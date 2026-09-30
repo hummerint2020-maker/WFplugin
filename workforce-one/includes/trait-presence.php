@@ -6,6 +6,7 @@ trait EWS_Presence_Trait {
     private function presence_verification_enabled(){ return (bool)get_option('ews_presence_verification',0); }
     private function presence_tables(){ global $wpdb; return [$wpdb->prefix.'ews_kiosks',$wpdb->prefix.'ews_presence_verifications']; }
     private function ensure_presence_schema(){
+        if($this->ews_schema_is_current())return;
         global $wpdb;
         $c=$wpdb->get_charset_collate();
         list($k,$v)=$this->presence_tables();

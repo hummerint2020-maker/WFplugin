@@ -13,6 +13,7 @@ trait EWS_Departments_Trait {
     }
 
     private function ensure_departments_schema(){
+        if($this->ews_schema_is_current())return;
         global $wpdb;
         require_once ABSPATH.'wp-admin/includes/upgrade.php';
         $c=$wpdb->get_charset_collate(); $t=$this->department_tables();

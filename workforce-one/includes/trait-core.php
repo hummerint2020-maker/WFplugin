@@ -47,6 +47,7 @@ trait EWS_Core_Trait {
         }
 
     private function ensure_employee_attendance_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb;
             $employees=$this->employees;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$employees))!==$employees)return;
@@ -57,6 +58,7 @@ trait EWS_Core_Trait {
         }
 
     private function ensure_employee_profile_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb;
             $employees=$this->employees;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$employees))!==$employees)return;
@@ -72,6 +74,7 @@ trait EWS_Core_Trait {
         }
 
     private function ensure_time_feature_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->time_logs))===$this->time_logs){
                 $cols=$wpdb->get_col("SHOW COLUMNS FROM {$this->time_logs}",0);
@@ -109,6 +112,7 @@ trait EWS_Core_Trait {
             require_once ABSPATH.'wp-admin/includes/upgrade.php';
             $c=$wpdb->get_charset_collate();
             $table=$wpdb->prefix.'ews_schedule_swaps';
+            if($this->ews_schema_is_current())return $table;
             dbDelta("CREATE TABLE {$table} (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 requester_employee_id BIGINT UNSIGNED NOT NULL,
@@ -133,6 +137,7 @@ trait EWS_Core_Trait {
     
 
         private function ensure_leave_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php'; $c=$wpdb->get_charset_collate();
             $types=$wpdb->prefix.'ews_leave_types'; $bal=$wpdb->prefix.'ews_leave_balances';
             $req=$wpdb->prefix.'ews_leave_requests'; $snap=$wpdb->prefix.'ews_leave_schedule_snapshots';
@@ -421,6 +426,7 @@ trait EWS_Core_Trait {
             $this->leave_redirect(['leave_done'=>1]);
         }
         private function ensure_vacation_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
             $c=$wpdb->get_charset_collate(); $table=$wpdb->prefix.'ews_vacation_requests';
             dbDelta("CREATE TABLE {$table} (
@@ -491,6 +497,7 @@ trait EWS_Core_Trait {
         }
 
 private function ensure_break_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
             $c=$wpdb->get_charset_collate(); $table=$wpdb->prefix.'ews_break_sessions';
             dbDelta("CREATE TABLE {$table} (
@@ -647,6 +654,7 @@ private function ensure_break_schema(){
         }
 
         private function ensure_overtime_schema(){
+        if($this->ews_schema_is_current())return;
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
             $c=$wpdb->get_charset_collate(); $table=$wpdb->prefix.'ews_overtime_requests';
             dbDelta("CREATE TABLE {$table} (
@@ -808,8 +816,21 @@ private function ensure_break_schema(){
             return (bool)get_option('ews_feature_overtime',false);
         }
 
+        private function ews_schema_target(){ return '3.28.2'; }
+
+        /*
+         * True once maybe_upgrade_schema() has completed for the current schema
+         * target. Every ensure_*_schema() routine returns early when this is true,
+         * so request paths never run SHOW TABLES / SHOW COLUMNS / dbDelta.
+         * To ship a schema change: update the ensure_* routine and bump
+         * ews_schema_target().
+         */
+        private function ews_schema_is_current(){
+            return get_option('ews_schema_version','')===$this->ews_schema_target();
+        }
+
         private function maybe_upgrade_schema(){
-            $target='3.28.1';
+            $target=$this->ews_schema_target();
             $done=get_option('ews_schema_version','');
             if($done===$target)return;
 
@@ -832,6 +853,12 @@ private function ensure_break_schema(){
             $this->ensure_auto_attendance_schema();
             $this->ensure_achievements_schema();
             $this->ensure_polls_schema();
+            $this->ensure_swap_schema();
+            $this->ensure_leave_schema();
+            $this->ensure_push_schema();
+            $this->ensure_recognition_schema();
+            $this->ews_v321_ensure_locations_table();
+            $this->ews_v321_ensure_employee_map();
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);
             if(get_option('ews_presence_qr_signin',null)===null)update_option('ews_presence_qr_signin',false,false);
             if(get_option('ews_presence_verification',null)===null)update_option('ews_presence_verification',false,false);
@@ -1787,6 +1814,7 @@ private function face_signin_enabled(){ return (bool)get_option('ews_feature_fac
     }
 
     private function ensure_schedule_config_schema(){
+        if($this->ews_schema_is_current())return;
         global $wpdb;
         $table=$wpdb->prefix.'ews_face_profiles';
         $charset=$wpdb->get_charset_collate();

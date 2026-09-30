@@ -13,6 +13,7 @@ trait EWS_Recognition_Trait {
     private static $ews_recognition_schema_ready = false;
 
     private function ensure_recognition_schema(){
+        if($this->ews_schema_is_current())return;
         if(self::$ews_recognition_schema_ready)return;
         global $wpdb;
         $table=$wpdb->prefix.'ews_kudos';

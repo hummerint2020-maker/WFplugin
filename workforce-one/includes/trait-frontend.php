@@ -1371,9 +1371,12 @@ private function layout($title,$body){
         if(!$emps || !method_exists($this,'team_tables')) return $emps;
 
         $t=$this->team_tables();
-        $teams_exist=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['teams']));
-        $members_exist=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['members']));
-        if($teams_exist!==$t['teams'] || $members_exist!==$t['members']) return $emps;
+        // Team tables are created by maybe_upgrade_schema(); only probe on a not-yet-upgraded install.
+        if(!$this->ews_schema_is_current()){
+            $teams_exist=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['teams']));
+            $members_exist=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['members']));
+            if($teams_exist!==$t['teams'] || $members_exist!==$t['members']) return $emps;
+        }
 
         $team_rows=$wpdb->get_results("SELECT tm.id,tm.name,tm.manager_employee_id FROM {$t['teams']} tm WHERE tm.active=1 ORDER BY tm.name ASC");
         if(!$team_rows) return $emps;

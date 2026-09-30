@@ -9,6 +9,7 @@ trait EWS_Employees_Trait {
         $this->invalidate_employee_runtime_cache($new_employee_id,$wp_user_id);if($supervisor_id&&$supervisor_id===$new_employee_id)wp_die('An employee cannot be their own supervisor.');$this->ensure_approval_schema();if($supervisor_id){$rel=$this->approval_set_relationship($new_employee_id,'supervisor',$supervisor_id,0);if(is_wp_error($rel))wp_die('Employee saved, but supervisor could not be saved. '.esc_html($rel->get_error_message()));}$this->audit('employee_create','employee',$new_employee_id,$n.' / '.$d);$this->redirect(['ews_view'=>'employees']);}
 
     private function ensure_employee_email_column(){
+        if($this->ews_schema_is_current())return;
             global $wpdb;
             $table=$this->employees;
             $exists=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table));

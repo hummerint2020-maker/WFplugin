@@ -6,7 +6,8 @@ trait EWS_Locations_Trait {
     private function ews_v321_ensure_locations_table(){
             global $wpdb;
             $table=$this->locations;
-            if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table){
+            $schema_current=$this->ews_schema_is_current();
+            if(!$schema_current && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table){
                 require_once ABSPATH.'wp-admin/includes/upgrade.php';
                 $c=$wpdb->get_charset_collate();
                 dbDelta("CREATE TABLE {$table} (
@@ -24,7 +25,7 @@ trait EWS_Locations_Trait {
                 ) $c;");
             }
             // Backfill the column on installations created by earlier releases.
-            $has_default = $wpdb->get_var("SHOW COLUMNS FROM {$table} LIKE 'is_default'");
+            $has_default = $schema_current || $wpdb->get_var("SHOW COLUMNS FROM {$table} LIKE 'is_default'");
             if(!$has_default){
                 $wpdb->query("ALTER TABLE {$table} ADD COLUMN is_default TINYINT(1) NOT NULL DEFAULT 0 AFTER enforcement");
             }
@@ -42,14 +43,16 @@ trait EWS_Locations_Trait {
 
     private function ews_default_location(){
             global $wpdb;
-            $this->ews_v321_ensure_locations_table();
+            // Hot path (every Sign In / time view): schema and default normalization are handled by
+            // maybe_upgrade_schema() and the location admin handlers.
+            if(!$this->ews_schema_is_current())$this->ews_v321_ensure_locations_table();
             return $wpdb->get_row("SELECT * FROM {$this->locations} WHERE active=1 AND is_default=1 ORDER BY id ASC LIMIT 1");
         }
 
     private function ews_v321_ensure_employee_map(){
             global $wpdb;
             $table=$wpdb->prefix.'ews_employee_locations_v321';
-            if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table){
+            if(!$this->ews_schema_is_current() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table){
                 require_once ABSPATH.'wp-admin/includes/upgrade.php';
                 $c=$wpdb->get_charset_collate();
                 dbDelta("CREATE TABLE {$table} (
@@ -65,7 +68,7 @@ trait EWS_Locations_Trait {
     private function ews_v321_employee_location($employee_id){
             global $wpdb;
             $table=$wpdb->prefix.'ews_employee_locations_v321';
-            if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table)return null;
+            if(!$this->ews_schema_is_current() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table)return null;
             $lid=(int)$wpdb->get_var($wpdb->prepare("SELECT location_id FROM {$table} WHERE employee_id=%d",(int)$employee_id));
             if($lid){
                 $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->locations} WHERE id=%d AND active=1",$lid));

@@ -12,6 +12,7 @@ trait EWS_Achievements_Trait {
     }
 
     private function ensure_achievements_schema(){
+        if($this->ews_schema_is_current())return;
         if(self::$ews_achievements_schema_ready)return;
         global $wpdb;
         require_once ABSPATH.'wp-admin/includes/upgrade.php';

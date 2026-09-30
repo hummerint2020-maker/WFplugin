@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) exit;
 trait EWS_Auto_Attendance_Trait {
 
     private function ensure_auto_attendance_schema(){
+        if($this->ews_schema_is_current())return;
         global $wpdb;
         require_once ABSPATH.'wp-admin/includes/upgrade.php';
         $c=$wpdb->get_charset_collate();

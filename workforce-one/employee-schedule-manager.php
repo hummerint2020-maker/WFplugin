@@ -2,11 +2,11 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.28.1
+ * Version: 3.28.2
  * Author: Internal
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.28.1');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.28.2');
 
 if (version_compare(PHP_VERSION, '7.2.5', '<')) {
     add_action('admin_notices', function () {

@@ -6,6 +6,7 @@ trait EWS_Tasks_Trait {
     private function tasks_enabled(){ return (bool)get_option('ews_feature_tasks',false); }
 
     private function ensure_tasks_schema(){
+        if($this->ews_schema_is_current())return;
         if(self::$ews_tasks_schema_ready)return;
         global $wpdb;
         $table=$wpdb->prefix.'ews_tasks';

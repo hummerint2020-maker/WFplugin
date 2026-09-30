@@ -73,6 +73,7 @@ trait EWS_Notifications_Trait {
         global $wpdb;
         $this->notifications=$wpdb->prefix.'ews_notifications';
         if(self::$notifications_schema_ready && !$force) return;
+        if(!$force && $this->ews_schema_is_current()) return;
         $charset=$wpdb->get_charset_collate();
         $exists=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->notifications));
         if(!$exists || $force){
@@ -379,6 +380,7 @@ trait EWS_Notifications_Trait {
     }
 
     private function ensure_push_schema(){
+        if($this->ews_schema_is_current())return;
         global $wpdb;
         $table=$this->push_table();
         $exists=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table));
