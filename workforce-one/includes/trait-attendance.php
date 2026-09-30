@@ -251,6 +251,51 @@ trait EWS_Attendance_Trait {
 
     public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field($_POST['work_date']);$s=sanitize_text_field($_POST['status']);$n=sanitize_textarea_field($_POST['note']??'');if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
 
+    /*
+     * Parse and validate an attendance CSV (columns: domain_name, work_date, status, note —
+     * the same layout as att_sample()). Every row is returned with valid/error so the preview
+     * can show exactly what will be imported; att_import() re-checks permissions per row.
+     */
+    private function parse_csv($path){
+            $max_bytes=2*1024*1024; $max_rows=5000;
+            if(!is_readable($path))return ['error'=>'The uploaded file could not be read.'];
+            if(filesize($path)>$max_bytes)return ['error'=>'The CSV file is larger than 2 MB. Please split it into smaller files.'];
+            $fh=fopen($path,'r'); if(!$fh)return ['error'=>'The uploaded file could not be read.'];
+            $first=fgets($fh); if($first===false){fclose($fh);return ['error'=>'The CSV file is empty.'];}
+            $first=preg_replace('/^\xEF\xBB\xBF/','',$first);
+            // Excel in many locales (including Arabic) saves CSV with ";" as the separator.
+            $delim=substr_count($first,';')>substr_count($first,',')?';':',';
+            $header=array_map(function($h){return strtolower(trim((string)$h));},str_getcsv($first,$delim));
+            $cols=['domain_name'=>array_search('domain_name',$header,true),'work_date'=>array_search('work_date',$header,true),'status'=>array_search('status',$header,true),'note'=>array_search('note',$header,true)];
+            foreach(['domain_name','work_date','status'] as $req)if($cols[$req]===false){fclose($fh);return ['error'=>'Missing required column "'.$req.'". Download the sample CSV for the expected format.'];}
+            global $wpdb;
+            $employees=[];
+            foreach((array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1") as $e)$employees[strtolower(trim($e->domain_name))]=$e;
+            $statuses=$this->statuses(); $status_lc=[]; foreach($statuses as $s)$status_lc[strtolower($s)]=$s;
+            $rows=[]; $line=1; $seen=[];
+            while(($r=fgetcsv($fh,0,$delim))!==false){
+                $line++;
+                if($r===[null]||count(array_filter(array_map('trim',array_map('strval',$r)),'strlen'))===0)continue;
+                if(count($rows)>=$max_rows){fclose($fh);return ['error'=>'The CSV file has more than '.$max_rows.' rows. Please split it into smaller files.'];}
+                $get=function($k)use($r,$cols){return $cols[$k]===false?'':trim((string)($r[$cols[$k]]??''));};
+                $domain=sanitize_text_field($get('domain_name')); $raw_date=sanitize_text_field($get('work_date'));
+                $raw_status=sanitize_text_field($get('status')); $note=sanitize_textarea_field($get('note'));
+                $emp=$employees[strtolower($domain)]??null; $date=$this->normalize_date($raw_date); $status=$status_lc[strtolower($raw_status)]??'';
+                $error='';
+                if(!$emp)$error='Unknown or inactive employee';
+                elseif($date==='')$error='Invalid date (use YYYY-MM-DD)';
+                elseif($status==='')$error='Unknown status';
+                elseif(!$this->employee_attendance_enabled((int)$emp->id))$error='Attendance tracking is disabled for this employee';
+                elseif(!$this->department_scope_allows_employee((int)$emp->id))$error='Employee is outside your Department';
+                elseif(isset($seen[$emp->id.'|'.$date]))$error='Duplicate of line '.$seen[$emp->id.'|'.$date];
+                if(!$error)$seen[$emp->id.'|'.$date]=$line;
+                $rows[]=['line'=>$line,'domain'=>$domain,'employee'=>$emp?$emp->name:'','eid'=>$emp?(int)$emp->id:0,'date'=>$raw_date,'normalized_date'=>$date,'status'=>$status?:$raw_status,'note'=>$note,'valid'=>$error==='','error'=>$error];
+            }
+            fclose($fh);
+            if(!$rows)return ['error'=>'The CSV file has no data rows.'];
+            return ['rows'=>$rows];
+        }
+
     public function att_preview(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_preview');if(empty($_FILES['attendance_csv']['tmp_name']))wp_die('CSV required.');$p=$this->parse_csv($_FILES['attendance_csv']['tmp_name']);if(isset($p['error']))wp_die(esc_html($p['error']));$t=wp_generate_uuid4();set_transient('ews31_preview_'.$t.'_'.get_current_user_id(),$p['rows'],15*MINUTE_IN_SECONDS);$this->redirect(['ews_view'=>'attendance','preview'=>$t]);}
 
     public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field($_POST['token']);$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}$this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}

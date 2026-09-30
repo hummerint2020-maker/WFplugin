@@ -7,15 +7,15 @@
  * Text Domain: workforce-one
  * Domain Path: /languages
  * Requires at least: 6.0
- * Requires PHP: 7.2.5
+ * Requires PHP: 7.4
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
 if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.29.0');
 
-if (version_compare(PHP_VERSION, '7.2.5', '<')) {
+if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
-        echo '<div class="notice notice-error"><p><strong>Workforce One:</strong> PHP 7.2.5 or newer is required.</p></div>';
+        echo '<div class="notice notice-error"><p><strong>Workforce One:</strong> PHP 7.4 or newer is required.</p></div>';
     });
     return;
 }

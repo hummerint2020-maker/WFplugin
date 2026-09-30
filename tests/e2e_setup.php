@@ -14,5 +14,5 @@ $secret=bin2hex(random_bytes(32));
 $wpdb->insert("{$p}ews_kiosks",['location_id'=>$lid,'name'=>'Reception','status'=>'active','credential_hash'=>hash('sha256',$secret),'created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);
 $kid=$wpdb->insert_id; update_option('ews_presence_kiosk_key_'.$kid,$secret,false);
 $pid=wp_insert_post(['post_title'=>'App','post_name'=>'app','post_content'=>'[employee_app]','post_status'=>'publish','post_type'=>'page']);
-file_put_contents(getenv('S').'/ids.json',json_encode(compact('uid','eid','lid','kid','secret','pid')));
+file_put_contents((getenv('S')?:sys_get_temp_dir()).'/ids.json',json_encode(compact('uid','eid','lid','kid','secret','pid')));
 echo "ok ".json_encode(compact('eid','kid','pid'));

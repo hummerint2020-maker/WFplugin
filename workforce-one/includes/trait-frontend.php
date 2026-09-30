@@ -388,8 +388,10 @@ private function layout($title,$body){
                 if(!$show_all)$leave_sql.=" LIMIT 6";
                 $my=$wpdb->get_results($wpdb->prepare($leave_sql,$emp->id));
                 $html.='<div class="ews-vac-card"><div class="ews-vac-section-head"><h3>My Leave Requests</h3>';
-                if($show_all)$recent_url=remove_query_arg('leave_history',$this->app_view_url('vacation'));
+                if($show_all){
+                    $recent_url=remove_query_arg('leave_history',$this->app_view_url('vacation'));
                     $html.='<a class="ews-vac-view-all" href="'.esc_url($recent_url).'">← Back to recent requests</a>';
+                }
                 $html.='</div><div>';
                 if(!$my){
                     $html.=$this->ews_empty_state('No Leave Requests Yet','You haven\'t submitted any leave requests yet.',$this->app_view_url('vacation'),'Request Leave');
@@ -481,7 +483,7 @@ private function layout($title,$body){
                 $table=$wpdb->prefix.'ews_overtime_requests';$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d ORDER BY requested_at DESC LIMIT 20",(int)$emp->id));
                 $html.='<div class="ews-ot-card"><h3>My Overtime Requests</h3><p class="ews-ot-muted">Track your pending and completed overtime requests.</p><div class="ews-ot-list">';
                 if(!$rows)$html.=$this->ews_empty_state('No Overtime Requests Yet','You haven\'t submitted any overtime requests yet.',$this->app_view_url('overtime'),'Request Overtime');
-                else foreach($rows as $r){$status=sanitize_key(strtolower($r->status));$sc=$status==='pending'?'ews-ot-pending':($status==='approved'?'ews-ot-approved':'ews-ot-rejected');$hours=floor($r->requested_minutes/60);$mins=$r->requested_minutes%60;$duration=$hours.($hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$html.='<div class="ews-ot-row"><div><div class="ews-ot-date">'.esc_html($r->overtime_date).' · '.esc_html(substr($r->start_time,0,5)).' → '.esc_html(substr($r->end_time,0,5)).'</div><div class="ews-ot-meta">'.esc_html($duration).' · '.esc_html($r->reason).'</div></div><span class="ews-ot-status '.$sc.'">'.esc_html($r->status).'</span></div>';}
+                else foreach($rows as $r){$status=sanitize_key(strtolower($r->status));$sc=$status==='pending'?'ews-ot-pending':($status==='approved'?'ews-ot-approved':'ews-ot-rejected');$hours=floor($r->requested_minutes/60);$mins=$r->requested_minutes%60;$duration=$hours.((int)$hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$html.='<div class="ews-ot-row"><div><div class="ews-ot-date">'.esc_html($r->overtime_date).' · '.esc_html(substr($r->start_time,0,5)).' → '.esc_html(substr($r->end_time,0,5)).'</div><div class="ews-ot-meta">'.esc_html($duration).' · '.esc_html($r->reason).'</div></div><span class="ews-ot-status '.$sc.'">'.esc_html($r->status).'</span></div>';}
                 $html.='</div></div></div>';
                 $html.='<script>(function(){var s=document.getElementById("ews-ot-start"),e=document.getElementById("ews-ot-end"),o=document.getElementById("ews-ot-count");function f(){if(!s.value||!e.value){o.innerHTML="🕐 <span>Select the times to see the requested duration.</span>";return;}var a=s.value.split(":"),b=e.value.split(":"),x=(+a[0])*60+(+a[1]),y=(+b[0])*60+(+b[1]);if(y<=x){o.innerHTML="⚠️ <span>End time must be after start time.</span>";return;}var n=y-x,h=Math.floor(n/60),m=n%60;o.innerHTML="🕐 <span>You are requesting <strong>"+h+" hour"+(h===1?"":"s")+(m?" "+m+" min":"")+"</strong>.</span>";}s.addEventListener("change",f);e.addEventListener("change",f);})();</script>';
             }
@@ -492,14 +494,14 @@ private function layout($title,$body){
                 $rows=$wpdb->get_results($wpdb->prepare("SELECT r.*,e.name employee_name,ars.id approval_step_id,ars.step_order FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id INNER JOIN {$at['requests']} ar ON ar.entity_type='overtime_request' AND ar.entity_id=r.id INNER JOIN {$at['instances']} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING' AND ars.approver_wp_user_id=%d WHERE r.status='Pending' ORDER BY r.requested_at ASC",get_current_user_id()));
                 $html.='<div class="ews-ot-card" style="margin-top:18px"><h3>My Pending Overtime Approvals</h3><p class="ews-ot-muted">Requests currently assigned to you by the approval workflow.</p>';
                 if(!$rows)$html.=$this->ews_empty_state('No Pending Overtime Approvals','You\'re all caught up.');
-                foreach($rows as $r){$hours=floor((int)$r->requested_minutes/60);$mins=(int)$r->requested_minutes%60;$duration=$hours.($hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$html.='<div class="ews-ot-row"><div><div class="ews-ot-date">'.esc_html($r->employee_name).' · '.esc_html($r->overtime_date).' · Level '.(int)$r->step_order.'</div><div class="ews-ot-meta">'.esc_html(substr($r->start_time,0,5)).' → '.esc_html(substr($r->end_time,0,5)).' · <strong>'.esc_html($duration).'</strong></div><div class="ews-ot-meta" style="margin-top:7px">“'.esc_html($r->reason).'”</div><div style="display:flex;gap:8px;margin-top:12px"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="approve"><button class="ews-btn" type="submit">Approve</button></form><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="reject"><button class="ews-btn secondary" type="submit">Reject</button></form></div></div><span class="ews-ot-status ews-ot-pending">Level '.(int)$r->step_order.'</span></div>';}
+                foreach($rows as $r){$hours=floor((int)$r->requested_minutes/60);$mins=(int)$r->requested_minutes%60;$duration=$hours.((int)$hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$html.='<div class="ews-ot-row"><div><div class="ews-ot-date">'.esc_html($r->employee_name).' · '.esc_html($r->overtime_date).' · Level '.(int)$r->step_order.'</div><div class="ews-ot-meta">'.esc_html(substr($r->start_time,0,5)).' → '.esc_html(substr($r->end_time,0,5)).' · <strong>'.esc_html($duration).'</strong></div><div class="ews-ot-meta" style="margin-top:7px">“'.esc_html($r->reason).'”</div><div style="display:flex;gap:8px;margin-top:12px"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="approve"><button class="ews-btn" type="submit">Approve</button></form><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="reject"><button class="ews-btn secondary" type="submit">Reject</button></form></div></div><span class="ews-ot-status ews-ot-pending">Level '.(int)$r->step_order.'</span></div>';}
                 $html.='</div>';
             }elseif($this->can('ews_manage_settings')){
                 $table=$wpdb->prefix.'ews_overtime_requests';
                 $rows=$wpdb->get_results("SELECT r.*,e.name employee_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id WHERE r.status='Pending' ORDER BY r.requested_at ASC");
                 $html.='<div class="ews-ot-card" style="margin-top:18px"><h3>Pending Overtime Requests</h3><p class="ews-ot-muted">Review overtime requests. Any Manager can approve or reject.</p>';
                 if(!$rows)$html.=$this->ews_empty_state('No Pending Overtime Requests','You\'re all caught up.');
-                foreach($rows as $r){$hours=floor((int)$r->requested_minutes/60);$mins=(int)$r->requested_minutes%60;$duration=$hours.($hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$html.='<div class="ews-ot-row"><div><div class="ews-ot-date">'.esc_html($r->employee_name).' · '.esc_html($r->overtime_date).'</div><div class="ews-ot-meta">'.esc_html(substr($r->start_time,0,5)).' → '.esc_html(substr($r->end_time,0,5)).' · <strong>'.esc_html($duration).'</strong></div><div class="ews-ot-meta" style="margin-top:7px">“'.esc_html($r->reason).'”</div><div style="display:flex;gap:8px;margin-top:12px"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="approve"><button class="ews-btn" type="submit">Approve</button></form><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="reject"><button class="ews-btn secondary" type="submit">Reject</button></form></div></div><span class="ews-ot-status ews-ot-pending">Pending</span></div>';}
+                foreach($rows as $r){$hours=floor((int)$r->requested_minutes/60);$mins=(int)$r->requested_minutes%60;$duration=$hours.((int)$hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$html.='<div class="ews-ot-row"><div><div class="ews-ot-date">'.esc_html($r->employee_name).' · '.esc_html($r->overtime_date).'</div><div class="ews-ot-meta">'.esc_html(substr($r->start_time,0,5)).' → '.esc_html(substr($r->end_time,0,5)).' · <strong>'.esc_html($duration).'</strong></div><div class="ews-ot-meta" style="margin-top:7px">“'.esc_html($r->reason).'”</div><div style="display:flex;gap:8px;margin-top:12px"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="approve"><button class="ews-btn" type="submit">Approve</button></form><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_overtime_respond','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="'.(int)$r->id.'"><input type="hidden" name="decision" value="reject"><button class="ews-btn secondary" type="submit">Reject</button></form></div></div><span class="ews-ot-status ews-ot-pending">Pending</span></div>';}
                 $html.='</div>';
             }
             return $html.'</div>';
@@ -1440,7 +1442,7 @@ private function layout($title,$body){
             $e->_schedule_manager_teams=$managed_names;
         }
 
-        usort($emps,function($a,$b){
+        usort($emps,function($a,$b)use($current_emp_id){
             $ga=(string)($a->_schedule_primary_team??'');
             $gb=(string)($b->_schedule_primary_team??'');
             if($ga==='' && $gb!=='') return 1;
@@ -1877,6 +1879,7 @@ private function layout($title,$body){
                 }
             }
 
+            $team_options=[];
             foreach($emps as $e){
                 foreach((array)($e->_schedule_team_names??[]) as $team_name){
                     $team_name=trim((string)$team_name);
@@ -2032,6 +2035,44 @@ private function layout($title,$body){
 
                     <div class="ews-att-savebar"><span>Empty cells are not changed.</span><button type="submit" name="attendance_save" value="1" class="ews-btn ews-save-all">✓ Save Schedule & Attendance</button></div>
                 </form>
+
+                <?php
+                $preview_token=isset($_GET['preview'])?sanitize_text_field(wp_unslash($_GET['preview'])):'';
+                $preview_rows=$preview_token?get_transient('ews31_preview_'.$preview_token.'_'.get_current_user_id()):false;
+                if($preview_token && !is_array($preview_rows)): ?>
+                <div class="ews-notice ews-notice-error">The CSV preview has expired. Please upload the file again.</div>
+                <?php elseif(is_array($preview_rows)):
+                    $preview_valid=count(array_filter($preview_rows,function($r){return !empty($r['valid']);}));
+                    $preview_invalid=count($preview_rows)-$preview_valid; ?>
+                <div class="ews-card ews-csv-preview">
+                    <h3 style="margin-top:0">CSV Preview</h3>
+                    <p><strong><?php echo (int)$preview_valid; ?></strong> row(s) ready to import<?php if($preview_invalid): ?>, <strong style="color:#b42318"><?php echo (int)$preview_invalid; ?></strong> row(s) will be skipped<?php endif; ?>. Existing entries for the same employee and date will be replaced.</p>
+                    <div style="overflow:auto;max-height:420px">
+                    <table class="ews-table ews-preview"><thead><tr><th>Line</th><th>Employee</th><th>Date</th><th>Status</th><th>Note</th><th>Result</th></tr></thead><tbody>
+                    <?php foreach($preview_rows as $r): ?>
+                        <tr class="<?php echo empty($r['valid'])?'ews-invalid':'ews-valid'; ?>">
+                            <td><?php echo (int)$r['line']; ?></td>
+                            <td><?php echo esc_html($r['employee']?:$r['domain']); ?></td>
+                            <td><?php echo esc_html($r['normalized_date']?:$r['date']); ?></td>
+                            <td><?php echo esc_html($r['status']); ?></td>
+                            <td><?php echo esc_html($r['note']); ?></td>
+                            <td><?php echo empty($r['valid'])?'<span class="ews-error">✕ '.esc_html($r['error']).'</span>':'<span style="color:#067647">✓ OK</span>'; ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody></table>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+                        <?php if($preview_valid): ?>
+                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                            <input type="hidden" name="action" value="ews31_att_import"><?php wp_nonce_field('ews31_att_import'); ?>
+                            <input type="hidden" name="token" value="<?php echo esc_attr($preview_token); ?>">
+                            <button class="ews-btn">✓ Import <?php echo (int)$preview_valid; ?> row(s)</button>
+                        </form>
+                        <?php endif; ?>
+                        <a class="ews-btn secondary" href="<?php echo esc_url(remove_query_arg('preview')); ?>">Cancel</a>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <details class="ews-card ews-csv-details">
                     <summary><strong>Advanced: Bulk CSV Import</strong><span>Use this when you have many rows from Excel.</span></summary>

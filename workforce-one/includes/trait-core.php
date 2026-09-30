@@ -738,7 +738,7 @@ private function ensure_break_schema(){
 
                 if($fresh->status==='APPROVED' || $fresh->status==='REJECTED'){
                     $approved=$fresh->status==='APPROVED';
-                    $hours=floor((int)$req->requested_minutes/60);$mins=(int)$req->requested_minutes%60;$duration=$hours.($hours===1?' hour':' hours').($mins?' '.$mins.' min':'');
+                    $hours=floor((int)$req->requested_minutes/60);$mins=(int)$req->requested_minutes%60;$duration=$hours.((int)$hours===1?' hour':' hours').($mins?' '.$mins.' min':'');
                     $msg=$approved?'Your overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.', '.$duration.') has been approved.':'Your overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.') has been rejected.';
                     $this->audit($approved?'overtime_approved':'overtime_rejected','overtime_request',$id,($approved?'Approved':'Rejected').' by '.wp_get_current_user()->display_name);
                     if($emp->wp_user_id){$title=$approved?'Overtime Approved':'Overtime Rejected';$this->notify_user((int)$emp->wp_user_id,$title,$msg,'overtime','overtime',$id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,$title,$msg,'overtime',$id);}
@@ -759,7 +759,7 @@ private function ensure_break_schema(){
             if($decision==='approve'){
                 $ok=$wpdb->update($table,['status'=>'Approved','reviewed_by'=>get_current_user_id(),'reviewed_at'=>$now],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);
                 if($ok!==1)$this->overtime_redirect(['overtime_error'=>$ok===false?'save':'done']);
-                $hours=floor((int)$req->requested_minutes/60);$mins=(int)$req->requested_minutes%60;$duration=$hours.($hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$msg='Your overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.', '.$duration.') has been approved.';
+                $hours=floor((int)$req->requested_minutes/60);$mins=(int)$req->requested_minutes%60;$duration=$hours.((int)$hours===1?' hour':' hours').($mins?' '.$mins.' min':'');$msg='Your overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.', '.$duration.') has been approved.';
                 $this->audit('overtime_approved','overtime_request',$id,'Approved by '.wp_get_current_user()->display_name);
                 if($emp->wp_user_id){$this->notify_user((int)$emp->wp_user_id,'Overtime Approved',$msg,'overtime','overtime',$id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Overtime Approved',$msg,'overtime',$id);}
                 $this->overtime_redirect(['overtime_done'=>1]);
@@ -1593,8 +1593,8 @@ function current_employee(){
                 ];
             }
             $has_training=false;
-            foreach($out as $x)if(strtolower($x['name'])==='training course'){$has_training=true;break;}
-            if(!$has_training)$out[]=array_merge(['name'=>'Training Course','requires_sign_in'=>0,'requires_location'=>0,'attendance_rule'=>'business_trip','active'=>1],$style_defaults['Training Course']);
+            foreach($out as $x){if(strtolower($x['name'])==='training course'){$has_training=true;break;}}
+            if(!$has_training)$out[]=array_merge(['name'=>'Training Course','requires_sign_in'=>0,'requires_location'=>0,'attendance_rule'=>'business_trip','active'=>1],['icon'=>'🎓','bg_color'=>'#e0f2fe','text_color'=>'#0369a1','border_color'=>'#bae6fd']);
                 self::$ews_schedule_types_cache=$out;
             }
             if(!$active_only)return self::$ews_schedule_types_cache;
@@ -1802,7 +1802,7 @@ private function face_signin_enabled(){ return (bool)get_option('ews_feature_fac
         foreach($managers as $m){
             if((int)$m->ID===$user_id)continue;
             $this->notify_user((int)$m->ID,'Face Reset Request',$msg,'face_reset','face_reset',$employee_id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$m->ID,'Face Reset Request',$msg,'face_reset','face_reset',$employee_id,add_query_arg(['page'=>'ews31-face-reset-requests'],admin_url('admin.php')));
+            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$m->ID,'Face Reset Request',$msg,'face_reset',$employee_id,add_query_arg(['page'=>'ews31-face-reset-requests'],admin_url('admin.php')));
         }
         return true;
     }

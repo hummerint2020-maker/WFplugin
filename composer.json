@@ -1,0 +1,25 @@
+{
+    "name": "hummerint2020-maker/workforce-one",
+    "description": "Development tooling for the Workforce One WordPress plugin (not shipped with the plugin).",
+    "type": "project",
+    "license": "proprietary",
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "php-stubs/wordpress-stubs": "^6.6",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "phpcompatibility/php-compatibility": "^9.3",
+        "squizlabs/php_codesniffer": "^3.10",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": false
+        }
+    },
+    "scripts": {
+        "lint": "find workforce-one -name '*.php' -not -path '*/assets/vendor/*' -print0 | xargs -0 -n1 php -l",
+        "phpstan": "phpstan analyse --memory-limit=2G --no-progress",
+        "phpcompat": "phpcs --standard=phpcs.xml.dist"
+    }
+}

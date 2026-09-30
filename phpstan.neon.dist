@@ -1,0 +1,13 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+parameters:
+    level: 2
+    paths:
+        - workforce-one
+    excludePaths:
+        - workforce-one/assets
+    bootstrapFiles:
+        - tests/phpstan-bootstrap.php
+    ignoreErrors:
+        # ABSPATH is only known at runtime.
+        - identifier: requireOnce.fileNotFound

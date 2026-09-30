@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ruleset name="Workforce One">
+    <description>PHP version compatibility for the minimum supported PHP (see plugin header).</description>
+    <file>workforce-one</file>
+    <exclude-pattern>workforce-one/assets/vendor/*</exclude-pattern>
+    <arg name="extensions" value="php"/>
+    <arg value="sp"/>
+    <config name="testVersion" value="7.4-"/>
+    <rule ref="PHPCompatibility"/>
+</ruleset>
