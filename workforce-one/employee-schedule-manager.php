@@ -126,11 +126,7 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_general_leave_save',[$this,'general_leave_save']);
             add_action('admin_post_ews31_general_leave_delete',[$this,'general_leave_delete']);
             add_action('admin_post_ews31_leave_save',[$this,'leave_save']);
-            add_action('admin_post_ews31_time_event',[$this,'time_event']);
-            add_action('admin_post_ews_break_start',[$this,'break_start']);
-            add_action('admin_post_ews_break_resume',[$this,'break_resume']);
-            add_action('ews_break_duration_reminder',[$this,'break_duration_reminder'],10,1);
-            add_action('ews_break_manager_escalation',[$this,'break_manager_escalation'],10,1);
+            \WorkforceOne\Attendance\Hooks::register($this);
             add_action('admin_post_ews31_time_reset',[$this,'admin_time_reset']);
             add_action('admin_post_ews31_time_save',[$this,'admin_time_save']);
             add_action('admin_post_ews31_time_csv',[$this,'admin_time_csv']);
