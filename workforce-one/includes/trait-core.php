@@ -1523,6 +1523,9 @@ function current_employee(){
         }
 
     private function working_day_names(){
+            // Display only: WordPress core provides the translated weekday names.
+            global $wp_locale;
+            if($wp_locale instanceof WP_Locale){$out=[];for($i=0;$i<7;$i++)$out[$i]=$wp_locale->get_weekday($i);return $out;}
             return [0=>'Sunday',1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday'];
         }
 

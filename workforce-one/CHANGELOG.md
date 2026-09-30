@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.30.0
+### Fixed (all present in 3.28.0)
+- The plugin did not load at all on PHP 7.4–8.0 (PHP 8.1-only syntax in the Excel report).
+- Bulk CSV attendance import crashed (missing `parse_csv()` and preview screen). Now supports
+  Excel's `;` separator, BOM, duplicates, unknown employees/dates/statuses, department scope.
+- Attendance screen fatal error on PHP 8 when no Teams exist.
+- Early Leave form validation never ran in the browser (a `<` in inline JS made WordPress
+  encode `&&`).
+- Face Reset push notification opened a broken link.
+- Logged-in employee was not sorted first in their team on the schedule.
+- "Back to recent requests" link with an undefined URL; "1 hours" labels.
+- Minimum PHP is now 7.4 (Web Push already needed 7.3+).
+
+### i18n
+- Translated: Sign In / Out page, Dashboard, Leave, Overtime, Early Leave, navigation and
+  header, notifications bell, all confirmation/result dialogs, request statuses, and the
+  face/QR JavaScript (`wp.i18n`). Arabic translation: 440+ strings.
+
+### Tooling
+- GitHub Actions: PHP 7.4/8.1/8.3/8.4 lint, PHPStan (level 2), PHPCompatibility, and a
+  WordPress + MySQL 8 job running the security e2e, an all-pages smoke test, a Chromium
+  JavaScript-error check, an Arabic/RTL pass and uninstall checks.
+
 ## 3.29.0
 ### Security
 - Face Sign In can no longer be bypassed by posting `face_verified=1`: a successful

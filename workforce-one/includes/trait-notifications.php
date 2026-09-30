@@ -671,7 +671,7 @@ trait EWS_Notifications_Trait {
                 $open_url=wp_nonce_url(add_query_arg(['action'=>'ews_notification_open','notification_id'=>$id],admin_url('admin-post.php')),'ews_notification_open_'.$id);
                 $title=wp_trim_words(wp_strip_all_tags((string)$note->title),9,'…');
                 $message=wp_trim_words(wp_strip_all_tags((string)$note->message),13,'…');
-                $time=human_time_diff(strtotime($note->created_at),current_time('timestamp')).' ago';
+                $time=sprintf(/* translators: %s: human-readable time difference */__('%s ago','workforce-one'),human_time_diff(strtotime($note->created_at),current_time('timestamp')));
                 $items.='<a class="ews-bell-item'.(!(int)$note->is_read?' unread':''). '" href="'.esc_url($open_url).'">'
                     .'<span class="ews-bell-item-icon" aria-hidden="true">🔔</span>'
                     .'<span class="ews-bell-item-body"><strong>'.esc_html($title).'</strong><span>'.esc_html($message).'</span><small>'.esc_html($time).'</small></span>'
@@ -679,15 +679,15 @@ trait EWS_Notifications_Trait {
                     .'</a>';
             }
         }else{
-            $items='<div class="ews-bell-empty"><strong>You’re all caught up</strong><span>No new notifications.</span></div>';
+            $items='<div class="ews-bell-empty"><strong>'.esc_html__('You’re all caught up','workforce-one').'</strong><span>'.esc_html__('No new notifications.','workforce-one').'</span></div>';
         }
         return '<div class="ews-notification-bell-wrap">'
-            .'<button type="button" class="ews-notification-bell" aria-label="Notifications" title="Notifications" aria-expanded="false" aria-controls="ews-notification-dropdown">'
+            .'<button type="button" class="ews-notification-bell" aria-label="'.esc_attr__('Notifications','workforce-one').'" title="'.esc_attr__('Notifications','workforce-one').'" aria-expanded="false" aria-controls="ews-notification-dropdown">'
             .'<span class="ews-bell-icon" aria-hidden="true">🔔</span>'.($count?'<span class="ews-bell-count">'.$count.'</span>':'').'</button>'
             .'<div id="ews-notification-dropdown" class="ews-notification-dropdown" hidden>'
-            .'<div class="ews-bell-head"><strong>Notifications</strong>'.($count?'<span>'.$count.' unread</span>':'<span>All caught up</span>').'</div>'
+            .'<div class="ews-bell-head"><strong>'.esc_html__('Notifications','workforce-one').'</strong>'.($count?'<span>'.esc_html(sprintf(/* translators: %d: unread count */_n('%d unread','%d unread',$count,'workforce-one'),$count)).'</span>':'<span>'.esc_html__('All caught up','workforce-one').'</span>').'</div>'
             .'<div class="ews-bell-list">'.$items.'</div>'
-            .'<a class="ews-bell-footer" href="'.esc_url($all_url).'">View all notifications →</a>'
+            .'<a class="ews-bell-footer" href="'.esc_url($all_url).'">'.esc_html__('View all notifications →','workforce-one').'</a>'
             .'</div></div>';
     }
 }

@@ -91,6 +91,28 @@ jobs:
         run: python3 tests/e2e_presence_face.py "$S"
       - name: Smoke test (every admin page and app view)
         run: python3 tests/smoke.py "$WP/wp-content/debug.log"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright (Chromium)
+        run: |
+          npm install --no-save --no-package-lock playwright@1
+          npx playwright install --with-deps chromium
+      - name: Browser smoke test (JavaScript errors on every view)
+        run: node tests/browser_smoke.js
+      - name: Arabic (RTL) pass
+        run: |
+          wp language core install ar --path="$WP"
+          wp site switch-language ar --path="$WP"
+          python3 tests/smoke.py "$WP/wp-content/debug.log"
+          node tests/browser_smoke.js
+          curl -s -c /tmp/cj -b /tmp/cj -o /dev/null http://127.0.0.1:8080/wp-login.php
+          curl -s -c /tmp/cj -b /tmp/cj -o /dev/null -d 'log=emp1&pwd=emp1pass&testcookie=1' http://127.0.0.1:8080/wp-login.php
+          curl -s -b /tmp/cj 'http://127.0.0.1:8080/app/?ews_view=time' > /tmp/time_ar.html
+          grep -q 'dir="rtl"' /tmp/time_ar.html
+          grep -q 'workforce-one-rtl.css' /tmp/time_ar.html
+          grep -q 'تسجيل الحضور' /tmp/time_ar.html
+          wp site switch-language en_US --path="$WP"
       - name: Uninstall keeps data unless opted in
         run: |
           wp plugin uninstall workforce-one --deactivate --skip-delete --path="$WP"
