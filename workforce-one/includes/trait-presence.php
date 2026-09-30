@@ -123,8 +123,8 @@ trait EWS_Presence_Trait {
     }
     public function presence_kiosk_route(){
         if(!isset($_GET['ews_kiosk'])||isset($_GET['kiosk_payload']))return;
-        $id=absint($_GET['ews_kiosk']);$secret=$this->presence_kiosk_authorized($id);if($secret===''){status_header(403);wp_die('Kiosk access denied.');}
-        global $wpdb;list($kt)=$this->presence_tables();$k=$wpdb->get_row($wpdb->prepare("SELECT k.*,l.name location_name FROM $kt k LEFT JOIN {$this->locations} l ON l.id=k.location_id WHERE k.id=%d AND k.status='active' LIMIT 1",$id));if(!$k)wp_die('Kiosk is inactive.');
+        $id=absint($_GET['ews_kiosk']);$secret=$this->presence_kiosk_authorized($id);if($secret==='')wp_die('Kiosk access denied.','Kiosk',['response'=>403]);
+        global $wpdb;list($kt)=$this->presence_tables();$k=$wpdb->get_row($wpdb->prepare("SELECT k.*,l.name location_name FROM $kt k LEFT JOIN {$this->locations} l ON l.id=k.location_id WHERE k.id=%d AND k.status='active' LIMIT 1",$id));if(!$k)wp_die('Kiosk is inactive.','Kiosk',['response'=>403]);
         $payload=$this->presence_qr_payload($id,$secret);$slot_seconds=$this->presence_qr_slot_seconds();
         $payload_url=add_query_arg(['ews_kiosk'=>$id,'kiosk_key'=>$secret,'kiosk_payload'=>1],home_url('/'));
         $qr_lib=plugin_dir_url(dirname(__DIR__).'/employee-schedule-manager.php').'assets/vendor/qrcode-generator-1.4.4.js';

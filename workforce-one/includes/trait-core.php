@@ -833,6 +833,11 @@ private function ensure_break_schema(){
             $target=$this->ews_schema_target();
             $done=get_option('ews_schema_version','');
             if($done===$target)return;
+            // The base tables come from activate(). If this runs before activation has
+            // created them (e.g. WP-CLI loads the plugin before the activation hook), create
+            // them now; otherwise the column upgrades below would be skipped yet marked done.
+            global $wpdb;
+            if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->employees))!==$this->employees)self::activate();
 
             /* Existing schema routines are retained; they now run only once
                when the plugin schema version changes. */
