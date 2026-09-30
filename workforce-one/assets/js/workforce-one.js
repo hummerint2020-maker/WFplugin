@@ -159,6 +159,8 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
               
               var apiBase=module.getAttribute('data-api-base')||'', serverEnrolled=module.getAttribute('data-server-enrolled')==='1';
               var wpNonce=module.getAttribute('data-wp-nonce')||'', modal=module.querySelector('#ews-face-modal'),video=module.querySelector('#ews-face-video');
+              // face-api.js and its models are bundled with the plugin (assets/vendor/face-api/).
+              var vendorBase=module.getAttribute('data-vendor-base')||'';
               var status=module.querySelector('#ews-face-status'),state=module.querySelector('#ews-face-state');
               var stream=null,ready=false,busy=false,pendingForm=null;
               var faceRequired=module.getAttribute('data-face-required')==='1', faceCfg=JSON.parse(module.getAttribute('data-face-config')||'{}'),SAMPLE_COUNT=5,THRESHOLD=.60;
@@ -179,9 +181,9 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
               async function loadModels(){
                 if(window.faceapi)return;
                 await new Promise(function(resolve,reject){var s=document.createElement('script');
-                  s.src='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
+                  s.src=vendorBase+'face-api-0.22.2.min.js';
                   s.onload=resolve;s.onerror=function(){reject(new Error('Could not load face-api.js.'));};document.head.appendChild(s);});
-                var base='https://justadudewhohacks.github.io/face-api.js/models';
+                var base=vendorBase+'models';
                 await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(base),faceapi.nets.faceLandmark68Net.loadFromUri(base),faceapi.nets.faceRecognitionNet.loadFromUri(base)]);
               }
               async function startCamera(){
