@@ -803,6 +803,7 @@ trait EWS_Admin_Trait {
             echo '<div class="wfo-confirm-grid">';
             foreach($labels as $key=>$label){$v=array_key_exists($key,$confirm_cfg)?(int)!empty($confirm_cfg[$key]):$confirm_defaults[$key]; echo '<label class="wfo-confirm-item"><input type="checkbox" name="confirm_actions['.esc_attr($key).']" value="1" '.checked($v,1,false).'> '.esc_html($label).'</label>';}
             echo '</div></div>';
+            echo $this->privacy_settings_section();
             echo '<div class="wfo-savebar"><span style="color:#667085;font-size:13px">Changes apply after saving this configuration.</span><button class="button button-primary">Save Feature Configuration</button></div></form></div></div>';
         }
 
@@ -1574,6 +1575,7 @@ trait EWS_Admin_Trait {
             $recognition_weekly_limit=max(1,min(1000,(int)($_POST['recognition_weekly_limit']??5)));
             update_option('ews_presence_qr_signin',!empty($_POST['presence_qr_signin'])?1:0,false);
             update_option('ews_presence_verification',!empty($_POST['presence_verification'])?1:0,false);
+            $this->privacy_settings_save();
             update_option('ews_feature_recognition',$recognition_enabled,false);
             update_option('ews_recognition_allow_kudos',$recognition_allow_kudos,false);
             update_option('ews_recognition_weekly_limit_mode',$recognition_limit_mode,false);

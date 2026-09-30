@@ -33,9 +33,10 @@ require_once __DIR__ . '/includes/trait-polls.php';
 require_once __DIR__ . '/includes/trait-recognition.php';
 require_once __DIR__ . '/includes/trait-departments.php';
 require_once __DIR__ . '/includes/trait-presence.php';
+require_once __DIR__ . '/includes/trait-privacy.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait;
+    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -168,10 +169,12 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_profile_photo_save',[$this,'profile_photo_save']);
             add_action('admin_post_ews_profile_password_change',[$this,'profile_password_change']);
             add_action('ews_notifications_cleanup',[$this,'cleanup_notifications']);
+            add_action('ews_privacy_cleanup',[$this,'privacy_cleanup_cron']);
             add_action('ews_auto_attendance_tick',[$this,'auto_attendance_cron']);
             add_filter('cron_schedules',function($s){if(!isset($s['ews_auto_five_minutes']))$s['ews_auto_five_minutes']=['interval'=>300,'display'=>'Every 5 minutes'];return $s;});
             // Keep the scheduler present after upgrades/reloads; wp_next_scheduled prevents duplicates.
             if(wp_next_scheduled('ews_auto_attendance_tick')===false) $this->auto_attendance_schedule();
+            $this->privacy_schedule();
             if(wp_next_scheduled('ews_smart_nudges_tick')===false) wp_schedule_event(time()+120,'ews_auto_five_minutes','ews_smart_nudges_tick');
         }
 
@@ -237,7 +240,7 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); }
+    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); }
 
 }
 
