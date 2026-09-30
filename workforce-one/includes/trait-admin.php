@@ -6,6 +6,7 @@ trait EWS_Admin_Trait {
     public function enqueue_admin_ui_foundation($hook_suffix){
         if(strpos((string)$hook_suffix, "page_ews31") === false && (string)$hook_suffix !== "toplevel_page_ews31") return;
         wp_enqueue_style('workforce-one-ui', plugin_dir_url(__FILE__) . '../assets/css/workforce-one-ui.css', [], EWS_VERSION);
+        wp_style_add_data('workforce-one-ui', 'rtl', 'replace');
     }
 
     public function admin_menu(){

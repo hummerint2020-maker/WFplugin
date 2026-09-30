@@ -64,15 +64,16 @@ trait EWS_Privacy_Trait {
         $face=$this->privacy_face_delete_inactive()?1:0;
         $delete_all=(int)get_option('ews_delete_data_on_uninstall',0);
         $last=get_option('ews_privacy_cleanup_last_run','');
-        $choices=[0=>'Keep indefinitely',30=>'30 days',90=>'90 days',180=>'180 days',365=>'1 year',730=>'2 years'];
-        if(!isset($choices[$days]))$choices[$days]=$days.' days';
-        $html='<div class="wfo-feature-section"><div><div class="wfo-feature-title">Privacy &amp; Data Retention</div><div class="wfo-feature-desc">Attendance collects location, IP address and (when Face Sign In is used) biometric face templates. Limit how long this personal data is kept.</div></div>';
-        $html.='<p><label>Remove GPS coordinates and IP address from attendance logs after <select name="location_retention_days">';
+        $choices=[0=>__('Keep indefinitely','workforce-one'),30=>__('30 days','workforce-one'),90=>__('90 days','workforce-one'),180=>__('180 days','workforce-one'),365=>__('1 year','workforce-one'),730=>__('2 years','workforce-one')];
+        /* translators: %d: number of days */
+        if(!isset($choices[$days]))$choices[$days]=sprintf(__('%d days','workforce-one'),$days);
+        $html='<div class="wfo-feature-section"><div><div class="wfo-feature-title">'.esc_html__('Privacy & Data Retention','workforce-one').'</div><div class="wfo-feature-desc">'.esc_html__('Attendance collects location, IP address and (when Face Sign In is used) biometric face templates. Limit how long this personal data is kept.','workforce-one').'</div></div>';
+        $html.='<p><label>'.esc_html__('Remove GPS coordinates and IP address from attendance logs after','workforce-one').' <select name="location_retention_days">';
         foreach($choices as $v=>$label)$html.='<option value="'.(int)$v.'" '.selected($days,$v,false).'>'.esc_html($label).'</option>';
-        $html.='</select></label><br><span class="description">The attendance record, time and inside/outside status are kept.</span></p>';
-        $html.='<p><label><input type="checkbox" name="face_delete_inactive" value="1" '.checked($face,1,false).'> Delete face templates of inactive (archived) employees</label></p>';
-        $html.='<p><label><input type="checkbox" name="delete_data_on_uninstall" value="1" '.checked($delete_all,1,false).'> <strong>Delete all Workforce One data when the plugin is deleted</strong></label><br><span class="description">Removes all tables, settings, roles and Kiosk keys. This cannot be undone.</span></p>';
-        if($last)$html.='<p class="description">Last cleanup run: '.esc_html($last).'</p>';
+        $html.='</select></label><br><span class="description">'.esc_html__('The attendance record, time and inside/outside status are kept.','workforce-one').'</span></p>';
+        $html.='<p><label><input type="checkbox" name="face_delete_inactive" value="1" '.checked($face,1,false).'> '.esc_html__('Delete face templates of inactive (archived) employees','workforce-one').'</label></p>';
+        $html.='<p><label><input type="checkbox" name="delete_data_on_uninstall" value="1" '.checked($delete_all,1,false).'> <strong>'.esc_html__('Delete all Workforce One data when the plugin is deleted','workforce-one').'</strong></label><br><span class="description">'.esc_html__('Removes all tables, settings, roles and Kiosk keys. This cannot be undone.','workforce-one').'</span></p>';
+        if($last)$html.='<p class="description">'.esc_html__('Last cleanup run:','workforce-one').' '.esc_html($last).'</p>';
         $html.='</div>';
         return $html;
     }

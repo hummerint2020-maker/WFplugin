@@ -1,0 +1,279 @@
+/* Workforce One UI Foundation — V3.27.9
+ * Visual-only design primitives. No business behavior, data, permissions or workflows.
+ */
+:root{
+  --ews-ui-primary:#2563eb;
+  --ews-ui-primary-hover:#1d4ed8;
+  --ews-ui-ink:#172033;
+  --ews-ui-muted:#667085;
+  --ews-ui-line:#e4e7ec;
+  --ews-ui-surface:#fff;
+  --ews-ui-bg:#f6f8fb;
+  --ews-ui-success:#067647;
+  --ews-ui-success-bg:#ecfdf3;
+  --ews-ui-warning:#b54708;
+  --ews-ui-warning-bg:#fffaeb;
+  --ews-ui-danger:#b42318;
+  --ews-ui-danger-bg:#fef3f2;
+  --ews-ui-info:#175cd3;
+  --ews-ui-info-bg:#eff8ff;
+  --ews-ui-radius-sm:6px;
+  --ews-ui-radius-md:8px;
+  --ews-ui-radius-lg:10px;
+  --ews-ui-space-1:4px;
+  --ews-ui-space-2:8px;
+  --ews-ui-space-3:12px;
+  --ews-ui-space-4:16px;
+  --ews-ui-space-5:20px;
+  --ews-ui-space-6:24px;
+  --ews-ui-space-7:32px;
+  --ews-ui-focus:0 0 0 3px rgba(37,99,235,.14);
+}
+
+/* Shared Workforce One primitives. */
+.ews-app .ews-btn,
+.ews-app button.ews-btn,
+.ews-app input[type=submit].ews-btn{
+  min-height:38px;padding:8px 13px;border-radius:var(--ews-ui-radius-sm);
+  font-size:13px;line-height:20px;font-weight:600;border:1px solid transparent;
+  transition:background-color .12s ease,border-color .12s ease,box-shadow .12s ease;
+}
+.ews-app .ews-btn:hover{filter:none}
+.ews-app .ews-btn:focus-visible{outline:0;box-shadow:var(--ews-ui-focus)}
+.ews-app .ews-card{border-radius:var(--ews-ui-radius-lg);box-shadow:0 1px 2px rgba(16,24,40,.03)}
+.ews-app .ews-form input,.ews-app .ews-form select,.ews-app .ews-form textarea{
+  min-height:38px;border-radius:var(--ews-ui-radius-sm);transition:border-color .12s ease,box-shadow .12s ease;
+}
+.ews-app .ews-form input:focus,.ews-app .ews-form select:focus,.ews-app .ews-form textarea:focus{outline:0;border-color:var(--ews-ui-primary);box-shadow:var(--ews-ui-focus)}
+
+/* Admin foundation: scoped to Workforce One screens only. */
+body.toplevel_page_ews31 #wpbody-content > .wrap,
+body[class*="_page_ews31-"] #wpbody-content > .wrap{
+  color:var(--ews-ui-ink);max-width:1320px;
+}
+body.toplevel_page_ews31 #wpbody-content > .wrap > h1,
+body[class*="_page_ews31-"] #wpbody-content > .wrap > h1{
+  margin:0 0 6px;font-size:24px;line-height:32px;font-weight:700;color:#101828;letter-spacing:-.01em;
+}
+body.toplevel_page_ews31 #wpbody-content > .wrap > h1 + p,
+body[class*="_page_ews31-"] #wpbody-content > .wrap > h1 + p{
+  color:var(--ews-ui-muted);font-size:13px;line-height:20px;
+}
+body.toplevel_page_ews31 #wpbody-content .button,
+body[class*="_page_ews31-"] #wpbody-content .button{
+  min-height:36px;padding:7px 12px;border-radius:var(--ews-ui-radius-sm);line-height:20px;font-weight:600;
+  border-color:#d0d5dd;box-shadow:none;transition:background-color .12s ease,border-color .12s ease,box-shadow .12s ease;
+}
+body.toplevel_page_ews31 #wpbody-content .button:hover,
+body[class*="_page_ews31-"] #wpbody-content .button:hover{border-color:#98a2b3;background:#f8fafc}
+body.toplevel_page_ews31 #wpbody-content .button:focus,
+body[class*="_page_ews31-"] #wpbody-content .button:focus{box-shadow:var(--ews-ui-focus);outline:0}
+body.toplevel_page_ews31 #wpbody-content .button-primary,
+body[class*="_page_ews31-"] #wpbody-content .button-primary{
+  background:var(--ews-ui-primary);border-color:var(--ews-ui-primary);color:#fff;text-shadow:none;
+}
+body.toplevel_page_ews31 #wpbody-content .button-primary:hover,
+body[class*="_page_ews31-"] #wpbody-content .button-primary:hover{background:var(--ews-ui-primary-hover);border-color:var(--ews-ui-primary-hover);color:#fff}
+body.toplevel_page_ews31 #wpbody-content input[type=text],
+body.toplevel_page_ews31 #wpbody-content input[type=email],
+body.toplevel_page_ews31 #wpbody-content input[type=number],
+body.toplevel_page_ews31 #wpbody-content input[type=password],
+body.toplevel_page_ews31 #wpbody-content input[type=url],
+body.toplevel_page_ews31 #wpbody-content input[type=date],
+body.toplevel_page_ews31 #wpbody-content input[type=datetime-local],
+body.toplevel_page_ews31 #wpbody-content select,
+body.toplevel_page_ews31 #wpbody-content textarea,
+body[class*="_page_ews31-"] #wpbody-content input[type=text],
+body[class*="_page_ews31-"] #wpbody-content input[type=email],
+body[class*="_page_ews31-"] #wpbody-content input[type=number],
+body[class*="_page_ews31-"] #wpbody-content input[type=password],
+body[class*="_page_ews31-"] #wpbody-content input[type=url],
+body[class*="_page_ews31-"] #wpbody-content input[type=date],
+body[class*="_page_ews31-"] #wpbody-content input[type=datetime-local],
+body[class*="_page_ews31-"] #wpbody-content select,
+body[class*="_page_ews31-"] #wpbody-content textarea{
+  min-height:38px;border:1px solid #d0d5dd;border-radius:var(--ews-ui-radius-sm);box-shadow:none;color:#101828;
+  transition:border-color .12s ease,box-shadow .12s ease;
+}
+body.toplevel_page_ews31 #wpbody-content textarea,
+body[class*="_page_ews31-"] #wpbody-content textarea{min-height:90px}
+body.toplevel_page_ews31 #wpbody-content input:focus,
+body.toplevel_page_ews31 #wpbody-content select:focus,
+body.toplevel_page_ews31 #wpbody-content textarea:focus,
+body[class*="_page_ews31-"] #wpbody-content input:focus,
+body[class*="_page_ews31-"] #wpbody-content select:focus,
+body[class*="_page_ews31-"] #wpbody-content textarea:focus{
+  border-color:var(--ews-ui-primary);box-shadow:var(--ews-ui-focus);outline:0;
+}
+body.toplevel_page_ews31 #wpbody-content table.widefat,
+body[class*="_page_ews31-"] #wpbody-content table.widefat{
+  border:1px solid var(--ews-ui-line);border-radius:var(--ews-ui-radius-lg);overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.03);
+}
+body.toplevel_page_ews31 #wpbody-content table.widefat thead th,
+body[class*="_page_ews31-"] #wpbody-content table.widefat thead th{
+  background:#f8fafc;color:#475467;font-size:12px;font-weight:600;padding:11px 12px;border-bottom:1px solid var(--ews-ui-line);
+}
+body.toplevel_page_ews31 #wpbody-content table.widefat tbody td,
+body[class*="_page_ews31-"] #wpbody-content table.widefat tbody td{padding:11px 12px;vertical-align:middle;border-bottom-color:#eef0f3}
+body.toplevel_page_ews31 #wpbody-content table.widefat tbody tr:last-child td,
+body[class*="_page_ews31-"] #wpbody-content table.widefat tbody tr:last-child td{border-bottom:0}
+body.toplevel_page_ews31 #wpbody-content table.widefat tbody tr:hover,
+body[class*="_page_ews31-"] #wpbody-content table.widefat tbody tr:hover{background:#fbfcfe}
+body.toplevel_page_ews31 #wpbody-content .notice,
+body[class*="_page_ews31-"] #wpbody-content .notice{border-radius:var(--ews-ui-radius-md);box-shadow:0 1px 2px rgba(16,24,40,.02)}
+
+@media (max-width:782px){
+  body.toplevel_page_ews31 #wpbody-content > .wrap,
+  body[class*="_page_ews31-"] #wpbody-content > .wrap{margin-left:12px;margin-right:12px}
+  body.toplevel_page_ews31 #wpbody-content > .wrap > h1,
+  body[class*="_page_ews31-"] #wpbody-content > .wrap > h1{font-size:21px;line-height:28px}
+}
+
+/* Phase 2 — Admin UI Refinement / Batch 1: Core Admin
+ * Visual-only selectors for Employees, Departments, Teams and Work Locations.
+ * Intentionally no markup, data, workflow or JavaScript changes.
+ */
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form,
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child,
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > div[style*="background:#fff"]{
+  background:var(--ews-ui-surface)!important;
+  border:1px solid var(--ews-ui-line)!important;
+  border-radius:var(--ews-ui-radius-lg)!important;
+  box-shadow:0 1px 2px rgba(16,24,40,.03)!important;
+  box-sizing:border-box;
+}
+
+/* Core form cards */
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form,
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child,
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > div[style*="background:#fff"]{
+  padding:24px!important;
+}
+
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form p,
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] p,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] p,
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > div[style*="background:#fff"] p{
+  margin:0 0 14px;
+}
+
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form p:last-child,
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] p:last-child,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] p:last-child,
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > div[style*="background:#fff"] p:last-child{
+  margin-bottom:0;
+}
+
+/* Form labels and helper text */
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form label,
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] label,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] label,
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap label{
+  color:#344054;
+}
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form small,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap .description,
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap .description{
+  color:var(--ews-ui-muted);
+}
+
+/* Employees: dense management table stays usable without changing its data model. */
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat{
+  margin-top:12px;
+  min-width:1180px;
+}
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat input[type=text],
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat input[type=email],
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat select{
+  width:100%;
+  min-width:110px;
+  box-sizing:border-box;
+}
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat select[multiple]{min-width:150px}
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat td{
+  padding:10px 9px;
+}
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat td:last-child{
+  white-space:nowrap;
+}
+body[class*="_page_ews31-employees"] #wpbody-content > .wrap > table.widefat tr[style*="opacity"]{background:#fafafa}
+
+/* Departments / Teams two-column workspace */
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"],
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"]{
+  gap:24px!important;
+}
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] > div,
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] > div{
+  min-width:0;
+}
+body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] > div:nth-child(2),
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] > div:nth-child(2){
+  overflow:hidden;
+}
+body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child > form > div[style*="max-height"]{
+  background:#f8fafc!important;
+  border:1px solid var(--ews-ui-line)!important;
+  border-radius:var(--ews-ui-radius-md);
+}
+body[class*="_page_ews31-departments"] #wpbody-content h2,
+body[class*="_page_ews31-teams"] #wpbody-content h2,
+body[class*="_page_ews31-multi-locations"] #wpbody-content h2{
+  color:#101828;
+  font-size:17px;
+  line-height:24px;
+}
+
+/* Work Locations: separate the location editor from the two operational tables. */
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > table.widefat{
+  margin-top:10px;
+}
+body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > h2{
+  margin-top:28px!important;
+  margin-bottom:10px;
+}
+body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table th{
+  color:#344054;
+  font-weight:600;
+  width:180px;
+}
+body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table td{
+  padding:12px 10px;
+}
+body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table tr:first-child th,
+body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table tr:first-child td{
+  padding-top:4px;
+}
+
+/* Core admin tables: keep actions visually secondary and statuses readable. */
+body[class*="_page_ews31-departments"] #wpbody-content table.widefat .button,
+body[class*="_page_ews31-teams"] #wpbody-content table.widefat .button,
+body[class*="_page_ews31-multi-locations"] #wpbody-content table.widefat .button{
+  min-height:32px;
+  padding:5px 10px;
+  font-size:12px;
+}
+
+@media(max-width:900px){
+  body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"],
+  body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"]{
+    grid-template-columns:1fr!important;
+  }
+}
+@media(max-width:782px){
+  body[class*="_page_ews31-employees"] #wpbody-content > .wrap > form,
+  body[class*="_page_ews31-departments"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child,
+  body[class*="_page_ews31-teams"] #wpbody-content > .wrap > div[style*="display:grid"] > div:first-child,
+  body[class*="_page_ews31-multi-locations"] #wpbody-content > .wrap > div[style*="background:#fff"]{
+    padding:18px!important;
+  }
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table,
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table tbody,
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table tr,
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table th,
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table td{display:block;width:auto}
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table th{padding:10px 0 4px}
+  body[class*="_page_ews31-multi-locations"] #wpbody-content .form-table td{padding:0 0 8px}
+}

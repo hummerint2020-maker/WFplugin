@@ -2,11 +2,16 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.28.2
+ * Version: 3.29.0
  * Author: Internal
+ * Text Domain: workforce-one
+ * Domain Path: /languages
+ * Requires at least: 6.0
+ * Requires PHP: 7.2.5
+ * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.28.2');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.29.0');
 
 if (version_compare(PHP_VERSION, '7.2.5', '<')) {
     add_action('admin_notices', function () {
@@ -54,6 +59,7 @@ class EWS_Manager_V31_1 {
                SHOW COLUMNS/dbDelta checks on every front-end page request, which
                made navigation unnecessarily slow. */
             $this->maybe_upgrade_schema();
+            add_action('init',[$this,'load_textdomain'],1);
             add_shortcode('employee_app',[$this,'app']);
             add_action('rest_api_init',[$this,'face_rest_routes']);
             add_shortcode('employee_login',[$this,'login_page']);
@@ -176,6 +182,10 @@ class EWS_Manager_V31_1 {
             if(wp_next_scheduled('ews_auto_attendance_tick')===false) $this->auto_attendance_schedule();
             $this->privacy_schedule();
             if(wp_next_scheduled('ews_smart_nudges_tick')===false) wp_schedule_event(time()+120,'ews_auto_five_minutes','ews_smart_nudges_tick');
+        }
+
+    public function load_textdomain(){
+            load_plugin_textdomain('workforce-one',false,dirname(plugin_basename(__FILE__)).'/languages');
         }
 
     static function activate(){

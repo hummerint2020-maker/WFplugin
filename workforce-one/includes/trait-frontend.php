@@ -10,18 +10,18 @@ trait EWS_Frontend_Trait {
         register_rest_route('workforce-one/v1','/face/delete',array('methods'=>'POST','callback'=>array($this,'face_rest_delete'),'permission_callback'=>function(){return is_user_logged_in();}));
     }
     public function face_rest_enroll($request){
-        $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee','Employee account not found',array('status'=>403));
+        $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
         $p=$request->get_json_params(); $tpl=isset($p['template'])&&is_array($p['template'])?$p['template']:array();
-        if(count($tpl)<64)return new WP_Error('invalid_template','Invalid face template',array('status'=>400));
+        if(count($tpl)<64)return new WP_Error('invalid_template',__('Invalid face template','workforce-one'),array('status'=>400));
         // An existing enrollment can only be replaced through the admin-approved reset workflow.
-        if($this->face_template_for_employee($emp->id))return new WP_Error('already_enrolled','A face is already enrolled. Request a reset to enroll again.',array('status'=>409));
-        return $this->face_save_template($emp->id,$tpl)?array('ok'=>true):new WP_Error('save_failed','Could not save face template',array('status'=>500));
+        if($this->face_template_for_employee($emp->id))return new WP_Error('already_enrolled',__('A face is already enrolled. Request a reset to enroll again.','workforce-one'),array('status'=>409));
+        return $this->face_save_template($emp->id,$tpl)?array('ok'=>true):new WP_Error('save_failed',__('Could not save face template','workforce-one'),array('status'=>500));
     }
     public function face_rest_verify($request){
-        $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee','Employee account not found',array('status'=>403));
+        $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
         $p=$request->get_json_params(); $tpl=isset($p['template'])&&is_array($p['template'])?$p['template']:array();
-        $stored=$this->face_template_for_employee($emp->id); if(!$stored)return new WP_Error('not_enrolled','No face enrolled for this employee',array('status'=>404));
-        if(count($tpl)!==count($stored))return new WP_Error('invalid_template','Template size mismatch',array('status'=>400));
+        $stored=$this->face_template_for_employee($emp->id); if(!$stored)return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));
+        if(count($tpl)!==count($stored))return new WP_Error('invalid_template',__('Template size mismatch','workforce-one'),array('status'=>400));
         $sum=0;foreach($tpl as $i=>$v){$d=(float)$v-(float)$stored[$i];$sum+=$d*$d;}
         $distance=sqrt($sum);$threshold=(float)$this->face_signin_setting('face_match_threshold',.60);
         $ok=$distance<$threshold;
@@ -31,18 +31,18 @@ trait EWS_Frontend_Trait {
     }
     public function face_rest_reset_request($request){
         $emp=$this->current_employee();
-        if(!$emp)return new WP_Error('no_employee','Employee account not found',array('status'=>403));
-        if(!$this->face_template_for_employee($emp->id))return new WP_Error('not_enrolled','No face is currently enrolled.',array('status'=>404));
+        if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
+        if(!$this->face_template_for_employee($emp->id))return new WP_Error('not_enrolled',__('No face is currently enrolled.','workforce-one'),array('status'=>404));
         if($this->face_reset_requested($emp->id))return array('ok'=>true,'already_requested'=>true);
         $ok=$this->face_request_reset($emp->id,get_current_user_id());
-        if(!$ok)return new WP_Error('request_failed','Could not submit the face reset request.',array('status'=>500));
+        if(!$ok)return new WP_Error('request_failed',__('Could not submit the face reset request.','workforce-one'),array('status'=>500));
         return array('ok'=>true,'requested'=>true);
     }
 
     public function face_rest_delete($request){
         $p=$request->get_json_params();$id=absint($p['employee_id']??0);$emp=$this->current_employee();
         // Employees must not be able to delete their own enrollment: that would bypass the reset approval workflow.
-        if(!$id||!$this->can('ews_manage_employees'))return new WP_Error('forbidden','You cannot remove this face profile',array('status'=>403));
+        if(!$id||!$this->can('ews_manage_employees'))return new WP_Error('forbidden',__('You cannot remove this face profile','workforce-one'),array('status'=>403));
         return array('ok'=>$this->face_delete_template($id));
     }
 
@@ -186,6 +186,8 @@ trait EWS_Frontend_Trait {
             $root=plugin_dir_url(dirname(__DIR__) . '/employee-schedule-manager.php');
             $ver=defined('EWS_VERSION') ? EWS_VERSION : '3.22.81';
             wp_enqueue_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
+            // assets/css/*-rtl.css are generated with rtlcss from the LTR files (see assets/css/README.md).
+            wp_style_add_data('workforce-one', 'rtl', 'replace');
             wp_enqueue_script('workforce-one', $root.'assets/js/workforce-one.js', [], $ver, true);
             wp_add_inline_script('workforce-one','window.ewsConfirmationConfig='.wp_json_encode($this->frontend_confirmation_config()).';','before');
         }
