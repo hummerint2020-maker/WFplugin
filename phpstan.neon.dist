@@ -8,6 +8,7 @@ parameters:
         - workforce-one/assets
     bootstrapFiles:
         - tests/phpstan-bootstrap.php
+    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # ABSPATH is only known at runtime.
         - identifier: requireOnce.fileNotFound

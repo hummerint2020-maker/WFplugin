@@ -261,7 +261,7 @@ register_deactivation_hook(__FILE__, ['EWS_Manager_V31_1','deactivate']);
  * Do not construct the plugin object during the WordPress plugin-activation
  * request. The activation callback is static and does not need the object.
  */
-$ews_activation_request=(defined('WP_ADMIN') && WP_ADMIN && isset($_REQUEST['action']) && in_array($_REQUEST['action'],['activate','activate-plugin'],true));
+$ews_activation_request=(is_admin() && isset($_REQUEST['action']) && in_array($_REQUEST['action'],['activate','activate-plugin'],true));
 if(!$ews_activation_request){
     new EWS_Manager_V31_1();
 }

@@ -413,7 +413,7 @@ trait EWS_Reports_Trait {
         $maxCols=$type==='attendance'?max(12,count($headers)):max(10,count($headers));
         $lastCol=$this->report_xlsx_col($maxCols);
 
-        $esc=$this->report_xlsx_escape(...);
+        $esc=function($v){return $this->report_xlsx_escape($v);};
         $cell=function($value,$row,$col,$style=0,$numeric=false) use ($esc){
             $ref=$this->report_xlsx_col($col).$row;
             if($numeric && $value!=='' && is_numeric($value)) return '<c r="'.$ref.'" s="'.$style.'"><v>'.(0+$value).'</v></c>';

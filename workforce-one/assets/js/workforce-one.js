@@ -1,4 +1,8 @@
 (function(){
+/* Translations come from wp.i18n (languages/workforce-one-<locale>-<hash>.json). */
+var ewsI18n=(window.wp&&window.wp.i18n)?window.wp.i18n:{__:function(s){return s;},sprintf:function(f){var a=[].slice.call(arguments,1),i=0;return f.replace(/%%|%(\d+\$)?[sd]/g,function(m,n){return m==='%%'?'%':a[n?parseInt(n,10)-1:i++];});}};
+var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
+(function(){
     function initEwsSubmitGuard(){
         document.querySelectorAll("form").forEach(function(form){
             if(form.dataset.ewsSubmitGuard==="1") return;
@@ -169,9 +173,9 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
               function profile(){return serverEnrolled?{template:true,samples:SAMPLE_COUNT}:null;}
               function refreshState(){
                 var p=profile();
-                if(state)state.textContent=p&&p.template?'Enrolled ('+p.samples+' samples)':'Not enrolled';
+                if(state)state.textContent=p&&p.template?ewsSprintf(/* translators: %d: number of samples */__('Enrolled (%d samples)','workforce-one'),p.samples):__('Not enrolled','workforce-one');
                 var open=module.querySelector('#ews-face-open'),enrollBtn=module.querySelector('#ews-face-enroll'),resetBtn=module.querySelector('#ews-face-reset');
-                if(open)open.textContent='📷 '+(p&&p.template?'Verify Face':'Set Up / Verify Face');
+                if(open)open.textContent='📷 '+(p&&p.template?__('Verify Face','workforce-one'):__('Set Up / Verify Face','workforce-one'));
                 if(enrollBtn)enrollBtn.style.display=p&&p.template?'none':'';
                 if(resetBtn)resetBtn.style.display=p&&p.template?'':'none';
               }
@@ -182,12 +186,12 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 if(window.faceapi)return;
                 await new Promise(function(resolve,reject){var s=document.createElement('script');
                   s.src=vendorBase+'face-api-0.22.2.min.js';
-                  s.onload=resolve;s.onerror=function(){reject(new Error('Could not load face-api.js.'));};document.head.appendChild(s);});
+                  s.onload=resolve;s.onerror=function(){reject(new Error(__('Could not load face-api.js.','workforce-one')));};document.head.appendChild(s);});
                 var base=vendorBase+'models';
                 await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(base),faceapi.nets.faceLandmark68Net.loadFromUri(base),faceapi.nets.faceRecognitionNet.loadFromUri(base)]);
               }
               async function startCamera(){
-                if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('Camera is not supported by this browser.');
+                if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error(__('Camera is not supported by this browser.','workforce-one'));
                 if(stream)return;
                 stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
                 video.srcObject=stream;await video.play();
@@ -197,8 +201,8 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
               async function detect(){
                 var r=await faceapi.detectAllFaces(video,new faceapi.TinyFaceDetectorOptions({inputSize:parseInt(faceCfg.detector_input_size,10)||320,scoreThreshold:parseFloat(faceCfg.detector_score_threshold)||.35}))
                   .withFaceLandmarks().withFaceDescriptors();
-                if(r.length===0)throw new Error('No face detected. Center your face and try again.');
-                if(r.length>1)throw new Error('More than one face detected. Only one person may be in the camera.');
+                if(r.length===0)throw new Error(__('No face detected. Center your face and try again.','workforce-one'));
+                if(r.length>1)throw new Error(__('More than one face detected. Only one person may be in the camera.','workforce-one'));
                 return r[0];
               }
               function eyeEAR(p,ids){
@@ -213,7 +217,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
               }
 
               async function calibratedLiveness(){
-                setStatus('Liveness calibration: keep your eyes open and look at the camera…');
+                setStatus(__('Liveness calibration: keep your eyes open and look at the camera…','workforce-one'));
                 var vals=[],nose0=null;
                 for(var i=0;i<(parseInt(faceCfg.baseline_samples,10)||15);i++){
                   var r=await detect(),m=metrics(r);vals.push(m.avg);
@@ -222,7 +226,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 }
                 vals.sort(function(a,b){return a-b;});
                 var baseline=vals[Math.floor(vals.length*.7)],threshold=baseline*(parseFloat(faceCfg.eye_drop_threshold)||.90);
-                setStatus('Liveness: blink once slowly…');
+                setStatus(__('Liveness: blink once slowly…','workforce-one'));
                 var blink=false,move=false,closedSince=null,closedMin=1,started=Date.now();
                 while(Date.now()-started<(parseInt(faceCfg.challenge_timeout_sec,10)||12)*1000){
                   var r=await detect(),m=metrics(r),e=m.avg;
@@ -236,30 +240,30 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                     closedSince=null;closedMin=1;
                   }
                   var pct=Math.max(0,Math.min(99,Math.round((1-e/baseline)*100)));
-                  setStatus('Liveness: '+(blink?'✓ blink':'blink once')+' · '+(move?'✓ movement':'gently move head')+' · eye change '+pct+'%');
-                  if(blink&&move){setStatus('✓ Liveness passed.');return true;}
+                  setStatus(ewsSprintf(/* translators: 1: blink state, 2: movement state, 3: eye change percentage */__('Liveness: %1$s · %2$s · eye change %3$s%%','workforce-one'),(blink?__('✓ blink','workforce-one'):__('blink once','workforce-one')),(move?__('✓ movement','workforce-one'):__('gently move head','workforce-one')),pct));
+                  if(blink&&move){setStatus(__('✓ Liveness passed.','workforce-one'));return true;}
                   await new Promise(function(x){setTimeout(x,(parseInt(faceCfg.sample_interval_ms,10)||100));});
                 }
-                if(!blink)throw new Error('Blink was not detected. Make one clear slow blink while looking at the camera.');
-                throw new Error('Blink detected. Gently move your head left or right and try again.');
+                if(!blink)throw new Error(__('Blink was not detected. Make one clear slow blink while looking at the camera.','workforce-one'));
+                throw new Error(__('Blink detected. Gently move your head left or right and try again.','workforce-one'));
               }
 
               async function enroll(){
-                if(serverEnrolled){setStatus('A face is already enrolled. Verify it or clear the existing enrollment first.');return;}
-                if(busy||!ready)return;busy=true;setStatus('Enrollment: sample 1 of '+SAMPLE_COUNT);
+                if(serverEnrolled){setStatus(__('A face is already enrolled. Verify it or clear the existing enrollment first.','workforce-one'));return;}
+                if(busy||!ready)return;busy=true;setStatus(ewsSprintf(/* translators: %d: total samples */__('Enrollment: sample 1 of %d','workforce-one'),SAMPLE_COUNT));
                 try{
                   var ds=[];
                   for(var i=0;i<SAMPLE_COUNT;i++){var r=await detect();ds.push(Array.from(r.descriptor));
-                    if(i<SAMPLE_COUNT-1){setStatus('Enrollment: sample '+(i+1)+' captured. Slightly change your angle…');await new Promise(function(x){setTimeout(x,(parseInt(faceCfg.enrollment_interval_ms,10)||650));});}}
+                    if(i<SAMPLE_COUNT-1){setStatus(ewsSprintf(/* translators: %d: sample number */__('Enrollment: sample %d captured. Slightly change your angle…','workforce-one'),i+1));await new Promise(function(x){setTimeout(x,(parseInt(faceCfg.enrollment_interval_ms,10)||650));});}}
                   var save=await fetch(apiBase+'face/enroll',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:avg(ds)})});
                   var sj=await save.json();if(!save.ok||!sj.ok)throw new Error(sj.message||'Could not save face enrollment.');
-                  serverEnrolled=true;refreshState();setStatus('✓ Face enrollment saved to Workforce One.');
+                  serverEnrolled=true;refreshState();setStatus(__('✓ Face enrollment saved to Workforce One.','workforce-one'));
                 }catch(e){setStatus(e.message||'Enrollment failed.');}finally{busy=false;}
               }
 
               async function verify(){
                 if(busy||!ready)return;
-                var p=profile();if(!p||!p.template){setStatus('No face is enrolled. Press Enroll Face first.');return;}
+                var p=profile();if(!p||!p.template){setStatus(__('No face is enrolled. Press Enroll Face first.','workforce-one'));return;}
                 busy=true;
                 try{
                   await calibratedLiveness();
@@ -268,7 +272,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                   var vj=await vr.json();if(!vr.ok)throw new Error(vj.message||'Face verification failed.');
                   var d=parseFloat(vj.distance||99);
                   if(vj.ok){
-                    setStatus('✓ Face verified.');
+                    setStatus(__('✓ Face verified.','workforce-one'));
                     if(pendingForm){
                       var hidden=pendingForm.querySelector('input[name="face_verified"]');
                       if(hidden)hidden.value='1';
@@ -279,26 +283,26 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                       var f=pendingForm;pendingForm=null;
                       setTimeout(function(){if(f&&f.submit)f.submit();},250);
                     }
-                  }else{pendingForm=null;setStatus('✕ Face did not match — distance '+d.toFixed(3)+'.');}
+                  }else{pendingForm=null;setStatus(ewsSprintf(/* translators: %s: match distance */__('✕ Face did not match — distance %s.','workforce-one'),d.toFixed(3)));}
                 }catch(e){setStatus(e.message||'Verification failed.');}
                 finally{busy=false;}
               }
 
               async function openModal(){
-                modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');setStatus('Loading face model…');
+                modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');setStatus(__('Loading face model…','workforce-one'));
                 try{await loadModels();ready=true;await startCamera();setStatus(profile()?'Ready. Verify your enrolled face.':'Ready. Enroll your face first.');}
                 catch(e){setStatus(e.message||'Unable to initialize camera.');}
               }
               function closeModal(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true');stopCamera();busy=false;pendingForm=null;}
               async function requestReset(){
                 if(busy)return;
-                if(!serverEnrolled){setStatus('No face enrollment to reset.');return;}
-                if(!confirm('Request a face reset? Your current enrollment will remain active until an administrator approves the reset.'))return;
-                busy=true;setStatus('Submitting face reset request…');
+                if(!serverEnrolled){setStatus(__('No face enrollment to reset.','workforce-one'));return;}
+                if(!confirm(__('Request a face reset? Your current enrollment will remain active until an administrator approves the reset.','workforce-one')))return;
+                busy=true;setStatus(__('Submitting face reset request…','workforce-one'));
                 try{
                   var rr=await fetch(apiBase+'face/reset-request',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:'{}'});
                   var jj=await rr.json();if(!rr.ok||!jj.ok)throw new Error(jj.message||'Could not submit reset request.');
-                  setStatus('✓ Reset request submitted. Your current face enrollment is still active.');
+                  setStatus(__('✓ Reset request submitted. Your current face enrollment is still active.','workforce-one'));
                 }catch(e){setStatus(e.message||'Could not submit reset request.');}
                 finally{busy=false;}
               }
@@ -354,10 +358,10 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 var original=link.innerHTML;
                 link.setAttribute('aria-busy','true');
                 link.classList.add('is-loading');
-                link.innerHTML='↻ &nbsp;Preparing CSV…';
+                link.innerHTML='↻ &nbsp;'+__('Preparing CSV…','workforce-one');
                 try{
                     var response=await fetch(link.href,{method:'GET',credentials:'same-origin',cache:'no-store'});
-                    if(!response.ok) throw new Error('Could not generate the CSV report.');
+                    if(!response.ok) throw new Error(__('Could not generate the CSV report.','workforce-one'));
                     var blob=await response.blob();
                     var disposition=response.headers.get('Content-Disposition')||'';
                     var match=disposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
@@ -413,10 +417,10 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 var original=link.innerHTML;
                 link.setAttribute('aria-busy','true');
                 link.classList.add('is-loading');
-                link.innerHTML='↻ &nbsp;Preparing Excel…';
+                link.innerHTML='↻ &nbsp;'+__('Preparing Excel…','workforce-one');
                 try{
                     var response=await fetch(link.href,{method:'GET',credentials:'same-origin',cache:'no-store'});
-                    if(!response.ok) throw new Error('Could not generate the Excel report.');
+                    if(!response.ok) throw new Error(__('Could not generate the Excel report.','workforce-one'));
                     var blob=await response.blob();
                     var disposition=response.headers.get('Content-Disposition')||'';
                     var match=disposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
@@ -447,4 +451,5 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEwsReportXlsxExport);
     else initEwsReportXlsxExport();
+})();
 })();
