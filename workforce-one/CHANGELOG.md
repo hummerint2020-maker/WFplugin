@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.31.0
+- Internal refactor of the Sign In / Sign Out module (rules in `src/`, page template in
+  `templates/app/time.php`, page JavaScript in `assets/js/time.js`). No behaviour change.
+- Version bump so browsers load the new CSS/JS instead of cached copies.
+
 ## 3.30.0
 ### Fixed (all present in 3.28.0)
 - The plugin did not load at all on PHP 7.4–8.0 (PHP 8.1-only syntax in the Excel report).
