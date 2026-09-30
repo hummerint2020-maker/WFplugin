@@ -42,6 +42,8 @@ jobs:
         run: vendor/bin/phpcs --standard=phpcs.xml.dist
       - name: Unit tests
         run: vendor/bin/phpunit
+      - name: Translations complete
+        run: python3 tests/check_translations.py
 
   e2e:
     name: WordPress + MySQL e2e

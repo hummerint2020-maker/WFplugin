@@ -1260,6 +1260,24 @@ function current_employee(){
 
     private function time_event_label($type){return $type==='sign_out'?'Sign Out':'Sign In';}
 
+    /** URL of a file inside the plugin, e.g. plugin_url('assets/js/time.js'). Safe to call from templates. */
+    private function plugin_url($path=''){
+            return plugin_dir_url(dirname(__DIR__).'/employee-schedule-manager.php').ltrim($path,'/');
+        }
+
+    /**
+     * Render templates/<name>.php with $vars as local variables and return the HTML.
+     * Templates run inside this object, so they can call its helpers via $this.
+     */
+    private function render_template($name,array $vars=[]){
+            $file=dirname(__DIR__).'/templates/'.$name.'.php';
+            if(!is_file($file))return '';
+            extract($vars,EXTR_SKIP);
+            ob_start();
+            include $file;
+            return ob_get_clean();
+        }
+
     private function location_distance_meters($lat1,$lon1,$lat2,$lon2){
             return \WorkforceOne\Support\Geo::distanceMeters($lat1,$lon1,$lat2,$lon2);
         }
