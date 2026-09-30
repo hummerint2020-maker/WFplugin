@@ -8,6 +8,20 @@ trait EWS_Attendance_Trait {
             $type=sanitize_key($_POST['event_type']??'');
             if(!in_array($type,['sign_in','sign_out'],true))wp_die('Invalid event.');
             check_admin_referer('ews_time_event_'.$type);
+            $this->record_time_event($type,['face_ok'=>$this->face_consume_token(wp_unslash($_POST['face_token']??''))]);
+        }
+
+    /*
+     * Shared Sign In / Sign Out recorder. Callers are responsible for their own
+     * nonce check. $ctx:
+     *   face_ok     bool  A server-issued face token was consumed for this request.
+     *   qr_kiosk    obj   Kiosk row validated from a dynamic QR (QR Sign-In only).
+     *   qr_location obj   Work location of that kiosk; the employee's own GPS must be inside it.
+     */
+    private function record_time_event($type,$ctx=[]){
+            $face_ok=!empty($ctx['face_ok']);
+            $qr_kiosk=$ctx['qr_kiosk']??null;
+            $qr_location=$ctx['qr_location']??null;
             $emp=$this->current_employee();
             if($emp && !$this->employee_attendance_enabled((int)$emp->id)){ $this->redirect(['ews_view'=>'time','time_error'=>rawurlencode('Attendance tracking is disabled for your employee profile.')]);return; }
             $sch=$emp?$this->today_schedule_for_employee($emp->id):null;$ev=$emp?$this->today_events($emp->id):[];
@@ -16,7 +30,7 @@ trait EWS_Attendance_Trait {
             $requires_sign_in=$sch?$this->schedule_type_requires_sign_in($sch->status):false;
             $requires_location=$sch?$this->schedule_type_requires_location($sch->status):false;
             $msg='';
-            if(!$msg && $this->face_signin_enabled() && $type==='sign_in' && (($_POST['face_verified']??'')!=='1'))$msg='Face verification is required before Sign In. Please complete Face Verification and try again.';
+            if(!$msg && $this->face_signin_enabled() && $type==='sign_in' && !$face_ok)$msg='Face verification is required before Sign In. Please complete Face Verification and try again.';
             if(!$emp)$msg='Your WordPress account is not linked to an active employee.';
             elseif($is_general_leave)$msg='Today is a General Leave day. Sign In is not required.';
             elseif(!$sch||!$requires_sign_in)$msg='Today is not a working day for you.';
@@ -56,12 +70,21 @@ trait EWS_Attendance_Trait {
             $distance=$this->location_distance_meters($lat,$lng,$configured_lat,$configured_lng);
             $radius=$assigned_location_v321?(float)$assigned_location_v321->radius:(float)get_option('ews_location_radius',200);
             if($distance!==null&&$configured_lat!==''&&$configured_lng!=='')$location_status=$distance<=$radius?'inside':'outside';
+            if($qr_location){
+                // A QR can be photographed and forwarded, so QR Sign-In additionally requires the
+                // employee's own device location to be inside the kiosk's work location.
+                $qr_distance=$this->location_distance_meters($lat,$lng,$qr_location->latitude,$qr_location->longitude);
+                $qr_radius=(float)($qr_location->radius?:200);
+                if(!is_numeric($qr_location->latitude)||!is_numeric($qr_location->longitude)){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode('This Kiosk location has no coordinates configured. Please contact your administrator.')]);return;}
+                if($qr_distance===null||$integrity_reason==='stale_timestamp'){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode('Location access is required for QR Sign In. Please allow Location Services and try again.')]);return;}
+                if($integrity_status==='suspicious'||$qr_distance>$qr_radius){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode('You must be at '.$qr_location->name.' to use QR Sign In. Distance: '.$this->format_distance($qr_distance))]);return;}
+            }
             if($type!=='sign_out'&&$requires_location&&$assigned_location_v321&&$assigned_location_v321->enforcement&&$location_status!=='inside'){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode('You are outside your assigned work location. Distance: '.$this->format_distance($distance))]);return;}
             $inserted=$wpdb->insert($this->time_logs,['employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>current_time('Y-m-d'),'event_type'=>$type,'event_at'=>$now,'scheduled_status'=>$sch->status,'ip_address'=>isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance,'location_timestamp'=>$location_timestamp,'integrity_status'=>$integrity_status,'integrity_reason'=>$integrity_reason,'created_at'=>$now]);
             if($inserted===false){$detail=$wpdb->last_error?$wpdb->last_error:'Database insert failed.';$this->audit('time_'.$type.'_failed','time_log',0,$emp->name.' / '.$detail);$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode('Unable to record '.$this->time_event_label($type).'. Please contact the administrator.')]);return;}
             $classification=$type==='sign_in'?$this->sign_in_classification($now,$emp?$emp->id:0):'';
             if($type==='sign_out' && $emp){ $this->achievement_evaluate_attendance((int)$emp->id,current_time('Y-m-d')); }
-            $this->audit('time_'.$type,'time_log',$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$now.' / '.$classification.' / face_verified='.((($_POST['face_verified']??'')==='1')?'yes':'no').' / source='.(($_POST['qr_verified']??'')==='1'?'qr_kiosk_'.absint($_POST['qr_kiosk_id']??0):'normal'));
+            $this->audit('time_'.$type,'time_log',$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$now.' / '.$classification.' / face_verified='.($face_ok?'yes':'no').' / source='.($qr_kiosk?'qr_kiosk_'.(int)$qr_kiosk->id:'normal'));
             $success=$type==='sign_in'&&$classification==='Late Arrival'?'Late Arrival recorded successfully.':$this->time_event_label($type).' recorded successfully.';
             $this->redirect(['ews_view'=>'time','time_success'=>rawurlencode($success)]);
         }

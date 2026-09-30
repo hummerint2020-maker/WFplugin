@@ -1096,7 +1096,7 @@ trait EWS_Admin_Trait {
 
         $presence_locations=[]; $presence_latest=null;
         if($this->presence_verification_enabled() && $this->can('ews_manage_attendance')){
-            global $wpdb; $this->ensure_presence_schema(); $presence_locations=$wpdb->get_results("SELECT id,name FROM {$this->locations} WHERE active=1 ORDER BY name ASC");
+            global $wpdb; $presence_locations=$wpdb->get_results("SELECT id,name FROM {$this->locations} WHERE active=1 ORDER BY name ASC");
             list(,$presence_vt)=$this->presence_tables();
             $presence_latest=$wpdb->get_results($wpdb->prepare("SELECT v.*,l.name location_name FROM $presence_vt v LEFT JOIN {$this->locations} l ON l.id=v.location_id WHERE v.employee_id=%d ORDER BY v.id DESC LIMIT 5",$employee_id));
         }

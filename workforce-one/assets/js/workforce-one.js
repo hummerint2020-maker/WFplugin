@@ -270,6 +270,10 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                     if(pendingForm){
                       var hidden=pendingForm.querySelector('input[name="face_verified"]');
                       if(hidden)hidden.value='1';
+                      // The server only trusts this single-use token, not face_verified.
+                      var tok=pendingForm.querySelector('input[name="face_token"]');
+                      if(!tok){tok=document.createElement('input');tok.type='hidden';tok.name='face_token';pendingForm.appendChild(tok);}
+                      tok.value=vj.face_token||'';
                       var f=pendingForm;pendingForm=null;
                       setTimeout(function(){if(f&&f.submit)f.submit();},250);
                     }

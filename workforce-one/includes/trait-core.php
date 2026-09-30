@@ -809,7 +809,7 @@ private function ensure_break_schema(){
         }
 
         private function maybe_upgrade_schema(){
-            $target='3.28.0';
+            $target='3.28.1';
             $done=get_option('ews_schema_version','');
             if($done===$target)return;
 
@@ -1651,6 +1651,28 @@ private function face_signin_enabled(){ return (bool)get_option('ews_feature_fac
         if($json===false) return false;
         $data=json_decode($json,true);
         return is_array($data)?array_values(array_map('floatval',$data)):false;
+    }
+
+    /* Face matching happens in /face/verify; a successful match issues a short-lived,
+       single-use token bound to the current user. Sign In trusts that token only,
+       never a client-supplied "face_verified" flag. */
+    private function face_issue_token(){
+        $uid=get_current_user_id();
+        if(!$uid)return '';
+        $token=wp_generate_password(40,false,false);
+        set_transient('ews_face_token_'.$uid,hash('sha256',$token),120);
+        return $token;
+    }
+
+    private function face_consume_token($token){
+        $uid=get_current_user_id();
+        $token=is_string($token)?trim($token):'';
+        if(!$uid||$token==='')return false;
+        $stored=get_transient('ews_face_token_'.$uid);
+        if(!is_string($stored)||$stored==='')return false;
+        if(!hash_equals($stored,hash('sha256',$token)))return false;
+        delete_transient('ews_face_token_'.$uid);
+        return true;
     }
 
     private function face_template_for_employee($employee_id){

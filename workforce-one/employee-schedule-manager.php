@@ -2,11 +2,11 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.28.0
+ * Version: 3.28.1
  * Author: Internal
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.28.0');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.28.1');
 
 if (version_compare(PHP_VERSION, '7.2.5', '<')) {
     add_action('admin_notices', function () {
@@ -235,8 +235,7 @@ class EWS_Manager_V31_1 {
             update_option('ews_vapid_public_key',$b64($public),false);
             update_option('ews_vapid_private_key',$private_pem,false);
             return true;
-                    update_option('ews_schema_version','3.13.8',false);
-}
+        }
 
     static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); }
 
