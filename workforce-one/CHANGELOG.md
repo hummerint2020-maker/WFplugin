@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.8
+### Fixed (wp-admin → Employees)
+- **Every check now runs before anything is saved.** Making an employee their own supervisor was
+  refused only after the other changes were already saved (and on Add, after the employee was
+  created).
+- **A WordPress user can be linked to one employee only.** Linking the same user to two
+  employees made it unclear who was signing in.
+- **A team manager cannot be moved out of their team's Department**, including to "No
+  Department". The check read the old department from a query that never selected it.
+- Two employees can no longer supervise each other, and an inactive employee cannot be chosen as
+  supervisor.
+- An employee whose default shift was deactivated keeps it when their row is saved (the
+  inactive shift is still listed for them).
+- Errors and confirmations are shown on the page instead of a blank error screen.
+- The page loads the WordPress user list once instead of once per employee.
+
+### Added
+- An **Archive** button per active employee (asks for confirmation when "Delete Employee"
+  confirmations are on).
+
+### Internal
+- Employees page moved to `includes/trait-employee-admin.php`, HTML to
+  `templates/admin/employees.php`, checks to `src/Employees/EmployeeRules.php` (unit tested).
+
 ## 3.31.7
 ### Fixed
 - **Apostrophes and quotes are saved as typed everywhere.** Text from forms (leave and overtime

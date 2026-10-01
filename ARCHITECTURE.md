@@ -3,7 +3,7 @@
 The plugin started as one class (`EWS_Manager_V31_1`) built from 19 traits in
 `workforce-one/includes/`, with HTML, CSS and JavaScript inside PHP strings. It is being
 moved, **one module at a time and without behaviour changes**, to the structure below.
-Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`, wp-admin Leaves page in `includes/trait-leave-admin.php`) and Overtime + Early Leave (`includes/trait-overtime.php`) Schedule Swaps (`includes/trait-swap.php`), Schedule Configuration (`includes/trait-schedule-config.php`), Feature Configuration (`includes/trait-features.php`), and the wp-admin request pages: Requests Hub (`includes/trait-admin-requests.php`) and Face Reset Requests (`includes/trait-face-reset.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
+Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`, wp-admin Leaves page in `includes/trait-leave-admin.php`) and Overtime + Early Leave (`includes/trait-overtime.php`) Schedule Swaps (`includes/trait-swap.php`), Schedule Configuration (`includes/trait-schedule-config.php`), Feature Configuration (`includes/trait-features.php`), Employees (`includes/trait-employee-admin.php`), and the wp-admin request pages: Requests Hub (`includes/trait-admin-requests.php`) and Face Reset Requests (`includes/trait-face-reset.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
 
 ```
 workforce-one/
@@ -16,6 +16,7 @@ workforce-one/
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, AdminRecordRules.php, Hooks.php
     Overtime/RequestRules.php, Hooks.php        EarlyLeave/RequestRules.php
     Schedule/SwapRules.php, Hooks.php, ConfigRules.php, ConfigHooks.php
+    Employees/EmployeeRules.php       add / update employee checks
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
     Requests/Hub.php, Hooks.php        presentation rules of the admin request pages
   includes/trait-*.php            legacy code; shrinks as modules move out
