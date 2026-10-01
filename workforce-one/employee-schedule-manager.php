@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.1
+ * Version: 3.31.2
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.1');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.2');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -24,6 +24,7 @@ require_once __DIR__ . '/src/autoload.php';
 require_once __DIR__ . '/includes/trait-core.php';
 require_once __DIR__ . '/includes/trait-attendance.php';
 require_once __DIR__ . '/includes/trait-leave.php';
+require_once __DIR__ . '/includes/trait-overtime.php';
 require_once __DIR__ . '/includes/trait-frontend.php';
 require_once __DIR__ . '/includes/trait-pwa.php';
 require_once __DIR__ . '/includes/trait-reports.php';
@@ -43,7 +44,7 @@ require_once __DIR__ . '/includes/trait-presence.php';
 require_once __DIR__ . '/includes/trait-privacy.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
+    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Overtime_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -121,8 +122,6 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_poll_archive',[$this,'poll_archive']);
             add_action('admin_post_ews_poll_vote',[$this,'poll_vote']);
             add_action('ews_smart_nudges_tick',[$this,'smart_nudges_cron']);
-            add_action('admin_post_ews_overtime_request_create',[$this,'overtime_request_create']);
-            add_action('admin_post_ews_overtime_request_respond',[$this,'overtime_request_respond']);
             add_action('admin_post_ews31_working_days_save',[$this,'working_days_save_handler']);
             add_action('admin_post_ews31_general_leave_save',[$this,'general_leave_save']);
             add_action('admin_post_ews31_general_leave_delete',[$this,'general_leave_delete']);
@@ -147,11 +146,10 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_swap_respond',[$this,'swap_request_respond']);
             add_action('admin_post_ews_swap_cancel',[$this,'swap_request_cancel']);
             \WorkforceOne\Leave\Hooks::register($this);
+            \WorkforceOne\Overtime\Hooks::register($this);
             add_action('admin_post_ews_leave_type_save',[$this,'admin_leave_type_save']);
             add_action('admin_post_ews_leave_balance_save',[$this,'admin_leave_balance_save']);
             add_action('admin_post_ews_admin_leave_record',[$this,'admin_admin_leave_record']);
-            add_action('admin_post_ews_early_leave_create',[$this,'early_leave_create']);
-            add_action('admin_post_ews_early_leave_respond',[$this,'early_leave_respond']);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
             add_action('admin_post_ews_task_delete',[$this,'task_delete']);

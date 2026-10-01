@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.2
+### Fixed
+- Leave decisions taken on the wp-admin **Requests** page now use the same rules as the employee
+  app: they are charged to the leave's year (the 3.31.1 fix did not apply on that page) and
+  cancellations restore balance and schedule through the same code.
+- Overtime overlap check compares times consistently (HH:MM:SS) on every database.
+
+### Internal
+- Overtime and Early Leave moved to `includes/trait-overtime.php` with rules in `src/Overtime`
+  and `src/EarlyLeave`; the admin Requests page reuses them. No behaviour change.
+
 ## 3.31.1
 ### Fixed
 - Leave is now charged to the balance of the **year the leave falls in**. Previously every
