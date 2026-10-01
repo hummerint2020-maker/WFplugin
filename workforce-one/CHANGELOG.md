@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.6
+### Fixed (wp-admin → Schedule Configuration)
+- **Working hours that end before they start are refused** unless "Allow Overnight Shift" is on
+  (e.g. 17:00 → 08:00 was accepted as a normal day). A refused change no longer saves the grace
+  period and overnight setting on its own.
+- **Shifts:** a shift that ends before it starts must be marked Overnight; two shifts cannot
+  share a name; and a new shift never reuses the id of a removed one (employees whose default
+  shift was removed were silently moved onto the next shift added).
+- **Schedule types:** Office, WFH and Vacation (which the plugin relies on) can no longer be
+  renamed or removed, and a type used in employee schedules can only be deactivated, not
+  renamed or removed (that left those days with an unknown type). Duplicate names are refused
+  instead of silently dropped.
+- **General Leave:** a second holiday on the same date is refused.
+- Every save now shows a confirmation or a clear error on the page instead of a blank error
+  screen; Working Days and Working Hours had no confirmation at all.
+
+### Internal
+- Schedule Configuration moved to `includes/trait-schedule-config.php`, HTML to
+  `templates/admin/schedule-config.php`, styles to `assets/css/admin-schedule-config.css` (+ RTL),
+  rules to `src/Schedule/ConfigRules.php` (unit tested), hooks to `src/Schedule/ConfigHooks.php`.
+
 ## 3.31.5
 ### Fixed (wp-admin → Leaves)
 - **Record Leave no longer eats other pending reservations.** Recording a leave subtracted its

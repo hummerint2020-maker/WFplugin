@@ -7,6 +7,10 @@ trait EWS_Admin_Trait {
         if(strpos((string)$hook_suffix, "page_ews31") === false && (string)$hook_suffix !== "toplevel_page_ews31") return;
         wp_enqueue_style('workforce-one-ui', plugin_dir_url(__FILE__) . '../assets/css/workforce-one-ui.css', [], EWS_VERSION);
         wp_style_add_data('workforce-one-ui', 'rtl', 'replace');
+        if(substr((string)$hook_suffix,-strlen('ews31-schedule-config'))==='ews31-schedule-config'){
+            wp_enqueue_style('workforce-one-admin-schedule-config', $this->plugin_url('assets/css/admin-schedule-config.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-schedule-config', 'rtl', 'replace');
+        }
     }
 
     public function admin_menu(){
@@ -1175,145 +1179,6 @@ trait EWS_Admin_Trait {
             echo '<div class="wrap"><h1>Reports</h1><p>Use <code>[employee_app]</code> → Reports for the frontend report interface.</p></div>';
         }
 
-    public function admin_schedule_config(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            $types=$this->schedule_types_config(false);
-            $events=$this->company_calendar_events(current_time('Y-m-d'),'2099-12-31');
-            $hours=$this->working_hours();
-            $shifts=$this->shifts();
-            $grace_period=max(0,min(180,(int)get_option('ews_grace_period',10)));
-            $overnight_enabled=(int)get_option('ews_allow_overnight_shift',0);
-            $working_days=$this->working_days();
-            $day_names=$this->working_day_names();
-            $active_types=0;
-            foreach($types as $t){if(!empty($t['active']))$active_types++;}
-
-            echo '<div class="wrap ews-sc-admin">';
-            echo '<style>
-            .ews-sc-admin{max-width:1480px;margin-right:24px}.ews-sc-admin *{box-sizing:border-box}
-            .ews-sc-hero{margin:24px 0 20px;padding:28px 32px;border-radius:18px;background:linear-gradient(135deg,#101827 0%,#1b2638 58%,#30205f 100%);color:#fff;box-shadow:0 10px 30px rgba(16,24,39,.12)}
-            .ews-sc-hero h1{margin:0 0 8px;color:#fff;font-size:30px;line-height:1.2;font-weight:700}.ews-sc-hero p{margin:0;color:#cbd5e1;font-size:14px;max-width:780px}
-            .ews-sc-stats{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}.ews-sc-stat{padding:9px 13px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);border-radius:10px;font-size:12px;color:#dbe4ef}.ews-sc-stat strong{color:#fff;font-size:14px;margin-right:5px}
-            .ews-sc-notice{border:0!important;border-left:4px solid #22a06b!important;border-radius:10px;padding:2px 14px!important;margin:0 0 18px!important;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-            .ews-sc-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr);gap:18px;align-items:start}.ews-sc-card{background:#fff;border:1px solid #e3e7ee;border-radius:16px;box-shadow:0 4px 16px rgba(16,24,40,.045);overflow:hidden;margin:0 0 18px}.ews-sc-card-head{padding:20px 22px 14px;border-bottom:1px solid #edf0f4}.ews-sc-card-head h2{margin:0 0 5px;font-size:18px;color:#172033}.ews-sc-card-head p{margin:0;color:#667085;font-size:13px;line-height:1.5}.ews-sc-card-body{padding:20px 22px}
-            .ews-sc-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.ews-sc-field label{display:block;font-size:12px;font-weight:600;color:#344054;margin-bottom:7px}.ews-sc-field input[type=time],.ews-sc-field input[type=text],.ews-sc-field input[type=date],.ews-sc-field input[type=email],.ews-sc-field select{width:100%;min-height:40px;border:1px solid #d0d5dd;border-radius:9px;padding:7px 10px;background:#fff}.ews-sc-help{font-size:12px;color:#667085;margin-top:12px}.ews-sc-actions{margin-top:18px;display:flex;justify-content:flex-end}.ews-sc-admin .button-primary{background:#5b21b6;border-color:#5b21b6;border-radius:8px;padding:5px 15px;min-height:38px;box-shadow:none}.ews-sc-admin .button-primary:hover{background:#4c1d95;border-color:#4c1d95}
-            .ews-sc-days{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.ews-sc-day{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid #e4e7ec;border-radius:10px;background:#f8fafc;color:#344054;font-size:13px}.ews-sc-day:has(input:checked){border-color:#c4b5fd;background:#f5f3ff}.ews-sc-day input{margin:0}
-            .ews-sc-table-wrap{overflow-x:auto}.ews-sc-table{width:100%;border-collapse:separate;border-spacing:0;min-width:850px}.ews-sc-table th{background:#f8fafc;color:#475467;font-size:11px;text-transform:uppercase;letter-spacing:.02em;padding:11px 9px;border-bottom:1px solid #e4e7ec;text-align:left}.ews-sc-table td{padding:10px 9px;border-bottom:1px solid #edf0f4;vertical-align:middle}.ews-sc-table tr:last-child td{border-bottom:0}.ews-sc-table input[type=text],.ews-sc-table select{width:100%;min-height:36px;border:1px solid #d0d5dd;border-radius:7px;padding:5px 7px}.ews-sc-table input[type=color]{width:42px;height:34px;padding:2px;border:1px solid #d0d5dd;border-radius:7px;background:#fff}.ews-sc-table .center{text-align:center}.ews-sc-new td{background:#fafbfc}.ews-sc-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#ecfdf3;color:#027a48;font-size:11px;font-weight:600}.ews-sc-pill.off{background:#f2f4f7;color:#667085}
-            .ews-sc-calendar-form{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:10px;align-items:end}.ews-sc-calendar-form label{display:block;font-size:12px;font-weight:600;color:#344054;margin-bottom:6px}.ews-sc-calendar-form input{width:100%;min-height:40px;border:1px solid #d0d5dd;border-radius:9px;padding:7px 10px}.ews-sc-events{margin-top:18px;border-top:1px solid #edf0f4}.ews-sc-events table{width:100%;border-collapse:collapse}.ews-sc-events th,.ews-sc-events td{padding:10px 4px;border-bottom:1px solid #edf0f4;text-align:left;font-size:12px}.ews-sc-events th{color:#667085;font-weight:600}.ews-sc-delete{color:#b42318;text-decoration:none;font-weight:600}.ews-sc-savebar{position:sticky;bottom:18px;z-index:20;display:flex;justify-content:flex-end;padding:10px 0}.ews-sc-savebar .button{box-shadow:0 8px 20px rgba(16,24,40,.14)}
-            @media(max-width:1100px){.ews-sc-grid{grid-template-columns:1fr}.ews-sc-fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
-            @media(max-width:782px){.ews-sc-admin{margin-right:10px}.ews-sc-hero{padding:22px}.ews-sc-fields,.ews-sc-days{grid-template-columns:1fr}.ews-sc-calendar-form{grid-template-columns:1fr}.ews-sc-actions{justify-content:stretch}.ews-sc-actions .button,.ews-sc-calendar-form .button{width:100%;text-align:center}.ews-sc-savebar{bottom:8px}.ews-sc-savebar .button{width:100%}}
-            </style>';
-
-            echo '<div class="ews-sc-hero"><h1>Schedule Configuration</h1><p>Set the company working calendar, attendance timing, and schedule types used across Workforce One.</p><div class="ews-sc-stats"><span class="ews-sc-stat"><strong>'.count($types).'</strong> schedule types</span><span class="ews-sc-stat"><strong>'.$active_types.'</strong> active</span><span class="ews-sc-stat"><strong>'.count($working_days).'</strong> working days</span><span class="ews-sc-stat"><strong>'.count($events).'</strong> upcoming holidays</span></div></div>';
-
-            if(isset($_GET['schedule_config_saved']))echo '<div class="notice notice-success is-dismissible ews-sc-notice"><p>Schedule configuration saved.</p></div>';
-            if(isset($_GET['general_leave_saved']))echo '<div class="notice notice-success is-dismissible ews-sc-notice"><p>General Leave added.</p></div>';
-            if(isset($_GET['general_leave_deleted']))echo '<div class="notice notice-success is-dismissible ews-sc-notice"><p>General Leave removed.</p></div>';
-
-            echo '<div class="ews-sc-grid">';
-            echo '<div>';
-            echo '<div class="ews-sc-card"><div class="ews-sc-card-head"><h2>Working Hours</h2><p>Define when the workday starts and ends, and how long the grace period lasts before an arrival is classified as Late Arrival.</p></div><div class="ews-sc-card-body">';
-            echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_working_hours_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews31_working_hours_save">';
-            echo '<div class="ews-sc-fields">';
-            echo '<div class="ews-sc-field"><label>Work Start</label><input type="time" name="work_start" value="'.esc_attr($hours['start']).'" required><div class="ews-sc-help">Start of the scheduled workday.</div></div>';
-            echo '<div class="ews-sc-field"><label>Grace Period</label><div style="display:flex;gap:8px;align-items:center"><input type="number" name="grace_period" value="'.esc_attr($grace_period).'" min="0" max="180" step="1" style="max-width:180px"><span style="color:#667085;font-size:13px">minutes</span></div><div class="ews-sc-help">Time allowed after Work Start before the arrival is classified as late.</div></div>';
-            echo '<div class="ews-sc-field"><label>Work End</label><input type="time" name="work_end" value="'.esc_attr($hours['end']).'" required><div class="ews-sc-help">End of the scheduled workday.</div></div>';
-            echo '</div>';
-            echo '<div style="margin-top:18px;padding:14px 16px;border:1px solid #e4e7ec;border-radius:11px;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><strong style="display:block;color:#344054;font-size:13px">Allow Overnight Shift</strong><span style="display:block;margin-top:3px;color:#667085;font-size:12px;line-height:1.45">Allow working hours to cross midnight into the next day, e.g. 22:00 → 06:00.</span></div><label style="display:flex;align-items:center;gap:8px;white-space:nowrap;font-weight:600;color:#344054"><input type="checkbox" name="allow_overnight_shift" value="1" '.checked($overnight_enabled,1,false).'> Enabled</label></div>';
-            echo '<div class="ews-sc-actions"><button class="button button-primary">Save Working Hours</button></div></form>';
-            echo '<div class="ews-sc-help">Example: 08:00 start → 10 minute grace period → arrivals after 08:10 are Late Arrival. Actual Sign In time is always preserved. Overnight mode is OFF by default.</div></div></div>';
-
-            echo '<div class="ews-sc-card"><div class="ews-sc-card-head"><h2>Shifts</h2><p>Create reusable shifts. A Default Shift can then be assigned to each employee and automatically controls their work hours, grace period, and Sign In cutoff.</p></div><div class="ews-sc-card-body"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_shifts_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews31_shifts_save"><div class="ews-sc-table-wrap"><table class="ews-sc-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Grace (min)</th><th>Sign In Cutoff (min)</th><th>Overnight</th><th>Active</th></tr></thead><tbody>';
-            foreach($shifts as $i=>$shift){echo '<tr><td><input type="hidden" name="shifts['.(int)$i.'][id]" value="'.(int)$shift['id'].'"><input name="shifts['.(int)$i.'][name]" value="'.esc_attr($shift['name']).'"></td><td><input type="time" name="shifts['.(int)$i.'][start]" value="'.esc_attr($shift['start']).'"></td><td><input type="time" name="shifts['.(int)$i.'][end]" value="'.esc_attr($shift['end']).'"></td><td><input type="number" name="shifts['.(int)$i.'][grace]" value="'.(int)$shift['grace'].'" min="0" max="180"></td><td><input type="number" name="shifts['.(int)$i.'][sign_in_cutoff_minutes]" value="'.(int)($shift['sign_in_cutoff_minutes']??240).'" min="0" max="1440"></td><td class="center"><input type="checkbox" name="shifts['.(int)$i.'][overnight]" value="1" '.checked(!empty($shift['overnight']),true,false).'></td><td class="center"><input type="checkbox" name="shifts['.(int)$i.'][active]" value="1" '.checked(!empty($shift['active']),true,false).'></td></tr>';}
-            echo '<tr class="ews-sc-new"><td><input name="new_shift[name]" placeholder="New shift"></td><td><input type="time" name="new_shift[start]" value="08:00"></td><td><input type="time" name="new_shift[end]" value="17:00"></td><td><input type="number" name="new_shift[grace]" value="10" min="0" max="180"></td><td><input type="number" name="new_shift[sign_in_cutoff_minutes]" value="240" min="0" max="1440"></td><td class="center"><input type="checkbox" name="new_shift[overnight]" value="1"></td><td class="center"><input type="checkbox" name="new_shift[active]" value="1" checked></td></tr>';
-            echo '</tbody></table></div><div class="ews-sc-actions"><button class="button button-primary">Save Shifts</button></div></form><div class="ews-sc-help">Sign In Cutoff is measured from Shift Start. Default is 240 minutes (4 hours). Grace only controls On Time vs Late. The effective cutoff never extends past Shift End. Employees without a Default Shift use the company Working Hours with the 4-hour default cutoff.</div></div></div>';
-            echo '<div class="ews-sc-card"><div class="ews-sc-card-head"><h2>Schedule Types</h2><p>Control what each schedule type requires for Sign In, location, and attendance processing.</p></div><div class="ews-sc-card-body"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_schedule_config_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews31_schedule_config_save"><div class="ews-sc-table-wrap"><table class="ews-sc-table"><thead><tr><th>Name</th><th>Icon</th><th>Background</th><th>Text</th><th>Border</th><th>Sign In</th><th>Location</th><th>Attendance Rule</th><th>Active</th></tr></thead><tbody>';
-            foreach($types as $i=>$type){
-                echo '<tr>';
-                echo '<td><input name="types['.(int)$i.'][name]" value="'.esc_attr($type['name']).'" aria-label="Schedule type name"></td>';
-                echo '<td><input name="types['.(int)$i.'][icon]" value="'.esc_attr($type['icon']??'•').'" style="width:58px;text-align:center" maxlength="8" aria-label="Schedule type icon"></td>';
-                echo '<td><input type="color" name="types['.(int)$i.'][bg_color]" value="'.esc_attr($type['bg_color']??'#f2f4f7').'" aria-label="Background color"></td>';
-                echo '<td><input type="color" name="types['.(int)$i.'][text_color]" value="'.esc_attr($type['text_color']??'#667085').'" aria-label="Text color"></td>';
-                echo '<td><input type="color" name="types['.(int)$i.'][border_color]" value="'.esc_attr($type['border_color']??'#e5e7eb').'" aria-label="Border color"></td>';
-                echo '<td class="center"><input type="checkbox" name="types['.(int)$i.'][requires_sign_in]" value="1" '.checked(!empty($type['requires_sign_in']),true,false).'></td>';
-                echo '<td class="center"><input type="checkbox" name="types['.(int)$i.'][requires_location]" value="1" '.checked(!empty($type['requires_location']),true,false).'></td>';
-                echo '<td><select name="types['.(int)$i.'][attendance_rule]"><option value="attendance" '.selected($type['attendance_rule'],'attendance',false).'>Attendance</option><option value="leave" '.selected($type['attendance_rule'],'leave',false).'>Leave</option><option value="business_trip" '.selected($type['attendance_rule'],'business_trip',false).'>Business Trip</option></select></td>';
-                echo '<td class="center"><input type="checkbox" name="types['.(int)$i.'][active]" value="1" '.checked(!empty($type['active']),true,false).'></td></tr>';
-            }
-            echo '<tr class="ews-sc-new"><td><input name="types[new][name]" placeholder="New schedule type"></td><td><input name="types[new][icon]" value="•" style="width:58px;text-align:center" maxlength="8"></td><td><input type="color" name="types[new][bg_color]" value="#f2f4f7"></td><td><input type="color" name="types[new][text_color]" value="#667085"></td><td><input type="color" name="types[new][border_color]" value="#e5e7eb"></td><td class="center"><input type="checkbox" name="types[new][requires_sign_in]" value="1"></td><td class="center"><input type="checkbox" name="types[new][requires_location]" value="1"></td><td><select name="types[new][attendance_rule]"><option value="attendance">Attendance</option><option value="leave">Leave</option><option value="business_trip">Business Trip</option></select></td><td class="center"><input type="checkbox" name="types[new][active]" value="1" checked></td></tr>';
-            echo '</tbody></table></div><div class="ews-sc-actions"><button class="button button-primary">Save Schedule Configuration</button></div></form><div class="ews-sc-help">Tip: WFH is configured as Sign In = Yes and Office Location = No; it is not special-cased in code.</div></div></div>';
-            echo '</div>';
-
-            echo '<div>';
-            echo '<div class="ews-sc-card"><div class="ews-sc-card-head"><h2>Working Days</h2><p>Choose the normal company working days. Unselected days are treated as days off.</p></div><div class="ews-sc-card-body"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_working_days_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews31_working_days_save"><div class="ews-sc-days">';
-            foreach($day_names as $day=>$name)echo '<label class="ews-sc-day"><input type="checkbox" name="working_days[]" value="'.(int)$day.'" '.checked(in_array($day,$working_days,true),true,false).'> <span>'.esc_html($name).'</span></label>';
-            echo '</div><div class="ews-sc-actions"><button class="button button-primary">Save Working Days</button></div></form><div class="ews-sc-help">Default: Sunday–Thursday. For this client, select Saturday through Thursday and leave Friday unchecked.</div></div></div>';
-
-            echo '<div class="ews-sc-card"><div class="ews-sc-card-head"><h2>General Leave</h2><p>Add company-wide holidays without changing employees’ stored schedules.</p></div><div class="ews-sc-card-body"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="ews31_general_leave_save">'.wp_nonce_field('ews_general_leave_save','_wpnonce',true,false).'<div class="ews-sc-calendar-form"><div><label>Date</label><input type="date" name="event_date" required></div><div><label>Holiday title</label><input type="text" name="title" maxlength="190" required placeholder="e.g. National Holiday"></div><button class="button button-primary">Add Holiday</button></div></form>';
-            echo '<div class="ews-sc-events"><h3 style="font-size:14px;margin:16px 0 8px">Upcoming holidays</h3><table><thead><tr><th>Date</th><th>Title</th><th></th></tr></thead><tbody>';
-            if(!$events)echo '<tr><td colspan="3">No General Leave configured.</td></tr>';
-            foreach($events as $event){$url=wp_nonce_url(add_query_arg(['action'=>'ews31_general_leave_delete','id'=>(int)$event->id],admin_url('admin-post.php')),'ews_general_leave_delete_'.(int)$event->id);echo '<tr><td>'.esc_html(date_i18n('D, d M Y',strtotime($event->event_date))).'</td><td>'.esc_html($event->title).'</td><td style="text-align:right"><a class="ews-sc-delete" href="'.esc_url($url).'" data-ews-confirm-key="general_leave_delete">Remove</a></td></tr>';}
-            echo '</tbody></table></div></div></div>';
-            echo '</div></div>';
-            echo '</div>';
-        }
-
-    public function schedule_config_save(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_schedule_config_save');
-            $raw=$_POST['types']??[];
-            $clean=[];$names=[];
-            if(is_array($raw)){
-                foreach($raw as $type){
-                    if(!is_array($type))continue;
-                    $name=trim(sanitize_text_field($type['name']??''));
-                    if($name===''||isset($names[strtolower($name)]))continue;
-                    $rule=sanitize_key($type['attendance_rule']??'attendance');
-                    if(!in_array($rule,['attendance','leave','business_trip'],true))$rule='attendance';
-                    $names[strtolower($name)]=true;
-                    $hex=function($v,$fallback){$v=sanitize_text_field((string)$v);return preg_match('/^#[0-9a-fA-F]{6}$/',$v)?strtolower($v):$fallback;};
-                    $style_defaults=['Office'=>['icon'=>'🏢','bg_color'=>'#dcfce7','text_color'=>'#166534','border_color'=>'#bbf7d0'],'WFH'=>['icon'=>'🏠','bg_color'=>'#dbeafe','text_color'=>'#1d4ed8','border_color'=>'#bfdbfe'],'Vacation'=>['icon'=>'🌴','bg_color'=>'#fef3c7','text_color'=>'#92400e','border_color'=>'#fde68a'],'Business Trip'=>['icon'=>'🚗','bg_color'=>'#ede9fe','text_color'=>'#6d28d9','border_color'=>'#ddd6fe'],'Training Course'=>['icon'=>'🎓','bg_color'=>'#e0f2fe','text_color'=>'#0369a1','border_color'=>'#bae6fd']];
-                    $sd=$style_defaults[$name]??['icon'=>'•','bg_color'=>'#f2f4f7','text_color'=>'#667085','border_color'=>'#e5e7eb'];
-                    $clean[]=[
-                        'name'=>$name,
-                        'requires_sign_in'=>!empty($type['requires_sign_in'])?1:0,
-                        'requires_location'=>!empty($type['requires_location'])?1:0,
-                        'attendance_rule'=>$rule,
-                        'active'=>!empty($type['active'])?1:0,
-                        'icon'=>trim(sanitize_text_field($type['icon']??$sd['icon']))?:$sd['icon'],
-                        'bg_color'=>$hex($type['bg_color']??$sd['bg_color'],$sd['bg_color']),
-                        'text_color'=>$hex($type['text_color']??$sd['text_color'],$sd['text_color']),
-                        'border_color'=>$hex($type['border_color']??$sd['border_color'],$sd['border_color'])
-                    ];
-                }
-            }
-            if(!$clean)wp_die('At least one Schedule Type is required.');
-            update_option('ews_schedule_types_config',$clean,false);
-            $this->invalidate_schedule_runtime_cache();
-            $this->audit('schedule_config_update','settings',0,'Schedule Types updated');
-            $this->redirect(['page'=>'ews31-schedule-config','schedule_config_saved'=>1]);
-        }
-
-    public function shifts_save_handler(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied'); check_admin_referer('ews_shifts_save');
-            $raw=$_POST['shifts']??[]; $clean=[]; $used=[]; $valid_time=function($v){return is_string($v)&&preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$v);};
-            if(is_array($raw))foreach($raw as $shift){ if(!is_array($shift))continue; $id=absint($shift['id']??0); $name=trim(sanitize_text_field($shift['name']??'')); $start=sanitize_text_field($shift['start']??''); $end=sanitize_text_field($shift['end']??''); if(!$id||$name===''||!$valid_time($start)||!$valid_time($end)||isset($used[strtolower($name)]))continue; $used[strtolower($name)]=1; $clean[]=['id'=>$id,'name'=>$name,'start'=>$start,'end'=>$end,'grace'=>max(0,min(180,(int)($shift['grace']??10))),'sign_in_cutoff_minutes'=>max(0,min(1440,(int)($shift['sign_in_cutoff_minutes']??240))),'overnight'=>!empty($shift['overnight'])?1:0,'active'=>!empty($shift['active'])?1:0]; }
-            $new=$_POST['new_shift']??[]; if(is_array($new)){ $name=trim(sanitize_text_field($new['name']??'')); $start=sanitize_text_field($new['start']??''); $end=sanitize_text_field($new['end']??''); if($name!==''&&$valid_time($start)&&$valid_time($end)&&!isset($used[strtolower($name)])){ $ids=array_map(function($x){return (int)$x['id'];},$clean); $id=$ids?max($ids)+1:1; $clean[]=['id'=>$id,'name'=>$name,'start'=>$start,'end'=>$end,'grace'=>max(0,min(180,(int)($new['grace']??10))),'sign_in_cutoff_minutes'=>max(0,min(1440,(int)($new['sign_in_cutoff_minutes']??240))),'overnight'=>!empty($new['overnight'])?1:0,'active'=>!empty($new['active'])?1:0]; }}
-            if(!$clean)wp_die('At least one Shift is required.'); update_option('ews_shifts',$clean,false); $this->invalidate_schedule_runtime_cache(); $this->audit('shifts_update','settings',0,'Shifts updated'); $this->redirect(['page'=>'ews31-schedule-config','schedule_config_saved'=>1]);
-        }
-
-    public function working_days_save_handler(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_working_days_save');
-            $raw=$_POST['working_days']??[];$days=[];
-            if(is_array($raw))foreach($raw as $day){$day=absint($day);if($day>=0&&$day<=6)$days[$day]=$day;}
-            $days=array_values($days);sort($days,SORT_NUMERIC);
-            if(!$days)wp_die('Select at least one working day.');
-            update_option('ews_working_days',$days,false);
-            $this->audit('working_days_update','settings',0,implode(',',$days));
-            $this->redirect(['page'=>'ews31-schedule-config','working_days_saved'=>1]);
-        }
-
     public function features_save_handler(){
             if(!$this->can('ews_manage_settings'))wp_die('Access denied');
             check_admin_referer('ews_features_save');
@@ -1371,47 +1236,6 @@ trait EWS_Admin_Trait {
             update_option('ews_confirmation_actions',$clean,false);
             $this->audit('feature_update','settings',0,'recognition='.($recognition_enabled?'enabled':'disabled').';kudos='.($recognition_allow_kudos?'allowed':'blocked').';kudos_weekly=' . ($recognition_limit_mode==='unlimited'?'unlimited':$recognition_weekly_limit) . ';tasks='.($tasks_enabled?'enabled':'disabled').';overtime_requests='.($enabled?'enabled':'disabled').';face_signin='.($face_enabled?'enabled':'disabled').';breaks='.($break_enabled?'enabled':'disabled').';breaks_per_day='.$per_day.';break_duration='.$duration.';break_escalation='.$escalation);
             $this->redirect(['page'=>'ews31-features','features_saved'=>1]);
-        }
-
-        public function working_hours_save_handler(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_working_hours_save');
-            update_option('ews_allow_overnight_shift',!empty($_POST['allow_overnight_shift'])?1:0,false);
-            update_option('ews_grace_period',max(0,min(180,(int)($_POST['grace_period']??10))),false);
-            $start=sanitize_text_field($_POST['work_start']??'');
-            $normal_until=$this->working_hours()['normal_until'];
-            $end=sanitize_text_field($_POST['work_end']??'');
-            $result=$this->working_hours_save($start,$normal_until,$end);
-            if(is_wp_error($result))wp_die(esc_html($result->get_error_message()));
-            $this->invalidate_working_hours_runtime_cache();
-            $this->audit('working_hours_update','settings',0,$start.' - '.$normal_until.' - '.$end);
-            $this->redirect(['page'=>'ews31-schedule-config','working_hours_saved'=>1]);
-        }
-
-    public function general_leave_save(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_general_leave_save');
-            $date=$this->normalize_date($_POST['event_date']??'');
-            $title=trim(sanitize_text_field($_POST['title']??''));
-            if(!$date||$title==='')wp_die('Invalid General Leave.');
-            global $wpdb;
-            $ok=$wpdb->insert($this->company_calendar,['event_date'=>$date,'title'=>$title,'event_type'=>'general_leave','active'=>1,'created_by'=>get_current_user_id()],['%s','%s','%s','%d','%d']);
-            if($ok===false)wp_die('Could not save General Leave: '.esc_html($wpdb->last_error));
-            $this->invalidate_company_leave_runtime_cache();
-            $this->audit('general_leave_add','company_calendar',(int)$wpdb->insert_id,$date.' => '.$title);
-            $this->redirect(['page'=>'ews31-schedule-config','general_leave_saved'=>1]);
-        }
-
-    public function general_leave_delete(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            $id=absint($_GET['id']??0);
-            check_admin_referer('ews_general_leave_delete_'.$id);
-            global $wpdb;
-            $ok=$wpdb->delete($this->company_calendar,['id'=>$id],['%d']);
-            if($ok===false)wp_die('Could not remove General Leave.');
-            $this->invalidate_company_leave_runtime_cache();
-            $this->audit('general_leave_delete','company_calendar',$id,'Removed General Leave');
-            $this->redirect(['page'=>'ews31-schedule-config','general_leave_deleted'=>1]);
         }
 
     public function admin_email(){

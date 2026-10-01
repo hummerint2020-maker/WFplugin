@@ -8,4 +8,5 @@ after changing an LTR file regenerate them:
 ```bash
 npx rtlcss@4 assets/css/workforce-one.css    assets/css/workforce-one-rtl.css
 npx rtlcss@4 assets/css/workforce-one-ui.css assets/css/workforce-one-ui-rtl.css
+npx rtlcss@4 assets/css/admin-schedule-config.css assets/css/admin-schedule-config-rtl.css
 ```

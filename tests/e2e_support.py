@@ -47,7 +47,7 @@ class Session:
 
     def req(self, path, data=None):
         if isinstance(data, dict):
-            data = urllib.parse.urlencode(data).encode()
+            data = urllib.parse.urlencode(data, doseq=True).encode()
         try:
             r = self.op.open(urllib.request.Request(B + path, data=data))
             return r.status, r.read().decode('utf-8', 'replace'), dict(r.headers)
