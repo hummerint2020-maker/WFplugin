@@ -146,9 +146,9 @@ trait EWS_Auto_Attendance_Trait {
         $id=absint($_POST['rule_id']??0);
         $employee_id=absint($_POST['employee_id']??0);
         $recurrence=sanitize_key($_POST['recurrence']??'one_time');
-        $run_date=sanitize_text_field($_POST['run_date']??'');
-        $sign_in=sanitize_text_field($_POST['sign_in_time']??'');
-        $sign_out=sanitize_text_field($_POST['sign_out_time']??'');
+        $run_date=sanitize_text_field(wp_unslash($_POST['run_date']??''));
+        $sign_in=sanitize_text_field(wp_unslash($_POST['sign_in_time']??''));
+        $sign_out=sanitize_text_field(wp_unslash($_POST['sign_out_time']??''));
         $valid_time=function($v){return $v===''||preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$v);};
         if(!$employee_id || !in_array($recurrence,['one_time','weekly'],true) || !$valid_time($sign_in) || !$valid_time($sign_out) || ($sign_in===''&&$sign_out==='')) wp_die('Please provide a valid employee and at least one valid Auto Sign In / Auto Sign Out time.');
         if($recurrence==='one_time'){

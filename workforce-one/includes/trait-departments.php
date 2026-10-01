@@ -113,7 +113,7 @@ trait EWS_Departments_Trait {
     public function department_save(){
         if(!current_user_can('manage_options'))wp_die('Access denied'); check_admin_referer('ews_department_save'); $this->ensure_departments_schema();
         global $wpdb; $t=$this->department_tables();
-        $id=absint($_POST['department_id']??0); $name=sanitize_text_field($_POST['name']??''); $code=sanitize_key($_POST['code']??''); $description=sanitize_textarea_field($_POST['description']??''); $manager=absint($_POST['manager_employee_id']??0);
+        $id=absint($_POST['department_id']??0); $name=sanitize_text_field(wp_unslash($_POST['name']??'')); $code=sanitize_key($_POST['code']??''); $description=sanitize_textarea_field(wp_unslash($_POST['description']??'')); $manager=absint($_POST['manager_employee_id']??0);
         if(!$name||!$code)wp_safe_redirect(admin_url('admin.php?page=ews31-departments&department_error=Name+and+code+are+required')) or exit;
         $dup=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['departments']} WHERE (name=%s OR code=%s) AND id<>%d LIMIT 1",$name,$code,$id));
         if($dup)wp_safe_redirect(admin_url('admin.php?page=ews31-departments&department_error=Department+name+or+code+already+exists')) or exit;

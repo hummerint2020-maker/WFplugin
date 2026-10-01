@@ -79,10 +79,10 @@ trait EWS_Overtime_Trait {
             if(!is_user_logged_in())wp_die('You must be logged in.');
             check_admin_referer('ews_overtime_request_create');
             $emp=$this->current_employee();if(!$emp)$this->overtime_redirect(['overtime_error'=>'employee']);
-            $date=sanitize_text_field($_POST['overtime_date']??'');
-            $start=sanitize_text_field($_POST['start_time']??'');
-            $end=sanitize_text_field($_POST['end_time']??'');
-            $reason=trim(sanitize_textarea_field($_POST['reason']??''));
+            $date=sanitize_text_field(wp_unslash($_POST['overtime_date']??''));
+            $start=sanitize_text_field(wp_unslash($_POST['start_time']??''));
+            $end=sanitize_text_field(wp_unslash($_POST['end_time']??''));
+            $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
             $facts=['date'=>$date,'today'=>current_time('Y-m-d'),'start'=>$start,'end'=>$end,'reason'=>$reason];
             $error=OvertimeRules::check($facts);
             if(!$error){
@@ -207,9 +207,9 @@ trait EWS_Overtime_Trait {
             check_admin_referer('ews_early_leave_create');
             $emp=$this->current_employee();if(!$emp)$this->leave_redirect(['leave_error'=>'employee']);
             global $wpdb;$this->ensure_leave_schema();
-            $date=sanitize_text_field($_POST['work_date']??'');
+            $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
             $minutes=max(1,absint($_POST['leave_minutes']??0));
-            $reason=trim(sanitize_textarea_field($_POST['reason']??''));
+            $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
             $scheduled=$this->schedule_for_employee_date((int)$emp->id,$date);
             $facts=[
                 'date'=>$date,'today'=>current_time('Y-m-d'),'working_day'=>$this->is_working_day($date),

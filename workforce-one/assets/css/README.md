@@ -9,4 +9,5 @@ after changing an LTR file regenerate them:
 npx rtlcss@4 assets/css/workforce-one.css    assets/css/workforce-one-rtl.css
 npx rtlcss@4 assets/css/workforce-one-ui.css assets/css/workforce-one-ui-rtl.css
 npx rtlcss@4 assets/css/admin-schedule-config.css assets/css/admin-schedule-config-rtl.css
+npx rtlcss@4 assets/css/admin-features.css assets/css/admin-features-rtl.css
 ```

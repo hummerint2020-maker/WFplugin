@@ -83,9 +83,9 @@ trait EWS_Locations_Trait {
             global $wpdb;
             $this->ews_v321_ensure_locations_table();
             $id=absint($_POST['location_id']??0);
-            $name=sanitize_text_field($_POST['location_name']??'');
-            $lat=sanitize_text_field($_POST['location_latitude']??'');
-            $lng=sanitize_text_field($_POST['location_longitude']??'');
+            $name=sanitize_text_field(wp_unslash($_POST['location_name']??''));
+            $lat=sanitize_text_field(wp_unslash($_POST['location_latitude']??''));
+            $lng=sanitize_text_field(wp_unslash($_POST['location_longitude']??''));
             $radius=max(10,min(5000,absint($_POST['location_radius']??200)));
             $enforcement=!empty($_POST['location_enforcement'])?1:0;
             $active=!empty($_POST['active'])?1:0;
@@ -198,9 +198,9 @@ trait EWS_Locations_Trait {
             if(!$this->can('ews_manage_locations')) wp_die('Access denied');
             check_admin_referer('ews31_location_save');
             $enabled=!empty($_POST['location_enforcement'])?1:0;
-            $name=sanitize_text_field($_POST['location_name']??'Office HQ');
-            $lat=sanitize_text_field($_POST['location_latitude']??'');
-            $lng=sanitize_text_field($_POST['location_longitude']??'');
+            $name=sanitize_text_field(wp_unslash($_POST['location_name']??'Office HQ'));
+            $lat=sanitize_text_field(wp_unslash($_POST['location_latitude']??''));
+            $lng=sanitize_text_field(wp_unslash($_POST['location_longitude']??''));
             $radius=absint($_POST['location_radius']??200);
             if($radius<10)$radius=10;
             if($radius>5000)$radius=5000;

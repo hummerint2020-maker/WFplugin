@@ -250,8 +250,8 @@ trait EWS_Core_Trait {
             if(!is_user_logged_in())wp_die('You must be logged in.');
             check_admin_referer('ews_vacation_request_create');
             $emp=$this->current_employee();if(!$emp)$this->vacation_redirect(['vacation_error'=>'employee']);
-            $start=sanitize_text_field($_POST['start_date']??'');$end=sanitize_text_field($_POST['end_date']??'');
-            $reason=trim(sanitize_textarea_field($_POST['reason']??''));
+            $start=sanitize_text_field(wp_unslash($_POST['start_date']??''));$end=sanitize_text_field(wp_unslash($_POST['end_date']??''));
+            $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
             if(!$this->vacation_date_is_future($start)||!$this->vacation_date_is_future($end)||$end<$start)$this->vacation_redirect(['vacation_error'=>'date']);
             $days=$this->vacation_working_days_count($start,$end);
             if($days<1)$this->vacation_redirect(['vacation_error'=>'no_working_days']);
@@ -1150,7 +1150,7 @@ function current_employee(){
             $type=$this->schedule_type_config($name);
             return $type?(bool)$type['requires_sign_in']:false;
         }private function pwa_splash_settings(){
-            $defaults=['enabled'=>1,'duration_ms'=>650,'title'=>'Workforce One','subtitle'=>'Workforce Management Platform','background'=>'#f7f7fb','accent'=>'#6125c9','logo'=>''];
+            $defaults=\WorkforceOne\Settings\FeatureSettings::SPLASH_DEFAULTS;
             $saved=get_option('ews_pwa_splash_settings',[]);
             $s=wp_parse_args(is_array($saved)?$saved:[],$defaults);
             $s['enabled']=!empty($s['enabled'])?1:0;
@@ -1166,15 +1166,8 @@ function current_employee(){
 private function face_signin_enabled(){ return (bool)get_option('ews_feature_face_signin',false); }
 
     private function face_signin_settings(){
-        $defaults=array(
-            'baseline_samples'=>15,'sample_interval_ms'=>100,'eye_drop_threshold'=>0.90,
-            'blink_min_drop'=>0.94,'blink_min_ms'=>60,'challenge_timeout_sec'=>12,
-            'head_move_px'=>8,'head_move_ratio'=>0.018,'face_match_threshold'=>0.60,
-            'enrollment_samples'=>5,'enrollment_interval_ms'=>650,
-            'detector_score_threshold'=>0.35,'detector_input_size'=>320
-        );
         $saved=get_option('ews_face_signin_settings',array());
-        return wp_parse_args(is_array($saved)?$saved:array(),$defaults);
+        return wp_parse_args(is_array($saved)?$saved:array(),\WorkforceOne\Settings\FeatureSettings::FACE_DEFAULTS);
     }
 
     private function face_signin_setting($key,$fallback=null){

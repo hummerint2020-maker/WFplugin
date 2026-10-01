@@ -57,9 +57,9 @@ trait EWS_Leave_Admin_Trait {
         $this->ensure_leave_schema();
         $employee_id=absint($_POST['employee_id']??0);
         $leave_type_id=absint($_POST['leave_type_id']??0);
-        $start=sanitize_text_field($_POST['start_date']??'');
-        $end=sanitize_text_field($_POST['end_date']??'');
-        $reason=trim(sanitize_textarea_field($_POST['reason']??''));
+        $start=sanitize_text_field(wp_unslash($_POST['start_date']??''));
+        $end=sanitize_text_field(wp_unslash($_POST['end_date']??''));
+        $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
         $fail=function($code,$remaining=0){$this->leave_admin_redirect(['leave_record_error'=>rawurlencode(AdminRecordRules::message($code,$remaining))]);};
 
         $facts=['start_valid'=>$employee_id&&$this->valid_date($start),'end_valid'=>$this->valid_date($end),'start'=>$start,'end'=>$end];
@@ -98,7 +98,7 @@ trait EWS_Leave_Admin_Trait {
         check_admin_referer('ews_leave_type_save');
         global $wpdb;$this->ensure_leave_schema();
         $table=$wpdb->prefix.'ews_leave_types';
-        $id=absint($_POST['id']??0);$name=trim(sanitize_text_field($_POST['name']??''));
+        $id=absint($_POST['id']??0);$name=trim(sanitize_text_field(wp_unslash($_POST['name']??'')));
         $ent=max(0,(float)($_POST['annual_entitlement']??0));$ded=!empty($_POST['deduct_balance'])?1:0;$active=!empty($_POST['active'])?1:0;
         if($name==='')wp_die('Leave Type name is required.');
         if($id){

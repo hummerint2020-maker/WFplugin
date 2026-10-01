@@ -84,7 +84,7 @@ trait EWS_Presence_Trait {
 
     public function presence_kiosk_save(){
         if(!$this->can('ews_manage_locations'))wp_die(__('Access denied','workforce-one')); check_admin_referer('ews_presence_kiosk_save');
-        $name=sanitize_text_field($_POST['name']??'');$location_id=absint($_POST['location_id']??0); if($name===''||!$location_id)wp_die(__('Invalid kiosk.','workforce-one'));
+        $name=sanitize_text_field(wp_unslash($_POST['name']??''));$location_id=absint($_POST['location_id']??0); if($name===''||!$location_id)wp_die(__('Invalid kiosk.','workforce-one'));
         $loc=$this->presence_location($location_id); if(!$loc)wp_die(__('Invalid work location.','workforce-one'));
         global $wpdb; list($kt)=$this->presence_tables();
         $secret=bin2hex(random_bytes(32));

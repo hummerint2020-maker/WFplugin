@@ -87,7 +87,7 @@ trait EWS_Swap_Trait {
             $requester=$this->current_employee();
             if(!$requester)$this->swap_redirect(['swap_error'=>'employee']);
             $target=absint($_POST['target_employee_id']??0);
-            $date=sanitize_text_field($_POST['work_date']??'');
+            $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
             $error=SwapRules::checkRequest((int)$requester->id,$target,$date);
             if($error)$this->swap_redirect(['swap_error'=>$error]);
             global $wpdb;$table=$this->ensure_swap_schema();

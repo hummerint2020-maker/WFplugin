@@ -110,7 +110,7 @@ check('the Record Leave form is shown', bool(n_rec))
 
 
 def record(start, end, t=annual, employee=None):
-    _, qs, _ = adm.post('ews_admin_leave_record', _wpnonce=n_rec, employee_id=employee or eid, leave_type_id=t, start_date=start, end_date=end, reason='admin')
+    _, qs, _ = adm.post('ews_admin_leave_record', _wpnonce=n_rec, employee_id=employee or eid, leave_type_id=t, start_date=start, end_date=end, reason="admin's note")
     return qs
 
 
@@ -129,6 +129,7 @@ check('...the days are counted as used', bal(YEAR)['used'] == before['used'] + 2
 check("...the employee's own pending reservation is untouched", bal(YEAR)['pending'] == before['pending'], (before, bal(YEAR)))
 check('...the request records the balance it was charged to', int(r['balance_id'] or 0) == int(bal(YEAR)['id']), r)
 check('...it is audited', int(q("SELECT COUNT(*) c FROM {p}ews_audit_log WHERE action='admin_leave_record'")[0]['c']) == 1)
+check('...an apostrophe in the reason is stored as typed (no backslash)', q("SELECT reason FROM {p}ews_leave_requests WHERE id=%d" % int(r['id']))[0]['reason'] == "admin's note", q("SELECT reason FROM {p}ews_leave_requests WHERE id=%d" % int(r['id'])))
 
 qs = record(f'{NEXT}-01-10', f'{NEXT}-01-11')
 r = last_leave()

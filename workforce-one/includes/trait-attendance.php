@@ -112,7 +112,7 @@ trait EWS_Attendance_Trait {
             if(!$this->can('ews_manage_attendance')) wp_die('Access denied');
             check_admin_referer('ews31_att_grid_save');
             global $wpdb;
-            $week=sanitize_text_field($_POST['week']??current_time('Y-m-d'));
+            $week=sanitize_text_field(wp_unslash($_POST['week']??current_time('Y-m-d')));
             $t=strtotime($week);
             if(!$t)wp_die('Invalid week.');
             [$dates,$sun]=$this->week_dates_configured($week);
@@ -268,7 +268,7 @@ trait EWS_Attendance_Trait {
             $this->redirect($args);
         }
 
-    public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field($_POST['work_date']);$s=sanitize_text_field($_POST['status']);$n=sanitize_textarea_field($_POST['note']??'');if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
+    public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field(wp_unslash($_POST['work_date']));$s=sanitize_text_field(wp_unslash($_POST['status']));$n=sanitize_textarea_field(wp_unslash($_POST['note']??''));if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
 
     /*
      * Parse and validate an attendance CSV (columns: domain_name, work_date, status, note —
@@ -317,7 +317,7 @@ trait EWS_Attendance_Trait {
 
     public function att_preview(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_preview');if(empty($_FILES['attendance_csv']['tmp_name']))wp_die('CSV required.');$p=$this->parse_csv($_FILES['attendance_csv']['tmp_name']);if(isset($p['error']))wp_die(esc_html($p['error']));$t=wp_generate_uuid4();set_transient('ews31_preview_'.$t.'_'.get_current_user_id(),$p['rows'],15*MINUTE_IN_SECONDS);$this->redirect(['ews_view'=>'attendance','preview'=>$t]);}
 
-    public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field($_POST['token']);$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}$this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}
+    public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field(wp_unslash($_POST['token']));$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}$this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}
 
     public function att_sample(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_sample');nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename=attendance_import_sample.csv');echo "\xEF\xBB\xBF";$o=fopen('php://output','w');fputcsv($o,['domain_name','work_date','status','note']);fputcsv($o,['employee.domain','2026-08-09','Office','Normal attendance']);fputcsv($o,['employee.domain','2026-08-10','WFH','Working from home']);fputcsv($o,['employee02','2026-08-11','Vacation','Annual leave']);fclose($o);exit;}
 

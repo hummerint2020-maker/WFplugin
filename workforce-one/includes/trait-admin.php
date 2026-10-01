@@ -11,6 +11,10 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-schedule-config', $this->plugin_url('assets/css/admin-schedule-config.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-schedule-config', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-features'))==='ews31-features'){
+            wp_enqueue_style('workforce-one-admin-features', $this->plugin_url('assets/css/admin-features.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-features', 'rtl', 'replace');
+        }
     }
 
     public function admin_menu(){
@@ -65,10 +69,7 @@ trait EWS_Admin_Trait {
         public function ews_admin_confirmation_guard(){
             if(!$this->can('ews_manage_settings') && !$this->can('ews_manage_time')) return;
             $global=(int)get_option('ews_confirm_global',1);
-            $cfg=get_option('ews_confirmation_actions',[]);
-            if(!is_array($cfg))$cfg=[];
-            $defaults=['attendance_reset'=>1,'general_leave_delete'=>1,'employee_delete'=>1,'feature_disable'=>1];
-            foreach($defaults as $k=>$v){if(!array_key_exists($k,$cfg))$cfg[$k]=$v;}
+            $cfg=\WorkforceOne\Settings\FeatureSettings::confirmState(get_option('ews_confirmation_actions',[]));
             $payload=['global'=>(bool)$global,'actions'=>$cfg];
             echo '<script>window.ewsAdminConfirmationConfig='.wp_json_encode($payload).';(function(){function init(){document.querySelectorAll("[data-ews-confirm-key]").forEach(function(el){if(el.dataset.ewsConfirmBound==="1")return;el.dataset.ewsConfirmBound="1";el.addEventListener("click",function(e){var c=window.ewsAdminConfirmationConfig||{};var k=el.getAttribute("data-ews-confirm-key");if(c.global!==false&&c.actions&&c.actions[k]){var msg=k==="attendance_reset"?"Reset ALL attendance and break records for this employee on this date?":"Remove this General Leave?";if(!window.confirm(msg))e.preventDefault();}});});}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();})();</script>';
         }
@@ -188,9 +189,9 @@ trait EWS_Admin_Trait {
         if(!$this->achievements_enabled())wp_die('Enable Achievements before granting an achievement.');
         global $wpdb;
         $employee_id=absint($_POST['employee_id']??0);
-        $name=sanitize_text_field($_POST['achievement_name']??'');
-        $description=sanitize_textarea_field($_POST['achievement_description']??'');
-        $icon=sanitize_text_field($_POST['achievement_icon']??'🏅');
+        $name=sanitize_text_field(wp_unslash($_POST['achievement_name']??''));
+        $description=sanitize_textarea_field(wp_unslash($_POST['achievement_description']??''));
+        $icon=sanitize_text_field(wp_unslash($_POST['achievement_icon']??'🏅'));
         $style=sanitize_key($_POST['badge_style']??'circle');
         $allowed=['circle','shield','star','ribbon']; if(!in_array($style,$allowed,true))$style='circle';
         if(!$employee_id||$name==='')wp_die('Employee and achievement name are required.');
@@ -438,139 +439,6 @@ trait EWS_Admin_Trait {
         echo '<p style="margin-top:18px;color:#667085">Notifications and My Profile remain top-right actions. Employee management remains in WordPress Admin. Navigation visibility is presentation only; permissions remain the access-control layer.</p>';
         echo '</div>';
     }
-
-    public function admin_features(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            $overtime=$this->overtime_enabled(); $face_signin=$this->face_signin_enabled(); $tasks=$this->tasks_enabled(); $recognition_enabled=(int)get_option('ews_feature_recognition',1); $recognition_allow_kudos=(int)get_option('ews_recognition_allow_kudos',1); $recognition_limit_mode=get_option('ews_recognition_weekly_limit_mode','limited'); if(!in_array($recognition_limit_mode,['limited','unlimited'],true))$recognition_limit_mode='limited'; $recognition_weekly_limit=max(1,min(1000,(int)get_option('ews_recognition_weekly_limit',5)));
-            $splash_cfg=get_option('ews_pwa_splash_settings',[]);
-            if(!is_array($splash_cfg))$splash_cfg=[];
-            $splash_enabled=array_key_exists('enabled',$splash_cfg)?(int)$splash_cfg['enabled']:1;
-            $splash_duration=array_key_exists('duration_ms',$splash_cfg)?(int)$splash_cfg['duration_ms']:650;
-            $splash_title=array_key_exists('title',$splash_cfg)?sanitize_text_field($splash_cfg['title']):'Workforce One';
-            $splash_subtitle=array_key_exists('subtitle',$splash_cfg)?sanitize_text_field($splash_cfg['subtitle']):'Workforce Management Platform';
-            $splash_bg=array_key_exists('background',$splash_cfg)?sanitize_hex_color($splash_cfg['background']):'#f7f7fb';
-            $splash_accent=array_key_exists('accent',$splash_cfg)?sanitize_hex_color($splash_cfg['accent']):'#6125c9';
-            $splash_logo=array_key_exists('logo',$splash_cfg)?esc_url($splash_cfg['logo']):'';
-            $presence_qr=(int)get_option('ews_presence_qr_signin',0); $presence_verification=(int)get_option('ews_presence_verification',0);
-            $breaks=$this->break_enabled();
-            $breaks_per_day=$this->break_per_day();
-            $break_duration=$this->break_duration_minutes();
-            $break_escalation=$this->break_escalation_minutes();
-            $early_max=(int)get_option('ews_early_leave_max_minutes',120); $early_monthly=(int)get_option('ews_early_leave_monthly_minutes',240); $early_office_only=(int)get_option('ews_early_leave_office_only',1); $confirm_global=(int)get_option('ews_confirm_global',1); $confirm_defaults=['swap_cancel'=>1,'swap_reject'=>1,'leave_cancel'=>1,'leave_cancel_reject'=>1,'overtime_reject'=>1,'early_leave_reject'=>1,'attendance_reset'=>1,'general_leave_delete'=>1,'employee_delete'=>1,'feature_disable'=>1]; $confirm_cfg=get_option('ews_confirmation_actions',[]); if(!is_array($confirm_cfg))$confirm_cfg=[];
-            echo '<div class="wrap"><h1>Feature Configuration</h1>';
-            echo '<style id="wfo-feature-config-ui">
-            .wfo-features-shell{max-width:980px;background:#fff;border:1px solid #dcdcde;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(16,24,40,.04)}
-            .wfo-features-intro{padding:24px 28px;background:linear-gradient(180deg,#fafaff 0%,#fff 100%);border-bottom:1px solid #e8e8ec}
-            .wfo-features-intro p{margin:0;max-width:760px;color:#667085;font-size:14px;line-height:1.6}
-            .wfo-feature-section{padding:24px 28px;border-bottom:1px solid #ececf0}
-            .wfo-feature-section:last-of-type{border-bottom:0}
-            .wfo-feature-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
-            .wfo-feature-title{margin:0;font-size:18px;font-weight:700;color:#172b24;line-height:1.3}
-            .wfo-feature-desc{margin:5px 0 0;color:#667085;font-size:13px;line-height:1.5}
-            .wfo-feature-status{display:flex;align-items:center;gap:8px;white-space:nowrap;font-weight:700;color:#344054}
-            .wfo-feature-status input{margin:0}
-            .wfo-feature-fields{margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-            .wfo-field label,.wfo-feature-fields>label{display:block}
-            .wfo-field-label{display:block;font-size:12px;font-weight:700;color:#344054;margin-bottom:6px}
-            .wfo-feature-fields input[type=text],.wfo-feature-fields input[type=url],.wfo-feature-fields input[type=number]{width:100%;min-height:40px;border:1px solid #cfd3d8;border-radius:8px;padding:7px 11px;box-sizing:border-box}
-            .wfo-subpanel{margin-top:18px;padding:18px;border:1px solid #e2e5ea;border-radius:12px;background:#fafbfc}
-            .wfo-subpanel-title{font-size:14px;font-weight:700;color:#1d2939}
-            .wfo-subpanel-desc{margin:4px 0 14px;color:#667085;font-size:12px}
-            .wfo-confirm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-            .wfo-confirm-item{display:flex;align-items:center;gap:8px;padding:11px 12px;background:#f8f9fa;border:1px solid #e2e4e7;border-radius:9px;color:#344054;font-size:13px}
-            .wfo-confirm-item input{margin:0}
-            .wfo-savebar{padding:20px 28px;background:#fafafa;border-top:1px solid #e8e8ec;display:flex;align-items:center;justify-content:space-between;gap:16px}
-            .wfo-savebar .button-primary{min-height:40px;padding:0 18px;border-radius:8px}
-            @media(max-width:782px){
-              .wfo-feature-head{display:block}.wfo-feature-status{margin-top:14px}
-              .wfo-feature-fields{grid-template-columns:1fr}
-              .wfo-confirm-grid{grid-template-columns:1fr}
-              .wfo-feature-section,.wfo-features-intro,.wfo-savebar{padding:20px}
-            }
-            </style>';
-
-            if(isset($_GET['features_saved']))echo '<div class="notice notice-success is-dismissible"><p>Feature configuration saved.</p></div>';
-            echo '<div class="wfo-features-shell" style="margin-top:18px">';
-            echo '<div class="wfo-features-intro"><p>Enable or disable optional Workforce One features. Disabling a feature hides it from users and blocks direct access to its functionality.</p></div>';
-            echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-            echo wp_nonce_field('ews_features_save','_wpnonce',true,false);
-            echo '<input type="hidden" name="action" value="ews31_features_save">';
-            echo '<div class="wfo-feature-section">';
-            echo '<div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>';
-            echo '<label style="display:flex;align-items:center;gap:8px;font-weight:700"><input type="checkbox" name="tasks_enabled" value="1" '.checked($tasks,true,false).'> Enabled</label></div>';
-            echo '<div class="wfo-feature-section"><div><div class="wfo-feature-title">Presence Layer</div><div class="wfo-feature-desc">Optional workplace presence tools. Dynamic QR Sign-In and manager-requested Presence Verification are independent from normal Sign In / Out.</div></div><div class="wfo-feature-fields"><label><input type="checkbox" name="presence_qr_signin" value="1" '.checked($presence_qr,1,false).'> Dynamic QR Sign-In</label><label><input type="checkbox" name="presence_verification" value="1" '.checked($presence_verification,1,false).'> Presence Verification</label></div><p class="description">Create and manage workplace Kiosks from <strong>Presence Kiosks</strong>. Kiosks only display a rotating QR code and never contain employee credentials.</p></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div><div class="wfo-feature-title">Vacation Requests</div><div class="wfo-feature-desc">Employees can submit vacation requests and managers can approve them.</div></div>';
-            echo '<span style="font-weight:700;color:#008a20">Enabled</span></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div><div class="wfo-feature-title">Break Management</div><div class="wfo-feature-desc">Informative break tracking with employee notifications and Manager escalation for extended breaks.</div>';
-            echo '<div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:end">';
-            echo '<label>Breaks per day<br><input type="number" min="1" max="20" name="breaks_per_day" value="'.(int)$breaks_per_day.'" style="width:90px"></label>';
-            echo '<label>Break duration (minutes)<br><input type="number" min="1" max="480" name="break_duration" value="'.(int)$break_duration.'" style="width:120px"></label>';
-            echo '<label>Manager alert after (minutes)<br><input type="number" min="2" max="1440" name="break_escalation" value="'.(int)$break_escalation.'" style="width:150px"></label>';
-            echo '</div></div>';
-            echo '<label style="display:flex;align-items:center;gap:8px;font-weight:700"><input type="checkbox" name="break_enabled" value="1" '.checked($breaks,true,false).'> Enabled</label></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div><div class="wfo-feature-title">Early Leave</div><div class="wfo-feature-desc">Manager-approved attendance exception with configurable monthly allowance.</div><div style="margin-top:10px;display:flex;gap:12px"><label>Max per request (minutes)<br><input type="number" min="1" max="480" name="early_leave_max" value="'.(int)$early_max.'" style="width:120px"></label><label>Monthly allowance (minutes)<br><input type="number" min="1" max="7440" name="early_leave_monthly" value="'.(int)$early_monthly.'" style="width:140px"></label> <label style="margin-left:12px"><input type="checkbox" name="early_leave_office_only" value="1" '.checked($early_office_only,1,false).'> Office workdays only</label></div></div></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div><div class="wfo-feature-title">Face Verification for Sign In</div><div class="wfo-feature-desc">Require local browser face verification before Sign In. Face data stays in the employee browser.</div></div>';
-            echo '<label style="display:flex;align-items:center;gap:8px;font-weight:700"><input type="checkbox" name="face_signin_enabled" value="1" '.checked($face_signin,true,false).'> Enabled</label></div>';
-            $face_cfg=$this->face_signin_settings();
-            echo '<div class="wfo-subpanel">';
-            echo '<div class="wfo-subpanel-title">Face Algorithm Tuning</div><div class="wfo-subpanel-desc">Advanced tuning. Lower values generally make detection easier; higher values make it stricter.</div>';
-            echo '<div class="wfo-feature-fields">';
-            $fields=array(
-              'baseline_samples'=>array('Open-eye calibration samples',5,60,''),
-              'sample_interval_ms'=>array('Calibration interval (ms)',50,500,''),
-              'eye_drop_threshold'=>array('Blink start ratio',0.70,0.99,'step="0.01"'),
-              'blink_min_drop'=>array('Blink confirm ratio',0.70,0.99,'step="0.01"'),
-              'blink_min_ms'=>array('Minimum blink duration (ms)',30,300,''),
-              'challenge_timeout_sec'=>array('Liveness timeout (sec)',5,30,''),
-              'head_move_px'=>array('Head movement minimum (px)',2,40,''),
-              'head_move_ratio'=>array('Head movement ratio',0.005,0.08,'step="0.001"'),
-              'face_match_threshold'=>array('Face match distance',0.30,0.90,'step="0.01"'),
-              'enrollment_samples'=>array('Enrollment samples',3,10,''),
-              'enrollment_interval_ms'=>array('Enrollment interval (ms)',200,2000,''),
-              'detector_score_threshold'=>array('Face detector confidence',0.10,0.90,'step="0.01"'),
-              'detector_input_size'=>array('Detector input size',160,512,'')
-            );
-            foreach($fields as $k=>$f){
-                echo '<label style="display:block"><span style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">'.esc_html($f[0]).'</span><input type="number" name="face_signin_settings['.esc_attr($k).']" value="'.esc_attr($face_cfg[$k]).'" min="'.esc_attr($f[1]).'" max="'.esc_attr($f[2]).'" '.$f[3].' style="width:100%"></label>';
-            }
-            echo '</div></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div class="wfo-feature-title">PWA Splash Screen</div>';
-            echo '<div class="wfo-feature-desc">Customize the splash shown when Workforce One opens as a PWA. This affects the installed PWA only.</div>';
-            echo '<div class="wfo-feature-fields" style="max-width:760px">';
-            echo '<label><strong>Enable Splash</strong><br><input type="checkbox" name="pwa_splash[enabled]" value="1" '.checked($splash_enabled,1,false).'> Enabled</label>';
-            echo '<label><strong>Minimum duration (ms)</strong><br><input type="number" name="pwa_splash[duration_ms]" value="'.esc_attr($splash_duration).'" min="0" max="3000" step="50" style="width:100%"></label>';
-            echo '<label><strong>App title</strong><br><input type="text" name="pwa_splash[title]" value="'.esc_attr($splash_title).'" maxlength="60" style="width:100%"></label>';
-            echo '<label><strong>Subtitle</strong><br><input type="text" name="pwa_splash[subtitle]" value="'.esc_attr($splash_subtitle).'" maxlength="100" style="width:100%"></label>';
-            echo '<label><strong>Background</strong><br><input type="text" name="pwa_splash[background]" value="'.esc_attr($splash_bg).'" placeholder="#f7f7fb" style="width:100%"></label>';
-            echo '<label><strong>Accent / loader color</strong><br><input type="text" name="pwa_splash[accent]" value="'.esc_attr($splash_accent).'" placeholder="#6125c9" style="width:100%"></label>';
-            echo '<label style="grid-column:1/-1"><strong>Logo URL</strong><br><input type="url" name="pwa_splash[logo]" value="'.esc_attr($splash_logo).'" placeholder="https://..." style="width:100%"><span style="display:block;color:#646970;font-size:12px;margin-top:4px">Leave empty to use the default app icon.</span></label>';
-            echo '</div></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div class="wfo-feature-head"><div><div class="wfo-feature-title">Recognition &amp; Kudos</div><div class="wfo-feature-desc">Peer-to-peer appreciation. Recognition is not a performance score.</div></div><label class="wfo-feature-status"><input type="checkbox" name="recognition_enabled" value="1" '.checked($recognition_enabled,1,false).'> Enabled</label></div>';
-            echo '<div class="wfo-feature-fields">';
-            echo '<label><span class="wfo-field-label">Allow employees to give Kudos</span><input type="checkbox" name="recognition_allow_kudos" value="1" '.checked($recognition_allow_kudos,1,false).'> Employees can send Kudos to colleagues.</label>';
-            echo '<label><span class="wfo-field-label">Weekly sending limit</span><select name="recognition_weekly_limit_mode" style="width:100%;min-height:40px;border:1px solid #cfd3d8;border-radius:8px;padding:7px 11px;box-sizing:border-box"><option value="limited" '.selected($recognition_limit_mode,'limited',false).'>Limited</option><option value="unlimited" '.selected($recognition_limit_mode,'unlimited',false).'>Unlimited</option></select></label>';
-            echo '<label><span class="wfo-field-label">Maximum Kudos per employee / week</span><input type="number" min="1" max="1000" name="recognition_weekly_limit" value="'.(int)$recognition_weekly_limit.'" style="width:100%"><span style="display:block;color:#667085;font-size:12px;margin-top:4px">Calendar week: Monday through Sunday. Ignored when Unlimited is selected.</span></label>';
-            echo '</div></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div><div class="wfo-feature-title">Overtime Requests</div><div class="wfo-feature-desc">Allow employees to request overtime and managers to review it.</div></div>';
-            echo '<label style="display:flex;align-items:center;gap:8px;font-weight:700"><input type="checkbox" name="overtime_enabled" value="1" '.checked($overtime,true,false).'> Enabled</label></div>';
-            echo '<div class="wfo-feature-section">';
-            echo '<div class="wfo-feature-title">Confirmation Dialogs</div>';
-            echo '<div class="wfo-feature-desc">Control confirmation prompts for actions that can change or remove data. The global switch overrides all individual settings.</div>';
-            echo '<p><label><input type="checkbox" name="confirm_global" value="1" '.checked($confirm_global,1,false).'> <strong>Enable Confirmation Dialogs</strong></label></p>';
-            $labels=['swap_cancel'=>'Cancel Shift Swap','swap_reject'=>'Reject Shift Swap','leave_cancel'=>'Cancel Leave Request','leave_cancel_reject'=>'Reject Leave Cancellation','overtime_reject'=>'Reject Overtime Request','early_leave_reject'=>'Reject Early Leave Request','attendance_reset'=>'Reset Attendance Day','general_leave_delete'=>'Delete General Leave','employee_delete'=>'Delete Employee','feature_disable'=>'Disable Feature'];
-            echo '<div class="wfo-confirm-grid">';
-            foreach($labels as $key=>$label){$v=array_key_exists($key,$confirm_cfg)?(int)!empty($confirm_cfg[$key]):$confirm_defaults[$key]; echo '<label class="wfo-confirm-item"><input type="checkbox" name="confirm_actions['.esc_attr($key).']" value="1" '.checked($v,1,false).'> '.esc_html($label).'</label>';}
-            echo '</div></div>';
-            echo $this->privacy_settings_section();
-            echo '<div class="wfo-savebar"><span style="color:#667085;font-size:13px">Changes apply after saving this configuration.</span><button class="button button-primary">Save Feature Configuration</button></div></form></div></div>';
-        }
 
         public function admin_notification_settings(){
             if(!$this->can('ews_manage_settings'))wp_die('Access denied');
@@ -968,13 +836,13 @@ trait EWS_Admin_Trait {
             if(!$this->can('ews_view_reports')) wp_die('Access denied');
             global $wpdb;
 
-            [$dates,$sun]=$this->week_dates_configured(sanitize_text_field($_GET['week']??current_time('Y-m-d')));
+            [$dates,$sun]=$this->week_dates_configured(sanitize_text_field(wp_unslash($_GET['week']??current_time('Y-m-d'))));
             $week_start=$dates[0]??current_time('Y-m-d');
             $week_end=$dates[count($dates)-1]??$week_start;
             $today=current_time('Y-m-d');
-            $focus_date=sanitize_text_field($_GET['focus_date']??$today);
+            $focus_date=sanitize_text_field(wp_unslash($_GET['focus_date']??$today));
             if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$focus_date) || strtotime($focus_date)===false)$focus_date=$today;
-            $selected_team=sanitize_text_field($_GET['team']??'all');
+            $selected_team=sanitize_text_field(wp_unslash($_GET['team']??'all'));
 
             $all_emps=(array)$this->emps();
             $team_options=[];
@@ -1179,65 +1047,6 @@ trait EWS_Admin_Trait {
             echo '<div class="wrap"><h1>Reports</h1><p>Use <code>[employee_app]</code> → Reports for the frontend report interface.</p></div>';
         }
 
-    public function features_save_handler(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_features_save');
-            $splash_post=isset($_POST['pwa_splash'])&&is_array($_POST['pwa_splash'])?$_POST['pwa_splash']:[];
-            $splash_enabled=!empty($splash_post['enabled'])?1:0;
-            $splash_duration=max(0,min(3000,(int)($splash_post['duration_ms']??650)));
-            $splash_title=sanitize_text_field($splash_post['title']??'Workforce One');
-            $splash_subtitle=sanitize_text_field($splash_post['subtitle']??'Workforce Management Platform');
-            $splash_bg=sanitize_hex_color($splash_post['background']??'#f7f7fb')?:'#f7f7fb';
-            $splash_accent=sanitize_hex_color($splash_post['accent']??'#6125c9')?:'#6125c9';
-            $splash_logo=esc_url_raw($splash_post['logo']??'');
-            update_option('ews_pwa_splash_settings',[
-                'enabled'=>$splash_enabled,'duration_ms'=>$splash_duration,'title'=>$splash_title,
-                'subtitle'=>$splash_subtitle,'background'=>$splash_bg,'accent'=>$splash_accent,'logo'=>$splash_logo
-            ],false);
-            $recognition_enabled=!empty($_POST['recognition_enabled']);
-            $recognition_allow_kudos=!empty($_POST['recognition_allow_kudos']);
-            $recognition_limit_mode=sanitize_key($_POST['recognition_weekly_limit_mode']??'limited');
-            if(!in_array($recognition_limit_mode,['limited','unlimited'],true))$recognition_limit_mode='limited';
-            $recognition_weekly_limit=max(1,min(1000,(int)($_POST['recognition_weekly_limit']??5)));
-            update_option('ews_presence_qr_signin',!empty($_POST['presence_qr_signin'])?1:0,false);
-            update_option('ews_presence_verification',!empty($_POST['presence_verification'])?1:0,false);
-            $this->privacy_settings_save();
-            update_option('ews_feature_recognition',$recognition_enabled,false);
-            update_option('ews_recognition_allow_kudos',$recognition_allow_kudos,false);
-            update_option('ews_recognition_weekly_limit_mode',$recognition_limit_mode,false);
-            update_option('ews_recognition_weekly_limit',$recognition_weekly_limit,false);
-            $tasks_enabled=!empty($_POST['tasks_enabled']);
-            update_option('ews_feature_tasks',$tasks_enabled,false);
-            $enabled=!empty($_POST['overtime_enabled']);
-            update_option('ews_feature_overtime',$enabled,false);
-            $face_enabled=!empty($_POST['face_signin_enabled']);
-            update_option('ews_feature_face_signin',$face_enabled,false);
-            $face_defaults=array('baseline_samples'=>15,'sample_interval_ms'=>100,'eye_drop_threshold'=>0.90,'blink_min_drop'=>0.94,'blink_min_ms'=>60,'challenge_timeout_sec'=>12,'head_move_px'=>8,'head_move_ratio'=>0.018,'face_match_threshold'=>0.60,'enrollment_samples'=>5,'enrollment_interval_ms'=>650,'detector_score_threshold'=>0.35,'detector_input_size'=>320);
-            $face_post=isset($_POST['face_signin_settings'])&&is_array($_POST['face_signin_settings'])?$_POST['face_signin_settings']:array(); $face_cfg=array();
-            foreach($face_defaults as $k=>$default){$v=isset($face_post[$k])?$face_post[$k]:$default;$v=in_array($k,array('eye_drop_threshold','blink_min_drop','head_move_ratio','face_match_threshold','detector_score_threshold'),true)?(float)$v:(int)$v;$face_cfg[$k]=$v;}
-            $face_cfg['baseline_samples']=max(5,min(60,$face_cfg['baseline_samples']));$face_cfg['sample_interval_ms']=max(50,min(500,$face_cfg['sample_interval_ms']));$face_cfg['eye_drop_threshold']=max(.70,min(.99,$face_cfg['eye_drop_threshold']));$face_cfg['blink_min_drop']=max(.70,min(.99,$face_cfg['blink_min_drop']));$face_cfg['blink_min_ms']=max(30,min(300,$face_cfg['blink_min_ms']));$face_cfg['challenge_timeout_sec']=max(5,min(30,$face_cfg['challenge_timeout_sec']));$face_cfg['head_move_px']=max(2,min(40,$face_cfg['head_move_px']));$face_cfg['head_move_ratio']=max(.005,min(.08,$face_cfg['head_move_ratio']));$face_cfg['face_match_threshold']=max(.30,min(.90,$face_cfg['face_match_threshold']));$face_cfg['enrollment_samples']=max(3,min(10,$face_cfg['enrollment_samples']));$face_cfg['enrollment_interval_ms']=max(200,min(2000,$face_cfg['enrollment_interval_ms']));$face_cfg['detector_score_threshold']=max(.10,min(.90,$face_cfg['detector_score_threshold']));$face_cfg['detector_input_size']=in_array($face_cfg['detector_input_size'],array(160,224,320,416,512),true)?$face_cfg['detector_input_size']:320;
-            update_option('ews_face_signin_settings',$face_cfg,false);
-            $break_enabled=!empty($_POST['break_enabled']);
-            $per_day=max(1,min(20,(int)($_POST['breaks_per_day']??3)));
-            $duration=max(1,min(480,(int)($_POST['break_duration']??30)));
-            $escalation=max($duration+1,min(1440,(int)($_POST['break_escalation']??45)));
-            update_option('ews_feature_breaks',$break_enabled,false);
-            update_option('ews_breaks_per_day',$per_day,false);
-            update_option('ews_break_duration_minutes',$duration,false);
-            update_option('ews_break_manager_alert_minutes',$escalation,false);
-            update_option('ews_early_leave_max_minutes',max(1,min(480,(int)($_POST['early_leave_max']??120))),false);
-            update_option('ews_early_leave_monthly_minutes',max(1,min(7440,(int)($_POST['early_leave_monthly']??240))),false);
-            update_option('ews_early_leave_office_only',!empty($_POST['early_leave_office_only'])?1:0,false);
-            update_option('ews_confirm_global',!empty($_POST['confirm_global'])?1:0,false);
-            $allowed=['swap_cancel','swap_reject','leave_cancel','leave_cancel_reject','overtime_reject','attendance_reset','general_leave_delete','employee_delete','feature_disable'];
-            $raw=isset($_POST['confirm_actions'])&&is_array($_POST['confirm_actions'])?$_POST['confirm_actions']:[];
-            $clean=[];
-            foreach($allowed as $k)$clean[$k]=!empty($raw[$k])?1:0;
-            update_option('ews_confirmation_actions',$clean,false);
-            $this->audit('feature_update','settings',0,'recognition='.($recognition_enabled?'enabled':'disabled').';kudos='.($recognition_allow_kudos?'allowed':'blocked').';kudos_weekly=' . ($recognition_limit_mode==='unlimited'?'unlimited':$recognition_weekly_limit) . ';tasks='.($tasks_enabled?'enabled':'disabled').';overtime_requests='.($enabled?'enabled':'disabled').';face_signin='.($face_enabled?'enabled':'disabled').';breaks='.($break_enabled?'enabled':'disabled').';breaks_per_day='.$per_day.';break_duration='.$duration.';break_escalation='.$escalation);
-            $this->redirect(['page'=>'ews31-features','features_saved'=>1]);
-        }
-
     public function admin_email(){
             if(!$this->can('ews_manage_settings')) wp_die('Access denied');
             echo '<div class="wrap"><h1>Attendance Email Settings</h1><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">
@@ -1252,7 +1061,7 @@ trait EWS_Admin_Trait {
             check_admin_referer('ews31_time_reset');
             global $wpdb;
             $employee_id=absint($_POST['employee_id']??0);
-            $date=sanitize_text_field($_POST['work_date']??'');
+            $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
             if(!$employee_id||!$this->valid_date($date))wp_die('Invalid employee or date.');
             $deleted=$wpdb->query($wpdb->prepare("DELETE FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",$employee_id,$date));
 
@@ -1289,12 +1098,12 @@ trait EWS_Admin_Trait {
             global $wpdb;
             $id=absint($_POST['time_id']??0);
             $employee_id=absint($_POST['employee_id']??0);
-            $work_date=sanitize_text_field($_POST['work_date']??'');
+            $work_date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
             $event_type=sanitize_key($_POST['event_type']??'');
-            $event_at=str_replace('T',' ',sanitize_text_field($_POST['event_at']??''));
-            $lat_raw=sanitize_text_field($_POST['latitude']??'');
-            $lng_raw=sanitize_text_field($_POST['longitude']??'');
-            $acc_raw=sanitize_text_field($_POST['accuracy']??'');
+            $event_at=str_replace('T',' ',sanitize_text_field(wp_unslash($_POST['event_at']??'')));
+            $lat_raw=sanitize_text_field(wp_unslash($_POST['latitude']??''));
+            $lng_raw=sanitize_text_field(wp_unslash($_POST['longitude']??''));
+            $acc_raw=sanitize_text_field(wp_unslash($_POST['accuracy']??''));
             if(!$employee_id||!$this->valid_date($work_date)||!in_array($event_type,['sign_in','late_sign_in','sign_out'],true))wp_die('Invalid attendance record.');
             $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1",$employee_id));
             if(!$emp)wp_die('Employee not found.');
@@ -1334,8 +1143,8 @@ trait EWS_Admin_Trait {
 
     public function admin_time_csv(){
             if(!$this->can('ews_manage_time'))wp_die('Access denied');
-            $start=sanitize_text_field($_GET['start']??'');
-            $end=sanitize_text_field($_GET['end']??'');
+            $start=sanitize_text_field(wp_unslash($_GET['start']??''));
+            $end=sanitize_text_field(wp_unslash($_GET['end']??''));
             if(!$this->valid_date($start)||!$this->valid_date($end))wp_die('Invalid date range.');
             if(strtotime($end)<strtotime($start))wp_die('Invalid date range.');
             global $wpdb;
@@ -1376,7 +1185,7 @@ trait EWS_Admin_Trait {
 
     public function admin_time_report(){
             if(!$this->can('ews_manage_time'))wp_die('Access denied');global $wpdb;
-            $start=sanitize_text_field($_GET['start']??date('Y-m-01',current_time('timestamp')));$end=sanitize_text_field($_GET['end']??current_time('Y-m-d'));
+            $start=sanitize_text_field(wp_unslash($_GET['start']??date('Y-m-01',current_time('timestamp'))));$end=sanitize_text_field(wp_unslash($_GET['end']??current_time('Y-m-d')));
             if(!$this->valid_date($start)||!$this->valid_date($end)){$start=date('Y-m-01',current_time('timestamp'));$end=current_time('Y-m-d');}
             $rows=$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s ORDER BY l.work_date DESC,l.event_at DESC",$start,$end));
             $employees=$wpdb->get_results("SELECT id,name,domain_name,wp_user_id FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
@@ -1463,8 +1272,8 @@ trait EWS_Admin_Trait {
     public function admin_audit(){
             if(!$this->can('ews_view_audit_log')) wp_die('Access denied');
             global $wpdb;
-            $from=sanitize_text_field($_GET['audit_from']??'');
-            $to=sanitize_text_field($_GET['audit_to']??'');
+            $from=sanitize_text_field(wp_unslash($_GET['audit_from']??''));
+            $to=sanitize_text_field(wp_unslash($_GET['audit_to']??''));
             $user_id=absint($_GET['audit_user']??0);
             $where=[];$args=[];
             if($from && preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$from)){$where[]='a.created_at >= %s';$args[]=$from.' 00:00:00';}

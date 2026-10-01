@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.7
+### Fixed
+- **Apostrophes and quotes are saved as typed everywhere.** Text from forms (leave and overtime
+  reasons, employee and department names, task titles, holiday titles, notes, settings…) was
+  stored with a backslash: "Ahmed's" became "Ahmed\'s". 77 inputs across the plugin are fixed.
+- Feature Configuration: the **"Reject Early Leave Request" confirmation can now be turned off**
+  (it was shown but never saved, so it always came back on).
+- Feature Configuration: an Early Leave monthly allowance lower than the per-request maximum is
+  refused with a message, and nothing is saved.
+- Feature Configuration: the face detector input size is a choice of the sizes the model supports
+  (any other number was silently replaced by 320); an empty PWA splash title falls back to the default.
+
+### Internal
+- Feature Configuration moved to `includes/trait-features.php`, HTML to
+  `templates/admin/features.php`, styles to `assets/css/admin-features.css` (+ RTL), value rules to
+  `src/Settings/FeatureSettings.php` (unit tested). Face and splash defaults and the confirmation
+  list now live in one place.
+
 ## 3.31.6
 ### Fixed (wp-admin → Schedule Configuration)
 - **Working hours that end before they start are refused** unless "Allow Overnight Shift" is on

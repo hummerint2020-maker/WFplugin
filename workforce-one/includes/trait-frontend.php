@@ -162,17 +162,7 @@ trait EWS_Frontend_Trait {
             return $url;
         }
         private function frontend_confirmation_config(){
-            $defaults=[
-                'swap_cancel'=>1,'swap_reject'=>1,'leave_cancel'=>1,'leave_cancel_reject'=>1,
-                'overtime_reject'=>1,'early_leave_reject'=>1,'attendance_reset'=>1,'general_leave_delete'=>1,
-                'employee_delete'=>1,'feature_disable'=>1
-            ];
-            $cfg=get_option('ews_confirmation_actions',[]);
-            if(!is_array($cfg))$cfg=[];
-            foreach($defaults as $k=>$v){
-                if(!array_key_exists($k,$cfg))$cfg[$k]=$v;
-            }
-            return ['global'=>(bool)get_option('ews_confirm_global',1),'actions'=>$cfg];
+            return ['global'=>(bool)get_option('ews_confirm_global',1),'actions'=>\WorkforceOne\Settings\FeatureSettings::confirmState(get_option('ews_confirmation_actions',[]))];
         }
         private function ews_empty_state($title,$text='',$action_url='',$action_label=''){
             $html='<div class="ews-empty-state" role="status"><div class="ews-empty-icon" aria-hidden="true">○</div><div class="ews-empty-title">'.esc_html($title).'</div>';
@@ -528,9 +518,9 @@ private function layout($title,$body){
             global $wpdb;
 
             $today=current_time('Y-m-d');
-            $focus_date=sanitize_text_field($_GET['focus_date']??$today);
+            $focus_date=sanitize_text_field(wp_unslash($_GET['focus_date']??$today));
             if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$focus_date) || strtotime($focus_date)===false)$focus_date=$today;
-            $selected_team=sanitize_text_field($_GET['team']??'all');
+            $selected_team=sanitize_text_field(wp_unslash($_GET['team']??'all'));
 
             [$dates,$sun]=$this->week_dates_configured($focus_date);
             $week_start=$dates[0]??$focus_date;
@@ -634,7 +624,7 @@ private function layout($title,$body){
             $focus_names['actual']['Missing Sign-out']=$focus_missing_sign_out;
 
             $url=function($date=null,$team=null){
-                $args=['ews_view'=>'attendance-insights','focus_date'=>$date?:current_time('Y-m-d'),'team'=>$team===null?sanitize_text_field($_GET['team']??'all'):$team];
+                $args=['ews_view'=>'attendance-insights','focus_date'=>$date?:current_time('Y-m-d'),'team'=>$team===null?sanitize_text_field(wp_unslash($_GET['team']??'all')):$team];
                 return add_query_arg($args,$this->app_view_url('attendance-insights'));
             };
             $focus_prev=$url(date('Y-m-d',strtotime('-1 day',strtotime($focus_date))));
@@ -1377,7 +1367,7 @@ private function layout($title,$body){
         }
 
     private function week_dates(){
-            $raw=sanitize_text_field($_GET['week']??current_time('Y-m-d'));
+            $raw=sanitize_text_field(wp_unslash($_GET['week']??current_time('Y-m-d')));
             return $this->week_dates_configured($raw);
         }
 

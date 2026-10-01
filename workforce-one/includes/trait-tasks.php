@@ -74,11 +74,11 @@ trait EWS_Tasks_Trait {
         if(!$this->tasks_enabled())wp_die('Tasks are disabled.');
         check_admin_referer('ews_task_save');
         $id=absint($_POST['task_id']??0);
-        $title=trim(sanitize_text_field($_POST['title']??''));
-        $description=trim(sanitize_textarea_field($_POST['description']??''));
+        $title=trim(sanitize_text_field(wp_unslash($_POST['title']??'')));
+        $description=trim(sanitize_textarea_field(wp_unslash($_POST['description']??'')));
         $status=sanitize_key($_POST['status']??'todo');
         $priority=sanitize_key($_POST['priority']??'normal');
-        $due=trim(sanitize_text_field($_POST['due_date']??''));
+        $due=trim(sanitize_text_field(wp_unslash($_POST['due_date']??'')));
         $assigned=absint($_POST['assigned_to']??0);
         if($title==='')$this->tasks_redirect(['task_error'=>'title']);
         if(!in_array($status,$this->task_allowed_statuses(),true))$status='todo';

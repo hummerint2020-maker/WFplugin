@@ -134,7 +134,7 @@ trait EWS_Teams_Trait {
         if(!current_user_can('manage_options'))wp_die('Access denied');
         check_admin_referer('ews_team_save'); $this->ensure_teams_schema();
         global $wpdb; $t=$this->team_tables();
-        $id=absint($_POST['team_id']??0); $department_id=absint($_POST['department_id']??0); $name=sanitize_text_field($_POST['name']??''); $description=sanitize_textarea_field($_POST['description']??''); $manager=absint($_POST['manager_employee_id']??0);
+        $id=absint($_POST['team_id']??0); $department_id=absint($_POST['department_id']??0); $name=sanitize_text_field(wp_unslash($_POST['name']??'')); $description=sanitize_textarea_field(wp_unslash($_POST['description']??'')); $manager=absint($_POST['manager_employee_id']??0);
         $members=isset($_POST['member_ids'])&&is_array($_POST['member_ids'])?array_values(array_unique(array_filter(array_map('absint',$_POST['member_ids'])))):[];
         if(!$name||!$manager||!$department_id)return $this->team_redirect_error();
         $this->ensure_departments_schema();

@@ -217,9 +217,9 @@ trait EWS_Leave_Trait {
             if(!$emp)$this->leave_redirect(['leave_error'=>'employee']);
             global $wpdb; $this->ensure_leave_schema();
             $type_id=absint($_POST['leave_type_id']??0);
-            $start=sanitize_text_field($_POST['start_date']??'');
-            $end=sanitize_text_field($_POST['end_date']??'');
-            $reason=trim(sanitize_textarea_field($_POST['reason']??''));
+            $start=sanitize_text_field(wp_unslash($_POST['start_date']??''));
+            $end=sanitize_text_field(wp_unslash($_POST['end_date']??''));
+            $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
             $type=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_types WHERE id=%d AND active=1",$type_id));
             $days=$this->vacation_working_days_count($start,$end);
 

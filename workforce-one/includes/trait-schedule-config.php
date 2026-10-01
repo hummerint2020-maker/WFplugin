@@ -44,8 +44,8 @@ trait EWS_Schedule_Config_Trait {
 
     public function working_hours_save_handler(){
         $this->schedule_config_guard('ews_working_hours_save');
-        $start=sanitize_text_field($_POST['work_start']??'');
-        $end=sanitize_text_field($_POST['work_end']??'');
+        $start=sanitize_text_field(wp_unslash($_POST['work_start']??''));
+        $end=sanitize_text_field(wp_unslash($_POST['work_end']??''));
         $overnight=!empty($_POST['allow_overnight_shift']);
         // Validate first so a refused change saves nothing.
         if($error=ConfigRules::hoursError($start,$end,$overnight))$this->schedule_config_redirect(['schedule_error'=>$error]);
