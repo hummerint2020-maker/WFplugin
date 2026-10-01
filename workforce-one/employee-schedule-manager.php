@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.11
+ * Version: 3.31.12
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.11');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.12');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -35,6 +35,7 @@ require_once __DIR__ . '/includes/trait-employee-admin.php';
 require_once __DIR__ . '/includes/trait-time-report.php';
 require_once __DIR__ . '/includes/trait-settings-pages.php';
 require_once __DIR__ . '/includes/trait-achievements-admin.php';
+require_once __DIR__ . '/includes/trait-engagement-admin.php';
 require_once __DIR__ . '/includes/trait-frontend.php';
 require_once __DIR__ . '/includes/trait-pwa.php';
 require_once __DIR__ . '/includes/trait-reports.php';
@@ -54,7 +55,7 @@ require_once __DIR__ . '/includes/trait-presence.php';
 require_once __DIR__ . '/includes/trait-privacy.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
+    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -112,10 +113,7 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_report_xlsx',[$this,'report_xlsx']);
             add_action('admin_post_ews31_report_email',[$this,'report_email']);
             add_action('admin_post_ews31_email_save',[$this,'email_save']);
-            add_action('admin_post_ews31_employee_moments_save',[$this,'employee_moments_save']);
-            add_action('admin_post_ews_smart_nudges_save',[$this,'smart_nudges_save']);
             add_action('admin_post_ews_smart_nudge_dismiss',[$this,'smart_nudge_dismiss']);
-            add_action('admin_post_ews_smart_nudge_test_push',[$this,'smart_nudge_test_push']);
             add_action('admin_post_ews_achievements_settings_save',[$this,'achievements_settings_save']);
             add_action('admin_post_ews_achievement_manual_grant',[$this,'achievement_manual_grant']);
             add_action('admin_post_ews_achievement_award_delete',[$this,'achievement_award_delete']);
@@ -148,6 +146,7 @@ class EWS_Manager_V31_1 {
             \WorkforceOne\Schedule\ConfigHooks::register($this);
             add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
             \WorkforceOne\Requests\Hooks::register($this);
+            \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
             add_action('admin_post_ews_task_delete',[$this,'task_delete']);

@@ -195,18 +195,7 @@ trait EWS_Frontend_Trait {
         }
 
 private function layout($title,$body){
-            $nav_defaults=[
-                'dashboard'=>['label'=>'Dashboard','mobile_label'=>'Dashboard','icon'=>'🏠','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>10,'mobile_order'=>10],
-                'schedule'=>['label'=>'Schedule','mobile_label'=>'Schedule','icon'=>'📅','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>20,'mobile_order'=>20],
-                'time'=>['label'=>'Sign In / Out','mobile_label'=>'Sign In / Out','icon'=>'🕘','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>30,'mobile_order'=>30],
-                'vacation'=>['label'=>'Leave','mobile_label'=>'Leave','icon'=>'📝','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>40,'mobile_order'=>40],
-                'overtime'=>['label'=>'Overtime','mobile_label'=>'Overtime','icon'=>'⏱️','desktop_visible'=>1,'mobile_visible'=>0,'desktop_order'=>50,'mobile_order'=>50],
-                'tasks'=>['label'=>'Tasks','mobile_label'=>'Tasks','icon'=>'✅','desktop_visible'=>1,'mobile_visible'=>0,'desktop_order'=>60,'mobile_order'=>60],
-                'attendance'=>['label'=>'Attendance','mobile_label'=>'Attendance','icon'=>'📝','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>70,'mobile_order'=>50],
-                'reports'=>['label'=>'Reports','mobile_label'=>'Reports','icon'=>'📊','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>80,'mobile_order'=>60],
-                'attendance-insights'=>['label'=>'Attendance Insights','mobile_label'=>'Attendance Insights','icon'=>'📈','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>90,'mobile_order'=>70],
-                'people'=>['label'=>'People','mobile_label'=>'People','icon'=>'👥','desktop_visible'=>1,'mobile_visible'=>1,'desktop_order'=>75,'mobile_order'=>55],
-            ];
+            $nav_defaults=\WorkforceOne\Settings\Navigation::DEFAULTS;
             $nav_cfg=get_option('ews_frontend_navigation',[]);
             if(!is_array($nav_cfg))$nav_cfg=[];
             $items=[];
@@ -1037,17 +1026,7 @@ private function layout($title,$body){
 
 
     private function smart_nudge_settings(){
-        $defaults=['enabled'=>1,'items'=>['attendance'=>1,'tasks'=>1,'leave'=>1,'schedule'=>1],'attendance_after'=>15,'attendance_repeat'=>0,'attendance_repeat_interval'=>15,'attendance_max_reminders'=>3];
-        $saved=get_option('ews_smart_nudges',[]);
-        if(!is_array($saved))$saved=[];
-        $out=$defaults;
-        $out['enabled']=array_key_exists('enabled',$saved)?(!empty($saved['enabled'])?1:0):1;
-        if(isset($saved['items'])&&is_array($saved['items']))foreach($defaults['items'] as $k=>$v)$out['items'][$k]=array_key_exists($k,$saved['items'])?(!empty($saved['items'][$k])?1:0):$v;
-        $out['attendance_after']=isset($saved['attendance_after'])?max(1,min(240,absint($saved['attendance_after']))):15;
-        $out['attendance_repeat']=!empty($saved['attendance_repeat'])?1:0;
-        $out['attendance_repeat_interval']=isset($saved['attendance_repeat_interval'])?max(5,min(240,absint($saved['attendance_repeat_interval']))):15;
-        $out['attendance_max_reminders']=isset($saved['attendance_max_reminders'])?max(1,min(10,absint($saved['attendance_max_reminders']))):3;
-        return $out;
+        return \WorkforceOne\Settings\SmartNudges::config(get_option('ews_smart_nudges',[]));
     }
 
     private function smart_nudge_dismissed($user_id=null){
@@ -1224,18 +1203,18 @@ private function layout($title,$body){
         if(!(int)get_option('ews_employee_moments_enabled',1)) return [];
         $saved=get_option('ews_employee_moments',[]);
         if(!is_array($saved)||empty($saved)) return [];
-        $today=current_time('Y-m-d');
-        $today_md=date('m-d',strtotime($today));
-        $out=[];
-        $ids=array_map('absint',array_keys($saved));
+        $ids=array_filter(array_map('absint',array_keys($saved)));
         if(!$ids) return [];
-        $rows=$wpdb->get_results("SELECT id,name FROM {$this->employees} WHERE active=1 AND id IN (".implode(',',array_map('intval',$ids)).") ORDER BY name ASC");
+        $today=current_time('Y-m-d');
+        $out=[];
+        $rows=$wpdb->get_results("SELECT id,name FROM {$this->employees} WHERE active=1 AND id IN (".implode(',',$ids).") ORDER BY name ASC");
         foreach($rows as $e){
-            $id=(int)$e->id; $row=$saved[$id]??[];
-            $birthday=(string)($row['birthday']??''); $join=(string)($row['join_date']??'');
-            if($birthday && substr($birthday,5,5)===$today_md) $out[]=['type'=>'birthday','employee_id'=>$id,'name'=>$e->name,'icon'=>'🎂','title'=>'Birthday','message'=>'Happy birthday, '.(string)$e->name.'!'];
-            if($join && substr($join,5,5)===$today_md){ $years=(int)date('Y',strtotime($today))-(int)date('Y',strtotime($join)); if($years>0) $out[]=['type'=>'anniversary','employee_id'=>$id,'name'=>$e->name,'icon'=>'🎉','title'=>'Work Anniversary','message'=>$e->name.' is celebrating '.$years.' '.($years===1?'year':'years').' with the team!']; }
-            if($join && preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$join)){ $join_ts=strtotime($join.' 00:00:00'); $today_ts=strtotime($today.' 00:00:00'); $days=(int)floor(($today_ts-$join_ts)/DAY_IN_SECONDS); if($days>=0 && $days<30) $out[]=['type'=>'welcome','employee_id'=>$id,'name'=>$e->name,'icon'=>'👋','title'=>'Welcome','message'=>'Welcome to Workforce One, '.$e->name.'!']; }
+            $id=(int)$e->id; $row=is_array($saved[$id]??null)?$saved[$id]:[];
+            foreach(\WorkforceOne\Settings\Moments::forDate((string)($row['birthday']??''),(string)($row['join_date']??''),$today) as $m){
+                if($m['type']==='birthday')$out[]=['type'=>'birthday','employee_id'=>$id,'name'=>$e->name,'icon'=>'🎂','title'=>'Birthday','message'=>'Happy birthday, '.(string)$e->name.'!'];
+                elseif($m['type']==='anniversary')$out[]=['type'=>'anniversary','employee_id'=>$id,'name'=>$e->name,'icon'=>'🎉','title'=>'Work Anniversary','message'=>$e->name.' is celebrating '.$m['years'].' '.($m['years']===1?'year':'years').' with the team!'];
+                else $out[]=['type'=>'welcome','employee_id'=>$id,'name'=>$e->name,'icon'=>'👋','title'=>'Welcome','message'=>'Welcome to Workforce One, '.$e->name.'!'];
+            }
         }
         return $out;
     }

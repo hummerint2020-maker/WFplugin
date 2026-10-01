@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.12
+### Fixed
+- **View Navigation: the People page can be configured.** It was missing from the admin page
+  (the app had its own list), so it could not be renamed, reordered or hidden. The page and the
+  app now use one list.
+- **Employee Moments: saving no longer erases the dates of archived employees**, which were
+  dropped because only the employees shown on the form were kept. Impossible dates (e.g. 30 Feb)
+  and birthdays in the future are refused. Birthdays and work anniversaries on 29 February are
+  celebrated on 28 February in other years.
+- Smart Nudges: sending a test push no longer also says "settings saved".
+- Employee Profile, View Navigation and Recognition: changes are posted and then redirected, so
+  refreshing the page no longer repeats a save, reset or Kudos removal. Navigation changes are
+  audited.
+
+### Internal
+- These five pages moved to `includes/trait-engagement-admin.php` with HTML in
+  `templates/admin/`, Smart Nudges styles in `assets/css/admin-smart-nudges.css` (+ RTL), rules in
+  `src/Settings/{Navigation,Moments,SmartNudges}.php` (unit tested, also used by the app) and
+  hooks in `src/Settings/EngagementHooks.php`.
+
 ## 3.31.11
 ### Fixed (wp-admin → Achievements)
 - **Manually granted achievements no longer pile up in the "Automatic Achievements" list.**
