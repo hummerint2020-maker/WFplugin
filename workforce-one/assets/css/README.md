@@ -11,4 +11,5 @@ npx rtlcss@4 assets/css/workforce-one-ui.css assets/css/workforce-one-ui-rtl.css
 npx rtlcss@4 assets/css/admin-schedule-config.css assets/css/admin-schedule-config-rtl.css
 npx rtlcss@4 assets/css/admin-features.css assets/css/admin-features-rtl.css
 npx rtlcss@4 assets/css/admin-notifications.css assets/css/admin-notifications-rtl.css
+npx rtlcss@4 assets/css/admin-achievements.css assets/css/admin-achievements-rtl.css
 ```

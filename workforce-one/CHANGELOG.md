@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.11
+### Fixed (wp-admin → Achievements)
+- **Manually granted achievements no longer pile up in the "Automatic Achievements" list.**
+  Each grant is stored as its own definition, and every one of them was listed there.
+- Removing a manual achievement from an employee's profile also retires its definition, and the
+  profile now confirms the removal (the message was only on the Achievements page).
+- An unsupported badge icon is replaced by the default 🏅 instead of being saved empty.
+- The "Earned achievements" total counts Swap achievements too.
+- Errors (feature off, no name, unknown employee) are shown on the page instead of a blank
+  error screen; the icon picker is labelled "Badge Icon".
+
+### Internal
+- Achievements page moved to `includes/trait-achievements-admin.php`, HTML to
+  `templates/admin/achievements.php`, styles to `assets/css/admin-achievements.css` (+ RTL), the
+  icon picker to `assets/js/admin-achievements.js`, rules to `src/Achievements/ManualGrant.php`.
+
 ## 3.31.10
 ### Fixed
 - **Roles & Permissions: users with two roles kept losing permissions.** Switching a permission

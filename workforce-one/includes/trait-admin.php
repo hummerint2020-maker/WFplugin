@@ -19,6 +19,11 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-notifications', $this->plugin_url('assets/css/admin-notifications.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-notifications', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-achievements'))==='ews31-achievements'){
+            wp_enqueue_style('workforce-one-admin-achievements', $this->plugin_url('assets/css/admin-achievements.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-achievements', 'rtl', 'replace');
+            wp_enqueue_script('workforce-one-admin-achievements', $this->plugin_url('assets/js/admin-achievements.js'), [], EWS_VERSION, true);
+        }
     }
 
     public function admin_menu(){
@@ -80,133 +85,6 @@ trait EWS_Admin_Trait {
 
 
 
-
-    public function admin_achievements(){
-        if(!$this->can('ews_manage_settings'))wp_die('Access denied.');
-        global $wpdb;
-        $this->ensure_achievements_schema();
-        $enabled=$this->achievements_enabled();
-        $search=sanitize_text_field(wp_unslash($_GET['achievement_search']??''));
-        $progress_type=sanitize_key($_GET['achievement_type']??'all');
-        $employee_sql="SELECT id,name,domain_name FROM {$this->employees} WHERE active=1";
-        $employee_args=[];
-        if($search!==''){
-            $like='%'.$wpdb->esc_like($search).'%';
-            $employee_sql.=" AND (name LIKE %s OR domain_name LIKE %s)";
-            $employee_args=[$like,$like];
-        }
-        $employee_sql.=" ORDER BY name ASC";
-        $employees=$employee_args?$wpdb->get_results($wpdb->prepare($employee_sql,$employee_args)):$wpdb->get_results($employee_sql);
-        $defs=$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_achievements WHERE active=1 ORDER BY sort_order ASC,id ASC");
-        $progress=$enabled?$this->achievement_admin_progress_data($employees,$defs):[];
-        $attendance_rows=0;$swap_rows=0;$near_count=0;$earned_count=0;
-        foreach($progress as $row){
-            if($progress_type==='all' || $progress_type==='attendance')$attendance_rows++;
-            if($progress_type==='all' || $progress_type==='swap')$swap_rows++;
-            $earned_count+=count($row['attendance']['earned']);
-            if(isset($row['attendance']['achievement']) && $row['attendance']['target']>0 && $row['attendance']['current']>0 && ($row['attendance']['current']/$row['attendance']['target'])>=.8 && $row['attendance']['current']<$row['attendance']['target'])$near_count++;
-            if(isset($row['swap']['achievement']) && $row['swap']['target']>0 && ($row['swap']['current']/$row['swap']['target'])>=.8 && $row['swap']['current']<$row['swap']['target'])$near_count++;
-        }
-        echo '<div class="wrap"><h1>Achievements</h1>';
-        if(isset($_GET['achievement_saved']))echo '<div class="notice notice-success is-dismissible"><p>Achievement settings saved.</p></div>';
-        if(isset($_GET['achievement_granted']))echo '<div class="notice notice-success is-dismissible"><p>Achievement granted successfully. The employee received the normal achievement notification.</p></div>';
-        if(isset($_GET['achievement_deleted']))echo '<div class="notice notice-success is-dismissible"><p>Achievement removed from the employee profile.</p></div>';
-        if(isset($_GET['achievement_error']))echo '<div class="notice notice-error is-dismissible"><p>'.esc_html(sanitize_text_field(wp_unslash($_GET['achievement_error']))).'</p></div>';
-        echo '<style>
-        .wfo-ach-shell{max-width:1180px}.wfo-ach-card{background:#fff;border:1px solid #dcdcde;border-radius:14px;margin:16px 0;padding:22px;box-shadow:0 2px 8px rgba(16,24,40,.04)}.wfo-ach-head{display:flex;justify-content:space-between;gap:20px;align-items:center}.wfo-ach-muted{color:#667085;font-size:13px;line-height:1.55}.wfo-ach-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.wfo-ach-form-grid .full{grid-column:1/-1}.wfo-ach-form-grid label{display:block;font-weight:600;color:#344054;font-size:13px}.wfo-ach-form-grid input,.wfo-ach-form-grid select,.wfo-ach-form-grid textarea{width:100%;margin-top:6px;box-sizing:border-box}.wfo-ach-icons{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}.wfo-ach-icon{width:42px;height:42px;border:1px solid #d0d5dd;background:#fff;border-radius:10px;font-size:21px;cursor:pointer}.wfo-ach-icon.selected{border-color:#3158c8;box-shadow:0 0 0 2px #dbe4ff;background:#f7f8ff}.wfo-ach-preview{display:flex;align-items:center;gap:12px;margin-top:12px}.wfo-ach-preview-badge{width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:28px;background:#fff7e6;border:1px solid #f3d9a2}.wfo-ach-preview-badge.circle{border-radius:50%}.wfo-ach-preview-badge.shield{border-radius:18px 18px 24px 24px;clip-path:polygon(50% 0,90% 15%,90% 58%,50% 100%,10% 58%,10% 15%)}.wfo-ach-preview-badge.star{border-radius:18px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 95%,50% 72%,21% 95%,32% 57%,2% 35%,39% 35%)}.wfo-ach-preview-badge.ribbon{border-radius:10px 10px 18px 18px}.wfo-ach-list{width:100%;border-collapse:collapse}.wfo-ach-list th,.wfo-ach-list td{padding:10px 8px;border-bottom:1px solid #eef0f3;text-align:left;font-size:12px}.wfo-ach-badge{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;background:#fff7e6;border:1px solid #f3d9a2;font-size:18px;vertical-align:middle}.wfo-ach-badge.circle{border-radius:50%}.wfo-ach-badge.shield{border-radius:10px 10px 14px 14px}.wfo-ach-badge.star{border-radius:10px}.wfo-ach-badge.ribbon{border-radius:8px 8px 12px 12px}
-        .wfo-ach-progress-intro{display:flex;justify-content:space-between;gap:18px;align-items:flex-end}.wfo-ach-stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.wfo-ach-stat{border:1px solid #eaecf0;border-radius:12px;padding:14px 16px;background:#fcfcfd}.wfo-ach-stat .k{font-size:12px;color:#667085}.wfo-ach-stat .v{font-size:24px;font-weight:700;color:#101828;margin-top:4px}.wfo-ach-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}.wfo-ach-toolbar input[type=text],.wfo-ach-toolbar select{min-height:38px}.wfo-ach-toolbar input[type=text]{min-width:260px}.wfo-ach-progress-table{width:100%;border-collapse:separate;border-spacing:0}.wfo-ach-progress-table th{background:#f8fafc;color:#667085;font-size:12px;font-weight:600;text-align:left;padding:11px 12px;border-bottom:1px solid #eaecf0}.wfo-ach-progress-table td{padding:14px 12px;border-bottom:1px solid #f0f2f5;vertical-align:top}.wfo-ach-progress-table tr:last-child td{border-bottom:0}.wfo-ach-employee{display:flex;gap:10px;align-items:center;min-width:190px}.wfo-ach-avatar{width:36px;height:36px;border-radius:10px;background:#eff4ff;color:#3158c8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:0 0 auto}.wfo-ach-employee strong{display:block;color:#101828;font-size:13px}.wfo-ach-employee span{display:block;color:#98a2b3;font-size:11px;margin-top:2px}.wfo-ach-progress-cell{min-width:220px}.wfo-ach-progress-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:7px}.wfo-ach-progress-title{font-weight:600;color:#344054;font-size:12px}.wfo-ach-progress-value{font-weight:700;color:#101828;font-size:12px}.wfo-ach-progress-track{height:8px;border-radius:999px;background:#eaecf0;overflow:hidden}.wfo-ach-progress-fill{height:100%;border-radius:999px;background:#3158c8}.wfo-ach-progress-sub{font-size:11px;color:#667085;margin-top:6px}.wfo-ach-progress-earned{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.wfo-ach-earned-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:999px;background:#ecfdf3;color:#067647;font-size:10px;border:1px solid #abefc6}.wfo-ach-complete{font-size:12px;color:#067647;font-weight:600}.wfo-ach-empty{padding:24px 8px;color:#667085;text-align:center}.wfo-ach-legend{display:flex;gap:14px;flex-wrap:wrap;color:#667085;font-size:11px}.wfo-ach-near{color:#b54708;font-weight:600}.wfo-ach-near-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#f79009;margin-right:5px}
-        @media(max-width:1100px){.wfo-ach-progress-table{min-width:920px}.wfo-ach-progress-scroll{overflow-x:auto}.wfo-ach-progress-cell{min-width:260px}}@media(max-width:782px){.wfo-ach-form-grid{grid-template-columns:1fr}.wfo-ach-form-grid .full{grid-column:auto}.wfo-ach-head,.wfo-ach-progress-intro{display:block}.wfo-ach-stat-grid{grid-template-columns:1fr}.wfo-ach-toolbar input[type=text]{min-width:0;width:100%}.wfo-ach-toolbar{align-items:stretch}.wfo-ach-toolbar select,.wfo-ach-toolbar .button{width:100%}}
-        </style>';
-        echo '<div class="wfo-ach-shell">';
-        echo '<div class="wfo-ach-card"><div class="wfo-ach-head"><div><h2 style="margin:0 0 5px">Achievements Feature</h2><div class="wfo-ach-muted">Controls automatic achievements, profile display, and recognition notifications. Existing earned records are preserved if the feature is disabled.</div></div><strong style="color:'.($enabled?'#067647':'#b42318').';font-size:14px">'.($enabled?'Enabled':'Disabled').'</strong></div><form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="margin-top:18px">'.wp_nonce_field('ews_achievements_settings_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_achievements_settings_save"><label><input type="checkbox" name="achievements_enabled" value="1" '.checked($enabled,true,false).'> Enable Achievements</label><p><button class="button button-primary">Save Achievement Settings</button></p></form></div>';
-
-        if($enabled){
-            echo '<div class="wfo-ach-card"><div class="wfo-ach-progress-intro"><div><h2 style="margin:0 0 5px">Employee Achievement Progress</h2><div class="wfo-ach-muted">Admin-only view of each employee\'s current progress toward the next Attendance and Swap achievement. This is progress visibility, not a ranking.</div></div><div class="wfo-ach-legend"><span>🔥 Attendance streak</span><span>🤝 Successful swaps</span></div></div>';
-            echo '<div class="wfo-ach-stat-grid"><div class="wfo-ach-stat"><div class="k">Employees tracked</div><div class="v">'.(int)count($progress).'</div></div><div class="wfo-ach-stat"><div class="k">Near an achievement</div><div class="v">'.(int)$near_count.'</div></div><div class="wfo-ach-stat"><div class="k">Earned achievements</div><div class="v">'.(int)$earned_count.'</div></div></div>';
-            echo '<form method="get" class="wfo-ach-toolbar"><input type="hidden" name="page" value="ews31-achievements"><input type="text" name="achievement_search" value="'.esc_attr($search).'" placeholder="Search employee name or domain"><select name="achievement_type"><option value="all" '.selected($progress_type,'all',false).'>Attendance + Swap</option><option value="attendance" '.selected($progress_type,'attendance',false).'>Attendance</option><option value="swap" '.selected($progress_type,'swap',false).'>Swap</option></select><button class="button">Filter</button>'; if($search!==''||$progress_type!=='all')echo '<a class="button" href="'.esc_url(admin_url('admin.php?page=ews31-achievements')).'">Reset</a>'; echo '</form>';
-            echo '<div class="wfo-ach-progress-scroll"><table class="wfo-ach-progress-table"><thead><tr><th>Employee</th><th>Attendance Streak</th><th>Successful Swaps</th></tr></thead><tbody>';
-            $shown=0;
-            foreach($progress as $row){
-                $show_att=$progress_type==='all'||$progress_type==='attendance';$show_swap=$progress_type==='all'||$progress_type==='swap';
-                if(!$show_att && !$show_swap)continue;
-                $shown++;$e=$row['employee'];$initials='';foreach(preg_split('/\s+/',trim((string)$e->name)) as $part){if($part!=='')$initials.=mb_strtoupper(mb_substr($part,0,1));} $initials=mb_substr($initials,0,2);
-                echo '<tr><td><div class="wfo-ach-employee"><span class="wfo-ach-avatar">'.esc_html($initials?:'?').'</span><span><strong>'.esc_html($e->name).'</strong><span>'.esc_html($e->domain_name?:'Employee').'</span></span></div></td>';
-                if($show_att){
-                    $a=$row['attendance'];$target=(int)$a['target'];$current=(int)$a['current'];$pct=$target>0?min(100,round(($current/$target)*100)):100;
-                    if($a['achievement']){
-                        $near=$current>0&&$target>$current&&$pct>=80;
-                        echo '<td><div class="wfo-ach-progress-cell"><div class="wfo-ach-progress-head"><span class="wfo-ach-progress-title">'.esc_html($a['achievement']->icon.' '.$a['achievement']->name).'</span><span class="wfo-ach-progress-value">'.(int)$current.' / '.(int)$target.'</span></div><div class="wfo-ach-progress-track"><div class="wfo-ach-progress-fill" style="width:'.(int)$pct.'%"></div></div><div class="wfo-ach-progress-sub">'.($near?'<span class="wfo-ach-near"><span class="wfo-ach-near-dot"></span>':'').esc_html((int)$a['remaining'].' more consecutive days').($near?'</span>':'').' </div>';
-                        if(!empty($a['earned'])){echo '<div class="wfo-ach-progress-earned">';foreach($defs as $d){if($d->category==='attendance'&&isset($a['earned'][(int)$d->id]))echo '<span class="wfo-ach-earned-pill">'.esc_html($d->icon.' '.$d->name).'</span>';}echo '</div>';}
-                        echo '</div></td>';
-                    } else echo '<td><span class="wfo-ach-complete">🏆 All Attendance achievements earned</span></td>';
-                } else echo '<td>—</td>';
-                if($show_swap){
-                    $sw=$row['swap'];$target=(int)$sw['target'];$current=(int)$sw['current'];$pct=$target>0?min(100,round(($current/$target)*100)):100;
-                    if($sw['achievement']){
-                        $near=$target>$current&&$pct>=80;
-                        echo '<td><div class="wfo-ach-progress-cell"><div class="wfo-ach-progress-head"><span class="wfo-ach-progress-title">'.esc_html($sw['achievement']->icon.' '.$sw['achievement']->name).'</span><span class="wfo-ach-progress-value">'.(int)$current.' / '.(int)$target.'</span></div><div class="wfo-ach-progress-track"><div class="wfo-ach-progress-fill" style="width:'.(int)$pct.'%"></div></div><div class="wfo-ach-progress-sub">'.($near?'<span class="wfo-ach-near"><span class="wfo-ach-near-dot"></span>':'').esc_html((int)$sw['remaining'].' more successful swaps').($near?'</span>':'').' </div>'; if(!empty($sw['earned'])){echo '<div class="wfo-ach-progress-earned">';foreach($defs as $d){if($d->category==='collaboration'&&isset($sw['earned'][(int)$d->id]))echo '<span class="wfo-ach-earned-pill">'.esc_html($d->icon.' '.$d->name).'</span>';}echo '</div>';} echo '</div></td>';
-                    } else echo '<td><span class="wfo-ach-complete">🏆 All Swap achievements earned</span></td>';
-                } else echo '<td>—</td>';
-                echo '</tr>';
-            }
-            if(!$shown)echo '<tr><td colspan="3" class="wfo-ach-empty">No active employees match the current filter.</td></tr>';
-            echo '</tbody></table></div></div>';
-
-            echo '<div class="wfo-ach-card"><h2 style="margin-top:0">Grant Achievement to Employee</h2><p class="wfo-ach-muted">Manual achievements are stored as real earned achievements. The employee receives the same in-app and push congratulations flow as an automatic achievement.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_achievement_manual_grant','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_achievement_manual_grant"><div class="wfo-ach-form-grid"><label>Employee<select name="employee_id" required><option value="">Select employee</option>'; foreach((array)$employees as $e){echo '<option value="'.(int)$e->id.'">'.esc_html($e->name.($e->domain_name?' · '.$e->domain_name:'')).'</option>';} echo '</select></label><label>Achievement Name<input type="text" name="achievement_name" maxlength="120" required placeholder="e.g. Team Player"></label><label class="full">Description<textarea name="achievement_description" rows="3" maxlength="500" placeholder="e.g. Helped a teammate when they needed a shift swap."></textarea></label><label class="full">Badge Shape<input type="hidden" id="wfo-ach-icon" name="achievement_icon" value="🏅"><div class="wfo-ach-icons">'; foreach(['🏅','🤝','⭐','🔥','🏆','💎','👑','🚀','💡','🎯','🌟','❤️'] as $ic){echo '<button type="button" class="wfo-ach-icon'.($ic==='🏅'?' selected':'').'" data-icon="'.esc_attr($ic).'">'.esc_html($ic).'</button>';} echo '</div><span class="wfo-ach-muted">Choose the badge symbol shown on the employee profile.</span></label><label>Badge Shape<select name="badge_style" id="wfo-ach-style"><option value="circle">Circle</option><option value="shield">Shield</option><option value="star">Star</option><option value="ribbon">Ribbon</option></select><div class="wfo-ach-preview"><span class="wfo-ach-preview-badge circle" id="wfo-ach-preview">🏅</span><span class="wfo-ach-muted">Preview</span></div></label></div><p><button class="button button-primary">Grant Achievement & Notify Employee</button></p></form><script>(function(){var icon=document.getElementById("wfo-ach-icon"),preview=document.getElementById("wfo-ach-preview"),style=document.getElementById("wfo-ach-style");document.querySelectorAll(".wfo-ach-icon").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".wfo-ach-icon").forEach(function(x){x.classList.remove("selected")});b.classList.add("selected");icon.value=b.dataset.icon;preview.textContent=b.dataset.icon})});style.addEventListener("change",function(){preview.className="wfo-ach-preview-badge "+style.value})})();</script></div>';
-        }
-
-        echo '<div class="wfo-ach-card"><h2 style="margin-top:0">Automatic Achievements</h2><p class="wfo-ach-muted">These are the built-in achievements evaluated by Workforce One.</p><table class="wfo-ach-list"><thead><tr><th>Badge</th><th>Name</th><th>Category</th><th>Rule</th><th>Threshold</th></tr></thead><tbody>'; foreach((array)$defs as $d){echo '<tr><td><span class="wfo-ach-badge '.esc_attr($d->badge_style).'">'.esc_html($d->icon).'</span></td><td><strong>'.esc_html($d->name).'</strong><br><span class="wfo-ach-muted">'.esc_html($d->description).'</span></td><td>'.esc_html(ucwords(str_replace('_',' ',$d->category))).'</td><td>'.esc_html(ucwords(str_replace('_',' ',$d->rule_type))).'</td><td>'.(int)$d->threshold.'</td></tr>';} echo '</tbody></table></div></div></div>';
-    }
-
-    public function achievement_award_delete(){
-        if(!$this->can('ews_manage_settings'))wp_die('Access denied.');
-        $award_id=absint($_GET['award_id']??0);
-        $employee_id=absint($_GET['employee_id']??0);
-        check_admin_referer('ews_achievement_award_delete_'.(int)$award_id);
-        if(!$award_id || !$employee_id)wp_die('Achievement award not found.');
-        global $wpdb;
-        $awards=$wpdb->prefix.'ews_employee_achievements';
-        $row=$wpdb->get_row($wpdb->prepare("SELECT a.id,a.employee_id,a.achievement_id,a.earned_at,d.name,d.slug FROM {$awards} a INNER JOIN {$wpdb->prefix}ews_achievements d ON d.id=a.achievement_id WHERE a.id=%d AND a.employee_id=%d LIMIT 1",$award_id,$employee_id));
-        if(!$row)wp_die('Achievement award not found.');
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT id,name FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id));
-        $deleted=$wpdb->delete($awards,['id'=>$award_id,'employee_id'=>$employee_id],['%d','%d']);
-        if($deleted===false)wp_die('Could not delete the achievement award.');
-        $employee_name=$emp?$emp->name:('Employee #'.$employee_id);
-        $this->audit('achievement_award_deleted','employee_achievement',(int)$award_id,sprintf('%s achievement award removed: %s (%s)', $employee_name, $row->name, $row->slug));
-        $url=add_query_arg(['page'=>'ews31-employee-profile','employee_id'=>$employee_id,'achievement_deleted'=>1],admin_url('admin.php'));
-        wp_safe_redirect($url);
-        exit;
-    }
-
-    public function achievements_settings_save(){
-        if(!$this->can('ews_manage_settings'))wp_die('Access denied.');
-        check_admin_referer('ews_achievements_settings_save');
-        $enabled=!empty($_POST['achievements_enabled']);
-        update_option('ews_feature_achievements',$enabled,false);
-        $this->audit('achievement_feature_update','settings',0,$enabled?'enabled':'disabled');
-        $this->redirect(['page'=>'ews31-achievements','achievement_saved'=>1]);
-    }
-
-    public function achievement_manual_grant(){
-        if(!$this->can('ews_manage_settings'))wp_die('Access denied.');
-        check_admin_referer('ews_achievement_manual_grant');
-        if(!$this->achievements_enabled())wp_die('Enable Achievements before granting an achievement.');
-        global $wpdb;
-        $employee_id=absint($_POST['employee_id']??0);
-        $name=sanitize_text_field(wp_unslash($_POST['achievement_name']??''));
-        $description=sanitize_textarea_field(wp_unslash($_POST['achievement_description']??''));
-        $icon=sanitize_text_field(wp_unslash($_POST['achievement_icon']??'🏅'));
-        $style=sanitize_key($_POST['badge_style']??'circle');
-        $allowed=['circle','shield','star','ribbon']; if(!in_array($style,$allowed,true))$style='circle';
-        if(!$employee_id||$name==='')wp_die('Employee and achievement name are required.');
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$employee_id));
-        if(!$emp)wp_die('Employee not found.');
-        if($description==='')$description='A special recognition from Workforce One.';
-        if($this->create_manual_achievement($employee_id,$name,$description,$icon,$style)){
-            $this->redirect(['page'=>'ews31-achievements','achievement_granted'=>1]);
-        }
-        $this->redirect(['page'=>'ews31-achievements','achievement_error'=>'Could not grant the achievement.']);
-    }
 
     public function admin_smart_nudges(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied.');
@@ -623,6 +501,7 @@ trait EWS_Admin_Trait {
         elseif($today_planned!=='Not Set' && $today<current_time('Y-m-d'))$today_result='Absent';
 
         echo '<div class="wrap ews-profile-wrap">';
+        if(isset($_GET['achievement_deleted']))echo '<div class="notice notice-success is-dismissible"><p>Achievement removed from the employee profile.</p></div>';
         echo '<style>
         .ews-profile-wrap{max-width:1280px}.ews-profile-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:18px 0}.ews-profile-person{display:flex;gap:16px;align-items:center}.ews-profile-avatar{width:64px;height:64px;border-radius:16px;background:#f0f4ff;border:1px solid #dbe4ff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#3158c8;overflow:hidden}.ews-profile-avatar img{width:100%;height:100%;object-fit:cover}.ews-profile-title h1{margin:0 0 5px;font-size:28px}.ews-profile-title p{margin:0;color:#667085}.ews-profile-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.ews-profile-pill{display:inline-flex;align-items:center;border:1px solid #e4e7ec;border-radius:999px;padding:4px 9px;font-size:12px;background:#fff;color:#475467}.ews-profile-pill.is-active{color:#067647;background:#ecfdf3;border-color:#abefc6}.ews-profile-pill.is-inactive{color:#b42318;background:#fef3f2;border-color:#fecdca}.ews-profile-actions{display:flex;gap:8px}.ews-profile-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.ews-profile-card{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:16px}.ews-profile-card .label{font-size:12px;color:#667085}.ews-profile-card .value{font-size:23px;font-weight:700;color:#101828;margin-top:5px}.ews-profile-card .sub{font-size:12px;color:#667085;margin-top:4px}.ews-profile-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:16px}.ews-profile-panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;margin-bottom:16px;overflow:hidden}.ews-profile-panel h2{font-size:16px;margin:0;padding:15px 18px;border-bottom:1px solid #eef0f3}.ews-profile-body{padding:16px 18px}.ews-profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.ews-profile-field .k{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#98a2b3}.ews-profile-field .v{font-size:14px;color:#344054;margin-top:4px;word-break:break-word}.ews-profile-list{margin:0;padding:0;list-style:none}.ews-profile-list li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #f2f4f7;font-size:13px}.ews-profile-list li:last-child{border-bottom:0}.ews-profile-list .muted{color:#667085}.ews-profile-table{width:100%;border-collapse:collapse}.ews-profile-table th,.ews-profile-table td{padding:10px 12px;border-bottom:1px solid #f0f2f5;text-align:left;font-size:12px}.ews-profile-table th{color:#667085;font-weight:600;background:#fafbfc}.ews-profile-empty{color:#667085;padding:4px 0}.wfo-achievement-admin-badge{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff7e6;border:1px solid #f3d9a2;flex:0 0 auto}.wfo-achievement-admin-badge.circle{border-radius:50%}.wfo-achievement-admin-badge.shield{border-radius:12px 12px 18px 18px;clip-path:polygon(50% 0,90% 15%,90% 58%,50% 100%,10% 58%,10% 15%)}.wfo-achievement-admin-badge.star{border-radius:12px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 95%,50% 72%,21% 95%,32% 57%,2% 35%,39% 35%)}.wfo-achievement-admin-badge.ribbon{border-radius:10px 10px 16px 16px}.ews-profile-badge{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;background:#f2f4f7;color:#475467}.ews-profile-badge.present{background:#ecfdf3;color:#067647}.ews-profile-badge.late{background:#fffaeb;color:#b54708}.ews-profile-badge.absent{background:#fef3f2;color:#b42318}.ews-profile-badge.leave{background:#eff8ff;color:#175cd3}@media(max-width:980px){.ews-profile-layout{grid-template-columns:1fr}.ews-profile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.ews-profile-head{flex-direction:column}.ews-profile-grid,.ews-profile-fields{grid-template-columns:1fr}.ews-profile-actions{width:100%}.ews-profile-actions .button{flex:1;text-align:center}}
         </style>';
