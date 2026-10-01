@@ -494,23 +494,51 @@ trait EWS_Admin_Trait {
         if(!$id||!in_array($decision,['approve','reject'],true)||!in_array($type,['leave','leave_cancellation','overtime','early_leave','shift_swap','face_reset','legacy_vacation'],true))wp_die('Invalid request.');
         check_admin_referer('ews_admin_request_decision_'.$type.'_'.$id);
         global $wpdb;$now=current_time('mysql');$redirect=function($state){wp_safe_redirect(add_query_arg('request_notice',$state,admin_url('admin.php?page=ews31-requests')));exit;};
-        if($type==='leave'){
-            $this->ensure_leave_schema();$t=$wpdb->prefix.'ews_leave_requests';$r=$wpdb->get_row($wpdb->prepare("SELECT r.*,lt.name type_name,lt.deduct_balance FROM {$t} r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.id=%d AND r.status='Pending' LIMIT 1",$id));if(!$r)$redirect('error');$emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1",(int)$r->employee_id));$bal=$this->ensure_leave_balance((int)$r->employee_id,(int)$r->leave_type_id);if(!$emp||!$bal)$redirect('error');$ar=$this->approval_find_request('vacation','leave',$id);
+        if($type==='leave'||$type==='leave_cancellation'){
+            // Same operations as the employee app (includes/trait-leave.php), so balances, schedule
+            // snapshots and the year a leave is charged to behave identically on this page.
+            $this->ensure_leave_schema();
+            $cancel=$type==='leave_cancellation';
+            $r=$this->leave_request_row($id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
+            if(!$r)$redirect('error');
+            $emp=$this->leave_active_employee($r->employee_id);
+            $bal=$this->leave_request_balance($r);
+            if(!$emp||!$bal)$redirect('error');
+            $apply=function($outcome)use($cancel,$r,$emp,$bal,$id,$now){
+                if($cancel)return $outcome==='APPROVED'?$this->leave_apply_cancellation($r,$emp,$bal,$now):$this->leave_reject_cancellation($id);
+                $ok=$outcome==='APPROVED'?$this->leave_apply_final_approval($r,$emp,$bal,get_current_user_id(),$now):$this->leave_reject_approval($r,$bal,get_current_user_id(),$now);
+                return is_wp_error($ok)?'save':true;
+            };
+            $commit=function($outcome)use($apply,$redirect,$wpdb){
+                if($wpdb->query('START TRANSACTION')===false)$redirect('error');
+                if($apply($outcome)!==true){$wpdb->query('ROLLBACK');$redirect('error');}
+                if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$redirect('error');}
+            };
+            $ar=$this->approval_find_request('vacation',$cancel?'leave_cancellation':'leave',$id);
             if($ar && !in_array(strtoupper((string)$ar->status),['APPROVED','REJECTED'],true)){
-                $acted=$this->approval_act((int)$ar->id,$decision,'',true,true);if(is_wp_error($acted))$redirect('error');$fresh=$this->approval_find_request('vacation','leave',$id);if(!$fresh)$redirect('error');
-                if($fresh->status==='REJECTED'){$ok=$this->leave_reject_approval($r,$bal,get_current_user_id(),$now);if(is_wp_error($ok))$redirect('error');$msg='Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been rejected.';$this->notify_user((int)$emp->wp_user_id,'Leave Rejected',$msg,'leave','leave',$id);$redirect('rejected');}
-                if($fresh->status==='APPROVED'){$ok=$this->leave_apply_final_approval($r,$emp,$bal,get_current_user_id(),$now);if(is_wp_error($ok))$redirect('error');$msg='Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been approved.';$this->notify_user((int)$emp->wp_user_id,'Leave Approved',$msg,'leave','leave',$id);$redirect('approved');}
-                $next=$this->approval_current_step((int)$fresh->id);if($next&&$next->approver_wp_user_id)$this->notify_user((int)$next->approver_wp_user_id,'Vacation Request',$emp->name.' '.$r->type_name.' request is waiting for your approval.','vacation','vacation',$id);$redirect('advanced');
+                // The approval engine manages its own transaction for the admin override.
+                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true,true)))$redirect('error');
+                $fresh=$this->approval_find_request('vacation',$cancel?'leave_cancellation':'leave',$id);
+                if(!$fresh)$redirect('error');
+                if($fresh->status==='APPROVED'||$fresh->status==='REJECTED'){
+                    if($cancel){
+                        $commit($fresh->status);
+                    }else{
+                        if($apply($fresh->status)!==true)$redirect('error');
+                        $done=$fresh->status==='APPROVED'?'approved':'rejected';
+                        $this->notify_user((int)$emp->wp_user_id,'Leave '.ucfirst($done),'Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been '.$done.'.','leave','leave',$id);
+                    }
+                    $redirect($fresh->status==='APPROVED'?'approved':'rejected');
+                }
+                $next=$this->approval_current_step((int)$fresh->id);
+                if($next&&$next->approver_wp_user_id){
+                    if($cancel)$this->notify_user((int)$next->approver_wp_user_id,'Vacation Cancellation Request',$emp->name.' vacation cancellation is waiting for your approval.','vacation','vacation',$id);
+                    else $this->notify_user((int)$next->approver_wp_user_id,'Vacation Request',$emp->name.' '.$r->type_name.' request is waiting for your approval.','vacation','vacation',$id);
+                }
+                $redirect('advanced');
             }
-            if($wpdb->query('START TRANSACTION')===false)$redirect('error');$ok=$decision==='approve'?$this->leave_apply_final_approval($r,$emp,$bal,get_current_user_id(),$now):$this->leave_reject_approval($r,$bal,get_current_user_id(),$now);if(is_wp_error($ok)){$wpdb->query('ROLLBACK');$redirect('error');}if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$redirect('error');}$redirect($decision==='approve'?'approved':'rejected');
-        }
-        if($type==='leave_cancellation'){
-            $this->ensure_leave_schema();$t=$wpdb->prefix.'ews_leave_requests';$r=$wpdb->get_row($wpdb->prepare("SELECT r.*,lt.name type_name,lt.deduct_balance FROM {$t} r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.id=%d AND r.status='Approved' AND r.cancellation_status='Pending' LIMIT 1",$id));if(!$r)$redirect('error');
-            $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1",(int)$r->employee_id));$bal=$this->ensure_leave_balance((int)$r->employee_id,(int)$r->leave_type_id);if(!$emp||!$bal)$redirect('error');$ar=$this->approval_find_request('vacation','leave_cancellation',$id);
-            if($ar && !in_array(strtoupper((string)$ar->status),['APPROVED','REJECTED'],true)){$acted=$this->approval_act((int)$ar->id,$decision,'',true,true);if(is_wp_error($acted))$redirect('error');$fresh=$this->approval_find_request('vacation','leave_cancellation',$id);if(!$fresh)$redirect('error');if($fresh->status==='APPROVED'||$fresh->status==='REJECTED'){
-                if($wpdb->query('START TRANSACTION')===false)$redirect('error');if($fresh->status==='APPROVED'){if((int)$r->deduct_balance){$q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$r->requested_days,$now,$bal->id));if($q===false){$wpdb->query('ROLLBACK');$redirect('error');}}$snap=$wpdb->prefix.'ews_leave_schedule_snapshots';$snaps=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$snap} WHERE leave_request_id=%d ORDER BY work_date ASC",$id));if($snaps===null){$wpdb->query('ROLLBACK');$redirect('error');}foreach($snaps as $x){$q=((int)$x->had_schedule&&$x->schedule_id)?$wpdb->update($this->schedule,['status'=>$x->status,'note'=>$x->note,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>$x->schedule_id]):$wpdb->delete($this->schedule,['employee_id'=>$emp->id,'work_date'=>$x->work_date]);if($q===false){$wpdb->query('ROLLBACK');$redirect('error');}}$ok=$wpdb->update($t,['status'=>'Cancelled','cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],['id'=>$id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s','%s','%d','%s'],['%d','%s','%s']);}else{$ok=$wpdb->update($t,['cancellation_status'=>'Rejected'],['id'=>$id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s'],['%d','%s','%s']);}if($ok!==1){$wpdb->query('ROLLBACK');$redirect('error');}if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$redirect('error');}$redirect($fresh->status==='APPROVED'?'approved':'rejected');}
-                $next=$this->approval_current_step((int)$fresh->id);if($next&&$next->approver_wp_user_id)$this->notify_user((int)$next->approver_wp_user_id,'Vacation Cancellation Request',$emp->name.' vacation cancellation is waiting for your approval.','vacation','vacation',$id);$redirect('advanced');}
-            if($wpdb->query('START TRANSACTION')===false)$redirect('error');if($decision==='approve'){if((int)$r->deduct_balance){$q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$r->requested_days,$now,$bal->id));if($q===false){$wpdb->query('ROLLBACK');$redirect('error');}}$snap=$wpdb->prefix.'ews_leave_schedule_snapshots';$snaps=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$snap} WHERE leave_request_id=%d ORDER BY work_date ASC",$id));foreach((array)$snaps as $x){$q=((int)$x->had_schedule&&$x->schedule_id)?$wpdb->update($this->schedule,['status'=>$x->status,'note'=>$x->note,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>$x->schedule_id]):$wpdb->delete($this->schedule,['employee_id'=>$emp->id,'work_date'=>$x->work_date]);if($q===false){$wpdb->query('ROLLBACK');$redirect('error');}}$ok=$wpdb->update($t,['status'=>'Cancelled','cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],['id'=>$id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s','%s','%d','%s'],['%d','%s','%s']);$state='approved';}else{$ok=$wpdb->update($t,['cancellation_status'=>'Rejected'],['id'=>$id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s'],['%d','%s','%s']);$state='rejected';}if($ok!==1){$wpdb->query('ROLLBACK');$redirect('error');}if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$redirect('error');}$redirect($state);
+            $commit($decision==='approve'?'APPROVED':'REJECTED');
+            $redirect($decision==='approve'?'approved':'rejected');
         }
         if($type==='overtime'){
             $table=$wpdb->prefix.'ews_overtime_requests';$req=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Pending' LIMIT 1",$id));if(!$req)$redirect('error');$emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1",(int)$req->employee_id));$ar=$this->approval_find_request('overtime','overtime_request',$id);if($ar && !in_array(strtoupper((string)$ar->status),['APPROVED','REJECTED'],true)){$acted=$this->approval_act((int)$ar->id,$decision,'',true,true);if(is_wp_error($acted))$redirect('error');$fresh=$this->approval_find_request('overtime','overtime_request',$id);if(!$fresh)$redirect('error');if($fresh->status==='REJECTED'||$fresh->status==='APPROVED'){$ok=$wpdb->update($table,['status'=>$fresh->status==='APPROVED'?'Approved':'Rejected','reviewed_by'=>get_current_user_id(),'reviewed_at'=>$now],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);if($ok!==1)$redirect('error');$redirect($fresh->status==='APPROVED'?'approved':'rejected');}$next=$this->approval_current_step((int)$fresh->id);if($next&&$next->approver_wp_user_id)$this->notify_user((int)$next->approver_wp_user_id,'Overtime Approval Required',$emp->name.' overtime request is waiting for your approval.','overtime','overtime',$id);$redirect('advanced');}if($decision==='approve')$ok=$wpdb->update($table,['status'=>'Approved','reviewed_by'=>get_current_user_id(),'reviewed_at'=>$now],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);else$ok=$wpdb->update($table,['status'=>'Rejected','reviewed_by'=>get_current_user_id(),'reviewed_at'=>$now],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);if($ok!==1)$redirect('error');$redirect($decision==='approve'?'approved':'rejected');

@@ -68,6 +68,16 @@ class Session:
                     return m.group(1)
         return None
 
+    def admin_request_nonce(self, rtype, rid):
+        """Nonce of a decision form on the wp-admin "Requests" page."""
+        st, page, _ = self.req('/wp-admin/admin.php?page=ews31-requests')
+        for form in re.findall(r'<form.*?</form>', page, re.S):
+            if 'value="ews31_requests_decision"' in form and 'name="request_type" value="%s"' % rtype in form and 'name="request_id" value="%d"' % rid in form:
+                m = re.search(r'name="_wpnonce" value="([^"]+)"', form)
+                if m:
+                    return m.group(1)
+        return None
+
     def post(self, action, **data):
         st, body, h = self.req('/wp-admin/admin-post.php', {'action': action, **data})
         loc = h.get('Location', '')
@@ -243,6 +253,23 @@ def run(mode_approval):
     check(tag + '...cancellation returns them to next year\'s balance', balance(ny) == {'entitlement': 21.0, 'used': 0.0, 'pending': 0.0} and balance() == this_year, (balance(ny), balance()))
     _, qs, _ = create('%d-12-30' % ny, '%d-01-02' % (ny + 1))
     check(tag + 'a leave spanning two years is refused', qs.get('leave_error') == 'cross_year', qs)
+
+    # the wp-admin "Requests" page uses the same rules as the employee app
+    this_year, next_year = balance(), balance(ny)
+    _, qs, _ = create('%d-03-10' % ny, '%d-03-11' % ny)
+    lid7 = last_leave_id()
+    n = adm.admin_request_nonce('leave', lid7)
+    check(tag + 'admin Requests page lists the leave', bool(n))
+    adm.post('ews31_requests_decision', _wpnonce=n, request_type='leave', request_id=lid7, decision='approve')
+    check(tag + 'admin Requests page approval charges next year\'s balance',
+          leave(lid7)['status'] == 'Approved' and balance(ny)['used'] == next_year['used'] + 2 and balance(ny)['pending'] == next_year['pending'] and balance() == this_year,
+          (leave(lid7), balance(ny), next_year, balance(), this_year))
+    emp.post('ews_leave_cancel', _wpnonce=emp.nonce('ews_leave_cancel'), request_id=lid7)
+    n = adm.admin_request_nonce('leave_cancellation', lid7)
+    adm.post('ews31_requests_decision', _wpnonce=n, request_type='leave_cancellation', request_id=lid7, decision='approve')
+    check(tag + 'admin Requests page cancellation returns next year\'s days and restores the schedule',
+          leave(lid7)['status'] == 'Cancelled' and balance(ny) == next_year and balance() == this_year and schedule('%d-03-10' % ny) is None,
+          (leave(lid7), balance(ny), next_year, schedule('%d-03-10' % ny)))
 
     # requests created before this change were charged to the year they were submitted in
     if not mode_approval:
