@@ -48,6 +48,10 @@ final class LeaveRulesTest extends TestCase
         $this->assertNull(R::check($this->f(['remaining' => 3.0])), 'exactly enough');
         $this->assertNull(R::check($this->f(['remaining' => 0.0, 'deducts' => false])), 'non-deducting types ignore the balance');
         $this->assertSame(R::BALANCE, R::check($this->f(['has_balance' => false, 'deducts' => false])));
+        $this->assertSame(R::CROSS_YEAR, R::check($this->f(['start' => '2026-12-30', 'end' => '2027-01-02'])));
+        $this->assertSame(R::DATE, R::check($this->f(['start' => '2027-01-02', 'end' => '2026-12-30'])), 'reversed range is a date error');
+        $this->assertNull(R::check($this->f(['start' => '2027-01-10', 'end' => '2027-01-12'])), 'next year is fine');
+        $this->assertSame(2027, R::year('2027-01-10'));
     }
 
     public function testCancellationRules(): void

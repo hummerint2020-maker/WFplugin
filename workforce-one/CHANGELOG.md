@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.1
+### Fixed
+- Leave is now charged to the balance of the **year the leave falls in**. Previously every
+  request was checked against and charged to the current year's balance (e.g. a December
+  request for January used up the old year's days).
+- A leave spanning two calendar years is refused with a clear message: submit one request
+  per year.
+- Each request now records the balance it was charged to (`balance_id`). Requests created
+  before this version are settled on the balance of the year they were submitted in, which is
+  where their days were reserved, so existing balances stay consistent.
+
 ## 3.31.0
 - Internal refactor of the Sign In / Sign Out module (rules in `src/`, page template in
   `templates/app/time.php`, page JavaScript in `assets/js/time.js`). No behaviour change.

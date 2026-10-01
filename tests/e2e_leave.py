@@ -113,8 +113,9 @@ def type_id(name):
     return int(q("SELECT id FROM {p}ews_leave_types WHERE name='%s'" % name)[0]['id'])
 
 
-def balance():
-    rows = q("SELECT entitlement,used,pending FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d" % (ids()['eid'], type_id('Annual Leave')))
+def balance(year=None):
+    year = year or today.year
+    rows = q("SELECT entitlement,used,pending FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d" % (ids()['eid'], type_id('Annual Leave'), year))
     return {k: float(v) for k, v in rows[0].items()} if rows else None
 
 
@@ -227,6 +228,34 @@ def run(mode_approval):
     lid4 = last_leave_id()
     adm.post('ews_vacation_request_respond', _wpnonce=n_respond, request_id=lid4, decision='approve')
     check(tag + 'non-deducting leave is approved without touching the balance', leave(lid4)['status'] == 'Approved' and balance() == before, (leave(lid4), balance(), before))
+
+    # leave is charged to the balance of the year it falls in
+    ny = today.year + 1
+    this_year = balance()
+    _, qs, _ = create('%d-01-10' % ny, '%d-01-11' % ny)
+    lid5 = last_leave_id()
+    check(tag + 'next-year leave reserves days on next year\'s balance', qs.get('leave_sent') == '2' and (balance(ny) or {}).get('pending') == 2.0, (qs, balance(ny)))
+    check(tag + '...and leaves this year\'s balance untouched', balance() == this_year, (balance(), this_year))
+    adm.post('ews_vacation_request_respond', _wpnonce=n_respond, request_id=lid5, decision='approve')
+    check(tag + '...approval moves them to next year\'s used days', balance(ny) == {'entitlement': 21.0, 'used': 2.0, 'pending': 0.0} and balance() == this_year, (balance(ny), balance()))
+    emp.post('ews_leave_cancel', _wpnonce=emp.nonce('ews_leave_cancel'), request_id=lid5)
+    adm.post('ews_leave_cancel_respond', _wpnonce=adm.nonce('ews_leave_cancel_respond'), request_id=lid5, decision='approve')
+    check(tag + '...cancellation returns them to next year\'s balance', balance(ny) == {'entitlement': 21.0, 'used': 0.0, 'pending': 0.0} and balance() == this_year, (balance(ny), balance()))
+    _, qs, _ = create('%d-12-30' % ny, '%d-01-02' % (ny + 1))
+    check(tag + 'a leave spanning two years is refused', qs.get('leave_error') == 'cross_year', qs)
+
+    # requests created before this change were charged to the year they were submitted in
+    if not mode_approval:
+        php("""$b=$wpdb->get_row("SELECT id FROM {$p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d");
+               $wpdb->insert($p.'ews_leave_requests',['employee_id'=>%d,'leave_type_id'=>%d,'start_date'=>'%d-02-10','end_date'=>'%d-02-10','requested_days'=>1,'reason'=>'legacy','status'=>'Pending','requested_by'=>1,'requested_at'=>current_time('mysql')]);
+               $wpdb->query("UPDATE {$p}ews_leave_balances SET pending=pending+1 WHERE id=".(int)$b->id);"""
+            % (ids()['eid'], annual, today.year, ids()['eid'], annual, ny, ny))
+        lid6 = last_leave_id()
+        before_this, before_next = balance(), balance(ny)
+        adm.post('ews_vacation_request_respond', _wpnonce=n_respond, request_id=lid6, decision='approve')
+        check(tag + 'legacy request is settled on the balance it was charged to',
+              leave(lid6)['status'] == 'Approved' and balance()['pending'] == before_this['pending'] - 1 and balance()['used'] == before_this['used'] + 1 and balance(ny) == before_next,
+              (balance(), before_this, balance(ny), before_next))
 
 
 run(False)

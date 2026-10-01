@@ -10,9 +10,16 @@ if (!defined('ABSPATH')) exit;
 final class RequestRules
 {
     public const DATE = 'date';
+    public const CROSS_YEAR = 'cross_year';
     public const NO_WORKING_DAYS = 'no_working_days';
     public const OVERLAP = 'overlap';
     public const BALANCE = 'balance';
+
+    /** Leave year a request is charged to: the calendar year of its dates. */
+    public static function year(string $date): int
+    {
+        return (int) substr($date, 0, 4);
+    }
 
     public static function isFutureDate(string $date, string $today): bool
     {
@@ -31,6 +38,8 @@ final class RequestRules
             || !self::isFutureDate($f['end'], $f['today']) || $f['end'] < $f['start']) {
             return self::DATE;
         }
+        // Each request is charged to the balance of the year it falls in, so it must not span two years.
+        if (self::year($f['start']) !== self::year($f['end'])) return self::CROSS_YEAR;
         if ($f['working_days'] < 1) return self::NO_WORKING_DAYS;
         if (!empty($f['overlaps'])) return self::OVERLAP;
         if (empty($f['has_balance'])) return self::BALANCE;

@@ -74,6 +74,20 @@ trait EWS_Leave_Trait {
             return $wpdb->get_row($wpdb->prepare("SELECT r.*,lt.name type_name,lt.deduct_balance FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.id=%d {$extra_where} LIMIT 1",$id));
         }
 
+    /**
+     * The balance row a request was charged to. Requests created before 3.31.1 have no balance_id;
+     * they were charged to the year they were submitted in, so settle them there.
+     */
+    private function leave_request_balance($r){
+            global $wpdb;
+            if(!empty($r->balance_id)){
+                $bal=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_balances WHERE id=%d",(int)$r->balance_id));
+                if($bal)return $bal;
+            }
+            $year=!empty($r->requested_at)?(int)substr((string)$r->requested_at,0,4):$this->leave_year();
+            return $this->ensure_leave_balance((int)$r->employee_id,(int)$r->leave_type_id,$year?:$this->leave_year());
+        }
+
     private function leave_active_employee($employee_id){
             global $wpdb;
             return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1",(int)$employee_id));
@@ -99,7 +113,7 @@ trait EWS_Leave_Trait {
     /** Insert a Pending request and reserve the days. @return int|false request id */
     private function leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal){
             global $wpdb;
-            $ok=$wpdb->insert($wpdb->prefix.'ews_leave_requests',['employee_id'=>$emp->id,'leave_type_id'=>(int)$type->id,'start_date'=>$start,'end_date'=>$end,'requested_days'=>$days,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id()],['%d','%d','%s','%s','%f','%s','%s','%d']);
+            $ok=$wpdb->insert($wpdb->prefix.'ews_leave_requests',['employee_id'=>$emp->id,'leave_type_id'=>(int)$type->id,'start_date'=>$start,'end_date'=>$end,'requested_days'=>$days,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'balance_id'=>$bal?(int)$bal->id:null],['%d','%d','%s','%s','%f','%s','%s','%d','%d']);
             if($ok===false)return false;
             $id=(int)$wpdb->insert_id;
             if((int)$type->deduct_balance){
@@ -217,7 +231,8 @@ trait EWS_Leave_Trait {
             }
             $bal=null;
             if(!$error){
-                $bal=$this->ensure_leave_balance((int)$emp->id,$type_id);
+                // Charged to the balance of the year the leave falls in (not the year it is requested in).
+                $bal=$this->ensure_leave_balance((int)$emp->id,$type_id,RequestRules::year($start));
                 $facts['has_balance']=(bool)$bal;
                 $facts['deducts']=(bool)(int)$type->deduct_balance;
                 $facts['remaining']=$bal?Balance::remaining((float)$bal->entitlement,(float)$bal->used,(float)$bal->pending):0.0;
@@ -282,7 +297,7 @@ trait EWS_Leave_Trait {
             if(!$r||$r->status!=='Pending')$this->leave_redirect(['leave_done'=>1]);
             $emp=$this->leave_active_employee($r->employee_id);
             if(!$emp)$this->leave_redirect(['leave_error'=>'employee']);
-            $bal=$this->ensure_leave_balance($emp->id,$r->leave_type_id);
+            $bal=$this->leave_request_balance($r);
             if(!$bal)$this->leave_redirect(['leave_error'=>'balance']);
             $now=current_time('mysql');
 
@@ -375,7 +390,7 @@ trait EWS_Leave_Trait {
             if(!$r||!in_array($decision,['approve','reject'],true))wp_die('Invalid cancellation.');
             $emp=$this->leave_active_employee($r->employee_id);
             if(!$emp)wp_die('Employee not found.');
-            $bal=$this->ensure_leave_balance($emp->id,$r->leave_type_id);
+            $bal=$this->leave_request_balance($r);
             if(!$bal)wp_die('Leave balance unavailable.');
             $now=current_time('mysql');
 

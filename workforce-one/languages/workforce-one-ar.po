@@ -289,7 +289,7 @@ msgstr "يلزم وجود ملف موظف"
 
 #: includes/trait-frontend.php:734
 #: includes/trait-presence.php:153
-#: templates/app/time.php:100
+#: templates/app/time.php:110
 msgid "Presence Verification"
 msgstr "التحقق من التواجد"
 
@@ -315,7 +315,7 @@ msgstr "ينتهي خلال %s"
 
 #. translators: %s: mm:ss
 #: includes/trait-presence.php:158
-#: templates/app/time.php:96
+#: templates/app/time.php:106
 #: assets/js/time.js:145
 msgid "Starting camera…"
 msgstr "جارٍ تشغيل الكاميرا…"
@@ -436,126 +436,126 @@ msgstr "تسجيل الحضور غير مفعّل"
 msgid "Attendance is not required for your employee profile."
 msgstr "الحضور غير مطلوب في ملفك الوظيفي."
 
-#: templates/app/time.php:21
+#: templates/app/time.php:33
 msgid "Location permission required"
 msgstr "مطلوب إذن الوصول إلى الموقع"
 
-#: templates/app/time.php:24
+#: templates/app/time.php:36
 msgid "Location Services Required"
 msgstr "خدمات الموقع مطلوبة"
 
-#: templates/app/time.php:25
+#: templates/app/time.php:37
 #: assets/js/time.js:63
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr "اسمح بالوصول إلى موقعك عندما يطلب المتصفح ذلك. موقعك مطلوب لتسجيل الحضور والانصراف."
 
-#: templates/app/time.php:27
+#: templates/app/time.php:39
 msgid "Allow Location / Try Again"
 msgstr "السماح بالموقع / حاول مرة أخرى"
 
 #: includes/trait-frontend.php:1312
-#: templates/app/time.php:32
+#: templates/app/time.php:44
 msgid "Employee account not linked"
 msgstr "حساب الموظف غير مرتبط"
 
-#: templates/app/time.php:32
+#: templates/app/time.php:44
 msgid "Your WordPress account is not linked to an active employee. Please contact your manager."
 msgstr "حسابك غير مرتبط بموظف نشط. يرجى التواصل مع مديرك."
 
-#: templates/app/time.php:33
+#: templates/app/time.php:45
 msgid "Today is not a working day for you"
 msgstr "اليوم ليس يوم عمل بالنسبة لك"
 
 #. translators: %s: today's schedule status
-#: templates/app/time.php:33
+#: templates/app/time.php:45
 #, php-format
 msgid "Your schedule today is %s. Sign In / Sign Out is only available on working days."
 msgstr "جدولك اليوم: %s. تسجيل الحضور والانصراف متاح في أيام العمل فقط."
 
 #. translators: %s: today's schedule status
 #: includes/trait-frontend.php:1342
-#: templates/app/time.php:33
+#: templates/app/time.php:45
 msgid "Not Set"
 msgstr "غير محدد"
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
 #: includes/trait-frontend.php:1347
-#: templates/app/time.php:36
-#: templates/app/time.php:43
-#: templates/app/time.php:83
+#: templates/app/time.php:48
+#: templates/app/time.php:55
+#: templates/app/time.php:93
 msgid "Sign In"
 msgstr "تسجيل الحضور"
 
 #: includes/trait-frontend.php:1348
-#: templates/app/time.php:37
-#: templates/app/time.php:85
+#: templates/app/time.php:49
+#: templates/app/time.php:95
 msgid "Sign Out"
 msgstr "تسجيل الانصراف"
 
-#: templates/app/time.php:41
+#: templates/app/time.php:53
 msgid "You signed out today."
 msgstr "لقد سجّلت انصرافك اليوم."
 
 #. translators: 1: sign-in time, 2: sign-out time
-#: templates/app/time.php:41
+#: templates/app/time.php:53
 #, php-format
 msgid "Sign In was recorded at %1$s and Sign Out at %2$s."
 msgstr "تم تسجيل الحضور في %1$s والانصراف في %2$s."
 
-#: templates/app/time.php:43
+#: templates/app/time.php:55
 msgid "You are signed in."
 msgstr "أنت مسجّل الحضور."
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/time.php:43
+#: templates/app/time.php:55
 #, php-format
 msgid "%1$s recorded at %2$s."
 msgstr "%1$s — تم التسجيل في %2$s."
 
-#: templates/app/time.php:46
+#: templates/app/time.php:57
 msgid "Sign In is available now."
 msgstr "تسجيل الحضور متاح الآن."
 
 #. translators: 1: start time, 2: end time, 3: sign-in cutoff time
-#: templates/app/time.php:46
+#: templates/app/time.php:57
 #, php-format
 msgid "Allowed window: %1$s – %2$s, with Sign In cutoff at %3$s."
 msgstr "الفترة المسموحة: %1$s – %2$s، وآخر موعد لتسجيل الحضور %3$s."
 
-#: templates/app/time.php:50
+#: templates/app/time.php:60
 msgid "Sign In is not available yet."
 msgstr "تسجيل الحضور غير متاح بعد."
 
 #. translators: %s: start time
-#: templates/app/time.php:50
+#: templates/app/time.php:60
 #, php-format
 msgid "Your working hours start at %s."
 msgstr "تبدأ ساعات عملك في %s."
 
-#: templates/app/time.php:52
+#: templates/app/time.php:62
 msgid "Sign In is no longer available."
 msgstr "انتهى وقت تسجيل الحضور."
 
 #. translators: %s: cutoff time
-#: templates/app/time.php:52
+#: templates/app/time.php:62
 #, php-format
 msgid "The Sign In cutoff was %s."
 msgstr "كان آخر موعد لتسجيل الحضور %s."
 
-#: templates/app/time.php:59
+#: templates/app/time.php:69
 msgid "BREAK MANAGEMENT"
 msgstr "إدارة الاستراحات"
 
-#: templates/app/time.php:59
+#: templates/app/time.php:69
 msgid "You are on break"
 msgstr "أنت في استراحة"
 
-#: templates/app/time.php:59
+#: templates/app/time.php:69
 msgid "Take a break"
 msgstr "خذ استراحة"
 
 #. translators: %s: minutes
-#: templates/app/time.php:60
+#: templates/app/time.php:70
 #, php-format
 msgid "Your break is being tracked. The standard break duration is %s."
 msgstr "يتم احتساب استراحتك. مدة الاستراحة المعتادة %s."
@@ -563,170 +563,170 @@ msgstr "يتم احتساب استراحتك. مدة الاستراحة المع
 #. translators: %s: minutes
 #. translators: %d: minutes
 #. translators: %d: break number
-#: templates/app/time.php:60
-#: templates/app/time.php:66
-#: templates/app/time.php:75
-#: templates/app/time.php:89
+#: templates/app/time.php:70
+#: templates/app/time.php:76
+#: templates/app/time.php:85
+#: templates/app/time.php:99
 #, php-format
 msgid "%d min"
 msgstr "%d دقيقة"
 
 #. translators: %s: minutes
-#: templates/app/time.php:60
+#: templates/app/time.php:70
 msgid "Each break session is limited to the configured duration. Breaks are informative and do not affect attendance or overtime calculations."
 msgstr "كل استراحة محددة بالمدة المضبوطة. الاستراحات للمتابعة فقط ولا تؤثر على حساب الحضور أو العمل الإضافي."
 
 #. translators: %s: minutes
-#: templates/app/time.php:61
+#: templates/app/time.php:71
 msgid "remaining"
 msgstr "متبقية"
 
-#: templates/app/time.php:65
+#: templates/app/time.php:75
 msgid "ON BREAK"
 msgstr "في استراحة"
 
-#: templates/app/time.php:65
+#: templates/app/time.php:75
 msgid "Elapsed time"
 msgstr "الوقت المنقضي"
 
-#: templates/app/time.php:66
+#: templates/app/time.php:76
 msgid "Standard duration"
 msgstr "المدة المعتادة"
 
 #. translators: %d: minutes
-#: templates/app/time.php:66
+#: templates/app/time.php:76
 #, php-format
 msgid "Manager alert at %d min"
 msgstr "تنبيه المدير بعد %d دقيقة"
 
-#: templates/app/time.php:70
+#: templates/app/time.php:80
 msgid "Resume Work"
 msgstr "استئناف العمل"
 
-#: templates/app/time.php:75
+#: templates/app/time.php:85
 msgid "Start Break"
 msgstr "بدء الاستراحة"
 
 #. translators: %d: number of break sessions
-#: templates/app/time.php:78
+#: templates/app/time.php:88
 #, php-format
 msgid "You have used all %d break sessions available today."
 msgstr "لقد استخدمت كل الاستراحات المتاحة اليوم (%d)."
 
-#: templates/app/time.php:82
+#: templates/app/time.php:92
 msgid "Today's Record"
 msgstr "سجل اليوم"
 
 #: includes/trait-frontend.php:1347
 #: includes/trait-frontend.php:1348
-#: templates/app/time.php:83
-#: templates/app/time.php:84
-#: templates/app/time.php:85
+#: templates/app/time.php:93
+#: templates/app/time.php:94
+#: templates/app/time.php:95
 msgid "Not recorded"
 msgstr "لم يُسجَّل"
 
-#: templates/app/time.php:84
+#: templates/app/time.php:94
 msgid "Attendance Status"
 msgstr "حالة الحضور"
 
-#: templates/app/time.php:87
+#: templates/app/time.php:97
 msgid "Break Sessions"
 msgstr "الاستراحات"
 
 #. translators: %d: break number
-#: templates/app/time.php:89
+#: templates/app/time.php:99
 #, php-format
 msgid "Break %d"
 msgstr "استراحة %d"
 
 #. translators: %d: break number
-#: templates/app/time.php:89
+#: templates/app/time.php:99
 msgid "Open"
 msgstr "مفتوحة"
 
-#: templates/app/time.php:94
+#: templates/app/time.php:104
 msgid "QR Sign In"
 msgstr "تسجيل الحضور عبر QR"
 
-#: templates/app/time.php:94
+#: templates/app/time.php:104
 msgid "Scan the dynamic QR displayed at your workplace. This is an additional Sign In method; your normal Sign In remains available."
 msgstr "امسح رمز QR المتغيّر المعروض في مكان عملك. هذه طريقة إضافية لتسجيل الحضور، وتسجيل الحضور العادي ما زال متاحًا."
 
-#: templates/app/time.php:94
+#: templates/app/time.php:104
 msgid "Rotating QR"
 msgstr "رمز QR متغيّر"
 
-#: templates/app/time.php:95
-#: templates/app/time.php:96
+#: templates/app/time.php:105
+#: templates/app/time.php:106
 msgid "Scan Workplace QR"
 msgstr "مسح رمز QR الخاص بمكان العمل"
 
-#: templates/app/time.php:96
+#: templates/app/time.php:106
 msgid "Point your camera at the QR displayed at your workplace."
 msgstr "وجّه الكاميرا إلى رمز QR المعروض في مكان عملك."
 
-#: templates/app/time.php:96
+#: templates/app/time.php:106
 msgid "Sign In with QR"
 msgstr "تسجيل الحضور عبر QR"
 
-#: templates/app/time.php:100
+#: templates/app/time.php:110
 msgid "If a manager requests a physical presence check, the request will appear here and in your notifications."
 msgstr "إذا طلب المدير التحقق من تواجدك، سيظهر الطلب هنا وفي الإشعارات."
 
-#: templates/app/time.php:100
+#: templates/app/time.php:110
 msgid "Optional"
 msgstr "اختياري"
 
-#: templates/app/time.php:105
+#: templates/app/time.php:115
 msgid "Face Sign In"
 msgstr "تسجيل الحضور بالوجه"
 
-#: templates/app/time.php:105
+#: templates/app/time.php:115
 msgid "Face verification is required before Sign In."
 msgstr "التحقق من الوجه مطلوب قبل تسجيل الحضور."
 
-#: templates/app/time.php:105
+#: templates/app/time.php:115
 msgid "Face verification is available but currently optional."
 msgstr "التحقق من الوجه متاح لكنه اختياري حاليًا."
 
-#: templates/app/time.php:105
+#: templates/app/time.php:115
 msgid "Face processing runs in this browser."
 msgstr "تتم معالجة الوجه داخل هذا المتصفح."
 
-#: templates/app/time.php:106
+#: templates/app/time.php:116
 #: assets/js/workforce-one.js:176
 msgid "Not enrolled"
 msgstr "غير مسجّل"
 
-#: templates/app/time.php:108
-#: templates/app/time.php:117
+#: templates/app/time.php:118
+#: templates/app/time.php:127
 #: assets/js/workforce-one.js:178
 msgid "Verify Face"
 msgstr "تحقق من الوجه"
 
-#: templates/app/time.php:108
+#: templates/app/time.php:118
 #: assets/js/workforce-one.js:178
 msgid "Set Up / Verify Face"
 msgstr "تسجيل / تحقق من الوجه"
 
-#: templates/app/time.php:112
+#: templates/app/time.php:122
 msgid "Face Verification"
 msgstr "التحقق من الوجه"
 
-#: templates/app/time.php:112
+#: templates/app/time.php:122
 msgid "Blink once and gently move your head. Face processing stays on this device."
 msgstr "ارمش مرة واحدة وحرّك رأسك بهدوء. تبقى معالجة الوجه على هذا الجهاز."
 
-#: templates/app/time.php:114
+#: templates/app/time.php:124
 #: assets/js/workforce-one.js:292
 msgid "Loading face model…"
 msgstr "جارٍ تحميل نموذج الوجه…"
 
-#: templates/app/time.php:116
+#: templates/app/time.php:126
 msgid "Enroll Face"
 msgstr "تسجيل الوجه"
 
-#: templates/app/time.php:118
+#: templates/app/time.php:128
 msgid "Request Reset"
 msgstr "طلب إعادة التعيين"
 
@@ -2020,3 +2020,8 @@ msgstr "وجّه الكاميرا إلى رمز QR الخاص بمكان الع�
 #: assets/js/time.js:156
 msgid "Camera permission was denied or unavailable."
 msgstr "تم رفض إذن الكاميرا أو أنها غير متاحة."
+
+#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:379
+msgid "A leave cannot span two calendar years. Please submit one request for each year."
+msgstr "لا يمكن أن تمتد الإجازة عبر سنتين. يرجى تقديم طلب منفصل لكل سنة."
