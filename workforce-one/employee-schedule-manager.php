@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.2
+ * Version: 3.31.3
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.2');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.3');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -25,6 +25,7 @@ require_once __DIR__ . '/includes/trait-core.php';
 require_once __DIR__ . '/includes/trait-attendance.php';
 require_once __DIR__ . '/includes/trait-leave.php';
 require_once __DIR__ . '/includes/trait-overtime.php';
+require_once __DIR__ . '/includes/trait-swap.php';
 require_once __DIR__ . '/includes/trait-frontend.php';
 require_once __DIR__ . '/includes/trait-pwa.php';
 require_once __DIR__ . '/includes/trait-reports.php';
@@ -44,7 +45,7 @@ require_once __DIR__ . '/includes/trait-presence.php';
 require_once __DIR__ . '/includes/trait-privacy.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Overtime_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
+    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -142,11 +143,9 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_push_unsubscribe',[$this,'push_unsubscribe']);
             add_action('admin_post_ews_push_test',[$this,'push_test']);
             add_action('admin_post_ews_push_send_test',[$this,'push_send_test']);
-            add_action('admin_post_ews_swap_create',[$this,'swap_request_create']);
-            add_action('admin_post_ews_swap_respond',[$this,'swap_request_respond']);
-            add_action('admin_post_ews_swap_cancel',[$this,'swap_request_cancel']);
             \WorkforceOne\Leave\Hooks::register($this);
             \WorkforceOne\Overtime\Hooks::register($this);
+            \WorkforceOne\Schedule\Hooks::register($this);
             add_action('admin_post_ews_leave_type_save',[$this,'admin_leave_type_save']);
             add_action('admin_post_ews_leave_balance_save',[$this,'admin_leave_balance_save']);
             add_action('admin_post_ews_admin_leave_record',[$this,'admin_admin_leave_record']);

@@ -3,7 +3,7 @@
 The plugin started as one class (`EWS_Manager_V31_1`) built from 19 traits in
 `workforce-one/includes/`, with HTML, CSS and JavaScript inside PHP strings. It is being
 moved, **one module at a time and without behaviour changes**, to the structure below.
-Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`) and Overtime + Early Leave (`includes/trait-overtime.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
+Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`) and Overtime + Early Leave (`includes/trait-overtime.php`) and Schedule Swaps (`includes/trait-swap.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
 
 ```
 workforce-one/
@@ -15,6 +15,7 @@ workforce-one/
     Attendance/Hooks.php               the module's add_action() calls
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, Hooks.php
     Overtime/RequestRules.php, Hooks.php        EarlyLeave/RequestRules.php
+    Schedule/SwapRules.php, Hooks.php
   includes/trait-*.php            legacy code; shrinks as modules move out
   templates/app/*.php             page HTML; receives prepared variables only
   assets/js/*.js, assets/css/*    page scripts/styles, enqueued by the view that needs them

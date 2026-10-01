@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.31.3
+### Fixed
+- Pending **schedule swaps now appear on the wp-admin Requests page** and can be approved or
+  rejected there. The page read a table that never existed (`ews_shift_swaps`), so swaps were
+  never listed and the admin decision could not run.
+- An administrator's swap decision now also notifies the colleague whose day changes, and is
+  written to the audit log.
+- Cancelling a swap without a linked employee account shows the swap error instead of
+  redirecting to the Sign In page.
+
+### Internal
+- Schedule Swaps moved to `includes/trait-swap.php` with rules in `src/Schedule`; the admin
+  Requests page reuses the same swap operation (schedule re-check + transaction).
+
 ## 3.31.2
 ### Fixed
 - Leave decisions taken on the wp-admin **Requests** page now use the same rules as the employee
