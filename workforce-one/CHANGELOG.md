@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.31.5
+### Fixed (wp-admin → Leaves)
+- **Record Leave no longer eats other pending reservations.** Recording a leave subtracted its
+  days from the employee's *pending* balance although they had never been reserved, so the days
+  held for the employee's own pending requests were lost. The days are now reserved and approved
+  through the same path as an employee request.
+- Recorded leaves now remember the balance they were charged to. Before, cancelling a leave
+  recorded for another year gave the days back to the current year's balance.
+- Recording is checked against the balance left for that year (the page already said the normal
+  balance rules apply). The message tells how many days are left.
+- **Assign Annual Balance** has a Year field (last, this or next year), so next year's
+  entitlements can be prepared in December. It no longer accepts a missing employee or leave type.
+- Editing a leave type that no longer exists is refused instead of silently doing nothing.
+- After saving, the page always returns to Leaves.
+
+### Added
+- The Leaves page lists every employee's balances (entitlement, used, pending, remaining) for
+  last, this or next year.
+
+### Internal
+- Leaves admin page moved to `includes/trait-leave-admin.php` with HTML in
+  `templates/admin/leaves.php` and rules in `src/Leave/AdminRecordRules.php` (unit tested).
+
 ## 3.31.4
 ### Fixed
 - The **Face Reset Requests** admin page is now in the menu (Employee Schedule → Face Reset
