@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.10
+### Fixed
+- **Roles & Permissions: users with two roles kept losing permissions.** Switching a permission
+  off stored it on the role as an explicit "false", and WordPress lets that "false" override a
+  "true" from the user's other role, so e.g. someone who is both EWS Manager and EWS Employee
+  lost the Manager's permissions. A switched-off permission is now removed from the role. The
+  upgrade converts existing "false" entries (they stay off) and remembers the matrix, so later
+  upgrades never turn removed permissions back on.
+- Someone who manages roles through an EWS role (not a WordPress administrator) can no longer
+  remove "Manage Roles & Permissions" from every role they hold and lock themselves out.
+- Notification Settings: the **VAPID Subject** next to "Send Test Push" was never saved. It is
+  now saved when the test is sent (only a mailto: address or an https URL, as Web Push requires).
+- Notification Settings: saving the retention period now shows a confirmation; policy changes
+  are audited.
+
+### Internal
+- Both pages moved to `includes/trait-settings-pages.php`, HTML to `templates/admin/roles.php` and
+  `templates/admin/notifications.php`, styles to `assets/css/admin-notifications.css` (+ RTL),
+  rules to `src/Settings/RolePermissions.php` and `src/Settings/NotificationSettings.php` (unit tested).
+- Schema version 3.31.10 (runs the role migration once).
+
 ## 3.31.9
 ### Fixed (wp-admin → Sign In / Out Report)
 - **Manual records are checked like real ones:** a second Sign In (or Sign Out) on the same day

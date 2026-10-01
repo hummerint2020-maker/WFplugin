@@ -646,6 +646,7 @@ trait EWS_Notifications_Trait {
     public function push_send_test(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         check_admin_referer('ews_push_send_test');
+        $this->notifications_save_vapid_subject();
         $this->ensure_push_schema();
         global $wpdb;
         $rows=$wpdb->get_results("SELECT * FROM {$this->push_table()} ORDER BY updated_at DESC");

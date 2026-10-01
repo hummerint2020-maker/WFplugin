@@ -457,7 +457,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.1'; }
+        private function ews_schema_target(){ return '3.31.10'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -971,24 +971,6 @@ function current_employee(){
                 'ews_supervisor'=>['name'=>'EWS Supervisor','caps'=>['ews_view_dashboard','ews_view_people','ews_manage_schedule','ews_manage_attendance','ews_view_reports','ews_manage_time']],
                 'ews_employee'=>['name'=>'EWS Employee','caps'=>['ews_view_people']],
             ];
-        }
-
-    private function ensure_roles_permissions(){
-            foreach($this->role_defs() as $slug=>$def){
-                if(!get_role($slug))add_role($slug,$def['name'],['read'=>true]);
-            }
-            foreach($this->role_defs() as $slug=>$def){
-                $role=get_role($slug);if(!$role)continue;
-                foreach($this->permission_defs() as $cap=>$label){
-                    if(!isset($role->capabilities[$cap]))$role->add_cap($cap,in_array($cap,$def['caps'],true));
-                }
-            }
-            // WordPress admin menus evaluate the capability directly; make sure
-            // the native Administrator role can see all EWS admin pages.
-            $admin=get_role('administrator');
-            if($admin){
-                foreach($this->permission_defs() as $cap=>$label)$admin->add_cap($cap,true);
-            }
         }
 
     private function can($cap){

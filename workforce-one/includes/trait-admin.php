@@ -15,6 +15,10 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-features', $this->plugin_url('assets/css/admin-features.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-features', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-notifications'))==='ews31-notifications'){
+            wp_enqueue_style('workforce-one-admin-notifications', $this->plugin_url('assets/css/admin-notifications.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-notifications', 'rtl', 'replace');
+        }
     }
 
     public function admin_menu(){
@@ -439,135 +443,6 @@ trait EWS_Admin_Trait {
         echo '<p style="margin-top:18px;color:#667085">Notifications and My Profile remain top-right actions. Employee management remains in WordPress Admin. Navigation visibility is presentation only; permissions remain the access-control layer.</p>';
         echo '</div>';
     }
-
-        public function admin_notification_settings(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            $days=(int)get_option('ews_notification_retention_days',90);
-            $allowed=[7,30,90,180,365,0];
-            if(!in_array($days,$allowed,true))$days=90;
-            $policy=$this->notification_policy();
-            $categories=$this->notification_policy_categories();
-            global $wpdb;
-            $push_table=$this->push_table();
-            $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->employees} WHERE active=1 AND wp_user_id>0");
-            $ready=(int)$wpdb->get_var("SELECT COUNT(DISTINCT user_id) FROM {$push_table} WHERE user_id IN (SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0)");
-            $missing=max(0,$total-$ready);
-            $configured=(bool)(get_option('ews_vapid_public_key','') && get_option('ews_vapid_private_key',''));
-            $not_configured=$configured?0:$total;
-            if(!$configured){$ready=0;$missing=0;}
-            echo '<style>
-            .wfo-notification-policy{max-width:1180px}.wfo-policy-intro{font-size:14px;margin:4px 0 22px}.wfo-policy-health{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 1.7fr;gap:12px;margin:0 0 18px}.wfo-health-card,.wfo-health-meta{background:#fff;border:1px solid #e2e4e7;border-radius:12px;padding:17px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}.wfo-health-card strong{display:block;font-size:22px;line-height:1.1}.wfo-health-card span:not(.wfo-health-icon){display:block;color:#646970;font-size:12px;margin-top:4px}.wfo-health-icon{font-size:18px;line-height:1}.wfo-health-meta{display:block}.wfo-health-meta strong,.wfo-health-meta span{display:block}.wfo-health-meta span{color:#646970;font-size:12px;margin-top:5px}.wfo-policy-panel{background:#fff;border:1px solid #e2e4e7;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}.wfo-policy-panel-head{display:flex;justify-content:space-between;gap:20px;padding:22px 24px;border-bottom:1px solid #eee}.wfo-policy-panel-head h2{margin:0 0 5px}.wfo-policy-panel-head p{margin:0;color:#646970}.wfo-policy-admin{align-self:center;border:1px solid #dcdcde;border-radius:999px;padding:6px 11px;font-size:12px;color:#50575e;white-space:nowrap}.wfo-policy-table-head,.wfo-policy-row{display:grid;grid-template-columns:minmax(260px,1fr) 110px 110px 150px;align-items:center}.wfo-policy-table-head{background:#f6f7f7;padding:11px 24px;color:#646970;font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}.wfo-policy-table-head span:not(:first-child),.wfo-policy-row>.wfo-switch{text-align:center}.wfo-policy-row{padding:16px 24px;border-top:1px solid #f0f0f1}.wfo-policy-category strong{display:block;font-size:14px}.wfo-policy-category span{display:block;color:#646970;font-size:12px;margin-top:3px}.wfo-switch{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}.wfo-switch input{position:absolute;opacity:0;pointer-events:none}.wfo-switch>span{width:38px;height:22px;border-radius:999px;background:#c3c4c7;position:relative;transition:.15s}.wfo-switch>span:after{content:"";position:absolute;width:18px;height:18px;left:2px;top:2px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:.15s}.wfo-switch input:checked+span{background:#2271b1}.wfo-switch input:checked+span:after{transform:translateX(16px)}.wfo-switch em{font-style:normal;font-size:11px;color:#646970;min-width:22px}.wfo-policy-note{margin:14px 0;background:#fff;border:1px solid #e2e4e7;border-radius:12px;padding:15px 18px;display:flex;gap:8px;align-items:flex-start}.wfo-policy-note strong{white-space:nowrap}.wfo-policy-note span{color:#646970;font-size:12px}.wfo-policy-actions{padding:18px 0}.wfo-policy-secondary{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}.wfo-policy-secondary>div{background:#fff;border:1px solid #e2e4e7;border-radius:12px;padding:20px}.wfo-policy-secondary h2{margin-top:0}.wfo-policy-secondary p{color:#646970}.wfo-policy-secondary form{margin:0}@media(max-width:900px){.wfo-policy-health{grid-template-columns:1fr 1fr}.wfo-health-meta{grid-column:1/-1}.wfo-policy-table-head,.wfo-policy-row{grid-template-columns:minmax(180px,1fr) 80px 80px 110px;padding-left:14px;padding-right:14px}.wfo-policy-secondary{grid-template-columns:1fr}}
-            </style>';
-            echo '<div class="wrap wfo-notification-policy"><h1>Notification Policy Center</h1>';
-            echo '<p class="description wfo-policy-intro">Control how Workforce One delivers notifications across the organization.</p>';
-            if(isset($_GET['policy_saved'])) echo '<div class="notice notice-success is-dismissible"><p><strong>Notification policy updated successfully.</strong></p></div>';
-            if(isset($_GET['push_sent'])) echo '<div class="notice notice-success is-dismissible"><p>Push test sent to '.(int)$_GET['push_sent'].' device(s). Expired: '.(int)($_GET['push_expired']??0).'. Errors: '.(int)($_GET['push_error']??0).'.</p></div>';
-            echo '<div class="wfo-policy-health">';
-            echo '<div class="wfo-health-card"><span class="wfo-health-icon">●</span><div><strong>'.(int)$ready.'</strong><span>Push Ready</span></div></div>';
-            echo '<div class="wfo-health-card"><span class="wfo-health-icon">●</span><div><strong>'.(int)$missing.'</strong><span>No Active Device</span></div></div>';
-            echo '<div class="wfo-health-card"><span class="wfo-health-icon">●</span><div><strong>'.(int)$not_configured.'</strong><span>Not Configured</span></div></div>';
-            echo '<div class="wfo-health-meta"><strong>Push Delivery Health</strong><span>'.($configured?'Push infrastructure is configured.':'Push infrastructure is not configured yet.').'</span></div>';
-            echo '</div>';
-            echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-            wp_nonce_field('ews_notification_policy_save');
-            echo '<input type="hidden" name="action" value="ews_notification_policy_save">';
-            echo '<div class="wfo-policy-panel"><div class="wfo-policy-panel-head"><div><h2>Notification Policy</h2><p>In-App notifications are retained as part of the notification history. Push controls device delivery.</p></div><span class="wfo-policy-admin">Admin controlled</span></div>';
-            echo '<div class="wfo-policy-table-head"><span>Category</span><span>In-App</span><span>Push</span><span>Mandatory Push</span></div>';
-            foreach($categories as $key=>$cat){
-                $row=$policy[$key];
-                echo '<div class="wfo-policy-row">';
-                echo '<div class="wfo-policy-category"><strong>'.esc_html($cat['label']).'</strong><span>'.esc_html($cat['description']).'</span></div>';
-                echo '<label class="wfo-switch"><input type="checkbox" name="policy['.esc_attr($key).'][in_app]" value="1" '.checked($row['in_app'],1,false).'><span></span><em>'.($row['in_app']?'ON':'OFF').'</em></label>';
-                echo '<label class="wfo-switch"><input type="checkbox" name="policy['.esc_attr($key).'][push]" value="1" '.checked($row['push'],1,false).'><span></span><em>'.($row['push']?'ON':'OFF').'</em></label>';
-                echo '<label class="wfo-switch"><input type="checkbox" name="policy['.esc_attr($key).'][mandatory]" value="1" '.checked($row['mandatory'],1,false).'><span></span><em>'.($row['mandatory']?'ON':'OFF').'</em></label>';
-                echo '</div>';
-            }
-            echo '</div>';
-            echo '<div class="wfo-policy-note"><strong>About Mandatory Push</strong><span>Mandatory Push means Workforce One will attempt Push delivery for this category even when optional Push is turned off. It cannot bypass browser or operating-system permissions.</span></div>';
-            echo '<div class="wfo-policy-actions"><button class="button button-primary button-large" type="submit">Save Notification Policy</button></div>';
-            echo '</form>';
-            echo '<div class="wfo-policy-secondary"><div><h2>Push Notifications</h2><p>Send a test push to every subscribed device. This infrastructure test is not affected by the Notification Policy.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-            wp_nonce_field('ews_push_send_test');
-            echo '<input type="hidden" name="action" value="ews_push_send_test">';
-            echo '<p><label><strong>VAPID Subject</strong><br><input type="text" name="vapid_subject" value="'.esc_attr(get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com'))).'" class="regular-text" placeholder="mailto:admin@example.com"></label></p><p class="description">Use a mailto: address or your HTTPS site URL.</p><p><button class="button" type="submit">Send Test Push</button></p></form></div>';
-            echo '<div><h2>Notification Retention</h2><p>Choose how long notifications remain in the system.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-            wp_nonce_field('ews_notification_settings_save');
-            echo '<input type="hidden" name="action" value="ews_notification_settings_save"><select name="retention_days">';
-            foreach($allowed as $v){$label=$v===0?'Forever':$v.' days';echo '<option value="'.(int)$v.'" '.selected($days,$v,false).'>'.esc_html($label).'</option>';}
-            echo '</select><p><button class="button" type="submit">Save Retention</button></p></form></div></div></div>';
-        }
-
-        public function admin_notification_policy_save(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_notification_policy_save');
-            $categories=$this->notification_policy_categories();
-            $posted=isset($_POST['policy'])&&is_array($_POST['policy'])?wp_unslash($_POST['policy']):[];
-            $policy=[];
-            foreach($categories as $key=>$cat){
-                $row=isset($posted[$key])&&is_array($posted[$key])?$posted[$key]:[];
-                $mandatory=!empty($row['mandatory'])?1:0;
-                $policy[$key]=[
-                    'in_app'=>!empty($row['in_app'])?1:0,
-                    'push'=>($mandatory||!empty($row['push']))?1:0,
-                    'mandatory'=>$mandatory,
-                ];
-            }
-            update_option('ews_notification_policy',$policy,false);
-            update_option('ews_notification_policy_updated_at',current_time('mysql'),false);
-            update_option('ews_notification_policy_updated_by',get_current_user_id(),false);
-            $this->redirect(['page'=>'ews31-notifications','policy_saved'=>1]);
-        }
-
-        public function admin_notification_settings_save(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');
-            check_admin_referer('ews_notification_settings_save');
-            $allowed=[7,30,90,180,365,0];
-            $days=isset($_POST['retention_days'])?(int)$_POST['retention_days']:90;
-            if(!in_array($days,$allowed,true))$days=90;
-            update_option('ews_notification_retention_days',$days);
-            $subject=sanitize_text_field(wp_unslash($_POST['vapid_subject']??''));
-            if($subject && (strpos($subject,'mailto:')===0 || filter_var($subject,FILTER_VALIDATE_URL))) update_option('ews_vapid_subject',$subject,false);
-            $this->redirect(['page'=>'ews31-notifications','saved'=>1]);
-        }
-
-        public function admin_roles_save(){
-            if(!$this->can('ews_manage_roles'))wp_die('Access denied');
-            check_admin_referer('ews31_roles_save');
-            $defs=$this->role_defs();$perms=$this->permission_defs();
-            foreach($defs as $slug=>$def){
-                $role=get_role($slug);if(!$role)continue;
-                foreach($perms as $cap=>$label){
-                    $enabled=!empty($_POST['roles'][$slug][$cap]);
-                    $role->add_cap($cap,$enabled);
-                }
-            }
-            $this->audit('roles_permissions_update','role',0,'Updated EWS role permissions');
-            $this->redirect(['page'=>'ews31-roles','roles_saved'=>1]);
-        }
-
-    public function admin_roles(){
-            if(!$this->can('ews_manage_roles'))wp_die('Access denied');
-            $defs=$this->role_defs();$perms=$this->permission_defs();
-            echo '<div class="wrap"><h1>Roles & Permissions</h1>';
-            if(isset($_GET['roles_saved']))echo '<div class="notice notice-success is-dismissible"><p>Roles and permissions saved successfully.</p></div>';
-            echo '<p>Control what each Employee Schedule role can access. WordPress Administrators always retain full access.</p>';
-            echo '<div style="background:#f6f7f7;border-left:4px solid #2271b1;padding:12px 14px;margin:14px 0;max-width:1100px"><strong>Permission model:</strong> <em>View Dashboard</em> only controls whether the user gets the management dashboard or the personal user dashboard. All other permissions are independent. If a user does not have a module permission, that module is hidden from the Workforce One frontend and protected server-side as well.</div>';
-            echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
-            wp_nonce_field('ews31_roles_save');
-            echo '<input type="hidden" name="action" value="ews31_roles_save"><div style="overflow:auto"><table class="widefat striped"><thead><tr><th>Permission</th>';
-            foreach($defs as $slug=>$def)echo '<th style="text-align:center">'.esc_html($def['name']).'</th>';
-            echo '</tr></thead><tbody>';
-            foreach($perms as $cap=>$label){
-                echo '<tr><td><strong>'.esc_html($label).'</strong><br><code>'.esc_html($cap).'</code></td>';
-                foreach($defs as $slug=>$def){
-                    $role=get_role($slug);$checked=$role&&$role->has_cap($cap);
-                    echo '<td style="text-align:center"><input type="checkbox" name="roles['.esc_attr($slug).']['.esc_attr($cap).']" value="1" '.checked($checked,true,false).'></td>';
-                }
-                echo '</tr>';
-            }
-            echo '</tbody></table></div><p><button class="button button-primary">Save Permissions</button></p></form>';
-            echo '<div style="background:#fff;border:1px solid #ddd;padding:15px;margin-top:20px"><h2>Role Assignment</h2><p>Assign the EWS roles to WordPress users from <strong>Users → All Users</strong>. Employees should normally use <strong>EWS Employee</strong>; managers/supervisors can be assigned the corresponding EWS role.</p></div></div>';
-        }
 
     public function admin_home_router(){
             if($this->can('ews_view_dashboard')){ $this->admin_home(); return; }
