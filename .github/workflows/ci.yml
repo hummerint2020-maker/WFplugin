@@ -97,6 +97,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance.py "$S"
       - name: Leave behaviour tests (normal + approval workflow)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave.py "$S"
+      - name: Overtime and Early Leave behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_overtime.py "$S"
       - name: Re-seed after behaviour tests
         run: wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Smoke test (every admin page and app view)
