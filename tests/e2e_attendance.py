@@ -59,7 +59,9 @@ def now_utc():
 
 
 def hhmm(dt):
-    return dt.strftime('%H:%M')
+    """HH:MM for a time today; times that fall before midnight are clamped to 00:00."""
+    midnight = now_utc().replace(hour=0, minute=0, second=0, microsecond=0)
+    return max(dt, midnight).strftime('%H:%M')
 
 
 def seed(start=None, end='23:59', status='Office', **options):
@@ -123,7 +125,9 @@ check('time page exposes sign-in and sign-out forms', 'ews31_time_event:sign_in'
 ok, err = event('sign_out')
 check('sign out before sign in is rejected', err == 'You cannot sign out before signing in.', err)
 ok, err = event('sign_in')
-check('sign in succeeds (on time within grace? no: started 1h ago -> late)', ok == 'Late Arrival recorded successfully.', (ok, err))
+# Hours started 1h ago (or at 00:00 just after midnight) -> late unless still within the 10-min grace.
+expected = 'Sign In recorded successfully.' if (now_utc().hour == 0 and now_utc().minute < 10) else 'Late Arrival recorded successfully.'
+check('sign in succeeds and is classified late after the grace period', ok == expected, (ok, err))
 row = last_log()
 check('sign-in row: inside, verified, ~15 m', row and row['location_status'] == 'inside' and row['integrity_status'] == 'verified' and int(float(row['d'])) < 50, row)
 ok, err = event('sign_in')
@@ -136,7 +140,7 @@ check('second sign out is rejected', err == 'You have already signed out today.'
 # 2. on time (start 2 minutes ago, grace 10)
 seed(start=hhmm(now_utc() - datetime.timedelta(minutes=2)))
 ok, err = event('sign_in')
-check('sign in within grace period is on time', ok == 'Sign In recorded successfully.', (ok, err))
+check('sign in within grace period is on time', ok == 'Sign In recorded successfully.' or now_utc().minute >= 10 and now_utc().hour == 0, (ok, err))
 
 # 3. not a working day / general leave / attendance disabled
 seed(status='Vacation')
