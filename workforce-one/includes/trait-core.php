@@ -1282,67 +1282,6 @@ private function face_signin_enabled(){ return (bool)get_option('ews_feature_fac
         return $ok!==false;
     }
 
-    private function face_reset_requested($employee_id){
-        $employee_id=absint($employee_id);
-        if(!$employee_id)return false;
-        $requests=get_option('ews_face_reset_requests',array());
-        return is_array($requests) && !empty($requests[$employee_id]) && ($requests[$employee_id]['status']??'')==='pending';
-    }
-
-    private function face_request_reset($employee_id,$user_id=0){
-        $employee_id=absint($employee_id);
-        $user_id=absint($user_id);
-        if(!$employee_id || !$this->face_template_for_employee($employee_id)) return false;
-        $requests=get_option('ews_face_reset_requests',array());
-        if(!is_array($requests))$requests=array();
-        if(!empty($requests[$employee_id]) && ($requests[$employee_id]['status']??'')==='pending') return true;
-        $requests[$employee_id]=array(
-            'status'=>'pending',
-            'requested_by'=>$user_id,
-            'requested_at'=>current_time('mysql')
-        );
-        $saved=update_option('ews_face_reset_requests',$requests,false);
-        if(!$saved)return false;
-        global $wpdb;
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$employee_id));
-        if(!$emp)return true;
-        $workflow=$this->approval_workflow('face_reset');
-        $approval_active=$workflow && (int)$workflow->active===1;
-        if($approval_active){
-            $approval=$this->approval_start('face_reset','face_reset_request',$employee_id,$employee_id,[],true);
-            if(is_wp_error($approval))return false;
-            $ar=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
-            if($ar && strtoupper((string)$ar->status)==='APPROVED'){
-                if(!$this->face_delete_template($employee_id))return false;
-                $requests=get_option('ews_face_reset_requests',[]);
-                if(is_array($requests)&&isset($requests[$employee_id])){
-                    $requests[$employee_id]['status']='approved';
-                    $requests[$employee_id]['handled_by']=$user_id;
-                    $requests[$employee_id]['handled_at']=current_time('mysql');
-                    update_option('ews_face_reset_requests',$requests,false);
-                }
-                $msg='Your Face Reset request has been approved. You can now enroll your new face.';
-                if(!empty($emp->wp_user_id)){$this->notify_user((int)$emp->wp_user_id,'Face Reset Approved',$msg,'success','face_reset',$employee_id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Face Reset Approved',$msg,'face_reset',$employee_id,add_query_arg('ews_view','time',home_url('/')));}
-                return true;
-            }
-            $step=$ar?$this->approval_current_step((int)$ar->id):null;
-            if($step && !empty($step->approver_wp_user_id)){
-                $msg=$emp->name.' requested a Face Reset. Approval is required.';
-                $this->notify_user((int)$step->approver_wp_user_id,'Face Reset Request',$msg,'face_reset','face_reset',$employee_id);
-                if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$step->approver_wp_user_id,'Face Reset Request',$msg,'face_reset',$employee_id,add_query_arg(['page'=>'ews31-face-reset-requests'],admin_url('admin.php')));
-            }
-            return true;
-        }
-        $managers=get_users(['capability'=>'ews_manage_settings','fields'=>['ID']]);
-        $msg=$emp->name.' requested a Face Reset. Approval is required.';
-        foreach($managers as $m){
-            if((int)$m->ID===$user_id)continue;
-            $this->notify_user((int)$m->ID,'Face Reset Request',$msg,'face_reset','face_reset',$employee_id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$m->ID,'Face Reset Request',$msg,'face_reset',$employee_id,add_query_arg(['page'=>'ews31-face-reset-requests'],admin_url('admin.php')));
-        }
-        return true;
-    }
-
     private function face_delete_template($employee_id){
         global $wpdb;
         $employee_id=absint($employee_id);

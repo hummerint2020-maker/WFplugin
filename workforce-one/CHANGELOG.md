@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.4
+### Fixed
+- The **Face Reset Requests** admin page is now in the menu (Employee Schedule → Face Reset
+  Requests). It was never registered, so every "Face Reset Request" notification sent to
+  managers and approvers linked to a page that answered "not allowed".
+- With the Face Reset approval workflow on, an employee can request a reset **again** after an
+  earlier one was decided. Before, the second request failed and could only be pushed through by
+  an administrator.
+- Face Reset decisions from the Requests Hub now tell the employee and are written to the audit
+  log in every case (the workflow path did neither), and a failed face removal is reported.
+- On the Face Reset page, approving the first of several approval levels shows "moved to the
+  next level" instead of "Face reset approved".
+- Legacy vacation approvals from the Requests Hub are atomic: if marking a day fails, nothing is
+  changed.
+
+### Internal
+- Requests Hub moved to `includes/trait-admin-requests.php`, Face Reset to
+  `includes/trait-face-reset.php`; page HTML in `templates/admin/`; presentation rules in
+  `src/Requests/Hub.php` (unit tested). Every hub decision now calls the owning module's
+  operation (`leave_admin_decide`, `overtime_admin_decide`, `early_leave_admin_decide`,
+  `swap_admin_decide`, `face_reset_decide`), and the four copies of the Face Reset decision are one.
+
 ## 3.31.3
 ### Fixed
 - Pending **schedule swaps now appear on the wp-admin Requests page** and can be approved or

@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\EarlyLeave\RequestRules as EarlyLeaveRules;
 use WorkforceOne\Overtime\RequestRules as OvertimeRules;
+use WorkforceOne\Requests\Hub;
 
 /**
  * Overtime requests and Early Leave requests.
@@ -250,5 +251,40 @@ trait EWS_Overtime_Trait {
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->leave_redirect(['early_error'=>'save']);}
             $this->early_leave_notify_employee($r,$decision);
             $this->leave_redirect(['leave_done'=>1]);
+        }
+
+    /* ------------------------------------------------------------------ wp-admin Requests Hub */
+
+    /** Administrator decision on an overtime request. Returns a Hub outcome. */
+    private function overtime_admin_decide($id,$decision){
+            global $wpdb;
+            $req=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d AND status='Pending' LIMIT 1",$id));
+            if(!$req)return Hub::ERROR;
+            $ar=$this->approval_find_request('overtime','overtime_request',$id);
+            if($ar && Hub::isOpenApproval((string)$ar->status)){
+                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true,true)))return Hub::ERROR;
+                $fresh=$this->approval_find_request('overtime','overtime_request',$id);
+                if(!$fresh)return Hub::ERROR;
+                $outcome=Hub::workflowOutcome((string)$fresh->status);
+                if($outcome!==Hub::ADVANCED)return $this->overtime_set_status($id,$outcome===Hub::APPROVED?'Approved':'Rejected')===true?$outcome:Hub::ERROR;
+                $next=$this->approval_current_step((int)$fresh->id);
+                if($next&&$next->approver_wp_user_id){
+                    $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",(int)$req->employee_id));
+                    $this->notify_user((int)$next->approver_wp_user_id,'Overtime Approval Required',($emp?$emp->name:'An employee').' overtime request is waiting for your approval.','overtime','overtime',$id);
+                }
+                return Hub::ADVANCED;
+            }
+            return $this->overtime_set_status($id,$decision==='approve'?'Approved':'Rejected')===true?Hub::outcome($decision):Hub::ERROR;
+        }
+
+    /** Administrator decision on an early leave request. Returns a Hub outcome. */
+    private function early_leave_admin_decide($id,$decision){
+            global $wpdb;
+            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE id=%d AND status='Pending' LIMIT 1",$id));
+            if(!$r)return Hub::ERROR;
+            if($decision==='approve'&&!$this->early_leave_can_approve($r))return Hub::ERROR;
+            if($this->early_leave_set_status($id,$decision==='approve'?'Approved':'Rejected')!==1)return Hub::ERROR;
+            $this->early_leave_notify_employee($r,$decision,false);
+            return Hub::outcome($decision);
         }
 }

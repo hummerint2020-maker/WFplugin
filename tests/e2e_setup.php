@@ -1,7 +1,7 @@
 <?php
 global $wpdb; $p=$wpdb->prefix;
 $uid=username_exists('emp1')?:wp_create_user('emp1','emp1pass','emp1@example.com');
-$wpdb->query("DELETE FROM {$p}ews_employees"); $wpdb->query("DELETE FROM {$p}ews_schedule"); $wpdb->query("DELETE FROM {$p}ews_time_logs"); $wpdb->query("DELETE FROM {$p}ews_locations"); $wpdb->query("DELETE FROM {$p}ews_kiosks"); $wpdb->query("DELETE FROM {$p}ews_employee_locations_v321");
+$wpdb->query("DELETE FROM {$p}ews_employees"); $wpdb->query("DELETE FROM {$p}ews_schedule"); $wpdb->query("DELETE FROM {$p}ews_time_logs"); $wpdb->query("DELETE FROM {$p}ews_locations"); $wpdb->query("DELETE FROM {$p}ews_kiosks"); $wpdb->query("DELETE FROM {$p}ews_employee_locations_v321"); $wpdb->query("DELETE FROM {$p}ews_face_profiles"); delete_option('ews_face_reset_requests');
 $wpdb->insert("{$p}ews_employees",['name'=>'Emp One','domain_name'=>'emp1','email'=>'emp1@example.com','wp_user_id'=>$uid,'active'=>1,'attendance_enabled'=>1]);
 $eid=$wpdb->insert_id;
 $wpdb->insert("{$p}ews_schedule",['employee_id'=>$eid,'work_date'=>current_time('Y-m-d'),'status'=>'Office']);

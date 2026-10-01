@@ -5,6 +5,7 @@ use WorkforceOne\Leave\Balance;
 use WorkforceOne\Leave\CancellationRules;
 use WorkforceOne\Leave\RequestRules;
 use WorkforceOne\Leave\WorkingDays;
+use WorkforceOne\Requests\Hub;
 
 /**
  * Leave requests: submit, approve/reject, cancellation.
@@ -417,5 +418,58 @@ trait EWS_Leave_Trait {
             if($ar)$this->audit($decision==='approve'?'leave_cancel_approved':'leave_cancel_rejected','leave_request',$id,ucfirst($decision).' cancellation approval by '.wp_get_current_user()->display_name);
             else $this->audit($decision==='approve'?'leave_cancelled':'leave_cancel_rejected','leave_request',$id,ucfirst($decision).' cancellation by '.wp_get_current_user()->display_name);
             $this->leave_redirect(['leave_done'=>1]);
+        }
+
+    /**
+     * Decision from the wp-admin Requests Hub (administrator override). Uses the same operations
+     * as the employee app, so balances, schedule snapshots and the charged year match.
+     * Returns a Hub outcome: approved, rejected, advanced or error.
+     */
+    private function leave_admin_decide($id,$cancel,$decision){
+            global $wpdb;
+            $this->ensure_leave_schema();
+            $r=$this->leave_request_row($id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
+            if(!$r)return Hub::ERROR;
+            $emp=$this->leave_active_employee($r->employee_id);
+            $bal=$this->leave_request_balance($r);
+            if(!$emp||!$bal)return Hub::ERROR;
+            $now=current_time('mysql');
+            $apply=function($outcome)use($cancel,$r,$emp,$bal,$id,$now){
+                if($cancel)return $outcome==='APPROVED'?$this->leave_apply_cancellation($r,$emp,$bal,$now):$this->leave_reject_cancellation($id);
+                $ok=$outcome==='APPROVED'?$this->leave_apply_final_approval($r,$emp,$bal,get_current_user_id(),$now):$this->leave_reject_approval($r,$bal,get_current_user_id(),$now);
+                return is_wp_error($ok)?'save':true;
+            };
+            $commit=function($outcome)use($apply,$wpdb){
+                if($wpdb->query('START TRANSACTION')===false)return false;
+                if($apply($outcome)!==true){$wpdb->query('ROLLBACK');return false;}
+                if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return false;}
+                return true;
+            };
+            $entity=$cancel?'leave_cancellation':'leave';
+            $ar=$this->approval_find_request('vacation',$entity,$id);
+            if($ar && Hub::isOpenApproval((string)$ar->status)){
+                // The approval engine manages its own transaction for the admin override.
+                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true,true)))return Hub::ERROR;
+                $fresh=$this->approval_find_request('vacation',$entity,$id);
+                if(!$fresh)return Hub::ERROR;
+                $outcome=Hub::workflowOutcome((string)$fresh->status);
+                if($outcome!==Hub::ADVANCED){
+                    $final=$outcome===Hub::APPROVED?'APPROVED':'REJECTED';
+                    if($cancel){
+                        if(!$commit($final))return Hub::ERROR;
+                    }else{
+                        if($apply($final)!==true)return Hub::ERROR;
+                        $this->notify_user((int)$emp->wp_user_id,'Leave '.ucfirst($outcome),'Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been '.$outcome.'.','leave','leave',$id);
+                    }
+                    return $outcome;
+                }
+                $next=$this->approval_current_step((int)$fresh->id);
+                if($next&&$next->approver_wp_user_id){
+                    if($cancel)$this->notify_user((int)$next->approver_wp_user_id,'Vacation Cancellation Request',$emp->name.' vacation cancellation is waiting for your approval.','vacation','vacation',$id);
+                    else $this->notify_user((int)$next->approver_wp_user_id,'Vacation Request',$emp->name.' '.$r->type_name.' request is waiting for your approval.','vacation','vacation',$id);
+                }
+                return Hub::ADVANCED;
+            }
+            return $commit($decision==='approve'?'APPROVED':'REJECTED')?Hub::outcome($decision):Hub::ERROR;
         }
 }
