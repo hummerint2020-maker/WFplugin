@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.9
+### Fixed (wp-admin → Sign In / Out Report)
+- **Manual records are checked like real ones:** a second Sign In (or Sign Out) on the same day
+  is refused, and a Sign Out must be after the Sign In. Before, any number could be added.
+- **Editing a record keeps its employee and type.** The form did not select the record's
+  employee, and a Late Sign In could only be saved back as a plain Sign In.
+- **Location of manual records** is checked against the employee's Work Location, like a real
+  Sign In (it used the old single-location setting). The Radius column shows that location's radius.
+- Records of archived employees can be edited.
+- **CSV exports are safe to open in Excel:** cells starting with `=`, `+`, `-` or `@` (e.g. a name
+  typed as a formula) are written as text instead of being run as formulas. Applies to the
+  Sign In / Out and Reports exports.
+- The Sign In / Out CSV link is protected against cross-site requests.
+- Errors are shown on the page instead of a blank error screen.
+
+### Internal
+- Sign In / Out Report moved to `includes/trait-time-report.php`, HTML to
+  `templates/admin/time-report.php`, rules to `src/Attendance/ManualRecordRules.php`, CSV helper to
+  `src/Support/Csv.php` (both unit tested).
+
 ## 3.31.8
 ### Fixed (wp-admin → Employees)
 - **Every check now runs before anything is saved.** Making an employee their own supervisor was

@@ -111,6 +111,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_features.py "$S"
       - name: Employees page behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_employees.py "$S"
+      - name: Sign In / Out Report behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_time_report.py "$S"
       - name: Re-seed after behaviour tests
         run: wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Smoke test (every admin page and app view)

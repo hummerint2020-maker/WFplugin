@@ -3,7 +3,7 @@
 The plugin started as one class (`EWS_Manager_V31_1`) built from 19 traits in
 `workforce-one/includes/`, with HTML, CSS and JavaScript inside PHP strings. It is being
 moved, **one module at a time and without behaviour changes**, to the structure below.
-Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`, wp-admin Leaves page in `includes/trait-leave-admin.php`) and Overtime + Early Leave (`includes/trait-overtime.php`) Schedule Swaps (`includes/trait-swap.php`), Schedule Configuration (`includes/trait-schedule-config.php`), Feature Configuration (`includes/trait-features.php`), Employees (`includes/trait-employee-admin.php`), and the wp-admin request pages: Requests Hub (`includes/trait-admin-requests.php`) and Face Reset Requests (`includes/trait-face-reset.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
+Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`, wp-admin Leaves page in `includes/trait-leave-admin.php`) and Overtime + Early Leave (`includes/trait-overtime.php`) Schedule Swaps (`includes/trait-swap.php`), Schedule Configuration (`includes/trait-schedule-config.php`), Feature Configuration (`includes/trait-features.php`), Employees (`includes/trait-employee-admin.php`), Sign In / Out Report (`includes/trait-time-report.php`), and the wp-admin request pages: Requests Hub (`includes/trait-admin-requests.php`) and Face Reset Requests (`includes/trait-face-reset.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
 
 ```
 workforce-one/
@@ -13,6 +13,8 @@ workforce-one/
     Attendance/SignInRules.php         business rules – pure PHP, no WordPress
     Attendance/LocationAssessment.php  business rules – pure PHP, no WordPress
     Attendance/Hooks.php               the module's add_action() calls
+    Attendance/ManualRecordRules.php   admin-entered Sign In / Out records
+    Support/Csv.php                    CSV export cells (formula-injection safe)
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, AdminRecordRules.php, Hooks.php
     Overtime/RequestRules.php, Hooks.php        EarlyLeave/RequestRules.php
     Schedule/SwapRules.php, Hooks.php, ConfigRules.php, ConfigHooks.php
