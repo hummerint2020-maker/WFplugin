@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.14
+### Fixed (wp-admin home and Audit Log)
+- **The admin dashboard counts the right people.** It only looked at Office and WFH days, so
+  employees on a custom schedule type that requires Sign In were never counted; employees with
+  attendance tracking switched off were counted as No Show every day; and on a company holiday
+  everyone scheduled was a No Show. Expected now = active, tracked, and scheduled on a type that
+  requires Sign In, on a day that is not a company holiday (which is shown instead).
+- **Audit Log:** an Action filter; the Target column now names shift swaps (employees and date),
+  leave types, company holidays and Kudos (they showed "—"); a From/To range entered the wrong
+  way round is swapped; impossible dates are ignored.
+
+### Internal
+- Admin home and Audit Log moved to `includes/trait-admin-dashboard.php`, HTML to
+  `templates/admin/dashboard.php` and `templates/admin/audit.php`, rules to
+  `src/Attendance/TodayStatus.php` and `src/Audit/AuditFilters.php` (unit tested).
+
 ## 3.31.13
 ### Fixed
 - **On Time / Late Arrival now follows the employee's own shift everywhere.** The Sign In / Out
