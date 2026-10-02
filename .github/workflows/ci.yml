@@ -68,6 +68,14 @@ jobs:
           extensions: mysqli, gd, openssl
           coverage: none
           tools: wp-cli
+      # setup-php's wp-cli tool is not always installed; fall back to the official phar.
+      - name: Install WP-CLI
+        run: |
+          if ! command -v wp >/dev/null 2>&1; then
+            curl -fsSL --retry 3 -o /tmp/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+            sudo install -m 0755 /tmp/wp-cli.phar /usr/local/bin/wp
+          fi
+          wp --version
       - name: Install WordPress
         run: |
           mkdir -p "$S"
