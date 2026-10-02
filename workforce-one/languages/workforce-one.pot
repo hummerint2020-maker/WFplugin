@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.0\n"
+"Project-Id-Version: Workforce One 3.31.15\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-01T00:49:22+00:00\n"
+"POT-Creation-Date: 2026-10-02T19:26:56+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -169,8 +169,8 @@ msgid "Cancel"
 msgstr ""
 
 #: includes/trait-frontend.php:99
-#: includes/trait-frontend.php:392
-#: includes/trait-frontend.php:461
+#: includes/trait-frontend.php:364
+#: includes/trait-frontend.php:433
 msgid "OK"
 msgstr ""
 
@@ -287,7 +287,7 @@ msgid "Break Updated"
 msgstr ""
 
 #: includes/trait-frontend.php:130
-#: includes/trait-frontend.php:486
+#: includes/trait-frontend.php:458
 msgid "Overtime Requests are currently disabled."
 msgstr ""
 
@@ -311,8 +311,8 @@ msgstr ""
 #: includes/trait-frontend.php:130
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:351
+#: includes/trait-frontend.php:464
 #: includes/trait-presence.php:115
 #: includes/trait-presence.php:151
 #: includes/trait-presence.php:166
@@ -328,7 +328,7 @@ msgid "Please enter a valid overtime time range."
 msgstr ""
 
 #: includes/trait-frontend.php:130
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Please enter a reason for the overtime request."
 msgstr ""
 
@@ -350,13 +350,13 @@ msgstr ""
 
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "Please select a valid future date range."
 msgstr ""
 
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "The selected range contains no working days."
 msgstr ""
 
@@ -424,6 +424,10 @@ msgstr ""
 msgid "The swap request has already been processed or expired."
 msgstr ""
 
+#: includes/trait-frontend.php:142
+msgid "This day has already passed, so it can no longer be swapped."
+msgstr ""
+
 #: includes/trait-frontend.php:143
 msgid "Shift Swap Not Completed"
 msgstr ""
@@ -461,17 +465,17 @@ msgid "The shift swap has been updated."
 msgstr ""
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "You already have a pending or approved leave overlapping this period."
 msgstr ""
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "Insufficient available balance for this Leave Type."
 msgstr ""
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "A leave cannot span two calendar years. Please submit one request for each year."
 msgstr ""
 
@@ -484,489 +488,489 @@ msgid "Please review the leave details and try again."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:355
 msgid "Please select a future date for Early Leave."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:384
-#: includes/trait-frontend.php:475
+#: includes/trait-frontend.php:356
+#: includes/trait-frontend.php:447
 msgid "Early Leave is available only on a configured working day."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:385
+#: includes/trait-frontend.php:357
 msgid "Early Leave is available only on an Office workday. It cannot be requested on Work From Home or Leave/Vacation days."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:386
-#: includes/trait-frontend.php:476
+#: includes/trait-frontend.php:358
+#: includes/trait-frontend.php:448
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:387
-#: includes/trait-frontend.php:477
+#: includes/trait-frontend.php:359
+#: includes/trait-frontend.php:449
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:388
+#: includes/trait-frontend.php:360
 msgid "We could not submit the Early Leave request. Please try again."
 msgstr ""
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:389
+#: includes/trait-frontend.php:361
 msgid "This request can no longer be approved because the employee is no longer scheduled for an eligible Office workday."
 msgstr ""
 
 #: includes/trait-frontend.php:156
-#: includes/trait-frontend.php:392
-#: includes/trait-frontend.php:461
+#: includes/trait-frontend.php:364
+#: includes/trait-frontend.php:433
 msgid "Early Leave Not Available"
 msgstr ""
 
 #: includes/trait-frontend.php:156
-#: includes/trait-frontend.php:391
+#: includes/trait-frontend.php:363
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Dashboard"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
-#: includes/trait-frontend.php:1301
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
+#: includes/trait-frontend.php:1263
 msgid "Schedule"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:1350
-#: includes/trait-frontend.php:1372
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:1312
+#: includes/trait-frontend.php:1334
 msgid "Sign In / Out"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Leave"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:491
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:463
+#: includes/trait-frontend.php:706
 msgid "Overtime"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Tasks"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:679
-#: includes/trait-frontend.php:734
-#: includes/trait-frontend.php:1301
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:651
+#: includes/trait-frontend.php:706
+#: includes/trait-frontend.php:1263
 msgid "Attendance"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Reports"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Attendance Insights"
 msgstr ""
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "People"
 msgstr ""
 
-#: includes/trait-frontend.php:261
+#: includes/trait-frontend.php:241
 msgid "Workforce One navigation"
 msgstr ""
 
-#: includes/trait-frontend.php:275
-#: includes/trait-frontend.php:310
+#: includes/trait-frontend.php:255
+#: includes/trait-frontend.php:290
 msgid "Log out"
 msgstr ""
 
-#: includes/trait-frontend.php:279
+#: includes/trait-frontend.php:259
 msgid "Mobile shortcut:"
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:279
+#: includes/trait-frontend.php:259
 #, php-format
 msgid "Use your browser menu → %s to keep Workforce One one tap away."
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:279
+#: includes/trait-frontend.php:259
 msgid "Add to Home Screen"
 msgstr ""
 
-#: includes/trait-frontend.php:284
+#: includes/trait-frontend.php:264
 msgid "Workforce Management Platform"
 msgstr ""
 
-#: includes/trait-frontend.php:284
+#: includes/trait-frontend.php:264
 msgid "One Platform. One Team. One Goal."
 msgstr ""
 
-#: includes/trait-frontend.php:299
+#: includes/trait-frontend.php:279
 msgid "My Profile menu"
 msgstr ""
 
-#: includes/trait-frontend.php:309
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:289
+#: includes/trait-frontend.php:706
 msgid "My Profile"
 msgstr ""
 
-#: includes/trait-frontend.php:378
+#: includes/trait-frontend.php:350
 msgid "TIME OFF"
 msgstr ""
 
-#: includes/trait-frontend.php:378
+#: includes/trait-frontend.php:350
 msgid "Leave Management"
 msgstr ""
 
-#: includes/trait-frontend.php:378
+#: includes/trait-frontend.php:350
 msgid "Request time off, track your balance and follow approvals in one place. Leave Types marked “No balance deduction” are recorded without consuming leave balance."
 msgstr ""
 
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "Could not submit the leave request."
 msgstr ""
 
-#: includes/trait-frontend.php:380
+#: includes/trait-frontend.php:352
 msgid "Leave request submitted successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:381
+#: includes/trait-frontend.php:353
 msgid "Cancellation request submitted to your Manager."
 msgstr ""
 
-#: includes/trait-frontend.php:396
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:368
+#: includes/trait-frontend.php:385
 msgid "Request Leave"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:368
 msgid "Select a Leave Type and future date range. Working days are calculated automatically."
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:368
 msgid "Leave Type"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:397
+#: includes/trait-frontend.php:369
 #, php-format
 msgid "Available: %s"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:397
+#: includes/trait-frontend.php:369
 msgid "No balance deduction"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:370
+#: includes/trait-frontend.php:470
 msgid "From"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:370
+#: includes/trait-frontend.php:470
 msgid "To"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
+#: includes/trait-frontend.php:370
 msgid "Select dates to calculate working days."
 msgstr ""
 
 #. translators: %s: available days
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:398
-#: includes/trait-frontend.php:448
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:370
+#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:470
 msgid "Reason"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
+#: includes/trait-frontend.php:370
 msgid "(optional)"
 msgstr ""
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
+#: includes/trait-frontend.php:370
 msgid "Submit Leave Request"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:372
 msgid "Available"
 msgstr ""
 
-#: includes/trait-frontend.php:406
+#: includes/trait-frontend.php:378
 msgid "My Leave Requests"
 msgstr ""
 
-#: includes/trait-frontend.php:409
+#: includes/trait-frontend.php:381
 msgid "Back to recent requests"
 msgstr ""
 
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:385
 msgid "No Leave Requests Yet"
 msgstr ""
 
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:385
 msgid "You haven't submitted any leave requests yet."
 msgstr ""
 
-#: includes/trait-frontend.php:416
+#: includes/trait-frontend.php:388
 msgid "Cancellation Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:389
 msgid "Cancellation Rejected — cannot be submitted again."
 msgstr ""
 
-#: includes/trait-frontend.php:418
+#: includes/trait-frontend.php:390
 msgid "Request Cancellation"
 msgstr ""
 
-#: includes/trait-frontend.php:419
+#: includes/trait-frontend.php:391
 msgid "Cancellation unavailable — leave has started."
 msgstr ""
 
-#: includes/trait-frontend.php:423
+#: includes/trait-frontend.php:395
 msgid "View all leave requests"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:404
 msgid "Leave Requests Awaiting Your Approval"
 msgstr ""
 
-#: includes/trait-frontend.php:432
-#: includes/trait-frontend.php:435
-#: includes/trait-frontend.php:452
-#: includes/trait-frontend.php:513
-#: includes/trait-frontend.php:520
+#: includes/trait-frontend.php:404
+#: includes/trait-frontend.php:407
+#: includes/trait-frontend.php:424
+#: includes/trait-frontend.php:485
+#: includes/trait-frontend.php:492
 msgid "Approve"
 msgstr ""
 
-#: includes/trait-frontend.php:432
-#: includes/trait-frontend.php:435
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:444
-#: includes/trait-frontend.php:452
-#: includes/trait-frontend.php:513
-#: includes/trait-frontend.php:520
+#: includes/trait-frontend.php:404
+#: includes/trait-frontend.php:407
+#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:416
+#: includes/trait-frontend.php:424
+#: includes/trait-frontend.php:485
+#: includes/trait-frontend.php:492
 msgid "Reject"
 msgstr ""
 
-#: includes/trait-frontend.php:432
-#: includes/trait-frontend.php:435
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:520
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:404
+#: includes/trait-frontend.php:407
+#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:1348
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:435
+#: includes/trait-frontend.php:407
 msgid "Pending Leave Requests"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:413
 msgid "Leave Cancellations Awaiting Your Approval"
 msgstr ""
 
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:444
+#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:416
 msgid "Approve Cancellation"
 msgstr ""
 
-#: includes/trait-frontend.php:444
+#: includes/trait-frontend.php:416
 msgid "Cancellation Requests"
 msgstr ""
 
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 msgid "Early Leave"
 msgstr ""
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 #, php-format
 msgid "Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours."
 msgstr ""
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:470
 msgid "Date"
 msgstr ""
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 msgid "Duration (minutes)"
 msgstr ""
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 msgid "Request Early Leave"
 msgstr ""
 
-#: includes/trait-frontend.php:452
+#: includes/trait-frontend.php:424
 msgid "Pending Early Leave"
 msgstr ""
 
-#: includes/trait-frontend.php:471
+#: includes/trait-frontend.php:443
 msgid "Please select a date for Early Leave."
 msgstr ""
 
-#: includes/trait-frontend.php:473
+#: includes/trait-frontend.php:445
 msgid "Early Leave must be requested for a future date."
 msgstr ""
 
-#: includes/trait-frontend.php:491
+#: includes/trait-frontend.php:463
 msgid "EXTRA HOURS"
 msgstr ""
 
-#: includes/trait-frontend.php:491
+#: includes/trait-frontend.php:463
 msgid "Request overtime in advance and know exactly what you are asking to work."
 msgstr ""
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Please select today or a future date."
 msgstr ""
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Please select a valid time range."
 msgstr ""
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "You already have a pending or approved overtime request overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Could not submit the overtime request."
 msgstr ""
 
 #. translators: %s: requested hours
-#: includes/trait-frontend.php:493
+#: includes/trait-frontend.php:465
 #, php-format
 msgid "Overtime request submitted. You are requesting %s hour(s)."
 msgstr ""
 
 #. translators: %s: requested hours
-#: includes/trait-frontend.php:494
+#: includes/trait-frontend.php:466
 msgid "Overtime request approved."
 msgstr ""
 
-#: includes/trait-frontend.php:495
+#: includes/trait-frontend.php:467
 msgid "Overtime request rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:498
-#: includes/trait-frontend.php:501
+#: includes/trait-frontend.php:470
+#: includes/trait-frontend.php:473
 msgid "Request Overtime"
 msgstr ""
 
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:470
 msgid "Submit your overtime request before you work the extra hours. Manager approval is required."
 msgstr ""
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:498
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:470
+#: includes/trait-frontend.php:476
 msgid "Select the times to see the requested duration."
 msgstr ""
 
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:470
 msgid "Submit Overtime Request"
 msgstr ""
 
-#: includes/trait-frontend.php:500
+#: includes/trait-frontend.php:472
 msgid "My Overtime Requests"
 msgstr ""
 
-#: includes/trait-frontend.php:500
+#: includes/trait-frontend.php:472
 msgid "Track your pending and completed overtime requests."
 msgstr ""
 
-#: includes/trait-frontend.php:501
+#: includes/trait-frontend.php:473
 msgid "No Overtime Requests Yet"
 msgstr ""
 
-#: includes/trait-frontend.php:501
+#: includes/trait-frontend.php:473
 msgid "You haven't submitted any overtime requests yet."
 msgstr ""
 
 #. translators: %s: duration
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 #, php-format
 msgid "You are requesting %s."
 msgstr ""
 
 #. translators: %d: hours
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 #, php-format
 msgid "%d h"
 msgstr ""
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 #, php-format
 msgid "%1$d h %2$d min"
 msgstr ""
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 msgid "End time must be after start time."
 msgstr ""
 
-#: includes/trait-frontend.php:511
+#: includes/trait-frontend.php:483
 msgid "My Pending Overtime Approvals"
 msgstr ""
 
-#: includes/trait-frontend.php:511
+#: includes/trait-frontend.php:483
 msgid "Requests currently assigned to you by the approval workflow."
 msgstr ""
 
-#: includes/trait-frontend.php:512
+#: includes/trait-frontend.php:484
 msgid "No Pending Overtime Approvals"
 msgstr ""
 
-#: includes/trait-frontend.php:512
-#: includes/trait-frontend.php:519
+#: includes/trait-frontend.php:484
+#: includes/trait-frontend.php:491
 msgid "You're all caught up."
 msgstr ""
 
-#: includes/trait-frontend.php:513
+#: includes/trait-frontend.php:485
 msgid "Level"
 msgstr ""
 
-#: includes/trait-frontend.php:518
+#: includes/trait-frontend.php:490
 msgid "Pending Overtime Requests"
 msgstr ""
 
-#: includes/trait-frontend.php:518
+#: includes/trait-frontend.php:490
 msgid "Review overtime requests. Any Manager can approve or reject."
 msgstr ""
 
-#: includes/trait-frontend.php:519
+#: includes/trait-frontend.php:491
 msgid "No Pending Overtime Requests"
 msgstr ""
 
-#: includes/trait-frontend.php:527
+#: includes/trait-frontend.php:499
 #: includes/trait-presence.php:66
 #: includes/trait-presence.php:86
 #: includes/trait-presence.php:99
@@ -974,349 +978,349 @@ msgstr ""
 msgid "Access denied"
 msgstr ""
 
-#: includes/trait-frontend.php:527
+#: includes/trait-frontend.php:499
 msgid "Attendance Insights is not available for your account."
 msgstr ""
 
-#: includes/trait-frontend.php:656
+#: includes/trait-frontend.php:628
 msgid "Week"
 msgstr ""
 
-#: includes/trait-frontend.php:660
+#: includes/trait-frontend.php:632
 msgid "All Teams"
 msgstr ""
 
-#: includes/trait-frontend.php:661
+#: includes/trait-frontend.php:633
 msgid "Day"
 msgstr ""
 
-#: includes/trait-frontend.php:666
+#: includes/trait-frontend.php:638
 msgid "Today"
 msgstr ""
 
-#: includes/trait-frontend.php:670
+#: includes/trait-frontend.php:642
 msgid "Workforce Overview"
 msgstr ""
 
-#: includes/trait-frontend.php:670
+#: includes/trait-frontend.php:642
 msgid "Planned workforce distribution. Click a count to see the employees behind it."
 msgstr ""
 
-#: includes/trait-frontend.php:679
+#: includes/trait-frontend.php:651
 msgid "Actual attendance classification based on schedule and time logs. Planned Office/WFH is not inferred from sign-in."
 msgstr ""
 
-#: includes/trait-frontend.php:682
+#: includes/trait-frontend.php:654
 msgid "Missing Sign-out"
 msgstr ""
 
-#: includes/trait-frontend.php:687
+#: includes/trait-frontend.php:659
 msgid "Weekly Workforce Overview"
 msgstr ""
 
-#: includes/trait-frontend.php:687
+#: includes/trait-frontend.php:659
 msgid "Configured working days for the selected week. Counts are planned schedule values."
 msgstr ""
 
-#: includes/trait-frontend.php:688
+#: includes/trait-frontend.php:660
 msgid "Workforce"
 msgstr ""
 
-#: includes/trait-frontend.php:691
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:663
+#: includes/trait-frontend.php:706
 msgid "Employees"
 msgstr ""
 
-#: includes/trait-frontend.php:696
+#: includes/trait-frontend.php:668
 msgid "No employees in this category."
 msgstr ""
 
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:706
 msgid "Time"
 msgstr ""
 
-#: includes/trait-frontend.php:734
-#: includes/trait-frontend.php:1301
-#: includes/trait-frontend.php:1372
-#: includes/trait-notifications.php:685
-#: includes/trait-notifications.php:688
+#: includes/trait-frontend.php:706
+#: includes/trait-frontend.php:1263
+#: includes/trait-frontend.php:1334
+#: includes/trait-notifications.php:686
+#: includes/trait-notifications.php:689
 msgid "Notifications"
 msgstr ""
 
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:706
 msgid "Employee Profile"
 msgstr ""
 
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:706
 #: includes/trait-presence.php:153
 #: templates/app/time.php:110
 msgid "Presence Verification"
 msgstr ""
 
-#: includes/trait-frontend.php:1289
-#: includes/trait-frontend.php:1331
+#: includes/trait-frontend.php:1251
+#: includes/trait-frontend.php:1293
 msgid "BA Team · Workforce One"
 msgstr ""
 
-#: includes/trait-frontend.php:1289
+#: includes/trait-frontend.php:1251
 msgid "Good to see you."
 msgstr ""
 
-#: includes/trait-frontend.php:1289
+#: includes/trait-frontend.php:1251
 msgid "Here’s today’s workforce snapshot."
 msgstr ""
 
-#: includes/trait-frontend.php:1292
+#: includes/trait-frontend.php:1254
 msgid "Active Employees"
 msgstr ""
 
-#: includes/trait-frontend.php:1293
+#: includes/trait-frontend.php:1255
 msgid "Office Today"
 msgstr ""
 
-#: includes/trait-frontend.php:1294
+#: includes/trait-frontend.php:1256
 msgid "WFH Today"
 msgstr ""
 
-#: includes/trait-frontend.php:1295
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1257
+#: includes/trait-frontend.php:1265
 msgid "Leave / Mission"
 msgstr ""
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "This Week"
 msgstr ""
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "No working days configured"
 msgstr ""
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "Plan your week"
 msgstr ""
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "Review schedules and keep your team aligned."
 msgstr ""
 
-#: includes/trait-frontend.php:1300
-#: includes/trait-frontend.php:1367
+#: includes/trait-frontend.php:1262
+#: includes/trait-frontend.php:1329
 msgid "View Schedule"
 msgstr ""
 
-#: includes/trait-frontend.php:1301
-#: includes/trait-frontend.php:1371
+#: includes/trait-frontend.php:1263
+#: includes/trait-frontend.php:1333
 msgid "Quick Actions"
 msgstr ""
 
-#: includes/trait-frontend.php:1301
+#: includes/trait-frontend.php:1263
 msgid "Common tasks"
 msgstr ""
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "Today at a glance"
 msgstr ""
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "Current schedule distribution"
 msgstr ""
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "Office"
 msgstr ""
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "WFH"
 msgstr ""
 
-#: includes/trait-frontend.php:1312
+#: includes/trait-frontend.php:1274
 #: templates/app/time.php:44
 msgid "Employee account not linked"
 msgstr ""
 
-#: includes/trait-frontend.php:1312
+#: includes/trait-frontend.php:1274
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr ""
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:1331
+#: includes/trait-frontend.php:1293
 #, php-format
 msgid "Good to see you, %s."
 msgstr ""
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:1331
+#: includes/trait-frontend.php:1293
 msgid "Here’s your day at a glance."
 msgstr ""
 
-#: includes/trait-frontend.php:1342
+#: includes/trait-frontend.php:1304
 msgid "TODAY'S SCHEDULE"
 msgstr ""
 
 #. translators: %s: today's schedule status
-#: includes/trait-frontend.php:1342
+#: includes/trait-frontend.php:1304
 #: templates/app/time.php:45
 msgid "Not Set"
 msgstr ""
 
-#: includes/trait-frontend.php:1342
+#: includes/trait-frontend.php:1304
 msgid "Default location"
 msgstr ""
 
-#: includes/trait-frontend.php:1343
+#: includes/trait-frontend.php:1305
 msgid "Working day"
 msgstr ""
 
-#: includes/trait-frontend.php:1343
+#: includes/trait-frontend.php:1305
 msgid "No work scheduled"
 msgstr ""
 
-#: includes/trait-frontend.php:1346
+#: includes/trait-frontend.php:1308
 msgid "Work Location"
 msgstr ""
 
-#: includes/trait-frontend.php:1346
+#: includes/trait-frontend.php:1308
 msgid "Default"
 msgstr ""
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: includes/trait-frontend.php:1347
+#: includes/trait-frontend.php:1309
 #: templates/app/time.php:48
 #: templates/app/time.php:55
 #: templates/app/time.php:93
 msgid "Sign In"
 msgstr ""
 
-#: includes/trait-frontend.php:1347
-#: includes/trait-frontend.php:1348
+#: includes/trait-frontend.php:1309
+#: includes/trait-frontend.php:1310
 #: templates/app/time.php:93
 #: templates/app/time.php:94
 #: templates/app/time.php:95
 msgid "Not recorded"
 msgstr ""
 
-#: includes/trait-frontend.php:1348
+#: includes/trait-frontend.php:1310
 #: templates/app/time.php:49
 #: templates/app/time.php:95
 msgid "Sign Out"
 msgstr ""
 
-#: includes/trait-frontend.php:1350
+#: includes/trait-frontend.php:1312
 msgid "View Attendance"
 msgstr ""
 
-#: includes/trait-frontend.php:1356
+#: includes/trait-frontend.php:1318
 msgid "Overtime Today"
 msgstr ""
 
-#: includes/trait-frontend.php:1356
+#: includes/trait-frontend.php:1318
 msgid "Approved overtime and actual attendance"
 msgstr ""
 
-#: includes/trait-frontend.php:1358
+#: includes/trait-frontend.php:1320
 msgid "Approved OT"
 msgstr ""
 
-#: includes/trait-frontend.php:1359
+#: includes/trait-frontend.php:1321
 msgid "Actual OT"
 msgstr ""
 
-#: includes/trait-frontend.php:1360
+#: includes/trait-frontend.php:1322
 msgid "Unapproved Extra"
 msgstr ""
 
-#: includes/trait-frontend.php:1362
+#: includes/trait-frontend.php:1324
 msgid "Sign Out:"
 msgstr ""
 
-#: includes/trait-frontend.php:1366
+#: includes/trait-frontend.php:1328
 msgid "My Week"
 msgstr ""
 
-#: includes/trait-frontend.php:1366
+#: includes/trait-frontend.php:1328
 msgid "Your upcoming schedule"
 msgstr ""
 
-#: includes/trait-frontend.php:1367
+#: includes/trait-frontend.php:1329
 msgid "No Upcoming Schedule"
 msgstr ""
 
-#: includes/trait-frontend.php:1367
+#: includes/trait-frontend.php:1329
 msgid "No schedule has been set for your upcoming days."
 msgstr ""
 
-#: includes/trait-frontend.php:1368
+#: includes/trait-frontend.php:1330
 msgid "View full schedule"
 msgstr ""
 
-#: includes/trait-frontend.php:1371
+#: includes/trait-frontend.php:1333
 msgid "What do you need?"
 msgstr ""
 
-#: includes/trait-frontend.php:1372
+#: includes/trait-frontend.php:1334
 msgid "My Schedule"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:1659
+#: includes/trait-frontend.php:1354
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:1659
+#: includes/trait-frontend.php:1354
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:1666
+#: includes/trait-frontend.php:1361
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:1666
+#: includes/trait-frontend.php:1361
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
 #. translators: %s: human-readable time difference
-#: includes/trait-notifications.php:674
+#: includes/trait-notifications.php:675
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: includes/trait-notifications.php:682
+#: includes/trait-notifications.php:683
 msgid "You’re all caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:682
+#: includes/trait-notifications.php:683
 msgid "No new notifications."
 msgstr ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:688
+#: includes/trait-notifications.php:689
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -1324,11 +1328,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:688
+#: includes/trait-notifications.php:689
 msgid "All caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:690
+#: includes/trait-notifications.php:691
 msgid "View all notifications →"
 msgstr ""
 
@@ -1468,7 +1472,6 @@ msgstr ""
 #. translators: %s: mm:ss
 #: includes/trait-presence.php:158
 #: templates/app/time.php:106
-#: assets/js/time.js:145
 msgid "Starting camera…"
 msgstr ""
 
@@ -1581,7 +1584,6 @@ msgid "Location Services Required"
 msgstr ""
 
 #: templates/app/time.php:37
-#: assets/js/time.js:63
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr ""
 
@@ -1797,18 +1799,15 @@ msgid "Face processing runs in this browser."
 msgstr ""
 
 #: templates/app/time.php:116
-#: assets/js/workforce-one.js:176
 msgid "Not enrolled"
 msgstr ""
 
 #: templates/app/time.php:118
 #: templates/app/time.php:127
-#: assets/js/workforce-one.js:178
 msgid "Verify Face"
 msgstr ""
 
 #: templates/app/time.php:118
-#: assets/js/workforce-one.js:178
 msgid "Set Up / Verify Face"
 msgstr ""
 
@@ -1821,7 +1820,6 @@ msgid "Blink once and gently move your head. Face processing stays on this devic
 msgstr ""
 
 #: templates/app/time.php:124
-#: assets/js/workforce-one.js:292
 msgid "Loading face model…"
 msgstr ""
 
@@ -1831,186 +1829,4 @@ msgstr ""
 
 #: templates/app/time.php:128
 msgid "Request Reset"
-msgstr ""
-
-#: assets/js/time.js:64
-msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
-msgstr ""
-
-#: assets/js/time.js:65
-msgid "Location Services are not supported by this browser. Please use a modern browser."
-msgstr ""
-
-#: assets/js/time.js:67
-msgid "Location permission was denied. Please allow Location Services for this site, then try again."
-msgstr ""
-
-#: assets/js/time.js:68
-msgid "Your location could not be determined. Turn on Location Services/GPS and try again."
-msgstr ""
-
-#: assets/js/time.js:69
-msgid "Location request timed out. Turn on Location Services/GPS and try again."
-msgstr ""
-
-#: assets/js/time.js:70
-msgid "We need your location to continue. Please allow Location Services for this site."
-msgstr ""
-
-#: assets/js/time.js:92
-msgid "QR detected. Waiting for your location…"
-msgstr ""
-
-#: assets/js/time.js:93
-msgid "QR detected. Review and tap Sign In with QR."
-msgstr ""
-
-#: assets/js/time.js:96
-msgid "Location Services are required for QR Sign In."
-msgstr ""
-
-#: assets/js/time.js:107
-msgid "Location permission is required for QR Sign In. Please allow Location Services and try again."
-msgstr ""
-
-#: assets/js/time.js:140
-msgid "Camera QR scanning is unavailable on this browser/device."
-msgstr ""
-
-#: assets/js/time.js:153
-msgid "Point the camera at the workplace QR."
-msgstr ""
-
-#: assets/js/time.js:156
-msgid "Camera permission was denied or unavailable."
-msgstr ""
-
-#. translators: %d: number of samples
-#: assets/js/workforce-one.js:176
-#, js-format
-msgid "Enrolled (%d samples)"
-msgstr ""
-
-#: assets/js/workforce-one.js:189
-msgid "Could not load face-api.js."
-msgstr ""
-
-#: assets/js/workforce-one.js:194
-msgid "Camera is not supported by this browser."
-msgstr ""
-
-#: assets/js/workforce-one.js:204
-msgid "No face detected. Center your face and try again."
-msgstr ""
-
-#: assets/js/workforce-one.js:205
-msgid "More than one face detected. Only one person may be in the camera."
-msgstr ""
-
-#: assets/js/workforce-one.js:220
-msgid "Liveness calibration: keep your eyes open and look at the camera…"
-msgstr ""
-
-#: assets/js/workforce-one.js:229
-msgid "Liveness: blink once slowly…"
-msgstr ""
-
-#. translators: 1: blink state, 2: movement state, 3: eye change percentage
-#: assets/js/workforce-one.js:243
-#, js-format
-msgid "Liveness: %1$s · %2$s · eye change %3$s%%"
-msgstr ""
-
-#: assets/js/workforce-one.js:243
-msgid "✓ blink"
-msgstr ""
-
-#: assets/js/workforce-one.js:243
-msgid "blink once"
-msgstr ""
-
-#: assets/js/workforce-one.js:243
-msgid "✓ movement"
-msgstr ""
-
-#: assets/js/workforce-one.js:243
-msgid "gently move head"
-msgstr ""
-
-#: assets/js/workforce-one.js:244
-msgid "✓ Liveness passed."
-msgstr ""
-
-#: assets/js/workforce-one.js:247
-msgid "Blink was not detected. Make one clear slow blink while looking at the camera."
-msgstr ""
-
-#: assets/js/workforce-one.js:248
-msgid "Blink detected. Gently move your head left or right and try again."
-msgstr ""
-
-#: assets/js/workforce-one.js:252
-msgid "A face is already enrolled. Verify it or clear the existing enrollment first."
-msgstr ""
-
-#. translators: %d: total samples
-#: assets/js/workforce-one.js:253
-#, js-format
-msgid "Enrollment: sample 1 of %d"
-msgstr ""
-
-#. translators: %d: sample number
-#: assets/js/workforce-one.js:257
-#, js-format
-msgid "Enrollment: sample %d captured. Slightly change your angle…"
-msgstr ""
-
-#: assets/js/workforce-one.js:260
-msgid "✓ Face enrollment saved to Workforce One."
-msgstr ""
-
-#: assets/js/workforce-one.js:266
-msgid "No face is enrolled. Press Enroll Face first."
-msgstr ""
-
-#: assets/js/workforce-one.js:275
-msgid "✓ Face verified."
-msgstr ""
-
-#. translators: %s: match distance
-#: assets/js/workforce-one.js:286
-#, js-format
-msgid "✕ Face did not match — distance %s."
-msgstr ""
-
-#: assets/js/workforce-one.js:299
-msgid "No face enrollment to reset."
-msgstr ""
-
-#: assets/js/workforce-one.js:300
-msgid "Request a face reset? Your current enrollment will remain active until an administrator approves the reset."
-msgstr ""
-
-#: assets/js/workforce-one.js:301
-msgid "Submitting face reset request…"
-msgstr ""
-
-#: assets/js/workforce-one.js:305
-msgid "✓ Reset request submitted. Your current face enrollment is still active."
-msgstr ""
-
-#: assets/js/workforce-one.js:361
-msgid "Preparing CSV…"
-msgstr ""
-
-#: assets/js/workforce-one.js:364
-msgid "Could not generate the CSV report."
-msgstr ""
-
-#: assets/js/workforce-one.js:420
-msgid "Preparing Excel…"
-msgstr ""
-
-#: assets/js/workforce-one.js:423
-msgid "Could not generate the Excel report."
 msgstr ""

@@ -88,7 +88,7 @@ trait EWS_Swap_Trait {
             if(!$requester)$this->swap_redirect(['swap_error'=>'employee']);
             $target=absint($_POST['target_employee_id']??0);
             $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
-            $error=SwapRules::checkRequest((int)$requester->id,$target,$date);
+            $error=SwapRules::checkRequest((int)$requester->id,$target,$date)??SwapRules::checkNotPast($date,current_time('Y-m-d'));
             if($error)$this->swap_redirect(['swap_error'=>$error]);
             global $wpdb;$table=$this->ensure_swap_schema();
             $target_emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$target));
@@ -127,6 +127,8 @@ trait EWS_Swap_Trait {
                 $this->swap_notify($req_uid,'Schedule Swap Rejected',sprintf('%s rejected your schedule swap for %s.', $emp->name,date_i18n('l, d M',strtotime($r->work_date))),'warning',$id);
                 $this->swap_redirect(['swap_done'=>'rejected']);
             }
+            $past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));
+            if($past)$this->swap_redirect(['swap_error'=>$past]);
             $applied=$this->swap_apply($r);
             if($applied!==true)$this->swap_redirect(['swap_error'=>$applied]);
             $this->achievement_evaluate_swap_acceptance((int)$r->target_employee_id,(int)$r->requester_employee_id,(int)$id);

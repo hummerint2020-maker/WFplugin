@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.16
+### Fixed (employee app → Team Schedule)
+- **A day that has already passed can no longer be swapped.** The swap form offered every
+  Office/WFH day of the week, including past days, and the server accepted them, so a swap could
+  rewrite yesterday's schedule (and its attendance). Requests and acceptances for a past day are now
+  refused with a clear message (translated to Arabic); an administrator can still decide from the
+  Requests page.
+- The week label said "This week" for every week; it now says This week / Next week / Previous
+  week, or the date range.
+- When no day can be offered, the swap panel says so instead of showing an empty Day list.
+- The "No employees found" row spans every working-day column (it was fixed at 6 columns).
+
+### Internal
+- The Team Schedule moved to `includes/trait-schedule-view.php`, HTML to `templates/app/schedule.php`,
+  its inline scripts and `onclick` handlers (swap form, PDF, WhatsApp, confirm) to
+  `assets/js/schedule.js`, and the team ordering to `src/Schedule/TeamOrder.php` (unit tested).
+  Behaviour is pinned by `tests/e2e_schedule_view.py`.
+
 ## 3.31.15
 ### Fixed (wp-admin → Attendance Insights)
 - **Clicking a count always shows the employees behind it.** The overview tiles, the Workforce

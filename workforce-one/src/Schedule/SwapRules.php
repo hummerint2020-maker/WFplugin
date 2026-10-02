@@ -12,6 +12,7 @@ final class SwapRules
     public const INVALID_REQUEST = 'invalid_request';
     public const NOT_SWAPPABLE = 'not_swappable';
     public const CHANGED = 'changed';
+    public const PAST_DATE = 'past_date';
 
     /** Only these day types can be exchanged between two colleagues. */
     public const SWAPPABLE = ['Office', 'WFH'];
@@ -21,6 +22,12 @@ final class SwapRules
     {
         if (!$targetId || $targetId === $requesterId || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) return self::INVALID_REQUEST;
         return null;
+    }
+
+    /** A day that has already passed cannot be swapped (checked again when the swap is accepted). */
+    public static function checkNotPast(string $date, string $today): ?string
+    {
+        return $date < $today ? self::PAST_DATE : null;
     }
 
     /** Both days must exist, be Office/WFH, and differ (otherwise the swap changes nothing). */

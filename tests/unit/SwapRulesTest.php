@@ -29,4 +29,11 @@ final class SwapRulesTest extends TestCase
         $this->assertSame(SwapRules::CHANGED, SwapRules::checkStillCurrent('Office', 'WFH', 'WFH', 'WFH'));
         $this->assertSame(SwapRules::CHANGED, SwapRules::checkStillCurrent('Office', 'WFH', null, 'WFH'));
     }
+
+    public function testAPastDayCannotBeSwapped(): void
+    {
+        $this->assertSame(SwapRules::PAST_DATE, SwapRules::checkNotPast('2026-10-01', '2026-10-02'));
+        $this->assertNull(SwapRules::checkNotPast('2026-10-02', '2026-10-02'));
+        $this->assertNull(SwapRules::checkNotPast('2026-10-03', '2026-10-02'));
+    }
 }

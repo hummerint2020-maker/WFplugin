@@ -173,7 +173,7 @@ msgstr "انتهت صلاحية رمز QR. امسح الرمز الحالي."
 msgid "Invalid QR signature."
 msgstr "توقيع رمز QR غير صالح."
 
-#: includes/trait-frontend.php:527
+#: includes/trait-frontend.php:499
 #: includes/trait-presence.php:66
 #: includes/trait-presence.php:86
 #: includes/trait-presence.php:99
@@ -221,8 +221,8 @@ msgstr "يرجى تسجيل الدخول."
 #: includes/trait-frontend.php:130
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:351
+#: includes/trait-frontend.php:464
 #: includes/trait-presence.php:115
 #: includes/trait-presence.php:151
 #: includes/trait-presence.php:166
@@ -287,7 +287,7 @@ msgstr "يرجى التواصل مع المسؤول."
 msgid "Employee profile required"
 msgstr "يلزم وجود ملف موظف"
 
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:706
 #: includes/trait-presence.php:153
 #: templates/app/time.php:110
 msgid "Presence Verification"
@@ -316,7 +316,6 @@ msgstr "ينتهي خلال %s"
 #. translators: %s: mm:ss
 #: includes/trait-presence.php:158
 #: templates/app/time.php:106
-#: assets/js/time.js:145
 msgid "Starting camera…"
 msgstr "جارٍ تشغيل الكاميرا…"
 
@@ -420,19 +419,19 @@ msgstr "يحذف جميع الجداول والإعدادات والأدوار �
 msgid "Last cleanup run:"
 msgstr "آخر تنظيف:"
 
-#: includes/trait-frontend.php:1659
+#: includes/trait-frontend.php:1354
 msgid "On Time"
 msgstr "في الموعد"
 
-#: includes/trait-frontend.php:1659
+#: includes/trait-frontend.php:1354
 msgid "Late Arrival"
 msgstr "حضور متأخر"
 
-#: includes/trait-frontend.php:1666
+#: includes/trait-frontend.php:1361
 msgid "Attendance tracking is disabled"
 msgstr "تسجيل الحضور غير مفعّل"
 
-#: includes/trait-frontend.php:1666
+#: includes/trait-frontend.php:1361
 msgid "Attendance is not required for your employee profile."
 msgstr "الحضور غير مطلوب في ملفك الوظيفي."
 
@@ -445,7 +444,6 @@ msgid "Location Services Required"
 msgstr "خدمات الموقع مطلوبة"
 
 #: templates/app/time.php:37
-#: assets/js/time.js:63
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr "اسمح بالوصول إلى موقعك عندما يطلب المتصفح ذلك. موقعك مطلوب لتسجيل الحضور والانصراف."
 
@@ -453,7 +451,7 @@ msgstr "اسمح بالوصول إلى موقعك عندما يطلب المتص
 msgid "Allow Location / Try Again"
 msgstr "السماح بالموقع / حاول مرة أخرى"
 
-#: includes/trait-frontend.php:1312
+#: includes/trait-frontend.php:1274
 #: templates/app/time.php:44
 msgid "Employee account not linked"
 msgstr "حساب الموظف غير مرتبط"
@@ -473,20 +471,20 @@ msgid "Your schedule today is %s. Sign In / Sign Out is only available on workin
 msgstr "جدولك اليوم: %s. تسجيل الحضور والانصراف متاح في أيام العمل فقط."
 
 #. translators: %s: today's schedule status
-#: includes/trait-frontend.php:1342
+#: includes/trait-frontend.php:1304
 #: templates/app/time.php:45
 msgid "Not Set"
 msgstr "غير محدد"
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: includes/trait-frontend.php:1347
+#: includes/trait-frontend.php:1309
 #: templates/app/time.php:48
 #: templates/app/time.php:55
 #: templates/app/time.php:93
 msgid "Sign In"
 msgstr "تسجيل الحضور"
 
-#: includes/trait-frontend.php:1348
+#: includes/trait-frontend.php:1310
 #: templates/app/time.php:49
 #: templates/app/time.php:95
 msgid "Sign Out"
@@ -617,8 +615,8 @@ msgstr "لقد استخدمت كل الاستراحات المتاحة اليو�
 msgid "Today's Record"
 msgstr "سجل اليوم"
 
-#: includes/trait-frontend.php:1347
-#: includes/trait-frontend.php:1348
+#: includes/trait-frontend.php:1309
+#: includes/trait-frontend.php:1310
 #: templates/app/time.php:93
 #: templates/app/time.php:94
 #: templates/app/time.php:95
@@ -694,18 +692,15 @@ msgid "Face processing runs in this browser."
 msgstr "تتم معالجة الوجه داخل هذا المتصفح."
 
 #: templates/app/time.php:116
-#: assets/js/workforce-one.js:176
 msgid "Not enrolled"
 msgstr "غير مسجّل"
 
 #: templates/app/time.php:118
 #: templates/app/time.php:127
-#: assets/js/workforce-one.js:178
 msgid "Verify Face"
 msgstr "تحقق من الوجه"
 
 #: templates/app/time.php:118
-#: assets/js/workforce-one.js:178
 msgid "Set Up / Verify Face"
 msgstr "تسجيل / تحقق من الوجه"
 
@@ -718,7 +713,6 @@ msgid "Blink once and gently move your head. Face processing stays on this devic
 msgstr "ارمش مرة واحدة وحرّك رأسك بهدوء. تبقى معالجة الوجه على هذا الجهاز."
 
 #: templates/app/time.php:124
-#: assets/js/workforce-one.js:292
 msgid "Loading face model…"
 msgstr "جارٍ تحميل نموذج الوجه…"
 
@@ -730,136 +724,6 @@ msgstr "تسجيل الوجه"
 msgid "Request Reset"
 msgstr "طلب إعادة التعيين"
 
-#. translators: %d: number of samples
-#: assets/js/workforce-one.js:176
-#, js-format
-msgid "Enrolled (%d samples)"
-msgstr "مسجّل (%d عينات)"
-
-#: assets/js/workforce-one.js:189
-msgid "Could not load face-api.js."
-msgstr "تعذّر تحميل مكتبة التعرف على الوجه."
-
-#: assets/js/workforce-one.js:194
-msgid "Camera is not supported by this browser."
-msgstr "هذا المتصفح لا يدعم الكاميرا."
-
-#: assets/js/workforce-one.js:204
-msgid "No face detected. Center your face and try again."
-msgstr "لم يتم اكتشاف وجه. ضع وجهك في المنتصف وحاول مرة أخرى."
-
-#: assets/js/workforce-one.js:205
-msgid "More than one face detected. Only one person may be in the camera."
-msgstr "تم اكتشاف أكثر من وجه. يجب أن يظهر شخص واحد فقط أمام الكاميرا."
-
-#: assets/js/workforce-one.js:220
-msgid "Liveness calibration: keep your eyes open and look at the camera…"
-msgstr "معايرة التحقق الحي: أبقِ عينيك مفتوحتين وانظر إلى الكاميرا…"
-
-#: assets/js/workforce-one.js:229
-msgid "Liveness: blink once slowly…"
-msgstr "التحقق الحي: ارمش مرة واحدة ببطء…"
-
-#. translators: 1: blink state, 2: movement state, 3: eye change percentage
-#: assets/js/workforce-one.js:243
-#, js-format
-msgid "Liveness: %1$s · %2$s · eye change %3$s%%"
-msgstr "التحقق الحي: %1$s · %2$s · تغيّر العين %3$s%%"
-
-#: assets/js/workforce-one.js:243
-msgid "✓ blink"
-msgstr "✓ رمش"
-
-#: assets/js/workforce-one.js:243
-msgid "blink once"
-msgstr "ارمش مرة"
-
-#: assets/js/workforce-one.js:243
-msgid "✓ movement"
-msgstr "✓ حركة"
-
-#: assets/js/workforce-one.js:243
-msgid "gently move head"
-msgstr "حرّك رأسك بهدوء"
-
-#: assets/js/workforce-one.js:244
-msgid "✓ Liveness passed."
-msgstr "✓ تم التحقق الحي."
-
-#: assets/js/workforce-one.js:247
-msgid "Blink was not detected. Make one clear slow blink while looking at the camera."
-msgstr "لم يتم اكتشاف رمش. ارمش مرة واحدة ببطء وأنت تنظر إلى الكاميرا."
-
-#: assets/js/workforce-one.js:248
-msgid "Blink detected. Gently move your head left or right and try again."
-msgstr "تم اكتشاف الرمش. حرّك رأسك بهدوء يمينًا أو يسارًا ثم حاول مرة أخرى."
-
-#: assets/js/workforce-one.js:252
-msgid "A face is already enrolled. Verify it or clear the existing enrollment first."
-msgstr "يوجد وجه مسجّل بالفعل. تحقق منه أو اطلب إعادة التعيين أولًا."
-
-#. translators: %d: total samples
-#: assets/js/workforce-one.js:253
-#, js-format
-msgid "Enrollment: sample 1 of %d"
-msgstr "التسجيل: العينة 1 من %d"
-
-#. translators: %d: sample number
-#: assets/js/workforce-one.js:257
-#, js-format
-msgid "Enrollment: sample %d captured. Slightly change your angle…"
-msgstr "التسجيل: تم التقاط العينة %d. غيّر زاوية وجهك قليلًا…"
-
-#: assets/js/workforce-one.js:260
-msgid "✓ Face enrollment saved to Workforce One."
-msgstr "✓ تم حفظ تسجيل الوجه."
-
-#: assets/js/workforce-one.js:266
-msgid "No face is enrolled. Press Enroll Face first."
-msgstr "لا يوجد وجه مسجّل. اضغط «تسجيل الوجه» أولًا."
-
-#: assets/js/workforce-one.js:275
-msgid "✓ Face verified."
-msgstr "✓ تم التحقق من الوجه."
-
-#. translators: %s: match distance
-#: assets/js/workforce-one.js:286
-#, js-format
-msgid "✕ Face did not match — distance %s."
-msgstr "✕ الوجه غير مطابق — المسافة %s."
-
-#: assets/js/workforce-one.js:299
-msgid "No face enrollment to reset."
-msgstr "لا يوجد تسجيل وجه لإعادة تعيينه."
-
-#: assets/js/workforce-one.js:300
-msgid "Request a face reset? Your current enrollment will remain active until an administrator approves the reset."
-msgstr "هل تريد طلب إعادة تعيين الوجه؟ سيظل تسجيلك الحالي فعّالًا حتى يوافق المسؤول على الطلب."
-
-#: assets/js/workforce-one.js:301
-msgid "Submitting face reset request…"
-msgstr "جارٍ إرسال طلب إعادة التعيين…"
-
-#: assets/js/workforce-one.js:305
-msgid "✓ Reset request submitted. Your current face enrollment is still active."
-msgstr "✓ تم إرسال طلب إعادة التعيين. تسجيل وجهك الحالي ما زال فعّالًا."
-
-#: assets/js/workforce-one.js:361
-msgid "Preparing CSV…"
-msgstr "جارٍ تجهيز ملف CSV…"
-
-#: assets/js/workforce-one.js:364
-msgid "Could not generate the CSV report."
-msgstr "تعذّر إنشاء تقرير CSV."
-
-#: assets/js/workforce-one.js:420
-msgid "Preparing Excel…"
-msgstr "جارٍ تجهيز ملف Excel…"
-
-#: assets/js/workforce-one.js:423
-msgid "Could not generate the Excel report."
-msgstr "تعذّر إنشاء تقرير Excel."
-
 #: includes/trait-frontend.php:94
 msgid "Confirm"
 msgstr "تأكيد"
@@ -869,8 +733,8 @@ msgid "Cancel"
 msgstr "إلغاء"
 
 #: includes/trait-frontend.php:99
-#: includes/trait-frontend.php:392
-#: includes/trait-frontend.php:461
+#: includes/trait-frontend.php:364
+#: includes/trait-frontend.php:433
 msgid "OK"
 msgstr "حسنًا"
 
@@ -995,7 +859,7 @@ msgid "Break Updated"
 msgstr "تم تحديث الاستراحة"
 
 #: includes/trait-frontend.php:130
-#: includes/trait-frontend.php:486
+#: includes/trait-frontend.php:458
 msgid "Overtime Requests are currently disabled."
 msgstr "طلبات العمل الإضافي غير مفعّلة حاليًا."
 
@@ -1025,7 +889,7 @@ msgid "Please enter a valid overtime time range."
 msgstr "يرجى إدخال فترة عمل إضافي صالحة."
 
 #: includes/trait-frontend.php:130
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Please enter a reason for the overtime request."
 msgstr "يرجى كتابة سبب طلب العمل الإضافي."
 
@@ -1047,13 +911,13 @@ msgstr "تم إرسال طلب العمل الإضافي."
 
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "Please select a valid future date range."
 msgstr "يرجى اختيار فترة مستقبلية صالحة."
 
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "The selected range contains no working days."
 msgstr "الفترة المحددة لا تحتوي على أيام عمل."
 
@@ -1158,12 +1022,12 @@ msgid "The shift swap has been updated."
 msgstr "تم تحديث تبديل الوردية."
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "You already have a pending or approved leave overlapping this period."
 msgstr "لديك بالفعل إجازة معلقة أو معتمدة تتداخل مع هذه الفترة."
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "Insufficient available balance for this Leave Type."
 msgstr "رصيدك المتاح لا يكفي لنوع الإجازة هذا."
 
@@ -1176,729 +1040,729 @@ msgid "Please review the leave details and try again."
 msgstr "يرجى مراجعة بيانات الإجازة والمحاولة مرة أخرى."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:355
 msgid "Please select a future date for Early Leave."
 msgstr "يرجى اختيار تاريخ مستقبلي للانصراف المبكر."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:384
-#: includes/trait-frontend.php:475
+#: includes/trait-frontend.php:356
+#: includes/trait-frontend.php:447
 msgid "Early Leave is available only on a configured working day."
 msgstr "الانصراف المبكر متاح فقط في أيام العمل المحددة."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:385
+#: includes/trait-frontend.php:357
 msgid "Early Leave is available only on an Office workday. It cannot be requested on Work From Home or Leave/Vacation days."
 msgstr "الانصراف المبكر متاح فقط في أيام العمل من المكتب، ولا يمكن طلبه في أيام العمل من المنزل أو الإجازات."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:386
-#: includes/trait-frontend.php:476
+#: includes/trait-frontend.php:358
+#: includes/trait-frontend.php:448
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr "مدة الانصراف المبكر المطلوبة تتجاوز الحد الأقصى المسموح للطلب الواحد."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:387
-#: includes/trait-frontend.php:477
+#: includes/trait-frontend.php:359
+#: includes/trait-frontend.php:449
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr "مدة الانصراف المبكر المطلوبة تتجاوز الرصيد الشهري المتبقي."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:388
+#: includes/trait-frontend.php:360
 msgid "We could not submit the Early Leave request. Please try again."
 msgstr "تعذّر إرسال طلب الانصراف المبكر. حاول مرة أخرى."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:389
+#: includes/trait-frontend.php:361
 msgid "This request can no longer be approved because the employee is no longer scheduled for an eligible Office workday."
 msgstr "لم يعد من الممكن اعتماد هذا الطلب لأن الموظف لم يعد مجدولًا في يوم عمل مناسب من المكتب."
 
 #: includes/trait-frontend.php:156
-#: includes/trait-frontend.php:392
-#: includes/trait-frontend.php:461
+#: includes/trait-frontend.php:364
+#: includes/trait-frontend.php:433
 msgid "Early Leave Not Available"
 msgstr "الانصراف المبكر غير متاح"
 
 #: includes/trait-frontend.php:156
-#: includes/trait-frontend.php:391
+#: includes/trait-frontend.php:363
 msgid "Please review the Early Leave details and try again."
 msgstr "يرجى مراجعة بيانات الانصراف المبكر والمحاولة مرة أخرى."
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Dashboard"
 msgstr "الرئيسية"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
-#: includes/trait-frontend.php:1301
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
+#: includes/trait-frontend.php:1263
 msgid "Schedule"
 msgstr "الجدول"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:1350
-#: includes/trait-frontend.php:1372
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:1312
+#: includes/trait-frontend.php:1334
 msgid "Sign In / Out"
 msgstr "الحضور / الانصراف"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Leave"
 msgstr "الإجازات"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:491
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:463
+#: includes/trait-frontend.php:706
 msgid "Overtime"
 msgstr "العمل الإضافي"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Tasks"
 msgstr "المهام"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:679
-#: includes/trait-frontend.php:734
-#: includes/trait-frontend.php:1301
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:651
+#: includes/trait-frontend.php:706
+#: includes/trait-frontend.php:1263
 msgid "Attendance"
 msgstr "الحضور"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Reports"
 msgstr "التقارير"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "Attendance Insights"
 msgstr "تحليلات الحضور"
 
-#: includes/trait-frontend.php:236
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:216
+#: includes/trait-frontend.php:706
 msgid "People"
 msgstr "الموظفون"
 
-#: includes/trait-frontend.php:261
+#: includes/trait-frontend.php:241
 msgid "Workforce One navigation"
 msgstr "قائمة Workforce One"
 
-#: includes/trait-frontend.php:275
-#: includes/trait-frontend.php:310
+#: includes/trait-frontend.php:255
+#: includes/trait-frontend.php:290
 msgid "Log out"
 msgstr "تسجيل الخروج"
 
-#: includes/trait-frontend.php:279
+#: includes/trait-frontend.php:259
 msgid "Mobile shortcut:"
 msgstr "اختصار الموبايل:"
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:279
+#: includes/trait-frontend.php:259
 #, php-format
 msgid "Use your browser menu → %s to keep Workforce One one tap away."
 msgstr "من قائمة المتصفح اختر ← %s ليكون Workforce One على بُعد لمسة واحدة."
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:279
+#: includes/trait-frontend.php:259
 msgid "Add to Home Screen"
 msgstr "إضافة إلى الشاشة الرئيسية"
 
-#: includes/trait-frontend.php:284
+#: includes/trait-frontend.php:264
 msgid "Workforce Management Platform"
 msgstr "منصة إدارة فرق العمل"
 
-#: includes/trait-frontend.php:284
+#: includes/trait-frontend.php:264
 msgid "One Platform. One Team. One Goal."
 msgstr "منصة واحدة. فريق واحد. هدف واحد."
 
-#: includes/trait-frontend.php:299
+#: includes/trait-frontend.php:279
 msgid "My Profile menu"
 msgstr "قائمة ملفي الشخصي"
 
-#: includes/trait-frontend.php:309
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:289
+#: includes/trait-frontend.php:706
 msgid "My Profile"
 msgstr "ملفي الشخصي"
 
-#: includes/trait-frontend.php:378
+#: includes/trait-frontend.php:350
 msgid "TIME OFF"
 msgstr "الإجازات"
 
-#: includes/trait-frontend.php:378
+#: includes/trait-frontend.php:350
 msgid "Leave Management"
 msgstr "إدارة الإجازات"
 
-#: includes/trait-frontend.php:378
+#: includes/trait-frontend.php:350
 msgid "Request time off, track your balance and follow approvals in one place. Leave Types marked “No balance deduction” are recorded without consuming leave balance."
 msgstr "اطلب إجازة، وتابع رصيدك والموافقات في مكان واحد. أنواع الإجازات المعلَّمة بـ«بدون خصم من الرصيد» تُسجَّل دون استهلاك رصيد الإجازات."
 
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "Could not submit the leave request."
 msgstr "تعذّر إرسال طلب الإجازة."
 
-#: includes/trait-frontend.php:380
+#: includes/trait-frontend.php:352
 msgid "Leave request submitted successfully."
 msgstr "تم إرسال طلب الإجازة بنجاح."
 
-#: includes/trait-frontend.php:381
+#: includes/trait-frontend.php:353
 msgid "Cancellation request submitted to your Manager."
 msgstr "تم إرسال طلب الإلغاء إلى مديرك."
 
-#: includes/trait-frontend.php:396
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:368
+#: includes/trait-frontend.php:385
 msgid "Request Leave"
 msgstr "طلب إجازة"
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:368
 msgid "Select a Leave Type and future date range. Working days are calculated automatically."
 msgstr "اختر نوع الإجازة وفترة مستقبلية. يتم حساب أيام العمل تلقائيًا."
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:368
 msgid "Leave Type"
 msgstr "نوع الإجازة"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:370
+#: includes/trait-frontend.php:470
 msgid "From"
 msgstr "من"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:370
+#: includes/trait-frontend.php:470
 msgid "To"
 msgstr "إلى"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
+#: includes/trait-frontend.php:370
 msgid "Select dates to calculate working days."
 msgstr "اختر التواريخ لحساب أيام العمل."
 
 #. translators: %s: available days
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:398
-#: includes/trait-frontend.php:448
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:370
+#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:470
 msgid "Reason"
 msgstr "السبب"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
+#: includes/trait-frontend.php:370
 msgid "(optional)"
 msgstr "(اختياري)"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:398
+#: includes/trait-frontend.php:370
 msgid "Submit Leave Request"
 msgstr "إرسال طلب الإجازة"
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:372
 msgid "Available"
 msgstr "المتاح"
 
-#: includes/trait-frontend.php:406
+#: includes/trait-frontend.php:378
 msgid "My Leave Requests"
 msgstr "طلبات إجازتي"
 
-#: includes/trait-frontend.php:409
+#: includes/trait-frontend.php:381
 msgid "Back to recent requests"
 msgstr "العودة إلى أحدث الطلبات"
 
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:385
 msgid "No Leave Requests Yet"
 msgstr "لا توجد طلبات إجازة بعد"
 
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:385
 msgid "You haven't submitted any leave requests yet."
 msgstr "لم تُرسل أي طلبات إجازة بعد."
 
-#: includes/trait-frontend.php:416
+#: includes/trait-frontend.php:388
 msgid "Cancellation Pending"
 msgstr "الإلغاء قيد المراجعة"
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:389
 msgid "Cancellation Rejected — cannot be submitted again."
 msgstr "تم رفض الإلغاء — لا يمكن إرساله مرة أخرى."
 
-#: includes/trait-frontend.php:418
+#: includes/trait-frontend.php:390
 msgid "Request Cancellation"
 msgstr "طلب إلغاء"
 
-#: includes/trait-frontend.php:419
+#: includes/trait-frontend.php:391
 msgid "Cancellation unavailable — leave has started."
 msgstr "الإلغاء غير متاح — بدأت الإجازة بالفعل."
 
-#: includes/trait-frontend.php:423
+#: includes/trait-frontend.php:395
 msgid "View all leave requests"
 msgstr "عرض كل طلبات الإجازة"
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:404
 msgid "Leave Requests Awaiting Your Approval"
 msgstr "طلبات إجازة بانتظار موافقتك"
 
-#: includes/trait-frontend.php:432
-#: includes/trait-frontend.php:435
-#: includes/trait-frontend.php:452
-#: includes/trait-frontend.php:513
-#: includes/trait-frontend.php:520
+#: includes/trait-frontend.php:404
+#: includes/trait-frontend.php:407
+#: includes/trait-frontend.php:424
+#: includes/trait-frontend.php:485
+#: includes/trait-frontend.php:492
 msgid "Approve"
 msgstr "موافقة"
 
-#: includes/trait-frontend.php:432
-#: includes/trait-frontend.php:435
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:444
-#: includes/trait-frontend.php:452
-#: includes/trait-frontend.php:513
-#: includes/trait-frontend.php:520
+#: includes/trait-frontend.php:404
+#: includes/trait-frontend.php:407
+#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:416
+#: includes/trait-frontend.php:424
+#: includes/trait-frontend.php:485
+#: includes/trait-frontend.php:492
 msgid "Reject"
 msgstr "رفض"
 
-#: includes/trait-frontend.php:432
-#: includes/trait-frontend.php:435
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:520
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:404
+#: includes/trait-frontend.php:407
+#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:1348
 msgid "Pending"
 msgstr "قيد المراجعة"
 
-#: includes/trait-frontend.php:435
+#: includes/trait-frontend.php:407
 msgid "Pending Leave Requests"
 msgstr "طلبات إجازة قيد المراجعة"
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:413
 msgid "Leave Cancellations Awaiting Your Approval"
 msgstr "طلبات إلغاء إجازة بانتظار موافقتك"
 
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:444
+#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:416
 msgid "Approve Cancellation"
 msgstr "الموافقة على الإلغاء"
 
-#: includes/trait-frontend.php:444
+#: includes/trait-frontend.php:416
 msgid "Cancellation Requests"
 msgstr "طلبات الإلغاء"
 
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 msgid "Early Leave"
 msgstr "الانصراف المبكر"
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 #, php-format
 msgid "Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours."
 msgstr "متاح فقط في أيام العمل من المكتب · الحد الأقصى للطلب: %1$s ساعة · الرصيد الشهري: %2$s ساعة · المتبقي هذا الشهر: %3$s ساعة."
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:470
 msgid "Date"
 msgstr "التاريخ"
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 msgid "Duration (minutes)"
 msgstr "المدة (بالدقائق)"
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:448
+#: includes/trait-frontend.php:420
 msgid "Request Early Leave"
 msgstr "طلب انصراف مبكر"
 
-#: includes/trait-frontend.php:452
+#: includes/trait-frontend.php:424
 msgid "Pending Early Leave"
 msgstr "طلبات انصراف مبكر قيد المراجعة"
 
-#: includes/trait-frontend.php:491
+#: includes/trait-frontend.php:463
 msgid "EXTRA HOURS"
 msgstr "ساعات إضافية"
 
-#: includes/trait-frontend.php:491
+#: includes/trait-frontend.php:463
 msgid "Request overtime in advance and know exactly what you are asking to work."
 msgstr "اطلب العمل الإضافي مسبقًا واعرف بالضبط عدد الساعات التي تطلبها."
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Please select today or a future date."
 msgstr "يرجى اختيار تاريخ اليوم أو تاريخ مستقبلي."
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Please select a valid time range."
 msgstr "يرجى اختيار فترة زمنية صالحة."
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "You already have a pending or approved overtime request overlapping this period."
 msgstr "لديك بالفعل طلب عمل إضافي معلق أو معتمد يتداخل مع هذه الفترة."
 
-#: includes/trait-frontend.php:492
+#: includes/trait-frontend.php:464
 msgid "Could not submit the overtime request."
 msgstr "تعذّر إرسال طلب العمل الإضافي."
 
 #. translators: %s: requested hours
-#: includes/trait-frontend.php:493
+#: includes/trait-frontend.php:465
 #, php-format
 msgid "Overtime request submitted. You are requesting %s hour(s)."
 msgstr "تم إرسال طلب العمل الإضافي. المدة المطلوبة: %s ساعة."
 
 #. translators: %s: requested hours
-#: includes/trait-frontend.php:494
+#: includes/trait-frontend.php:466
 msgid "Overtime request approved."
 msgstr "تمت الموافقة على طلب العمل الإضافي."
 
-#: includes/trait-frontend.php:495
+#: includes/trait-frontend.php:467
 msgid "Overtime request rejected."
 msgstr "تم رفض طلب العمل الإضافي."
 
-#: includes/trait-frontend.php:498
-#: includes/trait-frontend.php:501
+#: includes/trait-frontend.php:470
+#: includes/trait-frontend.php:473
 msgid "Request Overtime"
 msgstr "طلب عمل إضافي"
 
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:470
 msgid "Submit your overtime request before you work the extra hours. Manager approval is required."
 msgstr "أرسل طلب العمل الإضافي قبل أن تعمل الساعات الإضافية. يلزم موافقة المدير."
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:498
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:470
+#: includes/trait-frontend.php:476
 msgid "Select the times to see the requested duration."
 msgstr "اختر الأوقات لمعرفة المدة المطلوبة."
 
-#: includes/trait-frontend.php:498
+#: includes/trait-frontend.php:470
 msgid "Submit Overtime Request"
 msgstr "إرسال طلب العمل الإضافي"
 
-#: includes/trait-frontend.php:500
+#: includes/trait-frontend.php:472
 msgid "My Overtime Requests"
 msgstr "طلبات العمل الإضافي الخاصة بي"
 
-#: includes/trait-frontend.php:500
+#: includes/trait-frontend.php:472
 msgid "Track your pending and completed overtime requests."
 msgstr "تابع طلبات العمل الإضافي المعلقة والمكتملة."
 
-#: includes/trait-frontend.php:501
+#: includes/trait-frontend.php:473
 msgid "No Overtime Requests Yet"
 msgstr "لا توجد طلبات عمل إضافي بعد"
 
-#: includes/trait-frontend.php:501
+#: includes/trait-frontend.php:473
 msgid "You haven't submitted any overtime requests yet."
 msgstr "لم تُرسل أي طلبات عمل إضافي بعد."
 
 #. translators: %s: duration
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 #, php-format
 msgid "You are requesting %s."
 msgstr "المدة المطلوبة: %s."
 
 #. translators: %d: hours
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 #, php-format
 msgid "%d h"
 msgstr "%d س"
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 #, php-format
 msgid "%1$d h %2$d min"
 msgstr "%1$d س %2$d د"
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:504
+#: includes/trait-frontend.php:476
 msgid "End time must be after start time."
 msgstr "يجب أن يكون وقت الانتهاء بعد وقت البدء."
 
-#: includes/trait-frontend.php:511
+#: includes/trait-frontend.php:483
 msgid "My Pending Overtime Approvals"
 msgstr "طلبات عمل إضافي بانتظار موافقتي"
 
-#: includes/trait-frontend.php:511
+#: includes/trait-frontend.php:483
 msgid "Requests currently assigned to you by the approval workflow."
 msgstr "الطلبات المسندة إليك حاليًا في مسار الموافقات."
 
-#: includes/trait-frontend.php:512
+#: includes/trait-frontend.php:484
 msgid "No Pending Overtime Approvals"
 msgstr "لا توجد طلبات عمل إضافي بانتظار موافقتك"
 
-#: includes/trait-frontend.php:512
-#: includes/trait-frontend.php:519
+#: includes/trait-frontend.php:484
+#: includes/trait-frontend.php:491
 msgid "You're all caught up."
 msgstr "لا يوجد شيء بانتظارك."
 
-#: includes/trait-frontend.php:513
+#: includes/trait-frontend.php:485
 msgid "Level"
 msgstr "المستوى"
 
-#: includes/trait-frontend.php:518
+#: includes/trait-frontend.php:490
 msgid "Pending Overtime Requests"
 msgstr "طلبات عمل إضافي قيد المراجعة"
 
-#: includes/trait-frontend.php:518
+#: includes/trait-frontend.php:490
 msgid "Review overtime requests. Any Manager can approve or reject."
 msgstr "راجع طلبات العمل الإضافي. يمكن لأي مدير الموافقة أو الرفض."
 
-#: includes/trait-frontend.php:519
+#: includes/trait-frontend.php:491
 msgid "No Pending Overtime Requests"
 msgstr "لا توجد طلبات عمل إضافي قيد المراجعة"
 
-#: includes/trait-frontend.php:527
+#: includes/trait-frontend.php:499
 msgid "Attendance Insights is not available for your account."
 msgstr "تحليلات الحضور غير متاحة لحسابك."
 
-#: includes/trait-frontend.php:656
+#: includes/trait-frontend.php:628
 msgid "Week"
 msgstr "أسبوع"
 
-#: includes/trait-frontend.php:660
+#: includes/trait-frontend.php:632
 msgid "All Teams"
 msgstr "كل الفرق"
 
-#: includes/trait-frontend.php:661
+#: includes/trait-frontend.php:633
 msgid "Day"
 msgstr "يوم"
 
-#: includes/trait-frontend.php:666
+#: includes/trait-frontend.php:638
 msgid "Today"
 msgstr "اليوم"
 
-#: includes/trait-frontend.php:670
+#: includes/trait-frontend.php:642
 msgid "Workforce Overview"
 msgstr "نظرة عامة على فريق العمل"
 
-#: includes/trait-frontend.php:670
+#: includes/trait-frontend.php:642
 msgid "Planned workforce distribution. Click a count to see the employees behind it."
 msgstr "التوزيع المخطط لفريق العمل. اضغط على أي رقم لعرض الموظفين."
 
-#: includes/trait-frontend.php:679
+#: includes/trait-frontend.php:651
 msgid "Actual attendance classification based on schedule and time logs. Planned Office/WFH is not inferred from sign-in."
 msgstr "تصنيف الحضور الفعلي بناءً على الجدول وسجلات الوقت. لا يُستنتج المكتب / العمل من المنزل المخطط من تسجيل الحضور."
 
-#: includes/trait-frontend.php:682
+#: includes/trait-frontend.php:654
 msgid "Missing Sign-out"
 msgstr "انصراف غير مسجّل"
 
-#: includes/trait-frontend.php:687
+#: includes/trait-frontend.php:659
 msgid "Weekly Workforce Overview"
 msgstr "نظرة أسبوعية على فريق العمل"
 
-#: includes/trait-frontend.php:687
+#: includes/trait-frontend.php:659
 msgid "Configured working days for the selected week. Counts are planned schedule values."
 msgstr "أيام العمل المحددة للأسبوع المختار. الأرقام تمثل الجدول المخطط."
 
-#: includes/trait-frontend.php:688
+#: includes/trait-frontend.php:660
 msgid "Workforce"
 msgstr "فريق العمل"
 
-#: includes/trait-frontend.php:691
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:663
+#: includes/trait-frontend.php:706
 msgid "Employees"
 msgstr "الموظفون"
 
-#: includes/trait-frontend.php:696
+#: includes/trait-frontend.php:668
 msgid "No employees in this category."
 msgstr "لا يوجد موظفون في هذه الفئة."
 
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:706
 msgid "Time"
 msgstr "الحضور"
 
-#: includes/trait-frontend.php:734
-#: includes/trait-frontend.php:1301
-#: includes/trait-frontend.php:1372
-#: includes/trait-notifications.php:685
-#: includes/trait-notifications.php:688
+#: includes/trait-frontend.php:706
+#: includes/trait-frontend.php:1263
+#: includes/trait-frontend.php:1334
+#: includes/trait-notifications.php:686
+#: includes/trait-notifications.php:689
 msgid "Notifications"
 msgstr "الإشعارات"
 
-#: includes/trait-frontend.php:734
+#: includes/trait-frontend.php:706
 msgid "Employee Profile"
 msgstr "ملف الموظف"
 
-#: includes/trait-frontend.php:1289
-#: includes/trait-frontend.php:1331
+#: includes/trait-frontend.php:1251
+#: includes/trait-frontend.php:1293
 msgid "BA Team · Workforce One"
 msgstr "BA Team · Workforce One"
 
-#: includes/trait-frontend.php:1289
+#: includes/trait-frontend.php:1251
 msgid "Good to see you."
 msgstr "أهلًا بك."
 
-#: includes/trait-frontend.php:1289
+#: includes/trait-frontend.php:1251
 msgid "Here’s today’s workforce snapshot."
 msgstr "هذه نظرة سريعة على فريق العمل اليوم."
 
-#: includes/trait-frontend.php:1292
+#: includes/trait-frontend.php:1254
 msgid "Active Employees"
 msgstr "الموظفون النشطون"
 
-#: includes/trait-frontend.php:1293
+#: includes/trait-frontend.php:1255
 msgid "Office Today"
 msgstr "في المكتب اليوم"
 
-#: includes/trait-frontend.php:1294
+#: includes/trait-frontend.php:1256
 msgid "WFH Today"
 msgstr "من المنزل اليوم"
 
-#: includes/trait-frontend.php:1295
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1257
+#: includes/trait-frontend.php:1265
 msgid "Leave / Mission"
 msgstr "إجازة / مأمورية"
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "This Week"
 msgstr "هذا الأسبوع"
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "No working days configured"
 msgstr "لم يتم تحديد أيام عمل"
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "Plan your week"
 msgstr "خطط لأسبوعك"
 
-#: includes/trait-frontend.php:1300
+#: includes/trait-frontend.php:1262
 msgid "Review schedules and keep your team aligned."
 msgstr "راجع الجداول وحافظ على تنسيق فريقك."
 
-#: includes/trait-frontend.php:1300
-#: includes/trait-frontend.php:1367
+#: includes/trait-frontend.php:1262
+#: includes/trait-frontend.php:1329
 msgid "View Schedule"
 msgstr "عرض الجدول"
 
-#: includes/trait-frontend.php:1301
-#: includes/trait-frontend.php:1371
+#: includes/trait-frontend.php:1263
+#: includes/trait-frontend.php:1333
 msgid "Quick Actions"
 msgstr "إجراءات سريعة"
 
-#: includes/trait-frontend.php:1301
+#: includes/trait-frontend.php:1263
 msgid "Common tasks"
 msgstr "المهام الشائعة"
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "Today at a glance"
 msgstr "اليوم في لمحة"
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "Current schedule distribution"
 msgstr "توزيع الجدول الحالي"
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "Office"
 msgstr "المكتب"
 
-#: includes/trait-frontend.php:1303
+#: includes/trait-frontend.php:1265
 msgid "WFH"
 msgstr "من المنزل"
 
-#: includes/trait-frontend.php:1312
+#: includes/trait-frontend.php:1274
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr "حسابك غير مرتبط بسجل موظف نشط. يرجى التواصل مع مديرك."
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:1331
+#: includes/trait-frontend.php:1293
 #, php-format
 msgid "Good to see you, %s."
 msgstr "أهلًا بك يا %s."
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:1331
+#: includes/trait-frontend.php:1293
 msgid "Here’s your day at a glance."
 msgstr "هذا يومك في لمحة."
 
-#: includes/trait-frontend.php:1342
+#: includes/trait-frontend.php:1304
 msgid "TODAY'S SCHEDULE"
 msgstr "جدول اليوم"
 
-#: includes/trait-frontend.php:1342
+#: includes/trait-frontend.php:1304
 msgid "Default location"
 msgstr "الموقع الافتراضي"
 
-#: includes/trait-frontend.php:1343
+#: includes/trait-frontend.php:1305
 msgid "Working day"
 msgstr "يوم عمل"
 
-#: includes/trait-frontend.php:1343
+#: includes/trait-frontend.php:1305
 msgid "No work scheduled"
 msgstr "لا يوجد عمل مجدول"
 
-#: includes/trait-frontend.php:1346
+#: includes/trait-frontend.php:1308
 msgid "Work Location"
 msgstr "موقع العمل"
 
-#: includes/trait-frontend.php:1346
+#: includes/trait-frontend.php:1308
 msgid "Default"
 msgstr "افتراضي"
 
-#: includes/trait-frontend.php:1350
+#: includes/trait-frontend.php:1312
 msgid "View Attendance"
 msgstr "عرض الحضور"
 
-#: includes/trait-frontend.php:1356
+#: includes/trait-frontend.php:1318
 msgid "Overtime Today"
 msgstr "العمل الإضافي اليوم"
 
-#: includes/trait-frontend.php:1356
+#: includes/trait-frontend.php:1318
 msgid "Approved overtime and actual attendance"
 msgstr "العمل الإضافي المعتمد والحضور الفعلي"
 
-#: includes/trait-frontend.php:1358
+#: includes/trait-frontend.php:1320
 msgid "Approved OT"
 msgstr "إضافي معتمد"
 
-#: includes/trait-frontend.php:1359
+#: includes/trait-frontend.php:1321
 msgid "Actual OT"
 msgstr "إضافي فعلي"
 
-#: includes/trait-frontend.php:1360
+#: includes/trait-frontend.php:1322
 msgid "Unapproved Extra"
 msgstr "وقت إضافي غير معتمد"
 
-#: includes/trait-frontend.php:1362
+#: includes/trait-frontend.php:1324
 msgid "Sign Out:"
 msgstr "الانصراف:"
 
-#: includes/trait-frontend.php:1366
+#: includes/trait-frontend.php:1328
 msgid "My Week"
 msgstr "أسبوعي"
 
-#: includes/trait-frontend.php:1366
+#: includes/trait-frontend.php:1328
 msgid "Your upcoming schedule"
 msgstr "جدولك القادم"
 
-#: includes/trait-frontend.php:1367
+#: includes/trait-frontend.php:1329
 msgid "No Upcoming Schedule"
 msgstr "لا يوجد جدول قادم"
 
-#: includes/trait-frontend.php:1367
+#: includes/trait-frontend.php:1329
 msgid "No schedule has been set for your upcoming days."
 msgstr "لم يتم تحديد جدول لأيامك القادمة."
 
-#: includes/trait-frontend.php:1368
+#: includes/trait-frontend.php:1330
 msgid "View full schedule"
 msgstr "عرض الجدول الكامل"
 
-#: includes/trait-frontend.php:1371
+#: includes/trait-frontend.php:1333
 msgid "What do you need?"
 msgstr "ماذا تحتاج؟"
 
-#: includes/trait-frontend.php:1372
+#: includes/trait-frontend.php:1334
 msgid "My Schedule"
 msgstr "جدولي"
 
 #. translators: %s: human-readable time difference
-#: includes/trait-notifications.php:674
+#: includes/trait-notifications.php:675
 #, php-format
 msgid "%s ago"
 msgstr "منذ %s"
 
-#: includes/trait-notifications.php:682
+#: includes/trait-notifications.php:683
 msgid "You’re all caught up"
 msgstr "لا يوجد جديد"
 
-#: includes/trait-notifications.php:682
+#: includes/trait-notifications.php:683
 msgid "No new notifications."
 msgstr "لا توجد إشعارات جديدة."
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:688
+#: includes/trait-notifications.php:689
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -1910,58 +1774,58 @@ msgstr[4] "%d غير مقروءة"
 msgstr[5] "%d غير مقروءة"
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:688
+#: includes/trait-notifications.php:689
 msgid "All caught up"
 msgstr "لا يوجد جديد"
 
-#: includes/trait-notifications.php:690
+#: includes/trait-notifications.php:691
 msgid "View all notifications →"
 msgstr "عرض كل الإشعارات ←"
 
-#: includes/trait-frontend.php:471
+#: includes/trait-frontend.php:443
 msgid "Please select a date for Early Leave."
 msgstr "يرجى اختيار تاريخ للانصراف المبكر."
 
-#: includes/trait-frontend.php:473
+#: includes/trait-frontend.php:445
 msgid "Early Leave must be requested for a future date."
 msgstr "يجب طلب الانصراف المبكر لتاريخ مستقبلي."
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:397
+#: includes/trait-frontend.php:369
 #, php-format
 msgid "Available: %s"
 msgstr "المتاح: %s"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:397
+#: includes/trait-frontend.php:369
 msgid "No balance deduction"
 msgstr "بدون خصم من الرصيد"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Approved"
 msgstr "معتمد"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Rejected"
 msgstr "مرفوض"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Cancelled"
 msgstr "ملغى"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Accepted"
 msgstr "مقبول"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Completed"
 msgstr "مكتمل"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Expired"
 msgstr "منتهي"
 
-#: includes/trait-frontend.php:1653
+#: includes/trait-frontend.php:1348
 msgid "Verified"
 msgstr "تم التحقق"
 
@@ -1969,59 +1833,11 @@ msgstr "تم التحقق"
 msgid "Unable to record this action."
 msgstr "تعذّر تسجيل هذا الإجراء."
 
-#: assets/js/time.js:64
-msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
-msgstr "الوصول إلى الموقع يتطلب HTTPS. افتح Workforce One عبر اتصال آمن."
-
-#: assets/js/time.js:65
-msgid "Location Services are not supported by this browser. Please use a modern browser."
-msgstr "هذا المتصفح لا يدعم خدمات الموقع. استخدم متصفحًا حديثًا."
-
-#: assets/js/time.js:67
-msgid "Location permission was denied. Please allow Location Services for this site, then try again."
-msgstr "تم رفض إذن الموقع. اسمح بخدمات الموقع لهذا الموقع ثم حاول مرة أخرى."
-
-#: assets/js/time.js:68
-msgid "Your location could not be determined. Turn on Location Services/GPS and try again."
-msgstr "تعذّر تحديد موقعك. شغّل خدمات الموقع / GPS ثم حاول مرة أخرى."
-
-#: assets/js/time.js:69
-msgid "Location request timed out. Turn on Location Services/GPS and try again."
-msgstr "انتهت مهلة تحديد الموقع. شغّل خدمات الموقع / GPS ثم حاول مرة أخرى."
-
-#: assets/js/time.js:70
-msgid "We need your location to continue. Please allow Location Services for this site."
-msgstr "نحتاج إلى موقعك للمتابعة. اسمح بخدمات الموقع لهذا الموقع."
-
-#: assets/js/time.js:92
-msgid "QR detected. Waiting for your location…"
-msgstr "تم التعرف على الرمز. في انتظار تحديد موقعك…"
-
-#: assets/js/time.js:93
-msgid "QR detected. Review and tap Sign In with QR."
-msgstr "تم التعرف على الرمز. راجع ثم اضغط «تسجيل الحضور عبر QR»."
-
-#: assets/js/time.js:96
-msgid "Location Services are required for QR Sign In."
-msgstr "خدمات الموقع مطلوبة لتسجيل الحضور عبر QR."
-
-#: assets/js/time.js:107
-msgid "Location permission is required for QR Sign In. Please allow Location Services and try again."
-msgstr "إذن الموقع مطلوب لتسجيل الحضور عبر QR. اسمح بخدمات الموقع ثم حاول مرة أخرى."
-
-#: assets/js/time.js:140
-msgid "Camera QR scanning is unavailable on this browser/device."
-msgstr "المسح بالكاميرا غير متاح على هذا المتصفح أو الجهاز."
-
-#: assets/js/time.js:153
-msgid "Point the camera at the workplace QR."
-msgstr "وجّه الكاميرا إلى رمز QR الخاص بمكان العمل."
-
-#: assets/js/time.js:156
-msgid "Camera permission was denied or unavailable."
-msgstr "تم رفض إذن الكاميرا أو أنها غير متاحة."
-
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:379
+#: includes/trait-frontend.php:351
 msgid "A leave cannot span two calendar years. Please submit one request for each year."
 msgstr "لا يمكن أن تمتد الإجازة عبر سنتين. يرجى تقديم طلب منفصل لكل سنة."
+
+#: includes/trait-frontend.php:142
+msgid "This day has already passed, so it can no longer be swapped."
+msgstr "هذا اليوم انتهى بالفعل، لذا لا يمكن تبديله."
