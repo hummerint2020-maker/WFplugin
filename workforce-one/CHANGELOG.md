@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.21
+### Fixed (employee app → People and a colleague's profile)
+- **Profiles broke when "Show supervisor" was on.** The page asked the database for a
+  `supervisor_id` column that does not exist (supervisors are approval relationships), so every
+  profile said "Employee not found". The supervisor now comes from the same relationship as
+  wp-admin → Employees.
+- **Kudos explain why they were refused.** Over the weekly limit, a duplicate, an unknown category
+  or an unavailable colleague all showed "Unable to send Kudos"; the reason was dropped on the
+  way back. Each now has its own message.
+- Kudos can no longer be sent while profiles hide the Recognition section (the form is not shown
+  then, but the action accepted direct requests).
+- A colleague's profile said "Your earned milestones" / "Your achievements will appear here", and
+  showed Achievements even with the Achievements feature switched off.
+- Initials use first and last name, as on the other profiles.
+
+### Internal
+- People and the colleague profile moved to `includes/trait-people-view.php`, HTML to
+  `templates/app/people.php` and `templates/app/employee.php`, styles to `assets/css/workforce-one.css`
+  (+ RTL), the Kudos toggle (inline `onclick`) to `assets/js/people.js`. Behaviour is pinned by
+  `tests/e2e_people.py`. `includes/trait-frontend.php` is now 691 lines.
+
 ## 3.31.20
 ### Fixed (employee app → Dashboard)
 - **The managers' snapshot counts the right people.** Archived employees' schedules were counted

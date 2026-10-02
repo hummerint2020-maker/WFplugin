@@ -189,6 +189,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-leave', $root.'assets/js/leave.js', [], $ver, true);
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
             wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
+            wp_register_script('workforce-one-people', $root.'assets/js/people.js', [], $ver, true);
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;
@@ -376,133 +377,6 @@ private function layout($title,$body){
             $titles=['dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one')];
             $layout_title=$titles[$view]??ucwords(str_replace('-',' ',$view));
             return $this->layout($layout_title,$content);
-        }
-
-    private function people_content(){
-            global $wpdb;
-            if(!$this->can('ews_view_people'))return $this->ews_empty_state('Access denied','People is not available for your account.');
-            $search=sanitize_text_field(wp_unslash($_GET['people_search']??''));
-            $team_id=absint($_GET['people_team']??0);
-            $where=["active=1"];$args=[];
-            if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where[]='(name LIKE %s OR domain_name LIKE %s OR email LIKE %s)';$args[]=$like;$args[]=$like;$args[]=$like;}
-            if($team_id && method_exists($this,'team_tables')){
-                $tt=$this->team_tables();
-                $ids=$wpdb->get_col($wpdb->prepare("SELECT employee_id FROM {$tt['members']} WHERE team_id=%d AND active=1",$team_id));
-                if(!$ids)$ids=[0];
-                $ph=implode(',',array_fill(0,count($ids),'%d'));$where[]="id IN ($ph)";$args=array_merge($args,array_map('absint',$ids));
-            }
-            $sql="SELECT id,name,domain_name,profile_image_type,profile_image_url,avatar_key FROM {$this->employees} WHERE ".implode(' AND ',$where)." ORDER BY name ASC LIMIT 500";
-            $rows=$args?$wpdb->get_results($wpdb->prepare($sql,...$args)):$wpdb->get_results($sql);
-            $teams=[];
-            if(method_exists($this,'team_tables')){$tt=$this->team_tables();$teams=$wpdb->get_results("SELECT id,name FROM {$tt['teams']} WHERE active=1 ORDER BY name ASC");}
-            ob_start();
-            ?>
-            <div class="ews-card wfo-people-head">
-                <div><h3 style="margin:0">People</h3><p class="wfo-people-muted">Find colleagues and view their work profile.</p></div>
-                <form method="get" class="wfo-people-filters">
-                    <input type="hidden" name="ews_view" value="people">
-                    <input type="search" name="people_search" value="<?php echo esc_attr($search); ?>" placeholder="Search people..." aria-label="Search people">
-                    <select name="people_team" aria-label="Filter by team"><option value="0">All Teams</option><?php foreach((array)$teams as $t): ?><option value="<?php echo (int)$t->id; ?>" <?php selected($team_id,(int)$t->id); ?>><?php echo esc_html($t->name); ?></option><?php endforeach; ?></select>
-                    <button class="ews-btn" type="submit">Search</button>
-                    <?php if($search!==''||$team_id): ?><a class="ews-btn secondary" href="<?php echo esc_url($this->app_view_url('people')); ?>">Clear</a><?php endif; ?>
-                </form>
-            </div>
-            <div class="wfo-people-grid">
-            <?php foreach((array)$rows as $r):
-                $initials='';foreach(preg_split('/\s+/',trim((string)$r->name)) as $part){if($part!=='')$initials.=mb_strtoupper(mb_substr($part,0,1));if(mb_strlen($initials)>=2)break;}if($initials==='')$initials='ME';
-                $img='';if($r->profile_image_type==='photo'&&!empty($r->profile_image_url))$img=$r->profile_image_url;elseif($r->profile_image_type==='avatar'&&!empty($r->avatar_key))$img=$this->profile_avatar_url($r->avatar_key);
-                $url=add_query_arg(['ews_view'=>'employee','employee_id'=>(int)$r->id],$this->app_view_url('people'));
-            ?>
-                <a class="wfo-person-card" href="<?php echo esc_url($url); ?>">
-                    <div class="wfo-person-avatar"><?php if($img): ?><img src="<?php echo esc_url($img); ?>" alt=""><?php else: ?><span><?php echo esc_html($initials); ?></span><?php endif; ?></div>
-                    <div class="wfo-person-main"><strong><?php echo esc_html($r->name); ?></strong><span><?php echo esc_html($r->domain_name); ?></span></div><span class="wfo-person-arrow">›</span>
-                </a>
-            <?php endforeach; ?>
-            </div>
-            <?php if(!$rows): ?><div class="ews-card"><div class="ews-empty-state"><div class="ews-empty-icon">👥</div><div class="ews-empty-title">No people found</div><div class="ews-empty-text">Try another name or team.</div></div></div><?php endif; ?>
-            <?php
-            return ob_get_clean();
-        }
-
-        private function employee_profile_content($employee_id=0){
-            global $wpdb;
-            $cfg=$this->employee_profile_settings();
-            if(!$this->can('ews_view_people') || empty($cfg['enabled']))return $this->ews_empty_state('Profiles unavailable','Employee profiles are not available for your account.');
-            if(!$employee_id)return $this->ews_empty_state('Employee not found','No employee was selected.');
-            $select=['id','name','active'];
-            if(!empty($cfg['show_photo']))$select=array_merge($select,['profile_image_type','profile_image_url','avatar_key']);
-            if(!empty($cfg['show_email']))$select[]='email';
-            if(!empty($cfg['show_supervisor']))$select[]='supervisor_id';
-            $emp=$wpdb->get_row($wpdb->prepare("SELECT ".implode(',',array_unique($select))." FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$employee_id));
-            if(!$emp)return $this->ews_empty_state('Employee not found','This employee is unavailable.');
-            $teams=[];
-            if(!empty($cfg['show_team'])&&method_exists($this,'team_ids_for_employee')&&method_exists($this,'team_tables')){
-                $ids=$this->team_ids_for_employee((int)$emp->id);
-                if($ids){$tt=$this->team_tables();$ph=implode(',',array_fill(0,count($ids),'%d'));$teams=$wpdb->get_results($wpdb->prepare("SELECT id,name FROM {$tt['teams']} WHERE id IN ($ph) AND active=1 ORDER BY name ASC",...$ids));}
-            }
-            $supervisor='';
-            if(!empty($cfg['show_supervisor'])&&!empty($emp->supervisor_id)){
-                $sup=$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",absint($emp->supervisor_id)));
-                $supervisor=$sup?(string)$sup:'';
-            }
-            $initials='';foreach(preg_split('/\s+/',trim((string)$emp->name)) as $part){if($part!=='')$initials.=mb_strtoupper(mb_substr($part,0,1));if(mb_strlen($initials)>=2)break;}if($initials==='')$initials='ME';
-            $img='';if(!empty($cfg['show_photo'])&&isset($emp->profile_image_type)){if($emp->profile_image_type==='photo'&&!empty($emp->profile_image_url))$img=$emp->profile_image_url;elseif($emp->profile_image_type==='avatar'&&!empty($emp->avatar_key))$img=$this->profile_avatar_url($emp->avatar_key);}
-            ob_start(); ?>
-            <style>
-            .wfo-employee-profile-head{display:flex;align-items:center;gap:16px;margin:0 0 16px;padding:22px 24px;border:1px solid #e0e7ff;border-radius:18px;background:linear-gradient(135deg,#eef4ff 0%,#f7f5ff 58%,#eef2ff 100%);position:relative;overflow:hidden}.wfo-employee-profile-head:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-80px;top:-125px;background:rgba(99,102,241,.10)}.wfo-employee-profile-person{display:flex;align-items:center;gap:16px;min-width:0;position:relative;z-index:1}.wfo-employee-profile-avatar{width:84px;height:84px;border-radius:24px;background:#eef2ff;border:1px solid #dbe4ff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#3158c8;overflow:hidden;flex:0 0 84px;box-shadow:0 8px 22px rgba(49,88,200,.10)}.wfo-employee-profile-avatar img{width:100%;height:100%;object-fit:cover}.wfo-employee-profile-title{min-width:0}.wfo-employee-profile-title h2{margin:0;font-size:29px;line-height:1.15;color:#101828}.wfo-employee-profile-empty-head{min-height:18px}.wfo-employee-profile-work{margin-bottom:16px}.wfo-employee-profile-work h3{margin-bottom:14px}.wfo-employee-profile-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.wfo-employee-profile-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid #e4e7ec;background:rgba(255,255,255,.78);color:#475467;font-size:12px}.ews-my-profile-panel{background:#fff;border:1px solid #e4e7ec;border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 3px 12px rgba(16,24,40,.025)}.ews-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;border-bottom:1px solid #eef0f3}.ews-section-head h3{font-size:16px;margin:0;color:#101828}.ews-section-head p{margin:3px 0 0;color:#667085;font-size:11px}.ews-my-profile-section-link{color:#3158c8;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap;padding:6px 8px;border-radius:8px}.ews-my-profile-body{padding:16px 18px}.ews-achievements-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ews-achievement-card{display:flex;gap:11px;align-items:flex-start;border:1px solid #eaecf0;border-radius:12px;padding:12px;background:#fcfcfd}.ews-achievement-icon{width:42px;height:42px;border-radius:12px;background:#fff7e6;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}.ews-achievement-name{font-weight:800;color:#101828;font-size:13px}.ews-achievement-desc{font-size:11px;color:#667085;margin-top:3px;line-height:1.45}.ews-achievement-date{font-size:10px;color:#98a2b3;margin-top:6px}.wfo-kudos-action{margin-bottom:12px}.wfo-kudos-form{border:1px solid #e4e7ec;border-radius:12px;background:#fcfcfd;padding:14px;margin-bottom:14px}.wfo-kudos-form label{display:block;font-size:12px;font-weight:700;color:#344054;margin-bottom:10px}.wfo-kudos-form select,.wfo-kudos-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #d0d5dd;border-radius:9px;padding:10px;background:#fff;font:inherit;font-size:13px}.wfo-kudos-optional{font-weight:400;color:#98a2b3}.wfo-kudos-form-actions{display:flex;gap:8px}.wfo-kudos-form-actions .secondary{background:#fff}.wfo-recognition-list{display:grid;gap:10px}.wfo-recognition-item{display:flex;gap:11px;align-items:flex-start;border:1px solid #eaecf0;border-radius:12px;padding:12px;background:#fcfcfd}.wfo-recognition-icon{width:40px;height:40px;border-radius:12px;background:#fff7e6;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}.wfo-recognition-title{font-size:12px;color:#475467}.wfo-recognition-title strong{color:#101828}.wfo-recognition-message{font-size:12px;color:#344054;margin-top:4px;line-height:1.45}.wfo-recognition-date{font-size:10px;color:#98a2b3;margin-top:5px}.wfo-recognition-notice{border-radius:9px;padding:9px 11px;font-size:12px;margin-bottom:12px}.wfo-recognition-notice.success{background:#ecfdf3;border:1px solid #abefc6;color:#067647}.wfo-recognition-notice.error{background:#fef3f2;border:1px solid #fecdca;color:#b42318}
-            @media(max-width:700px){.wfo-employee-profile-head{padding:18px}.wfo-employee-profile-avatar{width:68px;height:68px;flex-basis:68px;border-radius:20px}.wfo-employee-profile-title h2{font-size:23px}.ews-achievements-grid{grid-template-columns:1fr}.ews-section-head{padding:12px 14px}.ews-section-head h3{font-size:15px}.ews-my-profile-body{padding:12px 14px}}
-            </style>
-            <div class="wfo-profile-back"><a href="<?php echo esc_url($this->app_view_url('people')); ?>">← Back to People</a></div>
-            <?php if(!empty($cfg['show_photo']) || !empty($cfg['show_name'])): ?>
-            <div class="wfo-employee-profile-head ews-card">
-                <div class="wfo-employee-profile-person">
-                    <?php if(!empty($cfg['show_photo'])): ?><div class="wfo-employee-profile-avatar"><?php if($img): ?><img src="<?php echo esc_url($img); ?>" alt=""><?php else: ?><span><?php echo esc_html($initials); ?></span><?php endif; ?></div><?php endif; ?>
-                    <?php if(!empty($cfg['show_name'])): ?><div class="wfo-employee-profile-title"><h2><?php echo esc_html($emp->name); ?></h2></div><?php endif; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-            <?php if(!empty($cfg['show_team']) || !empty($cfg['show_email']) || !empty($cfg['show_supervisor'])): ?>
-            <div class="ews-card wfo-employee-profile-work"><h3>Work Profile</h3><div class="wfo-profile-fields">
-                <?php if(!empty($cfg['show_team'])): ?><div><span>Teams</span><strong><?php echo $teams?esc_html(implode(', ',array_map(function($t){return $t->name;},$teams))):'No team assigned'; ?></strong></div><?php endif; ?>
-                <?php if(!empty($cfg['show_email'])): ?><div><span>Work Email</span><strong><?php echo !empty($emp->email)?esc_html($emp->email):'Not provided'; ?></strong></div><?php endif; ?>
-                <?php if(!empty($cfg['show_supervisor'])): ?><div><span>Supervisor</span><strong><?php echo $supervisor?esc_html($supervisor):'Not assigned'; ?></strong></div><?php endif; ?>
-            </div></div>
-            <?php endif; ?>
-            <?php if(!empty($cfg['show_achievements'])): $profile_achievements=method_exists($this,'employee_achievements')?$this->employee_achievements((int)$emp->id):[]; ?>
-            <section class="ews-my-profile-panel">
-                <div class="ews-section-head"><div><h3>🏆 Achievements</h3><p>Your earned milestones</p></div><span class="ews-my-profile-section-link"><?php echo (int)count($profile_achievements); ?> earned</span></div>
-                <div class="ews-my-profile-body"><div class="ews-achievements-grid">
-                    <?php if(!$profile_achievements): ?><div class="ews-profile-photo-help">Your achievements will appear here as you reach milestones.</div>
-                    <?php else: foreach((array)$profile_achievements as $achievement): ?><div class="ews-achievement-card"><div class="ews-achievement-icon <?php echo esc_attr($achievement->badge_style?:'circle'); ?>"><?php echo esc_html($achievement->icon); ?></div><div><div class="ews-achievement-name"><?php echo esc_html($achievement->name); ?></div><div class="ews-achievement-desc"><?php echo esc_html($achievement->description); ?></div><div class="ews-achievement-date">Earned <?php echo esc_html(date_i18n(get_option('date_format'),strtotime($achievement->earned_at))); ?></div></div></div><?php endforeach; endif; ?>
-                </div></div>
-            </section><?php endif; ?>
-            <?php if(!empty($cfg['show_recognition']) && method_exists($this,'recognition_enabled') && $this->recognition_enabled()):
-                $recognition_rows=method_exists($this,'recognition_rows')?$this->recognition_rows((int)$emp->id):[];
-                $viewer=$this->current_employee(); $can_kudos=$viewer && (int)$viewer->id!==(int)$emp->id && method_exists($this,'recognition_allow_kudos') && $this->recognition_allow_kudos();
-                $kudos_error=sanitize_key($_GET['kudos_error']??''); $kudos_sent=!empty($_GET['kudos_sent']);
-                $kudos_notice_key='wfo_kudos_notice_'.get_current_user_id().'_'.(int)$emp->id;
-                $kudos_notice=get_transient($kudos_notice_key);
-                if($kudos_notice==='success'){ $kudos_sent=true; $kudos_error=''; delete_transient($kudos_notice_key); }
-                elseif($kudos_notice==='error'){ $kudos_error='error'; $kudos_sent=false; delete_transient($kudos_notice_key); }
-            ?>
-            <section class="ews-my-profile-panel wfo-recognition-panel">
-                <div class="ews-section-head"><div><h3>👏 Recognition</h3><p>Appreciation from your colleagues</p></div><span class="ews-my-profile-section-link"><?php echo (int)count($recognition_rows); ?> received</span></div>
-                <div class="ews-my-profile-body">
-                    <?php if($kudos_sent): ?><div class="wfo-recognition-notice success">Kudos sent successfully.</div><?php elseif($kudos_error): ?><div class="wfo-recognition-notice error">Unable to send Kudos. Please check the details and try again.</div><?php endif; ?>
-                    <?php if($can_kudos): ?>
-                    <div class="wfo-kudos-action"><button type="button" class="ews-btn" onclick="var f=document.getElementById('wfo-kudos-form');f.hidden=!f.hidden;if(!f.hidden)f.scrollIntoView({behavior:'smooth',block:'nearest'});">👏 Give Kudos</button></div>
-                    <form id="wfo-kudos-form" class="wfo-kudos-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" hidden>
-                        <?php echo wp_nonce_field('ews_kudos_submit','ews_kudos_nonce',true,false); ?><input type="hidden" name="action" value="ews_kudos_submit"><input type="hidden" name="recipient_employee_id" value="<?php echo (int)$emp->id; ?>">
-                        <label>What are you recognizing?<select name="category" required><?php foreach($this->recognition_categories() as $key=>$label): ?><option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label>
-                        <label>Message <span class="wfo-kudos-optional">(optional)</span><textarea name="message" rows="3" maxlength="500" placeholder="Write a short thank-you..."></textarea></label>
-                        <div class="wfo-kudos-form-actions"><button type="submit" class="ews-btn">Send Kudos</button><button type="button" class="ews-btn secondary" onclick="document.getElementById('wfo-kudos-form').hidden=true;">Cancel</button></div>
-                    </form>
-                    <?php endif; ?>
-                    <?php if($recognition_rows): ?><div class="wfo-recognition-list"><?php foreach($recognition_rows as $row): ?><article class="wfo-recognition-item"><div class="wfo-recognition-icon">👏</div><div><div class="wfo-recognition-title"><strong><?php echo esc_html($row->sender_name?:'A colleague'); ?></strong> · <?php echo esc_html($this->recognition_category_label($row->category)); ?></div><?php if($row->message!==''): ?><div class="wfo-recognition-message">“<?php echo esc_html($row->message); ?>”</div><?php endif; ?><div class="wfo-recognition-date"><?php echo esc_html(date_i18n(get_option('date_format'),strtotime($row->created_at))); ?></div></div></article><?php endforeach; ?></div><?php elseif(!$can_kudos): ?><div class="ews-empty-state"><div class="ews-empty-icon">👏</div><div class="ews-empty-title">No recognition yet</div><div class="ews-empty-text">Recognition from colleagues will appear here.</div></div><?php endif; ?>
-                </div>
-            </section>
-            <?php endif; ?>
-            <?php return ob_get_clean();
         }
 
     public function login_page(){
