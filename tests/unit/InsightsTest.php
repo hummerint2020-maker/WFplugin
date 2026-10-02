@@ -40,4 +40,12 @@ final class InsightsTest extends TestCase
         $this->assertSame(67, I::rate(1, 1, 1));
         $this->assertSame(0, I::rate(0, 0, 0));
     }
+
+    public function testValidDate(): void
+    {
+        $this->assertSame('2026-02-28', I::validDate('2026-02-28', 'x'));
+        $this->assertSame('x', I::validDate('2026-02-31', 'x'));
+        $this->assertSame('x', I::validDate('tomorrow', 'x'));
+        $this->assertSame('x', I::validDate('2026-2-3', 'x'));
+    }
 }

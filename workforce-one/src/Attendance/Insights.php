@@ -39,6 +39,12 @@ final class Insights
         return 'Pending';
     }
 
+    /** A real Y-m-d date (2026-02-31 is not), otherwise $fallback. */
+    public static function validDate(string $raw, string $fallback): string
+    {
+        return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]) ? $raw : $fallback;
+    }
+
     /** Share of working days attended (Present + Late) out of Present + Late + Absent, in %. */
     public static function rate(int $present, int $late, int $absent): int
     {

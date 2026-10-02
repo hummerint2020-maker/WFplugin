@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.18
+### Fixed (employee app → Attendance Insights)
+The app's Attendance Insights page had its own copy of the calculations and disagreed with the
+wp-admin page (fixed in 3.31.15). It now uses the same code, so:
+- Employees with attendance tracking switched off are left out (they counted as Office and Absent).
+- Training Course and other business-trip types count as Business Trip, and custom schedule types
+  get their own "Other" row (both counted as "Not Set").
+- An impossible date in the address (e.g. 2026-02-31) falls back to today instead of another week.
+- In Arabic the employee drawer opens from the left and the first column sticks on the right
+  (the page's inline styles were never flipped for RTL).
+
+### Internal
+- The page moved to `includes/trait-attendance-insights.php` next to the wp-admin page, which
+  now shares `insights_teams()` / `insights_employees()` / `insights_compute()` with it. HTML in
+  `templates/app/attendance-insights.php`, styles in `assets/css/workforce-one.css` (+ RTL), the
+  drawer and pickers in `assets/js/app-attendance-insights.js`. Behaviour is pinned by
+  `tests/e2e_app_insights.py`.
+
 ## 3.31.17
 ### Fixed (employee app → Attendance, the managers' grid)
 - **A change lost to another manager is now reported.** When two managers edit the same cell, the
