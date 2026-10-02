@@ -188,6 +188,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-app-attendance-insights', $root.'assets/js/app-attendance-insights.js', [], $ver, true);
             wp_register_script('workforce-one-leave', $root.'assets/js/leave.js', [], $ver, true);
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
+            wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;
@@ -504,117 +505,6 @@ private function layout($title,$body){
             <?php return ob_get_clean();
         }
 
-    private function my_profile_content(){
-            global $wpdb;
-            $emp=$this->current_employee();
-            if(!$emp)return $this->ews_empty_state('Profile unavailable','Your Workforce One employee account is not linked to this login.');
-            $today=current_time('Y-m-d');
-            $schedule=$this->today_schedule_for_employee((int)$emp->id);
-            $events=$this->today_events((int)$emp->id);
-            $sign_in=$events['sign_in']->event_at??'';
-            $sign_out=$events['sign_out']->event_at??'';
-            $planned=$schedule?$schedule->status:'Not Set';
-            $today_result=$sign_in?($this->sign_in_classification($sign_in,(int)$emp->id)):($this->schedule_type_requires_sign_in($planned)?'Not Signed In':$planned);
-            $teams=[];
-            if(method_exists($this,'team_ids_for_employee') && method_exists($this,'team_tables')){
-                $team_ids=$this->team_ids_for_employee((int)$emp->id);
-                if($team_ids){
-                    $tt=$this->team_tables();
-                    $placeholders=implode(',',array_fill(0,count($team_ids),'%d'));
-                    $teams=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$tt['teams']} WHERE id IN ($placeholders) AND active=1 ORDER BY name ASC",...$team_ids));
-                }
-            }
-            $supervisor=$this->approval_related_employee((int)$emp->id,'supervisor');
-            $hours=$this->working_hours((int)$emp->id);
-            $shift=$this->shift_for_employee((int)$emp->id);
-            $week_cfg=$this->week_dates_configured($today);
-            $week_dates=(array)($week_cfg[0]??[]);
-            $week_rows=[];
-            if($week_dates){
-                $week_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,status,note FROM {$this->schedule} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY work_date",(int)$emp->id,$week_dates[0],$week_dates[count($week_dates)-1]));
-            }
-            $week_map=[];foreach((array)$week_rows as $r)$week_map[$r->work_date]=$r;
-            $recent_start=date('Y-m-d',strtotime($today.' -6 days'));
-            $recent_logs=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY work_date DESC,event_at ASC",(int)$emp->id,$recent_start,$today));
-            $recent=[];foreach((array)$recent_logs as $r){$d=$r->work_date;if(!isset($recent[$d]))$recent[$d]=['in'=>'','out'=>''];if($r->event_type==='sign_in')$recent[$d]['in']=$r->event_at;if($r->event_type==='sign_out')$recent[$d]['out']=$r->event_at;}
-            $year=(int)current_time('Y');
-            $leave_balances=[];
-            if(method_exists($this,'ensure_leave_schema')){$this->ensure_leave_schema();$types=$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_leave_types WHERE active=1 ORDER BY name");foreach((array)$types as $t){$b=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d LIMIT 1",(int)$emp->id,(int)$t->id,$year));if($b) $leave_balances[]=['name'=>$t->name,'entitlement'=>(float)$b->entitlement,'available'=>max(0,(float)$b->entitlement-(float)$b->used-(float)$b->pending),'used'=>(float)$b->used,'pending'=>(float)$b->pending];}}
-            $image_type=!empty($emp->profile_image_type)?$emp->profile_image_type:'initials';
-            $image_url=!empty($emp->profile_image_url)?$emp->profile_image_url:'';
-            $profile_updated=sanitize_key($_GET['profile_updated']??'');
-            $profile_error=sanitize_key($_GET['profile_error']??'');
-            $password_updated=sanitize_key($_GET['password_updated']??'');
-            $password_error=sanitize_key($_GET['password_error']??'');
-            $avatar_key=!empty($emp->avatar_key)?$emp->avatar_key:'';
-            $avatar_url=$image_type==='avatar'&&$avatar_key?$this->profile_avatar_url($avatar_key):'';
-            $initials='';foreach(preg_split('/\s+/',trim((string)$emp->name)) as $part){if($part!=='')$initials.=mb_strtoupper(mb_substr($part,0,1));if(mb_strlen($initials)>=2)break;}if($initials==='')$initials='ME';
-            $display_image=(($image_type==='photo'&&$image_url)||($image_type==='avatar'&&$avatar_url))?($image_type==='avatar'?$avatar_url:$image_url):'';
-            $team_label=$teams?implode(', ',array_map(function($x){return $x->name;},(array)$teams)):'—';
-            $catalog=$this->profile_avatar_catalog();
-            ob_start(); ?>
-            <style>
-            .ews-my-profile{max-width:1100px}.ews-my-profile-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:8px 0 20px;padding:22px 24px;border:1px solid #e0e7ff;border-radius:18px;background:linear-gradient(135deg,#eef4ff 0%,#f7f5ff 58%,#eef2ff 100%);position:relative;overflow:hidden}.ews-my-profile-head:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-70px;top:-120px;background:rgba(99,102,241,.10)}.ews-my-profile-person{display:flex;align-items:center;gap:16px;min-width:0;position:relative;z-index:1}.ews-my-profile-avatar{width:84px;height:84px;border-radius:24px;background:#eef2ff;border:1px solid #dbe4ff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#3158c8;overflow:hidden;position:relative;flex:0 0 auto;box-shadow:0 8px 22px rgba(49,88,200,.10)}.ews-my-profile-avatar img{width:100%;height:100%;object-fit:cover}.ews-profile-avatar-edit{position:absolute;right:4px;bottom:4px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:#3158c8;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer}.ews-my-profile-title{min-width:0}.ews-my-profile-title h2{margin:0 0 7px;font-size:29px;line-height:1.15;color:#101828}.ews-my-profile-title p{margin:0;color:#667085;overflow-wrap:anywhere}.ews-my-profile-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.ews-my-profile-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid #e4e7ec;background:rgba(255,255,255,.78);color:#475467;font-size:12px}.ews-my-profile-pill.active{color:#067647;background:#ecfdf3;border-color:#abefc6}.ews-my-profile-quote{margin-left:auto;position:relative;z-index:1;text-align:right;color:#475467;font-size:13px;line-height:1.5;padding-right:8px}.ews-my-profile-quote:after{content:"";display:block;width:52px;height:2px;background:#635bff;margin:7px 0 0 auto;border-radius:2px}.ews-my-profile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}.ews-my-profile-card,.ews-my-profile-panel{background:#fff;border:1px solid #e4e7ec;border-radius:14px}.ews-my-profile-card{padding:16px;display:flex;align-items:center;gap:12px;min-width:0;box-shadow:0 4px 14px rgba(16,24,40,.035)}.ews-my-profile-card.planned{background:linear-gradient(180deg,#fff 0%,#f7f8ff 100%)}.ews-my-profile-card.attendance{background:linear-gradient(180deg,#fff 0%,#fffaf2 100%)}.ews-my-profile-card.hours{background:linear-gradient(180deg,#fff 0%,#f5fcf8 100%)}.ews-my-profile-card-icon{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;background:#eef2ff;color:#3158c8}.attendance .ews-my-profile-card-icon{background:#fff0db;color:#9a4f00}.hours .ews-my-profile-card-icon{background:#e7f8ee;color:#087443}.ews-my-profile-card .label{font-size:12px;color:#667085}.ews-my-profile-card .value{font-size:21px;font-weight:800;color:#101828;margin-top:5px}.ews-my-profile-card .sub{font-size:12px;color:#667085;margin-top:4px}.ews-my-profile-panel{overflow:hidden;margin-bottom:16px;box-shadow:0 3px 12px rgba(16,24,40,.025)}.ews-my-profile-card,.ews-my-profile-panel{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.ews-my-profile-card:hover,.ews-my-profile-panel:hover{border-color:#d9def0;box-shadow:0 8px 22px rgba(16,24,40,.055)}.ews-my-profile-section-link{transition:background .15s ease,color .15s ease;padding:6px 8px;border-radius:8px}.ews-my-profile-section-link:hover{background:#eef2ff;color:#2448b8}.ews-profile-security-btn,.ews-profile-photo-btn,.ews-profile-avatar-edit{transition:transform .15s ease,box-shadow .15s ease,background .15s ease}.ews-profile-security-btn:hover,.ews-profile-photo-btn:hover{box-shadow:0 5px 12px rgba(49,88,200,.12);transform:translateY(-1px)}.ews-profile-avatar-edit:hover{transform:scale(1.06);box-shadow:0 3px 8px rgba(49,88,200,.22)}.ews-my-day{transition:transform .15s ease,box-shadow .15s ease}.ews-my-day:hover{transform:translateY(-2px);box-shadow:0 5px 12px rgba(16,24,40,.06)}.ews-my-day.current-day{box-shadow:inset 0 0 0 2px #635bff,0 4px 12px rgba(99,91,255,.10);position:relative}.ews-my-day.current-day:after{content:"Today";position:absolute;top:6px;right:7px;font-size:8px;font-weight:800;color:#635bff;text-transform:uppercase;letter-spacing:.03em}.ews-achievements-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ews-achievement-card{display:flex;gap:11px;align-items:flex-start;border:1px solid #eaecf0;border-radius:12px;padding:12px;background:#fcfcfd}.ews-achievement-icon{width:42px;height:42px;border-radius:12px;background:#fff7e6;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}.ews-achievement-name{font-weight:800;color:#101828;font-size:13px}.ews-achievement-desc{font-size:11px;color:#667085;margin-top:3px;line-height:1.45}.ews-achievement-date{font-size:10px;color:#98a2b3;margin-top:6px}.wfo-kudos-action{margin-bottom:12px}.wfo-kudos-form{border:1px solid #e4e7ec;border-radius:12px;background:#fcfcfd;padding:14px;margin-bottom:14px}.wfo-kudos-form label{display:block;font-size:12px;font-weight:700;color:#344054;margin-bottom:10px}.wfo-kudos-form select,.wfo-kudos-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #d0d5dd;border-radius:9px;padding:10px;background:#fff;font:inherit;font-size:13px}.wfo-kudos-optional{font-weight:400;color:#98a2b3}.wfo-kudos-form-actions{display:flex;gap:8px}.wfo-kudos-form-actions .secondary{background:#fff}.wfo-recognition-list{display:grid;gap:10px}.wfo-recognition-item{display:flex;gap:11px;align-items:flex-start;border:1px solid #eaecf0;border-radius:12px;padding:12px;background:#fcfcfd}.wfo-recognition-icon{width:40px;height:40px;border-radius:12px;background:#fff7e6;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}.wfo-recognition-title{font-size:12px;color:#475467}.wfo-recognition-title strong{color:#101828}.wfo-recognition-message{font-size:12px;color:#344054;margin-top:4px;line-height:1.45}.wfo-recognition-date{font-size:10px;color:#98a2b3;margin-top:5px}.wfo-recognition-notice{border-radius:9px;padding:9px 11px;font-size:12px;margin-bottom:12px}.wfo-recognition-notice.success{background:#ecfdf3;border:1px solid #abefc6;color:#067647}.wfo-recognition-notice.error{background:#fef3f2;border:1px solid #fecdca;color:#b42318}.ews-my-profile-table tbody tr{transition:background .12s ease}.ews-my-profile-table tbody tr:hover{background:#f8f9fd}.ews-profile-notice{animation:ews-profile-notice-in .2s ease}@keyframes ews-profile-notice-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}.ews-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;border-bottom:1px solid #eef0f3}.ews-section-head h3{font-size:16px;margin:0;color:#101828}.ews-section-head p{margin:3px 0 0;color:#667085;font-size:11px}.ews-section-head-icon{width:34px;height:34px;border-radius:10px;background:#eef2ff;color:#3158c8;display:flex;align-items:center;justify-content:center}.ews-my-profile-section-link{color:#3158c8;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap}.ews-my-profile-body{padding:16px 18px}.ews-my-profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 34px}.ews-my-profile-field .k{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#98a2b3}.ews-my-profile-field .v{font-size:14px;color:#344054;margin-top:4px;word-break:break-word}.ews-my-week{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.ews-my-day{border:1px solid #eaecf0;border-radius:11px;padding:12px;text-align:center;background:#fafbff}.ews-my-day.wfh{background:#f2f6ff;border-color:#dbe5ff}.ews-my-day.office{background:#f5f9ff;border-color:#dbe8f5}.ews-my-day .d{font-size:11px;color:#667085}.ews-my-day .s{font-weight:800;margin-top:6px;font-size:13px;color:#101828}.ews-my-profile-table{width:100%;border-collapse:collapse}.ews-my-profile-table th,.ews-my-profile-table td{padding:10px 12px;border-bottom:1px solid #f0f2f5;text-align:left;font-size:12px}.ews-my-profile-table th{background:#fafbfc;color:#667085;font-weight:600}.ews-att-status{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.ews-att-status.present{background:#ecfdf3;color:#067647}.ews-att-status.incomplete{background:#fff7ed;color:#b54708}.ews-profile-security{display:flex;align-items:center;justify-content:space-between;gap:16px}.ews-profile-security-main{display:flex;align-items:center;gap:12px}.ews-profile-security-icon{width:42px;height:42px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:19px}.ews-profile-security-title{font-weight:800;color:#101828}.ews-profile-security-sub{font-size:12px;color:#667085;margin-top:2px}.ews-profile-security-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;border:1px solid #3158c8;background:#f8f8ff;color:#3158c8;font-size:12px;font-weight:800;cursor:pointer}.ews-leave-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ews-leave-card{border:1px solid #eaecf0;border-radius:12px;padding:14px;background:#fcfcfd}.ews-leave-top{display:flex;justify-content:space-between;gap:12px}.ews-leave-card .k{font-size:12px;color:#667085}.ews-leave-card .v{font-size:14px;color:#344054;margin-top:4px}.ews-leave-percent{font-size:11px;color:#667085;white-space:nowrap}.ews-leave-bar{height:7px;background:#e7ebf3;border-radius:999px;overflow:hidden;margin-top:12px}.ews-leave-bar span{display:block;height:100%;background:#3158c8;border-radius:999px;min-width:0}.ews-profile-notice{margin:0 0 14px;padding:10px 12px;border-radius:10px;font-size:13px;border:1px solid #abefc6;background:#ecfdf3;color:#067647}.ews-profile-notice.error{border-color:#fecaca;background:#fef2f2;color:#991b1b}.ews-profile-modal-backdrop{position:fixed;inset:0;background:rgba(16,24,40,.48);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}.ews-profile-modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(16,24,40,.25)}.ews-profile-modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eef0f3}.ews-profile-modal-head h3{margin:0;font-size:17px}.ews-profile-modal-close{border:0;background:#f2f4f7;width:32px;height:32px;border-radius:9px;font-size:20px;cursor:pointer}.ews-profile-modal-body{padding:18px}.ews-profile-modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.ews-profile-photo-btn{display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:9px;border:1px solid #3158c8;background:#3158c8;color:#fff;font-size:12px;font-weight:700;cursor:pointer}.ews-profile-photo-btn.secondary{background:#fff;color:#3158c8}.ews-profile-photo-help{font-size:12px;color:#667085;margin-top:8px}.ews-profile-picture-preview{display:flex;align-items:center;gap:14px}.ews-profile-picture-preview .ews-my-profile-avatar{width:76px;height:76px;border-radius:20px;font-size:24px}.ews-avatar-picker{margin-top:14px;border:1px solid #e4e7ec;border-radius:12px;padding:14px;background:#fcfcfd}.ews-avatar-picker-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.ews-avatar-filters{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.ews-avatar-filter{border:1px solid #e4e7ec;background:#fff;color:#475467;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}.ews-avatar-filter.active{background:#3158c8;color:#fff;border-color:#3158c8}.ews-avatar-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.ews-avatar-choice{position:relative;border:1px solid #e4e7ec;background:#fff;border-radius:12px;padding:4px;cursor:pointer;aspect-ratio:1}.ews-avatar-choice img{width:100%;height:100%;display:block}.ews-avatar-choice.selected{border:2px solid #3158c8;padding:3px}.ews-avatar-check{display:none;position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#3158c8;color:#fff;font-size:12px;line-height:20px}.ews-avatar-choice.selected .ews-avatar-check{display:block}.ews-photo-upload-panel{margin-top:10px;padding:10px;border:1px dashed #d0d5dd;border-radius:10px;background:#fff}.ews-avatar-picker[hidden],.ews-photo-upload-panel[hidden],.ews-profile-modal-backdrop[hidden]{display:none}.ews-password-form{display:grid;gap:12px}.ews-password-field{display:grid;gap:6px}.ews-password-field label{font-size:12px;font-weight:600;color:#344054}.ews-password-field input{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #d0d5dd;border-radius:9px;font-size:14px}.ews-password-requirements{background:#f8f9fc;border:1px solid #eaecf0;border-radius:10px;padding:11px 12px;font-size:12px;color:#667085}.ews-password-requirements strong{display:block;color:#344054;margin-bottom:5px}.ews-password-requirements ul{margin:0;padding-left:18px}.ews-password-submit{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}
-            @media(max-width:900px){.ews-my-profile-grid{grid-template-columns:1fr 1fr}.ews-my-week{grid-template-columns:repeat(5,minmax(110px,1fr));overflow:auto}.ews-my-profile-quote{display:none}.ews-my-profile-head{padding:18px}}
-            @media(max-width:700px){.ews-my-profile{width:100%;max-width:none;box-sizing:border-box}.ews-my-profile-head{align-items:flex-start;margin-bottom:12px;padding:14px;border-radius:15px;gap:10px}.ews-my-profile-head:after{width:150px;height:150px;right:-55px;top:-85px}.ews-my-profile-person{gap:10px;min-width:0}.ews-my-profile-avatar{width:60px;height:60px;min-width:60px;border-radius:16px;font-size:21px}.ews-profile-avatar-edit{width:23px;height:23px;font-size:10px;right:2px;bottom:2px}.ews-my-profile-title h2{font-size:21px;white-space:nowrap}.ews-my-profile-title p{display:none}.ews-my-profile-meta{gap:5px;margin-top:6px}.ews-my-profile-pill{padding:5px 8px;font-size:10px}.ews-my-profile-quote{display:none!important}.ews-my-profile-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.ews-my-profile-card{padding:9px 7px;display:block}.ews-my-profile-card-icon{width:32px;height:32px;border-radius:9px;font-size:16px;margin-bottom:6px}.ews-my-profile-card .label{font-size:8.5px;white-space:nowrap}.ews-my-profile-card .value{font-size:13px;line-height:1.2;white-space:nowrap;letter-spacing:-.02em}.ews-my-profile-card .sub{font-size:8.5px;white-space:nowrap}.ews-my-profile-card.attendance .value{font-size:12px}.ews-my-profile-card.hours .value{font-size:12px}.ews-my-profile-panel{border-radius:12px;margin-bottom:12px}.ews-section-head{padding:12px 14px}.ews-section-head h3{font-size:15px}.ews-section-head p{font-size:10px}.ews-section-head-icon{display:none}.ews-my-profile-body{padding:12px 14px}.ews-my-profile-fields{grid-template-columns:1fr;gap:11px}.ews-my-profile-field .v{font-size:13px}.ews-my-week{grid-template-columns:repeat(5,minmax(84px,1fr));gap:6px;overflow:auto;padding-bottom:2px}.ews-my-day{padding:10px 7px}.ews-my-day .s{font-size:12px}.ews-achievements-grid{grid-template-columns:1fr}.ews-leave-grid{grid-template-columns:1fr;gap:8px}.ews-profile-security{align-items:flex-start}.ews-profile-security-btn{white-space:nowrap}.ews-profile-modal-backdrop{padding:10px;align-items:flex-end}.ews-profile-modal{max-height:92vh;border-radius:16px 16px 10px 10px}.ews-profile-modal-body{padding:14px}.ews-avatar-filters{overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px}.ews-avatar-filter{flex:0 0 auto;white-space:nowrap}.ews-avatar-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.ews-profile-picture-preview .ews-my-profile-avatar{width:64px;height:64px}.ews-password-submit .ews-profile-photo-btn{flex:1}.ews-my-profile-table{min-width:620px}.ews-my-profile-table th,.ews-my-profile-table td{padding:9px 7px;font-size:10.5px}}
-            </style>
-            <div class="ews-my-profile">
-                <?php if($profile_updated): ?><div class="ews-profile-notice"><?php echo ($profile_updated==='reset'?'Profile picture reset to initials.':($profile_updated==='avatar'?'Avatar selected successfully.':'Profile picture updated successfully.')); ?></div><?php endif; ?>
-                <?php if($profile_error): ?><div class="ews-profile-notice error"><?php echo $profile_error==='size'?'Image must be 2 MB or smaller.':($profile_error==='type'?'Please upload a JPG, PNG, or WebP image.':'Could not upload the profile picture. Please try again.'); ?></div><?php endif; ?>
-                <?php if($password_updated): ?><div class="ews-profile-notice">Password updated successfully.</div><?php endif; ?>
-                <?php if($password_error): ?><div class="ews-profile-notice error"><?php echo $password_error==='current'?'Current password is incorrect.':($password_error==='mismatch'?'New passwords do not match.':($password_error==='weak'?'New password must be at least 8 characters and include uppercase, lowercase, number and special character.':($password_error==='same'?'New password must be different from the current password.':'Could not update your password. Please try again.'))); ?></div><?php endif; ?>
-
-                <div class="ews-my-profile-head">
-                    <div class="ews-my-profile-person">
-                        <div class="ews-my-profile-avatar" title="Edit profile picture">
-                            <?php if($display_image): ?><img src="<?php echo esc_url($display_image); ?>" alt="<?php echo esc_attr($emp->name); ?>"><?php else: ?><?php echo esc_html($initials); ?><?php endif; ?>
-                            <button type="button" class="ews-profile-avatar-edit" id="ews-open-profile-picture" aria-label="Edit profile picture">✎</button>
-                        </div>
-                        <div class="ews-my-profile-title"><h2><?php echo esc_html($emp->name); ?></h2><div class="ews-my-profile-meta"><span class="ews-my-profile-pill active">● Active</span><span class="ews-my-profile-pill">👥 <?php echo esc_html($team_label); ?></span></div></div><div class="ews-my-profile-quote"><strong>One Platform.<br>One Team. One Goal.</strong></div>
-                    </div>
-                </div>
-
-                <div class="ews-my-profile-grid">
-                    <div class="ews-my-profile-card planned"><div class="ews-my-profile-card-icon">⌂</div><div><div class="label">Today · Planned</div><div class="value"><?php echo esc_html($planned); ?></div><div class="sub">Schedule status</div></div></div>
-                    <div class="ews-my-profile-card attendance"><div class="ews-my-profile-card-icon">◷</div><div><div class="label">Today · Attendance</div><div class="value"><?php echo esc_html($today_result); ?></div><div class="sub"><?php echo $sign_in?'In '.esc_html(date_i18n('g:i A',strtotime($sign_in))): 'Not signed in'; ?></div></div></div>
-                    <div class="ews-my-profile-card hours"><div class="ews-my-profile-card-icon">▣</div><div><div class="label">Working Hours</div><div class="value"><?php echo esc_html($this->format_time_label($hours['start']).' – '.$this->format_time_label($hours['end'])); ?></div><div class="sub"><?php echo esc_html($shift?$shift['name']:'Company Default'); ?></div></div></div>
-                </div>
-
-                <section class="ews-my-profile-panel ews-info-panel"><div class="ews-section-head"><div><h3>My Information</h3><p>Your personal and work information</p></div><span class="ews-section-head-icon">♙</span></div><div class="ews-my-profile-body"><div class="ews-my-profile-fields">
-                    <div class="ews-my-profile-field"><div class="k">Name</div><div class="v"><?php echo esc_html($emp->name); ?></div></div>
-                    <div class="ews-my-profile-field"><div class="k">Domain</div><div class="v"><?php echo esc_html($emp->domain_name); ?></div></div>
-                    <div class="ews-my-profile-field"><div class="k">Email</div><div class="v"><?php echo esc_html($emp->email?:'—'); ?></div></div>
-                    <div class="ews-my-profile-field"><div class="k">Team</div><div class="v"><?php echo esc_html($team_label); ?></div></div>
-                    <div class="ews-my-profile-field"><div class="k">Supervisor</div><div class="v"><?php echo $supervisor?esc_html($supervisor->name):'—'; ?></div></div>
-                    <div class="ews-my-profile-field"><div class="k">Shift</div><div class="v"><?php echo esc_html($shift?$shift['name']:'Company Default'); ?></div></div>
-                </div></div></section>
-
-                <section class="ews-my-profile-panel ews-security-panel"><div class="ews-my-profile-body"><div class="ews-profile-security"><div class="ews-profile-security-main"><div class="ews-profile-security-icon">🔒</div><div><div class="ews-profile-security-title">Security</div><div class="ews-profile-security-sub">Keep your Workforce One account secure.</div></div></div><button type="button" class="ews-profile-security-btn" id="ews-open-password">Reset Password&nbsp; →</button></div></div></section>
-
-                <?php if($this->achievements_enabled()): $achievements=$this->employee_achievements((int)$emp->id); ?>
-                <section class="ews-my-profile-panel"><div class="ews-section-head"><div><h3>🏆 Achievements</h3><p>Your earned milestones</p></div><span class="ews-my-profile-section-link"><?php echo (int)count($achievements); ?> earned</span></div><div class="ews-my-profile-body"><div class="ews-achievements-grid"><?php if(!$achievements): ?><div class="ews-profile-photo-help">Your achievements will appear here as you reach milestones.</div><?php else: foreach($achievements as $a): ?><div class="ews-achievement-card"><div class="ews-achievement-icon <?php echo esc_attr($a->badge_style?:'circle'); ?>"><?php echo esc_html($a->icon); ?></div><div><div class="ews-achievement-name"><?php echo esc_html($a->name); ?></div><div class="ews-achievement-desc"><?php echo esc_html($a->description); ?></div><div class="ews-achievement-date">Earned <?php echo esc_html(date_i18n(get_option('date_format'),strtotime($a->earned_at))); ?></div></div></div><?php endforeach; endif; ?></div></div></section><?php endif; ?>
-
-                <section class="ews-my-profile-panel"><div class="ews-section-head"><div><h3>My Week</h3><p>Your schedule for this week</p></div><a class="ews-my-profile-section-link" href="<?php echo esc_url($this->app_view_url('schedule')); ?>">View Schedule&nbsp; →</a></div><div class="ews-my-profile-body"><div class="ews-my-week">
-                    <?php foreach($week_dates as $d): $r=$week_map[$d]??null; $status=$r?$r->status:'Not Set'; $status_class=strtolower(str_replace(' ','-',(string)$status)); $day_class=$d===$today?' current-day':''; ?><div class="ews-my-day <?php echo esc_attr($status_class.$day_class); ?>"><div class="d"><?php echo esc_html(date('D',strtotime($d))); ?><br><?php echo esc_html(date('d M',strtotime($d))); ?></div><div class="s"><?php echo esc_html($status); ?></div></div><?php endforeach; ?>
-                </div></div></section>
-
-                <?php if($leave_balances): ?><section class="ews-my-profile-panel"><div class="ews-section-head"><div><h3>Leave Balance · <?php echo esc_html($year); ?></h3><p>Your leave entitlement and usage</p></div><a class="ews-my-profile-section-link" href="<?php echo esc_url($this->app_view_url('leave')); ?>">View Leave&nbsp; →</a></div><div class="ews-my-profile-body"><div class="ews-leave-grid"><?php foreach($leave_balances as $lb): $pct=$lb['entitlement']>0?min(100,round(($lb['used']/$lb['entitlement'])*100)):0; ?><div class="ews-leave-card"><div class="ews-leave-top"><div><div class="k"><?php echo esc_html($lb['name']); ?></div><div class="v"><strong><?php echo esc_html(number_format($lb['available'],2)); ?></strong> available</div><div class="ews-my-profile-photo-note">Used <?php echo esc_html(number_format($lb['used'],2)); ?> · Pending <?php echo esc_html(number_format($lb['pending'],2)); ?></div></div><span class="ews-leave-percent"><?php echo esc_html($pct); ?>% used</span></div><div class="ews-leave-bar"><span style="width:<?php echo esc_attr($pct); ?>%"></span></div></div><?php endforeach; ?></div></div></section><?php endif; ?>
-
-                <section class="ews-my-profile-panel"><div class="ews-section-head"><div><h3>Recent Attendance</h3><p>Your latest attendance records</p></div><a class="ews-my-profile-section-link" href="<?php echo esc_url($this->app_view_url('time')); ?>">View All&nbsp; →</a></div><div class="ews-my-profile-body" style="padding:0"><div style="overflow:auto"><table class="ews-my-profile-table"><thead><tr><th>Date</th><th>Sign In</th><th>Sign Out</th><th>Total Hours</th><th>Status</th></tr></thead><tbody><?php if($recent): foreach($recent as $d=>$rr): $total='—'; $att_status='Incomplete'; if($rr['in']&&$rr['out']){$mins=max(0,round((strtotime($rr['out'])-strtotime($rr['in']))/60));$total=floor($mins/60).'h '.($mins%60).'m';$att_status='Present';} elseif(!$rr['in']){$att_status='No Sign In';} ?><tr><td><?php echo esc_html(date('F j, Y',strtotime($d))); ?></td><td><?php echo $rr['in']?esc_html(date_i18n('g:i A',strtotime($rr['in']))):'—'; ?></td><td><?php echo $rr['out']?esc_html(date_i18n('g:i A',strtotime($rr['out']))):'—'; ?></td><td><?php echo esc_html($total); ?></td><td><span class="ews-att-status <?php echo $att_status==='Present'?'present':'incomplete'; ?>"><?php echo esc_html($att_status); ?></span></td></tr><?php endforeach; else: ?><tr><td colspan="5" class="ews-my-profile-muted">No attendance records in the selected period.</td></tr><?php endif; ?></tbody></table></div></div></section>
-
-                <div class="ews-profile-modal-backdrop" id="ews-profile-picture-modal" hidden><div class="ews-profile-modal" role="dialog" aria-modal="true" aria-labelledby="ews-picture-title"><div class="ews-profile-modal-head"><h3 id="ews-picture-title">Profile Picture</h3><button type="button" class="ews-profile-modal-close" id="ews-close-profile-picture" aria-label="Close">×</button></div><div class="ews-profile-modal-body">
-                    <div class="ews-profile-picture-preview"><div class="ews-my-profile-avatar"><?php if($display_image): ?><img src="<?php echo esc_url($display_image); ?>" alt="<?php echo esc_attr($emp->name); ?>"><?php else: ?><?php echo esc_html($initials); ?><?php endif; ?></div><div><strong>Choose how you appear across Workforce One.</strong><div class="ews-profile-photo-help">Your profile picture belongs to your Workforce One employee profile, not the WordPress user profile.</div></div></div>
-                    <div class="ews-profile-modal-actions"><button type="button" class="ews-profile-photo-btn" id="ews-open-avatar-picker">Choose Avatar</button><button type="button" class="ews-profile-photo-btn secondary" id="ews-open-photo-upload">Upload Photo</button><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="ews_profile_photo_save"><input type="hidden" name="profile_photo_action" value="reset"><?php wp_nonce_field('ews_profile_photo_save'); ?><button type="submit" class="ews-profile-photo-btn secondary">Use Initials</button></form></div>
-                    <div id="ews-avatar-picker" class="ews-avatar-picker" hidden><div class="ews-avatar-picker-head"><div><strong>Choose your avatar</strong><div class="ews-profile-photo-help">Pick an avatar to use across Workforce One.</div></div></div><div class="ews-avatar-filters"><button type="button" class="ews-avatar-filter active" data-filter="all">All</button><button type="button" class="ews-avatar-filter" data-filter="Men">Men</button><button type="button" class="ews-avatar-filter" data-filter="Women">Women</button><button type="button" class="ews-avatar-filter" data-filter="Professional">Professional</button><button type="button" class="ews-avatar-filter" data-filter="Casual">Casual</button><button type="button" class="ews-avatar-filter" data-filter="Fun">Fun</button></div><div class="ews-avatar-grid"><?php foreach($catalog as $key=>$meta): ?><button type="button" class="ews-avatar-choice<?php echo $avatar_key===$key?' selected':''; ?>" data-avatar-key="<?php echo esc_attr($key); ?>" data-category="<?php echo esc_attr($meta['category']); ?>" data-style="<?php echo esc_attr($meta['style']); ?>" title="<?php echo esc_attr($meta['label']); ?>"><img src="<?php echo esc_url($this->profile_avatar_url($key)); ?>" alt="<?php echo esc_attr($meta['label']); ?>"><span class="ews-avatar-check">✓</span></button><?php endforeach; ?></div><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="ews-avatar-form"><input type="hidden" name="action" value="ews_profile_photo_save"><input type="hidden" name="profile_photo_action" value="avatar"><input type="hidden" name="avatar_key" id="ews-avatar-key" value="<?php echo esc_attr($avatar_key); ?>"><?php wp_nonce_field('ews_profile_photo_save'); ?><button type="submit" class="ews-profile-photo-btn" id="ews-save-avatar" <?php echo $avatar_key?'':'disabled'; ?>>Save Avatar</button></form></div>
-                    <div id="ews-photo-upload-panel" class="ews-photo-upload-panel" hidden><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" class="ews-profile-photo-actions"><input type="hidden" name="action" value="ews_profile_photo_save"><input type="hidden" name="profile_photo_action" value="upload"><?php wp_nonce_field('ews_profile_photo_save'); ?><input type="file" name="profile_photo" accept="image/jpeg,image/png,image/webp" required><button type="submit" class="ews-profile-photo-btn">Upload Photo</button></form><div class="ews-profile-photo-help">JPG, PNG or WebP · maximum 2 MB</div></div>
-                </div></div></div>
-
-                <div class="ews-profile-modal-backdrop" id="ews-password-modal" hidden><div class="ews-profile-modal" role="dialog" aria-modal="true" aria-labelledby="ews-password-title"><div class="ews-profile-modal-head"><h3 id="ews-password-title">Reset Password</h3><button type="button" class="ews-profile-modal-close" id="ews-close-password" aria-label="Close">×</button></div><div class="ews-profile-modal-body"><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="ews-password-form"><input type="hidden" name="action" value="ews_profile_password_change"><?php wp_nonce_field('ews_profile_password_change'); ?><div class="ews-password-field"><label for="ews-current-password">Current Password</label><input id="ews-current-password" name="current_password" type="password" autocomplete="current-password" required></div><div class="ews-password-field"><label for="ews-new-password">New Password</label><input id="ews-new-password" name="new_password" type="password" autocomplete="new-password" required></div><div class="ews-password-field"><label for="ews-confirm-password">Confirm New Password</label><input id="ews-confirm-password" name="confirm_password" type="password" autocomplete="new-password" required></div><div class="ews-password-requirements"><strong>Password requirements</strong><ul><li>At least 8 characters</li><li>One uppercase letter</li><li>One lowercase letter</li><li>One number</li><li>One special character</li></ul></div><div class="ews-password-submit"><button type="button" class="ews-profile-photo-btn secondary" id="ews-cancel-password">Cancel</button><button type="submit" class="ews-profile-photo-btn">Update Password</button></div></form></div></div></div>
-            </div>
-            <script>(function(){function modal(id,open,close){var m=document.getElementById(id);if(!m)return;document.getElementById(open)&&document.getElementById(open).addEventListener('click',function(){m.hidden=false;document.body.style.overflow='hidden';});document.getElementById(close)&&document.getElementById(close).addEventListener('click',function(){m.hidden=true;document.body.style.overflow='';});m.addEventListener('click',function(e){if(e.target===m){m.hidden=true;document.body.style.overflow='';}});}modal('ews-profile-picture-modal','ews-open-profile-picture','ews-close-profile-picture');modal('ews-password-modal','ews-open-password','ews-close-password');document.getElementById('ews-cancel-password')&&document.getElementById('ews-cancel-password').addEventListener('click',function(){document.getElementById('ews-password-modal').hidden=true;document.body.style.overflow='';});var picker=document.getElementById('ews-avatar-picker'),openA=document.getElementById('ews-open-avatar-picker'),photo=document.getElementById('ews-open-photo-upload'),upload=document.getElementById('ews-photo-upload-panel'),key=document.getElementById('ews-avatar-key'),save=document.getElementById('ews-save-avatar');openA&&openA.addEventListener('click',function(){picker.hidden=false;});photo&&photo.addEventListener('click',function(){upload.hidden=!upload.hidden;});document.querySelectorAll('.ews-avatar-filter').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.ews-avatar-filter').forEach(function(x){x.classList.remove('active');});b.classList.add('active');var f=b.getAttribute('data-filter');document.querySelectorAll('.ews-avatar-choice').forEach(function(c){var cat=c.getAttribute('data-category'),style=c.getAttribute('data-style');c.hidden=!(f==='all'||cat===f||style===f);});});});document.querySelectorAll('.ews-avatar-choice').forEach(function(c){c.addEventListener('click',function(){document.querySelectorAll('.ews-avatar-choice').forEach(function(x){x.classList.remove('selected');});c.classList.add('selected');key.value=c.getAttribute('data-avatar-key');save.disabled=false;});});})();</script>
-            <?php return ob_get_clean();
-        }
-
     public function login_page(){
             if(is_user_logged_in()){
                 $url=remove_query_arg(['login','loggedout','login_error']);
@@ -838,28 +728,6 @@ private function layout($title,$body){
         $ref=wp_get_referer();if(!$ref)$ref=home_url('/');wp_safe_redirect($ref);exit;
     }
 
-    private function smart_nudges_markup($emp){
-        // Sign In Reminder is push-only. It must never render as a Smart Nudge card.
-        $nudges=$this->smart_nudge_for_employee($emp);
-        if($nudges){
-            $nudges=array_values(array_filter($nudges,function($n){return ($n['kind']??'')!=='attendance';}));
-        }
-        if(!$nudges)return '';
-        ob_start(); ?>
-        <div class="ews-smart-nudges-card">
-            <div class="ews-smart-nudges-head"><div><span class="ews-personal-label">SMART NUDGES</span><h3>Things that need your attention</h3></div><span>🔔</span></div>
-            <div class="ews-smart-nudges-list">
-                <?php foreach($nudges as $n): $dismiss=wp_nonce_url(add_query_arg(['action'=>'ews_smart_nudge_dismiss','nudge_id'=>$n['id']],admin_url('admin-post.php')),'ews_smart_nudge_dismiss_'.$n['id']); ?>
-                <div class="ews-smart-nudge ews-smart-nudge-<?php echo esc_attr($n['kind']); ?>">
-                    <div class="ews-smart-nudge-icon"><?php echo esc_html($n['icon']); ?></div>
-                    <div class="ews-smart-nudge-body"><strong><?php echo esc_html($n['title']); ?></strong><p><?php echo esc_html($n['message']); ?></p><div class="ews-smart-nudge-actions"><a class="ews-btn" href="<?php echo esc_url($n['url']); ?>"><?php echo esc_html($n['action']); ?></a><a class="ews-smart-nudge-dismiss" href="<?php echo esc_url($dismiss); ?>">Dismiss</a></div></div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php return ob_get_clean();
-    }
-
     private function employee_moments_for_today(){
         global $wpdb;
         if(!(int)get_option('ews_employee_moments_enabled',1)) return [];
@@ -880,132 +748,6 @@ private function layout($title,$body){
         }
         return $out;
     }
-
-    private function employee_moments_markup(){
-        $moments=$this->employee_moments_for_today();
-        if(!$moments) return '';
-        ob_start(); ?>
-        <div class="ews-dash-card ews-moments-card">
-            <div class="ews-dash-card-head"><div><h3>✨ Today's Moments</h3><p>A little celebration for the team.</p></div><span>🎊</span></div>
-            <div class="ews-moments-list">
-                <?php foreach($moments as $m): ?><div class="ews-moment-item"><div class="ews-moment-icon"><?php echo esc_html($m['icon']); ?></div><div><strong><?php echo esc_html($m['title']); ?></strong><p><?php echo esc_html($m['message']); ?></p></div></div><?php endforeach; ?>
-            </div>
-        </div>
-        <?php return ob_get_clean();
-    }
-
-    private function dashboard_content(){
-            global $wpdb;
-            $unread=$this->notification_unread_count();
-
-            /* Managers/Admins get the workforce overview. */
-            if($this->can('ews_view_dashboard')){
-                $count=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->employees} WHERE active=1");
-                $today=current_time('Y-m-d');
-                $snapshot=$wpdb->get_row($wpdb->prepare(
-                    "SELECT
-                        SUM(status='Office') AS office_count,
-                        SUM(status='WFH') AS wfh_count,
-                        SUM(status IN ('Vacation','Business Trip')) AS leave_count
-                     FROM {$this->schedule}
-                     WHERE work_date=%s",
-                    $today
-                ));
-                $office=(int)($snapshot->office_count??0);
-                $wfh=(int)($snapshot->wfh_count??0);
-                $leave=(int)($snapshot->leave_count??0);
-                ob_start(); ?>
-                <div class="ews-dashboard">
-                    <div class="ews-dash-welcome">
-                        <div><div class="ews-dash-kicker"><?php esc_html_e('BA Team · Workforce One','workforce-one'); ?></div><h2><?php esc_html_e('Good to see you.','workforce-one'); ?></h2><p><?php echo esc_html(date_i18n('l, d F Y')); ?> · <?php esc_html_e('Here’s today’s workforce snapshot.','workforce-one'); ?></p></div>
-                    </div>
-                    <div class="ews-dash-stats">
-                        <div class="ews-dash-stat"><div class="ews-dash-stat-icon purple">👥</div><div><div class="n"><?php echo $count; ?></div><div class="l"><?php esc_html_e('Active Employees','workforce-one'); ?></div></div></div>
-                        <div class="ews-dash-stat"><div class="ews-dash-stat-icon green">🏢</div><div><div class="n"><?php echo $office; ?></div><div class="l"><?php esc_html_e('Office Today','workforce-one'); ?></div></div></div>
-                        <div class="ews-dash-stat"><div class="ews-dash-stat-icon blue">🏠</div><div><div class="n"><?php echo $wfh; ?></div><div class="l"><?php esc_html_e('WFH Today','workforce-one'); ?></div></div></div>
-                        <div class="ews-dash-stat"><div class="ews-dash-stat-icon orange">✈</div><div><div class="n"><?php echo $leave; ?></div><div class="l"><?php esc_html_e('Leave / Mission','workforce-one'); ?></div></div></div>
-                    </div>
-                    <?php echo $this->employee_moments_markup(); ?>
-                    <?php echo $this->employee_poll_markup(); ?>
-                    <div class="ews-dash-grid">
-                        <div class="ews-dash-card"><div class="ews-dash-card-head"><div><h3><?php esc_html_e('This Week','workforce-one'); ?></h3><p><?php $wfo_days=$this->working_days(); $wfo_names=$this->working_day_names(); echo esc_html($wfo_days?implode(' → ',array_map(function($d)use($wfo_names){return $wfo_names[$d]??'';},$wfo_days)):__('No working days configured','workforce-one')); ?></p></div><span>📅</span></div><div class="ews-dash-week-line"><div><strong><?php esc_html_e('Plan your week','workforce-one'); ?></strong><small><?php esc_html_e('Review schedules and keep your team aligned.','workforce-one'); ?></small></div><a class="ews-btn" href="<?php echo esc_url($this->app_view_url('schedule')); ?>"><?php esc_html_e('View Schedule','workforce-one'); ?></a></div></div>
-                        <div class="ews-dash-card"><div class="ews-dash-card-head"><div><h3><?php esc_html_e('Quick Actions','workforce-one'); ?></h3><p><?php esc_html_e('Common tasks','workforce-one'); ?></p></div><span>⚡</span></div><div class="ews-dash-actions"><a href="<?php echo esc_url($this->app_view_url('schedule')); ?>"><span>📅</span> <?php esc_html_e('Schedule','workforce-one'); ?></a><?php if($this->can('ews_manage_attendance')): ?><a href="<?php echo esc_url($this->app_view_url('attendance')); ?>"><span>📝</span> <?php esc_html_e('Attendance','workforce-one'); ?></a><?php endif; ?><a href="<?php echo esc_url($this->app_view_url('notifications')); ?>"><span>🔔</span> <?php esc_html_e('Notifications','workforce-one'); ?><?php if($unread): ?><b><?php echo absint($unread); ?></b><?php endif; ?></a></div></div>
-                    </div>
-                    <div class="ews-dash-card ews-dash-status"><div class="ews-dash-card-head"><div><h3><?php esc_html_e('Today at a glance','workforce-one'); ?></h3><p><?php esc_html_e('Current schedule distribution','workforce-one'); ?></p></div><span>✓</span></div><div class="ews-dash-bars"><div><div><span><?php esc_html_e('Office','workforce-one'); ?></span><b><?php echo $office; ?></b></div><i><em style="width:<?php echo $count?min(100,round(($office/$count)*100)):0; ?>%"></em></i></div><div><div><span><?php esc_html_e('WFH','workforce-one'); ?></span><b><?php echo $wfh; ?></b></div><i><em class="blue" style="width:<?php echo $count?min(100,round(($wfh/$count)*100)):0; ?>%"></em></i></div><div><div><span><?php esc_html_e('Leave / Mission','workforce-one'); ?></span><b><?php echo $leave; ?></b></div><i><em class="orange" style="width:<?php echo $count?min(100,round(($leave/$count)*100)):0; ?>%"></em></i></div></div></div>
-                </div>
-                </div>
-            <?php return ob_get_clean();
-            }
-
-            /* Employees get a personal dashboard. */
-            $emp=$this->current_employee();
-            if(!$emp){
-                return '<div class="ews-dashboard"><div class="ews-dash-card ews-employee-dashboard-empty"><h2>'.esc_html__('Employee account not linked','workforce-one').'</h2><p>'.esc_html__('Your WordPress account is not linked to an active employee record. Please contact your manager.','workforce-one').'</p></div></div>';
-            }
-            $today=current_time('Y-m-d');
-            $sch=$this->today_schedule_for_employee($emp->id);
-            $events=$this->today_events($emp->id);
-            $loc=method_exists($this,'ews_v321_employee_location')?$this->ews_v321_employee_location($emp->id):null;
-            if(!$loc && method_exists($this,'ews_default_location'))$loc=$this->ews_default_location();
-
-            $next=$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date>%s ORDER BY work_date ASC LIMIT 5",$emp->id,$today));
-            $first_name=trim(explode(' ',trim((string)$emp->name))[0]);
-            $status=$sch?$sch->status:'Not Set';
-            $is_working=$sch?$this->schedule_type_requires_sign_in($status):false;
-            if($this->company_leave_dates($today,$today))$is_working=false;
-            $sign_in=$events['sign_in']->event_at??($events['late_sign_in']->event_at??null);
-            $sign_out=$events['sign_out']->event_at??null;
-            $ot_summary=$this->overtime_attendance_summary((int)$emp->id,$today);
-            ob_start(); ?>
-            <div class="ews-dashboard ews-employee-dashboard">
-                <div class="ews-dash-welcome">
-                    <div><div class="ews-dash-kicker"><?php esc_html_e('BA Team · Workforce One','workforce-one'); ?></div><h2><?php printf(/* translators: %s: employee first name */esc_html__('Good to see you, %s.','workforce-one'),esc_html($first_name?:$emp->name)); ?></h2><p><?php echo esc_html(date_i18n('l, d F Y')); ?> · <?php esc_html_e('Here’s your day at a glance.','workforce-one'); ?></p></div>
-                </div>
-
-                <?php echo $this->employee_moments_markup(); ?>
-
-                <?php echo $this->employee_poll_markup(); ?>
-
-                <?php echo $this->smart_nudges_markup($emp); ?>
-
-                <div class="ews-employee-today">
-                    <div class="ews-employee-today-head">
-                        <div><span class="ews-personal-label"><?php esc_html_e('TODAY\'S SCHEDULE','workforce-one'); ?></span><h3><?php echo esc_html($status==='Not Set'?__('Not Set','workforce-one'):$status); ?></h3><p><?php echo $loc?esc_html($loc->name):esc_html__('Default location','workforce-one'); ?></p></div>
-                        <span class="ews-personal-status <?php echo $is_working?'working':'neutral'; ?>"><?php echo esc_html($is_working?__('Working day','workforce-one'):__('No work scheduled','workforce-one')); ?></span>
-                    </div>
-                    <div class="ews-personal-meta">
-                        <div><span><?php esc_html_e('Work Location','workforce-one'); ?></span><b><?php echo $loc?esc_html($loc->name):esc_html__('Default','workforce-one'); ?></b></div>
-                        <div><span><?php esc_html_e('Sign In','workforce-one'); ?></span><b><?php echo $sign_in?esc_html(date_i18n('h:i A',strtotime($sign_in))):esc_html__('Not recorded','workforce-one'); ?></b></div>
-                        <div><span><?php esc_html_e('Sign Out','workforce-one'); ?></span><b><?php echo $sign_out?esc_html(date_i18n('h:i A',strtotime($sign_out))):esc_html__('Not recorded','workforce-one'); ?></b></div>
-                    </div>
-                    <a class="ews-btn ews-personal-action" href="<?php echo esc_url($this->app_view_url('time')); ?>"><?php echo esc_html($sign_in?__('View Attendance','workforce-one'):__('Sign In / Out','workforce-one')); ?></a>
-                </div>
-
-                <div class="ews-dash-grid">
-                    <?php if($this->overtime_enabled() && ($ot_summary['approved_minutes']>0 || $ot_summary['actual_approved_minutes']>0 || $ot_summary['unapproved_extra_minutes']>0 || !empty($ot_summary['approved_requests']))): ?>
-                    <div class="ews-dash-card ews-overtime-attendance-card">
-                        <div class="ews-dash-card-head"><div><h3><?php esc_html_e('Overtime Today','workforce-one'); ?></h3><p><?php esc_html_e('Approved overtime and actual attendance','workforce-one'); ?></p></div><span>⏱️</span></div>
-                        <div class="ews-personal-meta">
-                            <div><span><?php esc_html_e('Approved OT','workforce-one'); ?></span><b><?php echo esc_html($this->format_duration_minutes($ot_summary['approved_minutes'])); ?></b></div>
-                            <div><span><?php esc_html_e('Actual OT','workforce-one'); ?></span><b><?php echo esc_html($this->format_duration_minutes($ot_summary['actual_approved_minutes'])); ?></b></div>
-                            <?php if($ot_summary['unapproved_extra_minutes']>0): ?><div><span><?php esc_html_e('Unapproved Extra','workforce-one'); ?></span><b><?php echo esc_html($this->format_duration_minutes($ot_summary['unapproved_extra_minutes'])); ?></b></div><?php endif; ?>
-                        </div>
-                        <?php if($ot_summary['sign_out']): ?><div style="margin-top:10px;color:#667085;font-size:13px"><?php esc_html_e('Sign Out:','workforce-one'); ?> <strong><?php echo esc_html(date_i18n('g:i A',strtotime($ot_summary['sign_out']))); ?></strong></div><?php endif; ?>
-                    </div>
-                    <?php endif; ?>
-                    <div class="ews-dash-card">
-                        <div class="ews-dash-card-head"><div><h3><?php esc_html_e('My Week','workforce-one'); ?></h3><p><?php esc_html_e('Your upcoming schedule','workforce-one'); ?></p></div><span>📅</span></div>
-                        <?php if($next): ?><div class="ews-my-week-list"><?php foreach($next as $r): ?><div><span><?php echo esc_html(date_i18n('D, d M',strtotime($r->work_date))); ?></span><b><?php echo esc_html($r->status); ?></b></div><?php endforeach; ?></div><?php else: ?><?php echo $this->ews_empty_state(__('No Upcoming Schedule','workforce-one'),__('No schedule has been set for your upcoming days.','workforce-one'),$this->app_view_url('schedule'),__('View Schedule','workforce-one')); ?><?php endif; ?>
-                        <a class="ews-dash-inline-link" href="<?php echo esc_url($this->app_view_url('schedule')); ?>"><?php esc_html_e('View full schedule','workforce-one'); ?> →</a>
-                    </div>
-                    <div class="ews-dash-card">
-                        <div class="ews-dash-card-head"><div><h3><?php esc_html_e('Quick Actions','workforce-one'); ?></h3><p><?php esc_html_e('What do you need?','workforce-one'); ?></p></div><span>⚡</span></div>
-                        <div class="ews-dash-actions"><a href="<?php echo esc_url($this->app_view_url('time')); ?>"><span>🕘</span> <?php esc_html_e('Sign In / Out','workforce-one'); ?></a><a href="<?php echo esc_url($this->app_view_url('notifications')); ?>"><span>🔔</span> <?php esc_html_e('Notifications','workforce-one'); ?><?php if($unread): ?><b><?php echo absint($unread); ?></b><?php endif; ?></a><a href="<?php echo esc_url($this->app_view_url('schedule')); ?>"><span>📅</span> <?php esc_html_e('My Schedule','workforce-one'); ?></a></div>
-                    </div>
-                </div>
-            </div>
-            <?php return ob_get_clean();
-        }
 
     private function week_dates(){
             $raw=sanitize_text_field(wp_unslash($_GET['week']??current_time('Y-m-d')));

@@ -48,4 +48,11 @@ final class InsightsTest extends TestCase
         $this->assertSame('x', I::validDate('tomorrow', 'x'));
         $this->assertSame('x', I::validDate('2026-2-3', 'x'));
     }
+
+    public function testSnapshot(): void
+    {
+        $plans = [['Office', 'attendance'], ['WFH', 'attendance'], ['Vacation', 'leave'], ['Training Course', 'business_trip'], ['', null], ['Field Visit', 'attendance']];
+        $this->assertSame(['office' => 1, 'wfh' => 1, 'away' => 2], I::snapshot($plans, false));
+        $this->assertSame(['office' => 0, 'wfh' => 0, 'away' => 2], I::snapshot($plans, true));
+    }
 }

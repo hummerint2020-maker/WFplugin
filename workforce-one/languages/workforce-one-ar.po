@@ -285,7 +285,7 @@ msgstr "يرجى التواصل مع المسؤول."
 msgid "Employee profile required"
 msgstr "يلزم وجود ملف موظف"
 
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:376
 #: includes/trait-presence.php:153
 #: templates/app/time.php:110
 msgid "Presence Verification"
@@ -417,19 +417,19 @@ msgstr "يحذف جميع الجداول والإعدادات والأدوار �
 msgid "Last cleanup run:"
 msgstr "آخر تنظيف:"
 
-#: includes/trait-frontend.php:1023
+#: includes/trait-frontend.php:765
 msgid "On Time"
 msgstr "في الموعد"
 
-#: includes/trait-frontend.php:1023
+#: includes/trait-frontend.php:765
 msgid "Late Arrival"
 msgstr "حضور متأخر"
 
-#: includes/trait-frontend.php:1030
+#: includes/trait-frontend.php:772
 msgid "Attendance tracking is disabled"
 msgstr "تسجيل الحضور غير مفعّل"
 
-#: includes/trait-frontend.php:1030
+#: includes/trait-frontend.php:772
 msgid "Attendance is not required for your employee profile."
 msgstr "الحضور غير مطلوب في ملفك الوظيفي."
 
@@ -449,7 +449,7 @@ msgstr "اسمح بالوصول إلى موقعك عندما يطلب المتص
 msgid "Allow Location / Try Again"
 msgstr "السماح بالموقع / حاول مرة أخرى"
 
-#: includes/trait-frontend.php:943
+#: templates/app/dashboard.php:145
 #: templates/app/time.php:44
 msgid "Employee account not linked"
 msgstr "حساب الموظف غير مرتبط"
@@ -469,20 +469,20 @@ msgid "Your schedule today is %s. Sign In / Sign Out is only available on workin
 msgstr "جدولك اليوم: %s. تسجيل الحضور والانصراف متاح في أيام العمل فقط."
 
 #. translators: %s: today's schedule status
-#: includes/trait-frontend.php:973
+#: templates/app/dashboard.php:106
 #: templates/app/time.php:45
 msgid "Not Set"
 msgstr "غير محدد"
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: includes/trait-frontend.php:978
+#: templates/app/dashboard.php:111
 #: templates/app/time.php:48
 #: templates/app/time.php:55
 #: templates/app/time.php:93
 msgid "Sign In"
 msgstr "تسجيل الحضور"
 
-#: includes/trait-frontend.php:979
+#: templates/app/dashboard.php:112
 #: templates/app/time.php:49
 #: templates/app/time.php:95
 msgid "Sign Out"
@@ -613,8 +613,8 @@ msgstr "لقد استخدمت كل الاستراحات المتاحة اليو�
 msgid "Today's Record"
 msgstr "سجل اليوم"
 
-#: includes/trait-frontend.php:978
-#: includes/trait-frontend.php:979
+#: templates/app/dashboard.php:111
+#: templates/app/dashboard.php:112
 #: templates/app/time.php:93
 #: templates/app/time.php:94
 #: templates/app/time.php:95
@@ -1072,99 +1072,99 @@ msgstr "الانصراف المبكر غير متاح"
 msgid "Please review the Early Leave details and try again."
 msgstr "يرجى مراجعة بيانات الانصراف المبكر والمحاولة مرة أخرى."
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 msgid "Dashboard"
 msgstr "الرئيسية"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
-#: includes/trait-frontend.php:932
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
+#: templates/app/dashboard.php:78
 msgid "Schedule"
 msgstr "الجدول"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:981
-#: includes/trait-frontend.php:1003
+#: includes/trait-frontend.php:221
+#: templates/app/dashboard.php:114
+#: templates/app/dashboard.php:139
 msgid "Sign In / Out"
 msgstr "الحضور / الانصراف"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 msgid "Leave"
 msgstr "الإجازات"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 #: templates/app/overtime.php:34
 msgid "Overtime"
 msgstr "العمل الإضافي"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 msgid "Tasks"
 msgstr "المهام"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
-#: includes/trait-frontend.php:932
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 #: templates/app/attendance-insights.php:51
+#: templates/app/dashboard.php:78
 msgid "Attendance"
 msgstr "الحضور"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 msgid "Reports"
 msgstr "التقارير"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 msgid "Attendance Insights"
 msgstr "تحليلات الحضور"
 
-#: includes/trait-frontend.php:220
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:376
 msgid "People"
 msgstr "الموظفون"
 
-#: includes/trait-frontend.php:245
+#: includes/trait-frontend.php:246
 msgid "Workforce One navigation"
 msgstr "قائمة Workforce One"
 
-#: includes/trait-frontend.php:259
-#: includes/trait-frontend.php:294
+#: includes/trait-frontend.php:260
+#: includes/trait-frontend.php:295
 msgid "Log out"
 msgstr "تسجيل الخروج"
 
-#: includes/trait-frontend.php:263
+#: includes/trait-frontend.php:264
 msgid "Mobile shortcut:"
 msgstr "اختصار الموبايل:"
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:263
+#: includes/trait-frontend.php:264
 #, php-format
 msgid "Use your browser menu → %s to keep Workforce One one tap away."
 msgstr "من قائمة المتصفح اختر ← %s ليكون Workforce One على بُعد لمسة واحدة."
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:263
+#: includes/trait-frontend.php:264
 msgid "Add to Home Screen"
 msgstr "إضافة إلى الشاشة الرئيسية"
 
-#: includes/trait-frontend.php:268
+#: includes/trait-frontend.php:269
 msgid "Workforce Management Platform"
 msgstr "منصة إدارة فرق العمل"
 
-#: includes/trait-frontend.php:268
+#: includes/trait-frontend.php:269
 msgid "One Platform. One Team. One Goal."
 msgstr "منصة واحدة. فريق واحد. هدف واحد."
 
-#: includes/trait-frontend.php:283
+#: includes/trait-frontend.php:284
 msgid "My Profile menu"
 msgstr "قائمة ملفي الشخصي"
 
-#: includes/trait-frontend.php:293
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:294
+#: includes/trait-frontend.php:376
 msgid "My Profile"
 msgstr "ملفي الشخصي"
 
@@ -1277,7 +1277,7 @@ msgstr "موافقة"
 msgid "Reject"
 msgstr "رفض"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 #: templates/app/leave.php:107
 #: templates/app/leave.php:121
 #: templates/app/overtime.php:79
@@ -1475,7 +1475,7 @@ msgstr "أيام العمل المحددة للأسبوع المختار. الأ
 msgid "Workforce"
 msgstr "فريق العمل"
 
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:376
 #: templates/app/attendance-insights.php:72
 msgid "Employees"
 msgstr "الموظفون"
@@ -1484,190 +1484,188 @@ msgstr "الموظفون"
 msgid "No employees in this category."
 msgstr "لا يوجد موظفون في هذه الفئة."
 
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:376
 msgid "Time"
 msgstr "الحضور"
 
-#: includes/trait-frontend.php:375
-#: includes/trait-frontend.php:932
-#: includes/trait-frontend.php:1003
+#: includes/trait-frontend.php:376
 #: includes/trait-notifications.php:686
 #: includes/trait-notifications.php:689
+#: templates/app/dashboard.php:36
 msgid "Notifications"
 msgstr "الإشعارات"
 
-#: includes/trait-frontend.php:375
+#: includes/trait-frontend.php:376
 msgid "Employee Profile"
 msgstr "ملف الموظف"
 
-#: includes/trait-frontend.php:920
-#: includes/trait-frontend.php:962
+#: templates/app/dashboard.php:41
 msgid "BA Team · Workforce One"
 msgstr "BA Team · Workforce One"
 
-#: includes/trait-frontend.php:920
+#: templates/app/dashboard.php:43
 msgid "Good to see you."
 msgstr "أهلًا بك."
 
-#: includes/trait-frontend.php:920
+#: templates/app/dashboard.php:43
 msgid "Here’s today’s workforce snapshot."
 msgstr "هذه نظرة سريعة على فريق العمل اليوم."
 
-#: includes/trait-frontend.php:923
+#: templates/app/dashboard.php:54
 msgid "Active Employees"
 msgstr "الموظفون النشطون"
 
-#: includes/trait-frontend.php:924
+#: templates/app/dashboard.php:55
 msgid "Office Today"
 msgstr "في المكتب اليوم"
 
-#: includes/trait-frontend.php:925
+#: templates/app/dashboard.php:56
 msgid "WFH Today"
 msgstr "من المنزل اليوم"
 
-#: includes/trait-frontend.php:926
-#: includes/trait-frontend.php:934
+#: templates/app/dashboard.php:57
+#: templates/app/dashboard.php:83
 msgid "Leave / Mission"
 msgstr "إجازة / مأمورية"
 
-#: includes/trait-frontend.php:931
+#: templates/app/dashboard.php:74
 msgid "This Week"
 msgstr "هذا الأسبوع"
 
-#: includes/trait-frontend.php:931
+#: templates/app/dashboard.php:74
 msgid "No working days configured"
 msgstr "لم يتم تحديد أيام عمل"
 
-#: includes/trait-frontend.php:931
+#: templates/app/dashboard.php:75
 msgid "Plan your week"
 msgstr "خطط لأسبوعك"
 
-#: includes/trait-frontend.php:931
+#: templates/app/dashboard.php:75
 msgid "Review schedules and keep your team aligned."
 msgstr "راجع الجداول وحافظ على تنسيق فريقك."
 
-#: includes/trait-frontend.php:931
-#: includes/trait-frontend.php:998
+#: templates/app/dashboard.php:75
+#: templates/app/dashboard.php:133
 msgid "View Schedule"
 msgstr "عرض الجدول"
 
-#: includes/trait-frontend.php:932
-#: includes/trait-frontend.php:1002
+#: templates/app/dashboard.php:77
+#: templates/app/dashboard.php:138
 msgid "Quick Actions"
 msgstr "إجراءات سريعة"
 
-#: includes/trait-frontend.php:932
+#: templates/app/dashboard.php:77
 msgid "Common tasks"
 msgstr "المهام الشائعة"
 
-#: includes/trait-frontend.php:934
+#: templates/app/dashboard.php:81
 msgid "Today at a glance"
 msgstr "اليوم في لمحة"
 
-#: includes/trait-frontend.php:934
+#: templates/app/dashboard.php:81
 msgid "Current schedule distribution"
 msgstr "توزيع الجدول الحالي"
 
-#: includes/trait-frontend.php:934
+#: templates/app/dashboard.php:83
 msgid "Office"
 msgstr "المكتب"
 
-#: includes/trait-frontend.php:934
+#: templates/app/dashboard.php:83
 msgid "WFH"
 msgstr "من المنزل"
 
-#: includes/trait-frontend.php:943
+#: templates/app/dashboard.php:145
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr "حسابك غير مرتبط بسجل موظف نشط. يرجى التواصل مع مديرك."
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:962
+#: templates/app/dashboard.php:46
 #, php-format
 msgid "Good to see you, %s."
 msgstr "أهلًا بك يا %s."
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:962
+#: templates/app/dashboard.php:46
 msgid "Here’s your day at a glance."
 msgstr "هذا يومك في لمحة."
 
-#: includes/trait-frontend.php:973
+#: templates/app/dashboard.php:106
 msgid "TODAY'S SCHEDULE"
 msgstr "جدول اليوم"
 
-#: includes/trait-frontend.php:973
+#: templates/app/dashboard.php:106
 msgid "Default location"
 msgstr "الموقع الافتراضي"
 
-#: includes/trait-frontend.php:974
+#: templates/app/dashboard.php:107
 msgid "Working day"
 msgstr "يوم عمل"
 
-#: includes/trait-frontend.php:974
+#: templates/app/dashboard.php:107
 msgid "No work scheduled"
 msgstr "لا يوجد عمل مجدول"
 
-#: includes/trait-frontend.php:977
+#: templates/app/dashboard.php:110
 msgid "Work Location"
 msgstr "موقع العمل"
 
-#: includes/trait-frontend.php:977
+#: templates/app/dashboard.php:110
 msgid "Default"
 msgstr "افتراضي"
 
-#: includes/trait-frontend.php:981
+#: templates/app/dashboard.php:114
 msgid "View Attendance"
 msgstr "عرض الحضور"
 
-#: includes/trait-frontend.php:987
+#: templates/app/dashboard.php:120
 msgid "Overtime Today"
 msgstr "العمل الإضافي اليوم"
 
-#: includes/trait-frontend.php:987
+#: templates/app/dashboard.php:120
 msgid "Approved overtime and actual attendance"
 msgstr "العمل الإضافي المعتمد والحضور الفعلي"
 
-#: includes/trait-frontend.php:989
+#: templates/app/dashboard.php:122
 msgid "Approved OT"
 msgstr "إضافي معتمد"
 
-#: includes/trait-frontend.php:990
+#: templates/app/dashboard.php:123
 msgid "Actual OT"
 msgstr "إضافي فعلي"
 
-#: includes/trait-frontend.php:991
+#: templates/app/dashboard.php:124
 msgid "Unapproved Extra"
 msgstr "وقت إضافي غير معتمد"
 
-#: includes/trait-frontend.php:993
+#: templates/app/dashboard.php:126
 msgid "Sign Out:"
 msgstr "الانصراف:"
 
-#: includes/trait-frontend.php:997
+#: templates/app/dashboard.php:130
 msgid "My Week"
 msgstr "أسبوعي"
 
-#: includes/trait-frontend.php:997
+#: templates/app/dashboard.php:130
 msgid "Your upcoming schedule"
 msgstr "جدولك القادم"
 
-#: includes/trait-frontend.php:998
+#: templates/app/dashboard.php:133
 msgid "No Upcoming Schedule"
 msgstr "لا يوجد جدول قادم"
 
-#: includes/trait-frontend.php:998
+#: templates/app/dashboard.php:133
 msgid "No schedule has been set for your upcoming days."
 msgstr "لم يتم تحديد جدول لأيامك القادمة."
 
-#: includes/trait-frontend.php:999
+#: templates/app/dashboard.php:135
 msgid "View full schedule"
 msgstr "عرض الجدول الكامل"
 
-#: includes/trait-frontend.php:1002
+#: templates/app/dashboard.php:138
 msgid "What do you need?"
 msgstr "ماذا تحتاج؟"
 
-#: includes/trait-frontend.php:1003
+#: templates/app/dashboard.php:139
 msgid "My Schedule"
 msgstr "جدولي"
 
@@ -1725,31 +1723,31 @@ msgstr "المتاح: %s"
 msgid "No balance deduction"
 msgstr "بدون خصم من الرصيد"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Approved"
 msgstr "معتمد"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Rejected"
 msgstr "مرفوض"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Cancelled"
 msgstr "ملغى"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Accepted"
 msgstr "مقبول"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Completed"
 msgstr "مكتمل"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Expired"
 msgstr "منتهي"
 
-#: includes/trait-frontend.php:1017
+#: includes/trait-frontend.php:759
 msgid "Verified"
 msgstr "تم التحقق"
 
@@ -1799,3 +1797,9 @@ msgstr "لا توجد طلبات إلغاء"
 #: templates/app/overtime.php:48
 msgid "Why is overtime required?"
 msgstr "لماذا تحتاج إلى العمل الإضافي؟"
+
+#: templates/app/dashboard.php:48
+#: templates/app/dashboard.php:106
+#: templates/app/dashboard.php:132
+msgid "General Leave"
+msgstr "إجازة رسمية"

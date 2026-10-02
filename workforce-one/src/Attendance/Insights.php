@@ -39,6 +39,25 @@ final class Insights
         return 'Pending';
     }
 
+    /**
+     * Today's workforce snapshot (employee app dashboard): Office / WFH / Leave + missions.
+     * On a company holiday nobody is in the Office or working from home.
+     * @param array<int,array{0:string,1:?string}> $plans [status, attendance rule] per employee
+     * @return array{office:int,wfh:int,away:int}
+     */
+    public static function snapshot(array $plans, bool $holiday): array
+    {
+        $out = ['office' => 0, 'wfh' => 0, 'away' => 0];
+        foreach ($plans as [$status, $rule]) {
+            $category = self::planCategory($status, $rule);
+            if ($category === 'Leave' || $category === 'Business Trip') $out['away']++;
+            elseif ($holiday) continue;
+            elseif ($category === 'Office') $out['office']++;
+            elseif ($category === 'WFH') $out['wfh']++;
+        }
+        return $out;
+    }
+
     /** A real Y-m-d date (2026-02-31 is not), otherwise $fallback. */
     public static function validDate(string $raw, string $fallback): string
     {

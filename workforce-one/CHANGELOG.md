@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.20
+### Fixed (employee app → Dashboard)
+- **The managers' snapshot counts the right people.** Archived employees' schedules were counted
+  in "Office Today"; Training Course and other mission/leave types were left out of
+  "Leave / Mission" (only Vacation and Business Trip counted); a department manager saw the whole
+  company. Now: active employees of the manager's department, every leave and mission type.
+- On a company holiday nobody is counted in the Office or at home, and the holiday is named.
+- The managers' dashboard closed one `<div>` too many, breaking the page around it.
+- The employee's "Today's Schedule" and "My Week" show a company holiday as General Leave
+  (they showed the planned Office/WFH and "Working day").
+
+### Fixed (employee app → My Profile)
+- "View Leave" opened the Dashboard (it linked to a view that does not exist).
+- Recent Attendance showed every Sign In as "Present" even when late, and an older-style late
+  Sign In as "No Sign In"; the result now follows the employee's shift.
+- On a company holiday "Today" and "My Week" show General Leave (not "Not Signed In").
+- Leave balances show 19.5 instead of 19.50; initials follow the admin profile (first + last name).
+
+### Internal
+- Dashboard moved to `includes/trait-dashboard-view.php` + `templates/app/dashboard.php` (the
+  snapshot rule is `Insights::snapshot()`, unit tested); My Profile to `includes/trait-my-profile.php`
+  + `templates/app/my-profile.php`, its styles to `assets/css/workforce-one.css` (+ RTL) and its
+  script to `assets/js/my-profile.js`. Behaviour is pinned by `tests/e2e_dashboard_view.py` and
+  `tests/e2e_my_profile.py`. `includes/trait-frontend.php` is now 817 lines (from 2061).
+
 ## 3.31.19
 ### Fixed (employee app → Leave and Overtime)
 - **Managers' Leave page layout.** With no cancellation requests waiting, the "Cancellation Requests"
