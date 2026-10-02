@@ -18,14 +18,15 @@ final class AttendanceGridTest extends TestCase
         $this->assertSame(['class' => 'trip', 'label' => '✈ Training Course', 'detail' => ''], GridRules::badge('Training Course'));
     }
 
-    public function testSaveMessageReportsConflictsAndInvalidChanges(): void
+    public function testSaveMessageReportsInvalidChanges(): void
     {
         $this->assertNull(GridRules::message([]));
         $this->assertSame(['text' => 'Saved 2 schedule record(s). Skipped empty cells: 1.', 'error' => false], GridRules::message(['grid_saved' => '2', 'grid_skipped' => '1']));
         $m = GridRules::message(['grid_saved' => '0', 'grid_conflict' => '1', 'grid_invalid' => '2']);
         $this->assertTrue($m['error']);
-        $this->assertStringContainsString('1 change(s) were not saved because the schedule was changed by someone else', $m['text']);
         $this->assertStringContainsString('2 change(s) could not be saved', $m['text']);
+        // Conflicts have their own pop-up in the app layout.
+        $this->assertStringNotContainsString('someone else', $m['text']);
         $this->assertSame('Imported 3 row(s); rejected 0.', GridRules::message(['imported' => '3'])['text']);
     }
 }

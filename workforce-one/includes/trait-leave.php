@@ -53,10 +53,6 @@ trait EWS_Leave_Trait {
             return WorkingDays::count((string)$start,(string)$end,$this->working_days());
         }
 
-    private function vacation_date_is_future($date){
-            return RequestRules::isFutureDate((string)$date,current_time('Y-m-d'));
-        }
-
     private function leave_redirect($args=[]){
             $url=wp_get_referer(); if(!$url||strpos($url,'admin-post.php')!==false)$url=home_url('/');
             $url=remove_query_arg(['leave_sent','leave_error','leave_done','leave_cancel_sent','early_error','break_success','break_error','overtime_sent','overtime_error','time_success','time_error','saved','imported','grid_saved','time_reset','time_saved'],$url);

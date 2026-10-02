@@ -231,51 +231,6 @@ trait EWS_Core_Trait {
             ) {$c};");
         }
 
-        private function vacation_overlap($employee_id,$start,$end){
-            global $wpdb;$table=$wpdb->prefix.'ews_vacation_requests';
-            return (bool)$wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$table} WHERE employee_id=%d AND status IN ('Pending','Approved') AND start_date<=%s AND end_date>=%s LIMIT 1",
-                $employee_id,$end,$start
-            ));
-        }
-
-        private function vacation_redirect($args=[]){
-            $url=wp_get_referer();if(!$url||strpos($url,'admin-post.php')!==false)$url=home_url('/');
-            $url=remove_query_arg(['vacation_sent','vacation_error','vacation_done','vacation_rejected','leave_sent','leave_error','early_error','break_success','break_error','overtime_sent','overtime_error','time_success','time_error','saved','imported','grid_saved','time_reset','time_saved'],$url);
-            $url=add_query_arg('ews_view','vacation',$url);if($args)$url=add_query_arg($args,$url);
-            wp_safe_redirect($url);exit;
-        }
-
-        public function vacation_request_create(){
-            if(!is_user_logged_in())wp_die('You must be logged in.');
-            check_admin_referer('ews_vacation_request_create');
-            $emp=$this->current_employee();if(!$emp)$this->vacation_redirect(['vacation_error'=>'employee']);
-            $start=sanitize_text_field(wp_unslash($_POST['start_date']??''));$end=sanitize_text_field(wp_unslash($_POST['end_date']??''));
-            $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
-            if(!$this->vacation_date_is_future($start)||!$this->vacation_date_is_future($end)||$end<$start)$this->vacation_redirect(['vacation_error'=>'date']);
-            $days=$this->vacation_working_days_count($start,$end);
-            if($days<1)$this->vacation_redirect(['vacation_error'=>'no_working_days']);
-            $this->ensure_vacation_schema();
-            if($this->vacation_overlap((int)$emp->id,$start,$end))$this->vacation_redirect(['vacation_error'=>'overlap']);
-            global $wpdb;$table=$wpdb->prefix.'ews_vacation_requests';
-            $ok=$wpdb->insert($table,['employee_id'=>(int)$emp->id,'start_date'=>$start,'end_date'=>$end,'requested_days'=>$days,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'requested_at'=>current_time('mysql')],['%d','%s','%s','%d','%s','%s','%d','%s']);
-            if($ok===false)$this->vacation_redirect(['vacation_error'=>'save']);
-            $id=(int)$wpdb->insert_id;
-            $this->audit('vacation_request','vacation_request',$id,$emp->name.' requested '.$days.' working day(s) from '.$start.' to '.$end);
-            $managers=get_users(['capability'=>'ews_manage_settings','fields'=>['ID']]);
-            foreach($managers as $m){
-                if((int)$m->ID===(int)get_current_user_id())continue;
-                $msg=$emp->name.' requested '.$days.' working day(s) from '.$start.' to '.$end.'. Approval is required.';
-                $this->notify_user((int)$m->ID,'Vacation Request',$msg,'vacation','vacation',$id);
-                if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$m->ID,'Vacation Request',$msg,'vacation',$id);
-            }
-            $this->vacation_redirect(['vacation_sent'=>$days]);
-        }
-
-        public function vacation_request_respond(){
-            if(!$this->can('ews_manage_settings'))wp_die('Access denied');check_admin_referer('ews_vacation_respond');$id=absint($_POST['request_id']??0);$decision=sanitize_key($_POST['decision']??'');if(!$id||!in_array($decision,['approve','reject'],true))wp_die('Invalid vacation decision.');$this->ensure_vacation_schema();global $wpdb;$table=$wpdb->prefix.'ews_vacation_requests';$req=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d LIMIT 1",$id));if(!$req)wp_die('Vacation request not found.');if($req->status!=='Pending')$this->vacation_redirect(['vacation_done'=>1]);$emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",(int)$req->employee_id));if(!$emp)$this->vacation_redirect(['vacation_error'=>'employee']);$now=current_time('mysql');if($wpdb->query('START TRANSACTION')===false)$this->vacation_redirect(['vacation_error'=>'save']);$ok=$wpdb->update($table,['status'=>$decision==='approve'?'Approved':'Rejected','reviewed_by'=>get_current_user_id(),'reviewed_at'=>$now],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);if($ok!==1){$wpdb->query('ROLLBACK');$this->vacation_redirect(['vacation_error'=>$ok===false?'save':'done']);}if($decision==='approve'){for($ts=strtotime($req->start_date);$ts<=strtotime($req->end_date);$ts=strtotime('+1 day',$ts)){$date=date('Y-m-d',$ts);if(!$this->is_working_day($date))continue;$existing=$this->schedule_for_employee_date((int)$emp->id,$date);if($existing)$q=$wpdb->update($this->schedule,['status'=>'Vacation','note'=>'Approved vacation request #'.$id,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>(int)$existing->id],['%s','%s','%d','%s'],['%d']);else$q=$wpdb->insert($this->schedule,['employee_id'=>(int)$emp->id,'work_date'=>$date,'status'=>'Vacation','note'=>'Approved vacation request #'.$id,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['%d','%s','%s','%s','%d','%s']);if($q===false){$wpdb->query('ROLLBACK');$this->vacation_redirect(['vacation_error'=>'save']);}}}if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->vacation_redirect(['vacation_error'=>'save']);}$msg=$decision==='approve'?'Your vacation request from '.$req->start_date.' to '.$req->end_date.' ('.$req->requested_days.' working day(s)) has been approved.':'Your vacation request from '.$req->start_date.' to '.$req->end_date.' has been rejected.';$this->audit($decision==='approve'?'vacation_approved':'vacation_rejected','vacation_request',$id,ucfirst($decision).' by '.wp_get_current_user()->display_name);if($emp->wp_user_id){$title=$decision==='approve'?'Vacation Approved':'Vacation Rejected';$this->notify_user((int)$emp->wp_user_id,$title,$msg,'vacation','vacation',$id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,$title,$msg,'vacation',$id);}$this->vacation_redirect($decision==='approve'?['vacation_done'=>1]:['vacation_rejected'=>1]);
-        }
-
 private function ensure_break_schema(){
         if($this->ews_schema_is_current())return;
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';

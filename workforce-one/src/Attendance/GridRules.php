@@ -44,8 +44,8 @@ final class GridRules
         if (isset($q['saved'])) return ['text' => 'Attendance saved.', 'error' => false];
         if (!isset($q['grid_saved'])) return null;
         $text = 'Saved ' . $n('grid_saved') . ' schedule record(s). Skipped empty cells: ' . $n('grid_skipped') . '.';
-        if ($n('grid_conflict')) $text .= ' ' . $n('grid_conflict') . ' change(s) were not saved because the schedule was changed by someone else after you opened this page. Review the current values and try again.';
+        // Conflicts (grid_conflict) get their own pop-up from the app layout (ux_notice_from_query()).
         if ($n('grid_invalid')) $text .= ' ' . $n('grid_invalid') . ' change(s) could not be saved (unknown status, or an employee you cannot manage).';
-        return ['text' => $text, 'error' => $n('grid_conflict') > 0 || $n('grid_invalid') > 0];
+        return ['text' => $text, 'error' => $n('grid_invalid') > 0];
     }
 }

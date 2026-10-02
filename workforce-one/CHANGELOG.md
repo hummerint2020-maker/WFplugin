@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.31.19
+### Fixed (employee app → Leave and Overtime)
+- **Managers' Leave page layout.** With no cancellation requests waiting, the "Cancellation Requests"
+  card was never closed, so the cards after it (Pending Early Leave) were drawn inside it. Empty
+  manager lists now say so ("No Pending Leave Requests", "No Cancellation Requests").
+- **Results were shown twice.** Every result (leave sent, errors, Early Leave errors, overtime sent…)
+  appeared both as the layout's pop-up and again inside the page — an Early Leave error opened two
+  dialogs. Only the pop-up remains.
+- "View all leave requests" appeared with exactly six requests (nothing more to show); it now
+  appears only when there are more.
+- The Early Leave allowance showed hours like "1.6666666666667"; it now shows "1.67".
+- Durations read "1 hour 30 min" in English only; they now use the translated "1 h 30 min" also
+  used by the Overtime form. The working-day counter, "working day(s)", "day(s)", the approval
+  "Level" and the overtime reason placeholder are translated too (Arabic added).
+- Cancelled leave requests are shown in grey instead of red (as if rejected).
+
+### Correction (3.31.17)
+- The 3.31.17 notes said conflicting grid changes were not reported; they were (the "Schedule
+  Conflict" pop-up). The inline sentence added for them duplicated that pop-up and was removed.
+
+### Internal
+- Leave and Overtime views moved to `includes/trait-leave-view.php`, HTML to `templates/app/leave.php`
+  and `templates/app/overtime.php`, styles to `assets/css/workforce-one.css` (+ RTL), scripts to
+  `assets/js/leave.js` and `assets/js/overtime.js`; number/duration formats to
+  `src/Support/Format.php` (unit tested). Behaviour is pinned by `tests/e2e_leave_view.py`.
+- Removed the unused pre-3.x `vacation_request_create()` / `vacation_request_respond()` handlers
+  (the hooks have pointed to the Leave module for a long time).
+
 ## 3.31.18
 ### Fixed (employee app → Attendance Insights)
 The app's Attendance Insights page had its own copy of the calculations and disagreed with the
@@ -20,11 +48,11 @@ wp-admin page (fixed in 3.31.15). It now uses the same code, so:
 
 ## 3.31.17
 ### Fixed (employee app → Attendance, the managers' grid)
-- **A change lost to another manager is now reported.** When two managers edit the same cell, the
-  later save is (rightly) not applied, but the page still said only "Saved 0 schedule record(s)".
-  It now says how many changes were not saved because someone else changed the schedule, and how
-  many were refused (unknown status, or an employee you cannot manage). The conflict message also
-  no longer reappears after the next successful save.
+- **Refused changes are now reported.** A change with an unknown status, or for an employee the
+  manager may not manage, was dropped while the page still said "Saved 0 schedule record(s)";
+  it now says how many changes could not be saved. (Changes lost to another manager's newer edit
+  were already reported by the layout's "Schedule Conflict" pop-up; that pop-up no longer
+  reappears after the next successful save.)
 - **Department managers can no longer change another department through the no-JavaScript form**
   (the normal grid already refused it).
 - A Training Course or other business-trip type showed "— Not scheduled"; it now shows its name.

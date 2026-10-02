@@ -110,7 +110,7 @@ check('...and audited', q("SELECT details FROM {p}ews_audit_log WHERE action='at
 qs = grid_save(adm, [{'employee': ctx['ali'], 'day': idx, 'status': 'Vacation', 'original': 'Office'}])
 check('a stale change (someone saved in between) is not applied', qs.get('grid_conflict') == '1' and q("SELECT status FROM {p}ews_schedule WHERE employee_id=%d AND work_date='%s'" % (ctx['ali'], DAY)) == [{'status': 'WFH'}], qs)
 st, page, _ = adm.req(PAGE + '&' + urllib.parse.urlencode(qs))
-check('...and the manager is told so', 'changed by someone else' in page, re.findall(r'class="ews-notice[^"]*">([^<]*)', page))
+check('...and the manager is told so (the layout\'s Schedule Conflict pop-up)', 'Schedule Conflict' in page and 'another manager changed the same cell' in page, re.findall(r'class="ews-notice[^"]*">([^<]*)', page))
 conflict_url = PAGE + '&' + urllib.parse.urlencode(qs)
 qs = grid_save(adm, [{'employee': ctx['ali'], 'day': idx, 'status': 'Vacation', 'original': 'WFH'}], referer=conflict_url)
 check('the next save does not repeat the old conflict message', qs.get('grid_saved') == '1' and 'grid_conflict' not in qs, qs)
