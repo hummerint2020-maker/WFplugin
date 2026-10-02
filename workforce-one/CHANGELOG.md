@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.22
+### Fixed (employee app → login and frame)
+- **A wrong password now stays in the app.** Nothing ever sent a failed login back to the app's login
+  page, so employees landed on the plain WordPress login screen and the app's "The username or
+  password is incorrect" message never appeared. A failed login from the app's form now returns
+  to it with that message.
+- **"You have been logged out successfully" now appears.** Log out links returned to the app
+  without the "logged out" flag the login page waits for.
+- A page you may not open (e.g. Attendance for an employee) showed the Dashboard but kept the
+  other page's title; the title now matches what is shown.
+- The menu highlights People on a colleague's profile, and the right item when the address uses
+  capitals (e.g. `ews_view=Schedule`).
+- The profile menu initials use first and last name, as on the profiles.
+
+### Internal
+- The frame moved to `includes/trait-app-layout.php` (which view is shown and who may open it is
+  now one list, used by both the page and the menu), HTML to `templates/app/layout.php` and
+  `templates/app/login.php`, the login styles to `assets/css/workforce-one.css` (+ RTL), and the
+  frame's inline script (profile menu, notices) to `assets/js/workforce-one.js`. Behaviour is
+  pinned by `tests/e2e_layout.py`. `includes/trait-frontend.php` is now 441 lines (from 2061): the
+  face REST routes, small shared helpers, asset registration, Smart Nudges and the Sign In view.
+
 ## 3.31.21
 ### Fixed (employee app → People and a colleague's profile)
 - **Profiles broke when "Show supervisor" was on.** The page asked the database for a
