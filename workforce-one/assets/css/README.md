@@ -14,4 +14,5 @@ npx rtlcss@4 assets/css/admin-notifications.css assets/css/admin-notifications-r
 npx rtlcss@4 assets/css/admin-achievements.css assets/css/admin-achievements-rtl.css
 npx rtlcss@4 assets/css/admin-smart-nudges.css assets/css/admin-smart-nudges-rtl.css
 npx rtlcss@4 assets/css/admin-employee-profile.css assets/css/admin-employee-profile-rtl.css
+npx rtlcss@4 assets/css/admin-attendance-insights.css assets/css/admin-attendance-insights-rtl.css
 ```

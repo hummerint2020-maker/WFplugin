@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.14
+ * Version: 3.31.15
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.14');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.15');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -38,6 +38,7 @@ require_once __DIR__ . '/includes/trait-achievements-admin.php';
 require_once __DIR__ . '/includes/trait-engagement-admin.php';
 require_once __DIR__ . '/includes/trait-employee-profile.php';
 require_once __DIR__ . '/includes/trait-admin-dashboard.php';
+require_once __DIR__ . '/includes/trait-attendance-insights.php';
 require_once __DIR__ . '/includes/trait-frontend.php';
 require_once __DIR__ . '/includes/trait-pwa.php';
 require_once __DIR__ . '/includes/trait-reports.php';
@@ -57,7 +58,7 @@ require_once __DIR__ . '/includes/trait-presence.php';
 require_once __DIR__ . '/includes/trait-privacy.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
+    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 

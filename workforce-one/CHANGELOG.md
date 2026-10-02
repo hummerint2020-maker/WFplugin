@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.15
+### Fixed (wp-admin → Attendance Insights)
+- **Clicking a count always shows the employees behind it.** The overview tiles, the Workforce
+  Distribution rows and the "Review" buttons did nothing; only the weekly table and the attendance
+  buttons opened the list. "Review" now opens the employee's profile.
+- **Vacation and other leave types are planned as Leave** (the overview tiles counted them as
+  "Not Set" while the card above said "Leave"), custom schedule types get their own "Other" row,
+  and business-trip types count as Business Trip.
+- Employees with attendance tracking switched off are left out (they were Absent every day).
+- "Expected to sign in" counts every schedule type that requires Sign In (it counted Office and
+  WFH only); the Missing Sign-out list uses the employee's last Sign Out of the day.
+- An impossible focus date falls back to today.
+
+### Internal
+- Attendance Insights moved to `includes/trait-attendance-insights.php`, HTML to
+  `templates/admin/attendance-insights.php`, styles to `assets/css/admin-attendance-insights.css`
+  (+ RTL), the drill-down to `assets/js/admin-attendance-insights.js`, rules to
+  `src/Attendance/Insights.php` (unit tested). `includes/trait-admin.php` now holds only the menu, the
+  shared admin assets and a few one-line pages (124 lines, from 2101).
+
 ## 3.31.14
 ### Fixed (wp-admin home and Audit Log)
 - **The admin dashboard counts the right people.** It only looked at Office and WFH days, so
