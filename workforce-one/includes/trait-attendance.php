@@ -235,7 +235,7 @@ trait EWS_Attendance_Trait {
                     $eid=absint($eid);
                     if(!$eid||!is_array($days))continue;
                     $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$eid));
-                    if(!$exists || !$this->employee_attendance_enabled($eid)){$invalid++;continue;}
+                    if(!$exists || !$this->employee_attendance_enabled($eid) || !$this->department_scope_allows_employee($eid)){$invalid++;continue;}
                     foreach($dates as $i=>$date){
                         $status=sanitize_text_field($days[$i]??'');
                         if($status===''||$status==='Not Set'){ $skipped++; continue; }

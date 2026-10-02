@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.17
+### Fixed (employee app → Attendance, the managers' grid)
+- **A change lost to another manager is now reported.** When two managers edit the same cell, the
+  later save is (rightly) not applied, but the page still said only "Saved 0 schedule record(s)".
+  It now says how many changes were not saved because someone else changed the schedule, and how
+  many were refused (unknown status, or an employee you cannot manage). The conflict message also
+  no longer reappears after the next successful save.
+- **Department managers can no longer change another department through the no-JavaScript form**
+  (the normal grid already refused it).
+- A Training Course or other business-trip type showed "— Not scheduled"; it now shows its name.
+- A company holiday shows its name under "Leave".
+- Day results use the same rules as wp-admin → Attendance Insights, so the two pages agree.
+
+### Internal
+- The grid moved to `includes/trait-attendance-grid.php`, HTML to `templates/app/attendance.php`,
+  its inline script and `onchange` handlers to `assets/js/attendance-grid.js`, and the badge /
+  result-message rules to `src/Attendance/GridRules.php` (unit tested). Behaviour is pinned by
+  `tests/e2e_attendance_grid.py` (results, saving and its concurrency guard, department scope, CSV import).
+
 ## 3.31.16
 ### Fixed (employee app → Team Schedule)
 - **A day that has already passed can no longer be swapped.** The swap form offered every

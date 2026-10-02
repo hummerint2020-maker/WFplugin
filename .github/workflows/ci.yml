@@ -135,6 +135,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_insights.py "$S"
       - name: Team Schedule page (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_schedule_view.py "$S"
+      - name: Attendance grid (employee app, managers)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_grid.py "$S"
       - name: Re-seed after behaviour tests
         run: wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Smoke test (every admin page and app view)
