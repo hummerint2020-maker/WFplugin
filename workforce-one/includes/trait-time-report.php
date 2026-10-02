@@ -42,7 +42,7 @@ trait EWS_Time_Report_Trait {
             $records[]=[
                 'id'=>(int)$r->id,'employee_id'=>$eid,'work_date'=>$r->work_date,'name'=>(string)$r->name,'domain'=>(string)$r->domain_name,
                 'scheduled'=>(string)$r->scheduled_status,'event'=>$this->time_event_label($r->event_type),
-                'status'=>$r->event_type==='sign_in'?$this->sign_in_classification($r->event_at):($r->event_type==='late_sign_in'?'Late Arrival':'—'),
+                'status'=>$r->event_type==='sign_in'?$this->sign_in_classification($r->event_at,(int)$r->employee_id):($r->event_type==='late_sign_in'?'Late Arrival':'—'),
                 'time'=>date_i18n('Y-m-d h:i A',strtotime($r->event_at)),
                 'location'=>($r->latitude!==null&&$r->longitude!==null)?$r->latitude.', '.$r->longitude:'Not available',
                 'distance'=>$r->distance_meters!==null?$this->format_distance((float)$r->distance_meters):'Not available',
@@ -164,7 +164,7 @@ trait EWS_Time_Report_Trait {
             fputcsv($f,Csv::row([
                 $r->work_date,date_i18n('l',strtotime($r->work_date)),$r->name,$r->domain_name,$r->scheduled_status,
                 $this->time_event_label($r->event_type),
-                $r->event_type==='sign_in'?$this->sign_in_classification($r->event_at):($r->event_type==='late_sign_in'?'Late Arrival':''),
+                $r->event_type==='sign_in'?$this->sign_in_classification($r->event_at,(int)$r->employee_id):($r->event_type==='late_sign_in'?'Late Arrival':''),
                 date_i18n('Y-m-d h:i A',strtotime($r->event_at)),
                 $r->latitude!==null?$r->latitude:'',$r->longitude!==null?$r->longitude:'',
                 $r->distance_meters!==null?$this->format_distance((float)$r->distance_meters):'',

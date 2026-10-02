@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.31.13
+### Fixed
+- **On Time / Late Arrival now follows the employee's own shift everywhere.** The Sign In / Out
+  report, its CSV, the admin dashboard and the employee's own dashboard and Sign In page judged a
+  sign-in against the company working hours, so someone on a 10:00 shift who signed in at 10:05 was
+  shown as late. (The attendance reports already used the shift.)
+- **Employee profile:** today's card now shows "Late" for a late sign-in (it showed "Present"
+  unless the record was an old-style late sign-in), and initials of Arabic and other non-Latin
+  names are shown (they came out empty).
+- The hidden "Employee Profile" menu entry no longer appears in the admin menu on other pages
+  (opening it there only said "Employee not found").
+
+### Internal
+- Employee profile moved to `includes/trait-employee-profile.php`, HTML to
+  `templates/admin/employee-profile.php`, styles to `assets/css/admin-employee-profile.css`
+  (+ RTL), summary rules to `src/Employees/ProfileSummary.php` (unit tested).
+
 ## 3.31.12
 ### Fixed
 - **View Navigation: the People page can be configured.** It was missing from the admin page

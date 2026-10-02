@@ -3,7 +3,7 @@
 The plugin started as one class (`EWS_Manager_V31_1`) built from 19 traits in
 `workforce-one/includes/`, with HTML, CSS and JavaScript inside PHP strings. It is being
 moved, **one module at a time and without behaviour changes**, to the structure below.
-Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`, wp-admin Leaves page in `includes/trait-leave-admin.php`) and Overtime + Early Leave (`includes/trait-overtime.php`), Schedule Swaps (`includes/trait-swap.php`), Schedule Configuration (`includes/trait-schedule-config.php`), Feature Configuration (`includes/trait-features.php`), Employees (`includes/trait-employee-admin.php`), Sign In / Out Report (`includes/trait-time-report.php`), Roles & Permissions and Notification Settings (`includes/trait-settings-pages.php`), Achievements (`includes/trait-achievements-admin.php`), Smart Nudges / Moments / Employee Profile / View Navigation / Recognition (`includes/trait-engagement-admin.php`), and the wp-admin request pages: Requests Hub (`includes/trait-admin-requests.php`) and Face Reset Requests (`includes/trait-face-reset.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
+Done so far: Sign In / Sign Out (reference module), Leave (`includes/trait-leave.php`, wp-admin Leaves page in `includes/trait-leave-admin.php`) and Overtime + Early Leave (`includes/trait-overtime.php`), Schedule Swaps (`includes/trait-swap.php`), Schedule Configuration (`includes/trait-schedule-config.php`), Feature Configuration (`includes/trait-features.php`), Employees and the employee profile (`includes/trait-employee-admin.php`, `includes/trait-employee-profile.php`), Sign In / Out Report (`includes/trait-time-report.php`), Roles & Permissions and Notification Settings (`includes/trait-settings-pages.php`), Achievements (`includes/trait-achievements-admin.php`), Smart Nudges / Moments / Employee Profile / View Navigation / Recognition (`includes/trait-engagement-admin.php`), and the wp-admin request pages: Requests Hub (`includes/trait-admin-requests.php`) and Face Reset Requests (`includes/trait-face-reset.php`). The wp-admin Requests page reuses the module operations instead of its own copies.
 
 ```
 workforce-one/
@@ -20,6 +20,7 @@ workforce-one/
     Schedule/SwapRules.php, Hooks.php, ConfigRules.php, ConfigHooks.php
     Achievements/ManualGrant.php      manual grants, progress cells
     Employees/EmployeeRules.php       add / update employee checks
+    Employees/ProfileSummary.php      profile initials, today's result, 30-day stats
     Settings/RolePermissions.php      role → permission matrix (off = removed, never stored false)
     Settings/NotificationSettings.php retention, VAPID subject, policy
     Settings/Navigation.php, Moments.php, SmartNudges.php, EngagementHooks.php   engagement settings

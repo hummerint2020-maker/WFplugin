@@ -28,6 +28,10 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-smart-nudges', $this->plugin_url('assets/css/admin-smart-nudges.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-smart-nudges', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-employee-profile'))==='ews31-employee-profile'){
+            wp_enqueue_style('workforce-one-admin-employee-profile', $this->plugin_url('assets/css/admin-employee-profile.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-employee-profile', 'rtl', 'replace');
+        }
     }
 
     public function admin_menu(){
@@ -68,13 +72,11 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Employee Profile','Employee Profile','ews_manage_settings','ews31-employee-profile-settings',[$this,'admin_employee_profile_settings']);
             add_submenu_page('ews31','View Navigation','View Navigation','ews_manage_settings','ews31-navigation',[$this,'admin_navigation']);
             add_submenu_page('ews31','Approval Workflows','Approval Workflows','manage_options','ews31-approvals',[$this,'admin_approval_workflows']);
-            // Keep Employee Profile registered so direct URLs remain authorized.
-            // Hide it from the submenu because profiles are opened from Employees.
+            // Keep Employee Profile registered so direct URLs remain authorized (removing the
+            // submenu entry would make WordPress refuse the page), but hide its menu link on every
+            // screen: profiles are opened from Employees.
             add_action('admin_head', function(){
-                $screen=get_current_screen();
-                if($screen && $screen->id==='toplevel_page_ews31'){
-                    echo '<style>#toplevel_page_ews31 .wp-submenu a[href="admin.php?page=ews31-employee-profile"]{display:none!important}</style>';
-                }
+                echo '<style>#toplevel_page_ews31 .wp-submenu a[href="admin.php?page=ews31-employee-profile"]{display:none!important}</style>';
             });
         }
 
@@ -153,7 +155,7 @@ trait EWS_Admin_Trait {
                     if($ev->event_type==='sign_in'){
                         // A late arrival is still a Sign In event. Its attendance
                         // status is derived from the actual time + grace period.
-                        $status_by_employee[$eid]=$this->sign_in_classification($ev->event_at)==='Late Arrival'?'late_arrival':'sign_in';
+                        $status_by_employee[$eid]=$this->sign_in_classification($ev->event_at,$eid)==='Late Arrival'?'late_arrival':'sign_in';
                     }elseif($ev->event_type==='late_sign_in' && $status_by_employee[$eid]==='no_show'){
                         // Preserve compatibility with historical records.
                         $status_by_employee[$eid]='late_arrival';
@@ -201,133 +203,6 @@ trait EWS_Admin_Trait {
             <a class="button" href="'.esc_url($report_url).'">Today Sign In / Out Report</a>
             <a class="button" href="'.esc_url(admin_url('admin.php?page=ews31-reports')).'">Reports</a></p></div>';
         }
-
-    public function admin_employee_profile(){
-        if(!$this->can('ews_manage_employees')) wp_die('Access denied');
-        global $wpdb;
-        $employee_id=absint($_GET['employee_id']??0);
-        if(!$employee_id) wp_die('Employee not found.');
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id));
-        if(!$emp) wp_die('Employee not found.');
-
-        $this->ensure_teams_schema();
-        $tt=$this->team_tables();
-        $teams=$wpdb->get_results($wpdb->prepare("SELECT t.id,t.name,t.manager_employee_id FROM {$tt['teams']} t INNER JOIN {$tt['members']} m ON m.team_id=t.id AND m.employee_id=%d AND m.active=1 WHERE t.active=1 ORDER BY t.name ASC",$employee_id));
-        $supervisor=$this->approval_related_employee($employee_id,'supervisor');
-        $manager_teams=[];
-        foreach((array)$teams as $tm){ if((int)$tm->manager_employee_id===$employee_id) $manager_teams[]=$tm->name; }
-
-        $today=current_time('Y-m-d');
-        $schedule=$wpdb->get_row($wpdb->prepare("SELECT status,note FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",$employee_id,$today));
-        $today_events=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY event_at ASC",$employee_id,$today));
-        $today_in='';$today_out='';$today_in_type='';
-        foreach((array)$today_events as $ev){
-            if(($ev->event_type==='sign_in'||$ev->event_type==='late_sign_in')&&!$today_in){$today_in=$ev->event_at;$today_in_type=$ev->event_type;}
-            if($ev->event_type==='sign_out'&&!$today_out)$today_out=$ev->event_at;
-        }
-
-        $period_start=date('Y-m-d',strtotime('-29 days',current_time('timestamp')));
-        [$att_rows]=$this->report_attendance_data($period_start,$today,'all',$employee_id,'all',$emp->active?'active':'all');
-        $counted=0;$attended=0;$late=0;$absent=0;
-        foreach((array)$att_rows as $ar){
-            if(in_array($ar['result'],['Present','Late','Absent'],true)){
-                $counted++;
-                if($ar['result']==='Present'||$ar['result']==='Late')$attended++;
-                if($ar['result']==='Late')$late++;
-                if($ar['result']==='Absent')$absent++;
-            }
-        }
-        $attendance_rate=$counted>0?round(($attended/$counted)*100):0;
-        $recent=[];
-        foreach(array_reverse((array)$att_rows) as $ar){if(count($recent)>=10)break;$recent[]=$ar;}
-
-        $this->ensure_leave_schema();
-        $leave_types=$wpdb->get_results("SELECT id,name FROM {$wpdb->prefix}ews_leave_types WHERE active=1 ORDER BY name ASC");
-        $leave_balances=[];$year=(int)date('Y',current_time('timestamp'));$bal_table=$wpdb->prefix.'ews_leave_balances';
-        foreach((array)$leave_types as $lt){
-            $b=$wpdb->get_row($wpdb->prepare("SELECT entitlement,used,pending FROM {$bal_table} WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d LIMIT 1",$employee_id,(int)$lt->id,$year));
-            if($b)$leave_balances[]=['name'=>$lt->name,'entitlement'=>(float)$b->entitlement,'used'=>(float)$b->used,'pending'=>(float)$b->pending,'available'=>max(0,(float)$b->entitlement-(float)$b->used-(float)$b->pending)];
-        }
-
-        $presence_locations=[]; $presence_latest=null;
-        if($this->presence_verification_enabled() && $this->can('ews_manage_attendance')){
-            global $wpdb; $presence_locations=$wpdb->get_results("SELECT id,name FROM {$this->locations} WHERE active=1 ORDER BY name ASC");
-            list(,$presence_vt)=$this->presence_tables();
-            $presence_latest=$wpdb->get_results($wpdb->prepare("SELECT v.*,l.name location_name FROM $presence_vt v LEFT JOIN {$this->locations} l ON l.id=v.location_id WHERE v.employee_id=%d ORDER BY v.id DESC LIMIT 5",$employee_id));
-        }
-        $shift=$this->shift_for_employee($employee_id);$hours=$this->working_hours($employee_id);
-        $initials='';$parts=preg_split('/\s+/',trim((string)$emp->name));
-        if($parts){$initials=strtoupper(substr($parts[0],0,1).(count($parts)>1?substr($parts[count($parts)-1],0,1):''));}
-        $profile_image_type=!empty($emp->profile_image_type)?$emp->profile_image_type:'initials';
-        $profile_image_url=!empty($emp->profile_image_url)?$emp->profile_image_url:'';
-        $status_label=(int)$emp->active?'Active':'Inactive';$status_class=(int)$emp->active?'is-active':'is-inactive';
-        $today_planned=$schedule?$schedule->status:'Not Set';
-        $today_result='Pending';
-        if($today_planned==='Vacation'||$today_planned==='Leave')$today_result='Leave';
-        elseif(in_array($today_planned,['Business Trip','Training Course'],true))$today_result=$today_planned;
-        elseif($today_in)$today_result=$today_in_type==='late_sign_in'?'Late':'Present';
-        elseif($today_planned!=='Not Set' && $today<current_time('Y-m-d'))$today_result='Absent';
-
-        echo '<div class="wrap ews-profile-wrap">';
-        if(isset($_GET['achievement_deleted']))echo '<div class="notice notice-success is-dismissible"><p>Achievement removed from the employee profile.</p></div>';
-        echo '<style>
-        .ews-profile-wrap{max-width:1280px}.ews-profile-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:18px 0}.ews-profile-person{display:flex;gap:16px;align-items:center}.ews-profile-avatar{width:64px;height:64px;border-radius:16px;background:#f0f4ff;border:1px solid #dbe4ff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#3158c8;overflow:hidden}.ews-profile-avatar img{width:100%;height:100%;object-fit:cover}.ews-profile-title h1{margin:0 0 5px;font-size:28px}.ews-profile-title p{margin:0;color:#667085}.ews-profile-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.ews-profile-pill{display:inline-flex;align-items:center;border:1px solid #e4e7ec;border-radius:999px;padding:4px 9px;font-size:12px;background:#fff;color:#475467}.ews-profile-pill.is-active{color:#067647;background:#ecfdf3;border-color:#abefc6}.ews-profile-pill.is-inactive{color:#b42318;background:#fef3f2;border-color:#fecdca}.ews-profile-actions{display:flex;gap:8px}.ews-profile-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.ews-profile-card{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:16px}.ews-profile-card .label{font-size:12px;color:#667085}.ews-profile-card .value{font-size:23px;font-weight:700;color:#101828;margin-top:5px}.ews-profile-card .sub{font-size:12px;color:#667085;margin-top:4px}.ews-profile-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:16px}.ews-profile-panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;margin-bottom:16px;overflow:hidden}.ews-profile-panel h2{font-size:16px;margin:0;padding:15px 18px;border-bottom:1px solid #eef0f3}.ews-profile-body{padding:16px 18px}.ews-profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.ews-profile-field .k{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#98a2b3}.ews-profile-field .v{font-size:14px;color:#344054;margin-top:4px;word-break:break-word}.ews-profile-list{margin:0;padding:0;list-style:none}.ews-profile-list li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #f2f4f7;font-size:13px}.ews-profile-list li:last-child{border-bottom:0}.ews-profile-list .muted{color:#667085}.ews-profile-table{width:100%;border-collapse:collapse}.ews-profile-table th,.ews-profile-table td{padding:10px 12px;border-bottom:1px solid #f0f2f5;text-align:left;font-size:12px}.ews-profile-table th{color:#667085;font-weight:600;background:#fafbfc}.ews-profile-empty{color:#667085;padding:4px 0}.wfo-achievement-admin-badge{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff7e6;border:1px solid #f3d9a2;flex:0 0 auto}.wfo-achievement-admin-badge.circle{border-radius:50%}.wfo-achievement-admin-badge.shield{border-radius:12px 12px 18px 18px;clip-path:polygon(50% 0,90% 15%,90% 58%,50% 100%,10% 58%,10% 15%)}.wfo-achievement-admin-badge.star{border-radius:12px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 95%,50% 72%,21% 95%,32% 57%,2% 35%,39% 35%)}.wfo-achievement-admin-badge.ribbon{border-radius:10px 10px 16px 16px}.ews-profile-badge{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;background:#f2f4f7;color:#475467}.ews-profile-badge.present{background:#ecfdf3;color:#067647}.ews-profile-badge.late{background:#fffaeb;color:#b54708}.ews-profile-badge.absent{background:#fef3f2;color:#b42318}.ews-profile-badge.leave{background:#eff8ff;color:#175cd3}@media(max-width:980px){.ews-profile-layout{grid-template-columns:1fr}.ews-profile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.ews-profile-head{flex-direction:column}.ews-profile-grid,.ews-profile-fields{grid-template-columns:1fr}.ews-profile-actions{width:100%}.ews-profile-actions .button{flex:1;text-align:center}}
-        </style>';
-        echo '<div class="ews-profile-head"><div class="ews-profile-person"><div class="ews-profile-avatar">'.(($profile_image_type==='photo'&&$profile_image_url)?'<img src="'.esc_url($profile_image_url).'" alt="'.esc_attr($emp->name).'">':esc_html($initials)).'</div><div class="ews-profile-title"><h1>'.esc_html($emp->name).'</h1><p>'.esc_html($emp->domain_name).' · '.esc_html($emp->email?:'No email').'</p><div class="ews-profile-meta"><span class="ews-profile-pill '.$status_class.'">'.esc_html($status_label).'</span>';
-        foreach((array)$teams as $tm)echo '<span class="ews-profile-pill">'.esc_html($tm->name.((int)$tm->manager_employee_id===$employee_id?' · Manager':'')).'</span>';
-        echo '</div></div></div><div class="ews-profile-actions"><a class="button" href="'.esc_url(admin_url('admin.php?page=ews31-employees')).'">← Employees</a></div></div>';
-
-        if($presence_locations){
-            echo '<section class="ews-profile-panel" style="margin-bottom:16px"><h2>Presence Verification</h2><div class="ews-profile-body"><form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">'.wp_nonce_field('ews_presence_request','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_presence_request"><input type="hidden" name="employee_id" value="'.(int)$employee_id.'"><label style="font-size:12px;font-weight:600;color:#344054">Work Location<br><select name="location_id" required style="min-width:220px;margin-top:5px"><option value="">Select location</option>';
-            foreach($presence_locations as $pl)echo '<option value="'.(int)$pl->id.'">'.esc_html($pl->name).'</option>';
-            echo '</select></label><button class="button button-primary" type="submit">Request Presence Verification</button></form>';
-            if($presence_latest){echo '<div style="overflow:auto;margin-top:16px"><table class="widefat striped"><thead><tr><th>Status</th><th>Location</th><th>Requested</th><th>Expires</th><th>Verified</th></tr></thead><tbody>';foreach($presence_latest as $pr){echo '<tr><td><strong>'.esc_html(ucfirst($pr->status)).'</strong></td><td>'.esc_html($pr->location_name?:'—').'</td><td>'.esc_html($pr->created_at).'</td><td>'.esc_html($pr->expires_at).'</td><td>'.esc_html($pr->verified_at?:'—').'</td></tr>';}echo '</tbody></table></div>';}
-            echo '</div></section>';
-        }
-
-        echo '<div class="ews-profile-grid">';
-        echo '<div class="ews-profile-card"><div class="label">Today · Planned</div><div class="value" style="font-size:18px">'.esc_html($today_planned).'</div><div class="sub">'.esc_html($schedule&&$schedule->note?$schedule->note:'Schedule status').'</div></div>';
-        echo '<div class="ews-profile-card"><div class="label">Today · Attendance</div><div class="value" style="font-size:18px">'.esc_html($today_result).'</div><div class="sub">'.esc_html($today_in?'In '.date_i18n('g:i A',strtotime($today_in)):'No sign in').' '.($today_out?'· Out '.date_i18n('g:i A',strtotime($today_out)):'').'</div></div>';
-        echo '<div class="ews-profile-card"><div class="label">30-day Attendance Rate</div><div class="value">'.(int)$attendance_rate.'%</div><div class="sub">'.(int)$attended.' attended · '.(int)$absent.' absent</div></div>';
-        echo '<div class="ews-profile-card"><div class="label">Late Arrivals · 30 days</div><div class="value">'.(int)$late.'</div><div class="sub">Based on actual Sign In events</div></div></div>';
-
-        if($this->achievements_enabled()){
-            $achievements=$this->employee_achievements((int)$employee_id);
-            echo '<section class="ews-profile-panel"><h2>🏆 Achievements <span style="font-size:12px;color:#667085;font-weight:400">'.(int)count($achievements).' earned</span></h2><div class="ews-profile-body">';
-            if(!$achievements){
-                echo '<div class="ews-profile-empty">No achievements earned yet.</div>';
-            } else {
-                echo '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">';
-                foreach($achievements as $a){
-                    $shape=esc_attr($a->badge_style?:'circle');
-                    $delete_url=wp_nonce_url(admin_url('admin-post.php?action=ews_achievement_award_delete&award_id='.(int)$a->id.'&employee_id='.(int)$employee_id),'ews_achievement_award_delete_'.(int)$a->id);
-                    echo '<div style="border:1px solid #eaecf0;border-radius:12px;padding:12px;background:#fcfcfd;display:flex;gap:10px;align-items:flex-start;justify-content:space-between"><div style="display:flex;gap:10px;align-items:flex-start;min-width:0"><div class="wfo-achievement-admin-badge '.esc_attr($shape).'">'.esc_html($a->icon).'</div><div><strong style="color:#101828">'.esc_html($a->name).'</strong><div style="font-size:12px;color:#667085;margin-top:3px">'.esc_html($a->description).'</div><div style="font-size:11px;color:#98a2b3;margin-top:6px">Earned '.esc_html(date_i18n(get_option('date_format'),strtotime($a->earned_at))).'</div></div></div><a class="button button-small" style="color:#b42318;border-color:#fecdca;flex:0 0 auto" href="'.esc_url($delete_url).'" onclick="return confirm(\'Delete this achievement award? The badge will be removed from the employee profile. If the employee still qualifies, an automatic achievement may be awarded again later.\');">Delete</a></div>';
-                }
-                echo '</div>';
-            }
-            echo '</div></section>';
-        }
-
-        echo '<div class="ews-profile-layout"><div>';
-        echo '<section class="ews-profile-panel"><h2>Employee Information</h2><div class="ews-profile-body"><div class="ews-profile-fields">';
-        $linked_user=$emp->wp_user_id?get_userdata((int)$emp->wp_user_id):null;
-        echo '<div class="ews-profile-field"><div class="k">Employee Name</div><div class="v">'.esc_html($emp->name).'</div></div><div class="ews-profile-field"><div class="k">Domain Name</div><div class="v">'.esc_html($emp->domain_name).'</div></div><div class="ews-profile-field"><div class="k">Email</div><div class="v">'.esc_html($emp->email?:'—').'</div></div><div class="ews-profile-field"><div class="k">WordPress User</div><div class="v">'.($linked_user?esc_html($linked_user->user_login):'Not linked').'</div></div><div class="ews-profile-field"><div class="k">Status</div><div class="v">'.esc_html($status_label).'</div></div><div class="ews-profile-field"><div class="k">Employee Since</div><div class="v">'.esc_html($emp->created_at?date_i18n(get_option('date_format'),strtotime($emp->created_at)):'—').'</div></div>';
-        echo '</div></div></section>';
-
-        echo '<section class="ews-profile-panel"><h2>Organization & Work Setup</h2><div class="ews-profile-body"><div class="ews-profile-fields">';
-        echo '<div class="ews-profile-field"><div class="k">Direct Supervisor</div><div class="v">'.($supervisor?esc_html($supervisor->name.' ('.$supervisor->domain_name.')'):'—').'</div></div><div class="ews-profile-field"><div class="k">Teams</div><div class="v">'.($teams?esc_html(implode(', ',array_map(function($x){return $x->name;},(array)$teams))):'—').'</div></div><div class="ews-profile-field"><div class="k">Default Shift</div><div class="v">'.esc_html($shift?$shift['name']:'Company Default').'</div></div><div class="ews-profile-field"><div class="k">Working Hours</div><div class="v">'.esc_html($this->format_time_label($hours['start']).' – '.$this->format_time_label($hours['end'])).'</div></div></div></div></section>';
-
-        echo '<section class="ews-profile-panel"><h2>Recent Attendance</h2><div class="ews-profile-body" style="padding:0"><table class="ews-profile-table"><thead><tr><th>Date</th><th>Planned</th><th>Sign In</th><th>Sign Out</th><th>Result</th></tr></thead><tbody>';
-        if(!$recent)echo '<tr><td colspan="5" class="ews-profile-empty">No attendance records in the selected period.</td></tr>';else foreach($recent as $ar){$cls=strtolower(str_replace(' ','-',$ar['result']));echo '<tr><td>'.esc_html(date_i18n(get_option('date_format'),strtotime($ar['date']))).'</td><td>'.esc_html($ar['planned']).'</td><td>'.esc_html($ar['sign_in']?:'—').'</td><td>'.esc_html($ar['sign_out']?:'—').'</td><td><span class="ews-profile-badge '.esc_attr($cls).'">'.esc_html($ar['result']).'</span></td></tr>';}
-        echo '</tbody></table></div></section></div><div>';
-
-        echo '<section class="ews-profile-panel"><h2>Leave Balance · '.$year.'</h2><div class="ews-profile-body">';
-        if(!$leave_balances)echo '<div class="ews-profile-empty">No leave balances found for this employee.</div>';else{echo '<ul class="ews-profile-list">';foreach($leave_balances as $b){echo '<li><span><strong>'.esc_html($b['name']).'</strong><br><span class="muted">Used '.esc_html(number_format($b['used'],2)).' · Pending '.esc_html(number_format($b['pending'],2)).'</span></span><strong>'.esc_html(number_format($b['available'],2)).' available</strong></li>';}echo '</ul>';}
-        echo '</div></section>';
-        echo '<section class="ews-profile-panel"><h2>Today</h2><div class="ews-profile-body"><ul class="ews-profile-list"><li><span class="muted">Planned</span><strong>'.esc_html($today_planned).'</strong></li><li><span class="muted">Sign In</span><strong>'.esc_html($today_in?date_i18n('g:i A',strtotime($today_in)):'—').'</strong></li><li><span class="muted">Sign Out</span><strong>'.esc_html($today_out?date_i18n('g:i A',strtotime($today_out)):'—').'</strong></li><li><span class="muted">Result</span><strong>'.esc_html($today_result).'</strong></li></ul></div></section>';
-        if($manager_teams)echo '<section class="ews-profile-panel"><h2>Team Management</h2><div class="ews-profile-body"><div class="ews-profile-empty">Employee is a manager of: <strong>'.esc_html(implode(', ',$manager_teams)).'</strong></div></div></section>';
-        echo '</div></div></div>';
-    }
 
     public function admin_attendance_insights(){
             if(!$this->can('ews_view_reports')) wp_die('Access denied');

@@ -852,7 +852,7 @@ private function layout($title,$body){
             $sign_in=$events['sign_in']->event_at??'';
             $sign_out=$events['sign_out']->event_at??'';
             $planned=$schedule?$schedule->status:'Not Set';
-            $today_result=$sign_in?($this->sign_in_classification($sign_in)):($this->schedule_type_requires_sign_in($planned)?'Not Signed In':$planned);
+            $today_result=$sign_in?($this->sign_in_classification($sign_in,(int)$emp->id)):($this->schedule_type_requires_sign_in($planned)?'Not Signed In':$planned);
             $teams=[];
             if(method_exists($this,'team_ids_for_employee') && method_exists($this,'team_tables')){
                 $team_ids=$this->team_ids_for_employee((int)$emp->id);
@@ -1641,7 +1641,7 @@ private function layout($title,$body){
             $signin_bounds=$this->sign_in_window_bounds($emp?$emp->id:0);
             $hours_start_label=$this->format_time_label($hours['start']);
             $hours_end_label=$this->format_time_label($hours['end']);
-            $sign_in_status_label=isset($ev['sign_in'])?$this->sign_in_classification_label($this->sign_in_classification($ev['sign_in']->event_at)):'';
+            $sign_in_status_label=isset($ev['sign_in'])?$this->sign_in_classification_label($this->sign_in_classification($ev['sign_in']->event_at,$emp?(int)$emp->id:0)):'';
             $face_enrolled=(bool)$this->face_template_for_employee($emp?$emp->id:0);
             $face_settings=$this->face_signin_settings();
             $face_vendor_url=$this->plugin_url('assets/vendor/face-api/');
