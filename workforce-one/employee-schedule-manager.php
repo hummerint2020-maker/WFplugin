@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.32
+ * Version: 3.31.33
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.32');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.33');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -148,10 +148,6 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_time_reset',[$this,'admin_time_reset']);
             add_action('admin_post_ews31_time_save',[$this,'admin_time_save']);
             add_action('admin_post_ews31_time_csv',[$this,'admin_time_csv']);
-            add_action('admin_post_ews31_location_save',[$this,'admin_location_save']);
-            add_action('admin_post_ews_multi_location_save_v321',[$this,'admin_multi_location_save_v321']);
-            add_action('admin_post_ews_multi_location_archive_v321',[$this,'admin_multi_location_archive_v321']);
-            add_action('admin_post_ews_employee_location_save_v321',[$this,'admin_employee_location_save_v321']);
             add_action('admin_post_ews31_roles_save',[$this,'admin_roles_save']);
             add_action('admin_post_ews_notification_read',[$this,'notification_read']);
             add_action('admin_post_ews_notification_open',[$this,'notification_open']);
@@ -167,6 +163,7 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
             \WorkforceOne\Requests\Hooks::register($this);
             \WorkforceOne\Approvals\Hooks::register($this);
+            \WorkforceOne\Locations\Hooks::register($this);
             \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);

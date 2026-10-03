@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.31.33
+Work Locations (`includes/trait-locations.php`) moved to the new structure.
+
+### Fixed (wp-admin → Work Locations)
+- **Archiving the default location left it marked as the default.** The next active location
+  became the default too, so two rows carried the flag (one archived). Archiving now clears it and
+  hands the default to the next active location straight away; the list shows "Default" only on an
+  active location.
+- The employee location list said "No default location" for an employee without an assigned
+  location; it now says "Default location", which is what Sign In uses for them.
+
+### Removed
+- The old single-location "Location Settings" page and its save action. The page had no menu entry
+  (Work Locations replaced it), so it could not be opened. Its saved values are still used, as before,
+  when no work location exists.
+
+### Internal
+- `src/Locations/LocationRules.php` (coordinates, radius 10–5,000 m, seats, default; unit tested)
+  and `src/Locations/Hooks.php`; HTML in `templates/admin/locations.php`; the Archive confirmation in
+  `assets/js/admin-locations.js` (was inline).
+- `tests/e2e_locations.py` (21 checks): add, validation, default, edit, seats, employee assignment,
+  archive, access.
+
 ## 3.31.32
 Internal: `includes/trait-core.php` (1,462 lines) split by topic. No behaviour change: the 109
 methods and properties were moved, not edited, and a check confirmed each one is byte-for-byte the

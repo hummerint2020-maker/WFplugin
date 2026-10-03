@@ -32,6 +32,9 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-employee-profile', $this->plugin_url('assets/css/admin-employee-profile.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-employee-profile', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-multi-locations'))==='ews31-multi-locations'){
+            wp_enqueue_script('workforce-one-admin-locations', $this->plugin_url('assets/js/admin-locations.js'), [], EWS_VERSION, true);
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-approvals'))==='ews31-approvals'){
             wp_enqueue_script('workforce-one-admin-approvals', $this->plugin_url('assets/js/admin-approvals.js'), [], EWS_VERSION, true);
         }
