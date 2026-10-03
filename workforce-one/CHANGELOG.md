@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.24
+Reports, phase 1 / round 1: one calculation engine for report days, and the numbers it fixes.
+
+### Fixed (employee app → Reports → Attendance, and its CSV / Excel exports)
+- **Working hours now deduct breaks.** A 09:05–17:00 day with a 45-minute break showed 7 h 55 min;
+  it now shows 7:10 net. Overnight shifts get their hours (they showed nothing).
+- **A company holiday is "Holiday", not "Leave".** Every employee's holiday counted as a leave day,
+  so the Leave card was inflated (7 instead of 1 in the test week); holidays have their own card
+  and expect no hours.
+- **The Excel summary shows the screen's numbers.** It recomputed its own cards from the CSV text
+  (Office / WFH from the plan, Leave from Vacation only) and disagreed with the screen.
+- New columns on screen and in the exports: late minutes (from the shift start), early-leave
+  minutes (before the shift end), break minutes, net hours and expected hours (shift length minus
+  the allowed break).
+- Business-trip types such as Training Course count under Business Trip.
+- The report opens on this month to date (it opened on today only), using the site's time zone.
+
+### Internal
+- `src/Reports/DayMetrics.php` measures one employee-day (result, late / early minutes, net and
+  expected minutes, missing Sign Out) and `src/Reports/Summary.php` counts them; both are unit
+  tested. `report_days()` loads schedules, first Sign In, last Sign Out and closed breaks for a
+  period and runs every day through the engine. The CSV and the Excel file are built from one
+  `report_export_table()`. Removed the unused `report_csv()` and `report_xlsx_cell()`.
+- `tests/e2e_reports.py` pins the report, its CSV and Excel, the default period and department scope.
+
 ## 3.31.23
 ### Changed (employee app)
 - The profile menu (picture / initials at the top right, with My Profile and Log out) now shows

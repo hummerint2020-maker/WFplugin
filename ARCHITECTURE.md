@@ -20,6 +20,7 @@ workforce-one/
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
     Support/Format.php                 number, hours and duration formats
+    Reports/DayMetrics.php, Summary.php  the report engine: one employee-day measured, and the day counts
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, AdminRecordRules.php, Hooks.php
     Overtime/RequestRules.php, Hooks.php        EarlyLeave/RequestRules.php
     Schedule/SwapRules.php, Hooks.php, ConfigRules.php, ConfigHooks.php, TeamOrder.php (Team Schedule order)
