@@ -167,6 +167,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_auto_attendance.py "$S"
       - name: Employee Polls
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_polls.py "$S"
+      - name: Installable app (PWA)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_pwa.py "$S"
       - name: Time zones (Cairo) and overnight shifts
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_timezone.py "$S"
       - name: Re-seed after behaviour tests
@@ -182,6 +184,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Browser smoke test (JavaScript errors on every view)
         run: node tests/browser_smoke.js
+      - name: Installable app in Chromium (service worker, cache, manifest, splash)
+        run: node tests/pwa_browser.js
       - name: Arabic (RTL) pass
         run: |
           wp language core install ar --path="$WP"

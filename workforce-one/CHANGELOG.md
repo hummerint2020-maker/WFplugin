@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.38
+The installable app (PWA, `includes/trait-pwa.php`) moved to the new structure. **No change for
+phones:** the manifest, the service worker, the page tags, the splash screen, the install banner and
+the push helpers are byte-for-byte the same as before (checked against a snapshot of the old output
+for several splash settings, and the full app pages).
+
+### Internal
+- `src/Pwa/Manifest.php` (manifest and service-worker values; unit tested) and `src/Pwa/Hooks.php`
+  (registered in the same order as before). Output in `templates/pwa/head.php`, `footer.php` and
+  `service-worker.php`.
+- `tests/e2e_pwa.py` (24 checks: manifest, icons, service worker headers and cache, offline assets,
+  head tags, splash settings and escaping, install banner, push helpers, other pages untouched) and
+  `tests/pwa_browser.js` (Chromium: the service worker installs, controls the app page and fills its
+  cache; the manifest is installable; the splash goes away; no errors). Both run in CI.
+- This was the last module with HTML inside PHP strings.
+
 ## 3.31.37
 Employee Polls: reworked and moved to the new structure (`includes/trait-polls.php`).
 

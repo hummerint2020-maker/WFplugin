@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.37
+ * Version: 3.31.38
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.37');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.38');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -102,11 +102,8 @@ class EWS_Manager_V31_1 {
             add_shortcode('employee_schedule',function(){ return $this->app_forced_view('schedule'); });
             add_shortcode('employee_attendance',function(){ return $this->app_forced_view('time'); });
             add_shortcode('employee_reports',function(){ return $this->app_forced_view('reports'); });
-            add_action('wp_head',[$this,'pwa_head']);
             add_action('wp_enqueue_scripts',[$this,'enqueue_frontend_assets']);
-            add_action('wp_footer',[$this,'pwa_footer']);
-            add_action('template_redirect',[$this,'pwa_manifest_route']);
-            add_action('template_redirect',[$this,'pwa_sw_route']);
+            \WorkforceOne\Pwa\Hooks::register($this); // wp_head, wp_footer, manifest and service worker routes (same order as before)
             add_action('admin_menu',[$this,'admin_menu']);
             add_action('admin_enqueue_scripts',[$this,'enqueue_admin_ui_foundation']);
             add_action('admin_post_ews31_employee_save',[$this,'employee_save']);
