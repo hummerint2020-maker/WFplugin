@@ -91,7 +91,7 @@ jobs:
       - name: Activate plugin (schema install on MySQL)
         run: |
           wp plugin activate workforce-one --path="$WP"
-          test "$(wp option get ews_schema_version --path="$WP")" = "$(grep -oP "ews_schema_target\(\)\{ return '\K[0-9.]+" workforce-one/includes/trait-core.php)"
+          test "$(wp option get ews_schema_version --path="$WP")" = "$(grep -oP "ews_schema_target\(\)\{ return '\K[0-9.]+" workforce-one/includes/trait-schema.php)"
           wp eval 'global $wpdb; $n=count($wpdb->get_col("SHOW TABLES LIKE \"{$wpdb->prefix}ews\\_%\"")); echo "ews tables: $n\n"; if($n<37) exit(1);' --path="$WP"
       - name: Seed test data
         run: wp eval-file tests/e2e_setup.php --path="$WP"

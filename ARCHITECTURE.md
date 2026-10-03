@@ -36,6 +36,15 @@ workforce-one/
     Requests/Hub.php, Hooks.php        presentation rules of the admin request pages
     Approvals/Workflows.php, StateMachine.php, Hooks.php  approval modes per workflow, request/step states
   includes/trait-*.php            legacy code; shrinks as modules move out
+    shared building blocks (split out of trait-core.php in 3.31.32, code unchanged):
+    trait-core.php            request caches, current employee, render_template(), plugin_url(), audit(), dates, schedule saves
+    trait-schema.php          ensure_*_schema(), ews_schema_target(), maybe_upgrade_schema()
+    trait-work-time.php       shifts, working hours, grace, Sign In window, working days, holidays, attendance_day()
+    trait-schedule-types.php  schedule types (Office, WFH, …) and what each requires
+    trait-breaks.php          breaks (settings, sessions, reminders)
+    trait-face.php            Face Sign In templates and tokens
+    trait-permissions.php     capabilities, roles, can()
+    trait-profile-account.php avatar, password, profile photo, profile settings
   templates/app/*.php             page HTML; receives prepared variables only
   templates/admin/*.php           wp-admin page HTML (same rule)
   assets/js/*.js, assets/css/*    page scripts/styles, enqueued by the view that needs them
@@ -62,7 +71,7 @@ tests/
 
 ## Rules that stay true
 - Stored values (statuses such as `Approved`, `Late Arrival`) stay English; translate on display.
-- Schema changes go through `ensure_*_schema()` + a bump of `ews_schema_target()`.
+- Schema changes go through `ensure_*_schema()` + a bump of `ews_schema_target()` (both in `includes/trait-schema.php`).
 - No external CDNs; vendor libraries live in `assets/vendor/` with their licences.
 
 ## Reading form input

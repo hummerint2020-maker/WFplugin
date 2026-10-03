@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.32
+Internal: `includes/trait-core.php` (1,462 lines) split by topic. No behaviour change: the 109
+methods and properties were moved, not edited, and a check confirmed each one is byte-for-byte the
+same before and after.
+
+### Internal
+- `trait-core.php` keeps the request caches and small shared helpers (316 lines). New:
+  `trait-schema.php` (tables and the schema upgrade), `trait-work-time.php` (shifts, working hours,
+  working days, holidays), `trait-schedule-types.php`, `trait-breaks.php`, `trait-face.php`,
+  `trait-permissions.php` and `trait-profile-account.php`.
+- CI reads the schema version from `trait-schema.php`.
+
 ## 3.31.31
 The approval engine (`includes/trait-approvals.php`) moved to the new structure, with its
 wp-admin page.

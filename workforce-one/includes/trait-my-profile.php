@@ -6,7 +6,7 @@ use WorkforceOne\Employees\ProfileSummary;
 /**
  * The employee app's My Profile page (?ews_view=profile): today, this week, recent attendance,
  * leave balances and achievements, plus the picture and password dialogs (their actions live in
- * trait-core.php: ews_profile_photo_save, ews_profile_password_change).
+ * trait-profile-account.php: ews_profile_photo_save, ews_profile_password_change).
  * View: templates/app/my-profile.php; script: assets/js/my-profile.js. Behaviour: tests/e2e_my_profile.py.
  */
 trait EWS_My_Profile_Trait {
