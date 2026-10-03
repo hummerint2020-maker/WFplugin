@@ -28,6 +28,11 @@ const B = 'http://127.0.0.1:8080';
   check('...its offline cache holds the app\'s static files', cache.keys.length === 1 && /^employee-hub-v/.test(cache.keys[0]) && cache.n === 5, cache);
   const manifest = await page.evaluate(async () => { const l = document.querySelector('link[rel=manifest]'); if (!l) return null; const r = await fetch(l.href); return r.ok ? r.json() : null; });
   check('the manifest loads and is installable (standalone, icons)', manifest && manifest.display === 'standalone' && manifest.icons.length === 2, manifest);
+  const cdp = await page.context().newCDPSession(page);
+  const parsed = await cdp.send('Page.getAppManifest');
+  const pm = parsed.manifest || {};
+  check('Chromium reads the manifest without errors; the app keeps its id and opens on the app page', parsed.errors.length === 0 && pm.id === B + '/?ews_view=time'
+    && pm.startUrl === B + '/app/?ews_view=time', { errors: parsed.errors, id: pm.id, start: pm.startUrl });
   await page.waitForTimeout(1500);
   check('the splash screen is gone once the page has loaded', await page.locator('#ews-pwa-splash').count() === 0);
   check('the push helpers are ready', await page.evaluate(() => typeof window.ewsEnablePush === 'function' && typeof window.ewsDisablePush === 'function'));

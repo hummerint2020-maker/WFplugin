@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.39
+### Fixed
+- The installed app (Add to Home Screen) opened on the site's home page instead of the employee
+  app when the `[employee_app]` page is not the front page. It now opens on the app page.
+- Phones that already installed the app keep it: the manifest now has an `id` equal to the old start
+  URL, which is how phones identify an installed app. Nothing changes on sites whose app page is the
+  front page.
+
+### Internal
+- `tests/e2e_pwa.py` 27 checks (start page, id, front-page case); `tests/pwa_browser.js` checks the
+  id and start page as Chromium reads them.
+
 ## 3.31.38
 The installable app (PWA, `includes/trait-pwa.php`) moved to the new structure. **No change for
 phones:** the manifest, the service worker, the page tags, the splash screen, the install banner and

@@ -26,6 +26,14 @@ check('...with 192 and 512 px PNG icons that load', set(icons) == {'192x192', '5
 check('...and is never cached', 'no-cache' in h.get('Cache-Control', '') or 'no-store' in h.get('Cache-Control', ''), h.get('Cache-Control'))
 st, body, _ = emp.req('/app/?ews_pwa=manifest')
 check('requested from the app page, it starts on the app page', st == 200 and json.loads(body).get('start_url') == B + '/app/?ews_view=time', body[:200])
+check('the app opens on the app page even when it is not the front page', m.get('start_url') == B + '/app/?ews_view=time', m.get('start_url'))
+check('...and keeps the identity of apps already installed (id = the old start URL)', m.get('id') == B + '/?ews_view=time' and list(m)[:4] == ['id', 'name', 'short_name', 'description'], (m.get('id'), list(m)[:4]))
+app_page = php("echo (int)get_option('ews_app_page_id');").strip()
+php("update_option('show_on_front','page'); update_option('page_on_front',%s);" % app_page)
+st, body, _ = emp.req('/?ews_pwa=manifest')
+fm = json.loads(body) if st == 200 else {}
+check('when the app page is the front page, start URL and id are the front page', fm.get('start_url') == B + '/?ews_view=time' and fm.get('id') == B + '/?ews_view=time', fm)
+php("update_option('show_on_front','posts'); update_option('page_on_front',0);")
 st, body, h = emp.req('/?ews_pwa=icon')
 check('the SVG icon is served', st == 200 and h.get('Content-Type', '').startswith('image/svg+xml') and body.startswith('<svg'))
 

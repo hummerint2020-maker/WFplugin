@@ -19,15 +19,18 @@ final class Manifest
      * @param string $appUrl the page the app opens on (the [employee_app] page, or the home page)
      * @param string $scopePath the site's path ('/' for a site at the domain root)
      * @param string $root the plugin's URL, with a trailing slash
+     * @param string $homeUrl the site's home URL. Up to 3.31.38 the app always started there, and a
+     *        phone identifies an installed app by its first start URL, so that URL stays the id.
      * @return array<string,mixed>
      */
-    public static function data(string $appUrl, string $scopePath, string $root): array
+    public static function data(string $appUrl, string $scopePath, string $root, string $homeUrl = ''): array
     {
-        return [
+        $data = $homeUrl === '' ? [] : ['id' => self::startUrl($homeUrl)];
+        return $data + [
             'name' => self::NAME,
             'short_name' => self::NAME,
             'description' => 'Employee Schedule & Attendance',
-            'start_url' => $appUrl . (strpos($appUrl, '?') === false ? '?' : '&') . 'ews_view=time',
+            'start_url' => self::startUrl($appUrl),
             'scope' => $scopePath,
             'display' => 'standalone',
             'orientation' => 'portrait-primary',
@@ -38,6 +41,12 @@ final class Manifest
                 ['src' => $root . 'assets/icons/workforce-one-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable'],
             ],
         ];
+    }
+
+    /** The app's start URL: the page with the Sign In screen open. */
+    public static function startUrl(string $appUrl): string
+    {
+        return $appUrl . (strpos($appUrl, '?') === false ? '?' : '&') . 'ews_view=time';
     }
 
     /**

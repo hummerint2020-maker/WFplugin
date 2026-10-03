@@ -13,6 +13,15 @@ final class ManifestTest extends TestCase
         $this->assertSame(['192x192', '512x512'], array_column($m['icons'], 'sizes'));
     }
 
+    public function testIdKeepsInstalledAppsWhenTheStartUrlMoves(): void
+    {
+        $m = M::data('https://hr.example.com/app/', '/', '/', 'https://hr.example.com/');
+        $this->assertSame(['id', 'name'], array_slice(array_keys($m), 0, 2));
+        $this->assertSame(['https://hr.example.com/?ews_view=time', 'https://hr.example.com/app/?ews_view=time'], [$m['id'], $m['start_url']]);
+        $front = M::data('https://hr.example.com/', '/', '/', 'https://hr.example.com/');
+        $this->assertSame($front['id'], $front['start_url'], 'an app on the front page is unchanged');
+    }
+
     public function testServiceWorker(): void
     {
         $sw = M::serviceWorker('https://x.test/wp-content/plugins/workforce-one/', '/wp-content/plugins/workforce-one/', '3.31.38');

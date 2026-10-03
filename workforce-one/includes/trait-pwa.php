@@ -27,8 +27,9 @@ trait EWS_PWA_Trait {
             if(isset($_GET['ews_pwa']) && $_GET['ews_pwa']==='manifest'){
                 nocache_headers();
                 header('Content-Type: application/manifest+json; charset=utf-8');
-                $app=$this->pwa_is_employee_app_page()?get_permalink():home_url('/');
-                echo wp_json_encode(Manifest::data((string)$app,wp_parse_url(home_url('/'),PHP_URL_PATH) ?: '/',$this->pwa_plugin_root()));
+                // The manifest is linked from the home URL; start on the [employee_app] page wherever it is.
+                $app=$this->pwa_is_employee_app_page()?get_permalink():$this->app_home_url();
+                echo wp_json_encode(Manifest::data((string)$app,wp_parse_url(home_url('/'),PHP_URL_PATH) ?: '/',$this->pwa_plugin_root(),home_url('/')));
                 exit;
             }
             if(isset($_GET['ews_pwa']) && $_GET['ews_pwa']==='icon'){
