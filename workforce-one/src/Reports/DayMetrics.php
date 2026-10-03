@@ -77,9 +77,42 @@ final class DayMetrics
         return intdiv($minutes, 60) . ':' . str_pad((string) ($minutes % 60), 2, '0', STR_PAD_LEFT);
     }
 
-    /** −40 → "−0:40" (a balance; the minus sign is U+2212). */
+    /** A balance: −40 → "−0:40" (U+2212), 120 → "+2:00", 0 → "0:00". */
     public static function signedHm(int $minutes): string
     {
-        return ($minutes < 0 ? '−' : '') . self::hm(abs($minutes));
+        return ($minutes < 0 ? '−' : ($minutes > 0 ? '+' : '')) . self::hm(abs($minutes));
+    }
+
+    /**
+     * Overtime on one day, from approved overtime windows and the employee's own shift.
+     * - Approved: the length of each approved window.
+     * - Actual: the part of a window before the shift start that the first Sign In covers, plus the
+     *   part after the shift end that the last Sign Out covers (time inside the shift is not overtime).
+     * - Unapproved extra: presence after the shift end not covered by an approved window.
+     * @param array<int,array{start:string,end:string}> $windows 'H:i' or 'H:i:s'
+     * @return array{approved:int,actual:int,extra:int,windows:array<int,array{approved:int,actual:int}>}
+     */
+    public static function overtime(string $date, string $shiftStart, string $shiftEnd, ?string $firstIn, ?string $lastOut, array $windows): array
+    {
+        $start = strtotime($date . ' ' . $shiftStart);
+        $end = strtotime($date . ' ' . $shiftEnd);
+        if ($end <= $start) $end += 86400;
+        $in = $firstIn ? strtotime($firstIn) : null;
+        $out = $lastOut ? strtotime($lastOut) : null;
+        $approved = 0; $actual = 0; $approvedPost = 0; $each = [];
+        foreach ($windows as $w) {
+            $rs = strtotime($date . ' ' . $w['start']);
+            $re = strtotime($date . ' ' . $w['end']);
+            if ($re <= $rs) continue;
+            $mins = intdiv($re - $rs, 60);
+            $real = 0;
+            if ($in !== null && $rs < $start) $real += max(0, intdiv(min($re, $start) - max($rs, $in), 60));
+            if ($out !== null && $re > $end) $real += max(0, intdiv(min($re, $out) - max($rs, $end), 60));
+            if ($re > $end) $approvedPost += intdiv($re - max($rs, $end), 60);
+            $approved += $mins; $actual += $real;
+            $each[] = ['approved' => $mins, 'actual' => $real];
+        }
+        $presence = $out !== null && $out > $end ? intdiv($out - $end, 60) : 0;
+        return ['approved' => $approved, 'actual' => $actual, 'extra' => max(0, $presence - min($presence, $approvedPost)), 'windows' => $each];
     }
 }

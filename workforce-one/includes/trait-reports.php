@@ -8,6 +8,7 @@ trait EWS_Reports_Trait {
         return [
             'summary'=>['Attendance Summary','One row per employee: attendance, punctuality, lateness and hours.'],
             'attendance'=>['Daily Log','Every employee-day: plan, Sign In / Out, result, late minutes and hours.'],
+            'timesheet'=>['Timesheet','Worked hours per employee for payroll: net hours, overtime and leave taken.'],
             'workforce'=>['Workforce','Planned distribution per day: Office, WFH, leave and missions.'],
         ];
     }
@@ -23,6 +24,7 @@ trait EWS_Reports_Trait {
         [$emps,$team_options]=$this->report_employee_scope($team,0,$employee_status);
         if($type==='summary')$body=$this->report_summary_builder($s,$e);
         elseif($type==='attendance')$body=$this->attendance_report_builder($s,$e);
+        elseif($type==='timesheet')$body=$this->report_timesheet_builder($s,$e);
         else $body=$this->workforce_report_builder($s,$e);
 
         $url=function($args)use($s,$e,$team,$employee_id,$employee_status,$type){
@@ -41,6 +43,14 @@ trait EWS_Reports_Trait {
             'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>\WorkforceOne\Reports\Summary::BUCKETS,'body'=>$body,
             'period_label'=>date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e)),
         ]);
+    }
+
+    /** Timesheet: worked hours, overtime and leave per employee, for payroll. */
+    private function report_timesheet_builder($s,$e){
+        [$team,$employee_id,,$employee_status]=$this->report_request_filters();
+        [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+        $export=function($action)use($s,$e,$team,$employee_id,$employee_status){return wp_nonce_url(add_query_arg(['action'=>$action,'report_type'=>'timesheet','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report');};
+        return $this->render_template('app/report-timesheet',['people'=>\WorkforceOne\Reports\Timesheet::byEmployee($rows),'overtime'=>$this->overtime_enabled(),'csv_url'=>$export('ews31_report_download'),'xlsx_url'=>$export('ews31_report_xlsx')]);
     }
 
     /** Attendance Summary: one row per employee, KPIs compared with the previous period. */
@@ -132,6 +142,12 @@ trait EWS_Reports_Trait {
             $mins=$r->actual_minutes!==null?(int)$r->actual_minutes:max(0,intdiv((int)strtotime($r->end_at)-(int)strtotime($r->start_at),60));
             $breaks[(int)$r->employee_id][$r->work_date]=($breaks[(int)$r->employee_id][$r->work_date]??0)+$mins;
         }
+        // Approved overtime windows (Overtime feature on): actual and unapproved overtime per day.
+        $ot_on=$this->overtime_enabled();$windows=[];
+        if($ot_on){
+            $this->ensure_overtime_schema();
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,overtime_date,start_time,end_time FROM {$wpdb->prefix}ews_overtime_requests WHERE status='Approved' AND employee_id IN ($ph) AND overtime_date BETWEEN %s AND %s ORDER BY start_time ASC",array_merge($ids,[$s,$e]))) as $r)$windows[(int)$r->employee_id][$r->overtime_date][]=['start'=>$r->start_time,'end'=>$r->end_time];
+        }
         $holidays=$this->company_leave_dates($s,$e);
         $today=current_time('Y-m-d');$now=current_time('mysql');
         $allowance=$this->break_enabled()?$this->break_duration_minutes():0;
@@ -148,7 +164,8 @@ trait EWS_Reports_Trait {
                     'shift_start'=>$h['start'],'shift_end'=>$h['end'],'normal_until'=>$h['normal_until'],'grace'=>(int)($h['grace']??$this->global_grace_period()),'overnight'=>!empty($h['overnight']),'break_allowance'=>$allowance,
                     'first_in'=>$in?$in->event_at:null,'first_in_legacy_late'=>$in&&$in->event_type==='late_sign_in','last_out'=>$out?$out->event_at:null,'break_minutes'=>(int)($breaks[$eid][$d]??0),
                 ]);
-                $rows[]=$m+['employee_id'=>$eid,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,'planned'=>$planned!==''?$planned:'Not Set',
+                $ot=$ot_on?\WorkforceOne\Reports\DayMetrics::overtime($d,$h['start'],$h['end'],$in?$in->event_at:null,$out?$out->event_at:null,$windows[$eid][$d]??[]):['approved'=>0,'actual'=>0,'extra'=>0];
+                $rows[]=$m+['ot_approved'=>$ot['approved'],'ot_actual'=>$ot['actual'],'ot_extra'=>$ot['extra'],'employee_id'=>$eid,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,'planned'=>$planned!==''?$planned:'Not Set',
                     'bucket'=>$type && $type['attendance_rule']==='business_trip' && $m['result']===$planned?'Business Trip':$m['result'],
                     'holiday'=>$holidays[$d]??'','sign_in'=>$in?date_i18n('H:i',strtotime($in->event_at)):'','sign_out'=>$out?date_i18n('H:i',strtotime($out->event_at)):''];
             }
@@ -372,6 +389,24 @@ trait EWS_Reports_Trait {
             return ['headers'=>['Date','Office','WFH','Leave','Business Trip','Absent','Not Set'],'rows'=>$out,'kpis'=>$kpis];
         }
         $hm=function($m){return \WorkforceOne\Reports\DayMetrics::hm((int)$m);};
+        // Every employee-day, for the "Daily Details" sheet of the summary and the timesheet.
+        $details=function($rows)use($hm){
+            $out=[];
+            foreach($rows as $r)$out[]=[$r['employee'],$r['domain'],$r['date'],$r['planned'],$r['result'],$r['sign_in'],$r['sign_out'],$r['late_minutes'],$r['early_minutes'],$r['break_minutes'],$hm($r['net_minutes']),\WorkforceOne\Reports\Timesheet::decimalHours((int)$r['net_minutes']),$r['expected']?$hm($r['expected_minutes']):'',$r['ot_actual'],$r['ot_extra']];
+            return ['name'=>'Daily Details','headers'=>['Employee','Employee ID','Date','Planned','Result','First Sign In','Last Sign Out','Late (min)','Early Leave (min)','Break (min)','Net Hours','Net Hours (decimal)','Expected Hours','Overtime Worked (min)','Unapproved Extra (min)'],'rows'=>$out];
+        };
+        if($type==='timesheet'){
+            [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+            $out=[];$k=['Employees'=>0,'Worked Days'=>0,'Absent Days'=>0,'Leave Days'=>0,'Holidays'=>0];
+            foreach(\WorkforceOne\Reports\Timesheet::byEmployee($rows) as $p){
+                $dec=function($m){return \WorkforceOne\Reports\Timesheet::decimalHours((int)$m);};
+                $out[]=[$p['employee'],$p['domain'],implode(' · ',$p['teams']),$p['worked_days'],$hm($p['net_minutes']),$dec($p['net_minutes']),$hm($p['expected_minutes']),$dec($p['expected_minutes']),\WorkforceOne\Reports\DayMetrics::signedHm($p['balance_minutes']),
+                    $hm($p['ot_approved']),$hm($p['ot_actual']),$dec($p['ot_actual']),$hm($p['ot_extra']),$p['late_minutes'],$p['early_minutes'],$p['absent'],$p['leave_days'],$p['leave_breakdown'],$p['holidays']];
+                $k['Employees']++;$k['Worked Days']+=$p['worked_days'];$k['Absent Days']+=$p['absent'];$k['Leave Days']+=$p['leave_days'];$k['Holidays']+=$p['holidays'];
+            }
+            return ['headers'=>['Employee','Employee ID','Team','Worked Days','Net Hours','Net Hours (decimal)','Expected Hours','Expected Hours (decimal)','Balance','Overtime Approved','Overtime Worked','Overtime Worked (decimal)','Unapproved Extra','Late (min)','Early Leave (min)','Absent Days','Leave Days','Leave Breakdown','Holidays'],
+                'rows'=>$out,'kpis'=>$k,'sheets'=>[$details($rows)]];
+        }
         if($type==='summary'){
             [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
             $out=[];
@@ -379,7 +414,7 @@ trait EWS_Reports_Trait {
                 $p['attendance_rate'],$p['punctuality_rate'],$p['late_minutes'],$p['early_minutes'],$p['missing_sign_out'],$p['avg_first_in'],$hm($p['net_minutes']),$hm($p['expected_minutes']),\WorkforceOne\Reports\DayMetrics::signedHm($p['balance_minutes'])];
             $t=\WorkforceOne\Reports\EmployeeSummary::totals($rows);
             return ['headers'=>['Employee','Employee ID','Team','Expected Days','Present','Late','Absent','Leave','Holiday','Business Trip','Attendance %','Punctuality %','Late (min)','Early Leave (min)','Missing Sign-out','Avg First Sign In','Net Hours','Expected Hours','Balance'],
-                'rows'=>$out,'kpis'=>['Attendance %'=>$t['attendance_rate'],'Punctuality %'=>$t['punctuality_rate'],'Late (min)'=>$t['late_minutes'],'Absent'=>$t['absent'],'Missing Sign-out'=>$t['missing_sign_out'],'Present'=>$t['present']]];
+                'rows'=>$out,'kpis'=>['Attendance %'=>$t['attendance_rate'],'Punctuality %'=>$t['punctuality_rate'],'Late (min)'=>$t['late_minutes'],'Absent'=>$t['absent'],'Missing Sign-out'=>$t['missing_sign_out'],'Present'=>$t['present']],'sheets'=>[$details($rows)]];
         }
         [$rows,$summary]=$this->report_attendance_data($s,$e,$team,$employee_id,$status,$employee_status);
         $out=[];
@@ -407,11 +442,31 @@ trait EWS_Reports_Trait {
         while($n>0){$n--; $s=chr(65+($n%26)).$s; $n=intdiv($n,26);}
         return $s;
     }
+    /** A plain sheet: a header row (style 4), data rows (style 5), frozen header and a filter. */
+    private function report_xlsx_table_sheet(array $headers,array $rows,array $widths=[]){
+        $xml='<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>';
+        foreach($headers as $i=>$h)$xml.='<col min="'.($i+1).'" max="'.($i+1).'" width="'.(int)($widths[$i]??max(12,min(40,mb_strlen((string)$h)+4))).'" customWidth="1"/>';
+        $xml.='</cols><sheetData>';
+        $all=array_merge([$headers],$rows);
+        foreach($all as $r=>$row){
+            $xml.='<row r="'.($r+1).'">';
+            foreach(array_values($row) as $c=>$v){
+                $ref=$this->report_xlsx_col($c+1).($r+1);$style=$r===0?4:5;
+                $xml.=($r>0 && is_int($v))?'<c r="'.$ref.'" s="'.$style.'"><v>'.$v.'</v></c>':'<c r="'.$ref.'" s="'.$style.'" t="inlineStr"><is><t xml:space="preserve">'.$this->report_xlsx_escape($v).'</t></is></c>';
+            }
+            $xml.='</row>';
+        }
+        $xml.='</sheetData>';
+        if($headers)$xml.='<autoFilter ref="A1:'.$this->report_xlsx_col(count($headers)).count($all).'"/>';
+        return $xml.'</worksheet>';
+    }
+
     private function report_xlsx_build($type,$start,$end){
         if(!class_exists('ZipArchive')) return new WP_Error('xlsx_zip','The PHP ZipArchive extension is required for Excel export.');
 
         $table=$this->report_export_table($start,$end,$type);
-        $title=$type==='workforce'?'Workforce Report':($type==='summary'?'Attendance Summary':'Attendance Report');
+        $titles=['workforce'=>'Workforce Report','summary'=>'Attendance Summary','timesheet'=>'Timesheet','attendance'=>'Attendance Report'];
+        $title=$titles[$type]??'Attendance Report';
         $generated=current_time('Y-m-d H:i');
         $headers=$table['headers'];
         $data=$table['rows'];
@@ -432,7 +487,7 @@ trait EWS_Reports_Trait {
         $sheet.='<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>';
         $sheet.='<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="8" topLeftCell="A9" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
         $sheet.='<sheetFormatPr defaultRowHeight="20"/><cols>';
-        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:($type==='summary'?[24,16,18,10,9,9,9,9,9,10,11,11,10,11,11,11,11,11,10]:[24,16,18,12,14,10,10,14,18,10,12,10,11,12]);
+        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:(in_array($type,['summary','timesheet'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12]);
         for($c=1;$c<=$maxCols;$c++){ $w=$widths[$c-1]??14; $sheet.='<col min="'.$c.'" max="'.$c.'" width="'.$w.'" customWidth="1"/>'; }
         $sheet.='</cols><sheetData>';
 
@@ -488,6 +543,7 @@ trait EWS_Reports_Trait {
         $styles.='<fills count="15"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>';
         foreach($fills as $f)$styles.='<fill><patternFill patternType="solid"><fgColor rgb="'.$f.'"/><bgColor indexed="64"/></patternFill></fill>';
         $styles.='</fills><borders count="3"><border/><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"><color rgb="FFD7E2EE"/></bottom></border><border><left style="thin"><color rgb="FFD7E2EE"/></left><right style="thin"><color rgb="FFD7E2EE"/></right><top style="thin"><color rgb="FFD7E2EE"/></top><bottom style="thin"><color rgb="FFD7E2EE"/></bottom></border></borders>';
+        $styles.='<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>';
         $styles.='<cellXfs count="25">';
         $styles.='<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>'; // 0 base
         $styles.='<xf numFmtId="0" fontId="1" fillId="3" borderId="0" applyAlignment="1"><alignment vertical="center"/></xf>'; // 1 hero
@@ -515,24 +571,44 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
             $styles.='<xf numFmtId="0" fontId="2" fillId="'.$cfg['fill'].'" borderId="2" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>';
             $styles.='<xf numFmtId="0" fontId="2" fillId="'.$cfg['fill'].'" borderId="2" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>';
         }
-        $styles.='</cellXfs></styleSheet>';
+        $styles.='</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
         $tmp=wp_tempnam('workforce-one-'.$type.'.xlsx'); $zip=new ZipArchive();
         if($zip->open($tmp,ZipArchive::CREATE|ZipArchive::OVERWRITE)!==true)return new WP_Error('xlsx_open','Could not create Excel workbook.');
-        $zip->addFromString('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>');
         $zip->addFromString('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
-        $sheetName=$type==='workforce'?'Workforce Report':($type==='summary'?'Attendance Summary':'Attendance Report');
-        $zip->addFromString('xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets><sheet name="'.$sheetName.'" sheetId="1" r:id="rId1"/></sheets></workbook>');
-        $zip->addFromString('xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
-        $zip->addFromString('xl/worksheets/sheet1.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.$sheet);
+        // Further sheets: the report's own (e.g. Daily Details), then the Definitions of every figure.
+        $extra=$table['sheets']??[];
+        $defs=[];foreach(\WorkforceOne\Reports\Definitions::all() as $term=>$text)$defs[]=[$term,$text];
+        $extra[]=['name'=>'Definitions','headers'=>['Figure','Definition'],'rows'=>$defs,'widths'=>[24,110]];
+        $sheets=[[$title,$sheet]];
+        foreach($extra as $x)$sheets[]=[$x['name'],$this->report_xlsx_table_sheet($x['headers'],$x['rows'],$x['widths']??[])];
+        $overrides='';$entries='';$rels='';
+        foreach($sheets as $i=>[$name,$xml]){
+            $n=$i+1;
+            $overrides.='<Override PartName="/xl/worksheets/sheet'.$n.'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+            $entries.='<sheet name="'.$this->report_xlsx_escape($name).'" sheetId="'.$n.'" r:id="rId'.$n.'"/>';
+            $rels.='<Relationship Id="rId'.$n.'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'.$n.'.xml"/>';
+            $zip->addFromString('xl/worksheets/sheet'.$n.'.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.$xml);
+        }
+        $rels.='<Relationship Id="rId'.(count($sheets)+1).'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
+        $zip->addFromString('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'.$overrides.'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>');
+        $zip->addFromString('xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets>'.$entries.'</sheets></workbook>');
+        $zip->addFromString('xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'.$rels.'</Relationships>');
         $zip->addFromString('xl/styles.xml',$styles); $zip->close();
         $data=file_get_contents($tmp); @unlink($tmp); return $data;
     }
+    /** Who exported which report, for which period and filters (wp-admin → Audit Log). */
+    private function report_export_audit($type,$format,$s,$e){
+        [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
+        $this->audit('report_export','report',0,sprintf('%s %s · %s to %s · team: %s · employee: %s · result: %s · employees: %s',$this->report_catalog()[$type][0]??$type,$format,$s,$e,$team,$employee_id?:'all',$status,$employee_status));
+    }
+
     public function report_xlsx(){
         if(!$this->can('ews_view_reports'))wp_die('Access denied');
         check_admin_referer('ews31_report'); [$s,$e]=$this->period();
-        $type=sanitize_key($_GET['report_type']??'attendance'); if(!in_array($type,['summary','attendance','workforce'],true))$type='attendance';
+        $type=sanitize_key($_GET['report_type']??'attendance'); if(!in_array($type,['summary','attendance','timesheet','workforce'],true))$type='attendance';
         $xlsx=$this->report_xlsx_build($type,$s,$e); if(is_wp_error($xlsx))wp_die(esc_html($xlsx->get_error_message()));
+        $this->report_export_audit($type,'Excel',$s,$e);
         nocache_headers(); header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.xlsx'); header('Content-Length:'.strlen($xlsx)); echo $xlsx; exit;
     }
 
@@ -541,8 +617,9 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
         check_admin_referer('ews31_report');
         [$s,$e]=$this->period();
         $type=sanitize_key($_GET['report_type']??'attendance');
-        if(!in_array($type,['summary','attendance','workforce'],true))$type='attendance';
+        if(!in_array($type,['summary','attendance','timesheet','workforce'],true))$type='attendance';
         $csv=$this->report_detailed_csv($s,$e,$type);
+        $this->report_export_audit($type,'CSV',$s,$e);
         nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.csv');echo "\xEF\xBB\xBF".$csv;exit;
     }
 

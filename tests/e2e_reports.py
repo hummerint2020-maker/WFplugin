@@ -132,12 +132,52 @@ rows = csv_rows(adm, page)
 check('the summary exports with its own columns', rows and {'Employee', 'Attendance %', 'Late (min)', 'Net Hours', 'Expected Hours', 'Balance'} <= set(rows[0].keys()), list(rows[0].keys()) if rows else rows)
 check('the status filter belongs to the Daily Log only', 'name="status"' not in page)
 
+# ---------------------------------------------------------------- Timesheet (payroll) and multi-sheet Excel
+php("""
+    update_option('ews_feature_overtime',1,false);
+    $wpdb->query("DELETE FROM {$p}ews_overtime_requests");
+    $ops=(int)$wpdb->get_var("SELECT department_id FROM {$p}ews_employees WHERE name='Omar Ontime'");
+    $wpdb->insert($p.'ews_employees',['name'=>'Otto Overtime','domain_name'=>'otto','email'=>'otto@example.com','active'=>1,'attendance_enabled'=>1,'department_id'=>$ops]); $o=$wpdb->insert_id;
+    $wpdb->insert($p.'ews_schedule',['employee_id'=>$o,'work_date'=>'%(day)s','status'=>'Office']);
+    $wpdb->insert($p.'ews_time_logs',['employee_id'=>$o,'user_id'=>1,'work_date'=>'%(day)s','event_type'=>'sign_in','event_at'=>'%(day)s 09:00:00','scheduled_status'=>'Office']);
+    $wpdb->insert($p.'ews_time_logs',['employee_id'=>$o,'user_id'=>1,'work_date'=>'%(day)s','event_type'=>'sign_out','event_at'=>'%(day)s 18:30:00','scheduled_status'=>'Office']);
+    $wpdb->insert($p.'ews_overtime_requests',['employee_id'=>$o,'overtime_date'=>'%(day)s','start_time'=>'17:00:00','end_time'=>'18:00:00','requested_minutes'=>60,'reason'=>'Release','status'=>'Approved','requested_by'=>1,'requested_at'=>current_time('mysql')]);
+""" % {'day': DAY})
+TIMESHEET = '/app/?ews_view=reports&report_type=timesheet&start=%s&end=%s' % (DAY, HOL)
+st, page, _ = adm.req(TIMESHEET)
+otto, omar, vera = summary_row(page, 'Otto Overtime'), summary_row(page, 'Omar Ontime'), summary_row(page, 'Vera Vacation')
+check('the Timesheet tab opens', st == 200 and 'data-report="timesheet"' in page)
+check('timesheet hours, also as decimals for payroll', (omar.get('net'), omar.get('net_decimal'), otto.get('net'), otto.get('net_decimal'), otto.get('balance')) == ('7:10', '7.17', '9:30', '9.50', '+2:00'), (omar, otto))
+check('overtime: approved 1:00, worked 1:00, unapproved extra 0:30', (otto.get('ot_approved'), otto.get('ot_actual'), otto.get('ot_extra')) == ('1:00', '1:00', '0:30'), otto)
+check('leave taken by type and holidays', (vera.get('leave_days'), vera.get('leave_breakdown'), omar.get('holidays')) == ('1', 'Vacation 1', '1'), (vera, omar))
+rows = csv_rows(adm, page)
+check('the timesheet CSV has payroll columns', rows and {'Employee ID', 'Worked Days', 'Net Hours', 'Net Hours (decimal)', 'Expected Hours', 'Overtime Worked', 'Unapproved Extra', 'Leave Breakdown'} <= set(rows[0].keys()), list(rows[0].keys()) if rows else rows)
+
+
+def xlsx_sheets(sess, page):
+    url = nonce_url(page, 'ews31_report_xlsx')
+    data = sess.op.open(__import__('urllib.request').request.Request('http://127.0.0.1:8080' + url)).read() if url else b''
+    try:
+        return re.findall(r'<sheet name="([^"]+)"', zipfile.ZipFile(io.BytesIO(data)).read('xl/workbook.xml').decode())
+    except Exception:
+        return []
+
+
+check('the timesheet Excel has Timesheet, Daily Details and Definitions sheets', xlsx_sheets(adm, page) == ['Timesheet', 'Daily Details', 'Definitions'], xlsx_sheets(adm, page))
+st, page, _ = adm.req(SUMMARY)
+check('...and the summary Excel too', xlsx_sheets(adm, page) == ['Attendance Summary', 'Daily Details', 'Definitions'], xlsx_sheets(adm, page))
+check('exports are recorded in the audit log', len(q("SELECT id FROM {p}ews_audit_log WHERE action='report_export'")) >= 3)
+
 uid = q("SELECT wp_user_id FROM {p}ews_employees WHERE name='Mona Manager'")[0]['wp_user_id']
 php("$u=new WP_User(%s); $u->add_cap('ews_view_reports');" % uid)
 emp = Session('emp1', 'emp1pass')
 st, page, _ = emp.req(REPORT)
 rows = csv_rows(emp, page)
 check('a department manager reports on their department only', rows and 'Sam Sales' not in {r['Employee'] for r in rows} and 'Omar Ontime' in {r['Employee'] for r in rows})
+# A manager on a different shift (07:00-15:00) sees the employee's overtime against the employee's shift.
+php("$s=get_option('ews_shifts'); $s=is_array($s)?$s:[]; $s[]=['id'=>77,'name'=>'Early','start'=>'07:00','end'=>'15:00','grace'=>10,'active'=>1]; update_option('ews_shifts',$s,false); $wpdb->update($p.'ews_employees',['default_shift_id'=>77],['name'=>'Mona Manager']);")
+st, page, _ = emp.req(TIMESHEET)
+check('overtime follows the employee\'s shift, not the viewer\'s', summary_row(page, 'Otto Overtime').get('ot_extra') == '0:30', summary_row(page, 'Otto Overtime'))
 php("$u=new WP_User(%s); $u->remove_cap('ews_view_reports');" % uid)
 st, page, _ = emp.req(REPORT)
 check('without View Reports there is no report', 'Report Summary' not in page)

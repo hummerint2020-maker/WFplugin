@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.26
+Reports, phase 1 / round 3: the Timesheet and a fuller Excel export.
+
+### Added (employee app → Reports)
+- **Timesheet** tab: worked hours per employee for payroll — worked days, net and expected hours
+  (also as decimals, e.g. 7:10 = 7.17), the balance, overtime approved / worked / unapproved extra
+  (when Overtime is on), late and early-leave minutes, absent days, leave days with the leave taken
+  by type (e.g. "Sick Leave 1; Vacation 2") and holidays.
+- **Excel exports have more sheets.** The Attendance Summary and the Timesheet add a "Daily Details"
+  sheet (every employee-day behind the totals), and every export ends with a "Definitions" sheet
+  explaining each figure. Decimal hours are real numbers, so Excel can add them up.
+- **Exports are recorded in the Audit Log** (report, format, period and filters).
+
+### Fixed
+- Overtime worked used the first Sign Out of the day instead of the last, and was measured
+  against the shift of the user looking at it rather than the employee's. Neither showed on the
+  screens in use (the Dashboard asks about the signed-in employee; the overtime report that
+  asked about others was never displayed), but the Timesheet relies on it. Overtime now has one
+  rule set (`DayMetrics::overtime()`, unit tested) used by the Dashboard and the reports.
+- Excel files declare a default cell style (some readers warned that it was missing).
+
+### Internal
+- `src/Reports/Timesheet.php` and `src/Reports/Definitions.php`; `report_days()` adds approved,
+  worked and unapproved overtime to every day; the Excel writer builds any number of sheets.
+
 ## 3.31.25
 Reports, phase 1 / round 2: the Report Center and the Attendance Summary.
 

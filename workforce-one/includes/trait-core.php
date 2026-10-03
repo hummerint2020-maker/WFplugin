@@ -638,82 +638,27 @@ function current_employee(){
             if(is_file($path))@unlink($path);
         }
 
+    /**
+     * Overtime on one day for one employee: approved, actually worked and unapproved extra minutes
+     * (rules: \WorkforceOne\Reports\DayMetrics::overtime()), against the employee's own shift and
+     * their first Sign In / last Sign Out.
+     */
     private function overtime_attendance_summary($eid,$date){
             if(!$this->overtime_enabled())return ['approved_minutes'=>0,'actual_approved_minutes'=>0,'unapproved_extra_minutes'=>0,'approved_requests'=>[]];
             global $wpdb;
             $table=$wpdb->prefix.'ews_overtime_requests';
-            $requests=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND overtime_date=%s AND status='Approved' ORDER BY start_time ASC",$eid,$date));
+            $requests=(array)$wpdb->get_results($wpdb->prepare("SELECT id,start_time,end_time FROM {$table} WHERE employee_id=%d AND overtime_date=%s AND status='Approved' ORDER BY start_time ASC",$eid,$date));
             $events=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY event_at ASC",$eid,$date));
             $sign_in=null;$sign_out=null;
             foreach($events as $ev){
                 if(($ev->event_type==='sign_in'||$ev->event_type==='late_sign_in') && !$sign_in)$sign_in=$ev->event_at;
-                if($ev->event_type==='sign_out' && !$sign_out)$sign_out=$ev->event_at;
+                if($ev->event_type==='sign_out')$sign_out=$ev->event_at; // the last one
             }
-            $cfg=$this->working_hours();
-            $scheduled_start=strtotime($date.' '.$cfg['start']);
-            $scheduled_end=strtotime($date.' '.$cfg['end']);
-            $in_ts=$sign_in?strtotime($sign_in):null;
-            $out_ts=$sign_out?strtotime($sign_out):null;
-            $approved=0;$actual=0;$details=[];
-            foreach($requests as $r){
-                $rs=strtotime($date.' '.$r->start_time);
-                $re=strtotime($date.' '.$r->end_time);
-                if($re<=$rs)continue;
-
-                // Approved duration is the approved request itself. It is not limited
-                // by scheduled working hours; pre-shift and post-shift OT are both valid.
-                $mins=(int)floor(($re-$rs)/60);
-                $approved+=$mins;
-
-                // Actual OT must be backed by attendance:
-                // pre-shift OT -> actual Sign In; post-shift OT -> actual Sign Out.
-                $real=0;
-                if($rs < $scheduled_start){
-                    if($in_ts){
-                        $actual_start=max($rs,$in_ts);
-                        $actual_end=min($re,$scheduled_start);
-                        if($actual_end>$actual_start)$real=(int)floor(($actual_end-$actual_start)/60);
-                    }
-                    // If the same approved request crosses the scheduled start,
-                    // count the post-shift part from Sign Out as well.
-                    if($re>$scheduled_end && $out_ts){
-                        $actual_start=max($scheduled_end,$rs);
-                        $actual_end=min($re,$out_ts);
-                        if($actual_end>$actual_start)$real+=(int)floor(($actual_end-$actual_start)/60);
-                    }
-                } elseif($rs >= $scheduled_end){
-                    if($out_ts){
-                        $actual_start=max($rs,$scheduled_end);
-                        $actual_end=min($re,$out_ts);
-                        if($actual_end>$actual_start)$real=(int)floor(($actual_end-$actual_start)/60);
-                    }
-                } else {
-                    // Request overlaps regular hours and extends after shift.
-                    if($out_ts && $re>$scheduled_end){
-                        $actual_start=$scheduled_end;
-                        $actual_end=min($re,$out_ts);
-                        if($actual_end>$actual_start)$real=(int)floor(($actual_end-$actual_start)/60);
-                    }
-                }
-                $actual+=$real;
-                $details[]=['id'=>(int)$r->id,'date'=>$date,'start'=>$r->start_time,'end'=>$r->end_time,'approved_minutes'=>$mins,'actual_minutes'=>$real];
-            }
-
-            // Unapproved extra presence is only time after the scheduled end that
-            // is not covered by an approved OT window. Pre-shift attendance is
-            // intentionally not converted into OT here.
-            $unapproved=0;
-            if($out_ts && $out_ts>$scheduled_end){
-                $presence=(int)floor(($out_ts-$scheduled_end)/60);
-                $approved_post=0;
-                foreach($details as $d){
-                    $rs=strtotime($date.' '.$d['start']);$re=strtotime($date.' '.$d['end']);
-                    $post_start=max($rs,$scheduled_end);
-                    if($re>$post_start)$approved_post+=(int)floor(($re-$post_start)/60);
-                }
-                $unapproved=max(0,$presence-min($presence,$approved_post));
-            }
-            return ['approved_minutes'=>$approved,'actual_approved_minutes'=>$actual,'unapproved_extra_minutes'=>$unapproved,'approved_requests'=>$details,'sign_in'=>$sign_in,'sign_out'=>$sign_out,'scheduled_start'=>$cfg['start'],'scheduled_end'=>$cfg['end']];
+            $cfg=$this->working_hours((int)$eid);
+            $o=\WorkforceOne\Reports\DayMetrics::overtime($date,$cfg['start'],$cfg['end'],$sign_in,$sign_out,array_map(function($r){return ['start'=>$r->start_time,'end'=>$r->end_time];},$requests));
+            $details=[];
+            foreach(array_values(array_filter($requests,function($r)use($date){return strtotime($date.' '.$r->end_time)>strtotime($date.' '.$r->start_time);})) as $i=>$r)$details[]=['id'=>(int)$r->id,'date'=>$date,'start'=>$r->start_time,'end'=>$r->end_time,'approved_minutes'=>$o['windows'][$i]['approved'],'actual_minutes'=>$o['windows'][$i]['actual']];
+            return ['approved_minutes'=>$o['approved'],'actual_approved_minutes'=>$o['actual'],'unapproved_extra_minutes'=>$o['extra'],'approved_requests'=>$details,'sign_in'=>$sign_in,'sign_out'=>$sign_out,'scheduled_start'=>$cfg['start'],'scheduled_end'=>$cfg['end']];
         }
 
         private function format_duration_minutes($minutes){

@@ -68,6 +68,24 @@ final class DayMetricsTest extends TestCase
 
     public function testSignedHours(): void
     {
-        $this->assertSame(['−0:40', '1:05', '0:00'], [M::signedHm(-40), M::signedHm(65), M::signedHm(0)]);
+        $this->assertSame(['−0:40', '+1:05', '0:00'], [M::signedHm(-40), M::signedHm(65), M::signedHm(0)]);
+    }
+
+    public function testOvertime(): void
+    {
+        // Approved 17:00-18:00, out at 18:30: 60 approved, 60 actual, 30 unapproved extra.
+        $o = M::overtime('2026-09-30', '09:00', '17:00', '2026-09-30 09:00:00', '2026-09-30 18:30:00', [['start' => '17:00:00', 'end' => '18:00:00']]);
+        $this->assertSame([60, 60, 30], [$o['approved'], $o['actual'], $o['extra']]);
+        // Left at 17:30: only half of the window was worked; nothing unapproved.
+        $o = M::overtime('2026-09-30', '09:00', '17:00', '2026-09-30 09:00:00', '2026-09-30 17:30:00', [['start' => '17:00', 'end' => '18:00']]);
+        $this->assertSame([60, 30, 0], [$o['approved'], $o['actual'], $o['extra']]);
+        // Before the shift: covered by an early Sign In.
+        $o = M::overtime('2026-09-30', '09:00', '17:00', '2026-09-30 07:30:00', '2026-09-30 17:00:00', [['start' => '07:00', 'end' => '09:00']]);
+        $this->assertSame([120, 90, 0], [$o['approved'], $o['actual'], $o['extra']]);
+        // A window inside the shift and past its end counts only the part after the end.
+        $o = M::overtime('2026-09-30', '09:00', '17:00', '2026-09-30 09:00:00', '2026-09-30 19:00:00', [['start' => '16:00', 'end' => '18:00']]);
+        $this->assertSame([120, 60, 60], [$o['approved'], $o['actual'], $o['extra']]);
+        // No approved window: staying late is all unapproved.
+        $this->assertSame(45, M::overtime('2026-09-30', '09:00', '17:00', '2026-09-30 09:00:00', '2026-09-30 17:45:00', [])['extra']);
     }
 }
