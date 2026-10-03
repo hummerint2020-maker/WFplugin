@@ -20,7 +20,7 @@ trait EWS_Schedule_Types_Trait {
 
     private function schedule_types_config($active_only=true){
             if(self::$ews_schedule_types_cache===null){
-                $types=get_option('ews_schedule_types_config',null);
+                $types=$this->option('ews_schedule_types_config');
             if(!is_array($types)||empty($types)){
                 $types=$this->default_schedule_types_config();
                 update_option('ews_schedule_types_config',$types,false);

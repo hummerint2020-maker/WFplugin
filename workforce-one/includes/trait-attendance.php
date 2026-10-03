@@ -65,9 +65,9 @@ trait EWS_Attendance_Trait {
             [$integrity_status,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_timestamp,time(),$prev?:null);
             [$location_status,$distance]=LocationAssessment::geofence(
                 $lat,$lng,
-                $assigned_location?$assigned_location->latitude:get_option('ews_location_latitude',''),
-                $assigned_location?$assigned_location->longitude:get_option('ews_location_longitude',''),
-                $assigned_location?(float)$assigned_location->radius:(float)get_option('ews_location_radius',200)
+                $assigned_location?$assigned_location->latitude:$this->option('ews_location_latitude'),
+                $assigned_location?$assigned_location->longitude:$this->option('ews_location_longitude'),
+                $assigned_location?(float)$assigned_location->radius:(float)$this->option('ews_location_radius')
             );
             if($qr_location){
                 // A QR can be photographed and forwarded, so QR Sign-In additionally requires the

@@ -15,7 +15,7 @@ trait EWS_Face_Reset_Trait {
     /* ------------------------------------------------------------------ operations */
 
     private function face_reset_requests(){
-        $requests=get_option('ews_face_reset_requests',[]);
+        $requests=$this->option('ews_face_reset_requests');
         return is_array($requests)?$requests:[];
     }
 

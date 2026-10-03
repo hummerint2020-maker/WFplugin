@@ -46,6 +46,10 @@ trait EWS_Admin_Trait {
         if(substr((string)$hook_suffix,-strlen('ews31-approvals'))==='ews31-approvals'){
             wp_enqueue_script('workforce-one-admin-approvals', $this->plugin_url('assets/js/admin-approvals.js'), [], EWS_VERSION, true);
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-settings-overview'))==='ews31-settings-overview'){
+            wp_enqueue_style('workforce-one-admin-settings-overview', $this->plugin_url('assets/css/admin-settings-overview.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-settings-overview', 'rtl', 'replace');
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-attendance-insights'))==='ews31-attendance-insights'){
             wp_enqueue_style('workforce-one-admin-attendance-insights', $this->plugin_url('assets/css/admin-attendance-insights.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-attendance-insights', 'rtl', 'replace');
@@ -91,6 +95,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Employee Profile','Employee Profile','ews_manage_settings','ews31-employee-profile-settings',[$this,'admin_employee_profile_settings']);
             add_submenu_page('ews31','View Navigation','View Navigation','ews_manage_settings','ews31-navigation',[$this,'admin_navigation']);
             add_submenu_page('ews31','Approval Workflows','Approval Workflows','manage_options','ews31-approvals',[$this,'admin_approval_workflows']);
+            add_submenu_page('ews31','Settings Overview','Settings Overview','manage_options','ews31-settings-overview',[$this,'admin_settings_overview']);
             // Keep Employee Profile registered so direct URLs remain authorized (removing the
             // submenu entry would make WordPress refuse the page), but hide its menu link on every
             // screen: profiles are opened from Employees.
@@ -102,8 +107,8 @@ trait EWS_Admin_Trait {
 
         public function ews_admin_confirmation_guard(){
             if(!$this->can('ews_manage_settings') && !$this->can('ews_manage_time')) return;
-            $global=(int)get_option('ews_confirm_global',1);
-            $cfg=\WorkforceOne\Settings\FeatureSettings::confirmState(get_option('ews_confirmation_actions',[]));
+            $global=(int)$this->option('ews_confirm_global');
+            $cfg=\WorkforceOne\Settings\FeatureSettings::confirmState($this->option('ews_confirmation_actions'));
             $payload=['global'=>(bool)$global,'actions'=>$cfg];
             echo '<script>window.ewsAdminConfirmationConfig='.wp_json_encode($payload).';(function(){function init(){document.querySelectorAll("[data-ews-confirm-key]").forEach(function(el){if(el.dataset.ewsConfirmBound==="1")return;el.dataset.ewsConfirmBound="1";el.addEventListener("click",function(e){var c=window.ewsAdminConfirmationConfig||{};var k=el.getAttribute("data-ews-confirm-key");if(c.global!==false&&c.actions&&c.actions[k]){var msg=k==="attendance_reset"?"Reset ALL attendance and break records for this employee on this date?":"Remove this General Leave?";if(!window.confirm(msg))e.preventDefault();}});});}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();})();</script>';
         }
@@ -126,7 +131,7 @@ trait EWS_Admin_Trait {
             echo '<div class="wrap"><h1>Attendance Email Settings</h1><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">
             <input type="hidden" name="action" value="ews31_email_save">'.wp_nonce_field('ews31_email_save','_wpnonce',true,false).'
             <p>Enter recipient email addresses separated by comma, semicolon or new line.</p>
-            <textarea name="emails" style="width:600px;max-width:100%;min-height:120px">'.esc_textarea(get_option('ews_attendance_emails','')).'</textarea>
+            <textarea name="emails" style="width:600px;max-width:100%;min-height:120px">'.esc_textarea($this->option('ews_attendance_emails')).'</textarea>
             <p><button class="button button-primary">Save Email Settings</button></p></form></div>';
         }
 

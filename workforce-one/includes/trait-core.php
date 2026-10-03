@@ -37,6 +37,11 @@ trait EWS_Core_Trait {
             self::$ews_company_leave_cache=[];
         }
 
+    /** A Workforce One setting, or its default from src/Settings/Options.php when none is saved. */
+    private function option($name){
+            return get_option($name,\WorkforceOne\Settings\Options::defaultOf($name));
+        }
+
 
     private function employee_attendance_enabled($employee_id){
             global $wpdb;
@@ -73,7 +78,7 @@ function current_employee(){
     private function app_home_url(){
         static $url=null;
         if($url!==null)return $url;
-        $id=(int)get_option('ews_app_page_id',0);
+        $id=(int)$this->option('ews_app_page_id');
         $post=$id?get_post($id):null;
         if(!$post||$post->post_status!=='publish'||!has_shortcode((string)$post->post_content,'employee_app')){
             global $wpdb;
@@ -146,7 +151,7 @@ function current_employee(){
 
     private function pwa_splash_settings(){
             $defaults=\WorkforceOne\Settings\FeatureSettings::SPLASH_DEFAULTS;
-            $saved=get_option('ews_pwa_splash_settings',[]);
+            $saved=$this->option('ews_pwa_splash_settings');
             $s=wp_parse_args(is_array($saved)?$saved:[],$defaults);
             $s['enabled']=!empty($s['enabled'])?1:0;
             $s['duration_ms']=max(0,min(3000,(int)$s['duration_ms']));

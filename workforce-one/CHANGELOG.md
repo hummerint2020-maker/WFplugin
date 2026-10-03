@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.40
+### Added
+- **wp-admin → Settings Overview** (administrators only): every Workforce One setting in one
+  read-only list, grouped by area, with its current value, its default, whether it was changed and
+  an Edit link to the page where it is set. "Only changed" shows just the changed ones. Settings the
+  plugin writes itself and values kept from older versions are labelled as such; stored settings
+  this version does not use are listed by name.
+- **Export settings (JSON)** on the same page, for support: every setting with value, default and
+  changed, plus the plugin, WordPress and PHP versions. Secrets (push private key, kiosk secrets)
+  are never shown or exported, only whether they are set; employee data (birthdays, face reset
+  requests) is only counted. Each export is recorded in the Audit Log.
+
+### Internal
+- `src/Settings/Options.php` lists all 59 settings with their defaults. Code reads settings through
+  `$this->option()`, which uses those defaults, instead of repeating a default at each
+  `get_option()` (about 90 places). No default changed: every one was checked against the value
+  the code used before.
+- `tests/unit/OptionsTest.php` fails when code uses a setting that is not listed, or passes
+  `get_option()` a different default. `tests/e2e_settings_overview.py` (27 checks) runs in CI.
+
 ## 3.31.39
 ### Fixed
 - The installed app (Add to Home Screen) opened on the site's home page instead of the employee

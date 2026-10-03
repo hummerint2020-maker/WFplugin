@@ -15,7 +15,7 @@ trait EWS_Settings_Pages_Trait {
 
     /** @return array<string, array<string, bool>> the matrix as the roles hold it now */
     private function roles_matrix(){
-        $saved=get_option('ews_role_permissions',[]);
+        $saved=$this->option('ews_role_permissions');
         $matrix=[];
         foreach($this->role_defs() as $slug=>$def){
             $role=get_role($slug);
@@ -89,7 +89,7 @@ trait EWS_Settings_Pages_Trait {
         global $wpdb;
         $push_table=$this->push_table();
         $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->employees} WHERE active=1 AND wp_user_id>0");
-        $configured=(bool)(get_option('ews_vapid_public_key','') && get_option('ews_vapid_private_key',''));
+        $configured=(bool)($this->option('ews_vapid_public_key') && $this->option('ews_vapid_private_key'));
         $ready=$configured?(int)$wpdb->get_var("SELECT COUNT(DISTINCT user_id) FROM {$push_table} WHERE user_id IN (SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0)"):0;
         $notices=['policy'=>'Notification policy updated successfully.','retention'=>'Notification retention saved.'];
         $notice=$notices[sanitize_key($_GET['notifications_notice']??'')]??null;
@@ -97,7 +97,7 @@ trait EWS_Settings_Pages_Trait {
         echo $this->render_template('admin/notifications',[
             'health'=>['ready'=>$ready,'missing'=>$configured?max(0,$total-$ready):0,'not_configured'=>$configured?0:$total,'configured'=>$configured],
             'categories'=>$this->notification_policy_categories(),'policy'=>$this->notification_policy(),
-            'retention'=>NotificationSettings::retention(get_option('ews_notification_retention_days',NotificationSettings::DEFAULT_RETENTION)),
+            'retention'=>NotificationSettings::retention($this->option('ews_notification_retention_days')),
             'retention_choices'=>NotificationSettings::RETENTION_DAYS,
             'vapid_subject'=>(string)get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com')),
             'notice'=>$notice,'post_url'=>admin_url('admin-post.php'),

@@ -67,7 +67,7 @@ trait EWS_Achievements_Trait {
         self::$ews_achievements_schema_ready=true;
     }
 
-    private function achievements_enabled(){ return (bool)get_option('ews_feature_achievements',true); }
+    private function achievements_enabled(){ return (bool)$this->option('ews_feature_achievements'); }
 
     private function achievement_definitions($category=''){
         if(!$this->achievements_enabled()) return [];
@@ -158,7 +158,7 @@ trait EWS_Achievements_Trait {
         $employee_id=absint($employee_id);
         if(!$employee_id)return 0;
         try{$cursor=new DateTimeImmutable($through_date.' 12:00:00',wp_timezone());}catch(Exception $e){return 0;}
-        $working_days=array_map('intval',(array)get_option('ews_working_days',['0','1','2','3','4']));
+        $working_days=array_map('intval',(array)$this->option('ews_working_days'));
         if(!$working_days)return 0;
         $definitions=$this->achievement_definitions('attendance');
         $max_threshold=1;
@@ -296,7 +296,7 @@ trait EWS_Achievements_Trait {
         // admin page does not execute hundreds of per-day queries for every employee.
         $attendance_streaks=[];
         if($ids){
-            $working_days=array_map('intval',(array)get_option('ews_working_days',['0','1','2','3','4']));
+            $working_days=array_map('intval',(array)$this->option('ews_working_days'));
             $today=current_time('Y-m-d');
             try{
                 $tz=wp_timezone();

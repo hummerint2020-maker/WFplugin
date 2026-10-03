@@ -20,7 +20,7 @@ trait EWS_Time_Report_Trait {
     private function time_report_site($employee_id){
         $loc=$this->ews_v321_employee_location((int)$employee_id);
         if($loc)return [$loc->latitude,$loc->longitude,(float)($loc->radius?:200)];
-        return [get_option('ews_location_latitude',''),get_option('ews_location_longitude',''),(float)get_option('ews_location_radius',200)];
+        return [$this->option('ews_location_latitude'),$this->option('ews_location_longitude'),(float)$this->option('ews_location_radius')];
     }
 
     public function admin_time_report(){

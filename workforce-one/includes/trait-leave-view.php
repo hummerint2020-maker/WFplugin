@@ -65,7 +65,7 @@ trait EWS_Leave_View_Trait {
 
         $early=null;
         if($emp){
-            $monthly=(int)get_option('ews_early_leave_monthly_minutes',240);$max=(int)get_option('ews_early_leave_max_minutes',120);
+            $monthly=(int)$this->option('ews_early_leave_monthly_minutes');$max=(int)$this->option('ews_early_leave_max_minutes');
             $remaining=max(0,$monthly-$this->early_leave_month_usage($emp->id,substr($today,0,7)));
             $early=['max'=>$max,'remaining'=>$remaining,
                 /* translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours */

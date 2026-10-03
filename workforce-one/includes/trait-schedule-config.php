@@ -31,8 +31,8 @@ trait EWS_Schedule_Config_Trait {
             'active_types'=>count(array_filter($types,function($t){return !empty($t['active']);})),
             'events'=>$events,'delete_urls'=>$delete_urls,
             'hours'=>$this->working_hours(),
-            'grace_period'=>ConfigRules::graceMinutes(get_option('ews_grace_period',10)),
-            'overnight_enabled'=>(bool)(int)get_option('ews_allow_overnight_shift',0),
+            'grace_period'=>ConfigRules::graceMinutes($this->option('ews_grace_period')),
+            'overnight_enabled'=>(bool)(int)$this->option('ews_allow_overnight_shift'),
             'shifts'=>$this->shifts(),
             'working_days'=>$this->working_days(),
             'day_names'=>$this->working_day_names(),
@@ -70,7 +70,7 @@ trait EWS_Schedule_Config_Trait {
     public function shifts_save_handler(){
         $this->schedule_config_guard('ews_shifts_save');
         $stored=array_map(function($s){return (int)$s['id'];},$this->shifts());
-        $highest=max(array_merge([(int)get_option('ews_shifts_highest_id',0)],$stored));
+        $highest=max(array_merge([(int)$this->option('ews_shifts_highest_id')],$stored));
         [$clean,$error]=ConfigRules::shifts(wp_unslash($_POST['shifts']??[]),wp_unslash($_POST['new_shift']??[]),$highest);
         if($error)$this->schedule_config_redirect(['schedule_error'=>$error]);
         foreach($clean as &$shift)$shift['name']=sanitize_text_field($shift['name']);

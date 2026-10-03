@@ -42,7 +42,7 @@ trait EWS_Notifications_Trait {
 
     private function notification_policy(){
         $defaults=$this->notification_policy_defaults();
-        $saved=get_option('ews_notification_policy',[]);
+        $saved=$this->option('ews_notification_policy');
         if(!is_array($saved))$saved=[];
         foreach($defaults as $key=>$row){
             if(isset($saved[$key]) && is_array($saved[$key])){
@@ -369,7 +369,7 @@ trait EWS_Notifications_Trait {
     public function cleanup_notifications(){
         global $wpdb;
         $this->ensure_notifications_schema();
-        $days=(int)get_option('ews_notification_retention_days',90);
+        $days=(int)$this->option('ews_notification_retention_days');
         if($days<=0)return;
         $cutoff=gmdate('Y-m-d H:i:s',time()-($days*DAY_IN_SECONDS));
         $wpdb->query($wpdb->prepare("DELETE FROM {$this->notifications} WHERE created_at < %s",$cutoff));
@@ -414,12 +414,12 @@ trait EWS_Notifications_Trait {
     private function get_vapid_public_key(){
         if(self::$ews_vapid_public_key_cache!==null)return self::$ews_vapid_public_key_cache;
         $this->ensure_vapid_keys();
-        self::$ews_vapid_public_key_cache=(string)get_option('ews_vapid_public_key','');
+        self::$ews_vapid_public_key_cache=(string)$this->option('ews_vapid_public_key');
         return self::$ews_vapid_public_key_cache;
     }
 
     private function ensure_vapid_keys(){
-        if(get_option('ews_vapid_public_key','') && get_option('ews_vapid_private_key','')) return true;
+        if($this->option('ews_vapid_public_key') && $this->option('ews_vapid_private_key')) return true;
         if(!function_exists('openssl_pkey_new')) return false;
         $key=openssl_pkey_new([
             'private_key_type'=>OPENSSL_KEYTYPE_EC,
@@ -478,8 +478,8 @@ trait EWS_Notifications_Trait {
     }
 
     private function vapid_jwt($audience){
-        $private=get_option('ews_vapid_private_key','');
-        $public=get_option('ews_vapid_public_key','');
+        $private=$this->option('ews_vapid_private_key');
+        $public=$this->option('ews_vapid_public_key');
         $subject=get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com'));
         if(!$private||!$public)return false;
         $now=time();
@@ -615,7 +615,7 @@ trait EWS_Notifications_Trait {
                 'Urgency: normal',
                 'Content-Type: application/octet-stream',
                 'Content-Encoding: aes128gcm',
-                'Authorization: vapid t='.$jwt.', k='.get_option('ews_vapid_public_key',''),
+                'Authorization: vapid t='.$jwt.', k='.$this->option('ews_vapid_public_key'),
                 'Content-Length: '.strlen($enc['body'])
             ]
         ]);

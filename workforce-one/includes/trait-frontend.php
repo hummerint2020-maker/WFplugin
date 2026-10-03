@@ -162,7 +162,7 @@ trait EWS_Frontend_Trait {
             return $url;
         }
         private function frontend_confirmation_config(){
-            return ['global'=>(bool)get_option('ews_confirm_global',1),'actions'=>\WorkforceOne\Settings\FeatureSettings::confirmState(get_option('ews_confirmation_actions',[]))];
+            return ['global'=>(bool)$this->option('ews_confirm_global'),'actions'=>\WorkforceOne\Settings\FeatureSettings::confirmState($this->option('ews_confirmation_actions'))];
         }
         private function ews_empty_state($title,$text='',$action_url='',$action_label=''){
             $html='<div class="ews-empty-state" role="status"><div class="ews-empty-icon" aria-hidden="true">○</div><div class="ews-empty-title">'.esc_html($title).'</div>';
@@ -204,7 +204,7 @@ trait EWS_Frontend_Trait {
         }
 
     private function smart_nudge_settings(){
-        return \WorkforceOne\Settings\SmartNudges::config(get_option('ews_smart_nudges',[]));
+        return \WorkforceOne\Settings\SmartNudges::config($this->option('ews_smart_nudges'));
     }
 
     private function smart_nudge_dismissed($user_id=null){
@@ -356,8 +356,8 @@ trait EWS_Frontend_Trait {
 
     private function employee_moments_for_today(){
         global $wpdb;
-        if(!(int)get_option('ews_employee_moments_enabled',1)) return [];
-        $saved=get_option('ews_employee_moments',[]);
+        if(!(int)$this->option('ews_employee_moments_enabled')) return [];
+        $saved=$this->option('ews_employee_moments');
         if(!is_array($saved)||empty($saved)) return [];
         $ids=array_filter(array_map('absint',array_keys($saved)));
         if(!$ids) return [];

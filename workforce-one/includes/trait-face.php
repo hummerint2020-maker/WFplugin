@@ -7,10 +7,10 @@ if (!defined('ABSPATH')) exit;
 trait EWS_Face_Trait {
 
 
-private function face_signin_enabled(){ return (bool)get_option('ews_feature_face_signin',false); }
+private function face_signin_enabled(){ return (bool)$this->option('ews_feature_face_signin'); }
 
     private function face_signin_settings(){
-        $saved=get_option('ews_face_signin_settings',array());
+        $saved=$this->option('ews_face_signin_settings');
         return wp_parse_args(is_array($saved)?$saved:array(),\WorkforceOne\Settings\FeatureSettings::FACE_DEFAULTS);
     }
 

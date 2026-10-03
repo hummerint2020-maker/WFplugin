@@ -2,12 +2,12 @@
 if (!defined('ABSPATH')) exit;
 
 trait EWS_Recognition_Trait {
-    private function recognition_enabled(){ return (bool)get_option('ews_feature_recognition',true); }
-    private function recognition_allow_kudos(){ return (bool)get_option('ews_recognition_allow_kudos',true); }
+    private function recognition_enabled(){ return (bool)$this->option('ews_feature_recognition'); }
+    private function recognition_allow_kudos(){ return (bool)$this->option('ews_recognition_allow_kudos'); }
     private function recognition_weekly_limit(){
-        $mode=get_option('ews_recognition_weekly_limit_mode','limited');
+        $mode=$this->option('ews_recognition_weekly_limit_mode');
         if($mode==='unlimited')return 0;
-        return max(1,min(1000,(int)get_option('ews_recognition_weekly_limit',5)));
+        return max(1,min(1000,(int)$this->option('ews_recognition_weekly_limit')));
     }
 
     private static $ews_recognition_schema_ready = false;

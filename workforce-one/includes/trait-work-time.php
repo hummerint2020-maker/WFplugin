@@ -72,7 +72,7 @@ trait EWS_Work_Time_Trait {
 
     private function shifts(){
             if(self::$ews_shifts_cache!==null)return self::$ews_shifts_cache;
-            $raw=get_option('ews_shifts',null);
+            $raw=$this->option('ews_shifts');
             if(!is_array($raw)||empty($raw)){
                 $raw=$this->default_shifts();
                 update_option('ews_shifts',$raw,false);
@@ -124,14 +124,14 @@ trait EWS_Work_Time_Trait {
                 $normal_until=$cutoff_ts!==false?date('H:i',$cutoff_ts):$shift['end'];
                 return self::$ews_working_hours_cache[$employee_id]=['start'=>$shift['start'],'normal_until'=>$normal_until,'end'=>$shift['end'],'grace'=>$shift['grace'],'sign_in_cutoff_minutes'=>$shift['sign_in_cutoff_minutes'],'overnight'=>$shift['overnight'],'shift_id'=>$shift['id'],'shift_name'=>$shift['name']];
             }
-            $cfg=get_option('ews_working_hours',[]); $defaults=$this->default_working_hours(); if(!is_array($cfg))$cfg=[];
+            $cfg=$this->option('ews_working_hours'); $defaults=$this->default_working_hours(); if(!is_array($cfg))$cfg=[];
             $start=preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$cfg['start']??'')?$cfg['start']:$defaults['start'];
             $end=preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$cfg['end']??'')?$cfg['end']:$defaults['end'];
             $normal_until=preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$cfg['normal_until']??'')?$cfg['normal_until']:$end;
-            return self::$ews_working_hours_cache[$employee_id]=['start'=>$start,'normal_until'=>$normal_until,'end'=>$end,'grace'=>$this->global_grace_period(),'sign_in_cutoff_minutes'=>240,'overnight'=>(int)get_option('ews_allow_overnight_shift',0),'shift_id'=>0,'shift_name'=>'Company Default'];
+            return self::$ews_working_hours_cache[$employee_id]=['start'=>$start,'normal_until'=>$normal_until,'end'=>$end,'grace'=>$this->global_grace_period(),'sign_in_cutoff_minutes'=>240,'overnight'=>(int)$this->option('ews_allow_overnight_shift'),'shift_id'=>0,'shift_name'=>'Company Default'];
         }
 
-    private function global_grace_period(){ return max(0,min(180,(int)get_option('ews_grace_period',10))); }
+    private function global_grace_period(){ return max(0,min(180,(int)$this->option('ews_grace_period'))); }
 
     private function attendance_grace_period($employee_id=0){
             $h=$this->working_hours($employee_id); return isset($h['grace'])?(int)$h['grace']:$this->global_grace_period();
@@ -180,11 +180,11 @@ trait EWS_Work_Time_Trait {
 
     private function default_working_days(){
             // PHP date('w'): Sunday=0 ... Saturday=6.
-            return [0,1,2,3,4]; // Preserve current behavior: Sunday–Thursday.
+            return \WorkforceOne\Settings\Options::defaultOf('ews_working_days'); // Sunday–Thursday.
         }
 
     private function working_days(){
-            $days=get_option('ews_working_days',null);
+            $days=$this->option('ews_working_days');
             if(!is_array($days))$days=$this->default_working_days();
             $out=[];
             foreach($days as $day){

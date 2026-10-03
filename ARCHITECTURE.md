@@ -34,6 +34,7 @@ workforce-one/
     Settings/NotificationSettings.php retention, VAPID subject, policy
     Settings/Navigation.php, Moments.php, SmartNudges.php, EngagementHooks.php   engagement settings
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
+    Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
     Requests/Hub.php, Hooks.php        presentation rules of the admin request pages
     Approvals/Workflows.php, StateMachine.php, Hooks.php  approval modes per workflow, request/step states
     Locations/LocationRules.php, Hooks.php  work location checks (coordinates, radius, seats, default)
@@ -79,6 +80,11 @@ tests/
 - Stored values (statuses such as `Approved`, `Late Arrival`) stay English; translate on display.
 - Schema changes go through `ensure_*_schema()` + a bump of `ews_schema_target()` (both in `includes/trait-schema.php`).
 - No external CDNs; vendor libraries live in `assets/vendor/` with their licences.
+- Every setting (WordPress option) is listed in `src/Settings/Options.php` with its default. Read it
+  with `$this->option('ews_…')`, which falls back to that default; do not pass a default to
+  `get_option()` (null, meaning "is it saved?", is the exception). `tests/unit/OptionsTest.php`
+  fails on an unlisted option or a different default. A new setting also appears on
+  wp-admin → Settings Overview and in its export; mark secrets `secret` and employee data `data`.
 
 ## Reading form input
 

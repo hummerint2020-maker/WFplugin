@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 trait EWS_Tasks_Trait {
     private static $ews_tasks_schema_ready = false;
-    private function tasks_enabled(){ return (bool)get_option('ews_feature_tasks',false); }
+    private function tasks_enabled(){ return (bool)$this->option('ews_feature_tasks'); }
 
     private function ensure_tasks_schema(){
         if($this->ews_schema_is_current())return;

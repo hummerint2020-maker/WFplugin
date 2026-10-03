@@ -27,7 +27,7 @@ trait EWS_Engagement_Admin_Trait {
 
     public function admin_smart_nudges(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied.');
-        $last=get_option('ews_smart_nudges_last_result',[]);
+        $last=$this->option('ews_smart_nudges_last_result');
         $parts=[];
         if(is_array($last)){
             foreach(['employees'=>'Employees checked','nudges'=>'Active nudges','sent'=>'Push sent','skipped'=>'Skipped'] as $k=>$label)if(isset($last[$k]))$parts[]=$label.': '.(int)$last[$k];
@@ -37,7 +37,7 @@ trait EWS_Engagement_Admin_Trait {
         echo $this->render_template('admin/smart-nudges',[
             'cfg'=>$this->smart_nudge_settings(),
             'items'=>['tasks'=>'Task reminder — tasks due today or overdue.','leave'=>'Leave reminder — pending leave requests awaiting a decision.','schedule'=>'Schedule reminder — tomorrow\'s planned schedule.'],
-            'last_run'=>(int)get_option('ews_smart_nudges_last_run',0),'last_result'=>$parts,
+            'last_run'=>(int)$this->option('ews_smart_nudges_last_run'),'last_result'=>$parts,
             'notice'=>($_GET['nudges_notice']??'')==='saved'?'Smart Nudge settings saved.':null,
             'test_ok'=>$test===''?null:$test==='test_sent',
             'post_url'=>admin_url('admin-post.php'),
@@ -63,12 +63,12 @@ trait EWS_Engagement_Admin_Trait {
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         global $wpdb;
         $employees=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
-        $saved=get_option('ews_employee_moments',[]);
+        $saved=$this->option('ews_employee_moments');
         $saved=is_array($saved)?$saved:[];
         $configured=0;
         foreach($employees as $e)if(!empty($saved[(int)$e->id]['birthday'])||!empty($saved[(int)$e->id]['join_date']))$configured++;
         echo $this->render_template('admin/moments',[
-            'employees'=>$employees,'saved'=>$saved,'enabled'=>(bool)(int)get_option('ews_employee_moments_enabled',1),'configured'=>$configured,
+            'employees'=>$employees,'saved'=>$saved,'enabled'=>(bool)(int)$this->option('ews_employee_moments_enabled'),'configured'=>$configured,
             'notice'=>($_GET['moments_notice']??'')==='saved'?'Employee Moments settings saved.':null,
             'error'=>($_GET['moments_error']??'')==='date'?'Nothing was saved: a date is not valid, or a birthday is in the future.':null,
             'post_url'=>admin_url('admin-post.php'),
@@ -78,7 +78,7 @@ trait EWS_Engagement_Admin_Trait {
     public function employee_moments_save(){
         $this->engagement_guard('ews31_employee_moments_save');
         global $wpdb;
-        $stored=get_option('ews_employee_moments',[]);
+        $stored=$this->option('ews_employee_moments');
         $form_ids=array_map('intval',(array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1"));
         [$clean,$error]=Moments::merge(wp_unslash($_POST['moments']??[]),is_array($stored)?$stored:[],$form_ids,current_time('Y-m-d'));
         if($error)$this->engagement_redirect('ews31-moments',['moments_error'=>$error]);
@@ -117,7 +117,7 @@ trait EWS_Engagement_Admin_Trait {
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         $notices=['saved'=>'Frontend navigation settings saved.','reset'=>'Frontend navigation restored to defaults.'];
         echo $this->render_template('admin/navigation',[
-            'cfg'=>Navigation::config(get_option('ews_frontend_navigation',[])),'defaults'=>Navigation::DEFAULTS,
+            'cfg'=>Navigation::config($this->option('ews_frontend_navigation')),'defaults'=>Navigation::DEFAULTS,
             'notice'=>$notices[sanitize_key($_GET['navigation_notice']??'')]??null,'post_url'=>admin_url('admin-post.php'),
         ]);
     }

@@ -63,7 +63,7 @@ trait EWS_App_Layout_Trait {
 
     /** Menu items from View Navigation, limited to the views this user may open. */
     private function app_navigation(){
-        $cfg=get_option('ews_frontend_navigation',[]);
+        $cfg=$this->option('ews_frontend_navigation');
         if(!is_array($cfg))$cfg=[];
         // Labels still equal to the built-in English defaults are translated; custom labels are shown as entered.
         $i18n=['Dashboard'=>__('Dashboard','workforce-one'),'Schedule'=>__('Schedule','workforce-one'),'Sign In / Out'=>__('Sign In / Out','workforce-one'),'Leave'=>__('Leave','workforce-one'),'Overtime'=>__('Overtime','workforce-one'),'Tasks'=>__('Tasks','workforce-one'),'Attendance'=>__('Attendance','workforce-one'),'Reports'=>__('Reports','workforce-one'),'Attendance Insights'=>__('Attendance Insights','workforce-one'),'People'=>__('People','workforce-one')];

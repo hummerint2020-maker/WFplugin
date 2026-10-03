@@ -251,12 +251,12 @@ private function ensure_break_schema(){
          * ews_schema_target().
          */
         private function ews_schema_is_current(){
-            return get_option('ews_schema_version','')===$this->ews_schema_target();
+            return $this->option('ews_schema_version')===$this->ews_schema_target();
         }
 
         private function maybe_upgrade_schema(){
             $target=$this->ews_schema_target();
-            $done=get_option('ews_schema_version','');
+            $done=$this->option('ews_schema_version');
             if($done===$target)return;
             // The base tables come from activate(). If this runs before activation has
             // created them (e.g. WP-CLI loads the plugin before the activation hook), create
@@ -303,7 +303,7 @@ private function ensure_break_schema(){
          * Re-evaluate those rows against the event's own time in UTC; rows that really were stale stay so.
          */
         private function repair_stale_location_integrity(){
-            if(get_option('ews_integrity_repair_done'))return;
+            if($this->option('ews_integrity_repair_done'))return;
             global $wpdb;
             $last=0;
             do{
@@ -342,7 +342,7 @@ private function ensure_break_schema(){
             if(get_option('ews_face_signin_settings',null)===null)update_option('ews_face_signin_settings',array(),false);
             
             global $wpdb;
-            $version=get_option('ews_schedule_config_schema','');
+            $version=$this->option('ews_schedule_config_schema');
             require_once ABSPATH.'wp-admin/includes/upgrade.php';
             $charset=$wpdb->get_charset_collate();
             $calendar=$wpdb->prefix.'ews_company_calendar';
@@ -362,7 +362,7 @@ private function ensure_break_schema(){
                 update_option('ews_schedule_types_config',$this->default_schedule_types_config(),false);
                 update_option('ews_working_days',$this->default_working_days(),false);
             }else{
-                $types=get_option('ews_schedule_types_config',[]);
+                $types=$this->option('ews_schedule_types_config');
                 if(!is_array($types)||empty($types))update_option('ews_schedule_types_config',$this->default_schedule_types_config(),false);
                 $days=get_option('ews_working_days',null); if(!is_array($days))update_option('ews_working_days',$this->default_working_days(),false);
             }

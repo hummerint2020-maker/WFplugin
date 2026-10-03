@@ -9,21 +9,21 @@ trait EWS_Breaks_Trait {
 
 
         private function break_enabled(){
-            return (bool)get_option('ews_feature_breaks',false);
+            return (bool)$this->option('ews_feature_breaks');
         }
 
         private function break_per_day(){
-            $n=(int)get_option('ews_breaks_per_day',3);
+            $n=(int)$this->option('ews_breaks_per_day');
             return max(1,min(20,$n));
         }
 
         private function break_duration_minutes(){
-            $n=(int)get_option('ews_break_duration_minutes',30);
+            $n=(int)$this->option('ews_break_duration_minutes');
             return max(1,min(480,$n));
         }
 
         private function break_escalation_minutes(){
-            $n=(int)get_option('ews_break_manager_alert_minutes',45);
+            $n=(int)$this->option('ews_break_manager_alert_minutes');
             return max($this->break_duration_minutes()+1,min(1440,$n));
         }
 

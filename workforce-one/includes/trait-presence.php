@@ -11,8 +11,8 @@ use WorkforceOne\Presence\QrCode;
  */
 
 trait EWS_Presence_Trait {
-    private function presence_qr_enabled(){ return (bool)get_option('ews_presence_qr_signin',0); }
-    private function presence_verification_enabled(){ return (bool)get_option('ews_presence_verification',0); }
+    private function presence_qr_enabled(){ return (bool)$this->option('ews_presence_qr_signin'); }
+    private function presence_verification_enabled(){ return (bool)$this->option('ews_presence_verification'); }
     private function presence_tables(){ global $wpdb; return [$wpdb->prefix.'ews_kiosks',$wpdb->prefix.'ews_presence_verifications']; }
     private function ensure_presence_schema(){
         if($this->ews_schema_is_current())return;

@@ -18,7 +18,7 @@ trait EWS_Overtime_Trait {
     /* ------------------------------------------------------------------ overtime helpers */
 
     private function overtime_enabled(){
-            return (bool)get_option('ews_feature_overtime',false);
+            return (bool)$this->option('ews_feature_overtime');
         }
 
     private function overtime_request_minutes($start,$end){
@@ -182,7 +182,7 @@ trait EWS_Overtime_Trait {
     /** Approval re-checks the schedule: with "Office only" the day must still be Office. */
     private function early_leave_can_approve($r){
             $sch=$this->schedule_for_employee_date((int)$r->employee_id,$r->work_date);
-            return EarlyLeaveRules::scheduleAllows((bool)(int)get_option('ews_early_leave_office_only',1),$sch?$sch->status:null);
+            return EarlyLeaveRules::scheduleAllows((bool)(int)$this->option('ews_early_leave_office_only'),$sch?$sch->status:null);
         }
 
     /** Pending -> Approved/Rejected. @return int|false rows changed */
@@ -213,8 +213,8 @@ trait EWS_Overtime_Trait {
             $scheduled=$this->schedule_for_employee_date((int)$emp->id,$date);
             $facts=[
                 'date'=>$date,'today'=>current_time('Y-m-d'),'working_day'=>$this->is_working_day($date),
-                'office_only'=>(bool)(int)get_option('ews_early_leave_office_only',1),'schedule_status'=>$scheduled?$scheduled->status:null,
-                'minutes'=>$minutes,'max_minutes'=>(int)get_option('ews_early_leave_max_minutes',120),'monthly_minutes'=>(int)get_option('ews_early_leave_monthly_minutes',240),
+                'office_only'=>(bool)(int)$this->option('ews_early_leave_office_only'),'schedule_status'=>$scheduled?$scheduled->status:null,
+                'minutes'=>$minutes,'max_minutes'=>(int)$this->option('ews_early_leave_max_minutes'),'monthly_minutes'=>(int)$this->option('ews_early_leave_monthly_minutes'),
             ];
             $error=EarlyLeaveRules::check($facts);
             if(!$error){

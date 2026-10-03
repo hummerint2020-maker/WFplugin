@@ -169,8 +169,8 @@ trait EWS_Profile_Account_Trait {
             if(is_file($path))@unlink($path);
         }
 
-    private function employee_profile_settings(){
-            $defaults=[
+    private function employee_profile_defaults(){
+            return [
                 'enabled'=>1,
                 'show_photo'=>1,
                 'show_name'=>1,
@@ -180,7 +180,11 @@ trait EWS_Profile_Account_Trait {
                 'show_achievements'=>1,
                 'show_recognition'=>0,
             ];
-            $cfg=get_option('ews_employee_profile_settings',[]);
+        }
+
+    private function employee_profile_settings(){
+            $defaults=$this->employee_profile_defaults();
+            $cfg=$this->option('ews_employee_profile_settings');
             if(!is_array($cfg))$cfg=[];
             foreach($defaults as $key=>$value){
                 if(!array_key_exists($key,$cfg))$cfg[$key]=$value;
