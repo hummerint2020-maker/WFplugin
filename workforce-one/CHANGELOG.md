@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.31
+The approval engine (`includes/trait-approvals.php`) moved to the new structure, with its
+wp-admin page.
+
+### Fixed (wp-admin → Approval Workflows)
+- **Settings that did nothing are gone.** The page offered Early Leave and Shift Swap approval,
+  but neither module uses approval workflows: whatever was saved was ignored. They are now named
+  in one line that says managers decide them.
+- **Only the modes a workflow supports are offered.** Vacation and Overtime act only on
+  "Level 1" and "Level 1 + Level 2". "Sequential" or "Peer" could be saved for them, and then
+  the workflow was silently ignored and any manager could approve. They now offer No approval,
+  Level 1 and Level 1 + Level 2; Face Reset also offers Sequential. Saving another mode is refused
+  with the reason, and a mode saved by an older version is pointed out on its card.
+- **"No approval" says what it does.** It differs per module: a leave is still decided by
+  managers (no approval chain), while overtime and face resets are approved automatically. The
+  page used to say "proceeds without approval" for all of them.
+
+### Internal
+- `src/Approvals/Workflows.php` (modes, checks, steps) and `StateMachine.php` (request and step
+  states), unit tested; `src/Approvals/Hooks.php`; HTML in `templates/admin/approvals.php`, the
+  page script in `assets/js/admin-approvals.js` (was inline). An unused helper was removed.
+- `tests/e2e_approvals.py` (26 checks): the settings page, supervisors, and the two-level flow
+  through Leave (order of levels, double decisions, rejection, missing or unlinked approvers).
+
 ## 3.31.30
 Reports: Location Capacity (the last report of the plan's phase 2).
 

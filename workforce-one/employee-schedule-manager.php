@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.30
+ * Version: 3.31.31
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.30');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.31');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -159,6 +159,7 @@ class EWS_Manager_V31_1 {
             \WorkforceOne\Schedule\ConfigHooks::register($this);
             add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
             \WorkforceOne\Requests\Hooks::register($this);
+            \WorkforceOne\Approvals\Hooks::register($this);
             \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
@@ -167,8 +168,6 @@ class EWS_Manager_V31_1 {
 
             add_action('admin_post_ews_notification_settings_save',[$this,'admin_notification_settings_save']);
             add_action('admin_post_ews_notification_policy_save',[$this,'admin_notification_policy_save']);
-            add_action('admin_post_ews_approval_workflow_save',[$this,'approval_workflow_save']);
-            add_action('admin_post_ews_approval_relationship_save',[$this,'approval_relationship_save']);
             add_action('admin_post_ews_team_save',[$this,'team_save']);
             add_action('admin_post_ews_team_delete',[$this,'team_delete']);
             add_action('admin_post_ews_auto_attendance_save',[$this,'auto_attendance_save']);
