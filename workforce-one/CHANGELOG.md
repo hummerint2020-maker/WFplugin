@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.28
+### Fixed (Sign In / Out)
+- **QR Sign In works on sites outside UTC (Egypt, the Gulf, …) (K3).** The phone's location time
+  (Unix time, UTC) was compared with WordPress *local* time, so on a UTC+3 site every location
+  looked three hours old: QR Sign In was refused with "Location access is required", and every
+  Sign In was saved as "unreliable / stale_timestamp", so the integrity column of the
+  Sign In / Out Report was wrong. The comparison now uses `time()`.
+- **Existing records are repaired once.** On upgrade, rows saved as "stale_timestamp" are
+  re-checked against their own time in UTC; rows that really were stale stay that way.
+- **Sign Out after midnight on an overnight shift (K4).** After midnight the app looked only at
+  the new day, found no Sign In and refused the Sign Out (the Sign In page showed no actions at
+  all). An overnight shift now belongs to the day it started: after midnight, and after its end
+  while it is still open, the Sign In page, Sign Out, breaks and the holiday check use that day,
+  and the Sign Out is recorded on it.
+
+### Internal
+- `src/Attendance/ShiftDay.php` (which day the current shift belongs to; unit tested) and
+  `attendance_day()`; schema target 3.31.11 runs the one-time integrity repair.
+- `tests/e2e_timezone.py` runs on Cairo time: Sign In integrity, QR Sign In, Sign Out after
+  midnight and after the shift end, and the repair. `tests/e2e_setup.php` resets the site to UTC.
+
 ## 3.31.27
 Reports, phase 1 / round 4: the Workforce report on the engine, and clean-up. This completes
 phase 1 of the reports plan (engine, Attendance Summary, Daily Log, Timesheet, Excel).

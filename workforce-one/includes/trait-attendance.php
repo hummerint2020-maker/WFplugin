@@ -37,7 +37,7 @@ trait EWS_Attendance_Trait {
                 'employee'=>(bool)$emp,
                 'face_required'=>$this->face_signin_enabled(),
                 'face_ok'=>$face_ok,
-                'general_leave'=>$sch && $this->company_leave_dates(current_time('Y-m-d'),current_time('Y-m-d')),
+                'general_leave'=>$sch && $emp && $this->company_leave_dates($this->attendance_day($emp->id),$this->attendance_day($emp->id)),
                 'working_day'=>$sch && $this->schedule_type_requires_sign_in($sch->status),
                 'signed_in'=>isset($ev['sign_in'])||isset($ev['late_sign_in']),
                 'signed_out'=>isset($ev['sign_out']),
@@ -61,7 +61,8 @@ trait EWS_Attendance_Trait {
             $location_timestamp=isset($_POST['location_timestamp'])&&is_numeric($_POST['location_timestamp'])?(int)$_POST['location_timestamp']:null;
             global $wpdb;
             $prev=($lat!==null&&$lng!==null)?$wpdb->get_row($wpdb->prepare("SELECT latitude,longitude,location_timestamp FROM {$this->time_logs} WHERE employee_id=%d AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",(int)$emp->id),ARRAY_A):null;
-            [$integrity_status,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_timestamp,current_time('timestamp'),$prev?:null);
+            // The phone's location timestamp is Unix time (UTC): compare it with time(), not WordPress local time.
+            [$integrity_status,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_timestamp,time(),$prev?:null);
             [$location_status,$distance]=LocationAssessment::geofence(
                 $lat,$lng,
                 $assigned_location?$assigned_location->latitude:get_option('ews_location_latitude',''),
@@ -80,10 +81,10 @@ trait EWS_Attendance_Trait {
 
             // 3. Record it.
             $now=current_time('mysql');
-            $inserted=$wpdb->insert($this->time_logs,['employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>current_time('Y-m-d'),'event_type'=>$type,'event_at'=>$now,'scheduled_status'=>$sch->status,'ip_address'=>isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance,'location_timestamp'=>$location_timestamp,'integrity_status'=>$integrity_status,'integrity_reason'=>$integrity_reason,'created_at'=>$now]);
+            $inserted=$wpdb->insert($this->time_logs,['employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>$this->attendance_day($emp->id),'event_type'=>$type,'event_at'=>$now,'scheduled_status'=>$sch->status,'ip_address'=>isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance,'location_timestamp'=>$location_timestamp,'integrity_status'=>$integrity_status,'integrity_reason'=>$integrity_reason,'created_at'=>$now]);
             if($inserted===false){$detail=$wpdb->last_error?$wpdb->last_error:'Database insert failed.';$this->audit('time_'.$type.'_failed','time_log',0,$emp->name.' / '.$detail);$fail($type==='sign_out'?__('Unable to record Sign Out. Please contact the administrator.','workforce-one'):__('Unable to record Sign In. Please contact the administrator.','workforce-one'));return;}
             $classification=$type==='sign_in'?$this->sign_in_classification($now,$emp->id):'';
-            if($type==='sign_out'){ $this->achievement_evaluate_attendance((int)$emp->id,current_time('Y-m-d')); }
+            if($type==='sign_out'){ $this->achievement_evaluate_attendance((int)$emp->id,$this->attendance_day($emp->id)); }
             $this->audit('time_'.$type,'time_log',$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$now.' / '.$classification.' / face_verified='.($face_ok?'yes':'no').' / source='.($qr_kiosk?'qr_kiosk_'.(int)$qr_kiosk->id:'normal'));
             $success=$type==='sign_in'&&$classification==='Late Arrival'?__('Late Arrival recorded successfully.','workforce-one'):($type==='sign_out'?__('Sign Out recorded successfully.','workforce-one'):__('Sign In recorded successfully.','workforce-one'));
             $this->redirect(['ews_view'=>'time','time_success'=>rawurlencode($success)]);

@@ -275,12 +275,12 @@ private function ensure_break_schema(){
 
         private function break_sessions_today($employee_id){
             global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND work_date=%s ORDER BY id ASC",(int)$employee_id,current_time('Y-m-d')));
+            return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND work_date=%s ORDER BY id ASC",(int)$employee_id,$this->attendance_day($employee_id)));
         }
 
         private function break_open_session($employee_id){
             global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND work_date=%s AND status='Open' ORDER BY id DESC LIMIT 1",(int)$employee_id,current_time('Y-m-d')));
+            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND work_date=%s AND status='Open' ORDER BY id DESC LIMIT 1",(int)$employee_id,$this->attendance_day($employee_id)));
         }
 
         private function break_remaining($employee_id){
@@ -320,7 +320,7 @@ private function ensure_break_schema(){
             if($this->break_remaining($emp->id)<=0)$this->break_redirect(['break_error'=>rawurlencode('No break sessions remain today.')]);
             global $wpdb; $table=$wpdb->prefix.'ews_break_sessions'; $now=current_time('mysql');
             $ok=$wpdb->insert($table,[
-                'employee_id'=>(int)$emp->id,'user_id'=>(int)$emp->wp_user_id,'work_date'=>current_time('Y-m-d'),
+                'employee_id'=>(int)$emp->id,'user_id'=>(int)$emp->wp_user_id,'work_date'=>$this->attendance_day($emp->id),
                 'start_at'=>$now,'status'=>'Open','created_at'=>$now
             ],['%d','%d','%s','%s','%s','%s']);
             if(!$ok)$this->break_redirect(['break_error'=>rawurlencode('Unable to start your break. Please try again.')]);
@@ -412,7 +412,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.10'; }
+        private function ews_schema_target(){ return '3.31.11'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -464,7 +464,30 @@ private function ensure_break_schema(){
             if(get_option('ews_presence_qr_signin',null)===null)update_option('ews_presence_qr_signin',false,false);
             if(get_option('ews_presence_verification',null)===null)update_option('ews_presence_verification',false,false);
             if(method_exists($this,'ensure_presence_schema'))$this->ensure_presence_schema();
+            $this->repair_stale_location_integrity();
             update_option('ews_schema_version',$target,false);
+        }
+
+        /**
+         * One-time repair (3.31.28): sites not on UTC compared the phone's UTC location time with local
+         * time, so fresh locations were saved as "unreliable / stale_timestamp" (3 hours off in Cairo).
+         * Re-evaluate those rows against the event's own time in UTC; rows that really were stale stay so.
+         */
+        private function repair_stale_location_integrity(){
+            if(get_option('ews_integrity_repair_done'))return;
+            global $wpdb;
+            $last=0;
+            do{
+                $rows=$wpdb->get_results($wpdb->prepare("SELECT id,event_at,latitude,longitude,accuracy,location_timestamp FROM {$this->time_logs} WHERE integrity_reason='stale_timestamp' AND location_timestamp IS NOT NULL AND id>%d ORDER BY id ASC LIMIT 500",$last));
+                foreach((array)$rows as $r){
+                    $last=(int)$r->id;
+                    $utc=strtotime(get_gmt_from_date($r->event_at).' UTC');
+                    if(!$utc)continue;
+                    [$st,$why]=\WorkforceOne\Attendance\LocationAssessment::integrity($r->latitude!==null?(float)$r->latitude:null,$r->longitude!==null?(float)$r->longitude:null,$r->accuracy!==null?(float)$r->accuracy:null,(int)$r->location_timestamp,$utc,null);
+                    if($why!=='stale_timestamp')$wpdb->update($this->time_logs,['integrity_status'=>$st,'integrity_reason'=>$why],['id'=>(int)$r->id]);
+                }
+            }while($rows && count($rows)===500);
+            update_option('ews_integrity_repair_done',1,false);
         }
 
 function current_employee(){
@@ -667,13 +690,35 @@ function current_employee(){
             return $h.($h===1?' hour':' hours').($m?' '.$m.' min':'');
         }
 
+    /**
+     * The day the employee's current shift belongs to (src/Attendance/ShiftDay.php): today, or, for an
+     * overnight shift after midnight (or still open after its end), the day it started. Sign In / Out,
+     * breaks and the Sign In page all use it.
+     */
+    private function attendance_day($eid){
+            $eid=(int)$eid;$today=current_time('Y-m-d');
+            static $cache=[];
+            $key=$eid.'|'.$today.'|'.current_time('H:i');
+            if(isset($cache[$key]))return $cache[$key];
+            $h=$this->working_hours($eid);
+            $overnight=!empty($h['overnight']) && $h['start']>$h['end'];
+            $open=false;
+            if($overnight && $eid){
+                global $wpdb;
+                $yesterday=date('Y-m-d',strtotime($today.' -1 day'));
+                $types=(array)$wpdb->get_col($wpdb->prepare("SELECT event_type FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",$eid,$yesterday));
+                $open=(in_array('sign_in',$types,true)||in_array('late_sign_in',$types,true)) && !in_array('sign_out',$types,true);
+            }
+            return $cache[$key]=\WorkforceOne\Attendance\ShiftDay::resolve($today,current_time('H:i'),(string)$h['start'],(string)$h['end'],$overnight,$open);
+        }
+
     private function today_schedule_for_employee($eid){
             global $wpdb;
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",$eid,current_time('Y-m-d')));
+            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",$eid,$this->attendance_day($eid)));
         }
 
     private function today_events($eid){
-            global $wpdb;$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s ORDER BY event_at ASC",$eid,current_time('Y-m-d')));
+            global $wpdb;$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s ORDER BY event_at ASC",$eid,$this->attendance_day($eid)));
             $o=[];foreach($rows as $r)$o[$r->event_type]=$r;return $o;
         }
 

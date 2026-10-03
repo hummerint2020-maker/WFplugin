@@ -22,6 +22,7 @@ final class LocationAssessment
     /**
      * How trustworthy the reported position is. Recorded with the event; never blocks it on its own.
      *
+     * @param int $nowTs Unix time (time()), never WordPress local time: the phone's timestamp is UTC.
      * @param array{latitude: mixed, longitude: mixed, location_timestamp: mixed}|null $previous
      *        The employee's last event that had coordinates (timestamps in milliseconds).
      * @return array{0: string, 1: string} [status, reason]

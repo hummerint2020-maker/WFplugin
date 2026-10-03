@@ -17,6 +17,7 @@ workforce-one/
     Attendance/Insights.php            planned category / actual status / rates (Attendance Insights, Attendance grid)
     Attendance/GridRules.php           Attendance grid badges and save/import messages
     Attendance/TodayStatus.php         today's On Time / Late / No Show (admin home)
+    Attendance/ShiftDay.php            which day the current (overnight) shift belongs to
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
     Support/Format.php                 number, hours and duration formats

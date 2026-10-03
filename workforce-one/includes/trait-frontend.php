@@ -397,7 +397,7 @@ trait EWS_Frontend_Trait {
             if($emp && !$this->employee_attendance_enabled((int)$emp->id))return '<div class="ews-time-card"><div class="ews-time-block"><div class="ews-time-icon">📋</div><h2>'.esc_html__('Attendance tracking is disabled','workforce-one').'</h2><p>'.esc_html__('Attendance is not required for your employee profile.','workforce-one').'</p></div></div>';
             $sch=$emp?$this->today_schedule_for_employee($emp->id):null;$ev=$emp?$this->today_events($emp->id):[];
             $working=$sch&&$this->schedule_type_requires_sign_in($sch->status);
-            $today=current_time('Y-m-d');
+            $today=$emp?$this->attendance_day($emp->id):current_time('Y-m-d'); // an overnight shift after midnight is still yesterday's
             if($this->company_leave_dates($today,$today))$working=false;$sign_in_open=$this->sign_in_window_open();
             $hours=$this->working_hours($emp?$emp->id:0);$grace_period=$this->attendance_grace_period($emp?$emp->id:0);$face_signin_enabled=$this->face_signin_enabled();$requires_location=$sch?$this->schedule_type_requires_location($sch->status):false;$break_data=($emp&&$this->break_enabled())?$this->break_ui_data($emp->id):null;
             $signin_bounds=$this->sign_in_window_bounds($emp?$emp->id:0);
