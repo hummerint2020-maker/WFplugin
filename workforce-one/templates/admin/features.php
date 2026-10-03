@@ -13,6 +13,7 @@
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
  * @var string $privacy_html                    section rendered by the Privacy module
+ * @var int $presence_minutes                   time an employee has to answer a presence request
  * @var bool $saved
  * @var string|null $error
  * @var string $post_url
@@ -41,6 +42,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <div class="wfo-feature-fields">
         <label><input type="checkbox" name="presence_qr_signin" value="1" <?php checked($on['presence_qr']); ?>> Dynamic QR Sign-In</label>
         <label><input type="checkbox" name="presence_verification" value="1" <?php checked($on['presence_verification']); ?>> Presence Verification</label>
+        <label>Time to answer a request <input type="number" name="presence_request_minutes" min="1" max="60" step="1" value="<?php echo (int) $presence_minutes; ?>" style="width:80px"> minutes</label>
     </div>
     <p class="description">Create and manage workplace Kiosks from <strong>Presence Kiosks</strong>. Kiosks only display a rotating QR code and never contain employee credentials.</p>
 </div>

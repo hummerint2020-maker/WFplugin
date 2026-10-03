@@ -9,6 +9,7 @@
  * @var object[] $employees              active employees with their assigned location_id
  * @var object[] $active_locations       active locations (id, name) for assignment
  * @var string $notice                   confirmation after a save / archive ('' = none)
+ * @var int $warn_pct                    Location Capacity: a day is near capacity from this occupancy
  */
 if (!defined('ABSPATH')) exit;
 $post = admin_url('admin-post.php');
@@ -33,6 +34,12 @@ $post = admin_url('admin-post.php');
     <p><button class="button button-primary"><?php echo $edit ? 'Save Changes' : 'Add Location'; ?></button>
     <?php if ($edit): ?><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=ews31-multi-locations')); ?>">Cancel</a><?php endif; ?></p>
 </form></div>
+
+<form method="post" action="<?php echo esc_url($post); ?>" style="background:#fff;border:1px solid #dcdcde;padding:14px 20px;max-width:760px;margin-top:16px">
+    <input type="hidden" name="action" value="ews_capacity_settings_save"><?php wp_nonce_field('ews_capacity_settings_save'); ?>
+    <label><strong>Location Capacity report:</strong> a day is "near capacity" from <input type="number" name="capacity_warn_percent" min="50" max="100" step="1" value="<?php echo (int) $warn_pct; ?>" style="width:70px">% of the seats</label>
+    <button class="button">Save</button>
+</form>
 
 <h2 style="margin-top:30px">Employees by Location</h2>
 <table class="widefat striped"><thead><tr><th>Employee</th><th>Domain</th><th>Assigned Location</th></tr></thead><tbody>

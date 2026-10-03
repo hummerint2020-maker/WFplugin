@@ -94,6 +94,25 @@ final class PayrollTest extends TestCase
         $this->assertSame('adjust_kind', R::adjustment(['kind' => 'gift', 'amount' => '5', 'reason' => 'x'])[1]);
     }
 
+    public function testLateArrivalByTiers(): void
+    {
+        $tiers = [['after' => 10, 'days' => 0.25], ['after' => 30, 'days' => 0.5]];
+        $this->assertSame(0.0, C::tier(10, $tiers), 'exactly 10 minutes is not more than 10');
+        $this->assertSame(0.25, C::tier(12, $tiers));
+        $this->assertSame(0.5, C::tier(31, $tiers));
+        $days = [self::day('2026-09-03', ['result' => 'Late', 'late_minutes' => 12]), self::day('2026-09-04', ['result' => 'Late', 'late_minutes' => 45])];
+        $p = C::month(self::RATE, ['late_mode' => 'tiers', 'late_tiers' => $tiers] + self::RULES, $days, 480, '2026-09');
+        $this->assertSame([87.5, 175.0], array_column($p['late']['days'], 'amount'));
+        [$r, $e] = R::rules(['currency' => 'EGP', 'day_divisor' => '30', 'day_base' => 'gross', 'absence_days' => '1', 'overtime_rate' => '1.35', 'overtime_rate_off' => '2', 'max_deduction_days' => '0',
+            'late_mode' => 'tiers', 'late_tier_minutes' => ['30', '10', ''], 'late_tier_days' => ['0.5', '0.25', '']]);
+        $this->assertNull($e);
+        $this->assertSame([['after' => 10, 'days' => 0.25], ['after' => 30, 'days' => 0.5]], $r['late_tiers'], 'sorted by minutes');
+        $base = ['currency' => 'EGP', 'day_divisor' => '30', 'day_base' => 'gross', 'absence_days' => '1', 'overtime_rate' => '1.35', 'overtime_rate_off' => '2', 'max_deduction_days' => '0'];
+        $this->assertSame('tiers', R::rules($base + ['late_mode' => 'tiers'])[1], 'tiers need a row');
+        $this->assertSame('tiers', R::rules($base + ['late_tier_minutes' => ['10', '10'], 'late_tier_days' => ['0.25', '0.5']])[1], 'each minutes value once');
+        $this->assertSame('minute', R::rules($base)[0]['late_mode']);
+    }
+
     public function testSalaryForm(): void
     {
         [$r, $e] = R::rate(['basic' => '9000', 'effective_from' => '2026-09-01', 'allowance_name' => ['Transport', '', 'Meals'], 'allowance_amount' => ['600', '', '900.5'], 'note' => 'x']);

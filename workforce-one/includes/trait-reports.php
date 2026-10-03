@@ -173,13 +173,13 @@ trait EWS_Reports_Trait {
             if(!isset($valid[$lid]))$lid=$default_id; // an archived location falls back to the default, as at Sign In
             $seated[]=['location_id'=>$lid,'date'=>$d,'signed_in'=>isset($signed[$eid][$d]),'mine'=>isset($mine[$eid])];
         }
-        return [\WorkforceOne\Reports\Capacity::grid($locations,$seated,$dates,current_time('Y-m-d')),$split];
+        return [\WorkforceOne\Reports\Capacity::grid($locations,$seated,$dates,current_time('Y-m-d'),\WorkforceOne\Reports\Capacity::warnPercent($this->option('ews_capacity_warn_percent'))),$split];
     }
 
     /** Location Capacity: planned and actual people per location and day against its seats. */
     private function report_capacity_builder($s,$e){
         [$grid,$split]=$this->report_capacity_data($s,$e);
-        return $this->render_template('app/report-capacity',['grid'=>$grid,'split'=>$split,'today'=>current_time('Y-m-d'),'warn_pct'=>\WorkforceOne\Reports\Capacity::WARN_PCT]+$this->report_export_urls('capacity',$s,$e));
+        return $this->render_template('app/report-capacity',['grid'=>$grid,'split'=>$split,'today'=>current_time('Y-m-d'),'warn_pct'=>\WorkforceOne\Reports\Capacity::warnPercent($this->option('ews_capacity_warn_percent'))]+$this->report_export_urls('capacity',$s,$e));
     }
 
     /** @return array<int,array<string,string>> the current user's saved report views */

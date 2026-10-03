@@ -57,6 +57,18 @@ final class OptionsTest extends TestCase
         $this->assertTrue(O::isChanged('ews_payroll_overtime_rate', '1.5'));
     }
 
+    public function testNewLimits(): void
+    {
+        $this->assertSame(15, \WorkforceOne\Schedule\ConfigRules::absentAfterMinutes(0));
+        $this->assertSame(720, \WorkforceOne\Schedule\ConfigRules::absentAfterMinutes(9999));
+        $this->assertSame(120, O::defaultOf('ews_absent_after_minutes'), 'two hours, as before it was a setting');
+        $this->assertSame(1, \WorkforceOne\Settings\FeatureSettings::presenceMinutes(0));
+        $this->assertSame(3, O::defaultOf('ews_presence_request_minutes'));
+        $this->assertSame(50, \WorkforceOne\Reports\Capacity::warnPercent(10));
+        $this->assertSame('warn', \WorkforceOne\Reports\Capacity::level(2, 3, 60));
+        $this->assertSame('ok', \WorkforceOne\Reports\Capacity::level(2, 3));
+    }
+
     public function testExportMasksSecretsAndData(): void
     {
         $this->assertSame('(set)', O::exportValue('ews_vapid_private_key', 'pem'));

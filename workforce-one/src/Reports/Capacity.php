@@ -10,8 +10,14 @@ if (!defined('ABSPATH')) exit;
  */
 final class Capacity
 {
-    /** Occupancy from which a day is "near capacity". */
+    /** Occupancy from which a day is "near capacity", unless set on Work Locations (50–100). */
     public const WARN_PCT = 90;
+
+    /** @param mixed $value */
+    public static function warnPercent($value): int
+    {
+        return max(50, min(100, (int) $value));
+    }
 
     public const LABELS = ['over' => 'Over capacity', 'warn' => 'Near capacity', 'ok' => 'OK', 'none' => 'No limit'];
 
@@ -20,9 +26,10 @@ final class Capacity
      * @param array<int,array{location_id:int,date:string,signed_in:bool,mine:bool}> $seated one entry per employee-day taking a seat
      * @param string[] $dates the days of the report, in order
      * @param string $today 'Y-m-d': later days have no actual figure
+     * @param int $warnPct occupancy from which a day is near capacity
      * @return array<int,array<string,mixed>> per location id: id, name, seats, days (date => planned, actual, mine, pct, level), peak, days_over, days_warn
      */
-    public static function grid(array $locations, array $seated, array $dates, string $today): array
+    public static function grid(array $locations, array $seated, array $dates, string $today, int $warnPct = self::WARN_PCT): array
     {
         $out = [];
         foreach ($locations as $l) {
@@ -44,7 +51,7 @@ final class Capacity
             $peak = 0; $over = 0; $warn = 0;
             foreach ($l['days'] as $d => $day) {
                 $pct = self::pct($day['planned'], $l['seats']);
-                $level = self::level($day['planned'], $l['seats']);
+                $level = self::level($day['planned'], $l['seats'], $warnPct);
                 $out[$id]['days'][$d] += ['pct' => $pct, 'level' => $level];
                 $peak = max($peak, $day['planned']);
                 if ($level === 'over') $over++;
@@ -61,11 +68,11 @@ final class Capacity
         return $seats ? (int) round($planned * 100 / $seats) : null;
     }
 
-    /** over (more people than seats), warn (WARN_PCT or more), ok, or none (no seat limit). */
-    public static function level(int $planned, ?int $seats): string
+    /** over (more people than seats), warn ($warnPct or more), ok, or none (no seat limit). */
+    public static function level(int $planned, ?int $seats, int $warnPct = self::WARN_PCT): string
     {
         if (!$seats) return 'none';
         if ($planned > $seats) return 'over';
-        return $planned * 100 >= self::WARN_PCT * $seats ? 'warn' : 'ok';
+        return $planned * 100 >= $warnPct * $seats ? 'warn' : 'ok';
     }
 }

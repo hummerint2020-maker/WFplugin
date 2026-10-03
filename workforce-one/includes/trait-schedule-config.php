@@ -32,6 +32,7 @@ trait EWS_Schedule_Config_Trait {
             'events'=>$events,'delete_urls'=>$delete_urls,
             'hours'=>$this->working_hours(),
             'grace_period'=>ConfigRules::graceMinutes($this->option('ews_grace_period')),
+            'absent_after'=>ConfigRules::absentAfterMinutes($this->option('ews_absent_after_minutes')),
             'overnight_enabled'=>(bool)(int)$this->option('ews_allow_overnight_shift'),
             'shifts'=>$this->shifts(),
             'working_days'=>$this->working_days(),
@@ -51,6 +52,7 @@ trait EWS_Schedule_Config_Trait {
         if($error=ConfigRules::hoursError($start,$end,$overnight))$this->schedule_config_redirect(['schedule_error'=>$error]);
         update_option('ews_allow_overnight_shift',$overnight?1:0,false);
         update_option('ews_grace_period',ConfigRules::graceMinutes($_POST['grace_period']??10),false);
+        if(isset($_POST['absent_after']))update_option('ews_absent_after_minutes',ConfigRules::absentAfterMinutes($_POST['absent_after']),false);
         $result=$this->working_hours_save($start,$end,$end);
         if(is_wp_error($result))$this->schedule_config_redirect(['schedule_error'=>'hours_invalid']);
         $this->invalidate_working_hours_runtime_cache();

@@ -19,7 +19,7 @@ seed = json.loads(php(r"""
     $month='%s';
     foreach(['ews_pay_rates','ews_pay_adjustments','ews_payroll_runs','ews_payslips','ews_schedule','ews_time_logs','ews_overtime_requests','ews_early_leave_requests','ews_leave_requests','ews_leave_schedule_snapshots','ews_company_calendar','ews_break_sessions','ews_audit_log'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("DELETE FROM {$p}ews_leave_types WHERE name IN ('Unpaid Leave','Sick Leave')");
-    foreach(['ews_payroll_day_divisor','ews_payroll_day_base','ews_payroll_absence_days','ews_payroll_overtime_rate','ews_payroll_overtime_rate_off','ews_payroll_max_deduction_days','ews_payroll_currency','ews_shifts'] as $o) delete_option($o);
+    foreach(['ews_payroll_late_mode','ews_payroll_late_tiers','ews_payroll_day_divisor','ews_payroll_day_base','ews_payroll_absence_days','ews_payroll_overtime_rate','ews_payroll_overtime_rate_off','ews_payroll_max_deduction_days','ews_payroll_currency','ews_shifts'] as $o) delete_option($o);
     update_option('ews_working_days',[0,1,2,3,4],false);
     update_option('ews_working_hours',['start'=>'08:00','normal_until'=>'10:00','end'=>'16:00'],false);
     update_option('ews_grace_period',10,false); update_option('ews_feature_breaks',0,false); update_option('ews_feature_overtime',1,false);
@@ -154,6 +154,19 @@ check('an impossible rule is refused', php("echo get_option('ews_payroll_day_div
 adm.req('/wp-admin/admin-post.php', dict(base_rules, max_deduction_days=1))
 check('a saved rule applies at once: deductions capped at one day', '10,588.59' in row('Paula Pay', adm.req(PAGE + '&month=' + MONTH)[1]), row('Paula Pay', adm.req(PAGE + '&month=' + MONTH)[1]))
 adm.req('/wp-admin/admin-post.php', base_rules)
+
+st, page, _ = adm.req(PAGE + '&tab=rules')
+check('late arrival can be deducted by tiers instead of by the minute', 'name="late_mode"' in page and 'name="late_tier_minutes[]"' in page)
+tiers = dict(base_rules, late_mode='tiers', **{'late_tier_minutes[]': ['10', '30', ''], 'late_tier_days[]': ['0.25', '0.5', '']})
+adm.req('/wp-admin/admin-post.php', tiers)
+check('...saved', php("echo get_option('ews_payroll_late_mode');").strip() == 'tiers' and json.loads(php("echo wp_json_encode(get_option('ews_payroll_late_tiers'));")) == [{'after': 10, 'days': 0.25}, {'after': 30, 'days': 0.5}])
+st, page, _ = adm.req(PAGE + '&month=' + MONTH + '&employee=%d' % P)
+text = html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', page)))
+check('...12 minutes late (more than 10) costs a quarter day: −87.50', '−87.50' in text and '9,611.51' in text, text[:300])
+st, _, h = adm.req('/wp-admin/admin-post.php', dict(base_rules, late_mode='tiers', **{'late_tier_minutes[]': [''], 'late_tier_days[]': ['']}))
+check('...tiers need at least one row', 'payroll_error' in h.get('Location', '') and php("echo get_option('ews_payroll_late_mode');").strip() == 'tiers')
+adm.req('/wp-admin/admin-post.php', base_rules)
+check('back to by the minute', php("echo get_option('ews_payroll_late_mode');").strip() == 'minute')
 
 # ---------------------------------------------------------------- export
 st, page, _ = adm.req(PAGE + '&month=' + MONTH)

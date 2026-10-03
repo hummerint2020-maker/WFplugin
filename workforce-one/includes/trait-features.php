@@ -18,6 +18,7 @@ trait EWS_Features_Trait {
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         $error=sanitize_key($_GET['features_error']??'');
         echo $this->render_template('admin/features',[
+            'presence_minutes'=>\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes')),
             'on'=>[
                 'tasks'=>$this->tasks_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
@@ -66,6 +67,8 @@ trait EWS_Features_Trait {
         update_option('ews_pwa_splash_settings',$splash,false);
         update_option('ews_presence_qr_signin',$flag('presence_qr_signin')?1:0,false);
         update_option('ews_presence_verification',$flag('presence_verification')?1:0,false);
+        // A form without the field (an older page) keeps the saved time.
+        if(isset($post['presence_request_minutes']))update_option('ews_presence_request_minutes',FeatureSettings::presenceMinutes($post['presence_request_minutes']),false);
         $this->privacy_settings_save();
         update_option('ews_feature_recognition',$flag('recognition_enabled'),false);
         update_option('ews_recognition_allow_kudos',$flag('recognition_allow_kudos'),false);

@@ -12,5 +12,6 @@ final class Hooks
         add_action('admin_post_ews_multi_location_save_v321', [$plugin, 'admin_multi_location_save_v321']);
         add_action('admin_post_ews_multi_location_archive_v321', [$plugin, 'admin_multi_location_archive_v321']);
         add_action('admin_post_ews_employee_location_save_v321', [$plugin, 'admin_employee_location_save_v321']);
+        add_action('admin_post_ews_capacity_settings_save', [$plugin, 'admin_capacity_settings_save']);
     }
 }

@@ -78,7 +78,8 @@ trait EWS_Payroll_Trait {
         return ['currency'=>(string)$this->option('ews_payroll_currency'),'day_divisor'=>(int)$this->option('ews_payroll_day_divisor'),
             'day_base'=>(string)$this->option('ews_payroll_day_base'),'absence_days'=>(float)$this->option('ews_payroll_absence_days'),
             'overtime_rate'=>(float)$this->option('ews_payroll_overtime_rate'),'overtime_rate_off'=>(float)$this->option('ews_payroll_overtime_rate_off'),
-            'max_deduction_days'=>(float)$this->option('ews_payroll_max_deduction_days'),'employee_view'=>(bool)$this->option('ews_payroll_employee_view')];
+            'max_deduction_days'=>(float)$this->option('ews_payroll_max_deduction_days'),'employee_view'=>(bool)$this->option('ews_payroll_employee_view'),
+            'late_mode'=>(string)$this->option('ews_payroll_late_mode')==='tiers'?'tiers':'minute','late_tiers'=>array_values(array_filter((array)$this->option('ews_payroll_late_tiers'),'is_array'))];
     }
 
     /** @return array{basic:float,allowances:array<int,array{name:string,amount:float}>,effective_from:string,note:string,id:int}|null */
@@ -432,6 +433,8 @@ trait EWS_Payroll_Trait {
         update_option('ews_payroll_overtime_rate_off',$rules['overtime_rate_off'],false);
         update_option('ews_payroll_max_deduction_days',$rules['max_deduction_days'],false);
         update_option('ews_payroll_employee_view',$rules['employee_view']?1:0,false);
+        update_option('ews_payroll_late_mode',$rules['late_mode'],false);
+        update_option('ews_payroll_late_tiers',$rules['late_tiers'],false);
         $this->audit('payroll_rules_saved','settings',0,'Payroll rules');
         $this->payroll_redirect(['tab'=>'rules','payroll_saved'=>'rules']);
     }

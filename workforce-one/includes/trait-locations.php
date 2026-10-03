@@ -158,7 +158,19 @@ trait EWS_Locations_Trait {
                     'enforcement'=>$edit?(int)$edit->enforcement:0,'active'=>$edit?(int)$edit->active:1,'is_default'=>$edit?(int)$edit->is_default:(!$rows?1:0)],
                 'employees'=>(array)$wpdb->get_results("SELECT e.id,e.name,e.domain_name,m.location_id FROM {$this->employees} e LEFT JOIN {$map} m ON m.employee_id=e.id WHERE e.active=1 ORDER BY e.name ASC"),
                 'active_locations'=>(array)$wpdb->get_results("SELECT id,name FROM {$this->locations} WHERE active=1 ORDER BY name ASC"),
-                'notice'=>isset($_GET['saved'])?'Location saved successfully.':(isset($_GET['archived'])?'Location archived successfully.':(isset($_GET['employee_saved'])?'Employee location saved successfully.':'')),
+                'warn_pct'=>\WorkforceOne\Reports\Capacity::warnPercent($this->option('ews_capacity_warn_percent')),
+                'notice'=>isset($_GET['capacity_saved'])?'Capacity warning saved.':(isset($_GET['saved'])?'Location saved successfully.':(isset($_GET['archived'])?'Location archived successfully.':(isset($_GET['employee_saved'])?'Employee location saved successfully.':''))),
             ]);
+        }
+
+    /** Work Locations → when a day counts as "near capacity" in the Location Capacity report. */
+    public function admin_capacity_settings_save(){
+            if(!$this->can('ews_manage_locations'))wp_die('Access denied');
+            check_admin_referer('ews_capacity_settings_save');
+            $pct=\WorkforceOne\Reports\Capacity::warnPercent($_POST['capacity_warn_percent']??90);
+            update_option('ews_capacity_warn_percent',$pct,false);
+            $this->audit('capacity_warning_saved','settings',0,$pct.'%');
+            wp_safe_redirect(admin_url('admin.php?page=ews31-multi-locations&capacity_saved=1'));
+            exit;
         }
 }

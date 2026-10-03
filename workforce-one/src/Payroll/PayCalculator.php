@@ -13,7 +13,9 @@ if (!defined('ABSPATH')) exit;
  *   the month is paid for the days from it (day value × days, at most the full month) and days
  *   before it are not counted. The plugin passes the salary in effect on the month's last day.
  * - Absent (a planned working day with no Sign In): absence days × day value.
- * - Late: the report's late minutes (counted from the shift start, only once past the grace).
+ * - Late: the report's late minutes (counted from the shift start, only once past the grace), each
+ *   minute at the minute value; or, by tiers, the share of a day of the highest tier passed
+ *   (for example more than 15 minutes = 0.25 day).
  * - Early leave: the report's early minutes, less an approved Early Leave request that day.
  * - Leave: (100 − the leave type's paid %) of a day's value for each leave day; leave without a
  *   request (planned by a manager) is paid.
@@ -85,7 +87,7 @@ final class PayCalculator
             }
             $late = (int) ($d['late_minutes'] ?? 0);
             if ($late > 0) {
-                $amount = round($late * $minuteValue, 2);
+                $amount = round(($rules['late_mode'] ?? 'minute') === 'tiers' ? $dayValue * self::tier($late, (array) ($rules['late_tiers'] ?? [])) : $late * $minuteValue, 2);
                 $out['late']['days'][] = ['date' => $date, 'minutes' => $late, 'sign_in' => (string) ($d['sign_in'] ?? ''), 'amount' => $amount];
                 $out['late']['minutes'] += $late;
                 $out['late']['amount'] += $amount;
@@ -139,6 +141,19 @@ final class PayCalculator
         $out['total_deductions'] = round($out['deductions'] + $out['manual']['amount'], 2);
         $out['net'] = round($out['earned'] + $out['overtime']['amount'] + $out['bonuses']['amount'] - $out['total_deductions'], 2);
         return $out;
+    }
+
+    /**
+     * Share of a day for a number of late minutes: the highest tier whose minutes are passed.
+     * @param array<int,array{after:int,days:float}> $tiers
+     */
+    public static function tier(int $minutes, array $tiers): float
+    {
+        $share = 0.0;
+        foreach ($tiers as $t) {
+            if ($minutes > (int) $t['after']) $share = max($share, (float) $t['days']);
+        }
+        return $share;
     }
 
     /** 90 → "1:30". */

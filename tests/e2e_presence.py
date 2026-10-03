@@ -116,6 +116,16 @@ check('an expired request cannot be verified', 'This presence request has expire
 st, page, _ = emp.req('/app/?ews_view=presence&presence_request=%d&presence_error=%s' % (rid, urllib.parse.quote('Your account was hacked, call 0100')))
 check('the page shows only its own messages, not text from the link', 'call 0100' not in page)
 
+php("update_option('ews_presence_request_minutes',10,false); $wpdb->query(\"DELETE FROM {$p}ews_notifications\");")
+st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-employee-profile&employee_id=%d' % I['eid'])
+rq = forms(page, 'ews_presence_request')
+adm.req('/wp-admin/admin-post.php', {'action': 'ews_presence_request', '_wpnonce': nonce(rq[0]) if rq else '', 'employee_id': I['eid'], 'location_id': I['lid']})
+r = q("SELECT expires_at FROM {p}ews_presence_verifications ORDER BY id DESC LIMIT 1")
+ttl = (datetime.datetime.strptime(r[0]['expires_at'], '%Y-%m-%d %H:%M:%S') - datetime.datetime.utcnow()).total_seconds() if r else 0
+note = q("SELECT message FROM {p}ews_notifications WHERE user_id=%d ORDER BY id DESC LIMIT 1" % I['uid'])
+check('the time to answer follows the setting (10 minutes)', 570 <= ttl <= 601 and note and '10 minutes' in note[0]['message'], (ttl, note))
+php("delete_option('ews_presence_request_minutes');")
+
 # ---------------------------------------------------------------- disable a kiosk
 st, page, _ = adm.req(KIOSKS)
 dis = next((f for f in forms(page, 'ews_presence_kiosk_revoke') if 'name="kiosk_id" value="%d"' % bk in f), '')

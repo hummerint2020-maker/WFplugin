@@ -114,11 +114,10 @@ trait EWS_Work_Time_Trait {
             if(array_key_exists($employee_id,self::$ews_working_hours_cache))return self::$ews_working_hours_cache[$employee_id];
             $shift=$this->shift_for_employee($employee_id);
             if($shift){
-                // Shifts historically had no separate no-show cutoff. Preserve the
-                // legacy two-hour no-show window used by Company Working Hours,
-                // while anchoring it to each employee's actual shift start.
+                // A no-show counts as Absent today this long after the shift starts (Schedule
+                // Configuration; 2 hours by default). Past days are Absent whatever this is.
                 $start_ts=strtotime('1970-01-01 '.$shift['start'].':00');
-                $cutoff_ts=$start_ts!==false?$start_ts+(2*HOUR_IN_SECONDS):false;
+                $cutoff_ts=$start_ts!==false?$start_ts+\WorkforceOne\Schedule\ConfigRules::absentAfterMinutes($this->option('ews_absent_after_minutes'))*MINUTE_IN_SECONDS:false;
                 $end_ts=strtotime('1970-01-01 '.$shift['end'].':00');
                 if($cutoff_ts!==false && $end_ts!==false && empty($shift['overnight']) && $cutoff_ts>$end_ts)$cutoff_ts=$end_ts;
                 $normal_until=$cutoff_ts!==false?date('H:i',$cutoff_ts):$shift['end'];

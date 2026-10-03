@@ -203,7 +203,15 @@ $adjust_remove = static function ($id) {
                 ÷ <input type="number" name="day_divisor" min="1" max="31" step="1" value="<?php echo (int) $rules['day_divisor']; ?>" style="width:70px"> days
                 <p class="description">An hour's pay = a day's pay ÷ the hours of the employee's working day (shift less the allowed break).</p></td></tr>
             <tr><th>Absent without leave</th><td>deducts <input type="number" name="absence_days" min="0" max="5" step="0.25" value="<?php echo esc_attr($num($rules['absence_days'])); ?>" style="width:80px"> day(s)' pay per day</td></tr>
-            <tr><th>Late arrival</th><td>Each minute from the shift start, once past the grace period (<?php echo (int) $grace; ?> min, set on Schedule Configuration). Within the grace: no deduction.</td></tr>
+            <tr><th>Late arrival</th><td>Late minutes count from the shift start, once past the grace period (<?php echo (int) $grace; ?> min, set on Schedule Configuration). Within the grace: no deduction.
+                <p><label><input type="radio" name="late_mode" value="minute" <?php checked($rules['late_mode'] !== 'tiers'); ?>> By the minute (each late minute at an hour's pay ÷ 60)</label><br>
+                <label><input type="radio" name="late_mode" value="tiers" <?php checked($rules['late_mode'] === 'tiers'); ?>> By tiers (the highest tier passed that day):</label></p>
+                <?php $tier_rows = array_pad($rules['late_tiers'], max(4, count($rules['late_tiers'])), null); ?>
+                <?php foreach ($tier_rows as $t): ?>
+                    <p class="ews-pay-tier">more than <input type="number" name="late_tier_minutes[]" min="0" max="600" step="1" value="<?php echo $t ? (int) $t['after'] : ''; ?>" style="width:70px"> min
+                        = <input type="number" name="late_tier_days[]" min="0" max="2" step="0.05" value="<?php echo $t ? esc_attr($num($t['days'])) : ''; ?>" style="width:70px"> day(s)' pay</p>
+                <?php endforeach; ?>
+                <p class="description">Example: more than 10 min = 0.25 day, more than 30 min = 0.5 day. Leave unused rows empty.</p></td></tr>
             <tr><th>Early leave</th><td>Each minute before the shift end, unless covered by an approved Early Leave request.</td></tr>
             <tr><th>Leave</th><td>Each leave type's "Paid %" (wp-admin → Leaves). 100% = paid, 0% = a full day deducted.</td></tr>
             <tr><th>Overtime</th><td>Approved and actually worked, × <input type="number" name="overtime_rate" min="1" max="5" step="0.05" value="<?php echo esc_attr($num($rules['overtime_rate'])); ?>" style="width:80px"> an hour's pay on work days,

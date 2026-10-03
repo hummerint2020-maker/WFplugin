@@ -7,6 +7,7 @@
  * @var array<int,object> $events                   upcoming company holidays (id, event_date, title)
  * @var array{start:string,end:string} $hours
  * @var int $grace_period
+ * @var int $absent_after   minutes after a shift's start when a no-show counts as Absent today
  * @var bool $overnight_enabled
  * @var array<int,array<string,mixed>> $shifts
  * @var int[] $working_days
@@ -38,6 +39,7 @@ $rules = ['attendance' => 'Attendance', 'leave' => 'Leave', 'business_trip' => '
             <div class="ews-sc-fields">
                 <div class="ews-sc-field"><label>Work Start</label><input type="time" name="work_start" value="<?php echo esc_attr($hours['start']); ?>" required><div class="ews-sc-help">Start of the scheduled workday.</div></div>
                 <div class="ews-sc-field"><label>Grace Period</label><div style="display:flex;gap:8px;align-items:center"><input type="number" name="grace_period" value="<?php echo esc_attr($grace_period); ?>" min="0" max="180" step="1" style="max-width:180px"><span style="color:#667085;font-size:13px">minutes</span></div><div class="ews-sc-help">Time allowed after Work Start before the arrival is classified as late.</div></div>
+                <div class="ews-sc-field"><label>Absent After</label><div style="display:flex;gap:8px;align-items:center"><input type="number" name="absent_after" value="<?php echo (int) $absent_after; ?>" min="15" max="720" step="5" style="max-width:180px"><span style="color:#667085;font-size:13px">minutes</span></div><div class="ews-sc-help">For employees on a shift: when someone who has not signed in shows as Absent today (dashboards, today's reports). Before that they show as Pending. Past days count as Absent anyway.</div></div>
                 <div class="ews-sc-field"><label>Work End</label><input type="time" name="work_end" value="<?php echo esc_attr($hours['end']); ?>" required><div class="ews-sc-help">End of the scheduled workday.</div></div>
             </div>
             <div style="margin-top:18px;padding:14px 16px;border:1px solid #e4e7ec;border-radius:11px;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><strong style="display:block;color:#344054;font-size:13px">Allow Overnight Shift</strong><span style="display:block;margin-top:3px;color:#667085;font-size:12px;line-height:1.45">Allow working hours to cross midnight into the next day, e.g. 22:00 → 06:00.</span></div><label style="display:flex;align-items:center;gap:8px;white-space:nowrap;font-weight:600;color:#344054"><input type="checkbox" name="allow_overnight_shift" value="1" <?php checked($overnight_enabled); ?>> Enabled</label></div>

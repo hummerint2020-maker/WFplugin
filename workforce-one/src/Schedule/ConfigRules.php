@@ -41,6 +41,12 @@ final class ConfigRules
         return max(0, min(180, (int) $value));
     }
 
+    /** Minutes after a shift's start when a no-show counts as Absent today: 15 to 720. @param mixed $value */
+    public static function absentAfterMinutes($value): int
+    {
+        return max(15, min(720, (int) $value));
+    }
+
     /** @return int[] WordPress weekdays (0 = Sunday), unique and sorted. */
     public static function workingDays($raw): array
     {

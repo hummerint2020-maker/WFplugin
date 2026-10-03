@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.44
+Values that were fixed in the code are now settings. Every default is the old value, so nothing
+changes until an administrator changes it; all four are on Settings Overview.
+
+### Added
+- **Schedule Configuration → Absent After** (default 120 minutes): when a no-show on a shift shows as
+  Absent today on dashboards and today's reports (Pending before that). Past days, reports over past
+  periods and payroll are not affected: a past day without a Sign In is Absent anyway.
+- **Feature Configuration → time to answer a presence request** (default 3 minutes, 1–60); the
+  employee's notification says the time.
+- **Work Locations → near capacity from** (default 90% of seats, 50–100) for the Location Capacity
+  report.
+- **Payroll → Rules → late arrival by tiers** as an alternative to by the minute: "more than N minutes
+  = a share of a day's pay", the highest tier passed counts.
+
+### Not changed on purpose
+- The location checks at Sign In (GPS accuracy 100 m, phone clock within 5 minutes, no "travel"
+  faster than 180 km/h) stay fixed: they stop location spoofing.
+- The installed app's name and colour stay fixed: changing them can make phones treat it as a new app.
+
 ## 3.31.43
 ### Added
 - **Payslip PDF** for every closed month: "Download payslip (PDF)" in My Pay (the employee's own)

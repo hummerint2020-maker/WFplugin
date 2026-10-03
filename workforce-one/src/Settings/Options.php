@@ -4,6 +4,7 @@ namespace WorkforceOne\Settings;
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Payroll\PayRules;
+use WorkforceOne\Reports\Capacity;
 
 /**
  * Every setting Workforce One keeps in the WordPress options table: what it is, where it is edited
@@ -51,6 +52,7 @@ final class Options
     private const ALL = [
         // Attendance & Schedule
         'ews_grace_period' => ['group' => 'schedule', 'label' => 'Grace period before Late', 'kind' => 'int', 'default' => 10, 'unit' => 'min', 'page' => 'ews31-schedule-config'],
+        'ews_absent_after_minutes' => ['group' => 'schedule', 'label' => 'A no-show on a shift is Absent today after', 'kind' => 'int', 'default' => 120, 'unit' => 'min', 'page' => 'ews31-schedule-config'],
         'ews_allow_overnight_shift' => ['group' => 'schedule', 'label' => 'Overnight shifts allowed', 'kind' => 'bool', 'default' => 0, 'page' => 'ews31-schedule-config'],
         'ews_working_days' => ['group' => 'schedule', 'label' => 'Working days', 'kind' => 'days', 'default' => [0, 1, 2, 3, 4], 'page' => 'ews31-schedule-config'],
         'ews_shifts' => ['group' => 'schedule', 'label' => 'Shifts', 'kind' => 'grouped', 'default' => [], 'builtin' => 'one Standard shift, 08:00–17:00', 'page' => 'ews31-schedule-config'],
@@ -66,6 +68,8 @@ final class Options
         'ews_location_enforcement' => ['group' => 'locations', 'label' => 'Old single-location enforcement (no longer used)', 'kind' => 'int', 'default' => 0, 'legacy' => true],
         'ews_presence_qr_signin' => ['group' => 'locations', 'label' => 'QR Sign In at kiosks', 'kind' => 'bool', 'default' => 0, 'page' => 'ews31-features'],
         'ews_presence_verification' => ['group' => 'locations', 'label' => 'Presence verification requests', 'kind' => 'bool', 'default' => 0, 'page' => 'ews31-features'],
+        'ews_presence_request_minutes' => ['group' => 'locations', 'label' => 'Time to answer a presence request', 'kind' => 'int', 'default' => 3, 'unit' => 'min', 'page' => 'ews31-features'],
+        'ews_capacity_warn_percent' => ['group' => 'locations', 'label' => 'Location Capacity: near capacity from', 'kind' => 'int', 'default' => Capacity::WARN_PCT, 'unit' => '% of seats', 'page' => 'ews31-multi-locations'],
         self::KIOSK_KEYS => ['group' => 'locations', 'label' => 'Kiosk secrets', 'kind' => 'secret', 'default' => '', 'page' => 'ews31-presence-kiosks'],
 
         // Early Leave & Breaks
@@ -125,6 +129,8 @@ final class Options
         'ews_payroll_absence_days' => ['group' => 'payroll', 'label' => 'An absent day deducts', 'kind' => 'number', 'default' => PayRules::DEFAULTS['absence_days'], 'unit' => 'days\' pay', 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_overtime_rate' => ['group' => 'payroll', 'label' => 'Overtime on work days', 'kind' => 'number', 'default' => PayRules::DEFAULTS['overtime_rate'], 'unit' => '× hourly pay', 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_overtime_rate_off' => ['group' => 'payroll', 'label' => 'Overtime on days off and holidays', 'kind' => 'number', 'default' => PayRules::DEFAULTS['overtime_rate_off'], 'unit' => '× hourly pay', 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_late_mode' => ['group' => 'payroll', 'label' => 'Late arrival is deducted (minute = by the minute, tiers = by tiers)', 'kind' => 'text', 'default' => PayRules::DEFAULTS['late_mode'], 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_late_tiers' => ['group' => 'payroll', 'label' => 'Late arrival tiers', 'kind' => 'grouped', 'default' => PayRules::DEFAULTS['late_tiers'], 'builtin' => 'none', 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_employee_view' => ['group' => 'payroll', 'label' => 'Employees see their pay in the app (My Pay)', 'kind' => 'bool', 'default' => PayRules::DEFAULTS['employee_view'], 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_max_deduction_days' => ['group' => 'payroll', 'label' => 'Deductions limited to', 'kind' => 'number', 'default' => PayRules::DEFAULTS['max_deduction_days'], 'unit' => 'days\' pay', 'zero' => 'No limit', 'page' => 'ews31-payroll&tab=rules'],
 

@@ -113,6 +113,12 @@ final class FeatureSettings
     }
 
     /** @return array<string, int> every action, on or off */
+    /** Minutes an employee has to answer a presence verification request: 1 to 60. @param mixed $value */
+    public static function presenceMinutes($value): int
+    {
+        return max(1, min(60, (int) $value));
+    }
+
     public static function confirmActions($posted): array
     {
         $posted = is_array($posted) ? $posted : [];

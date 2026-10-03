@@ -20,7 +20,7 @@ def opt(name):
 def seed():
     wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
     php("""
-        foreach(['ews_shifts','ews_schedule_types_config','ews_allow_overnight_shift','ews_grace_period'] as $o) delete_option($o);
+        foreach(['ews_shifts','ews_schedule_types_config','ews_allow_overnight_shift','ews_grace_period','ews_absent_after_minutes'] as $o) delete_option($o);
         update_option('ews_working_hours',['start'=>'08:00','normal_until'=>'17:00','end'=>'17:00'],false);
         $wpdb->query("DELETE FROM {$p}ews_company_calendar"); $wpdb->query("DELETE FROM {$p}ews_audit_log");
     """)
@@ -51,8 +51,10 @@ check('employee cannot open the page', 'Schedule Configuration' not in page, st)
 n = page_nonce(adm, 'ews31_working_hours_save')
 
 
-def hours(start, end, grace=10, overnight=False):
+def hours(start, end, grace=10, overnight=False, absent_after=None):
     data = dict(_wpnonce=n, work_start=start, work_end=end, grace_period=grace)
+    if absent_after is not None:
+        data['absent_after'] = absent_after
     if overnight:
         data['allow_overnight_shift'] = 1
     return adm.post('ews31_working_hours_save', **data)[1]
@@ -74,6 +76,24 @@ hours('22:00', '06:00', 10, overnight=True)
 check('an overnight day is saved when overnight shifts are on', opt('ews_working_hours')['start'] == '22:00' and int(opt('ews_allow_overnight_shift')) == 1, opt('ews_working_hours'))
 hours('08:00', '17:00', 400)
 check('the grace period is capped at 180 minutes', int(opt('ews_grace_period')) == 180)
+
+
+def no_show_cutoff(start):
+    """When a no-show on a shift starting at `start` counts as Absent today ('normal_until')."""
+    return php("""$s=get_option('ews_shifts'); $s=is_array($s)&&$s?$s:[]; update_option('ews_shifts',[['id'=>901,'name'=>'Probe','start'=>'%s','end'=>'20:00','grace'=>10,'sign_in_cutoff_minutes'=>240,'overnight'=>0,'active'=>1]],false);
+        $wpdb->insert($p.'ews_employees',['name'=>'Probe Person','domain_name'=>'probe','email'=>'probe@example.com','active'=>1,'attendance_enabled'=>1,'default_shift_id'=>901]); $eid=$wpdb->insert_id;
+        $m=new ReflectionMethod('EWS_Manager_V31_1','working_hours'); $m->setAccessible(true); echo $m->invoke(new EWS_Manager_V31_1(),$eid)['normal_until'];
+        $wpdb->delete($p.'ews_employees',['id'=>$eid]); update_option('ews_shifts',$s,false);""" % start).strip().splitlines()[-1]
+
+
+check('by default a no-show on a shift is Absent 2 hours after its start', no_show_cutoff('08:00') == '10:00')
+st, page, _ = adm.req(PAGE)
+check('the page offers when a no-show counts as Absent', 'name="absent_after"' in page and 'value="120"' in page)
+hours('08:00', '17:00', 10, absent_after=45)
+check('...and it is saved', int(opt('ews_absent_after_minutes')) == 45 and no_show_cutoff('08:00') == '08:45', opt('ews_absent_after_minutes'))
+hours('08:00', '17:00', 10, absent_after=5000)
+check('...within 15 minutes and 12 hours', int(opt('ews_absent_after_minutes')) == 720)
+hours('08:00', '17:00', 10, absent_after=120)
 emp.post('ews31_working_hours_save', _wpnonce=n, work_start='01:00', work_end='02:00')
 check('employee cannot change working hours', opt('ews_working_hours')['start'] == '08:00')
 

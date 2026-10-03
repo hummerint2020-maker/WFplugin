@@ -46,7 +46,7 @@ def full(**over):
         'pwa_splash[logo]': 'https://example.com/logo.png',
         'recognition_enabled': 1, 'recognition_allow_kudos': 1, 'recognition_weekly_limit_mode': 'limited', 'recognition_weekly_limit': 7,
         'overtime_enabled': 1, 'confirm_global': 1,
-        'location_retention_days': 90, 'face_delete_inactive': 1,
+        'location_retention_days': 90, 'face_delete_inactive': 1, 'presence_request_minutes': 3,
     }
     for k in CONFIRM:
         data['confirm_actions[%s]' % k] = 1
@@ -102,6 +102,18 @@ adm.post('ews31_features_save', _wpnonce=n, **full(**{k: None for k in ['tasks_e
 check('features can be switched off', not any(opt(o) in (True, 1, '1') for o in ['ews_feature_tasks', 'ews_presence_qr_signin', 'ews_feature_breaks', 'ews_feature_overtime', 'ews_feature_face_signin', 'ews_feature_recognition', 'ews_confirm_global']))
 emp.post('ews31_features_save', _wpnonce=n, **full())
 check('employee cannot change features', not opt('ews_feature_tasks'))
+
+# ---------------------------------------------------------------- presence request time
+adm2 = Session('admin', 'admin')
+st, page, _ = adm2.req(PAGE)
+check('Presence Verification has a time to answer', 'name="presence_request_minutes"' in page)
+adm2.post('ews31_features_save', **full(_wpnonce=page_nonce(adm2), presence_request_minutes=10))
+check('...saved in minutes', int(opt('ews_presence_request_minutes')) == 10, opt('ews_presence_request_minutes'))
+adm2.post('ews31_features_save', **full(_wpnonce=page_nonce(adm2), presence_request_minutes=500))
+check('...from 1 to 60', int(opt('ews_presence_request_minutes')) == 60)
+adm2.post('ews31_features_save', **full(_wpnonce=page_nonce(adm2), presence_request_minutes=None))
+check('...a form without the field keeps it', int(opt('ews_presence_request_minutes')) == 60)
+php("delete_option('ews_presence_request_minutes');")
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
