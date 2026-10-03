@@ -6,10 +6,10 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_payroll_close.py <state-
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import html, json, os, re, sys
+import html, json, os, re, shutil, subprocess, sys, unicodedata, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
 
 PAGE = '/wp-admin/admin.php?page=ews31-payroll'
 
@@ -28,6 +28,7 @@ seed = json.loads(php(r"""
     echo wp_json_encode(['month'=>$month,'work'=>$work,'current'=>current_time('Y-m')]);
 """).splitlines()[-1])
 MONTH, W, CURRENT = seed['month'], seed['work'], seed['current']
+MONTH_LABEL = php("echo date('F Y',strtotime('%s-01'));" % MONTH).strip()
 ABSENT, LATE, NO_OUT, LATER = W[1], W[2], W[3], W[5]
 
 
@@ -151,9 +152,51 @@ pg, text = detail()
 check('...and follows attendance again (the later absence now counts)', money(BASE + 400 - 350) in text, text[:300])
 st, body, _ = emp.req('/app/?ews_view=pay&month=' + MONTH)
 check('...and the employee no longer sees it as final', 'Final' not in body)
+php("$wpdb->update($p.'ews_employees',['name'=>'أحمد محمد'],['id'=>%d]);" % E)  # names may be Arabic
 adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_close', '_wpnonce': cn, 'month': MONTH})
 note = q("SELECT title,message FROM {p}ews_notifications WHERE user_id=%d" % I['uid'])
 check('closing with My Pay on tells each employee their payslip is ready', len(note) == 1 and 'Payslip' in note[0]['title'], note)
+
+# ---------------------------------------------------------------- payslip PDF
+
+
+def download(sess, path):
+    try:
+        r = sess.op.open(urllib.request.Request(B + path))
+        return r.headers.get('Content-Type', ''), r.headers.get('Content-Disposition', ''), r.read()
+    except urllib.error.HTTPError as e:
+        return e.headers.get('Content-Type', ''), '', e.read()
+
+
+def pdf_text(raw):
+    if not shutil.which('pdftotext'):
+        return None
+    p = subprocess.run(['pdftotext', '-layout', '-', '-'], input=raw, capture_output=True)
+    return unicodedata.normalize('NFKC', p.stdout.decode('utf-8', 'replace')) if p.returncode == 0 else 'unreadable: ' + p.stderr.decode()[:200]
+
+
+pg, _ = detail()
+link = re.search(r'href="([^"]*action=ews_payroll_pdf[^"]*)"', pg)
+check('a closed month offers each employee\'s payslip as a PDF', link is not None)
+ctype, disp, raw = download(adm, html.unescape(link.group(1)).split('127.0.0.1:8080')[-1]) if link else ('', '', b'')
+check('...which downloads as a PDF file', ctype.startswith('application/pdf') and 'attachment' in disp and raw.startswith(b'%PDF-') and raw.rstrip().endswith(b'%%EOF'), (ctype, disp, raw[:20]))
+check('...small enough for a phone (font subset)', 0 < len(raw) < 120000, len(raw))
+txt = pdf_text(raw)
+if txt is not None:
+    flat = re.sub(r'[\u200e\u200f\u202a-\u202e]', '', txt)
+    check('...with the month, the net pay and every line', all(x in flat for x in ('Payslip', MONTH_LABEL, money(BASE + 400 - 350), 'Basic salary', 'Transport', 'Project delivery', 'Advance repayment', 'Late arrival', '12 min')), flat[:600])
+    check('...and the Arabic name joined and in order', 'أحمد محمد' in flat or 'محمد أحمد' in flat, flat[:300])
+st, mypay, _ = emp.req('/app/?ews_view=pay&month=' + MONTH)
+elink = re.search(r'href="([^"]*action=ews_payslip_pdf[^"]*)"', mypay)
+check('My Pay offers the closed month\'s payslip PDF', elink is not None)
+ctype, disp, raw = download(emp, html.unescape(elink.group(1)).split('127.0.0.1:8080')[-1]) if elink else ('', '', b'')
+check('...and the employee can download it', ctype.startswith('application/pdf') and raw.startswith(b'%PDF-'), (ctype, raw[:60]))
+st, cur_page, _ = emp.req('/app/?ews_view=pay&month=' + CURRENT)
+check('an estimate has no PDF (only closed months)', 'ews_payslip_pdf' not in cur_page)
+ctype, disp, raw = download(emp, html.unescape(elink.group(1)).split('127.0.0.1:8080')[-1].replace('month=' + MONTH, 'month=2020-01')) if elink else ('', '', b'')
+check('...nor a month without a payslip', not raw.startswith(b'%PDF-'))
+ctype, disp, raw = download(emp, html.unescape(link.group(1)).split('127.0.0.1:8080')[-1]) if link else ('', '', b'')
+check('an employee cannot use the admin download', not raw.startswith(b'%PDF-'))
 
 # ---------------------------------------------------------------- access
 for action in ('ews_payroll_close', 'ews_payroll_reopen', 'ews_payroll_adjust_save'):

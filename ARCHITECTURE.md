@@ -36,6 +36,8 @@ workforce-one/
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
     Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
     Payroll/PayCalculator.php, PayRules.php, Hooks.php  a month's pay from attendance and adjustments; salary, rules and adjustment forms
+    Payroll/PayslipPdf.php            a closed month's payslip as a PDF
+    Pdf/Document.php, TrueTypeFont.php, ArabicText.php  small PDF writer: embedded font subset, Arabic joining and right-to-left order
     Requests/Hub.php, Hooks.php        presentation rules of the admin request pages
     Approvals/Workflows.php, StateMachine.php, Hooks.php  approval modes per workflow, request/step states
     Locations/LocationRules.php, Hooks.php  work location checks (coordinates, radius, seats, default)

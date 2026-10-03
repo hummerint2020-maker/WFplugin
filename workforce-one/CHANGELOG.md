@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.31.43
+### Added
+- **Payslip PDF** for every closed month: "Download payslip (PDF)" in My Pay (the employee's own)
+  and on an employee's month in wp-admin → Payroll (logged in the Audit Log). Same lines as My Pay:
+  net pay, figures, earnings, deductions with the days behind them, and how a day is valued.
+  Made on the server (no browser printing), so it downloads the same way on phones, including the
+  installed app. Months not yet closed have no PDF.
+- Arabic names and reasons print correctly (letters joined, right to left), using the bundled
+  DejaVu Sans font; each PDF embeds only the letters it uses (about 25 KB).
+
+### Internal
+- `src/Pdf/` (Document, TrueTypeFont, ArabicText), `src/Payroll/PayslipPdf.php`,
+  `assets/vendor/dejavu/`. Tests: `tests/unit/PdfTest.php`; `tests/e2e_payroll_close.py` now reads
+  the PDF back with `pdftotext` (43 checks; CI installs poppler-utils).
+
 ## 3.31.42
 Payroll, phase 2.
 

@@ -17,5 +17,7 @@ final class Hooks
         add_action('admin_post_ews_payroll_adjust_delete', [$plugin, 'payroll_adjust_delete']);
         add_action('admin_post_ews_payroll_close', [$plugin, 'payroll_close']);
         add_action('admin_post_ews_payroll_reopen', [$plugin, 'payroll_reopen']);
+        add_action('admin_post_ews_payroll_pdf', [$plugin, 'payroll_pdf']);
+        add_action('admin_post_ews_payslip_pdf', [$plugin, 'payslip_pdf']); // My Pay (any signed-in employee, own payslip only)
     }
 }

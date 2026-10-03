@@ -173,8 +173,10 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_settings_overview.py "$S"
       - name: Payroll (salaries, rules, monthly pay from attendance, export)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_payroll.py "$S"
-      - name: Payroll close, adjustments and My Pay
-        run: WP_CLI="wp --path=$WP" python3 tests/e2e_payroll_close.py "$S"
+      - name: Payroll close, adjustments, My Pay and payslip PDF
+        run: |
+          command -v pdftotext >/dev/null || sudo apt-get install -y -qq poppler-utils >/dev/null
+          WP_CLI="wp --path=$WP" python3 tests/e2e_payroll_close.py "$S"
       - name: Time zones (Cairo) and overnight shifts
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_timezone.py "$S"
       - name: Re-seed after behaviour tests

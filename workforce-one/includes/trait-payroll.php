@@ -178,6 +178,7 @@ trait EWS_Payroll_Trait {
             if($employee&&$people)$vars['detail']=$people[0];
             else $vars['people']=$people;
             $vars['export_url']=wp_nonce_url(add_query_arg(['action'=>'ews_payroll_export','month'=>$month],admin_url('admin-post.php')),'ews_payroll_export');
+            $vars['pdf_url']=$run&&$employee?wp_nonce_url(add_query_arg(['action'=>'ews_payroll_pdf','month'=>$month,'employee'=>$employee],admin_url('admin-post.php')),'ews_payroll_pdf'):'';
         }elseif($tab==='salaries'){
             global $wpdb;
             $emps=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
@@ -192,7 +193,7 @@ trait EWS_Payroll_Trait {
             $vars['default_from']=current_time('Y-m').'-01';
             $vars['selected']=absint($_GET['employee']??0);
         }
-        echo $this->render_template('admin/payroll',$vars+['run'=>null,'can_close'=>false]);
+        echo $this->render_template('admin/payroll',$vars+['run'=>null,'can_close'=>false,'pdf_url'=>'']);
     }
 
     /** The closed run of a month, if any. */
@@ -336,7 +337,56 @@ trait EWS_Payroll_Trait {
             'older_url'=>$i!==false&&isset($months[$i+1])?add_query_arg(['ews_view'=>'pay','month'=>$months[$i+1]],$this->app_home_url()):'',
             'newer_url'=>$i!==false&&$i>0?add_query_arg(['ews_view'=>'pay','month'=>$months[$i-1]],$this->app_home_url()):'',
             'preparing'=>$month===$current&&!isset($closed[$previous])?date('F Y',strtotime($previous.'-01')):'',
+            'pdf_url'=>isset($closed[$month])?wp_nonce_url(add_query_arg(['action'=>'ews_payslip_pdf','month'=>$month],admin_url('admin-post.php')),'ews_payslip_pdf'):'',
         ]);
+    }
+
+    /** A payslip row of a closed month: [data, closed_at] or null. */
+    private function payroll_payslip($month,$employee_id){
+        global $wpdb;$t=$this->payroll_tables();$this->ensure_payroll_schema();
+        $r=$wpdb->get_row($wpdb->prepare("SELECT s.data,r.closed_at FROM {$t['payslips']} s JOIN {$t['runs']} r ON r.id=s.run_id WHERE r.month=%s AND s.employee_id=%d",$month,$employee_id));
+        $d=$r?json_decode((string)$r->data,true):null;
+        return is_array($d)&&isset($d['pay'])?[$d,(string)$r->closed_at]:null;
+    }
+
+    /** Send a closed month's payslip as a PDF download. */
+    private function payroll_send_pdf($month,array $slip){
+        [$d,$closed_at]=$slip;
+        $font=\WorkforceOne\Pdf\TrueTypeFont::fromFile(dirname(__DIR__).'/assets/vendor/dejavu/DejaVuSans.ttf');
+        $pdf=\WorkforceOne\Payroll\PayslipPdf::render($font,[
+            'company'=>wp_specialchars_decode((string)get_bloginfo('name'),ENT_QUOTES),'employee'=>(string)($d['employee']['name']??''),'month_label'=>date('F Y',strtotime($month.'-01')),
+            'closed_at'=>$closed_at,'currency'=>(string)($d['currency']??$this->payroll_rules()['currency']),'rules'=>(array)($d['rules']??[])+$this->payroll_rules(),'pay'=>$d['pay'],'generated'=>current_time('j M Y H:i'),
+        ]);
+        $name=sanitize_file_name('payslip-'.$month.'-'.remove_accents((string)($d['employee']['name']??'employee')));
+        nocache_headers();
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="'.($name!==''?$name:'payslip-'.$month).'.pdf"');
+        header('Content-Length: '.strlen($pdf));
+        echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary PDF
+        exit;
+    }
+
+    /** wp-admin: any employee's payslip of a closed month. */
+    public function payroll_pdf(){
+        if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
+        check_admin_referer('ews_payroll_pdf');
+        $month=$this->payroll_month_param();$eid=absint($_GET['employee']??0);
+        $slip=$this->payroll_payslip($month,$eid);
+        if(!$slip)$this->payroll_redirect(['month'=>$month,'employee'=>$eid,'payroll_error'=>'not_closed']);
+        $this->audit('payslip_downloaded','employee',$eid,$month);
+        $this->payroll_send_pdf($month,$slip);
+    }
+
+    /** My Pay: the signed-in employee's own payslip of a closed month. */
+    public function payslip_pdf(){
+        if(!is_user_logged_in())wp_die('Access denied',403);
+        check_admin_referer('ews_payslip_pdf');
+        $emp=$this->current_employee();
+        if(!$emp||!$this->option('ews_payroll_employee_view'))wp_die('Access denied',403);
+        $month=$this->payroll_month_param();
+        $slip=$this->payroll_payslip($month,(int)$emp->id);
+        if(!$slip)wp_die('No payslip for this month.',404);
+        $this->payroll_send_pdf($month,$slip);
     }
 
     public function payroll_rate_save(){

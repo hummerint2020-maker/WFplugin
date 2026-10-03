@@ -13,6 +13,7 @@
  * @var string $older_url
  * @var string $newer_url
  * @var string $preparing      last month's label while it is not closed ('' = nothing to say)
+ * @var string $pdf_url        payslip PDF of a closed month ('' = none)
  */
 if (!defined('ABSPATH')) exit;
 
@@ -94,6 +95,7 @@ $days_list = static function (array $rows) {
     </div>
 
     <div class="ews-pay-card"><div class="ews-pay-ln total"><div>Net pay</div><div class="ews-pay-amt"><?php echo esc_html($currency . ' ' . $money($p['net'])); ?></div></div></div>
+    <?php if ($pdf_url !== ''): ?><a class="ews-pay-pdf" href="<?php echo esc_url($pdf_url); ?>">⬇ Download payslip (PDF)</a><?php endif; ?>
     <p class="ews-pay-foot">A day's pay = <?php echo esc_html(($rules['day_base'] ?? 'gross') === 'basic' ? 'basic' : '(basic + allowances)'); ?> ÷ <?php echo (int) ($rules['day_divisor'] ?? 30); ?> = <?php echo esc_html($money($p['day_value'])); ?>. Amounts are before income tax and social insurance. A question about this month? Contact HR.</p>
 <?php endif; ?>
 </div>

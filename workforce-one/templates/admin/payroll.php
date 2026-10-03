@@ -15,6 +15,7 @@
  * @var string $export_url (month tab)
  * @var array{closed_at:string,closed_by:string}|null $run  the month is closed (figures kept as they were)
  * @var bool $can_close    (month tab) the month has ended and is not closed
+ * @var string $pdf_url    (one employee, closed month) payslip PDF ('' = none)
  * @var string $default_from (salaries tab)
  * @var int $selected      (salaries tab) employee to preselect
  * @var int $grace         grace period in minutes (Schedule Configuration)
@@ -97,6 +98,7 @@ $adjust_remove = static function ($id) {
         <?php if ($p['cap'] !== null): ?><tr><td>Limited to <?php echo esc_html($num($rules['max_deduction_days'])); ?> day(s)' pay <span class="ews-pay-sub">deductions before the limit: <?php echo esc_html($money($p['deductions_before_cap'])); ?></span></td><td class="num minus"><?php echo esc_html($minus($p['cap'])); ?></td></tr><?php endif; ?>
     </tbody></table>
     </div>
+    <?php if ($pdf_url !== ''): ?><p><a class="button button-primary" href="<?php echo esc_url($pdf_url); ?>">Download payslip (PDF)</a></p><?php endif; ?>
     <table class="widefat ews-pay-total"><tr><td>Net pay</td><td class="num"><?php echo esc_html($cur . ' ' . $money($p['net'])); ?></td></tr></table>
     <?php if (!$run): ?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="ews-pay-adjust">
