@@ -42,7 +42,7 @@ trait EWS_Breaks_Trait {
         }
 
         private function break_redirect($args=[]){
-            $url=wp_get_referer(); if(!$url||strpos($url,'admin-post.php')!==false)$url=home_url('/');
+            $url=wp_get_referer(); if(!$url||strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
             $url=remove_query_arg(['break_success','break_error','leave_sent','leave_error','early_error','time_success','time_error','overtime_sent','overtime_error','saved','imported','grid_saved','time_reset','time_saved'],$url);
             $url=add_query_arg('ews_view','time',$url);
             if($args)$url=add_query_arg($args,$url);
@@ -102,7 +102,7 @@ trait EWS_Breaks_Trait {
             $wpdb->update($table,['end_at'=>$now,'actual_minutes'=>$minutes,'status'=>'Completed'],['id'=>(int)$session->id],['%s','%d','%s'],['%d']);
             $msg='Your break ended. Duration: '.$minutes.' minute'.($minutes===1?'':'s').'.';
             $this->notify_user((int)$emp->wp_user_id,'Break Ended',$msg,'break','break',(int)$session->id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Break Ended',$msg,'break',(int)$session->id,add_query_arg('ews_view','time',home_url('/')));
+            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Break Ended',$msg,'break',(int)$session->id,add_query_arg('ews_view','time',$this->app_home_url()));
             $this->audit('break_resume','break',(int)$session->id,$emp->name.' / '.$now.' / '.$minutes.'m');
             $this->break_redirect(['break_success'=>rawurlencode($msg)]);
         }
@@ -115,7 +115,7 @@ trait EWS_Breaks_Trait {
             $wpdb->update($table,['duration_notified'=>1],['id'=>(int)$s->id],['%d'],['%d']);
             $msg='Your '.$this->break_duration_minutes().'-minute break has ended. Please resume work.';
             $this->notify_user((int)$s->user_id,'Break Time Ended',$msg,'break','break',(int)$s->id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$s->user_id,'Break Time Ended',$msg,'break',(int)$s->id,add_query_arg('ews_view','time',home_url('/')));
+            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$s->user_id,'Break Time Ended',$msg,'break',(int)$s->id,add_query_arg('ews_view','time',$this->app_home_url()));
         }
 
         public function break_manager_escalation($session_id){
@@ -131,7 +131,7 @@ trait EWS_Breaks_Trait {
             $msg=$emp->name.' has been on break for '.$elapsed.' minutes and has not resumed work.';
             foreach($this->break_manager_user_ids() as $uid){
                 $this->notify_user($uid,'Extended Break Alert',$msg,'break','break',(int)$s->id);
-                if(method_exists($this,'push_custom_notification'))$this->push_custom_notification($uid,'Extended Break Alert',$msg,'break',(int)$s->id,add_query_arg('ews_view','time',home_url('/')));
+                if(method_exists($this,'push_custom_notification'))$this->push_custom_notification($uid,'Extended Break Alert',$msg,'break',(int)$s->id,add_query_arg('ews_view','time',$this->app_home_url()));
             }
         }
 

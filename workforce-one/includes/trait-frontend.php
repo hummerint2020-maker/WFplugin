@@ -191,6 +191,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
             wp_register_script('workforce-one-people', $root.'assets/js/people.js', [], $ver, true);
             wp_register_script('workforce-one-reports', $root.'assets/js/reports.js', [], $ver, true);
+            wp_register_script('workforce-one-presence-scan', $root.'assets/js/presence-scan.js', ['workforce-one-jsqr'], $ver, true);
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;
@@ -350,7 +351,7 @@ trait EWS_Frontend_Trait {
         check_admin_referer('ews_smart_nudge_dismiss_'.$id);
         $raw=get_user_meta(get_current_user_id(),'ews_smart_nudge_dismissed',true);if(!is_array($raw))$raw=[];
         $raw[$id]=time();update_user_meta(get_current_user_id(),'ews_smart_nudge_dismissed',$raw);
-        $ref=wp_get_referer();if(!$ref)$ref=home_url('/');wp_safe_redirect($ref);exit;
+        $ref=wp_get_referer();if(!$ref)$ref=$this->app_home_url();wp_safe_redirect($ref);exit;
     }
 
     private function employee_moments_for_today(){
@@ -417,7 +418,7 @@ trait EWS_Frontend_Trait {
                 'signin_bounds','hours_start_label','hours_end_label','sign_in_status_label','face_enrolled','face_settings','face_vendor_url','qr_enabled','presence_enabled','presence_url'));
         }
     private function redirect($args=[]){
-            $u=wp_get_referer()?:home_url("/");
+            $u=wp_get_referer()?:$this->app_home_url();
             /*
              * Flash messages are one-shot. Clear any previous flash params
              * before adding the new result, otherwise a stale success/error

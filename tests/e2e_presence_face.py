@@ -12,7 +12,7 @@ def req(url,data=None,headers={},method=None):
 res=[]
 def check(n,c,extra=''): res.append(c); print(('PASS ' if c else 'FAIL ')+n+(' | '+extra if extra and not c else ''))
 sec=ids['secret']; kid=ids['kid']
-st,body,_=req(f'/?ews_kiosk={kid}&kiosk_key={sec}'); check('kiosk page opens (was always 403)',st==200 and 'qrcode(' in body and 'api.qrserver' not in body,str(st)+body[:200])
+st,body,_=req(f'/?ews_kiosk={kid}&kiosk_key={sec}'); check('kiosk page opens (was always 403)',st==200 and 'assets/js/kiosk.js' in body and 'qrcode-generator' in body and 'api.qrserver' not in body,str(st)+body[:200])
 st,_,_=req(f'/?ews_kiosk={kid}&kiosk_key={hashlib.sha256(sec.encode()).hexdigest()}'); check('kiosk with hash as key -> 403',st==403)
 st,_,_=req(f'/?ews_kiosk={kid}&kiosk_key=bad'); check('kiosk bad key -> 403',st==403)
 st,payload,_=req(f'/?ews_kiosk={kid}&kiosk_key={sec}&kiosk_payload=1'); check('payload route',st==200 and payload.startswith(f'wfo1|{kid}|'),payload[:100])

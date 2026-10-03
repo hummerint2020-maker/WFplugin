@@ -38,7 +38,7 @@ trait EWS_Overtime_Trait {
         }
 
     private function overtime_redirect($args=[]){
-            $url=wp_get_referer();if(!$url||strpos($url,'admin-post.php')!==false)$url=home_url('/');
+            $url=wp_get_referer();if(!$url||strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
             $url=remove_query_arg(['overtime_sent','overtime_error','leave_sent','leave_error','early_error','break_success','break_error','time_success','time_error','saved','imported','grid_saved','time_reset','time_saved'],$url);
             $url=add_query_arg('ews_view','overtime',$url);if($args)$url=add_query_arg($args,$url);
             wp_safe_redirect($url);exit;

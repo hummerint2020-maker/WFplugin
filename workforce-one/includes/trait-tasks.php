@@ -36,7 +36,7 @@ trait EWS_Tasks_Trait {
 
     private function tasks_redirect($args=[]){
         $url=wp_get_referer();
-        if(!$url || strpos($url,'admin-post.php')!==false)$url=home_url('/');
+        if(!$url || strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
         $url=remove_query_arg(['task_saved','task_updated','task_deleted','task_completed','task_error'],$url);
         if($args)$url=add_query_arg($args,$url);
         wp_safe_redirect($url); exit;
@@ -65,7 +65,7 @@ trait EWS_Tasks_Trait {
         if(!$user_id || $user_id===get_current_user_id()) return;
         $this->notify_user($user_id,$title,$message,'info','task',$task_id);
         if(method_exists($this,'push_custom_notification')){
-            $this->push_custom_notification($user_id,$title,$message,'task',$task_id,add_query_arg('ews_view','tasks',home_url('/')));
+            $this->push_custom_notification($user_id,$title,$message,'task',$task_id,add_query_arg('ews_view','tasks',$this->app_home_url()));
         }
     }
 

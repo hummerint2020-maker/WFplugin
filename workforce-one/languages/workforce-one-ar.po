@@ -32,88 +32,88 @@ msgstr "داخلي"
 msgid "Attendance tracking is disabled for your employee profile."
 msgstr "تسجيل الحضور غير مفعّل في ملفك الوظيفي."
 
-#: includes/trait-attendance.php:96
+#: includes/trait-attendance.php:97
 msgid "Face verification is required before Sign In. Please complete Face Verification and try again."
 msgstr "يجب التحقق من الوجه قبل تسجيل الحضور. أكمل التحقق من الوجه ثم حاول مرة أخرى."
 
-#: includes/trait-attendance.php:95
+#: includes/trait-attendance.php:96
 msgid "Your WordPress account is not linked to an active employee."
 msgstr "حسابك غير مرتبط بموظف نشط."
 
-#: includes/trait-attendance.php:97
+#: includes/trait-attendance.php:98
 msgid "Today is a General Leave day. Sign In is not required."
 msgstr "اليوم إجازة عامة، ولا يلزم تسجيل الحضور."
 
-#: includes/trait-attendance.php:98
+#: includes/trait-attendance.php:99
 msgid "Today is not a working day for you."
 msgstr "اليوم ليس يوم عمل بالنسبة لك."
 
 #. translators: %s: start time
-#: includes/trait-attendance.php:99
+#: includes/trait-attendance.php:100
 #, php-format
 msgid "Sign In is not available yet. Your working hours start at %s."
 msgstr "تسجيل الحضور غير متاح بعد. تبدأ ساعات عملك في %s."
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:102
+#: includes/trait-attendance.php:103
 #, php-format
 msgid "Sign In is no longer available. The Sign In cutoff was %s."
 msgstr "انتهى وقت تسجيل الحضور. كان آخر موعد للتسجيل %s."
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:103
+#: includes/trait-attendance.php:104
 msgid "You have already signed in today."
 msgstr "لقد سجّلت حضورك اليوم بالفعل."
 
-#: includes/trait-attendance.php:104
+#: includes/trait-attendance.php:105
 msgid "Please Resume Work before signing out."
 msgstr "يرجى استئناف العمل قبل تسجيل الانصراف."
 
-#: includes/trait-attendance.php:105
+#: includes/trait-attendance.php:106
 msgid "You cannot sign out before signing in."
 msgstr "لا يمكنك تسجيل الانصراف قبل تسجيل الحضور."
 
-#: includes/trait-attendance.php:106
+#: includes/trait-attendance.php:107
 msgid "You have already signed out today."
 msgstr "لقد سجّلت انصرافك اليوم بالفعل."
 
-#: includes/trait-attendance.php:75
+#: includes/trait-attendance.php:76
 msgid "This Kiosk location has no coordinates configured. Please contact your administrator."
 msgstr "لم يتم ضبط إحداثيات موقع هذا الكشك. يرجى التواصل مع المسؤول."
 
-#: includes/trait-attendance.php:76
+#: includes/trait-attendance.php:77
 msgid "Location access is required for QR Sign In. Please allow Location Services and try again."
 msgstr "يلزم الوصول إلى موقعك لتسجيل الحضور عبر QR. اسمح بخدمات الموقع ثم حاول مرة أخرى."
 
 #. translators: 1: work location name, 2: distance
-#: includes/trait-attendance.php:77
+#: includes/trait-attendance.php:78
 #, php-format
 msgid "You must be at %1$s to use QR Sign In. Distance: %2$s"
 msgstr "يجب أن تكون في %1$s لتسجيل الحضور عبر QR. المسافة: %2$s"
 
 #. translators: %s: distance
-#: includes/trait-attendance.php:79
+#: includes/trait-attendance.php:80
 #, php-format
 msgid "You are outside your assigned work location. Distance: %s"
 msgstr "أنت خارج موقع العمل المخصص لك. المسافة: %s"
 
-#: includes/trait-attendance.php:84
+#: includes/trait-attendance.php:85
 msgid "Unable to record Sign Out. Please contact the administrator."
 msgstr "تعذّر تسجيل الانصراف. يرجى التواصل مع المسؤول."
 
-#: includes/trait-attendance.php:84
+#: includes/trait-attendance.php:85
 msgid "Unable to record Sign In. Please contact the administrator."
 msgstr "تعذّر تسجيل الحضور. يرجى التواصل مع المسؤول."
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Late Arrival recorded successfully."
 msgstr "تم تسجيل الحضور المتأخر بنجاح."
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Sign Out recorded successfully."
 msgstr "تم تسجيل الانصراف بنجاح."
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Sign In recorded successfully."
 msgstr "تم تسجيل الحضور بنجاح."
 
@@ -155,203 +155,198 @@ msgstr "تعذّر إرسال طلب إعادة تعيين الوجه."
 msgid "You cannot remove this face profile"
 msgstr "لا يمكنك حذف بيانات هذا الوجه"
 
-#: includes/trait-presence.php:50
-#: includes/trait-presence.php:52
+#: includes/trait-presence.php:56
+#: includes/trait-presence.php:112
 msgid "Invalid QR code."
 msgstr "رمز QR غير صالح."
 
-#: includes/trait-presence.php:53
-#: includes/trait-presence.php:60
+#: includes/trait-presence.php:57
+#: includes/trait-presence.php:62
+#: includes/trait-presence.php:114
 msgid "This kiosk is inactive."
 msgstr "هذا الكشك غير نشط."
 
-#: includes/trait-presence.php:55
+#: includes/trait-presence.php:58
+#: includes/trait-presence.php:113
 msgid "This QR code has expired. Please scan the current code."
 msgstr "انتهت صلاحية رمز QR. امسح الرمز الحالي."
 
-#: includes/trait-presence.php:57
+#: includes/trait-presence.php:59
 msgid "Invalid QR signature."
 msgstr "توقيع رمز QR غير صالح."
 
 #: includes/trait-attendance-insights.php:150
-#: includes/trait-presence.php:66
-#: includes/trait-presence.php:86
-#: includes/trait-presence.php:99
-#: includes/trait-presence.php:102
+#: includes/trait-presence.php:69
+#: includes/trait-presence.php:80
+#: includes/trait-presence.php:93
+#: includes/trait-presence.php:96
 msgid "Access denied"
 msgstr "غير مسموح بالدخول"
 
-#: includes/trait-presence.php:87
+#: includes/trait-presence.php:81
 msgid "Invalid kiosk."
 msgstr "كشك غير صالح."
 
-#: includes/trait-presence.php:88
+#: includes/trait-presence.php:82
 msgid "Invalid work location."
 msgstr "موقع عمل غير صالح."
 
-#: includes/trait-presence.php:93
+#: includes/trait-presence.php:87
 msgid "Could not create kiosk."
 msgstr "تعذّر إنشاء الكشك."
 
-#: includes/trait-presence.php:99
+#: includes/trait-presence.php:93
 msgid "Kiosk not found."
 msgstr "لم يتم العثور على الكشك."
 
-#: includes/trait-presence.php:103
+#: includes/trait-presence.php:97
 msgid "Invalid employee or location."
 msgstr "موظف أو موقع غير صالح."
 
-#: includes/trait-presence.php:104
+#: includes/trait-presence.php:98
 msgid "You cannot manage presence outside your Department."
 msgstr "لا يمكنك إدارة التحقق من الحضور خارج إدارتك."
 
-#: includes/trait-presence.php:105
+#: includes/trait-presence.php:99
 msgid "Employee or location not found."
 msgstr "لم يتم العثور على الموظف أو الموقع."
 
-#: includes/trait-presence.php:106
+#: includes/trait-presence.php:100
 msgid "Could not create presence verification request."
 msgstr "تعذّر إنشاء طلب التحقق من التواجد."
 
-#: includes/trait-presence.php:114
-#: includes/trait-presence.php:164
+#: includes/trait-presence.php:122
+#: includes/trait-presence.php:168
 msgid "Please log in."
 msgstr "يرجى تسجيل الدخول."
 
 #: includes/trait-frontend.php:130
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-presence.php:115
-#: includes/trait-presence.php:151
-#: includes/trait-presence.php:166
+#: includes/trait-presence.php:123
+#: includes/trait-presence.php:157
+#: includes/trait-presence.php:170
 msgid "Your account is not linked to an active employee."
 msgstr "حسابك غير مرتبط بموظف نشط."
 
-#: includes/trait-presence.php:116
+#: includes/trait-presence.php:124
 msgid "Presence request not found."
 msgstr "لم يتم العثور على طلب التحقق."
 
-#: includes/trait-presence.php:117
+#: includes/trait-presence.php:110
 msgid "This presence request has already been processed."
 msgstr "تمت معالجة طلب التحقق هذا بالفعل."
 
-#: includes/trait-presence.php:118
+#: includes/trait-presence.php:111
 msgid "This presence request has expired."
 msgstr "انتهت صلاحية طلب التحقق هذا."
 
-#: includes/trait-presence.php:120
+#: includes/trait-presence.php:115
 msgid "This QR belongs to a different work location."
 msgstr "رمز QR هذا خاص بموقع عمل آخر."
 
-#: includes/trait-presence.php:121
+#: includes/trait-presence.php:116
 msgid "The request changed before it could be verified."
 msgstr "تغيّر الطلب قبل إتمام التحقق."
 
-#: includes/trait-presence.php:126
+#: includes/trait-presence.php:136
 msgid "Kiosk access denied."
 msgstr "غير مسموح بالدخول إلى الكشك."
 
-#: includes/trait-presence.php:127
+#: includes/trait-presence.php:137
 msgid "Kiosk is inactive."
 msgstr "الكشك غير نشط."
 
-#: includes/trait-presence.php:132
+#: templates/kiosk.php:21
 msgid "Scan to continue"
 msgstr "امسح الرمز للمتابعة"
 
-#: includes/trait-presence.php:132
+#: templates/kiosk.php:22
 msgid "Dynamic Workforce One QR"
 msgstr "رمز QR المتغيّر من Workforce One"
 
-#: includes/trait-presence.php:132
+#: templates/kiosk.php:27
 msgid "Connection unavailable. Please check this kiosk connection."
 msgstr "الاتصال غير متاح. يرجى التحقق من اتصال هذا الكشك."
 
 #. translators: %d: seconds
-#: includes/trait-presence.php:134
+#: templates/kiosk.php:24
 #, php-format
 msgid "Changes in %ds"
 msgstr "يتغيّر خلال %d ث"
 
-#: includes/trait-presence.php:150
+#: includes/trait-presence.php:156
 msgid "Presence Verification is disabled"
 msgstr "التحقق من التواجد غير مفعّل"
 
-#: includes/trait-presence.php:150
+#: includes/trait-presence.php:156
 msgid "Please contact your administrator."
 msgstr "يرجى التواصل مع المسؤول."
 
-#: includes/trait-presence.php:151
+#: includes/trait-presence.php:157
 msgid "Employee profile required"
 msgstr "يلزم وجود ملف موظف"
 
 #: includes/trait-app-layout.php:57
-#: includes/trait-presence.php:153
+#: templates/app/presence.php:13
 #: templates/app/time.php:110
 msgid "Presence Verification"
 msgstr "التحقق من التواجد"
 
-#: includes/trait-presence.php:154
+#: templates/app/presence.php:14
 msgid "Presence verified successfully."
 msgstr "تم التحقق من تواجدك بنجاح."
 
-#: includes/trait-presence.php:156
+#: templates/app/presence.php:17
 msgid "No active presence verification request was found."
 msgstr "لا يوجد طلب تحقق من التواجد نشط."
 
 #. translators: %s: work location name
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:19
 #, php-format
 msgid "Please scan the QR code displayed at %s."
 msgstr "يرجى مسح رمز QR المعروض في %s."
 
 #. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:20
 #, php-format
 msgid "Expires in %s"
 msgstr "ينتهي خلال %s"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:23
 #: templates/app/time.php:106
 msgid "Starting camera…"
 msgstr "جارٍ تشغيل الكاميرا…"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:24
 msgid "Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device."
 msgstr "يستخدم المسح إذن الكاميرا في المتصفح. إذا لم يكن المسح متاحًا على هذا الجهاز، استخدم متصفحًا أو جهازًا يدعم QR."
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:25
 msgid "Verify Presence"
 msgstr "تأكيد التواجد"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:23
 msgid "Camera scanning is unavailable. Please use a QR-capable device."
 msgstr "المسح بالكاميرا غير متاح. يرجى استخدام جهاز يدعم QR."
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
+#: templates/app/presence.php:28
 msgid "Status:"
 msgstr "الحالة:"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
+#: templates/app/presence.php:29
 msgid "Location:"
 msgstr "الموقع:"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
+#: templates/app/presence.php:30
 msgid "Verified at:"
 msgstr "وقت التحقق:"
 
-#: includes/trait-presence.php:163
+#: includes/trait-presence.php:167
 msgid "Dynamic QR Sign-In is disabled."
 msgstr "تسجيل الحضور عبر QR غير مفعّل."
 
-#: includes/trait-presence.php:169
+#: includes/trait-presence.php:173
 msgid "The Kiosk location is unavailable."
 msgstr "موقع الكشك غير متاح."
 
@@ -417,19 +412,19 @@ msgstr "يحذف جميع الجداول والإعدادات والأدوار �
 msgid "Last cleanup run:"
 msgstr "آخر تنظيف:"
 
-#: includes/trait-frontend.php:389
+#: includes/trait-frontend.php:391
 msgid "On Time"
 msgstr "في الموعد"
 
-#: includes/trait-frontend.php:389
+#: includes/trait-frontend.php:391
 msgid "Late Arrival"
 msgstr "حضور متأخر"
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:398
 msgid "Attendance tracking is disabled"
 msgstr "تسجيل الحضور غير مفعّل"
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:398
 msgid "Attendance is not required for your employee profile."
 msgstr "الحضور غير مطلوب في ملفك الوظيفي."
 
@@ -1277,7 +1272,7 @@ msgstr "موافقة"
 msgid "Reject"
 msgstr "رفض"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 #: templates/app/leave.php:107
 #: templates/app/leave.php:121
 #: templates/app/overtime.php:79
@@ -1723,35 +1718,35 @@ msgstr "المتاح: %s"
 msgid "No balance deduction"
 msgstr "بدون خصم من الرصيد"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Approved"
 msgstr "معتمد"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Rejected"
 msgstr "مرفوض"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Cancelled"
 msgstr "ملغى"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Accepted"
 msgstr "مقبول"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Completed"
 msgstr "مكتمل"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Expired"
 msgstr "منتهي"
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Verified"
 msgstr "تم التحقق"
 
-#: includes/trait-attendance.php:108
+#: includes/trait-attendance.php:109
 msgid "Unable to record this action."
 msgstr "تعذّر تسجيل هذا الإجراء."
 

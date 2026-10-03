@@ -56,7 +56,7 @@ trait EWS_Recognition_Trait {
     }
 
     private function recognition_redirect($employee_id,$args=[]){
-        $fallback=add_query_arg('ews_view','people',home_url('/'));
+        $fallback=add_query_arg('ews_view','people',$this->app_home_url());
         $referer=wp_get_referer();
         $base=$referer?wp_validate_redirect($referer,$fallback):$fallback;
         $base=remove_query_arg(['kudos_error','kudos_sent'],$base);

@@ -53,7 +53,7 @@ trait EWS_Profile_Account_Trait {
             $current=(string)wp_unslash($_POST['current_password']??'');
             $new=(string)wp_unslash($_POST['new_password']??'');
             $confirm=(string)wp_unslash($_POST['confirm_password']??'');
-            $redirect=remove_query_arg(['password_updated','password_error'],wp_get_referer()?:home_url('/'));
+            $redirect=remove_query_arg(['password_updated','password_error'],wp_get_referer()?:$this->app_home_url());
             $redirect=add_query_arg('ews_view','profile',$redirect);
             if(!wp_check_password($current,$user->user_pass,$user_id)){
                 wp_safe_redirect(add_query_arg('password_error','current',$redirect));exit;
@@ -93,7 +93,7 @@ trait EWS_Profile_Account_Trait {
                 if($ok===false) wp_die('Could not save the avatar.');
                 $this->delete_employee_profile_image_file($old_url);
                 $this->audit('profile_avatar_update','employee',(int)$emp->id,$emp->name.' selected avatar '.$key);
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_updated'=>'avatar'],$redirect)); exit;
             }
             if($action==='reset'){
@@ -101,33 +101,33 @@ trait EWS_Profile_Account_Trait {
                 if($ok===false)wp_die('Could not reset the profile picture.');
                 $this->delete_employee_profile_image_file($old_url);
                 $this->audit('profile_photo_reset','employee',(int)$emp->id,$emp->name.' reset profile picture');
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_updated'=>'reset'],$redirect));exit;
             }
             if(empty($_FILES['profile_photo'])||!empty($_FILES['profile_photo']['error'])){
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_error'=>'upload'],$redirect));exit;
             }
             $file=$_FILES['profile_photo'];
             if((int)$file['size']>2*1024*1024){
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_error'=>'size'],$redirect));exit;
             }
             $check=wp_check_filetype_and_ext($file['tmp_name'],$file['name'],['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp']);
             if(empty($check['type'])||empty($check['ext'])){
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_error'=>'type'],$redirect));exit;
             }
             $img=@getimagesize($file['tmp_name']);
             if(!$img||empty($img['mime'])||!in_array($img['mime'],['image/jpeg','image/png','image/webp'],true)){
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_error'=>'type'],$redirect));exit;
             }
             require_once ABSPATH.'wp-admin/includes/file.php';
             $overrides=['test_form'=>false,'mimes'=>['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp']];
             $uploaded=wp_handle_upload($file,$overrides);
             if(isset($uploaded['error'])||empty($uploaded['url'])){
-                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_error'=>'upload'],$redirect));exit;
             }
             $editor=wp_get_image_editor($uploaded['file']);
@@ -138,7 +138,7 @@ trait EWS_Profile_Account_Trait {
                     $saved=$editor->save($uploaded['file']);
                     if(is_wp_error($saved)){
                         @unlink($uploaded['file']);
-                        $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+                        $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_error'=>'upload'],$redirect));exit;
                     }
                 }
@@ -151,7 +151,7 @@ trait EWS_Profile_Account_Trait {
             }
             $this->delete_employee_profile_image_file($old_url);
             $this->audit('profile_photo_update','employee',(int)$emp->id,$emp->name.' updated profile picture');
-            $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:home_url('/'));
+            $redirect=remove_query_arg(['profile_updated','profile_error'],wp_get_referer()?:$this->app_home_url());
             wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_updated'=>'photo'],$redirect));exit;
         }
 

@@ -1,6 +1,15 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Presence\QrCode;
+
+/**
+ * Presence: kiosks (a screen at a work location showing a rotating QR), QR Sign In, and presence
+ * verification (a manager asks an employee to scan the QR of a location within 3 minutes).
+ * QR rules: src/Presence/QrCode.php; pages: templates/admin/presence-kiosks.php, templates/kiosk.php,
+ * templates/app/presence.php.
+ */
+
 trait EWS_Presence_Trait {
     private function presence_qr_enabled(){ return (bool)get_option('ews_presence_qr_signin',0); }
     private function presence_verification_enabled(){ return (bool)get_option('ews_presence_verification',0); }
@@ -28,7 +37,7 @@ trait EWS_Presence_Trait {
         if($hash===''||$secret===''||!hash_equals($hash,hash('sha256',$secret)))return '';
         return $secret;
     }
-    private function presence_qr_slot_seconds(){ return 15; }
+    private function presence_qr_slot_seconds(){ return QrCode::SLOT_SECONDS; }
     private function presence_kiosk_authorized($id){
         $key=sanitize_text_field(wp_unslash($_GET['kiosk_key']??''));
         $secret=$this->presence_secret($id);
@@ -39,47 +48,32 @@ trait EWS_Presence_Trait {
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->locations} WHERE id=%d AND active=1 LIMIT 1",absint($location_id)));
     }
     private function presence_qr_payload($kiosk_id,$secret,$slot=null){
-        $slot=$slot===null?(int)floor(time()/$this->presence_qr_slot_seconds()):(int)$slot;
-        $payload='wfo1|'.$kiosk_id.'|'.$slot;
-        $sig=hash_hmac('sha256',$payload,$secret.AUTH_KEY);
-        return $payload.'|'.$sig;
+        return QrCode::payload((int)$kiosk_id,$slot===null?QrCode::slot(time()):(int)$slot,$secret.AUTH_KEY);
     }
+    /** A scanned kiosk code (src/Presence/QrCode.php): the active kiosk, or why it is refused. @return object|WP_Error */
     private function presence_validate_qr($raw){
-        $raw=sanitize_text_field($raw);
-        $parts=explode('|',$raw);
-        if(count($parts)!==4 || $parts[0]!=='wfo1') return new WP_Error('invalid_qr',__('Invalid QR code.','workforce-one'));
-        $kid=absint($parts[1]); $slot=(int)$parts[2]; $sig=$parts[3];
-        if(!$kid || !preg_match('/^[a-f0-9]{64}$/',$sig)) return new WP_Error('invalid_qr',__('Invalid QR code.','workforce-one'));
-        $secret=$this->presence_secret($kid); if($secret==='') return new WP_Error('inactive_kiosk',__('This kiosk is inactive.','workforce-one'));
-        $now=(int)floor(time()/$this->presence_qr_slot_seconds());
-        if(abs($now-$slot)>1) return new WP_Error('expired_qr',__('This QR code has expired. Please scan the current code.','workforce-one'));
-        $expected=hash_hmac('sha256','wfo1|'.$kid.'|'.$slot,$secret.AUTH_KEY);
-        if(!hash_equals($expected,$sig)) return new WP_Error('invalid_qr',__('Invalid QR signature.','workforce-one'));
+        $qr=QrCode::parse(sanitize_text_field($raw));
+        if(!$qr) return new WP_Error('invalid_qr',__('Invalid QR code.','workforce-one'));
+        $secret=$this->presence_secret($qr['kiosk_id']); if($secret==='') return new WP_Error('inactive_kiosk',__('This kiosk is inactive.','workforce-one'));
+        if(!QrCode::fresh($qr['slot'],QrCode::slot(time()))) return new WP_Error('expired_qr',__('This QR code has expired. Please scan the current code.','workforce-one'));
+        if(!QrCode::signatureValid($qr,$secret.AUTH_KEY)) return new WP_Error('invalid_qr',__('Invalid QR signature.','workforce-one'));
         global $wpdb; list($kt)= $this->presence_tables();
-        $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $kt WHERE id=%d AND status='active' LIMIT 1",$kid));
+        $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM $kt WHERE id=%d AND status='active' LIMIT 1",$qr['kiosk_id']));
         if(!$row)return new WP_Error('inactive_kiosk',__('This kiosk is inactive.','workforce-one'));
         return $row;
     }
     private function presence_employee_for_user(){ return $this->current_employee(); }
 
+    /** wp-admin → Presence Kiosks: create a kiosk for a work location, open or disable it. */
     public function admin_presence_kiosks(){
         if(!$this->can('ews_manage_locations')) wp_die(__('Access denied','workforce-one'));
         global $wpdb; list($kt)= $this->presence_tables();
-        $locations=$wpdb->get_results("SELECT id,name FROM {$this->locations} WHERE active=1 ORDER BY name ASC");
-        $rows=$wpdb->get_results("SELECT k.*,l.name location_name FROM $kt k LEFT JOIN {$this->locations} l ON l.id=k.location_id ORDER BY k.id DESC");
-        echo '<div class="wrap"><h1>Presence Kiosks</h1>';
-        if(isset($_GET['presence_saved']))echo '<div class="notice notice-success is-dismissible"><p>Kiosk saved successfully.</p></div>';
-        if(isset($_GET['presence_revoked']))echo '<div class="notice notice-success is-dismissible"><p>Kiosk disabled successfully.</p></div>';
-        echo '<div class="wfo-features-shell" style="max-width:1100px;margin-top:18px"><div class="wfo-feature-section"><h2 style="margin-top:0">Create Kiosk</h2><p style="color:#667085">A Kiosk only displays the rotating QR code. It never contains employee credentials.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_presence_kiosk_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_presence_kiosk_save"><table class="form-table"><tr><th>Kiosk Name</th><td><input class="regular-text" name="name" required placeholder="Cairo HQ Reception"></td></tr><tr><th>Work Location</th><td><select name="location_id" required><option value="">Select location</option>'; foreach($locations as $l)echo '<option value="'.(int)$l->id.'">'.esc_html($l->name).'</option>'; echo '</select></td></tr></table><p><button class="button button-primary">Create Kiosk</button></p></form></div>';
-        echo '<div class="wfo-feature-section"><h2 style="margin-top:0">Configured Kiosks</h2><table class="widefat striped"><thead><tr><th>Name</th><th>Location</th><th>Status</th><th>Last Seen</th><th>Display</th><th>Action</th></tr></thead><tbody>';
-        if(!$rows)echo '<tr><td colspan="6">No kiosks configured.</td></tr>';
-        foreach($rows as $r){
-            $display=add_query_arg(['ews_kiosk'=>(int)$r->id,'kiosk_key'=>get_option('ews_presence_kiosk_key_'.$r->id,'')],home_url('/'));
-            echo '<tr><td><strong>'.esc_html($r->name).'</strong></td><td>'.esc_html($r->location_name?:'—').'</td><td>'.esc_html(ucfirst($r->status)).'</td><td>'.esc_html($r->last_seen_at?:'—').'</td><td>'.($r->status==='active'?'<a class="button button-small" target="_blank" rel="noopener" href="'.esc_url($display).'">Open Kiosk</a>':'—').'</td><td>';
-            if($r->status==='active')echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="display:inline">'.wp_nonce_field('ews_presence_kiosk_revoke','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_presence_kiosk_revoke"><input type="hidden" name="kiosk_id" value="'.(int)$r->id.'"><button class="button button-small">Disable</button></form>';
-            echo '</td></tr>';
-        }
-        echo '</tbody></table></div></div></div>';
+        $rows=(array)$wpdb->get_results("SELECT k.*,l.name location_name FROM $kt k LEFT JOIN {$this->locations} l ON l.id=k.location_id ORDER BY k.id DESC");
+        foreach($rows as $r)$r->display_url=$r->status==='active'?add_query_arg(['ews_kiosk'=>(int)$r->id,'kiosk_key'=>get_option('ews_presence_kiosk_key_'.$r->id,'')],home_url('/')):'';
+        echo $this->render_template('admin/presence-kiosks',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
+            'locations'=>(array)$wpdb->get_results("SELECT id,name FROM {$this->locations} WHERE active=1 ORDER BY name ASC"),'rows'=>$rows,
+            'notice'=>isset($_GET['presence_saved'])?'Kiosk saved successfully.':(isset($_GET['presence_revoked'])?'Kiosk disabled successfully.':''),
+        ]);
     }
 
     public function presence_kiosk_save(){
@@ -106,36 +100,47 @@ trait EWS_Presence_Trait {
         list(,$vt)=$this->presence_tables();$expires=gmdate('Y-m-d H:i:s',time()+180);$ok=$wpdb->insert($vt,['employee_id'=>$eid,'location_id'=>$location_id,'requested_by'=>get_current_user_id(),'status'=>'pending','expires_at'=>$expires,'created_at'=>current_time('mysql')],['%d','%d','%d','%s','%s','%s']);if($ok===false)wp_die(__('Could not create presence verification request.','workforce-one'));$id=(int)$wpdb->insert_id;
         $this->audit('presence_verification_requested','presence_verification',$id,$emp->name.' / '.$loc->name.' / expires='.$expires);
         if(!empty($emp->wp_user_id)){
-            $msg='Please verify your presence at <strong>'.esc_html($loc->name).'</strong>. The request expires in 3 minutes.';$url=add_query_arg(['ews_view'=>'presence','presence_request'=>$id],home_url('/'));$this->notify_user((int)$emp->wp_user_id,'Presence Verification',$msg,'presence',$id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Presence Verification',$msg,'presence',$id,$url);
+            $msg='Please verify your presence at <strong>'.esc_html($loc->name).'</strong>. The request expires in 3 minutes.';$url=add_query_arg(['ews_view'=>'presence','presence_request'=>$id],$this->app_home_url());$this->notify_user((int)$emp->wp_user_id,'Presence Verification',$msg,'presence',$id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Presence Verification',$msg,'presence',$id,$url);
         }
         wp_safe_redirect(wp_get_referer()?:admin_url('admin.php?page=ews31-requests'));exit;
     }
+    /** Messages of the presence page, by the code in its link (never text taken from the link). */
+    private function presence_error_message($code){
+        $m=[
+            'processed'=>__('This presence request has already been processed.','workforce-one'),
+            'expired'=>__('This presence request has expired.','workforce-one'),
+            'invalid_qr'=>__('Invalid QR code.','workforce-one'),
+            'expired_qr'=>__('This QR code has expired. Please scan the current code.','workforce-one'),
+            'inactive_kiosk'=>__('This kiosk is inactive.','workforce-one'),
+            'wrong_location'=>__('This QR belongs to a different work location.','workforce-one'),
+            'changed'=>__('The request changed before it could be verified.','workforce-one'),
+        ];
+        return $m[sanitize_key((string)$code)]??'';
+    }
+
     public function presence_verify(){
         if(!is_user_logged_in())wp_die(__('Please log in.','workforce-one')); check_admin_referer('ews_presence_verify');
         $id=absint($_POST['request_id']??0);$raw=wp_unslash($_POST['qr_payload']??'');$emp=$this->presence_employee_for_user();if(!$emp)wp_die(__('Your account is not linked to an active employee.','workforce-one'));
         global $wpdb;list(,$vt)=$this->presence_tables();$req=$wpdb->get_row($wpdb->prepare("SELECT * FROM $vt WHERE id=%d AND employee_id=%d LIMIT 1",$id,(int)$emp->id));if(!$req)wp_die(__('Presence request not found.','workforce-one'));
-        if($req->status!=='pending'){ $this->redirect(['ews_view'=>'presence','presence_request'=>$id,'presence_error'=>rawurlencode(__('This presence request has already been processed.','workforce-one'))]);return; }
-        if(strtotime($req->expires_at)<time()){$wpdb->update($vt,['status'=>'expired'],['id'=>$id,'status'=>'pending'],['%s'],['%d','%s']);$this->audit('presence_verification_expired','presence_verification',$id,$emp->name);$this->redirect(['ews_view'=>'presence','presence_request'=>$id,'presence_error'=>rawurlencode(__('This presence request has expired.','workforce-one'))]);return;}
-        $k=$this->presence_validate_qr($raw);if(is_wp_error($k)){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / '.$k->get_error_code());$this->redirect(['ews_view'=>'presence','presence_request'=>$id,'presence_error'=>rawurlencode($k->get_error_message())]);return;}
-        if((int)$k->location_id!==(int)$req->location_id){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / wrong_location');$this->redirect(['ews_view'=>'presence','presence_request'=>$id,'presence_error'=>rawurlencode(__('This QR belongs to a different work location.','workforce-one'))]);return;}
-        $now=current_time('mysql');$updated=$wpdb->query($wpdb->prepare("UPDATE $vt SET status='verified',verified_at=%s,kiosk_id=%d WHERE id=%d AND status='pending'",$now,(int)$k->id,$id));if($updated!==1){$this->redirect(['ews_view'=>'presence','presence_request'=>$id,'presence_error'=>rawurlencode(__('The request changed before it could be verified.','workforce-one'))]);return;}
-        $this->audit('presence_verification_verified','presence_verification',$id,$emp->name.' / kiosk='.$k->name);$this->redirect(['ews_view'=>'presence','presence_request'=>$id,'presence_success'=>1]);
+        $back=function($args)use($id){$this->redirect(array_merge(['ews_view'=>'presence','presence_request'=>$id],$args));};
+        if($req->status!=='pending'){$back(['presence_error'=>'processed']);return;}
+        if(strtotime($req->expires_at)<time()){$wpdb->update($vt,['status'=>'expired'],['id'=>$id,'status'=>'pending'],['%s'],['%d','%s']);$this->audit('presence_verification_expired','presence_verification',$id,$emp->name);$back(['presence_error'=>'expired']);return;}
+        $k=$this->presence_validate_qr($raw);if(is_wp_error($k)){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / '.$k->get_error_code());$back(['presence_error'=>$k->get_error_code()]);return;}
+        if((int)$k->location_id!==(int)$req->location_id){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / wrong_location');$back(['presence_error'=>'wrong_location']);return;}
+        $now=current_time('mysql');$updated=$wpdb->query($wpdb->prepare("UPDATE $vt SET status='verified',verified_at=%s,kiosk_id=%d WHERE id=%d AND status='pending'",$now,(int)$k->id,$id));if($updated!==1){$back(['presence_error'=>'changed']);return;}
+        $this->audit('presence_verification_verified','presence_verification',$id,$emp->name.' / kiosk='.$k->name);$back(['presence_success'=>1]);
     }
+    /** The kiosk's screen (?ews_kiosk=<id>&kiosk_key=<secret>): the rotating QR of its work location. */
     public function presence_kiosk_route(){
         if(!isset($_GET['ews_kiosk'])||isset($_GET['kiosk_payload']))return;
         $id=absint($_GET['ews_kiosk']);$secret=$this->presence_kiosk_authorized($id);if($secret==='')wp_die(__('Kiosk access denied.','workforce-one'),'Kiosk',['response'=>403]);
         global $wpdb;list($kt)=$this->presence_tables();$k=$wpdb->get_row($wpdb->prepare("SELECT k.*,l.name location_name FROM $kt k LEFT JOIN {$this->locations} l ON l.id=k.location_id WHERE k.id=%d AND k.status='active' LIMIT 1",$id));if(!$k)wp_die(__('Kiosk is inactive.','workforce-one'),'Kiosk',['response'=>403]);
-        $payload=$this->presence_qr_payload($id,$secret);$slot_seconds=$this->presence_qr_slot_seconds();
-        $payload_url=add_query_arg(['ews_kiosk'=>$id,'kiosk_key'=>$secret,'kiosk_payload'=>1],home_url('/'));
-        $qr_lib=plugin_dir_url(dirname(__DIR__).'/employee-schedule-manager.php').'assets/vendor/qrcode-generator-1.4.4.js';
         nocache_headers();header('Content-Type: text/html; charset=utf-8');header('X-Robots-Tag: noindex, nofollow');header('Referrer-Policy: no-referrer');
-        echo '<!doctype html><html '.get_language_attributes().'><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Workforce One Kiosk</title><style>html,body{margin:0;height:100%;background:#f7f8fb;font-family:Arial,sans-serif}body{display:flex;align-items:center;justify-content:center}.k{width:min(760px,92vw);text-align:center;background:#fff;border:1px solid #e4e7ec;border-radius:24px;padding:34px;box-shadow:0 12px 40px rgba(16,24,40,.08)}.brand{font-weight:800;font-size:24px;color:#101828}.sub{color:#667085;margin:8px 0 24px}.qr{width:min(420px,75vw);height:min(420px,75vw);margin:0 auto}.qr svg{width:100%;height:100%;display:block}.timer{font-size:18px;font-weight:700;margin-top:18px;color:#344054}.loc{margin-top:8px;color:#667085}.offline{display:none;color:#b42318;margin-top:10px}</style></head><body><main class="k"><div class="brand">WORKFORCE ONE</div><div class="sub">'.esc_html__('Scan to continue','workforce-one').'</div><div id="qr" class="qr" role="img" aria-label="'.esc_attr__('Dynamic Workforce One QR','workforce-one').'"></div><div id="timer" class="timer"></div><div class="loc">'.esc_html($k->location_name).'</div><div id="offline" class="offline">'.esc_html__('Connection unavailable. Please check this kiosk connection.','workforce-one').'</div></main>';
-        echo '<script src="'.esc_url($qr_lib).'"></script>';
-        echo '<script>(function(){var CHG='.wp_json_encode(/* translators: %d: seconds */__('Changes in %ds','workforce-one')).',SLOT='.(int)$slot_seconds.',URL_='.wp_json_encode($payload_url).',current='.wp_json_encode($payload).',lastSlot=-1,box=document.getElementById("qr"),timer=document.getElementById("timer"),offline=document.getElementById("offline");'
-            .'function draw(v){var q=qrcode(0,"M");q.addData(v);q.make();box.innerHTML=q.createSvgTag({cellSize:8,margin:2,scalable:true});}'
-            .'function tick(){var now=Math.floor(Date.now()/1000),slot=Math.floor(now/SLOT);timer.textContent=CHG.replace("%d",SLOT-(now%SLOT));if(slot===lastSlot)return;lastSlot=slot;'
-            .'fetch(URL_+"&t="+slot,{cache:"no-store",credentials:"omit"}).then(function(r){if(!r.ok)throw new Error();return r.text();}).then(function(v){if(v.indexOf("wfo1|")!==0)throw new Error();current=v;draw(v);offline.style.display="none";}).catch(function(){offline.style.display="block";lastSlot=-1;});}'
-            .'draw(current);lastSlot=Math.floor(Date.now()/1000/SLOT);setInterval(tick,1000);tick();})();</script></body></html>';
+        echo $this->render_template('kiosk',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
+            'location_name'=>(string)$k->location_name,'payload'=>$this->presence_qr_payload($id,$secret),'slot_seconds'=>QrCode::SLOT_SECONDS,
+            'payload_url'=>add_query_arg(['ews_kiosk'=>$id,'kiosk_key'=>$secret,'kiosk_payload'=>1],home_url('/')),
+            'qr_lib'=>$this->plugin_url('assets/vendor/qrcode-generator-1.4.4.js'),'script'=>$this->plugin_url('assets/js/kiosk.js'),'style'=>$this->plugin_url('assets/css/kiosk.css'),'version'=>EWS_VERSION,
+        ]);
         exit;
     }
     public function presence_kiosk_payload_route(){
@@ -146,18 +151,17 @@ trait EWS_Presence_Trait {
         if(!get_transient('ews_kiosk_seen_'.$id)){set_transient('ews_kiosk_seen_'.$id,1,60);$wpdb->update($kt,['last_seen_at'=>current_time('mysql')],['id'=>$id],['%s'],['%d']);}
         nocache_headers();header('Content-Type:text/plain; charset=utf-8');header('X-Robots-Tag: noindex, nofollow');echo $this->presence_qr_payload($id,$secret);exit;
     }
+    /** Employee app → Presence Verification: scan the kiosk QR of the requested work location. */
     private function presence_content(){
         if(!$this->presence_verification_enabled())return $this->ews_empty_state(__('Presence Verification is disabled','workforce-one'),__('Please contact your administrator.','workforce-one'));
         $emp=$this->presence_employee_for_user();if(!$emp)return $this->ews_empty_state(__('Employee profile required','workforce-one'),__('Your account is not linked to an active employee.','workforce-one'));
-        $id=absint($_GET['presence_request']??0);global $wpdb;list(,$vt)=$this->presence_tables();$req=$id?$wpdb->get_row($wpdb->prepare("SELECT v.*,l.name location_name,k.name kiosk_name FROM $vt v LEFT JOIN {$this->locations} l ON l.id=v.location_id LEFT JOIN {$wpdb->prefix}ews_kiosks k ON k.id=v.kiosk_id WHERE v.id=%d AND v.employee_id=%d LIMIT 1",$id,(int)$emp->id)):null;
-        ob_start();echo '<div class="wfo-card" style="max-width:720px;margin:0 auto"><h2 style="margin-top:0">'.esc_html__('Presence Verification','workforce-one').'</h2>';
-        if(isset($_GET['presence_success']))echo '<div class="ews-notice">'.esc_html__('Presence verified successfully.','workforce-one').'</div>';
-        if(isset($_GET['presence_error']))echo '<div class="ews-notice ews-notice-error">'.esc_html(wp_unslash($_GET['presence_error'])).'</div>';
-        if(!$req){echo '<p>'.esc_html__('No active presence verification request was found.','workforce-one').'</p></div>';return ob_get_clean();}
-        if($req->status==='pending'){
-            $left=max(0,strtotime($req->expires_at)-time());echo '<p>'.sprintf(/* translators: %s: work location name */esc_html__('Please scan the QR code displayed at %s.','workforce-one'),'<strong>'.esc_html($req->location_name).'</strong>').'</p><p id="wfo-presence-countdown" style="font-weight:700">'.sprintf(/* translators: %s: mm:ss */esc_html__('Expires in %s','workforce-one'),esc_html(gmdate('i:s',$left))).'</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'" id="wfo-presence-form">'.wp_nonce_field('ews_presence_verify','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_presence_verify"><input type="hidden" name="request_id" value="'.(int)$req->id.'"><input type="hidden" name="qr_payload" id="wfo-presence-payload"><div id="wfo-presence-scanner" style="background:#101828;border-radius:16px;overflow:hidden;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff">'.esc_html__('Starting camera…','workforce-one').'</div><p style="color:#667085;font-size:12px">'.esc_html__('Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device.','workforce-one').'</p><button class="button button-primary" type="submit">'.esc_html__('Verify Presence','workforce-one').'</button></form><script src="'.esc_url(plugin_dir_url(dirname(__DIR__).'/employee-schedule-manager.php').'assets/vendor/jsQR-1.4.0.js').'"></script><script>(function(){var video=document.createElement("video"),canvas=document.createElement("canvas"),box=document.getElementById("wfo-presence-scanner"),input=document.getElementById("wfo-presence-payload"),form=document.getElementById("wfo-presence-form");canvas.width=640;canvas.height=480;function fail(){box.textContent='.wp_json_encode(__('Camera scanning is unavailable. Please use a QR-capable device.','workforce-one')).';}if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof jsQR!=="function"){fail();return;}navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}).then(function(stream){video.setAttribute("playsinline","");video.autoplay=true;video.srcObject=stream;box.innerHTML="";box.appendChild(video);var ctx=canvas.getContext("2d",{willReadFrequently:true});function scan(){if(video.readyState>=2){canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;ctx.drawImage(video,0,0,canvas.width,canvas.height);var d=ctx.getImageData(0,0,canvas.width,canvas.height);var code=jsQR(d.data,d.width,d.height,{inversionAttempts:"dontInvert"});if(code&&code.data&&code.data.indexOf("wfo1|")===0){input.value=code.data;stream.getTracks().forEach(function(t){t.stop();});form.submit();return;}}requestAnimationFrame(scan);}scan();}).catch(fail);})();</script>';
-        }else{echo '<p>'.esc_html__('Status:','workforce-one').' <strong>'.esc_html(ucfirst($req->status)).'</strong></p><p>'.esc_html__('Location:','workforce-one').' '.esc_html($req->location_name).'</p>'.($req->verified_at?'<p>'.esc_html__('Verified at:','workforce-one').' '.esc_html($req->verified_at).'</p>':'');}
-        echo '</div>';return ob_get_clean();
+        $id=absint($_GET['presence_request']??0);global $wpdb;list($kt,$vt)=$this->presence_tables();
+        $req=$id?$wpdb->get_row($wpdb->prepare("SELECT v.*,l.name location_name,k.name kiosk_name FROM $vt v LEFT JOIN {$this->locations} l ON l.id=v.location_id LEFT JOIN $kt k ON k.id=v.kiosk_id WHERE v.id=%d AND v.employee_id=%d LIMIT 1",$id,(int)$emp->id)):null;
+        if($req&&$req->status==='pending'){wp_enqueue_script('workforce-one-presence-scan');}
+        return $this->render_template('app/presence',[
+            'req'=>$req,'left'=>$req?max(0,strtotime($req->expires_at)-time()):0,
+            'success'=>isset($_GET['presence_success']),'error'=>$this->presence_error_message($_GET['presence_error']??''),
+        ]);
     }
     public function presence_qr_signin(){
         if(!$this->presence_qr_enabled())wp_die(__('Dynamic QR Sign-In is disabled.','workforce-one'));

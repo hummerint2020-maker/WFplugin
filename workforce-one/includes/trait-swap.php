@@ -26,7 +26,7 @@ trait EWS_Swap_Trait {
 
     private function swap_redirect($args=[]){
             $url=wp_get_referer();
-            if(!$url || strpos($url,'admin-post.php')!==false)$url=home_url('/');
+            if(!$url || strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
             $url=remove_query_arg(['action','swap_error','swap_sent','swap_done','leave_error','leave_sent','leave_done','leave_cancel_sent','early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','vacation_sent','vacation_error','vacation_done','vacation_rejected','saved','imported','grid_saved','time_reset','time_saved'],$url);
             $url=add_query_arg('ews_view','schedule',$url);
             if($args)$url=add_query_arg($args,$url);

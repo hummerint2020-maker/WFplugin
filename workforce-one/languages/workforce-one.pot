@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.21\n"
+"Project-Id-Version: Workforce One 3.31.33\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-02T23:43:02+00:00\n"
+"POT-Creation-Date: 2026-10-03T13:54:18+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -104,7 +104,7 @@ msgid "Employee Profile"
 msgstr ""
 
 #: includes/trait-app-layout.php:57
-#: includes/trait-presence.php:153
+#: templates/app/presence.php:13
 #: templates/app/time.php:110
 msgid "Presence Verification"
 msgstr ""
@@ -116,10 +116,10 @@ msgid "Sign In / Out"
 msgstr ""
 
 #: includes/trait-attendance-insights.php:150
-#: includes/trait-presence.php:66
-#: includes/trait-presence.php:86
-#: includes/trait-presence.php:99
-#: includes/trait-presence.php:102
+#: includes/trait-presence.php:69
+#: includes/trait-presence.php:80
+#: includes/trait-presence.php:93
+#: includes/trait-presence.php:96
 msgid "Access denied"
 msgstr ""
 
@@ -131,92 +131,92 @@ msgstr ""
 msgid "Attendance tracking is disabled for your employee profile."
 msgstr ""
 
-#: includes/trait-attendance.php:75
+#: includes/trait-attendance.php:76
 msgid "This Kiosk location has no coordinates configured. Please contact your administrator."
 msgstr ""
 
-#: includes/trait-attendance.php:76
+#: includes/trait-attendance.php:77
 msgid "Location access is required for QR Sign In. Please allow Location Services and try again."
 msgstr ""
 
 #. translators: 1: work location name, 2: distance
-#: includes/trait-attendance.php:77
+#: includes/trait-attendance.php:78
 #, php-format
 msgid "You must be at %1$s to use QR Sign In. Distance: %2$s"
 msgstr ""
 
 #. translators: %s: distance
-#: includes/trait-attendance.php:79
+#: includes/trait-attendance.php:80
 #, php-format
 msgid "You are outside your assigned work location. Distance: %s"
 msgstr ""
 
-#: includes/trait-attendance.php:84
+#: includes/trait-attendance.php:85
 msgid "Unable to record Sign Out. Please contact the administrator."
 msgstr ""
 
-#: includes/trait-attendance.php:84
+#: includes/trait-attendance.php:85
 msgid "Unable to record Sign In. Please contact the administrator."
 msgstr ""
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Late Arrival recorded successfully."
 msgstr ""
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Sign Out recorded successfully."
 msgstr ""
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Sign In recorded successfully."
 msgstr ""
 
-#: includes/trait-attendance.php:95
+#: includes/trait-attendance.php:96
 msgid "Your WordPress account is not linked to an active employee."
 msgstr ""
 
-#: includes/trait-attendance.php:96
+#: includes/trait-attendance.php:97
 msgid "Face verification is required before Sign In. Please complete Face Verification and try again."
 msgstr ""
 
-#: includes/trait-attendance.php:97
+#: includes/trait-attendance.php:98
 msgid "Today is a General Leave day. Sign In is not required."
 msgstr ""
 
-#: includes/trait-attendance.php:98
+#: includes/trait-attendance.php:99
 msgid "Today is not a working day for you."
 msgstr ""
 
 #. translators: %s: start time
-#: includes/trait-attendance.php:99
+#: includes/trait-attendance.php:100
 #, php-format
 msgid "Sign In is not available yet. Your working hours start at %s."
 msgstr ""
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:102
+#: includes/trait-attendance.php:103
 #, php-format
 msgid "Sign In is no longer available. The Sign In cutoff was %s."
 msgstr ""
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:103
+#: includes/trait-attendance.php:104
 msgid "You have already signed in today."
 msgstr ""
 
-#: includes/trait-attendance.php:104
+#: includes/trait-attendance.php:105
 msgid "Please Resume Work before signing out."
 msgstr ""
 
-#: includes/trait-attendance.php:105
+#: includes/trait-attendance.php:106
 msgid "You cannot sign out before signing in."
 msgstr ""
 
-#: includes/trait-attendance.php:106
+#: includes/trait-attendance.php:107
 msgid "You have already signed out today."
 msgstr ""
 
-#: includes/trait-attendance.php:108
+#: includes/trait-attendance.php:109
 msgid "Unable to record this action."
 msgstr ""
 
@@ -409,9 +409,9 @@ msgstr ""
 #: includes/trait-frontend.php:130
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-presence.php:115
-#: includes/trait-presence.php:151
-#: includes/trait-presence.php:166
+#: includes/trait-presence.php:123
+#: includes/trait-presence.php:157
+#: includes/trait-presence.php:170
 msgid "Your account is not linked to an active employee."
 msgstr ""
 
@@ -617,54 +617,54 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 #: templates/app/leave.php:107
 #: templates/app/leave.php:121
 #: templates/app/overtime.php:79
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:383
+#: includes/trait-frontend.php:385
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:389
+#: includes/trait-frontend.php:391
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:389
+#: includes/trait-frontend.php:391
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:398
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:398
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -719,180 +719,108 @@ msgstr ""
 msgid "View all notifications →"
 msgstr ""
 
-#: includes/trait-presence.php:50
-#: includes/trait-presence.php:52
+#: includes/trait-presence.php:56
+#: includes/trait-presence.php:112
 msgid "Invalid QR code."
 msgstr ""
 
-#: includes/trait-presence.php:53
-#: includes/trait-presence.php:60
+#: includes/trait-presence.php:57
+#: includes/trait-presence.php:62
+#: includes/trait-presence.php:114
 msgid "This kiosk is inactive."
 msgstr ""
 
-#: includes/trait-presence.php:55
+#: includes/trait-presence.php:58
+#: includes/trait-presence.php:113
 msgid "This QR code has expired. Please scan the current code."
 msgstr ""
 
-#: includes/trait-presence.php:57
+#: includes/trait-presence.php:59
 msgid "Invalid QR signature."
 msgstr ""
 
-#: includes/trait-presence.php:87
+#: includes/trait-presence.php:81
 msgid "Invalid kiosk."
 msgstr ""
 
-#: includes/trait-presence.php:88
+#: includes/trait-presence.php:82
 msgid "Invalid work location."
 msgstr ""
 
-#: includes/trait-presence.php:93
+#: includes/trait-presence.php:87
 msgid "Could not create kiosk."
 msgstr ""
 
-#: includes/trait-presence.php:99
+#: includes/trait-presence.php:93
 msgid "Kiosk not found."
 msgstr ""
 
-#: includes/trait-presence.php:103
+#: includes/trait-presence.php:97
 msgid "Invalid employee or location."
 msgstr ""
 
-#: includes/trait-presence.php:104
+#: includes/trait-presence.php:98
 msgid "You cannot manage presence outside your Department."
 msgstr ""
 
-#: includes/trait-presence.php:105
+#: includes/trait-presence.php:99
 msgid "Employee or location not found."
 msgstr ""
 
-#: includes/trait-presence.php:106
+#: includes/trait-presence.php:100
 msgid "Could not create presence verification request."
 msgstr ""
 
-#: includes/trait-presence.php:114
-#: includes/trait-presence.php:164
-msgid "Please log in."
-msgstr ""
-
-#: includes/trait-presence.php:116
-msgid "Presence request not found."
-msgstr ""
-
-#: includes/trait-presence.php:117
+#: includes/trait-presence.php:110
 msgid "This presence request has already been processed."
 msgstr ""
 
-#: includes/trait-presence.php:118
+#: includes/trait-presence.php:111
 msgid "This presence request has expired."
 msgstr ""
 
-#: includes/trait-presence.php:120
+#: includes/trait-presence.php:115
 msgid "This QR belongs to a different work location."
 msgstr ""
 
-#: includes/trait-presence.php:121
+#: includes/trait-presence.php:116
 msgid "The request changed before it could be verified."
 msgstr ""
 
-#: includes/trait-presence.php:126
+#: includes/trait-presence.php:122
+#: includes/trait-presence.php:168
+msgid "Please log in."
+msgstr ""
+
+#: includes/trait-presence.php:124
+msgid "Presence request not found."
+msgstr ""
+
+#: includes/trait-presence.php:136
 msgid "Kiosk access denied."
 msgstr ""
 
-#: includes/trait-presence.php:127
+#: includes/trait-presence.php:137
 msgid "Kiosk is inactive."
 msgstr ""
 
-#: includes/trait-presence.php:132
-msgid "Scan to continue"
-msgstr ""
-
-#: includes/trait-presence.php:132
-msgid "Dynamic Workforce One QR"
-msgstr ""
-
-#: includes/trait-presence.php:132
-msgid "Connection unavailable. Please check this kiosk connection."
-msgstr ""
-
-#. translators: %d: seconds
-#: includes/trait-presence.php:134
-#, php-format
-msgid "Changes in %ds"
-msgstr ""
-
-#: includes/trait-presence.php:150
+#: includes/trait-presence.php:156
 msgid "Presence Verification is disabled"
 msgstr ""
 
-#: includes/trait-presence.php:150
+#: includes/trait-presence.php:156
 msgid "Please contact your administrator."
 msgstr ""
 
-#: includes/trait-presence.php:151
+#: includes/trait-presence.php:157
 msgid "Employee profile required"
 msgstr ""
 
-#: includes/trait-presence.php:154
-msgid "Presence verified successfully."
-msgstr ""
-
-#: includes/trait-presence.php:156
-msgid "No active presence verification request was found."
-msgstr ""
-
-#. translators: %s: work location name
-#: includes/trait-presence.php:158
-#, php-format
-msgid "Please scan the QR code displayed at %s."
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
-#, php-format
-msgid "Expires in %s"
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
-#: templates/app/time.php:106
-msgid "Starting camera…"
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
-msgid "Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device."
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
-msgid "Verify Presence"
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
-msgid "Camera scanning is unavailable. Please use a QR-capable device."
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
-msgid "Status:"
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
-msgid "Location:"
-msgstr ""
-
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
-msgid "Verified at:"
-msgstr ""
-
-#: includes/trait-presence.php:163
+#: includes/trait-presence.php:167
 msgid "Dynamic QR Sign-In is disabled."
 msgstr ""
 
-#: includes/trait-presence.php:169
+#: includes/trait-presence.php:173
 msgid "The Kiosk location is unavailable."
 msgstr ""
 
@@ -1537,6 +1465,55 @@ msgstr ""
 msgid "No Pending Overtime Requests"
 msgstr ""
 
+#: templates/app/presence.php:14
+msgid "Presence verified successfully."
+msgstr ""
+
+#: templates/app/presence.php:17
+msgid "No active presence verification request was found."
+msgstr ""
+
+#. translators: %s: work location name
+#: templates/app/presence.php:19
+#, php-format
+msgid "Please scan the QR code displayed at %s."
+msgstr ""
+
+#. translators: %s: mm:ss
+#: templates/app/presence.php:20
+#, php-format
+msgid "Expires in %s"
+msgstr ""
+
+#: templates/app/presence.php:23
+msgid "Camera scanning is unavailable. Please use a QR-capable device."
+msgstr ""
+
+#: templates/app/presence.php:23
+#: templates/app/time.php:106
+msgid "Starting camera…"
+msgstr ""
+
+#: templates/app/presence.php:24
+msgid "Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device."
+msgstr ""
+
+#: templates/app/presence.php:25
+msgid "Verify Presence"
+msgstr ""
+
+#: templates/app/presence.php:28
+msgid "Status:"
+msgstr ""
+
+#: templates/app/presence.php:29
+msgid "Location:"
+msgstr ""
+
+#: templates/app/presence.php:30
+msgid "Verified at:"
+msgstr ""
+
 #: templates/app/time.php:33
 msgid "Location permission required"
 msgstr ""
@@ -1791,4 +1768,22 @@ msgstr ""
 
 #: templates/app/time.php:128
 msgid "Request Reset"
+msgstr ""
+
+#: templates/kiosk.php:21
+msgid "Scan to continue"
+msgstr ""
+
+#: templates/kiosk.php:22
+msgid "Dynamic Workforce One QR"
+msgstr ""
+
+#. translators: %d: seconds
+#: templates/kiosk.php:24
+#, php-format
+msgid "Changes in %ds"
+msgstr ""
+
+#: templates/kiosk.php:27
+msgid "Connection unavailable. Please check this kiosk connection."
 msgstr ""

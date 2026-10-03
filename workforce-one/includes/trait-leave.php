@@ -54,7 +54,7 @@ trait EWS_Leave_Trait {
         }
 
     private function leave_redirect($args=[]){
-            $url=wp_get_referer(); if(!$url||strpos($url,'admin-post.php')!==false)$url=home_url('/');
+            $url=wp_get_referer(); if(!$url||strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
             $url=remove_query_arg(['leave_sent','leave_error','leave_done','leave_cancel_sent','early_error','break_success','break_error','overtime_sent','overtime_error','time_success','time_error','saved','imported','grid_saved','time_reset','time_saved'],$url);
             $url=add_query_arg('ews_view','vacation',$url); if($args)$url=add_query_arg($args,$url); wp_safe_redirect($url); exit;
         }

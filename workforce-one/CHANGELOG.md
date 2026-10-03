@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.34
+Kiosks, QR codes and Presence Verification (`includes/trait-presence.php`) moved to the new
+structure.
+
+### Fixed
+- **Links sent outside the app opened the home page.** Push notifications (presence requests,
+  breaks, tasks, face resets, notifications) and redirects without a referring page went to
+  `/?ews_view=…`. On a site where the app has its own page (e.g. `/app/`), the home page does
+  not show the app, so the employee landed on the website instead of the request. They now go to
+  the page that holds `[employee_app]`, or to the home page when there is none.
+- **The Presence Verification page showed any text put in its link.** Its error message came from
+  the link itself (`presence_error=<text>`), so a forged link could show a fake message on the
+  page. The link now carries only a code, and the page shows only its own messages.
+
+### Internal
+- `src/Presence/QrCode.php` (QR payload, parsing, slot freshness, signature; unit tested) and
+  `src/Presence/Hooks.php`. HTML in `templates/admin/presence-kiosks.php`, `templates/kiosk.php` and
+  `templates/app/presence.php`. The kiosk script and style (`assets/js/kiosk.js`,
+  `assets/css/kiosk.css`) and the camera scanner (`assets/js/presence-scan.js`) are files instead of
+  inline code.
+- `app_home_url()` (the app page, remembered in `ews_app_page_id`).
+- `tests/e2e_presence.py` (25 checks): kiosks (create, secret stored as a hash, audit, disable)
+  and the presence request flow (notification, wrong location, invalid or expired codes, double
+  verification, expiry, forged messages).
+
 ## 3.31.33
 Work Locations (`includes/trait-locations.php`) moved to the new structure.
 

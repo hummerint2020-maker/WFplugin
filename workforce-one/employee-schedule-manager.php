@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.33
+ * Version: 3.31.34
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.33');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.34');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -108,13 +108,6 @@ class EWS_Manager_V31_1 {
             add_action('template_redirect',[$this,'pwa_manifest_route']);
             add_action('template_redirect',[$this,'pwa_sw_route']);
             add_action('admin_menu',[$this,'admin_menu']);
-            add_action('admin_post_ews_presence_kiosk_save',[$this,'presence_kiosk_save']);
-            add_action('admin_post_ews_presence_kiosk_revoke',[$this,'presence_kiosk_revoke']);
-            add_action('admin_post_ews_presence_request',[$this,'presence_request']);
-            add_action('admin_post_ews_presence_verify',[$this,'presence_verify']);
-            add_action('admin_post_ews_presence_qr_signin',[$this,'presence_qr_signin']);
-            add_action('template_redirect',[$this,'presence_kiosk_payload_route'],1);
-            add_action('template_redirect',[$this,'presence_kiosk_route'],2);
             add_action('admin_enqueue_scripts',[$this,'enqueue_admin_ui_foundation']);
             add_action('admin_post_ews31_employee_save',[$this,'employee_save']);
             add_action('admin_post_ews_kudos_submit',[$this,'recognition_submit']);
@@ -164,6 +157,7 @@ class EWS_Manager_V31_1 {
             \WorkforceOne\Requests\Hooks::register($this);
             \WorkforceOne\Approvals\Hooks::register($this);
             \WorkforceOne\Locations\Hooks::register($this);
+            \WorkforceOne\Presence\Hooks::register($this);
             \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);

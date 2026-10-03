@@ -65,6 +65,25 @@ function current_employee(){
     private function time_event_label($type){return $type==='sign_out'?'Sign Out':'Sign In';}
 
     /** URL of a file inside the plugin, e.g. plugin_url('assets/js/time.js'). Safe to call from templates. */
+    /**
+     * The employee app's page (the published page with the [employee_app] shortcode), for links made
+     * outside the app: push notifications, emails, and redirects without a referer. The home page
+     * when no such page exists. The page id is remembered in ews_app_page_id and re-checked.
+     */
+    private function app_home_url(){
+        static $url=null;
+        if($url!==null)return $url;
+        $id=(int)get_option('ews_app_page_id',0);
+        $post=$id?get_post($id):null;
+        if(!$post||$post->post_status!=='publish'||!has_shortcode((string)$post->post_content,'employee_app')){
+            global $wpdb;
+            $id=(int)$wpdb->get_var("SELECT ID FROM {$wpdb->posts} WHERE post_type='page' AND post_status='publish' AND post_content LIKE '%[employee_app%' ORDER BY ID ASC LIMIT 1");
+            update_option('ews_app_page_id',$id,false);
+        }
+        $url=$id?(string)get_permalink($id):home_url('/');
+        return $url;
+    }
+
     private function plugin_url($path=''){
             return plugin_dir_url(dirname(__DIR__).'/employee-schedule-manager.php').ltrim($path,'/');
         }

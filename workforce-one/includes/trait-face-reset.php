@@ -104,7 +104,7 @@ trait EWS_Face_Reset_Trait {
             $this->face_reset_notify((int)$emp->wp_user_id,
                 $approved?'Face Reset Approved':'Face Reset Rejected',
                 $approved?'Your Face Reset request has been approved. You can now enroll your new face.':'Your Face Reset request has been rejected. Your current face enrollment remains active.',
-                $approved?'success':'warning',$employee_id,add_query_arg('ews_view','time',home_url('/')));
+                $approved?'success':'warning',$employee_id,add_query_arg('ews_view','time',$this->app_home_url()));
         }
         return true;
     }
