@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.27
+Reports, phase 1 / round 4: the Workforce report on the engine, and clean-up. This completes
+phase 1 of the reports plan (engine, Attendance Summary, Daily Log, Timesheet, Excel).
+
+### Fixed (employee app → Reports → Workforce)
+- **Every schedule type is counted.** The report had a fixed list of types, so a type you added
+  (e.g. Field Visit) disappeared from the counts. Types are now grouped as Office, WFH, Leave,
+  Business Trip (incl. Training Course), Other and Not Set.
+- **Company holidays have their own column** (the holiday was counted as an ordinary Office day).
+- **Actual absences are shown next to the plan** (an absent employee planned for Office was not
+  counted as absent).
+- The CSV and Excel export the same columns as the screen.
+
+### Fixed (Schedule → Send schedules)
+- A department manager's "Send schedules" emailed every employee in the company; it now emails
+  the employees the sender manages (administrators: everyone).
+
+### Internal
+- `src/Reports/Workforce.php` (unit tested). The Daily Log and Workforce views moved to
+  `templates/app/report-daily.php` and `templates/app/report-workforce.php`. Removed the never-shown
+  `overtime_report_content()` (an Overtime report on the engine is planned for phase 2).
+
 ## 3.31.26
 Reports, phase 1 / round 3: the Timesheet and a fuller Excel export.
 

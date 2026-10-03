@@ -165,7 +165,7 @@ trait EWS_Reports_Trait {
                     'first_in'=>$in?$in->event_at:null,'first_in_legacy_late'=>$in&&$in->event_type==='late_sign_in','last_out'=>$out?$out->event_at:null,'break_minutes'=>(int)($breaks[$eid][$d]??0),
                 ]);
                 $ot=$ot_on?\WorkforceOne\Reports\DayMetrics::overtime($d,$h['start'],$h['end'],$in?$in->event_at:null,$out?$out->event_at:null,$windows[$eid][$d]??[]):['approved'=>0,'actual'=>0,'extra'=>0];
-                $rows[]=$m+['ot_approved'=>$ot['approved'],'ot_actual'=>$ot['actual'],'ot_extra'=>$ot['extra'],'employee_id'=>$eid,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,'planned'=>$planned!==''?$planned:'Not Set',
+                $rows[]=$m+['ot_approved'=>$ot['approved'],'ot_actual'=>$ot['actual'],'ot_extra'=>$ot['extra'],'rule'=>$type?$type['attendance_rule']:null,'employee_id'=>$eid,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,'planned'=>$planned!==''?$planned:'Not Set',
                     'bucket'=>$type && $type['attendance_rule']==='business_trip' && $m['result']===$planned?'Business Trip':$m['result'],
                     'holiday'=>$holidays[$d]??'','sign_in'=>$in?date_i18n('H:i',strtotime($in->event_at)):'','sign_out'=>$out?date_i18n('H:i',strtotime($out->event_at)):''];
             }
@@ -212,141 +212,39 @@ trait EWS_Reports_Trait {
         return [date('Y-m-d',$start),date('Y-m-d',$end)];
     }
 
+    /** Daily Log: every employee-day, paged. */
     private function attendance_report_builder($s,$e){
         [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
         [$rows,$summary,,$emps]=$this->report_attendance_data($s,$e,$team,$employee_id,$status,$employee_status);
-        $page=max(1,absint($_GET['report_page']??1));$per=25;$total=count($rows);$pages=max(1,(int)ceil($total/$per));$page=min($page,$pages);$view=array_slice($rows,($page-1)*$per,$per);
-        $base=['ews_view'=>'reports','report_type'=>'attendance','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status];
-        ob_start(); ?>
-
-        <div class="ews-report-summary-card">
-            <div class="ews-report-section-head"><div><h3>Report Summary</h3><p><?php echo esc_html(date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e))); ?></p></div><span><?php echo esc_html(count($emps).' Employees'); ?> <i>•</i> <?php echo esc_html(count($this->working_days()).' configured working days'); ?></span></div>
-            <div class="ews-report-summary-grid">
-                <?php $cards=[['Present','✓','green'],['Late','◷','amber'],['Absent','×','red'],['Leave','▣','blue'],['Holiday','✦','blue'],['Business Trip','↗','purple'],['Pending','◷','gray'],['Not Scheduled','—','gray'],['Missing Sign-out','!','amber']]; foreach($cards as $c): ?><div class="ews-report-summary-item <?php echo esc_attr($c[2]); ?>"><span><?php echo esc_html($c[1]); ?></span><div><b><?php echo (int)$summary[$c[0]]; ?></b><small><?php echo esc_html($c[0]); ?></small></div></div><?php endforeach; ?></div>
-        </div>
-
-        <div class="ews-report-results-card">
-            <div class="ews-report-section-head"><div><h3>Report Results <small>(<?php echo (int)$total; ?> records)</small></h3><p>Attendance classification is based on the same schedule and time-log rules used across Workforce One.</p></div><a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url(wp_nonce_url(add_query_arg(array_merge(['action'=>'ews31_report_download'],$base),admin_url('admin-post.php')),'ews31_report')); ?>" data-ews-csv-export="1">⇩ &nbsp;Export CSV</a>
-<a class="ews-btn secondary ews-report-export-xlsx" href="<?php echo esc_url(wp_nonce_url(add_query_arg(array_merge(['action'=>'ews31_report_xlsx'],$base),admin_url('admin-post.php')),'ews31_report')); ?>" data-ews-xlsx-export="1">▣ &nbsp;Export Excel</a></div>
-            <div class="ews-report-table-wrap"><table class="ews-report-table"><thead><tr><th>Employee</th><th>Team</th><th>Date</th><th>Planned</th><th>Sign In</th><th>Sign Out</th><th>Result</th><th>Late</th><th>Net / Expected</th></tr></thead><tbody>
-            <?php if(!$view): ?><tr><td colspan="9" class="ews-report-empty">No records match the selected filters.</td></tr><?php else: foreach($view as $r): ?><tr><td><strong><?php echo esc_html($r['employee']); ?></strong><small><?php echo esc_html($r['domain']); ?></small></td><td><?php echo esc_html($r['teams']?implode(' · ',$r['teams']):'—'); ?></td><td><strong><?php echo esc_html(date_i18n('d M',strtotime($r['date']))); ?></strong><small><?php echo esc_html(date_i18n('D',strtotime($r['date']))); ?></small></td><td><?php echo $this->report_planned_badge($r['planned']); ?></td><td><?php echo esc_html($r['sign_in']?:'—'); ?></td><td><?php echo esc_html($r['sign_out']?:'—'); ?></td><td><div class="ews-report-statuses"><?php echo $this->report_status_badge($r['result']); ?><?php foreach(($r['flags']??[]) as $flag)echo $this->report_status_badge($flag); ?></div></td><td><?php echo $r['late_minutes']?esc_html($r['late_minutes'].' min'):'—'; ?></td><td><?php echo esc_html(\WorkforceOne\Reports\DayMetrics::hm($r['net_minutes']).($r['expected']?' / '.\WorkforceOne\Reports\DayMetrics::hm($r['expected_minutes']):'')); ?></td></tr><?php endforeach; endif; ?></tbody></table></div>
-            <?php if($pages>1): ?><div class="ews-report-pagination"><span>Showing <?php echo (int)(($page-1)*$per+1); ?> to <?php echo (int)min($page*$per,$total); ?> of <?php echo (int)$total; ?> records</span><div><?php for($i=1;$i<=$pages;$i++): if($i>5&&$i<$pages-1&&abs($i-$page)>1)continue; ?><a class="<?php echo $i===$page?'active':''; ?>" href="<?php echo esc_url(add_query_arg(array_merge($base,['report_page'=>$i]),$this->app_view_url('reports'))); ?>"><?php echo (int)$i; ?></a><?php endfor; ?></div></div><?php endif; ?>
-        </div>
-        <?php return ob_get_clean();
-    }
-
-    private function workforce_report_builder($s,$e){
-        $employee_status=sanitize_key($_GET['employee_status']??'active');
-        if(!in_array($employee_status,['active','inactive','all'],true))$employee_status='active';
-        [$rows,$summary,$team_options,$emps]=$this->report_attendance_data($s,$e,sanitize_text_field(wp_unslash($_GET['team']??'all')),absint($_GET['employee']??0),'all',$employee_status);
-        $days=[];$t=strtotime($s);$et=strtotime($e);while($t!==false&&$t<=$et){$d=date('Y-m-d',$t);if($this->is_working_day($d))$days[]=$d;$t=strtotime('+1 day',$t);}
-        $matrix=[];$labels=['Office','WFH','Vacation','Leave','Business Trip','Training Course','Not Set','Absent'];
-        foreach($days as $d)$matrix[$d]=array_fill_keys($labels,0);
-        foreach($rows as $r){$p=$r['planned'];$key=in_array($p,$labels,true)?$p:($p==='Vacation'?'Vacation':$p);if($r['result']==='Absent')$key='Absent';if($p==='Not Set')$key='Not Set';if(isset($matrix[$r['date']][$key]))$matrix[$r['date']][$key]++;}
-        $team=sanitize_text_field(wp_unslash($_GET['team']??'all'));$employee_id=absint($_GET['employee']??0);
-        ob_start(); ?>
-        <div class="ews-report-summary-card"><div class="ews-report-section-head"><div><h3>Workforce Summary</h3><p>Planned workforce assignments across the selected period · <?php echo esc_html(date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e))); ?></p></div><span><?php echo esc_html(count($emps).' Employees'); ?></span></div><div class="ews-report-summary-grid four">
-            <?php foreach([['Office','▦','blue'],['WFH','⌂','purple'],['Leave','▣','amber'],['Business Trip','↗','cyan']] as $c): $count=0;foreach($rows as $r){if($r['planned']===$c[0]||($c[0]==='Leave'&&$r['planned']==='Vacation'))$count++;} ?><div class="ews-report-summary-item <?php echo esc_attr($c[2]); ?>"><span><?php echo esc_html($c[1]); ?></span><div><b><?php echo (int)$count; ?></b><small><?php echo esc_html($c[0]); ?></small></div></div><?php endforeach; ?></div></div>
-        <div class="ews-report-results-card"><div class="ews-report-section-head"><div><h3>Daily Workforce Distribution</h3><p>Counts are based on planned schedule status, not inferred from sign-in location.</p></div><a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url(wp_nonce_url(add_query_arg(['action'=>'ews31_report_download','report_type'=>'workforce','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report')); ?>" data-ews-csv-export="1">⇩ &nbsp;Export CSV</a>
-<a class="ews-btn secondary ews-report-export-xlsx" href="<?php echo esc_url(wp_nonce_url(add_query_arg(['action'=>'ews31_report_xlsx','report_type'=>'workforce','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report')); ?>" data-ews-xlsx-export="1">▣ &nbsp;Export Excel</a></div><div class="ews-report-table-wrap"><table class="ews-report-table ews-workforce-table"><thead><tr><th>Date</th><th>Office</th><th>WFH</th><th>Leave</th><th>Business Trip</th><th>Absent</th><th>Not Set</th></tr></thead><tbody><?php foreach($days as $d): ?><tr><td><strong><?php echo esc_html(date_i18n('d M',strtotime($d))); ?></strong><small><?php echo esc_html(date_i18n('D',strtotime($d))); ?></small></td><td><?php echo (int)($matrix[$d]['Office']??0); ?></td><td><?php echo (int)($matrix[$d]['WFH']??0); ?></td><td><?php echo (int)(($matrix[$d]['Vacation']??0)+($matrix[$d]['Leave']??0)); ?></td><td><?php echo (int)(($matrix[$d]['Business Trip']??0)+($matrix[$d]['Training Course']??0)); ?></td><td><?php echo (int)($matrix[$d]['Absent']??0); ?></td><td><?php echo (int)($matrix[$d]['Not Set']??0); ?></td></tr><?php endforeach; if(!$days): ?><tr><td colspan="7" class="ews-report-empty">No configured working days in this period.</td></tr><?php endif; ?></tbody></table></div></div>
-        <?php return ob_get_clean();
-    }
-
-    private function overtime_report_content($s,$e){
-        global $wpdb;
-        $employee_id=absint($_GET['ot_employee']??0);
-        $status=sanitize_key($_GET['ot_status']??'all');
-        if(!in_array($status,['all','Pending','Approved','Rejected'],true))$status='all';
-
-        $where="r.overtime_date BETWEEN %s AND %s";
-        $args=[$s,$e];
-        if($employee_id){$where.=" AND r.employee_id=%d";$args[]=$employee_id;}
-        if($status!=='all'){$where.=" AND r.status=%s";$args[]=$status;}
-
-        $table=$wpdb->prefix.'ews_overtime_requests';
-        $rows=$wpdb->get_results($wpdb->prepare(
-            "SELECT r.*,e.name employee_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id WHERE {$where} ORDER BY r.overtime_date DESC,e.name ASC,r.start_time ASC",
-            ...$args
-        ));
-        $employees=$wpdb->get_results("SELECT id,name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
-
-        $requested=0;$approved=0;$actual=0;$extra=0;
-        foreach($rows as $r){
-            $requested+=(int)$r->requested_minutes;
-            if($r->status==='Approved'){
-                $sum=$this->overtime_attendance_summary((int)$r->employee_id,$r->overtime_date);
-                foreach($sum['approved_requests'] as $d)if((int)$d['id']===(int)$r->id){$approved+=(int)$d['approved_minutes'];$actual+=(int)$d['actual_minutes'];break;}
-                $extra+=(int)$sum['unapproved_extra_minutes'];
-            }
+        $per=25;$total=count($rows);$pages=max(1,(int)ceil($total/$per));$page=min(max(1,absint($_GET['report_page']??1)),$pages);
+        $view=array_slice($rows,($page-1)*$per,$per);
+        foreach($view as $i=>$r){
+            $view[$i]['planned_html']=$this->report_planned_badge($r['planned']);
+            $view[$i]['result_html']=$this->report_status_badge($r['result']).implode('',array_map(function($f){return $this->report_status_badge($f);},$r['flags']));
         }
-        ob_start(); ?>
-        <div class="ews-card ews-form" style="margin-top:18px">
-            <div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-start;flex-wrap:wrap">
-                <div><h3 style="margin-bottom:4px">Overtime Report</h3><p style="margin:0;color:#667085">Requested, approved and actual overtime for the selected period.</p></div>
-            </div>
-            <form style="margin-top:16px">
-                <input type="hidden" name="ews_view" value="reports">
-                <input type="hidden" name="start" value="<?php echo esc_attr($s);?>">
-                <input type="hidden" name="end" value="<?php echo esc_attr($e);?>">
-                <div class="ews-grid2">
-                    <label>Employee
-                        <select name="ot_employee">
-                            <option value="0">All Employees</option>
-                            <?php foreach($employees as $emp): ?><option value="<?php echo (int)$emp->id;?>" <?php selected($employee_id,(int)$emp->id);?>><?php echo esc_html($emp->name);?></option><?php endforeach;?>
-                        </select>
-                    </label>
-                    <label>Status
-                        <select name="ot_status">
-                            <?php foreach(['all'=>'All','Pending'=>'Pending','Approved'=>'Approved','Rejected'=>'Rejected'] as $v=>$label): ?><option value="<?php echo esc_attr($v);?>" <?php selected($status,$v);?>><?php echo esc_html($label);?></option><?php endforeach;?>
-                        </select>
-                    </label>
-                </div>
-                <button class="ews-btn">Apply Filters</button>
-            </form>
+        $base=['ews_view'=>'reports','report_type'=>'attendance','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status];
+        $export=function($action)use($base){return wp_nonce_url(add_query_arg(array_merge(['action'=>$action],$base),admin_url('admin-post.php')),'ews31_report');};
+        return $this->render_template('app/report-daily',[
+            'summary'=>$summary,'cards_order'=>\WorkforceOne\Reports\Summary::BUCKETS,'employee_count'=>count($emps),'working_days'=>count($this->working_days()),
+            'period_label'=>date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e)),
+            'view'=>$view,'total'=>$total,'page'=>$page,'pages'=>$pages,'per'=>$per,
+            'page_url'=>function($i)use($base){return add_query_arg(array_merge($base,['report_page'=>$i]),$this->app_view_url('reports'));},
+            'csv_url'=>$export('ews31_report_download'),'xlsx_url'=>$export('ews31_report_xlsx'),
+        ]);
+    }
 
-            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px">
-                <div style="padding:14px;border:1px solid #eaecf0;border-radius:12px"><small>Requested</small><strong style="display:block;font-size:20px"><?php echo esc_html($this->format_duration_minutes($requested));?></strong></div>
-                <div style="padding:14px;border:1px solid #eaecf0;border-radius:12px"><small>Approved</small><strong style="display:block;font-size:20px"><?php echo esc_html($this->format_duration_minutes($approved));?></strong></div>
-                <div style="padding:14px;border:1px solid #eaecf0;border-radius:12px"><small>Actual OT</small><strong style="display:block;font-size:20px"><?php echo esc_html($this->format_duration_minutes($actual));?></strong></div>
-                <div style="padding:14px;border:1px solid #eaecf0;border-radius:12px"><small>Unapproved Extra</small><strong style="display:block;font-size:20px"><?php echo esc_html($this->format_duration_minutes($extra));?></strong></div>
-            </div>
-
-            <div style="overflow:auto;margin-top:18px">
-                <table style="width:100%;border-collapse:collapse;min-width:820px">
-                    <thead><tr>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Employee</th>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Date</th>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Requested</th>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Approved</th>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Actual OT</th>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Unapproved Extra</th>
-                        <th style="text-align:left;padding:10px;border-bottom:1px solid #eaecf0">Status</th>
-                    </tr></thead><tbody>
-                    <?php if(!$rows): ?><tr><td colspan="7" style="padding:22px;text-align:center;color:#667085">No overtime records found.</td></tr>
-                    <?php else: foreach($rows as $r):
-                        $r_approved=0;$r_actual=0;$r_extra=0;
-                        if($r->status==='Approved'){
-                            $sum=$this->overtime_attendance_summary((int)$r->employee_id,$r->overtime_date);
-                            foreach($sum['approved_requests'] as $d)if((int)$d['id']===(int)$r->id){$r_approved=(int)$d['approved_minutes'];$r_actual=(int)$d['actual_minutes'];break;}
-                            $r_extra=(int)$sum['unapproved_extra_minutes'];
-                        }
-                        $cls=$r->status==='Approved'?'#027a48':($r->status==='Rejected'?'#b42318':'#9a3412');
-                    ?>
-                    <tr>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><?php echo esc_html($r->employee_name);?></td>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><?php echo esc_html(date_i18n('d M Y',strtotime($r->overtime_date)));?><br><small><?php echo esc_html(substr($r->start_time,0,5).' → '.substr($r->end_time,0,5));?></small></td>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><?php echo esc_html($this->format_duration_minutes($r->requested_minutes));?></td>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><?php echo $r->status==='Approved'?esc_html($this->format_duration_minutes($r_approved)):'—';?></td>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><?php echo $r->status==='Approved'?esc_html($this->format_duration_minutes($r_actual)):'—';?></td>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><?php echo $r->status==='Approved'?esc_html($this->format_duration_minutes($r_extra)):'—';?></td>
-                        <td style="padding:10px;border-top:1px solid #f2f4f7"><strong style="color:<?php echo esc_attr($cls);?>"><?php echo esc_html($r->status);?></strong></td>
-                    </tr>
-                    <?php endforeach; endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <?php return ob_get_clean();
+    /** Workforce: planned distribution per day (src/Reports/Workforce.php). */
+    private function workforce_report_builder($s,$e){
+        [$team,$employee_id,,$employee_status]=$this->report_request_filters();
+        [$rows,,,$emps]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+        $days=\WorkforceOne\Reports\Workforce::byDay($rows);
+        $base=['report_type'=>'workforce','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status];
+        $export=function($action)use($base){return wp_nonce_url(add_query_arg(array_merge(['action'=>$action],$base),admin_url('admin-post.php')),'ews31_report');};
+        return $this->render_template('app/report-workforce',[
+            'days'=>$days,'totals'=>\WorkforceOne\Reports\Workforce::totals($days),'columns'=>\WorkforceOne\Reports\Workforce::COLUMNS,'employee_count'=>count($emps),
+            'period_label'=>date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e)),
+            'csv_url'=>$export('ews31_report_download'),'xlsx_url'=>$export('ews31_report_xlsx'),
+        ]);
     }
 
     /** The report period from the request; by default this month to date (site time). */
@@ -376,17 +274,10 @@ trait EWS_Reports_Trait {
         [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
         if($type==='workforce'){
             [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
-            $by=[];$kpis=['Office'=>0,'WFH'=>0,'Leave'=>0,'Business Trip'=>0];
-            foreach($rows as $r){
-                $c=&$by[$r['date']];
-                if(!isset($c))$c=['Office'=>0,'WFH'=>0,'Leave'=>0,'Business Trip'=>0,'Absent'=>0,'Not Set'=>0];
-                $p=$r['planned'];
-                if($p==='Office')$c['Office']++;elseif($p==='WFH')$c['WFH']++;elseif(in_array($p,['Vacation','Leave'],true))$c['Leave']++;elseif(in_array($p,['Business Trip','Training Course'],true))$c['Business Trip']++;elseif($r['result']==='Absent')$c['Absent']++;elseif($p==='Not Set')$c['Not Set']++;
-                if($p==='Office'||$p==='WFH')$kpis[$p]++;elseif(in_array($p,['Vacation','Leave'],true))$kpis['Leave']++;elseif($p==='Business Trip')$kpis['Business Trip']++;
-                unset($c);
-            }
-            $out=[];foreach($by as $d=>$c)$out[]=array_merge([$d],array_values($c));
-            return ['headers'=>['Date','Office','WFH','Leave','Business Trip','Absent','Not Set'],'rows'=>$out,'kpis'=>$kpis];
+            $days=\WorkforceOne\Reports\Workforce::byDay($rows);$out=[];
+            foreach($days as $d=>$c)$out[]=array_merge([$d],array_values($c));
+            $kpis=[];foreach(\WorkforceOne\Reports\Workforce::totals($days) as $k=>$n)if($k!=='absent'&&$k!=='not_set')$kpis[\WorkforceOne\Reports\Workforce::COLUMNS[$k]]=$n;
+            return ['headers'=>array_merge(['Date'],array_values(\WorkforceOne\Reports\Workforce::COLUMNS)),'rows'=>$out,'kpis'=>$kpis];
         }
         $hm=function($m){return \WorkforceOne\Reports\DayMetrics::hm((int)$m);};
         // Every employee-day, for the "Daily Details" sheet of the summary and the timesheet.
@@ -629,7 +520,8 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
             [$s,$e]=$this->period();
             $sent=0;$skipped=0;$errors=[];
             global $wpdb;
-            $emps=$wpdb->get_results("SELECT * FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+            // Only the employees the sender manages (everyone for administrators).
+            $emps=$this->department_scoped_employees($this->emps());
             foreach($emps as $emp){
                 $email=isset($emp->email)?trim($emp->email):'';
                 if(!$email || !is_email($email)){ $skipped++; continue; }

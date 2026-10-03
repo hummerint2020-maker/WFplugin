@@ -168,6 +168,30 @@ st, page, _ = adm.req(SUMMARY)
 check('...and the summary Excel too', xlsx_sheets(adm, page) == ['Attendance Summary', 'Daily Details', 'Definitions'], xlsx_sheets(adm, page))
 check('exports are recorded in the audit log', len(q("SELECT id FROM {p}ews_audit_log WHERE action='report_export'")) >= 3)
 
+# ---------------------------------------------------------------- Workforce on the engine
+php("""
+    $types=get_option('ews_schedule_types_config'); if(!is_array($types)||!$types){$m=new ReflectionMethod('EWS_Manager_V31_1','default_schedule_types_config');$m->setAccessible(true);$types=$m->invoke(new EWS_Manager_V31_1());}
+    $types[]=['name'=>'Field Visit','requires_sign_in'=>1,'requires_location'=>0,'attendance_rule'=>'attendance','active'=>1,'icon'=>'•','bg_color'=>'#f2f4f7','text_color'=>'#667085','border_color'=>'#e5e7eb'];
+    update_option('ews_schedule_types_config',$types,false);
+    $wpdb->update($p.'ews_schedule',['status'=>'Field Visit'],['employee_id'=>%(lina)d,'work_date'=>'%(day)s']);
+    $wpdb->update($p.'ews_schedule',['status'=>'Training Course'],['employee_id'=>%(sam)d,'work_date'=>'%(day)s']);
+""" % {'lina': ids['lina'], 'sam': ids['sam'], 'day': DAY})
+WORKFORCE = '/app/?ews_view=reports&report_type=workforce&start=%s&end=%s' % (DAY, HOL)
+st, page, _ = adm.req(WORKFORCE)
+
+
+def wf_day(page, date):
+    m = re.search(r'<tr data-date="%s">(.*?)</tr>' % date, page, re.S)
+    return {c: re.sub(r'<[^>]+>', '', v).strip() for c, v in re.findall(r'<td data-col="([a-z_]+)"[^>]*>(.*?)</td>', m.group(1), re.S)} if m else {}
+
+
+day, hol = wf_day(page, DAY), wf_day(page, HOL)
+check('Workforce: every schedule type is counted (custom types under Other, Training Course under Business Trip)', (day.get('office'), day.get('wfh'), day.get('leave'), day.get('trip'), day.get('other'), day.get('not_set')) == ('3', '0', '1', '1', '1', '1'), day)
+check('...a company holiday is its own column', (hol.get('holiday'), hol.get('office')) == ('7', '0'), hol)
+check('...and the actual absences are shown next to the plan', day.get('absent') == '1', day)
+rows = csv_rows(adm, page)
+check('...the CSV matches the screen', rows and next((r for r in rows if r['Date'] == DAY), {}).get('Other') == '1', rows[:2] if rows else rows)
+
 uid = q("SELECT wp_user_id FROM {p}ews_employees WHERE name='Mona Manager'")[0]['wp_user_id']
 php("$u=new WP_User(%s); $u->add_cap('ews_view_reports');" % uid)
 emp = Session('emp1', 'emp1pass')
@@ -178,6 +202,13 @@ check('a department manager reports on their department only', rows and 'Sam Sal
 php("$s=get_option('ews_shifts'); $s=is_array($s)?$s:[]; $s[]=['id'=>77,'name'=>'Early','start'=>'07:00','end'=>'15:00','grace'=>10,'active'=>1]; update_option('ews_shifts',$s,false); $wpdb->update($p.'ews_employees',['default_shift_id'=>77],['name'=>'Mona Manager']);")
 st, page, _ = emp.req(TIMESHEET)
 check('overtime follows the employee\'s shift, not the viewer\'s', summary_row(page, 'Otto Overtime').get('ot_extra') == '0:30', summary_row(page, 'Otto Overtime'))
+# The weekly schedule email from a department manager goes to their department only.
+st, sched, _ = emp.req('/app/?ews_view=schedule')
+mail = re.search(r'href="([^"]*action=ews31_report_email[^"]*)"', sched)
+st, body, h = emp.req(mail.group(1).replace('&#038;', '&').split('127.0.0.1:8080')[-1]) if mail else (0, '', {})
+qs = {k: v[0] for k, v in urllib.parse.parse_qs(urllib.parse.urlparse(h.get('Location', '')).query).items()}
+total = sum(int(qs.get(k, 0)) for k in ('email_sent', 'email_skipped', 'email_failed'))
+check('the schedule email from a department manager reaches their department only (6 of 7)', total == 6, qs)
 php("$u=new WP_User(%s); $u->remove_cap('ews_view_reports');" % uid)
 st, page, _ = emp.req(REPORT)
 check('without View Reports there is no report', 'Report Summary' not in page)
