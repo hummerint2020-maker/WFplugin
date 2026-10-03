@@ -16,7 +16,7 @@ trait EWS_Admin_Dashboard_Trait {
         if($this->can('ews_view_dashboard')){$this->admin_home();return;}
         $routes=['ews_manage_employees'=>'admin_employees','ews_manage_attendance'=>'admin_attendance','ews_view_reports'=>'admin_reports',
             'ews_manage_locations'=>'admin_multi_locations_v321','ews_manage_settings'=>'admin_schedule_config','ews_manage_time'=>'admin_time_report',
-            'ews_manage_auto_attendance'=>'admin_auto_attendance','ews_view_audit_log'=>'admin_audit','ews_manage_roles'=>'admin_roles'];
+            'ews_manage_auto_attendance'=>'admin_auto_attendance','ews_view_audit_log'=>'admin_audit','ews_manage_roles'=>'admin_roles','ews_manage_payroll'=>'admin_payroll'];
         foreach($routes as $cap=>$method){
             if($this->can($cap) && method_exists($this,$method)){$this->{$method}();return;}
         }

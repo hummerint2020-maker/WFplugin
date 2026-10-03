@@ -3,6 +3,8 @@ namespace WorkforceOne\Settings;
 
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Payroll\PayRules;
+
 /**
  * Every setting Workforce One keeps in the WordPress options table: what it is, where it is edited
  * and the value used when nothing is saved. Code reads a setting through the plugin's option()
@@ -11,7 +13,7 @@ if (!defined('ABSPATH')) exit;
  * get_option() a different default.
  *
  * Kinds:
- *  - bool, int, text, days (weekday numbers, Sunday = 0), list (array of keys): plain values.
+ *  - bool, int, number (decimal), text, days (weekday numbers, Sunday = 0): plain values.
  *  - grouped: an array with its own built-in defaults, kept with the code that uses them
  *    ('builtin' describes them); the plugin compares the effective value with them. 'default' is only
  *    what get_option() falls back to.
@@ -40,6 +42,7 @@ final class Options
         'notifications' => 'Notifications',
         'access' => 'Access',
         'privacy' => 'Privacy',
+        'payroll' => 'Payroll',
         'system' => 'System',
     ];
 
@@ -115,6 +118,15 @@ final class Options
         'ews_face_delete_inactive' => ['group' => 'privacy', 'label' => 'Delete face data of inactive employees', 'kind' => 'bool', 'default' => 1, 'page' => 'ews31-features'],
         'ews_delete_data_on_uninstall' => ['group' => 'privacy', 'label' => 'Delete all data when the plugin is deleted', 'kind' => 'bool', 'default' => 0, 'page' => 'ews31-features'],
 
+        // Payroll (wp-admin → Payroll → Rules; defaults in src/Payroll/PayRules.php)
+        'ews_payroll_currency' => ['group' => 'payroll', 'label' => 'Currency', 'kind' => 'text', 'default' => PayRules::DEFAULTS['currency'], 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_day_divisor' => ['group' => 'payroll', 'label' => 'A day\'s pay = monthly pay ÷', 'kind' => 'int', 'default' => PayRules::DEFAULTS['day_divisor'], 'unit' => 'days', 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_day_base' => ['group' => 'payroll', 'label' => 'A day\'s pay is based on (gross = basic + allowances)', 'kind' => 'text', 'default' => PayRules::DEFAULTS['day_base'], 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_absence_days' => ['group' => 'payroll', 'label' => 'An absent day deducts', 'kind' => 'number', 'default' => PayRules::DEFAULTS['absence_days'], 'unit' => 'days\' pay', 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_overtime_rate' => ['group' => 'payroll', 'label' => 'Overtime on work days', 'kind' => 'number', 'default' => PayRules::DEFAULTS['overtime_rate'], 'unit' => '× hourly pay', 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_overtime_rate_off' => ['group' => 'payroll', 'label' => 'Overtime on days off and holidays', 'kind' => 'number', 'default' => PayRules::DEFAULTS['overtime_rate_off'], 'unit' => '× hourly pay', 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_max_deduction_days' => ['group' => 'payroll', 'label' => 'Deductions limited to', 'kind' => 'number', 'default' => PayRules::DEFAULTS['max_deduction_days'], 'unit' => 'days\' pay', 'zero' => 'No limit', 'page' => 'ews31-payroll&tab=rules'],
+
         // System (written by the plugin itself)
         'ews_schema_version' => ['group' => 'system', 'label' => 'Database version', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_schedule_config_schema' => ['group' => 'system', 'label' => 'Schedule settings format', 'kind' => 'text', 'default' => '', 'internal' => true],
@@ -179,6 +191,8 @@ final class Options
                 return (bool) $value !== (bool) $default;
             case 'int':
                 return (int) $value !== (int) $default;
+            case 'number':
+                return abs((float) $value - (float) $default) > 1e-9;
             case 'days':
                 return self::days($value) !== self::days($default);
             default:
@@ -199,6 +213,9 @@ final class Options
             case 'int':
                 if ((int) $value === 0 && $d['zero'] !== null) return $d['zero'];
                 return trim((int) $value . ' ' . $d['unit']);
+            case 'number':
+                if ((float) $value == 0 && $d['zero'] !== null) return $d['zero'];
+                return trim(rtrim(rtrim(number_format((float) $value, 4, '.', ''), '0'), '.') . ' ' . $d['unit']);
             case 'days':
                 $days = self::days($value);
                 return $days ? implode(', ', array_map(static function ($n) { return self::DAYS[$n]; }, $days)) : 'None';
@@ -229,6 +246,7 @@ final class Options
         if ($value === null) return null;
         if ($kind === 'bool') return (bool) $value;
         if ($kind === 'int' && is_numeric($value)) return (int) $value;
+        if ($kind === 'number' && is_numeric($value)) return (float) $value;
         if ($kind === 'days') return self::days($value);
         return $value;
     }

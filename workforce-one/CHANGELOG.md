@@ -1,5 +1,35 @@
 # Changelog
 
+## 3.31.41
+### Added
+- **wp-admin → Payroll** (phase 1; WordPress administrators, or a role given the new "Manage
+  Payroll" permission on Roles & Permissions — no EWS role has it by default). Employees see nothing.
+  - **Salaries:** basic salary and allowances per employee, with the date each salary starts.
+    Earlier months keep the salary they had; the history can be opened and a wrong entry removed.
+    The Audit Log records that a salary was set, never the amounts.
+  - **Monthly Payroll:** each employee's pay for a month, worked out from attendance with the
+    report engine's figures: absence, late arrival (from the shift start, once past the grace),
+    early leave without an approved request, unpaid leave, and approved overtime actually worked
+    (× 1.35 on work days, × 2 on days off and company holidays). Opening an employee shows the days
+    behind every figure. Days without a Sign Out are flagged for review (counted as worked).
+  - **Rules:** a day's pay (basic + allowances, or basic only, ÷ 30), what an absent day deducts,
+    the overtime rates and an optional monthly limit on deductions. Listed on Settings Overview.
+  - **Export to Excel:** one row per employee, plus a sheet with every day behind the figures.
+- **Leaves → leave types: "Paid %"** (100 = paid, the default for every existing type; 0 = unpaid),
+  used by Payroll.
+
+### Notes
+- Amounts are before income tax and social insurance. The rates and limits must follow the labour
+  law and company policy; check them with HR or the accountant.
+- An employee's first salary is paid from its start date (÷ 30 per day); after that, the salary in
+  effect on a month's last day covers the whole month.
+- Database 3.31.14: new table `ews_pay_rates`, column `paid_percent` on `ews_leave_types`.
+
+### Internal
+- `src/Payroll/` (PayCalculator, PayRules, Hooks), `includes/trait-payroll.php`,
+  `templates/admin/payroll.php`. Tests: `tests/e2e_payroll.py` (33 checks, a month with every kind of
+  day and the net pay worked out by hand), `tests/unit/PayrollTest.php`.
+
 ## 3.31.40
 ### Added
 - **wp-admin → Settings Overview** (administrators only): every Workforce One setting in one

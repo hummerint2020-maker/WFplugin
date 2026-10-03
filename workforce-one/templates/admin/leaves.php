@@ -29,6 +29,7 @@ $num = static function ($n) { return rtrim(rtrim(number_format((float) $n, 1, '.
             <label>Name<br><input name="name" value="<?php echo esc_attr($t->name); ?>" required></label>
             <label>Annual entitlement<br><input type="number" min="0" step="0.5" name="annual_entitlement" value="<?php echo esc_attr($t->annual_entitlement); ?>" style="width:110px"></label>
             <label><input type="checkbox" name="deduct_balance" value="1" <?php checked((int) $t->deduct_balance, 1); ?>> Deduct balance</label>
+            <label title="Share of a day's pay kept on this leave (Payroll). 100 = fully paid, 0 = unpaid.">Paid %<br><input type="number" min="0" max="100" step="1" name="paid_percent" value="<?php echo (int) ($t->paid_percent ?? 100); ?>" style="width:80px"></label>
             <label><input type="checkbox" name="active" value="1" <?php checked((int) $t->active, 1); ?>> Active</label>
             <button class="button button-primary">Save</button>
         </div>
@@ -37,7 +38,8 @@ $num = static function ($n) { return rtrim(rtrim(number_format((float) $n, 1, '.
     <form method="post" action="<?php echo esc_url($post_url); ?>" style="border-top:1px solid #eee;padding-top:18px">
         <?php wp_nonce_field('ews_leave_type_save'); ?><input type="hidden" name="action" value="ews_leave_type_save"><input type="hidden" name="id" value="0">
         <strong>Add Leave Type</strong> <input name="name" placeholder="e.g. Sick Leave" required> <input type="number" min="0" step="0.5" name="annual_entitlement" value="0" style="width:110px">
-        <label><input type="checkbox" name="deduct_balance" value="1" checked> Deduct balance</label> <button class="button">Add</button>
+        <label><input type="checkbox" name="deduct_balance" value="1" checked> Deduct balance</label>
+        <label title="Share of a day's pay kept on this leave (Payroll). 100 = fully paid, 0 = unpaid.">Paid % <input type="number" min="0" max="100" step="1" name="paid_percent" value="100" style="width:70px"></label> <button class="button">Add</button>
     </form>
 </div>
 

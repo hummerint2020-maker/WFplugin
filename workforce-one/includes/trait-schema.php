@@ -108,7 +108,8 @@ trait EWS_Schema_Trait {
             dbDelta("CREATE TABLE {$types} (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(120) NOT NULL,
                 active TINYINT(1) NOT NULL DEFAULT 1, deduct_balance TINYINT(1) NOT NULL DEFAULT 1,
-                annual_entitlement DECIMAL(8,2) NOT NULL DEFAULT 0, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                annual_entitlement DECIMAL(8,2) NOT NULL DEFAULT 0, paid_percent TINYINT UNSIGNED NOT NULL DEFAULT 100,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY(id), KEY active(active)) {$c};");
             dbDelta("CREATE TABLE {$bal} (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL,
@@ -132,6 +133,8 @@ trait EWS_Schema_Trait {
                 leave_minutes INT UNSIGNED NOT NULL, reason TEXT NULL, status VARCHAR(30) NOT NULL DEFAULT 'Pending',
                 requested_by BIGINT UNSIGNED NOT NULL, reviewed_by BIGINT UNSIGNED NULL, requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 reviewed_at DATETIME NULL, PRIMARY KEY(id), KEY employee_date(employee_id,work_date), KEY employee_status(employee_id,status)) {$c};");
+            // Payroll (3.31.41): share of a day's pay kept on each leave type; existing types stay fully paid.
+            if(!in_array('paid_percent',(array)$wpdb->get_col("SHOW COLUMNS FROM {$types}",0),true))$wpdb->query("ALTER TABLE {$types} ADD COLUMN `paid_percent` TINYINT UNSIGNED NOT NULL DEFAULT 100");
             // Upgrade-safe migration for installations that already had the legacy Vacation table.
             $req_cols=$wpdb->get_col("SHOW COLUMNS FROM {$req}",0);
             $req_defs=[
@@ -241,7 +244,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.13'; }
+        private function ews_schema_target(){ return '3.31.14'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -287,6 +290,7 @@ private function ensure_break_schema(){
             $this->ensure_leave_schema();
             $this->ensure_push_schema();
             $this->ensure_recognition_schema();
+            $this->ensure_payroll_schema();
             $this->ews_v321_ensure_locations_table();
             $this->ews_v321_ensure_employee_map();
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);

@@ -171,6 +171,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_pwa.py "$S"
       - name: Settings Overview (all settings, defaults, export)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_settings_overview.py "$S"
+      - name: Payroll (salaries, rules, monthly pay from attendance, export)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_payroll.py "$S"
       - name: Time zones (Cairo) and overnight shifts
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_timezone.py "$S"
       - name: Re-seed after behaviour tests

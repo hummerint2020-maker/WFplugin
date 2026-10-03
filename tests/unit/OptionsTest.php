@@ -21,7 +21,7 @@ final class OptionsTest extends TestCase
     {
         foreach (O::all() as $name => $d) {
             $this->assertArrayHasKey($d['group'], O::GROUPS, $name);
-            $this->assertContains($d['kind'], ['bool', 'int', 'text', 'days', 'list', 'grouped', 'secret', 'data'], $name);
+            $this->assertContains($d['kind'], ['bool', 'int', 'number', 'text', 'days', 'grouped', 'secret', 'data'], $name);
             $this->assertNotSame('', $d['label'], $name);
             if ($d['kind'] === 'grouped' && !$d['internal']) $this->assertNotNull($d['builtin'], $name . ' needs a description of its built-in defaults');
         }
@@ -51,6 +51,10 @@ final class OptionsTest extends TestCase
         $this->assertSame('Not set', O::display('ews_vapid_private_key', ''));
         $this->assertSame('2 items', O::display('ews_employee_moments', [1 => [], 2 => []]));
         $this->assertSame('(empty)', O::display('ews_attendance_emails', ''));
+        $this->assertSame('1.35 × hourly pay', O::display('ews_payroll_overtime_rate', '1.35'));
+        $this->assertSame('No limit', O::display('ews_payroll_max_deduction_days', '0'));
+        $this->assertFalse(O::isChanged('ews_payroll_overtime_rate', '1.35'));
+        $this->assertTrue(O::isChanged('ews_payroll_overtime_rate', '1.5'));
     }
 
     public function testExportMasksSecretsAndData(): void
