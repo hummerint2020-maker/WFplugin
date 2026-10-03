@@ -19,6 +19,7 @@ trait EWS_Locations_Trait {
                     enforcement TINYINT(1) NOT NULL DEFAULT 0,
                     is_default TINYINT(1) NOT NULL DEFAULT 0,
                     active TINYINT(1) NOT NULL DEFAULT 1,
+                    seats INT UNSIGNED NULL,
                     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY(id), KEY active(active), KEY name(name)
@@ -28,6 +29,10 @@ trait EWS_Locations_Trait {
             $has_default = $schema_current || $wpdb->get_var("SHOW COLUMNS FROM {$table} LIKE 'is_default'");
             if(!$has_default){
                 $wpdb->query("ALTER TABLE {$table} ADD COLUMN is_default TINYINT(1) NOT NULL DEFAULT 0 AFTER enforcement");
+            }
+            // Seats (3.31.30): how many people the location holds; NULL = no limit (Location Capacity report).
+            if(!$schema_current && !$wpdb->get_var("SHOW COLUMNS FROM {$table} LIKE 'seats'")){
+                $wpdb->query("ALTER TABLE {$table} ADD COLUMN seats INT UNSIGNED NULL AFTER active");
             }
             // The first active location is always the default when no default exists.
             $default_id=(int)$wpdb->get_var("SELECT id FROM {$table} WHERE is_default=1 AND active=1 ORDER BY id ASC LIMIT 1");
@@ -90,10 +95,11 @@ trait EWS_Locations_Trait {
             $enforcement=!empty($_POST['location_enforcement'])?1:0;
             $active=!empty($_POST['active'])?1:0;
             $make_default=!empty($_POST['location_default'])?1:0;
+            $seats=absint($_POST['location_seats']??0);
             if(!$name||!is_numeric($lat)||!is_numeric($lng)||$lat<-90||$lat>90||$lng<-180||$lng>180)wp_die('Please enter a valid location name, latitude and longitude.');
             $existing_count=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->locations} WHERE active=1");
             $is_default=($make_default || (!$id && $existing_count===0))?1:0;
-            $data=['name'=>$name,'latitude'=>(float)$lat,'longitude'=>(float)$lng,'radius'=>$radius,'enforcement'=>$enforcement,'is_default'=>$is_default,'active'=>$active,'updated_at'=>current_time('mysql')];
+            $data=['name'=>$name,'latitude'=>(float)$lat,'longitude'=>(float)$lng,'radius'=>$radius,'enforcement'=>$enforcement,'is_default'=>$is_default,'active'=>$active,'seats'=>$seats?:null,'updated_at'=>current_time('mysql')];
             // Saving a default location is a two-write operation. Keep it atomic so a
             // failure while clearing the previous default cannot leave inconsistent state.
             if($wpdb->query('START TRANSACTION')===false)wp_die('Unable to start location save.');
@@ -155,6 +161,7 @@ trait EWS_Locations_Trait {
             echo '<tr><th>Latitude</th><td><input class="regular-text" type="number" step="0.0000001" name="location_latitude" required value="'.esc_attr($lat).'"></td></tr>';
             echo '<tr><th>Longitude</th><td><input class="regular-text" type="number" step="0.0000001" name="location_longitude" required value="'.esc_attr($lng).'"></td></tr>';
             echo '<tr><th>Allowed Radius</th><td><input type="number" min="10" max="5000" name="location_radius" value="'.esc_attr($radius).'"> meters</td></tr>';
+            echo '<tr><th>Seats</th><td><input type="number" min="0" max="100000" name="location_seats" value="'.esc_attr($edit&&$edit->seats?(int)$edit->seats:'').'" placeholder="No limit"><p class="description">How many people this location holds. Reports → Location Capacity warns when the plan reaches 90% and when it goes over. Leave empty for no limit.</p></td></tr>';
             echo '<tr><th>Location Enforcement</th><td><label><input type="checkbox" name="location_enforcement" value="1" '.checked($enf,1,false).'> Require attendance to be inside this location</label></td></tr>';
             echo '<tr><th>Default Location</th><td><label><input type="checkbox" name="location_default" value="1" '.checked($is_default,1,false).'> Use this as the system default location</label><p class="description">The first location added is automatically set as the default. Only one location can be the default.</p></td></tr>';
             echo '<tr><th>Status</th><td><label><input type="checkbox" name="active" value="1" '.checked($active,1,false).'> Active</label></td></tr>';
@@ -179,10 +186,10 @@ trait EWS_Locations_Trait {
             }
             echo '</tbody></table>';
     
-            echo '<h2 style="margin-top:30px">Configured Locations</h2><table class="widefat striped"><thead><tr><th>Name</th><th>Coordinates</th><th>Radius</th><th>Enforcement</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-            if(!$rows)echo '<tr><td colspan="6">No locations configured.</td></tr>';
+            echo '<h2 style="margin-top:30px">Configured Locations</h2><table class="widefat striped"><thead><tr><th>Name</th><th>Coordinates</th><th>Radius</th><th>Seats</th><th>Enforcement</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+            if(!$rows)echo '<tr><td colspan="7">No locations configured.</td></tr>';
             foreach($rows as $r){
-                echo '<tr><td><strong>'.esc_html($r->name).'</strong>'.($r->is_default?'<br><span style="color:#2563eb;font-weight:600">Default</span>':'').'</td><td>'.esc_html($r->latitude.', '.$r->longitude).'</td><td>'.esc_html($r->radius).' m</td><td>'.($r->enforcement?'Enabled':'Disabled').'</td><td>'.($r->active?'Active':'Archived').'</td><td>';
+                echo '<tr><td><strong>'.esc_html($r->name).'</strong>'.($r->is_default?'<br><span style="color:#2563eb;font-weight:600">Default</span>':'').'</td><td>'.esc_html($r->latitude.', '.$r->longitude).'</td><td>'.esc_html($r->radius).' m</td><td>'.(!empty($r->seats)?(int)$r->seats.' seats':'No limit').'</td><td>'.($r->enforcement?'Enabled':'Disabled').'</td><td>'.($r->active?'Active':'Archived').'</td><td>';
                 echo '<a class="button button-small" href="'.esc_url(admin_url('admin.php?page=ews31-multi-locations&edit_location='.(int)$r->id)).'">Edit</a> ';
                 if($r->active){
                     echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="display:inline" onsubmit="return confirm(\'Archive this location?\');">';

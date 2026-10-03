@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
 final class SavedViews
 {
     public const MAX = 12;
-    public const RANGES = ['today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_month'];
+    public const RANGES = ['today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_month', 'next_two_weeks'];
     private const FILTERS = ['report_type', 'team', 'employee', 'employee_status', 'status'];
 
     /**

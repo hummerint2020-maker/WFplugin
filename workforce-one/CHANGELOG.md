@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.30
+Reports: Location Capacity (the last report of the plan's phase 2).
+
+### Added
+- **Seats per location** (wp-admin → Work Locations): how many people a location holds; empty
+  means no limit. Shown in the locations list.
+- **Location Capacity report** (employee app → Reports): for each active location and working day,
+  the people planned there against its seats, the occupancy and, on past days, how many of them
+  signed in. A day is "near capacity" from 90 % and "over capacity" above the seats. Without dates
+  it shows the next two weeks (a plan; "Next 2 Weeks" quick range). A per-location summary gives
+  the peak and the days over / near capacity. CSV and Excel (one row per location and day).
+  - Who takes a seat: an employee scheduled with a type that requires the location (e.g. Office),
+    at their assigned location (or the default location, as at Sign In). WFH, leave, missions and
+    company holidays take none.
+  - A department manager sees the whole location (the seats are shared) and how many of the people
+    are their own employees.
+
+### Internal
+- `src/Reports/Capacity.php` (unit tested); `seats` column on the locations table (schema 3.31.12).
+- `tests/e2e_capacity.py` (19 checks).
+
 ## 3.31.29
 Reports, phase 2: the Overtime and Leave & Balances reports, overtime on days off, the daily
 attendance trend and saved views.

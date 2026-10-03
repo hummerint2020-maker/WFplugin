@@ -12,6 +12,7 @@ trait EWS_Reports_Trait {
         ];
         if($this->overtime_enabled())$c['overtime']=['Overtime','Overtime requests by status, approved hours, the hours worked in them and unapproved extra time.'];
         $c['leave']=['Leave & Balances','Days on leave, leave requests and the remaining balance of each leave type.'];
+        $c['capacity']=['Location Capacity','People planned at each location per day against its seats, and who actually came.'];
         $c['workforce']=['Workforce','Planned distribution per day: Office, WFH, leave and missions.'];
         return $c;
     }
@@ -29,7 +30,8 @@ trait EWS_Reports_Trait {
         $yesterday=date('Y-m-d',strtotime('-1 day',$now));
         return ['today'=>['Today',current_time('Y-m-d'),current_time('Y-m-d')],'yesterday'=>['Yesterday',$yesterday,$yesterday],
             'this_week'=>['This Week',$tw_s,$tw_e],'last_week'=>['Last Week',$lw_s,$lw_e],
-            'this_month'=>['This Month',current_time('Y-m-01'),current_time('Y-m-d')],'last_month'=>['Last Month',date('Y-m-01',strtotime('first day of last month',$now)),date('Y-m-t',strtotime('last day of last month',$now))]];
+            'this_month'=>['This Month',current_time('Y-m-01'),current_time('Y-m-d')],'last_month'=>['Last Month',date('Y-m-01',strtotime('first day of last month',$now)),date('Y-m-t',strtotime('last day of last month',$now))],
+            'next_two_weeks'=>['Next 2 Weeks',current_time('Y-m-d'),date('Y-m-d',strtotime('+13 days',strtotime(current_time('Y-m-d'))))]];
     }
 
     /** Employee app → Reports: the Report Center shell (shared filters) around the chosen report. */
@@ -40,7 +42,7 @@ trait EWS_Reports_Trait {
         $type=$this->report_request_type();
         [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
         [$emps,$team_options]=$this->report_employee_scope($team,0,$employee_status);
-        $builders=['summary'=>'report_summary_builder','attendance'=>'attendance_report_builder','timesheet'=>'report_timesheet_builder','overtime'=>'report_overtime_builder','leave'=>'report_leave_builder','workforce'=>'workforce_report_builder'];
+        $builders=['summary'=>'report_summary_builder','attendance'=>'attendance_report_builder','timesheet'=>'report_timesheet_builder','overtime'=>'report_overtime_builder','leave'=>'report_leave_builder','capacity'=>'report_capacity_builder','workforce'=>'workforce_report_builder'];
         $body=$this->{$builders[$type]}($s,$e);
 
         $url=function($args)use($s,$e,$team,$employee_id,$employee_status,$type){
@@ -49,7 +51,7 @@ trait EWS_Reports_Trait {
         $quick=$this->report_quick_ranges();
         $tabs=[];foreach($catalog as $key=>$c)$tabs[$key]=['title'=>$c[0],'hint'=>$c[1],'url'=>$url(['report_type'=>$key,'report_page'=>1])];
         $quick_urls=[];$range='';
-        foreach($quick as $key=>[$label,$qs,$qe]){$active=$s===$qs&&$e===$qe;if($active&&$range==='')$range=$key;$quick_urls[$label]=['url'=>$url(['start'=>$qs,'end'=>$qe,'report_page'=>1]),'active'=>$active];}
+        foreach($quick as $key=>[$label,$qs,$qe]){$active=$s===$qs&&$e===$qe;if($active&&$range==='')$range=$key;if($key==='next_two_weeks'&&$type!=='capacity')continue;$quick_urls[$label]=['url'=>$url(['start'=>$qs,'end'=>$qe,'report_page'=>1]),'active'=>$active];}
         // Saved views (per user): open with their filters; a quick range opens on today's period.
         $ranges=[];foreach($quick as $key=>[,$qs,$qe])$ranges[$key]=[$qs,$qe];
         $views=[];
@@ -137,6 +139,47 @@ trait EWS_Reports_Trait {
     private function report_leave_builder($s,$e){
         [$people,$types,$year]=$this->report_leave_data($s,$e);
         return $this->render_template('app/report-leave',['people'=>$people,'totals'=>\WorkforceOne\Reports\LeaveReport::totals($people),'types'=>$types,'year'=>$year]+$this->report_export_urls('leave',$s,$e));
+    }
+
+    /**
+     * Location Capacity data: Capacity::grid() for the active locations over the period's working
+     * days. The whole location counts, whoever manages it; "mine" is the viewer's department share
+     * (not shown to admins, who see everyone).
+     * @return array{0:array<int,array<string,mixed>>,1:bool} the grid and whether "mine" applies
+     */
+    private function report_capacity_data($s,$e){
+        global $wpdb;
+        $this->ews_v321_ensure_locations_table();$map_table=$this->ews_v321_ensure_employee_map();
+        $locations=[];
+        foreach((array)$wpdb->get_results("SELECT id,name,seats FROM {$this->locations} WHERE active=1 ORDER BY is_default DESC,name ASC") as $l)$locations[]=['id'=>(int)$l->id,'name'=>(string)$l->name,'seats'=>$l->seats!==null?(int)$l->seats:null];
+        $default=$this->ews_default_location();$default_id=$default?(int)$default->id:0;
+        $holidays=$this->company_leave_dates($s,$e);$dates=[];
+        for($t=strtotime($s),$et=strtotime($e);$t!==false&&$t<=$et;$t=strtotime('+1 day',$t)){$d=date('Y-m-d',$t);if($this->is_working_day($d))$dates[]=$d;}
+        $split=!current_user_can('manage_options');
+        $mine=[];
+        if($split){[$scoped]=$this->report_employee_scope('all',0,'active');foreach($scoped as $x)$mine[(int)$x->id]=true;}
+        $where_loc=[];foreach((array)$wpdb->get_results("SELECT employee_id,location_id FROM {$map_table}") as $m)$where_loc[(int)$m->employee_id]=(int)$m->location_id;
+        $active=[];foreach((array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1 AND (attendance_enabled IS NULL OR attendance_enabled=1)") as $id)$active[(int)$id]=true;
+        $signed=[];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT DISTINCT employee_id,work_date FROM {$this->time_logs} WHERE event_type IN ('sign_in','late_sign_in') AND work_date BETWEEN %s AND %s",$s,$e)) as $r)$signed[(int)$r->employee_id][$r->work_date]=true;
+        $valid=array_fill_keys(array_column($locations,'id'),true);$dateset=array_fill_keys($dates,true);
+        $seated=[];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE work_date BETWEEN %s AND %s",$s,$e)) as $r){
+            $eid=(int)$r->employee_id;$d=(string)$r->work_date;
+            if(!isset($active[$eid],$dateset[$d])||isset($holidays[$d]))continue;
+            $type=$this->schedule_type_config(trim((string)$r->status));
+            if(!$type||empty($type['requires_location']))continue; // WFH, leave, missions take no seat
+            $lid=$where_loc[$eid]??$default_id;
+            if(!isset($valid[$lid]))$lid=$default_id; // an archived location falls back to the default, as at Sign In
+            $seated[]=['location_id'=>$lid,'date'=>$d,'signed_in'=>isset($signed[$eid][$d]),'mine'=>isset($mine[$eid])];
+        }
+        return [\WorkforceOne\Reports\Capacity::grid($locations,$seated,$dates,current_time('Y-m-d')),$split];
+    }
+
+    /** Location Capacity: planned and actual people per location and day against its seats. */
+    private function report_capacity_builder($s,$e){
+        [$grid,$split]=$this->report_capacity_data($s,$e);
+        return $this->render_template('app/report-capacity',['grid'=>$grid,'split'=>$split,'today'=>current_time('Y-m-d'),'warn_pct'=>\WorkforceOne\Reports\Capacity::WARN_PCT]+$this->report_export_urls('capacity',$s,$e));
     }
 
     /** @return array<int,array<string,string>> the current user's saved report views */
@@ -368,9 +411,10 @@ trait EWS_Reports_Trait {
         ]);
     }
 
-    /** The report period from the request; by default this month to date (site time). */
+    /** The report period from the request; by default this month to date (site time), and the next two weeks for Location Capacity (a plan). */
     private function period(){
         $today=current_time('Y-m-d');$month_start=current_time('Y-m-01');
+        if(!isset($_GET['start'])&&sanitize_key($_GET['report_type']??'')==='capacity')return [$today,date('Y-m-d',strtotime('+13 days',strtotime($today)))];
         $s=sanitize_text_field(wp_unslash($_GET['start']??$month_start));$e=sanitize_text_field(wp_unslash($_GET['end']??$today));
         if(!$this->valid_date($s)||!$this->valid_date($e)||$e<$s){$s=$month_start;$e=$today;}
         return [$s,$e];
@@ -407,6 +451,18 @@ trait EWS_Reports_Trait {
             foreach($rows as $r)$out[]=[$r['employee'],$r['domain'],$r['date'],$r['planned'],$r['result'],$r['sign_in'],$r['sign_out'],$r['late_minutes'],$r['early_minutes'],$r['break_minutes'],$hm($r['net_minutes']),\WorkforceOne\Reports\Timesheet::decimalHours((int)$r['net_minutes']),$r['expected']?$hm($r['expected_minutes']):'',$r['ot_actual'],$r['ot_extra']];
             return ['name'=>'Daily Details','headers'=>['Employee','Employee ID','Date','Planned','Result','First Sign In','Last Sign Out','Late (min)','Early Leave (min)','Break (min)','Net Hours','Net Hours (decimal)','Expected Hours','Overtime Worked (min)','Unapproved Extra (min)'],'rows'=>$out];
         };
+        if($type==='capacity'){
+            [$grid,$split]=$this->report_capacity_data($s,$e);$out=[];$k=['Locations'=>count($grid),'Days Over'=>0,'Days Near'=>0];
+            foreach($grid as $l){
+                foreach($l['days'] as $d=>$day){
+                    $r=[$l['name'],$d,$l['seats']??'',$day['planned'],$day['actual']??'',$day['pct']===null?'':$day['pct'].'%',\WorkforceOne\Reports\Capacity::LABELS[$day['level']]];
+                    if($split)$r[]=$day['mine'];
+                    $out[]=$r;
+                }
+                $k['Days Over']+=$l['days_over'];$k['Days Near']+=$l['days_warn'];
+            }
+            return ['headers'=>array_merge(['Location','Date','Seats','Planned','Actual','Occupancy','Status'],$split?['Your Employees']:[]),'rows'=>$out,'kpis'=>$k];
+        }
         if($type==='overtime'){
             $people=$this->report_overtime_data($s,$e);$out=[];
             foreach($people as $p)$out[]=[$p['employee'],$p['domain'],implode(' · ',$p['teams']),$p['requests'],$p['approved'],$p['pending'],$p['rejected'],$hm($p['approved_minutes']),$hm($p['worked_minutes']),
@@ -497,7 +553,7 @@ trait EWS_Reports_Trait {
         if(!class_exists('ZipArchive')) return new WP_Error('xlsx_zip','The PHP ZipArchive extension is required for Excel export.');
 
         $table=$this->report_export_table($start,$end,$type);
-        $titles=['workforce'=>'Workforce Report','summary'=>'Attendance Summary','timesheet'=>'Timesheet','overtime'=>'Overtime','leave'=>'Leave and Balances','attendance'=>'Attendance Report'];
+        $titles=['workforce'=>'Workforce Report','summary'=>'Attendance Summary','timesheet'=>'Timesheet','overtime'=>'Overtime','leave'=>'Leave and Balances','capacity'=>'Location Capacity','attendance'=>'Attendance Report'];
         $title=$titles[$type]??'Attendance Report';
         $generated=current_time('Y-m-d H:i');
         $headers=$table['headers'];
@@ -519,7 +575,7 @@ trait EWS_Reports_Trait {
         $sheet.='<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>';
         $sheet.='<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="8" topLeftCell="A9" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
         $sheet.='<sheetFormatPr defaultRowHeight="20"/><cols>';
-        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:(in_array($type,['summary','timesheet','overtime','leave'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12]);
+        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:($type==='capacity'?[22,14,10,10,10,12,16,14]:(in_array($type,['summary','timesheet','overtime','leave'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12]));
         for($c=1;$c<=$maxCols;$c++){ $w=$widths[$c-1]??14; $sheet.='<col min="'.$c.'" max="'.$c.'" width="'.$w.'" customWidth="1"/>'; }
         $sheet.='</cols><sheetData>';
 

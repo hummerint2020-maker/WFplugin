@@ -446,4 +446,15 @@
 .ews-rc-save-view label{display:grid;gap:4px;font-size:12px;font-weight:600;color:#475467;flex:1 1 220px}
 .ews-rc-save-view input[type=text]{min-height:38px;border:1px solid #d0d5dd;border-radius:8px;padding:6px 10px;font-size:14px}
 .ews-rc-save-view small{flex-basis:100%;color:#667085;font-size:12px}
+.ews-rc-cap-grid th,.ews-rc-cap-grid td{text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ews-rc-cap-grid thead th small,.ews-rc-cap-grid tbody th small{display:block;font-weight:500;color:#667085;font-size:11px}
+.ews-rc-cap-grid tbody th{text-align:start;position:sticky;inset-inline-start:0;background:#fff;z-index:1}
+.ews-rc-cap-grid thead th.is-today{color:#5b21b6}
+.ews-rc-cap{min-width:62px;border-radius:8px}
+.ews-rc-cap b{font-size:16px}.ews-rc-cap small{color:#667085}
+.ews-rc-cap span,.ews-rc-cap em{display:block;font-size:11px;font-style:normal;color:#475467}
+.ews-rc-cap--ok{background:#ecfdf3}.ews-rc-cap--warn{background:#fffaeb}.ews-rc-cap--over{background:#fef3f2}.ews-rc-cap--none{background:#f9fafb}
+.ews-rc-cap--over b{color:#b42318}.ews-rc-cap--warn b{color:#b54708}
+.ews-rc-cap-legend{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.ews-rc-cap-legend span{font-size:12px;font-weight:600;color:#344054;padding:3px 10px;border-radius:999px;border:1px solid #e4e7ec}
 .ews-report-section-head .ews-report-export-csv,.ews-report-section-head .ews-report-export-xlsx{display:inline-flex;align-items:center;gap:4px;font-size:12px!important;line-height:1.2;padding:8px 12px!important;margin:10px 6px 0 0;white-space:nowrap;min-height:0}

@@ -33,6 +33,8 @@ final class Definitions
             'Overtime on a day off' => 'On days off and company holidays there is no shift, so the whole approved window is overtime and counts as worked where Sign In and Sign Out cover it.',
             'Utilisation' => 'Overtime worked / overtime approved.',
             'Leave requests' => 'Leave requests whose dates overlap the period (approved or pending), with their requested days.',
+            'Seat' => 'An employee scheduled with a type that requires the location (e.g. Office) takes a seat at their assigned location (or the default location). WFH, leave, missions and company holidays take none.',
+            'Occupancy' => 'People planned at a location / its seats. Near capacity from 90 %; over capacity above the seats.',
             'Remaining balance' => "The year's entitlement minus used days minus pending requests (negative when overdrawn).",
             'Hours (decimal)' => 'Hours as a decimal number for payroll, e.g. 7:10 = 7.17.',
         ];
