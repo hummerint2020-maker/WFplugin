@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.36
+Auto Attendance (`includes/trait-auto-attendance.php`) moved to the new structure.
+
+### Fixed
+- **Overnight rules never signed out.** A rule such as 22:00 → 06:00 tried to record the 06:00 Sign
+  Out on the same day, before the 22:00 Sign In, and skipped it. A Sign Out earlier than the Sign In
+  now means an overnight shift: it is recorded the next morning, on the day the shift started (as
+  for manual Sign Out after midnight), and a one-time overnight rule switches off after it. The list
+  shows "(next day)" next to such a Sign Out.
+- **Weekly rules ran on the wrong weekday on sites west of UTC** (the Americas): the weekday was
+  read from midnight UTC converted to the site's time zone, i.e. the day before. It now comes from
+  the date itself. Sites in Egypt and the Gulf were not affected.
+- A one-time rule for a day the employee was off or on leave stays listed as enabled no longer: it
+  switches off once its day has passed.
+
+### Internal
+- `src/Attendance/AutoRules.php` (days, overnight rules, what is due; unit tested) and
+  `src/Attendance/AutoHooks.php`; HTML in `templates/admin/auto-attendance.php`; the confirmations
+  in `assets/js/admin-organization.js` (were inline).
+- `tests/e2e_auto_attendance.py` (22 checks): saving, the cron (times, no duplicates, leave and
+  holidays skipped, weekly days, overnight, a site west of UTC), switch off, delete, bulk Sign Out.
+
 ## 3.31.35
 Departments and Teams (`includes/trait-departments.php`, `includes/trait-teams.php`) moved to the
 new structure.

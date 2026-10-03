@@ -163,6 +163,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_presence.py "$S"
       - name: Departments and Teams
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_organization.py "$S"
+      - name: Auto Attendance
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_auto_attendance.py "$S"
       - name: Time zones (Cairo) and overnight shifts
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_timezone.py "$S"
       - name: Re-seed after behaviour tests

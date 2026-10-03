@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.35
+ * Version: 3.31.36
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.35');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.36');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -157,6 +157,7 @@ class EWS_Manager_V31_1 {
             \WorkforceOne\Locations\Hooks::register($this);
             \WorkforceOne\Presence\Hooks::register($this);
             \WorkforceOne\Organization\Hooks::register($this);
+            \WorkforceOne\Attendance\AutoHooks::register($this);
             \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
@@ -165,15 +166,10 @@ class EWS_Manager_V31_1 {
 
             add_action('admin_post_ews_notification_settings_save',[$this,'admin_notification_settings_save']);
             add_action('admin_post_ews_notification_policy_save',[$this,'admin_notification_policy_save']);
-            add_action('admin_post_ews_auto_attendance_save',[$this,'auto_attendance_save']);
-            add_action('admin_post_ews_auto_attendance_toggle',[$this,'auto_attendance_toggle']);
-            add_action('admin_post_ews_auto_attendance_delete',[$this,'auto_attendance_delete']);
-            add_action('admin_post_ews_auto_attendance_bulk_sign_out',[$this,'auto_attendance_bulk_sign_out']);
             add_action('admin_post_ews_profile_photo_save',[$this,'profile_photo_save']);
             add_action('admin_post_ews_profile_password_change',[$this,'profile_password_change']);
             add_action('ews_notifications_cleanup',[$this,'cleanup_notifications']);
             add_action('ews_privacy_cleanup',[$this,'privacy_cleanup_cron']);
-            add_action('ews_auto_attendance_tick',[$this,'auto_attendance_cron']);
             add_filter('cron_schedules',function($s){if(!isset($s['ews_auto_five_minutes']))$s['ews_auto_five_minutes']=['interval'=>300,'display'=>'Every 5 minutes'];return $s;});
             // Keep the scheduler present after upgrades/reloads; wp_next_scheduled prevents duplicates.
             if(wp_next_scheduled('ews_auto_attendance_tick')===false) $this->auto_attendance_schedule();

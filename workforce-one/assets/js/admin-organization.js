@@ -1,10 +1,14 @@
-/* wp-admin → Departments and Teams (templates/admin/departments.php, teams.php): confirm Archive, and
+/* wp-admin → Departments, Teams and Auto Attendance: confirm Archive / Delete forms and links, and
    on the team form list only the chosen department's employees as manager and members. */
 (function () {
     'use strict';
     document.addEventListener('submit', function (e) {
         var msg = e.target && e.target.getAttribute ? e.target.getAttribute('data-ews-confirm') : null;
         if (msg && !window.confirm(msg)) e.preventDefault();
+    });
+    document.addEventListener('click', function (e) {
+        var link = e.target && e.target.closest ? e.target.closest('a[data-ews-confirm]') : null;
+        if (link && !window.confirm(link.getAttribute('data-ews-confirm'))) e.preventDefault();
     });
     function filter(form) {
         var dep = form.querySelector('.ews-team-department');
