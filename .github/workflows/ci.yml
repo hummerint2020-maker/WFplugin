@@ -151,6 +151,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_layout.py "$S"
       - name: Reports (employee app) and exports
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports.py "$S"
+      - name: Reports phase 2 (overtime, leave, trend, saved views)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports_more.py "$S"
       - name: Time zones (Cairo) and overnight shifts
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_timezone.py "$S"
       - name: Re-seed after behaviour tests

@@ -22,6 +22,7 @@ workforce-one/
     Support/Csv.php                    CSV export cells (formula-injection safe)
     Support/Format.php                 number, hours and duration formats
     Reports/DayMetrics.php, Summary.php, EmployeeSummary.php, Timesheet.php, Workforce.php, Definitions.php  the report engine: one employee-day measured (incl. overtime), day counts, per-employee figures, payroll timesheet, figure definitions
+    Reports/OvertimeReport.php, LeaveReport.php, Trend.php, SavedViews.php  overtime and leave & balances reports, daily attendance trend, saved report views
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, AdminRecordRules.php, Hooks.php
     Overtime/RequestRules.php, Hooks.php        EarlyLeave/RequestRules.php
     Schedule/SwapRules.php, Hooks.php, ConfigRules.php, ConfigHooks.php, TeamOrder.php (Team Schedule order)

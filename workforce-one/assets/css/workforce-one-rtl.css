@@ -426,4 +426,24 @@
 .ews-rc-summary td a{font-weight:700;color:#5b21b6;text-decoration:none}
 .ews-rc-summary td a:hover{text-decoration:underline}
 .ews-rc-neg{color:#b42318;font-weight:700}
+.ews-rc-trend{margin:14px 0 0;padding:12px 14px;border:1px solid #e4e7ec;border-radius:12px;background:#fff}
+.ews-rc-trend figcaption{font-size:13px;font-weight:700;color:#101828;margin-bottom:8px}
+.ews-rc-trend figcaption small{font-weight:500;color:#667085;margin-right:6px}
+.ews-rc-trend svg{display:block;width:100%;height:110px}
+.ews-rc-trend-grid{stroke:#eef0f3;stroke-width:1;vector-effect:non-scaling-stroke}
+.ews-rc-trend-bar{fill:#d0d5dd}.ews-rc-trend-bar.good{fill:#12b76a}.ews-rc-trend-bar.ok{fill:#f79009}.ews-rc-trend-bar.low{fill:#f04438}
+.ews-rc-trend-bar:hover{opacity:.75}
+.ews-rc-trend-axis{display:flex;justify-content:space-between;font-size:11px;color:#667085;margin-top:4px}
+.ews-rc-views{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
+.ews-rc-views>span:first-child{font-size:12px;font-weight:700;color:#667085}
+.ews-rc-view-chip{display:inline-flex;align-items:center;border:1px solid #d9d6fe;background:#f4f3ff;border-radius:999px;overflow:hidden}
+.ews-rc-view{padding:5px 12px 5px 4px;font-size:13px;font-weight:600;color:#5b21b6;text-decoration:none}
+.ews-rc-view:hover{text-decoration:underline}
+.ews-rc-view-chip form{margin:0}
+.ews-rc-view-chip button{border:0;background:none;color:#7a5af8;font-size:16px;line-height:1;padding:4px 6px 6px 10px;cursor:pointer}
+.ews-rc-view-chip button:hover{color:#b42318}
+.ews-rc-save-view{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:-4px 0 16px;padding:10px 14px;border:1px dashed #d0d5dd;border-radius:12px;background:#fcfcfd}
+.ews-rc-save-view label{display:grid;gap:4px;font-size:12px;font-weight:600;color:#475467;flex:1 1 220px}
+.ews-rc-save-view input[type=text]{min-height:38px;border:1px solid #d0d5dd;border-radius:8px;padding:6px 10px;font-size:14px}
+.ews-rc-save-view small{flex-basis:100%;color:#667085;font-size:12px}
 .ews-report-section-head .ews-report-export-csv,.ews-report-section-head .ews-report-export-xlsx{display:inline-flex;align-items:center;gap:4px;font-size:12px!important;line-height:1.2;padding:8px 12px!important;margin:10px 0 0 6px;white-space:nowrap;min-height:0}

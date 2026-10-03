@@ -3,7 +3,7 @@
  * Employee app: Report Center. Shared filters for every report, then the chosen report's body.
  * Styles: assets/css/workforce-one.css (.ews-report-*, .ews-rc-*); script: assets/js/reports.js.
  *
- * @var string $type                    summary | attendance | workforce
+ * @var string $type                    summary | attendance | timesheet | overtime | leave | workforce
  * @var array<string,array{title:string,hint:string,url:string}> $tabs
  * @var string $start
  * @var string $end
@@ -17,6 +17,8 @@
  * @var string[] $statuses
  * @var string $body                    the report's own HTML
  * @var string $period_label
+ * @var array<int,array{id:string,name:string,url:string}> $views  the user's saved views
+ * @var string $range                   the quick range the period matches ('' = custom dates)
  */
 if (!defined('ABSPATH')) exit;
 ?>
@@ -28,6 +30,15 @@ if (!defined('ABSPATH')) exit;
     <nav class="ews-report-tabs" aria-label="Reports">
         <?php foreach ($tabs as $key => $tab): ?><a class="ews-report-tab <?php echo $type === $key ? 'active' : ''; ?>" href="<?php echo esc_url($tab['url']); ?>" title="<?php echo esc_attr($tab['hint']); ?>"><?php echo esc_html($tab['title']); ?></a><?php endforeach; ?>
     </nav>
+    <?php if ($views): ?>
+    <div class="ews-rc-views"><span>Saved views</span>
+        <?php foreach ($views as $v): ?>
+        <span class="ews-rc-view-chip"><a class="ews-rc-view" href="<?php echo esc_url($v['url']); ?>"><?php echo esc_html($v['name']); ?></a><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <input type="hidden" name="action" value="ews_report_view_delete"><input type="hidden" name="view_id" value="<?php echo esc_attr($v['id']); ?>"><input type="hidden" name="_wpnonce" value="<?php echo esc_attr(wp_create_nonce('ews_report_view')); ?>">
+            <button type="submit" aria-label="<?php echo esc_attr('Remove saved view ' . $v['name']); ?>" title="Remove">×</button></form></span>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 
     <form class="ews-report-filter-card" method="get">
         <input type="hidden" name="ews_view" value="reports"><input type="hidden" name="report_type" value="<?php echo esc_attr($type); ?>">
@@ -46,6 +57,13 @@ if (!defined('ABSPATH')) exit;
             <?php else: ?><div></div><?php endif; ?>
             <div class="ews-report-generate"><button class="ews-btn" type="submit">▥ &nbsp;Generate Report</button></div>
         </div>
+    </form>
+    <form class="ews-rc-save-view" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        <input type="hidden" name="action" value="ews_report_view_save"><input type="hidden" name="_wpnonce" value="<?php echo esc_attr(wp_create_nonce('ews_report_view')); ?>">
+        <?php foreach (['report_type' => $type, 'start' => $start, 'end' => $end, 'team' => $team, 'employee' => (string) $employee_id, 'employee_status' => $employee_status, 'range' => $range] + ($type === 'attendance' ? ['status' => $status] : []) as $k => $v): ?><input type="hidden" name="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($v); ?>"><?php endforeach; ?>
+        <label>Save this report as a view<input type="text" name="view_name" maxlength="60" required placeholder="e.g. Ops team this month"></label>
+        <button class="ews-btn secondary" type="submit">☆ &nbsp;Save view</button>
+        <small><?php echo $range !== '' ? esc_html('The period is saved as "' . ucwords(str_replace('_', ' ', $range)) . '", so the view always opens on the current one.') : 'The view keeps these dates.'; ?></small>
     </form>
 
     <?php echo $body; // phpcs:ignore WordPress.Security.EscapeOutput -- built (and escaped) by the report builder ?>

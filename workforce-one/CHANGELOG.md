@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.31.29
+Reports, phase 2: the Overtime and Leave & Balances reports, overtime on days off, the daily
+attendance trend and saved views.
+
+### Added (employee app → Reports)
+- **Overtime report** (when the Overtime feature is on): per employee, the requests of the period
+  by status, approved hours, the hours actually worked in them, utilisation (worked / approved),
+  days worked and unapproved extra time after the shift. Only employees with overtime are listed.
+  CSV and Excel.
+- **Leave & Balances report**: per employee, the days on leave in the period by type, the leave
+  requests overlapping the period (approved / pending, with their days), and the remaining balance
+  of every active leave type for the period's year ("16 / 21", with entitlement, used and pending on
+  hover; overdrawn balances in red). CSV and Excel.
+- **Daily attendance trend** on the Attendance Summary: one bar per working day, coloured by the
+  rate (90 %+, 75 %+, below), with the day's present / late / absent counts on hover.
+- **Saved views**: save the report shown, with its filters, under a name; it is listed above every
+  report for you (up to 12; same name replaces). A quick range (This Month, Last Week, …) is saved
+  as the range, so the view always opens on the current period; other periods keep their dates.
+
+### Fixed (Reports → Timesheet)
+- **Work on a day off was missing from the Timesheet.** Only configured working days were counted,
+  so hours and approved overtime on a weekend did not reach payroll. Days off on which the employee
+  signed in or had approved overtime now count (net hours, worked days, overtime), with no expected
+  hours. The Daily Log, Summary and Workforce reports still list working days only.
+- **Overtime on a company holiday or a day off** counted only the part outside the normal shift
+  hours. There is no shift on those days, so the whole approved window now counts.
+
+### Internal
+- `src/Reports/OvertimeReport.php`, `LeaveReport.php`, `Trend.php`, `SavedViews.php` and
+  `DayMetrics::offDayOvertime()` (unit tested). Saved views are user meta `ews_report_views`.
+- `tests/e2e_reports_more.py` (27 checks).
+
 ## 3.31.28
 ### Fixed (Sign In / Out)
 - **QR Sign In works on sites outside UTC (Egypt, the Gulf, …) (K3).** The phone's location time

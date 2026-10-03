@@ -10,6 +10,7 @@
  * @var callable $drill                          (employee id, result) → Daily Log URL
  * @var string $csv_url
  * @var string $xlsx_url
+ * @var array<string,array{present:int,late:int,absent:int,rate:?int}> $trend  Trend::daily()
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Reports\DayMetrics;
@@ -47,6 +48,21 @@ $count = static function (int $n, int $employee, string $result) use ($drill): s
             <span class="ews-rc-delta flat">of <?php echo esc_html(DayMetrics::hm((int) $totals['expected_minutes'])); ?> expected</span>
         </div>
     </div>
+    <?php if ($trend):
+        $bar = 18; $gap = 6; $w = max(count($trend), 14) * ($bar + $gap); $i = 0; // a short period keeps slim bars ?>
+    <figure class="ews-rc-trend">
+        <figcaption>Daily attendance rate <small>(Present + Late) / expected · hover a bar for the day</small></figcaption>
+        <svg viewBox="0 0 <?php echo (int) $w; ?> 104" preserveAspectRatio="none" role="img" aria-label="Daily attendance rate">
+            <line x1="0" y1="2" x2="<?php echo (int) $w; ?>" y2="2" class="ews-rc-trend-grid"/><line x1="0" y1="52" x2="<?php echo (int) $w; ?>" y2="52" class="ews-rc-trend-grid"/>
+            <?php foreach ($trend as $date => $t):
+                $day_rate = $t['rate']; $h = $day_rate === null ? 2 : max(2, (int) $day_rate);
+                $level = $day_rate === null ? 'none' : ($day_rate >= 90 ? 'good' : ($day_rate >= 75 ? 'ok' : 'low')); ?>
+            <rect class="ews-rc-trend-bar <?php echo esc_attr($level); ?>" data-date="<?php echo esc_attr($date); ?>" data-rate="<?php echo $day_rate === null ? -1 : (int) $day_rate; ?>" x="<?php echo (int) ($i++ * ($bar + $gap) + $gap / 2); ?>" y="<?php echo 102 - $h; ?>" width="<?php echo (int) $bar; ?>" height="<?php echo (int) $h; ?>" rx="3"><title><?php echo esc_html(date_i18n('D d M', strtotime($date)) . ': ' . ($day_rate === null ? 'nobody expected' : $day_rate . '% · ' . $t['present'] . ' present, ' . $t['late'] . ' late, ' . $t['absent'] . ' absent')); ?></title></rect>
+            <?php endforeach; ?>
+        </svg>
+        <div class="ews-rc-trend-axis"><span><?php echo esc_html(date_i18n('d M', strtotime((string) array_key_first($trend)))); ?></span><?php if (count($trend) > 1): ?><span><?php echo esc_html(date_i18n('d M', strtotime((string) array_key_last($trend)))); ?></span><?php endif; ?></div>
+    </figure>
+    <?php endif; ?>
 </div>
 
 <div class="ews-report-results-card">

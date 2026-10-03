@@ -19,6 +19,8 @@ use WorkforceOne\Attendance\Insights;
 final class DayMetrics
 {
     public const HOLIDAY = 'Holiday';
+    /** A day off (not a working day) on which the employee worked: Timesheet and Overtime only. */
+    public const OFF_DAY = 'Off Day';
 
     /**
      * @param array{
@@ -114,5 +116,32 @@ final class DayMetrics
         }
         $presence = $out !== null && $out > $end ? intdiv($out - $end, 60) : 0;
         return ['approved' => $approved, 'actual' => $actual, 'extra' => max(0, $presence - min($presence, $approvedPost)), 'windows' => $each];
+    }
+
+    /**
+     * Overtime on a day off (not a working day, or a company holiday): there is no shift, so the
+     * whole approved window is overtime and every minute of presence counts.
+     * - Approved: the length of each approved window.
+     * - Actual: the part of each window between the first Sign In and the last Sign Out.
+     * - Unapproved extra: presence outside the approved windows.
+     * @param array<int,array{start:string,end:string}> $windows 'H:i' or 'H:i:s'
+     * @return array{approved:int,actual:int,extra:int,windows:array<int,array{approved:int,actual:int}>}
+     */
+    public static function offDayOvertime(string $date, ?string $firstIn, ?string $lastOut, array $windows): array
+    {
+        $in = $firstIn ? strtotime($firstIn) : null;
+        $out = $lastOut ? strtotime($lastOut) : null;
+        $approved = 0; $actual = 0; $each = [];
+        foreach ($windows as $w) {
+            $rs = strtotime($date . ' ' . $w['start']);
+            $re = strtotime($date . ' ' . $w['end']);
+            if ($re <= $rs) continue;
+            $mins = intdiv($re - $rs, 60);
+            $real = ($in !== null && $out !== null) ? max(0, intdiv(min($re, $out) - max($rs, $in), 60)) : 0;
+            $approved += $mins; $actual += $real;
+            $each[] = ['approved' => $mins, 'actual' => $real];
+        }
+        $presence = ($in !== null && $out !== null && $out > $in) ? intdiv($out - $in, 60) : 0;
+        return ['approved' => $approved, 'actual' => $actual, 'extra' => max(0, $presence - $actual), 'windows' => $each];
     }
 }

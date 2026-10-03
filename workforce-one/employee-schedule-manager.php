@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.28
+ * Version: 3.31.29
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.28');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.29');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -122,6 +122,8 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_att_sample',[$this,'att_sample']);
             add_action('admin_post_ews31_report_download',[$this,'report_download']);
             add_action('admin_post_ews31_report_xlsx',[$this,'report_xlsx']);
+            add_action('admin_post_ews_report_view_save',[$this,'report_view_save']);
+            add_action('admin_post_ews_report_view_delete',[$this,'report_view_delete']);
             add_action('admin_post_ews31_report_email',[$this,'report_email']);
             add_action('admin_post_ews31_email_save',[$this,'email_save']);
             add_action('admin_post_ews_smart_nudge_dismiss',[$this,'smart_nudge_dismiss']);

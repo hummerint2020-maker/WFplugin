@@ -5,12 +5,31 @@ trait EWS_Reports_Trait {
 
     /** Report types of the Report Center: key => [title, what it answers]. */
     private function report_catalog(){
-        return [
+        $c=[
             'summary'=>['Attendance Summary','One row per employee: attendance, punctuality, lateness and hours.'],
             'attendance'=>['Daily Log','Every employee-day: plan, Sign In / Out, result, late minutes and hours.'],
             'timesheet'=>['Timesheet','Worked hours per employee for payroll: net hours, overtime and leave taken.'],
-            'workforce'=>['Workforce','Planned distribution per day: Office, WFH, leave and missions.'],
         ];
+        if($this->overtime_enabled())$c['overtime']=['Overtime','Overtime requests by status, approved hours, the hours worked in them and unapproved extra time.'];
+        $c['leave']=['Leave & Balances','Days on leave, leave requests and the remaining balance of each leave type.'];
+        $c['workforce']=['Workforce','Planned distribution per day: Office, WFH, leave and missions.'];
+        return $c;
+    }
+
+    /** The report type from the request, if the Report Center offers it. */
+    private function report_request_type($default='summary'){
+        $type=sanitize_key($_GET['report_type']??$default);
+        return isset($this->report_catalog()[$type])?$type:$default;
+    }
+
+    /** Quick ranges of the period picker: key => [label, start, end] (site time). */
+    private function report_quick_ranges(){
+        $now=current_time('timestamp');
+        [$tw_s,$tw_e]=$this->report_work_week_range();[$lw_s,$lw_e]=$this->report_work_week_range(null,-1);
+        $yesterday=date('Y-m-d',strtotime('-1 day',$now));
+        return ['today'=>['Today',current_time('Y-m-d'),current_time('Y-m-d')],'yesterday'=>['Yesterday',$yesterday,$yesterday],
+            'this_week'=>['This Week',$tw_s,$tw_e],'last_week'=>['Last Week',$lw_s,$lw_e],
+            'this_month'=>['This Month',current_time('Y-m-01'),current_time('Y-m-d')],'last_month'=>['Last Month',date('Y-m-01',strtotime('first day of last month',$now)),date('Y-m-t',strtotime('last day of last month',$now))]];
     }
 
     /** Employee app → Reports: the Report Center shell (shared filters) around the chosen report. */
@@ -18,29 +37,31 @@ trait EWS_Reports_Trait {
         if(!$this->can('ews_view_reports'))return $this->ews_empty_state('Reports unavailable','You do not have permission to view reports.');
         [$s,$e]=$this->period();
         $catalog=$this->report_catalog();
-        $type=sanitize_key($_GET['report_type']??'summary');
-        if(!isset($catalog[$type]))$type='summary';
+        $type=$this->report_request_type();
         [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
         [$emps,$team_options]=$this->report_employee_scope($team,0,$employee_status);
-        if($type==='summary')$body=$this->report_summary_builder($s,$e);
-        elseif($type==='attendance')$body=$this->attendance_report_builder($s,$e);
-        elseif($type==='timesheet')$body=$this->report_timesheet_builder($s,$e);
-        else $body=$this->workforce_report_builder($s,$e);
+        $builders=['summary'=>'report_summary_builder','attendance'=>'attendance_report_builder','timesheet'=>'report_timesheet_builder','overtime'=>'report_overtime_builder','leave'=>'report_leave_builder','workforce'=>'workforce_report_builder'];
+        $body=$this->{$builders[$type]}($s,$e);
 
         $url=function($args)use($s,$e,$team,$employee_id,$employee_status,$type){
             return add_query_arg(array_merge(['ews_view'=>'reports','report_type'=>$type,'start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],$args),$this->app_view_url('reports'));
         };
-        $now=current_time('timestamp');
-        [$tw_s,$tw_e]=$this->report_work_week_range();[$lw_s,$lw_e]=$this->report_work_week_range(null,-1);
-        $quick=['Today'=>[current_time('Y-m-d'),current_time('Y-m-d')],'Yesterday'=>[date('Y-m-d',strtotime('-1 day',$now)),date('Y-m-d',strtotime('-1 day',$now))],
-            'This Week'=>[$tw_s,$tw_e],'Last Week'=>[$lw_s,$lw_e],
-            'This Month'=>[current_time('Y-m-01'),current_time('Y-m-d')],'Last Month'=>[date('Y-m-01',strtotime('first day of last month',$now)),date('Y-m-t',strtotime('last day of last month',$now))]];
+        $quick=$this->report_quick_ranges();
         $tabs=[];foreach($catalog as $key=>$c)$tabs[$key]=['title'=>$c[0],'hint'=>$c[1],'url'=>$url(['report_type'=>$key,'report_page'=>1])];
-        $quick_urls=[];foreach($quick as $label=>$r)$quick_urls[$label]=['url'=>$url(['start'=>$r[0],'end'=>$r[1],'report_page'=>1]),'active'=>$s===$r[0]&&$e===$r[1]];
+        $quick_urls=[];$range='';
+        foreach($quick as $key=>[$label,$qs,$qe]){$active=$s===$qs&&$e===$qe;if($active&&$range==='')$range=$key;$quick_urls[$label]=['url'=>$url(['start'=>$qs,'end'=>$qe,'report_page'=>1]),'active'=>$active];}
+        // Saved views (per user): open with their filters; a quick range opens on today's period.
+        $ranges=[];foreach($quick as $key=>[,$qs,$qe])$ranges[$key]=[$qs,$qe];
+        $views=[];
+        foreach($this->report_saved_views() as $v){
+            $args=\WorkforceOne\Reports\SavedViews::args($v,$ranges);
+            if(!isset($catalog[$args['report_type']??'']))continue; // e.g. Overtime switched off
+            $views[]=['id'=>$v['id'],'name'=>$v['name'],'url'=>add_query_arg(array_merge(['ews_view'=>'reports'],$args),$this->app_view_url('reports'))];
+        }
         wp_enqueue_script('workforce-one-reports');
         return $this->render_template('app/reports',[
             'type'=>$type,'tabs'=>$tabs,'start'=>$s,'end'=>$e,'team'=>$team,'employee_id'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status,
-            'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>\WorkforceOne\Reports\Summary::BUCKETS,'body'=>$body,
+            'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>\WorkforceOne\Reports\Summary::BUCKETS,'body'=>$body,'views'=>$views,'range'=>$range,
             'period_label'=>date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e)),
         ]);
     }
@@ -48,7 +69,7 @@ trait EWS_Reports_Trait {
     /** Timesheet: worked hours, overtime and leave per employee, for payroll. */
     private function report_timesheet_builder($s,$e){
         [$team,$employee_id,,$employee_status]=$this->report_request_filters();
-        [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+        [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status,true);
         $export=function($action)use($s,$e,$team,$employee_id,$employee_status){return wp_nonce_url(add_query_arg(['action'=>$action,'report_type'=>'timesheet','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report');};
         return $this->render_template('app/report-timesheet',['people'=>\WorkforceOne\Reports\Timesheet::byEmployee($rows),'overtime'=>$this->overtime_enabled(),'csv_url'=>$export('ews31_report_download'),'xlsx_url'=>$export('ews31_report_xlsx')]);
     }
@@ -67,7 +88,85 @@ trait EWS_Reports_Trait {
         return $this->render_template('app/report-summary',[
             'people'=>$people,'totals'=>$totals,'previous'=>$previous,'previous_label'=>date_i18n('d M',strtotime($ps)).' – '.date_i18n('d M Y',strtotime($pe)),
             'drill'=>$drill,'csv_url'=>$export('ews31_report_download'),'xlsx_url'=>$export('ews31_report_xlsx'),
+            'trend'=>\WorkforceOne\Reports\Trend::daily($rows),
         ]);
+    }
+
+    /** The export links of a report (CSV and Excel), with the request's filters. */
+    private function report_export_urls($type,$s,$e){
+        [$team,$employee_id,,$employee_status]=$this->report_request_filters();
+        $url=function($action)use($type,$s,$e,$team,$employee_id,$employee_status){return wp_nonce_url(add_query_arg(['action'=>$action,'report_type'=>$type,'start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report');};
+        return ['csv_url'=>$url('ews31_report_download'),'xlsx_url'=>$url('ews31_report_xlsx')];
+    }
+
+    /** Overtime report data: OvertimeReport::byEmployee() over the period, days off included. */
+    private function report_overtime_data($s,$e){
+        global $wpdb;
+        [$team,$employee_id,,$employee_status]=$this->report_request_filters();
+        [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status,true);
+        $this->ensure_overtime_schema();
+        $requests=(array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,status FROM {$wpdb->prefix}ews_overtime_requests WHERE overtime_date BETWEEN %s AND %s",$s,$e),ARRAY_A);
+        return \WorkforceOne\Reports\OvertimeReport::byEmployee($rows,$requests);
+    }
+
+    /** Overtime: requests, approved and worked hours, unapproved extra (Overtime feature on). */
+    private function report_overtime_builder($s,$e){
+        $people=$this->report_overtime_data($s,$e);
+        return $this->render_template('app/report-overtime',['people'=>$people,'totals'=>\WorkforceOne\Reports\OvertimeReport::totals($people)]+$this->report_export_urls('overtime',$s,$e));
+    }
+
+    /**
+     * Leave report data: LeaveReport::byEmployee(), the active leave types and the balance year
+     * (the year of the period's end).
+     * @return array{0:array<int,array<string,mixed>>,1:string[],2:int}
+     */
+    private function report_leave_data($s,$e){
+        global $wpdb;
+        [$team,$employee_id,,$employee_status]=$this->report_request_filters();
+        [$rows,,,$emps]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+        $this->ensure_leave_schema();
+        $year=(int)substr($e,0,4);
+        $people=[];foreach($emps as $x)$people[]=['employee_id'=>(int)$x->id,'employee'=>(string)$x->name,'domain'=>(string)$x->domain_name,'teams'=>(array)($x->_report_teams??[])];
+        $requests=(array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,status,requested_days FROM {$wpdb->prefix}ews_leave_requests WHERE start_date<=%s AND end_date>=%s",$e,$s),ARRAY_A);
+        $balances=(array)$wpdb->get_results($wpdb->prepare("SELECT b.employee_id,t.name type,b.entitlement,b.used,b.pending FROM {$wpdb->prefix}ews_leave_balances b JOIN {$wpdb->prefix}ews_leave_types t ON t.id=b.leave_type_id AND t.active=1 WHERE b.leave_year=%d",$year),ARRAY_A);
+        $types=array_map('strval',(array)$wpdb->get_col("SELECT name FROM {$wpdb->prefix}ews_leave_types WHERE active=1 ORDER BY name ASC"));
+        return [\WorkforceOne\Reports\LeaveReport::byEmployee($people,$rows,$requests,$balances),$types,$year];
+    }
+
+    /** Leave & Balances: leave days, requests and the remaining balance per leave type. */
+    private function report_leave_builder($s,$e){
+        [$people,$types,$year]=$this->report_leave_data($s,$e);
+        return $this->render_template('app/report-leave',['people'=>$people,'totals'=>\WorkforceOne\Reports\LeaveReport::totals($people),'types'=>$types,'year'=>$year]+$this->report_export_urls('leave',$s,$e));
+    }
+
+    /** @return array<int,array<string,string>> the current user's saved report views */
+    private function report_saved_views(){
+        $v=get_user_meta(get_current_user_id(),'ews_report_views',true);
+        return is_array($v)?array_values(array_filter($v,'is_array')):[];
+    }
+
+    /** Report Center → Save view: the current filters under a name (per user). */
+    public function report_view_save(){
+        if(!$this->can('ews_view_reports'))wp_die('Access denied',403);
+        check_admin_referer('ews_report_view');
+        $type=sanitize_key($_POST['report_type']??'summary');
+        if(!isset($this->report_catalog()[$type]))$type='summary';
+        $filters=['report_type'=>$type];
+        foreach(['team','employee_status','status','start','end'] as $k)$filters[$k]=sanitize_text_field(wp_unslash($_POST[$k]??''));
+        $filters['employee']=(string)absint($_POST['employee']??0);
+        foreach(['start','end'] as $k)if(!$this->valid_date($filters[$k]))$filters[$k]='';
+        $range=sanitize_key($_POST['range']??'');
+        $views=\WorkforceOne\Reports\SavedViews::add($this->report_saved_views(),sanitize_text_field(wp_unslash($_POST['view_name']??'')),$filters,$range);
+        update_user_meta(get_current_user_id(),'ews_report_views',$views);
+        wp_safe_redirect(add_query_arg(array_merge(['ews_view'=>'reports'],array_filter($filters,'strlen')),$this->app_view_url('reports')));exit;
+    }
+
+    /** Report Center → remove a saved view. */
+    public function report_view_delete(){
+        if(!$this->can('ews_view_reports'))wp_die('Access denied',403);
+        check_admin_referer('ews_report_view');
+        update_user_meta(get_current_user_id(),'ews_report_views',\WorkforceOne\Reports\SavedViews::remove($this->report_saved_views(),sanitize_key($_POST['view_id']??'')));
+        wp_safe_redirect(add_query_arg(['ews_view'=>'reports'],$this->app_view_url('reports')));exit;
     }
 
     private function report_team_context(){
@@ -121,13 +220,16 @@ trait EWS_Reports_Trait {
      * Every working day of a period for the given employees, measured by the report engine
      * (src/Reports/DayMetrics.php): planned status, first Sign In, last Sign Out, closed breaks,
      * and the day's result, late / early minutes and net / expected minutes.
-     * @return array<int,array<string,mixed>> one row per employee and working day
+     * With $off_days, also the days off (not configured working days) on which the employee signed
+     * in or had approved overtime, as result "Off Day": the Timesheet and the Overtime report count
+     * the hours worked on them.
+     * @return array<int,array<string,mixed>> one row per employee and working day (and day off worked)
      */
-    private function report_days(array $emps,$s,$e){
+    private function report_days(array $emps,$s,$e,$off_days=false){
         global $wpdb;
-        $dates=[];
-        for($t=strtotime($s),$et=strtotime($e);$t!==false&&$t<=$et;$t=strtotime('+1 day',$t)){$d=date('Y-m-d',$t);if($this->is_working_day($d))$dates[]=$d;}
-        if(!$emps||!$dates)return [];
+        $dates=[];$working=[];
+        for($t=strtotime($s),$et=strtotime($e);$t!==false&&$t<=$et;$t=strtotime('+1 day',$t)){$d=date('Y-m-d',$t);$w=$this->is_working_day($d);if($w||$off_days)$dates[]=$d;if($w)$working[$d]=true;}
+        if(!$emps||!$working)return [];
         $this->ensure_break_schema();
         $ids=array_map(function($x){return (int)$x->id;},$emps);
         $ph=implode(',',array_fill(0,count($ids),'%d'));
@@ -155,6 +257,11 @@ trait EWS_Reports_Trait {
         foreach($emps as $emp){
             $eid=(int)$emp->id;$h=$this->working_hours($eid);
             foreach($dates as $d){
+                if(!isset($working[$d])){
+                    if(!isset($first[$eid][$d])&&empty($windows[$eid][$d]))continue;
+                    $rows[]=$this->report_off_day($emp,$d,$h,$first[$eid][$d]??null,$last[$eid][$d]??null,(int)($breaks[$eid][$d]??0),$windows[$eid][$d]??[],$today,$now,$ot_on);
+                    continue;
+                }
                 $planned=$schedule[$eid][$d]??'';
                 $type=$planned!==''?$this->schedule_type_config($planned):null;
                 $in=$first[$eid][$d]??null;$out=$last[$eid][$d]??null;
@@ -164,7 +271,9 @@ trait EWS_Reports_Trait {
                     'shift_start'=>$h['start'],'shift_end'=>$h['end'],'normal_until'=>$h['normal_until'],'grace'=>(int)($h['grace']??$this->global_grace_period()),'overnight'=>!empty($h['overnight']),'break_allowance'=>$allowance,
                     'first_in'=>$in?$in->event_at:null,'first_in_legacy_late'=>$in&&$in->event_type==='late_sign_in','last_out'=>$out?$out->event_at:null,'break_minutes'=>(int)($breaks[$eid][$d]??0),
                 ]);
-                $ot=$ot_on?\WorkforceOne\Reports\DayMetrics::overtime($d,$h['start'],$h['end'],$in?$in->event_at:null,$out?$out->event_at:null,$windows[$eid][$d]??[]):['approved'=>0,'actual'=>0,'extra'=>0];
+                // A company holiday has no shift: all approved overtime counts, as on a day off.
+                $ot=!$ot_on?['approved'=>0,'actual'=>0,'extra'=>0]:(isset($holidays[$d])?\WorkforceOne\Reports\DayMetrics::offDayOvertime($d,$in?$in->event_at:null,$out?$out->event_at:null,$windows[$eid][$d]??[])
+                    :\WorkforceOne\Reports\DayMetrics::overtime($d,$h['start'],$h['end'],$in?$in->event_at:null,$out?$out->event_at:null,$windows[$eid][$d]??[]));
                 $rows[]=$m+['ot_approved'=>$ot['approved'],'ot_actual'=>$ot['actual'],'ot_extra'=>$ot['extra'],'rule'=>$type?$type['attendance_rule']:null,'employee_id'=>$eid,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,'planned'=>$planned!==''?$planned:'Not Set',
                     'bucket'=>$type && $type['attendance_rule']==='business_trip' && $m['result']===$planned?'Business Trip':$m['result'],
                     'holiday'=>$holidays[$d]??'','sign_in'=>$in?date_i18n('H:i',strtotime($in->event_at)):'','sign_out'=>$out?date_i18n('H:i',strtotime($out->event_at)):''];
@@ -173,10 +282,22 @@ trait EWS_Reports_Trait {
         return $rows;
     }
 
-    private function report_attendance_data($s,$e,$selected_team='all',$employee_id=0,$status_filter='all',$employee_status='active'){
+    /** A report_days() row for a day off the employee worked: no plan, no expected hours. */
+    private function report_off_day($emp,$d,array $h,$in,$out,$break_minutes,array $windows,$today,$now,$ot_on){
+        $m=\WorkforceOne\Reports\DayMetrics::compute([
+            'date'=>$d,'today'=>$today,'now'=>$now,'holiday'=>'Off Day','planned'=>'','rule'=>null,'requires_sign_in'=>false,
+            'shift_start'=>$h['start'],'shift_end'=>$h['end'],'normal_until'=>$h['normal_until'],'grace'=>0,'overnight'=>!empty($h['overnight']),'break_allowance'=>0,
+            'first_in'=>$in?$in->event_at:null,'first_in_legacy_late'=>false,'last_out'=>$out?$out->event_at:null,'break_minutes'=>$break_minutes,
+        ]);
+        $ot=$ot_on?\WorkforceOne\Reports\DayMetrics::offDayOvertime($d,$in?$in->event_at:null,$out?$out->event_at:null,$windows):['approved'=>0,'actual'=>0,'extra'=>0];
+        return array_merge($m,['result'=>\WorkforceOne\Reports\DayMetrics::OFF_DAY,'ot_approved'=>$ot['approved'],'ot_actual'=>$ot['actual'],'ot_extra'=>$ot['extra'],'rule'=>null,'employee_id'=>(int)$emp->id,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,
+            'planned'=>'Not Set','bucket'=>\WorkforceOne\Reports\DayMetrics::OFF_DAY,'holiday'=>'','sign_in'=>$in?date_i18n('H:i',strtotime($in->event_at)):'','sign_out'=>$out?date_i18n('H:i',strtotime($out->event_at)):'']);
+    }
+
+    private function report_attendance_data($s,$e,$selected_team='all',$employee_id=0,$status_filter='all',$employee_status='active',$off_days=false){
         [$emps,$team_options,$team_names_by_emp]=$this->report_employee_scope($selected_team,$employee_id,$employee_status);
         $rows=[];$summary=array_fill_keys(\WorkforceOne\Reports\Summary::BUCKETS,0)+['records'=>0];
-        foreach($this->report_days($emps,$s,$e) as $day){
+        foreach($this->report_days($emps,$s,$e,$off_days) as $day){
             $flags=$day['missing_sign_out']?['Missing Sign-out']:[];
             $summary=\WorkforceOne\Reports\Summary::add($summary,$day);
             if($status_filter!=='all'&&$day['bucket']!==$status_filter&&$day['result']!==$status_filter&&!in_array($status_filter,$flags,true))continue;
@@ -286,8 +407,28 @@ trait EWS_Reports_Trait {
             foreach($rows as $r)$out[]=[$r['employee'],$r['domain'],$r['date'],$r['planned'],$r['result'],$r['sign_in'],$r['sign_out'],$r['late_minutes'],$r['early_minutes'],$r['break_minutes'],$hm($r['net_minutes']),\WorkforceOne\Reports\Timesheet::decimalHours((int)$r['net_minutes']),$r['expected']?$hm($r['expected_minutes']):'',$r['ot_actual'],$r['ot_extra']];
             return ['name'=>'Daily Details','headers'=>['Employee','Employee ID','Date','Planned','Result','First Sign In','Last Sign Out','Late (min)','Early Leave (min)','Break (min)','Net Hours','Net Hours (decimal)','Expected Hours','Overtime Worked (min)','Unapproved Extra (min)'],'rows'=>$out];
         };
+        if($type==='overtime'){
+            $people=$this->report_overtime_data($s,$e);$out=[];
+            foreach($people as $p)$out[]=[$p['employee'],$p['domain'],implode(' · ',$p['teams']),$p['requests'],$p['approved'],$p['pending'],$p['rejected'],$hm($p['approved_minutes']),$hm($p['worked_minutes']),
+                \WorkforceOne\Reports\Timesheet::decimalHours((int)$p['worked_minutes']),$p['utilisation']===null?'':$p['utilisation'].'%',$p['days'],$hm($p['extra_minutes'])];
+            $t=\WorkforceOne\Reports\OvertimeReport::totals($people);
+            return ['headers'=>['Employee','Employee ID','Team','Requests','Approved','Pending','Rejected','Approved Hours','Worked Hours','Worked Hours (decimal)','Utilisation','Days Worked','Unapproved Extra'],'rows'=>$out,
+                'kpis'=>['Employees'=>$t['employees'],'Requests'=>$t['requests'],'Pending'=>$t['pending'],'Approved (min)'=>$t['approved_minutes'],'Worked (min)'=>$t['worked_minutes'],'Unapproved (min)'=>$t['extra_minutes']]];
+        }
+        if($type==='leave'){
+            [$people,$types,$year]=$this->report_leave_data($s,$e);$out=[];$days=function($n){return \WorkforceOne\Reports\LeaveReport::days((float)$n);};
+            foreach($people as $p){
+                $r=[$p['employee'],$p['domain'],implode(' · ',$p['teams']),$p['leave_days'],$p['leave_breakdown'],$p['approved_requests'],$days($p['approved_days']),$p['pending_requests'],$days($p['pending_days'])];
+                foreach($types as $type_name){$b=$p['balances'][$type_name]??null;$r[]=$b?$days($b['remaining']):'';$r[]=$b?$days($b['entitlement']):'';}
+                $out[]=$r;
+            }
+            $headers=['Employee','Employee ID','Team','Leave Days','Leave Taken','Approved Requests','Approved Days','Pending Requests','Pending Days'];
+            foreach($types as $type_name){$headers[]=$type_name.' Remaining '.$year;$headers[]=$type_name.' Entitlement '.$year;}
+            $t=\WorkforceOne\Reports\LeaveReport::totals($people);
+            return ['headers'=>$headers,'rows'=>$out,'kpis'=>['Employees on Leave'=>$t['on_leave'],'Leave Days'=>$t['leave_days'],'Approved Requests'=>$t['approved_requests'],'Pending Requests'=>$t['pending_requests'],'Overdrawn'=>$t['overdrawn']]];
+        }
         if($type==='timesheet'){
-            [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+            [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status,true);
             $out=[];$k=['Employees'=>0,'Worked Days'=>0,'Absent Days'=>0,'Leave Days'=>0,'Holidays'=>0];
             foreach(\WorkforceOne\Reports\Timesheet::byEmployee($rows) as $p){
                 $dec=function($m){return \WorkforceOne\Reports\Timesheet::decimalHours((int)$m);};
@@ -356,7 +497,7 @@ trait EWS_Reports_Trait {
         if(!class_exists('ZipArchive')) return new WP_Error('xlsx_zip','The PHP ZipArchive extension is required for Excel export.');
 
         $table=$this->report_export_table($start,$end,$type);
-        $titles=['workforce'=>'Workforce Report','summary'=>'Attendance Summary','timesheet'=>'Timesheet','attendance'=>'Attendance Report'];
+        $titles=['workforce'=>'Workforce Report','summary'=>'Attendance Summary','timesheet'=>'Timesheet','overtime'=>'Overtime','leave'=>'Leave and Balances','attendance'=>'Attendance Report'];
         $title=$titles[$type]??'Attendance Report';
         $generated=current_time('Y-m-d H:i');
         $headers=$table['headers'];
@@ -378,7 +519,7 @@ trait EWS_Reports_Trait {
         $sheet.='<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>';
         $sheet.='<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="8" topLeftCell="A9" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
         $sheet.='<sheetFormatPr defaultRowHeight="20"/><cols>';
-        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:(in_array($type,['summary','timesheet'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12]);
+        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:(in_array($type,['summary','timesheet','overtime','leave'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12]);
         for($c=1;$c<=$maxCols;$c++){ $w=$widths[$c-1]??14; $sheet.='<col min="'.$c.'" max="'.$c.'" width="'.$w.'" customWidth="1"/>'; }
         $sheet.='</cols><sheetData>';
 
@@ -497,7 +638,7 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
     public function report_xlsx(){
         if(!$this->can('ews_view_reports'))wp_die('Access denied');
         check_admin_referer('ews31_report'); [$s,$e]=$this->period();
-        $type=sanitize_key($_GET['report_type']??'attendance'); if(!in_array($type,['summary','attendance','timesheet','workforce'],true))$type='attendance';
+        $type=$this->report_request_type('attendance');
         $xlsx=$this->report_xlsx_build($type,$s,$e); if(is_wp_error($xlsx))wp_die(esc_html($xlsx->get_error_message()));
         $this->report_export_audit($type,'Excel',$s,$e);
         nocache_headers(); header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.xlsx'); header('Content-Length:'.strlen($xlsx)); echo $xlsx; exit;
@@ -507,8 +648,7 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
         if(!$this->can('ews_view_reports'))wp_die('Access denied');
         check_admin_referer('ews31_report');
         [$s,$e]=$this->period();
-        $type=sanitize_key($_GET['report_type']??'attendance');
-        if(!in_array($type,['summary','attendance','timesheet','workforce'],true))$type='attendance';
+        $type=$this->report_request_type('attendance');
         $csv=$this->report_detailed_csv($s,$e,$type);
         $this->report_export_audit($type,'CSV',$s,$e);
         nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.csv');echo "\xEF\xBB\xBF".$csv;exit;
