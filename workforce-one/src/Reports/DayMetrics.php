@@ -76,4 +76,10 @@ final class DayMetrics
         $minutes = max(0, $minutes);
         return intdiv($minutes, 60) . ':' . str_pad((string) ($minutes % 60), 2, '0', STR_PAD_LEFT);
     }
+
+    /** −40 → "−0:40" (a balance; the minus sign is U+2212). */
+    public static function signedHm(int $minutes): string
+    {
+        return ($minutes < 0 ? '−' : '') . self::hm(abs($minutes));
+    }
 }

@@ -98,6 +98,40 @@ check('the Excel summary shows the same numbers as the screen', k and all(str(c.
 st, page2, _ = adm.req('/app/?ews_view=reports&report_type=attendance')
 check('the default period is this month to date', re.search(r'name="start" value="%s"' % today.strftime('%Y-%m-01'), page2) is not None, re.findall(r'name="start" value="([^"]*)"', page2))
 
+# ---------------------------------------------------------------- Report Center: Attendance Summary
+SUMMARY = '/app/?ews_view=reports&report_type=summary&start=%s&end=%s' % (DAY, HOL)
+
+
+def summary_row(page, name):
+    m = re.search(r'<tr data-employee="%s">(.*?)</tr>' % re.escape(name), page, re.S)
+    return {c: re.sub(r'<[^>]+>', '', v).strip() for c, v in re.findall(r'<td data-col="([a-z_]+)"[^>]*>(.*?)</td>', m.group(1), re.S)} if m else {}
+
+
+st, page, _ = adm.req('/app/?ews_view=reports')
+check('Reports opens on the Attendance Summary', 'data-report="summary"' in page and 'Attendance Summary' in page)
+st, page, _ = adm.req(SUMMARY)
+lina, omar, ali = summary_row(page, 'Lina Late'), summary_row(page, 'Omar Ontime'), summary_row(page, 'Ali Absent')
+check('summary per employee: late days, late minutes, rates', (lina.get('late'), lina.get('late_minutes'), lina.get('attendance_rate'), lina.get('punctuality_rate')) == ('1', '40', '100%', '0%'), lina)
+check('...net, expected and balance hours', (lina.get('net'), lina.get('expected'), lina.get('balance')) == ('6:50', '7:30', '−0:40'), lina)
+check('...an absent employee', (ali.get('absent'), ali.get('attendance_rate'), omar.get('punctuality_rate')) == ('1', '0%', '100%'), (ali, omar))
+kpi = dict(re.findall(r'<div class="ews-rc-kpi" data-kpi="([a-z_]+)">\s*<small>[^<]*</small>\s*<b>([^<]*)</b>', page))
+check('KPIs for the whole report (3 of 4 expected days attended = 75%)', kpi.get('attendance_rate') == '75%' and kpi.get('late_minutes') == '40', kpi)
+check('with no data before the period, the KPIs say so instead of a fake change', 'No data for the previous period' in page and 'vs previous' not in page)
+php("$wpdb->insert($p.'ews_schedule',['employee_id'=>%d,'work_date'=>'%s','status'=>'Office']);" % (ids['ali'], d(-4)))
+st, page, _ = adm.req(SUMMARY)
+check('KPIs compare with the previous period (attendance 0%% before → ▲ 75 pts)', re.search(r'data-kpi="attendance_rate">.*?▲ 75 pts vs previous', page, re.S) is not None, re.findall(r'class="ews-rc-delta[^"]*">([^<]*)', page))
+check('a rate with no days behind it shows "—"', summary_row(page, 'Vera Vacation').get('attendance_rate') == '—' and summary_row(page, 'Ali Absent').get('punctuality_rate') == '—')
+link = re.search(r'<td data-col="absent"[^>]*><a href="([^"]+)"', page.split('data-employee="Ali Absent"')[-1])
+check('every count opens the days behind it', link is not None)
+if link:
+    st, drill, _ = adm.req(link.group(1).replace('&#038;', '&').replace('&amp;', '&').split('127.0.0.1:8080')[-1])
+    names = re.findall(r'<tr><td><strong>([^<]+)</strong><small>', drill)
+    check('...e.g. Ali\'s absent day in the Daily Log', names == ['Ali Absent'] and 'data-report="attendance"' in drill, names)
+check('the table can be sorted', 'data-ews-sortable' in page and 'assets/js/reports.js' in page)
+rows = csv_rows(adm, page)
+check('the summary exports with its own columns', rows and {'Employee', 'Attendance %', 'Late (min)', 'Net Hours', 'Expected Hours', 'Balance'} <= set(rows[0].keys()), list(rows[0].keys()) if rows else rows)
+check('the status filter belongs to the Daily Log only', 'name="status"' not in page)
+
 uid = q("SELECT wp_user_id FROM {p}ews_employees WHERE name='Mona Manager'")[0]['wp_user_id']
 php("$u=new WP_User(%s); $u->add_cap('ews_view_reports');" % uid)
 emp = Session('emp1', 'emp1pass')

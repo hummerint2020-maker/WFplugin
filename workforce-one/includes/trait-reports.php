@@ -3,36 +3,61 @@ if (!defined('ABSPATH')) exit;
 
 trait EWS_Reports_Trait {
 
+    /** Report types of the Report Center: key => [title, what it answers]. */
+    private function report_catalog(){
+        return [
+            'summary'=>['Attendance Summary','One row per employee: attendance, punctuality, lateness and hours.'],
+            'attendance'=>['Daily Log','Every employee-day: plan, Sign In / Out, result, late minutes and hours.'],
+            'workforce'=>['Workforce','Planned distribution per day: Office, WFH, leave and missions.'],
+        ];
+    }
+
+    /** Employee app → Reports: the Report Center shell (shared filters) around the chosen report. */
     private function reports_content(){
         if(!$this->can('ews_view_reports'))return $this->ews_empty_state('Reports unavailable','You do not have permission to view reports.');
         [$s,$e]=$this->period();
-        $type=sanitize_key($_GET['report_type']??'attendance');
-        if(!in_array($type,['attendance','workforce'],true))$type='attendance';
-
-        if($type==='attendance')$body=$this->attendance_report_builder($s,$e);
+        $catalog=$this->report_catalog();
+        $type=sanitize_key($_GET['report_type']??'summary');
+        if(!isset($catalog[$type]))$type='summary';
+        [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
+        [$emps,$team_options]=$this->report_employee_scope($team,0,$employee_status);
+        if($type==='summary')$body=$this->report_summary_builder($s,$e);
+        elseif($type==='attendance')$body=$this->attendance_report_builder($s,$e);
         else $body=$this->workforce_report_builder($s,$e);
 
-        $base=['ews_view'=>'reports','start'=>$s,'end'=>$e];
-        $tabs=[
-            'attendance'=>['Attendance Report','Attendance'],
-            'workforce'=>['Workforce Report','Workforce'],
-        ];
-        ob_start(); ?>
-        <div class="ews-reports-page">
-            <div class="ews-reports-head">
-                <div><h2>Reports</h2><p>Build and export workforce reports</p></div>
-                <div class="ews-reports-head-badge">Manager Report Center</div>
-            </div>
-            <div class="ews-report-tabs" role="tablist" aria-label="Report types">
-                <?php foreach($tabs as $key=>$tab):
-                    $url=add_query_arg(array_merge($base,['report_type'=>$key],[]),$this->app_view_url('reports'));
-                ?>
-                    <a class="ews-report-tab <?php echo $type===$key?'active':''; ?>" href="<?php echo esc_url($url); ?>"><?php echo esc_html($tab[1]); ?> Report</a>
-                <?php endforeach; ?>
-            </div>
-            <?php echo $body; ?>
-        </div>
-        <?php return ob_get_clean();
+        $url=function($args)use($s,$e,$team,$employee_id,$employee_status,$type){
+            return add_query_arg(array_merge(['ews_view'=>'reports','report_type'=>$type,'start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],$args),$this->app_view_url('reports'));
+        };
+        $now=current_time('timestamp');
+        [$tw_s,$tw_e]=$this->report_work_week_range();[$lw_s,$lw_e]=$this->report_work_week_range(null,-1);
+        $quick=['Today'=>[current_time('Y-m-d'),current_time('Y-m-d')],'Yesterday'=>[date('Y-m-d',strtotime('-1 day',$now)),date('Y-m-d',strtotime('-1 day',$now))],
+            'This Week'=>[$tw_s,$tw_e],'Last Week'=>[$lw_s,$lw_e],
+            'This Month'=>[current_time('Y-m-01'),current_time('Y-m-d')],'Last Month'=>[date('Y-m-01',strtotime('first day of last month',$now)),date('Y-m-t',strtotime('last day of last month',$now))]];
+        $tabs=[];foreach($catalog as $key=>$c)$tabs[$key]=['title'=>$c[0],'hint'=>$c[1],'url'=>$url(['report_type'=>$key,'report_page'=>1])];
+        $quick_urls=[];foreach($quick as $label=>$r)$quick_urls[$label]=['url'=>$url(['start'=>$r[0],'end'=>$r[1],'report_page'=>1]),'active'=>$s===$r[0]&&$e===$r[1]];
+        wp_enqueue_script('workforce-one-reports');
+        return $this->render_template('app/reports',[
+            'type'=>$type,'tabs'=>$tabs,'start'=>$s,'end'=>$e,'team'=>$team,'employee_id'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status,
+            'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>\WorkforceOne\Reports\Summary::BUCKETS,'body'=>$body,
+            'period_label'=>date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e)),
+        ]);
+    }
+
+    /** Attendance Summary: one row per employee, KPIs compared with the previous period. */
+    private function report_summary_builder($s,$e){
+        [$team,$employee_id,,$employee_status]=$this->report_request_filters();
+        [$rows,,,$emps]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+        $people=\WorkforceOne\Reports\EmployeeSummary::byEmployee($rows);
+        $totals=\WorkforceOne\Reports\EmployeeSummary::totals($rows);
+        [$ps,$pe]=\WorkforceOne\Reports\EmployeeSummary::previousPeriod($s,$e);
+        $previous=\WorkforceOne\Reports\EmployeeSummary::totals($this->report_days($emps,$ps,$pe));
+        $base=['ews_view'=>'reports','report_type'=>'attendance','start'=>$s,'end'=>$e,'team'=>$team,'employee_status'=>$employee_status];
+        $drill=function($employee,$status)use($base){return add_query_arg(array_merge($base,['employee'=>$employee,'status'=>$status,'report_page'=>1]),$this->app_view_url('reports'));};
+        $export=function($action)use($s,$e,$team,$employee_id,$employee_status){return wp_nonce_url(add_query_arg(['action'=>$action,'report_type'=>'summary','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report');};
+        return $this->render_template('app/report-summary',[
+            'people'=>$people,'totals'=>$totals,'previous'=>$previous,'previous_label'=>date_i18n('d M',strtotime($ps)).' – '.date_i18n('d M Y',strtotime($pe)),
+            'drill'=>$drill,'csv_url'=>$export('ews31_report_download'),'xlsx_url'=>$export('ews31_report_xlsx'),
+        ]);
     }
 
     private function report_team_context(){
@@ -171,39 +196,11 @@ trait EWS_Reports_Trait {
     }
 
     private function attendance_report_builder($s,$e){
-        $team=sanitize_text_field(wp_unslash($_GET['team']??'all'));$employee_id=absint($_GET['employee']??0);$status=sanitize_text_field(wp_unslash($_GET['status']??'all'));$employee_status=sanitize_key($_GET['employee_status']??'active');
-        if(!in_array($employee_status,['active','inactive','all'],true))$employee_status='active';
-        $valid_status=array_merge(['all'],\WorkforceOne\Reports\Summary::BUCKETS);if(!in_array($status,$valid_status,true))$status='all';
-        [$rows,$summary,$team_options,$emps]=$this->report_attendance_data($s,$e,$team,$employee_id,$status,$employee_status);
+        [$team,$employee_id,$status,$employee_status]=$this->report_request_filters();
+        [$rows,$summary,,$emps]=$this->report_attendance_data($s,$e,$team,$employee_id,$status,$employee_status);
         $page=max(1,absint($_GET['report_page']??1));$per=25;$total=count($rows);$pages=max(1,(int)ceil($total/$per));$page=min($page,$pages);$view=array_slice($rows,($page-1)*$per,$per);
         $base=['ews_view'=>'reports','report_type'=>'attendance','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status];
-        [$this_week_start,$this_week_end]=$this->report_work_week_range();
-        [$last_week_start,$last_week_end]=$this->report_work_week_range(null,-1);
-        $quick=[
-            'Today'=>[current_time('Y-m-d'),current_time('Y-m-d')],
-            'Yesterday'=>[date('Y-m-d',strtotime('-1 day',current_time('timestamp'))),date('Y-m-d',strtotime('-1 day',current_time('timestamp')))],
-            'This Week'=>[$this_week_start,$this_week_end],
-            'Last Week'=>[$last_week_start,$last_week_end],
-            'This Month'=>[date('Y-m-01',current_time('timestamp')),date('Y-m-t',current_time('timestamp'))],
-            'Last Month'=>[date('Y-m-01',strtotime('first day of last month',current_time('timestamp'))),date('Y-m-t',strtotime('last day of last month',current_time('timestamp')))],
-        ];
         ob_start(); ?>
-        <form class="ews-report-filter-card" method="get">
-            <input type="hidden" name="ews_view" value="reports"><input type="hidden" name="report_type" value="attendance">
-            <div class="ews-report-filter-head"><div><h3>Report Period</h3><p>Select a period and filters, then generate the report.</p></div></div>
-            <div class="ews-report-period-grid">
-                <label>From Date<input type="date" name="start" value="<?php echo esc_attr($s); ?>"></label>
-                <label>To Date<input type="date" name="end" value="<?php echo esc_attr($e); ?>"></label>
-                <div class="ews-report-quick"><span>Quick Range</span><div><?php foreach($quick as $label=>$range): $qstart=$range[0];$qend=$range[1]; ?><a class="<?php echo ($s===$qstart&&$e===$qend)?'active':''; ?>" href="<?php echo esc_url(add_query_arg(array_merge($base,['start'=>$qstart,'end'=>$qend,'report_page'=>1]),$this->app_view_url('reports'))); ?>"><?php echo esc_html($label); ?></a><?php endforeach; ?></div></div>
-            </div>
-            <div class="ews-report-filter-grid">
-                <label>Team<select name="team"><option value="all">All Teams</option><?php foreach($team_options as $v): ?><option value="<?php echo esc_attr($v); ?>" <?php selected($team,$v); ?>><?php echo esc_html($v); ?></option><?php endforeach; ?></select></label>
-                <label>Employee<select name="employee"><option value="0">All Employees</option><?php foreach($emps as $emp): ?><option value="<?php echo (int)$emp->id; ?>" <?php selected($employee_id,(int)$emp->id); ?>><?php echo esc_html($emp->name); ?><?php echo !$emp->active?' (Inactive)':''; ?></option><?php endforeach; ?></select></label>
-                <label>Employee Status<select name="employee_status"><option value="active" <?php selected($employee_status,'active'); ?>>Active Only</option><option value="inactive" <?php selected($employee_status,'inactive'); ?>>Inactive Only</option><option value="all" <?php selected($employee_status,'all'); ?>>All Employees</option></select></label>
-                <label>Status<select name="status"><?php foreach($valid_status as $v): ?><option value="<?php echo esc_attr($v); ?>" <?php selected($status,$v); ?>><?php echo esc_html($v==='all'?'All Statuses':$v); ?></option><?php endforeach; ?></select></label>
-                <div class="ews-report-generate"><button class="ews-btn" type="submit">▥ &nbsp;Generate Report</button></div>
-            </div>
-        </form>
 
         <div class="ews-report-summary-card">
             <div class="ews-report-section-head"><div><h3>Report Summary</h3><p><?php echo esc_html(date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e))); ?></p></div><span><?php echo esc_html(count($emps).' Employees'); ?> <i>•</i> <?php echo esc_html(count($this->working_days()).' configured working days'); ?></span></div>
@@ -231,34 +228,6 @@ trait EWS_Reports_Trait {
         foreach($rows as $r){$p=$r['planned'];$key=in_array($p,$labels,true)?$p:($p==='Vacation'?'Vacation':$p);if($r['result']==='Absent')$key='Absent';if($p==='Not Set')$key='Not Set';if(isset($matrix[$r['date']][$key]))$matrix[$r['date']][$key]++;}
         $team=sanitize_text_field(wp_unslash($_GET['team']??'all'));$employee_id=absint($_GET['employee']??0);
         ob_start(); ?>
-        <form class="ews-report-filter-card" method="get">
-            <input type="hidden" name="ews_view" value="reports"><input type="hidden" name="report_type" value="workforce">
-            <div class="ews-report-filter-head"><div><h3>Report Period</h3><p>Select the period and workforce scope.</p></div></div>
-            <div class="ews-report-period-grid">
-                <label>From Date<input type="date" name="start" value="<?php echo esc_attr($s); ?>"></label>
-                <label>To Date<input type="date" name="end" value="<?php echo esc_attr($e); ?>"></label>
-                <div class="ews-report-quick"><span>Quick Range</span><div><?php
-                [$this_week_start,$this_week_end]=$this->report_work_week_range();
-                [$last_week_start,$last_week_end]=$this->report_work_week_range(null,-1);
-                $wquick=[
-                    'Today'=>[current_time('Y-m-d'),current_time('Y-m-d')],
-                    'Yesterday'=>[date('Y-m-d',strtotime('-1 day',current_time('timestamp'))),date('Y-m-d',strtotime('-1 day',current_time('timestamp')))],
-                    'This Week'=>[$this_week_start,$this_week_end],
-                    'Last Week'=>[$last_week_start,$last_week_end],
-                    'This Month'=>[date('Y-m-01',current_time('timestamp')),date('Y-m-t',current_time('timestamp'))],
-                    'Last Month'=>[date('Y-m-01',strtotime('first day of last month',current_time('timestamp'))),date('Y-m-t',strtotime('last day of last month',current_time('timestamp')))],
-                ];
-                foreach($wquick as $label=>$range):
-                    $qurl=add_query_arg(['ews_view'=>'reports','report_type'=>'workforce','start'=>$range[0],'end'=>$range[1],'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],$this->app_view_url('reports'));
-                ?><a class="<?php echo ($s===$range[0]&&$e===$range[1])?'active':''; ?>" href="<?php echo esc_url($qurl); ?>"><?php echo esc_html($label); ?></a><?php endforeach; ?></div></div>
-            </div>
-            <div class="ews-report-filter-grid">
-                <label>Team<select name="team"><option value="all">All Teams</option><?php foreach($team_options as $v): ?><option value="<?php echo esc_attr($v); ?>" <?php selected($team,$v); ?>><?php echo esc_html($v); ?></option><?php endforeach; ?></select></label>
-                <label>Employee<select name="employee"><option value="0">All Employees</option><?php foreach($emps as $emp): ?><option value="<?php echo (int)$emp->id; ?>" <?php selected($employee_id,(int)$emp->id); ?>><?php echo esc_html($emp->name); ?><?php echo !$emp->active?' (Inactive)':''; ?></option><?php endforeach; ?></select></label>
-                <label>Employee Status<select name="employee_status"><option value="active" <?php selected($employee_status,'active'); ?>>Active Only</option><option value="inactive" <?php selected($employee_status,'inactive'); ?>>Inactive Only</option><option value="all" <?php selected($employee_status,'all'); ?>>All Employees</option></select></label>
-                <div></div><div class="ews-report-generate"><button class="ews-btn" type="submit">▥ &nbsp;Generate Report</button></div>
-            </div>
-        </form>
         <div class="ews-report-summary-card"><div class="ews-report-section-head"><div><h3>Workforce Summary</h3><p>Planned workforce assignments across the selected period · <?php echo esc_html(date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e))); ?></p></div><span><?php echo esc_html(count($emps).' Employees'); ?></span></div><div class="ews-report-summary-grid four">
             <?php foreach([['Office','▦','blue'],['WFH','⌂','purple'],['Leave','▣','amber'],['Business Trip','↗','cyan']] as $c): $count=0;foreach($rows as $r){if($r['planned']===$c[0]||($c[0]==='Leave'&&$r['planned']==='Vacation'))$count++;} ?><div class="ews-report-summary-item <?php echo esc_attr($c[2]); ?>"><span><?php echo esc_html($c[1]); ?></span><div><b><?php echo (int)$count; ?></b><small><?php echo esc_html($c[0]); ?></small></div></div><?php endforeach; ?></div></div>
         <div class="ews-report-results-card"><div class="ews-report-section-head"><div><h3>Daily Workforce Distribution</h3><p>Counts are based on planned schedule status, not inferred from sign-in location.</p></div><a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url(wp_nonce_url(add_query_arg(['action'=>'ews31_report_download','report_type'=>'workforce','start'=>$s,'end'=>$e,'team'=>$team,'employee'=>$employee_id,'employee_status'=>$employee_status],admin_url('admin-post.php')),'ews31_report')); ?>" data-ews-csv-export="1">⇩ &nbsp;Export CSV</a>
@@ -402,8 +371,17 @@ trait EWS_Reports_Trait {
             $out=[];foreach($by as $d=>$c)$out[]=array_merge([$d],array_values($c));
             return ['headers'=>['Date','Office','WFH','Leave','Business Trip','Absent','Not Set'],'rows'=>$out,'kpis'=>$kpis];
         }
-        [$rows,$summary]=$this->report_attendance_data($s,$e,$team,$employee_id,$status,$employee_status);
         $hm=function($m){return \WorkforceOne\Reports\DayMetrics::hm((int)$m);};
+        if($type==='summary'){
+            [$rows]=$this->report_attendance_data($s,$e,$team,$employee_id,'all',$employee_status);
+            $out=[];
+            foreach(\WorkforceOne\Reports\EmployeeSummary::byEmployee($rows) as $p)$out[]=[$p['employee'],$p['domain'],implode(' · ',$p['teams']),$p['expected_days'],$p['present'],$p['late'],$p['absent'],$p['leave'],$p['holiday'],$p['trip'],
+                $p['attendance_rate'],$p['punctuality_rate'],$p['late_minutes'],$p['early_minutes'],$p['missing_sign_out'],$p['avg_first_in'],$hm($p['net_minutes']),$hm($p['expected_minutes']),\WorkforceOne\Reports\DayMetrics::signedHm($p['balance_minutes'])];
+            $t=\WorkforceOne\Reports\EmployeeSummary::totals($rows);
+            return ['headers'=>['Employee','Employee ID','Team','Expected Days','Present','Late','Absent','Leave','Holiday','Business Trip','Attendance %','Punctuality %','Late (min)','Early Leave (min)','Missing Sign-out','Avg First Sign In','Net Hours','Expected Hours','Balance'],
+                'rows'=>$out,'kpis'=>['Attendance %'=>$t['attendance_rate'],'Punctuality %'=>$t['punctuality_rate'],'Late (min)'=>$t['late_minutes'],'Absent'=>$t['absent'],'Missing Sign-out'=>$t['missing_sign_out'],'Present'=>$t['present']]];
+        }
+        [$rows,$summary]=$this->report_attendance_data($s,$e,$team,$employee_id,$status,$employee_status);
         $out=[];
         foreach($rows as $r)$out[]=[$r['employee'],$r['domain'],$r['teams']?implode(' · ',$r['teams']):'',$r['date'],$r['planned'],$r['sign_in'],$r['sign_out'],$r['result'],implode('; ',$r['flags']),
             $r['late_minutes'],$r['early_minutes'],$r['break_minutes'],$hm($r['net_minutes']),$r['expected']?$hm($r['expected_minutes']):''];
@@ -433,7 +411,7 @@ trait EWS_Reports_Trait {
         if(!class_exists('ZipArchive')) return new WP_Error('xlsx_zip','The PHP ZipArchive extension is required for Excel export.');
 
         $table=$this->report_export_table($start,$end,$type);
-        $title=$type==='workforce'?'Workforce Report':'Attendance Report';
+        $title=$type==='workforce'?'Workforce Report':($type==='summary'?'Attendance Summary':'Attendance Report');
         $generated=current_time('Y-m-d H:i');
         $headers=$table['headers'];
         $data=$table['rows'];
@@ -454,7 +432,7 @@ trait EWS_Reports_Trait {
         $sheet.='<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>';
         $sheet.='<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="8" topLeftCell="A9" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
         $sheet.='<sheetFormatPr defaultRowHeight="20"/><cols>';
-        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:[24,16,18,12,14,10,10,14,18,10,12,10,11,12];
+        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:($type==='summary'?[24,16,18,10,9,9,9,9,9,10,11,11,10,11,11,11,11,11,10]:[24,16,18,12,14,10,10,14,18,10,12,10,11,12]);
         for($c=1;$c<=$maxCols;$c++){ $w=$widths[$c-1]??14; $sheet.='<col min="'.$c.'" max="'.$c.'" width="'.$w.'" customWidth="1"/>'; }
         $sheet.='</cols><sheetData>';
 
@@ -543,7 +521,7 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
         if($zip->open($tmp,ZipArchive::CREATE|ZipArchive::OVERWRITE)!==true)return new WP_Error('xlsx_open','Could not create Excel workbook.');
         $zip->addFromString('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>');
         $zip->addFromString('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
-        $sheetName=$type==='workforce'?'Workforce Report':'Attendance Report';
+        $sheetName=$type==='workforce'?'Workforce Report':($type==='summary'?'Attendance Summary':'Attendance Report');
         $zip->addFromString('xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets><sheet name="'.$sheetName.'" sheetId="1" r:id="rId1"/></sheets></workbook>');
         $zip->addFromString('xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
         $zip->addFromString('xl/worksheets/sheet1.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'.$sheet);
@@ -553,7 +531,7 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
     public function report_xlsx(){
         if(!$this->can('ews_view_reports'))wp_die('Access denied');
         check_admin_referer('ews31_report'); [$s,$e]=$this->period();
-        $type=sanitize_key($_GET['report_type']??'attendance'); if(!in_array($type,['attendance','workforce'],true))$type='attendance';
+        $type=sanitize_key($_GET['report_type']??'attendance'); if(!in_array($type,['summary','attendance','workforce'],true))$type='attendance';
         $xlsx=$this->report_xlsx_build($type,$s,$e); if(is_wp_error($xlsx))wp_die(esc_html($xlsx->get_error_message()));
         nocache_headers(); header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.xlsx'); header('Content-Length:'.strlen($xlsx)); echo $xlsx; exit;
     }
@@ -563,7 +541,7 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
         check_admin_referer('ews31_report');
         [$s,$e]=$this->period();
         $type=sanitize_key($_GET['report_type']??'attendance');
-        if(!in_array($type,['attendance','workforce'],true))$type='attendance';
+        if(!in_array($type,['summary','attendance','workforce'],true))$type='attendance';
         $csv=$this->report_detailed_csv($s,$e,$type);
         nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.csv');echo "\xEF\xBB\xBF".$csv;exit;
     }

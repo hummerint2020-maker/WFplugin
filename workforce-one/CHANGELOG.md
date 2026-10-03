@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.25
+Reports, phase 1 / round 2: the Report Center and the Attendance Summary.
+
+### Added (employee app → Reports)
+- **Report Center.** One page with the reports as tabs (Attendance Summary, Daily Log, Workforce)
+  and one shared filter bar: period with quick ranges, team, employee and employee status (the
+  result filter appears on the Daily Log only). Reports opens on the Attendance Summary.
+- **Attendance Summary.** One row per employee: expected days, present / late / absent / leave,
+  attendance and punctuality rates, late and early-leave minutes, missing Sign-outs, average first
+  Sign In, net and expected hours and the balance between them. Columns sort by clicking their title.
+  Every count opens the Daily Log days behind it. A rate with no days behind it shows "—", not 0%.
+- **KPIs compared with the previous period** of the same length (e.g. "▲ 3 pts vs previous");
+  when that period has no data the card says so instead of showing a made-up change.
+- CSV and Excel export of the summary, with the same columns and cards.
+
+### Internal
+- `src/Reports/EmployeeSummary.php` (per-employee and total figures, previous period) is unit
+  tested; the shell and the summary are `templates/app/reports.php` and
+  `templates/app/report-summary.php`; sorting is `assets/js/reports.js`. The Daily Log and
+  Workforce reports no longer carry their own copies of the filter form.
+
 ## 3.31.24
 Reports, phase 1 / round 1: one calculation engine for report days, and the numbers it fixes.
 

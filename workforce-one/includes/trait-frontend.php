@@ -190,6 +190,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
             wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
             wp_register_script('workforce-one-people', $root.'assets/js/people.js', [], $ver, true);
+            wp_register_script('workforce-one-reports', $root.'assets/js/reports.js', [], $ver, true);
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;

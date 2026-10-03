@@ -65,4 +65,9 @@ final class DayMetricsTest extends TestCase
         $m = M::compute(self::day(['planned' => 'Training Course', 'rule' => 'business_trip', 'requires_sign_in' => false]));
         $this->assertSame(['Training Course', false], [$m['result'], $m['expected']]);
     }
+
+    public function testSignedHours(): void
+    {
+        $this->assertSame(['−0:40', '1:05', '0:00'], [M::signedHm(-40), M::signedHm(65), M::signedHm(0)]);
+    }
 }
