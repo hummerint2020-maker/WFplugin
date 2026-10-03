@@ -206,6 +206,8 @@ trait EWS_Notifications_Trait {
         $entity=sanitize_key($notification->entity??'');
         $id=absint($notification->entity_id??0);
         switch($entity){
+            case 'poll':
+                return $this->notification_app_view_url('polls');
             case 'task':
                 $url=$this->notification_app_view_url('tasks');
                 return $id?add_query_arg('edit_task',$id,$url):$url;

@@ -31,6 +31,7 @@ trait EWS_App_Layout_Trait {
             case 'employees': return $this->can('ews_manage_employees');
             case 'reports': case 'attendance-insights': return $this->can('ews_view_reports');
             case 'people': case 'employee': return $this->can('ews_view_people') && !empty($profiles['enabled']);
+            case 'polls': return $this->polls_available();
         }
         return false;
     }
@@ -52,9 +53,10 @@ trait EWS_App_Layout_Trait {
             case 'people': $content=$this->people_content(); break;
             case 'employee': $content=$this->employee_profile_content(absint($_GET['employee_id']??0)); break;
             case 'presence': $content=$this->presence_content(); break;
+            case 'polls': $content=$this->polls_content(); break;
             default: $content=$this->dashboard_content();
         }
-        $titles=['dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one')];
+        $titles=['dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>'Polls'];
         // A colleague's profile belongs to People in the menu.
         return $this->layout($titles[$view]??ucwords(str_replace('-',' ',$view)),$content,$view==='employee'?'people':$view);
     }

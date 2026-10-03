@@ -32,7 +32,12 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-employee-profile', $this->plugin_url('assets/css/admin-employee-profile.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-employee-profile', 'rtl', 'replace');
         }
-        if(substr((string)$hook_suffix,-strlen('ews31-departments'))==='ews31-departments'||substr((string)$hook_suffix,-strlen('ews31-teams'))==='ews31-teams'||substr((string)$hook_suffix,-strlen('ews31-auto-attendance'))==='ews31-auto-attendance'){
+        if(substr((string)$hook_suffix,-strlen('ews31-polls'))==='ews31-polls'){
+            wp_enqueue_style('workforce-one-admin-polls', $this->plugin_url('assets/css/admin-polls.css'), [], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-polls', 'rtl', 'replace');
+            wp_enqueue_script('workforce-one-admin-polls', $this->plugin_url('assets/js/admin-polls.js'), [], EWS_VERSION, true);
+        }
+        if(substr((string)$hook_suffix,-strlen('ews31-polls'))==='ews31-polls'||substr((string)$hook_suffix,-strlen('ews31-departments'))==='ews31-departments'||substr((string)$hook_suffix,-strlen('ews31-teams'))==='ews31-teams'||substr((string)$hook_suffix,-strlen('ews31-auto-attendance'))==='ews31-auto-attendance'){
             wp_enqueue_script('workforce-one-admin-organization', $this->plugin_url('assets/js/admin-organization.js'), [], EWS_VERSION, true);
         }
         if(substr((string)$hook_suffix,-strlen('ews31-multi-locations'))==='ews31-multi-locations'){

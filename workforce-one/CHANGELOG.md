@@ -1,5 +1,41 @@
 # Changelog
 
+## 3.31.37
+Employee Polls: reworked and moved to the new structure (`includes/trait-polls.php`).
+
+### Added
+- **Audience:** a poll is for everyone or for one department; other departments neither see it nor
+  can vote in it.
+- **When results are shown:** after the employee votes (as before), when the poll closes, or to admins
+  only. Employees who voted see "Results will be shown when the poll closes" in the meantime.
+- **Changing a vote** until the poll closes (optional per poll); the employee's own choice is marked
+  in the results.
+- **Anonymous or named:** anonymous (the default, as before) exports only the counts; a named poll
+  also exports who voted for what.
+- **Notify employees** when a poll opens (in-app and push, once), to its audience only.
+- **Polls page** in the employee app (menu item "Polls", shown when there is a poll for the
+  employee): open polls, unanswered first, then past polls with their results. The Dashboard shows
+  the newest poll the employee has not answered, with "See all polls" (before, only the newest poll
+  was ever shown, so an older open poll could not be answered).
+- **Admin list:** each poll's state (Open, Scheduled, Closed, Hidden, Archived), audience,
+  participation ("12 of 40 voted (30%)"), results and **CSV export**. "Closes in 3 days" on open
+  polls. Percentages now add up to 100.
+
+### Fixed
+- Creating a poll was recorded as an update in the Audit Log.
+- A refused vote (poll closed or switched off, not for the employee's department, a second vote)
+  showed a bare error page; the employee now goes back to the poll with the reason.
+- Archiving a poll now ends it properly: it is shown to its audience under past polls with its
+  results, and cannot be voted in or reactivated by mistake.
+- The admin page showed any text put in its link as an error; it now shows only its own messages.
+
+### Internal
+- `src/Polls/PollRules.php` (state, audience, voting, results visibility, checks, percentages,
+  participation; unit tested) and `src/Polls/Hooks.php`. HTML in `templates/admin/polls.php`,
+  `templates/app/polls.php` and `templates/app/poll-card.php`; `assets/css/admin-polls.css` and
+  `assets/js/admin-polls.js` (were inline). Schema 3.31.13 adds the poll settings columns.
+- `tests/e2e_polls.py` (33 checks).
+
 ## 3.31.36
 Auto Attendance (`includes/trait-auto-attendance.php`) moved to the new structure.
 

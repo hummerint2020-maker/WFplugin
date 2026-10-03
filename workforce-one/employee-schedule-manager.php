@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.36
+ * Version: 3.31.37
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.36');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.37');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -128,11 +128,6 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_achievements_settings_save',[$this,'achievements_settings_save']);
             add_action('admin_post_ews_achievement_manual_grant',[$this,'achievement_manual_grant']);
             add_action('admin_post_ews_achievement_award_delete',[$this,'achievement_award_delete']);
-            add_action('admin_post_ews_poll_save',[$this,'poll_save']);
-            add_action('admin_post_ews_poll_toggle',[$this,'poll_toggle']);
-            add_action('admin_post_ews_poll_homepage',[$this,'poll_homepage']);
-            add_action('admin_post_ews_poll_archive',[$this,'poll_archive']);
-            add_action('admin_post_ews_poll_vote',[$this,'poll_vote']);
             add_action('ews_smart_nudges_tick',[$this,'smart_nudges_cron']);
             add_action('admin_post_ews31_leave_save',[$this,'leave_save']);
             \WorkforceOne\Attendance\Hooks::register($this);
@@ -158,6 +153,7 @@ class EWS_Manager_V31_1 {
             \WorkforceOne\Presence\Hooks::register($this);
             \WorkforceOne\Organization\Hooks::register($this);
             \WorkforceOne\Attendance\AutoHooks::register($this);
+            \WorkforceOne\Polls\Hooks::register($this);
             \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
