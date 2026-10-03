@@ -17,7 +17,7 @@ wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 MONTH = php("echo date('Y-m',strtotime('first day of last month',current_time('timestamp')));").strip()
 seed = json.loads(php(r"""
     $month='%s';
-    foreach(['ews_pay_rates','ews_schedule','ews_time_logs','ews_overtime_requests','ews_early_leave_requests','ews_leave_requests','ews_leave_schedule_snapshots','ews_company_calendar','ews_break_sessions','ews_audit_log'] as $t) $wpdb->query("DELETE FROM {$p}$t");
+    foreach(['ews_pay_rates','ews_pay_adjustments','ews_payroll_runs','ews_payslips','ews_schedule','ews_time_logs','ews_overtime_requests','ews_early_leave_requests','ews_leave_requests','ews_leave_schedule_snapshots','ews_company_calendar','ews_break_sessions','ews_audit_log'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("DELETE FROM {$p}ews_leave_types WHERE name IN ('Unpaid Leave','Sick Leave')");
     foreach(['ews_payroll_day_divisor','ews_payroll_day_base','ews_payroll_absence_days','ews_payroll_overtime_rate','ews_payroll_overtime_rate_off','ews_payroll_max_deduction_days','ews_payroll_currency','ews_shifts'] as $o) delete_option($o);
     update_option('ews_working_days',[0,1,2,3,4],false);

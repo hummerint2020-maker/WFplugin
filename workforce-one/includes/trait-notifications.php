@@ -29,6 +29,7 @@ trait EWS_Notifications_Trait {
             'smart_nudge'=>['label'=>'Smart Nudges','description'=>'Actionable employee reminders and attention prompts.','push_default'=>1],
             'achievement'=>['label'=>'Achievements','description'=>'Employee achievement and recognition notifications.','push_default'=>1],
             'recognition'=>['label'=>'Recognition','description'=>'Kudos and employee recognition notifications.','push_default'=>1],
+            'payroll'=>['label'=>'Payroll','description'=>'A payslip is ready in My Pay.','push_default'=>1],
         ];
     }
 

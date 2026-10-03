@@ -1,0 +1,36 @@
+/* Employee app → My Pay (templates/app/pay.php). RTL: app-pay-rtl.css (npx rtlcss@4). */
+.ews-pay{max-width:760px}
+.ews-pay-month{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px}
+.ews-pay-month b{font-size:16px;color:#101828}
+.ews-pay-arrow{width:34px;height:34px;border:1px solid #e4e7ec;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#3158c8;background:#fff;font-weight:800;text-decoration:none}
+.ews-pay-arrow.off{opacity:.35}
+.ews-pay-hero{border:1px solid #e0e7ff;border-radius:16px;padding:16px;background:linear-gradient(135deg,#eef4ff 0%,#f7f5ff 60%,#eef2ff 100%);margin-bottom:12px}
+.ews-pay-hero .k{font-size:12px;color:#667085}
+.ews-pay-hero .v{font-size:30px;font-weight:800;color:#101828;margin:4px 0}
+.ews-pay-hero .v span{font-size:15px;color:#475467;font-weight:700;margin-right:4px}
+.ews-pay-pill{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.ews-pay-pill.final{background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+.ews-pay-pill.est{background:#fff7ed;color:#b54708;border:1px solid #fed7aa}
+.ews-pay-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.ews-pay-stats>div{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:9px 6px;text-align:center;font-size:10px;color:#667085}
+.ews-pay-stats b{display:block;font-size:15px;color:#101828;margin-bottom:2px}
+.ews-pay-card{background:#fff;border:1px solid #e4e7ec;border-radius:14px;overflow:hidden;margin-bottom:12px}
+.ews-pay-card h3{margin:0;padding:12px 14px;font-size:15px;border-bottom:1px solid #eef0f3;color:#101828}
+.ews-pay-ln{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #f2f4f7;font-size:13px;color:#344054}
+.ews-pay-card>.ews-pay-ln:last-child,.ews-pay-card details:last-child .ews-pay-ln{border-bottom:0}
+.ews-pay-ln-sub{font-size:11px;color:#98a2b3;margin-top:2px}
+.ews-pay-amt{font-weight:700;white-space:nowrap}
+.ews-pay-amt.plus{color:#067647}
+.ews-pay-amt.minus{color:#b42318}
+.ews-pay-ln.total{background:#f8f9fc;font-size:15px;color:#101828;border-bottom:0}
+.ews-pay-ln.total .ews-pay-amt{font-size:16px}
+.ews-pay details>summary{list-style:none;cursor:pointer}
+.ews-pay details>summary::-webkit-details-marker{display:none}
+.ews-pay details[open]>summary .ews-pay-ln{background:#fafbff}
+.ews-pay-chev{color:#98a2b3;margin-left:4px;font-size:11px}
+.ews-pay-days{background:#fafbff;padding:0 14px 10px;border-bottom:1px solid #f2f4f7}
+.ews-pay-days div{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#475467;padding:6px 0;border-top:1px dashed #e4e7ec}
+.ews-pay-warn{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}
+.ews-pay-note{border:1px solid #e4e7ec;background:#fff;color:#475467;border-radius:12px;padding:10px 12px;font-size:12px;margin-bottom:12px}
+.ews-pay-empty{padding:18px 14px;color:#667085;font-size:13px}
+.ews-pay-foot{font-size:11px;color:#667085;line-height:1.5;margin:4px 2px 12px}

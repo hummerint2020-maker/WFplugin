@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.42
+Payroll, phase 2.
+
+### Added
+- **Bonuses and deductions** for an employee's month, each with the reason the employee sees.
+  The limit on deductions covers attendance only, not these. The Audit Log records them without
+  amounts.
+- **Closing a month:** every payslip is kept as it is at that moment and no longer follows
+  attendance, adjustments or rule changes. A month can be closed only after it ends and once no day
+  needs review (a missing Sign Out must be fixed first). A closed month can be reopened to correct a
+  mistake (logged). Export uses the closed figures.
+- **My Pay** in the employee app (English, the employee's own pay only), switched on by an
+  administrator under Payroll → Rules (off by default; listed on Settings Overview). It shows closed
+  months as final payslips and the current month as an estimate ("Expected net"), with the days
+  behind each figure. When a month is closed with My Pay on, each employee is notified (new
+  notification category "Payroll").
+
+### Notes
+- Database 3.31.15: new tables `ews_pay_adjustments`, `ews_payroll_runs`, `ews_payslips`.
+- A PDF payslip is not included.
+
+### Internal
+- `tests/e2e_payroll_close.py` (33 checks); `PayCalculator::month()` takes the adjustments.
+
 ## 3.31.41
 ### Added
 - **wp-admin → Payroll** (phase 1; WordPress administrators, or a role given the new "Manage

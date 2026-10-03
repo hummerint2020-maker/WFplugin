@@ -39,7 +39,7 @@ function ews_uninstall_site() {
         'ews_company_calendar', 'ews_departments', 'ews_early_leave_requests', 'ews_employee_achievements',
         'ews_employee_locations_v321', 'ews_employee_relationships', 'ews_employees', 'ews_face_profiles',
         'ews_kiosks', 'ews_kudos', 'ews_leave_balances', 'ews_leave_requests', 'ews_leave_schedule_snapshots',
-        'ews_leave_types', 'ews_locations', 'ews_notifications', 'ews_overtime_requests', 'ews_pay_rates', 'ews_poll_options',
+        'ews_leave_types', 'ews_locations', 'ews_notifications', 'ews_overtime_requests', 'ews_pay_adjustments', 'ews_pay_rates', 'ews_payroll_runs', 'ews_payslips', 'ews_poll_options',
         'ews_poll_votes', 'ews_polls', 'ews_presence_verifications', 'ews_push_subscriptions', 'ews_schedule',
         'ews_schedule_swaps', 'ews_shift_swaps', 'ews_tasks', 'ews_team_members', 'ews_teams', 'ews_time_logs',
         'ews_vacation_requests',

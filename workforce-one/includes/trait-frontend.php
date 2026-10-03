@@ -193,6 +193,8 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-reports', $root.'assets/js/reports.js', [], $ver, true);
             wp_register_script('workforce-one-presence-scan', $root.'assets/js/presence-scan.js', ['workforce-one-jsqr'], $ver, true);
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
+            wp_register_style('workforce-one-pay', $root.'assets/css/app-pay.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-pay', 'rtl', 'replace');
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;
             wp_enqueue_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);

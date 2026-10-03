@@ -8,7 +8,7 @@ final class PayRules
 {
     public const DEFAULTS = [
         'currency' => 'EGP', 'day_divisor' => 30, 'day_base' => 'gross', 'absence_days' => 1.0,
-        'overtime_rate' => 1.35, 'overtime_rate_off' => 2.0, 'max_deduction_days' => 0.0,
+        'overtime_rate' => 1.35, 'overtime_rate_off' => 2.0, 'max_deduction_days' => 0.0, 'employee_view' => false,
     ];
 
     /** Error code → message shown on the Payroll page (codes travel in the redirect, never text). */
@@ -26,6 +26,16 @@ final class PayRules
         'allowance_amount' => 'Each allowance must be zero or more.',
         'not_found' => 'That salary entry no longer exists.',
         'employee' => 'Choose an employee.',
+        'adjust_amount' => 'The amount must be more than zero.',
+        'adjust_reason' => 'Write the reason; the employee sees it on their payslip.',
+        'adjust_kind' => 'Choose a bonus or a deduction.',
+        'closed' => 'This month is closed. Reopen it to change it.',
+        'review' => 'Some days still need review (a missing Sign Out). Fix them in the Sign In / Out report, then close the month.',
+        'not_ended' => 'A month can be closed only after it ends.',
+        'already_closed' => 'This month is already closed.',
+        'not_closed' => 'This month is not closed.',
+        'nothing' => 'No employee has a salary for this month.',
+        'month' => 'Choose a month.',
     ];
 
     public static function message(string $code): string
@@ -82,7 +92,22 @@ final class PayRules
         $cap = $num('max_deduction_days');
         if ($cap === null || $cap < 0 || $cap > 31) return [null, 'cap'];
         return [['currency' => $currency, 'day_divisor' => (int) $divisor, 'day_base' => $base, 'absence_days' => $absence,
-            'overtime_rate' => $rate, 'overtime_rate_off' => $off, 'max_deduction_days' => $cap], null];
+            'overtime_rate' => $rate, 'overtime_rate_off' => $off, 'max_deduction_days' => $cap, 'employee_view' => !empty($post['employee_view'])], null];
+    }
+
+    /**
+     * A bonus or deduction added by hand: kind, amount (> 0) and the reason the employee will see.
+     * @param array{kind:string,amount:string,reason:string} $post
+     * @return array{0:?array{kind:string,amount:float,reason:string},1:?string}
+     */
+    public static function adjustment(array $post): array
+    {
+        if (!in_array($post['kind'], ['bonus', 'deduction'], true)) return [null, 'adjust_kind'];
+        $amount = trim($post['amount']);
+        if (!is_numeric($amount) || (float) $amount <= 0 || (float) $amount > 100000000) return [null, 'adjust_amount'];
+        $reason = trim($post['reason']);
+        if ($reason === '') return [null, 'adjust_reason'];
+        return [['kind' => $post['kind'], 'amount' => round((float) $amount, 2), 'reason' => mb_substr($reason, 0, 190)], null];
     }
 
     /** 1234.5 → "1,234.50". */

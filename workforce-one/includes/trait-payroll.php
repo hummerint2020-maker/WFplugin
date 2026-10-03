@@ -7,13 +7,17 @@ use WorkforceOne\Payroll\PayRules;
 /**
  * wp-admin → Payroll (permission "Manage Payroll"): salaries with the date they take effect, the
  * payroll rules, and each month's pay worked out from attendance (src/Payroll/PayCalculator.php on
- * the report engine's days). Phase 1: nothing is stored per month and employees see nothing.
- * Salaries are never written to the Audit Log, only that one was set.
+ * the report engine's days), bonuses and deductions added by hand, and closing a month: its
+ * payslips are kept as they were and no longer follow attendance until it is reopened.
+ * Employees see their own pay in the app (My Pay) once an administrator switches it on.
+ * Amounts are never written to the Audit Log, only what was done.
  * Output: templates/admin/payroll.php. Behaviour: tests/e2e_payroll.py.
  */
 trait EWS_Payroll_Trait {
 
     private function payroll_table(){ global $wpdb; return $wpdb->prefix.'ews_pay_rates'; }
+    /** @return array{adjustments:string,runs:string,payslips:string} */
+    private function payroll_tables(){ global $wpdb; return ['adjustments'=>$wpdb->prefix.'ews_pay_adjustments','runs'=>$wpdb->prefix.'ews_payroll_runs','payslips'=>$wpdb->prefix.'ews_payslips']; }
 
     private function ensure_payroll_schema(){
         if($this->ews_schema_is_current())return;
@@ -31,6 +35,42 @@ trait EWS_Payroll_Trait {
             PRIMARY KEY(id),
             KEY employee_from(employee_id,effective_from)
         ) {$wpdb->get_charset_collate()};");
+        $t=$this->payroll_tables();$c=$wpdb->get_charset_collate();
+        // Bonuses and deductions added by hand for one employee and month.
+        dbDelta("CREATE TABLE {$t['adjustments']} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            employee_id BIGINT UNSIGNED NOT NULL,
+            month CHAR(7) NOT NULL,
+            kind VARCHAR(10) NOT NULL,
+            amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+            reason VARCHAR(190) NOT NULL,
+            created_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(id),
+            KEY employee_month(employee_id,month)
+        ) {$c};");
+        // A closed month and the payslips it kept (figures as they were when closed).
+        dbDelta("CREATE TABLE {$t['runs']} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            month CHAR(7) NOT NULL,
+            employees INT UNSIGNED NOT NULL DEFAULT 0,
+            total_net DECIMAL(16,2) NOT NULL DEFAULT 0,
+            currency VARCHAR(3) NOT NULL DEFAULT '',
+            closed_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            closed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(id),
+            UNIQUE KEY month(month)
+        ) {$c};");
+        dbDelta("CREATE TABLE {$t['payslips']} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            run_id BIGINT UNSIGNED NOT NULL,
+            employee_id BIGINT UNSIGNED NOT NULL,
+            net DECIMAL(14,2) NOT NULL DEFAULT 0,
+            data LONGTEXT NOT NULL,
+            PRIMARY KEY(id),
+            UNIQUE KEY run_employee(run_id,employee_id),
+            KEY employee(employee_id)
+        ) {$c};");
     }
 
     /** The payroll rules (wp-admin → Payroll → Rules). @return array<string,mixed> */
@@ -38,7 +78,7 @@ trait EWS_Payroll_Trait {
         return ['currency'=>(string)$this->option('ews_payroll_currency'),'day_divisor'=>(int)$this->option('ews_payroll_day_divisor'),
             'day_base'=>(string)$this->option('ews_payroll_day_base'),'absence_days'=>(float)$this->option('ews_payroll_absence_days'),
             'overtime_rate'=>(float)$this->option('ews_payroll_overtime_rate'),'overtime_rate_off'=>(float)$this->option('ews_payroll_overtime_rate_off'),
-            'max_deduction_days'=>(float)$this->option('ews_payroll_max_deduction_days')];
+            'max_deduction_days'=>(float)$this->option('ews_payroll_max_deduction_days'),'employee_view'=>(bool)$this->option('ews_payroll_employee_view')];
     }
 
     /** @return array{basic:float,allowances:array<int,array{name:string,amount:float}>,effective_from:string,note:string,id:int}|null */
@@ -92,6 +132,8 @@ trait EWS_Payroll_Trait {
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,SUM(leave_minutes) m FROM {$wpdb->prefix}ews_early_leave_requests WHERE status='Approved' AND employee_id IN ($ph) AND work_date BETWEEN %s AND %s GROUP BY employee_id,work_date",array_merge($ids,[$first,$last]))) as $r)$early[(int)$r->employee_id][$r->work_date]=(int)$r->m;
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT s.employee_id,s.work_date,t.name,t.paid_percent FROM {$wpdb->prefix}ews_leave_schedule_snapshots s JOIN {$wpdb->prefix}ews_leave_requests r ON r.id=s.leave_request_id JOIN {$wpdb->prefix}ews_leave_types t ON t.id=r.leave_type_id WHERE r.status='Approved' AND s.employee_id IN ($ph) AND s.work_date BETWEEN %s AND %s",array_merge($ids,[$first,$last]))) as $r)$leave[(int)$r->employee_id][$r->work_date]=['type'=>(string)$r->name,'paid'=>(int)$r->paid_percent];
         }
+        $adjust=[];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,employee_id,kind,amount,reason FROM {$this->payroll_tables()['adjustments']} WHERE month=%s ORDER BY id ASC",$month)) as $r)$adjust[(int)$r->employee_id][]=['id'=>(int)$r->id,'kind'=>(string)$r->kind,'amount'=>(float)$r->amount,'reason'=>(string)$r->reason];
         $rules=$this->payroll_rules();
         $out=[];
         foreach($emps as $e){
@@ -103,7 +145,7 @@ trait EWS_Payroll_Trait {
                 if(isset($leave[$eid][$d['date']])){$d['leave_type']=$leave[$eid][$d['date']]['type'];$d['leave_paid']=$leave[$eid][$d['date']]['paid'];}
                 $rows[]=$d;
             }
-            $out[]=['employee'=>$e,'pay'=>PayCalculator::month($rates[$eid],$rules,$rows,$this->payroll_day_minutes($eid),$month)];
+            $out[]=['employee'=>$e,'pay'=>PayCalculator::month($rates[$eid],$rules,$rows,$this->payroll_day_minutes($eid),$month,$adjust[$eid]??[])];
         }
         return $out;
     }
@@ -129,7 +171,10 @@ trait EWS_Payroll_Trait {
             'grace'=>(int)$this->global_grace_period(),'notice'=>sanitize_key($_GET['payroll_saved']??''),'error'=>PayRules::message(sanitize_key($_GET['payroll_error']??'')),'detail'=>null,'people'=>[],'salaries'=>[]];
         if($tab==='month'){
             $employee=absint($_GET['employee']??0);
-            $people=$this->payroll_month($month,$employee);
+            $run=$this->payroll_run($month);
+            $vars['run']=$run?['closed_at'=>(string)$run->closed_at,'closed_by'=>(string)(get_userdata((int)$run->closed_by)->display_name??'')]:null;
+            $vars['can_close']=!$run&&$month<current_time('Y-m');
+            $people=$run?$this->payroll_payslips((int)$run->id,$employee):$this->payroll_month($month,$employee);
             if($employee&&$people)$vars['detail']=$people[0];
             else $vars['people']=$people;
             $vars['export_url']=wp_nonce_url(add_query_arg(['action'=>'ews_payroll_export','month'=>$month],admin_url('admin-post.php')),'ews_payroll_export');
@@ -147,7 +192,151 @@ trait EWS_Payroll_Trait {
             $vars['default_from']=current_time('Y-m').'-01';
             $vars['selected']=absint($_GET['employee']??0);
         }
-        echo $this->render_template('admin/payroll',$vars);
+        echo $this->render_template('admin/payroll',$vars+['run'=>null,'can_close'=>false]);
+    }
+
+    /** The closed run of a month, if any. */
+    private function payroll_run($month){
+        global $wpdb;$this->ensure_payroll_schema();
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->payroll_tables()['runs']} WHERE month=%s",$month));
+    }
+
+    /** A closed month's payslips, as payroll_month() rows (employee name and id as they were). @return array<int,array{employee:object,pay:array<string,mixed>}> */
+    private function payroll_payslips($run_id,$only_employee=0){
+        global $wpdb;$t=$this->payroll_tables();
+        $where=$only_employee?$wpdb->prepare(' AND employee_id=%d',$only_employee):'';
+        $out=[];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,data FROM {$t['payslips']} WHERE run_id=%d{$where}",$run_id)) as $r){
+            $d=json_decode((string)$r->data,true);
+            if(!is_array($d)||!isset($d['pay']))continue;
+            $out[]=['employee'=>(object)['id'=>(int)$r->employee_id,'name'=>(string)($d['employee']['name']??'')],'pay'=>$d['pay']];
+        }
+        usort($out,function($a,$b){return strcasecmp($a['employee']->name,$b['employee']->name);});
+        return $out;
+    }
+
+    private function payroll_month_post(){
+        $m=sanitize_text_field(wp_unslash($_POST['month']??''));
+        return preg_match('/^\d{4}-(0[1-9]|1[0-2])$/',$m)?$m:'';
+    }
+
+    public function payroll_adjust_save(){
+        if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
+        check_admin_referer('ews_payroll_adjust_save');
+        global $wpdb;$this->ensure_payroll_schema();
+        $month=$this->payroll_month_post();$eid=absint($_POST['employee_id']??0);
+        $back=['month'=>$month,'employee'=>$eid];
+        $emp=$eid?$wpdb->get_row($wpdb->prepare("SELECT id,name FROM {$this->employees} WHERE id=%d",$eid)):null;
+        if(!$month||!$emp)$this->payroll_redirect(['payroll_error'=>'employee']);
+        if($this->payroll_run($month))$this->payroll_redirect($back+['payroll_error'=>'closed']);
+        [$adj,$error]=PayRules::adjustment(['kind'=>(string)($_POST['kind']??''),'amount'=>(string)($_POST['amount']??''),'reason'=>sanitize_text_field(wp_unslash((string)($_POST['reason']??'')))]);
+        if($error)$this->payroll_redirect($back+['payroll_error'=>$error]);
+        $wpdb->insert($this->payroll_tables()['adjustments'],['employee_id'=>$eid,'month'=>$month,'kind'=>$adj['kind'],'amount'=>$adj['amount'],'reason'=>$adj['reason'],'created_by'=>get_current_user_id(),'created_at'=>current_time('mysql')],['%d','%s','%s','%f','%s','%d','%s']);
+        $this->audit('pay_adjustment_added','employee',$eid,$emp->name.' '.$month.': '.($adj['kind']==='bonus'?'bonus':'deduction').' — '.$adj['reason']);
+        $this->payroll_redirect($back+['payroll_saved'=>'adjustment']);
+    }
+
+    public function payroll_adjust_delete(){
+        if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
+        check_admin_referer('ews_payroll_adjust_delete');
+        global $wpdb;$this->ensure_payroll_schema();$t=$this->payroll_tables();
+        $r=$wpdb->get_row($wpdb->prepare("SELECT a.*,e.name FROM {$t['adjustments']} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id WHERE a.id=%d",absint($_POST['adjustment_id']??0)));
+        if(!$r)$this->payroll_redirect(['payroll_error'=>'not_found']);
+        $back=['month'=>(string)$r->month,'employee'=>(int)$r->employee_id];
+        if($this->payroll_run((string)$r->month))$this->payroll_redirect($back+['payroll_error'=>'closed']);
+        $wpdb->delete($t['adjustments'],['id'=>(int)$r->id],['%d']);
+        $this->audit('pay_adjustment_removed','employee',(int)$r->employee_id,(string)$r->name.' '.$r->month.': '.$r->kind.' — '.$r->reason);
+        $this->payroll_redirect($back+['payroll_saved'=>'adjustment_removed']);
+    }
+
+    public function payroll_close(){
+        if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
+        check_admin_referer('ews_payroll_close');
+        global $wpdb;$this->ensure_payroll_schema();$t=$this->payroll_tables();
+        $month=$this->payroll_month_post();
+        if(!$month)$this->payroll_redirect(['payroll_error'=>'month']);
+        $back=['month'=>$month];
+        if($month>=current_time('Y-m'))$this->payroll_redirect($back+['payroll_error'=>'not_ended']);
+        if($this->payroll_run($month))$this->payroll_redirect($back+['payroll_error'=>'already_closed']);
+        $people=array_values(array_filter($this->payroll_month($month),function($x){return $x['pay']!==null;}));
+        if(!$people)$this->payroll_redirect($back+['payroll_error'=>'nothing']);
+        foreach($people as $x)if($x['pay']['review'])$this->payroll_redirect($back+['payroll_error'=>'review']);
+        $rules=$this->payroll_rules();
+        $total=round(array_sum(array_map(function($x){return (float)$x['pay']['net'];},$people)),2);
+        $ok=$wpdb->insert($t['runs'],['month'=>$month,'employees'=>count($people),'total_net'=>$total,'currency'=>$rules['currency'],'closed_by'=>get_current_user_id(),'closed_at'=>current_time('mysql')],['%s','%d','%f','%s','%d','%s']);
+        if(!$ok)$this->payroll_redirect($back+['payroll_error'=>'already_closed']);
+        $run_id=(int)$wpdb->insert_id;
+        foreach($people as $x){
+            $wpdb->insert($t['payslips'],['run_id'=>$run_id,'employee_id'=>(int)$x['employee']->id,'net'=>$x['pay']['net'],
+                'data'=>wp_json_encode(['employee'=>['id'=>(int)$x['employee']->id,'name'=>(string)$x['employee']->name],'currency'=>$rules['currency'],'rules'=>$rules,'pay'=>$x['pay']])],['%d','%d','%f','%s']);
+        }
+        $this->audit('payroll_closed','payroll',$run_id,$month.': '.count($people).' payslips');
+        if($rules['employee_view']){
+            $label=date('F Y',strtotime($month.'-01'));
+            foreach($people as $x){
+                if(!empty($x['employee']->wp_user_id))$this->notify_user((int)$x['employee']->wp_user_id,'Payslip ready','Your payslip for '.$label.' is ready in My Pay.','info','payroll',$run_id);
+            }
+        }
+        $this->payroll_redirect($back+['payroll_saved'=>'closed']);
+    }
+
+    public function payroll_reopen(){
+        if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
+        check_admin_referer('ews_payroll_reopen');
+        global $wpdb;$this->ensure_payroll_schema();$t=$this->payroll_tables();
+        $month=$this->payroll_month_post();
+        $run=$month?$this->payroll_run($month):null;
+        if(!$run)$this->payroll_redirect(['month'=>$month,'payroll_error'=>'not_closed']);
+        $wpdb->delete($t['payslips'],['run_id'=>(int)$run->id],['%d']);
+        $wpdb->delete($t['runs'],['id'=>(int)$run->id],['%d']);
+        $this->audit('payroll_reopened','payroll',(int)$run->id,$month);
+        $this->payroll_redirect(['month'=>$month,'payroll_saved'=>'reopened']);
+    }
+
+    /** My Pay: switched on by an administrator, for an employee with a salary or a payslip. */
+    private function payroll_view_available(){
+        if(!$this->option('ews_payroll_employee_view'))return false;
+        $emp=$this->current_employee();
+        if(!$emp)return false;
+        global $wpdb;$this->ensure_payroll_schema();
+        return (bool)$wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$this->payroll_table()} WHERE employee_id=%d LIMIT 1",(int)$emp->id))
+            || (bool)$wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$this->payroll_tables()['payslips']} WHERE employee_id=%d LIMIT 1",(int)$emp->id));
+    }
+
+    /** Employee app → My Pay: a closed month's payslip, or the current month as an estimate. Only the employee's own. */
+    private function pay_content(){
+        $emp=$this->current_employee();
+        if(!$emp)return $this->ews_empty_state('Employee profile required','Your account is not linked to an active employee.');
+        global $wpdb;$t=$this->payroll_tables();
+        $closed=[];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT r.month,r.closed_at,s.data FROM {$t['payslips']} s JOIN {$t['runs']} r ON r.id=s.run_id WHERE s.employee_id=%d ORDER BY r.month DESC",(int)$emp->id)) as $r){
+            $d=json_decode((string)$r->data,true);
+            if(is_array($d)&&isset($d['pay']))$closed[(string)$r->month]=['pay'=>$d['pay'],'currency'=>(string)($d['currency']??''),'rules'=>(array)($d['rules']??[]),'closed_at'=>(string)$r->closed_at];
+        }
+        $current=current_time('Y-m');
+        $months=array_keys($closed);if(!in_array($current,$months,true))$months[]=$current;
+        rsort($months);
+        $req=sanitize_text_field(wp_unslash($_GET['month']??''));
+        $month=preg_match('/^\d{4}-(0[1-9]|1[0-2])$/',$req)?$req:($closed?array_key_first($closed):$current);
+        $rules=$this->payroll_rules();
+        $slip=null;$final=false;$closed_at='';$currency=$rules['currency'];$used_rules=$rules;
+        if(isset($closed[$month])){
+            $slip=$closed[$month]['pay'];$final=true;$closed_at=$closed[$month]['closed_at'];
+            if($closed[$month]['currency']!=='')$currency=$closed[$month]['currency'];
+            if($closed[$month]['rules'])$used_rules=$closed[$month]['rules']+$rules;
+        }elseif($month===$current){
+            $rows=$this->payroll_month($month,(int)$emp->id);
+            $slip=$rows[0]['pay']??null;
+        }
+        $i=array_search($month,$months,true);
+        $previous=date('Y-m',strtotime('first day of last month',current_time('timestamp')));
+        wp_enqueue_style('workforce-one-pay');
+        return $this->render_template('app/pay',[
+            'month'=>$month,'month_label'=>date('F Y',strtotime($month.'-01')),'slip'=>$slip,'final'=>$final,'closed_at'=>$closed_at,'currency'=>$currency,'rules'=>$used_rules,
+            'older_url'=>$i!==false&&isset($months[$i+1])?add_query_arg(['ews_view'=>'pay','month'=>$months[$i+1]],$this->app_home_url()):'',
+            'newer_url'=>$i!==false&&$i>0?add_query_arg(['ews_view'=>'pay','month'=>$months[$i-1]],$this->app_home_url()):'',
+            'preparing'=>$month===$current&&!isset($closed[$previous])?date('F Y',strtotime($previous.'-01')):'',
+        ]);
     }
 
     public function payroll_rate_save(){
@@ -192,6 +381,7 @@ trait EWS_Payroll_Trait {
         update_option('ews_payroll_overtime_rate',$rules['overtime_rate'],false);
         update_option('ews_payroll_overtime_rate_off',$rules['overtime_rate_off'],false);
         update_option('ews_payroll_max_deduction_days',$rules['max_deduction_days'],false);
+        update_option('ews_payroll_employee_view',$rules['employee_view']?1:0,false);
         $this->audit('payroll_rules_saved','settings',0,'Payroll rules');
         $this->payroll_redirect(['tab'=>'rules','payroll_saved'=>'rules']);
     }
@@ -201,27 +391,30 @@ trait EWS_Payroll_Trait {
         check_admin_referer('ews_payroll_export');
         if(!class_exists('ZipArchive'))wp_die('The PHP ZipArchive extension is required for Excel export.');
         $month=$this->payroll_month_param();
-        $people=array_values(array_filter($this->payroll_month($month),function($x){return $x['pay']!==null;}));
-        $headers=['Employee','Basic','Allowances','Monthly pay','Paid for','Overtime (h:mm)','Overtime pay','Absent days','Absence','Late (min)','Late','Early leave (min)','Early leave','Unpaid leave days','Unpaid leave','Deductions','Net pay','Days to review'];
+        $run=$this->payroll_run($month);
+        $people=$run?$this->payroll_payslips((int)$run->id):array_values(array_filter($this->payroll_month($month),function($x){return $x['pay']!==null;}));
+        $headers=['Employee','Basic','Allowances','Monthly pay','Paid for','Overtime (h:mm)','Overtime pay','Absent days','Absence','Late (min)','Late','Early leave (min)','Early leave','Unpaid leave days','Unpaid leave','Attendance deductions','Bonuses','Other deductions','Net pay','Days to review'];
         $rows=[];$days=[];
         foreach($people as $x){
             $p=$x['pay'];$name=(string)$x['employee']->name;
             $rows[]=[$name,$p['basic'],$p['allowances_total'],$p['monthly'],$p['prorated']?'From '.$p['prorated']['from']:'Full month',PayCalculator::hm((int)$p['overtime']['minutes']),$p['overtime']['amount'],
                 count($p['absence']['days']),-$p['absence']['amount'],(int)$p['late']['minutes'],-$p['late']['amount'],(int)$p['early']['minutes'],-$p['early']['amount'],
-                count($p['leave']['days']),-$p['leave']['amount'],-$p['deductions'],$p['net'],count($p['review'])];
+                count($p['leave']['days']),-$p['leave']['amount'],-$p['deductions'],$p['bonuses']['amount'],-$p['manual']['amount'],$p['net'],count($p['review'])];
             foreach($p['absence']['days'] as $d)$days[]=[$name,$d['date'],'Absent','',-$d['amount']];
             foreach($p['late']['days'] as $d)$days[]=[$name,$d['date'],'Late arrival (in '.$d['sign_in'].')',$d['minutes'],-$d['amount']];
             foreach($p['early']['days'] as $d)$days[]=[$name,$d['date'],'Early leave without approval (out '.$d['sign_out'].')',$d['minutes'],-$d['amount']];
             foreach($p['leave']['days'] as $d)$days[]=[$name,$d['date'],$d['type'].' ('.$d['paid'].'% paid)','',-$d['amount']];
             foreach($p['overtime']['days'] as $d)$days[]=[$name,$d['date'],'Overtime × '.$d['rate'].($d['off']?' (day off)':''),$d['minutes'],$d['amount']];
             foreach($p['review'] as $d)$days[]=[$name,$d['date'],'To review: '.$d['reason'],'',''];
+            foreach($p['bonuses']['items'] as $a)$days[]=[$name,$month,'Bonus: '.$a['reason'],'',$a['amount']];
+            foreach($p['manual']['items'] as $a)$days[]=[$name,$month,'Deduction: '.$a['reason'],'',-$a['amount']];
         }
         $label=date('F Y',strtotime($month.'-01'));
         $xlsx=$this->payroll_xlsx([
-            ['Payroll '.$label,$headers,$rows,[26,12,12,12,16,14,12,12,12,10,12,14,12,14,12,12,14,12]],
+            ['Payroll '.$label,$headers,$rows,[26,12,12,12,16,14,12,12,12,10,12,14,12,14,12,14,12,14,14,12]],
             ['Days',['Employee','Date','Item','Minutes','Amount'],$days,[26,12,44,10,12]],
         ]);
-        $this->audit('payroll_exported','payroll',0,$month.' ('.count($people).' employees)');
+        $this->audit('payroll_exported','payroll',0,$month.' ('.count($people).' employees'.($run?', closed':'').')');
         nocache_headers();
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="payroll-'.$month.'.xlsx"');

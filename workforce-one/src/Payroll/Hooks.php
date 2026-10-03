@@ -13,5 +13,9 @@ final class Hooks
         add_action('admin_post_ews_payroll_rate_delete', [$plugin, 'payroll_rate_delete']);
         add_action('admin_post_ews_payroll_rules_save', [$plugin, 'payroll_rules_save']);
         add_action('admin_post_ews_payroll_export', [$plugin, 'payroll_export']);
+        add_action('admin_post_ews_payroll_adjust_save', [$plugin, 'payroll_adjust_save']);
+        add_action('admin_post_ews_payroll_adjust_delete', [$plugin, 'payroll_adjust_delete']);
+        add_action('admin_post_ews_payroll_close', [$plugin, 'payroll_close']);
+        add_action('admin_post_ews_payroll_reopen', [$plugin, 'payroll_reopen']);
     }
 }

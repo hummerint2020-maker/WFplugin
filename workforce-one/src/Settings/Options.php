@@ -125,6 +125,7 @@ final class Options
         'ews_payroll_absence_days' => ['group' => 'payroll', 'label' => 'An absent day deducts', 'kind' => 'number', 'default' => PayRules::DEFAULTS['absence_days'], 'unit' => 'days\' pay', 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_overtime_rate' => ['group' => 'payroll', 'label' => 'Overtime on work days', 'kind' => 'number', 'default' => PayRules::DEFAULTS['overtime_rate'], 'unit' => '× hourly pay', 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_overtime_rate_off' => ['group' => 'payroll', 'label' => 'Overtime on days off and holidays', 'kind' => 'number', 'default' => PayRules::DEFAULTS['overtime_rate_off'], 'unit' => '× hourly pay', 'page' => 'ews31-payroll&tab=rules'],
+        'ews_payroll_employee_view' => ['group' => 'payroll', 'label' => 'Employees see their pay in the app (My Pay)', 'kind' => 'bool', 'default' => PayRules::DEFAULTS['employee_view'], 'page' => 'ews31-payroll&tab=rules'],
         'ews_payroll_max_deduction_days' => ['group' => 'payroll', 'label' => 'Deductions limited to', 'kind' => 'number', 'default' => PayRules::DEFAULTS['max_deduction_days'], 'unit' => 'days\' pay', 'zero' => 'No limit', 'page' => 'ews31-payroll&tab=rules'],
 
         // System (written by the plugin itself)

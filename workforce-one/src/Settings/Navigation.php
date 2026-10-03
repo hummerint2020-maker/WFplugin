@@ -20,6 +20,7 @@ final class Navigation
         'attendance' => ['label' => 'Attendance', 'mobile_label' => 'Attendance', 'icon' => '📝', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 70, 'mobile_order' => 50],
         'people' => ['label' => 'People', 'mobile_label' => 'People', 'icon' => '👥', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 75, 'mobile_order' => 55],
         'reports' => ['label' => 'Reports', 'mobile_label' => 'Reports', 'icon' => '📊', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 80, 'mobile_order' => 60],
+        'pay' => ['label' => 'My Pay', 'mobile_label' => 'My Pay', 'icon' => '💰', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 85, 'mobile_order' => 75],
         'attendance-insights' => ['label' => 'Attendance Insights', 'mobile_label' => 'Attendance Insights', 'icon' => '📈', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 90, 'mobile_order' => 70],
     ];
 

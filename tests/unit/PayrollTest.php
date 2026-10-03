@@ -77,6 +77,23 @@ final class PayrollTest extends TestCase
         $this->assertSame(3000.0, $feb['earned'], 'a full month is the monthly pay, whatever its length');
     }
 
+    public function testBonusesAndManualDeductionsAreOutsideTheCap(): void
+    {
+        $days = [self::day('2026-09-02', ['result' => 'Absent'])];
+        $adj = [['id' => 1, 'kind' => 'bonus', 'amount' => 500.0, 'reason' => 'Project'], ['id' => 2, 'kind' => 'deduction', 'amount' => 100.0, 'reason' => 'Advance']];
+        $p = C::month(self::RATE, ['max_deduction_days' => 0.5] + self::RULES, $days, 480, '2026-09', $adj);
+        $this->assertSame(175.0, $p['deductions'], 'the cap applies to attendance');
+        $this->assertSame(100.0, $p['manual']['amount']);
+        $this->assertSame(275.0, $p['total_deductions']);
+        $this->assertSame([['id' => 1, 'reason' => 'Project', 'amount' => 500.0]], $p['bonuses']['items']);
+        $this->assertSame(10500.0 - 175 + 500 - 100, $p['net']);
+        [$a, $e] = R::adjustment(['kind' => 'bonus', 'amount' => '50', 'reason' => ' Thanks ']);
+        $this->assertSame(['kind' => 'bonus', 'amount' => 50.0, 'reason' => 'Thanks'], $a);
+        $this->assertSame('adjust_amount', R::adjustment(['kind' => 'bonus', 'amount' => '0', 'reason' => 'x'])[1]);
+        $this->assertSame('adjust_reason', R::adjustment(['kind' => 'deduction', 'amount' => '5', 'reason' => ' '])[1]);
+        $this->assertSame('adjust_kind', R::adjustment(['kind' => 'gift', 'amount' => '5', 'reason' => 'x'])[1]);
+    }
+
     public function testSalaryForm(): void
     {
         [$r, $e] = R::rate(['basic' => '9000', 'effective_from' => '2026-09-01', 'allowance_name' => ['Transport', '', 'Meals'], 'allowance_amount' => ['600', '', '900.5'], 'note' => 'x']);

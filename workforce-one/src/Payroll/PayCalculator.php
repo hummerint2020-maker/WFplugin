@@ -19,7 +19,9 @@ if (!defined('ABSPATH')) exit;
  *   request (planned by a manager) is paid.
  * - Overtime: the approved overtime actually worked (inside approved windows) × the minute value ×
  *   the work-day rate, or the days-off rate on a day off or company holiday.
- * - Deductions can be capped at a number of days' value (0 = no cap).
+ * - Deductions for attendance can be capped at a number of days' value (0 = no cap).
+ * - Bonuses and deductions added by hand (with a reason) are added or taken off as they are; the
+ *   cap does not apply to them.
  * - A day without a Sign Out counts as worked and is listed for review.
  * Every day's amount is rounded to 2 decimals; totals are sums of the rounded amounts.
  */
@@ -32,9 +34,10 @@ final class PayCalculator
      *        with 'approved_early' (minutes) and, on leave days, 'leave_paid' (0–100) and 'leave_type'
      * @param int $dayMinutes minutes of the employee's working day
      * @param string $month 'Y-m'
+     * @param array<int,array{id?:int,kind:string,amount:float,reason:string}> $adjustments bonuses and deductions added by hand
      * @return array<string,mixed>
      */
-    public static function month(array $rate, array $rules, array $days, int $dayMinutes, string $month): array
+    public static function month(array $rate, array $rules, array $days, int $dayMinutes, string $month, array $adjustments = []): array
     {
         $basic = round((float) $rate['basic'], 2);
         $allowances = array_values(array_filter((array) $rate['allowances'], static function ($a) { return is_array($a) && (float) ($a['amount'] ?? 0) > 0; }));
@@ -125,7 +128,16 @@ final class PayCalculator
         $out['deductions_before_cap'] = $deductions;
         $out['cap'] = $cap !== null && $deductions > $cap ? $cap : null;
         $out['deductions'] = $out['cap'] ?? $deductions;
-        $out['net'] = round($out['earned'] + $out['overtime']['amount'] - $out['deductions'], 2);
+        $out['bonuses'] = ['items' => [], 'amount' => 0.0];
+        $out['manual'] = ['items' => [], 'amount' => 0.0];
+        foreach ($adjustments as $a) {
+            $key = $a['kind'] === 'bonus' ? 'bonuses' : 'manual';
+            $amount = round(max(0, (float) $a['amount']), 2);
+            $out[$key]['items'][] = ['id' => (int) ($a['id'] ?? 0), 'reason' => (string) $a['reason'], 'amount' => $amount];
+            $out[$key]['amount'] = round($out[$key]['amount'] + $amount, 2);
+        }
+        $out['total_deductions'] = round($out['deductions'] + $out['manual']['amount'], 2);
+        $out['net'] = round($out['earned'] + $out['overtime']['amount'] + $out['bonuses']['amount'] - $out['total_deductions'], 2);
         return $out;
     }
 

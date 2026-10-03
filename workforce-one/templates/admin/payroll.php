@@ -7,12 +7,14 @@
  * @var string $month      'Y-m'
  * @var array<string,mixed> $rules
  * @var string $page_url
- * @var string $notice     rate | deleted | rules | ''
+ * @var string $notice     rate | deleted | rules | adjustment | adjustment_removed | closed | reopened | ''
  * @var string $error      message ('' = none)
  * @var array{employee:object,pay:?array<string,mixed>}|null $detail
  * @var array<int,array{employee:object,pay:?array<string,mixed>}> $people
  * @var array<int,array{employee:object,current:?array<string,mixed>,upcoming:array<int,array<string,mixed>>,history:array<int,array<string,mixed>>}> $salaries
  * @var string $export_url (month tab)
+ * @var array{closed_at:string,closed_by:string}|null $run  the month is closed (figures kept as they were)
+ * @var bool $can_close    (month tab) the month has ended and is not closed
  * @var string $default_from (salaries tab)
  * @var int $selected      (salaries tab) employee to preselect
  * @var int $grace         grace period in minutes (Schedule Configuration)
@@ -30,6 +32,10 @@ $cur = (string) $rules['currency'];
 $month_label = date('F Y', strtotime($month . '-01'));
 $tabs = ['month' => 'Monthly Payroll', 'salaries' => 'Salaries', 'rules' => 'Rules'];
 $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.', ''), '0'), '.'); };
+$adjust_remove = static function ($id) {
+    return ' <form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="ews-pay-inline" data-ews-confirm="Remove this adjustment?"><input type="hidden" name="action" value="ews_payroll_adjust_delete"><input type="hidden" name="adjustment_id" value="' . (int) $id . '">'
+        . wp_nonce_field('ews_payroll_adjust_delete', '_wpnonce', true, false) . '<button class="button-link-delete">Remove</button></form>';
+};
 ?>
 <div class="wrap ews-payroll"><h1>Payroll</h1>
 <nav class="nav-tab-wrapper">
@@ -40,8 +46,15 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
 <?php if ($notice === 'rate'): ?><div class="notice notice-success is-dismissible"><p>Salary saved.</p></div><?php endif; ?>
 <?php if ($notice === 'deleted'): ?><div class="notice notice-success is-dismissible"><p>Salary entry removed.</p></div><?php endif; ?>
 <?php if ($notice === 'rules'): ?><div class="notice notice-success is-dismissible"><p>Payroll rules saved. They apply to every month shown from now on.</p></div><?php endif; ?>
+<?php if ($notice === 'adjustment'): ?><div class="notice notice-success is-dismissible"><p>Adjustment added.</p></div><?php endif; ?>
+<?php if ($notice === 'adjustment_removed'): ?><div class="notice notice-success is-dismissible"><p>Adjustment removed.</p></div><?php endif; ?>
+<?php if ($notice === 'closed'): ?><div class="notice notice-success is-dismissible"><p>Month closed. Its payslips are kept as they are now<?php echo !empty($rules['employee_view']) ? ' and employees can see them in My Pay' : ''; ?>.</p></div><?php endif; ?>
+<?php if ($notice === 'reopened'): ?><div class="notice notice-warning is-dismissible"><p>Month reopened: its figures follow attendance again until it is closed.</p></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
 
+<?php if ($tab === 'month' && $run): ?>
+    <div class="ews-pay-closed"><strong>✓ Closed</strong> on <?php echo esc_html($run['closed_at']); ?><?php echo $run['closed_by'] !== '' ? esc_html(' by ' . $run['closed_by']) : ''; ?>. These are the figures as they were when the month was closed; later attendance changes do not change them.</div>
+<?php endif; ?>
 <?php if ($tab === 'month' && $detail): $e = $detail['employee']; $p = $detail['pay']; ?>
     <p><a href="<?php echo esc_url(add_query_arg(['month' => $month], $page_url)); ?>">← All employees, <?php echo esc_html($month_label); ?></a></p>
     <h2><?php echo esc_html($e->name); ?> · <?php echo esc_html($month_label); ?></h2>
@@ -49,7 +62,7 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
         <p>No salary set. <a href="<?php echo esc_url(add_query_arg(['tab' => 'salaries', 'employee' => (int) $e->id], $page_url)); ?>">Set a salary</a></p>
     <?php else: ?>
     <div class="ews-pay-hero"><span>Net pay · before tax and social insurance</span><strong><?php echo esc_html($cur . ' ' . $money($p['net'])); ?></strong>
-        <em>Estimate from attendance. Nothing is closed or paid from this page yet.</em></div>
+        <em><?php echo $run ? 'Final: the month is closed.' : 'Estimate from attendance until the month is closed.'; ?></em></div>
     <div class="ews-pay-stats">
         <div><b><?php echo (int) $p['stats']['worked_days']; ?>/<?php echo (int) $p['stats']['expected_days']; ?></b>Planned days worked</div>
         <div><b><?php echo (int) $p['stats']['late_days']; ?></b>Late days</div>
@@ -67,6 +80,7 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
         <?php if ($p['prorated']): ?><tr><td>Paid from <?php echo esc_html($day($p['prorated']['from'])); ?> <span class="ews-pay-sub"><?php echo (int) $p['prorated']['days']; ?> days × <?php echo esc_html($money($p['day_value'])); ?></span></td><td class="num"><?php echo esc_html($money($p['earned'])); ?></td></tr><?php endif; ?>
         <tr><td>Overtime (approved and worked) <span class="ews-pay-sub"><?php echo esc_html(PayCalculator::hm((int) $p['overtime']['minutes'])); ?></span></td><td class="num plus"><?php echo esc_html($plus($p['overtime']['amount'])); ?></td></tr>
         <?php foreach ($p['overtime']['days'] as $d): ?><tr class="ews-pay-day"><td><?php echo esc_html($day($d['date']) . ' · ' . PayCalculator::hm((int) $d['minutes']) . ' × ' . $num($d['rate']) . ($d['off'] ? ' (day off)' : '')); ?></td><td class="num"><?php echo esc_html($plus($d['amount'])); ?></td></tr><?php endforeach; ?>
+        <?php foreach ($p['bonuses']['items'] as $a): ?><tr><td>Bonus <span class="ews-pay-sub"><?php echo esc_html($a['reason']); ?></span><?php echo $run ? '' : $adjust_remove($a['id']); ?></td><td class="num plus"><?php echo esc_html($plus($a['amount'])); ?></td></tr><?php endforeach; ?>
     </tbody></table>
     <table class="widefat ews-pay-lines"><thead><tr><th colspan="2">Deductions</th></tr></thead><tbody>
         <tr><td>Absent <span class="ews-pay-sub"><?php echo count($p['absence']['days']); ?> day(s) × <?php echo esc_html($num($rules['absence_days'])); ?> day's pay</span></td><td class="num minus"><?php echo esc_html($minus($p['absence']['amount'])); ?></td></tr>
@@ -79,10 +93,22 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
             <tr><td><?php echo esc_html($type); ?> <span class="ews-pay-sub"><?php echo (int) $t['days']; ?> day(s), <?php echo (int) $t['paid']; ?>% paid</span></td><td class="num minus"><?php echo esc_html($minus($t['amount'])); ?></td></tr>
             <tr class="ews-pay-day"><td colspan="2"><?php echo esc_html(implode(', ', array_map($day, $t['dates']))); ?></td></tr>
         <?php endforeach; ?>
+        <?php foreach ($p['manual']['items'] as $a): ?><tr><td>Deduction <span class="ews-pay-sub"><?php echo esc_html($a['reason']); ?></span><?php echo $run ? '' : $adjust_remove($a['id']); ?></td><td class="num minus"><?php echo esc_html($minus($a['amount'])); ?></td></tr><?php endforeach; ?>
         <?php if ($p['cap'] !== null): ?><tr><td>Limited to <?php echo esc_html($num($rules['max_deduction_days'])); ?> day(s)' pay <span class="ews-pay-sub">deductions before the limit: <?php echo esc_html($money($p['deductions_before_cap'])); ?></span></td><td class="num minus"><?php echo esc_html($minus($p['cap'])); ?></td></tr><?php endif; ?>
     </tbody></table>
     </div>
     <table class="widefat ews-pay-total"><tr><td>Net pay</td><td class="num"><?php echo esc_html($cur . ' ' . $money($p['net'])); ?></td></tr></table>
+    <?php if (!$run): ?>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="ews-pay-adjust">
+        <input type="hidden" name="action" value="ews_payroll_adjust_save"><?php wp_nonce_field('ews_payroll_adjust_save'); ?>
+        <input type="hidden" name="employee_id" value="<?php echo (int) $e->id; ?>"><input type="hidden" name="month" value="<?php echo esc_attr($month); ?>">
+        <strong>Add a bonus or deduction</strong>
+        <select name="kind"><option value="bonus">Bonus</option><option value="deduction">Deduction</option></select>
+        <input type="number" name="amount" min="0.01" step="0.01" placeholder="Amount" required>
+        <input type="text" name="reason" maxlength="190" placeholder="Reason (the employee sees it)" required class="regular-text">
+        <button class="button">Add</button>
+    </form>
+    <?php endif; ?>
     <p class="description">A day's pay = <?php echo esc_html($rules['day_base'] === 'basic' ? 'basic' : '(basic + allowances)'); ?> ÷ <?php echo (int) $rules['day_divisor']; ?> = <?php echo esc_html($money($p['day_value'])); ?> · an hour = <?php echo esc_html($money($p['minute_value'] * 60)); ?> (working day of <?php echo esc_html(PayCalculator::hm((int) $p['day_minutes'])); ?>). Amounts are before income tax and social insurance.</p>
     <?php endif; ?>
 
@@ -91,6 +117,17 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
         <label>Month <input type="month" name="month" value="<?php echo esc_attr($month); ?>"></label> <button class="button">Show</button>
         <a class="button button-primary" href="<?php echo esc_url($export_url); ?>">Export to Excel</a>
     </form>
+    <?php if ($can_close): ?>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="ews-pay-closeform" data-ews-confirm="Close <?php echo esc_attr($month_label); ?>? Its payslips will be kept as they are now<?php echo !empty($rules['employee_view']) ? ' and employees will be told they are ready' : ''; ?>.">
+        <input type="hidden" name="action" value="ews_payroll_close"><?php wp_nonce_field('ews_payroll_close'); ?><input type="hidden" name="month" value="<?php echo esc_attr($month); ?>">
+        <button class="button">Close <?php echo esc_html($month_label); ?></button> <span class="description">Keeps every payslip as it is now. Days to review must be fixed first.</span>
+    </form>
+    <?php elseif ($run): ?>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="ews-pay-closeform" data-ews-confirm="Reopen <?php echo esc_attr($month_label); ?>? Its payslips are removed and the figures follow attendance again.">
+        <input type="hidden" name="action" value="ews_payroll_reopen"><?php wp_nonce_field('ews_payroll_reopen'); ?><input type="hidden" name="month" value="<?php echo esc_attr($month); ?>">
+        <button class="button">Reopen <?php echo esc_html($month_label); ?></button> <span class="description">Only to correct a mistake.</span>
+    </form>
+    <?php endif; ?>
     <p class="description">Worked out from attendance with the <a href="<?php echo esc_url(add_query_arg('tab', 'rules', $page_url)); ?>">payroll rules</a>. Amounts are before income tax and social insurance. Open an employee to see the days behind each figure.</p>
     <table class="widefat striped ews-pay-table">
         <thead><tr><th>Employee</th><th class="num">Monthly pay</th><th class="num">Overtime</th><th class="num">Deductions</th><th class="num">Net pay (<?php echo esc_html($cur); ?>)</th><th>Check</th></tr></thead>
@@ -103,7 +140,7 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
                 <?php else: $total += $p['net']; $paid++; ?>
                     <td class="num"><?php echo esc_html($money($p['earned'])); ?><?php if ($p['prorated']): ?><br><span class="ews-pay-sub">from <?php echo esc_html($day($p['prorated']['from'])); ?></span><?php endif; ?></td>
                     <td class="num plus"><?php echo esc_html($plus($p['overtime']['amount'])); ?></td>
-                    <td class="num minus"><?php echo esc_html($minus($p['deductions'])); ?></td>
+                    <td class="num minus"><?php echo esc_html($minus($p['total_deductions'] ?? $p['deductions'])); ?><?php if (!empty($p['bonuses']['amount'])): ?><br><span class="ews-pay-sub">bonus <?php echo esc_html($plus($p['bonuses']['amount'])); ?></span><?php endif; ?></td>
                     <td class="num"><strong><?php echo esc_html($money($p['net'])); ?></strong></td>
                     <td><?php if ($p['review']): ?><span class="ews-pay-flag"><?php echo count($p['review']); ?> to review</span><?php endif; ?></td>
                 <?php endif; ?>
@@ -171,6 +208,8 @@ $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.
                 × <input type="number" name="overtime_rate_off" min="1" max="5" step="0.05" value="<?php echo esc_attr($num($rules['overtime_rate_off'])); ?>" style="width:80px"> on days off and company holidays.</td></tr>
             <tr><th>Limit on deductions</th><td>at most <input type="number" name="max_deduction_days" min="0" max="31" step="0.5" value="<?php echo esc_attr($num($rules['max_deduction_days'])); ?>" style="width:80px"> days' pay a month <span class="description">(0 = no limit)</span></td></tr>
         </table>
+        <p><label><input type="checkbox" name="employee_view" value="1" <?php checked(!empty($rules['employee_view'])); ?>> <strong>Employees can see their own pay in the app (My Pay)</strong></label><br>
+            <span class="description">Closed months as final payslips, and the current month as an estimate. Switch on once the figures have been checked.</span></p>
         <p class="description">Rates and limits must follow the labour law and your company policy; check them with HR or your accountant.</p>
         <p><button class="button button-primary">Save rules</button></p>
     </form>

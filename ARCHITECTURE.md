@@ -35,7 +35,7 @@ workforce-one/
     Settings/Navigation.php, Moments.php, SmartNudges.php, EngagementHooks.php   engagement settings
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
     Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
-    Payroll/PayCalculator.php, PayRules.php, Hooks.php  a month's pay from attendance; salary and rules forms
+    Payroll/PayCalculator.php, PayRules.php, Hooks.php  a month's pay from attendance and adjustments; salary, rules and adjustment forms
     Requests/Hub.php, Hooks.php        presentation rules of the admin request pages
     Approvals/Workflows.php, StateMachine.php, Hooks.php  approval modes per workflow, request/step states
     Locations/LocationRules.php, Hooks.php  work location checks (coordinates, radius, seats, default)
