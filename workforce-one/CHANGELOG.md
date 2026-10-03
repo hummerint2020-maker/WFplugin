@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.31.23
+### Changed (employee app)
+- The profile menu (picture / initials at the top right, with My Profile and Log out) now shows
+  on desktop too. It was shown only on phones, so on a computer My Profile could not be reached
+  from the menu.
+
 ## 3.31.22
 ### Fixed (employee app → login and frame)
 - **A wrong password now stays in the app.** Nothing ever sent a failed login back to the app's login
