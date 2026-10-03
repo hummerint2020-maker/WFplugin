@@ -157,7 +157,7 @@ trait EWS_Notifications_Trait {
         $payload=[
             'title'=>$note?$note->title:'Schedule Updated',
             'body'=>$note?wp_strip_all_tags($note->message):'Your schedule has been updated.',
-            'url'=>add_query_arg('ews_view','notifications',home_url('/')),
+            'url'=>add_query_arg('ews_view','notifications',$this->app_home_url()),
             'notification_id'=>$note?(int)$note->id:0,
             'type'=>'schedule'
         ];
@@ -199,13 +199,15 @@ trait EWS_Notifications_Trait {
                 return add_query_arg('ews_view',sanitize_key($view),$ref);
             }
         }
-        return add_query_arg('ews_view',sanitize_key($view),home_url('/'));
+        return add_query_arg('ews_view',sanitize_key($view),$this->app_home_url());
     }
 
     private function notification_url($notification){
         $entity=sanitize_key($notification->entity??'');
         $id=absint($notification->entity_id??0);
         switch($entity){
+            case 'poll':
+                return $this->notification_app_view_url('polls');
             case 'task':
                 $url=$this->notification_app_view_url('tasks');
                 return $id?add_query_arg('edit_task',$id,$url):$url;
@@ -275,7 +277,7 @@ trait EWS_Notifications_Trait {
         $this->ensure_notifications_schema();
         $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE user_id=%d AND is_read=0",current_time('mysql'),get_current_user_id()));
         $this->invalidate_notification_unread_cache(get_current_user_id());
-        $redirect=wp_get_referer()?:home_url('/');
+        $redirect=wp_get_referer()?:$this->app_home_url();
         wp_safe_redirect($redirect);exit;
     }
 
@@ -630,7 +632,7 @@ trait EWS_Notifications_Trait {
         return $this->send_push_payload($row,[
             'title'=>'Workforce One',
             'body'=>'You have a new notification.',
-            'url'=>home_url('/')
+            'url'=>$this->app_home_url()
         ]);
     }
 
@@ -646,12 +648,13 @@ trait EWS_Notifications_Trait {
     public function push_send_test(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         check_admin_referer('ews_push_send_test');
+        $this->notifications_save_vapid_subject();
         $this->ensure_push_schema();
         global $wpdb;
         $rows=$wpdb->get_results("SELECT * FROM {$this->push_table()} ORDER BY updated_at DESC");
         $sent=0;$expired=0;$errors=[];
         foreach($rows as $row){
-            $result=$this->send_push_payload($row,['title'=>'Workforce One','body'=>'This is a test notification.','url'=>add_query_arg('ews_view','notifications',home_url('/'))]);
+            $result=$this->send_push_payload($row,['title'=>'Workforce One','body'=>'This is a test notification.','url'=>add_query_arg('ews_view','notifications',$this->app_home_url())]);
             if($result['ok']){$sent++;continue;}
             if(!empty($result['expired'])){$expired++;$wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);continue;}
             $errors[]=$result['error'];

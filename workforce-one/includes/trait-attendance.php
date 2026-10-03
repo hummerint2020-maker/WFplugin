@@ -1,6 +1,9 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\LocationAssessment;
+use WorkforceOne\Attendance\SignInRules;
+
 trait EWS_Attendance_Trait {
 
     public function time_event(){
@@ -22,78 +25,95 @@ trait EWS_Attendance_Trait {
             $face_ok=!empty($ctx['face_ok']);
             $qr_kiosk=$ctx['qr_kiosk']??null;
             $qr_location=$ctx['qr_location']??null;
+            $fail=function($msg){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($msg)]);};
             $emp=$this->current_employee();
-            if($emp && !$this->employee_attendance_enabled((int)$emp->id)){ $this->redirect(['ews_view'=>'time','time_error'=>rawurlencode(__('Attendance tracking is disabled for your employee profile.','workforce-one'))]);return; }
+            if($emp && !$this->employee_attendance_enabled((int)$emp->id)){$fail(__('Attendance tracking is disabled for your employee profile.','workforce-one'));return;}
             $sch=$emp?$this->today_schedule_for_employee($emp->id):null;$ev=$emp?$this->today_events($emp->id):[];
-            $assigned_location_v321=$emp?$this->ews_v321_employee_location($emp->id):null;
-            $is_general_leave=$sch && $this->company_leave_dates(current_time('Y-m-d'),current_time('Y-m-d'));
-            $requires_sign_in=$sch?$this->schedule_type_requires_sign_in($sch->status):false;
+            $assigned_location=$emp?$this->ews_v321_employee_location($emp->id):null;
             $requires_location=$sch?$this->schedule_type_requires_location($sch->status):false;
-            $msg='';
-            if(!$msg && $this->face_signin_enabled() && $type==='sign_in' && !$face_ok)$msg=__('Face verification is required before Sign In. Please complete Face Verification and try again.','workforce-one');
-            if(!$emp)$msg=__('Your WordPress account is not linked to an active employee.','workforce-one');
-            elseif($is_general_leave)$msg=__('Today is a General Leave day. Sign In is not required.','workforce-one');
-            elseif(!$sch||!$requires_sign_in)$msg=__('Today is not a working day for you.','workforce-one');
-            elseif($type==='sign_in'&&!$this->sign_in_window_open($emp?$emp->id:0)){
-                $h=$this->working_hours($emp?$emp->id:0); $bounds=$this->sign_in_window_bounds($emp?$emp->id:0); $now_ts=current_time('timestamp');
-                if($bounds['start'] && $now_ts<$bounds['start'])$msg=sprintf(/* translators: %s: start time */__('Sign In is not available yet. Your working hours start at %s.','workforce-one'),date_i18n('g:i A',$bounds['start']));
-                else $msg=sprintf(/* translators: %s: cutoff time */__('Sign In is no longer available. The Sign In cutoff was %s.','workforce-one'),$bounds['cutoff']?date_i18n('g:i A',$bounds['cutoff']):$this->format_time_label($h['end']));
+
+            // 1. May this event be recorded at all?
+            $facts=[
+                'employee'=>(bool)$emp,
+                'face_required'=>$this->face_signin_enabled(),
+                'face_ok'=>$face_ok,
+                'general_leave'=>$sch && $emp && $this->company_leave_dates($this->attendance_day($emp->id),$this->attendance_day($emp->id)),
+                'working_day'=>$sch && $this->schedule_type_requires_sign_in($sch->status),
+                'signed_in'=>isset($ev['sign_in'])||isset($ev['late_sign_in']),
+                'signed_out'=>isset($ev['sign_out']),
+            ];
+            $bounds=null;
+            if($emp && $type==='sign_in'){
+                $facts['window']=SignInRules::WINDOW_OPEN;
+                if(!$this->sign_in_window_open($emp->id)){
+                    $bounds=$this->sign_in_window_bounds($emp->id);
+                    $facts['window']=($bounds['start'] && current_time('timestamp')<$bounds['start'])?SignInRules::WINDOW_NOT_YET:SignInRules::WINDOW_CLOSED;
+                }
             }
-            elseif($type==='sign_in'&&(isset($ev['sign_in'])||isset($ev['late_sign_in'])))$msg=__('You have already signed in today.','workforce-one');
-            elseif($type==='sign_out'&&$this->break_enabled()&&$this->break_open_session($emp->id))$msg=__('Please Resume Work before signing out.','workforce-one');
-            elseif($type==='sign_out'&&!isset($ev['sign_in'])&&!isset($ev['late_sign_in']))$msg=__('You cannot sign out before signing in.','workforce-one');
-            elseif($type==='sign_out'&&isset($ev['sign_out']))$msg=__('You have already signed out today.','workforce-one');
-            if($msg){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($msg)]);return;}
-            global $wpdb;$now=current_time('mysql');
+            if($emp && $type==='sign_out')$facts['on_break']=$this->break_enabled()&&$this->break_open_session($emp->id);
+            $rule=SignInRules::check($type,$facts);
+            if($rule){$fail($this->sign_in_rule_message($rule,$emp,$bounds));return;}
+
+            // 2. Where is the employee?
             $lat=isset($_POST['latitude'])&&is_numeric($_POST['latitude'])?(float)$_POST['latitude']:null;
             $lng=isset($_POST['longitude'])&&is_numeric($_POST['longitude'])?(float)$_POST['longitude']:null;
             $acc=isset($_POST['accuracy'])&&is_numeric($_POST['accuracy'])?(float)$_POST['accuracy']:null;
             $location_timestamp=isset($_POST['location_timestamp'])&&is_numeric($_POST['location_timestamp'])?(int)$_POST['location_timestamp']:null;
-            $integrity_status='unreliable';$integrity_reason='location_not_available';
-            if($lat!==null&&$lng!==null){
-                $integrity_status='verified';$integrity_reason='';
-                if($acc===null){$integrity_status='unreliable';$integrity_reason='missing_accuracy';}
-                elseif($acc>100){$integrity_status='unreliable';$integrity_reason='low_accuracy';}
-                if($location_timestamp===null){$integrity_status='unreliable';$integrity_reason=$integrity_reason?:'missing_timestamp';}
-                elseif(abs((int)round($location_timestamp/1000)-current_time('timestamp'))>300){$integrity_status='unreliable';$integrity_reason='stale_timestamp';}
-                $prev=$wpdb->get_row($wpdb->prepare("SELECT latitude,longitude,location_timestamp,event_at FROM {$this->time_logs} WHERE employee_id=%d AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",(int)$emp->id));
-                if($prev && $location_timestamp!==null && $prev->location_timestamp){
-                    $elapsed=max(1,abs($location_timestamp-(int)$prev->location_timestamp)/1000);
-                    if($elapsed<=7200){
-                        $move=$this->location_distance_meters((float)$prev->latitude,(float)$prev->longitude,$lat,$lng);
-                        if($move!==null && ($move/$elapsed)*3.6>180){$integrity_status='suspicious';$integrity_reason='impossible_movement';}
-                    }
-                }
-            }
-            $location_status=($lat!==null&&$lng!==null)?'recorded':'not_available';
-            $configured_lat=$assigned_location_v321?$assigned_location_v321->latitude:get_option('ews_location_latitude','');$configured_lng=$assigned_location_v321?$assigned_location_v321->longitude:get_option('ews_location_longitude','');
-            $distance=$this->location_distance_meters($lat,$lng,$configured_lat,$configured_lng);
-            $radius=$assigned_location_v321?(float)$assigned_location_v321->radius:(float)get_option('ews_location_radius',200);
-            if($distance!==null&&$configured_lat!==''&&$configured_lng!=='')$location_status=$distance<=$radius?'inside':'outside';
+            global $wpdb;
+            $prev=($lat!==null&&$lng!==null)?$wpdb->get_row($wpdb->prepare("SELECT latitude,longitude,location_timestamp FROM {$this->time_logs} WHERE employee_id=%d AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",(int)$emp->id),ARRAY_A):null;
+            // The phone's location timestamp is Unix time (UTC): compare it with time(), not WordPress local time.
+            [$integrity_status,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_timestamp,time(),$prev?:null);
+            [$location_status,$distance]=LocationAssessment::geofence(
+                $lat,$lng,
+                $assigned_location?$assigned_location->latitude:get_option('ews_location_latitude',''),
+                $assigned_location?$assigned_location->longitude:get_option('ews_location_longitude',''),
+                $assigned_location?(float)$assigned_location->radius:(float)get_option('ews_location_radius',200)
+            );
             if($qr_location){
                 // A QR can be photographed and forwarded, so QR Sign-In additionally requires the
                 // employee's own device location to be inside the kiosk's work location.
-                $qr_distance=$this->location_distance_meters($lat,$lng,$qr_location->latitude,$qr_location->longitude);
-                $qr_radius=(float)($qr_location->radius?:200);
-                if(!is_numeric($qr_location->latitude)||!is_numeric($qr_location->longitude)){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode(__('This Kiosk location has no coordinates configured. Please contact your administrator.','workforce-one'))]);return;}
-                if($qr_distance===null||$integrity_reason==='stale_timestamp'){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode(__('Location access is required for QR Sign In. Please allow Location Services and try again.','workforce-one'))]);return;}
-                if($integrity_status==='suspicious'||$qr_distance>$qr_radius){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode(sprintf(/* translators: 1: work location name, 2: distance */__('You must be at %1$s to use QR Sign In. Distance: %2$s','workforce-one'),$qr_location->name,$this->format_distance($qr_distance)))]);return;}
+                [$qr_error,$qr_distance]=LocationAssessment::qrCheck($lat,$lng,$qr_location->latitude,$qr_location->longitude,(float)($qr_location->radius?:200),$integrity_status,$integrity_reason);
+                if($qr_error===LocationAssessment::QR_KIOSK_NO_COORDS){$fail(__('This Kiosk location has no coordinates configured. Please contact your administrator.','workforce-one'));return;}
+                if($qr_error===LocationAssessment::QR_LOCATION_REQUIRED){$fail(__('Location access is required for QR Sign In. Please allow Location Services and try again.','workforce-one'));return;}
+                if($qr_error===LocationAssessment::QR_OUTSIDE){$fail(sprintf(/* translators: 1: work location name, 2: distance */__('You must be at %1$s to use QR Sign In. Distance: %2$s','workforce-one'),$qr_location->name,$this->format_distance($qr_distance)));return;}
             }
-            if($type!=='sign_out'&&$requires_location&&$assigned_location_v321&&$assigned_location_v321->enforcement&&$location_status!=='inside'){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode(sprintf(/* translators: %s: distance */__('You are outside your assigned work location. Distance: %s','workforce-one'),$this->format_distance($distance)))]);return;}
-            $inserted=$wpdb->insert($this->time_logs,['employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>current_time('Y-m-d'),'event_type'=>$type,'event_at'=>$now,'scheduled_status'=>$sch->status,'ip_address'=>isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance,'location_timestamp'=>$location_timestamp,'integrity_status'=>$integrity_status,'integrity_reason'=>$integrity_reason,'created_at'=>$now]);
-            if($inserted===false){$detail=$wpdb->last_error?$wpdb->last_error:'Database insert failed.';$this->audit('time_'.$type.'_failed','time_log',0,$emp->name.' / '.$detail);$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($type==='sign_out'?__('Unable to record Sign Out. Please contact the administrator.','workforce-one'):__('Unable to record Sign In. Please contact the administrator.','workforce-one'))]);return;}
-            $classification=$type==='sign_in'?$this->sign_in_classification($now,$emp?$emp->id:0):'';
-            if($type==='sign_out' && $emp){ $this->achievement_evaluate_attendance((int)$emp->id,current_time('Y-m-d')); }
+            if($type!=='sign_out'&&$requires_location&&$assigned_location&&$assigned_location->enforcement&&$location_status!=='inside'){$fail(sprintf(/* translators: %s: distance */__('You are outside your assigned work location. Distance: %s','workforce-one'),$this->format_distance($distance)));return;}
+
+            // 3. Record it.
+            $now=current_time('mysql');
+            $inserted=$wpdb->insert($this->time_logs,['employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>$this->attendance_day($emp->id),'event_type'=>$type,'event_at'=>$now,'scheduled_status'=>$sch->status,'ip_address'=>isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance,'location_timestamp'=>$location_timestamp,'integrity_status'=>$integrity_status,'integrity_reason'=>$integrity_reason,'created_at'=>$now]);
+            if($inserted===false){$detail=$wpdb->last_error?$wpdb->last_error:'Database insert failed.';$this->audit('time_'.$type.'_failed','time_log',0,$emp->name.' / '.$detail);$fail($type==='sign_out'?__('Unable to record Sign Out. Please contact the administrator.','workforce-one'):__('Unable to record Sign In. Please contact the administrator.','workforce-one'));return;}
+            $classification=$type==='sign_in'?$this->sign_in_classification($now,$emp->id):'';
+            if($type==='sign_out'){ $this->achievement_evaluate_attendance((int)$emp->id,$this->attendance_day($emp->id)); }
             $this->audit('time_'.$type,'time_log',$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$now.' / '.$classification.' / face_verified='.($face_ok?'yes':'no').' / source='.($qr_kiosk?'qr_kiosk_'.(int)$qr_kiosk->id:'normal'));
             $success=$type==='sign_in'&&$classification==='Late Arrival'?__('Late Arrival recorded successfully.','workforce-one'):($type==='sign_out'?__('Sign Out recorded successfully.','workforce-one'):__('Sign In recorded successfully.','workforce-one'));
             $this->redirect(['ews_view'=>'time','time_success'=>rawurlencode($success)]);
+        }
+
+    /** Employee-facing text for a SignInRules result. */
+    private function sign_in_rule_message($rule,$emp,$bounds){
+            switch($rule){
+                case SignInRules::NO_EMPLOYEE: return __('Your WordPress account is not linked to an active employee.','workforce-one');
+                case SignInRules::FACE_REQUIRED: return __('Face verification is required before Sign In. Please complete Face Verification and try again.','workforce-one');
+                case SignInRules::GENERAL_LEAVE: return __('Today is a General Leave day. Sign In is not required.','workforce-one');
+                case SignInRules::NOT_WORKING_DAY: return __('Today is not a working day for you.','workforce-one');
+                case SignInRules::TOO_EARLY: return sprintf(/* translators: %s: start time */__('Sign In is not available yet. Your working hours start at %s.','workforce-one'),date_i18n('g:i A',$bounds['start']));
+                case SignInRules::TOO_LATE:
+                    $h=$this->working_hours($emp->id);
+                    return sprintf(/* translators: %s: cutoff time */__('Sign In is no longer available. The Sign In cutoff was %s.','workforce-one'),$bounds['cutoff']?date_i18n('g:i A',$bounds['cutoff']):$this->format_time_label($h['end']));
+                case SignInRules::ALREADY_SIGNED_IN: return __('You have already signed in today.','workforce-one');
+                case SignInRules::ON_BREAK: return __('Please Resume Work before signing out.','workforce-one');
+                case SignInRules::NOT_SIGNED_IN: return __('You cannot sign out before signing in.','workforce-one');
+                case SignInRules::ALREADY_SIGNED_OUT: return __('You have already signed out today.','workforce-one');
+            }
+            return __('Unable to record this action.','workforce-one');
         }
 
     public function att_grid_save(){
             if(!$this->can('ews_manage_attendance')) wp_die('Access denied');
             check_admin_referer('ews31_att_grid_save');
             global $wpdb;
-            $week=sanitize_text_field($_POST['week']??current_time('Y-m-d'));
+            $week=sanitize_text_field(wp_unslash($_POST['week']??current_time('Y-m-d')));
             $t=strtotime($week);
             if(!$t)wp_die('Invalid week.');
             [$dates,$sun]=$this->week_dates_configured($week);
@@ -216,7 +236,7 @@ trait EWS_Attendance_Trait {
                     $eid=absint($eid);
                     if(!$eid||!is_array($days))continue;
                     $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$eid));
-                    if(!$exists || !$this->employee_attendance_enabled($eid)){$invalid++;continue;}
+                    if(!$exists || !$this->employee_attendance_enabled($eid) || !$this->department_scope_allows_employee($eid)){$invalid++;continue;}
                     foreach($dates as $i=>$date){
                         $status=sanitize_text_field($days[$i]??'');
                         if($status===''||$status==='Not Set'){ $skipped++; continue; }
@@ -249,7 +269,7 @@ trait EWS_Attendance_Trait {
             $this->redirect($args);
         }
 
-    public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field($_POST['work_date']);$s=sanitize_text_field($_POST['status']);$n=sanitize_textarea_field($_POST['note']??'');if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
+    public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field(wp_unslash($_POST['work_date']));$s=sanitize_text_field(wp_unslash($_POST['status']));$n=sanitize_textarea_field(wp_unslash($_POST['note']??''));if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
 
     /*
      * Parse and validate an attendance CSV (columns: domain_name, work_date, status, note —
@@ -298,7 +318,7 @@ trait EWS_Attendance_Trait {
 
     public function att_preview(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_preview');if(empty($_FILES['attendance_csv']['tmp_name']))wp_die('CSV required.');$p=$this->parse_csv($_FILES['attendance_csv']['tmp_name']);if(isset($p['error']))wp_die(esc_html($p['error']));$t=wp_generate_uuid4();set_transient('ews31_preview_'.$t.'_'.get_current_user_id(),$p['rows'],15*MINUTE_IN_SECONDS);$this->redirect(['ews_view'=>'attendance','preview'=>$t]);}
 
-    public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field($_POST['token']);$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}$this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}
+    public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field(wp_unslash($_POST['token']));$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}$this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}
 
     public function att_sample(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_sample');nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename=attendance_import_sample.csv');echo "\xEF\xBB\xBF";$o=fopen('php://output','w');fputcsv($o,['domain_name','work_date','status','note']);fputcsv($o,['employee.domain','2026-08-09','Office','Normal attendance']);fputcsv($o,['employee.domain','2026-08-10','WFH','Working from home']);fputcsv($o,['employee02','2026-08-11','Vacation','Annual leave']);fclose($o);exit;}
 

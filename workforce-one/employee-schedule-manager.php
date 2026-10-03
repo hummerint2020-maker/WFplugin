@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.30.0
+ * Version: 3.31.39
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.30.0');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.39');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -20,8 +20,39 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
+require_once __DIR__ . '/src/autoload.php';
 require_once __DIR__ . '/includes/trait-core.php';
+require_once __DIR__ . '/includes/trait-schema.php';
+require_once __DIR__ . '/includes/trait-work-time.php';
+require_once __DIR__ . '/includes/trait-schedule-types.php';
+require_once __DIR__ . '/includes/trait-breaks.php';
+require_once __DIR__ . '/includes/trait-face.php';
+require_once __DIR__ . '/includes/trait-permissions.php';
+require_once __DIR__ . '/includes/trait-profile-account.php';
 require_once __DIR__ . '/includes/trait-attendance.php';
+require_once __DIR__ . '/includes/trait-leave.php';
+require_once __DIR__ . '/includes/trait-overtime.php';
+require_once __DIR__ . '/includes/trait-swap.php';
+require_once __DIR__ . '/includes/trait-face-reset.php';
+require_once __DIR__ . '/includes/trait-admin-requests.php';
+require_once __DIR__ . '/includes/trait-leave-admin.php';
+require_once __DIR__ . '/includes/trait-schedule-config.php';
+require_once __DIR__ . '/includes/trait-features.php';
+require_once __DIR__ . '/includes/trait-employee-admin.php';
+require_once __DIR__ . '/includes/trait-time-report.php';
+require_once __DIR__ . '/includes/trait-settings-pages.php';
+require_once __DIR__ . '/includes/trait-achievements-admin.php';
+require_once __DIR__ . '/includes/trait-engagement-admin.php';
+require_once __DIR__ . '/includes/trait-employee-profile.php';
+require_once __DIR__ . '/includes/trait-admin-dashboard.php';
+require_once __DIR__ . '/includes/trait-attendance-insights.php';
+require_once __DIR__ . '/includes/trait-schedule-view.php';
+require_once __DIR__ . '/includes/trait-attendance-grid.php';
+require_once __DIR__ . '/includes/trait-leave-view.php';
+require_once __DIR__ . '/includes/trait-dashboard-view.php';
+require_once __DIR__ . '/includes/trait-my-profile.php';
+require_once __DIR__ . '/includes/trait-people-view.php';
+require_once __DIR__ . '/includes/trait-app-layout.php';
 require_once __DIR__ . '/includes/trait-frontend.php';
 require_once __DIR__ . '/includes/trait-pwa.php';
 require_once __DIR__ . '/includes/trait-reports.php';
@@ -41,7 +72,7 @@ require_once __DIR__ . '/includes/trait-presence.php';
 require_once __DIR__ . '/includes/trait-privacy.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -64,33 +95,19 @@ class EWS_Manager_V31_1 {
             add_action('rest_api_init',[$this,'face_rest_routes']);
             add_shortcode('employee_login',[$this,'login_page']);
             add_action('wp_logout',[$this,'after_logout']);
+            add_action('wp_login_failed',[$this,'app_login_failed']);
             add_action('init',[$this,'prevent_dynamic_page_cache'],0);
             add_action('template_redirect',[$this,'prevent_dynamic_page_cache'],0);
             add_action('send_headers',[$this,'send_dynamic_no_cache_headers'],0);
             add_shortcode('employee_schedule',function(){ return $this->app_forced_view('schedule'); });
             add_shortcode('employee_attendance',function(){ return $this->app_forced_view('time'); });
             add_shortcode('employee_reports',function(){ return $this->app_forced_view('reports'); });
-            add_action('wp_head',[$this,'pwa_head']);
             add_action('wp_enqueue_scripts',[$this,'enqueue_frontend_assets']);
-            add_action('wp_footer',[$this,'pwa_footer']);
-            add_action('template_redirect',[$this,'pwa_manifest_route']);
-            add_action('template_redirect',[$this,'pwa_sw_route']);
+            \WorkforceOne\Pwa\Hooks::register($this); // wp_head, wp_footer, manifest and service worker routes (same order as before)
             add_action('admin_menu',[$this,'admin_menu']);
-            add_action('admin_post_ews_presence_kiosk_save',[$this,'presence_kiosk_save']);
-            add_action('admin_post_ews_presence_kiosk_revoke',[$this,'presence_kiosk_revoke']);
-            add_action('admin_post_ews_presence_request',[$this,'presence_request']);
-            add_action('admin_post_ews_presence_verify',[$this,'presence_verify']);
-            add_action('admin_post_ews_presence_qr_signin',[$this,'presence_qr_signin']);
-            add_action('template_redirect',[$this,'presence_kiosk_payload_route'],1);
-            add_action('template_redirect',[$this,'presence_kiosk_route'],2);
             add_action('admin_enqueue_scripts',[$this,'enqueue_admin_ui_foundation']);
             add_action('admin_post_ews31_employee_save',[$this,'employee_save']);
-            add_action('admin_post_ews31_face_reset_approve',[$this,'face_reset_admin_approve']);
             add_action('admin_post_ews_kudos_submit',[$this,'recognition_submit']);
-            add_action('admin_post_ews_department_save',[$this,'department_save']);
-            add_action('admin_post_ews_department_delete',[$this,'department_delete']);
-            add_action('admin_post_ews31_face_reset_reject',[$this,'face_reset_admin_reject']);
-            add_action('admin_post_ews31_requests_decision',[$this,'admin_requests_decision']);
             add_action('admin_post_ews31_employee_update',[$this,'employee_update']);
             add_action('admin_post_ews31_employee_archive',[$this,'employee_archive']);
             add_action('admin_post_ews31_att_single',[$this,'att_single']);
@@ -100,43 +117,20 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_att_sample',[$this,'att_sample']);
             add_action('admin_post_ews31_report_download',[$this,'report_download']);
             add_action('admin_post_ews31_report_xlsx',[$this,'report_xlsx']);
+            add_action('admin_post_ews_report_view_save',[$this,'report_view_save']);
+            add_action('admin_post_ews_report_view_delete',[$this,'report_view_delete']);
             add_action('admin_post_ews31_report_email',[$this,'report_email']);
             add_action('admin_post_ews31_email_save',[$this,'email_save']);
-            add_action('admin_post_ews31_schedule_config_save',[$this,'schedule_config_save']);
-            add_action('admin_post_ews31_shifts_save',[$this,'shifts_save_handler']);
-            add_action('admin_post_ews31_working_hours_save',[$this,'working_hours_save_handler']);
-            add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
-            add_action('admin_post_ews31_employee_moments_save',[$this,'employee_moments_save']);
-            add_action('admin_post_ews_smart_nudges_save',[$this,'smart_nudges_save']);
             add_action('admin_post_ews_smart_nudge_dismiss',[$this,'smart_nudge_dismiss']);
-            add_action('admin_post_ews_smart_nudge_test_push',[$this,'smart_nudge_test_push']);
             add_action('admin_post_ews_achievements_settings_save',[$this,'achievements_settings_save']);
             add_action('admin_post_ews_achievement_manual_grant',[$this,'achievement_manual_grant']);
             add_action('admin_post_ews_achievement_award_delete',[$this,'achievement_award_delete']);
-            add_action('admin_post_ews_poll_save',[$this,'poll_save']);
-            add_action('admin_post_ews_poll_toggle',[$this,'poll_toggle']);
-            add_action('admin_post_ews_poll_homepage',[$this,'poll_homepage']);
-            add_action('admin_post_ews_poll_archive',[$this,'poll_archive']);
-            add_action('admin_post_ews_poll_vote',[$this,'poll_vote']);
             add_action('ews_smart_nudges_tick',[$this,'smart_nudges_cron']);
-            add_action('admin_post_ews_overtime_request_create',[$this,'overtime_request_create']);
-            add_action('admin_post_ews_overtime_request_respond',[$this,'overtime_request_respond']);
-            add_action('admin_post_ews31_working_days_save',[$this,'working_days_save_handler']);
-            add_action('admin_post_ews31_general_leave_save',[$this,'general_leave_save']);
-            add_action('admin_post_ews31_general_leave_delete',[$this,'general_leave_delete']);
             add_action('admin_post_ews31_leave_save',[$this,'leave_save']);
-            add_action('admin_post_ews31_time_event',[$this,'time_event']);
-            add_action('admin_post_ews_break_start',[$this,'break_start']);
-            add_action('admin_post_ews_break_resume',[$this,'break_resume']);
-            add_action('ews_break_duration_reminder',[$this,'break_duration_reminder'],10,1);
-            add_action('ews_break_manager_escalation',[$this,'break_manager_escalation'],10,1);
+            \WorkforceOne\Attendance\Hooks::register($this);
             add_action('admin_post_ews31_time_reset',[$this,'admin_time_reset']);
             add_action('admin_post_ews31_time_save',[$this,'admin_time_save']);
             add_action('admin_post_ews31_time_csv',[$this,'admin_time_csv']);
-            add_action('admin_post_ews31_location_save',[$this,'admin_location_save']);
-            add_action('admin_post_ews_multi_location_save_v321',[$this,'admin_multi_location_save_v321']);
-            add_action('admin_post_ews_multi_location_archive_v321',[$this,'admin_multi_location_archive_v321']);
-            add_action('admin_post_ews_employee_location_save_v321',[$this,'admin_employee_location_save_v321']);
             add_action('admin_post_ews31_roles_save',[$this,'admin_roles_save']);
             add_action('admin_post_ews_notification_read',[$this,'notification_read']);
             add_action('admin_post_ews_notification_open',[$this,'notification_open']);
@@ -145,18 +139,19 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_push_unsubscribe',[$this,'push_unsubscribe']);
             add_action('admin_post_ews_push_test',[$this,'push_test']);
             add_action('admin_post_ews_push_send_test',[$this,'push_send_test']);
-            add_action('admin_post_ews_swap_create',[$this,'swap_request_create']);
-            add_action('admin_post_ews_swap_respond',[$this,'swap_request_respond']);
-            add_action('admin_post_ews_swap_cancel',[$this,'swap_request_cancel']);
-            add_action('admin_post_ews_vacation_request_create',[$this,'leave_request_create']);
-            add_action('admin_post_ews_vacation_request_respond',[$this,'leave_request_respond']);
-            add_action('admin_post_ews_leave_cancel',[$this,'leave_cancel_request']);
-            add_action('admin_post_ews_leave_cancel_respond',[$this,'leave_cancel_respond']);
-            add_action('admin_post_ews_leave_type_save',[$this,'admin_leave_type_save']);
-            add_action('admin_post_ews_leave_balance_save',[$this,'admin_leave_balance_save']);
-            add_action('admin_post_ews_admin_leave_record',[$this,'admin_admin_leave_record']);
-            add_action('admin_post_ews_early_leave_create',[$this,'early_leave_create']);
-            add_action('admin_post_ews_early_leave_respond',[$this,'early_leave_respond']);
+            \WorkforceOne\Leave\Hooks::register($this);
+            \WorkforceOne\Overtime\Hooks::register($this);
+            \WorkforceOne\Schedule\Hooks::register($this);
+            \WorkforceOne\Schedule\ConfigHooks::register($this);
+            add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
+            \WorkforceOne\Requests\Hooks::register($this);
+            \WorkforceOne\Approvals\Hooks::register($this);
+            \WorkforceOne\Locations\Hooks::register($this);
+            \WorkforceOne\Presence\Hooks::register($this);
+            \WorkforceOne\Organization\Hooks::register($this);
+            \WorkforceOne\Attendance\AutoHooks::register($this);
+            \WorkforceOne\Polls\Hooks::register($this);
+            \WorkforceOne\Settings\EngagementHooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
             add_action('admin_post_ews_task_delete',[$this,'task_delete']);
@@ -164,19 +159,10 @@ class EWS_Manager_V31_1 {
 
             add_action('admin_post_ews_notification_settings_save',[$this,'admin_notification_settings_save']);
             add_action('admin_post_ews_notification_policy_save',[$this,'admin_notification_policy_save']);
-            add_action('admin_post_ews_approval_workflow_save',[$this,'approval_workflow_save']);
-            add_action('admin_post_ews_approval_relationship_save',[$this,'approval_relationship_save']);
-            add_action('admin_post_ews_team_save',[$this,'team_save']);
-            add_action('admin_post_ews_team_delete',[$this,'team_delete']);
-            add_action('admin_post_ews_auto_attendance_save',[$this,'auto_attendance_save']);
-            add_action('admin_post_ews_auto_attendance_toggle',[$this,'auto_attendance_toggle']);
-            add_action('admin_post_ews_auto_attendance_delete',[$this,'auto_attendance_delete']);
-            add_action('admin_post_ews_auto_attendance_bulk_sign_out',[$this,'auto_attendance_bulk_sign_out']);
             add_action('admin_post_ews_profile_photo_save',[$this,'profile_photo_save']);
             add_action('admin_post_ews_profile_password_change',[$this,'profile_password_change']);
             add_action('ews_notifications_cleanup',[$this,'cleanup_notifications']);
             add_action('ews_privacy_cleanup',[$this,'privacy_cleanup_cron']);
-            add_action('ews_auto_attendance_tick',[$this,'auto_attendance_cron']);
             add_filter('cron_schedules',function($s){if(!isset($s['ews_auto_five_minutes']))$s['ews_auto_five_minutes']=['interval'=>300,'display'=>'Every 5 minutes'];return $s;});
             // Keep the scheduler present after upgrades/reloads; wp_next_scheduled prevents duplicates.
             if(wp_next_scheduled('ews_auto_attendance_tick')===false) $this->auto_attendance_schedule();

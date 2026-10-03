@@ -36,7 +36,7 @@ trait EWS_Tasks_Trait {
 
     private function tasks_redirect($args=[]){
         $url=wp_get_referer();
-        if(!$url || strpos($url,'admin-post.php')!==false)$url=home_url('/');
+        if(!$url || strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
         $url=remove_query_arg(['task_saved','task_updated','task_deleted','task_completed','task_error'],$url);
         if($args)$url=add_query_arg($args,$url);
         wp_safe_redirect($url); exit;
@@ -65,7 +65,7 @@ trait EWS_Tasks_Trait {
         if(!$user_id || $user_id===get_current_user_id()) return;
         $this->notify_user($user_id,$title,$message,'info','task',$task_id);
         if(method_exists($this,'push_custom_notification')){
-            $this->push_custom_notification($user_id,$title,$message,'task',$task_id,add_query_arg('ews_view','tasks',home_url('/')));
+            $this->push_custom_notification($user_id,$title,$message,'task',$task_id,add_query_arg('ews_view','tasks',$this->app_home_url()));
         }
     }
 
@@ -74,11 +74,11 @@ trait EWS_Tasks_Trait {
         if(!$this->tasks_enabled())wp_die('Tasks are disabled.');
         check_admin_referer('ews_task_save');
         $id=absint($_POST['task_id']??0);
-        $title=trim(sanitize_text_field($_POST['title']??''));
-        $description=trim(sanitize_textarea_field($_POST['description']??''));
+        $title=trim(sanitize_text_field(wp_unslash($_POST['title']??'')));
+        $description=trim(sanitize_textarea_field(wp_unslash($_POST['description']??'')));
         $status=sanitize_key($_POST['status']??'todo');
         $priority=sanitize_key($_POST['priority']??'normal');
-        $due=trim(sanitize_text_field($_POST['due_date']??''));
+        $due=trim(sanitize_text_field(wp_unslash($_POST['due_date']??'')));
         $assigned=absint($_POST['assigned_to']??0);
         if($title==='')$this->tasks_redirect(['task_error'=>'title']);
         if(!in_array($status,$this->task_allowed_statuses(),true))$status='todo';

@@ -1,6 +1,14 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\AutoRules;
+
+/**
+ * Auto Attendance: rules that record Sign In / Sign Out for an employee at set times (one day or every
+ * week; overnight when the Sign Out is earlier than the Sign In), the five-minute cron that runs them,
+ * and the bulk Sign Out. Rules: src/Attendance/AutoRules.php; page: templates/admin/auto-attendance.php.
+ */
+
 trait EWS_Auto_Attendance_Trait {
 
     private function ensure_auto_attendance_schema(){
@@ -46,10 +54,7 @@ trait EWS_Auto_Attendance_Trait {
     }
 
     private function auto_attendance_rule_applies($rule,$date){
-        if($rule->recurrence==='one_time') return (string)$rule->run_date===$date;
-        $days=[];
-        foreach(explode(',',(string)$rule->weekdays) as $d){if($d!==''&&is_numeric($d))$days[]=(int)$d;}
-        return in_array((int)wp_date('w',strtotime($date)),$days,true);
+        return AutoRules::applies((string)$rule->recurrence,$rule->run_date,(string)$rule->weekdays,(string)$date);
     }
 
     private function auto_attendance_working_schedule($employee_id,$date){
@@ -63,7 +68,12 @@ trait EWS_Auto_Attendance_Trait {
         return $sch;
     }
 
-    private function auto_attendance_event($employee_id,$date,$type,$target_time,$sch,$rule_id){
+    /**
+     * Record one automatic Sign In / Sign Out on the attendance day $date, at $target_time on
+     * $event_date (the next day for an overnight rule's Sign Out). Never duplicates an event.
+     */
+    private function auto_attendance_event($employee_id,$date,$type,$target_time,$sch,$rule_id,$event_date=null){
+        $event_date=$event_date?:$date;
         global $wpdb;
         // One indexed attendance lookup is enough for both duplicate protection
         // and Sign Out eligibility.
@@ -74,9 +84,9 @@ trait EWS_Auto_Attendance_Trait {
             if(!isset($events['sign_in'])&&!isset($events['late_sign_in'])) return ['ok'=>false,'reason'=>'no_sign_in'];
             if(isset($events['sign_out'])) return ['ok'=>false,'reason'=>'already_signed_out'];
             $sign_in=isset($events['sign_in'])?$events['sign_in']:$events['late_sign_in'];
-            if(strtotime($sign_in->event_at)>strtotime($date.' '.$target_time)) return ['ok'=>false,'reason'=>'sign_in_after_target'];
+            if(strtotime($sign_in->event_at)>strtotime($event_date.' '.$target_time)) return ['ok'=>false,'reason'=>'sign_in_after_target'];
         }
-        $event_at=$date.' '.$target_time.':00';
+        $event_at=$event_date.' '.$target_time.':00';
         $now=current_time('mysql');
         $user_id=0;
         $emp=$wpdb->get_row($wpdb->prepare("SELECT name,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$employee_id));
@@ -103,38 +113,36 @@ trait EWS_Auto_Attendance_Trait {
         return ['ok'=>true,'id'=>(int)$wpdb->insert_id];
     }
 
+    /** The five-minute cron: record what each enabled rule has due (src/Attendance/AutoRules.php). */
     private function process_auto_attendance(){
         global $wpdb;
         $table=$wpdb->prefix.'ews_auto_attendance_rules';
         $today=current_time('Y-m-d');
+        $yesterday=date('Y-m-d',strtotime($today.' 12:00:00 -1 day'));
         $now=current_time('H:i');
-        // Only load rules that can possibly be due today. Weekly rules are a small
-        // active set; one-time rules are narrowed to today's date by the indexed query.
-        $rules=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE enabled=1 AND ((recurrence='one_time' AND run_date=%s) OR recurrence='weekly') ORDER BY id ASC",$today));
+        // Only rules that can be due: weekly ones, and one-time rules of today or (overnight) yesterday.
+        $rules=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE enabled=1 AND ((recurrence='one_time' AND run_date IN (%s,%s)) OR recurrence='weekly') ORDER BY id ASC",$today,$yesterday));
         foreach($rules as $rule){
-            if(!$this->auto_attendance_rule_applies($rule,$today)) continue;
-            $sch=$this->auto_attendance_working_schedule((int)$rule->employee_id,$today);
-            if(!$sch) continue;
-            if($rule->sign_in_time && substr((string)$rule->sign_in_time,0,5)<=$now)
-                $this->auto_attendance_event((int)$rule->employee_id,$today,'sign_in',substr((string)$rule->sign_in_time,0,5),$sch,(int)$rule->id);
-            if($rule->sign_out_time && substr((string)$rule->sign_out_time,0,5)<=$now)
-                $this->auto_attendance_event((int)$rule->employee_id,$today,'sign_out',substr((string)$rule->sign_out_time,0,5),$sch,(int)$rule->id);
-            if($rule->recurrence==='one_time' && $rule->run_date===$today){
-                // Keep a one-time rule enabled until every configured action has
-                // reached its target time and has been handled. Previously this
-                // was disabled after the first action (e.g. Sign In), which meant
-                // a later Sign Out on the same rule could never run.
-                $sign_in_done = empty($rule->sign_in_time);
-                $sign_out_done = empty($rule->sign_out_time);
-                if(!$sign_in_done && substr((string)$rule->sign_in_time,0,5)<=$now){
-                    $sign_in_done = (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in') LIMIT 1",(int)$rule->employee_id,$today));
-                }
-                if(!$sign_out_done && substr((string)$rule->sign_out_time,0,5)<=$now){
-                    $sign_out_done = (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type='sign_out' LIMIT 1",(int)$rule->employee_id,$today));
-                }
-                if($sign_in_done && $sign_out_done){
-                    $wpdb->update($table,['enabled'=>0,'updated_at'=>current_time('mysql')],['id'=>(int)$rule->id],['%d','%s'],['%d']);
-                }
+            $eid=(int)$rule->employee_id;
+            foreach(AutoRules::due((array)$rule,$today,$yesterday,$now) as $a){
+                $sch=$this->auto_attendance_working_schedule($eid,$a['work_date']);
+                if($sch)$this->auto_attendance_event($eid,$a['work_date'],$a['type'],$a['time'],$sch,(int)$rule->id,$a['event_date']);
+            }
+            if($rule->recurrence!=='one_time')continue;
+            // A one-time rule stays enabled until each of its actions has reached its time and been
+            // handled (an overnight Sign Out is due the next day).
+            $run=(string)$rule->run_date;
+            $done=function($type,$time,$when)use($wpdb,$eid,$run,$today,$now){
+                if(empty($time))return true;
+                if($when>$today||($when===$today&&substr((string)$time,0,5)>$now))return false;
+                $types=$type==='sign_in'?"'sign_in','late_sign_in'":"'sign_out'";
+                return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ($types) LIMIT 1",$eid,$run));
+            };
+            $out_day=AutoRules::signOutDate($run,$rule->sign_in_time,$rule->sign_out_time);
+            $missed=!$this->auto_attendance_working_schedule($eid,$run); // nothing to record on a day off / leave
+            if($missed||($done('sign_in',$rule->sign_in_time,$run)&&$done('sign_out',$rule->sign_out_time,$out_day))){
+                if($missed&&($run>=$today||$out_day>=$today))continue; // keep it until its day has passed
+                $wpdb->update($table,['enabled'=>0,'updated_at'=>current_time('mysql')],['id'=>(int)$rule->id],['%d','%s'],['%d']);
             }
         }
     }
@@ -146,9 +154,9 @@ trait EWS_Auto_Attendance_Trait {
         $id=absint($_POST['rule_id']??0);
         $employee_id=absint($_POST['employee_id']??0);
         $recurrence=sanitize_key($_POST['recurrence']??'one_time');
-        $run_date=sanitize_text_field($_POST['run_date']??'');
-        $sign_in=sanitize_text_field($_POST['sign_in_time']??'');
-        $sign_out=sanitize_text_field($_POST['sign_out_time']??'');
+        $run_date=sanitize_text_field(wp_unslash($_POST['run_date']??''));
+        $sign_in=sanitize_text_field(wp_unslash($_POST['sign_in_time']??''));
+        $sign_out=sanitize_text_field(wp_unslash($_POST['sign_out_time']??''));
         $valid_time=function($v){return $v===''||preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$v);};
         if(!$employee_id || !in_array($recurrence,['one_time','weekly'],true) || !$valid_time($sign_in) || !$valid_time($sign_out) || ($sign_in===''&&$sign_out==='')) wp_die('Please provide a valid employee and at least one valid Auto Sign In / Auto Sign Out time.');
         if($recurrence==='one_time'){
@@ -252,31 +260,28 @@ trait EWS_Auto_Attendance_Trait {
         exit;
     }
 
+    /** wp-admin → Auto Attendance: add / edit rules, switch them on or off, bulk Sign Out. */
     public function admin_auto_attendance(){
         if(!$this->can('ews_manage_auto_attendance'))wp_die('Access denied');
         global $wpdb;$table=$wpdb->prefix.'ews_auto_attendance_rules';
         $edit_id=absint($_GET['edit_rule']??0);
         $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d",$edit_id)):null;
-        $emps=array_values(array_filter($this->emps(),function($e){return !isset($e->attendance_enabled) || (int)$e->attendance_enabled===1;}));
-        $rows=$wpdb->get_results("SELECT r.*,e.name,e.domain_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id ORDER BY r.enabled DESC,r.id DESC");
-        echo '<div class="wrap"><h1>Auto Attendance</h1><p>Automatically record real Sign In / Sign Out events for selected employees. Leave days are skipped and recurring rules remain active.</p>';
-        if(isset($_GET['saved']))echo '<div class="notice notice-success is-dismissible"><p>Auto Attendance Rule saved.</p></div>';
-        if(isset($_GET['bulk_sign_out'])){
-            $so=absint($_GET['bulk_sign_out']);$sk=absint($_GET['bulk_skipped']??0);$fl=absint($_GET['bulk_failed']??0);
-            echo '<div class="notice notice-success is-dismissible"><p>Auto Sign Out completed for <strong>'.$so.'</strong> signed-in employee'.($so===1?'':'s').'.'.($sk?' '.$sk.' skipped.':'').($fl?' '.$fl.' failed.':'').'</p></div>';
+        $rows=(array)$wpdb->get_results("SELECT r.*,e.name,e.domain_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id ORDER BY r.enabled DESC,r.id DESC");
+        foreach($rows as $r){
+            $r->when=$r->recurrence==='one_time'?(string)$r->run_date:$this->auto_attendance_days_label(array_filter(array_map('absint',explode(',',(string)$r->weekdays)),function($v){return $v>=0&&$v<=6;}));
+            $r->overnight=AutoRules::overnight($r->sign_in_time,$r->sign_out_time);
+            $r->toggle_url=wp_nonce_url(admin_url('admin-post.php?action=ews_auto_attendance_toggle&rule_id='.(int)$r->id),'ews_auto_attendance_toggle_'.$r->id);
+            $r->delete_url=wp_nonce_url(admin_url('admin-post.php?action=ews_auto_attendance_delete&rule_id='.(int)$r->id),'ews_auto_attendance_delete_'.$r->id);
         }
-        echo '<div style="background:#fff;border:1px solid #dcdcde;padding:18px;margin:18px 0;max-width:900px"><h2>'.($edit?'Edit Rule':'Add Rule').'</h2><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_auto_attendance_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_auto_attendance_save"><input type="hidden" name="rule_id" value="'.(int)($edit->id??0).'">';
-        echo '<table class="form-table"><tr><th>Employee</th><td><select name="employee_id" required><option value="">Select employee</option>';
-        foreach($emps as $e)echo '<option value="'.(int)$e->id.'" '.selected((int)($edit->employee_id??0),(int)$e->id,false).'>'.esc_html($e->name.' ('.$e->domain_name.')').'</option>';
-        echo '</select></td></tr><tr><th>Mode</th><td><label><input type="radio" name="recurrence" value="one_time" '.checked(($edit->recurrence??'one_time'),'one_time',false).'> One-time</label> &nbsp; <label><input type="radio" name="recurrence" value="weekly" '.checked(($edit->recurrence??''),'weekly',false).'> Recurring</label></td></tr>';
-        echo '<tr><th>Date</th><td><input type="date" name="run_date" value="'.esc_attr($edit->run_date??'').'"> <span class="description">Used for one-time rules.</span></td></tr>';
-        $selected=[];if($edit&&$edit->weekdays!=='')foreach(explode(',',$edit->weekdays) as $d)$selected[(int)$d]=1;else foreach($this->working_days() as $d)$selected[$d]=1;
-        echo '<tr><th>Recurring days</th><td>'; $dn=[0=>'Sunday',1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday'];foreach($dn as $d=>$n)echo '<label style="display:inline-block;margin-right:12px"><input type="checkbox" name="weekdays[]" value="'.$d.'" '.checked(isset($selected[$d]),true,false).'> '.esc_html($n).'</label>';echo '<p class="description">Defaults to the configured working days (currently '.esc_html($this->auto_attendance_days_label($this->working_days())).').</p></td></tr>';
-        echo '<tr><th>Auto Sign In</th><td><input type="time" name="sign_in_time" value="'.esc_attr($edit->sign_in_time??'').'"></td></tr><tr><th>Auto Sign Out</th><td><input type="time" name="sign_out_time" value="'.esc_attr($edit->sign_out_time??'').'"></td></tr><tr><th>Status</th><td><label><input type="checkbox" name="enabled" value="1" '.checked((int)($edit->enabled??1),1,false).'> Enabled</label></td></tr></table><p><button class="button button-primary">Save Rule</button> '.($edit?'<a class="button" href="'.esc_url(admin_url('admin.php?page=ews31-auto-attendance')).'">Cancel</a>':'').'</p></form></div>';
-        $bulk_url=wp_nonce_url(admin_url('admin-post.php?action=ews_auto_attendance_bulk_sign_out'),'ews_auto_attendance_bulk_sign_out');
-        echo '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 10px"><h2 style="margin:0">Rules</h2><a class="button button-secondary" href="'.esc_url($bulk_url).'" onclick="return confirm(\'Auto Sign Out all employees who have signed in today and have not signed out yet?\');">Auto Sign Out All Signed-In</a></div><table class="widefat striped"><thead><tr><th>Employee</th><th>Mode</th><th>Days / Date</th><th>Sign In</th><th>Sign Out</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-        if(!$rows)echo '<tr><td colspan="7">No Auto Attendance Rules configured.</td></tr>';
-        foreach($rows as $r){$when=$r->recurrence==='one_time'?$r->run_date:$this->auto_attendance_days_label(array_filter(array_map('absint',explode(',',(string)$r->weekdays)),function($v){return $v>=0&&$v<=6;}));$toggle=wp_nonce_url(admin_url('admin-post.php?action=ews_auto_attendance_toggle&rule_id='.(int)$r->id),'ews_auto_attendance_toggle_'.$r->id);$del=wp_nonce_url(admin_url('admin-post.php?action=ews_auto_attendance_delete&rule_id='.(int)$r->id),'ews_auto_attendance_delete_'.$r->id);echo '<tr><td><strong>'.esc_html($r->name).'</strong><br><small>'.esc_html($r->domain_name).'</small></td><td>'.esc_html($r->recurrence==='one_time'?'One-time':'Recurring').'</td><td>'.esc_html($when).'</td><td>'.esc_html($r->sign_in_time?:'—').'</td><td>'.esc_html($r->sign_out_time?:'—').'</td><td>'.($r->enabled?'<span style="color:#16803c;font-weight:600">Enabled</span>':'<span style="color:#777">Disabled</span>').'</td><td><a class="button button-small" href="'.esc_url(admin_url('admin.php?page=ews31-auto-attendance&edit_rule='.(int)$r->id)).'">Edit</a> <a class="button button-small" href="'.esc_url($toggle).'">'.($r->enabled?'Disable':'Enable').'</a> <a class="button button-small" href="'.esc_url($del).'" onclick="return confirm(\'Delete this Auto Attendance Rule?\');">Delete</a></td></tr>';}
-        echo '</tbody></table><p class="description">The scheduler checks every five minutes. If it runs late, the attendance event keeps the configured rule time. Existing Sign In / Sign Out events are never duplicated.</p></div>';
+        $selected=[];
+        if($edit&&(string)$edit->weekdays!=='')foreach(explode(',',$edit->weekdays) as $d)$selected[(int)$d]=true;else foreach($this->working_days() as $d)$selected[(int)$d]=true;
+        $bulk=null;
+        if(isset($_GET['bulk_sign_out']))$bulk=['done'=>absint($_GET['bulk_sign_out']),'skipped'=>absint($_GET['bulk_skipped']??0),'failed'=>absint($_GET['bulk_failed']??0)];
+        echo $this->render_template('admin/auto-attendance',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
+            'edit'=>$edit,'rows'=>$rows,'selected_days'=>$selected,'saved'=>isset($_GET['saved']),'bulk'=>$bulk,
+            'emps'=>array_values(array_filter($this->emps(),function($e){return !isset($e->attendance_enabled) || (int)$e->attendance_enabled===1;})),
+            'working_days_label'=>$this->auto_attendance_days_label($this->working_days()),
+            'bulk_url'=>wp_nonce_url(admin_url('admin-post.php?action=ews_auto_attendance_bulk_sign_out'),'ews_auto_attendance_bulk_sign_out'),
+        ]);
     }
 }

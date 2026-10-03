@@ -118,7 +118,7 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
 function ewsCloseGlobalModal(m){if(!m)return;m.remove();try{var u=new URL(window.location.href);["leave_error","leave_sent","leave_done","leave_cancel_sent","early_error","time_success","time_error","break_success","break_error","overtime_sent","overtime_error","saved","imported","grid_saved","time_reset","time_saved"].forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString())}catch(e){}}
 document.addEventListener("click",function(e){var b=e.target.closest(".ews-ux-ok,.ews-ux-close,.ews-ux-cancel");if(b){var m=b.closest(".ews-ux-modal");if(m)ewsCloseGlobalModal(m)}if(e.target.classList&&e.target.classList.contains("ews-ux-modal"))ewsCloseGlobalModal(e.target)});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){var m=document.querySelector(".ews-ux-modal");if(m)ewsCloseGlobalModal(m)}});
-function ewsConsumeGlobalFlash(){var keys=["leave_error","leave_sent","leave_done","leave_cancel_sent","early_error","time_success","time_error","break_success","break_error","overtime_sent","overtime_error","swap_error","swap_sent","swap_done","vacation_sent","vacation_error","vacation_done","vacation_rejected","saved","imported","grid_saved","time_reset","time_saved","profile_updated","profile_error"];try{var u=new URL(window.location.href),flash=false;keys.forEach(function(k){if(u.searchParams.has(k))flash=true;});if(!flash)return;keys.forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString());var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}catch(e){var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}}
+function ewsConsumeGlobalFlash(){var keys=["leave_error","leave_sent","leave_done","leave_cancel_sent","early_error","time_success","time_error","break_success","break_error","overtime_sent","overtime_error","swap_error","swap_sent","swap_done","vacation_sent","vacation_error","vacation_done","vacation_rejected","saved","imported","grid_saved","time_reset","time_saved","profile_updated","profile_error","password_updated","password_error","grid_skipped","grid_invalid","grid_conflict","rejected"];try{var u=new URL(window.location.href),flash=false;keys.forEach(function(k){if(u.searchParams.has(k))flash=true;});if(!flash)return;keys.forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString());var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}catch(e){var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}}
 document.addEventListener("DOMContentLoaded",ewsConsumeGlobalFlash);
 window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
 })();
@@ -452,4 +452,31 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEwsReportXlsxExport);
     else initEwsReportXlsxExport();
 })();
+})();
+
+/* App frame (templates/app/layout.php): the profile menu, and inline notices that fade out after 3 s. */
+(function(){
+    function initEwsAppFrame(){
+        var trigger=document.querySelector(".ews-profile-menu-trigger");
+        var menu=document.getElementById("ews-profile-menu-dropdown");
+        if(trigger && menu){
+            trigger.addEventListener("click",function(e){
+                e.preventDefault();
+                var open=trigger.getAttribute("aria-expanded")==="true";
+                trigger.setAttribute("aria-expanded",open?"false":"true");
+                menu.hidden=open;
+            });
+            document.addEventListener("click",function(e){
+                if(!e.target.closest(".ews-profile-menu")){trigger.setAttribute("aria-expanded","false");menu.hidden=true;}
+            });
+        }
+        document.querySelectorAll(".ews-main .ews-notice,.ews-main .ews-time-success,.ews-main .ews-time-error,.ews-main .ews-profile-notice").forEach(function(el){
+            setTimeout(function(){
+                el.style.transition="opacity .35s ease, max-height .35s ease, margin .35s ease, padding .35s ease";
+                el.style.opacity="0";el.style.maxHeight="0";el.style.marginTop="0";el.style.marginBottom="0";el.style.paddingTop="0";el.style.paddingBottom="0";
+                setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},400);
+            },3000);
+        });
+    }
+    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initEwsAppFrame);else initEwsAppFrame();
 })();

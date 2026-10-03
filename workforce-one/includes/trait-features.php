@@ -1,0 +1,99 @@
+<?php
+if (!defined('ABSPATH')) exit;
+
+use WorkforceOne\Settings\FeatureSettings;
+
+/**
+ * wp-admin "Feature Configuration": optional features and their settings. Option names are
+ * unchanged. Rules: src/Settings/FeatureSettings.php. Behaviour: tests/e2e_features.py.
+ */
+trait EWS_Features_Trait {
+
+    private function features_redirect($args){
+        wp_safe_redirect(add_query_arg($args,admin_url('admin.php?page=ews31-features')));
+        exit;
+    }
+
+    public function admin_features(){
+        if(!$this->can('ews_manage_settings'))wp_die('Access denied');
+        $error=sanitize_key($_GET['features_error']??'');
+        echo $this->render_template('admin/features',[
+            'on'=>[
+                'tasks'=>$this->tasks_enabled(),
+                'presence_qr'=>(bool)(int)get_option('ews_presence_qr_signin',0),
+                'presence_verification'=>(bool)(int)get_option('ews_presence_verification',0),
+                'breaks'=>$this->break_enabled(),
+                'face'=>$this->face_signin_enabled(),
+                'recognition'=>(bool)(int)get_option('ews_feature_recognition',1),
+                'kudos'=>(bool)(int)get_option('ews_recognition_allow_kudos',1),
+                'overtime'=>$this->overtime_enabled(),
+                'early_leave_office_only'=>(bool)(int)get_option('ews_early_leave_office_only',1),
+                'confirm_global'=>(bool)(int)get_option('ews_confirm_global',1),
+            ],
+            'breaks'=>['per_day'=>$this->break_per_day(),'duration'=>$this->break_duration_minutes(),'escalation'=>$this->break_escalation_minutes()],
+            'early_leave'=>['max'=>(int)get_option('ews_early_leave_max_minutes',120),'monthly'=>(int)get_option('ews_early_leave_monthly_minutes',240)],
+            'face'=>$this->face_signin_settings(),
+            'face_fields'=>FeatureSettings::FACE_FIELDS,
+            'detector_sizes'=>FeatureSettings::DETECTOR_SIZES,
+            'splash'=>$this->pwa_splash_settings(),
+            'recognition'=>FeatureSettings::recognition(get_option('ews_recognition_weekly_limit_mode','limited'),get_option('ews_recognition_weekly_limit',5)),
+            'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
+            'confirm'=>FeatureSettings::confirmState(get_option('ews_confirmation_actions',[])),
+            'privacy_html'=>$this->privacy_settings_section(),
+            'saved'=>isset($_GET['features_saved']),
+            'error'=>$error!==''?FeatureSettings::errorMessage($error):null,
+            'post_url'=>admin_url('admin-post.php'),
+        ]);
+    }
+
+    public function features_save_handler(){
+        if(!$this->can('ews_manage_settings'))wp_die('Access denied');
+        check_admin_referer('ews_features_save');
+        $post=wp_unslash($_POST);
+        $flag=function($key)use($post){return !empty($post[$key]);};
+
+        // Validate everything before saving anything.
+        [$early,$error]=FeatureSettings::earlyLeave($post['early_leave_max']??120,$post['early_leave_monthly']??240);
+        if($error)$this->features_redirect(['features_error'=>$error]);
+
+        $splash_post=is_array($post['pwa_splash']??null)?$post['pwa_splash']:[];
+        foreach(['title','subtitle'] as $k)$splash_post[$k]=sanitize_text_field($splash_post[$k]??'');
+        $splash=FeatureSettings::splash($splash_post);
+        $splash['logo']=esc_url_raw($splash['logo']);
+        $breaks=FeatureSettings::breaks($post['breaks_per_day']??3,$post['break_duration']??30,$post['break_escalation']??45);
+        $recognition=FeatureSettings::recognition(sanitize_key($post['recognition_weekly_limit_mode']??'limited'),$post['recognition_weekly_limit']??5);
+
+        update_option('ews_pwa_splash_settings',$splash,false);
+        update_option('ews_presence_qr_signin',$flag('presence_qr_signin')?1:0,false);
+        update_option('ews_presence_verification',$flag('presence_verification')?1:0,false);
+        $this->privacy_settings_save();
+        update_option('ews_feature_recognition',$flag('recognition_enabled'),false);
+        update_option('ews_recognition_allow_kudos',$flag('recognition_allow_kudos'),false);
+        update_option('ews_recognition_weekly_limit_mode',$recognition['mode'],false);
+        update_option('ews_recognition_weekly_limit',$recognition['limit'],false);
+        update_option('ews_feature_tasks',$flag('tasks_enabled'),false);
+        update_option('ews_feature_overtime',$flag('overtime_enabled'),false);
+        update_option('ews_feature_face_signin',$flag('face_signin_enabled'),false);
+        update_option('ews_face_signin_settings',FeatureSettings::face($post['face_signin_settings']??[]),false);
+        update_option('ews_feature_breaks',$flag('break_enabled'),false);
+        update_option('ews_breaks_per_day',$breaks['per_day'],false);
+        update_option('ews_break_duration_minutes',$breaks['duration'],false);
+        update_option('ews_break_manager_alert_minutes',$breaks['escalation'],false);
+        update_option('ews_early_leave_max_minutes',$early['max'],false);
+        update_option('ews_early_leave_monthly_minutes',$early['monthly'],false);
+        update_option('ews_early_leave_office_only',$flag('early_leave_office_only')?1:0,false);
+        update_option('ews_confirm_global',$flag('confirm_global')?1:0,false);
+        update_option('ews_confirmation_actions',FeatureSettings::confirmActions($post['confirm_actions']??[]),false);
+
+        $state=function($on){return $on?'enabled':'disabled';};
+        $this->audit('feature_update','settings',0,implode(';',[
+            'tasks='.$state($flag('tasks_enabled')),'overtime_requests='.$state($flag('overtime_enabled')),
+            'face_signin='.$state($flag('face_signin_enabled')),'breaks='.$state($flag('break_enabled')),
+            'breaks_per_day='.$breaks['per_day'],'break_duration='.$breaks['duration'],'break_escalation='.$breaks['escalation'],
+            'early_leave='.$early['max'].'/'.$early['monthly'],'presence_qr='.$state($flag('presence_qr_signin')),
+            'recognition='.$state($flag('recognition_enabled')),'kudos='.($flag('recognition_allow_kudos')?'allowed':'blocked'),
+            'kudos_weekly='.($recognition['mode']==='unlimited'?'unlimited':$recognition['limit']),
+        ]));
+        $this->features_redirect(['features_saved'=>1]);
+    }
+}

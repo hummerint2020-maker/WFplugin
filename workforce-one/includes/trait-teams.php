@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Organization\OrgRules;
+
 /**
  * Workforce One Teams foundation.
  *
@@ -105,62 +107,55 @@ trait EWS_Teams_Trait {
         return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['members']} WHERE team_id=%d AND employee_id=%d AND active=1 LIMIT 1",absint($team_id),absint($employee_id)));
     }
 
+    /** wp-admin → Teams: create / edit a team (department, manager, members); archive teams. */
     public function admin_teams(){
         if(!current_user_can('manage_options'))wp_die('Access denied');
-        $this->ensure_teams_schema();
+        $this->ensure_teams_schema(); $this->ensure_departments_schema();
         global $wpdb; $t=$this->team_tables();
-        $teams=$wpdb->get_results("SELECT tm.*,e.name manager_name,(SELECT COUNT(*) FROM {$t['members']} m WHERE m.team_id=tm.id AND m.active=1) member_count FROM {$t['teams']} tm LEFT JOIN {$this->employees} e ON e.id=tm.manager_employee_id WHERE tm.active=1 ORDER BY tm.name ASC");
-        $this->ensure_departments_schema(); $employees=$wpdb->get_results("SELECT id,name,domain_name,department_id FROM {$this->employees} WHERE active=1 ORDER BY name ASC"); $departments=$wpdb->get_results("SELECT id,name FROM {$wpdb->prefix}ews_departments WHERE active=1 ORDER BY name ASC");
         $edit_id=absint($_GET['team_id']??0); $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['teams']} WHERE id=%d AND active=1 LIMIT 1",$edit_id)):null;
-        $selected=[];
-        if($edit){$selected=array_map('intval',$wpdb->get_col($wpdb->prepare("SELECT employee_id FROM {$t['members']} WHERE team_id=%d AND active=1",(int)$edit->id)));}
-        echo '<div class="wrap"><h1>Teams</h1>';
-        if(isset($_GET['team_saved']))echo '<div class="notice notice-success is-dismissible"><p>Team saved successfully.</p></div>';
-        if(isset($_GET['team_deleted']))echo '<div class="notice notice-success is-dismissible"><p>Team archived successfully.</p></div>';
-        if(isset($_GET['team_error']))echo '<div class="notice notice-error is-dismissible"><p>Could not save the team. Please verify the team name, manager and members.</p></div>';
-        echo '<p style="max-width:900px">Create work teams and assign one Team Manager to each team. The Team Manager is an organizational relationship, not a WordPress role, and the manager is automatically included as a team member.</p>';
-        echo '<div style="display:grid;grid-template-columns:minmax(320px,520px) 1fr;gap:20px;align-items:start">';
-        echo '<div style="background:#fff;border:1px solid #dcdcde;padding:22px"><h2 style="margin-top:0">'.($edit?'Edit Team':'Create Team').'</h2><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_team_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_team_save"><input type="hidden" name="team_id" value="'.(int)($edit?$edit->id:0).'">';
-        echo '<p><label><strong>Name</strong><br><input type="text" name="name" value="'.esc_attr($edit?$edit->name:'').'" required style="width:100%;max-width:480px"></label></p>';
-        echo '<p><label><strong>Description</strong><br><textarea name="description" rows="4" style="width:100%;max-width:480px">'.esc_textarea($edit?$edit->description:'').'</textarea></label></p>';
-        echo '<p><label><strong>Team Manager</strong><br><select name="manager_employee_id" required style="width:100%;max-width:480px"><option value="0">— Select manager —</option>';foreach($employees as $e)echo '<option value="'.(int)$e->id.'"'.selected((int)($edit?$edit->manager_employee_id:0),(int)$e->id,false).'>'.esc_html($e->name).' · '.esc_html($e->domain_name).'</option>';echo '</select></label></p>';
-        echo '<p><strong>Team Members</strong><br><span class="description">Select the employees who belong to this team. The manager will always be added automatically.</span></p><div style="max-height:300px;overflow:auto;border:1px solid #dcdcde;padding:10px">';foreach($employees as $e){echo '<label style="display:block;padding:6px 0"><input type="checkbox" name="member_ids[]" value="'.(int)$e->id.'"'.(in_array((int)$e->id,$selected,true)?' checked':'').'> '.esc_html($e->name).' · '.esc_html($e->domain_name).'</label>';}echo '</div>';
-        echo '<p><label><strong>Department</strong><br><select name="department_id" required style="min-width:240px"><option value="">-- Select Department --</option>';foreach($departments as $dep)echo '<option value="'.(int)$dep->id.'"'.selected((int)($edit->department_id??0),(int)$dep->id,false).'>'.esc_html($dep->name).'</option>';echo '</select></label></p><p><button class="button button-primary" type="submit">'.($edit?'Save Team':'Create Team').'</button> '.($edit?'<a class="button" href="'.esc_url(admin_url('admin.php?page=ews31-teams')).'">Cancel</a>':'').'</p></form></div>';
-        echo '<div style="background:#fff;border:1px solid #dcdcde;padding:22px"><h2 style="margin-top:0">Active Teams</h2>';if(!$teams){echo '<p>No teams created yet.</p>';}else{echo '<table class="widefat striped"><thead><tr><th>Team</th><th>Manager</th><th>Members</th><th>Actions</th></tr></thead><tbody>';foreach($teams as $team){echo '<tr><td><strong>'.esc_html($team->name).'</strong>'.($team->description?'<br><span style="color:#646970">'.esc_html($team->description).'</span>':'').'</td><td>'.esc_html($team->manager_name?:'—').'</td><td>'.(int)$team->member_count.'</td><td><a class="button button-small" href="'.esc_url(add_query_arg(['page'=>'ews31-teams','team_id'=>(int)$team->id],admin_url('admin.php'))).'">Edit</a> <form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="display:inline">'.wp_nonce_field('ews_team_delete_'.$team->id,'_wpnonce',true,false).'<input type="hidden" name="action" value="ews_team_delete"><input type="hidden" name="team_id" value="'.(int)$team->id.'"><button class="button button-small" type="submit" onclick="return confirm(\'Archive this team?\')">Archive</button></form></td></tr>'; }echo '</tbody></table>';}
-        echo '</div></div></div>';
+        echo $this->render_template('admin/teams',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
+            'edit'=>$edit,
+            'selected'=>$edit?array_map('intval',$wpdb->get_col($wpdb->prepare("SELECT employee_id FROM {$t['members']} WHERE team_id=%d AND active=1",(int)$edit->id))):[],
+            'teams'=>(array)$wpdb->get_results("SELECT tm.*,e.name manager_name,d.name department_name,(SELECT COUNT(*) FROM {$t['members']} m WHERE m.team_id=tm.id AND m.active=1) member_count FROM {$t['teams']} tm LEFT JOIN {$this->employees} e ON e.id=tm.manager_employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=tm.department_id WHERE tm.active=1 ORDER BY tm.name ASC"),
+            'employees'=>(array)$wpdb->get_results("SELECT e.id,e.name,e.domain_name,e.department_id,d.name department_name FROM {$this->employees} e LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id AND d.active=1 WHERE e.active=1 ORDER BY e.name ASC"),
+            'departments'=>(array)$wpdb->get_results("SELECT id,name FROM {$wpdb->prefix}ews_departments WHERE active=1 ORDER BY name ASC"),
+            'notice'=>isset($_GET['team_saved'])?'Team saved successfully.':(isset($_GET['team_deleted'])?'Team archived successfully.':''),
+            'error'=>OrgRules::message('team',sanitize_key(wp_unslash($_GET['team_error']??''))),
+        ]);
     }
 
     public function team_save(){
         if(!current_user_can('manage_options'))wp_die('Access denied');
-        check_admin_referer('ews_team_save'); $this->ensure_teams_schema();
+        check_admin_referer('ews_team_save'); $this->ensure_teams_schema(); $this->ensure_departments_schema();
         global $wpdb; $t=$this->team_tables();
-        $id=absint($_POST['team_id']??0); $department_id=absint($_POST['department_id']??0); $name=sanitize_text_field($_POST['name']??''); $description=sanitize_textarea_field($_POST['description']??''); $manager=absint($_POST['manager_employee_id']??0);
-        $members=isset($_POST['member_ids'])&&is_array($_POST['member_ids'])?array_values(array_unique(array_filter(array_map('absint',$_POST['member_ids'])))):[];
-        if(!$name||!$manager||!$department_id)return $this->team_redirect_error();
-        $this->ensure_departments_schema();
-        $department_exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_departments WHERE id=%d AND active=1 LIMIT 1",$department_id));
-        if(!$department_exists)return $this->team_redirect_error();
-        $manager_exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",$manager,$department_id));
-        if(!$manager_exists)return $this->team_redirect_error();
-        $dup=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['teams']} WHERE name=%s AND id<>%d AND active=1 LIMIT 1",$name,$id));
-        if($dup)return $this->team_redirect_error();
-        $now=current_time('mysql');
-        if($wpdb->query('START TRANSACTION')===false)return $this->team_redirect_error();
+        $id=absint($_POST['team_id']??0); $department_id=absint($_POST['department_id']??0); $name=sanitize_text_field(wp_unslash($_POST['name']??'')); $description=sanitize_textarea_field(wp_unslash($_POST['description']??'')); $manager=absint($_POST['manager_employee_id']??0);
+        $members=isset($_POST['member_ids'])&&is_array($_POST['member_ids'])?array_map('absint',wp_unslash($_POST['member_ids'])):[];
+        $members[]=$manager; $members=array_values(array_unique(array_filter($members)));
+        $in_department=function($eid)use($wpdb,$department_id){return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",$eid,$department_id));};
+        $error=OrgRules::teamError([
+            'name'=>$name,'department'=>$department_id,'manager'=>$manager,
+            'department_active'=>(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_departments WHERE id=%d AND active=1 LIMIT 1",$department_id)),
+            'manager_in_department'=>$manager&&$in_department($manager),
+            'members_in_department'=>count(array_filter($members,$in_department))===count($members),
+            'duplicate'=>OrgRules::duplicate((array)$wpdb->get_col($wpdb->prepare("SELECT active FROM {$t['teams']} WHERE name=%s AND id<>%d",$name,$id))),
+        ]);
+        if($error!=='')$this->team_redirect_error($error);
+        $now=current_time('mysql');$is_new=!$id;
+        if($wpdb->query('START TRANSACTION')===false)$this->team_redirect_error('save');
         if($id){$ok=$wpdb->update($t['teams'],['name'=>$name,'description'=>$description,'manager_employee_id'=>$manager,'department_id'=>$department_id,'updated_at'=>$now],['id'=>$id],['%s','%s','%d','%d','%s'],['%d']);}
         else{$ok=$wpdb->insert($t['teams'],['name'=>$name,'description'=>$description,'manager_employee_id'=>$manager,'department_id'=>$department_id,'active'=>1,'created_at'=>$now,'updated_at'=>$now],['%s','%s','%d','%d','%d','%s','%s']);$id=(int)$wpdb->insert_id;}
-        if($ok===false||!$id){$wpdb->query('ROLLBACK');return $this->team_redirect_error();}
-        $members[]=$manager; $members=array_values(array_unique($members));
-        $valid=[];foreach($members as $eid){if($wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",$eid,$department_id)))$valid[]=$eid;}if(count($valid)!==count($members)){ $wpdb->query('ROLLBACK'); return $this->team_redirect_error(); }
+        if($ok===false||!$id)$this->team_redirect_error('save');
         $wpdb->query($wpdb->prepare("UPDATE {$t['members']} SET active=0,updated_at=%s WHERE team_id=%d AND active=1",$now,$id));
-        foreach($valid as $eid){$existing=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['members']} WHERE team_id=%d AND employee_id=%d LIMIT 1",$id,$eid));if($existing){$ok=$wpdb->update($t['members'],['active'=>1,'updated_at'=>$now],['id'=>(int)$existing],['%d','%s'],['%d']);}else{$ok=$wpdb->insert($t['members'],['team_id'=>$id,'employee_id'=>$eid,'active'=>1,'joined_at'=>$now,'updated_at'=>$now],['%d','%d','%d','%s','%s']);}if($ok===false){$wpdb->query('ROLLBACK');return $this->team_redirect_error();}}
-        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return $this->team_redirect_error();}
-        $this->audit($id?'team_update':'team_create','team',$id,$name.' / manager='.$manager.' / members='.count($valid));
+        foreach($members as $eid){$existing=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['members']} WHERE team_id=%d AND employee_id=%d LIMIT 1",$id,$eid));if($existing){$ok=$wpdb->update($t['members'],['active'=>1,'updated_at'=>$now],['id'=>(int)$existing],['%d','%s'],['%d']);}else{$ok=$wpdb->insert($t['members'],['team_id'=>$id,'employee_id'=>$eid,'active'=>1,'joined_at'=>$now,'updated_at'=>$now],['%d','%d','%d','%s','%s']);}if($ok===false)$this->team_redirect_error('save');}
+        if($wpdb->query('COMMIT')===false)$this->team_redirect_error('save');
+        $this->audit($is_new?'team_create':'team_update','team',$id,$name.' / manager='.$manager.' / members='.count($members));
         wp_safe_redirect(admin_url('admin.php?page=ews31-teams&team_saved=1'));exit;
     }
 
-    private function team_redirect_error(){
+    /** Back to the Teams page with the reason (OrgRules::MESSAGES['team']); undoes an open transaction. */
+    private function team_redirect_error($code='save'){
         if(isset($GLOBALS['wpdb']))$GLOBALS['wpdb']->query('ROLLBACK');
-        wp_safe_redirect(admin_url('admin.php?page=ews31-teams&team_error=1'));exit;
+        wp_safe_redirect(add_query_arg('team_error',$code,admin_url('admin.php?page=ews31-teams')));exit;
     }
 
     public function team_delete(){

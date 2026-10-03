@@ -1,0 +1,23 @@
+/* wp-admin → Employee Polls (templates/admin/polls.php). */
+.wfo-poll-admin{max-width:1180px}
+.wfo-poll-admin .card{background:#fff;border:1px solid #dcdcde;border-radius:14px;padding:22px;margin:16px 0;box-shadow:0 2px 8px rgba(16,24,40,.04);max-width:none}
+.wfo-poll-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.wfo-poll-admin label{font-weight:600;display:block;margin-bottom:6px}
+.wfo-poll-admin label.wfo-poll-check{font-weight:400}
+.wfo-poll-admin input[type=text],.wfo-poll-admin textarea,.wfo-poll-admin input[type=datetime-local],.wfo-poll-admin select{width:100%;box-sizing:border-box}
+.wfo-poll-option-row{display:flex;gap:8px;margin:8px 0}
+.wfo-poll-option-row input{flex:1}
+.wfo-poll-admin table{width:100%;border-collapse:collapse}
+.wfo-poll-admin th,.wfo-poll-admin td{padding:11px 9px;border-bottom:1px solid #eef0f3;text-align:right;vertical-align:top}
+.wfo-poll-pill{display:inline-block;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:700;margin-bottom:4px}
+.wfo-poll-open{background:#ecfdf3;color:#15803d}
+.wfo-poll-scheduled{background:#fffaeb;color:#b54708}
+.wfo-poll-closed,.wfo-poll-archived,.wfo-poll-hidden{background:#f2f4f7;color:#667085}
+.wfo-poll-home{background:#eef4ff;color:#3158c8}
+.wfo-poll-result-row{display:flex;justify-content:space-between;font-size:11px}
+.wfo-poll-resultbar{height:8px;background:#eef2f6;border-radius:99px;overflow:hidden;min-width:120px}
+.wfo-poll-resultbar i{display:block;height:100%;background:#3158c8;border-radius:99px}
+.wfo-poll-muted{color:#667085;font-size:12px;font-weight:400}
+.wfo-poll-actions{display:flex;gap:7px;flex-wrap:wrap}
+.wfo-poll-add{margin-top:8px}
+@media(max-width:800px){.wfo-poll-grid{grid-template-columns:1fr}}

@@ -218,54 +218,29 @@ trait EWS_Approvals_Trait {
     }
 
     private function approval_mode_family($mode){
-        $mode=strtoupper((string)$mode);
-        if($mode==='LEVEL_1'||$mode==='LEVEL_2'||$mode==='SEQUENTIAL')return 'SEQUENTIAL';
-        if($mode==='PEER')return 'PEER';
-        return 'NONE';
+        return \WorkforceOne\Approvals\Workflows::modeFamily((string)$mode);
     }
 
-    private function approval_sequential_level_count($mode,$step_configs=[]){
-        $mode=strtoupper((string)$mode);
-        if($mode==='LEVEL_1')return 1;
-        if($mode==='LEVEL_2')return 2;
-        if($mode==='SEQUENTIAL'){
-            $count=0;
-            foreach([1,2] as $i){
-                if(isset($step_configs[$i])&&is_array($step_configs[$i])&&!empty($step_configs[$i]['resolver_type']))$count=$i;
-            }
-            return $count;
-        }
-        return 0;
-    }
-
-    private function approval_configure_workflow($workflow_key,$mode,$step_configs=[]){
+    /**
+     * Save a workflow's mode and steps (one transaction). $supported limits the modes (the modes the
+     * workflow's module handles); the checks are WorkforceOne\Approvals\Workflows::plan().
+     * @return true|WP_Error
+     */
+    private function approval_configure_workflow($workflow_key,$mode,$step_configs=[],$supported=null){
         global $wpdb;
         $t=$this->approval_tables();
         $workflow=$this->approval_workflow($workflow_key);
         if(!$workflow)return new WP_Error('workflow_not_found','Workflow not found.');
         $mode=strtoupper(sanitize_key($mode));
-        if(!in_array($mode,['NONE','LEVEL_1','LEVEL_2','SEQUENTIAL','PEER'],true))return new WP_Error('invalid_mode','Invalid approval mode: '.$mode);
-        $family=$this->approval_mode_family($mode);
-        $count=$this->approval_sequential_level_count($mode,$step_configs);
-        if($mode==='PEER')$count=1;
-        for($i=1;$i<=$count;$i++){
-            $cfg=isset($step_configs[$i])&&is_array($step_configs[$i])?$step_configs[$i]:[];
-            $resolver=strtoupper(sanitize_key($cfg['resolver_type']??''));
-            $value=absint($cfg['resolver_value']??0);
-            $allowed=['SUPERVISOR','TEAM_MANAGER','SPECIFIC_EMPLOYEE','SPECIFIC_USER'];
-            if($family==='PEER')$allowed=['TARGET_EMPLOYEE'];
-            if(!in_array($resolver,$allowed,true))return new WP_Error('invalid_resolver','Invalid approver resolver for step '.$i.': '.$resolver);
-            if(in_array($resolver,['SPECIFIC_EMPLOYEE','SPECIFIC_USER'],true)&&!$value)return new WP_Error('missing_resolver_value','A specific approver is required for step '.$i.'.');
-        }
+        $plan=\WorkforceOne\Approvals\Workflows::plan($mode,is_array($step_configs)?$step_configs:[],$supported);
+        if(!$plan['ok'])return new WP_Error($plan['code'],$plan['message']);
         $now=current_time('mysql');
         if($wpdb->query('START TRANSACTION')===false)return new WP_Error('db_error','Could not start configuration transaction.');
         $ok=$wpdb->query($wpdb->prepare("UPDATE {$t['workflows']} SET approval_mode=%s,active=1,updated_at=%s WHERE id=%d",$mode,$now,(int)$workflow->id));
         if($ok===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error',$wpdb->last_error);}
         if($wpdb->query($wpdb->prepare("DELETE FROM {$t['steps']} WHERE workflow_id=%d",(int)$workflow->id))===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error',$wpdb->last_error);}
-        for($i=1;$i<=$count;$i++){
-            $cfg=$step_configs[$i]??[];$resolver=strtoupper(sanitize_key($cfg['resolver_type']??($family==='PEER'?'TARGET_EMPLOYEE':'')));$value=$cfg['resolver_value']??null;if(in_array($resolver,['SPECIFIC_EMPLOYEE','SPECIFIC_USER'],true))$value=(string)absint($value);elseif($resolver==='TARGET_EMPLOYEE')$value=null;else $value=null;
-            $step_type=$family==='PEER'?'PEER':'APPROVAL';
-            $ok=$wpdb->insert($t['steps'],['workflow_id'=>(int)$workflow->id,'step_order'=>$i,'step_type'=>$step_type,'resolver_type'=>$resolver,'resolver_value'=>$value,'required'=>1,'active'=>1,'created_at'=>$now,'updated_at'=>$now],['%d','%d','%s','%s','%s','%d','%d','%s','%s']);
+        foreach($plan['steps'] as $step){
+            $ok=$wpdb->insert($t['steps'],['workflow_id'=>(int)$workflow->id,'step_order'=>$step['step_order'],'step_type'=>$step['step_type'],'resolver_type'=>$step['resolver_type'],'resolver_value'=>$step['resolver_value'],'required'=>1,'active'=>1,'created_at'=>$now,'updated_at'=>$now],['%d','%d','%s','%s','%s','%d','%d','%s','%s']);
             if($ok===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error',$wpdb->last_error);}
         }
         $commit=$wpdb->query('COMMIT');
@@ -337,7 +312,7 @@ trait EWS_Approvals_Trait {
             'entity_type'=>sanitize_key($entity_type),
             'entity_id'=>(int)$entity_id,
             'requester_employee_id'=>(int)$requester_employee_id,
-            'status'=>$family==='PEER'?'WAITING_FOR_PEER':'WAITING_FOR_LEVEL_1',
+            'status'=>\WorkforceOne\Approvals\StateMachine::initialStatus($family),
             'current_step'=>1,
         ],['%d','%s','%d','%d','%s','%d']);
         if($ok===false){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
@@ -353,7 +328,7 @@ trait EWS_Approvals_Trait {
                 if($manage_transaction)$wpdb->query('ROLLBACK');
                 return new WP_Error('approval_approver_unlinked','The configured approver is not linked to a WordPress user.');
             }
-            $status=$approver?(((int)$step->step_order===1)?'PENDING':'WAITING'):'SKIPPED';
+            $status=\WorkforceOne\Approvals\StateMachine::stepStatus((int)$step->step_order,(bool)$approver);
             $ok=$wpdb->insert($t['instances'],[
                 'approval_request_id'=>$approval_id,
                 'step_order'=>(int)$step->step_order,
@@ -396,109 +371,60 @@ trait EWS_Approvals_Trait {
         if(!$allow_admin_override && (!is_user_logged_in() || (int)$step->approver_wp_user_id!==(int)get_current_user_id()))return new WP_Error('approval_not_authorized','You are not the assigned approver.');
 
         $now=current_time('mysql');
+        $next=$decision==='approve'?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='WAITING' ORDER BY step_order ASC LIMIT 1",$approval_request_id)):null;
+        $to=\WorkforceOne\Approvals\StateMachine::afterDecision($decision,$next?(int)$next->step_order:null);
         if($manage_transaction && $wpdb->query('START TRANSACTION')===false)return new WP_Error('approval_db_error','Could not start approval transaction.');
-        $new_status=$decision==='approve'?'APPROVED':'REJECTED';
         $ok=$wpdb->update($t['instances'],[
-            'status'=>$new_status,
+            'status'=>$to['step'],
             'decision'=>$decision,
             'comment'=>$comment,
             'acted_at'=>$now,
         ],['id'=>(int)$step->id,'status'=>'PENDING'],['%s','%s','%s','%s'],['%d','%s']);
         if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_stale','Approval step was already handled.');}
-
-        if($decision==='reject'){
-            $ok=$wpdb->update($t['requests'],['status'=>'REJECTED','completed_at'=>$now],['id'=>$approval_request_id],['%s','%s'],['%d']);
+        if($next){
+            $ok=$wpdb->update($t['instances'],['status'=>'PENDING'],['id'=>(int)$next->id,'status'=>'WAITING'],['%s'],['%d','%s']);
             if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
+            $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'current_step'=>$to['current_step']],['id'=>$approval_request_id],['%s','%d'],['%d']);
+        }elseif($decision==='reject'){
+            $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'completed_at'=>$now],['id'=>$approval_request_id],['%s','%s'],['%d']);
         }else{
-            $next=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='WAITING' ORDER BY step_order ASC LIMIT 1",$approval_request_id));
-            if($next){
-                $ok=$wpdb->update($t['instances'],['status'=>'PENDING'],['id'=>(int)$next->id,'status'=>'WAITING'],['%s'],['%d','%s']);
-                if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
-                $ok=$wpdb->update($t['requests'],['status'=>'WAITING_FOR_LEVEL_'.(int)$next->step_order,'current_step'=>(int)$next->step_order],['id'=>$approval_request_id],['%s','%d'],['%d']);
-            }else{
-                $ok=$wpdb->update($t['requests'],['status'=>'APPROVED','current_step'=>null,'completed_at'=>$now],['id'=>$approval_request_id],['%s','%d','%s'],['%d']);
-            }
-            if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
+            $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'current_step'=>null,'completed_at'=>$now],['id'=>$approval_request_id],['%s','%d','%s'],['%d']);
         }
+        if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
         if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval decision.');}
         return true;
     }
-    private function get_active_teams_for_approval(){
-        global $wpdb;
-        $t=$this->team_tables();
-        $this->ensure_teams_schema();
-        return $wpdb->get_results("SELECT tm.id,tm.name,e.name AS manager_name FROM {$t['teams']} tm LEFT JOIN {$this->employees} e ON e.id=tm.manager_employee_id AND e.active=1 WHERE tm.active=1 ORDER BY tm.name ASC");
-    }
-
+    /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */
     public function admin_approval_workflows(){
         if(!current_user_can('manage_options'))wp_die('Access denied');
         global $wpdb;$t=$this->approval_tables();$this->ensure_approval_schema();
-        $employees=$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+        $employees=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
         $users=get_users(['fields'=>['ID','display_name','user_email'],'orderby'=>'display_name','order'=>'ASC']);
-        $workflows=['vacation'=>'Vacation','overtime'=>'Overtime','early_leave'=>'Early Leave','face_reset'=>'Face Reset','shift_swap'=>'Shift Swap'];
-        echo '<div class="wrap"><h1>Approval Workflows</h1>';
-        if(isset($_GET['approval_saved']))echo '<div class="notice notice-success is-dismissible"><p>Approval configuration saved.</p></div>';
-        if(isset($_GET['approval_error'])){$msg='Could not save approval configuration. Please verify the selected approvers.';if(isset($_GET['approval_error_message'])&&$_GET['approval_error_message']!=='')$msg.=' <strong>'.esc_html(sanitize_text_field(wp_unslash($_GET['approval_error_message']))).'</strong>';echo '<div class="notice notice-error is-dismissible"><p>'.$msg.'</p></div>';}
-        echo '<p style="max-width:1000px">Configure approval authority independently from WordPress roles. Choose the approval mode for each workflow and then configure only the fields required by that mode.</p>';
-        foreach($workflows as $key=>$label){
+        $cards=[];
+        foreach(\WorkforceOne\Approvals\Workflows::IN_USE as $key=>[$label,$supported]){
             $workflow=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",$key));
-            $steps=$workflow?$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['steps']} WHERE workflow_id=%d ORDER BY step_order",(int)$workflow->id)):[];
-            $cfg=[1=>['resolver_type'=>'SUPERVISOR','resolver_value'=>''],2=>['resolver_type'=>'SUPERVISOR','resolver_value'=>'']];
-            foreach($steps as $st)$cfg[(int)$st->step_order]=['resolver_type'=>$st->resolver_type,'resolver_value'=>$st->resolver_value];
-            $current_mode=strtoupper((string)($workflow->approval_mode??'NONE'));
-            $card_id='ews-approval-workflow-'.sanitize_key($key);
-            echo '<div class="ews-approval-card" data-approval-card="'.esc_attr($card_id).'" style="background:#fff;border:1px solid #dcdcde;padding:22px;max-width:1100px;margin:0 0 18px">';
-            echo '<h2 style="margin-top:0">'.esc_html($label).' Approval</h2>';
-            echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'">'.wp_nonce_field('ews_approval_workflow_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_approval_workflow_save"><input type="hidden" name="workflow_key" value="'.esc_attr($key).'">';
-            echo '<table class="form-table"><tr><th>Approval Mode</th><td><select class="ews-approval-mode" name="approval_mode" aria-label="Approval Mode">';
-            echo '<option value="NONE"'.selected($current_mode,'NONE',false).'>No approval</option>';
-            echo '<option value="LEVEL_1"'.selected($current_mode,'LEVEL_1',false).'>Level 1 approval</option>';
-            echo '<option value="LEVEL_2"'.selected($current_mode,'LEVEL_2',false).'>Level 1 + Level 2 approval</option>';
-            echo '<option value="SEQUENTIAL"'.selected($current_mode,'SEQUENTIAL',false).'>Sequential approval</option>';
-            echo '<option value="PEER"'.selected($current_mode,'PEER',false).'>Peer approval</option>';
-            echo '</select><div class="ews-approval-help" style="margin-top:8px;line-height:1.6">';
-            echo '<div data-mode="NONE"><strong>No approval:</strong> request proceeds without approval.</div>';
-            echo '<div data-mode="LEVEL_1"><strong>Level 1:</strong> exactly one approval level.</div>';
-            echo '<div data-mode="LEVEL_2"><strong>Level 1 + Level 2:</strong> exactly two sequential approval levels.</div>';
-            echo '<div data-mode="SEQUENTIAL"><strong>Sequential:</strong> approval levels run in order using the configured active levels.</div>';
-            echo '<div data-mode="PEER"><strong>Peer:</strong> the request target/peer is the approver.</div>';
-            echo '</div></td></tr></table>';
-            for($i=1;$i<=2;$i++){
-                $c=$cfg[$i];
-                $visible_modes=($i===1)?'LEVEL_1 LEVEL_2 SEQUENTIAL':'LEVEL_2 SEQUENTIAL';
-                echo '<div class="ews-approval-level" data-visible-modes="'.esc_attr($visible_modes).'" style="border:1px solid #dcdcde;padding:16px;margin:12px 0">';
-                echo '<h3 style="margin-top:0">Level '.(int)$i.'</h3>';
-                echo '<p><label>Approver source <select class="ews-approval-source" name="level_'.(int)$i.'_type">';
-                echo '<option value="SUPERVISOR"'.selected($c['resolver_type'],'SUPERVISOR',false).'>Employee Supervisor</option>';
-                echo '<option value="TEAM_MANAGER"'.selected($c['resolver_type'],'TEAM_MANAGER',false).'>Team Manager</option>';
-                echo '<option value="SPECIFIC_EMPLOYEE"'.selected($c['resolver_type'],'SPECIFIC_EMPLOYEE',false).'>Specific Workforce Employee</option>';
-                echo '<option value="SPECIFIC_USER"'.selected($c['resolver_type'],'SPECIFIC_USER',false).'>Specific WordPress User</option>';
-                echo '</select></label></p>';
-                echo '<p class="ews-specific-employee"><label>Specific Employee <select name="level_'.(int)$i.'_employee"><option value="0">— Select —</option>';
-                foreach($employees as $e)echo '<option value="'.(int)$e->id.'"'.selected((int)$c['resolver_value'],(int)$e->id,false).'>'.esc_html($e->name).' · '.esc_html($e->domain_name).'</option>';
-                echo '</select></label></p>';
-                echo '<p class="ews-specific-user"><label>Specific User <select name="level_'.(int)$i.'_user"><option value="0">— Select —</option>';
-                foreach($users as $u)echo '<option value="'.(int)$u->ID.'"'.selected((int)$c['resolver_value'],(int)$u->ID,false).'>'.esc_html($u->display_name).' · '.esc_html($u->user_email).'</option>';
-                echo '</select></label></p>';
-                echo '</div>';
-            }
-            echo '<div class="ews-peer-settings" style="border:1px solid #dcdcde;padding:16px;margin:12px 0"><h3 style="margin-top:0">Peer Approval</h3><p class="description">The peer is supplied by the request itself (target employee). No supervisor/team-manager selection is required.</p></div>';
-            echo '<p><button type="submit" class="button button-primary">Save '.esc_html($label).' Approval</button></p>';
-            echo '</form>';
-            echo '<script>(function(){function syncCard(card){var mode=card.querySelector(".ews-approval-mode");if(!mode)return;var value=(mode.value||"NONE").toUpperCase();card.querySelectorAll(".ews-approval-help [data-mode]").forEach(function(el){el.style.display=el.getAttribute("data-mode")===value?"block":"none";});card.querySelectorAll(".ews-approval-level").forEach(function(level){var modes=(level.getAttribute("data-visible-modes")||"").split(/\\s+/);level.style.display=modes.indexOf(value)>=0?"block":"none";});var peer=card.querySelector(".ews-peer-settings");if(peer)peer.style.display=value==="PEER"?"block":"none";card.querySelectorAll(".ews-approval-source").forEach(function(source){var row=source.closest(".ews-approval-level"),emp=row?row.querySelector(".ews-specific-employee"):null,user=row?row.querySelector(".ews-specific-user"):null,type=(source.value||"").toUpperCase();if(emp)emp.style.display=type==="SPECIFIC_EMPLOYEE"?"block":"none";if(user)user.style.display=type==="SPECIFIC_USER"?"block":"none";});}document.querySelectorAll(".ews-approval-card").forEach(function(card){var mode=card.querySelector(".ews-approval-mode");if(mode)mode.addEventListener("change",function(){syncCard(card);});card.querySelectorAll(".ews-approval-source").forEach(function(source){source.addEventListener("change",function(){syncCard(card);});});syncCard(card);});})();</script>';
-            echo '</div>';
+            $levels=[1=>['resolver_type'=>'SUPERVISOR','resolver_value'=>''],2=>['resolver_type'=>'SUPERVISOR','resolver_value'=>'']];
+            if($workflow)foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['steps']} WHERE workflow_id=%d ORDER BY step_order",(int)$workflow->id)) as $st)$levels[(int)$st->step_order]=['resolver_type'=>$st->resolver_type,'resolver_value'=>$st->resolver_value];
+            $mode=strtoupper((string)($workflow->approval_mode??'NONE'));
+            $active=$workflow&&(int)$workflow->active===1;
+            $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>\WorkforceOne\Approvals\Workflows::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:'NONE','levels'=>$levels,
+                'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:''];
         }
-        echo '<div style="background:#fff;border:1px solid #dcdcde;padding:22px;max-width:1100px"><h2 style="margin-top:0">Supervisor Relationships</h2><p>Assign the direct supervisor used by the <strong>Employee Supervisor</strong> resolver.</p>';
-        foreach($employees as $e){$sup=$this->approval_related_employee((int)$e->id,'supervisor');echo '<form method="post" action="'.esc_url(admin_url('admin-post.php')).'" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #eee">'.wp_nonce_field('ews_approval_relationship_save','_wpnonce',true,false).'<input type="hidden" name="action" value="ews_approval_relationship_save"><input type="hidden" name="employee_id" value="'.(int)$e->id.'"><strong style="min-width:220px">'.esc_html($e->name).'</strong><select name="supervisor_employee_id" style="min-width:280px"><option value="0">— No supervisor —</option>';foreach($employees as $x){if((int)$x->id===(int)$e->id)continue;echo '<option value="'.(int)$x->id.'"'.selected($sup?(int)$sup->id:0,(int)$x->id,false).'>'.esc_html($x->name).'</option>';}echo '</select><button class="button" type="submit">Save</button></form>';}
-        echo '</div></div>';
+        $supervisors=[];foreach($employees as $e){$sup=$this->approval_related_employee((int)$e->id,'supervisor');$supervisors[(int)$e->id]=$sup?(int)$sup->id:0;}
+        $error='';
+        if(isset($_GET['approval_error'])){$error='Could not save approval configuration. Please verify the selected approvers.';$detail=sanitize_text_field(wp_unslash($_GET['approval_error_message']??''));if($detail!=='')$error.=' '.$detail;}
+        echo $this->render_template('admin/approvals',['cards'=>$cards,'not_in_use'=>\WorkforceOne\Approvals\Workflows::NOT_IN_USE,'mode_labels'=>\WorkforceOne\Approvals\Workflows::MODES,
+            'employees'=>$employees,'users'=>$users,'supervisors'=>$supervisors,'saved'=>isset($_GET['approval_saved']),'error'=>$error]); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
     }
 
     public function approval_workflow_save(){
         if(!current_user_can('manage_options'))wp_die('Access denied');check_admin_referer('ews_approval_workflow_save');
-        $workflow_key=sanitize_key($_POST['workflow_key']??'');if(!in_array($workflow_key,['vacation','overtime','early_leave','face_reset','shift_swap'],true))wp_die('Invalid workflow.');
+        $workflow_key=sanitize_key($_POST['workflow_key']??'');
+        $in_use=\WorkforceOne\Approvals\Workflows::IN_USE;
+        if(!isset($in_use[$workflow_key]))wp_die('Invalid workflow.');
         $mode=strtoupper(sanitize_key($_POST['approval_mode']??'NONE'));$configs=[];
         if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=2;$i++){$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']??''));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=absint($_POST['level_'.$i.'_employee']??0);elseif($type==='SPECIFIC_USER')$value=absint($_POST['level_'.$i.'_user']??0);$configs[$i]=['resolver_type'=>$type,'resolver_value'=>$value];}}
-        $ok=$this->approval_configure_workflow($workflow_key,$mode,$configs);
+        $ok=$this->approval_configure_workflow($workflow_key,$mode,$configs,$in_use[$workflow_key][1]);
         if(is_wp_error($ok))wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_code'=>rawurlencode($ok->get_error_code()),'approval_error_message'=>rawurlencode($ok->get_error_message())],admin_url('admin.php?page=ews31-approvals')));else{$this->audit('approval_workflow_update','approval_workflow',0,$workflow_key.'='.$mode);wp_safe_redirect(add_query_arg('approval_saved',1,admin_url('admin.php?page=ews31-approvals')));}exit;
     }
 
