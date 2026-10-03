@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.31.35
+Departments and Teams (`includes/trait-departments.php`, `includes/trait-teams.php`) moved to the
+new structure.
+
+### Fixed (wp-admin → Departments)
+- **The page's checks did not stop anything.** Each check redirected with an error but then carried
+  on (`wp_safe_redirect(...) or exit` never reaches `exit`), so a department was saved with a
+  duplicate name, with no code, or with a manager from another department, and **a department that
+  still had employees or teams was archived** (its employees kept pointing to an archived
+  department). Every check now stops the save or the archive.
+- **Creating a department was recorded as an update** in the Audit Log (same for teams).
+- The page showed any text put in its link as an error; it now shows only its own messages.
+
+### Fixed (wp-admin → Teams)
+- **The reason a team could not be saved is shown.** It always said "Please verify the team name,
+  manager and members"; it now says which: a missing field, a manager or member from another
+  department, or a name already used (also by an archived team: archived names stay reserved, which
+  is why creating a team with an archived team's name failed with no explanation).
+- The team form lists only the chosen department's employees as manager and members, and each
+  employee shows their department. The team list shows each team's department.
+
+### Internal
+- `src/Organization/OrgRules.php` (the checks and their messages; unit tested) and
+  `src/Organization/Hooks.php`; HTML in `templates/admin/departments.php` and `teams.php`; the
+  Archive confirmations and the team form filter in `assets/js/admin-organization.js` (were inline).
+- `tests/e2e_organization.py` (26 checks).
+
 ## 3.31.34
 Kiosks, QR codes and Presence Verification (`includes/trait-presence.php`) moved to the new
 structure.
