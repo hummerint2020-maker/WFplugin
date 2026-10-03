@@ -38,8 +38,7 @@ trait EWS_Face_Reset_Trait {
 
     private function face_reset_notify($user_id,$title,$message,$type,$employee_id,$link){
         if(!$user_id)return;
-        $this->notify_user((int)$user_id,$title,$message,$type,'face_reset',$employee_id);
-        if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$user_id,$title,$message,'face_reset',$employee_id,$link);
+        $this->notify((int)$user_id,'face_reset',$title,$message,['type'=>$type,'entity_id'=>$employee_id,'url'=>$link]);
     }
 
     private function face_reset_admin_link(){

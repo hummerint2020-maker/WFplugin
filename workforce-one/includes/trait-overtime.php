@@ -58,8 +58,7 @@ trait EWS_Overtime_Trait {
         }
 
     private function overtime_notify($user_id,$title,$msg,$id){
-            $this->notify_user((int)$user_id,$title,$msg,'overtime','overtime',$id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$user_id,$title,$msg,'overtime',$id);
+            $this->notify((int)$user_id,'overtime',$title,$msg,['entity_id'=>$id]);
         }
 
     /** Tell the employee the final outcome and write the audit entry. */
@@ -198,8 +197,7 @@ trait EWS_Overtime_Trait {
             if(!$emp||!$emp->wp_user_id)return;
             $title='Early Leave '.ucfirst($decision);
             $msg='Your Early Leave request for '.$r->work_date.' has been '.($decision==='approve'?'approved':'rejected').'.';
-            $this->notify_user($emp->wp_user_id,$title,$msg,'early_leave','early_leave',(int)$r->id);
-            if($push&&method_exists($this,'push_custom_notification'))$this->push_custom_notification($emp->wp_user_id,$title,$msg,'early_leave',(int)$r->id);
+            $this->notify((int)$emp->wp_user_id,'early_leave',$title,$msg,['entity_id'=>(int)$r->id,'push'=>$push]);
         }
 
     public function early_leave_create(){
@@ -228,8 +226,7 @@ trait EWS_Overtime_Trait {
             $msg=$emp->name.' requested Early Leave of '.floor($minutes/60).'h '.($minutes%60).'m on '.$date.'.';
             foreach(get_users(['capability'=>'ews_manage_time','fields'=>['ID']]) as $m){
                 if((int)$m->ID===(int)get_current_user_id())continue;
-                $this->notify_user($m->ID,'Early Leave Request',$msg,'early_leave','early_leave',$id);
-                if(method_exists($this,'push_custom_notification'))$this->push_custom_notification($m->ID,'Early Leave Request',$msg,'early_leave',$id);
+                $this->notify((int)$m->ID,'early_leave','Early Leave Request',$msg,['entity_id'=>$id]);
             }
             $this->leave_redirect(['leave_sent'=>1]);
         }
@@ -270,7 +267,7 @@ trait EWS_Overtime_Trait {
                 $next=$this->approval_current_step((int)$fresh->id);
                 if($next&&$next->approver_wp_user_id){
                     $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",(int)$req->employee_id));
-                    $this->notify_user((int)$next->approver_wp_user_id,'Overtime Approval Required',($emp?$emp->name:'An employee').' overtime request is waiting for your approval.','overtime','overtime',$id);
+                    $this->notify((int)$next->approver_wp_user_id,'overtime','Overtime Approval Required',($emp?$emp->name:'An employee').' overtime request is waiting for your approval.',['entity_id'=>$id]);
                 }
                 return Hub::ADVANCED;
             }

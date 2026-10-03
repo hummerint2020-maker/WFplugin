@@ -6,6 +6,23 @@ use WorkforceOne\Attendance\SignInRules;
 
 trait EWS_Attendance_Trait {
 
+    /**
+     * The device location a form posted (hidden fields filled by the browser's geolocation):
+     * [latitude, longitude, accuracy in metres, timestamp in ms], null where missing.
+     * @return array{0:?float,1:?float,2:?float,3:?int}
+     */
+    private function posted_device_location(){
+            $num=function($k){return isset($_POST[$k])&&is_numeric($_POST[$k])?$_POST[$k]:null;}; // phpcs:ignore WordPress.Security.NonceVerification -- the callers check the nonce
+            $lat=$num('latitude');$lng=$num('longitude');$acc=$num('accuracy');$ts=$num('location_timestamp');
+            return [$lat!==null?(float)$lat:null,$lng!==null?(float)$lng:null,$acc!==null?(float)$acc:null,$ts!==null?(int)$ts:null];
+        }
+
+    /** The employee's last Sign In / Out that had coordinates (for the impossible-movement check). */
+    private function last_device_location($employee_id){
+            global $wpdb;
+            return $wpdb->get_row($wpdb->prepare("SELECT latitude,longitude,location_timestamp FROM {$this->time_logs} WHERE employee_id=%d AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",(int)$employee_id),ARRAY_A);
+        }
+
     public function time_event(){
             if(!is_user_logged_in())wp_die('Please log in.');
             $type=sanitize_key($_POST['event_type']??'');
@@ -55,12 +72,9 @@ trait EWS_Attendance_Trait {
             if($rule){$fail($this->sign_in_rule_message($rule,$emp,$bounds));return;}
 
             // 2. Where is the employee?
-            $lat=isset($_POST['latitude'])&&is_numeric($_POST['latitude'])?(float)$_POST['latitude']:null;
-            $lng=isset($_POST['longitude'])&&is_numeric($_POST['longitude'])?(float)$_POST['longitude']:null;
-            $acc=isset($_POST['accuracy'])&&is_numeric($_POST['accuracy'])?(float)$_POST['accuracy']:null;
-            $location_timestamp=isset($_POST['location_timestamp'])&&is_numeric($_POST['location_timestamp'])?(int)$_POST['location_timestamp']:null;
+            [$lat,$lng,$acc,$location_timestamp]=$this->posted_device_location();
             global $wpdb;
-            $prev=($lat!==null&&$lng!==null)?$wpdb->get_row($wpdb->prepare("SELECT latitude,longitude,location_timestamp FROM {$this->time_logs} WHERE employee_id=%d AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",(int)$emp->id),ARRAY_A):null;
+            $prev=($lat!==null&&$lng!==null)?$this->last_device_location((int)$emp->id):null;
             // The phone's location timestamp is Unix time (UTC): compare it with time(), not WordPress local time.
             [$integrity_status,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_timestamp,time(),$prev?:null);
             [$location_status,$distance]=LocationAssessment::geofence(

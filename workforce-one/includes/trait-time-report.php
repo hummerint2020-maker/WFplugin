@@ -35,6 +35,7 @@ trait EWS_Time_Report_Trait {
         $integrity_labels=['verified'=>'Verified','unreliable'=>'Unreliable','suspicious'=>'Suspicious','not_evaluated'=>'Not evaluated'];
         $radius_by_employee=[];
         $records=[];
+        $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},$rows));
         foreach($rows as $r){
             $eid=(int)$r->employee_id;
             if(!isset($radius_by_employee[$eid]))$radius_by_employee[$eid]=(int)$this->time_report_site($eid)[2];
@@ -158,6 +159,7 @@ trait EWS_Time_Report_Trait {
         fprintf($f,"\xEF\xBB\xBF");
         fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason']);
         $radius=[];
+        $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},(array)$rows));
         foreach((array)$rows as $r){
             $eid=(int)$r->employee_id;
             if(!isset($radius[$eid]))$radius[$eid]=(int)$this->time_report_site($eid)[2].' m';

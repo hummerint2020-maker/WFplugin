@@ -18,6 +18,7 @@ workforce-one/
     Attendance/GridRules.php           Attendance grid badges and save/import messages
     Attendance/TodayStatus.php         today's On Time / Late / No Show (admin home)
     Attendance/ShiftDay.php            which day the current (overnight) shift belongs to
+    Attendance/Lateness.php            the one "late" rule (shift start + grace), used by the reports, payroll and sign_in_classification()
     Attendance/AutoRules.php, AutoHooks.php  Auto Attendance rules: days, overnight, what is due
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
@@ -32,6 +33,7 @@ workforce-one/
     Employees/ProfileSummary.php      profile initials, today's result, 30-day stats
     Settings/RolePermissions.php      role → permission matrix (off = removed, never stored false)
     Settings/NotificationSettings.php retention, VAPID subject, policy
+    Notifications/PushEndpoint.php    which Web Push endpoints may be contacted (public HTTPS only; SSRF guard)
     Settings/Navigation.php, Moments.php, SmartNudges.php, EngagementHooks.php   engagement settings
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
     Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
@@ -95,3 +97,16 @@ WordPress adds backslashes to `$_POST`, `$_GET` and `$_REQUEST` ("magic quotes")
 `wp_unslash()` request values before sanitising them, e.g.
 `sanitize_text_field(wp_unslash($_POST['reason'] ?? ''))`; otherwise "Ahmed's" is stored as
 "Ahmed\'s".
+
+## Notifications (3.31.45)
+
+Every notification goes through `notify($user_id, $category, $title, $message, $opt)` in
+`includes/trait-notifications.php`: it saves the in-app notification and queues the push, each as the
+Notification Policy for the category allows. Queued pushes are handed to WP-Cron at the end of the
+request (`push_flush()` → event `ews_push_deliver` → `push_deliver()`), so a slow or dead push service
+never holds up the action, and a push failure cannot break it. The outcome of the last batch is in
+`ews_push_last_delivery` (shown on Notification Settings). Only the jobs that are already background
+work (Smart Nudges cron) and the admin test buttons call `push_custom_notification()` directly.
+Before each delivery the endpoint is checked again (`push_delivery_target()`), and cURL connects only
+to the checked address (`CURLOPT_RESOLVE`), over HTTPS, without redirects, within 5 seconds.
+

@@ -10,6 +10,7 @@
  * @var string $vapid_subject
  * @var string|null $notice
  * @var string $post_url
+ * @var array{at?:string,sent?:int,failed?:int,errors?:string[]} $last_delivery the last batch of notification pushes (sent after the response)
  */
 if (!defined('ABSPATH')) exit;
 $switch = static function (string $name, int $on) {
@@ -52,6 +53,9 @@ $switch = static function (string $name, int $on) {
             <p class="description">Use a mailto: address or your HTTPS site URL. It is saved when you send the test.</p>
             <p><button class="button" type="submit">Save &amp; Send Test Push</button></p>
         </form>
+        <?php if (!empty($last_delivery['at'])): ?>
+            <p class="description wfo-push-last" data-failed="<?php echo (int) ($last_delivery['failed'] ?? 0); ?>">Last push delivery: <?php echo esc_html($last_delivery['at']); ?> · sent <?php echo (int) ($last_delivery['sent'] ?? 0); ?> · failed <?php echo (int) ($last_delivery['failed'] ?? 0); ?><?php if (!empty($last_delivery['errors'])): ?> · <?php echo esc_html(implode(' / ', (array) $last_delivery['errors'])); ?><?php endif; ?></p>
+        <?php endif; ?>
     </div>
     <div><h2>Notification Retention</h2><p>Choose how long notifications remain in the system.</p>
         <form method="post" action="<?php echo esc_url($post_url); ?>">

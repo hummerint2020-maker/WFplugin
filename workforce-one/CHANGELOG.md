@@ -1,5 +1,62 @@
 # Changelog
 
+## 3.31.45
+A targeted hardening release: security, speed and correctness fixes found in the architecture audit.
+No new features, no database changes, no settings removed.
+
+### Security
+- **Web Push endpoints can no longer point inside the server's network (SSRF).** Any signed-in user
+  could save a "push endpoint" such as `http://169.254.169.254/…` or `https://127.0.0.1/…`, and the
+  server would later POST to it. Now an endpoint must be HTTPS on the standard port, without a user
+  name or password, with a real public host name (not `localhost`, `.local`, `.internal`, a single
+  word or a disguised number such as `127.1`); an IP address must be public (loopback, private,
+  link-local, carrier-grade NAT, multicast, documentation and other reserved IPv4/IPv6 ranges are
+  refused, including IPv4 inside IPv6). Checked when subscribing and again just before every
+  delivery: the host name is resolved, every address must be public, and cURL connects only to the
+  address that was checked (no second DNS answer), HTTPS only, no redirects. There is no list of
+  allowed providers, so every standard push service keeps working (FCM, Mozilla, Apple, Windows).
+  Subscriptions saved earlier with an endpoint that can never be valid are removed at their next
+  delivery and logged in the Audit Log (`push_endpoint_removed`).
+- **Presence Verification now checks where the phone is.** Scanning the right QR was enough, so a
+  photo of the kiosk screen sent to someone at home verified their "presence". The employee's own
+  device location must now be inside the requested work location (its radius), with the same rules
+  as QR Sign In (`LocationAssessment`: a missing or stale location is refused, impossible movement
+  counts as outside). The QR signature, its 15-second freshness, the request's expiry and the
+  location of the QR are checked as before. The page asks for the location when it opens and says
+  so if the permission is denied; the Audit Log has the reason and the distance.
+
+### Fixed
+- **Payroll → Close month now sends the "Payslip ready" push** (as the Notification Policy's
+  Payroll row, on by default, says). It only created the in-app notification.
+- **A slow or dead push service no longer freezes actions.** Pushes were sent during the request,
+  each device with a 15-second timeout. They are now sent right after the response (WP-Cron), with a
+  3-second connect / 5-second total limit. The last delivery (sent, failed, last errors) is shown on
+  Notification Settings.
+- **Reports, payroll and the admin pages no longer look up each employee's shift one by one.** One
+  query for the whole list (or none when the employee rows are already loaded). Measured with 60
+  employees: Timesheet 123 → 61 queries, Attendance Summary 127 → 66, Payroll month 116 → 56, admin
+  dashboard 94 → 35, Sign In / Out report 212 → 153. Shifts, the Company Working Hours fallback and
+  the per-request cache work as before.
+- The presence request notification was saved with the wrong fields (its id as the category).
+
+### Changed (internal; same results)
+- **One rule for "late"** (`src/Attendance/Lateness.php`): the reports and payroll and the dashboard /
+  My Profile / Sign In / Out report labels now use the same code. Tested against the old code every
+  5 minutes over two days for day, overnight, midnight and no-grace shifts, and at the boundaries
+  (exactly at the end of the grace is on time; one second later is late).
+- **One way to notify** (`notify()`): saves the in-app notification and queues the push, each as the
+  Notification Policy allows. All notifications use it. Differences, by design: a category's push
+  setting now also applies where only an in-app notification was sent before (leave / vacation
+  decisions and approver steps, overtime approver steps; their push is off by default, so nothing
+  changes unless an administrator turned it on), and Kudos follow the Recognition in-app setting.
+
+### Not changed on purpose
+- Admin Requests page decisions still do not push (as before).
+- Polls and presence requests still have no push: their categories are not in the Notification Policy
+  (unchanged; adding them would be a new setting).
+- A Sign In entered or imported by an administrator for another day is labelled On Time / Late by
+  its time on the dashboard, but by its work day in the reports (as before).
+
 ## 3.31.44
 Values that were fixed in the code are now settings. Every default is the old value, so nothing
 changes until an administrator changes it; all four are on Settings Overview.

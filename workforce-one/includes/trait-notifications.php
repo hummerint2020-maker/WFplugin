@@ -1,12 +1,16 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Notifications\PushEndpoint;
+
 trait EWS_Notifications_Trait {
 
     private $notifications;
     private static $notifications_schema_ready = false;
     private static $ews_notification_unread_cache = [];
     private static $ews_vapid_public_key_cache = null;
+    /** Pushes waiting for the end of this request (notify()); see push_flush(). */
+    private static $ews_push_queue = [];
 
     private function invalidate_notification_unread_cache($user_id=0){
         $user_id=absint($user_id);
@@ -100,11 +104,9 @@ trait EWS_Notifications_Trait {
         self::$notifications_schema_ready=true;
     }
 
-    private function notify_user($user_id,$title,$message,$type='info',$entity=null,$entity_id=null){
+    /** Saves an in-app notification when the policy for $category allows it. */
+    private function notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id){
         global $wpdb;
-        $user_id=absint($user_id);
-        if(!$user_id)return 0;
-        $category=$entity?sanitize_key($entity):sanitize_key($type);
         if(!$this->notification_in_app_allowed($category))return 0;
         $this->ensure_notifications_schema();
         $ok=$wpdb->insert($this->notifications,[
@@ -126,50 +128,92 @@ trait EWS_Notifications_Trait {
         return (int)$wpdb->insert_id;
     }
 
+    /**
+     * The one way to tell a user about something: saves the in-app notification and queues the push,
+     * each as the Notifications policy for $category allows. The push is sent after the response
+     * (push_flush() hands it to WP-Cron), so a slow or dead push service never holds up the action
+     * that caused it, and a push failure can never undo or break it.
+     * Options: url (push link; default the app view named after the category), entity and type
+     * (stored with the notification; default the category), entity_id, push (false: in-app only).
+     * @param array{url?:string,entity?:string,type?:string,entity_id?:int,push?:bool} $opt
+     * @return int the notification id, or 0 when none was saved
+     */
+    private function notify($user_id,$category,$title,$message,array $opt=[]){
+        $user_id=absint($user_id);
+        if(!$user_id)return 0;
+        $category=sanitize_key($category);
+        $entity=sanitize_key($opt['entity']??$category);
+        $type=sanitize_key($opt['type']??$category);
+        $entity_id=absint($opt['entity_id']??0);
+        $id=$this->notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id);
+        if(($opt['push']??true) && $this->notification_push_allowed($category)){
+            // The link is worked out now: it can depend on the page the user is on (see notification_app_view_url()).
+            $url=!empty($opt['url'])?(string)$opt['url']:$this->notification_app_view_url($category);
+            if(!self::$ews_push_queue)add_action('shutdown',[$this,'push_flush'],1);
+            self::$ews_push_queue[]=['user_id'=>$user_id,'title'=>(string)$title,'message'=>(string)$message,'category'=>$category,'entity_id'=>$entity_id,'url'=>$url];
+        }
+        return $id;
+    }
+
+    /** End of the request: the queued pushes go to WP-Cron as one event, started right away. */
+    public function push_flush(){
+        $batch=self::$ews_push_queue;
+        self::$ews_push_queue=[];
+        if(!$batch)return;
+        // Already in a WP-Cron job (break reminders): nobody is waiting, so send now.
+        if(wp_doing_cron()){$this->push_deliver($batch);return;}
+        // The key keeps two identical batches from being merged into one event by WordPress.
+        wp_schedule_single_event(time(),'ews_push_deliver',[$batch,wp_generate_uuid4()]);
+        if(!(defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) && function_exists('spawn_cron'))spawn_cron();
+    }
+
+    /** WP-Cron: sends a batch of queued pushes and records the outcome (ews_push_last_delivery). */
+    public function push_deliver($batch,$key=''){
+        $sent=0;$failed=0;$errors=[];
+        foreach(is_array($batch)?$batch:[] as $p){
+            if(!is_array($p)||empty($p['user_id']))continue;
+            $r=$this->push_to_user((int)$p['user_id'],(string)($p['title']??''),(string)($p['message']??''),(string)($p['category']??''),(int)($p['entity_id']??0),(string)($p['url']??''));
+            $sent+=$r['sent'];$failed+=$r['failed'];
+            foreach($r['errors'] as $e)$errors[]=$e;
+        }
+        $last=['at'=>current_time('mysql'),'sent'=>$sent,'failed'=>$failed,'errors'=>array_slice(array_values(array_unique($errors)),0,5)];
+        update_option('ews_push_last_delivery',$last,false);
+        if($failed)$this->push_debug('Push delivery failures',$last);
+        return $last;
+    }
+
+    /**
+     * Sends one push to every device of a user, now (the policy for $type permitting).
+     * notify() queues pushes; this is for the cron jobs and the admin tests that send directly.
+     */
     public function push_custom_notification($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+            return $this->push_to_user($user_id,$title,$message,$type,$entity_id,$url)['sent'];
+        }
+
+    /** @return array{sent:int,failed:int,errors:array<int,string>} */
+    private function push_to_user($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+            $none=['sent'=>0,'failed'=>0,'errors'=>[]];
             $category=sanitize_key($type);
-            if(!$this->notification_push_allowed($category))return 0;
-            if(!function_exists('curl_init'))return 0;
+            if(!$this->notification_push_allowed($category))return $none;
             $this->ensure_push_schema();
             global $wpdb;
             $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
+            if(!$rows)return $none;
+            if(!function_exists('curl_init'))return ['sent'=>0,'failed'=>count($rows),'errors'=>['PHP cURL extension is not available.']];
             $resolved_url=$url;
             if(!$resolved_url){
                 $resolved_url=$this->notification_app_view_url($category);
             }
             $payload=['title'=>$title,'body'=>wp_strip_all_tags($message),'url'=>$resolved_url,'notification_id'=>0,'type'=>sanitize_key($type),'entity_id'=>absint($entity_id)];
-            $sent=0;
+            $out=$none;
             foreach($rows as $row){
                 $result=$this->send_push_payload($row,$payload);
-                if(!empty($result['ok']))$sent++;
-                if(!empty($result['expired']))$wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);
+                if(!empty($result['ok'])){$out['sent']++;continue;}
+                if(!empty($result['expired'])){$wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);continue;}
+                $out['failed']++;$out['errors'][]=(string)($result['error']??'unknown');
             }
-            return $sent;
+            return $out;
         }
-
-    public function push_schedule_update($user_id){
-        if(!$this->notification_push_allowed('schedule'))return;
-        if(!function_exists('curl_init'))return;
-        $this->ensure_notifications_schema();
-        $this->ensure_push_schema();
-        global $wpdb;
-        $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
-        $note=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->notifications} WHERE user_id=%d AND entity='schedule' ORDER BY id DESC LIMIT 1",$user_id));
-        $payload=[
-            'title'=>$note?$note->title:'Schedule Updated',
-            'body'=>$note?wp_strip_all_tags($note->message):'Your schedule has been updated.',
-            'url'=>add_query_arg('ews_view','notifications',$this->app_home_url()),
-            'notification_id'=>$note?(int)$note->id:0,
-            'type'=>'schedule'
-        ];
-        foreach($rows as $row){
-            $result=$this->send_push_payload($row,$payload);
-            $this->push_debug('Schedule push result',['user_id'=>(int)$user_id,'device_id'=>(int)$row->id,'result'=>$result]);
-            if(!empty($result['expired'])){
-                $wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);
-            }
-        }
-    }
 
     private function notification_unread_count($user_id=null){
         global $wpdb;
@@ -445,6 +489,11 @@ trait EWS_Notifications_Trait {
         if(!is_array($data)||empty($data['endpoint'])||empty($data['keys']['p256dh'])||empty($data['keys']['auth']))wp_die('Invalid push subscription.');
         $endpoint=esc_url_raw($data['endpoint']);
         if(!$endpoint)wp_die('Invalid push endpoint.');
+        // Only public HTTPS push services (src/Notifications/PushEndpoint.php). A host name that does not
+        // resolve now is accepted; delivery checks again and connects only to public addresses.
+        [$bad,$host]=PushEndpoint::check($endpoint);
+        if(!$bad){$ips=$this->push_endpoint_ips($host);if($ips)$bad=PushEndpoint::checkResolved($ips);}
+        if($bad){$this->push_debug('Subscription refused',['reason'=>$bad,'user_id'=>get_current_user_id()]);wp_die(esc_html(PushEndpoint::message($bad)),'',['response'=>400]);}
         $this->ensure_push_schema();
         global $wpdb;$table=$this->push_table();$hash=hash('sha256',$endpoint);
         $row=$wpdb->get_row($wpdb->prepare("SELECT id FROM {$table} WHERE endpoint_hash=%s",$hash));
@@ -591,6 +640,34 @@ trait EWS_Notifications_Trait {
         return ['ok'=>true,'body'=>$body];
     }
 
+    /** The addresses a push endpoint host resolves to (IPv4 and IPv6); an IP address is itself. */
+    private function push_endpoint_ips($host){
+        if(filter_var($host,FILTER_VALIDATE_IP))return [$host];
+        $ips=@gethostbynamel($host.'.');
+        $ips=is_array($ips)?$ips:[];
+        if(function_exists('dns_get_record')){
+            $aaaa=@dns_get_record($host.'.',DNS_AAAA);
+            foreach(is_array($aaaa)?$aaaa:[] as $r){ if(!empty($r['ipv6']))$ips[]=$r['ipv6']; }
+        }
+        return array_values(array_unique($ips));
+    }
+
+    /**
+     * Checks a stored endpoint just before delivery and picks the address to connect to.
+     * @return array{ok:bool,error?:string,permanent?:bool,host?:string,resolve?:string}
+     */
+    private function push_delivery_target($endpoint){
+        [$bad,$host]=PushEndpoint::check((string)$endpoint);
+        if($bad)return ['ok'=>false,'error'=>$bad,'permanent'=>true];
+        $ips=$this->push_endpoint_ips($host);
+        $bad=PushEndpoint::checkResolved($ips);
+        if($bad)return ['ok'=>false,'error'=>$bad,'permanent'=>false];
+        // Connect to an address that was just checked, so DNS cannot answer differently for the request.
+        $v4=array_values(array_filter($ips,function($ip){return filter_var($ip,FILTER_VALIDATE_IP,FILTER_FLAG_IPV4);}));
+        $ip=$v4?$v4[0]:'['.$ips[0].']';
+        return ['ok'=>true,'host'=>$host,'resolve'=>$host.':443:'.$ip];
+    }
+
     private function push_debug($message,$context=[]){
         if(defined('WP_DEBUG') && WP_DEBUG){
             error_log('[Workforce One Push] '.$message.' '.wp_json_encode($context));
@@ -599,6 +676,17 @@ trait EWS_Notifications_Trait {
 
     private function send_push_payload($row,$payload){
         if(!function_exists('curl_init'))return ['ok'=>false,'error'=>'PHP cURL extension is not available.'];
+        $target=$this->push_delivery_target($row->endpoint);
+        if(!$target['ok']){
+            // A stored endpoint that can never be valid (saved before 3.31.45) is removed; one whose host
+            // now resolves to a private address is skipped this time.
+            if(!empty($target['permanent'])){
+                global $wpdb; $wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);
+                $this->audit('push_endpoint_removed','push_subscription',(int)$row->id,'user_id='.(int)$row->user_id.'; '.$target['error']);
+            }
+            $this->push_debug('Endpoint refused',['device_id'=>(int)$row->id,'reason'=>$target['error']]);
+            return ['ok'=>false,'blocked'=>true,'error'=>PushEndpoint::message($target['error'])];
+        }
         $aud=$this->push_endpoint_audience($row->endpoint);
         $jwt=$aud?$this->vapid_jwt($aud):false;
         if(!$jwt)return ['ok'=>false,'error'=>'Unable to create VAPID token. Check OpenSSL and VAPID settings.'];
@@ -610,7 +698,14 @@ trait EWS_Notifications_Trait {
             CURLOPT_POSTFIELDS=>$enc['body'],
             CURLOPT_RETURNTRANSFER=>true,
             CURLOPT_HEADER=>false,
-            CURLOPT_TIMEOUT=>15,
+            // HTTPS only, no redirects, to the address checked above; a dead push service costs at most 5 seconds.
+            CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS=>CURLPROTO_HTTPS,
+            CURLOPT_FOLLOWLOCATION=>false,
+            CURLOPT_MAXREDIRS=>0,
+            CURLOPT_RESOLVE=>[$target['resolve']],
+            CURLOPT_CONNECTTIMEOUT=>3,
+            CURLOPT_TIMEOUT=>5,
             CURLOPT_HTTPHEADER=>[
                 'TTL: 300',
                 'Urgency: normal',

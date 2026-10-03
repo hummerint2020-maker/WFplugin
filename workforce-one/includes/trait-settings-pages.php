@@ -101,6 +101,7 @@ trait EWS_Settings_Pages_Trait {
             'retention_choices'=>NotificationSettings::RETENTION_DAYS,
             'vapid_subject'=>(string)get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com')),
             'notice'=>$notice,'post_url'=>admin_url('admin-post.php'),
+            'last_delivery'=>is_array($this->option('ews_push_last_delivery'))?$this->option('ews_push_last_delivery'):[],
         ]);
     }
 

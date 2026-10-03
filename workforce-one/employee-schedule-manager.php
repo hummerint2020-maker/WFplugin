@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.44
+ * Version: 3.31.45
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.44');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.45');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -141,6 +141,7 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_push_unsubscribe',[$this,'push_unsubscribe']);
             add_action('admin_post_ews_push_test',[$this,'push_test']);
             add_action('admin_post_ews_push_send_test',[$this,'push_send_test']);
+            add_action('ews_push_deliver',[$this,'push_deliver'],10,2);
             \WorkforceOne\Leave\Hooks::register($this);
             \WorkforceOne\Overtime\Hooks::register($this);
             \WorkforceOne\Schedule\Hooks::register($this);
@@ -240,7 +241,7 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); }
+    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
 
 }
 

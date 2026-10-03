@@ -1798,3 +1798,35 @@ msgstr "لماذا تحتاج إلى العمل الإضافي؟"
 #: templates/app/dashboard.php:132
 msgid "General Leave"
 msgstr "إجازة رسمية"
+
+#: includes/trait-presence.php
+msgid "Location access is required to verify your presence. Please allow Location Services and try again."
+msgstr "يلزم الوصول إلى موقعك لتأكيد تواجدك. اسمح بخدمات الموقع ثم حاول مرة أخرى."
+
+#: includes/trait-presence.php
+msgid "You must be at the requested work location to verify your presence."
+msgstr "يجب أن تكون في موقع العمل المطلوب لتأكيد تواجدك."
+
+#: includes/trait-presence.php
+msgid "This work location has no coordinates configured. Please contact your administrator."
+msgstr "لم يتم ضبط إحداثيات موقع العمل هذا. يرجى التواصل مع المسؤول."
+
+#: templates/app/presence.php
+msgid "Getting your location… Please allow location access when your browser asks."
+msgstr "جارٍ تحديد موقعك… اسمح بالوصول إلى الموقع عندما يطلب المتصفح ذلك."
+
+#: templates/app/presence.php
+msgid "Location ready."
+msgstr "تم تحديد الموقع."
+
+#: templates/app/presence.php
+msgid "Location permission was denied. Presence can only be verified with your location: allow Location Services for this site, then reload this page."
+msgstr "تم رفض إذن الموقع. لا يمكن تأكيد التواجد إلا بموقعك: اسمح بخدمات الموقع لهذا الموقع ثم أعد تحميل الصفحة."
+
+#: templates/app/presence.php
+msgid "Your location could not be determined. Turn on Location Services/GPS and reload this page."
+msgstr "تعذر تحديد موقعك. فعّل خدمات الموقع/GPS ثم أعد تحميل الصفحة."
+
+#: templates/app/presence.php
+msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
+msgstr "يتطلب الوصول إلى الموقع اتصال HTTPS. افتح Workforce One عبر اتصال آمن."

@@ -63,10 +63,7 @@ trait EWS_Tasks_Trait {
     private function task_notify_user($user_id,$title,$message,$task_id){
         $user_id=absint($user_id);
         if(!$user_id || $user_id===get_current_user_id()) return;
-        $this->notify_user($user_id,$title,$message,'info','task',$task_id);
-        if(method_exists($this,'push_custom_notification')){
-            $this->push_custom_notification($user_id,$title,$message,'task',$task_id,add_query_arg('ews_view','tasks',$this->app_home_url()));
-        }
+        $this->notify($user_id,'task',$title,$message,['type'=>'info','entity_id'=>$task_id,'url'=>add_query_arg('ews_view','tasks',$this->app_home_url())]);
     }
 
     public function task_save(){

@@ -44,6 +44,7 @@ trait EWS_Admin_Dashboard_Trait {
                     if(!isset($first[(int)$ev->employee_id]))$first[(int)$ev->employee_id]=$ev;
                 }
             }
+            $this->prime_shift_cache(array_map(function($s){return (int)$s->id;},$expected));
             foreach($expected as $s){
                 $ev=$first[(int)$s->id]??null;
                 $status=TodayStatus::status($ev?$ev->event_type:null,$ev?$this->sign_in_classification($ev->event_at,(int)$s->id):null);

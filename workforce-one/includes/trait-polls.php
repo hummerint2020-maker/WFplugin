@@ -182,8 +182,7 @@ trait EWS_Polls_Trait {
             :(array)$wpdb->get_col("SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL AND wp_user_id>0");
         $url=add_query_arg('ews_view','polls',$this->app_home_url());
         foreach($users as $uid){
-            $this->notify_user((int)$uid,'New poll',(string)$poll->question,'poll','poll',(int)$poll->id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$uid,'New poll',(string)$poll->question,'poll',(int)$poll->id,$url);
+            $this->notify((int)$uid,'poll','New poll',(string)$poll->question,['entity_id'=>(int)$poll->id,'url'=>$url]);
         }
         $wpdb->update($t['polls'],['notified_at'=>$this->polls_now()],['id'=>(int)$poll->id],['%s'],['%d']);
         return count($users);

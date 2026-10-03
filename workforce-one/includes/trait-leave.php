@@ -92,8 +92,7 @@ trait EWS_Leave_Trait {
 
     /** In-app + push notification. */
     private function leave_notify($user_id,$title,$message,$type,$entity_id){
-            $this->notify_user((int)$user_id,$title,$message,$type,$type,$entity_id);
-            if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$user_id,$title,$message,$type,$entity_id);
+            $this->notify((int)$user_id,$type,$title,$message,['entity_id'=>$entity_id]);
         }
 
     /** Run $fn inside a transaction; any non-true result rolls back and redirects with that leave_error code. */
@@ -270,8 +269,7 @@ trait EWS_Leave_Trait {
             $this->audit('leave_request','leave_request',$id,$emp->name.' requested '.$days.' day(s) of '.$type->name);
             foreach(get_users(['capability'=>'ews_manage_settings','fields'=>['ID']]) as $m){
                 if((int)$m->ID===(int)get_current_user_id())continue;
-                $this->notify_user($m->ID,'Leave Request',$request_msg,'leave','leave',$id);
-                if(method_exists($this,'push_custom_notification'))$this->push_custom_notification($m->ID,'Leave Request',$request_msg,'leave',$id);
+                $this->notify((int)$m->ID,'leave','Leave Request',$request_msg,['entity_id'=>$id]);
             }
             $this->leave_redirect(['leave_sent'=>$days]);
         }
@@ -455,14 +453,14 @@ trait EWS_Leave_Trait {
                         if(!$commit($final))return Hub::ERROR;
                     }else{
                         if($apply($final)!==true)return Hub::ERROR;
-                        $this->notify_user((int)$emp->wp_user_id,'Leave '.ucfirst($outcome),'Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been '.$outcome.'.','leave','leave',$id);
+                        $this->notify((int)$emp->wp_user_id,'leave','Leave '.ucfirst($outcome),'Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been '.$outcome.'.',['entity_id'=>$id]);
                     }
                     return $outcome;
                 }
                 $next=$this->approval_current_step((int)$fresh->id);
                 if($next&&$next->approver_wp_user_id){
-                    if($cancel)$this->notify_user((int)$next->approver_wp_user_id,'Vacation Cancellation Request',$emp->name.' vacation cancellation is waiting for your approval.','vacation','vacation',$id);
-                    else $this->notify_user((int)$next->approver_wp_user_id,'Vacation Request',$emp->name.' '.$r->type_name.' request is waiting for your approval.','vacation','vacation',$id);
+                    if($cancel)$this->notify((int)$next->approver_wp_user_id,'vacation','Vacation Cancellation Request',$emp->name.' vacation cancellation is waiting for your approval.',['entity_id'=>$id]);
+                    else $this->notify((int)$next->approver_wp_user_id,'vacation','Vacation Request',$emp->name.' '.$r->type_name.' request is waiting for your approval.',['entity_id'=>$id]);
                 }
                 return Hub::ADVANCED;
             }

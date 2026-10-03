@@ -1,7 +1,8 @@
 <?php
 /**
  * Employee app → Presence Verification: scan the QR of the requested work location's kiosk.
- * Script: assets/js/presence-scan.js (camera scanning with jsQR; submits the code when found).
+ * Script: assets/js/presence-scan.js (camera scanning with jsQR, plus the device location, which the
+ * server checks against the requested work location; submits when the code is found).
  *
  * @var object|null $req     the request (location_name, status, expires_at, verified_at), if any
  * @var int $left            seconds until it expires
@@ -20,6 +21,13 @@ if (!defined('ABSPATH')) exit;
     <p id="wfo-presence-countdown" style="font-weight:700"><?php /* translators: %s: mm:ss */ printf(esc_html__('Expires in %s', 'workforce-one'), esc_html(gmdate('i:s', $left))); ?></p>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="wfo-presence-form">
         <?php wp_nonce_field('ews_presence_verify'); ?><input type="hidden" name="action" value="ews_presence_verify"><input type="hidden" name="request_id" value="<?php echo (int) $req->id; ?>"><input type="hidden" name="qr_payload" id="wfo-presence-payload">
+        <input type="hidden" name="latitude" id="wfo-presence-lat"><input type="hidden" name="longitude" id="wfo-presence-lng"><input type="hidden" name="accuracy" id="wfo-presence-acc"><input type="hidden" name="location_timestamp" id="wfo-presence-ts">
+        <p id="wfo-presence-location" role="status" aria-live="polite" style="font-size:13px;color:#475467"
+            data-waiting="<?php esc_attr_e('Getting your location… Please allow location access when your browser asks.', 'workforce-one'); ?>"
+            data-ready="<?php esc_attr_e('Location ready.', 'workforce-one'); ?>"
+            data-denied="<?php esc_attr_e('Location permission was denied. Presence can only be verified with your location: allow Location Services for this site, then reload this page.', 'workforce-one'); ?>"
+            data-failed="<?php esc_attr_e('Your location could not be determined. Turn on Location Services/GPS and reload this page.', 'workforce-one'); ?>"
+            data-insecure="<?php esc_attr_e('Location access requires HTTPS. Please open Workforce One using a secure connection.', 'workforce-one'); ?>"></p>
         <div id="wfo-presence-scanner" data-unavailable="<?php esc_attr_e('Camera scanning is unavailable. Please use a QR-capable device.', 'workforce-one'); ?>" style="background:#101828;border-radius:16px;overflow:hidden;min-height:280px;display:flex;align-items:center;justify-content:center;color:#fff"><?php esc_html_e('Starting camera…', 'workforce-one'); ?></div>
         <p style="color:#667085;font-size:12px"><?php esc_html_e('Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device.', 'workforce-one'); ?></p>
         <button class="button button-primary" type="submit"><?php esc_html_e('Verify Presence', 'workforce-one'); ?></button>

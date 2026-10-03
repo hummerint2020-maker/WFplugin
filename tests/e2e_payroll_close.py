@@ -6,7 +6,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_payroll_close.py <state-
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import html, json, os, re, shutil, subprocess, sys, unicodedata, urllib.request
+import html, json, os, re, shutil, subprocess, sys, time, unicodedata, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -153,9 +153,38 @@ check('...and follows attendance again (the later absence now counts)', money(BA
 st, body, _ = emp.req('/app/?ews_view=pay&month=' + MONTH)
 check('...and the employee no longer sees it as final', 'Final' not in body)
 php("$wpdb->update($p.'ews_employees',['name'=>'أحمد محمد'],['id'=>%d]);" % E)  # names may be Arabic
+
+
+def queued_pushes():
+    """Pushes waiting in WP-Cron (DISABLE_WP_CRON is on in the tests, so nothing runs by itself)."""
+    return json.loads(php("$o=[];foreach((array)_get_cron_array() as $t=>$hooks){foreach((array)($hooks['ews_push_deliver']??[]) as $e){foreach($e['args'][0] as $x)$o[]=$x;}} echo wp_json_encode($o);"))
+
+
+# A device subscribed before 3.31.45 with an endpoint that is no longer allowed: delivery removes it.
+php("$wpdb->query(\"DELETE FROM {$p}ews_push_subscriptions\"); wp_unschedule_hook('ews_push_deliver'); $wpdb->insert($p.'ews_push_subscriptions',['user_id'=>%d,'endpoint'=>'https://127.0.0.1/push','endpoint_hash'=>hash('sha256','https://127.0.0.1/push'),'p256dh'=>'x','auth'=>'y','content_encoding'=>'aes128gcm','created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);" % I['uid'])
+# ...and one whose push service is down (a public address that never answers).
+php("$wpdb->insert($p.'ews_push_subscriptions',['user_id'=>%d,'endpoint'=>'https://fcm.googleapis.com:443/fcm/send/dead','endpoint_hash'=>hash('sha256','dead'),'p256dh'=>'x','auth'=>'y','content_encoding'=>'aes128gcm','created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);" % I['uid'])
+started = time.time()
 adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_close', '_wpnonce': cn, 'month': MONTH})
-note = q("SELECT title,message FROM {p}ews_notifications WHERE user_id=%d" % I['uid'])
-check('closing with My Pay on tells each employee their payslip is ready', len(note) == 1 and 'Payslip' in note[0]['title'], note)
+took = time.time() - started
+check('a dead push endpoint does not slow the action down (the push is not sent during it)', took < 3, took)
+note = q("SELECT title,message,entity,entity_id FROM {p}ews_notifications WHERE user_id=%d" % I['uid'])
+check('closing with My Pay on tells each employee their payslip is ready (in the app)', len(note) == 1 and 'Payslip' in note[0]['title'] and note[0]['entity'] == 'payroll', note)
+pushes = queued_pushes()
+check('...and queues a push (Payroll push is on by default; before 3.31.45 there was none)', [(x['user_id'], x['category']) for x in pushes] == [(I['uid'], 'payroll')] and 'ews_view=pay' in pushes[0]['url'], pushes)
+check('...sent after the response, not during it (the close did not touch the devices)', len(q("SELECT id FROM {p}ews_push_subscriptions WHERE user_id=%d" % I['uid'])) == 2)
+wp('cron', 'event', 'run', 'ews_push_deliver')
+last = json.loads(php("echo wp_json_encode(get_option('ews_push_last_delivery'));"))
+check('delivery: an endpoint that is not a public HTTPS push service is never contacted, and is removed', [r['endpoint'] for r in q("SELECT endpoint FROM {p}ews_push_subscriptions WHERE user_id=%d" % I['uid'])] == ['https://fcm.googleapis.com:443/fcm/send/dead'] and last['failed'] == 2 and 'private or reserved' in ' '.join(last['errors']), last)
+check('...and the removal is in the Audit Log', 'user_id=%d' % I['uid'] in (q("SELECT details FROM {p}ews_audit_log WHERE action='push_endpoint_removed'") or [{'details': ''}])[-1]['details'])
+st, npage, _ = adm.req('/wp-admin/admin.php?page=ews31-notifications')
+check('...the failures are recorded (the dead endpoint too) and shown on Notification Settings', 'Last push delivery' in npage and 'failed 2' in npage, last)
+# The Payroll push follows the Notification Policy like every other category.
+php("update_option('ews_notification_policy',['payroll'=>['in_app'=>1,'push'=>0,'mandatory'=>0]],false);")
+adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_reopen', '_wpnonce': rn2.group(1) if rn2 else '', 'month': MONTH})
+adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_close', '_wpnonce': cn, 'month': MONTH})
+check('with Payroll push off, closing notifies in the app only', len(q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND entity='payroll'" % I['uid'])) == 2 and queued_pushes() == [], queued_pushes())
+php("delete_option('ews_notification_policy');")
 
 # ---------------------------------------------------------------- payslip PDF
 

@@ -276,7 +276,7 @@ trait EWS_Payroll_Trait {
         if($rules['employee_view']){
             $label=date('F Y',strtotime($month.'-01'));
             foreach($people as $x){
-                if(!empty($x['employee']->wp_user_id))$this->notify_user((int)$x['employee']->wp_user_id,'Payslip ready','Your payslip for '.$label.' is ready in My Pay.','info','payroll',$run_id);
+                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll','Payslip ready','Your payslip for '.$label.' is ready in My Pay.',['type'=>'info','entity_id'=>$run_id,'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
             }
         }
         $this->payroll_redirect($back+['payroll_saved'=>'closed']);

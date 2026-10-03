@@ -213,5 +213,20 @@ php("$u=new WP_User(%s); $u->remove_cap('ews_view_reports');" % uid)
 st, page, _ = emp.req(REPORT)
 check('without View Reports there is no report', 'Report Summary' not in page)
 
+# Shift lookups are batched (3.31.45): one query for a whole list of employees, same shift each.
+out = json.loads(php("""
+    update_option('ews_shifts',[['id'=>1,'name'=>'Day','start'=>'08:00','end'=>'16:00','grace'=>5,'active'=>1],['id'=>2,'name'=>'Night','start'=>'22:00','end'=>'06:00','grace'=>15,'overnight'=>1,'active'=>1],['id'=>3,'name'=>'Old','start'=>'07:00','end'=>'15:00','active'=>0]],false);
+    $ids=[];foreach([1,2,3,0,99] as $i=>$sid){$wpdb->insert($p.'ews_employees',['name'=>'Shift '.$i,'domain_name'=>'shift'.$i,'active'=>1,'attendance_enabled'=>1,'default_shift_id'=>$sid]);$ids[]=$wpdb->insert_id;}
+    $o=new EWS_Manager_V31_1(); $c=new ReflectionProperty('EWS_Manager_V31_1','ews_shift_for_employee_cache'); $c->setAccessible(true);
+    $one=new ReflectionMethod('EWS_Manager_V31_1','shift_for_employee'); $one->setAccessible(true);
+    $prime=new ReflectionMethod('EWS_Manager_V31_1','prime_shift_cache'); $prime->setAccessible(true);
+    $c->setValue(null,[]); $before=$wpdb->num_queries; $single=[];foreach($ids as $id){$s=$one->invoke($o,$id);$single[]=$s?$s['id']:null;} $single_q=$wpdb->num_queries-$before;
+    $c->setValue(null,[]); $before=$wpdb->num_queries; $prime->invoke($o,$ids); $batched=[];foreach($ids as $id){$s=$one->invoke($o,$id);$batched[]=$s?$s['id']:null;} $batched_q=$wpdb->num_queries-$before;
+    $rows=$wpdb->get_results("SELECT * FROM {$p}ews_employees WHERE id IN (".implode(',',$ids).") ORDER BY id"); $c->setValue(null,[]); $before=$wpdb->num_queries; $prime->invoke($o,$rows); $from_rows=[];foreach($ids as $id){$s=$one->invoke($o,$id);$from_rows[]=$s?$s['id']:null;} $rows_q=$wpdb->num_queries-$before;
+    $wpdb->query("DELETE FROM {$p}ews_employees WHERE id IN (".implode(',',$ids).")"); delete_option('ews_shifts');
+    echo wp_json_encode(compact('single','single_q','batched','batched_q','from_rows','rows_q'));"""))
+check('a batch shift lookup gives each employee the same shift as one at a time (inactive and unknown shifts: Company Working Hours)', out['single'] == out['batched'] == out['from_rows'] == [1, 2, None, None, None], out)
+check('...in one query for ids, none for loaded employee rows (was one per employee)', (out['single_q'], out['batched_q'], out['rows_q']) == (5, 1, 0), out)
+
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

@@ -6,7 +6,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_presence.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import datetime, hashlib, html, json, os, re, sys, urllib.parse
+import datetime, hashlib, html, json, os, re, sys, time, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -77,12 +77,19 @@ check('...and the employee is notified', note and note[0]['title'] == 'Presence 
 st, page, _ = emp.req('/app/?ews_view=presence&presence_request=%d' % rid)
 check('the employee sees where to scan and how long is left', 'Cairo HQ' in page and 'Expires in' in page and forms(page, 'ews_presence_verify'))
 check('...with the scanner script in a file (no inline script)', 'assets/js/presence-scan.js' in page and 'getUserMedia' not in page)
+check('...which also sends the device location (hidden fields and a status line for a denied permission)', all('name="%s"' % f in page for f in ('latitude', 'longitude', 'accuracy', 'location_timestamp')) and 'data-denied=' in page)
 vf = forms(page, 'ews_presence_verify')
 vnonce = nonce(vf[0]) if vf else ''
 
 
-def verify(payload):
-    st, _, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_presence_verify', '_wpnonce': vnonce, 'request_id': rid, 'qr_payload': payload})
+HQ = {'latitude': 30.0444, 'longitude': 31.2357, 'accuracy': 12}  # inside Cairo HQ (radius 200 m)
+
+
+def verify(payload, where=HQ, age=0):
+    data = {'action': 'ews_presence_verify', '_wpnonce': vnonce, 'request_id': rid, 'qr_payload': payload}
+    if where:  # the device location the page's script attaches (timestamp in ms, like the browser's)
+        data.update(where, location_timestamp=int((time.time() - age) * 1000))
+    st, _, h = emp.req('/wp-admin/admin-post.php', data)
     return loc(h)
 
 
@@ -98,9 +105,26 @@ l = verify(qr(bk, secret))
 st, page, _ = emp.req(l)
 check('a QR of another location is refused', 'This QR belongs to a different work location.' in page and q("SELECT status FROM {p}ews_presence_verifications WHERE id=%d" % rid)[0]['status'] == 'pending')
 check('failed attempts are in the Audit Log', len(q("SELECT id FROM {p}ews_audit_log WHERE action='presence_verification_failed'")) == 2)
+# The right QR is not enough: the employee's own device must be inside the requested location.
+pending = lambda: q("SELECT status FROM {p}ews_presence_verifications WHERE id=%d" % rid)[0]['status'] == 'pending'
+l = verify(qr(I['kid'], I['secret']), where=None)
+st, page, _ = emp.req(l)
+check('a valid QR without a device location (permission denied) is refused, asking for location access', 'presence_error=location_required' in l and 'Location access is required to verify your presence.' in page and pending(), l)
+l = verify(qr(I['kid'], I['secret']), where={'latitude': 31.2, 'longitude': 29.9, 'accuracy': 10})
+st, page, _ = emp.req(l)
+check('a valid QR scanned outside the location (a forwarded photo) is refused', 'presence_error=outside_kiosk' in l and 'You must be at the requested work location' in page and pending(), l)
+fail = q("SELECT details FROM {p}ews_audit_log WHERE action='presence_verification_failed' ORDER BY id DESC LIMIT 1")[0]['details']
+check('...the Audit Log has the reason and the distance', 'outside_kiosk' in fail and 'distance=' in fail and 'm' in fail, fail)
+l = verify(qr(I['kid'], I['secret']), where={'latitude': 30.0444, 'longitude': 31.2357, 'accuracy': 12}, age=900)
+check('a stale device location (15 minutes old) is refused like a missing one', 'presence_error=location_required' in l and pending(), l)
+l = verify(qr(I['kid'], I['secret']), where={'latitude': 30.0452, 'longitude': 31.2357, 'accuracy': 12})
+check('a valid QR inside the location radius (about 90 m from the centre) verifies presence', 'presence_success=1' in l, l)
+php("$wpdb->update($p.'ews_presence_verifications',['status'=>'pending','verified_at'=>null,'kiosk_id'=>null],['id'=>%d]);" % rid)
 l = verify(qr(I['kid'], I['secret']))
 v = q("SELECT status,kiosk_id FROM {p}ews_presence_verifications WHERE id=%d" % rid)[0]
 check('the right kiosk\'s QR verifies presence', 'presence_success=1' in l and v['status'] == 'verified' and str(v['kiosk_id']) == str(I['kid']), (l, v))
+ok = q("SELECT details FROM {p}ews_audit_log WHERE action='presence_verification_verified' ORDER BY id DESC LIMIT 1")[0]['details']
+check('...with the distance in the Audit Log', 'distance=0m' in ok, ok)
 st, page, _ = emp.req('/app/?ews_view=presence&presence_request=%d' % rid)
 check('...and the page shows it as verified', 'Verified' in page and 'Verified at' in page)
 l = verify(qr(I['kid'], I['secret']))

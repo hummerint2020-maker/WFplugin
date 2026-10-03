@@ -113,6 +113,7 @@ final class Options
         'ews_vapid_subject' => ['group' => 'notifications', 'label' => 'Push contact (VAPID subject)', 'kind' => 'text', 'default' => null, 'builtin' => 'mailto: + the site admin email', 'page' => 'ews31-notifications'],
         'ews_vapid_public_key' => ['group' => 'notifications', 'label' => 'Push public key', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_vapid_private_key' => ['group' => 'notifications', 'label' => 'Push private key', 'kind' => 'secret', 'default' => ''],
+        'ews_push_last_delivery' => ['group' => 'notifications', 'label' => 'Last push delivery (sent, failed, last error)', 'kind' => 'data', 'default' => [], 'internal' => true],
 
         // Access
         'ews_role_permissions' => ['group' => 'access', 'label' => 'Roles & permissions', 'kind' => 'grouped', 'default' => [], 'builtin' => 'each role keeps its WordPress capabilities', 'page' => 'ews31-roles'],

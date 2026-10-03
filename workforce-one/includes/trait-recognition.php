@@ -118,11 +118,8 @@ trait EWS_Recognition_Trait {
         $msg=$sender_name.' recognized you for '.$label.'.';
         if($message!=='')$msg.=' “'.wp_strip_all_tags($message).'”';
         if(!empty($recipient->wp_user_id)){
-            $this->notify_user((int)$recipient->wp_user_id,$title,$msg,'recognition','kudos',$id);
-            if(method_exists($this,'push_custom_notification')){
-                $url=add_query_arg(['ews_view'=>'employee','employee_id'=>$recipient_id],$this->app_view_url('people'));
-                $this->push_custom_notification((int)$recipient->wp_user_id,$title,$msg,'recognition',$id,$url);
-            }
+            $url=add_query_arg(['ews_view'=>'employee','employee_id'=>$recipient_id],$this->app_view_url('people'));
+            $this->notify((int)$recipient->wp_user_id,'recognition',$title,$msg,['entity'=>'kudos','entity_id'=>$id,'url'=>$url]);
         }
         $this->audit('kudos_created','kudos',$id,'sender_employee_id='.(int)$sender->id.'; recipient_employee_id='.$recipient_id.'; category='.$category);
         // Keep the success notice one-time and out of the persistent URL query string.

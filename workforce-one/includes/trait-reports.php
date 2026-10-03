@@ -297,6 +297,7 @@ trait EWS_Reports_Trait {
         $today=current_time('Y-m-d');$now=current_time('mysql');
         $allowance=$this->break_enabled()?$this->break_duration_minutes():0;
         $rows=[];
+        $this->prime_shift_cache($emps);
         foreach($emps as $emp){
             $eid=(int)$emp->id;$h=$this->working_hours($eid);
             foreach($dates as $d){

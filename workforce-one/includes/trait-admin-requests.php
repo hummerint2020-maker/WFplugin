@@ -125,7 +125,7 @@ trait EWS_Admin_Requests_Trait {
             }
         }
         if(!$ok || $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
-        if($emp && $emp->wp_user_id)$this->notify_user((int)$emp->wp_user_id,$approve?'Vacation Approved':'Vacation Rejected',$approve?'Your vacation request has been approved.':'Your vacation request has been rejected.','vacation','vacation',$id);
+        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?'Vacation Approved':'Vacation Rejected',$approve?'Your vacation request has been approved.':'Your vacation request has been rejected.',['entity_id'=>$id,'push'=>false]);
         return Hub::outcome($decision);
     }
 }

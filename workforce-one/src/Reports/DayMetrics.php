@@ -4,6 +4,7 @@ namespace WorkforceOne\Reports;
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Attendance\Insights;
+use WorkforceOne\Attendance\Lateness;
 
 /**
  * One employee's day, as every report counts it. Pure: no WordPress calls.
@@ -33,7 +34,7 @@ final class DayMetrics
      */
     public static function compute(array $f): array
     {
-        $start = strtotime($f['date'] . ' ' . $f['shift_start'] . ':00');
+        $start = Lateness::shiftStart($f['date'], $f['shift_start']);
         $end = strtotime($f['date'] . ' ' . $f['shift_end'] . ':00');
         if ($end <= $start) $end += 86400; // overnight shift ends the next day
         $in = $f['first_in'] ? strtotime($f['first_in']) : null;
@@ -46,7 +47,7 @@ final class DayMetrics
         if ($holiday) {
             $result = self::HOLIDAY;
         } else {
-            $late = $in !== null && ($f['first_in_legacy_late'] || $in > $start + $f['grace'] * 60);
+            $late = $in !== null && ($f['first_in_legacy_late'] || Lateness::isLate($in, $start, (int) $f['grace']));
             $cutoff = strtotime($f['date'] . ' ' . $f['normal_until'] . ':00');
             if ($f['normal_until'] < $f['shift_start']) $cutoff += 86400;
             $result = Insights::actual([

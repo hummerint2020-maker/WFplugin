@@ -71,8 +71,7 @@ trait EWS_Swap_Trait {
     /** In-app notification plus push (when enabled) for one swap participant. */
     private function swap_notify($user_id,$title,$message,$type,$swap_id,$push=true){
             if(!$user_id)return;
-            $this->notify_user($user_id,$title,$message,$type,'swap',$swap_id);
-            if($push)$this->push_custom_notification($user_id,$title,$message,'swap',$swap_id);
+            $this->notify($user_id,'swap',$title,$message,['type'=>$type,'entity_id'=>$swap_id,'push'=>$push]);
         }
 
     private function swap_audit($action,$r,$detail){

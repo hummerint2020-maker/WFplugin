@@ -1,11 +1,13 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\LocationAssessment;
 use WorkforceOne\Presence\QrCode;
 
 /**
  * Presence: kiosks (a screen at a work location showing a rotating QR), QR Sign In, and presence
- * verification (a manager asks an employee to scan the QR of a location within the time set on Feature Configuration, 3 minutes by default).
+ * verification (a manager asks an employee to scan the QR of a location within the time set on Feature Configuration, 3 minutes by default;
+ * since 3.31.45 the employee's device location must also be inside that location, as for QR Sign In).
  * QR rules: src/Presence/QrCode.php; pages: templates/admin/presence-kiosks.php, templates/kiosk.php,
  * templates/app/presence.php.
  */
@@ -100,7 +102,7 @@ trait EWS_Presence_Trait {
         list(,$vt)=$this->presence_tables();$minutes=\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes'));$expires=gmdate('Y-m-d H:i:s',time()+$minutes*60);$ok=$wpdb->insert($vt,['employee_id'=>$eid,'location_id'=>$location_id,'requested_by'=>get_current_user_id(),'status'=>'pending','expires_at'=>$expires,'created_at'=>current_time('mysql')],['%d','%d','%d','%s','%s','%s']);if($ok===false)wp_die(__('Could not create presence verification request.','workforce-one'));$id=(int)$wpdb->insert_id;
         $this->audit('presence_verification_requested','presence_verification',$id,$emp->name.' / '.$loc->name.' / expires='.$expires);
         if(!empty($emp->wp_user_id)){
-            $msg='Please verify your presence at <strong>'.esc_html($loc->name).'</strong>. The request expires in '.$minutes.' '.($minutes===1?'minute':'minutes').'.';$url=add_query_arg(['ews_view'=>'presence','presence_request'=>$id],$this->app_home_url());$this->notify_user((int)$emp->wp_user_id,'Presence Verification',$msg,'presence',$id);if(method_exists($this,'push_custom_notification'))$this->push_custom_notification((int)$emp->wp_user_id,'Presence Verification',$msg,'presence',$id,$url);
+            $msg='Please verify your presence at <strong>'.esc_html($loc->name).'</strong>. The request expires in '.$minutes.' '.($minutes===1?'minute':'minutes').'.';$url=add_query_arg(['ews_view'=>'presence','presence_request'=>$id],$this->app_home_url());$this->notify((int)$emp->wp_user_id,'presence','Presence Verification',$msg,['entity_id'=>$id,'url'=>$url]);
         }
         wp_safe_redirect(wp_get_referer()?:admin_url('admin.php?page=ews31-requests'));exit;
     }
@@ -114,6 +116,9 @@ trait EWS_Presence_Trait {
             'inactive_kiosk'=>__('This kiosk is inactive.','workforce-one'),
             'wrong_location'=>__('This QR belongs to a different work location.','workforce-one'),
             'changed'=>__('The request changed before it could be verified.','workforce-one'),
+            LocationAssessment::QR_LOCATION_REQUIRED=>__('Location access is required to verify your presence. Please allow Location Services and try again.','workforce-one'),
+            LocationAssessment::QR_OUTSIDE=>__('You must be at the requested work location to verify your presence.','workforce-one'),
+            LocationAssessment::QR_KIOSK_NO_COORDS=>__('This work location has no coordinates configured. Please contact your administrator.','workforce-one'),
         ];
         return $m[sanitize_key((string)$code)]??'';
     }
@@ -127,8 +132,16 @@ trait EWS_Presence_Trait {
         if(strtotime($req->expires_at)<time()){$wpdb->update($vt,['status'=>'expired'],['id'=>$id,'status'=>'pending'],['%s'],['%d','%s']);$this->audit('presence_verification_expired','presence_verification',$id,$emp->name);$back(['presence_error'=>'expired']);return;}
         $k=$this->presence_validate_qr($raw);if(is_wp_error($k)){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / '.$k->get_error_code());$back(['presence_error'=>$k->get_error_code()]);return;}
         if((int)$k->location_id!==(int)$req->location_id){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / wrong_location');$back(['presence_error'=>'wrong_location']);return;}
+        // Presence means being there: a QR can be photographed and forwarded, so the employee's own
+        // device location must also be inside the requested work location - the same rule as QR Sign In.
+        [$lat,$lng,$acc,$location_ts]=$this->posted_device_location();
+        [$integrity,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_ts,time(),$lat!==null&&$lng!==null?$this->last_device_location((int)$emp->id):null);
+        $loc=$this->presence_location((int)$req->location_id);
+        [$where,$distance]=LocationAssessment::qrCheck($lat,$lng,$loc?$loc->latitude:null,$loc?$loc->longitude:null,(float)($loc&&$loc->radius?$loc->radius:200),$integrity,$integrity_reason);
+        $at=$distance!==null?' / distance='.round($distance).'m':'';
+        if($where!==null){$this->audit('presence_verification_failed','presence_verification',$id,$emp->name.' / '.$where.$at.($integrity_reason?' / '.$integrity_reason:''));$back(['presence_error'=>$where]);return;}
         $now=current_time('mysql');$updated=$wpdb->query($wpdb->prepare("UPDATE $vt SET status='verified',verified_at=%s,kiosk_id=%d WHERE id=%d AND status='pending'",$now,(int)$k->id,$id));if($updated!==1){$back(['presence_error'=>'changed']);return;}
-        $this->audit('presence_verification_verified','presence_verification',$id,$emp->name.' / kiosk='.$k->name);$back(['presence_success'=>1]);
+        $this->audit('presence_verification_verified','presence_verification',$id,$emp->name.' / kiosk='.$k->name.$at.' / '.$integrity);$back(['presence_success'=>1]);
     }
     /** The kiosk's screen (?ews_kiosk=<id>&kiosk_key=<secret>): the rotating QR of its work location. */
     public function presence_kiosk_route(){

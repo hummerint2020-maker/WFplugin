@@ -104,6 +104,34 @@ trait EWS_Work_Time_Trait {
             return self::$ews_shift_for_employee_cache[$employee_id]=null;
         }
 
+    /**
+     * Fills the shift_for_employee() cache for many employees at once, so a page that lists them
+     * (reports, payroll, the dashboard, the Sign In / Out report) does not run one query each.
+     * Takes employee rows (their default_shift_id is used when loaded) or ids. The result per
+     * employee is the same as shift_for_employee(): the active default shift, or null for the
+     * Company Working Hours.
+     * @param array<int,object|int> $employees
+     */
+    private function prime_shift_cache(array $employees){
+            global $wpdb;
+            $shift_ids=[];$missing=[];
+            foreach($employees as $e){
+                $id=is_object($e)?absint($e->id??0):absint($e);
+                if(!$id||array_key_exists($id,self::$ews_shift_for_employee_cache))continue;
+                if(is_object($e)&&property_exists($e,'default_shift_id'))$shift_ids[$id]=(int)$e->default_shift_id;
+                else $missing[$id]=$id;
+            }
+            foreach(array_chunk(array_values($missing),500) as $chunk){
+                $ph=implode(',',array_fill(0,count($chunk),'%d'));
+                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,default_shift_id FROM {$this->employees} WHERE id IN ($ph)",$chunk)) as $r)$shift_ids[(int)$r->id]=(int)$r->default_shift_id;
+                foreach($chunk as $id){ if(!isset($shift_ids[$id]))$shift_ids[$id]=0; }
+            }
+            if(!$shift_ids)return;
+            $active=[];
+            foreach($this->shifts() as $shift){ if(!empty($shift['active']) && !isset($active[(int)$shift['id']]))$active[(int)$shift['id']]=$shift; }
+            foreach($shift_ids as $id=>$shift_id)self::$ews_shift_for_employee_cache[$id]=$shift_id&&isset($active[$shift_id])?$active[$shift_id]:null;
+        }
+
     private function default_working_hours(){
             return ['start'=>'08:00','normal_until'=>'10:00','end'=>'17:00'];
         }
@@ -161,11 +189,9 @@ trait EWS_Work_Time_Trait {
         }
 
     private function sign_in_classification($event_at=null,$employee_id=0){
-            $ts=$event_at?strtotime($event_at):current_time('timestamp'); $date=date('Y-m-d',$ts); $cfg=$this->working_hours($employee_id);
-            $start=strtotime($date.' '.$cfg['start']);
-            if(!empty($cfg['overnight']) && $cfg['start']>$cfg['end'] && date('H:i',$ts)<=$cfg['end'])$start=strtotime(date('Y-m-d',strtotime($date.' -1 day')).' '.$cfg['start']);
-            $grace_end=$start+($this->attendance_grace_period($employee_id)*60);
-            return $ts<=$grace_end?'On Time':'Late Arrival';
+            // The one "late" rule (src/Attendance/Lateness.php), shared with the reports and payroll.
+            $ts=$event_at?(int)strtotime($event_at):(int)current_time('timestamp'); $cfg=$this->working_hours($employee_id);
+            return \WorkforceOne\Attendance\Lateness::classify($ts,(string)$cfg['start'],(string)$cfg['end'],!empty($cfg['overnight']),(int)$this->attendance_grace_period($employee_id));
         }
 
     private function working_hours_save($start,$normal_until,$end){

@@ -322,19 +322,17 @@ function current_employee(){
             $changed=($old_status!==$status);
             if($emp && $emp->wp_user_id && $changed){
                 $label=date_i18n('l, d M Y',strtotime($date));
-                $this->notify_user(
+                $this->notify(
                     (int)$emp->wp_user_id,
+                    'schedule',
                     'Schedule Updated',
                     'Your schedule for <strong>'.esc_html($label).'</strong> is now <strong>'.esc_html($status).'</strong>.',
-                    'info',
-                    'schedule',
-                    (int)$id
+                    ['type'=>'info','entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','notifications',$this->app_home_url())]
                 );
-                $this->push_schedule_update((int)$emp->wp_user_id);
             }
 
             return ['ok'=>true,'conflict'=>false,'id'=>$id,'changed'=>$changed,'old_status'=>$old_status];
         }
 
-    private function save_att($eid,$date,$status,$note=''){global $wpdb;$id=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s",$eid,$date));$old_status=$id?$wpdb->get_var($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE id=%d",$id)):null;$old_note=$id?$wpdb->get_var($wpdb->prepare("SELECT note FROM {$this->schedule} WHERE id=%d",$id)):null;$data=['status'=>$status,'note'=>$note,'updated_by'=>get_current_user_id(),'updated_at'=>current_time('mysql')];if($id){$updated=$wpdb->update($this->schedule,$data,['id'=>$id]);if($updated===false){$this->audit('schedule_update_failed','schedule',(int)$id,$wpdb->last_error?:'Database update failed.');return 0;}}else{$data['employee_id']=$eid;$data['work_date']=$date;$inserted=$wpdb->insert($this->schedule,$data);if($inserted===false){$this->audit('schedule_insert_failed','schedule',0,$wpdb->last_error?:'Database insert failed.');return 0;}$id=$wpdb->insert_id;}$emp=$wpdb->get_row($wpdb->prepare("SELECT name,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1",$eid));$changed=($old_status!==$status)||((string)$old_note!==(string)$note);if($emp&&$emp->wp_user_id&&$changed){$label=date_i18n('l, d M Y',strtotime($date));$this->notify_user((int)$emp->wp_user_id,'Schedule Updated','Your schedule for <strong>'.esc_html($label).'</strong> is now <strong>'.esc_html($status).'</strong>.','info','schedule',(int)$id);$this->push_schedule_update((int)$emp->wp_user_id);}return $id;}
+    private function save_att($eid,$date,$status,$note=''){global $wpdb;$id=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s",$eid,$date));$old_status=$id?$wpdb->get_var($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE id=%d",$id)):null;$old_note=$id?$wpdb->get_var($wpdb->prepare("SELECT note FROM {$this->schedule} WHERE id=%d",$id)):null;$data=['status'=>$status,'note'=>$note,'updated_by'=>get_current_user_id(),'updated_at'=>current_time('mysql')];if($id){$updated=$wpdb->update($this->schedule,$data,['id'=>$id]);if($updated===false){$this->audit('schedule_update_failed','schedule',(int)$id,$wpdb->last_error?:'Database update failed.');return 0;}}else{$data['employee_id']=$eid;$data['work_date']=$date;$inserted=$wpdb->insert($this->schedule,$data);if($inserted===false){$this->audit('schedule_insert_failed','schedule',0,$wpdb->last_error?:'Database insert failed.');return 0;}$id=$wpdb->insert_id;}$emp=$wpdb->get_row($wpdb->prepare("SELECT name,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1",$eid));$changed=($old_status!==$status)||((string)$old_note!==(string)$note);if($emp&&$emp->wp_user_id&&$changed){$label=date_i18n('l, d M Y',strtotime($date));$this->notify((int)$emp->wp_user_id,'schedule','Schedule Updated','Your schedule for <strong>'.esc_html($label).'</strong> is now <strong>'.esc_html($status).'</strong>.',['type'=>'info','entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','notifications',$this->app_home_url())]);}return $id;}
 }
