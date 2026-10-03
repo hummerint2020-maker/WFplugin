@@ -12,6 +12,7 @@ phase 1 of the reports plan (engine, Attendance Summary, Daily Log, Timesheet, E
 - **Actual absences are shown next to the plan** (an absent employee planned for Office was not
   counted as absent).
 - The CSV and Excel export the same columns as the screen.
+- The Export CSV / Export Excel buttons no longer grow to giant size on narrow screens.
 
 ### Fixed (Schedule → Send schedules)
 - A department manager's "Send schedules" emailed every employee in the company; it now emails

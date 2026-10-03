@@ -426,3 +426,4 @@
 .ews-rc-summary td a{font-weight:700;color:#5b21b6;text-decoration:none}
 .ews-rc-summary td a:hover{text-decoration:underline}
 .ews-rc-neg{color:#b42318;font-weight:700}
+.ews-report-section-head .ews-report-export-csv,.ews-report-section-head .ews-report-export-xlsx{display:inline-flex;align-items:center;gap:4px;font-size:12px!important;line-height:1.2;padding:8px 12px!important;margin:10px 0 0 6px;white-space:nowrap;min-height:0}
