@@ -130,8 +130,12 @@ check('...and a rule can be deleted', not q("SELECT id FROM {p}ews_auto_attendan
 # ---------------------------------------------------------------- bulk Sign Out
 php("$wpdb->query(\"DELETE FROM {$p}ews_time_logs WHERE employee_id=%d AND event_type='sign_out'\"); $wpdb->insert($p.'ews_break_sessions',['employee_id'=>%d,'user_id'=>0,'work_date'=>'%s','start_at'=>current_time('mysql'),'status'=>'Open']);" % (ids['emp'], ids['emp'], TODAY))
 bulk = re.search(r'<a [^>]*href="([^"]*action=ews_auto_attendance_bulk_sign_out[^"]*)"[^>]*>', page)
+# Who is still signed in today: emp and Vera, and Wes unless his New York day is still yesterday
+# here (between 00:00 and 04:00 UTC).
+OPEN = "SELECT DISTINCT s.employee_id FROM {p}ews_time_logs s WHERE s.work_date='%s' AND s.event_type IN ('sign_in','late_sign_in') AND NOT EXISTS (SELECT 1 FROM {p}ews_time_logs o WHERE o.employee_id=s.employee_id AND o.work_date=s.work_date AND o.event_type='sign_out')" % TODAY
+expected = len(q(OPEN))
 st, _, h = adm.req(html.unescape(bulk.group(1)).split('127.0.0.1:8080')[-1]) if bulk else (0, '', {})
-check('bulk Sign Out signs out everyone still signed in today (3)', 'bulk_sign_out=3' in h.get('Location', ''), (h.get('Location'), logs(ids['emp'])))
+check('bulk Sign Out signs out everyone still signed in today (%d)' % expected, expected >= 2 and 'bulk_sign_out=%d&' % expected in h.get('Location', '') + '&' and not q(OPEN), (expected, h.get('Location'), logs(ids['emp'])))
 check('...and closes their open break', q("SELECT status FROM {p}ews_break_sessions WHERE employee_id=%d" % ids['emp'])[0]['status'] == 'Completed')
 check('...after asking for confirmation (no inline script)', bulk and 'data-ews-confirm=' in bulk.group(0) and 'onclick' not in bulk.group(0))
 
