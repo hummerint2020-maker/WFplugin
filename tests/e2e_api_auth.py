@@ -110,7 +110,7 @@ bad = call('POST', '/auth/login', {'username': 'emp1', 'password': 'emp1pass', '
 check('a login without a valid device is 400 VALIDATION_FAILED with the fields', code(bad) == (400, 'VALIDATION_FAILED') and set(bad[1]['error']['details']['fields']) == {'device.installation_id', 'device.platform', 'device.model', 'device.app_version'}, bad[1])
 # Application passwords: switched on for this check only (this test site is HTTP), so the password
 # below really works for WordPress's own REST API, and the native login must still refuse it.
-php("file_put_contents(WPMU_PLUGIN_DIR.'/e2e-app-passwords.php','<?php add_filter(\"wp_is_application_passwords_available\",\"__return_true\");');")
+php("wp_mkdir_p(WPMU_PLUGIN_DIR); file_put_contents(WPMU_PLUGIN_DIR.'/e2e-app-passwords.php','<?php add_filter(\"wp_is_application_passwords_available\",\"__return_true\");');")
 try:
     app_pw = wp('user', 'application-password', 'create', 'emp1', 'e2e', '--porcelain').strip().splitlines()[-1]
     import base64
