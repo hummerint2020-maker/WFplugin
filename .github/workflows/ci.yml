@@ -85,6 +85,8 @@ jobs:
           wp config set --path="$WP" WP_DEBUG_LOG true --raw
           wp config set --path="$WP" WP_DEBUG_DISPLAY false --raw
           wp config set --path="$WP" DISABLE_WP_CRON true --raw
+          # Native API over HTTP for the test server only; a request sending X-E2E-Require-Https gets the production HTTPS rule.
+          wp config set --path="$WP" WORKFORCE_ONE_API_ALLOW_HTTP "empty(\$_SERVER['HTTP_X_E2E_REQUIRE_HTTPS'])" --raw
           wp core install --path="$WP" --url=http://127.0.0.1:8080 --title=CI --admin_user=admin --admin_password=admin --admin_email=ci@example.com --skip-email
           wp rewrite structure '/%postname%/' --path="$WP"
           ln -s "$GITHUB_WORKSPACE/workforce-one" "$WP/wp-content/plugins/workforce-one"
@@ -165,6 +167,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_parity.py "$S"
       - name: API foundation (Face verify without distance, attempt limit, routes, idempotency, concurrency)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_foundation.py "$S"
+      - name: Native app authentication (tokens, refresh rotation, devices, rate limits, isolation)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_auth.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

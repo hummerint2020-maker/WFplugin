@@ -267,7 +267,61 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.46'; }
+        /**
+         * Native app sessions (3.31.47): device sessions, their tokens (HMACs only, never the tokens)
+         * and the login attempt buckets. See includes/trait-api-auth.php.
+         */
+        private function ensure_api_auth_schema(){
+            if($this->ews_schema_is_current())return;
+            global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
+            $c=$wpdb->get_charset_collate(); $p=$wpdb->prefix;
+            dbDelta("CREATE TABLE {$p}ews_api_devices (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                public_id CHAR(32) NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                installation_id VARCHAR(100) NOT NULL,
+                platform VARCHAR(20) NOT NULL,
+                model VARCHAR(100) NOT NULL,
+                app_version VARCHAR(30) NOT NULL,
+                created_at DATETIME NOT NULL,
+                last_seen_at DATETIME NOT NULL,
+                expires_at DATETIME NOT NULL,
+                revoked_at DATETIME NULL,
+                revoked_reason VARCHAR(40) NULL,
+                refresh_audited_at DATETIME NULL,
+                PRIMARY KEY(id),
+                UNIQUE KEY public_id(public_id),
+                KEY user_installation(user_id,installation_id),
+                KEY expires_at(expires_at)
+            ) {$c};");
+            dbDelta("CREATE TABLE {$p}ews_api_tokens (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                device_id BIGINT UNSIGNED NOT NULL,
+                user_id BIGINT UNSIGNED NOT NULL,
+                kind VARCHAR(10) NOT NULL,
+                token_hash CHAR(64) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at DATETIME NOT NULL,
+                used_at DATETIME NULL,
+                revoked_at DATETIME NULL,
+                PRIMARY KEY(id),
+                UNIQUE KEY token_hash(token_hash),
+                KEY device_kind(device_id,kind),
+                KEY expires_at(expires_at)
+            ) {$c};");
+            dbDelta("CREATE TABLE {$p}ews_api_rate_limits (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                bucket VARCHAR(20) NOT NULL,
+                key_hash CHAR(64) NOT NULL,
+                window_start DATETIME NOT NULL,
+                count INT UNSIGNED NOT NULL DEFAULT 0,
+                PRIMARY KEY(id),
+                UNIQUE KEY bucket_key(bucket,key_hash),
+                KEY window_start(window_start)
+            ) {$c};");
+        }
+
+        private function ews_schema_target(){ return '3.31.47'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -315,6 +369,7 @@ private function ensure_break_schema(){
             $this->ensure_recognition_schema();
             $this->ensure_payroll_schema();
             $this->ensure_api_idempotency_schema();
+            $this->ensure_api_auth_schema();
             $this->ews_v321_ensure_locations_table();
             $this->ews_v321_ensure_employee_map();
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);

@@ -1,5 +1,60 @@
 # Changelog
 
+## 3.31.47
+API Phase 0B: sign-in for the future Android / iOS apps. Nothing changes for the Web app or
+wp-admin: they keep the WordPress login. No attendance, schedule or other data endpoints yet.
+
+### Added
+- **Native sign-in** with the WordPress user name and password (`wp_authenticate()`, so lock-out and
+  two-factor plugins on the WordPress login still apply; WordPress application passwords are not
+  accepted). Allowed: an active employee linked to the user, or a Workforce One administrator or
+  manager without an employee record. An archived employee gets ACCOUNT_DISABLED, a WordPress user
+  with neither gets ACCOUNT_NOT_LINKED.
+- **Tokens**: an access token (15 minutes) and a refresh token (60 days, never past 180 days after the
+  sign-in), both random opaque strings tied to the site, the user and one device session. Only
+  HMACs of them are stored. Every refresh replaces both tokens; presenting a refresh token a second
+  time is treated as theft: the device session ends, it is written to the Audit Log, and the app
+  must sign in again.
+- **Device sessions**: one per app installation (installation id, platform, model, app version, first
+  and last seen). The user can list their devices and sign one out; signing out (or signing in again
+  on the same installation) ends that session and its tokens. The browser login is never affected.
+- **Endpoints** (`/wp-json/workforce-one/v1/`): `GET /meta` (public: product, site, API and app
+  versions, feature flags, branding), `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`,
+  `GET /me`, `GET /me/devices`, `DELETE /me/devices/{id}`. Every answer uses the API envelope with
+  stable codes (INVALID_CREDENTIALS, RATE_LIMITED, TOKEN_MISSING, TOKEN_INVALID, TOKEN_EXPIRED,
+  REFRESH_INVALID, REFRESH_REUSED, DEVICE_REVOKED, ACCOUNT_DISABLED, ACCOUNT_NOT_LINKED,
+  HTTPS_REQUIRED, ...), `Cache-Control: no-store`, and never a database error or file path.
+- **Login limits**: 5 failed sign-ins per user name and 20 per address in 15 minutes; then every
+  attempt is answered 429 RATE_LIMITED with Retry-After, the same for existing and unknown users.
+- **HTTPS required** for sign-in and every authenticated request (for development only:
+  `define('WORKFORCE_ONE_API_ALLOW_HTTP', true);` in wp-config.php).
+
+### Isolation
+An access token is read only by the permission check of the native routes above (the
+`Authorization: Bearer` header, or `X-WFO-Authorization: Bearer` where hosts strip Authorization;
+never the URL, a cookie or the body). The plugin does not hook `determine_current_user`, so a token
+does not sign anyone in to wp-admin, admin-post.php, `/wp/v2`, the Web Face routes or other
+plugins' routes, and the WordPress user it sets for a native request is put back as soon as the
+handler returns.
+
+### Sessions end when
+the user signs out of that device or signs it out from another one; signs in again on the same
+installation; a refresh token is reused; the password is changed or reset (WordPress
+`wp_set_password`; on WordPress 6.0 / 6.1 `after_password_reset` and a changed hash on
+`profile_update`); the WordPress user is deleted or removed from the site; the employee is archived,
+made inactive or linked to another user on the Employees page; the 180 days are over. An account
+that stops qualifying in any other way (role removed, employee made inactive directly in the
+database) is refused on its next request.
+
+### Database
+Schema version 3.31.47: `ews_api_devices`, `ews_api_tokens`, `ews_api_rate_limits` (the idempotency
+table of 3.31.46 is reused). Expired tokens, old device sessions (90 days after they ended) and old
+rate-limit buckets are removed by the daily cleanup; uninstall drops the tables.
+
+### Not changed on purpose
+The Web app, wp-admin, the WordPress login, the Face routes and Sign In / Out (the attendance parity
+trace is identical to 3.31.45 and 3.31.46).
+
 ## 3.31.46
 API foundation, Phase 0A: security fixes, the Attendance service and the API skeleton. No new
 endpoints, no change to what employees see on the Sign In page (except one Face message), no

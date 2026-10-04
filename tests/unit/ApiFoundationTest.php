@@ -62,10 +62,10 @@ final class ApiFoundationTest extends TestCase
     public function testRoutes(): void
     {
         $this->assertSame('workforce-one/v1', Routes::NAMESPACE);
-        $paths = array_column(Routes::table(), 'path');
-        $this->assertSame(['/face/enroll', '/face/verify', '/face/reset-request', '/face/delete'], $paths, 'the four Face routes, unchanged');
-        foreach (Routes::table() as $r) {
-            $this->assertSame('POST', $r['methods']);
+        $web = array_values(array_filter(Routes::table(), function ($r) { return $r['kind'] === 'web'; }));
+        $this->assertSame(['/face/enroll', '/face/verify', '/face/reset-request', '/face/delete'], array_column($web, 'path'), 'the four Face routes, unchanged');
+        foreach ($web as $r) {
+            $this->assertSame(['POST', 'logged_in'], [$r['methods'], $r['access']]);
             $this->assertIsCallable(Routes::access($r['access']));
         }
         $this->expectException(\InvalidArgumentException::class);

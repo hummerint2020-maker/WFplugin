@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.45\n"
+"Project-Id-Version: Workforce One 3.31.47\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-04T01:33:10+00:00\n"
+"POT-Creation-Date: 2026-10-04T18:49:27+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -27,6 +27,66 @@ msgstr ""
 #. Author of the plugin
 #: employee-schedule-manager.php
 msgid "Internal"
+msgstr ""
+
+#: includes/trait-api-auth.php:76
+msgid "The user name or password is incorrect."
+msgstr ""
+
+#: includes/trait-api-auth.php:77
+msgid "Too many sign-in attempts. Please try again later."
+msgstr ""
+
+#: includes/trait-api-auth.php:78
+msgid "Please sign in to continue."
+msgstr ""
+
+#: includes/trait-api-auth.php:79
+msgid "Your session is not valid. Please sign in again."
+msgstr ""
+
+#: includes/trait-api-auth.php:80
+msgid "Your session has expired."
+msgstr ""
+
+#: includes/trait-api-auth.php:81
+msgid "Your session has ended. Please sign in again."
+msgstr ""
+
+#: includes/trait-api-auth.php:82
+msgid "For your security this session was ended. Please sign in again."
+msgstr ""
+
+#: includes/trait-api-auth.php:83
+msgid "This device was signed out. Please sign in again."
+msgstr ""
+
+#: includes/trait-api-auth.php:84
+msgid "Your account is not active in Workforce One."
+msgstr ""
+
+#: includes/trait-api-auth.php:85
+msgid "Your account is not linked to an employee in Workforce One."
+msgstr ""
+
+#: includes/trait-api-auth.php:86
+msgid "A secure connection (HTTPS) is required."
+msgstr ""
+
+#: includes/trait-api-auth.php:87
+msgid "Some fields are missing or invalid."
+msgstr ""
+
+#: includes/trait-api-auth.php:88
+msgid "Not found."
+msgstr ""
+
+#: includes/trait-api-auth.php:89
+msgid "You do not have access to this."
+msgstr ""
+
+#: includes/trait-api-auth.php:91
+msgid "Something went wrong. Please try again."
 msgstr ""
 
 #: includes/trait-app-layout.php:61
@@ -87,8 +147,8 @@ msgid "Tasks"
 msgstr ""
 
 #: includes/trait-app-layout.php:61
-#: includes/trait-notifications.php:785
-#: includes/trait-notifications.php:788
+#: includes/trait-notifications.php:786
+#: includes/trait-notifications.php:789
 #: templates/app/dashboard.php:36
 msgid "Notifications"
 msgstr ""
@@ -699,21 +759,21 @@ msgid "Available only on Office workdays · Maximum per request: %1$s hours · M
 msgstr ""
 
 #. translators: %s: human-readable time difference
-#: includes/trait-notifications.php:774
+#: includes/trait-notifications.php:775
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: includes/trait-notifications.php:782
+#: includes/trait-notifications.php:783
 msgid "You’re all caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:782
+#: includes/trait-notifications.php:783
 msgid "No new notifications."
 msgstr ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:788
+#: includes/trait-notifications.php:789
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -721,11 +781,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:788
+#: includes/trait-notifications.php:789
 msgid "All caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:790
+#: includes/trait-notifications.php:791
 msgid "View all notifications →"
 msgstr ""
 

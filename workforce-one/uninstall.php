@@ -35,7 +35,7 @@ function ews_uninstall_site() {
 
     $tables = [
         'ews_achievements', 'ews_approval_requests', 'ews_approval_steps', 'ews_approval_workflow_steps',
-        'ews_api_idempotency', 'ews_approval_workflows', 'ews_audit_log', 'ews_auto_attendance_rules', 'ews_break_sessions',
+        'ews_api_devices', 'ews_api_idempotency', 'ews_api_rate_limits', 'ews_api_tokens', 'ews_approval_workflows', 'ews_audit_log', 'ews_auto_attendance_rules', 'ews_break_sessions',
         'ews_company_calendar', 'ews_departments', 'ews_early_leave_requests', 'ews_employee_achievements',
         'ews_employee_locations_v321', 'ews_employee_relationships', 'ews_employees', 'ews_face_profiles',
         'ews_kiosks', 'ews_kudos', 'ews_leave_balances', 'ews_leave_requests', 'ews_leave_schedule_snapshots',

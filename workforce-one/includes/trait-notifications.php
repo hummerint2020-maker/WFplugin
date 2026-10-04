@@ -414,6 +414,7 @@ trait EWS_Notifications_Trait {
     public function cleanup_notifications(){
         global $wpdb;
         if(method_exists($this,'attendance_idempotency_cleanup'))$this->attendance_idempotency_cleanup();
+        if(method_exists($this,'api_auth_cleanup'))$this->api_auth_cleanup();
         $this->ensure_notifications_schema();
         $days=(int)$this->option('ews_notification_retention_days');
         if($days<=0)return;

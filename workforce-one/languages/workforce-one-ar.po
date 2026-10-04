@@ -1834,3 +1834,63 @@ msgstr "يتطلب الوصول إلى الموقع اتصال HTTPS. افتح W
 #: includes/trait-frontend.php
 msgid "Too many Face verification attempts. Please wait a few minutes and try again."
 msgstr "محاولات كثيرة للتحقق من الوجه. يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "The user name or password is incorrect."
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
+
+#: includes/trait-api-auth.php
+msgid "Too many sign-in attempts. Please try again later."
+msgstr "محاولات دخول كثيرة. يرجى المحاولة لاحقًا."
+
+#: includes/trait-api-auth.php
+msgid "Please sign in to continue."
+msgstr "يرجى تسجيل الدخول للمتابعة."
+
+#: includes/trait-api-auth.php
+msgid "Your session is not valid. Please sign in again."
+msgstr "جلستك غير صالحة. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "Your session has expired."
+msgstr "انتهت صلاحية جلستك."
+
+#: includes/trait-api-auth.php
+msgid "Your session has ended. Please sign in again."
+msgstr "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "For your security this session was ended. Please sign in again."
+msgstr "لحمايتك تم إنهاء هذه الجلسة. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "This device was signed out. Please sign in again."
+msgstr "تم تسجيل خروج هذا الجهاز. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "Your account is not active in Workforce One."
+msgstr "حسابك غير مفعّل في Workforce One."
+
+#: includes/trait-api-auth.php
+msgid "Your account is not linked to an employee in Workforce One."
+msgstr "حسابك غير مرتبط بموظف في Workforce One."
+
+#: includes/trait-api-auth.php
+msgid "A secure connection (HTTPS) is required."
+msgstr "يلزم اتصال آمن (HTTPS)."
+
+#: includes/trait-api-auth.php
+msgid "Some fields are missing or invalid."
+msgstr "بعض الحقول ناقصة أو غير صحيحة."
+
+#: includes/trait-api-auth.php
+msgid "Not found."
+msgstr "غير موجود."
+
+#: includes/trait-api-auth.php
+msgid "You do not have access to this."
+msgstr "ليست لديك صلاحية الوصول إلى هذا."
+
+#: includes/trait-api-auth.php
+msgid "Something went wrong. Please try again."
+msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."

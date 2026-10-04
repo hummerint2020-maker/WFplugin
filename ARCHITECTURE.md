@@ -25,6 +25,8 @@ workforce-one/
     Attendance/BreakRules.php, FaceMatch.php   break start / resume checks; Face match and failed-attempt limit
     Api/Hooks.php, Routes.php          REST transport: one route table under workforce-one/v1 (today the Face routes)
     Api/Response.php, ErrorMap.php     response envelope and request ids; domain codes → stable API codes + HTTP status
+    Api/Meta.php                       GET /meta: the public bootstrap document (only the keys listed there)
+    Api/Auth/Tokens.php, LoginThrottle.php, Bearer.php, LoginInput.php  token format and states, login limits, the token headers, the login body
     Attendance/AutoRules.php, AutoHooks.php  Auto Attendance rules: days, overnight, what is due
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
@@ -132,4 +134,22 @@ checks is behaviour; `tests/e2e_attendance_parity.py` records a normalised trace
 attendance outcome so the two versions of the code can be compared.
 Writes for one employee run under `GET_LOCK` (MySQL / MariaDB) and are verified after the insert
 (the first row wins) so concurrent duplicates cannot both be recorded on any database.
+
+## Native app authentication (3.31.47)
+
+```
+app ──POST /auth/login {username, password, device}──▶ wp_authenticate() (no application passwords)
+                                                     ─▶ account gate (active employee, or EWS admin)
+                                                     ─▶ device session + access token (15 min) + refresh token (60 d, ≤180 d)
+app ──GET /me  Authorization: Bearer wfo_at_…──────────▶ permission callback of the native route only:
+                                                        token+device (1 query) → user → account gate
+                                                        → wp_set_current_user for this request → handler
+                                                        → user put back (rest_request_after_callbacks)
+app ──POST /auth/refresh {refresh_token}───────────────▶ rotate (old one marked used); used again ⇒ session ends
+```
+`includes/trait-api-auth.php` holds the handlers and storage; `src/Api/Auth/*` the pure rules. Tokens
+are never read anywhere else (no `determine_current_user` filter), so they cannot authenticate
+wp-admin, admin-post.php, /wp/v2 or other plugins. `api_revoke_user_sessions()` ends every session
+of a user (password change, deleted user, archived employee) and is what a future "Sign out all
+devices" will call.
 

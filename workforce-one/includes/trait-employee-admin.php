@@ -86,13 +86,15 @@ trait EWS_Employee_Admin_Trait {
         check_admin_referer('ews31_employee_update');
         global $wpdb;
         $id=absint($_POST['id']??0);
-        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
+        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id,wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
         if(!$old)$this->employee_admin_redirect(['employee_error'=>'not_found']);
         [$in,$error]=$this->employee_admin_input($id,(int)$old->department_id);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
         $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'updated_at'=>current_time('mysql')],['id'=>$id]);
         if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
+        // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).
+        if(!empty($old->wp_user_id) && (((int)$old->active===1 && !$in['active']) || (int)$old->wp_user_id!==(int)$in['wp_user_id']))$this->api_revoke_user_sessions((int)$old->wp_user_id,$in['active']?'employee_unlinked':'employee_archived');
         if(!$this->employee_admin_set_supervisor($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
         if(is_wp_error($this->sync_employee_teams($id,$in['team_ids'])))$this->employee_admin_redirect(['employee_error'=>'teams']);
         $this->audit('employee_update','employee',$id,$in['name'].' / '.$in['domain_name'].' / '.$in['email'].' / teams='.count($in['team_ids']));
@@ -105,10 +107,13 @@ trait EWS_Employee_Admin_Trait {
         check_admin_referer('ews31_employee_archive');
         global $wpdb;
         $id=absint($_POST['id']??0);
-        $old=$id?$wpdb->get_var($wpdb->prepare("SELECT active FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
+        $row=$id?$wpdb->get_row($wpdb->prepare("SELECT active,wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
+        $old=$row?$row->active:null;
         if($old===null)$this->employee_admin_redirect(['employee_error'=>'not_found']);
         if($wpdb->update($this->employees,['active'=>0,'updated_at'=>current_time('mysql')],['id'=>$id])===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id);
+        // An archived employee is signed out of the app on every device (3.31.47).
+        if(!empty($row->wp_user_id))$this->api_revoke_user_sessions((int)$row->wp_user_id,'employee_archived');
         if((int)$old!==0)$this->audit('employee_status_change','employee',$id,'Status: Active -> Inactive');
         $this->employee_admin_redirect(['employee_notice'=>'archived']);
     }

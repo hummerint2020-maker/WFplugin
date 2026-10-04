@@ -42,6 +42,16 @@ final class ErrorMap
     public const NOT_FOUND = 'NOT_FOUND';
     public const FORBIDDEN = 'FORBIDDEN';
     public const INTERNAL_ERROR = 'INTERNAL_ERROR';
+    // Authentication (3.31.47)
+    public const INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
+    public const ACCOUNT_DISABLED = 'ACCOUNT_DISABLED';
+    public const TOKEN_MISSING = 'TOKEN_MISSING';
+    public const TOKEN_INVALID = 'TOKEN_INVALID';
+    public const TOKEN_EXPIRED = 'TOKEN_EXPIRED';
+    public const REFRESH_INVALID = 'REFRESH_INVALID';
+    public const REFRESH_REUSED = 'REFRESH_REUSED';
+    public const DEVICE_REVOKED = 'DEVICE_REVOKED';
+    public const HTTPS_REQUIRED = 'HTTPS_REQUIRED';
 
     /**
      * Domain code → API code. BreakRules reuses the SignInRules / AttendanceResult strings for the same
@@ -82,12 +92,21 @@ final class ErrorMap
         self::NO_OPEN_BREAK => 409, self::IDEMPOTENCY_CONFLICT => 409, self::REQUEST_IN_PROGRESS => 409,
         self::LOCATION_REQUIRED => 422, self::OUTSIDE_LOCATION => 422,
         self::VALIDATION_FAILED => 400, self::NOT_FOUND => 404, self::RATE_LIMITED => 429, self::INTERNAL_ERROR => 500,
+        self::INVALID_CREDENTIALS => 401, self::TOKEN_MISSING => 401, self::TOKEN_INVALID => 401, self::TOKEN_EXPIRED => 401,
+        self::REFRESH_INVALID => 401, self::REFRESH_REUSED => 401, self::DEVICE_REVOKED => 401,
+        self::ACCOUNT_DISABLED => 403, self::HTTPS_REQUIRED => 403,
     ];
 
     /** The API code for a domain code; unknown codes are INTERNAL_ERROR (never the raw internal code). */
     public static function code(string $domainCode): string
     {
         return self::CODES[$domainCode] ?? self::INTERNAL_ERROR;
+    }
+
+    /** Every API code with its HTTP status. @return array<string,int> */
+    public static function statuses(): array
+    {
+        return self::STATUS;
     }
 
     public static function status(string $apiCode): int

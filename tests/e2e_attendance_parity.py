@@ -55,6 +55,9 @@ def offset_for(local_minutes):
     """UTC offset (hours) that makes the site's time of day `local_minutes` after midnight now."""
     u = utc_now()
     h = ((local_minutes - (u.hour * 60 + u.minute)) % 1440) / 60.0
+    # Quarter hours only, like real time zones: WordPress truncates other fractions when it turns the
+    # offset into minutes (-7.05 h becomes -7:02), which put the site a minute off this test's clock.
+    h = round(h * 4) / 4
     return h - 24 if h > 14 else h
 
 
@@ -240,6 +243,10 @@ e = time_event('normal', 'duplicate sign out', 'sign_out')
 check('a second Sign Out is refused', msg(e) == 'time_error: You have already signed out today.' and not e['logs'], e)
 
 # 2. Grace: one minute inside it is On Time, one minute after it is Late (exact seconds: tests/unit/LatenessTest.php).
+# The start is a whole minute: begin early in a minute so "9 minutes ago" stays inside the
+# 10-minute grace however long the setup takes (it took a minute or more at :55 and later).
+while datetime.datetime.utcnow().second > 20:
+    time.sleep(1)
 seed(start=hhmm(local_now() - datetime.timedelta(minutes=9)))
 e = time_event('grace', 'start 9 min ago, grace 10', 'sign_in')
 check('Sign In inside the grace is On Time', msg(e) == 'time_success: Sign In recorded successfully.' and 'On Time' in e['audit'][0]['details'], e)
