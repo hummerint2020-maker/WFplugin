@@ -161,6 +161,10 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_locations.py "$S"
       - name: Kiosks and Presence Verification
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_presence.py "$S"
+      - name: Attendance parity (Web Sign In / Out, QR, Face token, breaks; concurrent duplicates)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_parity.py "$S"
+      - name: API foundation (Face verify without distance, attempt limit, routes, idempotency, concurrency)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_foundation.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

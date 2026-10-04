@@ -1,14 +1,11 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\FaceMatch;
+
 trait EWS_Frontend_Trait {
 
-    public function face_rest_routes(){
-        register_rest_route('workforce-one/v1','/face/enroll',array('methods'=>'POST','callback'=>array($this,'face_rest_enroll'),'permission_callback'=>function(){return is_user_logged_in();}));
-        register_rest_route('workforce-one/v1','/face/verify',array('methods'=>'POST','callback'=>array($this,'face_rest_verify'),'permission_callback'=>function(){return is_user_logged_in();}));
-        register_rest_route('workforce-one/v1','/face/reset-request',array('methods'=>'POST','callback'=>array($this,'face_rest_reset_request'),'permission_callback'=>function(){return is_user_logged_in();}));
-        register_rest_route('workforce-one/v1','/face/delete',array('methods'=>'POST','callback'=>array($this,'face_rest_delete'),'permission_callback'=>function(){return is_user_logged_in();}));
-    }
+    /* The Face REST routes are registered by src/Api/Routes.php (workforce-one/v1/face/*). */
     public function face_rest_enroll($request){
         $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
         $p=$request->get_json_params(); $tpl=isset($p['template'])&&is_array($p['template'])?$p['template']:array();
@@ -21,13 +18,25 @@ trait EWS_Frontend_Trait {
         $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
         $p=$request->get_json_params(); $tpl=isset($p['template'])&&is_array($p['template'])?$p['template']:array();
         $stored=$this->face_template_for_employee($emp->id); if(!$stored)return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));
-        if(count($tpl)!==count($stored))return new WP_Error('invalid_template',__('Template size mismatch','workforce-one'),array('status'=>400));
-        $sum=0;foreach($tpl as $i=>$v){$d=(float)$v-(float)$stored[$i];$sum+=$d*$d;}
-        $distance=sqrt($sum);$threshold=(float)$this->face_signin_setting('face_match_threshold',.60);
-        $ok=$distance<$threshold;
-        $out=array('ok'=>$ok,'distance'=>round($distance,4),'threshold'=>$threshold);
-        if($ok)$out['face_token']=$this->face_issue_token();
-        return $out;
+        // Only the decision is returned (no distance or threshold: that was a similarity oracle), and
+        // failed attempts are limited per user (src/Attendance/FaceMatch.php: 5 in 10 minutes).
+        $uid=get_current_user_id();$state=get_user_meta($uid,'ews_face_verify_failures',true);$state=is_array($state)?$state:null;
+        if(FaceMatch::lockedOut($state,time()))return $this->face_rate_limited(FaceMatch::retryAfter($state,time()));
+        $ok=FaceMatch::matches($tpl,$stored,(float)$this->face_signin_setting('face_match_threshold',.60));
+        if($ok!==true){
+            $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,'ews_face_verify_failures',$state);
+            if($state['failures']===FaceMatch::MAX_FAILURES)$this->audit('face_verify_locked','employee',(int)$emp->id,$emp->name.' / '.FaceMatch::MAX_FAILURES.' failed Face verifications in '.(FaceMatch::WINDOW_SECONDS/60).' minutes');
+            if($ok===null)return new WP_Error('invalid_template',__('Template size mismatch','workforce-one'),array('status'=>400));
+            return array('ok'=>false);
+        }
+        delete_user_meta($uid,'ews_face_verify_failures');
+        return array('ok'=>true,'face_token'=>$this->face_issue_token());
+    }
+
+    private function face_rate_limited($retry_after){
+        $r=new WP_REST_Response(array('code'=>'rate_limited','message'=>__('Too many Face verification attempts. Please wait a few minutes and try again.','workforce-one'),'data'=>array('status'=>429,'retry_after'=>(int)$retry_after)),429);
+        $r->header('Retry-After',(string)(int)$retry_after);
+        return $r;
     }
     public function face_rest_reset_request($request){
         $emp=$this->current_employee();

@@ -244,7 +244,30 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.15'; }
+        /**
+         * Idempotency keys (3.31.46): the stored result of a request sent with a key, so a retried
+         * request returns the first result instead of acting twice. The unique key makes the claim
+         * atomic on any database. Rows are kept 24 hours (attendance_idempotency_cleanup()).
+         */
+        private function ensure_api_idempotency_schema(){
+            if($this->ews_schema_is_current())return;
+            global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php';
+            $c=$wpdb->get_charset_collate(); $table=$wpdb->prefix.'ews_api_idempotency';
+            dbDelta("CREATE TABLE {$table} (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id BIGINT UNSIGNED NOT NULL,
+                scope VARCHAR(40) NOT NULL,
+                key_hash CHAR(64) NOT NULL,
+                request_hash CHAR(64) NOT NULL,
+                response LONGTEXT NULL,
+                created_at DATETIME NOT NULL,
+                PRIMARY KEY(id),
+                UNIQUE KEY user_scope_key(user_id,scope,key_hash),
+                KEY created_at(created_at)
+            ) {$c};");
+        }
+
+        private function ews_schema_target(){ return '3.31.46'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -291,6 +314,7 @@ private function ensure_break_schema(){
             $this->ensure_push_schema();
             $this->ensure_recognition_schema();
             $this->ensure_payroll_schema();
+            $this->ensure_api_idempotency_schema();
             $this->ews_v321_ensure_locations_table();
             $this->ews_v321_ensure_employee_map();
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);

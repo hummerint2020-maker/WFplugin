@@ -1,5 +1,58 @@
 # Changelog
 
+## 3.31.46
+API foundation, Phase 0A: security fixes, the Attendance service and the API skeleton. No new
+endpoints, no change to what employees see on the Sign In page (except one Face message), no
+change to any attendance rule.
+
+### Security
+- **Face verification no longer returns the match distance.** `POST /face/verify` answered with
+  the distance and the threshold, so a script could adjust a face descriptor step by step until it
+  matched (a similarity oracle). It now returns only `{ok}` (plus the single-use token on a match).
+  After **5 failed attempts in 10 minutes** a user gets HTTP 429 with `Retry-After` until the 10
+  minutes are over, and the lock-out is logged (`face_verify_locked`). A successful verification
+  clears the count. Enrolment, the token (120 s, single use) and Sign In are unchanged; the page
+  now says "Face did not match. Please try again." without a number.
+- **No more double Sign In / Sign Out / break.** The "already signed in?" check and the insert were
+  separate steps, so two requests at the same moment (a double tap, a retry on a slow network)
+  could both be recorded: 6 simultaneous Sign Ins left 2-3 rows on 3.31.45. Now each employee's
+  attendance writes run one at a time (MySQL / MariaDB `GET_LOCK`, named per site and employee, no
+  table or privilege needed, released automatically), and every insert is checked afterwards: if
+  another request recorded the same event first, the later row removes itself and that request
+  gets the usual "You have already signed in today." The check works on any database, including
+  those without `GET_LOCK` (SQLite, some clusters). The same applies to Sign Out, to starting a break
+  (one open break) and to Resume Work (a break ends once: one notification, one Audit Log row).
+
+### Changed (internal; the Web behaves as before)
+- **Attendance service** (`src/Attendance/AttendanceService.php`): Sign In, Sign Out, QR Sign-In and
+  breaks are decided in one place. The Web handlers (`time_event()`, `presence_qr_signin()`,
+  `break_start()`, `break_resume()`) only read the form, call the service and show the same
+  messages as before. The service sees the site only through `AttendanceContext` (the plugin's
+  existing helpers), so the future API will call the same code. Break rules are in
+  `src/Attendance/BreakRules.php`, Face decisions in `src/Attendance/FaceMatch.php`.
+- **Idempotency keys** (for the API; the Web does not send them): a request with a key returns the
+  stored result of the first request with that key (24 hours), a different request with the same
+  key is refused, and a failed save is not kept so a retry can succeed. New table
+  `ews_api_idempotency` (schema version 3.31.46).
+- **API skeleton** (`src/Api/`): one route table under `/wp-json/workforce-one/v1/` (today only the
+  four Face routes, same paths and authentication as before), the response envelope and request
+  ids (`Response`), and stable error codes with HTTP statuses for every attendance, break and
+  location result (`ErrorMap`). No new endpoints.
+
+### Proof that the Web did not change
+`tests/e2e_attendance_parity.py` runs 46 steps (normal day, duplicates, grace, WFH, Office,
+leave, General Leave, attendance off, the Sign In window, geofence inside / outside / no GPS,
+stale and inaccurate locations, Face required and the token's timing, QR Sign-In, breaks, an
+overnight shift after midnight, achievements) and records what each did: message, time log rows,
+Audit Log rows, break sessions, notifications, achievement awards, cron events. The trace of
+3.31.45 and of 3.31.46 are identical.
+
+### Not changed on purpose
+- A normal Sign In still records location integrity (stale, inaccurate, impossible movement)
+  without blocking it, as before; QR Sign-In and Presence still block. That is a product decision.
+- No token authentication, no attendance / leave / manager / payroll endpoints, no FCM, no native
+  Face, no QR window or Presence changes (Phase 0B and later).
+
 ## 3.31.45
 A targeted hardening release: security, speed and correctness fixes found in the architecture audit.
 No new features, no database changes, no settings removed.

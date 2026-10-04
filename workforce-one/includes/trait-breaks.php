@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\BreakRules;
+
 /**
  * Breaks: settings, today's sessions, start / resume from the Sign In page, and the reminder and
  * manager escalation cron events.
@@ -59,30 +61,17 @@ trait EWS_Breaks_Trait {
             return array_values(array_unique(array_filter($ids)));
         }
 
+        /*
+         * Start / Resume from the Sign In page: adapters over AttendanceService (startBreak(),
+         * resumeBreak(); rules in src/Attendance/BreakRules.php). Same checks, order and messages
+         * as before 3.31.46; a concurrent second request can no longer open a second break.
+         */
         public function break_start(){
             if(!$this->break_enabled())$this->break_redirect(['break_error'=>rawurlencode('Break Management is currently disabled.')]);
             if(!is_user_logged_in())wp_die('You must be logged in.');
             check_admin_referer('ews_break_start');
-            $emp=$this->current_employee();
-            if($emp && !$this->employee_attendance_enabled((int)$emp->id))$this->break_redirect(['break_error'=>rawurlencode('Attendance tracking is disabled for this employee.')]);
-            if(!$emp)$this->break_redirect(['break_error'=>rawurlencode('Employee account is not linked.')]);
-            $sch=$this->today_schedule_for_employee($emp->id); $ev=$this->today_events($emp->id);
-            if(!$sch || !$this->schedule_type_requires_sign_in($sch->status))$this->break_redirect(['break_error'=>rawurlencode('Breaks are available only on a working day.')]);
-            if(!isset($ev['sign_in'])&&!isset($ev['late_sign_in']))$this->break_redirect(['break_error'=>rawurlencode('You must Sign In before starting a break.')]);
-            if(isset($ev['sign_out']))$this->break_redirect(['break_error'=>rawurlencode('You have already signed out today.')]);
-            if($this->break_open_session($emp->id))$this->break_redirect(['break_error'=>rawurlencode('You are already on a break.')]);
-            if($this->break_remaining($emp->id)<=0)$this->break_redirect(['break_error'=>rawurlencode('No break sessions remain today.')]);
-            global $wpdb; $table=$wpdb->prefix.'ews_break_sessions'; $now=current_time('mysql');
-            $ok=$wpdb->insert($table,[
-                'employee_id'=>(int)$emp->id,'user_id'=>(int)$emp->wp_user_id,'work_date'=>$this->attendance_day($emp->id),
-                'start_at'=>$now,'status'=>'Open','created_at'=>$now
-            ],['%d','%d','%s','%s','%s','%s']);
-            if(!$ok)$this->break_redirect(['break_error'=>rawurlencode('Unable to start your break. Please try again.')]);
-            $id=(int)$wpdb->insert_id;
-            $now_utc=current_time('timestamp',true);
-            wp_schedule_single_event($now_utc+($this->break_duration_minutes()*60),'ews_break_duration_reminder',[$id]);
-            wp_schedule_single_event($now_utc+($this->break_escalation_minutes()*60),'ews_break_manager_escalation',[$id]);
-            $this->audit('break_start','break',$id,$emp->name.' / '.$now);
+            $r=$this->attendance_service()->startBreak();
+            if(!$r->ok)$this->break_redirect(['break_error'=>rawurlencode($this->break_error_message($r->code))]);
             $this->break_redirect(['break_success'=>rawurlencode('Break started successfully.')]);
         }
 
@@ -90,20 +79,32 @@ trait EWS_Breaks_Trait {
             if(!$this->break_enabled())$this->break_redirect(['break_error'=>rawurlencode('Break Management is currently disabled.')]);
             if(!is_user_logged_in())wp_die('You must be logged in.');
             check_admin_referer('ews_break_resume');
-            $emp=$this->current_employee();
-            if($emp && !$this->employee_attendance_enabled((int)$emp->id))$this->break_redirect(['break_error'=>rawurlencode('Attendance tracking is disabled for this employee.')]);
-            if(!$emp)$this->break_redirect(['break_error'=>rawurlencode('Employee account is not linked.')]);
-            global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            $session=$this->break_open_session($emp->id);
-            if(!$session)$this->break_redirect(['break_error'=>rawurlencode('No open break was found.')]);
-            $now=current_time('mysql');
-            $start=strtotime($session->start_at); $end=strtotime($now);
-            $minutes=max(0,(int)floor(($end-$start)/60));
-            $wpdb->update($table,['end_at'=>$now,'actual_minutes'=>$minutes,'status'=>'Completed'],['id'=>(int)$session->id],['%s','%d','%s'],['%d']);
-            $msg='Your break ended. Duration: '.$minutes.' minute'.($minutes===1?'':'s').'.';
-            $this->notify((int)$emp->wp_user_id,'break','Break Ended',$msg,['entity_id'=>(int)$session->id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);
-            $this->audit('break_resume','break',(int)$session->id,$emp->name.' / '.$now.' / '.$minutes.'m');
-            $this->break_redirect(['break_success'=>rawurlencode($msg)]);
+            $r=$this->attendance_service()->resumeBreak();
+            if(!$r->ok)$this->break_redirect(['break_error'=>rawurlencode($this->break_error_message($r->code))]);
+            $this->break_redirect(['break_success'=>rawurlencode($this->break_ended_message((int)$r->details['minutes']))]);
+        }
+
+        /** Text of the "Break Ended" notification and of the Resume message. */
+        private function break_ended_message($minutes){
+            $minutes=(int)$minutes;
+            return 'Your break ended. Duration: '.$minutes.' minute'.($minutes===1?'':'s').'.';
+        }
+
+        /** The Web message for a BreakRules code (the texts of 3.31.45). */
+        private function break_error_message($code){
+            $m=[
+                BreakRules::BREAKS_DISABLED=>'Break Management is currently disabled.',
+                BreakRules::ATTENDANCE_DISABLED=>'Attendance tracking is disabled for this employee.',
+                BreakRules::NO_EMPLOYEE=>'Employee account is not linked.',
+                BreakRules::NOT_WORKING_DAY=>'Breaks are available only on a working day.',
+                BreakRules::NOT_SIGNED_IN=>'You must Sign In before starting a break.',
+                BreakRules::ALREADY_SIGNED_OUT=>'You have already signed out today.',
+                BreakRules::ALREADY_ON_BREAK=>'You are already on a break.',
+                BreakRules::NO_BREAKS_LEFT=>'No break sessions remain today.',
+                BreakRules::NO_OPEN_BREAK=>'No open break was found.',
+                BreakRules::SAVE_FAILED=>'Unable to start your break. Please try again.',
+            ];
+            return $m[$code]??'Unable to record this action.';
         }
 
         public function break_duration_reminder($session_id){

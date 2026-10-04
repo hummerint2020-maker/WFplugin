@@ -1,6 +1,10 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\AttendanceCommand;
+use WorkforceOne\Attendance\AttendanceContext;
+use WorkforceOne\Attendance\AttendanceResult;
+use WorkforceOne\Attendance\AttendanceService;
 use WorkforceOne\Attendance\LocationAssessment;
 use WorkforceOne\Attendance\SignInRules;
 
@@ -32,76 +36,157 @@ trait EWS_Attendance_Trait {
         }
 
     /*
-     * Shared Sign In / Sign Out recorder. Callers are responsible for their own
-     * nonce check. $ctx:
+     * Shared Sign In / Sign Out recorder for the Web forms: an adapter over AttendanceService
+     * (src/Attendance/AttendanceService.php), which decides and records. Callers are responsible for
+     * their own nonce check. $ctx:
      *   face_ok     bool  A server-issued face token was consumed for this request.
      *   qr_kiosk    obj   Kiosk row validated from a dynamic QR (QR Sign-In only).
      *   qr_location obj   Work location of that kiosk; the employee's own GPS must be inside it.
+     * Ends with a redirect carrying the same messages as before 3.31.46.
      */
     private function record_time_event($type,$ctx=[]){
-            $face_ok=!empty($ctx['face_ok']);
-            $qr_kiosk=$ctx['qr_kiosk']??null;
-            $qr_location=$ctx['qr_location']??null;
-            $fail=function($msg){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($msg)]);};
-            $emp=$this->current_employee();
-            if($emp && !$this->employee_attendance_enabled((int)$emp->id)){$fail(__('Attendance tracking is disabled for your employee profile.','workforce-one'));return;}
-            $sch=$emp?$this->today_schedule_for_employee($emp->id):null;$ev=$emp?$this->today_events($emp->id):[];
-            $assigned_location=$emp?$this->ews_v321_employee_location($emp->id):null;
-            $requires_location=$sch?$this->schedule_type_requires_location($sch->status):false;
-
-            // 1. May this event be recorded at all?
-            $facts=[
-                'employee'=>(bool)$emp,
-                'face_required'=>$this->face_signin_enabled(),
-                'face_ok'=>$face_ok,
-                'general_leave'=>$sch && $emp && $this->company_leave_dates($this->attendance_day($emp->id),$this->attendance_day($emp->id)),
-                'working_day'=>$sch && $this->schedule_type_requires_sign_in($sch->status),
-                'signed_in'=>isset($ev['sign_in'])||isset($ev['late_sign_in']),
-                'signed_out'=>isset($ev['sign_out']),
-            ];
-            $bounds=null;
-            if($emp && $type==='sign_in'){
-                $facts['window']=SignInRules::WINDOW_OPEN;
-                if(!$this->sign_in_window_open($emp->id)){
-                    $bounds=$this->sign_in_window_bounds($emp->id);
-                    $facts['window']=($bounds['start'] && current_time('timestamp')<$bounds['start'])?SignInRules::WINDOW_NOT_YET:SignInRules::WINDOW_CLOSED;
-                }
-            }
-            if($emp && $type==='sign_out')$facts['on_break']=$this->break_enabled()&&$this->break_open_session($emp->id);
-            $rule=SignInRules::check($type,$facts);
-            if($rule){$fail($this->sign_in_rule_message($rule,$emp,$bounds));return;}
-
-            // 2. Where is the employee?
-            [$lat,$lng,$acc,$location_timestamp]=$this->posted_device_location();
-            global $wpdb;
-            $prev=($lat!==null&&$lng!==null)?$this->last_device_location((int)$emp->id):null;
-            // The phone's location timestamp is Unix time (UTC): compare it with time(), not WordPress local time.
-            [$integrity_status,$integrity_reason]=LocationAssessment::integrity($lat,$lng,$acc,$location_timestamp,time(),$prev?:null);
-            [$location_status,$distance]=LocationAssessment::geofence(
-                $lat,$lng,
-                $assigned_location?$assigned_location->latitude:$this->option('ews_location_latitude'),
-                $assigned_location?$assigned_location->longitude:$this->option('ews_location_longitude'),
-                $assigned_location?(float)$assigned_location->radius:(float)$this->option('ews_location_radius')
-            );
-            if($qr_location){
-                // A QR can be photographed and forwarded, so QR Sign-In additionally requires the
-                // employee's own device location to be inside the kiosk's work location.
-                [$qr_error,$qr_distance]=LocationAssessment::qrCheck($lat,$lng,$qr_location->latitude,$qr_location->longitude,(float)($qr_location->radius?:200),$integrity_status,$integrity_reason);
-                if($qr_error===LocationAssessment::QR_KIOSK_NO_COORDS){$fail(__('This Kiosk location has no coordinates configured. Please contact your administrator.','workforce-one'));return;}
-                if($qr_error===LocationAssessment::QR_LOCATION_REQUIRED){$fail(__('Location access is required for QR Sign In. Please allow Location Services and try again.','workforce-one'));return;}
-                if($qr_error===LocationAssessment::QR_OUTSIDE){$fail(sprintf(/* translators: 1: work location name, 2: distance */__('You must be at %1$s to use QR Sign In. Distance: %2$s','workforce-one'),$qr_location->name,$this->format_distance($qr_distance)));return;}
-            }
-            if($type!=='sign_out'&&$requires_location&&$assigned_location&&$assigned_location->enforcement&&$location_status!=='inside'){$fail(sprintf(/* translators: %s: distance */__('You are outside your assigned work location. Distance: %s','workforce-one'),$this->format_distance($distance)));return;}
-
-            // 3. Record it.
-            $now=current_time('mysql');
-            $inserted=$wpdb->insert($this->time_logs,['employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>$this->attendance_day($emp->id),'event_type'=>$type,'event_at'=>$now,'scheduled_status'=>$sch->status,'ip_address'=>isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance,'location_timestamp'=>$location_timestamp,'integrity_status'=>$integrity_status,'integrity_reason'=>$integrity_reason,'created_at'=>$now]);
-            if($inserted===false){$detail=$wpdb->last_error?$wpdb->last_error:'Database insert failed.';$this->audit('time_'.$type.'_failed','time_log',0,$emp->name.' / '.$detail);$fail($type==='sign_out'?__('Unable to record Sign Out. Please contact the administrator.','workforce-one'):__('Unable to record Sign In. Please contact the administrator.','workforce-one'));return;}
-            $classification=$type==='sign_in'?$this->sign_in_classification($now,$emp->id):'';
-            if($type==='sign_out'){ $this->achievement_evaluate_attendance((int)$emp->id,$this->attendance_day($emp->id)); }
-            $this->audit('time_'.$type,'time_log',$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$now.' / '.$classification.' / face_verified='.($face_ok?'yes':'no').' / source='.($qr_kiosk?'qr_kiosk_'.(int)$qr_kiosk->id:'normal'));
+            $cmd=new AttendanceCommand($type==='sign_out'?AttendanceCommand::SIGN_OUT:AttendanceCommand::SIGN_IN);
+            [$cmd->latitude,$cmd->longitude,$cmd->accuracy,$cmd->locationTimestampMs]=$this->posted_device_location();
+            $cmd->faceOk=!empty($ctx['face_ok']);
+            if(!empty($ctx['qr_kiosk']))$cmd->qrKiosk=['id'=>(int)$ctx['qr_kiosk']->id];
+            if(!empty($ctx['qr_location'])){$l=$ctx['qr_location'];$cmd->qrLocation=['name'=>(string)$l->name,'latitude'=>$l->latitude,'longitude'=>$l->longitude,'radius'=>$l->radius];}
+            $r=$this->attendance_service()->record($cmd);
+            if(!$r->ok){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($this->attendance_error_message($r,$cmd->type))]);return;}
+            $type=$cmd->type;$classification=(string)($r->details['classification']??'');
             $success=$type==='sign_in'&&$classification==='Late Arrival'?__('Late Arrival recorded successfully.','workforce-one'):($type==='sign_out'?__('Sign Out recorded successfully.','workforce-one'):__('Sign In recorded successfully.','workforce-one'));
             $this->redirect(['ews_view'=>'time','time_success'=>rawurlencode($success)]);
+        }
+
+    /** The Web message for an AttendanceService failure on Sign In / Sign Out (the texts of 3.31.45). */
+    private function attendance_error_message(AttendanceResult $r,$type){
+            $d=$r->details;
+            switch($r->code){
+                case AttendanceResult::ATTENDANCE_DISABLED: return __('Attendance tracking is disabled for your employee profile.','workforce-one');
+                case LocationAssessment::QR_KIOSK_NO_COORDS: return __('This Kiosk location has no coordinates configured. Please contact your administrator.','workforce-one');
+                case LocationAssessment::QR_LOCATION_REQUIRED: return __('Location access is required for QR Sign In. Please allow Location Services and try again.','workforce-one');
+                case LocationAssessment::QR_OUTSIDE: return sprintf(/* translators: 1: work location name, 2: distance */__('You must be at %1$s to use QR Sign In. Distance: %2$s','workforce-one'),(string)($d['location_name']??''),$this->format_distance($d['distance']??null));
+                case AttendanceResult::OUTSIDE_LOCATION: return sprintf(/* translators: %s: distance */__('You are outside your assigned work location. Distance: %s','workforce-one'),$this->format_distance($d['distance']??null));
+                case AttendanceResult::SAVE_FAILED: return $type==='sign_out'?__('Unable to record Sign Out. Please contact the administrator.','workforce-one'):__('Unable to record Sign In. Please contact the administrator.','workforce-one');
+            }
+            $emp=!empty($d['employee_id'])?(object)['id'=>(int)$d['employee_id']]:null;
+            return $this->sign_in_rule_message($r->code,$emp,$d['bounds']??null);
+        }
+
+    /** Attendance decisions for this request (Sign In / Out, breaks); see AttendanceContext for what it may touch. */
+    private function attendance_service(){
+            return new AttendanceService($this->attendance_context());
+        }
+
+    private function attendance_context(){
+            global $wpdb;
+            $breaks=$wpdb->prefix.'ews_break_sessions';
+            return new AttendanceContext([
+                'employee'=>function(){return $this->current_employee();},
+                'attendanceEnabled'=>function($eid){return $this->employee_attendance_enabled($eid);},
+                'schedule'=>function($eid){return $this->today_schedule_for_employee($eid);},
+                'events'=>function($eid){return $this->today_events($eid);},
+                'attendanceDay'=>function($eid){return $this->attendance_day($eid);},
+                'generalLeave'=>function($day){return (bool)$this->company_leave_dates($day,$day);},
+                'requiresSignIn'=>function($status){return $this->schedule_type_requires_sign_in($status);},
+                'requiresLocation'=>function($status){return $this->schedule_type_requires_location($status);},
+                'faceRequired'=>function(){return $this->face_signin_enabled();},
+                'windowOpen'=>function($eid){return $this->sign_in_window_open($eid);},
+                'windowBounds'=>function($eid){return $this->sign_in_window_bounds($eid);},
+                'classify'=>function($at,$eid){return $this->sign_in_classification($at,$eid);},
+                'assignedLocation'=>function($eid){return $this->ews_v321_employee_location($eid);},
+                'defaultSite'=>function(){return [$this->option('ews_location_latitude'),$this->option('ews_location_longitude'),(float)$this->option('ews_location_radius')];},
+                'lastDeviceLocation'=>function($eid){return $this->last_device_location($eid);},
+                'localTime'=>function(){return current_time('timestamp');},
+                'localMysql'=>function(){return current_time('mysql');},
+                'unixTime'=>function(){return time();},
+                'insertTimeLog'=>function($row)use($wpdb){return $wpdb->insert($this->time_logs,$row)===false?0:(int)$wpdb->insert_id;},
+                'insertError'=>function()use($wpdb){return (string)$wpdb->last_error;},
+                'lastInsertId'=>function()use($wpdb){return (int)$wpdb->insert_id;},
+                'firstEventId'=>function($eid,$day,$types)use($wpdb){
+                    $ph=implode(',',array_fill(0,count($types),'%s'));
+                    return (int)$wpdb->get_var($wpdb->prepare("SELECT MIN(id) FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ($ph)",array_merge([(int)$eid,$day],$types)));
+                },
+                'deleteTimeLog'=>function($id)use($wpdb){$wpdb->delete($this->time_logs,['id'=>(int)$id],['%d']);},
+                'evaluateAchievements'=>function($eid,$day){$this->achievement_evaluate_attendance($eid,$day);},
+                'audit'=>function($action,$entity,$id,$details){$this->audit($action,$entity,$id,$details);},
+                'currentUserId'=>function(){return get_current_user_id();},
+                'clientIp'=>function(){return isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'';},
+                'lock'=>function($eid){return $this->attendance_lock($eid);},
+                'unlock'=>function($eid){$this->attendance_unlock($eid);},
+                'idemFind'=>function($uid,$scope,$hash){return $this->attendance_idempotency_find($uid,$scope,$hash);},
+                'idemClaim'=>function($uid,$scope,$hash,$request){return $this->attendance_idempotency_claim($uid,$scope,$hash,$request);},
+                'idemSave'=>function($uid,$scope,$hash,$response)use($wpdb){$wpdb->update($wpdb->prefix.'ews_api_idempotency',['response'=>wp_json_encode($response)],['user_id'=>(int)$uid,'scope'=>$scope,'key_hash'=>$hash],['%s'],['%d','%s','%s']);},
+                'idemRelease'=>function($uid,$scope,$hash)use($wpdb){$wpdb->delete($wpdb->prefix.'ews_api_idempotency',['user_id'=>(int)$uid,'scope'=>$scope,'key_hash'=>$hash],['%d','%s','%s']);},
+                'breakEnabled'=>function(){return $this->break_enabled();},
+                'openBreak'=>function($eid){return $this->break_open_session($eid);},
+                'breakRemaining'=>function($eid){return $this->break_remaining($eid);},
+                'insertBreak'=>function($row)use($wpdb,$breaks){return $wpdb->insert($breaks,$row,['%d','%d','%s','%s','%s','%s'])?(int)$wpdb->insert_id:0;},
+                'firstOpenBreakId'=>function($eid,$day)use($wpdb,$breaks){return (int)$wpdb->get_var($wpdb->prepare("SELECT MIN(id) FROM {$breaks} WHERE employee_id=%d AND work_date=%s AND status='Open'",(int)$eid,$day));},
+                'deleteBreak'=>function($id)use($wpdb,$breaks){$wpdb->delete($breaks,['id'=>(int)$id],['%d']);},
+                'scheduleBreakEvents'=>function($id){
+                    $now_utc=current_time('timestamp',true);
+                    wp_schedule_single_event($now_utc+($this->break_duration_minutes()*60),'ews_break_duration_reminder',[$id]);
+                    wp_schedule_single_event($now_utc+($this->break_escalation_minutes()*60),'ews_break_manager_escalation',[$id]);
+                },
+                'closeBreak'=>function($id,$end,$minutes)use($wpdb,$breaks){return $wpdb->update($breaks,['end_at'=>$end,'actual_minutes'=>$minutes,'status'=>'Completed'],['id'=>(int)$id,'status'=>'Open'],['%s','%d','%s'],['%d','%s'])===1;},
+                'breakEnded'=>function($emp,$id,$minutes){$this->notify((int)$emp->wp_user_id,'break','Break Ended',$this->break_ended_message($minutes),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);},
+            ]);
+        }
+
+    /**
+     * Serialises attendance writes of one employee across requests: MySQL / MariaDB GET_LOCK (named
+     * per site and employee, released at the end of the request or when the connection closes; no
+     * table or privilege needed, available on shared hosting). Waits up to 5 seconds. Where it is not
+     * available (SQLite, some clusters) the request goes on unlocked and AttendanceService's
+     * check after the insert keeps the first row only.
+     */
+    private function attendance_lock($employee_id){
+            global $wpdb;
+            if(defined('DB_ENGINE') && DB_ENGINE==='sqlite')return false;
+            $prev=$wpdb->suppress_errors(true);
+            $got=$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,%d)',$this->attendance_lock_name($employee_id),5));
+            $wpdb->suppress_errors($prev);
+            return (string)$got==='1';
+        }
+
+    private function attendance_unlock($employee_id){
+            global $wpdb;
+            $prev=$wpdb->suppress_errors(true);
+            $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$this->attendance_lock_name($employee_id)));
+            $wpdb->suppress_errors($prev);
+        }
+
+    /** Lock names are server-wide: include the site (database + table prefix). At most 64 characters. */
+    private function attendance_lock_name($employee_id){
+            global $wpdb;
+            return 'wfo_att_'.substr(md5((defined('DB_NAME')?DB_NAME:'').'|'.$wpdb->prefix),0,12).'_'.(int)$employee_id;
+        }
+
+    /** @return array{request:string,response:array<string,mixed>|null}|null */
+    private function attendance_idempotency_find($user_id,$scope,$key_hash){
+            global $wpdb;
+            $this->ensure_api_idempotency_schema();
+            $row=$wpdb->get_row($wpdb->prepare("SELECT request_hash,response FROM {$wpdb->prefix}ews_api_idempotency WHERE user_id=%d AND scope=%s AND key_hash=%s LIMIT 1",(int)$user_id,$scope,$key_hash));
+            if(!$row)return null;
+            $response=$row->response!==null&&$row->response!==''?json_decode((string)$row->response,true):null;
+            return ['request'=>(string)$row->request_hash,'response'=>is_array($response)?$response:null];
+        }
+
+    /** Inserts the key as "in progress"; the unique key makes a concurrent second claim fail. */
+    private function attendance_idempotency_claim($user_id,$scope,$key_hash,$request_hash){
+            global $wpdb;
+            $this->ensure_api_idempotency_schema();
+            $prev=$wpdb->suppress_errors(true);
+            $ok=$wpdb->insert($wpdb->prefix.'ews_api_idempotency',['user_id'=>(int)$user_id,'scope'=>$scope,'key_hash'=>$key_hash,'request_hash'=>$request_hash,'created_at'=>current_time('mysql',true)],['%d','%s','%s','%s','%s']);
+            $wpdb->suppress_errors($prev);
+            return (bool)$ok;
+        }
+
+    /** Idempotency keys are kept for 24 hours (daily cleanup). */
+    private function attendance_idempotency_cleanup(){
+            global $wpdb;
+            $this->ensure_api_idempotency_schema();
+            $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}ews_api_idempotency WHERE created_at < %s",gmdate('Y-m-d H:i:s',time()-DAY_IN_SECONDS)));
         }
 
     /** Employee-facing text for a SignInRules result. */

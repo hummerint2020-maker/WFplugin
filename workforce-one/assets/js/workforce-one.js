@@ -270,7 +270,6 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                   var r=await detect();
                   var vr=await fetch(apiBase+'face/verify',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:Array.from(r.descriptor)})});
                   var vj=await vr.json();if(!vr.ok)throw new Error(vj.message||'Face verification failed.');
-                  var d=parseFloat(vj.distance||99);
                   if(vj.ok){
                     setStatus(__('✓ Face verified.','workforce-one'));
                     if(pendingForm){
@@ -283,7 +282,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                       var f=pendingForm;pendingForm=null;
                       setTimeout(function(){if(f&&f.submit)f.submit();},250);
                     }
-                  }else{pendingForm=null;setStatus(ewsSprintf(/* translators: %s: match distance */__('✕ Face did not match — distance %s.','workforce-one'),d.toFixed(3)));}
+                  }else{pendingForm=null;setStatus(__('✕ Face did not match. Please try again.','workforce-one'));}
                 }catch(e){setStatus(e.message||'Verification failed.');}
                 finally{busy=false;}
               }

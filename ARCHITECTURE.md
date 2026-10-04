@@ -19,6 +19,12 @@ workforce-one/
     Attendance/TodayStatus.php         today's On Time / Late / No Show (admin home)
     Attendance/ShiftDay.php            which day the current (overnight) shift belongs to
     Attendance/Lateness.php            the one "late" rule (shift start + grace), used by the reports, payroll and sign_in_classification()
+    Attendance/AttendanceService.php   Sign In / Out, QR Sign-In and breaks: the one place that decides (Web handlers are adapters; the API will be another)
+    Attendance/AttendanceContext.php   what the service may touch on the site (the plugin's helpers, as callables; fakes in tests)
+    Attendance/AttendanceCommand.php, AttendanceResult.php  the request as facts; the outcome as a code + details
+    Attendance/BreakRules.php, FaceMatch.php   break start / resume checks; Face match and failed-attempt limit
+    Api/Hooks.php, Routes.php          REST transport: one route table under workforce-one/v1 (today the Face routes)
+    Api/Response.php, ErrorMap.php     response envelope and request ids; domain codes → stable API codes + HTTP status
     Attendance/AutoRules.php, AutoHooks.php  Auto Attendance rules: days, overnight, what is due
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
@@ -109,4 +115,21 @@ never holds up the action, and a push failure cannot break it. The outcome of th
 work (Smart Nudges cron) and the admin test buttons call `push_custom_notification()` directly.
 Before each delivery the endpoint is checked again (`push_delivery_target()`), and cURL connects only
 to the checked address (`CURLOPT_RESOLVE`), over HTTPS, without redirects, within 5 seconds.
+
+## Attendance service (3.31.46)
+
+```
+Web form (admin-post) ─ time_event() / presence_qr_signin() ─┐
+                        break_start() / break_resume()       ├─▶ AttendanceService ─▶ SignInRules, BreakRules,
+REST (later, Phase 1) ─ AttendanceController ────────────────┘        │                LocationAssessment, Lateness
+                                                                      ▼
+                                                         AttendanceContext (plugin helpers, $wpdb)
+```
+The handler reads the request into an `AttendanceCommand` (location, Face token result, QR kiosk),
+calls the service, and turns the `AttendanceResult` code into its own output: the Web shows the
+messages it always showed; the API will use `Api\ErrorMap` + `Api\Response`. The order of the
+checks is behaviour; `tests/e2e_attendance_parity.py` records a normalised trace of every Web
+attendance outcome so the two versions of the code can be compared.
+Writes for one employee run under `GET_LOCK` (MySQL / MariaDB) and are verified after the insert
+(the first row wins) so concurrent duplicates cannot both be recorded on any database.
 

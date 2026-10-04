@@ -1830,3 +1830,7 @@ msgstr "تعذر تحديد موقعك. فعّل خدمات الموقع/GPS ث�
 #: templates/app/presence.php
 msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
 msgstr "يتطلب الوصول إلى الموقع اتصال HTTPS. افتح Workforce One عبر اتصال آمن."
+
+#: includes/trait-frontend.php
+msgid "Too many Face verification attempts. Please wait a few minutes and try again."
+msgstr "محاولات كثيرة للتحقق من الوجه. يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى."
