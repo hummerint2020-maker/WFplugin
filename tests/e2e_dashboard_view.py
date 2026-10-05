@@ -84,8 +84,9 @@ check('the employee dashboard closes every element it opens', ok, counts)
 tiles = re.findall(r'<a class="wfo-tile" href="[^"]*?(?:ews_view=([a-z-]+))?"', page.split('wfo-home-tiles')[1].split('</section>')[0]) if 'wfo-home-tiles' in page else []
 check('Home tiles: the pages this employee may open, plus Notifications (no manager pages, no Dashboard)', 'time' in tiles and 'schedule' in tiles and 'notifications' in tiles and 'attendance' not in tiles and 'dashboard' not in tiles, tiles)
 check('the week shows each status with an icon and a word', re.search(r'<li data-status="Office"><span>[^<]+</span><span class="wfo-chip is-office"><svg', page) is not None)
+# The page itself (not the header's notification list, whose titles are stored text).
 main = re.search(r'<main class="ews-main">(.*?)</main>', page, re.S).group(1)
-main = main.split('ews-poll-card')[0]
+main = main.split('<div class="wfo-content">')[-1].split('ews-poll-card')[0]
 check('no emoji in the Home page (before the poll card)', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF]', main), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF]', main))
 head = page.split('</head>')[0]
 check('the Home styles load in the <head> (no unstyled flash)', 'app-home.css' in head)
