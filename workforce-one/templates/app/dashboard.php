@@ -1,17 +1,20 @@
 <?php
 /**
- * Employee app: Dashboard. Managers ($manager) see the workforce snapshot of the employees they
- * manage; employees see their own day. Styles: assets/css/workforce-one.css (.ews-dash-*).
+ * Employee app: Dashboard (Home). Managers ($manager) see the workforce snapshot of the employees
+ * they manage; employees see their own day. The greeting is in the frame's header (layout.php).
+ * Styles: assets/css/app-home.css (.wfo-home-*); the poll card keeps its own styles.
  *
  * Both:
  * @var bool $manager
  * @var int $unread
  * @var string $today_label
- * @var array<int,array{icon:string,title:string,message:string}> $moments
+ * @var array<int,array{type?:string,icon:string,title:string,message:string}> $moments
  * @var string $poll_html                built by employee_poll_markup()
  * @var string $holiday                  today's company holiday ('' = none)
  * @var array<string,string> $urls       schedule, attendance, notifications, time
  * @var callable $empty                  ews_empty_state(title, text, url, label)
+ * @var array<int,array<string,mixed>> $tiles  menu items the user may open (not the Dashboard), in menu order
+ * @var string $notifications_label
  * Manager:
  * @var int $count
  * @var array{office:int,wfh:int,away:int} $snapshot
@@ -31,116 +34,125 @@
  * @var callable $dismiss_url
  */
 if (!defined('ABSPATH')) exit;
+use WorkforceOne\Ui\Icons;
+// phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; $poll_html and $empty() are built (and escaped) by the plugin.
 $total = $manager ? (int) $count : 0;
 $percent = static function (int $n) use ($total): int { return $total ? (int) min(100, round($n / $total * 100)) : 0; };
-$notifications_link = '<a href="' . esc_url($urls['notifications']) . '"><span>🔔</span> ' . esc_html__('Notifications', 'workforce-one') . ($unread ? '<b>' . absint($unread) . '</b>' : '') . '</a>';
+$status_label = static function (string $s): string {
+    if ($s === 'Not Set') return __('Not Set', 'workforce-one');
+    if ($s === 'General Leave') return __('General Leave', 'workforce-one');
+    return $s;
+};
+$chip = static function (string $s) use ($status_label): string {
+    [$icon, $tone] = Icons::forStatus($s);
+    return '<span class="wfo-chip is-' . esc_attr($tone) . '">' . Icons::svg($icon, 14, 2) . esc_html($status_label($s)) . '</span>';
+};
+$tile_tones = ['time' => 'green', 'schedule' => 'blue', 'vacation' => 'purple', 'overtime' => 'amber', 'tasks' => 'teal', 'polls' => 'rose', 'pay' => 'lime', 'reports' => 'slate', 'attendance' => 'green', 'people' => 'blue', 'attendance-insights' => 'purple'];
+$tiles_html = '';
+foreach ($tiles as $t) {
+    $tiles_html .= '<a class="wfo-tile" href="' . esc_url($t['url']) . '"><span class="wfo-tile-icon is-' . esc_attr($tile_tones[$t['key']] ?? 'slate') . '">' . Icons::forView($t['key'], 24) . '</span><span class="wfo-tile-label">' . esc_html($t['desktop_label']) . '</span></a>';
+}
+$tiles_html .= '<a class="wfo-tile" href="' . esc_url($urls['notifications']) . '"><span class="wfo-tile-icon is-slate">' . Icons::svg('bell', 24) . ($unread ? '<b class="wfo-badge">' . absint($unread) . '</b>' : '') . '</span><span class="wfo-tile-label">' . esc_html($notifications_label) . '</span></a>';
+$moment_icons = ['birthday' => 'gift', 'anniversary' => 'sparkle', 'welcome' => 'user'];
+$nudge_icons = ['attendance' => 'clock', 'tasks' => 'tasks', 'leave' => 'leave', 'schedule' => 'calendar'];
 ?>
 <?php if ($manager || $emp): ?>
-<div class="ews-dashboard<?php echo $manager ? '' : ' ews-employee-dashboard'; ?>">
-    <div class="ews-dash-welcome">
-        <div><div class="ews-dash-kicker"><?php esc_html_e('BA Team · Workforce One', 'workforce-one'); ?></div>
-            <?php if ($manager): ?>
-                <h2><?php esc_html_e('Good to see you.', 'workforce-one'); ?></h2><p><?php echo esc_html($today_label); ?> · <?php esc_html_e('Here’s today’s workforce snapshot.', 'workforce-one'); ?></p>
-            <?php else: ?>
-                <?php /* translators: %s: employee first name */ ?>
-                <h2><?php echo esc_html(sprintf(__('Good to see you, %s.', 'workforce-one'), $first_name)); ?></h2><p><?php echo esc_html($today_label); ?> · <?php esc_html_e('Here’s your day at a glance.', 'workforce-one'); ?></p>
-            <?php endif; ?>
-            <?php if ($holiday !== ''): ?><p><strong>🎉 <?php echo esc_html($holiday); ?></strong> · <?php esc_html_e('General Leave', 'workforce-one'); ?></p><?php endif; ?>
-        </div>
-    </div>
+<div class="wfo-home<?php echo $manager ? ' is-manager' : ' is-employee'; ?>">
 
-    <?php if ($manager): ?>
-    <div class="ews-dash-stats">
-        <div class="ews-dash-stat"><div class="ews-dash-stat-icon purple">👥</div><div><div class="n"><?php echo (int) $count; ?></div><div class="l"><?php esc_html_e('Active Employees', 'workforce-one'); ?></div></div></div>
-        <div class="ews-dash-stat"><div class="ews-dash-stat-icon green">🏢</div><div><div class="n"><?php echo (int) $snapshot['office']; ?></div><div class="l"><?php esc_html_e('Office Today', 'workforce-one'); ?></div></div></div>
-        <div class="ews-dash-stat"><div class="ews-dash-stat-icon blue">🏠</div><div><div class="n"><?php echo (int) $snapshot['wfh']; ?></div><div class="l"><?php esc_html_e('WFH Today', 'workforce-one'); ?></div></div></div>
-        <div class="ews-dash-stat"><div class="ews-dash-stat-icon orange">✈</div><div><div class="n"><?php echo (int) $snapshot['away']; ?></div><div class="l"><?php esc_html_e('Leave / Mission', 'workforce-one'); ?></div></div></div>
-    </div>
+    <?php if ($holiday !== ''): ?>
+    <div class="wfo-home-holiday" role="status"><?php echo Icons::svg('sun', 20); ?><span><strong><?php echo esc_html($holiday); ?></strong> · <?php esc_html_e('General Leave', 'workforce-one'); ?></span></div>
     <?php endif; ?>
 
-    <?php if ($moments): ?>
-    <div class="ews-dash-card ews-moments-card">
-        <div class="ews-dash-card-head"><div><h3>✨ Today's Moments</h3><p>A little celebration for the team.</p></div><span>🎊</span></div>
-        <div class="ews-moments-list">
-            <?php foreach ($moments as $m): ?><div class="ews-moment-item"><div class="ews-moment-icon"><?php echo esc_html($m['icon']); ?></div><div><strong><?php echo esc_html($m['title']); ?></strong><p><?php echo esc_html($m['message']); ?></p></div></div><?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <?php echo $poll_html; // phpcs:ignore WordPress.Security.EscapeOutput -- built by employee_poll_markup() ?>
-
     <?php if ($manager): ?>
-    <div class="ews-dash-grid">
-        <div class="ews-dash-card"><div class="ews-dash-card-head"><div><h3><?php esc_html_e('This Week', 'workforce-one'); ?></h3><p><?php echo esc_html($week_days ? implode(' → ', $week_days) : __('No working days configured', 'workforce-one')); ?></p></div><span>📅</span></div>
-            <div class="ews-dash-week-line"><div><strong><?php esc_html_e('Plan your week', 'workforce-one'); ?></strong><small><?php esc_html_e('Review schedules and keep your team aligned.', 'workforce-one'); ?></small></div><a class="ews-btn" href="<?php echo esc_url($urls['schedule']); ?>"><?php esc_html_e('View Schedule', 'workforce-one'); ?></a></div>
-        </div>
-        <div class="ews-dash-card"><div class="ews-dash-card-head"><div><h3><?php esc_html_e('Quick Actions', 'workforce-one'); ?></h3><p><?php esc_html_e('Common tasks', 'workforce-one'); ?></p></div><span>⚡</span></div>
-            <div class="ews-dash-actions"><a href="<?php echo esc_url($urls['schedule']); ?>"><span>📅</span> <?php esc_html_e('Schedule', 'workforce-one'); ?></a><?php if ($can_attendance): ?><a href="<?php echo esc_url($urls['attendance']); ?>"><span>📝</span> <?php esc_html_e('Attendance', 'workforce-one'); ?></a><?php endif; ?><?php echo $notifications_link; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped above ?></div>
-        </div>
-    </div>
-    <div class="ews-dash-card ews-dash-status"><div class="ews-dash-card-head"><div><h3><?php esc_html_e('Today at a glance', 'workforce-one'); ?></h3><p><?php esc_html_e('Current schedule distribution', 'workforce-one'); ?></p></div><span>✓</span></div>
-        <div class="ews-dash-bars">
-            <?php foreach ([['office', __('Office', 'workforce-one'), ''], ['wfh', __('WFH', 'workforce-one'), 'blue'], ['away', __('Leave / Mission', 'workforce-one'), 'orange']] as [$key, $label, $color]): ?>
-            <div><div><span><?php echo esc_html($label); ?></span><b><?php echo (int) $snapshot[$key]; ?></b></div><i><em<?php echo $color ? ' class="' . esc_attr($color) . '"' : ''; ?> style="width:<?php echo $percent((int) $snapshot[$key]); ?>%"></em></i></div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
+    <section class="wfo-home-kpis" aria-label="<?php esc_attr_e('Today in numbers', 'workforce-one'); ?>">
+        <div class="wfo-kpi"><span class="wfo-kpi-icon is-purple"><?php echo Icons::svg('people', 22); ?></span><div><div class="n"><?php echo (int) $count; ?></div><div class="l"><?php esc_html_e('Active Employees', 'workforce-one'); ?></div></div></div>
+        <div class="wfo-kpi"><span class="wfo-kpi-icon is-green"><?php echo Icons::svg('office', 22); ?></span><div><div class="n"><?php echo (int) $snapshot['office']; ?></div><div class="l"><?php esc_html_e('Office Today', 'workforce-one'); ?></div></div></div>
+        <div class="wfo-kpi"><span class="wfo-kpi-icon is-blue"><?php echo Icons::svg('wfh', 22); ?></span><div><div class="n"><?php echo (int) $snapshot['wfh']; ?></div><div class="l"><?php esc_html_e('WFH Today', 'workforce-one'); ?></div></div></div>
+        <div class="wfo-kpi"><span class="wfo-kpi-icon is-amber"><?php echo Icons::svg('briefcase', 22); ?></span><div><div class="n"><?php echo (int) $snapshot['away']; ?></div><div class="l"><?php esc_html_e('Leave / Mission', 'workforce-one'); ?></div></div></div>
+    </section>
     <?php else: ?>
-    <?php if ($nudges): ?>
-    <div class="ews-smart-nudges-card">
-        <div class="ews-smart-nudges-head"><div><span class="ews-personal-label">SMART NUDGES</span><h3>Things that need your attention</h3></div><span>🔔</span></div>
-        <div class="ews-smart-nudges-list">
-            <?php foreach ($nudges as $n): ?>
-            <div class="ews-smart-nudge ews-smart-nudge-<?php echo esc_attr($n['kind']); ?>">
-                <div class="ews-smart-nudge-icon"><?php echo esc_html($n['icon']); ?></div>
-                <div class="ews-smart-nudge-body"><strong><?php echo esc_html($n['title']); ?></strong><p><?php echo esc_html($n['message']); ?></p><div class="ews-smart-nudge-actions"><a class="ews-btn" href="<?php echo esc_url($n['url']); ?>"><?php echo esc_html($n['action']); ?></a><a class="ews-smart-nudge-dismiss" href="<?php echo esc_url($dismiss_url($n['id'])); ?>">Dismiss</a></div></div>
+    <section class="wfo-home-today" aria-label="<?php esc_attr_e('Today', 'workforce-one'); ?>">
+        <div class="wfo-home-today-head">
+            <div>
+                <span class="wfo-kicker"><?php esc_html_e('TODAY\'S SCHEDULE', 'workforce-one'); ?></span>
+                <h2 class="wfo-home-status"><?php echo esc_html($status_label($status)); ?></h2>
+                <p class="wfo-muted"><?php echo Icons::svg('pin', 16); ?><?php echo esc_html($location !== '' ? $location : __('Default location', 'workforce-one')); ?></p>
             </div>
-            <?php endforeach; ?>
+            <span class="wfo-chip <?php echo $is_working ? 'is-office' : 'is-none'; ?>"><?php echo Icons::svg($is_working ? 'check' : 'sun', 14, 2.2); ?><?php echo esc_html($is_working ? __('Working day', 'workforce-one') : __('No work scheduled', 'workforce-one')); ?></span>
         </div>
-    </div>
-    <?php endif; ?>
-
-    <div class="ews-employee-today">
-        <div class="ews-employee-today-head">
-            <div><span class="ews-personal-label"><?php esc_html_e('TODAY\'S SCHEDULE', 'workforce-one'); ?></span><h3><?php echo esc_html($status === 'Not Set' ? __('Not Set', 'workforce-one') : ($status === 'General Leave' ? __('General Leave', 'workforce-one') : $status)); ?></h3><p><?php echo esc_html($location !== '' ? $location : __('Default location', 'workforce-one')); ?></p></div>
-            <span class="ews-personal-status <?php echo $is_working ? 'working' : 'neutral'; ?>"><?php echo esc_html($is_working ? __('Working day', 'workforce-one') : __('No work scheduled', 'workforce-one')); ?></span>
-        </div>
-        <div class="ews-personal-meta">
-            <div><span><?php esc_html_e('Work Location', 'workforce-one'); ?></span><b><?php echo esc_html($location !== '' ? $location : __('Default', 'workforce-one')); ?></b></div>
+        <div class="wfo-home-times">
             <div><span><?php esc_html_e('Sign In', 'workforce-one'); ?></span><b><?php echo esc_html($sign_in !== '' ? $sign_in : __('Not recorded', 'workforce-one')); ?></b></div>
             <div><span><?php esc_html_e('Sign Out', 'workforce-one'); ?></span><b><?php echo esc_html($sign_out !== '' ? $sign_out : __('Not recorded', 'workforce-one')); ?></b></div>
+            <div><span><?php esc_html_e('Work Location', 'workforce-one'); ?></span><b><?php echo esc_html($location !== '' ? $location : __('Default', 'workforce-one')); ?></b></div>
         </div>
-        <a class="ews-btn ews-personal-action" href="<?php echo esc_url($urls['time']); ?>"><?php echo esc_html($sign_in !== '' ? __('View Attendance', 'workforce-one') : __('Sign In / Out', 'workforce-one')); ?></a>
-    </div>
+        <a class="wfo-home-action" href="<?php echo esc_url($urls['time']); ?>"><?php echo Icons::svg($sign_in !== '' ? 'clock' : 'login', 20, 2); ?><?php echo esc_html($sign_in !== '' ? __('View Attendance', 'workforce-one') : __('Sign In / Out', 'workforce-one')); ?></a>
+    </section>
 
-    <div class="ews-dash-grid">
+    <?php if ($nudges): ?>
+    <section class="wfo-home-nudges" aria-label="<?php esc_attr_e('Things that need your attention', 'workforce-one'); ?>">
+        <?php foreach ($nudges as $n): ?>
+        <div class="wfo-nudge" data-kind="<?php echo esc_attr($n['kind']); ?>">
+            <span class="wfo-nudge-icon"><?php echo Icons::svg($nudge_icons[$n['kind']] ?? 'alert', 20); ?></span>
+            <div class="wfo-nudge-body"><strong><?php echo esc_html($n['title']); ?></strong><p><?php echo esc_html($n['message']); ?></p></div>
+            <div class="wfo-nudge-actions"><a class="wfo-btn-sm" href="<?php echo esc_url($n['url']); ?>"><?php echo esc_html($n['action']); ?></a><a class="wfo-nudge-dismiss" href="<?php echo esc_url($dismiss_url($n['id'])); ?>"><?php esc_html_e('Dismiss', 'workforce-one'); ?></a></div>
+        </div>
+        <?php endforeach; ?>
+    </section>
+    <?php endif; ?>
+    <?php endif; ?>
+
+    <section class="wfo-card wfo-home-tiles" aria-label="<?php esc_attr_e('Quick Actions', 'workforce-one'); ?>"><?php echo $tiles_html; ?></section>
+
+    <?php if ($moments): ?>
+    <section class="wfo-card wfo-home-moments">
+        <div class="wfo-card-head"><h3><?php esc_html_e('Today\'s Moments', 'workforce-one'); ?></h3><p class="wfo-muted"><?php esc_html_e('A little celebration for the team.', 'workforce-one'); ?></p></div>
+        <div class="wfo-moments">
+            <?php foreach ($moments as $m): ?><div class="wfo-moment"><span class="wfo-moment-icon"><?php echo Icons::svg($moment_icons[$m['type'] ?? ''] ?? 'sparkle', 20); ?></span><div><strong><?php echo esc_html($m['title']); ?></strong><p><?php echo esc_html($m['message']); ?></p></div></div><?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <?php if ($manager): ?>
+    <div class="wfo-home-grid">
+        <section class="wfo-card wfo-home-glance">
+            <div class="wfo-card-head"><h3><?php esc_html_e('Today at a glance', 'workforce-one'); ?></h3><p class="wfo-muted"><?php esc_html_e('Current schedule distribution', 'workforce-one'); ?></p></div>
+            <div class="wfo-bars">
+                <?php foreach ([['office', __('Office', 'workforce-one'), 'office', 'green'], ['wfh', __('WFH', 'workforce-one'), 'wfh', 'blue'], ['away', __('Leave / Mission', 'workforce-one'), 'briefcase', 'amber']] as [$key, $label, $icon, $tone]): ?>
+                <div class="wfo-bar"><div class="wfo-bar-top"><span><?php echo Icons::svg($icon, 16); ?><?php echo esc_html($label); ?></span><b><?php echo (int) $snapshot[$key]; ?></b></div><i role="img" aria-label="<?php echo esc_attr($percent((int) $snapshot[$key]) . '%'); ?>"><em class="is-<?php echo esc_attr($tone); ?>" style="width:<?php echo $percent((int) $snapshot[$key]); ?>%"></em></i></div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <section class="wfo-card wfo-home-week">
+            <div class="wfo-card-head"><h3><?php esc_html_e('This Week', 'workforce-one'); ?></h3><p class="wfo-muted"><?php esc_html_e('Plan your week', 'workforce-one'); ?> · <?php esc_html_e('Review schedules and keep your team aligned.', 'workforce-one'); ?></p></div>
+            <?php if ($week_days): ?><div class="wfo-weekdays"><?php foreach ($week_days as $wd): ?><span><?php echo esc_html($wd); ?></span><?php endforeach; ?></div><?php else: ?><p class="wfo-muted"><?php esc_html_e('No working days configured', 'workforce-one'); ?></p><?php endif; ?>
+            <a class="wfo-home-action" href="<?php echo esc_url($urls['schedule']); ?>"><?php echo Icons::svg('calendar', 20); ?><?php esc_html_e('View Schedule', 'workforce-one'); ?></a>
+        </section>
+    </div>
+    <?php else: ?>
+    <div class="wfo-home-grid">
         <?php if ($overtime): ?>
-        <div class="ews-dash-card ews-overtime-attendance-card">
-            <div class="ews-dash-card-head"><div><h3><?php esc_html_e('Overtime Today', 'workforce-one'); ?></h3><p><?php esc_html_e('Approved overtime and actual attendance', 'workforce-one'); ?></p></div><span>⏱️</span></div>
-            <div class="ews-personal-meta">
+        <section class="wfo-card wfo-home-overtime">
+            <div class="wfo-card-head"><h3><?php esc_html_e('Overtime Today', 'workforce-one'); ?></h3><p class="wfo-muted"><?php esc_html_e('Approved overtime and actual attendance', 'workforce-one'); ?></p></div>
+            <div class="wfo-home-times">
                 <div><span><?php esc_html_e('Approved OT', 'workforce-one'); ?></span><b><?php echo esc_html($overtime['approved']); ?></b></div>
                 <div><span><?php esc_html_e('Actual OT', 'workforce-one'); ?></span><b><?php echo esc_html($overtime['actual']); ?></b></div>
                 <?php if ($overtime['extra'] !== ''): ?><div><span><?php esc_html_e('Unapproved Extra', 'workforce-one'); ?></span><b><?php echo esc_html($overtime['extra']); ?></b></div><?php endif; ?>
             </div>
-            <?php if ($overtime['sign_out'] !== ''): ?><div style="margin-top:10px;color:#667085;font-size:13px"><?php esc_html_e('Sign Out:', 'workforce-one'); ?> <strong><?php echo esc_html($overtime['sign_out']); ?></strong></div><?php endif; ?>
-        </div>
+            <?php if ($overtime['sign_out'] !== ''): ?><p class="wfo-muted"><?php esc_html_e('Sign Out:', 'workforce-one'); ?> <strong><?php echo esc_html($overtime['sign_out']); ?></strong></p><?php endif; ?>
+        </section>
         <?php endif; ?>
-        <div class="ews-dash-card">
-            <div class="ews-dash-card-head"><div><h3><?php esc_html_e('My Week', 'workforce-one'); ?></h3><p><?php esc_html_e('Your upcoming schedule', 'workforce-one'); ?></p></div><span>📅</span></div>
+        <section class="wfo-card wfo-home-week">
+            <div class="wfo-card-head wfo-card-head-row"><div><h3><?php esc_html_e('My Week', 'workforce-one'); ?></h3><p class="wfo-muted"><?php esc_html_e('Your upcoming schedule', 'workforce-one'); ?></p></div><a class="wfo-link" href="<?php echo esc_url($urls['schedule']); ?>"><?php esc_html_e('View full schedule', 'workforce-one'); ?></a></div>
             <?php if ($upcoming): ?>
-                <div class="ews-my-week-list"><?php foreach ($upcoming as $u): ?><div><span><?php echo esc_html($u['date']); ?></span><b><?php echo esc_html($u['status'] === 'General Leave' ? __('General Leave', 'workforce-one') : $u['status']); ?></b></div><?php endforeach; ?></div>
-            <?php else: echo $empty(__('No Upcoming Schedule', 'workforce-one'), __('No schedule has been set for your upcoming days.', 'workforce-one'), $urls['schedule'], __('View Schedule', 'workforce-one')); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped by ews_empty_state() ?>
+                <ul class="wfo-week-list"><?php foreach ($upcoming as $u): ?><li data-status="<?php echo esc_attr($u['status']); ?>"><span><?php echo esc_html($u['date']); ?></span><?php echo $chip($u['status']); ?></li><?php endforeach; ?></ul>
+            <?php else: echo $empty(__('No Upcoming Schedule', 'workforce-one'), __('No schedule has been set for your upcoming days.', 'workforce-one'), $urls['schedule'], __('View Schedule', 'workforce-one')); ?>
             <?php endif; ?>
-            <a class="ews-dash-inline-link" href="<?php echo esc_url($urls['schedule']); ?>"><?php esc_html_e('View full schedule', 'workforce-one'); ?> →</a>
-        </div>
-        <div class="ews-dash-card">
-            <div class="ews-dash-card-head"><div><h3><?php esc_html_e('Quick Actions', 'workforce-one'); ?></h3><p><?php esc_html_e('What do you need?', 'workforce-one'); ?></p></div><span>⚡</span></div>
-            <div class="ews-dash-actions"><a href="<?php echo esc_url($urls['time']); ?>"><span>🕘</span> <?php esc_html_e('Sign In / Out', 'workforce-one'); ?></a><?php echo $notifications_link; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped above ?><a href="<?php echo esc_url($urls['schedule']); ?>"><span>📅</span> <?php esc_html_e('My Schedule', 'workforce-one'); ?></a></div>
-        </div>
+        </section>
     </div>
     <?php endif; ?>
+
+    <?php echo $poll_html; ?>
 </div>
 <?php else: ?>
-<div class="ews-dashboard"><div class="ews-dash-card ews-employee-dashboard-empty"><h2><?php esc_html_e('Employee account not linked', 'workforce-one'); ?></h2><p><?php esc_html_e('Your WordPress account is not linked to an active employee record. Please contact your manager.', 'workforce-one'); ?></p></div></div>
+<div class="wfo-home"><section class="wfo-card wfo-home-empty"><span class="wfo-home-empty-icon"><?php echo Icons::svg('user', 28); ?></span><h2><?php esc_html_e('Employee account not linked', 'workforce-one'); ?></h2><p><?php esc_html_e('Your WordPress account is not linked to an active employee record. Please contact your manager.', 'workforce-one'); ?></p></section></div>
 <?php endif; ?>

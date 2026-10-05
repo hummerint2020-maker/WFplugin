@@ -1910,3 +1910,23 @@ msgstr "تم تسجيل الانصراف"
 #: templates/app/layout.php
 msgid "More"
 msgstr "المزيد"
+
+#: templates/app/dashboard.php
+msgid "Today in numbers"
+msgstr "اليوم بالأرقام"
+
+#: templates/app/dashboard.php
+msgid "Things that need your attention"
+msgstr "أمور تحتاج إلى انتباهك"
+
+#: templates/app/dashboard.php
+msgid "Dismiss"
+msgstr "تجاهل"
+
+#: templates/app/dashboard.php
+msgid "Today's Moments"
+msgstr "لحظات اليوم"
+
+#: templates/app/dashboard.php
+msgid "A little celebration for the team."
+msgstr "احتفال صغير مع الفريق."

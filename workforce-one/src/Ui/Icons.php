@@ -28,6 +28,17 @@ final class Icons
         'logout' => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
         'chevron' => '<path d="M9 18l6-6-6-6"/>',
         'close' => '<path d="M18 6 6 18M6 6l12 12"/>',
+        'office' => '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/>',
+        'wfh' => '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+        'briefcase' => '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+        'gift' => '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+        'sparkle' => '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17l.8 2.2L22 20l-2.2.8L19 23l-.8-2.2L16 20l2.2-.8z"/>',
+        'alert' => '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+        'check' => '<path d="M20 6 9 17l-5-5"/>',
+        'sun' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+        'pin' => '<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+        'login' => '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
+        'arrow' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
         'install' => '<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 8v6M9.5 11.5 12 14l2.5-2.5M10 18h4"/>',
     ];
 
@@ -48,6 +59,23 @@ final class Icons
     public static function forView(string $view, int $size = 22, float $stroke = 1.8): string
     {
         return self::svg(self::VIEWS[$view] ?? 'more', $size, $stroke);
+    }
+
+    /**
+     * A schedule status (Office, WFH, a leave type, a custom type…) → icon and tone, so a status is
+     * never shown by colour alone. Tones: office, wfh, leave, away, off, absent, none.
+     * @return array{0:string,1:string}
+     */
+    public static function forStatus(string $status): array
+    {
+        $s = strtolower(trim($status));
+        if ($s === '' || $s === 'not set') return ['calendar', 'none'];
+        if ($s === 'office') return ['office', 'office'];
+        if ($s === 'absent') return ['alert', 'absent'];
+        if ($s === 'wfh' || strpos($s, 'home') !== false || strpos($s, 'remote') !== false) return ['wfh', 'wfh'];
+        if (strpos($s, 'leave') !== false || strpos($s, 'vacation') !== false || strpos($s, 'sick') !== false || strpos($s, 'holiday') !== false) return ['leave', 'leave'];
+        if (strpos($s, 'off') !== false || strpos($s, 'rest') !== false || strpos($s, 'weekend') !== false) return ['sun', 'off'];
+        return ['briefcase', 'away'];
     }
 
     public static function has(string $name): bool

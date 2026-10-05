@@ -204,6 +204,8 @@ trait EWS_Frontend_Trait {
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
             wp_register_style('workforce-one-pay', $root.'assets/css/app-pay.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-pay', 'rtl', 'replace');
+            wp_register_style('workforce-one-home', $root.'assets/css/app-home.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-home', 'rtl', 'replace');
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;
             wp_enqueue_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
@@ -213,6 +215,8 @@ trait EWS_Frontend_Trait {
             wp_enqueue_style('workforce-one-shell', $root.'assets/css/app-shell.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-shell', 'rtl', 'replace');
             wp_add_inline_style('workforce-one-shell', $this->appearance_css());
+            // In the <head> on the Home page, so it does not flash unstyled (the view enqueues it too, for its shortcode).
+            if(sanitize_key($_GET['ews_view']??'dashboard')==='dashboard')wp_enqueue_style('workforce-one-home');
             wp_enqueue_script('workforce-one', $root.'assets/js/workforce-one.js', ['wp-i18n'], $ver, true);
             wp_set_script_translations('workforce-one', 'workforce-one', dirname(__DIR__).'/languages');
             wp_add_inline_script('workforce-one','window.ewsConfirmationConfig='.wp_json_encode($this->frontend_confirmation_config()).';','before');

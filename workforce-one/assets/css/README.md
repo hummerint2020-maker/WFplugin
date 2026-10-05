@@ -17,4 +17,5 @@ npx rtlcss@4 assets/css/admin-employee-profile.css assets/css/admin-employee-pro
 npx rtlcss@4 assets/css/admin-attendance-insights.css assets/css/admin-attendance-insights-rtl.css
 npx rtlcss@4 assets/css/app-shell.css assets/css/app-shell-rtl.css
 npx rtlcss@4 assets/css/admin-appearance.css assets/css/admin-appearance-rtl.css
+npx rtlcss@4 assets/css/app-home.css assets/css/app-home-rtl.css
 ```

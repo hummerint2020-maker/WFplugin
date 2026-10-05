@@ -146,4 +146,16 @@ final class AppearanceTest extends TestCase
             $this->assertNotSame(Icons::svg('more'), Icons::forView($key), "menu item $key has its own icon");
         }
     }
+
+    public function testStatusIcons(): void
+    {
+        $this->assertSame(['office', 'office'], Icons::forStatus('Office'));
+        $this->assertSame(['wfh', 'wfh'], Icons::forStatus('WFH'));
+        $this->assertSame(['leave', 'leave'], Icons::forStatus('Vacation'));
+        $this->assertSame(['leave', 'leave'], Icons::forStatus('General Leave'));
+        $this->assertSame(['alert', 'absent'], Icons::forStatus('Absent'));
+        $this->assertSame(['briefcase', 'away'], Icons::forStatus('Training Course'), 'a custom type is shown as away, with an icon');
+        $this->assertSame(['calendar', 'none'], Icons::forStatus('Not Set'));
+        $this->assertTrue(Icons::has('briefcase'));
+    }
 }

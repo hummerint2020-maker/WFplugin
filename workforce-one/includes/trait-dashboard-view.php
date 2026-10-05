@@ -6,7 +6,8 @@ use WorkforceOne\Attendance\Insights;
 /**
  * The employee app's Dashboard (?ews_view=dashboard): a workforce snapshot for managers
  * (ews_view_dashboard, limited to their department) and a personal dashboard for employees,
- * with Today's Moments, the poll and Smart Nudges. View: templates/app/dashboard.php (+ partials).
+ * with Today's Moments, the poll and Smart Nudges. View: templates/app/dashboard.php (+ partials),
+ * styles assets/css/app-home.css; the greeting goes to the frame's header ($app_header_greeting).
  * Nudge and moment rules stay in trait-frontend.php. Behaviour: tests/e2e_dashboard_view.py.
  */
 trait EWS_Dashboard_View_Trait {
@@ -18,9 +19,12 @@ trait EWS_Dashboard_View_Trait {
 
     private function dashboard_content(){
         global $wpdb;
+        wp_enqueue_style('workforce-one-home');
         $today=current_time('Y-m-d');
         $holidays=$this->company_leave_dates($today,$today);
+        $tiles=array_values(array_filter($this->app_navigation()[0],function($x){return $x['key']!=='dashboard';}));
         $common=[
+            'tiles'=>array_slice($tiles,0,7),'notifications_label'=>__('Notifications','workforce-one'),
             'unread'=>$this->notification_unread_count(),'today_label'=>date_i18n('l, d F Y'),
             'moments'=>$this->employee_moments_for_today(),'poll_html'=>$this->employee_poll_markup(),
             'holiday'=>$holidays[$today]??'',
@@ -40,6 +44,7 @@ trait EWS_Dashboard_View_Trait {
             $plans=[];
             foreach($emps as $e){$st=$status[(int)$e->id]??'';$type=$st!==''?$this->schedule_type_config($st):null;$plans[]=[$st,$type?$type['attendance_rule']:null];}
             $names=$this->working_day_names();
+            $this->app_header_greeting=[__('Good to see you.','workforce-one'),date_i18n('l, d F Y')];
             return $this->render_template('app/dashboard',$common+[
                 'manager'=>true,'count'=>count($emps),'snapshot'=>Insights::snapshot($plans,isset($holidays[$today])),
                 'week_days'=>array_map(function($d)use($names){return $names[$d]??'';},$this->working_days()),
@@ -65,6 +70,8 @@ trait EWS_Dashboard_View_Trait {
         $ot=$this->overtime_enabled()?$this->overtime_attendance_summary((int)$emp->id,$today):null;
         if($ot && !($ot['approved_minutes']>0 || $ot['actual_approved_minutes']>0 || $ot['unapproved_extra_minutes']>0 || !empty($ot['approved_requests'])))$ot=null;
         $first_name=trim(explode(' ',trim((string)$emp->name))[0]);
+        /* translators: %s: employee first name */
+        $this->app_header_greeting=[sprintf(__('Good to see you, %s.','workforce-one'),$first_name!==''?$first_name:(string)$emp->name),date_i18n('l, d F Y')];
         return $this->render_template('app/dashboard',$common+[
             'manager'=>false,'emp'=>$emp,'first_name'=>$first_name!==''?$first_name:(string)$emp->name,
             'status'=>$status,'is_working'=>$sch && !$holidays && $this->schedule_type_requires_sign_in($sch->status),

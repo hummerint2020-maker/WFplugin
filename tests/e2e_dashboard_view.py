@@ -44,6 +44,11 @@ def snapshot(page):
     return tuple(stat(page, k) for k in ('Active Employees', 'Office Today', 'WFH Today', 'Leave / Mission'))
 
 
+def today_status(page):
+    m = re.search(r'<h2 class="wfo-home-status">([^<]*)</h2>', page)
+    return m.group(1) if m else None
+
+
 def balanced(page):
     """The dashboard markup closes exactly the elements it opens (it sits inside <main>)."""
     m = re.search(r'<main class="ews-main">(.*?)</main>', page, re.S)
@@ -66,16 +71,24 @@ check('on a company holiday nobody is counted in the Office or at home, and the 
 
 # ---------------------------------------------------------------- employee dashboard
 st, page, _ = emp.req(PAGE)
-check('the employee dashboard greets by first name', 'Good to see you, Mona.' in page)
-check('on a company holiday today shows General Leave, not a working day', re.search(r"TODAY(?:'|&#039;)S SCHEDULE</span><h3>General Leave</h3>", page) is not None and 'No work scheduled' in page,
-      re.findall(r"TODAY(?:'|&#039;)S SCHEDULE</span><h3>([^<]*)</h3>", page))
+check('the employee dashboard greets by first name (in the header)', re.search(r'<p class="wfo-header-greeting">Good to see you, Mona.</p>', page) is not None)
+check('on a company holiday today shows General Leave, not a working day', today_status(page) == 'General Leave' and 'No work scheduled' in page, today_status(page))
 php("$wpdb->query(\"DELETE FROM {$p}ews_company_calendar\"); $wpdb->insert($p.'ews_company_calendar',['event_date'=>'%s','title'=>'Bank Holiday','event_type'=>'general_leave','active'=>1,'created_by'=>1]);" % d(1))
 st, page, _ = emp.req(PAGE)
-week = re.findall(r'<div><span>([^<]+)</span><b>([^<]+)</b></div>', page.split('ews-my-week-list')[-1].split('ews-dash-inline-link')[0])
+week = re.findall(r'<li data-status="([^"]*)"><span>([^<]+)</span>', page)
+week = [(day, st) for st, day in week]
 check('My Week shows a company holiday as General Leave', len(week) >= 2 and week[0][1] == 'General Leave' and week[1][1] == 'Office', week)
-check('today: WFH, a working day', re.search(r"TODAY(?:'|&#039;)S SCHEDULE</span><h3>WFH</h3>", page) is not None and 'Working day' in page)
+check('today: WFH, a working day', today_status(page) == 'WFH' and 'Working day' in page, today_status(page))
 ok, counts = balanced(page)
 check('the employee dashboard closes every element it opens', ok, counts)
+tiles = re.findall(r'<a class="wfo-tile" href="[^"]*?(?:ews_view=([a-z-]+))?"', page.split('wfo-home-tiles')[1].split('</section>')[0]) if 'wfo-home-tiles' in page else []
+check('Home tiles: the pages this employee may open, plus Notifications (no manager pages, no Dashboard)', 'time' in tiles and 'schedule' in tiles and 'notifications' in tiles and 'attendance' not in tiles and 'dashboard' not in tiles, tiles)
+check('the week shows each status with an icon and a word', re.search(r'<li data-status="Office"><span>[^<]+</span><span class="wfo-chip is-office"><svg', page) is not None)
+main = re.search(r'<main class="ews-main">(.*?)</main>', page, re.S).group(1)
+main = main.split('ews-poll-card')[0]
+check('no emoji in the Home page (before the poll card)', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF]', main), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF]', main))
+head = page.split('</head>')[0]
+check('the Home styles load in the <head> (no unstyled flash)', 'app-home.css' in head)
 php("$wpdb->query(\"DELETE FROM {$p}ews_company_calendar\");")
 
 # ---------------------------------------------------------------- department manager

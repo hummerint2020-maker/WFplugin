@@ -68,7 +68,7 @@ m = opt('ews_employee_moments')
 check('moment dates are saved', m.get(str(eid)) == {'birthday': birthday, 'join_date': d(-10)}, m)
 check("...without wiping an archived employee's dates", m.get(str(inactive)) == {'birthday': '1980-05-05', 'join_date': '2010-01-01'}, m)
 st, page, _ = adm.req('/app/?ews_view=dashboard')
-check("today's birthday and a recent joiner are celebrated on the dashboard", 'Happy birthday, Emp One!' in page, page.count('ews-moment-item'))
+check("today's birthday and a recent joiner are celebrated on the dashboard", 'Happy birthday, Emp One!' in page, page.count('class="wfo-moment"'))
 qs = adm.post('ews31_employee_moments_save', _wpnonce=n, enabled=1, **{'moments[%d][birthday]' % eid: '2026-02-30'})[1]
 check('an impossible date is refused', qs.get('moments_error') == 'date' and opt('ews_employee_moments')[str(eid)]['birthday'] == birthday, qs)
 qs = adm.post('ews31_employee_moments_save', _wpnonce=n, enabled=1, **{'moments[%d][birthday]' % eid: d(5)})[1]

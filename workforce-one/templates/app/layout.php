@@ -6,6 +6,7 @@
  * Script: assets/js/workforce-one.js (profile menu, More sheet, notices); styles: assets/css/app-shell.css.
  *
  * @var string $title
+ * @var array{0:string,1:string}|null $greeting  a view's greeting and date line (Dashboard); replaces the brand line
  * @var string $body                 the view's HTML
  * @var string $active               menu key of the view shown
  * @var array<int,array<string,mixed>> $desktop_items
@@ -50,11 +51,16 @@ $tab = function ($x) use ($active) {
             <a class="wfo-rail-logout" href="<?php echo esc_url($logout_url); ?>"><?php echo Icons::svg('logout', 20); ?><span class="wfo-rail-label"><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
         </aside>
         <main class="ews-main"><?php echo $notice_html; ?>
-            <header class="wfo-header">
+            <header class="wfo-header<?php echo $greeting ? ' has-greeting' : ''; ?>">
                 <div class="wfo-header-text">
+                    <?php if ($greeting): ?>
+                    <div class="wfo-header-kicker"><h1 class="ews-title"><?php echo esc_html($title); ?></h1><span><?php echo esc_html($greeting[1]); ?></span></div>
+                    <p class="wfo-header-greeting"><?php echo esc_html($greeting[0]); ?></p>
+                    <?php else: ?>
                     <div class="wfo-header-brand"><?php echo esc_html($company_name); ?> · <?php echo esc_html($app_name); ?></div>
                     <h1 class="ews-title"><?php echo esc_html($title); ?></h1>
                     <?php if ($tagline !== ''): ?><div class="ews-sub"><?php echo esc_html($tagline); ?></div><?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 <div class="ews-mobile-top-actions">
                     <?php echo $bell_html; ?>

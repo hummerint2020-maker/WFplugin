@@ -774,7 +774,7 @@ trait EWS_Notifications_Trait {
                 $message=wp_trim_words(wp_strip_all_tags((string)$note->message),13,'…');
                 $time=sprintf(/* translators: %s: human-readable time difference */__('%s ago','workforce-one'),human_time_diff(strtotime($note->created_at),current_time('timestamp')));
                 $items.='<a class="ews-bell-item'.(!(int)$note->is_read?' unread':''). '" href="'.esc_url($open_url).'">'
-                    .'<span class="ews-bell-item-icon" aria-hidden="true">🔔</span>'
+                    .'<span class="ews-bell-item-icon" aria-hidden="true">'.\WorkforceOne\Ui\Icons::svg('bell',18).'</span>'
                     .'<span class="ews-bell-item-body"><strong>'.esc_html($title).'</strong><span>'.esc_html($message).'</span><small>'.esc_html($time).'</small></span>'
                     .(!(int)$note->is_read?'<i class="ews-bell-item-dot" aria-hidden="true"></i>':'')
                     .'</a>';

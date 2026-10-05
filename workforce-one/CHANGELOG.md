@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.31.49
+New look, step 2: the Home page (Dashboard). Same information, same links, nothing removed.
+
+### Changed
+- **Greeting in the header**: "Good to see you, Mona." with today's date; the page's cards sit over
+  the header's lower edge.
+- **Employees**: a "Today" card with today's schedule (icon + word), location, Sign In / Sign Out
+  times and one main button (Sign In / Out, or View Attendance once signed in); Smart Nudges as
+  compact cards with their action and Dismiss; **quick tiles** for the pages you may open (from
+  the menu, so permissions and View Navigation apply) plus Notifications with the unread count;
+  My Week with each day's status as an icon + word; Overtime Today; Today's Moments; the poll.
+- **Managers**: four numbers over the header (active employees, office, WFH, leave / mission),
+  the same tiles, Today at a glance (bars labelled with icon, word and number), This Week with the
+  working days and View Schedule.
+- No emoji on the page (SVG icons); the bell's list uses the SVG icon too.
+- The page's styles load in the <head> (no unstyled flash).
+
 ## 3.31.48
 New look, step 1: the app frame and the theme. Every page keeps what it does (same forms, links,
 permissions and results); pages themselves are redesigned in the next steps.

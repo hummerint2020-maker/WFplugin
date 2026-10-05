@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.47\n"
+"Project-Id-Version: Workforce One 3.31.49\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-05T16:05:58+00:00\n"
+"POT-Creation-Date: 2026-10-05T16:50:25+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -89,98 +89,95 @@ msgstr ""
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: includes/trait-app-layout.php:61
+#: includes/trait-app-layout.php:64
 msgid "My Pay"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "Dashboard"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
-#: templates/app/dashboard.php:78
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "Schedule"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
+#: includes/trait-app-layout.php:64
 msgid "Time"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 #: templates/app/attendance-insights.php:51
-#: templates/app/dashboard.php:78
 msgid "Attendance"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
+#: includes/trait-app-layout.php:64
 #: templates/app/attendance-insights.php:72
 msgid "Employees"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "Reports"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "Attendance Insights"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "Leave"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 #: templates/app/overtime.php:34
 msgid "Overtime"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "Tasks"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
+#: includes/trait-app-layout.php:64
+#: includes/trait-dashboard-view.php:26
 #: includes/trait-notifications.php:786
 #: includes/trait-notifications.php:789
-#: templates/app/dashboard.php:36
 msgid "Notifications"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: templates/app/layout.php:66
-#: templates/app/layout.php:95
+#: includes/trait-app-layout.php:64
+#: templates/app/layout.php:72
+#: templates/app/layout.php:101
 msgid "My Profile"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "People"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
+#: includes/trait-app-layout.php:64
 msgid "Employee Profile"
 msgstr ""
 
-#: includes/trait-app-layout.php:61
+#: includes/trait-app-layout.php:64
 #: templates/app/presence.php:14
 #: templates/app/time.php:110
 msgid "Presence Verification"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: templates/app/dashboard.php:114
-#: templates/app/dashboard.php:139
+#: includes/trait-app-layout.php:74
+#: templates/app/dashboard.php:88
 msgid "Sign In / Out"
 msgstr ""
 
-#: includes/trait-app-layout.php:110
+#: includes/trait-app-layout.php:113
 msgid "One Platform. One Team. One Goal."
 msgstr ""
 
@@ -291,6 +288,16 @@ msgstr ""
 msgid "Unable to record this action."
 msgstr ""
 
+#: includes/trait-dashboard-view.php:46
+msgid "Good to see you."
+msgstr ""
+
+#. translators: %s: employee first name
+#: includes/trait-dashboard-view.php:73
+#, php-format
+msgid "Good to see you, %s."
+msgstr ""
+
 #: includes/trait-frontend.php:10
 #: includes/trait-frontend.php:18
 #: includes/trait-frontend.php:43
@@ -347,7 +354,7 @@ msgid "OK"
 msgstr ""
 
 #: includes/trait-frontend.php:109
-#: templates/app/layout.php:98
+#: templates/app/layout.php:104
 #: templates/app/leave.php:37
 msgid "Close"
 msgstr ""
@@ -693,54 +700,54 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 #: templates/app/leave.php:107
 #: templates/app/leave.php:121
 #: templates/app/overtime.php:79
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:400
+#: includes/trait-frontend.php:404
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:406
+#: includes/trait-frontend.php:410
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:406
+#: includes/trait-frontend.php:410
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:417
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:413
+#: includes/trait-frontend.php:417
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -987,6 +994,7 @@ msgid "Day"
 msgstr ""
 
 #: templates/app/attendance-insights.php:38
+#: templates/app/dashboard.php:74
 msgid "Today"
 msgstr ""
 
@@ -1022,260 +1030,243 @@ msgstr ""
 msgid "No employees in this category."
 msgstr ""
 
-#: templates/app/dashboard.php:41
-msgid "BA Team · Workforce One"
-msgstr ""
-
-#: templates/app/dashboard.php:43
-msgid "Good to see you."
-msgstr ""
-
-#: templates/app/dashboard.php:43
-msgid "Here’s today’s workforce snapshot."
-msgstr ""
-
-#. translators: %s: employee first name
-#: templates/app/dashboard.php:46
-#, php-format
-msgid "Good to see you, %s."
-msgstr ""
-
-#. translators: %s: employee first name
-#: templates/app/dashboard.php:46
-msgid "Here’s your day at a glance."
-msgstr ""
-
-#: templates/app/dashboard.php:48
-#: templates/app/dashboard.php:106
-#: templates/app/dashboard.php:132
-msgid "General Leave"
-msgstr ""
-
-#: templates/app/dashboard.php:54
-msgid "Active Employees"
-msgstr ""
-
-#: templates/app/dashboard.php:55
-msgid "Office Today"
-msgstr ""
-
-#: templates/app/dashboard.php:56
-msgid "WFH Today"
-msgstr ""
-
-#: templates/app/dashboard.php:57
-#: templates/app/dashboard.php:83
-msgid "Leave / Mission"
-msgstr ""
-
-#: templates/app/dashboard.php:74
-msgid "This Week"
-msgstr ""
-
-#: templates/app/dashboard.php:74
-msgid "No working days configured"
-msgstr ""
-
-#: templates/app/dashboard.php:75
-msgid "Plan your week"
-msgstr ""
-
-#: templates/app/dashboard.php:75
-msgid "Review schedules and keep your team aligned."
-msgstr ""
-
-#: templates/app/dashboard.php:75
-#: templates/app/dashboard.php:133
-msgid "View Schedule"
-msgstr ""
-
-#: templates/app/dashboard.php:77
-#: templates/app/dashboard.php:138
-msgid "Quick Actions"
-msgstr ""
-
-#: templates/app/dashboard.php:77
-msgid "Common tasks"
-msgstr ""
-
-#: templates/app/dashboard.php:81
-msgid "Today at a glance"
-msgstr ""
-
-#: templates/app/dashboard.php:81
-msgid "Current schedule distribution"
-msgstr ""
-
-#: templates/app/dashboard.php:83
-msgid "Office"
-msgstr ""
-
-#: templates/app/dashboard.php:83
-msgid "WFH"
-msgstr ""
-
-#: templates/app/dashboard.php:106
-msgid "TODAY'S SCHEDULE"
-msgstr ""
-
 #. translators: %s: today's schedule status
-#: templates/app/dashboard.php:106
+#: templates/app/dashboard.php:42
 #: templates/app/time.php:45
 msgid "Not Set"
 msgstr ""
 
-#: templates/app/dashboard.php:106
+#: templates/app/dashboard.php:43
+#: templates/app/dashboard.php:63
+msgid "General Leave"
+msgstr ""
+
+#: templates/app/dashboard.php:67
+msgid "Today in numbers"
+msgstr ""
+
+#: templates/app/dashboard.php:68
+msgid "Active Employees"
+msgstr ""
+
+#: templates/app/dashboard.php:69
+msgid "Office Today"
+msgstr ""
+
+#: templates/app/dashboard.php:70
+msgid "WFH Today"
+msgstr ""
+
+#: templates/app/dashboard.php:71
+#: templates/app/dashboard.php:120
+msgid "Leave / Mission"
+msgstr ""
+
+#: templates/app/dashboard.php:77
+msgid "TODAY'S SCHEDULE"
+msgstr ""
+
+#: templates/app/dashboard.php:79
 msgid "Default location"
 msgstr ""
 
-#: templates/app/dashboard.php:107
+#: templates/app/dashboard.php:81
 msgid "Working day"
 msgstr ""
 
-#: templates/app/dashboard.php:107
+#: templates/app/dashboard.php:81
 msgid "No work scheduled"
 msgstr ""
 
-#: templates/app/dashboard.php:110
-msgid "Work Location"
-msgstr ""
-
-#: templates/app/dashboard.php:110
-msgid "Default"
-msgstr ""
-
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/dashboard.php:111
+#: templates/app/dashboard.php:84
 #: templates/app/time.php:48
 #: templates/app/time.php:55
 #: templates/app/time.php:93
 msgid "Sign In"
 msgstr ""
 
-#: templates/app/dashboard.php:111
-#: templates/app/dashboard.php:112
+#: templates/app/dashboard.php:84
+#: templates/app/dashboard.php:85
 #: templates/app/time.php:93
 #: templates/app/time.php:94
 #: templates/app/time.php:95
 msgid "Not recorded"
 msgstr ""
 
-#: templates/app/dashboard.php:112
+#: templates/app/dashboard.php:85
 #: templates/app/time.php:49
 #: templates/app/time.php:95
 msgid "Sign Out"
 msgstr ""
 
-#: templates/app/dashboard.php:114
+#: templates/app/dashboard.php:86
+msgid "Work Location"
+msgstr ""
+
+#: templates/app/dashboard.php:86
+msgid "Default"
+msgstr ""
+
+#: templates/app/dashboard.php:88
 msgid "View Attendance"
 msgstr ""
 
-#: templates/app/dashboard.php:120
-msgid "Overtime Today"
+#: templates/app/dashboard.php:92
+msgid "Things that need your attention"
+msgstr ""
+
+#: templates/app/dashboard.php:97
+msgid "Dismiss"
+msgstr ""
+
+#: templates/app/dashboard.php:104
+msgid "Quick Actions"
+msgstr ""
+
+#: templates/app/dashboard.php:108
+msgid "Today's Moments"
+msgstr ""
+
+#: templates/app/dashboard.php:108
+msgid "A little celebration for the team."
+msgstr ""
+
+#: templates/app/dashboard.php:118
+msgid "Today at a glance"
+msgstr ""
+
+#: templates/app/dashboard.php:118
+msgid "Current schedule distribution"
 msgstr ""
 
 #: templates/app/dashboard.php:120
-msgid "Approved overtime and actual attendance"
+msgid "Office"
 msgstr ""
 
-#: templates/app/dashboard.php:122
-msgid "Approved OT"
-msgstr ""
-
-#: templates/app/dashboard.php:123
-msgid "Actual OT"
-msgstr ""
-
-#: templates/app/dashboard.php:124
-msgid "Unapproved Extra"
+#: templates/app/dashboard.php:120
+msgid "WFH"
 msgstr ""
 
 #: templates/app/dashboard.php:126
-msgid "Sign Out:"
+msgid "This Week"
 msgstr ""
 
-#: templates/app/dashboard.php:130
-msgid "My Week"
+#: templates/app/dashboard.php:126
+msgid "Plan your week"
 msgstr ""
 
-#: templates/app/dashboard.php:130
-msgid "Your upcoming schedule"
+#: templates/app/dashboard.php:126
+msgid "Review schedules and keep your team aligned."
 msgstr ""
 
-#: templates/app/dashboard.php:133
-msgid "No Upcoming Schedule"
+#: templates/app/dashboard.php:127
+msgid "No working days configured"
 msgstr ""
 
-#: templates/app/dashboard.php:133
-msgid "No schedule has been set for your upcoming days."
+#: templates/app/dashboard.php:128
+#: templates/app/dashboard.php:148
+msgid "View Schedule"
 msgstr ""
 
 #: templates/app/dashboard.php:135
-msgid "View full schedule"
+msgid "Overtime Today"
+msgstr ""
+
+#: templates/app/dashboard.php:135
+msgid "Approved overtime and actual attendance"
+msgstr ""
+
+#: templates/app/dashboard.php:137
+msgid "Approved OT"
 msgstr ""
 
 #: templates/app/dashboard.php:138
-msgid "What do you need?"
+msgid "Actual OT"
 msgstr ""
 
 #: templates/app/dashboard.php:139
-msgid "My Schedule"
+msgid "Unapproved Extra"
+msgstr ""
+
+#: templates/app/dashboard.php:141
+msgid "Sign Out:"
 msgstr ""
 
 #: templates/app/dashboard.php:145
+msgid "My Week"
+msgstr ""
+
+#: templates/app/dashboard.php:145
+msgid "Your upcoming schedule"
+msgstr ""
+
+#: templates/app/dashboard.php:145
+msgid "View full schedule"
+msgstr ""
+
+#: templates/app/dashboard.php:148
+msgid "No Upcoming Schedule"
+msgstr ""
+
+#: templates/app/dashboard.php:148
+msgid "No schedule has been set for your upcoming days."
+msgstr ""
+
+#: templates/app/dashboard.php:157
 #: templates/app/time.php:44
 msgid "Employee account not linked"
 msgstr ""
 
-#: templates/app/dashboard.php:145
+#: templates/app/dashboard.php:157
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr ""
 
-#: templates/app/layout.php:35
+#: templates/app/layout.php:36
 msgid "signed in"
 msgstr ""
 
-#: templates/app/layout.php:35
+#: templates/app/layout.php:36
 msgid "not signed in yet"
 msgstr ""
 
-#: templates/app/layout.php:35
+#: templates/app/layout.php:36
 msgid "signed out"
 msgstr ""
 
-#: templates/app/layout.php:43
-#: templates/app/layout.php:76
+#: templates/app/layout.php:44
+#: templates/app/layout.php:82
 msgid "Workforce One navigation"
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: templates/app/layout.php:50
-#: templates/app/layout.php:67
-#: templates/app/layout.php:107
+#: templates/app/layout.php:51
+#: templates/app/layout.php:73
+#: templates/app/layout.php:113
 msgid "Log out"
 msgstr ""
 
-#: templates/app/layout.php:62
+#: templates/app/layout.php:68
 msgid "My Profile menu"
 msgstr ""
 
-#: templates/app/layout.php:85
-#: templates/app/layout.php:92
+#: templates/app/layout.php:91
+#: templates/app/layout.php:98
 msgid "More"
 msgstr ""
 
-#: templates/app/layout.php:106
+#: templates/app/layout.php:112
 msgid "Mobile shortcut:"
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: templates/app/layout.php:106
+#: templates/app/layout.php:112
 #, php-format
 msgid "Use your browser menu → %s to keep Workforce One one tap away."
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: templates/app/layout.php:106
+#: templates/app/layout.php:112
 msgid "Add to Home Screen"
 msgstr ""
 

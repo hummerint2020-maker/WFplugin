@@ -12,6 +12,9 @@ use WorkforceOne\Employees\ProfileSummary;
  */
 trait EWS_App_Layout_Trait {
 
+    /** @var array{0:string,1:string}|null A view's greeting for the header (Dashboard): [greeting, date line]. */
+    private $app_header_greeting=null;
+
     public function app(){
         if(!is_user_logged_in())return $this->login_page();
         return $this->render_app_view(sanitize_key($_GET['ews_view']??'dashboard'));
@@ -104,7 +107,7 @@ trait EWS_App_Layout_Trait {
         $bar=\WorkforceOne\Ui\MobileBar::split($mobile);
         $clock=$bar['center']&&$emp?\WorkforceOne\Ui\MobileBar::clockState($this->today_events((int)$emp->id),true):'';
         return $this->render_template('app/layout',[
-            'title'=>$title,'body'=>$body,'active'=>$active,'desktop_items'=>$desktop,'mobile_items'=>$mobile,'bar'=>$bar,'clock_state'=>$clock,
+            'title'=>$title,'body'=>$body,'active'=>$active,'greeting'=>$this->app_header_greeting,'desktop_items'=>$desktop,'mobile_items'=>$mobile,'bar'=>$bar,'clock_state'=>$clock,
             // The built-in tagline is translated; one typed in Appearance is shown as entered.
             'company_name'=>$look['company_name'],'app_name'=>$look['app_name'],'logo_url'=>$look['logo_url'],
             'tagline'=>$look['tagline']===\WorkforceOne\Settings\Appearance::DEFAULTS['tagline']?__('One Platform. One Team. One Goal.','workforce-one'):$look['tagline'],
