@@ -1930,3 +1930,48 @@ msgstr "لحظات اليوم"
 #: templates/app/dashboard.php
 msgid "A little celebration for the team."
 msgstr "احتفال صغير مع الفريق."
+
+#: templates/app/time.php
+msgid "Now"
+msgstr "الآن"
+
+#: templates/app/time.php
+msgid "Before you sign in"
+msgstr "قبل تسجيل الحضور"
+
+#: templates/app/time.php
+msgid "Location"
+msgstr "الموقع"
+
+#: templates/app/time.php
+msgid "Needed for this schedule"
+msgstr "مطلوب لهذا الجدول"
+
+#: templates/app/time.php
+msgid "Not needed today"
+msgstr "غير مطلوب اليوم"
+
+#: templates/app/time.php
+msgid "Sign-in window"
+msgstr "نافذة تسجيل الحضور"
+
+#: templates/app/time.php
+msgid "Closed"
+msgstr "مغلقة"
+
+#: templates/app/time.php
+msgid "Face check"
+msgstr "التحقق بالوجه"
+
+#: templates/app/time.php
+msgid "Camera opens on Sign In"
+msgstr "تفتح الكاميرا عند تسجيل الحضور"
+
+#: templates/app/time.php
+msgid "Set up your face first"
+msgstr "سجّل وجهك أولًا"
+
+#: templates/app/time.php
+#. translators: %s: sign-in cutoff time
+msgid "Open until %s"
+msgstr "مفتوحة حتى %s"

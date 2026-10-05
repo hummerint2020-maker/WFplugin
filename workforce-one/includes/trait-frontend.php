@@ -205,6 +205,8 @@ trait EWS_Frontend_Trait {
             wp_register_style('workforce-one-pay', $root.'assets/css/app-pay.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-pay', 'rtl', 'replace');
             wp_register_style('workforce-one-home', $root.'assets/css/app-home.css', ['workforce-one'], $ver);
+            wp_register_style('workforce-one-time-page', $root.'assets/css/app-time.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-time-page', 'rtl', 'replace');
             wp_style_add_data('workforce-one-home', 'rtl', 'replace');
             wp_style_add_data('workforce-one', 'rtl', 'replace');
             if(!$this->pwa_is_employee_app_page()) return;
@@ -216,7 +218,9 @@ trait EWS_Frontend_Trait {
             wp_style_add_data('workforce-one-shell', 'rtl', 'replace');
             wp_add_inline_style('workforce-one-shell', $this->appearance_css());
             // In the <head> on the Home page, so it does not flash unstyled (the view enqueues it too, for its shortcode).
-            if(sanitize_key($_GET['ews_view']??'dashboard')==='dashboard')wp_enqueue_style('workforce-one-home');
+            $view=sanitize_key($_GET['ews_view']??'dashboard');
+            if($view==='dashboard')wp_enqueue_style('workforce-one-home');
+            if($view==='time')wp_enqueue_style('workforce-one-time-page');
             wp_enqueue_script('workforce-one', $root.'assets/js/workforce-one.js', ['wp-i18n'], $ver, true);
             wp_set_script_translations('workforce-one', 'workforce-one', dirname(__DIR__).'/languages');
             wp_add_inline_script('workforce-one','window.ewsConfirmationConfig='.wp_json_encode($this->frontend_confirmation_config()).';','before');
@@ -414,7 +418,7 @@ trait EWS_Frontend_Trait {
     private function time_content(){
             if(!is_user_logged_in())return $this->login_page();
             $emp=$this->current_employee();
-            if($emp && !$this->employee_attendance_enabled((int)$emp->id))return '<div class="ews-time-card"><div class="ews-time-block"><div class="ews-time-icon">📋</div><h2>'.esc_html__('Attendance tracking is disabled','workforce-one').'</h2><p>'.esc_html__('Attendance is not required for your employee profile.','workforce-one').'</p></div></div>';
+            if($emp && !$this->employee_attendance_enabled((int)$emp->id)){wp_enqueue_style('workforce-one-time-page');return '<div class="ews-time-card wfo-clock"><div class="ews-time-block wfo-clock-empty"><div class="ews-time-icon">'.\WorkforceOne\Ui\Icons::svg('attendance',30).'</div><h2>'.esc_html__('Attendance tracking is disabled','workforce-one').'</h2><p>'.esc_html__('Attendance is not required for your employee profile.','workforce-one').'</p></div></div>';}
             $sch=$emp?$this->today_schedule_for_employee($emp->id):null;$ev=$emp?$this->today_events($emp->id):[];
             $working=$sch&&$this->schedule_type_requires_sign_in($sch->status);
             $today=$emp?$this->attendance_day($emp->id):current_time('Y-m-d'); // an overnight shift after midnight is still yesterday's
@@ -430,11 +434,19 @@ trait EWS_Frontend_Trait {
             $qr_enabled=$this->presence_qr_enabled();
             $presence_enabled=$this->presence_verification_enabled();
             $presence_url=$this->app_view_url('presence');
+            // The picture at the top of the page (display only): avatar, where the employee is in the day, the ring.
+            $clock_state=\WorkforceOne\Ui\ClockFace::state($ev,$break_data && !empty($break_data['open']));
+            $signed_in_at=isset($ev['sign_in'])?$ev['sign_in']->event_at:(isset($ev['late_sign_in'])?$ev['late_sign_in']->event_at:null);
+            $clock_progress=\WorkforceOne\Ui\ClockFace::progress($clock_state,current_time('timestamp'),$signin_bounds,$signed_in_at?(int)strtotime($signed_in_at):null);
+            $picture=$this->employee_picture_url($emp);
+            $initials=$emp?(\WorkforceOne\Employees\ProfileSummary::initials((string)$emp->name)?:'ME'):'';
             wp_enqueue_style('workforce-one'); // already enqueued on the app page; needed when only [employee_attendance] is used
+            wp_enqueue_style('workforce-one-time-page');
             wp_enqueue_script('workforce-one-time');
             if($qr_enabled)wp_enqueue_script('workforce-one-jsqr');
             return $this->render_template('app/time',compact('emp','sch','ev','working','today','sign_in_open','hours','grace_period','face_signin_enabled','requires_location','break_data',
-                'signin_bounds','hours_start_label','hours_end_label','sign_in_status_label','face_enrolled','face_settings','face_vendor_url','qr_enabled','presence_enabled','presence_url'));
+                'signin_bounds','hours_start_label','hours_end_label','sign_in_status_label','face_enrolled','face_settings','face_vendor_url','qr_enabled','presence_enabled','presence_url',
+                'clock_state','clock_progress','signed_in_at','picture','initials'));
         }
     private function redirect($args=[]){
             $u=wp_get_referer()?:$this->app_home_url();

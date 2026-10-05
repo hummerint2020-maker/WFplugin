@@ -175,7 +175,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 var p=profile();
                 if(state)state.textContent=p&&p.template?ewsSprintf(/* translators: %d: number of samples */__('Enrolled (%d samples)','workforce-one'),p.samples):__('Not enrolled','workforce-one');
                 var open=module.querySelector('#ews-face-open'),enrollBtn=module.querySelector('#ews-face-enroll'),resetBtn=module.querySelector('#ews-face-reset');
-                if(open)open.textContent='📷 '+(p&&p.template?__('Verify Face','workforce-one'):__('Set Up / Verify Face','workforce-one'));
+                if(open)open.textContent=(p&&p.template?__('Verify Face','workforce-one'):__('Set Up / Verify Face','workforce-one'));
                 if(enrollBtn)enrollBtn.style.display=p&&p.template?'none':'';
                 if(resetBtn)resetBtn.style.display=p&&p.template?'':'none';
               }

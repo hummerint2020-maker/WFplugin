@@ -158,4 +158,19 @@ final class AppearanceTest extends TestCase
         $this->assertSame(['calendar', 'none'], Icons::forStatus('Not Set'));
         $this->assertTrue(Icons::has('briefcase'));
     }
+
+    public function testClockFace(): void
+    {
+        $this->assertSame('out', \WorkforceOne\Ui\ClockFace::state([], false));
+        $this->assertSame('in', \WorkforceOne\Ui\ClockFace::state(['late_sign_in' => 1], false));
+        $this->assertSame('break', \WorkforceOne\Ui\ClockFace::state(['sign_in' => 1], true));
+        $this->assertSame('done', \WorkforceOne\Ui\ClockFace::state(['sign_in' => 1, 'sign_out' => 1], true));
+        $b = ['start' => 1000, 'cutoff' => 2000, 'end' => 5000];
+        $this->assertEqualsWithDelta(0.5, \WorkforceOne\Ui\ClockFace::progress('out', 1500, $b, null), 0.001, 'half the Sign In window has passed');
+        $this->assertSame(0.0, \WorkforceOne\Ui\ClockFace::progress('out', 500, $b, null), 'before the window');
+        $this->assertSame(1.0, \WorkforceOne\Ui\ClockFace::progress('out', 9000, $b, null), 'clamped');
+        $this->assertEqualsWithDelta(0.25, \WorkforceOne\Ui\ClockFace::progress('in', 2100, $b, 1100), 0.001, 'a quarter of the shift worked');
+        $this->assertSame(0.0, \WorkforceOne\Ui\ClockFace::progress('in', 2100, ['start' => 0, 'cutoff' => 0, 'end' => 0], 1100), 'no working hours: empty ring');
+        $this->assertSame(1.0, \WorkforceOne\Ui\ClockFace::progress('done', 0, $b, null));
+    }
 }

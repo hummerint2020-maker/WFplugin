@@ -121,6 +121,18 @@ req('/wp-login.php', {'log': 'emp1', 'pwd': 'emp1pass', 'testcookie': '1'})
 NONCES.update(nonces())
 check('time page exposes sign-in and sign-out forms', 'ews31_time_event:sign_in' in NONCES and 'ews31_time_event:sign_out' in NONCES, NONCES)
 
+
+def page_state():
+    """The new Sign In page (3.31.50): state class, and each main form's (event, shown?) in order."""
+    st, page, _ = req('/app/?ews_view=time')
+    hero = re.search(r'<section class="wfo-clock-hero is-([a-z]+)"', page)
+    forms = re.findall(r'<form method="post"[^>]*?(hidden)?>(?:<input type="hidden" name="face_verified" value="0">)?<input type="hidden" id="_wpnonce"[^>]*>.*?name="event_type" value="([a-z_]+)"', page, re.S)
+    return (hero.group(1) if hero else None), [(ev, not hid) for hid, ev in forms], page
+
+
+state, forms, page = page_state()
+check('before Sign In: the page shows the avatar ring, Sign In is the one main action (Sign Out kept, hidden)', state == 'out' and forms == [('sign_in', True), ('sign_out', False)] and 'wfo-clock-ring' in page and 'wfo-clock-initials' in page, (state, forms))
+
 # 1. normal day
 ok, err = event('sign_out')
 check('sign out before sign in is rejected', err == 'You cannot sign out before signing in.', err)
@@ -130,10 +142,14 @@ expected = 'Sign In recorded successfully.' if (now_utc().hour == 0 and now_utc(
 check('sign in succeeds and is classified late after the grace period', ok == expected, (ok, err))
 row = last_log()
 check('sign-in row: inside, verified, ~15 m', row and row['location_status'] == 'inside' and row['integrity_status'] == 'verified' and int(float(row['d'])) < 50, row)
+state, forms, page = page_state()
+check('signed in: Sign Out becomes the main action (Sign In kept, hidden)', state == 'in' and forms == [('sign_in', False), ('sign_out', True)], (state, forms))
 ok, err = event('sign_in')
 check('second sign in is rejected', err == 'You have already signed in today.', err)
 ok, err = event('sign_out')
 check('sign out succeeds', ok == 'Sign Out recorded successfully.', (ok, err))
+state, forms, page = page_state()
+check('signed out: no main action, the day is done', state == 'done' and forms == [('sign_in', False), ('sign_out', False)] and 'You signed out today.' in page, (state, forms))
 ok, err = event('sign_out')
 check('second sign out is rejected', err == 'You have already signed out today.', err)
 

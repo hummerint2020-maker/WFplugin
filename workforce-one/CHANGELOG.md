@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.50
+New look, step 3: the Sign In / Out page. Signing in and out work exactly as before (same forms,
+location check, Face, QR, breaks; the attendance behaviour trace is identical to 3.31.47).
+
+### Changed
+- **Your picture in the middle**: your photo or avatar (or initials) inside a ring. Before Sign In
+  the ring shows how much of the Sign In window has passed; signed in, how much of the shift you
+  have worked; on a break it turns amber; signed out it is full. A small badge on the picture says
+  where you are (not signed in, signed in, on a break, signed out). Name, schedule (icon + word).
+- **The time**: before Sign In the site's current time (it keeps ticking, in the site's time zone,
+  not the phone's); then your Sign In or Sign Out time.
+- **One main button**: Sign In before, Sign Out after (the other form stays in the page, hidden,
+  exactly as the server would refuse it anyway); nothing after Sign Out. The window message
+  (available / not yet / no longer / signed in / signed out) sits under your name.
+- **Checks**: location needed or not, the Sign-in window (open until …, closed, or your result),
+  and Face check (optional, camera opens on Sign In, or set up your face first).
+- Breaks, Today's Record (a small timeline), QR Sign In, Presence Verification and Face Sign In
+  are cards in the same style; the location request and the Face / QR camera dialogs too.
+- No emoji on the page (the Face button no longer adds a camera emoji either).
+
 ## 3.31.49
 New look, step 2: the Home page (Dashboard). Same information, same links, nothing removed.
 

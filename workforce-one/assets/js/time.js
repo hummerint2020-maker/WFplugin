@@ -162,7 +162,21 @@
         modal.addEventListener('click', function (e) { if (e.target === modal) stop(); });
     }
 
+    /* ---- The clock at the top of the page: the site's time (not the device's), ticking ---- */
+    function initClock() {
+        var el = byId('wfo-clock-now');
+        if (!el || !el.dataset.siteTs) return;
+        var siteTs = parseInt(el.dataset.siteTs, 10) * 1000, loaded = Date.now();
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function tick() {
+            var d = new Date(siteTs + (Date.now() - loaded)), h = d.getUTCHours(), m = d.getUTCMinutes();
+            el.textContent = pad(h % 12 || 12) + ':' + pad(m) + ' ' + (h < 12 ? el.dataset.am : el.dataset.pm);
+        }
+        setInterval(tick, 15000);
+    }
+
     function init() {
+        initClock();
         initBreakTimer();
         initLocationGate();
         initQrSignIn();

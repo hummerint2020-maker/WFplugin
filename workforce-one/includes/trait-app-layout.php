@@ -92,6 +92,13 @@ trait EWS_App_Layout_Trait {
         return [$desktop,$mobile];
     }
 
+    /** The employee's photo or chosen avatar ('' = show initials). @param object|null $emp */
+    private function employee_picture_url($emp){
+        if($emp && ($emp->profile_image_type??'')==='photo' && !empty($emp->profile_image_url))return (string)$emp->profile_image_url;
+        if($emp && ($emp->profile_image_type??'')==='avatar' && !empty($emp->avatar_key))return (string)$this->profile_avatar_url($emp->avatar_key);
+        return '';
+    }
+
     /** Log out back to this page, which then confirms it ("You have been logged out"). */
     private function app_logout_url(){
         return wp_logout_url(add_query_arg('loggedout','1',get_permalink()?:home_url('/')));
@@ -100,9 +107,7 @@ trait EWS_App_Layout_Trait {
     private function layout($title,$body,$active='dashboard'){
         [$desktop,$mobile]=$this->app_navigation();
         $emp=$this->current_employee();
-        $picture='';
-        if($emp && ($emp->profile_image_type??'')==='photo' && !empty($emp->profile_image_url))$picture=(string)$emp->profile_image_url;
-        elseif($emp && ($emp->profile_image_type??'')==='avatar' && !empty($emp->avatar_key))$picture=$this->profile_avatar_url($emp->avatar_key);
+        $picture=$this->employee_picture_url($emp);
         $look=$this->appearance();
         $bar=\WorkforceOne\Ui\MobileBar::split($mobile);
         $clock=$bar['center']&&$emp?\WorkforceOne\Ui\MobileBar::clockState($this->today_events((int)$emp->id),true):'';
