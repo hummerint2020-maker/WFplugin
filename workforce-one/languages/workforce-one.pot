@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.49\n"
+"Project-Id-Version: Workforce One 3.31.50\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-05T19:48:49+00:00\n"
+"POT-Creation-Date: 2026-10-05T21:48:12+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -349,13 +349,13 @@ msgid "Cancel"
 msgstr ""
 
 #: includes/trait-frontend.php:108
-#: templates/app/leave.php:37
+#: templates/app/leave.php:44
 msgid "OK"
 msgstr ""
 
 #: includes/trait-frontend.php:109
 #: templates/app/layout.php:104
-#: templates/app/leave.php:37
+#: templates/app/leave.php:44
 #: templates/app/time.php:159
 #: templates/app/time.php:176
 msgid "Close"
@@ -470,7 +470,7 @@ msgid "Break Updated"
 msgstr ""
 
 #: includes/trait-frontend.php:139
-#: includes/trait-leave-view.php:100
+#: includes/trait-leave-view.php:101
 msgid "Overtime Requests are currently disabled."
 msgstr ""
 
@@ -667,7 +667,7 @@ msgid "Please select a future date for Early Leave."
 msgstr ""
 
 #: includes/trait-frontend.php:164
-#: templates/app/leave.php:40
+#: templates/app/leave.php:47
 msgid "Early Leave is available only on a configured working day."
 msgstr ""
 
@@ -676,12 +676,12 @@ msgid "Early Leave is available only on an Office workday. It cannot be requeste
 msgstr ""
 
 #: includes/trait-frontend.php:164
-#: templates/app/leave.php:41
+#: templates/app/leave.php:48
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr ""
 
 #: includes/trait-frontend.php:164
-#: templates/app/leave.php:42
+#: templates/app/leave.php:49
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr ""
 
@@ -694,7 +694,7 @@ msgid "This request can no longer be approved because the employee is no longer 
 msgstr ""
 
 #: includes/trait-frontend.php:165
-#: templates/app/leave.php:37
+#: templates/app/leave.php:44
 msgid "Early Leave Not Available"
 msgstr ""
 
@@ -702,54 +702,54 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:408
-#: templates/app/leave.php:107
-#: templates/app/leave.php:121
+#: includes/trait-frontend.php:411
+#: templates/app/leave.php:115
+#: templates/app/leave.php:129
 #: templates/app/overtime.php:79
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:408
+#: includes/trait-frontend.php:411
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:421
+#: includes/trait-frontend.php:424
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:421
+#: includes/trait-frontend.php:424
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1276,210 +1276,207 @@ msgstr ""
 msgid "Add to Home Screen"
 msgstr ""
 
-#: templates/app/leave.php:28
+#: templates/app/leave.php:30
 #: templates/app/overtime.php:78
 msgid "Reject"
 msgstr ""
 
-#: templates/app/leave.php:31
+#: templates/app/leave.php:33
 #: templates/app/overtime.php:73
 msgid "Level"
 msgstr ""
 
 #. translators: %s: number of days
-#: templates/app/leave.php:34
+#: templates/app/leave.php:36
 #, php-format
 msgid "%s day(s)"
 msgstr ""
 
-#: templates/app/leave.php:38
+#: templates/app/leave.php:45
 msgid "Please select a date for Early Leave."
 msgstr ""
 
-#: templates/app/leave.php:39
+#: templates/app/leave.php:46
 msgid "Early Leave must be requested for a future date."
 msgstr ""
 
-#: templates/app/leave.php:46
-msgid "TIME OFF"
-msgstr ""
-
-#: templates/app/leave.php:46
-msgid "Leave Management"
-msgstr ""
-
-#: templates/app/leave.php:46
+#: templates/app/leave.php:53
 msgid "Request time off, track your balance and follow approvals in one place. Leave Types marked “No balance deduction” are recorded without consuming leave balance."
 msgstr ""
 
-#: templates/app/leave.php:51
-#: templates/app/leave.php:79
+#: templates/app/leave.php:56
+msgid "Leave balance"
+msgstr ""
+
+#: templates/app/leave.php:57
+msgid "Available"
+msgstr ""
+
+#. translators: %s: available days
+#: templates/app/leave.php:57
+#: templates/app/leave.php:68
+msgid "No balance deduction"
+msgstr ""
+
+#: templates/app/leave.php:62
+#: templates/app/leave.php:87
 msgid "Request Leave"
 msgstr ""
 
-#: templates/app/leave.php:52
+#: templates/app/leave.php:63
 msgid "Select a Leave Type and future date range. Working days are calculated automatically."
 msgstr ""
 
-#: templates/app/leave.php:54
+#: templates/app/leave.php:65
 msgid "Leave Type"
 msgstr ""
 
 #. translators: %s: available days
-#: templates/app/leave.php:57
+#: templates/app/leave.php:68
 #, php-format
 msgid "Available: %s"
 msgstr ""
 
-#. translators: %s: available days
-#: templates/app/leave.php:57
-msgid "No balance deduction"
-msgstr ""
-
-#: templates/app/leave.php:61
+#: templates/app/leave.php:72
 #: templates/app/overtime.php:44
 msgid "From"
 msgstr ""
 
-#: templates/app/leave.php:62
+#: templates/app/leave.php:73
 #: templates/app/overtime.php:45
 msgid "To"
 msgstr ""
 
 #. translators: %d: number of working days
-#: templates/app/leave.php:65
+#: templates/app/leave.php:76
 msgid "Select a valid date range."
 msgstr ""
 
 #. translators: %d: number of working days
-#: templates/app/leave.php:65
+#: templates/app/leave.php:76
 #, php-format
 msgid "%d working day(s) requested."
 msgstr ""
 
 #. translators: %d: number of working days
-#: templates/app/leave.php:65
+#: templates/app/leave.php:76
 msgid "Select dates to calculate working days."
 msgstr ""
 
-#: templates/app/leave.php:66
-#: templates/app/leave.php:136
+#: templates/app/leave.php:77
+#: templates/app/leave.php:144
 #: templates/app/overtime.php:48
 msgid "Reason"
 msgstr ""
 
-#: templates/app/leave.php:66
+#: templates/app/leave.php:77
 msgid "(optional)"
 msgstr ""
 
-#: templates/app/leave.php:67
+#: templates/app/leave.php:78
 msgid "Submit Leave Request"
 msgstr ""
 
-#: templates/app/leave.php:70
-msgid "Available"
-msgstr ""
-
-#: templates/app/leave.php:75
+#: templates/app/leave.php:83
 msgid "My Leave Requests"
 msgstr ""
 
-#: templates/app/leave.php:76
+#: templates/app/leave.php:84
 msgid "Back to recent requests"
 msgstr ""
 
-#: templates/app/leave.php:79
+#: templates/app/leave.php:87
 msgid "No Leave Requests Yet"
 msgstr ""
 
-#: templates/app/leave.php:79
+#: templates/app/leave.php:87
 msgid "You haven't submitted any leave requests yet."
 msgstr ""
 
 #. translators: %s: number of working days
-#: templates/app/leave.php:84
+#: templates/app/leave.php:92
 #, php-format
 msgid "%s working day(s)"
 msgstr ""
 
-#: templates/app/leave.php:85
+#: templates/app/leave.php:93
 msgid "Cancellation Pending"
 msgstr ""
 
-#: templates/app/leave.php:86
+#: templates/app/leave.php:94
 msgid "Cancellation Rejected — cannot be submitted again."
 msgstr ""
 
-#: templates/app/leave.php:87
+#: templates/app/leave.php:95
 msgid "Request Cancellation"
 msgstr ""
 
-#: templates/app/leave.php:88
+#: templates/app/leave.php:96
 msgid "Cancellation unavailable — leave has started."
 msgstr ""
 
-#: templates/app/leave.php:93
+#: templates/app/leave.php:101
 msgid "View all leave requests"
 msgstr ""
 
-#: templates/app/leave.php:100
+#: templates/app/leave.php:108
 msgid "Leave Requests Awaiting Your Approval"
 msgstr ""
 
-#: templates/app/leave.php:100
+#: templates/app/leave.php:108
 msgid "Pending Leave Requests"
 msgstr ""
 
-#: templates/app/leave.php:101
+#: templates/app/leave.php:109
 msgid "No Pending Leave Requests"
 msgstr ""
 
-#: templates/app/leave.php:101
-#: templates/app/leave.php:115
+#: templates/app/leave.php:109
+#: templates/app/leave.php:123
 #: templates/app/overtime.php:72
 msgid "You're all caught up."
 msgstr ""
 
-#: templates/app/leave.php:106
-#: templates/app/leave.php:149
+#: templates/app/leave.php:114
+#: templates/app/leave.php:157
 #: templates/app/overtime.php:78
 msgid "Approve"
 msgstr ""
 
-#: templates/app/leave.php:114
+#: templates/app/leave.php:122
 msgid "Leave Cancellations Awaiting Your Approval"
 msgstr ""
 
-#: templates/app/leave.php:114
+#: templates/app/leave.php:122
 msgid "Cancellation Requests"
 msgstr ""
 
-#: templates/app/leave.php:115
+#: templates/app/leave.php:123
 msgid "No Cancellation Requests"
 msgstr ""
 
-#: templates/app/leave.php:120
+#: templates/app/leave.php:128
 msgid "Approve Cancellation"
 msgstr ""
 
-#: templates/app/leave.php:128
+#: templates/app/leave.php:136
 msgid "Early Leave"
 msgstr ""
 
-#: templates/app/leave.php:133
+#: templates/app/leave.php:141
 #: templates/app/overtime.php:43
 msgid "Date"
 msgstr ""
 
-#: templates/app/leave.php:134
+#: templates/app/leave.php:142
 msgid "Duration (minutes)"
 msgstr ""
 
-#: templates/app/leave.php:137
+#: templates/app/leave.php:145
 msgid "Request Early Leave"
 msgstr ""
 
-#: templates/app/leave.php:144
+#: templates/app/leave.php:152
 msgid "Pending Early Leave"
 msgstr ""
 

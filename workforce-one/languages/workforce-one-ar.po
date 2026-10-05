@@ -1975,3 +1975,7 @@ msgstr "سجّل وجهك أولًا"
 #. translators: %s: sign-in cutoff time
 msgid "Open until %s"
 msgstr "مفتوحة حتى %s"
+
+#: templates/app/leave.php
+msgid "Leave balance"
+msgstr "رصيد الإجازات"

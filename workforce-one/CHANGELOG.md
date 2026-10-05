@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.31.51
+New look, step 4: the Leave page. Requesting, cancelling and approving leave and Early Leave work
+exactly as before (same forms and fields; the leave tests pass unchanged: 77 + 17 + 26).
+
+### Changed
+- **Balances first**: one card per leave type with the days available (or "No balance deduction").
+- **Request Leave** and **My Leave Requests** side by side on wide screens, stacked on phones;
+  the form has larger fields, the live working-day count and one main button.
+- Each request shows the leave type, dates as "25 Oct – 27 Oct 2026", working days and reason, and
+  its status as an icon + word (Approved, Pending, Rejected, Cancelled); cancellation notes and the
+  Request Cancellation button keep their rules.
+- Managers' lists (leave approvals, cancellations, pending Early Leave) use the same rows with
+  Approve / Reject buttons; Early Leave is a card in the same style.
+- The page's own header card was removed (the app header already says Leave).
+
 ## 3.31.50
 New look, step 3: the Sign In / Out page. Signing in and out work exactly as before (same forms,
 location check, Face, QR, breaks; the attendance behaviour trace is identical to 3.31.47).

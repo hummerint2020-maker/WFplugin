@@ -19,4 +19,5 @@ npx rtlcss@4 assets/css/app-shell.css assets/css/app-shell-rtl.css
 npx rtlcss@4 assets/css/admin-appearance.css assets/css/admin-appearance-rtl.css
 npx rtlcss@4 assets/css/app-home.css assets/css/app-home-rtl.css
 npx rtlcss@4 assets/css/app-time.css assets/css/app-time-rtl.css
+npx rtlcss@4 assets/css/app-leave.css assets/css/app-leave-rtl.css
 ```
