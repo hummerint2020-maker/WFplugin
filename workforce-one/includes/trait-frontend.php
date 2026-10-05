@@ -209,6 +209,10 @@ trait EWS_Frontend_Trait {
             wp_enqueue_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
             // assets/css/*-rtl.css are generated with rtlcss from the LTR files (see assets/css/README.md).
             wp_style_add_data('workforce-one', 'rtl', 'replace');
+            // The app frame (templates/app/layout.php) and the theme from wp-admin → Appearance.
+            wp_enqueue_style('workforce-one-shell', $root.'assets/css/app-shell.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-shell', 'rtl', 'replace');
+            wp_add_inline_style('workforce-one-shell', $this->appearance_css());
             wp_enqueue_script('workforce-one', $root.'assets/js/workforce-one.js', ['wp-i18n'], $ver, true);
             wp_set_script_translations('workforce-one', 'workforce-one', dirname(__DIR__).'/languages');
             wp_add_inline_script('workforce-one','window.ewsConfirmationConfig='.wp_json_encode($this->frontend_confirmation_config()).';','before');

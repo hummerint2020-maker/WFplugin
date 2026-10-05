@@ -100,8 +100,15 @@ trait EWS_App_Layout_Trait {
         $picture='';
         if($emp && ($emp->profile_image_type??'')==='photo' && !empty($emp->profile_image_url))$picture=(string)$emp->profile_image_url;
         elseif($emp && ($emp->profile_image_type??'')==='avatar' && !empty($emp->avatar_key))$picture=$this->profile_avatar_url($emp->avatar_key);
+        $look=$this->appearance();
+        $bar=\WorkforceOne\Ui\MobileBar::split($mobile);
+        $clock=$bar['center']&&$emp?\WorkforceOne\Ui\MobileBar::clockState($this->today_events((int)$emp->id),true):'';
         return $this->render_template('app/layout',[
-            'title'=>$title,'body'=>$body,'active'=>$active,'desktop_items'=>$desktop,'mobile_items'=>$mobile,
+            'title'=>$title,'body'=>$body,'active'=>$active,'desktop_items'=>$desktop,'mobile_items'=>$mobile,'bar'=>$bar,'clock_state'=>$clock,
+            // The built-in tagline is translated; one typed in Appearance is shown as entered.
+            'company_name'=>$look['company_name'],'app_name'=>$look['app_name'],'logo_url'=>$look['logo_url'],
+            'tagline'=>$look['tagline']===\WorkforceOne\Settings\Appearance::DEFAULTS['tagline']?__('One Platform. One Team. One Goal.','workforce-one'):$look['tagline'],
+            'user_name'=>$emp?(string)$emp->name:wp_get_current_user()->display_name,
             'notice_html'=>$this->ux_notice_from_query(),'bell_html'=>$this->notification_bell(),
             'picture'=>$picture,'initials'=>($emp?ProfileSummary::initials((string)$emp->name):'')?:'ME',
             'home_url'=>$this->app_view_url('dashboard'),'profile_url'=>$this->app_view_url('profile'),'logout_url'=>$this->app_logout_url(),

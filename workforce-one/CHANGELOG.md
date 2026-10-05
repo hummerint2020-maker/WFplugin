@@ -1,5 +1,36 @@
 # Changelog
 
+## 3.31.48
+New look, step 1: the app frame and the theme. Every page keeps what it does (same forms, links,
+permissions and results); pages themselves are redesigned in the next steps.
+
+### Added
+- **wp-admin → Workforce One → Appearance** (needs Manage settings): company name, app name,
+  tagline and logo; four ready themes (Indigo Night, Nile Teal, Royal Blue, Sunset) or your own
+  four colours (header start / end, highlight, main colour); gradient or solid header; font
+  (Alexandria, Cairo, IBM Plex Sans Arabic, Tajawal, or the device font); corners (sharp, soft,
+  round). A live preview follows every change. Colours that would make text hard to read (WCAG
+  contrast below 4.5 : 1) are refused and the previous colour kept, with a message saying why.
+  Restore the built-in look at any time. Saves and resets are in the Audit Log; the setting is in
+  Settings Overview and its export.
+- **Fonts are part of the plugin** (`assets/fonts/`, SIL Open Font License); the app never loads
+  fonts from Google or any other site.
+
+### Changed
+- **App frame**: on desktop a narrow menu rail with line icons; a coloured header with the page
+  title, the bell and your picture. On phones a new bottom bar: Sign In / Out is the big middle
+  button, with a dot showing whether you are signed in (green), not yet (amber) or signed out;
+  the active page is highlighted; items that do not fit, My Profile and Log out are in a **More**
+  sheet. Which items appear, their names and order still come from View Navigation.
+- Menu, bell and profile-menu icons are SVG instead of emoji.
+- Buttons and accents on the older pages follow the theme colour.
+- The phone's "Add to Home Screen" hint (previously never shown) is in the More sheet, and hidden
+  once the app is installed.
+
+### Not changed
+Page content, forms, field names, links, permissions, notifications and every action. The
+Sign In / Out page, reports and wp-admin pages work as in 3.31.47.
+
 ## 3.31.47
 API Phase 0B: sign-in for the future Android / iOS apps. Nothing changes for the Web app or
 wp-admin: they keep the WordPress login. No attendance, schedule or other data endpoints yet.

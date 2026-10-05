@@ -1894,3 +1894,19 @@ msgstr "ليست لديك صلاحية الوصول إلى هذا."
 #: includes/trait-api-auth.php
 msgid "Something went wrong. Please try again."
 msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+
+#: templates/app/layout.php
+msgid "signed in"
+msgstr "تم تسجيل الحضور"
+
+#: templates/app/layout.php
+msgid "not signed in yet"
+msgstr "لم يتم تسجيل الحضور بعد"
+
+#: templates/app/layout.php
+msgid "signed out"
+msgstr "تم تسجيل الانصراف"
+
+#: templates/app/layout.php
+msgid "More"
+msgstr "المزيد"

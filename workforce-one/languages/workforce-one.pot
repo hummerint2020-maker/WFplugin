@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-04T18:49:27+00:00\n"
+"POT-Creation-Date: 2026-10-05T16:05:58+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -154,7 +154,8 @@ msgid "Notifications"
 msgstr ""
 
 #: includes/trait-app-layout.php:61
-#: templates/app/layout.php:52
+#: templates/app/layout.php:66
+#: templates/app/layout.php:95
 msgid "My Profile"
 msgstr ""
 
@@ -177,6 +178,10 @@ msgstr ""
 #: templates/app/dashboard.php:114
 #: templates/app/dashboard.php:139
 msgid "Sign In / Out"
+msgstr ""
+
+#: includes/trait-app-layout.php:110
+msgid "One Platform. One Team. One Goal."
 msgstr ""
 
 #: includes/trait-attendance-insights.php:150
@@ -342,6 +347,7 @@ msgid "OK"
 msgstr ""
 
 #: includes/trait-frontend.php:109
+#: templates/app/layout.php:98
 #: templates/app/leave.php:37
 msgid "Close"
 msgstr ""
@@ -687,54 +693,54 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 #: templates/app/leave.php:107
 #: templates/app/leave.php:121
 #: templates/app/overtime.php:79
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:396
+#: includes/trait-frontend.php:400
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:402
+#: includes/trait-frontend.php:406
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:402
+#: includes/trait-frontend.php:406
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:409
+#: includes/trait-frontend.php:413
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:409
+#: includes/trait-frontend.php:413
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1225,40 +1231,52 @@ msgstr ""
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr ""
 
-#: templates/app/layout.php:23
+#: templates/app/layout.php:35
+msgid "signed in"
+msgstr ""
+
+#: templates/app/layout.php:35
+msgid "not signed in yet"
+msgstr ""
+
+#: templates/app/layout.php:35
+msgid "signed out"
+msgstr ""
+
+#: templates/app/layout.php:43
+#: templates/app/layout.php:76
 msgid "Workforce One navigation"
 msgstr ""
 
-#: templates/app/layout.php:33
-#: templates/app/layout.php:53
+#. translators: %s: "Add to Home Screen"
+#: templates/app/layout.php:50
+#: templates/app/layout.php:67
+#: templates/app/layout.php:107
 msgid "Log out"
 msgstr ""
 
-#: templates/app/layout.php:38
+#: templates/app/layout.php:62
+msgid "My Profile menu"
+msgstr ""
+
+#: templates/app/layout.php:85
+#: templates/app/layout.php:92
+msgid "More"
+msgstr ""
+
+#: templates/app/layout.php:106
 msgid "Mobile shortcut:"
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: templates/app/layout.php:38
+#: templates/app/layout.php:106
 #, php-format
 msgid "Use your browser menu → %s to keep Workforce One one tap away."
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
-#: templates/app/layout.php:38
+#: templates/app/layout.php:106
 msgid "Add to Home Screen"
-msgstr ""
-
-#: templates/app/layout.php:43
-msgid "Workforce Management Platform"
-msgstr ""
-
-#: templates/app/layout.php:43
-msgid "One Platform. One Team. One Goal."
-msgstr ""
-
-#: templates/app/layout.php:48
-msgid "My Profile menu"
 msgstr ""
 
 #: templates/app/leave.php:28

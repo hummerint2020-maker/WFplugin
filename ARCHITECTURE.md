@@ -43,6 +43,8 @@ workforce-one/
     Settings/NotificationSettings.php retention, VAPID subject, policy
     Notifications/PushEndpoint.php    which Web Push endpoints may be contacted (public HTTPS only; SSRF guard)
     Settings/Navigation.php, Moments.php, SmartNudges.php, EngagementHooks.php   engagement settings
+    Settings/Appearance.php           the app's look (wp-admin → Appearance): themes, colours with contrast checks, fonts, corners → CSS variables
+    Ui/Icons.php, Ui/MobileBar.php    the app's SVG line icons; the phone's bottom bar (Sign In / Out in the middle, the rest under More)
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
     Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
     Payroll/PayCalculator.php, PayRules.php, Hooks.php  a month's pay from attendance and adjustments; salary, rules and adjustment forms
@@ -65,6 +67,7 @@ workforce-one/
     trait-face.php            Face Sign In templates and tokens
     trait-permissions.php     capabilities, roles, can()
     trait-profile-account.php avatar, password, profile photo, profile settings
+    trait-appearance.php      wp-admin Appearance page and the theme CSS of the app
   templates/app/*.php             page HTML; receives prepared variables only
   templates/admin/*.php           wp-admin page HTML (same rule)
   assets/js/*.js, assets/css/*    page scripts/styles, enqueued by the view that needs them
@@ -153,3 +156,14 @@ wp-admin, admin-post.php, /wp/v2 or other plugins. `api_revoke_user_sessions()` 
 of a user (password change, deleted user, archived employee) and is what a future "Sign out all
 devices" will call.
 
+
+## The new look (3.31.48 onward)
+
+The employee app is being redesigned page by page without changing what any page does. Step 1 is
+the frame (`templates/app/layout.php`, `assets/css/app-shell.css`) and the theme: every colour,
+the font and the corner radius are CSS custom properties (`--wfo-*`) written from wp-admin →
+Appearance (`Settings\Appearance::cssVars()`), and the older pages' `--purple` / `--blue` follow
+the theme too. Fonts are bundled in `assets/fonts/` (OFL; nothing is loaded from other sites).
+Rules for redesigned pages: keep every form field name, nonce, URL, element id and class that a
+script or test uses; style new markup with `wfo-` classes and the `--wfo-*` variables; icons
+come from `Ui\Icons` (no emoji); and status always has an icon and a word, never colour alone.

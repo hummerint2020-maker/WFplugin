@@ -55,6 +55,11 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-settings-overview', $this->plugin_url('assets/css/admin-settings-overview.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-settings-overview', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-appearance'))==='ews31-appearance'){
+            wp_enqueue_style('workforce-one-admin-appearance', $this->plugin_url('assets/css/admin-appearance.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-appearance', 'rtl', 'replace');
+            wp_enqueue_script('workforce-one-admin-appearance', $this->plugin_url('assets/js/admin-appearance.js'), [], EWS_VERSION, true);
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-attendance-insights'))==='ews31-attendance-insights'){
             wp_enqueue_style('workforce-one-admin-attendance-insights', $this->plugin_url('assets/css/admin-attendance-insights.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-attendance-insights', 'rtl', 'replace');
@@ -100,6 +105,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Audit Log','Audit Log','ews_view_audit_log','ews31-audit',[$this,'admin_audit']);
             add_submenu_page('ews31','Employee Profile','Employee Profile','ews_manage_settings','ews31-employee-profile-settings',[$this,'admin_employee_profile_settings']);
             add_submenu_page('ews31','View Navigation','View Navigation','ews_manage_settings','ews31-navigation',[$this,'admin_navigation']);
+            add_submenu_page('ews31','Appearance','Appearance','ews_manage_settings','ews31-appearance',[$this,'admin_appearance']);
             add_submenu_page('ews31','Approval Workflows','Approval Workflows','manage_options','ews31-approvals',[$this,'admin_approval_workflows']);
             add_submenu_page('ews31','Settings Overview','Settings Overview','manage_options','ews31-settings-overview',[$this,'admin_settings_overview']);
             // Keep Employee Profile registered so direct URLs remain authorized (removing the

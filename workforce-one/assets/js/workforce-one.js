@@ -453,7 +453,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
 })();
 })();
 
-/* App frame (templates/app/layout.php): the profile menu, and inline notices that fade out after 3 s. */
+/* App frame (templates/app/layout.php): the profile menu, the phone's "More" sheet, and inline notices that fade out after 3 s. */
 (function(){
     function initEwsAppFrame(){
         var trigger=document.querySelector(".ews-profile-menu-trigger");
@@ -468,6 +468,18 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
             document.addEventListener("click",function(e){
                 if(!e.target.closest(".ews-profile-menu")){trigger.setAttribute("aria-expanded","false");menu.hidden=true;}
             });
+        }
+        var more=document.getElementById("wfo-more"),moreBtn=document.querySelector("[data-wfo-more-open]");
+        if(more && moreBtn && typeof more.showModal==="function"){
+            moreBtn.addEventListener("click",function(){more.showModal();moreBtn.setAttribute("aria-expanded","true");});
+            more.addEventListener("close",function(){moreBtn.setAttribute("aria-expanded","false");moreBtn.focus();});
+            more.querySelectorAll("[data-wfo-more-close]").forEach(function(b){b.addEventListener("click",function(){more.close();});});
+            // A tap on the dimmed backdrop (outside the sheet) closes it.
+            more.addEventListener("click",function(e){if(e.target===more)more.close();});
+        }else if(more && moreBtn){
+            // No <dialog> support: show the sheet's content in place.
+            moreBtn.addEventListener("click",function(){var open=more.hasAttribute("open");if(open)more.removeAttribute("open");else more.setAttribute("open","");});
+            more.querySelectorAll("[data-wfo-more-close]").forEach(function(b){b.addEventListener("click",function(){more.removeAttribute("open");});});
         }
         document.querySelectorAll(".ews-main .ews-notice,.ews-main .ews-time-success,.ews-main .ews-time-error,.ews-main .ews-profile-notice").forEach(function(el){
             setTimeout(function(){

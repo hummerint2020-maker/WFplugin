@@ -784,7 +784,7 @@ trait EWS_Notifications_Trait {
         }
         return '<div class="ews-notification-bell-wrap">'
             .'<button type="button" class="ews-notification-bell" aria-label="'.esc_attr__('Notifications','workforce-one').'" title="'.esc_attr__('Notifications','workforce-one').'" aria-expanded="false" aria-controls="ews-notification-dropdown">'
-            .'<span class="ews-bell-icon" aria-hidden="true">🔔</span>'.($count?'<span class="ews-bell-count">'.$count.'</span>':'').'</button>'
+            .'<span class="ews-bell-icon" aria-hidden="true">'.\WorkforceOne\Ui\Icons::svg('bell',20).'</span>'.($count?'<span class="ews-bell-count">'.$count.'</span>':'').'</button>'
             .'<div id="ews-notification-dropdown" class="ews-notification-dropdown" hidden>'
             .'<div class="ews-bell-head"><strong>'.esc_html__('Notifications','workforce-one').'</strong>'.($count?'<span>'.esc_html(sprintf(/* translators: %d: unread count */_n('%d unread','%d unread',$count,'workforce-one'),$count)).'</span>':'<span>'.esc_html__('All caught up','workforce-one').'</span>').'</div>'
             .'<div class="ews-bell-list">'.$items.'</div>'

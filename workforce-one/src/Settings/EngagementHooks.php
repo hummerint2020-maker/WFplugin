@@ -3,7 +3,7 @@ namespace WorkforceOne\Settings;
 
 if (!defined('ABSPATH')) exit;
 
-/** admin-post actions of the engagement settings pages (existing action names unchanged). */
+/** admin-post actions of the engagement settings pages and Appearance (existing action names unchanged). */
 final class EngagementHooks
 {
     /** @param object $plugin The plugin instance that implements the handlers. */
@@ -15,6 +15,8 @@ final class EngagementHooks
         add_action('admin_post_ews31_profile_settings_save', [$plugin, 'profile_settings_save']);
         add_action('admin_post_ews31_navigation_save', [$plugin, 'navigation_save']);
         add_action('admin_post_ews31_navigation_reset', [$plugin, 'navigation_reset']);
+        add_action('admin_post_ews31_appearance_save', [$plugin, 'appearance_save']);
+        add_action('admin_post_ews31_appearance_reset', [$plugin, 'appearance_reset']);
         add_action('admin_post_ews31_kudos_delete', [$plugin, 'kudos_delete']);
     }
 }

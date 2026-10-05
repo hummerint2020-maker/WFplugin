@@ -151,6 +151,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
       - name: App frame, navigation and login (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_layout.py "$S"
+      - name: Appearance (theme) and the app frame's phone bar
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_appearance.py "$S"
       - name: Reports (employee app) and exports
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports.py "$S"
       - name: Reports phase 2 (overtime, leave, trend, saved views)
@@ -215,6 +217,7 @@ jobs:
           curl -s -b /tmp/cj 'http://127.0.0.1:8080/app/?ews_view=time' > /tmp/time_ar.html
           grep -q 'dir="rtl"' /tmp/time_ar.html
           grep -q 'workforce-one-rtl.css' /tmp/time_ar.html
+          grep -q 'app-shell-rtl.css' /tmp/time_ar.html
           grep -q 'تسجيل الحضور' /tmp/time_ar.html
           wp site switch-language en_US --path="$WP"
       - name: Uninstall keeps data unless opted in

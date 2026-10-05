@@ -26,7 +26,7 @@ def seed():
 def nav(page):
     """Desktop navigation: [(label, view, active)]."""
     side = page.split('<nav class="ews-nav">')[-1].split('</nav>')[0]
-    return [(re.sub(r'^\S+\s', '', html_text(m.group(3))), m.group(2), m.group(1) == 'active') for m in re.finditer(r'<a class="(active)?" href="[^"]*ews_view=([a-z-]+)[^"]*">([^<]*)</a>', side)]
+    return [(html_text(m.group(3)), m.group(2), m.group(1) == 'active') for m in re.finditer(r'<a class="(active)?" href="[^"]*ews_view=([a-z-]+)[^"]*"[^>]*>.*?<span class="wfo-rail-label">([^<]*)</span></a>', side)]
 
 
 def html_text(s):

@@ -119,6 +119,9 @@ trait EWS_Settings_Overview_Trait {
                 case 'ews_frontend_navigation':
                     $nav=Navigation::config($raw);
                     return [$nav!=Navigation::config([]),''];
+                case 'ews_appearance':
+                    $a=\WorkforceOne\Settings\Appearance::config($raw);
+                    return [is_array($raw)&&$a!=\WorkforceOne\Settings\Appearance::config([]),(\WorkforceOne\Settings\Appearance::PRESETS[$a['preset']]['label']??'Custom colours').', '.\WorkforceOne\Settings\Appearance::FONTS[$a['font']]['label']];
                 case 'ews_employee_profile_settings':
                     return [Options::differsFrom($raw,$this->employee_profile_defaults()),''];
                 case 'ews_smart_nudges':
