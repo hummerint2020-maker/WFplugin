@@ -1979,3 +1979,99 @@ msgstr "مفتوحة حتى %s"
 #: templates/app/leave.php
 msgid "Leave balance"
 msgstr "رصيد الإجازات"
+
+msgid "My Pay"
+msgstr "راتبي"
+
+msgid "Absent"
+msgstr "غائب"
+
+msgid "This week"
+msgstr "هذا الأسبوع"
+
+msgid "Next week"
+msgstr "الأسبوع القادم"
+
+msgid "Previous week"
+msgstr "الأسبوع السابق"
+
+msgid "Schedule emails sent:"
+msgstr "رسائل الجدول المرسلة:"
+
+msgid "skipped:"
+msgstr "تم تخطيها:"
+
+msgid "failed:"
+msgstr "فشلت:"
+
+msgid "View Week"
+msgstr "عرض الأسبوع"
+
+msgid "Send each active employee their own schedule for this week?"
+msgstr "هل تريد إرسال جدول هذا الأسبوع لكل موظف نشط؟"
+
+msgid "Send schedules"
+msgstr "إرسال الجداول"
+
+msgid "My week"
+msgstr "أسبوعي"
+
+msgid "Team Schedule"
+msgstr "جدول الفريق"
+
+msgid "Everyone can view the team's schedule to coordinate coverage and arrange swaps with colleagues."
+msgstr "يمكن للجميع رؤية جدول الفريق لتنسيق التغطية وترتيب التبديل مع الزملاء."
+
+msgid "Employee"
+msgstr "الموظف"
+
+msgid "No employees found"
+msgstr "لا يوجد موظفون"
+
+msgid "There are no active employees to display."
+msgstr "لا يوجد موظفون نشطون لعرضهم."
+
+msgid "You"
+msgstr "أنت"
+
+msgid "Manager"
+msgstr "المدير"
+
+msgid "No Team"
+msgstr "بدون فريق"
+
+msgid "Need to swap a day?"
+msgstr "تحتاج تبديل يوم؟"
+
+msgid "Choose a colleague and request a direct schedule swap. No approval is required."
+msgstr "اختر زميلًا واطلب تبديل الجدول مباشرة. لا يحتاج إلى موافقة."
+
+msgid "Request Swap"
+msgstr "طلب تبديل"
+
+msgid "Swap with"
+msgstr "التبديل مع"
+
+msgid "Select colleague"
+msgstr "اختر زميلًا"
+
+msgid "Send Request"
+msgstr "إرسال الطلب"
+
+msgid "You have no Office or WFH days left this week to swap."
+msgstr "لا توجد لديك أيام مكتب أو عمل من المنزل متبقية هذا الأسبوع للتبديل."
+
+msgid "Swap Requests"
+msgstr "طلبات التبديل"
+
+msgid "Asked you"
+msgstr "طلب منك"
+
+msgid "You asked"
+msgstr "طلبت أنت"
+
+msgid "Accept"
+msgstr "قبول"
+
+msgid "Use this shared schedule to find a colleague with a compatible day. You can request a swap directly from this page."
+msgstr "استخدم هذا الجدول المشترك لإيجاد زميل بيوم مناسب، ويمكنك طلب التبديل مباشرة من هذه الصفحة."

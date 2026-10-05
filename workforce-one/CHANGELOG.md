@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.52
+New look, step 5: the Schedule page. The team schedule, week switching, PDF / WhatsApp / Send
+schedules, and swap requests (send, accept, reject, cancel) work exactly as before (same forms and
+fields; the schedule and swap tests pass unchanged: 13 + 26, plus 6 new checks).
+
+### Changed
+- **Week switcher** as one card (arrows, "This week", the dates), with the date picker and the
+  PDF / WhatsApp / Send schedules buttons beside it (two rows on phones).
+- **My week**: a new strip with your seven days, each with an icon and the word (Office, WFH, …);
+  today is outlined.
+- **Team table**: each person with their picture or avatar (or initials), team name and the
+  You / Manager badges; every day is a status chip with an icon + word (no emoji); today's column is
+  highlighted; the names column stays in place while the days scroll sideways on a phone.
+- **Swap panel**: requests show who asked whom, the day and the two statuses being traded, with
+  Accept / Reject / Cancel buttons and a status chip (Pending, Accepted, Rejected, Cancelled).
+- The Schedule page texts are now translatable (Arabic added).
+
+### Fixed
+- On themes that limit page content to a narrow column (block themes such as Twenty Twenty-Five,
+  ~645px), the app was squeezed on desktop; it now uses up to 1440px.
+
 ## 3.31.51
 New look, step 4: the Leave page. Requesting, cancelling and approving leave and Early Leave work
 exactly as before (same forms and fields; the leave tests pass unchanged: 77 + 17 + 26).

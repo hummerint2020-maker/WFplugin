@@ -22,13 +22,6 @@
 .wfo-link:hover{text-decoration:underline}
 
 /* status chips: icon + word, never colour alone */
-.wfo-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap;background:#EEF0F5;color:#3B4466}
-.wfo-chip.is-office{background:#E6F7EF;color:#0F6B43}
-.wfo-chip.is-wfh{background:#E7EEFF;color:#1F4FB8}
-.wfo-chip.is-leave{background:#F1EAFF;color:#5B34B5}
-.wfo-chip.is-away{background:#FFF2DE;color:#8A4F00}
-.wfo-chip.is-absent{background:#FFE8EC;color:#A51D3E}
-.wfo-chip.is-off,.wfo-chip.is-none{background:#EEF0F5;color:#3B4466}
 
 .wfo-home-holiday{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--wfo-r-ctl);background:#FFF2DE;color:#6B3E00;font-size:14px;box-shadow:var(--wfo-shadow)}
 

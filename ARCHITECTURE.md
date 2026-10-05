@@ -167,3 +167,8 @@ the theme too. Fonts are bundled in `assets/fonts/` (OFL; nothing is loaded from
 Rules for redesigned pages: keep every form field name, nonce, URL, element id and class that a
 script or test uses; style new markup with `wfo-` classes and the `--wfo-*` variables; icons
 come from `Ui\Icons` (no emoji); and status always has an icon and a word, never colour alone.
+Each redesigned page has its own stylesheet (`assets/css/app-<page>.css` + generated `-rtl.css`),
+registered in `enqueue_frontend_assets()` and loaded in `<head>` for its `ews_view`: Home
+(`app-home.css`), Sign In / Out (`app-time.css`), Leave (`app-leave.css`) and Schedule
+(`app-schedule.css`). Shared pieces live in `app-shell.css` (status chips `.wfo-chip.is-<tone>`
+with `Icons::forStatus()`).

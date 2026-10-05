@@ -12,7 +12,9 @@
     --wfo-bg:#F3F4FA;--wfo-surface:#FFFFFF;--wfo-ink:#141A33;--wfo-muted:#6A7090;--wfo-line:#E8E9F2;
     --wfo-shadow:0 8px 24px rgba(19,35,91,.08);
     --bg:var(--wfo-bg);
-    font-family:var(--wfo-font);color:var(--wfo-ink);background:var(--wfo-bg);border-radius:var(--wfo-r-card)
+    font-family:var(--wfo-font);color:var(--wfo-ink);background:var(--wfo-bg);border-radius:var(--wfo-r-card);
+    /* block themes cap page content at their content width (~645px); the app needs the room */
+    max-width:min(1440px,100%);margin-inline:auto;box-sizing:border-box
 }
 .wfo-app .screen-reader-text{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .wfo-app .wfo-icon{flex:0 0 auto;display:block}
@@ -78,6 +80,15 @@
 .wfo-more::backdrop{background:rgba(11,14,31,.5)}
 .wfo-more-sheet{width:100%;max-height:86vh;overflow:auto;box-sizing:border-box;background:var(--wfo-surface);border-radius:28px 28px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:wfo-sheet-up .22s ease-out}
 @keyframes wfo-sheet-up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+/* status chips (icon + word, never colour alone): Home, Schedule */
+.wfo-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap;background:#EEF0F5;color:#3B4466}
+.wfo-chip.is-office{background:#E6F7EF;color:#0F6B43}
+.wfo-chip.is-wfh{background:#E7EEFF;color:#1F4FB8}
+.wfo-chip.is-leave{background:#F1EAFF;color:#5B34B5}
+.wfo-chip.is-away{background:#FFF2DE;color:#8A4F00}
+.wfo-chip.is-absent{background:#FFE8EC;color:#A51D3E}
+.wfo-chip.is-off,.wfo-chip.is-none{background:#EEF0F5;color:#3B4466}
+
 @media (prefers-reduced-motion:reduce){.wfo-more-sheet{animation:none}}
 .wfo-more-handle{width:40px;height:5px;border-radius:999px;background:var(--wfo-line);align-self:center}
 .wfo-more-head{display:flex;align-items:center;gap:8px}

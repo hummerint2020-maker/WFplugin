@@ -42,11 +42,15 @@ trait EWS_Schedule_View_Trait {
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE work_date IN ($ph)",...$dates)) as $r)$map[(int)$r->employee_id][$r->work_date]=$r->status;
         $company_leave=$this->company_leave_dates($dates[0],$week_end);
 
-        $cells=[];
-        foreach($emps as $e)foreach($dates as $d)$cells[(int)$e->id][$d]=$this->status_html(isset($company_leave[$d])?'General Leave':($map[(int)$e->id][$d]??'Not Set'));
-        $legend='';
-        foreach($this->schedule_types_config(true) as $stype)$legend.=$this->status_html($stype['name']);
-        foreach(['General Leave','Absent','Not Set'] as $extra)$legend.=$this->status_html($extra);
+        $cells=[];$people=[];
+        foreach($emps as $e){
+            foreach($dates as $d)$cells[(int)$e->id][$d]=isset($company_leave[$d])?'General Leave':($map[(int)$e->id][$d]??'Not Set');
+            $people[(int)$e->id]=['picture'=>$this->employee_picture_url($e),'initials'=>\WorkforceOne\Employees\ProfileSummary::initials((string)$e->name)?:'·'];
+        }
+        $legend=[];
+        foreach($this->schedule_types_config(true) as $stype)$legend[]=(string)$stype['name'];
+        foreach(['General Leave','Absent','Not Set'] as $extra)$legend[]=$extra;
+        $legend=array_values(array_unique($legend));
 
         // Days I can offer: my Office/WFH days from today on that are not a company holiday.
         $swap_days=[];
@@ -59,8 +63,9 @@ trait EWS_Schedule_View_Trait {
         $email=null;
         if(isset($_GET['email_sent'])||isset($_GET['email_skipped'])||isset($_GET['email_failed']))$email=['sent'=>absint($_GET['email_sent']??0),'skipped'=>absint($_GET['email_skipped']??0),'failed'=>absint($_GET['email_failed']??0)];
         wp_enqueue_script('workforce-one-schedule');
+        wp_enqueue_style('workforce-one-schedule-page');
         return $this->render_template('app/schedule',[
-            'emps'=>$emps,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'cells'=>$cells,'legend'=>$legend,
+            'emps'=>$emps,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'cells'=>$cells,'people'=>$people,'legend'=>$legend,
             'range'=>$range,'week_start'=>date('Y-m-d',$sun),
             'week_label'=>TeamOrder::weekLabel(date('Y-m-d',$sun),date('Y-m-d',$this_week))??$range,
             'prev_url'=>add_query_arg(['ews_view'=>'schedule','week'=>date('Y-m-d',strtotime('-7 days',$sun))]),
