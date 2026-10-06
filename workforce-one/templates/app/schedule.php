@@ -16,7 +16,8 @@
  * @var string $week_label
  * @var string $prev_url
  * @var string $next_url
- * @var string $print_title
+ * @var string $pdf_url               the week as a PDF (schedule_pdf())
+ * @var string $pdf_name
  * @var string $email_url               '' when the user cannot send schedules
  * @var array{sent:int,skipped:int,failed:int}|null $email
  * @var array<string,string> $swap_days  date => my status
@@ -61,19 +62,16 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                 <label><span class="screen-reader-text"><?php esc_html_e('Week', 'workforce-one'); ?></span><input type="date" name="week" value="<?php echo esc_attr($week_start); ?>" aria-label="<?php esc_attr_e('Week', 'workforce-one'); ?>"></label>
                 <button class="ews-btn wfo-btn-ghost" type="submit"><?php echo Icons::svg('calendar', 16); ?><?php esc_html_e('View Week', 'workforce-one'); ?></button>
             </form>
-            <div class="ews-schedule-tool-actions">
-                <button type="button" class="ews-btn secondary ews-pdf-btn wfo-btn-ghost" data-ews-print="<?php echo esc_attr($print_title); ?>"><?php echo Icons::svg('download', 16); ?>PDF</button>
-                <button type="button" class="ews-btn secondary ews-wa-btn wfo-btn-ghost" data-ews-print="Team Weekly Schedule" data-ews-whatsapp="1"><?php echo Icons::svg('share', 16); ?>WhatsApp</button>
-                <?php if ($email_url): ?>
-                    <a class="ews-btn wfo-btn-solid" href="<?php echo esc_url($email_url); ?>" data-ews-confirm="<?php esc_attr_e('Send each active employee their own schedule for this week?', 'workforce-one'); ?>"><?php echo Icons::svg('mail', 16); ?><?php esc_html_e('Send schedules', 'workforce-one'); ?></a>
-                <?php endif; ?>
-            </div>
         </div>
     </section>
 
-    <?php if ($current_emp_id && isset($cells[$current_emp_id])): ?>
+    <?php if ($current_emp_id && isset($cells[$current_emp_id])): $me_emp = $by_id[$current_emp_id] ?? null; $today_status = $cells[$current_emp_id][$today] ?? ''; ?>
     <section class="wfo-sched-card wfo-myweek" aria-labelledby="wfo-myweek-title">
-        <div class="wfo-card-title"><span class="wfo-card-icon"><?php echo Icons::svg('user', 20); ?></span><h3 id="wfo-myweek-title"><?php esc_html_e('My week', 'workforce-one'); ?></h3></div>
+        <div class="wfo-myweek-head">
+            <?php echo $avatar($current_emp_id, $me_emp ? (string) $me_emp->name : ''); ?>
+            <div class="wfo-myweek-who"><h3 id="wfo-myweek-title"><?php esc_html_e('My week', 'workforce-one'); ?></h3><?php if ($me_emp): ?><strong><?php echo esc_html($me_emp->name); ?></strong><?php endif; ?></div>
+            <?php if ($today_status !== ''): ?><span class="wfo-myweek-today"><?php echo $chip($today_status); ?></span><?php endif; ?>
+        </div>
         <ol class="wfo-myweek-days">
             <?php foreach ($dates as $d): $s = $cells[$current_emp_id][$d]; [$icon, $tone] = Icons::forStatus($s); ?>
             <li class="is-<?php echo esc_attr($tone); ?><?php echo $d === $today ? ' is-today' : ''; ?>"<?php echo $d === $today ? ' aria-current="date"' : ''; ?>>
@@ -84,15 +82,26 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             </li>
             <?php endforeach; ?>
         </ol>
+        <button type="button" class="ews-btn wfo-btn-solid wfo-myweek-swap ews-no-print" data-ews-open-swap><?php echo Icons::svg('swap', 16); ?><?php esc_html_e('Request a swap', 'workforce-one'); ?></button>
     </section>
     <?php endif; ?>
 
     <section class="wfo-sched-card ews-schedule-card" aria-labelledby="wfo-team-title">
         <div class="wfo-card-title">
-            <span class="wfo-card-icon is-teal"><?php echo Icons::svg('people', 20); ?></span>
-            <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?></h3><p class="wfo-help"><?php esc_html_e('Everyone can view the team\'s schedule to coordinate coverage and arrange swaps with colleagues.', 'workforce-one'); ?></p></div>
+            <span class="wfo-card-icon is-teal wfo-desktop-only"><?php echo Icons::svg('people', 20); ?></span>
+            <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?> <span class="wfo-sched-count"><?php echo esc_html(sprintf(/* translators: %d: number of people */ _n('%d person', '%d people', count($emps), 'workforce-one'), count($emps))); ?></span></h3><p class="wfo-help wfo-desktop-only"><?php esc_html_e('Everyone can view the team\'s schedule to coordinate coverage and arrange swaps with colleagues.', 'workforce-one'); ?></p></div>
         </div>
-        <div class="ews-schedule-legend wfo-legend"><?php foreach ($legend as $l) echo $chip($l); ?></div>
+        <div class="wfo-sched-bar ews-no-print">
+            <label class="wfo-sched-search"><?php echo Icons::svg('search', 17, 2); ?><input type="search" id="wfo-sched-search" placeholder="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" aria-label="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" autocomplete="off"></label>
+            <div class="ews-schedule-tool-actions wfo-sched-actions">
+                <a class="ews-btn secondary ews-pdf-btn wfo-btn-ghost" href="<?php echo esc_url($pdf_url); ?>" download><?php echo Icons::svg('download', 16); ?>PDF</a>
+                <button type="button" class="ews-btn secondary ews-wa-btn wfo-btn-ghost" data-ews-share-pdf="<?php echo esc_url($pdf_url); ?>" data-ews-share-name="<?php echo esc_attr($pdf_name); ?>" data-ews-share-text="<?php echo esc_attr(__('Team Schedule', 'workforce-one') . ' · ' . $range); ?>" data-ews-share-fallback="<?php esc_attr_e('The schedule PDF was downloaded. Attach it to your WhatsApp message.', 'workforce-one'); ?>"><?php echo Icons::svg('share', 16); ?>WhatsApp</button>
+                <?php if ($email_url): ?>
+                    <a class="ews-btn secondary wfo-btn-ghost" href="<?php echo esc_url($email_url); ?>" data-ews-confirm="<?php esc_attr_e('Send each active employee their own schedule for this week?', 'workforce-one'); ?>"><?php echo Icons::svg('mail', 16); ?><?php esc_html_e('Email everyone', 'workforce-one'); ?></a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="ews-schedule-legend wfo-legend wfo-desktop-only"><?php foreach ($legend as $l) echo $chip($l); ?></div>
         <div class="ews-schedule-table-wrap wfo-sched-scroll" tabindex="0" role="region" aria-labelledby="wfo-team-title">
             <table class="ews-table ews-schedule-table wfo-sched-table">
                 <thead>
@@ -128,6 +137,22 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                 </tbody>
             </table>
         </div>
+        <ul class="wfo-sched-cards">
+            <?php foreach ($emps as $e): if ((int) $e->id === $current_emp_id) continue; $manager = !empty($e->_schedule_team_manager); ?>
+            <li class="wfo-sched-pcard<?php echo $manager ? ' is-manager' : ''; ?>" data-employee-name="<?php echo esc_attr(strtolower($e->name . ' ' . $e->domain_name)); ?>">
+                <div class="wfo-sched-pcard-head">
+                    <?php echo $avatar((int) $e->id, (string) $e->name); ?>
+                    <div class="wfo-sched-pcard-who"><strong><?php echo esc_html($e->name); ?></strong><?php if ($manager): ?> <span class="ews-manager-badge"><?php esc_html_e('Manager', 'workforce-one'); ?></span><?php endif; ?><small><?php echo !empty($e->_schedule_team_names) ? esc_html(implode(' · ', $e->_schedule_team_names)) : esc_html__('No Team', 'workforce-one'); ?></small></div>
+                </div>
+                <ol class="wfo-sched-pdays" style="--days:<?php echo (int) count($dates); ?>">
+                    <?php foreach ($dates as $d): $st = $cells[(int) $e->id][$d]; [, $tone] = Icons::forStatus($st); ?>
+                    <li class="is-<?php echo esc_attr($tone); ?><?php echo $d === $today ? ' is-today' : ''; ?>"<?php echo $d === $today ? ' aria-current="date"' : ''; ?>><span><?php echo $d === $today ? esc_html__('Today', 'workforce-one') : esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($status_label($st)); ?></b></li>
+                    <?php endforeach; ?>
+                </ol>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <p class="wfo-sched-noresult" hidden><?php esc_html_e('No colleague matches your search.', 'workforce-one'); ?></p>
     </section>
 
     <?php if ($current_emp_id): ?>

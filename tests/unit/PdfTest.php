@@ -4,6 +4,7 @@ use WorkforceOne\Pdf\ArabicText as A;
 use WorkforceOne\Pdf\Document;
 use WorkforceOne\Pdf\TrueTypeFont;
 use WorkforceOne\Payroll\PayslipPdf;
+use WorkforceOne\Schedule\SchedulePdf;
 
 final class PdfTest extends TestCase
 {
@@ -68,5 +69,17 @@ final class PdfTest extends TestCase
         $pdf = PayslipPdf::render(self::font(), ['company' => 'BA Team', 'employee' => 'أحمد محمد', 'month_label' => 'September 2026', 'closed_at' => '2026-10-01 10:00:00',
             'currency' => 'EGP', 'rules' => ['day_divisor' => 30, 'day_base' => 'gross', 'max_deduction_days' => 0], 'pay' => $pay, 'generated' => '3 Oct 2026']);
         $this->assertGreaterThanOrEqual(2, substr_count($pdf, '/Type /Page '), 'more than one page');
+    }
+    public function testSchedulePdfAddsPagesForLongTeams(): void
+    {
+        $week = ['company' => 'Acme', 'title' => 'Team Schedule', 'heading' => 'جدول الفريق', 'employee' => 'Employee', 'empty' => 'None', 'range' => '04 Oct – 08 Oct 2026', 'generated' => '6 Oct 2026', 'days' => [], 'rows' => []];
+        foreach (['Sun', 'Mon', 'Tue', 'Wed', 'Thu'] as $i => $d) $week['days'][] = ['name' => $d, 'date' => sprintf('%02d Oct', 4 + $i)];
+        $one = SchedulePdf::render(self::font(), $week);
+        $this->assertStringStartsWith('%PDF-', $one);
+        $this->assertSame(1, substr_count($one, '/Type /Page '), 'an empty week is one page');
+        for ($i = 0; $i < 40; $i++) {
+            $week['rows'][] = ['name' => 'موظف رقم ' . $i . ' with a very long name that does not fit', 'team' => 'Blue', 'cells' => array_fill(0, 5, ['label' => 'Office', 'tone' => $i % 2 ? 'office' : 'unknown-tone'])];
+        }
+        $this->assertSame(2, substr_count(SchedulePdf::render(self::font(), $week), '/Type /Page '), '40 rows run onto a second page');
     }
 }

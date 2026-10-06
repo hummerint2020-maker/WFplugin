@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.57\n"
+"Project-Id-Version: Workforce One 3.31.60\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T10:42:41+00:00\n"
+"POT-Creation-Date: 2026-10-06T22:44:55+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -363,8 +363,8 @@ msgstr ""
 #: templates/app/attendance.php:204
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
-#: templates/app/schedule.php:152
-#: templates/app/schedule.php:173
+#: templates/app/schedule.php:177
+#: templates/app/schedule.php:198
 msgid "Cancel"
 msgstr ""
 
@@ -379,7 +379,7 @@ msgstr ""
 #: templates/app/leave.php:44
 #: templates/app/my-profile.php:157
 #: templates/app/my-profile.php:176
-#: templates/app/schedule.php:155
+#: templates/app/schedule.php:180
 #: templates/app/time.php:159
 #: templates/app/time.php:176
 msgid "Close"
@@ -731,7 +731,7 @@ msgstr ""
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
 #: templates/app/overtime.php:79
-#: templates/app/schedule.php:45
+#: templates/app/schedule.php:46
 msgid "Pending"
 msgstr ""
 
@@ -740,17 +740,17 @@ msgid "Approved"
 msgstr ""
 
 #: includes/trait-frontend.php:432
-#: templates/app/schedule.php:45
+#: templates/app/schedule.php:46
 msgid "Rejected"
 msgstr ""
 
 #: includes/trait-frontend.php:432
-#: templates/app/schedule.php:45
+#: templates/app/schedule.php:46
 msgid "Cancelled"
 msgstr ""
 
 #: includes/trait-frontend.php:432
-#: templates/app/schedule.php:45
+#: templates/app/schedule.php:46
 msgid "Accepted"
 msgstr ""
 
@@ -1048,6 +1048,56 @@ msgstr ""
 msgid "Last cleanup run:"
 msgstr ""
 
+#: includes/trait-schedule-view.php:56
+msgid "Please sign in."
+msgstr ""
+
+#. translators: %s: today's schedule status
+#: includes/trait-schedule-view.php:59
+#: templates/app/attendance-insights.php:22
+#: templates/app/attendance.php:43
+#: templates/app/dashboard.php:42
+#: templates/app/my-profile.php:37
+#: templates/app/schedule.php:32
+#: templates/app/time.php:60
+msgid "Not Set"
+msgstr ""
+
+#: includes/trait-schedule-view.php:59
+#: templates/app/dashboard.php:43
+#: templates/app/dashboard.php:63
+#: templates/app/my-profile.php:37
+#: templates/app/schedule.php:32
+msgid "General Leave"
+msgstr ""
+
+#: includes/trait-schedule-view.php:59
+#: templates/app/attendance-insights.php:22
+#: templates/app/attendance-insights.php:24
+#: templates/app/attendance.php:54
+#: templates/app/my-profile.php:37
+#: templates/app/schedule.php:32
+msgid "Absent"
+msgstr ""
+
+#: includes/trait-schedule-view.php:70
+#: templates/app/schedule.php:92
+#: templates/app/schedule.php:98
+msgid "Team Schedule"
+msgstr ""
+
+#: includes/trait-schedule-view.php:70
+#: templates/app/attendance.php:128
+#: templates/app/attendance.php:183
+#: templates/app/reports.php:53
+#: templates/app/schedule.php:109
+msgid "Employee"
+msgstr ""
+
+#: includes/trait-schedule-view.php:70
+msgid "No employees to show."
+msgstr ""
+
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance.php:62
 #: templates/app/dashboard.php:120
@@ -1069,24 +1119,6 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: templates/app/attendance-insights.php:22
-#: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:54
-#: templates/app/my-profile.php:37
-#: templates/app/schedule.php:31
-msgid "Absent"
-msgstr ""
-
-#. translators: %s: today's schedule status
-#: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:43
-#: templates/app/dashboard.php:42
-#: templates/app/my-profile.php:37
-#: templates/app/schedule.php:31
-#: templates/app/time.php:60
-msgid "Not Set"
-msgstr ""
-
 #: templates/app/attendance-insights.php:24
 #: templates/app/attendance.php:54
 msgid "Present"
@@ -1105,6 +1137,7 @@ msgstr ""
 #: templates/app/attendance-insights.php:43
 #: templates/app/attendance.php:133
 #: templates/app/dashboard.php:74
+#: templates/app/schedule.php:149
 #: templates/app/time.php:62
 msgid "Today"
 msgstr ""
@@ -1115,20 +1148,20 @@ msgstr ""
 
 #: templates/app/attendance-insights.php:34
 #: templates/app/attendance.php:72
-#: templates/app/schedule.php:43
-#: templates/app/schedule.php:54
+#: templates/app/schedule.php:44
+#: templates/app/schedule.php:55
 msgid "Previous week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:35
-#: templates/app/schedule.php:61
+#: templates/app/schedule.php:62
 msgid "Week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:36
 #: templates/app/attendance.php:81
-#: templates/app/schedule.php:43
-#: templates/app/schedule.php:56
+#: templates/app/schedule.php:44
+#: templates/app/schedule.php:57
 msgid "Next week"
 msgstr ""
 
@@ -1154,7 +1187,7 @@ msgid "All Teams"
 msgstr ""
 
 #: templates/app/attendance-insights.php:47
-#: templates/app/schedule.php:145
+#: templates/app/schedule.php:170
 msgid "Day"
 msgstr ""
 
@@ -1188,12 +1221,13 @@ msgid "No employees in this category."
 msgstr ""
 
 #: templates/app/attendance.php:35
-#: templates/app/schedule.php:118
+#: templates/app/schedule.php:127
 msgid "You"
 msgstr ""
 
 #: templates/app/attendance.php:36
-#: templates/app/schedule.php:118
+#: templates/app/schedule.php:127
+#: templates/app/schedule.php:145
 msgid "Manager"
 msgstr ""
 
@@ -1255,13 +1289,6 @@ msgstr ""
 
 #: templates/app/attendance.php:109
 msgid "Set…"
-msgstr ""
-
-#: templates/app/attendance.php:128
-#: templates/app/attendance.php:183
-#: templates/app/reports.php:53
-#: templates/app/schedule.php:100
-msgid "Employee"
 msgstr ""
 
 #. translators: 1: people with a record, 2: people absent
@@ -1343,13 +1370,6 @@ msgstr ""
 
 #: templates/app/attendance.php:220
 msgid "Download Sample CSV"
-msgstr ""
-
-#: templates/app/dashboard.php:43
-#: templates/app/dashboard.php:63
-#: templates/app/my-profile.php:37
-#: templates/app/schedule.php:31
-msgid "General Leave"
 msgstr ""
 
 #: templates/app/dashboard.php:67
@@ -1718,7 +1738,7 @@ msgstr ""
 
 #: templates/app/leave.php:30
 #: templates/app/overtime.php:78
-#: templates/app/schedule.php:171
+#: templates/app/schedule.php:196
 msgid "Reject"
 msgstr ""
 
@@ -2311,6 +2331,7 @@ msgstr ""
 
 #. translators: %d: number of people
 #: templates/app/people.php:23
+#: templates/app/schedule.php:92
 #, php-format
 msgid "%d person"
 msgid_plural "%d people"
@@ -2618,103 +2639,117 @@ msgstr ""
 msgid "The view keeps these dates."
 msgstr ""
 
-#: templates/app/schedule.php:43
+#: templates/app/schedule.php:44
 msgid "This week"
 msgstr ""
 
-#: templates/app/schedule.php:49
+#: templates/app/schedule.php:50
 msgid "Schedule emails sent:"
 msgstr ""
 
-#: templates/app/schedule.php:49
+#: templates/app/schedule.php:50
 msgid "skipped:"
 msgstr ""
 
-#: templates/app/schedule.php:49
+#: templates/app/schedule.php:50
 msgid "failed:"
 msgstr ""
 
-#: templates/app/schedule.php:62
+#: templates/app/schedule.php:63
 msgid "View Week"
 msgstr ""
 
-#: templates/app/schedule.php:68
-msgid "Send each active employee their own schedule for this week?"
-msgstr ""
-
-#: templates/app/schedule.php:68
-msgid "Send schedules"
-msgstr ""
-
-#: templates/app/schedule.php:76
+#: templates/app/schedule.php:72
 msgid "My week"
 msgstr ""
 
-#: templates/app/schedule.php:93
-msgid "Team Schedule"
+#: templates/app/schedule.php:85
+msgid "Request a swap"
 msgstr ""
 
-#: templates/app/schedule.php:93
+#. translators: %d: number of people
+#: templates/app/schedule.php:92
 msgid "Everyone can view the team's schedule to coordinate coverage and arrange swaps with colleagues."
 msgstr ""
 
-#: templates/app/schedule.php:111
+#: templates/app/schedule.php:95
+msgid "Search colleague"
+msgstr ""
+
+#: templates/app/schedule.php:98
+msgid "The schedule PDF was downloaded. Attach it to your WhatsApp message."
+msgstr ""
+
+#: templates/app/schedule.php:100
+msgid "Send each active employee their own schedule for this week?"
+msgstr ""
+
+#: templates/app/schedule.php:100
+msgid "Email everyone"
+msgstr ""
+
+#: templates/app/schedule.php:120
 msgid "No employees found"
 msgstr ""
 
-#: templates/app/schedule.php:111
+#: templates/app/schedule.php:120
 msgid "There are no active employees to display."
 msgstr ""
 
-#: templates/app/schedule.php:119
+#: templates/app/schedule.php:128
+#: templates/app/schedule.php:145
 msgid "No Team"
 msgstr ""
 
-#: templates/app/schedule.php:137
+#: templates/app/schedule.php:155
+msgid "No colleague matches your search."
+msgstr ""
+
+#: templates/app/schedule.php:162
 msgid "Need to swap a day?"
 msgstr ""
 
-#: templates/app/schedule.php:137
+#: templates/app/schedule.php:162
 msgid "Choose a colleague and request a direct schedule swap. No approval is required."
 msgstr ""
 
-#: templates/app/schedule.php:138
+#: templates/app/schedule.php:163
 msgid "Request Swap"
 msgstr ""
 
-#: templates/app/schedule.php:148
+#: templates/app/schedule.php:173
 msgid "Swap with"
 msgstr ""
 
-#: templates/app/schedule.php:149
+#: templates/app/schedule.php:174
 msgid "Select colleague"
 msgstr ""
 
-#: templates/app/schedule.php:152
+#: templates/app/schedule.php:177
 msgid "Send Request"
 msgstr ""
 
-#: templates/app/schedule.php:155
+#: templates/app/schedule.php:180
 msgid "You have no Office or WFH days left this week to swap."
 msgstr ""
 
-#: templates/app/schedule.php:160
+#: templates/app/schedule.php:185
 msgid "Swap Requests"
 msgstr ""
 
-#: templates/app/schedule.php:166
+#: templates/app/schedule.php:191
 msgid "Asked you"
 msgstr ""
 
-#: templates/app/schedule.php:166
+#: templates/app/schedule.php:191
 msgid "You asked"
 msgstr ""
 
-#: templates/app/schedule.php:171
+#: templates/app/schedule.php:196
 msgid "Accept"
 msgstr ""
 
-#: templates/app/schedule.php:180
+#: templates/app/schedule.php:205
 msgid "Use this shared schedule to find a colleague with a compatible day. You can request a swap directly from this page."
 msgstr ""
 

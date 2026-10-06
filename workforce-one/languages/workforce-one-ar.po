@@ -2726,3 +2726,24 @@ msgstr "اليوم السابق"
 
 msgid "Next day"
 msgstr "اليوم التالي"
+
+msgid "Email everyone"
+msgstr "إرسال بالبريد للجميع"
+
+msgid "No colleague matches your search."
+msgstr "لا يوجد زميل يطابق البحث."
+
+msgid "No employees to show."
+msgstr "لا يوجد موظفون للعرض."
+
+msgid "Please sign in."
+msgstr "يرجى تسجيل الدخول."
+
+msgid "Request a swap"
+msgstr "طلب تبديل"
+
+msgid "Search colleague"
+msgstr "ابحث عن زميل"
+
+msgid "The schedule PDF was downloaded. Attach it to your WhatsApp message."
+msgstr "تم تنزيل ملف PDF للجدول. أرفقه برسالة واتساب."

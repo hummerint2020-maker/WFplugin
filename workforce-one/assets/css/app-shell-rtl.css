@@ -113,6 +113,9 @@ body.wfo-fullscreen .ews-app.wfo-app{max-width:none;margin:0;border-radius:0;min
     .wfo-myweek-num{font-size:17px}
     .wfo-myweek-word{font-size:10px}
 }
+@media (max-width:420px){
+    .wfo-myweek-word{font-size:9px;letter-spacing:-.2px}
+}
 
 @media (prefers-reduced-motion:reduce){.wfo-more-sheet{animation:none}}
 .wfo-more-handle{width:40px;height:5px;border-radius:999px;background:var(--wfo-line);align-self:center}

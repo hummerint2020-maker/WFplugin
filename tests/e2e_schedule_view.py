@@ -84,6 +84,14 @@ check('each person has an avatar', page.count('class="wfo-sched-avatar') >= 4)
 content = page.split('<div class="wfo-content">', 1)[-1]
 check('no emoji on the Schedule page', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content))
 check('the page stylesheet is loaded in the head', 'app-schedule.css' in page.split('</head>')[0])
+check('phones get a card per colleague (not for me: My week shows mine)', len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)) == 3 and 'Request a swap' in page, len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)))
+pdf = re.search(r'class="[^"]*ews-pdf-btn[^"]*" href="([^"]+)"', page)
+pdf_path = pdf.group(1).replace('&#038;', '&').replace('&amp;', '&').split('127.0.0.1:8080')[-1] if pdf else ''
+check('the PDF and WhatsApp buttons use the same PDF link', bool(pdf) and 'data-ews-share-pdf="' + pdf.group(1) + '"' in page and 'action=ews_schedule_pdf' in pdf_path)
+st, body, h = emp.req(pdf_path)
+check('the PDF link returns a real PDF of the week', st == 200 and h.get('Content-Type', '').startswith('application/pdf') and body.startswith('%PDF-') and 'team-schedule-' in h.get('Content-Disposition', ''), (st, h.get('Content-Type'), body[:20]))
+st, body, _ = emp.req(re.sub(r'_wpnonce=[^&]+', '_wpnonce=bad', pdf_path))
+check('...and only with a valid link', not body.startswith('%PDF-'), st)
 check('the page script is a file (no inline onclick)', 'schedule.js' in page and 'onclick="(function(){document.title' not in page)
 
 print(f'{sum(results)} / {len(results)}')

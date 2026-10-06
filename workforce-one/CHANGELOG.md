@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.61
+The employees' Team Schedule page, after review (design A), and a working WhatsApp button.
+
+### Changed
+- On phones and tablets (820px and narrower) every colleague has **their own card**: picture, name,
+  team and the week as small day boxes in one row (status in words, today outlined). The wide table
+  stays on computers and in print.
+- **My week** comes first: your own days, today's status and a **Request a swap** button that opens
+  the swap form. Swap requests follow, then the team.
+- The team part has a **colleague search** (cards and table alike) and labelled **PDF**,
+  **WhatsApp** and (managers) **Email everyone** buttons. The legend and the "Team Schedule" blurb
+  are hidden on phones.
+
+### Fixed
+- **WhatsApp did not send a PDF.** It opened the browser's print dialog (which often does nothing in
+  the installed app) and then WhatsApp with text only, because a WhatsApp link cannot carry a file.
+  The week is now made into a real PDF on the server (new `SchedulePdf`, endpoint
+  `admin-post.php?action=ews_schedule_pdf`, signed-in users, nonce-checked, Arabic shaped). On a
+  phone the WhatsApp button hands the PDF to the share sheet, so it is sent as a file in WhatsApp;
+  where files cannot be shared (most computers) the PDF is downloaded and WhatsApp opens with a note
+  to attach it. The PDF button downloads the same file.
+
 ## 3.31.60
 ### Added
 - **Full-screen app page** (wp-admin → Appearance → Brand, on by default): the page that holds the

@@ -36,6 +36,7 @@ workforce-one/
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, AdminRecordRules.php, Hooks.php
     Overtime/RequestRules.php, Hooks.php        EarlyLeave/RequestRules.php
     Schedule/SwapRules.php, Hooks.php, ConfigRules.php, ConfigHooks.php, TeamOrder.php (Team Schedule order)
+    Schedule/SchedulePdf.php          one week of the Team Schedule as a PDF (app PDF / WhatsApp buttons; admin-post ews_schedule_pdf)
     Achievements/ManualGrant.php      manual grants, progress cells
     Employees/EmployeeRules.php       add / update employee checks
     Employees/ProfileSummary.php      profile initials, today's result, 30-day stats
