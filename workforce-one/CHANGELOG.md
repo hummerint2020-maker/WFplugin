@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.53
+New look, step 6: Polls (the Polls page and the poll card on Home). Voting, changing a vote, the
+results rules (after voting / when the poll closes / admins only) and anonymous polls work exactly
+as before (same form and fields; the poll tests pass unchanged: 33, plus 3 new checks).
+
+### Changed
+- **Poll card**: an icon, "Employee poll · Open/Closed", the question and its description, and
+  chips for "Closes in 2 days" and "Anonymous" (icons instead of emoji).
+- **Choices** are large tappable rows (two per row on wide screens, one on phones) grouped as a
+  labelled set for screen readers; one main Vote button.
+- **Results**: one row per choice with the percentage, a bar and the vote count; your choice is
+  outlined and marked "your vote"; a closed poll says "Here's the final result".
+- **Polls page**: "Open polls" and "Past polls" with their counts, cards side by side on wide
+  screens, and a friendly empty state.
+- The Polls texts are translatable (Arabic added, with Arabic plural forms); the page title and
+  the menu item "Polls" are translated too. Questions typed in English keep their punctuation
+  in the right place on the Arabic app.
+
 ## 3.31.52
 New look, step 5: the Schedule page. The team schedule, week switching, PDF / WhatsApp / Send
 schedules, and swap requests (send, accept, reject, cancel) work exactly as before (same forms and

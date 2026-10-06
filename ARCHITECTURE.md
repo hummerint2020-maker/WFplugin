@@ -169,6 +169,6 @@ script or test uses; style new markup with `wfo-` classes and the `--wfo-*` vari
 come from `Ui\Icons` (no emoji); and status always has an icon and a word, never colour alone.
 Each redesigned page has its own stylesheet (`assets/css/app-<page>.css` + generated `-rtl.css`),
 registered in `enqueue_frontend_assets()` and loaded in `<head>` for its `ews_view`: Home
-(`app-home.css`), Sign In / Out (`app-time.css`), Leave (`app-leave.css`) and Schedule
-(`app-schedule.css`). Shared pieces live in `app-shell.css` (status chips `.wfo-chip.is-<tone>`
+(`app-home.css`), Sign In / Out (`app-time.css`), Leave (`app-leave.css`), Schedule
+(`app-schedule.css`) and Polls (`app-polls.css`, also on Home for the poll card). Shared pieces live in `app-shell.css` (status chips `.wfo-chip.is-<tone>`
 with `Icons::forStatus()`).

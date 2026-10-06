@@ -2075,3 +2075,123 @@ msgstr "قبول"
 
 msgid "Use this shared schedule to find a colleague with a compatible day. You can request a swap directly from this page."
 msgstr "استخدم هذا الجدول المشترك لإيجاد زميل بيوم مناسب، ويمكنك طلب التبديل مباشرة من هذه الصفحة."
+
+msgid "Thanks! The results are shared with the admins only."
+msgstr "شكرًا! النتائج متاحة للمسؤولين فقط."
+
+msgid "Results will be shown when the poll closes (%s)."
+msgstr "ستظهر النتائج عند إغلاق التصويت (%s)."
+
+msgid "Results will be shown when the poll closes."
+msgstr "ستظهر النتائج عند إغلاق التصويت."
+
+msgid "Thanks for voting!"
+msgstr "شكرًا على تصويتك!"
+
+msgid "This poll is closed."
+msgstr "هذا التصويت مغلق."
+
+msgid "This poll is not for your department."
+msgstr "هذا التصويت ليس لقسمك."
+
+msgid "Please choose one of the poll's choices."
+msgstr "من فضلك اختر أحد خيارات التصويت."
+
+msgid "You have already voted in this poll."
+msgstr "لقد صوّت في هذا التصويت من قبل."
+
+msgid "Closes tomorrow"
+msgstr "يُغلق غدًا"
+
+msgid "Closes soon"
+msgstr "يُغلق قريبًا"
+
+msgid "Closes in %d day"
+msgid_plural "Closes in %d days"
+msgstr[0] "يُغلق خلال %d يوم"
+msgstr[1] "يُغلق خلال %d يوم"
+msgstr[2] "يُغلق خلال %d يوم"
+msgstr[3] "يُغلق خلال %d أيام"
+msgstr[4] "يُغلق خلال %d يومًا"
+msgstr[5] "يُغلق خلال %d يوم"
+
+msgid "Closes in %d hour"
+msgid_plural "Closes in %d hours"
+msgstr[0] "يُغلق خلال %d ساعة"
+msgstr[1] "يُغلق خلال %d ساعة"
+msgstr[2] "يُغلق خلال %d ساعة"
+msgstr[3] "يُغلق خلال %d ساعات"
+msgstr[4] "يُغلق خلال %d ساعة"
+msgstr[5] "يُغلق خلال %d ساعة"
+
+msgid "Employee poll"
+msgstr "تصويت الموظفين"
+
+msgid "Anonymous"
+msgstr "بدون أسماء"
+
+msgid "Your vote has been recorded. Here’s the current result."
+msgstr "تم تسجيل صوتك. هذه النتيجة الحالية."
+
+msgid "You voted in this poll. Here’s the final result."
+msgstr "لقد صوّت في هذا التصويت. هذه النتيجة النهائية."
+
+msgid "your vote"
+msgstr "صوتك"
+
+msgid "%d vote"
+msgid_plural "%d votes"
+msgstr[0] "%d صوت"
+msgstr[1] "%d صوت"
+msgstr[2] "%d صوت"
+msgstr[3] "%d أصوات"
+msgstr[4] "%d صوتًا"
+msgstr[5] "%d صوت"
+
+msgid "%d person has voted"
+msgid_plural "%d people have voted"
+msgstr[0] "صوّت %d شخص"
+msgstr[1] "صوّت %d شخص"
+msgstr[2] "صوّت %d شخص"
+msgstr[3] "صوّت %d أشخاص"
+msgstr[4] "صوّت %d شخصًا"
+msgstr[5] "صوّت %d شخص"
+
+msgid "Change vote"
+msgstr "تغيير الصوت"
+
+msgid "You can change your vote until the poll closes."
+msgstr "يمكنك تغيير صوتك حتى يُغلق التصويت."
+
+msgid "Be part of the decision"
+msgstr "شارك في القرار"
+
+msgid "Vote"
+msgstr "صوّت"
+
+msgid "%d more open poll"
+msgid_plural "%d more open polls"
+msgstr[0] "%d تصويت آخر مفتوح"
+msgstr[1] "%d تصويت آخر مفتوح"
+msgstr[2] "%d تصويت آخر مفتوح"
+msgstr[3] "%d تصويتات أخرى مفتوحة"
+msgstr[4] "%d تصويتًا آخر مفتوحًا"
+msgstr[5] "%d تصويت آخر مفتوح"
+
+msgid "See all polls"
+msgstr "كل التصويتات"
+
+msgid "Open polls"
+msgstr "تصويتات مفتوحة"
+
+msgid "No open polls right now."
+msgstr "لا توجد تصويتات مفتوحة الآن."
+
+msgid "New polls will appear here, and you will get a notification."
+msgstr "ستظهر التصويتات الجديدة هنا، وسيصلك إشعار بها."
+
+msgid "Past polls"
+msgstr "تصويتات سابقة"
+
+msgid "Polls"
+msgstr "التصويت"

@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.51\n"
+"Project-Id-Version: Workforce One 3.31.52\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-05T22:51:56+00:00\n"
+"POT-Creation-Date: 2026-10-06T10:03:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -90,6 +90,7 @@ msgid "Something went wrong. Please try again."
 msgstr ""
 
 #: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
 msgid "My Pay"
 msgstr ""
 
@@ -170,6 +171,11 @@ msgstr ""
 #: templates/app/presence.php:14
 #: templates/app/time.php:163
 msgid "Presence Verification"
+msgstr ""
+
+#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:74
+msgid "Polls"
 msgstr ""
 
 #: includes/trait-app-layout.php:74
@@ -705,7 +711,7 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
 #: templates/app/overtime.php:79
@@ -713,50 +719,50 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:414
+#: includes/trait-frontend.php:417
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:427
+#: includes/trait-frontend.php:430
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:427
+#: includes/trait-frontend.php:430
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -809,6 +815,42 @@ msgstr ""
 
 #: includes/trait-notifications.php:791
 msgid "View all notifications →"
+msgstr ""
+
+#. translators: %s: when the poll closes
+#: includes/trait-polls.php:112
+msgid "Thanks! The results are shared with the admins only."
+msgstr ""
+
+#. translators: %s: when the poll closes
+#: includes/trait-polls.php:112
+#, php-format
+msgid "Results will be shown when the poll closes (%s)."
+msgstr ""
+
+#. translators: %s: when the poll closes
+#: includes/trait-polls.php:112
+msgid "Results will be shown when the poll closes."
+msgstr ""
+
+#: includes/trait-polls.php:161
+msgid "Thanks for voting!"
+msgstr ""
+
+#: includes/trait-polls.php:164
+msgid "This poll is closed."
+msgstr ""
+
+#: includes/trait-polls.php:164
+msgid "This poll is not for your department."
+msgstr ""
+
+#: includes/trait-polls.php:165
+msgid "Please choose one of the poll's choices."
+msgstr ""
+
+#: includes/trait-polls.php:165
+msgid "You have already voted in this poll."
 msgstr ""
 
 #: includes/trait-presence.php:58
@@ -1571,6 +1613,123 @@ msgstr ""
 msgid "No Pending Overtime Requests"
 msgstr ""
 
+#. translators: %d: break number
+#: templates/app/poll-card.php:15
+#: templates/app/time.php:152
+msgid "Open"
+msgstr ""
+
+#: templates/app/poll-card.php:15
+#: templates/app/time.php:112
+msgid "Closed"
+msgstr ""
+
+#: templates/app/poll-card.php:17
+msgid "Closes tomorrow"
+msgstr ""
+
+#: templates/app/poll-card.php:18
+msgid "Closes soon"
+msgstr ""
+
+#. translators: %d: number of days
+#: templates/app/poll-card.php:19
+#, php-format
+msgid "Closes in %d day"
+msgid_plural "Closes in %d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of hours
+#: templates/app/poll-card.php:20
+#, php-format
+msgid "Closes in %d hour"
+msgid_plural "Closes in %d hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/poll-card.php:27
+msgid "Employee poll"
+msgstr ""
+
+#: templates/app/poll-card.php:32
+msgid "Anonymous"
+msgstr ""
+
+#: templates/app/poll-card.php:36
+msgid "Your vote has been recorded. Here’s the current result."
+msgstr ""
+
+#: templates/app/poll-card.php:36
+msgid "You voted in this poll. Here’s the final result."
+msgstr ""
+
+#: templates/app/poll-card.php:40
+msgid "your vote"
+msgstr ""
+
+#. translators: %d: number of votes
+#: templates/app/poll-card.php:42
+#, php-format
+msgid "%d vote"
+msgid_plural "%d votes"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of people
+#: templates/app/poll-card.php:46
+#, php-format
+msgid "%d person has voted"
+msgid_plural "%d people have voted"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/poll-card.php:54
+#: templates/app/poll-card.php:59
+msgid "Change vote"
+msgstr ""
+
+#: templates/app/poll-card.php:59
+msgid "You can change your vote until the poll closes."
+msgstr ""
+
+#: templates/app/poll-card.php:59
+msgid "Be part of the decision"
+msgstr ""
+
+#: templates/app/poll-card.php:59
+msgid "Vote"
+msgstr ""
+
+#. translators: %d: number of other open polls
+#: templates/app/poll-card.php:63
+#, php-format
+msgid "%d more open poll"
+msgid_plural "%d more open polls"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of other open polls
+#: templates/app/poll-card.php:63
+msgid "See all polls"
+msgstr ""
+
+#: templates/app/polls.php:17
+msgid "Open polls"
+msgstr ""
+
+#: templates/app/polls.php:19
+msgid "No open polls right now."
+msgstr ""
+
+#: templates/app/polls.php:19
+msgid "New polls will appear here, and you will get a notification."
+msgstr ""
+
+#: templates/app/polls.php:26
+msgid "Past polls"
+msgstr ""
+
 #: templates/app/presence.php:15
 msgid "Presence verified successfully."
 msgstr ""
@@ -1876,10 +2035,6 @@ msgstr ""
 msgid "Open until %s"
 msgstr ""
 
-#: templates/app/time.php:112
-msgid "Closed"
-msgstr ""
-
 #: templates/app/time.php:114
 msgid "Face check"
 msgstr ""
@@ -1984,11 +2139,6 @@ msgstr ""
 #: templates/app/time.php:152
 #, php-format
 msgid "Break %d"
-msgstr ""
-
-#. translators: %d: break number
-#: templates/app/time.php:152
-msgid "Open"
 msgstr ""
 
 #: templates/app/time.php:157

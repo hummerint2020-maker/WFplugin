@@ -176,6 +176,12 @@ st, page, _ = emp.req('/app/')
 c = cards(page)
 check('the Dashboard shows the newest poll the employee has not answered, with a link to all polls', list(c) == [poll_id('Coffee machine?')] and 'ews_view=polls' in page, list(c))
 
+st, page, _ = emp.req('/app/?ews_view=polls')
+content = page.split('<div class="wfo-content">', 1)[-1]
+check('no emoji on the Polls page or its cards', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF\u23F3]', content), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF\u23F3]', content))
+check('the poll stylesheet is loaded in the head of the Polls page and Home', 'app-polls.css' in page.split('</head>')[0] and 'app-polls.css' in emp.req('/app/')[1].split('</head>')[0])
+check('the choices are a labelled group (fieldset + legend)', '<fieldset class="ews-poll-options' in content and '<legend class="screen-reader-text">' in content)
+
 # ---------------------------------------------------------------- access
 st, body, _ = emp.req(PAGE)
 check('an employee cannot open the admin page', 'Create New Poll' not in body)

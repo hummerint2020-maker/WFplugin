@@ -108,7 +108,8 @@ trait EWS_Polls_Trait {
         $show=PollRules::resultsVisible((string)$poll->results_visibility,$state,$mine>0);
         $note='';
         if(!$show&&$mine){
-            $note=$poll->results_visibility==='admins'?'Thanks! The results are shared with the admins only.':'Results will be shown when the poll closes'.($poll->ends_at?' ('.date_i18n('d M, H:i',strtotime($poll->ends_at)).').':'.');
+            /* translators: %s: when the poll closes */
+            $note=$poll->results_visibility==='admins'?__('Thanks! The results are shared with the admins only.','workforce-one'):($poll->ends_at?sprintf(__('Results will be shown when the poll closes (%s).','workforce-one'),date_i18n('d M, H:i',strtotime($poll->ends_at))):__('Results will be shown when the poll closes.','workforce-one'));
         }
         return [
             'id'=>(int)$poll->id,'question'=>(string)$poll->question,'description'=>(string)$poll->description,'state'=>$state,
@@ -149,6 +150,7 @@ trait EWS_Polls_Trait {
         [$open]=$this->employee_polls($emp);
         $open=array_values(array_filter($open,function($p){return !empty($p->show_homepage);}));
         if(!$open)return '';
+        wp_enqueue_style('workforce-one-polls-page');
         return $this->render_template('app/poll-card',['poll'=>$this->poll_card($open[0],$emp,true),'more'=>count($open)-1,'polls_url'=>$this->app_view_url('polls'),
             'flash'=>$this->poll_flash((int)$open[0]->id)]);
     }
@@ -156,9 +158,12 @@ trait EWS_Polls_Trait {
     /** The thank-you or error after a vote, for the poll it is about. @return array{type:string,text:string}|null */
     private function poll_flash($poll_id){
         if(absint($_GET['poll_id']??($_GET['poll_voted']??0))!==(int)$poll_id)return null;
-        if(isset($_GET['poll_voted']))return ['type'=>'success','text'=>'Thanks for voting!'];
+        if(isset($_GET['poll_voted']))return ['type'=>'success','text'=>__('Thanks for voting!','workforce-one')];
         $code=sanitize_key($_GET['poll_error']??'');
-        return isset(PollRules::ERRORS[$code])?['type'=>'error','text'=>PollRules::ERRORS[$code]]:null;
+        // The messages an employee can get, translated (the rest stay as PollRules::ERRORS says).
+        $text=['closed'=>__('This poll is closed.','workforce-one'),'not_for_you'=>__('This poll is not for your department.','workforce-one'),
+            'choice'=>__('Please choose one of the poll\'s choices.','workforce-one'),'already'=>__('You have already voted in this poll.','workforce-one')];
+        return isset(PollRules::ERRORS[$code])?['type'=>'error','text'=>$text[$code]??PollRules::ERRORS[$code]]:null;
     }
 
     /** Employee app → Polls: open polls to answer and past polls with their results. */
@@ -166,6 +171,7 @@ trait EWS_Polls_Trait {
         $emp=$this->current_employee();
         if(!$emp)return $this->ews_empty_state('Employee profile required','Your account is not linked to an active employee.');
         [$open,$past]=$this->employee_polls($emp);
+        wp_enqueue_style('workforce-one-polls-page');
         $card=function($p)use($emp){return $this->render_template('app/poll-card',['poll'=>$this->poll_card($p,$emp),'more'=>0,'polls_url'=>'','flash'=>$this->poll_flash((int)$p->id)]);};
         // A refused vote for a poll that is not listed (switched off, not for this employee…) is told at the top.
         $about=absint($_GET['poll_id']??0);$listed=array_map(function($p){return (int)$p->id;},array_merge($open,$past));
