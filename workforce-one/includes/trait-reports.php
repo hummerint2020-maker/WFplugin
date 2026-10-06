@@ -61,6 +61,7 @@ trait EWS_Reports_Trait {
             $views[]=['id'=>$v['id'],'name'=>$v['name'],'url'=>add_query_arg(array_merge(['ews_view'=>'reports'],$args),$this->app_view_url('reports'))];
         }
         wp_enqueue_script('workforce-one-reports');
+        wp_enqueue_style('workforce-one-reports-page');
         return $this->render_template('app/reports',[
             'type'=>$type,'tabs'=>$tabs,'start'=>$s,'end'=>$e,'team'=>$team,'employee_id'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status,
             'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>\WorkforceOne\Reports\Summary::BUCKETS,'body'=>$body,'views'=>$views,'range'=>$range,
@@ -352,17 +353,16 @@ trait EWS_Reports_Trait {
 
     private function report_status_badge($status){
         $map=[
-            'Present'=>['✓','present'],'Late'=>['◷','late'],'Absent'=>['×','absent'],'Leave'=>['▣','leave'],
-            'Business Trip'=>['↗','trip'],'Holiday'=>['✦','leave'],'Pending'=>['◷','pending'],'Not Scheduled'=>['—','neutral'],'Missing Sign-out'=>['!','missing'],'Not Set'=>['—','neutral']
+            'Present'=>['check','present'],'Late'=>['overtime','late'],'Absent'=>['alert','absent'],'Leave'=>['leave','leave'],
+            'Business Trip'=>['briefcase','trip'],'Holiday'=>['sparkle','leave'],'Pending'=>['clock','pending'],'Not Scheduled'=>['calendar','neutral'],'Missing Sign-out'=>['alert','missing'],'Not Set'=>['calendar','neutral']
         ];
-        $v=$map[$status]??['•','neutral'];
-        return '<span class="ews-report-status '.$v[1].'"><b>'.esc_html($v[0]).'</b>'.esc_html($status).'</span>';
+        $v=$map[$status]??['calendar','neutral'];
+        return '<span class="ews-report-status '.$v[1].'">'.\WorkforceOne\Ui\Icons::svg($v[0],13,2.2).esc_html($status).'</span>';
     }
 
     private function report_planned_badge($status){
-        $type=$this->schedule_type_config($status);
-        if($type)return '<span class="ews-report-planned" style="background:'.esc_attr($type['bg_color']).';color:'.esc_attr($type['text_color']).';border-color:'.esc_attr($type['border_color']).'">'.esc_html(($type['icon']??'•').' '.$status).'</span>';
-        return '<span class="ews-report-planned neutral">'.esc_html($status).'</span>';
+        [$icon,$tone]=\WorkforceOne\Ui\Icons::forStatus((string)$status);
+        return '<span class="ews-report-planned wfo-chip is-'.esc_attr($tone).'">'.\WorkforceOne\Ui\Icons::svg($icon,13,2).'<span>'.esc_html($status).'</span></span>';
     }
 
     private function report_work_week_range($timestamp=null,$offset_weeks=0){

@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.57
+New look, step 10: the Report Center. Every report, filter, quick range, saved view, CSV / Excel
+export and sortable column works exactly as before (same tables, columns and data attributes; the
+report tests pass unchanged: 41 + 27 + 23).
+
+### Changed
+- **Report tabs** as a row of pills with icons (scrolls sideways on a phone), the report's
+  description under them.
+- **Saved views** as chips with a remove button.
+- **Report Period** card: quick ranges as pills, then From / To, team, employee, status and result
+  side by side with one Generate Report button. "Save this report as a view" folds away under a
+  link.
+- **Report cards**: summary tiles with icons instead of symbols, KPI tiles with the change versus
+  the previous period, the daily attendance chart in the theme colours, and tables with sticky
+  headers and status chips with icons (Present, Late, Absent, Leave…). The planned status uses
+  the same chips as the Schedule page.
+- Export buttons with icons; the filter texts are translatable (Arabic added).
+
 ## 3.31.56
 New look, step 9: the managers' Attendance page. Planning the week, "Set…" for a whole day, search
 and team filter, saving only the changed cells (with the stale-page conflict check), and the CSV

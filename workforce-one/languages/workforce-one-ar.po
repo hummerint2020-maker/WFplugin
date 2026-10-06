@@ -2648,3 +2648,69 @@ msgstr "تحقق ومعاينة"
 
 msgid "Download Sample CSV"
 msgstr "تنزيل نموذج CSV"
+
+msgid "Export CSV"
+msgstr "تصدير CSV"
+
+msgid "Export Excel"
+msgstr "تصدير Excel"
+
+msgid "Saved views"
+msgstr "العروض المحفوظة"
+
+msgid "Remove saved view %s"
+msgstr "حذف العرض المحفوظ %s"
+
+msgid "Remove"
+msgstr "حذف"
+
+msgid "Report Period"
+msgstr "فترة التقرير"
+
+msgid "Quick Range"
+msgstr "فترة سريعة"
+
+msgid "From Date"
+msgstr "من تاريخ"
+
+msgid "To Date"
+msgstr "إلى تاريخ"
+
+msgid "All Employees"
+msgstr "كل الموظفين"
+
+msgid "Inactive"
+msgstr "غير نشط"
+
+msgid "Employee Status"
+msgstr "حالة الموظف"
+
+msgid "Active Only"
+msgstr "النشطون فقط"
+
+msgid "Inactive Only"
+msgstr "غير النشطين فقط"
+
+msgid "All Results"
+msgstr "كل النتائج"
+
+msgid "Generate Report"
+msgstr "إنشاء التقرير"
+
+msgid "Save this report as a view"
+msgstr "احفظ هذا التقرير كعرض"
+
+msgid "View name"
+msgstr "اسم العرض"
+
+msgid "e.g. Ops team this month"
+msgstr "مثال: فريق العمليات هذا الشهر"
+
+msgid "Save view"
+msgstr "حفظ العرض"
+
+msgid "The period is saved as \"%s\", so the view always opens on the current one."
+msgstr "تُحفظ الفترة كـ \"%s\"، فيفتح العرض دائمًا على الفترة الحالية."
+
+msgid "The view keeps these dates."
+msgstr "يحتفظ العرض بهذه التواريخ."

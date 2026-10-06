@@ -37,8 +37,8 @@ $dates = $grid ? array_keys(reset($grid)['days']) : [];
 
 <div class="ews-report-results-card">
     <div class="ews-report-section-head"><div><h3>Daily Plan</h3><p>Planned / seats each day<?php echo $split ? ', with how many are your employees' : ''; ?>. Past days also show how many signed in.</p></div>
-        <a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url($csv_url); ?>" data-ews-csv-export="1">⇩ &nbsp;Export CSV</a>
-        <a class="ews-btn secondary ews-report-export-xlsx" href="<?php echo esc_url($xlsx_url); ?>" data-ews-xlsx-export="1">▣ &nbsp;Export Excel</a></div>
+        <a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url($csv_url); ?>" data-ews-csv-export="1"><?php echo \WorkforceOne\Ui\Icons::svg('download', 16); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><?php esc_html_e('Export CSV', 'workforce-one'); ?></a>
+        <a class="ews-btn secondary ews-report-export-xlsx" href="<?php echo esc_url($xlsx_url); ?>" data-ews-xlsx-export="1"><?php echo \WorkforceOne\Ui\Icons::svg('reports', 16); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><?php esc_html_e('Export Excel', 'workforce-one'); ?></a></div>
     <div class="ews-rc-cap-legend"><span class="ews-rc-cap--ok">OK</span><span class="ews-rc-cap--warn">Near capacity (<?php echo (int) $warn_pct; ?>%+)</span><span class="ews-rc-cap--over">Over capacity</span><span class="ews-rc-cap--none">No seat limit</span></div>
     <div class="ews-report-table-wrap"><table class="ews-report-table ews-rc-cap-grid">
         <thead><tr><th>Location</th>

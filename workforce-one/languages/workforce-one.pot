@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.55\n"
+"Project-Id-Version: Workforce One 3.31.56\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T10:29:34+00:00\n"
+"POT-Creation-Date: 2026-10-06T10:36:56+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -123,6 +123,7 @@ msgstr ""
 
 #: includes/trait-app-layout.php:64
 #: includes/trait-app-layout.php:74
+#: templates/app/reports.php:30
 msgid "Reports"
 msgstr ""
 
@@ -722,7 +723,7 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
 #: templates/app/overtime.php:79
@@ -730,50 +731,50 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:435
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:435
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:439
+#: includes/trait-frontend.php:442
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:439
+#: includes/trait-frontend.php:442
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1050,6 +1051,7 @@ msgstr ""
 
 #: templates/app/attendance-insights.php:32
 #: templates/app/people.php:19
+#: templates/app/reports.php:52
 msgid "All Teams"
 msgstr ""
 
@@ -1210,6 +1212,7 @@ msgstr ""
 
 #: templates/app/attendance.php:98
 #: templates/app/my-profile.php:93
+#: templates/app/reports.php:52
 msgid "Team"
 msgstr ""
 
@@ -1223,6 +1226,7 @@ msgstr ""
 
 #: templates/app/attendance.php:128
 #: templates/app/attendance.php:183
+#: templates/app/reports.php:53
 #: templates/app/schedule.php:100
 msgid "Employee"
 msgstr ""
@@ -1274,6 +1278,7 @@ msgid "Note"
 msgstr ""
 
 #: templates/app/attendance.php:183
+#: templates/app/reports.php:56
 msgid "Result"
 msgstr ""
 
@@ -2471,6 +2476,113 @@ msgstr ""
 
 #: templates/app/presence.php:38
 msgid "Verified at:"
+msgstr ""
+
+#: templates/app/report-capacity.php:40
+#: templates/app/report-daily.php:33
+#: templates/app/report-leave.php:28
+#: templates/app/report-overtime.php:29
+#: templates/app/report-summary.php:70
+#: templates/app/report-timesheet.php:17
+#: templates/app/report-workforce.php:22
+msgid "Export CSV"
+msgstr ""
+
+#: templates/app/report-capacity.php:41
+#: templates/app/report-daily.php:34
+#: templates/app/report-leave.php:29
+#: templates/app/report-overtime.php:30
+#: templates/app/report-summary.php:71
+#: templates/app/report-timesheet.php:18
+#: templates/app/report-workforce.php:23
+msgid "Export Excel"
+msgstr ""
+
+#: templates/app/reports.php:36
+msgid "Saved views"
+msgstr ""
+
+#. translators: %s: view name
+#: templates/app/reports.php:40
+#, php-format
+msgid "Remove saved view %s"
+msgstr ""
+
+#. translators: %s: view name
+#: templates/app/reports.php:40
+msgid "Remove"
+msgstr ""
+
+#: templates/app/reports.php:47
+msgid "Report Period"
+msgstr ""
+
+#: templates/app/reports.php:48
+msgid "Quick Range"
+msgstr ""
+
+#: templates/app/reports.php:50
+msgid "From Date"
+msgstr ""
+
+#: templates/app/reports.php:51
+msgid "To Date"
+msgstr ""
+
+#: templates/app/reports.php:53
+#: templates/app/reports.php:54
+msgid "All Employees"
+msgstr ""
+
+#: templates/app/reports.php:53
+msgid "Inactive"
+msgstr ""
+
+#: templates/app/reports.php:54
+msgid "Employee Status"
+msgstr ""
+
+#: templates/app/reports.php:54
+msgid "Active Only"
+msgstr ""
+
+#: templates/app/reports.php:54
+msgid "Inactive Only"
+msgstr ""
+
+#: templates/app/reports.php:56
+msgid "All Results"
+msgstr ""
+
+#: templates/app/reports.php:58
+msgid "Generate Report"
+msgstr ""
+
+#: templates/app/reports.php:62
+msgid "Save this report as a view"
+msgstr ""
+
+#: templates/app/reports.php:66
+msgid "View name"
+msgstr ""
+
+#: templates/app/reports.php:66
+msgid "e.g. Ops team this month"
+msgstr ""
+
+#: templates/app/reports.php:67
+msgid "Save view"
+msgstr ""
+
+#. translators: %s: range name, e.g. This Month
+#: templates/app/reports.php:68
+#, php-format
+msgid "The period is saved as \"%s\", so the view always opens on the current one."
+msgstr ""
+
+#. translators: %s: range name, e.g. This Month
+#: templates/app/reports.php:68
+msgid "The view keeps these dates."
 msgstr ""
 
 #: templates/app/schedule.php:43

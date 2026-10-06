@@ -14,8 +14,8 @@ use WorkforceOne\Reports\Timesheet;
 ?>
 <div class="ews-report-results-card">
     <div class="ews-report-section-head"><div><h3>Timesheet</h3><p>Net hours are Sign In to Sign Out minus breaks. Decimal hours are for payroll (7:10 = 7.17).</p></div>
-        <a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url($csv_url); ?>" data-ews-csv-export="1">⇩ &nbsp;Export CSV</a>
-        <a class="ews-btn secondary ews-report-export-xlsx" href="<?php echo esc_url($xlsx_url); ?>" data-ews-xlsx-export="1">▣ &nbsp;Export Excel</a></div>
+        <a class="ews-btn secondary ews-report-export-csv" href="<?php echo esc_url($csv_url); ?>" data-ews-csv-export="1"><?php echo \WorkforceOne\Ui\Icons::svg('download', 16); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><?php esc_html_e('Export CSV', 'workforce-one'); ?></a>
+        <a class="ews-btn secondary ews-report-export-xlsx" href="<?php echo esc_url($xlsx_url); ?>" data-ews-xlsx-export="1"><?php echo \WorkforceOne\Ui\Icons::svg('reports', 16); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><?php esc_html_e('Export Excel', 'workforce-one'); ?></a></div>
     <div class="ews-report-table-wrap"><table class="ews-report-table ews-rc-summary" data-ews-sortable>
         <thead><tr>
             <th data-sort="text">Employee</th><th data-sort="num">Worked Days</th><th data-sort="num">Net Hours</th><th data-sort="num">Decimal</th><th data-sort="num">Expected</th><th data-sort="num">Balance</th>
