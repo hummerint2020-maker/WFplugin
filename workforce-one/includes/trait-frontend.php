@@ -220,6 +220,8 @@ trait EWS_Frontend_Trait {
             wp_style_add_data('workforce-one-attendance-page', 'rtl', 'replace');
             wp_register_style('workforce-one-reports-page', $root.'assets/css/app-reports.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-reports-page', 'rtl', 'replace');
+            wp_register_style('workforce-one-insights-page', $root.'assets/css/app-insights.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-insights-page', 'rtl', 'replace');
             wp_style_add_data('workforce-one-time-page', 'rtl', 'replace');
             wp_style_add_data('workforce-one-home', 'rtl', 'replace');
             wp_style_add_data('workforce-one', 'rtl', 'replace');
@@ -242,6 +244,7 @@ trait EWS_Frontend_Trait {
             if($view==='people'||$view==='employee')wp_enqueue_style('workforce-one-people-page');
             if($view==='attendance')wp_enqueue_style('workforce-one-attendance-page');
             if($view==='reports')wp_enqueue_style('workforce-one-reports-page');
+            if($view==='attendance-insights')wp_enqueue_style('workforce-one-insights-page');
             wp_enqueue_script('workforce-one', $root.'assets/js/workforce-one.js', ['wp-i18n'], $ver, true);
             wp_set_script_translations('workforce-one', 'workforce-one', dirname(__DIR__).'/languages');
             wp_add_inline_script('workforce-one','window.ewsConfirmationConfig='.wp_json_encode($this->frontend_confirmation_config()).';','before');

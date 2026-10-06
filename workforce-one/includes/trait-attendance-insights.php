@@ -162,6 +162,7 @@ trait EWS_Attendance_Insights_Trait {
         ['drill'=>$drill,'focus_drill'=>$focus_drill]=$this->insights_compute($emps,$dates,$focus,$today);
         $url=function($date)use($team){return add_query_arg(['focus_date'=>$date,'team'=>$team],$this->app_view_url('attendance-insights'));};
         wp_enqueue_script('workforce-one-app-attendance-insights');
+        wp_enqueue_style('workforce-one-insights-page');
         return $this->render_template('app/attendance-insights',[
             'dates'=>$dates,'today'=>$today,'focus'=>$focus,'team'=>$team,'team_options'=>$team_options,
             'drill'=>$drill,'focus_drill'=>$focus_drill,

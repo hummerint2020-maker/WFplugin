@@ -2714,3 +2714,15 @@ msgstr "تُحفظ الفترة كـ \"%s\"، فيفتح العرض دائمًا
 
 msgid "The view keeps these dates."
 msgstr "يحتفظ العرض بهذه التواريخ."
+
+msgid "Other"
+msgstr "أخرى"
+
+msgid "Selected Day"
+msgstr "اليوم المحدد"
+
+msgid "Previous day"
+msgstr "اليوم السابق"
+
+msgid "Next day"
+msgstr "اليوم التالي"

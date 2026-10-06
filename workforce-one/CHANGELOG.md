@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.31.58
+New look, step 11: Attendance Insights. The week and day switchers, team and day filters and the
+names drawer behind every count work exactly as before (same data attributes and script; the
+insights tests pass unchanged: 13 + 12).
+
+### Changed
+- **Switchers**: week and day as two cards with arrows, a Today button when another day is shown,
+  and the team / day pickers beside them.
+- **Workforce Overview** tiles with icons (Office, WFH, Leave, Business Trip, Other, Absent,
+  Not Set) instead of emoji; **Attendance** results as coloured tiles with an icon + word.
+- **Weekly table**: row icons, the chosen day's column highlighted, counts as tappable pills
+  (zeros greyed out).
+- **Names drawer** slides in from the side on desktop and up from the bottom on phones.
+- Remaining texts translatable (Arabic added).
+
 ## 3.31.57
 New look, step 10: the Report Center. Every report, filter, quick range, saved view, CSV / Excel
 export and sortable column works exactly as before (same tables, columns and data attributes; the
