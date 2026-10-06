@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.59
+The managers' Attendance page on phones and tablets (700px and narrower), after review. Only the
+look changed; the grid tests pass unchanged (23).
+
+### Changed
+- An employee's card opens to the week's days **side by side in one row** (day, date, the planned
+  select and the result under it), like the earlier design; today's column is highlighted, and on a
+  narrow phone the row scrolls sideways.
+- The "Set…" boxes for whole days are one scrolling row too.
+- The stat tiles fit in one row on a tablet (icon above the number) and two per row on a phone.
+- Fixed: the Schedule Controls title was pushed aside on tablets.
+
 ## 3.31.58
 New look, step 11: Attendance Insights. The week and day switchers, team and day filters and the
 names drawer behind every count work exactly as before (same data attributes and script; the
