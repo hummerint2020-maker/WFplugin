@@ -10,7 +10,7 @@
 .wfo-header-greeting{margin:4px 0 0;font-size:28px;font-weight:700;line-height:1.25;color:#fff}
 .wfo-header.has-greeting+.wfo-content .wfo-home{margin-top:-62px;position:relative}
 
-.wfo-home{display:flex;flex-direction:column;gap:16px;max-width:1100px}
+.wfo-home{display:flex;flex-direction:column;gap:16px}
 .wfo-app .wfo-home h2,.wfo-app .wfo-home h3,.wfo-app .wfo-home p{margin:0}
 .wfo-card{background:var(--wfo-surface);border-radius:var(--wfo-r-card);box-shadow:var(--wfo-shadow);padding:18px 20px}
 .wfo-card-head{display:flex;flex-direction:column;gap:2px;margin-bottom:12px}

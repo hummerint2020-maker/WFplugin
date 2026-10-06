@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.59
+ * Version: 3.31.60
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.59');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.60');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -96,6 +96,7 @@ class EWS_Manager_V31_1 {
             $this->maybe_upgrade_schema();
             add_action('init',[$this,'load_textdomain'],1);
             add_shortcode('employee_app',[$this,'app']);
+            add_filter('template_include',[$this,'app_fullscreen_template'],99); // Appearance → Full-screen app page
             \WorkforceOne\Api\Hooks::register($this); // REST routes (src/Api/Routes.php)
             add_shortcode('employee_login',[$this,'login_page']);
             add_action('wp_logout',[$this,'after_logout']);

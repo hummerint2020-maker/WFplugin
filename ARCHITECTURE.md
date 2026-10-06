@@ -172,3 +172,6 @@ registered in `enqueue_frontend_assets()` and loaded in `<head>` for its `ews_vi
 (`app-home.css`), Sign In / Out (`app-time.css`), Leave (`app-leave.css`), Schedule
 (`app-schedule.css`), Polls (`app-polls.css`, also on Home for the poll card) My Profile (`app-profile.css`, also used by a colleague's profile) People (`app-people.css`) the managers' Attendance grid (`app-attendance.css`) the Report Center (`app-reports.css`) and Attendance Insights (`app-insights.css`). Shared pieces live in `app-shell.css` (status chips `.wfo-chip.is-<tone>`
 with `Icons::forStatus()`, and the seven-day `.wfo-myweek-days` strip).
+With Appearance → Full-screen app page (default) the app's page is rendered by
+`templates/app/page-fullscreen.php` (`app_fullscreen_template()` on `template_include`) instead of the
+theme's page template: `wp_head()` / `wp_footer()` only, no theme header or footer.

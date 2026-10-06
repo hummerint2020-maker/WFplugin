@@ -53,6 +53,8 @@ final class Appearance
         'app_name' => 'Workforce One',
         'tagline' => 'One Platform. One Team. One Goal.',
         'logo_url' => '',
+        // '1': the app's page shows only the app (no theme header, footer or page padding).
+        'fullscreen' => '1',
     ];
 
     /**
@@ -79,6 +81,7 @@ final class Appearance
         }
         $logo = trim((string) ($saved['logo_url'] ?? ''));
         $out['logo_url'] = preg_match('#^https?://[^\s"\'<>]+$#i', $logo) ? $logo : '';
+        if (array_key_exists('fullscreen', $saved)) $out['fullscreen'] = (string) $saved['fullscreen'] === '0' ? '0' : '1';
         return $out;
     }
 

@@ -20,6 +20,10 @@ final class AppearanceTest extends TestCase
         $this->assertSame('https://x.test/logo.svg', A::config(['logo_url' => 'https://x.test/logo.svg'])['logo_url']);
         $this->assertSame('', A::config(['company_name' => ''])['company_name'], 'an empty name is allowed (hidden)');
         $this->assertSame(60, mb_strlen(A::config(['app_name' => str_repeat('ش', 80)])['app_name']));
+        $this->assertSame('1', A::config([])['fullscreen'], 'the app page is full screen by default');
+        $this->assertSame('0', A::config(['fullscreen' => '0'])['fullscreen']);
+        $this->assertSame('1', A::config(['fullscreen' => 'yes'])['fullscreen'], 'anything else than 0 keeps it on');
+        $this->assertSame('0', A::fromPost(['fullscreen' => '0'], null)['config']['fullscreen'], 'the unticked box is saved');
     }
 
     public function testHexAndContrast(): void

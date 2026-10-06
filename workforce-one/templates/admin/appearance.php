@@ -42,6 +42,9 @@ $color_help = ['header_start' => 'Top of the header', 'header_end' => 'Bottom of
         </div>
         <label><span>Logo URL</span><input type="url" name="logo_url" value="<?php echo esc_attr($cfg['logo_url']); ?>" placeholder="https://… (square PNG or SVG, at least 256 px)" data-preview-logo></label>
         <p class="wfo-ap-help">Shown at the top of the app menu. Leave empty to show the app name's initials.</p>
+        <input type="hidden" name="fullscreen" value="0">
+        <label class="wfo-ap-check"><input type="checkbox" name="fullscreen" value="1" <?php checked($cfg['fullscreen'], '1'); ?>> Full-screen app page (show only the app, without the site theme's header, footer and page spacing)</label>
+        <p class="wfo-ap-help">Turn this off if the app page should keep your theme's header and footer.</p>
     </section>
 
     <section class="wfo-ap-card">

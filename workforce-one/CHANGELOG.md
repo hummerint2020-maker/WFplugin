@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.60
+### Added
+- **Full-screen app page** (wp-admin → Appearance → Brand, on by default): the page that holds the
+  app shows only the app, without the site theme's header, footer and page spacing. This removes the
+  empty band above the app header, most visible in the installed app. The theme's and other
+  plugins' head / footer code still runs (styles, the install tags). Untick it to keep the theme's
+  header and footer around the app.
+
+### Changed
+- Home's cards use the full width of the app, matching the header.
+
 ## 3.31.59
 The managers' Attendance page on phones and tablets (700px and narrower), after review. Only the
 look changed; the grid tests pass unchanged (23).

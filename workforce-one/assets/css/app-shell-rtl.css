@@ -80,6 +80,11 @@
 .wfo-more::backdrop{background:rgba(11,14,31,.5)}
 .wfo-more-sheet{width:100%;max-height:86vh;overflow:auto;box-sizing:border-box;background:var(--wfo-surface);border-radius:28px 28px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px;animation:wfo-sheet-up .22s ease-out}
 @keyframes wfo-sheet-up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+/* Appearance → Full-screen app page (templates/app/page-fullscreen.php): the app fills the window */
+body.wfo-fullscreen{margin:0;background:#F3F4FA;min-height:100vh}
+.wfo-fullscreen-main{margin:0;padding:0}
+body.wfo-fullscreen .ews-app.wfo-app{max-width:none;margin:0;border-radius:0;min-height:100vh}
+
 /* status chips (icon + word, never colour alone): Home, Schedule */
 .wfo-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap;background:#EEF0F5;color:#3B4466}
 .wfo-chip.is-office{background:#E6F7EF;color:#0F6B43}
