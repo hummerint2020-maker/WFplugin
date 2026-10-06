@@ -2546,3 +2546,105 @@ msgstr "لا يوجد نتائج"
 
 msgid "Try another name or team."
 msgstr "جرّب اسمًا أو فريقًا آخر."
+
+msgid "Present"
+msgstr "حاضر"
+
+msgid "Late"
+msgstr "متأخر"
+
+msgid "Awaiting sign in"
+msgstr "في انتظار تسجيل الحضور"
+
+msgid "Not scheduled"
+msgstr "غير مجدول"
+
+msgid "Business Trip"
+msgstr "مهمة عمل"
+
+msgid "MANAGER CONTROL CENTER"
+msgstr "مركز تحكم المدير"
+
+msgid "Manage your team schedule and see attendance results in one place."
+msgstr "أدر جدول فريقك وتابع نتائج الحضور في مكان واحد."
+
+msgid "Choose a date"
+msgstr "اختر تاريخًا"
+
+msgid "Choose week"
+msgstr "اختر الأسبوع"
+
+msgid "Present days"
+msgstr "أيام الحضور"
+
+msgid "Late days"
+msgstr "أيام التأخير"
+
+msgid "Absent days"
+msgstr "أيام الغياب"
+
+msgid "Attendance rate"
+msgstr "نسبة الحضور"
+
+msgid "Schedule Controls"
+msgstr "التحكم في الجدول"
+
+msgid "Set the planned schedule for everyone on a specific day."
+msgstr "حدد الجدول المخطط للجميع في يوم معين."
+
+msgid "Search employee..."
+msgstr "ابحث عن موظف..."
+
+msgid "All teams"
+msgstr "كل الفرق"
+
+msgid "Set…"
+msgstr "تحديد…"
+
+msgid "%1$d recorded · %2$d absent"
+msgstr "%1$d مسجّل · %2$d غائب"
+
+msgid "Empty cells are not changed."
+msgstr "الخانات الفارغة لا تتغير."
+
+msgid "Save Schedule & Attendance"
+msgstr "حفظ الجدول والحضور"
+
+msgid "The CSV preview has expired. Please upload the file again."
+msgstr "انتهت صلاحية معاينة الملف. من فضلك ارفعه مرة أخرى."
+
+msgid "CSV Preview"
+msgstr "معاينة الملف"
+
+msgid "Existing entries for the same employee and date will be replaced."
+msgstr "سيتم استبدال السجلات الموجودة لنفس الموظف والتاريخ."
+
+msgid "Line"
+msgstr "السطر"
+
+msgid "Note"
+msgstr "ملاحظة"
+
+msgid "Result"
+msgstr "النتيجة"
+
+msgid "Import %d row(s)"
+msgstr "استيراد %d صف"
+
+msgid "Advanced: Bulk CSV Import"
+msgstr "متقدم: استيراد جماعي من ملف CSV"
+
+msgid "Use this when you have many rows from Excel."
+msgstr "استخدمه عندما يكون لديك صفوف كثيرة من Excel."
+
+msgid "Download the sample, fill it in Excel, upload it, review validation, then import."
+msgstr "نزّل النموذج، املأه في Excel، ارفعه، راجع التحقق، ثم استورد."
+
+msgid "Upload CSV"
+msgstr "رفع ملف CSV"
+
+msgid "Validate & Preview"
+msgstr "تحقق ومعاينة"
+
+msgid "Download Sample CSV"
+msgstr "تنزيل نموذج CSV"

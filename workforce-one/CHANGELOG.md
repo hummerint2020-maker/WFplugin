@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.56
+New look, step 9: the managers' Attendance page. Planning the week, "Set…" for a whole day, search
+and team filter, saving only the changed cells (with the stale-page conflict check), and the CSV
+preview / import work exactly as before (same form, fields and the classes attendance-grid.js uses;
+the grid tests pass unchanged: 23).
+
+### Changed
+- **Week switcher** card (arrows and the date range, tap it to pick a date) beside a short intro.
+- **Five stat tiles** with icons: employees, present, late and absent days, attendance rate.
+- **Schedule Controls**: search with an icon, the team filter, one "Set…" box per day (today
+  outlined) and a colour key.
+- **The grid**: pictures or coloured initials, You / Manager badges, the planned type coloured in
+  each select, and the result under it as an icon + word (Present, Late, Absent, Leave, Awaiting
+  sign in, Not scheduled, trips) instead of symbols; the names column and the day headers stay in
+  place while scrolling.
+- **Save bar** stays at the bottom of the screen while you edit, with one yellow Save button.
+- **Phones**: one card per employee that opens to two-column day boxes.
+- The CSV preview and the Bulk CSV Import section are cards in the same style.
+- All texts are translatable (Arabic added).
+
 ## 3.31.55
 New look, step 8: People and a colleague's profile. Searching, the team filter, the profile
 sections chosen in wp-admin → Employee Profile, and Kudos work exactly as before (same form and

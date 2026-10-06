@@ -50,7 +50,11 @@ trait EWS_Attendance_Grid_Trait {
         $preview_token=sanitize_text_field(wp_unslash($_GET['preview']??''));
         $preview_rows=$preview_token!==''?get_transient('ews31_preview_'.$preview_token.'_'.get_current_user_id()):false;
         wp_enqueue_script('workforce-one-attendance-grid');
+        wp_enqueue_style('workforce-one-attendance-page');
+        $people=[];
+        foreach($emps as $e)$people[(int)$e->id]=['picture'=>$this->employee_picture_url($e),'initials'=>\WorkforceOne\Employees\ProfileSummary::initials((string)$e->name)?:'·'];
         return $this->render_template('app/attendance',[
+            'people'=>$people,
             'emps'=>$emps,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
             'summary'=>$summary,'day_summary'=>$day_summary,'team_options'=>array_values($team_options),
             'rate'=>Insights::rate($summary['Present'],$summary['Late'],$summary['Absent']),
