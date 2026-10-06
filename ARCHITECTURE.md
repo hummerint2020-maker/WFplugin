@@ -170,5 +170,5 @@ come from `Ui\Icons` (no emoji); and status always has an icon and a word, never
 Each redesigned page has its own stylesheet (`assets/css/app-<page>.css` + generated `-rtl.css`),
 registered in `enqueue_frontend_assets()` and loaded in `<head>` for its `ews_view`: Home
 (`app-home.css`), Sign In / Out (`app-time.css`), Leave (`app-leave.css`), Schedule
-(`app-schedule.css`), Polls (`app-polls.css`, also on Home for the poll card) and My Profile (`app-profile.css`). Shared pieces live in `app-shell.css` (status chips `.wfo-chip.is-<tone>`
+(`app-schedule.css`), Polls (`app-polls.css`, also on Home for the poll card) My Profile (`app-profile.css`, also used by a colleague's profile) and People (`app-people.css`). Shared pieces live in `app-shell.css` (status chips `.wfo-chip.is-<tone>`
 with `Icons::forStatus()`, and the seven-day `.wfo-myweek-days` strip).

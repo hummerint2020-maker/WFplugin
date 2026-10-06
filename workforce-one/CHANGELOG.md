@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.31.55
+New look, step 8: People and a colleague's profile. Searching, the team filter, the profile
+sections chosen in wp-admin → Employee Profile, and Kudos work exactly as before (same form and
+fields; the People tests pass unchanged: 15).
+
+### Changed
+- **People**: one search bar (name, team, Search / Clear), the number of people found, and
+  cards with each person's picture or avatar (or coloured initials), name and login.
+- **A colleague's profile** uses the My Profile look: a header card with the picture in a ring,
+  name and team; **Work Profile** (teams, a clickable work email, supervisor); **Achievements**;
+  **Recognition** with a Give Kudos button, the Kudos form and the received Kudos as cards.
+- All texts are translatable (Arabic added).
+
+### Fixed
+- Home: the "No upcoming schedule" message in My Week had oversized text; it now uses the
+  same empty-state style as the other pages.
+
 ## 3.31.54
 New look, step 7: My Profile. Changing the picture (avatar, photo upload, initials) and the
 password work exactly as before (same forms, fields and the ids the page script uses; the profile

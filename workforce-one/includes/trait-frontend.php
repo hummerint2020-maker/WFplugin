@@ -214,6 +214,8 @@ trait EWS_Frontend_Trait {
             wp_style_add_data('workforce-one-polls-page', 'rtl', 'replace');
             wp_register_style('workforce-one-profile-page', $root.'assets/css/app-profile.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-profile-page', 'rtl', 'replace');
+            wp_register_style('workforce-one-people-page', $root.'assets/css/app-people.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-people-page', 'rtl', 'replace');
             wp_style_add_data('workforce-one-time-page', 'rtl', 'replace');
             wp_style_add_data('workforce-one-home', 'rtl', 'replace');
             wp_style_add_data('workforce-one', 'rtl', 'replace');
@@ -232,7 +234,8 @@ trait EWS_Frontend_Trait {
             if($view==='vacation')wp_enqueue_style('workforce-one-leave-page');
             if($view==='schedule')wp_enqueue_style('workforce-one-schedule-page');
             if($view==='polls'||$view==='dashboard')wp_enqueue_style('workforce-one-polls-page');
-            if($view==='profile')wp_enqueue_style('workforce-one-profile-page');
+            if($view==='profile'||$view==='employee')wp_enqueue_style('workforce-one-profile-page');
+            if($view==='people'||$view==='employee')wp_enqueue_style('workforce-one-people-page');
             wp_enqueue_script('workforce-one', $root.'assets/js/workforce-one.js', ['wp-i18n'], $ver, true);
             wp_set_script_translations('workforce-one', 'workforce-one', dirname(__DIR__).'/languages');
             wp_add_inline_script('workforce-one','window.ewsConfirmationConfig='.wp_json_encode($this->frontend_confirmation_config()).';','before');

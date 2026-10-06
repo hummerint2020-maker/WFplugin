@@ -105,3 +105,10 @@
     .wfo-card{padding:16px}
 }
 @media (prefers-reduced-motion:reduce){.wfo-tile-icon{transition:none}}
+
+/* empty states inside Home cards (shared helper ews_empty_state()) */
+.wfo-app .wfo-home .ews-empty-state{display:flex;flex-direction:column;align-items:center;gap:6px;margin:0;padding:20px 12px;text-align:center;border:1px dashed var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
+.wfo-app .wfo-home .ews-empty-icon{width:44px;height:44px;border-radius:999px;background:var(--wfo-pri-soft);color:var(--wfo-pri);display:flex;align-items:center;justify-content:center;font-size:18px}
+.wfo-app .wfo-home .ews-empty-title{font-size:14px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-home .ews-empty-text{font-size:13px;line-height:1.5;color:var(--wfo-muted)}
+.wfo-app .wfo-home .ews-empty-action{margin-top:4px;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:var(--wfo-r-sm);background:var(--wfo-hero-start);color:#fff;text-decoration:none;font-size:13px;font-weight:600}

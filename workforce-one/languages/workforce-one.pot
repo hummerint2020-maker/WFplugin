@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.53\n"
+"Project-Id-Version: Workforce One 3.31.54\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T10:12:04+00:00\n"
+"POT-Creation-Date: 2026-10-06T10:21:29+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -165,6 +165,7 @@ msgid "People"
 msgstr ""
 
 #: includes/trait-app-layout.php:64
+#: templates/app/employee.php:34
 msgid "Employee Profile"
 msgstr ""
 
@@ -352,6 +353,7 @@ msgid "Confirm"
 msgstr ""
 
 #: includes/trait-frontend.php:104
+#: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
 #: templates/app/schedule.php:152
 #: templates/app/schedule.php:173
@@ -715,7 +717,7 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
 #: templates/app/overtime.php:79
@@ -723,50 +725,50 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:420
+#: includes/trait-frontend.php:423
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:426
+#: includes/trait-frontend.php:429
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:433
+#: includes/trait-frontend.php:436
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:433
+#: includes/trait-frontend.php:436
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1042,6 +1044,7 @@ msgid "Week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:32
+#: templates/app/people.php:19
 msgid "All Teams"
 msgstr ""
 
@@ -1291,6 +1294,142 @@ msgstr ""
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr ""
 
+#: templates/app/employee.php:22
+msgid "You have reached your weekly Kudos limit. You can send more next week."
+msgstr ""
+
+#: templates/app/employee.php:23
+msgid "You already sent this Kudos to this colleague today."
+msgstr ""
+
+#: templates/app/employee.php:24
+msgid "Please choose what you are recognizing."
+msgstr ""
+
+#: templates/app/employee.php:25
+msgid "This colleague is no longer available."
+msgstr ""
+
+#: templates/app/employee.php:31
+msgid "Back to People"
+msgstr ""
+
+#: templates/app/employee.php:48
+msgid "Work Profile"
+msgstr ""
+
+#: templates/app/employee.php:50
+msgid "Teams"
+msgstr ""
+
+#: templates/app/employee.php:50
+msgid "No team assigned"
+msgstr ""
+
+#: templates/app/employee.php:51
+msgid "Work Email"
+msgstr ""
+
+#: templates/app/employee.php:51
+msgid "Not provided"
+msgstr ""
+
+#: templates/app/employee.php:52
+#: templates/app/my-profile.php:94
+msgid "Supervisor"
+msgstr ""
+
+#: templates/app/employee.php:52
+msgid "Not assigned"
+msgstr ""
+
+#: templates/app/employee.php:59
+#: templates/app/my-profile.php:107
+msgid "Achievements"
+msgstr ""
+
+#: templates/app/employee.php:59
+msgid "Earned milestones"
+msgstr ""
+
+#. translators: %d: number of achievements
+#: templates/app/employee.php:59
+#: templates/app/my-profile.php:107
+#, php-format
+msgid "%d earned"
+msgid_plural "%d earned"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/employee.php:61
+msgid "No achievements earned yet."
+msgstr ""
+
+#. translators: %s: date
+#: templates/app/employee.php:64
+#: templates/app/my-profile.php:112
+#, php-format
+msgid "Earned %s"
+msgstr ""
+
+#: templates/app/employee.php:75
+msgid "Recognition"
+msgstr ""
+
+#: templates/app/employee.php:75
+msgid "Appreciation from colleagues"
+msgstr ""
+
+#. translators: %d: number of kudos
+#: templates/app/employee.php:75
+#, php-format
+msgid "%d received"
+msgid_plural "%d received"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of kudos
+#: templates/app/employee.php:76
+msgid "Kudos sent successfully."
+msgstr ""
+
+#: templates/app/employee.php:77
+msgid "Unable to send Kudos. Please check the details and try again."
+msgstr ""
+
+#: templates/app/employee.php:79
+msgid "Give Kudos"
+msgstr ""
+
+#: templates/app/employee.php:82
+msgid "What are you recognizing?"
+msgstr ""
+
+#: templates/app/employee.php:83
+msgid "Message"
+msgstr ""
+
+#: templates/app/employee.php:83
+#: templates/app/leave.php:77
+msgid "(optional)"
+msgstr ""
+
+#: templates/app/employee.php:83
+msgid "Write a short thank-you..."
+msgstr ""
+
+#: templates/app/employee.php:84
+msgid "Send Kudos"
+msgstr ""
+
+#: templates/app/employee.php:89
+msgid "A colleague"
+msgstr ""
+
+#: templates/app/employee.php:91
+msgid "No recognition yet. Recognition from colleagues will appear here."
+msgstr ""
+
 #: templates/app/layout.php:36
 msgid "signed in"
 msgstr ""
@@ -1431,10 +1570,6 @@ msgstr ""
 #: templates/app/leave.php:144
 #: templates/app/overtime.php:48
 msgid "Reason"
-msgstr ""
-
-#: templates/app/leave.php:77
-msgid "(optional)"
 msgstr ""
 
 #: templates/app/leave.php:78
@@ -1686,10 +1821,6 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/app/my-profile.php:94
-msgid "Supervisor"
-msgstr ""
-
 #: templates/app/my-profile.php:95
 msgid "Shift"
 msgstr ""
@@ -1708,29 +1839,11 @@ msgid "Reset Password"
 msgstr ""
 
 #: templates/app/my-profile.php:107
-msgid "Achievements"
-msgstr ""
-
-#: templates/app/my-profile.php:107
 msgid "Your earned milestones"
 msgstr ""
 
-#. translators: %d: number of achievements
-#: templates/app/my-profile.php:107
-#, php-format
-msgid "%d earned"
-msgid_plural "%d earned"
-msgstr[0] ""
-msgstr[1] ""
-
 #: templates/app/my-profile.php:109
 msgid "Your achievements will appear here as you reach milestones."
-msgstr ""
-
-#. translators: %s: date
-#: templates/app/my-profile.php:112
-#, php-format
-msgid "Earned %s"
 msgstr ""
 
 #: templates/app/my-profile.php:121
@@ -1955,6 +2068,42 @@ msgstr ""
 
 #: templates/app/overtime.php:72
 msgid "No Pending Overtime Requests"
+msgstr ""
+
+#: templates/app/people.php:18
+msgid "Search people..."
+msgstr ""
+
+#: templates/app/people.php:18
+msgid "Search people"
+msgstr ""
+
+#: templates/app/people.php:19
+msgid "Filter by team"
+msgstr ""
+
+#: templates/app/people.php:20
+msgid "Search"
+msgstr ""
+
+#: templates/app/people.php:21
+msgid "Clear"
+msgstr ""
+
+#. translators: %d: number of people
+#: templates/app/people.php:23
+#, php-format
+msgid "%d person"
+msgid_plural "%d people"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/people.php:35
+msgid "No people found"
+msgstr ""
+
+#: templates/app/people.php:35
+msgid "Try another name or team."
 msgstr ""
 
 #. translators: %d: break number

@@ -36,6 +36,7 @@ trait EWS_People_View_Trait {
             $people[]=['name'=>(string)$r->name,'domain'=>(string)$r->domain_name,'initials'=>ProfileSummary::initials((string)$r->name)?:'ME','picture'=>$this->people_picture($r),
                 'url'=>add_query_arg(['ews_view'=>'employee','employee_id'=>(int)$r->id],$this->app_view_url('people'))];
         }
+        wp_enqueue_style('workforce-one-people-page');
         return $this->render_template('app/people',[
             'people'=>$people,'search'=>$search,'team_id'=>$team_id,
             'teams'=>(array)$wpdb->get_results("SELECT id,name FROM {$tt['teams']} WHERE active=1 ORDER BY name ASC"),
@@ -74,6 +75,8 @@ trait EWS_People_View_Trait {
         }
 
         wp_enqueue_script('workforce-one-people');
+        wp_enqueue_style('workforce-one-profile-page');
+        wp_enqueue_style('workforce-one-people-page');
         return $this->render_template('app/employee',[
             'cfg'=>$cfg,'emp'=>$emp,'initials'=>ProfileSummary::initials((string)$emp->name)?:'ME','picture'=>!empty($cfg['show_photo'])?$this->people_picture($emp):'',
             'teams'=>$teams,'supervisor'=>$supervisor?(string)$supervisor->name:'',

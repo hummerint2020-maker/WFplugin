@@ -19,7 +19,7 @@
 .wfo-app .wfo-profile .wfo-profile-edit:hover{filter:brightness(1.05)}
 .wfo-app .wfo-profile .wfo-profile-edit:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .wfo-profile-who{position:relative;z-index:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.wfo-app .wfo-profile .wfo-profile-who h2{font-size:26px;font-weight:700;line-height:1.2;color:#fff;overflow-wrap:anywhere}
+.wfo-app .wfo-profile .wfo-profile-who h2{font-size:26px;font-weight:700;line-height:1.2;color:#fff;overflow-wrap:anywhere;unicode-bidi:plaintext;text-align:right}
 .wfo-app .wfo-profile .wfo-profile-sub{font-size:14px;color:rgba(255,255,255,.78);overflow-wrap:anywhere;text-align:right}
 .wfo-profile-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .wfo-profile-hero .wfo-chip.is-office{background:rgba(255,255,255,.95)}
@@ -161,7 +161,7 @@
     .wfo-app .wfo-profile{gap:12px}
     .wfo-profile-hero{flex-direction:column;text-align:center;padding:22px 16px}
     .wfo-profile-who{align-items:center}
-    .wfo-app .wfo-profile .wfo-profile-who h2{font-size:22px}
+    .wfo-app .wfo-profile .wfo-profile-who h2{font-size:22px;text-align:center}
     .wfo-app .wfo-profile .wfo-profile-sub{text-align:center}
     .wfo-profile-chips{justify-content:center}
     .wfo-profile-today{grid-template-columns:minmax(0,1fr);gap:8px}

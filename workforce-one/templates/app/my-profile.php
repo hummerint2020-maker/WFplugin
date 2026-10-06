@@ -67,7 +67,7 @@ $filters = ['all' => __('All', 'workforce-one'), 'Men' => __('Men', 'workforce-o
             <button type="button" class="ews-profile-avatar-edit wfo-profile-edit" id="ews-open-profile-picture" aria-label="<?php esc_attr_e('Edit profile picture', 'workforce-one'); ?>" title="<?php esc_attr_e('Edit profile picture', 'workforce-one'); ?>"><?php echo Icons::svg('edit', 17, 2); ?></button>
         </div>
         <div class="wfo-profile-who">
-            <h2 dir="auto"><?php echo esc_html($emp->name); ?></h2>
+            <h2><?php echo esc_html($emp->name); ?></h2>
             <p class="wfo-profile-sub" dir="ltr"><?php echo esc_html($emp->email ?: $emp->domain_name); ?></p>
             <div class="wfo-profile-chips">
                 <span class="wfo-chip is-office"><?php echo Icons::svg('check', 14, 2.4); ?><span><?php esc_html_e('Active', 'workforce-one'); ?></span></span>

@@ -2435,3 +2435,114 @@ msgstr "رمز خاص واحد"
 
 msgid "Update Password"
 msgstr "تحديث كلمة المرور"
+
+msgid "You have reached your weekly Kudos limit. You can send more next week."
+msgstr "وصلت للحد الأسبوعي من التقديرات. يمكنك إرسال المزيد الأسبوع القادم."
+
+msgid "You already sent this Kudos to this colleague today."
+msgstr "أرسلت هذا التقدير لهذا الزميل اليوم بالفعل."
+
+msgid "Please choose what you are recognizing."
+msgstr "من فضلك اختر ما تقدّره."
+
+msgid "This colleague is no longer available."
+msgstr "هذا الزميل لم يعد متاحًا."
+
+msgid "Back to People"
+msgstr "العودة إلى الموظفين"
+
+msgid "Work Profile"
+msgstr "بيانات العمل"
+
+msgid "Teams"
+msgstr "الفرق"
+
+msgid "No team assigned"
+msgstr "لا يوجد فريق"
+
+msgid "Work Email"
+msgstr "بريد العمل"
+
+msgid "Not provided"
+msgstr "غير متوفر"
+
+msgid "Not assigned"
+msgstr "غير محدد"
+
+msgid "Earned milestones"
+msgstr "الإنجازات المحققة"
+
+msgid "No achievements earned yet."
+msgstr "لا توجد إنجازات بعد."
+
+msgid "Recognition"
+msgstr "التقدير"
+
+msgid "Appreciation from colleagues"
+msgstr "تقدير من الزملاء"
+
+msgid "%d received"
+msgid_plural "%d received"
+msgstr[0] "%d تقدير"
+msgstr[1] "%d تقدير"
+msgstr[2] "%d تقدير"
+msgstr[3] "%d تقديرات"
+msgstr[4] "%d تقديرًا"
+msgstr[5] "%d تقدير"
+
+msgid "Kudos sent successfully."
+msgstr "تم إرسال التقدير بنجاح."
+
+msgid "Unable to send Kudos. Please check the details and try again."
+msgstr "تعذّر إرسال التقدير. راجع البيانات وحاول مرة أخرى."
+
+msgid "Give Kudos"
+msgstr "أرسل تقديرًا"
+
+msgid "What are you recognizing?"
+msgstr "ماذا تقدّر؟"
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Write a short thank-you..."
+msgstr "اكتب كلمة شكر قصيرة..."
+
+msgid "Send Kudos"
+msgstr "إرسال التقدير"
+
+msgid "A colleague"
+msgstr "زميل"
+
+msgid "No recognition yet. Recognition from colleagues will appear here."
+msgstr "لا يوجد تقدير بعد. سيظهر تقدير الزملاء هنا."
+
+msgid "Search people..."
+msgstr "ابحث عن زميل..."
+
+msgid "Search people"
+msgstr "البحث عن الموظفين"
+
+msgid "Filter by team"
+msgstr "تصفية حسب الفريق"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Clear"
+msgstr "مسح"
+
+msgid "%d person"
+msgid_plural "%d people"
+msgstr[0] "%d شخص"
+msgstr[1] "%d شخص"
+msgstr[2] "%d شخص"
+msgstr[3] "%d أشخاص"
+msgstr[4] "%d شخصًا"
+msgstr[5] "%d شخص"
+
+msgid "No people found"
+msgstr "لا يوجد نتائج"
+
+msgid "Try another name or team."
+msgstr "جرّب اسمًا أو فريقًا آخر."

@@ -157,7 +157,7 @@ final class AppearanceTest extends TestCase
         $this->assertSame(['briefcase', 'away'], Icons::forStatus('Training Course'), 'a custom type is shown as away, with an icon');
         $this->assertSame(['calendar', 'none'], Icons::forStatus('Not Set'));
         $this->assertTrue(Icons::has('briefcase'));
-        foreach (['swap', 'download', 'share', 'mail', 'lock'] as $name) $this->assertTrue(Icons::has($name), $name);
+        foreach (['swap', 'download', 'share', 'mail', 'lock', 'edit', 'trophy', 'key', 'search'] as $name) $this->assertTrue(Icons::has($name), $name);
     }
 
     public function testClockFace(): void
