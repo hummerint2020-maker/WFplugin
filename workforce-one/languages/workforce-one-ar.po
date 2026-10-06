@@ -2195,3 +2195,243 @@ msgstr "تصويتات سابقة"
 
 msgid "Polls"
 msgstr "التصويت"
+
+msgid "Profile picture reset to initials."
+msgstr "تمت إعادة صورة الملف الشخصي إلى الحروف الأولى."
+
+msgid "Avatar selected successfully."
+msgstr "تم اختيار الأفاتار بنجاح."
+
+msgid "Profile picture updated successfully."
+msgstr "تم تحديث صورة الملف الشخصي بنجاح."
+
+msgid "Image must be 2 MB or smaller."
+msgstr "يجب ألا يزيد حجم الصورة عن 2 ميجابايت."
+
+msgid "Please upload a JPG, PNG, or WebP image."
+msgstr "من فضلك ارفع صورة بصيغة JPG أو PNG أو WebP."
+
+msgid "Could not upload the profile picture. Please try again."
+msgstr "تعذّر رفع صورة الملف الشخصي. حاول مرة أخرى."
+
+msgid "Password updated successfully."
+msgstr "تم تحديث كلمة المرور بنجاح."
+
+msgid "Current password is incorrect."
+msgstr "كلمة المرور الحالية غير صحيحة."
+
+msgid "New passwords do not match."
+msgstr "كلمتا المرور الجديدتان غير متطابقتين."
+
+msgid "New password must be at least 8 characters and include uppercase, lowercase, number and special character."
+msgstr "يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل وتحتوي على حرف كبير وحرف صغير ورقم ورمز خاص."
+
+msgid "New password must be different from the current password."
+msgstr "يجب أن تختلف كلمة المرور الجديدة عن الحالية."
+
+msgid "Could not update your password. Please try again."
+msgstr "تعذّر تحديث كلمة المرور. حاول مرة أخرى."
+
+msgid "Company Default"
+msgstr "الافتراضي للشركة"
+
+msgid "All"
+msgstr "الكل"
+
+msgid "Men"
+msgstr "رجال"
+
+msgid "Women"
+msgstr "سيدات"
+
+msgid "Professional"
+msgstr "رسمي"
+
+msgid "Casual"
+msgstr "كاجوال"
+
+msgid "Fun"
+msgstr "مرح"
+
+msgid "Edit profile picture"
+msgstr "تعديل صورة الملف الشخصي"
+
+msgid "Active"
+msgstr "نشط"
+
+msgid "Today · Planned"
+msgstr "اليوم · المخطط"
+
+msgid "Schedule status"
+msgstr "حالة الجدول"
+
+msgid "Today · Attendance"
+msgstr "اليوم · الحضور"
+
+msgid "In %s"
+msgstr "حضور %s"
+
+msgid "Not signed in"
+msgstr "لم يسجّل الحضور"
+
+msgid "Working Hours"
+msgstr "ساعات العمل"
+
+msgid "My Information"
+msgstr "بياناتي"
+
+msgid "Your personal and work information"
+msgstr "بياناتك الشخصية وبيانات العمل"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Domain"
+msgstr "اسم الدخول"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "Team"
+msgstr "الفريق"
+
+msgid "Supervisor"
+msgstr "المشرف"
+
+msgid "Shift"
+msgstr "الوردية"
+
+msgid "Security"
+msgstr "الأمان"
+
+msgid "Keep your Workforce One account secure."
+msgstr "حافظ على أمان حسابك في Workforce One."
+
+msgid "Reset Password"
+msgstr "تغيير كلمة المرور"
+
+msgid "Achievements"
+msgstr "الإنجازات"
+
+msgid "Your earned milestones"
+msgstr "الإنجازات التي حققتها"
+
+msgid "%d earned"
+msgid_plural "%d earned"
+msgstr[0] "%d إنجاز"
+msgstr[1] "%d إنجاز"
+msgstr[2] "%d إنجاز"
+msgstr[3] "%d إنجازات"
+msgstr[4] "%d إنجازًا"
+msgstr[5] "%d إنجاز"
+
+msgid "Your achievements will appear here as you reach milestones."
+msgstr "ستظهر إنجازاتك هنا عند تحقيقها."
+
+msgid "Earned %s"
+msgstr "تحقق في %s"
+
+msgid "Your schedule for this week"
+msgstr "جدولك لهذا الأسبوع"
+
+msgid "Leave Balance"
+msgstr "رصيد الإجازات"
+
+msgid "Your leave entitlement and usage"
+msgstr "استحقاقك من الإجازات وما استخدمته"
+
+msgid "View Leave"
+msgstr "عرض الإجازات"
+
+msgid "available"
+msgstr "متاح"
+
+msgid "%d%% used"
+msgstr "%d%% مستخدم"
+
+msgid "Used %1$s · Pending %2$s · %3$d%% used"
+msgstr "المستخدم %1$s · قيد المراجعة %2$s · %3$d%% مستخدم"
+
+msgid "Recent Attendance"
+msgstr "الحضور الأخير"
+
+msgid "Your latest attendance records"
+msgstr "آخر سجلات حضورك"
+
+msgid "View All"
+msgstr "عرض الكل"
+
+msgid "Total Hours"
+msgstr "إجمالي الساعات"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "No attendance records in the selected period."
+msgstr "لا توجد سجلات حضور في هذه الفترة."
+
+msgid "Profile Picture"
+msgstr "صورة الملف الشخصي"
+
+msgid "Choose how you appear across Workforce One."
+msgstr "اختر كيف تظهر في Workforce One."
+
+msgid "Your profile picture belongs to your Workforce One employee profile, not the WordPress user profile."
+msgstr "صورتك مرتبطة بملفك كموظف في Workforce One، وليست صورة مستخدم ووردبريس."
+
+msgid "Choose Avatar"
+msgstr "اختيار أفاتار"
+
+msgid "Upload Photo"
+msgstr "رفع صورة"
+
+msgid "Use Initials"
+msgstr "استخدام الحروف الأولى"
+
+msgid "Choose your avatar"
+msgstr "اختر الأفاتار"
+
+msgid "Pick an avatar to use across Workforce One."
+msgstr "اختر أفاتار يظهر لك في Workforce One."
+
+msgid "Filter avatars"
+msgstr "تصفية الأفاتار"
+
+msgid "Save Avatar"
+msgstr "حفظ الأفاتار"
+
+msgid "Photo"
+msgstr "الصورة"
+
+msgid "JPG, PNG or WebP · maximum 2 MB"
+msgstr "JPG أو PNG أو WebP · بحد أقصى 2 ميجابايت"
+
+msgid "Current Password"
+msgstr "كلمة المرور الحالية"
+
+msgid "New Password"
+msgstr "كلمة المرور الجديدة"
+
+msgid "Confirm New Password"
+msgstr "تأكيد كلمة المرور الجديدة"
+
+msgid "Password requirements"
+msgstr "شروط كلمة المرور"
+
+msgid "At least 8 characters"
+msgstr "8 أحرف على الأقل"
+
+msgid "One uppercase letter"
+msgstr "حرف كبير واحد"
+
+msgid "One lowercase letter"
+msgstr "حرف صغير واحد"
+
+msgid "One number"
+msgstr "رقم واحد"
+
+msgid "One special character"
+msgstr "رمز خاص واحد"
+
+msgid "Update Password"
+msgstr "تحديث كلمة المرور"

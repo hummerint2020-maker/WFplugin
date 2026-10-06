@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.54
+New look, step 7: My Profile. Changing the picture (avatar, photo upload, initials) and the
+password work exactly as before (same forms, fields and the ids the page script uses; the profile
+tests pass unchanged: 12, plus 3 new checks).
+
+### Changed
+- **Header card** with your picture large in a ring (photo, avatar or initials), an edit button on
+  it, your name, email, and Active / team chips.
+- **Today**: three tiles for the planned status, attendance and working hours.
+- **My Information** as a clean two-column list; **Security** with a Reset Password button;
+  **Achievements** as small cards.
+- **My Week** uses the same seven-day strip as the Schedule page (icon + word, today outlined).
+- **Leave Balance**: days available, a bar and "Used · Pending · % used" per leave type.
+- **Recent Attendance** table restyled; the status shows a dot + word.
+- **Picture dialog**: centred on desktop, a sheet from the bottom on phones; avatar filters as
+  pills and round avatar choices with a check mark; the password dialog in the same style.
+- All texts are translatable (Arabic added); emails, times and English names line up correctly
+  on the Arabic app.
+
 ## 3.31.53
 New look, step 6: Polls (the Polls page and the poll card on Home). Voting, changing a vote, the
 results rules (after voting / when the poll closes / admins only) and anonymous polls work exactly

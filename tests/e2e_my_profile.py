@@ -39,7 +39,7 @@ seed()
 emp = Session('emp1', 'emp1pass')
 st, page, _ = emp.req(PAGE)
 check('My Profile opens', st == 200 and 'My Information' in page and 'Mona Ahmed Monier' in page, st)
-check('initials: first and last name (as on the admin profile)', re.search(r'class="ews-my-profile-avatar"[^>]*>\s*MM\s*<', page) is not None, re.findall(r'class="ews-my-profile-avatar"[^>]*>([^<]{0,20})', page))
+check('initials: first and last name (as on the admin profile)', re.search(r'class="ews-my-profile-avatar[^"]*"[^>]*>\s*MM\s*<', page) is not None, re.findall(r'class="ews-my-profile-avatar[^"]*"[^>]*>([^<]{0,20})', page))
 import datetime  # noqa: E402
 day = lambda n: today + datetime.timedelta(days=n)  # noqa: E731
 check('a late Sign In is Late, not Present', recent(page, day(-1)) == ('9:30 AM', '7h 30m', 'Late'), recent(page, day(-1)))
@@ -48,6 +48,10 @@ check('an on-time day is Present with its total', recent(page, day(-3)) == ('8:0
 check('"View Leave" opens the Leave page', 'ews_view=vacation' in page and 'ews_view=leave' not in page)
 check('the leave balance shows 19.5 available', '<strong>19.5</strong> available' in page, re.findall(r'<strong>([^<]*)</strong> available', page))
 check('the page script and styles are files', 'my-profile.js' in page and '.ews-my-profile{' not in page and "modal('ews-password-modal'" not in page)
+content = page.split('<div class="wfo-content">', 1)[-1]
+check('no emoji on My Profile', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content))
+check('the page stylesheet is loaded in the head', 'app-profile.css' in page.split('</head>')[0])
+check('the dialogs keep the ids the script opens', all('id="%s"' % i in page for i in ['ews-open-profile-picture', 'ews-profile-picture-modal', 'ews-open-avatar-picker', 'ews-avatar-picker', 'ews-avatar-key', 'ews-save-avatar', 'ews-open-password', 'ews-password-modal', 'ews-cancel-password']))
 st, page, _ = emp.req(PAGE + '&profile_error=size')
 check('an upload error is explained', 'Image must be 2 MB or smaller.' in page)
 
@@ -56,7 +60,7 @@ st, page, _ = emp.req(PAGE)
 planned = re.search(r'Today · Planned</div><div class="value">([^<]*)<', page)
 result = re.search(r'Today · Attendance</div><div class="value">([^<]*)<', page)
 check('on a company holiday today is General Leave, not "Not Signed In"', planned and planned.group(1) == 'General Leave' and result and result.group(1) == 'General Leave', (planned and planned.group(1), result and result.group(1)))
-check('...also in My Week', re.search(r'current-day"><div class="d">[^<]*<br>[^<]*</div><div class="s">General Leave</div>', page) is not None)
+check('...also in My Week', re.search(r'aria-current="date">(?:(?!</li>).)*<span class="wfo-myweek-word">General Leave</span>', page, re.S) is not None)
 php("$wpdb->query(\"DELETE FROM {$p}ews_company_calendar\");")
 
 php("$id=username_exists('loner')?:wp_create_user('loner','lonerpass','loner@example.com'); (new WP_User($id))->set_role('subscriber');")

@@ -88,6 +88,7 @@ trait EWS_My_Profile_Trait {
         $initials=ProfileSummary::initials((string)$emp->name);
 
         wp_enqueue_script('workforce-one-my-profile');
+        wp_enqueue_style('workforce-one-profile-page');
         return $this->render_template('app/my-profile',[
             'emp'=>$emp,'today'=>$today,'planned'=>$planned,'today_result'=>$today_result,'sign_in'=>$first_in?$first_in->event_at:'',
             'hours_label'=>$this->format_time_label($hours['start']).' – '.$this->format_time_label($hours['end']),

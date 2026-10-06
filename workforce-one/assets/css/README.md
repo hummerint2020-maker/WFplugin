@@ -22,4 +22,5 @@ npx rtlcss@4 assets/css/app-time.css assets/css/app-time-rtl.css
 npx rtlcss@4 assets/css/app-leave.css assets/css/app-leave-rtl.css
 npx rtlcss@4 assets/css/app-schedule.css assets/css/app-schedule-rtl.css
 npx rtlcss@4 assets/css/app-polls.css assets/css/app-polls-rtl.css
+npx rtlcss@4 assets/css/app-profile.css assets/css/app-profile-rtl.css
 ```

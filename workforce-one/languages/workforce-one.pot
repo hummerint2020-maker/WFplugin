@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.52\n"
+"Project-Id-Version: Workforce One 3.31.53\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T10:03:26+00:00\n"
+"POT-Creation-Date: 2026-10-06T10:12:04+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -155,6 +155,7 @@ msgstr ""
 #: includes/trait-app-layout.php:64
 #: templates/app/layout.php:72
 #: templates/app/layout.php:101
+#: templates/app/my-profile.php:64
 msgid "My Profile"
 msgstr ""
 
@@ -351,6 +352,7 @@ msgid "Confirm"
 msgstr ""
 
 #: includes/trait-frontend.php:104
+#: templates/app/my-profile.php:182
 #: templates/app/schedule.php:152
 #: templates/app/schedule.php:173
 msgid "Cancel"
@@ -364,6 +366,8 @@ msgstr ""
 #: includes/trait-frontend.php:109
 #: templates/app/layout.php:104
 #: templates/app/leave.php:44
+#: templates/app/my-profile.php:157
+#: templates/app/my-profile.php:176
 #: templates/app/schedule.php:155
 #: templates/app/time.php:159
 #: templates/app/time.php:176
@@ -711,7 +715,7 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
 #: templates/app/overtime.php:79
@@ -719,50 +723,50 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:417
+#: includes/trait-frontend.php:420
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:423
+#: includes/trait-frontend.php:426
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:423
+#: includes/trait-frontend.php:426
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:430
+#: includes/trait-frontend.php:433
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:430
+#: includes/trait-frontend.php:433
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1086,6 +1090,7 @@ msgstr ""
 
 #. translators: %s: today's schedule status
 #: templates/app/dashboard.php:42
+#: templates/app/my-profile.php:37
 #: templates/app/schedule.php:31
 #: templates/app/time.php:60
 msgid "Not Set"
@@ -1093,6 +1098,7 @@ msgstr ""
 
 #: templates/app/dashboard.php:43
 #: templates/app/dashboard.php:63
+#: templates/app/my-profile.php:37
 #: templates/app/schedule.php:31
 msgid "General Leave"
 msgstr ""
@@ -1136,6 +1142,7 @@ msgstr ""
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
 #: templates/app/dashboard.php:84
+#: templates/app/my-profile.php:153
 #: templates/app/time.php:81
 #: templates/app/time.php:89
 #: templates/app/time.php:101
@@ -1153,6 +1160,7 @@ msgid "Not recorded"
 msgstr ""
 
 #: templates/app/dashboard.php:85
+#: templates/app/my-profile.php:153
 #: templates/app/time.php:79
 #: templates/app/time.php:102
 #: templates/app/time.php:148
@@ -1225,6 +1233,7 @@ msgstr ""
 
 #: templates/app/dashboard.php:128
 #: templates/app/dashboard.php:148
+#: templates/app/my-profile.php:121
 msgid "View Schedule"
 msgstr ""
 
@@ -1253,6 +1262,7 @@ msgid "Sign Out:"
 msgstr ""
 
 #: templates/app/dashboard.php:145
+#: templates/app/my-profile.php:121
 msgid "My Week"
 msgstr ""
 
@@ -1518,6 +1528,7 @@ msgid "Early Leave"
 msgstr ""
 
 #: templates/app/leave.php:141
+#: templates/app/my-profile.php:153
 #: templates/app/overtime.php:43
 msgid "Date"
 msgstr ""
@@ -1532,6 +1543,339 @@ msgstr ""
 
 #: templates/app/leave.php:152
 msgid "Pending Early Leave"
+msgstr ""
+
+#: templates/app/my-profile.php:37
+#: templates/app/schedule.php:31
+msgid "Absent"
+msgstr ""
+
+#: templates/app/my-profile.php:49
+msgid "Profile picture reset to initials."
+msgstr ""
+
+#: templates/app/my-profile.php:49
+msgid "Avatar selected successfully."
+msgstr ""
+
+#: templates/app/my-profile.php:49
+msgid "Profile picture updated successfully."
+msgstr ""
+
+#: templates/app/my-profile.php:50
+msgid "Image must be 2 MB or smaller."
+msgstr ""
+
+#: templates/app/my-profile.php:50
+msgid "Please upload a JPG, PNG, or WebP image."
+msgstr ""
+
+#: templates/app/my-profile.php:50
+msgid "Could not upload the profile picture. Please try again."
+msgstr ""
+
+#: templates/app/my-profile.php:51
+msgid "Password updated successfully."
+msgstr ""
+
+#: templates/app/my-profile.php:54
+msgid "Current password is incorrect."
+msgstr ""
+
+#: templates/app/my-profile.php:54
+msgid "New passwords do not match."
+msgstr ""
+
+#: templates/app/my-profile.php:55
+msgid "New password must be at least 8 characters and include uppercase, lowercase, number and special character."
+msgstr ""
+
+#: templates/app/my-profile.php:56
+msgid "New password must be different from the current password."
+msgstr ""
+
+#: templates/app/my-profile.php:56
+msgid "Could not update your password. Please try again."
+msgstr ""
+
+#: templates/app/my-profile.php:58
+msgid "Company Default"
+msgstr ""
+
+#: templates/app/my-profile.php:59
+msgid "All"
+msgstr ""
+
+#: templates/app/my-profile.php:59
+msgid "Men"
+msgstr ""
+
+#: templates/app/my-profile.php:59
+msgid "Women"
+msgstr ""
+
+#: templates/app/my-profile.php:59
+msgid "Professional"
+msgstr ""
+
+#: templates/app/my-profile.php:59
+msgid "Casual"
+msgstr ""
+
+#: templates/app/my-profile.php:59
+msgid "Fun"
+msgstr ""
+
+#: templates/app/my-profile.php:67
+msgid "Edit profile picture"
+msgstr ""
+
+#: templates/app/my-profile.php:73
+msgid "Active"
+msgstr ""
+
+#: templates/app/my-profile.php:80
+msgid "Today · Planned"
+msgstr ""
+
+#: templates/app/my-profile.php:80
+msgid "Schedule status"
+msgstr ""
+
+#: templates/app/my-profile.php:81
+msgid "Today · Attendance"
+msgstr ""
+
+#. translators: %s: sign-in time
+#: templates/app/my-profile.php:81
+#, php-format
+msgid "In %s"
+msgstr ""
+
+#. translators: %s: sign-in time
+#: templates/app/my-profile.php:81
+msgid "Not signed in"
+msgstr ""
+
+#. translators: %s: sign-in time
+#: templates/app/my-profile.php:82
+msgid "Working Hours"
+msgstr ""
+
+#: templates/app/my-profile.php:88
+msgid "My Information"
+msgstr ""
+
+#: templates/app/my-profile.php:88
+msgid "Your personal and work information"
+msgstr ""
+
+#: templates/app/my-profile.php:90
+msgid "Name"
+msgstr ""
+
+#: templates/app/my-profile.php:91
+msgid "Domain"
+msgstr ""
+
+#: templates/app/my-profile.php:92
+msgid "Email"
+msgstr ""
+
+#: templates/app/my-profile.php:93
+msgid "Team"
+msgstr ""
+
+#: templates/app/my-profile.php:94
+msgid "Supervisor"
+msgstr ""
+
+#: templates/app/my-profile.php:95
+msgid "Shift"
+msgstr ""
+
+#: templates/app/my-profile.php:101
+msgid "Security"
+msgstr ""
+
+#: templates/app/my-profile.php:101
+msgid "Keep your Workforce One account secure."
+msgstr ""
+
+#: templates/app/my-profile.php:102
+#: templates/app/my-profile.php:176
+msgid "Reset Password"
+msgstr ""
+
+#: templates/app/my-profile.php:107
+msgid "Achievements"
+msgstr ""
+
+#: templates/app/my-profile.php:107
+msgid "Your earned milestones"
+msgstr ""
+
+#. translators: %d: number of achievements
+#: templates/app/my-profile.php:107
+#, php-format
+msgid "%d earned"
+msgid_plural "%d earned"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/my-profile.php:109
+msgid "Your achievements will appear here as you reach milestones."
+msgstr ""
+
+#. translators: %s: date
+#: templates/app/my-profile.php:112
+#, php-format
+msgid "Earned %s"
+msgstr ""
+
+#: templates/app/my-profile.php:121
+msgid "Your schedule for this week"
+msgstr ""
+
+#: templates/app/my-profile.php:136
+msgid "Leave Balance"
+msgstr ""
+
+#: templates/app/my-profile.php:136
+msgid "Your leave entitlement and usage"
+msgstr ""
+
+#: templates/app/my-profile.php:136
+msgid "View Leave"
+msgstr ""
+
+#: templates/app/my-profile.php:140
+msgid "available"
+msgstr ""
+
+#. translators: %d: percent
+#: templates/app/my-profile.php:141
+#, php-format
+msgid "%d%% used"
+msgstr ""
+
+#. translators: 1: days used, 2: days pending, 3: percent used
+#: templates/app/my-profile.php:142
+#, php-format
+msgid "Used %1$s · Pending %2$s · %3$d%% used"
+msgstr ""
+
+#: templates/app/my-profile.php:152
+msgid "Recent Attendance"
+msgstr ""
+
+#: templates/app/my-profile.php:152
+msgid "Your latest attendance records"
+msgstr ""
+
+#: templates/app/my-profile.php:152
+msgid "View All"
+msgstr ""
+
+#: templates/app/my-profile.php:153
+msgid "Total Hours"
+msgstr ""
+
+#: templates/app/my-profile.php:153
+msgid "Status"
+msgstr ""
+
+#: templates/app/my-profile.php:153
+msgid "No attendance records in the selected period."
+msgstr ""
+
+#: templates/app/my-profile.php:157
+msgid "Profile Picture"
+msgstr ""
+
+#: templates/app/my-profile.php:159
+msgid "Choose how you appear across Workforce One."
+msgstr ""
+
+#: templates/app/my-profile.php:159
+msgid "Your profile picture belongs to your Workforce One employee profile, not the WordPress user profile."
+msgstr ""
+
+#: templates/app/my-profile.php:161
+msgid "Choose Avatar"
+msgstr ""
+
+#: templates/app/my-profile.php:162
+#: templates/app/my-profile.php:171
+msgid "Upload Photo"
+msgstr ""
+
+#: templates/app/my-profile.php:163
+msgid "Use Initials"
+msgstr ""
+
+#: templates/app/my-profile.php:166
+msgid "Choose your avatar"
+msgstr ""
+
+#: templates/app/my-profile.php:166
+msgid "Pick an avatar to use across Workforce One."
+msgstr ""
+
+#: templates/app/my-profile.php:167
+msgid "Filter avatars"
+msgstr ""
+
+#: templates/app/my-profile.php:169
+msgid "Save Avatar"
+msgstr ""
+
+#: templates/app/my-profile.php:171
+msgid "Photo"
+msgstr ""
+
+#: templates/app/my-profile.php:171
+msgid "JPG, PNG or WebP · maximum 2 MB"
+msgstr ""
+
+#: templates/app/my-profile.php:178
+msgid "Current Password"
+msgstr ""
+
+#: templates/app/my-profile.php:179
+msgid "New Password"
+msgstr ""
+
+#: templates/app/my-profile.php:180
+msgid "Confirm New Password"
+msgstr ""
+
+#: templates/app/my-profile.php:181
+msgid "Password requirements"
+msgstr ""
+
+#: templates/app/my-profile.php:181
+msgid "At least 8 characters"
+msgstr ""
+
+#: templates/app/my-profile.php:181
+msgid "One uppercase letter"
+msgstr ""
+
+#: templates/app/my-profile.php:181
+msgid "One lowercase letter"
+msgstr ""
+
+#: templates/app/my-profile.php:181
+msgid "One number"
+msgstr ""
+
+#: templates/app/my-profile.php:181
+msgid "One special character"
+msgstr ""
+
+#: templates/app/my-profile.php:182
+msgid "Update Password"
 msgstr ""
 
 #: templates/app/overtime.php:23
@@ -1797,10 +2141,6 @@ msgstr ""
 
 #: templates/app/presence.php:38
 msgid "Verified at:"
-msgstr ""
-
-#: templates/app/schedule.php:31
-msgid "Absent"
 msgstr ""
 
 #: templates/app/schedule.php:43

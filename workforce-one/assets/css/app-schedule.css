@@ -43,19 +43,7 @@
 .wfo-app .wfo-sched .ews-schedule-tool-actions{display:flex;gap:8px;flex-wrap:wrap}
 .wfo-sched .screen-reader-text{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
 
-/* my week */
-.wfo-myweek-days{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
-.wfo-myweek-days li{min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 12px;border-radius:var(--wfo-r-ctl);background:#EEF0F5;color:#3B4466;text-align:center}
-.wfo-myweek-days li.is-office{background:#E6F7EF;color:#0F6B43}
-.wfo-myweek-days li.is-wfh{background:#E7EEFF;color:#1F4FB8}
-.wfo-myweek-days li.is-leave{background:#F1EAFF;color:#5B34B5}
-.wfo-myweek-days li.is-away{background:#FFF2DE;color:#8A4F00}
-.wfo-myweek-days li.is-absent{background:#FFE8EC;color:#A51D3E}
-.wfo-myweek-days li.is-today{box-shadow:inset 0 0 0 2px var(--wfo-pri)}
-.wfo-myweek-day{font-size:12px;font-weight:600;opacity:.85}
-.wfo-myweek-num{font-size:20px;font-weight:700;line-height:1.1;color:var(--wfo-ink)}
-.wfo-myweek-icon{display:flex}
-.wfo-myweek-word{font-size:11px;font-weight:600;line-height:1.25;max-width:100%;overflow-wrap:anywhere}
+/* my week: the strip itself is in app-shell.css */
 
 /* legend */
 .wfo-app .wfo-sched .wfo-legend{display:flex;flex-wrap:wrap;gap:6px;margin:0}
@@ -156,10 +144,6 @@
     .wfo-app .wfo-sched .ews-schedule-tool-actions .ews-btn:last-child{grid-column:auto}
     .wfo-app .wfo-sched .ews-schedule-tool-actions a.ews-btn{grid-column:1/-1}
     .wfo-app .wfo-sched .wfo-sched-jump .ews-btn{flex:0 0 auto}
-    .wfo-myweek-days{gap:5px}
-    .wfo-myweek-days li{padding:8px 2px 10px}
-    .wfo-myweek-num{font-size:17px}
-    .wfo-myweek-word{font-size:10px}
     .wfo-app .wfo-sched .wfo-sched-scroll{margin:0 -16px -16px}
     .wfo-app .wfo-sched .wfo-sched-table{min-width:760px}
     .wfo-app .wfo-sched .wfo-sched-table thead th:first-child,.wfo-app .wfo-sched .wfo-sched-table tbody .wfo-sched-who{padding-inline-start:16px;min-width:150px;max-width:170px}
