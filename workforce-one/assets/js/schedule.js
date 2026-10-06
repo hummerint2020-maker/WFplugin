@@ -9,27 +9,41 @@
         var url = btn.getAttribute('data-ews-share-pdf');
         var name = btn.getAttribute('data-ews-share-name') || 'team-schedule.pdf';
         var text = btn.getAttribute('data-ews-share-text') || '';
+        if (btn.disabled) return;
         btn.disabled = true;
-        fetch(url, { credentials: 'same-origin' })
-            .then(function (r) { if (!r.ok) throw new Error('pdf ' + r.status); return r.blob(); })
+        btn.setAttribute('aria-busy', 'true');
+        // Never wait on the server for long, and never leave the page: a failed share keeps the user here.
+        var ctl = window.AbortController ? new AbortController() : null;
+        var timer = ctl ? setTimeout(function () { ctl.abort(); }, 20000) : 0;
+        function download(blob) {
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(function () { URL.revokeObjectURL(link.href); link.remove(); }, 4000);
+            var note = btn.getAttribute('data-ews-share-fallback') || '';
+            var wa = 'https://wa.me/?text=' + encodeURIComponent(text + (note ? '\n' + note : ''));
+            window.open(wa, '_blank', 'noopener');
+        }
+        fetch(url, { credentials: 'same-origin', signal: ctl ? ctl.signal : undefined })
+            .then(function (r) {
+                if (!r.ok || (r.headers.get('Content-Type') || '').indexOf('application/pdf') !== 0) throw new Error('pdf ' + r.status);
+                return r.blob();
+            })
             .then(function (blob) {
                 var file = null;
                 try { file = new File([blob], name, { type: 'application/pdf' }); } catch (e) { file = null; }
                 if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    return navigator.share({ files: [file], title: text, text: text }).catch(function () {});
+                    return navigator.share({ files: [file], title: text, text: text }).catch(function (e) {
+                        // Cancelled by the user: nothing to do. Refused (e.g. the tap "expired"): download instead.
+                        if (!e || e.name !== 'AbortError') download(blob);
+                    });
                 }
-                var link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = name;
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(function () { URL.revokeObjectURL(link.href); link.remove(); }, 4000);
-                var note = btn.getAttribute('data-ews-share-fallback') || '';
-                var wa = 'https://wa.me/?text=' + encodeURIComponent(text + (note ? '\n' + note : ''));
-                if (!window.open(wa, '_blank', 'noopener')) window.location.href = wa;
+                download(blob);
             })
-            .catch(function () { window.location.href = url; })
-            .then(function () { btn.disabled = false; });
+            .catch(function () { window.alert(btn.getAttribute('data-ews-share-error') || 'The PDF could not be prepared. Please try again.'); })
+            .then(function () { clearTimeout(timer); btn.disabled = false; btn.removeAttribute('aria-busy'); });
     }
 
     function init() {

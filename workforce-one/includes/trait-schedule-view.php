@@ -68,11 +68,7 @@ trait EWS_Schedule_View_Trait {
         $range=date_i18n('d M',strtotime($g['dates'][0])).' – '.date_i18n('d M Y',strtotime($g['week_end']));
         $font=\WorkforceOne\Pdf\TrueTypeFont::fromFile(dirname(__DIR__).'/assets/vendor/dejavu/DejaVuSans.ttf');
         $pdf=\WorkforceOne\Schedule\SchedulePdf::render($font,['company'=>wp_specialchars_decode((string)get_bloginfo('name'),ENT_QUOTES),'title'=>__('Team Schedule','workforce-one').' '.$range,'heading'=>__('Team Schedule','workforce-one'),'employee'=>__('Employee','workforce-one'),'empty'=>__('No employees to show.','workforce-one'),'range'=>$range,'days'=>$days,'rows'=>$rows,'generated'=>date_i18n('j M Y H:i')]);
-        nocache_headers();
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="team-schedule-'.$g['dates'][0].'.pdf"');
-        header('Content-Length: '.strlen($pdf));
-        echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary PDF
+        \WorkforceOne\Support\Download::send($pdf,'application/pdf','team-schedule-'.$g['dates'][0].'.pdf');
         exit;
     }
 

@@ -92,6 +92,23 @@ st, body, h = emp.req(pdf_path)
 check('the PDF link returns a real PDF of the week', st == 200 and h.get('Content-Type', '').startswith('application/pdf') and body.startswith('%PDF-') and 'team-schedule-' in h.get('Content-Disposition', ''), (st, h.get('Content-Type'), body[:20]))
 st, body, _ = emp.req(re.sub(r'_wpnonce=[^&]+', '_wpnonce=bad', pdf_path))
 check('...and only with a valid link', not body.startswith('%PDF-'), st)
+# A cache / minify plugin that buffers and rewrites the page (here: drops its last 500 bytes) must
+# not touch the file: before 3.31.61 the PDF arrived short of its Content-Length and the phone
+# waited until the host gave up ("loads very slowly … 32000ms").
+mu_dir = php('echo WPMU_PLUGIN_DIR;')
+os.makedirs(mu_dir, exist_ok=True)
+mu_file = os.path.join(mu_dir, 'zz-e2e-rewrite-buffer.php')
+with open(mu_file, 'w') as f:
+    f.write("<?php if (($_GET['action'] ?? '') === 'ews_schedule_pdf') ob_start(function ($b) { return substr($b, 0, -500); });\n")
+try:
+    try:
+        st, body, h = emp.req(pdf_path)
+        whole = st == 200 and body.startswith('%PDF-') and body.rstrip().endswith('%%EOF')
+    except Exception as e:  # http.client.IncompleteRead: fewer bytes than Content-Length
+        st, body, whole = repr(e), '', False
+    check('...whole even when a plugin buffers and rewrites the output', whole, (st, body[-20:]))
+finally:
+    os.remove(mu_file)
 check('the page script is a file (no inline onclick)', 'schedule.js' in page and 'onclick="(function(){document.title' not in page)
 
 print(f'{sum(results)} / {len(results)}')

@@ -359,11 +359,7 @@ trait EWS_Payroll_Trait {
             'closed_at'=>$closed_at,'currency'=>(string)($d['currency']??$this->payroll_rules()['currency']),'rules'=>(array)($d['rules']??[])+$this->payroll_rules(),'pay'=>$d['pay'],'generated'=>current_time('j M Y H:i'),
         ]);
         $name=sanitize_file_name('payslip-'.$month.'-'.remove_accents((string)($d['employee']['name']??'employee')));
-        nocache_headers();
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="'.($name!==''?$name:'payslip-'.$month).'.pdf"');
-        header('Content-Length: '.strlen($pdf));
-        echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary PDF
+        \WorkforceOne\Support\Download::send($pdf,'application/pdf',($name!==''?$name:'payslip-'.$month).'.pdf');
         exit;
     }
 
@@ -468,11 +464,7 @@ trait EWS_Payroll_Trait {
             ['Days',['Employee','Date','Item','Minutes','Amount'],$days,[26,12,44,10,12]],
         ]);
         $this->audit('payroll_exported','payroll',0,$month.' ('.count($people).' employees'.($run?', closed':'').')');
-        nocache_headers();
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="payroll-'.$month.'.xlsx"');
-        header('Content-Length: '.strlen($xlsx));
-        echo $xlsx; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary workbook
+        \WorkforceOne\Support\Download::send($xlsx,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','payroll-'.$month.'.xlsx');
         exit;
     }
 

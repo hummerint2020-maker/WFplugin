@@ -31,6 +31,7 @@ workforce-one/
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
     Support/Format.php                 number, hours and duration formats
+    Support/Download.php               sends a generated file (PDF, Excel) past cache / minify output buffers
     Reports/DayMetrics.php, Summary.php, EmployeeSummary.php, Timesheet.php, Workforce.php, Definitions.php  the report engine: one employee-day measured (incl. overtime), day counts, per-employee figures, payroll timesheet, figure definitions
     Reports/OvertimeReport.php, LeaveReport.php, Trend.php, SavedViews.php, Capacity.php  overtime and leave & balances reports, daily attendance trend, saved report views, location capacity
     Leave/RequestRules.php, CancellationRules.php, Balance.php, WorkingDays.php, AdminRecordRules.php, Hooks.php

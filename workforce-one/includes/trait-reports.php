@@ -698,7 +698,7 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
         $type=$this->report_request_type('attendance');
         $xlsx=$this->report_xlsx_build($type,$s,$e); if(is_wp_error($xlsx))wp_die(esc_html($xlsx->get_error_message()));
         $this->report_export_audit($type,'Excel',$s,$e);
-        nocache_headers(); header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition:attachment; filename='.$type.'_report_'.$s.'_to_'.$e.'.xlsx'); header('Content-Length:'.strlen($xlsx)); echo $xlsx; exit;
+        \WorkforceOne\Support\Download::send($xlsx,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',$type.'_report_'.$s.'_to_'.$e.'.xlsx'); exit;
     }
 
     public function report_download(){

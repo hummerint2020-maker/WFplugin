@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.31.62
+Fix for 3.31.61, after the owner's test on the live site.
+
+### Fixed
+- **The WhatsApp / PDF button made the site hang** ("The web page loads very slowly … 32000ms").
+  A cache, minify or compression plugin (or the host) buffers every response and rewrites it; the
+  PDF reached the phone shorter than the size announced in its header, so the phone kept waiting
+  for the rest until the host gave up. Files are now sent with every output buffer dropped first,
+  and the size header only when nothing can change the bytes (new `Support\Download`). The same fix
+  covers the payslip PDF, the payroll Excel and the report Excel downloads, which had the same risk.
+- The WhatsApp button no longer leaves the page when something goes wrong: it gives up after
+  20 seconds and shows "The PDF could not be prepared. Please try again." (it used to open the PDF
+  link inside the installed app, with no way back). When the phone refuses to share the file, the
+  PDF is downloaded and WhatsApp opens instead; a cancelled share does nothing.
+
 ## 3.31.61
 The employees' Team Schedule page, after review (design A), and a working WhatsApp button.
 
