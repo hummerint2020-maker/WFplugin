@@ -48,10 +48,11 @@
 
     function init() {
         var open = document.getElementById('ews-open-swap');
-        var close = document.getElementById('ews-close-swap');
         var wrap = document.getElementById('ews-swap-form-wrap');
+        var panel = wrap ? wrap.closest('.ews-swap-panel') : null;
         function showSwap() {
             if (!wrap) return;
+            if (panel) panel.hidden = false;
             wrap.hidden = false;
             if (open) open.style.display = 'none';
             wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -60,7 +61,12 @@
         }
         if (open && wrap) open.addEventListener('click', showSwap);
         document.querySelectorAll('[data-ews-open-swap]').forEach(function (b) { b.addEventListener('click', showSwap); });
-        if (close && wrap) close.addEventListener('click', function () { wrap.hidden = true; if (open) open.style.display = ''; });
+        // The panel holds no requests (data-ews-swap-empty): it goes away again with the form.
+        document.querySelectorAll('#ews-close-swap').forEach(function (b) { b.addEventListener('click', function () {
+            wrap.hidden = true;
+            if (open) open.style.display = '';
+            if (panel && panel.hasAttribute('data-ews-swap-empty')) panel.hidden = true;
+        }); });
 
         // Colleague search: the table rows (desktop) and the cards (phones) alike.
         var search = document.getElementById('wfo-sched-search');

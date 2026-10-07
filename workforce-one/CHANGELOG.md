@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.63
+The Team Schedule page again, after the owner's review on a phone (design C, "slim cards").
+
+### Changed
+- **No explanation text:** the lines under Team Schedule ("Everyone can view…"), in the swap panel
+  ("Choose a colleague… No approval is required.") and at its end ("Use this shared schedule…") are
+  gone, on phones and computers.
+- **My week** is a dark card in the app's header colours with white day tiles; each day shows its
+  status as a coloured word, today is outlined, and **Request a swap** is the only swap button.
+- The **swap panel** only appears when there are swap requests this week (or while the form is
+  open); the big "No Swap Requests" box and the second "Request Swap" button are gone. People
+  without a My week card (no employee record in the list) still get the panel's own button.
+- **Colleague cards** are slimmer: name, manager badge and team on one line, the week in one row
+  of small coloured boxes.
+- On phones the search and the **PDF**, **WhatsApp** and **Email** buttons share one row (square
+  buttons, icon over a short label).
+
+### Fixed
+- On some phones the page was wider than the screen (header, week switcher and My week cut off on
+  the right): the three action buttons could not shrink. Everything now fits from 360px up.
+
 ## 3.31.62
 Fix for 3.31.61, after the owner's test on the live site.
 

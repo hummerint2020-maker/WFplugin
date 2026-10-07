@@ -84,6 +84,7 @@ check('each person has an avatar', page.count('class="wfo-sched-avatar') >= 4)
 content = page.split('<div class="wfo-content">', 1)[-1]
 check('no emoji on the Schedule page', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content))
 check('the page stylesheet is loaded in the head', 'app-schedule.css' in page.split('</head>')[0])
+check('no explanation blurbs (owner review, 3.31.63)', not any(t in page for t in ('Everyone can view', 'No approval is required', 'Use this shared schedule')))
 check('phones get a card per colleague (not for me: My week shows mine)', len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)) == 3 and 'Request a swap' in page, len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)))
 pdf = re.search(r'class="[^"]*ews-pdf-btn[^"]*" href="([^"]+)"', page)
 pdf_path = pdf.group(1).replace('&#038;', '&').replace('&amp;', '&').split('127.0.0.1:8080')[-1] if pdf else ''

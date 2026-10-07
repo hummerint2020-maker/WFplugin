@@ -2750,3 +2750,7 @@ msgstr "تم تنزيل ملف PDF للجدول. أرفقه برسالة وات�
 
 msgid "The PDF could not be prepared. Please try again."
 msgstr "تعذّر تجهيز ملف PDF. حاول مرة أخرى."
+
+msgctxt "short button label"
+msgid "Email"
+msgstr "بريد"

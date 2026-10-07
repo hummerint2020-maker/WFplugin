@@ -22,12 +22,11 @@
  * @var array{sent:int,skipped:int,failed:int}|null $email
  * @var array<string,string> $swap_days  date => my status
  * @var object[] $swap_requests
- * @var string $no_swaps_html
  * @var string $post_url
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
-// phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; $chip(), $avatar() and $no_swaps_html escape their output.
+// phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; $chip() and $avatar() escape their output.
 $status_label = static function (string $s): string {
     $known = ['Not Set' => __('Not Set', 'workforce-one'), 'General Leave' => __('General Leave', 'workforce-one'), 'Absent' => __('Absent', 'workforce-one')];
     return $known[$s] ?? $s;
@@ -89,15 +88,15 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
     <section class="wfo-sched-card ews-schedule-card" aria-labelledby="wfo-team-title">
         <div class="wfo-card-title">
             <span class="wfo-card-icon is-teal wfo-desktop-only"><?php echo Icons::svg('people', 20); ?></span>
-            <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?> <span class="wfo-sched-count"><?php echo esc_html(sprintf(/* translators: %d: number of people */ _n('%d person', '%d people', count($emps), 'workforce-one'), count($emps))); ?></span></h3><p class="wfo-help wfo-desktop-only"><?php esc_html_e('Everyone can view the team\'s schedule to coordinate coverage and arrange swaps with colleagues.', 'workforce-one'); ?></p></div>
+            <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?> <span class="wfo-sched-count"><?php echo esc_html(sprintf(/* translators: %d: number of people */ _n('%d person', '%d people', count($emps), 'workforce-one'), count($emps))); ?></span></h3></div>
         </div>
         <div class="wfo-sched-bar ews-no-print">
             <label class="wfo-sched-search"><?php echo Icons::svg('search', 17, 2); ?><input type="search" id="wfo-sched-search" placeholder="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" aria-label="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" autocomplete="off"></label>
             <div class="ews-schedule-tool-actions wfo-sched-actions">
-                <a class="ews-btn secondary ews-pdf-btn wfo-btn-ghost" href="<?php echo esc_url($pdf_url); ?>" download><?php echo Icons::svg('download', 16); ?>PDF</a>
-                <button type="button" class="ews-btn secondary ews-wa-btn wfo-btn-ghost" data-ews-share-pdf="<?php echo esc_url($pdf_url); ?>" data-ews-share-name="<?php echo esc_attr($pdf_name); ?>" data-ews-share-text="<?php echo esc_attr(__('Team Schedule', 'workforce-one') . ' · ' . $range); ?>" data-ews-share-fallback="<?php esc_attr_e('The schedule PDF was downloaded. Attach it to your WhatsApp message.', 'workforce-one'); ?>" data-ews-share-error="<?php esc_attr_e('The PDF could not be prepared. Please try again.', 'workforce-one'); ?>"><?php echo Icons::svg('share', 16); ?>WhatsApp</button>
+                <a class="ews-btn secondary ews-pdf-btn wfo-btn-ghost" href="<?php echo esc_url($pdf_url); ?>" download><?php echo Icons::svg('download', 16); ?><span>PDF</span></a>
+                <button type="button" class="ews-btn secondary ews-wa-btn wfo-btn-ghost" data-ews-share-pdf="<?php echo esc_url($pdf_url); ?>" data-ews-share-name="<?php echo esc_attr($pdf_name); ?>" data-ews-share-text="<?php echo esc_attr(__('Team Schedule', 'workforce-one') . ' · ' . $range); ?>" data-ews-share-fallback="<?php esc_attr_e('The schedule PDF was downloaded. Attach it to your WhatsApp message.', 'workforce-one'); ?>" data-ews-share-error="<?php esc_attr_e('The PDF could not be prepared. Please try again.', 'workforce-one'); ?>"><?php echo Icons::svg('share', 16); ?><span>WhatsApp</span></button>
                 <?php if ($email_url): ?>
-                    <a class="ews-btn secondary wfo-btn-ghost" href="<?php echo esc_url($email_url); ?>" data-ews-confirm="<?php esc_attr_e('Send each active employee their own schedule for this week?', 'workforce-one'); ?>"><?php echo Icons::svg('mail', 16); ?><?php esc_html_e('Email everyone', 'workforce-one'); ?></a>
+                    <a class="ews-btn secondary wfo-btn-ghost" href="<?php echo esc_url($email_url); ?>" data-ews-confirm="<?php esc_attr_e('Send each active employee their own schedule for this week?', 'workforce-one'); ?>"><?php echo Icons::svg('mail', 16); ?><span class="wfo-desktop-only"><?php esc_html_e('Email everyone', 'workforce-one'); ?></span><span class="wfo-phone-only"><?php echo esc_html_x('Email', 'short button label', 'workforce-one'); ?></span></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -155,13 +154,17 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
         <p class="wfo-sched-noresult" hidden><?php esc_html_e('No colleague matches your search.', 'workforce-one'); ?></p>
     </section>
 
-    <?php if ($current_emp_id): ?>
-    <section class="wfo-sched-card ews-swap-panel ews-no-print" aria-labelledby="wfo-swap-title">
+    <?php if ($current_emp_id): $has_myweek = isset($cells[$current_emp_id]); ?>
+    <section class="wfo-sched-card ews-swap-panel ews-no-print" aria-labelledby="wfo-swap-title"<?php echo ($has_myweek && !$swap_requests) ? ' hidden data-ews-swap-empty' : ''; ?>>
+        <?php if (!$has_myweek): ?>
         <div class="wfo-card-title ews-swap-panel-head">
             <span class="wfo-card-icon is-amber"><?php echo Icons::svg('swap', 20); ?></span>
-            <div class="wfo-card-title-text"><h3 id="wfo-swap-title"><?php esc_html_e('Need to swap a day?', 'workforce-one'); ?></h3><p class="wfo-help"><?php esc_html_e('Choose a colleague and request a direct schedule swap. No approval is required.', 'workforce-one'); ?></p></div>
+            <div class="wfo-card-title-text"><h3 id="wfo-swap-title"><?php esc_html_e('Need to swap a day?', 'workforce-one'); ?></h3></div>
             <button type="button" class="ews-btn wfo-btn-solid" id="ews-open-swap"><?php echo Icons::svg('swap', 16); ?><?php esc_html_e('Request Swap', 'workforce-one'); ?></button>
         </div>
+        <?php else: ?>
+        <h3 id="wfo-swap-title" class="screen-reader-text"><?php esc_html_e('Request a swap', 'workforce-one'); ?></h3>
+        <?php endif; ?>
         <div id="ews-swap-form-wrap" class="ews-swap-form-wrap" hidden>
             <?php if ($swap_days): ?>
             <form method="post" action="<?php echo esc_url($post_url); ?>" class="ews-swap-form">
@@ -181,6 +184,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             <?php endif; ?>
         </div>
 
+        <?php if ($swap_requests): ?>
         <div class="ews-swap-requests">
             <h4 class="ews-swap-requests-title"><?php esc_html_e('Swap Requests', 'workforce-one'); ?> · <?php echo esc_html($week_text); ?></h4>
             <?php if ($swap_requests): foreach ($swap_requests as $sr): $incoming = (int) $sr->target_employee_id === $current_emp_id; $other = $incoming ? (int) $sr->requester_employee_id : (int) $sr->target_employee_id; $state = strtolower((string) $sr->status); [$sicon, $stext] = $swap_states[$state] ?? ['alert', (string) $sr->status]; ?>
@@ -198,11 +202,9 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                     <form method="post" action="<?php echo esc_url($post_url); ?>"><?php wp_nonce_field('ews_swap_cancel_' . (int) $sr->id); ?><input type="hidden" name="action" value="ews_swap_cancel"><input type="hidden" name="swap_id" value="<?php echo (int) $sr->id; ?>"><button class="ews-swap-small reject" type="submit"><?php echo Icons::svg('close', 14, 2.2); ?><?php esc_html_e('Cancel', 'workforce-one'); ?></button></form>
                 <?php endif; ?></div>
             </div>
-            <?php endforeach; else: ?>
-                <?php echo $no_swaps_html; ?>
-            <?php endif; ?>
+            <?php endforeach; endif; ?>
         </div>
-        <p class="ews-swap-hint wfo-help"><?php echo Icons::svg('sparkle', 16); ?><span><?php esc_html_e('Use this shared schedule to find a colleague with a compatible day. You can request a swap directly from this page.', 'workforce-one'); ?></span></p>
+        <?php endif; ?>
     </section>
     <?php endif; ?>
 </div>
