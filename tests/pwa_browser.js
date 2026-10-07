@@ -18,6 +18,9 @@ const B = 'http://127.0.0.1:8080';
   const sw = await page.evaluate(async () => {
     const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 15000))]);
     if (!reg) return null;
+    // `ready` resolves as soon as there is an active worker, which may still be "activating".
+    const w = reg.active;
+    if (w && w.state === 'activating') await Promise.race([new Promise(r => w.addEventListener('statechange', () => { if (w.state !== 'activating') r(); })), new Promise(r => setTimeout(r, 10000))]);
     return { script: reg.active && reg.active.scriptURL, scope: reg.scope, state: reg.active && reg.active.state };
   });
   check('the service worker installs and activates for the whole site', sw && /\?ews_pwa=sw$/.test(sw.script) && sw.scope === B + '/' && sw.state === 'activated', sw);
