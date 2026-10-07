@@ -14,6 +14,8 @@ Fix for 3.31.61, after the owner's test on the live site.
   20 seconds and shows "The PDF could not be prepared. Please try again." (it used to open the PDF
   link inside the installed app, with no way back). When the phone refuses to share the file, the
   PDF is downloaded and WhatsApp opens instead; a cancelled share does nothing.
+- Native app sign-in: `expires_in` could read 899 instead of 900 when the clock crossed a second
+  while the tokens were being issued; the lifetimes are now counted from the moment of issue.
 
 ## 3.31.61
 The employees' Team Schedule page, after review (design A), and a working WhatsApp button.

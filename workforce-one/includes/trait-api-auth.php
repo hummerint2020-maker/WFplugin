@@ -434,11 +434,11 @@ trait EWS_Api_Auth_Trait {
         return $row?:null;
     }
 
-    /** @param array<string,mixed> $device @return array{access:string,access_expires:int,refresh:string,refresh_expires:int} */
+    /** @param array<string,mixed> $device @return array{access:string,access_expires:int,refresh:string,refresh_expires:int,issued_at:int} */
     private function api_issue_pair(array $device,$now){
         global $wpdb;$t=$this->api_tables();$site=$this->api_site_id();$session_end=$this->api_unix($device['expires_at']);
         $pair=['access'=>Tokens::make(Tokens::ACCESS,$site,random_bytes(32)),'access_expires'=>Tokens::accessExpiry($now,$session_end),
-            'refresh'=>Tokens::make(Tokens::REFRESH,$site,random_bytes(32)),'refresh_expires'=>Tokens::refreshExpiry($now,$session_end)];
+            'refresh'=>Tokens::make(Tokens::REFRESH,$site,random_bytes(32)),'refresh_expires'=>Tokens::refreshExpiry($now,$session_end),'issued_at'=>(int)$now];
         foreach([[Tokens::ACCESS,$pair['access'],$pair['access_expires']],[Tokens::REFRESH,$pair['refresh'],$pair['refresh_expires']]] as [$kind,$token,$exp]){
             $wpdb->insert($t['tokens'],['device_id'=>(int)$device['id'],'user_id'=>(int)$device['user_id'],'kind'=>$kind,'token_hash'=>Tokens::hash($token,$this->api_secret()),
                 'expires_at'=>$this->api_utc($exp),'created_at'=>$this->api_utc($now)],['%d','%d','%s','%s','%s','%s']);
@@ -446,9 +446,9 @@ trait EWS_Api_Auth_Trait {
         return $pair;
     }
 
-    /** @param array{access:string,access_expires:int,refresh:string,refresh_expires:int} $pair @param array<string,mixed> $device */
+    /** @param array{access:string,access_expires:int,refresh:string,refresh_expires:int,issued_at:int} $pair @param array<string,mixed> $device */
     private function api_session_payload(array $pair,array $device){
-        $now=time();
+        $now=$pair['issued_at']; // the lifetimes as issued (time() here could be a second later: 899 instead of 900)
         return [
             'token_type'=>'Bearer',
             'access_token'=>$pair['access'],'expires_in'=>max(0,$pair['access_expires']-$now),
