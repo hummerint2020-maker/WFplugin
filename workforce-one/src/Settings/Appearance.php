@@ -57,7 +57,19 @@ final class Appearance
         'fullscreen' => '1',
         // '1': phones cannot pinch-zoom the full-screen app page (Android; iPhones ignore it).
         'nozoom' => '0',
+        // The employee login (templates/app/login.php). Empty texts use the built-in, translated ones.
+        'login_bg' => 'theme',          // theme | color | picture
+        'login_bg_color' => '#13235B',
+        'login_bg_image' => '',
+        'login_title' => '',
+        'login_subtitle' => '',
+        'login_help' => '',
+        'login_remember' => '1',
+        'login_forgot' => '1',
+        'login_brand' => '1',
+        'login_eye' => '1',
     ];
+    public const LOGIN_BACKGROUNDS = ['theme' => 'Theme colours', 'color' => 'One colour', 'picture' => 'Picture'];
 
     /**
      * Saved settings merged over the defaults; anything invalid falls back to the default.
@@ -85,6 +97,19 @@ final class Appearance
         $out['logo_url'] = preg_match('#^https?://[^\s"\'<>]+$#i', $logo) ? $logo : '';
         if (array_key_exists('fullscreen', $saved)) $out['fullscreen'] = (string) $saved['fullscreen'] === '0' ? '0' : '1';
         if (array_key_exists('nozoom', $saved)) $out['nozoom'] = (string) $saved['nozoom'] === '1' ? '1' : '0';
+        $bg = (string) ($saved['login_bg'] ?? '');
+        if (isset(self::LOGIN_BACKGROUNDS[$bg])) $out['login_bg'] = $bg;
+        $hex = self::hex($saved['login_bg_color'] ?? '');
+        if ($hex !== '') $out['login_bg_color'] = $hex;
+        $img = trim((string) ($saved['login_bg_image'] ?? ''));
+        $out['login_bg_image'] = preg_match('#^https?://[^\s"\'<>()]+$#i', $img) ? $img : '';
+        if ($out['login_bg'] === 'picture' && $out['login_bg_image'] === '') $out['login_bg'] = 'theme';
+        foreach (['login_title' => 80, 'login_subtitle' => 120, 'login_help' => 160] as $f => $max) {
+            if (array_key_exists($f, $saved)) $out[$f] = self::cut(trim((string) $saved[$f]), $max);
+        }
+        foreach (['login_remember', 'login_forgot', 'login_brand', 'login_eye'] as $f) {
+            if (array_key_exists($f, $saved)) $out[$f] = (string) $saved[$f] === '0' ? '0' : '1';
+        }
         return $out;
     }
 
@@ -134,6 +159,11 @@ final class Appearance
         }
         if (!isset(self::PRESETS[$cfg['preset']]) ||!self::matchesPreset($cfg, $cfg['preset'])) {
             $cfg['preset'] = self::presetOf($cfg);
+        }
+        // The login's own colour carries white text (logo line, help line).
+        if (self::contrast($cfg['login_bg_color'], '#FFFFFF') < self::MIN_CONTRAST) {
+            $errors[] = sprintf('Login background %s is too light for white text (%.1f : 1, needs %.1f). The previous colour was kept.', $cfg['login_bg_color'], self::contrast($cfg['login_bg_color'], '#FFFFFF'), self::MIN_CONTRAST);
+            $cfg['login_bg_color'] = $prev['login_bg_color'];
         }
         return ['config' => $cfg, 'errors' => $errors];
     }

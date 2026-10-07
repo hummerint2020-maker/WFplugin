@@ -1,0 +1,69 @@
+/* Employee login (templates/app/login.php): look C, a white card on the brand colour, one colour or a
+   picture (wp-admin → Appearance → Login screen). The theme variables are printed for .wfo-login by
+   enqueue_login_assets(); --wfo-login-bg replaces the background when a colour or picture is chosen.
+   Scoped to .ews-login-wrap.wfo-login to win over the old .ews-login-* rules in workforce-one.css.
+   assets/css/app-login-rtl.css is generated with rtlcss (assets/css/README.md). */
+
+.ews-login-wrap.wfo-login{--wfo-pri:#5B3FD9;--wfo-hero-start:#13235B;--wfo-hero-mid:#37319A;--wfo-hl:#FFC83D;--wfo-hl-ink:#13235B;--wfo-r-card:24px;--wfo-r-ctl:14px;--wfo-pri-soft:#EBE8FA;
+    box-sizing:border-box;min-height:100vh;min-height:100dvh;margin:0;padding:32px 18px;display:flex;align-items:center;justify-content:center;
+    background:var(--wfo-login-bg,radial-gradient(circle at 12% 10%,var(--wfo-pri) 0%,transparent 42%),radial-gradient(circle at 88% 88%,var(--wfo-hero-mid) 0%,transparent 46%),var(--wfo-hero-start));
+    font-family:var(--wfo-font,system-ui,sans-serif);color:#141A33;touch-action:manipulation}
+.wfo-login *,.wfo-login *::before,.wfo-login *::after{box-sizing:border-box}
+.wfo-login-inner{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:20px}
+
+/* brand above the card */
+.wfo-login-brand{display:flex;flex-direction:column;align-items:center;gap:8px;color:#fff;text-align:center}
+.wfo-login-mark{width:64px;height:64px;border-radius:20px;background:var(--wfo-hl);color:var(--wfo-hl-ink);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.wfo-login-mark img{width:100%;height:100%;object-fit:cover;display:block}
+.ews-login-wrap.wfo-login .ews-login-logo{margin:4px 0 0;font-size:22px;font-weight:700;color:#fff;letter-spacing:0;text-align:center}
+.wfo-login-line{font-size:13px;opacity:.82;line-height:1.5;unicode-bidi:plaintext}
+
+/* the card */
+.ews-login-wrap.wfo-login .ews-login-card{width:100%;max-width:none;margin:0;padding:28px 24px;border:0;border-radius:var(--wfo-r-card);background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px}
+.ews-login-wrap.wfo-login .ews-login-card h1{margin:0;font-size:24px;font-weight:700;line-height:1.25;color:#141A33;text-align:center}
+.ews-login-wrap.wfo-login .ews-login-sub{margin:-8px 0 4px;font-size:13px;color:#6A7090;text-align:center}
+.ews-login-wrap.wfo-login .ews-login-error,.ews-login-wrap.wfo-login .ews-login-success{display:flex;align-items:flex-start;gap:8px;margin:0;padding:10px 12px;border:0;border-radius:12px;font-size:13px;line-height:1.45}
+.ews-login-wrap.wfo-login .ews-login-error{background:#FFE8EC;color:#A51D3E}
+.ews-login-wrap.wfo-login .ews-login-success{background:#E6F7EF;color:#0F6B43}
+.wfo-login .ews-login-error .wfo-icon,.wfo-login .ews-login-success .wfo-icon{flex:0 0 auto;margin-top:1px}
+
+/* the form (wp_login_form): fields, then Remember me and Forgot password? on one row, then Sign In */
+.ews-login-wrap.wfo-login .ews-login-card form{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:12px 10px}
+.ews-login-wrap.wfo-login .ews-login-card form>p{margin:0;flex:1 1 100%;min-width:0}
+.ews-login-wrap.wfo-login .ews-login-card .login-username label,.ews-login-wrap.wfo-login .ews-login-card .login-password label{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;margin:0}
+.ews-login-wrap.wfo-login .ews-login-card input[type=text],.ews-login-wrap.wfo-login .ews-login-card input[type=password],.ews-login-wrap.wfo-login .ews-login-card input[type=email]{
+    width:100%;height:52px;margin:0;padding:0 44px 0 14px;border:1.5px solid transparent;border-radius:var(--wfo-r-ctl);background-color:#F3F4FA;background-repeat:no-repeat;background-position:right 14px center;background-size:18px 18px;
+    color:#141A33;font:inherit;font-size:16px;box-shadow:none;outline:none}
+.ews-login-wrap.wfo-login .ews-login-card input[type=text]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236A7090' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E")}
+.ews-login-wrap.wfo-login .ews-login-card input[type=password],.ews-login-wrap.wfo-login .ews-login-card .login-password input[type=text]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236A7090' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='16' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E")}
+.ews-login-wrap.wfo-login .ews-login-card input::placeholder{color:#6A7090;opacity:1}
+.ews-login-wrap.wfo-login .ews-login-card input[type=text]:focus,.ews-login-wrap.wfo-login .ews-login-card input[type=password]:focus{border-color:var(--wfo-pri);background-color:#fff;box-shadow:0 0 0 4px var(--wfo-pri-soft)}
+/* the eye button (assets/js/login.js wraps the password field) */
+.wfo-login-pass{position:relative;display:block}
+.ews-login-wrap.wfo-login .ews-login-card .wfo-login-pass input{padding-left:52px}
+.wfo-login-eye{position:absolute;top:6px;left:6px;width:40px;height:40px;padding:0;border:0;border-radius:10px;background:transparent;color:#6A7090;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wfo-login-eye:hover{color:var(--wfo-pri)}
+.wfo-login-eye:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:1px}
+.wfo-login-eye .is-off{display:none}
+.wfo-login-eye[aria-pressed=true] .is-on{display:none}
+.wfo-login-eye[aria-pressed=true] .is-off{display:block}
+.ews-login-wrap.wfo-login .ews-login-card .login-remember{order:3;flex:1 1 auto;margin:0;padding:0;display:block;line-height:20px;font-size:13px;color:#3B4466}
+.ews-login-wrap.wfo-login .ews-login-card .login-remember label{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:13px;font-weight:400;color:#3B4466;cursor:pointer}
+.ews-login-wrap.wfo-login .ews-login-card .login-remember input{width:18px;height:18px;margin:0;accent-color:var(--wfo-pri)}
+.ews-login-wrap.wfo-login .ews-login-card .ews-login-forgot{order:4;flex:0 0 auto;margin:0 auto 0 0;padding:0;line-height:20px;text-align:left}
+.ews-login-wrap.wfo-login .ews-login-forgot a{font-size:13px;font-weight:600;color:var(--wfo-pri);text-decoration:none}
+.ews-login-wrap.wfo-login .ews-login-forgot a:hover{text-decoration:underline}
+.ews-login-wrap.wfo-login .ews-login-card .login-submit{order:5;margin:4px 0 0}
+.ews-login-wrap.wfo-login .ews-login-card input[type=submit],.ews-login-wrap.wfo-login .wfo-login-submit{width:100%;height:54px;margin:0;padding:0 16px;border:0;border-radius:16px;background:var(--wfo-hl);color:var(--wfo-hl-ink);font:inherit;font-size:16px;font-weight:800;line-height:54px;text-align:center;text-decoration:none;cursor:pointer;box-shadow:none;display:block}
+.ews-login-wrap.wfo-login .ews-login-card input[type=submit]:hover,.ews-login-wrap.wfo-login .wfo-login-submit:hover{filter:brightness(.96)}
+.ews-login-wrap.wfo-login .ews-login-card input[type=submit]:focus-visible,.ews-login-wrap.wfo-login .wfo-login-submit:focus-visible{outline:3px solid var(--wfo-hero-start);outline-offset:2px}
+.ews-login-wrap.wfo-login .wfo-login-alt{display:block;text-align:center;font-size:14px;font-weight:600;color:var(--wfo-pri);text-decoration:none}
+
+/* the help line under the card */
+.wfo-login-help{margin:0;font-size:13px;line-height:1.5;color:rgba(255,255,255,.86);text-align:center}
+
+@media (max-width:420px){
+    .ews-login-wrap.wfo-login{padding:24px 14px}
+    .ews-login-wrap.wfo-login .ews-login-card{padding:24px 18px}
+    .ews-login-wrap.wfo-login .ews-login-card h1{font-size:22px}
+}

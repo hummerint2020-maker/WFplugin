@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.62\n"
+"Project-Id-Version: Workforce One 3.31.64\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-07T00:27:55+00:00\n"
+"POT-Creation-Date: 2026-10-07T08:42:06+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -194,6 +194,37 @@ msgstr ""
 
 #: includes/trait-app-layout.php:118
 msgid "One Platform. One Team. One Goal."
+msgstr ""
+
+#: includes/trait-app-layout.php:157
+msgid "Forgot password?"
+msgstr ""
+
+#: includes/trait-app-layout.php:161
+#: includes/trait-app-layout.php:168
+msgid "Username or Email"
+msgstr ""
+
+#: includes/trait-app-layout.php:161
+#: includes/trait-app-layout.php:169
+msgid "Password"
+msgstr ""
+
+#: includes/trait-app-layout.php:161
+msgid "Remember me"
+msgstr ""
+
+#: includes/trait-app-layout.php:161
+msgctxt "log in to the app"
+msgid "Sign In"
+msgstr ""
+
+#: includes/trait-app-layout.php:173
+msgid "The username or password is incorrect. Please try again."
+msgstr ""
+
+#: includes/trait-app-layout.php:174
+msgid "You have been logged out successfully."
 msgstr ""
 
 #: includes/trait-attendance-insights.php:150
@@ -726,7 +757,7 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
@@ -735,50 +766,50 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:432
+#: includes/trait-frontend.php:437
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:438
+#: includes/trait-frontend.php:443
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:438
+#: includes/trait-frontend.php:443
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:445
+#: includes/trait-frontend.php:450
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:445
+#: includes/trait-frontend.php:450
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1706,9 +1737,11 @@ msgid "Workforce One navigation"
 msgstr ""
 
 #. translators: %s: "Add to Home Screen"
+#. translators: %s: app name
 #: templates/app/layout.php:51
 #: templates/app/layout.php:73
 #: templates/app/layout.php:113
+#: templates/app/login.php:40
 msgid "Log out"
 msgstr ""
 
@@ -1930,6 +1963,32 @@ msgstr ""
 
 #: templates/app/leave.php:152
 msgid "Pending Early Leave"
+msgstr ""
+
+#: templates/app/login.php:22
+msgid "Welcome back"
+msgstr ""
+
+#: templates/app/login.php:23
+msgid "Sign in with your work account"
+msgstr ""
+
+#: templates/app/login.php:36
+msgid "Show password"
+msgstr ""
+
+#: templates/app/login.php:36
+msgid "Hide password"
+msgstr ""
+
+#: templates/app/login.php:38
+msgid "You are already signed in"
+msgstr ""
+
+#. translators: %s: app name
+#: templates/app/login.php:39
+#, php-format
+msgid "Open %s"
 msgstr ""
 
 #: templates/app/my-profile.php:49

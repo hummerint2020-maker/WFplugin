@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.65
+New look: the employee login (look C, chosen by the owner), set up from wp-admin. Signing in, a
+wrong password coming back to the app, "logged out" and the Remember me / redirect behaviour work
+as before (same wp_login_form fields; the layout tests pass unchanged: 14).
+
+### Added
+- **wp-admin → Appearance → Login screen:** background (theme colours, one colour, or a picture,
+  darkened so the white text stays readable), welcome title, subtitle and a help line under the
+  form, and switches for "Remember me", "Forgot password?", the app name / company / tagline, and the
+  show-password eye. Empty title and subtitle use the built-in text. A colour too light for white
+  text is refused, like the header colours.
+
+### Changed
+- The login is a white card on the brand colours with the logo (or the app's initials), the app
+  name and "company · tagline" above it; fields with icons, an eye button to show the password,
+  "Remember me" and "Forgot password?" on one row, and a Sign In button in the highlight colour.
+  It uses the Appearance colours, font and corners, on phones and computers.
+- The login's text is translated (Arabic: "أهلًا بعودتك", "تسجيل الدخول", …); before it was English
+  only, and the company name was written into the page instead of taken from Appearance.
+- "You are already signed in" uses the same card.
+
+### Fixed
+- wp-admin → Appearance: the segmented choices (Corners, and now the login background) showed their
+  labels in the top corner of each pill instead of centred.
+
 ## 3.31.64
 Zoom on phones, after the owner asked to stop zoom in / out.
 

@@ -98,6 +98,29 @@ $color_help = ['header_start' => 'Top of the header', 'header_end' => 'Bottom of
         </fieldset>
     </section>
 
+    <section class="wfo-ap-card" id="wfo-ap-login">
+        <h2>Login screen</h2>
+        <p class="wfo-ap-help">What employees see before they sign in. The logo, colours, font and corners come from Brand and Theme above.</p>
+        <fieldset class="wfo-ap-fieldset"><legend>Background</legend><div class="wfo-ap-seg">
+            <?php foreach (Appearance::LOGIN_BACKGROUNDS as $key => $label): ?><label><input type="radio" name="login_bg" value="<?php echo esc_attr($key); ?>" <?php checked($cfg['login_bg'], $key); ?>><span><?php echo esc_html($label); ?></span></label><?php endforeach; ?></div>
+        </fieldset>
+        <div class="wfo-ap-cols3">
+            <label><span>Colour (One colour)</span><span class="wfo-ap-color"><input type="color" name="login_bg_color" value="<?php echo esc_attr($cfg['login_bg_color']); ?>"></span></label>
+            <label style="grid-column:span 2"><span>Picture URL (Picture)</span><input type="url" name="login_bg_image" value="<?php echo esc_attr($cfg['login_bg_image']); ?>" placeholder="https://… (a wide photo, at least 1600 px)"></label>
+        </div>
+        <p class="wfo-ap-help">The picture is darkened so the white text on it stays readable. Without a picture URL the theme colours are used.</p>
+        <div class="wfo-ap-cols3">
+            <label><span>Welcome title</span><input type="text" name="login_title" value="<?php echo esc_attr($cfg['login_title']); ?>" maxlength="80" placeholder="Welcome back"></label>
+            <label><span>Subtitle</span><input type="text" name="login_subtitle" value="<?php echo esc_attr($cfg['login_subtitle']); ?>" maxlength="120" placeholder="Sign in with your work account"></label>
+            <label><span>Help line</span><input type="text" name="login_help" value="<?php echo esc_attr($cfg['login_help']); ?>" maxlength="160" placeholder="Need help signing in? Contact HR"></label>
+        </div>
+        <p class="wfo-ap-help">Leave the title and subtitle empty to use the built-in text, shown in English or Arabic with the site language. The help line appears under the form only when filled in.</p>
+        <?php foreach (['login_remember' => 'Show "Remember me"', 'login_forgot' => 'Show the "Forgot password?" link', 'login_brand' => 'Show the app name, company name and tagline', 'login_eye' => 'Show the "show password" eye button'] as $key => $label): ?>
+        <input type="hidden" name="<?php echo esc_attr($key); ?>" value="0">
+        <label class="wfo-ap-check"><input type="checkbox" name="<?php echo esc_attr($key); ?>" value="1" <?php checked($cfg[$key], '1'); ?>> <?php echo esc_html($label); ?></label>
+        <?php endforeach; ?>
+    </section>
+
     <div class="wfo-ap-savebar">
         <span><?php echo $is_default ? 'Using the built-in look.' : 'Menu items, labels and order are set in View Navigation.'; ?></span>
         <button type="submit" class="button button-primary">Save appearance</button>

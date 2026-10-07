@@ -202,6 +202,9 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-reports', $root.'assets/js/reports.js', [], $ver, true);
             wp_register_script('workforce-one-presence-scan', $root.'assets/js/presence-scan.js', ['workforce-one-jsqr'], $ver, true);
             wp_register_style('workforce-one', $root.'assets/css/workforce-one.css', [], $ver);
+            wp_register_style('workforce-one-login', $root.'assets/css/app-login.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-login', 'rtl', 'replace');
+            wp_register_script('workforce-one-login', $root.'assets/js/login.js', [], $ver, true);
             wp_register_style('workforce-one-pay', $root.'assets/css/app-pay.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-pay', 'rtl', 'replace');
             wp_register_style('workforce-one-home', $root.'assets/css/app-home.css', ['workforce-one'], $ver);
@@ -233,6 +236,8 @@ trait EWS_Frontend_Trait {
             wp_enqueue_style('workforce-one-shell', $root.'assets/css/app-shell.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-shell', 'rtl', 'replace');
             wp_add_inline_style('workforce-one-shell', $this->appearance_css());
+            // Signed out, the app page is the login (templates/app/login.php): its styles in the <head>.
+            if(!is_user_logged_in())$this->enqueue_login_assets();
             // In the <head> on the Home page, so it does not flash unstyled (the view enqueues it too, for its shortcode).
             $view=sanitize_key($_GET['ews_view']??'dashboard');
             if($view==='dashboard')wp_enqueue_style('workforce-one-home');

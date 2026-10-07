@@ -2754,3 +2754,43 @@ msgstr "تعذّر تجهيز ملف PDF. حاول مرة أخرى."
 msgctxt "short button label"
 msgid "Email"
 msgstr "بريد"
+
+msgid "Forgot password?"
+msgstr "نسيت كلمة المرور؟"
+
+msgid "Hide password"
+msgstr "إخفاء كلمة المرور"
+
+msgid "Open %s"
+msgstr "فتح %s"
+
+msgid "Password"
+msgstr "كلمة المرور"
+
+msgid "Remember me"
+msgstr "تذكرني"
+
+msgid "Show password"
+msgstr "إظهار كلمة المرور"
+
+msgid "Sign in with your work account"
+msgstr "سجّل الدخول بحساب العمل"
+
+msgid "The username or password is incorrect. Please try again."
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة. حاول مرة أخرى."
+
+msgid "Username or Email"
+msgstr "اسم المستخدم أو البريد الإلكتروني"
+
+msgid "Welcome back"
+msgstr "أهلًا بعودتك"
+
+msgid "You are already signed in"
+msgstr "أنت مسجّل الدخول بالفعل"
+
+msgid "You have been logged out successfully."
+msgstr "تم تسجيل الخروج بنجاح."
+
+msgctxt "log in to the app"
+msgid "Sign In"
+msgstr "تسجيل الدخول"

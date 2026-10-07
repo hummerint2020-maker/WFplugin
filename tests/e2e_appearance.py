@@ -6,7 +6,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_appearance.py <state-dir
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import html, os, re, sys
+import html, json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -135,8 +135,38 @@ shell = re.search(r"href='[^']*?(/wp-content/plugins/[^']*?/assets/css/app-shell
 st, css, _ = emp.req(shell.group(1)) if shell else (0, '', {})
 check('fields are 16px on phones and double-tap does not zoom', 'font-size:16px!important' in css and 'touch-action:manipulation' in css)
 
+# Login screen (3.31.65): look C, with its settings in Appearance → Login screen.
+import urllib.request as _u
+def anon(path):
+    try:
+        r = _u.urlopen(_u.Request('http://127.0.0.1:8080' + path))
+        return r.read().decode('utf-8', 'replace')
+    except Exception as e:
+        return e.read().decode('utf-8', 'replace') if hasattr(e, 'read') else ''
+page = anon(APP)
+check('the login shows the built-in title, the brand, Remember me, Forgot password? and the eye', 'Welcome back' in page and 'Sign in with your work account' in page and 'wfo-login-brand' in page and 'name="rememberme"' in page and 'Forgot password?' in page and 'has-eye' in page and 'app-login.css' in page)
+check('...with no help line until one is set', 'wfo-login-help' not in page)
+n, _ = form_nonce(adm, 'ews31_appearance_save')
+adm.post('ews31_appearance_save', _wpnonce=n, preset='classic', header_style='gradient', corners='round', company_name='BA Team', app_name='Workforce One',
+         login_bg='color', login_bg_color='#0B3D2E', login_title='Hello team', login_subtitle='Use your company account', login_help='Need help? Call HR on 2040',
+         login_remember='0', login_forgot='0', login_brand='0', login_eye='0')
+page = anon(APP)
+check('the saved title, subtitle and help line are shown', 'Hello team' in page and 'Use your company account' in page and 'Need help? Call HR on 2040' in page and 'Welcome back' not in page)
+check('Remember me, Forgot password?, the brand and the eye can be hidden', 'name="rememberme"' not in page and 'Forgot password?' not in page and 'wfo-login-brand' not in page and 'has-eye' not in page)
+check('the chosen colour is the background', '--wfo-login-bg:#0B3D2E' in page and 'is-bg-color' in page)
+check('a wrong password still comes back to this login (the form is unchanged)', 'id="ews_login_username"' in anon(APP))
+n, _ = form_nonce(adm, 'ews31_appearance_save')
+adm.post('ews31_appearance_save', _wpnonce=n, preset='classic', header_style='gradient', corners='round', company_name='BA Team', app_name='Workforce One', login_bg='color', login_bg_color='#F5F5F5')
+saved = json.loads(php("echo wp_json_encode(get_option('ews_appearance'));"))
+check('a login colour too light for white text is refused', saved.get('login_bg_color') == '#0B3D2E', saved.get('login_bg_color'))
+n, _ = form_nonce(adm, 'ews31_appearance_save')
+adm.post('ews31_appearance_save', _wpnonce=n, preset='classic', header_style='gradient', corners='round', company_name='BA Team', app_name='Workforce One', login_bg='picture', login_bg_image='https://example.com/office.jpg')
+page = anon(APP)
+check('a picture background is darkened behind the card', 'url("https://example.com/office.jpg")' in page and 'is-bg-picture' in page)
+php("delete_option('ews_appearance');")
+
 audits = q("SELECT details FROM {p}ews_audit_log WHERE action='appearance_update'")
-check('each save and the reset are in the Audit Log', len(audits) == 4, audits)
+check('each save and the reset are in the Audit Log', len(audits) == 7, audits)
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

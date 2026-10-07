@@ -28,6 +28,15 @@ final class AppearanceTest extends TestCase
         $this->assertSame('1', A::config(['nozoom' => '1'])['nozoom']);
         $this->assertSame('0', A::config(['nozoom' => 'yes'])['nozoom'], 'only 1 turns zoom off');
         $this->assertSame('1', A::fromPost(['nozoom' => '1'], null)['config']['nozoom']);
+        $c = A::config([]);
+        $this->assertSame(['theme', '#13235B', '', '', '1', '1', '1', '1'], [$c['login_bg'], $c['login_bg_color'], $c['login_bg_image'], $c['login_help'], $c['login_remember'], $c['login_forgot'], $c['login_brand'], $c['login_eye']], 'login defaults');
+        $this->assertSame('theme', A::config(['login_bg' => 'video'])['login_bg'], 'unknown backgrounds fall back to the theme');
+        $this->assertSame('theme', A::config(['login_bg' => 'picture'])['login_bg'], 'a picture background needs a picture');
+        $this->assertSame('', A::config(['login_bg_image' => 'https://x.test/a.jpg") ; } body{display:none'])['login_bg_image'], 'a picture URL cannot break out of the CSS');
+        $this->assertSame('picture', A::config(['login_bg' => 'picture', 'login_bg_image' => 'https://x.test/a.jpg'])['login_bg']);
+        $this->assertSame('0', A::config(['login_remember' => '0'])['login_remember']);
+        $this->assertSame(80, mb_strlen(A::config(['login_title' => str_repeat('a', 200)])['login_title']), 'titles are cut');
+        $this->assertSame('#13235B', A::fromPost(['login_bg_color' => '#F5F5F5'], null)['config']['login_bg_color'], 'a login colour too light for white text is refused');
     }
 
     public function testHexAndContrast(): void
