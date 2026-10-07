@@ -2794,3 +2794,57 @@ msgstr "تم تسجيل الخروج بنجاح."
 msgctxt "log in to the app"
 msgid "Sign In"
 msgstr "تسجيل الدخول"
+
+msgid "Alerts are off on this device"
+msgstr "التنبيهات متوقفة على هذا الجهاز"
+
+msgid "Alerts are on on this device"
+msgstr "التنبيهات تعمل على هذا الجهاز"
+
+msgid "Earlier"
+msgstr "أقدم"
+
+msgid "Get leave, swap and schedule news as it happens."
+msgstr "اعرف أخبار الإجازات والتبديل والجدول فور حدوثها."
+
+msgid "Just now"
+msgstr "الآن"
+
+msgid "Mark \"%s\" as read"
+msgstr "تعليم \"%s\" كمقروء"
+
+msgid "Mark all read"
+msgstr "تعليم الكل كمقروء"
+
+msgid "Mark read"
+msgstr "تعليم كمقروء"
+
+msgid "News about your leave, schedule and requests will show up here."
+msgstr "ستظهر هنا أخبار إجازاتك وجدولك وطلباتك."
+
+msgid "No notifications yet."
+msgstr "لا توجد إشعارات بعد."
+
+msgid "No unread notifications."
+msgstr "لا توجد إشعارات غير مقروءة."
+
+msgid "Notification filter"
+msgstr "تصفية الإشعارات"
+
+msgid "Turn off"
+msgstr "إيقاف"
+
+msgid "Turn on"
+msgstr "تشغيل"
+
+msgid "Unread"
+msgstr "غير مقروء"
+
+msgid "Yesterday"
+msgstr "أمس"
+
+msgid "Yesterday · %s"
+msgstr "أمس · %s"
+
+msgid "unread"
+msgstr "غير مقروء"

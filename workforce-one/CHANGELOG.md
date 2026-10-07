@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.66
+New look: the Notifications page (look A, chosen by the owner). Opening a notification, Mark read,
+Mark all read, All / Unread and turning phone alerts on or off work as before (same admin-post
+actions and nonces; the push tests pass unchanged: 26).
+
+### Changed
+- Notifications are **grouped by day** (Today, Yesterday, Earlier), newest first, each with an icon
+  and colour for what it is about (leave, swap, schedule, attendance, poll, kudos, tasks, pay…),
+  the message, and when it came ("5 minutes ago", "Yesterday · 16:20", "Sun 4 Oct · 11:35").
+- Unread ones are bold with a dot; the **dot is the Mark read button**. The whole row opens the
+  notification (a real link now, so it also works with the keyboard and screen readers).
+- **All / Unread** switch with the unread count, and **Mark all read** (an icon button on phones).
+- **Alerts on this device** is a small strip at the top with Turn on / Turn off; it stays hidden
+  where the browser cannot receive alerts.
+- No emoji, no intro text; translated (Arabic). The page's script moved from inline code to
+  `assets/js/notifications.js`; styles in `assets/css/app-notifications.css`.
+
+### Tests
+- New `tests/e2e_notifications_view.py` (15): grouping and order, only my notifications, unread
+  count and dots, icons, kept formatting, times, Unread filter, Mark read, opening marks read,
+  Mark all read (only mine), empty states.
+
 ## 3.31.65
 New look: the employee login (look C, chosen by the owner), set up from wp-admin. Signing in, a
 wrong password coming back to the app, "logged out" and the Remember me / redirect behaviour work

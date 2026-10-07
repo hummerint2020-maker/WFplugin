@@ -171,6 +171,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_foundation.py "$S"
       - name: Native app authentication (tokens, refresh rotation, devices, rate limits, isolation)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_auth.py "$S"
+      - name: Notifications page (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_notifications_view.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

@@ -326,89 +326,47 @@ trait EWS_Notifications_Trait {
         wp_safe_redirect($redirect);exit;
     }
 
+    /** Icon and colour of a notification, from what it is about (its entity) and else its type. @return array{0:string,1:string} [icon, tone] */
+    private function notification_look($n){
+        $by_entity=['leave'=>['leave','leave'],'vacation'=>['leave','leave'],'early_leave'=>['leave','leave'],'overtime'=>['overtime','away'],
+            'swap'=>['swap','away'],'schedule'=>['calendar','wfh'],'break'=>['clock','teal'],'presence'=>['attendance','teal'],'attendance'=>['attendance','teal'],
+            'poll'=>['polls','pri'],'kudos'=>['trophy','gold'],'recognition'=>['trophy','gold'],'achievement'=>['trophy','gold'],'task'=>['tasks','wfh'],'payroll'=>['pay','office']];
+        $e=sanitize_key((string)($n->entity??''));
+        if(isset($by_entity[$e]))return $by_entity[$e];
+        $by_type=['success'=>['check','office'],'warning'=>['alert','away'],'error'=>['alert','absent']];
+        return $by_type[sanitize_key((string)$n->type)]??['bell','off'];
+    }
+
     public function notifications_content(){
         if(!is_user_logged_in())return $this->login_page();
-        $push_public_key=$this->get_vapid_public_key();
-        $push_url=admin_url('admin-post.php');
-        $push_nonce=wp_create_nonce('ews_push_subscription');
         $filter=sanitize_key($_GET['notification_tab']??'all');
         if(!in_array($filter,['all','unread'],true))$filter='all';
         $rows=$this->notification_rows(null,50,$filter);
-        $unread=$this->notification_unread_count();
+        // Newest first, grouped by day (the query puts unread first for the bell).
+        usort($rows,function($a,$b){return strcmp((string)$b->created_at,(string)$a->created_at)?:((int)$b->id<=>(int)$a->id);});
+        $today=current_time('Y-m-d');
+        $yesterday=date('Y-m-d',strtotime($today.' -1 day'));
+        $now=current_time('timestamp');
+        $groups=[];
+        foreach($rows as $n){
+            $ts=strtotime((string)$n->created_at);
+            $day=date('Y-m-d',$ts);
+            $key=$day===$today?'today':($day===$yesterday?'yesterday':'earlier');
+            if($key==='today')$when=$now-$ts<60?__('Just now','workforce-one'):sprintf(/* translators: %s: time span like "5 mins" */__('%s ago','workforce-one'),human_time_diff($ts,$now));
+            elseif($key==='yesterday')$when=sprintf(/* translators: %s: time */__('Yesterday · %s','workforce-one'),date_i18n(get_option('time_format')?:'H:i',$ts));
+            else $when=date_i18n('D j M · '.(get_option('time_format')?:'H:i'),$ts);
+            [$icon,$tone]=$this->notification_look($n);
+            $groups[$key][]=['id'=>(int)$n->id,'title'=>(string)$n->title,'message'=>(string)$n->message,'unread'=>!(int)$n->is_read,'when'=>$when,'icon'=>$icon,'tone'=>$tone,
+                'open_url'=>wp_nonce_url(add_query_arg(['action'=>'ews_notification_open','notification_id'=>(int)$n->id],admin_url('admin-post.php')),'ews_notification_open_'.(int)$n->id)];
+        }
         $all_url=$this->app_view_url('notifications');
-        $unread_url=add_query_arg('notification_tab','unread',$all_url);
-        ob_start(); ?>
-        <div class="ews-notifications-page">
-            <div class="ews-notif-intro">
-                <div class="ews-notif-intro-icon">🔔</div>
-                <div><h2>Notifications</h2><p>Stay updated with your latest alerts and activities.</p></div>
-            </div>
-
-            <div id="ews-notification-push-settings" class="ews-push-card">
-                <div class="ews-push-main">
-                    <div class="ews-push-icon">🔔</div>
-                    <div class="ews-push-copy"><strong>Push Notifications</strong><span>Receive notifications on this device.</span></div>
-                    <span id="ews-notification-push-status" class="ews-push-status">Enabled</span>
-                    <button id="ews-notification-push-enable" type="button" style="display:none;">Enable</button>
-                    <button id="ews-notification-push-disable" type="button" style="display:none;">Disable</button>
-                </div>
-                <div class="ews-push-device">▯ &nbsp; <strong>This device</strong></div>
-            </div>
-
-            <div class="ews-card ews-notifications-card">
-                <div class="ews-notifications-head">
-                    <div class="ews-notifications-title-wrap"><div><h2 style="margin:0;display:inline-block;">Your Notifications</h2><span class="ews-unread-count"><?php echo absint($unread); ?> Unread</span></div><div class="ews-notification-tabs" role="tablist" aria-label="Notification filter"><a class="<?php echo $filter==='all'?'active':''; ?>" href="<?php echo esc_url($all_url); ?>" role="tab" aria-selected="<?php echo $filter==='all'?'true':'false'; ?>">All</a><a class="<?php echo $filter==='unread'?'active':''; ?>" href="<?php echo esc_url($unread_url); ?>" role="tab" aria-selected="<?php echo $filter==='unread'?'true':'false'; ?>">Unread<?php echo $unread?' ('.absint($unread).')':''; ?></a></div></div>
-                    <?php if($unread): ?>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('ews_notification_read_all'); ?>
-                        <input type="hidden" name="action" value="ews_notification_read_all">
-                        <button class="ews-notification-read" type="submit">Mark all as read</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-                <?php if(!$rows): ?>
-                    <div class="ews-empty-notifications"><?php if($filter==='unread'): ?><div class="ews-empty-notifications-icon">✓</div><strong>You're all caught up.</strong><span>No unread notifications.</span><?php else: ?><div class="ews-empty-notifications-icon">🔔</div><strong>No notifications yet.</strong><span>You're all caught up.</span><?php endif; ?></div>
-                <?php else: foreach($rows as $n):
-                    $icon=$n->type==='success'?'✓':($n->type==='warning'?'!':($n->type==='error'?'×':($n->entity==='schedule'?'▣':'i')));
-                    $open_url=wp_nonce_url(add_query_arg(['action'=>'ews_notification_open','notification_id'=>(int)$n->id],admin_url('admin-post.php')),'ews_notification_open_'.(int)$n->id);
-                ?>
-                <div class="ews-notification <?php echo $n->is_read?'read':'unread'; ?>" data-notification-open="<?php echo esc_url($open_url); ?>" tabindex="0" role="link" aria-label="Open notification: <?php echo esc_attr($n->title); ?>">
-                    <div><?php if(!$n->is_read): ?><span style="display:block;width:7px;height:7px;border-radius:50%;background:#5b21b6;"></span><?php endif; ?></div>
-                    <div class="ews-notification-icon <?php echo esc_attr($n->type); ?>"><?php echo esc_html($icon); ?></div>
-                    <div class="ews-notification-body">
-                        <div class="ews-notification-title"><?php echo esc_html($n->title); ?></div>
-                        <div class="ews-notification-message"><?php echo wp_kses_post($n->message); ?></div>
-                        <div class="ews-notification-time"><?php echo esc_html(human_time_diff(strtotime($n->created_at),current_time('timestamp')).' ago'); ?></div>
-
-                    </div>
-                    <?php if(!$n->is_read): ?>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('ews_notification_read_'.(int)$n->id); ?>
-                        <input type="hidden" name="action" value="ews_notification_read">
-                        <input type="hidden" name="notification_id" value="<?php echo (int)$n->id; ?>">
-                        <button class="ews-notification-read" type="submit">Mark read</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; endif; ?>
-            </div>
-        </div>
-        <script>
-        (function(){
-          var status=document.getElementById('ews-notification-push-status'),en=document.getElementById('ews-notification-push-enable'),dis=document.getElementById('ews-notification-push-disable');
-          var publicKey=<?php echo wp_json_encode($push_public_key); ?>,postUrl=<?php echo wp_json_encode($push_url); ?>,nonce=<?php echo wp_json_encode($push_nonce); ?>;
-          function b64(s){var p='='.repeat((4-s.length%4)%4),x=(s+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(x),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
-          function state(){if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){status.style.display='none';en.style.display='none';dis.style.display='none';return;}if(!publicKey){status.style.display='none';return;}navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){if(sub){status.classList.add('enabled');status.style.display='inline-flex';en.style.display='none';dis.style.display='inline-block';}else{status.classList.remove('enabled');status.style.display='none';en.style.display='inline-block';dis.style.display='none';}}).catch(function(){});}
-          en.addEventListener('click',function(){en.disabled=true;navigator.serviceWorker.ready.then(function(reg){return Notification.requestPermission().then(function(p){if(p!=='granted')throw new Error('Notification permission was not granted.');return reg.pushManager.getSubscription().then(function(s){return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(publicKey)});});});}).then(function(sub){var body=new URLSearchParams();body.set('action','ews_push_subscribe');body.set('_wpnonce',nonce);body.set('subscription',JSON.stringify(sub.toJSON()));return fetch(postUrl,{method:'POST',credentials:'same-origin',body:body});}).then(function(r){if(!r.ok)throw new Error('Unable to save device subscription.');return r.text();}).then(function(){en.disabled=false;state();}).catch(function(){en.disabled=false;state();});});
-          dis.addEventListener('click',function(){dis.disabled=true;navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){if(!sub)return null;var body=new URLSearchParams();body.set('action','ews_push_unsubscribe');body.set('_wpnonce',nonce);body.set('endpoint',sub.endpoint);return fetch(postUrl,{method:'POST',credentials:'same-origin',body:body}).then(function(){return sub.unsubscribe();});}).then(function(){dis.disabled=false;state();}).catch(function(){dis.disabled=false;state();});});
-          if('serviceWorker'in navigator){navigator.serviceWorker.ready.then(state).catch(state);}else state();
-          document.querySelectorAll('.ews-notification[data-notification-open]').forEach(function(card){
-            card.addEventListener('click',function(e){if(e.target.closest('a,button,form'))return;window.location.href=card.getAttribute('data-notification-open');});
-            card.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){if(e.target!==card)return;e.preventDefault();window.location.href=card.getAttribute('data-notification-open');}});
-          });
-        })();
-        </script>
-        <?php return ob_get_clean();
+        wp_enqueue_style('workforce-one-notifications-page');
+        wp_enqueue_script('workforce-one-notifications');
+        return $this->render_template('app/notifications',[
+            'filter'=>$filter,'groups'=>$groups,'unread'=>$this->notification_unread_count(),
+            'all_url'=>$all_url,'unread_url'=>add_query_arg('notification_tab','unread',$all_url),
+            'post_url'=>admin_url('admin-post.php'),'push_key'=>(string)$this->get_vapid_public_key(),'push_nonce'=>wp_create_nonce('ews_push_subscription'),
+        ]);
     }
 
     public function cleanup_notifications(){
