@@ -123,6 +123,18 @@ n, _ = form_nonce(adm, 'ews31_appearance_reset')
 qs = adm.post('ews31_appearance_reset', _wpnonce=n)[1]
 st, page, _ = emp.req(APP)
 check('reset brings back the built-in look', qs.get('appearance_notice') == 'reset' and php("var_export(get_option('ews_appearance',null));") == 'NULL' and '--wfo-pri:#5B3FD9;' in theme_css(page))
+# Zoom on phones (3.31.64): fields are 16px and double-tap does not zoom; pinch-zoom only off when asked.
+vp = lambda html: (re.search(r'<meta name="viewport" content="([^"]+)"', html) or re.search('()', '')).group(1)
+st, page, _ = emp.req(APP)
+check('the app page lets phones pinch-zoom by default', st == 200 and 'width=device-width' in vp(page) and 'user-scalable' not in vp(page), vp(page))
+php("update_option('ews_appearance',['nozoom'=>'1'],false);")
+st, page, _ = emp.req(APP)
+check('...and "Stop pinch-zoom on phones" turns it off', 'maximum-scale=1, user-scalable=no' in vp(page), vp(page))
+php("delete_option('ews_appearance');")
+shell = re.search(r"href='[^']*?(/wp-content/plugins/[^']*?/assets/css/app-shell\.css)", page)
+st, css, _ = emp.req(shell.group(1)) if shell else (0, '', {})
+check('fields are 16px on phones and double-tap does not zoom', 'font-size:16px!important' in css and 'touch-action:manipulation' in css)
+
 audits = q("SELECT details FROM {p}ews_audit_log WHERE action='appearance_update'")
 check('each save and the reset are in the Audit Log', len(audits) == 4, audits)
 

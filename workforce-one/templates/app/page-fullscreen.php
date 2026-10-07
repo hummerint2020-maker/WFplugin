@@ -6,11 +6,12 @@
  * Styles: .wfo-fullscreen in assets/css/app-shell.css.
  */
 if (!defined('ABSPATH')) exit;
+$wfo_nozoom = (\WorkforceOne\Settings\Appearance::config(get_option('ews_appearance'))['nozoom'] ?? '0') === '1';
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
 <meta charset="<?php bloginfo('charset'); ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover<?php echo $wfo_nozoom ? ', maximum-scale=1, user-scalable=no' : ''; ?>">
 <?php wp_head(); ?>
 </head>
 <body <?php body_class('wfo-fullscreen'); ?>>

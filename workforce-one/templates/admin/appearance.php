@@ -45,6 +45,9 @@ $color_help = ['header_start' => 'Top of the header', 'header_end' => 'Bottom of
         <input type="hidden" name="fullscreen" value="0">
         <label class="wfo-ap-check"><input type="checkbox" name="fullscreen" value="1" <?php checked($cfg['fullscreen'], '1'); ?>> Full-screen app page (show only the app, without the site theme's header, footer and page spacing)</label>
         <p class="wfo-ap-help">Turn this off if the app page should keep your theme's header and footer.</p>
+        <input type="hidden" name="nozoom" value="0">
+        <label class="wfo-ap-check"><input type="checkbox" name="nozoom" value="1" <?php checked($cfg['nozoom'], '1'); ?>> Stop pinch-zoom on phones (full-screen app page only)</label>
+        <p class="wfo-ap-help">Works on Android phones; iPhones always allow pinch-zoom. Without it, typing in a field and double-tapping already no longer zoom the page. Leave it off if some employees need to zoom to read.</p>
     </section>
 
     <section class="wfo-ap-card">

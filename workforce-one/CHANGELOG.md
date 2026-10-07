@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.64
+Zoom on phones, after the owner asked to stop zoom in / out.
+
+### Changed
+- **No accidental zoom:** on phones every field in the app (search, selects, forms) uses 16px text,
+  so iPhones no longer zoom into the page when a field is tapped; double-tapping no longer zooms
+  either (and taps answer without the short delay).
+- **New setting, wp-admin → Appearance → "Stop pinch-zoom on phones"** (off by default): turns off
+  pinch-zoom on the full-screen app page. Android honours it; iPhones always allow pinch-zoom
+  (Apple ignores this since iOS 10). Leave it off if some employees need to zoom to read.
+
 ## 3.31.63
 The Team Schedule page again, after the owner's review on a phone (design C, "slim cards").
 

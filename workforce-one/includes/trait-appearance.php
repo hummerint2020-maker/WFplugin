@@ -68,6 +68,7 @@ trait EWS_Appearance_Trait {
         foreach(['company_name','app_name','tagline'] as $f)$in[$f]=sanitize_text_field((string)($post[$f]??''));
         $in['logo_url']=esc_url_raw(trim((string)($post['logo_url']??'')),['http','https']);
         if(isset($post['fullscreen']))$in['fullscreen']=(string)$post['fullscreen']==='1'?'1':'0';
+        if(isset($post['nozoom']))$in['nozoom']=(string)$post['nozoom']==='1'?'1':'0';
         $result=Appearance::fromPost($in,$this->option('ews_appearance'));
         update_option('ews_appearance',$result['config'],false);
         if($result['errors'])set_transient('ews_appearance_errors_'.get_current_user_id(),$result['errors'],10*MINUTE_IN_SECONDS);

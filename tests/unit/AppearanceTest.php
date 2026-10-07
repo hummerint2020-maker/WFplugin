@@ -24,6 +24,10 @@ final class AppearanceTest extends TestCase
         $this->assertSame('0', A::config(['fullscreen' => '0'])['fullscreen']);
         $this->assertSame('1', A::config(['fullscreen' => 'yes'])['fullscreen'], 'anything else than 0 keeps it on');
         $this->assertSame('0', A::fromPost(['fullscreen' => '0'], null)['config']['fullscreen'], 'the unticked box is saved');
+        $this->assertSame('0', A::config([])['nozoom'], 'phones may pinch-zoom by default');
+        $this->assertSame('1', A::config(['nozoom' => '1'])['nozoom']);
+        $this->assertSame('0', A::config(['nozoom' => 'yes'])['nozoom'], 'only 1 turns zoom off');
+        $this->assertSame('1', A::fromPost(['nozoom' => '1'], null)['config']['nozoom']);
     }
 
     public function testHexAndContrast(): void

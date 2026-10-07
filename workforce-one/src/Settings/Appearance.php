@@ -55,6 +55,8 @@ final class Appearance
         'logo_url' => '',
         // '1': the app's page shows only the app (no theme header, footer or page padding).
         'fullscreen' => '1',
+        // '1': phones cannot pinch-zoom the full-screen app page (Android; iPhones ignore it).
+        'nozoom' => '0',
     ];
 
     /**
@@ -82,6 +84,7 @@ final class Appearance
         $logo = trim((string) ($saved['logo_url'] ?? ''));
         $out['logo_url'] = preg_match('#^https?://[^\s"\'<>]+$#i', $logo) ? $logo : '';
         if (array_key_exists('fullscreen', $saved)) $out['fullscreen'] = (string) $saved['fullscreen'] === '0' ? '0' : '1';
+        if (array_key_exists('nozoom', $saved)) $out['nozoom'] = (string) $saved['nozoom'] === '1' ? '1' : '0';
         return $out;
     }
 
