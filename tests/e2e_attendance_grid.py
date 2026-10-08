@@ -40,8 +40,8 @@ def seed():
 
 
 def cell(page, eid, idx):
-    """The desktop grid cell of one employee/day: (planned, result class, result text)."""
-    m = re.search(r'<td class="ews-att-day[^"]*"[^>]*data-planned="([^"]*)">\s*<select name="att\[%d\]\[%d\]".*?<div class="ews-att-result ([a-z-]+)">(.*?)</div>' % (eid, idx), page, re.S)
+    """The grid cell of one employee/day: (planned, result class, result text)."""
+    m = re.search(r'<td class="ews-att-day[^"]*" data-employee="%d" data-day="%d" data-status="[^"]*" data-planned="([^"]*)">.*?<div class="ews-att-result ([a-z-]+)">(.*?)</div>' % (eid, idx), page, re.S)
     return (m.group(1), m.group(2), re.sub(r'<[^>]+>', ' ', m.group(3)).split()) if m else None
 
 

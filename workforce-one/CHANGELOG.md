@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.68
+Attendance page (manager grid) made light, as shown in the owner-approved HTML preview. Measured on
+the local test site with 300 employees: page 4.5 MB → 2.0 MB, 4,222 dropdowns (25,327 options) → 8
+(43), 830 → 160 ms.
+
+### Changed
+- **One picker instead of a dropdown in every day.** Each day is now a coloured button with its plan;
+  tapping it opens one shared list (next to the day on a computer, a sheet from the bottom on a
+  phone). Keyboard: arrows move, Enter picks, Esc closes.
+- **The grid is built once.** The phone layout was a second copy of the whole grid; the same grid now
+  turns into one card per employee at 700px and narrower (seven days in a row, an empty day shows a
+  dash).
+- **Save bar:** counts the days changed and not saved yet, has **Undo** (back to how the page opened),
+  and the browser asks before leaving with unsaved changes. Changed days get an amber ring.
+- Unchanged: the statuses, "Set…" for a whole day, search, team filter, CSV import and saving.
+  The page still sends only the changed days with the value each had when it opened, so a stale
+  page cannot overwrite another manager's newer change (reported as a schedule conflict).
+
 ## 3.31.67
 Performance, after the owner asked for it. Nothing a user does changes; pages need fewer database
 queries and the app downloads less. Measured on the local test site (PHP built-in server).

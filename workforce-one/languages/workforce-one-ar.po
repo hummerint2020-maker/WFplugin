@@ -2848,3 +2848,18 @@ msgstr "أمس · %s"
 
 msgid "unread"
 msgstr "غير مقروء"
+
+msgid "No changes yet. Tap a day to change it."
+msgstr "لا توجد تغييرات بعد. اضغط على أي يوم لتغييره."
+
+msgid "1 change not saved yet"
+msgstr "تغيير واحد لم يُحفظ بعد"
+
+msgid "%d changes not saved yet"
+msgstr "%d تغييرات لم تُحفظ بعد"
+
+msgid "You have changes that are not saved yet."
+msgstr "لديك تغييرات لم تُحفظ بعد."
+
+msgid "Undo"
+msgstr "تراجع"

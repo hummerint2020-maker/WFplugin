@@ -1,9 +1,12 @@
 <?php
 /**
  * Employee app: manager Attendance grid. Styles: assets/css/app-attendance.css (new look, 3.31.56);
- * script: assets/js/attendance-grid.js (search / team filter, "Set…" for a whole day, week picker,
- * and the changed-cells-only submit). The desktop table shows above 700px and the cards below,
- * matching the script's mobile check.
+ * script: assets/js/attendance-grid.js (the one status picker, search / team filter, "Set…" for a
+ * whole day, week picker, Undo and the changed-cells-only submit).
+ * One grid for every screen (3.31.68): a table above 700px, the same rows as cards below. Each day
+ * is a coloured button, not a <select>; the page has a single picker (#wfo-attg-picker) that opens
+ * next to the day on a computer and as a sheet from the bottom on a phone. With 300 employees this
+ * took the page from 4.5 MB and 4,222 selects (built twice) to one grid.
  *
  * @var object[] $emps                  ordered by TeamOrder, annotated with _schedule_* fields
  * @var array<int,array{picture:string,initials:string}> $people
@@ -39,10 +42,9 @@ $badges = static function (object $e) use ($current_emp_id): string {
 $row_attrs = static function (object $e): string {
     return 'data-employee-name="' . esc_attr(strtolower($e->name . ' ' . $e->domain_name)) . '" data-team="' . esc_attr(strtolower(implode('|', (array) ($e->_schedule_team_names ?? [])))) . '"';
 };
-$status_options = static function (string $planned) use ($statuses): string {
-    $html = '<option value="">' . esc_html__('Not Set', 'workforce-one') . '</option>';
-    foreach ($statuses as $s) $html .= '<option value="' . esc_attr($s) . '"' . selected($planned, $s, false) . '>' . esc_html($s) . '</option>';
-    return $html;
+$not_set = __('Not Set', 'workforce-one');
+$plan_class = static function (string $planned): string {
+    return 'ews-plan-' . sanitize_title($planned !== '' ? $planned : 'not-set');
 };
 $avatar = static function (object $e) use ($people): string {
     $p = $people[(int) $e->id] ?? ['picture' => '', 'initials' => '·'];
@@ -123,7 +125,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
         <?php wp_nonce_field('ews31_att_grid_save'); ?>
 
         <div class="ews-att-table-wrap wfo-att-card" tabindex="0" role="region" aria-label="<?php esc_attr_e('Attendance', 'workforce-one'); ?>">
-            <table class="ews-att-table">
+            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>">
                 <thead><tr>
                     <th class="employee-col" scope="col"><?php esc_html_e('Employee', 'workforce-one'); ?></th>
                     <?php foreach ($dates as $d): ?>
@@ -139,9 +141,9 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                 <?php foreach ($emps as $e): $eid = (int) $e->id; ?>
                     <tr class="ews-att-employee-row <?php echo esc_attr(trim(($current_emp_id === $eid ? 'current-user ' : '') . (!empty($e->_schedule_team_manager) ? 'team-manager' : ''))); ?>" <?php echo $row_attrs($e); ?>>
                         <td class="ews-att-employee"><?php echo $avatar($e); ?><div><strong><?php echo $badges($e); ?></strong><small><?php echo esc_html($e->domain_name); ?></small><?php if (!empty($e->_schedule_primary_team)): ?><span class="ews-att-team-label"><?php echo esc_html($e->_schedule_primary_team); ?></span><?php endif; ?></div></td>
-                        <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; ?>
-                        <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?>ews-plan-<?php echo esc_attr(sanitize_title($day['planned'] ?: 'not-set')); ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($day['planned']); ?>">
-                            <select name="att[<?php echo $eid; ?>][<?php echo (int) $i; ?>]" class="ews-att-cell ews-schedule-select" data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" aria-label="<?php echo esc_attr($e->name . ' · ' . date_i18n('D d M', strtotime($d))); ?>"><?php echo $status_options($day['planned']); ?></select>
+                        <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; $planned = (string) $day['planned']; ?>
+                        <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?><?php echo esc_attr($plan_class($planned)); ?>" data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($planned); ?>">
+                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip" data-ews-cell aria-haspopup="dialog" data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b></button>
                             <div class="ews-att-result <?php echo esc_attr($day['badge']['class']); ?>"><?php echo $result($day['badge'], 'small'); ?></div>
                         </td>
                         <?php endforeach; ?>
@@ -151,24 +153,21 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
             </table>
         </div>
 
-        <div class="ews-att-mobile">
-            <?php foreach ($emps as $e): $eid = (int) $e->id; ?>
-                <details class="ews-att-mobile-card <?php echo !empty($e->_schedule_team_manager) ? 'team-manager' : ''; ?> <?php echo $current_emp_id === $eid ? 'current-user' : ''; ?>" <?php echo $row_attrs($e); ?>>
-                    <summary><?php echo $avatar($e); ?><div><strong><?php echo $badges($e); ?></strong><small><?php echo esc_html($e->domain_name); ?><?php if (!empty($e->_schedule_primary_team)): ?> · <?php echo esc_html($e->_schedule_primary_team); ?><?php endif; ?></small></div><span class="wfo-att-chev" aria-hidden="true"><?php echo Icons::svg('chevron', 18, 2.2); ?></span></summary>
-                    <div class="ews-att-mobile-days">
-                    <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; ?>
-                        <div class="ews-att-mobile-day <?php echo $d === $today ? 'is-today' : ''; ?>">
-                            <header><b><?php echo esc_html(date_i18n('D', strtotime($d))); ?></b><small><?php echo esc_html(date_i18n('d M', strtotime($d))); ?></small></header>
-                            <select name="mobile_att[<?php echo $eid; ?>][<?php echo (int) $i; ?>]" class="ews-mobile-att-cell ews-schedule-select" data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" aria-label="<?php echo esc_attr($e->name . ' · ' . date_i18n('D d M', strtotime($d))); ?>"><?php echo $status_options($day['planned']); ?></select>
-                            <div class="ews-att-result <?php echo esc_attr($day['badge']['class']); ?>"><?php echo $result($day['badge'], 'dot'); ?></div>
-                        </div>
-                    <?php endforeach; ?>
-                    </div>
-                </details>
-            <?php endforeach; ?>
+        <?php /* the one picker for every day of every employee (attendance-grid.js moves it next to the day) */ ?>
+        <div class="wfo-attg-scrim" hidden></div>
+        <div class="wfo-attg-picker" id="wfo-attg-picker" role="dialog" aria-labelledby="wfo-attg-picker-title" hidden>
+            <div class="wfo-attg-picker-head"><strong id="wfo-attg-picker-title"></strong><button type="button" class="wfo-attg-picker-close" aria-label="<?php esc_attr_e('Close', 'workforce-one'); ?>"><?php echo Icons::svg('close', 16, 2.2); ?></button></div>
+            <div class="wfo-attg-picker-list" role="listbox" aria-labelledby="wfo-attg-picker-title">
+                <button type="button" role="option" data-value="" class="ews-plan-not-set"><i></i><?php echo esc_html($not_set); ?></button>
+                <?php foreach ($statuses as $st): ?><button type="button" role="option" data-value="<?php echo esc_attr($st); ?>" class="<?php echo esc_attr($plan_class($st)); ?>"><i></i><?php echo esc_html($st); ?></button><?php endforeach; ?>
+            </div>
         </div>
 
-        <div class="ews-att-savebar"><span><?php esc_html_e('Empty cells are not changed.', 'workforce-one'); ?></span><button type="submit" name="attendance_save" value="1" class="ews-btn ews-save-all"><?php echo Icons::svg('check', 17, 2.4); ?><?php esc_html_e('Save Schedule & Attendance', 'workforce-one'); ?></button></div>
+        <div class="ews-att-savebar">
+            <span class="wfo-attg-count" aria-live="polite" data-none="<?php esc_attr_e('No changes yet. Tap a day to change it.', 'workforce-one'); ?>" data-one="<?php esc_attr_e('1 change not saved yet', 'workforce-one'); ?>" data-many="<?php /* translators: %d: number of changed days (2 or more) */ esc_attr_e('%d changes not saved yet', 'workforce-one'); ?>" data-leave="<?php esc_attr_e('You have changes that are not saved yet.', 'workforce-one'); ?>"><?php esc_html_e('No changes yet. Tap a day to change it.', 'workforce-one'); ?></span>
+            <button type="button" class="ews-btn wfo-attg-undo" hidden><?php echo Icons::svg('close', 15, 2.2); ?><?php esc_html_e('Undo', 'workforce-one'); ?></button>
+            <button type="submit" name="attendance_save" value="1" class="ews-btn ews-save-all"><?php echo Icons::svg('check', 17, 2.4); ?><?php esc_html_e('Save Schedule & Attendance', 'workforce-one'); ?></button>
+        </div>
     </form>
 
     <?php if ($preview_token !== '' && $preview_rows === null): ?>
