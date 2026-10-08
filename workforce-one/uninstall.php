@@ -13,11 +13,18 @@ if (!defined('WP_UNINSTALL_PLUGIN')) exit;
 function ews_uninstall_site() {
     global $wpdb;
 
-    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation'] as $hook) {
+    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_tasks_tick'] as $hook) {
         wp_unschedule_hook($hook);
     }
 
     if ((int) get_option('ews_delete_data_on_uninstall', 0) !== 1) return;
+
+    // Files attached to task comments (3.31.70): their own private folder.
+    $task_dir = trailingslashit(wp_upload_dir()['basedir']) . 'workforce-one-tasks';
+    if (is_dir($task_dir) && !is_link($task_dir)) {
+        foreach ((array) scandir($task_dir) as $name) if ($name !== '.' && $name !== '..' && is_file($task_dir . '/' . $name)) @unlink($task_dir . '/' . $name);
+        @rmdir($task_dir);
+    }
 
     // Uploaded employee profile photos (only files inside the uploads directory).
     $employees = $wpdb->prefix . 'ews_employees';
@@ -41,7 +48,7 @@ function ews_uninstall_site() {
         'ews_kiosks', 'ews_kudos', 'ews_leave_balances', 'ews_leave_requests', 'ews_leave_schedule_snapshots',
         'ews_leave_types', 'ews_locations', 'ews_notifications', 'ews_overtime_requests', 'ews_pay_adjustments', 'ews_pay_rates', 'ews_payroll_runs', 'ews_payslips', 'ews_poll_options',
         'ews_poll_votes', 'ews_polls', 'ews_presence_verifications', 'ews_push_subscriptions', 'ews_schedule',
-        'ews_schedule_swaps', 'ews_shift_swaps', 'ews_tasks', 'ews_team_members', 'ews_teams', 'ews_time_logs',
+        'ews_schedule_swaps', 'ews_shift_swaps', 'ews_tasks', 'ews_task_items', 'ews_task_comments', 'ews_task_activity', 'ews_team_members', 'ews_teams', 'ews_time_logs',
         'ews_vacation_requests',
     ];
     foreach ($tables as $t) {
