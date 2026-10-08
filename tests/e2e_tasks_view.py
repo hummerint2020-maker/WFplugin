@@ -111,7 +111,9 @@ check('the employee deletes an own task (after a confirmation in the page)', qs.
 php("update_option('ews_feature_tasks',0,false);")
 st, page, _ = emp.req(PAGE)
 check('with Tasks switched off the page says so', 'Tasks are currently disabled by your administrator.' in page and 'wfo-tk-board' not in page)
-php("update_option('ews_feature_tasks',1,false);")
+php("""update_option('ews_feature_tasks',1,false);
+foreach(['ews_tasks','ews_task_items','ews_task_comments','ews_task_activity'] as $t)$wpdb->query("DELETE FROM {$p}$t");
+$wpdb->query("DELETE FROM {$p}ews_notifications WHERE entity='task'");""")
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

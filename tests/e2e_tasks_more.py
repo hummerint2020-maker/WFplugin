@@ -20,8 +20,9 @@ $wpdb->query("DELETE FROM {$p}ews_notifications WHERE entity='task'");""")
 # A second employee and a team with both.
 ids2 = php("""
 $u=username_exists('emp2')?:wp_create_user('emp2','emp2pass','emp2@example.com');
-$e=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE wp_user_id=%%d",$u));
-if(!$e){$wpdb->insert($p.'ews_employees',['name'=>'Emp Two','domain_name'=>'emp2','email'=>'emp2@example.com','wp_user_id'=>$u,'active'=>1,'attendance_enabled'=>0]);$e=(int)$wpdb->insert_id;}
+wp_set_password('emp2pass',$u);
+$e=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE wp_user_id=%%d OR domain_name='emp2' ORDER BY id LIMIT 1",$u));
+if($e){$wpdb->update($p.'ews_employees',['name'=>'Emp Two','wp_user_id'=>$u,'active'=>1],['id'=>$e]);}else{$wpdb->insert($p.'ews_employees',['name'=>'Emp Two','domain_name'=>'emp2','email'=>'emp2@example.com','wp_user_id'=>$u,'active'=>1,'attendance_enabled'=>0]);$e=(int)$wpdb->insert_id;}
 $wpdb->query("DELETE FROM {$p}ews_teams WHERE name='Front desk'");
 $wpdb->insert($p.'ews_teams',['name'=>'Front desk','active'=>1]);$tm=(int)$wpdb->insert_id;
 foreach([%d,$e] as $x)$wpdb->insert($p.'ews_team_members',['team_id'=>$tm,'employee_id'=>$x,'active'=>1]);
@@ -186,7 +187,8 @@ check('a reminder is sent once, an hour before the due time', r['reminded_at'] a
 
 # ---------------------------------------------------------------- Workload, Home, dragging
 st, page, _ = adm.req(PAGE + '&task_tab=workload')
-check('managers have a Workload tab with each person', 'Team workload' in page and 'Emp One' in page and 'Emp Two' in page and 'wfo-tk-load-row' in page)
+name1 = q("SELECT name FROM {p}ews_employees WHERE id=%s" % I['eid'])[0]['name']
+check('managers have a Workload tab with each person', 'Team workload' in page and html.escape(name1) in page and 'Emp Two' in page and 'wfo-tk-load-row' in page)
 st, page, _ = emp.req(PAGE + '&task_tab=workload')
 check('employees do not', 'Team workload' not in page)
 st, page, _ = emp.req('/app/?ews_view=dashboard')
@@ -202,6 +204,10 @@ st, page, _ = emp.req(PAGE)
 emp.post('ews_task_delete', _wpnonce=form_nonce(page, 'ews_task_delete', task_id=t1['id']), task_id=t1['id'])
 check('deleting a task removes its steps, comments, activity and files', not q("SELECT id FROM {p}ews_task_items WHERE task_id=%s" % t1['id']) and not q("SELECT id FROM {p}ews_task_comments WHERE task_id=%s" % t1['id']) and not os.path.exists(fdir + '/' + c[0]['file_key']))
 
-php("delete_option('ews_tasks_settings');")
+# Leave nothing behind for the tests that run next (a task would show the Home card).
+php("""delete_option('ews_tasks_settings');
+foreach(['ews_tasks','ews_task_items','ews_task_comments','ews_task_activity'] as $t)$wpdb->query("DELETE FROM {$p}$t");
+$wpdb->query("DELETE FROM {$p}ews_notifications WHERE entity='task'");
+$wpdb->query("DELETE FROM {$p}ews_team_members WHERE team_id=%d"); $wpdb->query("DELETE FROM {$p}ews_teams WHERE id=%d");""" % (TEAM, TEAM))
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
