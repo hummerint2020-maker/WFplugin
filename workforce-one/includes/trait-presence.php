@@ -152,6 +152,7 @@ trait EWS_Presence_Trait {
         echo $this->render_template('kiosk',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
             'location_name'=>(string)$k->location_name,'payload'=>$this->presence_qr_payload($id,$secret),'slot_seconds'=>QrCode::SLOT_SECONDS,
             'payload_url'=>add_query_arg(['ews_kiosk'=>$id,'kiosk_key'=>$secret,'kiosk_payload'=>1],home_url('/')),
+            'brand_css'=>\WorkforceOne\Settings\Appearance::cssVars($this->appearance(),'body'),'app_name'=>(string)$this->appearance()['app_name'],'logo'=>(string)$this->appearance()['logo_url'],
             'qr_lib'=>$this->plugin_url('assets/vendor/qrcode-generator-1.4.4.js'),'script'=>$this->plugin_url('assets/js/kiosk.js'),'style'=>$this->plugin_url('assets/css/kiosk.css'),'version'=>EWS_VERSION,
         ]);
         exit;
@@ -170,9 +171,11 @@ trait EWS_Presence_Trait {
         $emp=$this->presence_employee_for_user();if(!$emp)return $this->ews_empty_state(__('Employee profile required','workforce-one'),__('Your account is not linked to an active employee.','workforce-one'));
         $id=absint($_GET['presence_request']??0);global $wpdb;list($kt,$vt)=$this->presence_tables();
         $req=$id?$wpdb->get_row($wpdb->prepare("SELECT v.*,l.name location_name,k.name kiosk_name FROM $vt v LEFT JOIN {$this->locations} l ON l.id=v.location_id LEFT JOIN $kt k ON k.id=v.kiosk_id WHERE v.id=%d AND v.employee_id=%d LIMIT 1",$id,(int)$emp->id)):null;
+        if($req&&$req->status==='pending'&&strtotime($req->expires_at)<=time())$req->status='expired'; // shown as it is; the record turns expired when someone tries to verify it
         if($req&&$req->status==='pending'){wp_enqueue_script('workforce-one-presence-scan');}
+        wp_enqueue_style('workforce-one-presence-page');
         return $this->render_template('app/presence',[
-            'req'=>$req,'left'=>$req?max(0,strtotime($req->expires_at)-time()):0,
+            'req'=>$req,'left'=>$req?max(0,strtotime($req->expires_at)-time()):0,'total'=>60*\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes')),
             'success'=>isset($_GET['presence_success']),'error'=>$this->presence_error_message($_GET['presence_error']??''),
         ]);
     }

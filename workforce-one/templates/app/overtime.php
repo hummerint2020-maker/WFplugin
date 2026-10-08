@@ -125,7 +125,7 @@ $reopen = isset($_GET['overtime_error']); // phpcs:ignore WordPress.Security.Non
             </div>
             <p id="ews-ot-count" class="wfo-rq-total" aria-live="polite" data-messages="<?php echo esc_attr(wp_json_encode($counter)); ?>"><?php echo Icons::svg('clock', 16, 2.2); ?><span><?php echo esc_html($counter['empty']); ?></span></p>
             <div class="wfo-rq-field"><label for="wfo-ot-reason"><?php esc_html_e('Reason', 'workforce-one'); ?></label><textarea id="wfo-ot-reason" name="reason" rows="3" placeholder="<?php esc_attr_e('Why is overtime required?', 'workforce-one'); ?>" required></textarea></div>
-            <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Submit Overtime Request', 'workforce-one'); ?></button>
+            <button class="wfo-sheet-submit" type="submit" data-fwd><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Submit Overtime Request', 'workforce-one'); ?></button>
             <p class="wfo-sheet-note"><?php esc_html_e('Submit your overtime request before you work the extra hours. Manager approval is required.', 'workforce-one'); ?></p>
         </form>
     </dialog>

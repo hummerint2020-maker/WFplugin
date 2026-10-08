@@ -228,7 +228,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                     <option value=""><?php esc_html_e('Select colleague', 'workforce-one'); ?></option>
                     <?php foreach ($emps as $e): if ((int) $e->id !== $current_emp_id): ?><option value="<?php echo (int) $e->id; ?>"><?php echo esc_html($e->name); ?></option><?php endif; endforeach; ?>
                 </select></div>
-                <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Send Request', 'workforce-one'); ?></button>
+                <button class="wfo-sheet-submit" type="submit" data-fwd><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Send Request', 'workforce-one'); ?></button>
                 <p class="wfo-sheet-note"><?php esc_html_e('Your colleague gets your day and you get theirs once they accept.', 'workforce-one'); ?></p>
             </form>
             <?php else: ?>

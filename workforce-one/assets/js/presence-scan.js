@@ -8,8 +8,9 @@
         var box = document.getElementById('wfo-presence-scanner'), input = document.getElementById('wfo-presence-payload'), form = document.getElementById('wfo-presence-form');
         if (!box || !input || !form) return;
         var status = document.getElementById('wfo-presence-location');
+        countdown();
         var located = false, locating = false, waiting = false;
-        function say(key) { if (status) status.textContent = status.getAttribute('data-' + key) || ''; }
+        function say(key) { if (status) { status.textContent = status.getAttribute('data-' + key) || ''; status.setAttribute('data-state', key); } }
         function field(id, v) { var el = document.getElementById(id); if (el) el.value = v; }
         function send() { waiting = false; form.submit(); }
         function locate() {
@@ -37,7 +38,7 @@
 
         var video = document.createElement('video'), canvas = document.createElement('canvas');
         canvas.width = 640; canvas.height = 480;
-        function fail() { box.textContent = box.getAttribute('data-unavailable') || ''; }
+        function fail() { box.textContent = box.getAttribute('data-unavailable') || ''; if (box.parentNode) box.parentNode.classList.add('is-off'); }
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof jsQR !== 'function') { fail(); return; }
         navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).then(function (stream) {
             video.setAttribute('playsinline', '');
@@ -65,6 +66,25 @@
             scan();
         }).catch(fail);
     }
+    // The time left: the ring empties and the clock counts down; at zero the page reloads (expired).
+    function countdown() {
+        var ring = document.querySelector('.wfo-pres-ring'), clock = document.getElementById('wfo-presence-clock'), line = document.getElementById('wfo-presence-countdown');
+        if (!ring || !clock) return;
+        var total = parseInt(ring.getAttribute('data-total') || '0', 10), circle = parseFloat(ring.getAttribute('data-circle') || '0');
+        var started = parseInt(ring.getAttribute('data-left') || '0', 10), end = Date.now() + started * 1000, bar = ring.querySelector('.bar');
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function tick() {
+            var left = Math.max(0, Math.round((end - Date.now()) / 1000)), text = pad(Math.floor(left / 60)) + ':' + pad(left % 60);
+            clock.textContent = text;
+            if (line) line.textContent = (line.getAttribute('data-label') || '%s').replace('%s', text);
+            if (bar && total > 0) bar.setAttribute('stroke-dashoffset', String(circle * (1 - Math.min(1, left / total))));
+            ring.classList.toggle('is-low', left <= 60);
+            if (left === 0) { if (started > 0) window.location.reload(); return; }
+            setTimeout(tick, 1000);
+        }
+        tick();
+    }
+
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();

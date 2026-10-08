@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.67\n"
+"Project-Id-Version: Workforce One 3.31.68\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-08T01:27:04+00:00\n"
+"POT-Creation-Date: 2026-10-08T09:35:01+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -86,6 +86,7 @@ msgid "You do not have access to this."
 msgstr ""
 
 #: includes/trait-api-auth.php:91
+#: templates/app/tasks.php:101
 msgid "Something went wrong. Please try again."
 msgstr ""
 
@@ -118,6 +119,7 @@ msgstr ""
 #: includes/trait-app-layout.php:64
 #: templates/app/attendance-insights.php:82
 #: templates/app/attendance.php:88
+#: templates/app/employees.php:19
 msgid "Employees"
 msgstr ""
 
@@ -143,12 +145,14 @@ msgstr ""
 
 #: includes/trait-app-layout.php:64
 #: includes/trait-app-layout.php:74
-#: templates/app/overtime.php:34
+#: templates/app/pay.php:61
 msgid "Overtime"
 msgstr ""
 
 #: includes/trait-app-layout.php:64
 #: includes/trait-app-layout.php:74
+#: includes/trait-tasks.php:170
+#: templates/app/tasks.php:104
 msgid "Tasks"
 msgstr ""
 
@@ -177,7 +181,6 @@ msgid "Employee Profile"
 msgstr ""
 
 #: includes/trait-app-layout.php:64
-#: templates/app/presence.php:14
 #: templates/app/time.php:163
 msgid "Presence Verification"
 msgstr ""
@@ -394,8 +397,7 @@ msgstr ""
 #: templates/app/attendance.php:203
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
-#: templates/app/schedule.php:180
-#: templates/app/schedule.php:202
+#: templates/app/schedule.php:207
 msgid "Cancel"
 msgstr ""
 
@@ -411,7 +413,10 @@ msgstr ""
 #: templates/app/leave.php:44
 #: templates/app/my-profile.php:157
 #: templates/app/my-profile.php:176
-#: templates/app/schedule.php:183
+#: templates/app/overtime.php:114
+#: templates/app/schedule.php:219
+#: templates/app/schedule.php:236
+#: templates/app/tasks.php:84
 #: templates/app/time.php:159
 #: templates/app/time.php:176
 msgid "Close"
@@ -551,8 +556,8 @@ msgstr ""
 #: includes/trait-frontend.php:144
 #: includes/trait-frontend.php:160
 #: includes/trait-presence.php:128
-#: includes/trait-presence.php:170
-#: includes/trait-presence.php:183
+#: includes/trait-presence.php:171
+#: includes/trait-presence.php:186
 msgid "Your account is not linked to an active employee."
 msgstr ""
 
@@ -758,72 +763,78 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
-#: templates/app/overtime.php:79
+#: templates/app/presence.php:20
 #: templates/app/schedule.php:45
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
+#: templates/app/presence.php:20
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
+#: templates/app/presence.php:20
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
+#: includes/trait-tasks.php:166
+#: templates/app/tasks.php:69
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
+#: templates/app/presence.php:20
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:441
+#: includes/trait-frontend.php:453
+#: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:447
+#: includes/trait-frontend.php:459
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:447
+#: includes/trait-frontend.php:459
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:454
+#: includes/trait-frontend.php:466
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:454
+#: includes/trait-frontend.php:466
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
 #. translators: 1: hours, 2: minutes
 #: includes/trait-leave-view.php:19
-#: templates/app/overtime.php:30
+#: templates/app/overtime.php:51
 #, php-format
 msgid "%1$d h %2$d min"
 msgstr ""
 
 #. translators: %d: hours
 #: includes/trait-leave-view.php:21
-#: templates/app/overtime.php:28
+#: templates/app/overtime.php:49
 #, php-format
 msgid "%d h"
 msgstr ""
@@ -994,7 +1005,7 @@ msgid "This work location has no coordinates configured. Please contact your adm
 msgstr ""
 
 #: includes/trait-presence.php:127
-#: includes/trait-presence.php:181
+#: includes/trait-presence.php:184
 msgid "Please log in."
 msgstr ""
 
@@ -1010,23 +1021,23 @@ msgstr ""
 msgid "Kiosk is inactive."
 msgstr ""
 
-#: includes/trait-presence.php:169
+#: includes/trait-presence.php:170
 msgid "Presence Verification is disabled"
 msgstr ""
 
-#: includes/trait-presence.php:169
+#: includes/trait-presence.php:170
 msgid "Please contact your administrator."
 msgstr ""
 
-#: includes/trait-presence.php:170
+#: includes/trait-presence.php:171
 msgid "Employee profile required"
 msgstr ""
 
-#: includes/trait-presence.php:180
+#: includes/trait-presence.php:183
 msgid "Dynamic QR Sign-In is disabled."
 msgstr ""
 
-#: includes/trait-presence.php:186
+#: includes/trait-presence.php:189
 msgid "The Kiosk location is unavailable."
 msgstr ""
 
@@ -1120,6 +1131,7 @@ msgstr ""
 #: templates/app/attendance-insights.php:24
 #: templates/app/attendance.php:56
 #: templates/app/my-profile.php:37
+#: templates/app/pay.php:60
 #: templates/app/schedule.php:31
 msgid "Absent"
 msgstr ""
@@ -1140,6 +1152,67 @@ msgstr ""
 
 #: includes/trait-schedule-view.php:70
 msgid "No employees to show."
+msgstr ""
+
+#: includes/trait-tasks.php:106
+msgid "Task Assigned"
+msgstr ""
+
+#. translators: %s: task title
+#: includes/trait-tasks.php:106
+#: includes/trait-tasks.php:119
+#, php-format
+msgid "You have been assigned the task: %s."
+msgstr ""
+
+#: includes/trait-tasks.php:119
+#: templates/app/tasks.php:84
+#: templates/app/tasks.php:112
+msgid "New Task"
+msgstr ""
+
+#: includes/trait-tasks.php:148
+msgid "Task Status Updated"
+msgstr ""
+
+#. translators: 1: task title, 2: status
+#: includes/trait-tasks.php:148
+#, php-format
+msgid "%1$s is now %2$s."
+msgstr ""
+
+#: includes/trait-tasks.php:166
+#: templates/app/tasks.php:67
+msgid "To Do"
+msgstr ""
+
+#: includes/trait-tasks.php:166
+#: templates/app/tasks.php:68
+msgid "In Progress"
+msgstr ""
+
+#: includes/trait-tasks.php:167
+#: templates/app/tasks.php:29
+msgid "Urgent"
+msgstr ""
+
+#: includes/trait-tasks.php:167
+#: templates/app/tasks.php:29
+msgid "High"
+msgstr ""
+
+#: includes/trait-tasks.php:167
+#: templates/app/tasks.php:29
+msgid "Normal"
+msgstr ""
+
+#: includes/trait-tasks.php:167
+#: templates/app/tasks.php:29
+msgid "Low"
+msgstr ""
+
+#: includes/trait-tasks.php:170
+msgid "Tasks are currently disabled by your administrator."
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
@@ -1182,6 +1255,7 @@ msgstr ""
 #: templates/app/attendance.php:135
 #: templates/app/dashboard.php:74
 #: templates/app/notifications.php:19
+#: templates/app/overtime.php:117
 #: templates/app/schedule.php:148
 #: templates/app/time.php:62
 msgid "Today"
@@ -1220,6 +1294,7 @@ msgstr ""
 
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:100
+#: templates/app/employees.php:22
 #: templates/app/my-profile.php:93
 #: templates/app/reports.php:52
 msgid "Team"
@@ -1232,7 +1307,7 @@ msgid "All Teams"
 msgstr ""
 
 #: templates/app/attendance-insights.php:47
-#: templates/app/schedule.php:173
+#: templates/app/schedule.php:224
 msgid "Day"
 msgstr ""
 
@@ -1305,6 +1380,7 @@ msgid "Present days"
 msgstr ""
 
 #: templates/app/attendance.php:90
+#: templates/app/pay.php:59
 msgid "Late days"
 msgstr ""
 
@@ -1390,7 +1466,7 @@ msgstr ""
 #: templates/app/attendance.php:182
 #: templates/app/leave.php:141
 #: templates/app/my-profile.php:153
-#: templates/app/overtime.php:43
+#: templates/app/overtime.php:115
 msgid "Date"
 msgstr ""
 
@@ -1754,6 +1830,58 @@ msgstr ""
 msgid "No recognition yet. Recognition from colleagues will appear here."
 msgstr ""
 
+#. translators: %d: number of active employees
+#: templates/app/employees.php:19
+#, php-format
+msgid "%d active"
+msgid_plural "%d active"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of active employees
+#: templates/app/employees.php:20
+msgid "Search name or email"
+msgstr ""
+
+#: templates/app/employees.php:22
+#: templates/app/employees.php:41
+#: templates/app/my-profile.php:90
+msgid "Name"
+msgstr ""
+
+#: templates/app/employees.php:22
+#: templates/app/employees.php:42
+msgid "Domain Name"
+msgstr ""
+
+#: templates/app/employees.php:22
+#: templates/app/employees.php:43
+msgid "Email Address"
+msgstr ""
+
+#: templates/app/employees.php:29
+#: templates/app/schedule.php:127
+#: templates/app/schedule.php:144
+msgid "No Team"
+msgstr ""
+
+#: templates/app/employees.php:34
+msgid "No employee matches your search."
+msgstr ""
+
+#: templates/app/employees.php:38
+#: templates/app/employees.php:44
+msgid "Add Employee"
+msgstr ""
+
+#: templates/app/employees.php:46
+msgid "Teams, schedule, pay and access are set in wp-admin."
+msgstr ""
+
+#: templates/app/employees.php:46
+msgid "Open Employees in wp-admin"
+msgstr ""
+
 #: templates/app/layout.php:36
 msgid "signed in"
 msgstr ""
@@ -1805,13 +1933,13 @@ msgid "Add to Home Screen"
 msgstr ""
 
 #: templates/app/leave.php:30
-#: templates/app/overtime.php:78
+#: templates/app/overtime.php:90
 #: templates/app/schedule.php:200
 msgid "Reject"
 msgstr ""
 
 #: templates/app/leave.php:33
-#: templates/app/overtime.php:73
+#: templates/app/overtime.php:82
 msgid "Level"
 msgstr ""
 
@@ -1867,12 +1995,12 @@ msgid "Available: %s"
 msgstr ""
 
 #: templates/app/leave.php:72
-#: templates/app/overtime.php:44
+#: templates/app/overtime.php:123
 msgid "From"
 msgstr ""
 
 #: templates/app/leave.php:73
-#: templates/app/overtime.php:45
+#: templates/app/overtime.php:124
 msgid "To"
 msgstr ""
 
@@ -1894,7 +2022,7 @@ msgstr ""
 
 #: templates/app/leave.php:77
 #: templates/app/leave.php:144
-#: templates/app/overtime.php:48
+#: templates/app/overtime.php:127
 msgid "Reason"
 msgstr ""
 
@@ -1959,13 +2087,13 @@ msgstr ""
 #: templates/app/leave.php:109
 #: templates/app/leave.php:123
 #: templates/app/notifications.php:51
-#: templates/app/overtime.php:72
+#: templates/app/overtime.php:80
 msgid "You're all caught up."
 msgstr ""
 
 #: templates/app/leave.php:114
 #: templates/app/leave.php:157
-#: templates/app/overtime.php:78
+#: templates/app/overtime.php:90
 msgid "Approve"
 msgstr ""
 
@@ -2146,10 +2274,6 @@ msgstr ""
 
 #: templates/app/my-profile.php:88
 msgid "Your personal and work information"
-msgstr ""
-
-#: templates/app/my-profile.php:90
-msgid "Name"
 msgstr ""
 
 #: templates/app/my-profile.php:91
@@ -2392,83 +2516,315 @@ msgstr ""
 msgid "Mark \"%s\" as read"
 msgstr ""
 
-#: templates/app/overtime.php:23
+#: templates/app/overtime.php:44
 msgid "Select the times to see the requested duration."
 msgstr ""
 
-#: templates/app/overtime.php:24
+#: templates/app/overtime.php:45
 msgid "End time must be after start time."
 msgstr ""
 
 #. translators: %s: duration
-#: templates/app/overtime.php:26
+#: templates/app/overtime.php:47
 #, php-format
 msgid "You are requesting %s."
 msgstr ""
 
-#: templates/app/overtime.php:34
-msgid "EXTRA HOURS"
+#. translators: %s: month name
+#: templates/app/overtime.php:61
+#, php-format
+msgid "%s · approved overtime"
 msgstr ""
 
-#: templates/app/overtime.php:34
-msgid "Request overtime in advance and know exactly what you are asking to work."
+#. translators: %s: month name
+#: templates/app/overtime.php:62
+msgid "None yet"
 msgstr ""
 
-#: templates/app/overtime.php:39
-#: templates/app/overtime.php:56
+#. translators: 1: number of requests, 2: duration
+#: templates/app/overtime.php:64
+#, php-format
+msgid "%1$d waiting · %2$s"
+msgid_plural "%1$d waiting · %2$s"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of overtime requests this month
+#: templates/app/overtime.php:65
+#, php-format
+msgid "%d request this month"
+msgid_plural "%d requests this month"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/overtime.php:68
+#: templates/app/overtime.php:114
 msgid "Request Overtime"
 msgstr ""
 
-#: templates/app/overtime.php:40
-msgid "Submit your overtime request before you work the extra hours. Manager approval is required."
-msgstr ""
-
-#: templates/app/overtime.php:48
-msgid "Why is overtime required?"
-msgstr ""
-
-#: templates/app/overtime.php:49
-msgid "Submit Overtime Request"
-msgstr ""
-
-#: templates/app/overtime.php:53
-msgid "My Overtime Requests"
-msgstr ""
-
-#: templates/app/overtime.php:54
-msgid "Track your pending and completed overtime requests."
-msgstr ""
-
-#: templates/app/overtime.php:56
-msgid "No Overtime Requests Yet"
-msgstr ""
-
-#: templates/app/overtime.php:56
-msgid "You haven't submitted any overtime requests yet."
-msgstr ""
-
-#: templates/app/overtime.php:70
+#: templates/app/overtime.php:76
 msgid "My Pending Overtime Approvals"
 msgstr ""
 
-#: templates/app/overtime.php:70
+#: templates/app/overtime.php:76
 msgid "Pending Overtime Requests"
 msgstr ""
 
-#: templates/app/overtime.php:71
+#: templates/app/overtime.php:77
 msgid "Requests currently assigned to you by the approval workflow."
 msgstr ""
 
-#: templates/app/overtime.php:71
+#: templates/app/overtime.php:77
 msgid "Review overtime requests. Any Manager can approve or reject."
 msgstr ""
 
-#: templates/app/overtime.php:72
+#. translators: %d: number of requests waiting
+#: templates/app/overtime.php:78
+#, php-format
+msgid "%d waiting"
+msgid_plural "%d waiting"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/overtime.php:80
 msgid "No Pending Overtime Approvals"
 msgstr ""
 
-#: templates/app/overtime.php:72
+#: templates/app/overtime.php:80
 msgid "No Pending Overtime Requests"
+msgstr ""
+
+#: templates/app/overtime.php:99
+msgid "No Overtime Requests Yet"
+msgstr ""
+
+#: templates/app/overtime.php:99
+msgid "Request overtime in advance: your manager approves it before you work the extra hours."
+msgstr ""
+
+#: templates/app/overtime.php:102
+msgid "Waiting for your manager"
+msgstr ""
+
+#: templates/app/overtime.php:106
+#: templates/app/schedule.php:210
+msgid "Decided"
+msgstr ""
+
+#: templates/app/overtime.php:118
+msgid "Tomorrow"
+msgstr ""
+
+#: templates/app/overtime.php:127
+msgid "Why is overtime required?"
+msgstr ""
+
+#: templates/app/overtime.php:128
+msgid "Submit Overtime Request"
+msgstr ""
+
+#: templates/app/overtime.php:129
+msgid "Submit your overtime request before you work the extra hours. Manager approval is required."
+msgstr ""
+
+#. translators: %d: number of days
+#: templates/app/pay.php:30
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/pay.php:42
+msgid "Month"
+msgstr ""
+
+#: templates/app/pay.php:43
+msgid "Earlier month"
+msgstr ""
+
+#: templates/app/pay.php:45
+msgid "Later month"
+msgstr ""
+
+#. translators: %s: month and year
+#: templates/app/pay.php:48
+#, php-format
+msgid "No payslip for %s."
+msgstr ""
+
+#: templates/app/pay.php:51
+msgid "Net pay · before tax and insurance"
+msgstr ""
+
+#. translators: %s: month name
+#: templates/app/pay.php:51
+#, php-format
+msgid "Expected net · if the rest of %s goes as scheduled"
+msgstr ""
+
+#. translators: %s: date the month was closed
+#: templates/app/pay.php:53
+#, php-format
+msgid "Final · closed %s"
+msgstr ""
+
+#. translators: %s: date the month was closed
+#: templates/app/pay.php:54
+msgid "Estimate · changes until HR closes the month"
+msgstr ""
+
+#. translators: %s: month and year
+#: templates/app/pay.php:56
+#, php-format
+msgid "Your payslip for %s is being prepared."
+msgstr ""
+
+#: templates/app/pay.php:58
+msgid "Days worked"
+msgstr ""
+
+#: templates/app/pay.php:64
+msgid "no Sign Out recorded. HR is reviewing this day; until then it counts as a full day."
+msgstr ""
+
+#: templates/app/pay.php:67
+msgid "Earnings"
+msgstr ""
+
+#: templates/app/pay.php:68
+msgid "Basic salary"
+msgstr ""
+
+#: templates/app/pay.php:69
+msgid "Allowances"
+msgstr ""
+
+#. translators: %s: date
+#: templates/app/pay.php:70
+#, php-format
+msgid "Paid from %s"
+msgstr ""
+
+#: templates/app/pay.php:72
+msgid "Overtime (approved)"
+msgstr ""
+
+#. translators: %s: hours:minutes
+#: templates/app/pay.php:72
+#, php-format
+msgid "%s worked"
+msgstr ""
+
+#. translators: %s: hours:minutes
+#: templates/app/pay.php:73
+msgid "day off"
+msgstr ""
+
+#: templates/app/pay.php:75
+msgid "Bonus"
+msgstr ""
+
+#: templates/app/pay.php:81
+msgid "Deductions"
+msgstr ""
+
+#: templates/app/pay.php:82
+msgid "None this month"
+msgstr ""
+
+#: templates/app/pay.php:84
+msgid "Absent without leave"
+msgstr ""
+
+#: templates/app/pay.php:88
+msgid "Late arrival"
+msgstr ""
+
+#. translators: 1: minutes, 2: "3 days"
+#: templates/app/pay.php:88
+#, php-format
+msgid "%1$d min on %2$s, after the grace period"
+msgstr ""
+
+#. translators: %s: sign-in time
+#: templates/app/pay.php:89
+#, php-format
+msgid "in %s"
+msgstr ""
+
+#. translators: %d: minutes
+#. translators: %s: minutes
+#. translators: %d: break number
+#: templates/app/pay.php:89
+#: templates/app/pay.php:92
+#: templates/app/pay.php:93
+#: templates/app/time.php:122
+#: templates/app/time.php:128
+#: templates/app/time.php:137
+#: templates/app/time.php:152
+#, php-format
+msgid "%d min"
+msgstr ""
+
+#: templates/app/pay.php:92
+msgid "Early leave without approval"
+msgstr ""
+
+#. translators: %s: sign-out time
+#: templates/app/pay.php:93
+#, php-format
+msgid "out %s"
+msgstr ""
+
+#. translators: 1: "3 days", 2: percent paid
+#: templates/app/pay.php:96
+#, php-format
+msgid "%1$s, %2$s%% paid"
+msgstr ""
+
+#: templates/app/pay.php:99
+msgid "Deduction"
+msgstr ""
+
+#. translators: %s: number of days
+#: templates/app/pay.php:100
+#, php-format
+msgid "Limited to %s day(s)' pay"
+msgstr ""
+
+#. translators: %s: amount
+#: templates/app/pay.php:100
+#, php-format
+msgid "attendance deductions before the limit: %s"
+msgstr ""
+
+#: templates/app/pay.php:103
+msgid "Net pay"
+msgstr ""
+
+#: templates/app/pay.php:104
+msgid "Download payslip (PDF)"
+msgstr ""
+
+#: templates/app/pay.php:105
+msgid "The payslip PDF is ready when HR closes the month."
+msgstr ""
+
+#. translators: 1: "basic" or "(basic + allowances)", 2: days in the divisor, 3: amount
+#: templates/app/pay.php:106
+#, php-format
+msgid "A day's pay = %1$s ÷ %2$d = %3$s. Amounts are before income tax and social insurance. A question about this month? Contact HR."
+msgstr ""
+
+#. translators: 1: "basic" or "(basic + allowances)", 2: days in the divisor, 3: amount
+#: templates/app/pay.php:106
+msgid "basic"
+msgstr ""
+
+#. translators: 1: "basic" or "(basic + allowances)", 2: days in the divisor, 3: amount
+#: templates/app/pay.php:106
+msgid "(basic + allowances)"
 msgstr ""
 
 #: templates/app/people.php:18
@@ -2625,73 +2981,92 @@ msgstr ""
 msgid "Past polls"
 msgstr ""
 
-#: templates/app/presence.php:15
-msgid "Presence verified successfully."
+#: templates/app/presence.php:28
+msgid "No presence check right now"
 msgstr ""
 
-#: templates/app/presence.php:18
+#: templates/app/presence.php:29
 msgid "No active presence verification request was found."
 msgstr ""
 
-#. translators: %s: work location name
-#: templates/app/presence.php:20
-#, php-format
-msgid "Please scan the QR code displayed at %s."
+#: templates/app/presence.php:29
+msgid "When your manager asks you to confirm where you are, you get a notification that opens it here."
+msgstr ""
+
+#: templates/app/presence.php:34
+msgid "Your manager asked for a presence check"
 msgstr ""
 
 #. translators: %s: mm:ss
-#: templates/app/presence.php:21
+#: templates/app/presence.php:39
 #, php-format
 msgid "Expires in %s"
 msgstr ""
 
-#: templates/app/presence.php:26
-msgid "Getting your location… Please allow location access when your browser asks."
+#. translators: %s: work location name
+#: templates/app/presence.php:40
+#, php-format
+msgid "Please scan the QR code displayed at %s."
 msgstr ""
 
-#: templates/app/presence.php:27
-msgid "Location ready."
-msgstr ""
-
-#: templates/app/presence.php:28
-msgid "Location permission was denied. Presence can only be verified with your location: allow Location Services for this site, then reload this page."
-msgstr ""
-
-#: templates/app/presence.php:29
-msgid "Your location could not be determined. Turn on Location Services/GPS and reload this page."
-msgstr ""
-
-#: templates/app/presence.php:30
-msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
-msgstr ""
-
-#: templates/app/presence.php:31
+#: templates/app/presence.php:47
 msgid "Camera scanning is unavailable. Please use a QR-capable device."
 msgstr ""
 
-#: templates/app/presence.php:31
-#: templates/app/time.php:159
-msgid "Starting camera…"
+#: templates/app/presence.php:47
+msgid "Starting the camera…"
 msgstr ""
 
-#: templates/app/presence.php:32
-msgid "Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device."
+#: templates/app/presence.php:49
+msgid "Point your camera at the code"
 msgstr ""
 
-#: templates/app/presence.php:33
+#: templates/app/presence.php:52
+msgid "Getting your location… Please allow location access when your browser asks."
+msgstr ""
+
+#: templates/app/presence.php:53
+msgid "Location ready."
+msgstr ""
+
+#: templates/app/presence.php:54
+msgid "Location permission was denied. Presence can only be verified with your location: allow Location Services for this site, then reload this page."
+msgstr ""
+
+#: templates/app/presence.php:55
+msgid "Your location could not be determined. Turn on Location Services/GPS and reload this page."
+msgstr ""
+
+#: templates/app/presence.php:56
+msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
+msgstr ""
+
+#: templates/app/presence.php:57
 msgid "Verify Presence"
 msgstr ""
 
-#: templates/app/presence.php:36
+#: templates/app/presence.php:58
+msgid "Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device."
+msgstr ""
+
+#: templates/app/presence.php:64
+msgid "You are verified"
+msgstr ""
+
+#: templates/app/presence.php:66
 msgid "Status:"
 msgstr ""
 
-#: templates/app/presence.php:37
+#: templates/app/presence.php:67
 msgid "Location:"
 msgstr ""
 
-#: templates/app/presence.php:38
+#: templates/app/presence.php:68
 msgid "Verified at:"
+msgstr ""
+
+#: templates/app/presence.php:70
+msgid "Presence verified successfully."
 msgstr ""
 
 #: templates/app/report-capacity.php:40
@@ -2826,7 +3201,7 @@ msgid "My week"
 msgstr ""
 
 #: templates/app/schedule.php:84
-#: templates/app/schedule.php:166
+#: templates/app/schedule.php:219
 msgid "Request a swap"
 msgstr ""
 
@@ -2863,53 +3238,232 @@ msgstr ""
 msgid "There are no active employees to display."
 msgstr ""
 
-#: templates/app/schedule.php:127
-#: templates/app/schedule.php:144
-msgid "No Team"
-msgstr ""
-
 #: templates/app/schedule.php:154
 msgid "No colleague matches your search."
 msgstr ""
 
-#: templates/app/schedule.php:162
-msgid "Need to swap a day?"
-msgstr ""
-
-#: templates/app/schedule.php:163
-msgid "Request Swap"
-msgstr ""
-
-#: templates/app/schedule.php:176
-msgid "Swap with"
-msgstr ""
-
-#: templates/app/schedule.php:177
-msgid "Select colleague"
-msgstr ""
-
-#: templates/app/schedule.php:180
-msgid "Send Request"
-msgstr ""
-
-#: templates/app/schedule.php:183
-msgid "You have no Office or WFH days left this week to swap."
-msgstr ""
-
-#: templates/app/schedule.php:189
-msgid "Swap Requests"
-msgstr ""
-
-#: templates/app/schedule.php:195
+#: templates/app/schedule.php:174
 msgid "Asked you"
 msgstr ""
 
-#: templates/app/schedule.php:195
+#: templates/app/schedule.php:174
 msgid "You asked"
 msgstr ""
 
-#: templates/app/schedule.php:200
+#. translators: %s: "This week", "Next week" or a date range
+#: templates/app/schedule.php:187
+#, php-format
+msgid "Shift swaps · %s"
+msgstr ""
+
+#. translators: %d: number of swap requests
+#: templates/app/schedule.php:189
+#, php-format
+msgid "%d swap waiting for you"
+msgid_plural "%d swaps waiting for you"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of swap requests
+#: templates/app/schedule.php:190
+#: templates/app/schedule.php:193
+#, php-format
+msgid "%d request sent"
+msgid_plural "%d requests sent"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of swap requests
+#: templates/app/schedule.php:191
+msgid "Need to swap a day?"
+msgstr ""
+
+#: templates/app/schedule.php:195
+msgid "Request Swap"
+msgstr ""
+
+#: templates/app/schedule.php:198
+msgid "Waiting for you"
+msgstr ""
+
+#: templates/app/schedule.php:202
 msgid "Accept"
+msgstr ""
+
+#: templates/app/schedule.php:205
+msgid "Sent by you"
+msgstr ""
+
+#: templates/app/schedule.php:227
+msgid "Swap with"
+msgstr ""
+
+#: templates/app/schedule.php:228
+msgid "Select colleague"
+msgstr ""
+
+#: templates/app/schedule.php:231
+msgid "Send Request"
+msgstr ""
+
+#: templates/app/schedule.php:232
+msgid "Your colleague gets your day and you get theirs once they accept."
+msgstr ""
+
+#: templates/app/schedule.php:235
+msgid "You have no Office or WFH days left this week to swap."
+msgstr ""
+
+#. translators: %s: due date
+#: templates/app/tasks.php:48
+#, php-format
+msgid "Overdue · %s"
+msgstr ""
+
+#: templates/app/tasks.php:53
+msgid "Start"
+msgstr ""
+
+#: templates/app/tasks.php:54
+#: templates/app/tasks.php:55
+msgid "Done"
+msgstr ""
+
+#: templates/app/tasks.php:58
+msgid "Back to To Do"
+msgstr ""
+
+#: templates/app/tasks.php:59
+msgid "Reopen"
+msgstr ""
+
+#: templates/app/tasks.php:60
+msgid "Edit"
+msgstr ""
+
+#: templates/app/tasks.php:61
+msgid "Delete this task?"
+msgstr ""
+
+#: templates/app/tasks.php:62
+msgid "Delete"
+msgstr ""
+
+#. translators: %s: task title
+#: templates/app/tasks.php:63
+#, php-format
+msgid "More for %s"
+msgstr ""
+
+#: templates/app/tasks.php:72
+msgid "That task can’t move to that status yet. Start it first, then you can complete it."
+msgstr ""
+
+#: templates/app/tasks.php:73
+msgid "We couldn’t update the task status. No changes were applied."
+msgstr ""
+
+#: templates/app/tasks.php:74
+msgid "We couldn’t save the task. No partial changes were applied."
+msgstr ""
+
+#: templates/app/tasks.php:75
+msgid "We couldn’t delete the task. No changes were applied."
+msgstr ""
+
+#: templates/app/tasks.php:76
+msgid "Please enter a task title."
+msgstr ""
+
+#: templates/app/tasks.php:84
+msgid "Edit Task"
+msgstr ""
+
+#: templates/app/tasks.php:85
+msgid "Title"
+msgstr ""
+
+#: templates/app/tasks.php:85
+msgid "What needs to be done?"
+msgstr ""
+
+#: templates/app/tasks.php:86
+msgid "Description"
+msgstr ""
+
+#: templates/app/tasks.php:86
+msgid "Add useful context, instructions or notes..."
+msgstr ""
+
+#: templates/app/tasks.php:87
+#: templates/app/tasks.php:108
+msgid "Priority"
+msgstr ""
+
+#: templates/app/tasks.php:91
+msgid "Due Date"
+msgstr ""
+
+#: templates/app/tasks.php:92
+msgid "Assign To"
+msgstr ""
+
+#: templates/app/tasks.php:92
+msgid "Myself / Personal Task"
+msgstr ""
+
+#: templates/app/tasks.php:94
+msgid "Save Changes"
+msgstr ""
+
+#: templates/app/tasks.php:94
+msgid "Create Task"
+msgstr ""
+
+#: templates/app/tasks.php:104
+msgid "My Tasks"
+msgstr ""
+
+#: templates/app/tasks.php:104
+msgid "Team Tasks"
+msgstr ""
+
+#: templates/app/tasks.php:105
+msgid "Search tasks"
+msgstr ""
+
+#: templates/app/tasks.php:109
+msgid "All priorities"
+msgstr ""
+
+#: templates/app/tasks.php:110
+msgid "Filter"
+msgstr ""
+
+#. translators: %d: number of overdue tasks
+#: templates/app/tasks.php:114
+#, php-format
+msgid "%d task is overdue"
+msgid_plural "%d tasks are overdue"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/tasks.php:121
+msgid "Nothing finished yet."
+msgstr ""
+
+#: templates/app/tasks.php:121
+msgid "Nothing here."
+msgstr ""
+
+#. translators: %d: number of finished tasks
+#: templates/app/tasks.php:122
+#, php-format
+msgid "Show all %d"
+msgstr ""
+
+#: templates/app/tasks.php:125
+msgid "No task matches your search."
 msgstr ""
 
 #: templates/app/time.php:48
@@ -3058,17 +3612,6 @@ msgid "Your break is being tracked. The standard break duration is %s."
 msgstr ""
 
 #. translators: %s: minutes
-#. translators: %d: minutes
-#. translators: %d: break number
-#: templates/app/time.php:122
-#: templates/app/time.php:128
-#: templates/app/time.php:137
-#: templates/app/time.php:152
-#, php-format
-msgid "%d min"
-msgstr ""
-
-#. translators: %s: minutes
 #: templates/app/time.php:122
 msgid "Each break session is limited to the configured duration. Breaks are informative and do not affect attendance or overtime calculations."
 msgstr ""
@@ -3150,6 +3693,10 @@ msgid "Point your camera at the QR displayed at your workplace."
 msgstr ""
 
 #: templates/app/time.php:159
+msgid "Starting camera…"
+msgstr ""
+
+#: templates/app/time.php:159
 msgid "Sign In with QR"
 msgstr ""
 
@@ -3206,20 +3753,32 @@ msgstr ""
 msgid "Request Reset"
 msgstr ""
 
-#: templates/kiosk.php:21
+#: templates/kiosk.php:32
+msgid "Open Workforce One on your phone"
+msgstr ""
+
+#: templates/kiosk.php:33
+msgid "Open Sign In or the presence request"
+msgstr ""
+
+#: templates/kiosk.php:34
+msgid "Point the camera at this code"
+msgstr ""
+
+#: templates/kiosk.php:38
 msgid "Scan to continue"
 msgstr ""
 
-#: templates/kiosk.php:22
+#: templates/kiosk.php:39
 msgid "Dynamic Workforce One QR"
 msgstr ""
 
 #. translators: %d: seconds
-#: templates/kiosk.php:24
+#: templates/kiosk.php:41
 #, php-format
 msgid "Changes in %ds"
 msgstr ""
 
-#: templates/kiosk.php:27
+#: templates/kiosk.php:43
 msgid "Connection unavailable. Please check this kiosk connection."
 msgstr ""

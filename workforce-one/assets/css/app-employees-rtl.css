@@ -1,0 +1,48 @@
+/* Employee app → Employees (templates/app/employees.php, 3.31.69). RTL: app-employees-rtl.css
+   (npx rtlcss@4, assets/css/README.md). */
+.wfo-emps{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.wfo-app .wfo-emps-list,.wfo-app .wfo-emps-add{margin:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-app .wfo-emps-list{overflow:hidden}
+.wfo-emps-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px}
+.wfo-app .wfo-emps-head h3{flex:1 1 auto;margin:0;font-size:17px;font-weight:700;color:var(--wfo-ink)}
+.wfo-app .wfo-emps-head h3 span{font-size:13px;font-weight:500;color:var(--wfo-muted)}
+.wfo-app .wfo-emps-search{flex:0 1 260px;display:flex;align-items:center;gap:8px;min-height:42px;margin:0;padding:0 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);color:var(--wfo-muted)}
+.wfo-app .wfo-emps-search input{flex:1 1 auto;min-width:0;height:40px;margin:0;padding:0;border:0;background:none;box-shadow:none;outline:0;font:inherit;font-size:14px;color:var(--wfo-ink)}
+.wfo-emps-cols,.wfo-app .wfo-emps-rows a{display:grid;grid-template-columns:2fr 1.2fr 1.7fr 1.3fr 24px;align-items:center;gap:12px;padding:0 18px}
+.wfo-app .wfo-emps-cols{min-height:36px;background:#F7F8FC;font-size:11.5px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-emps-rows{margin:0;padding:0;list-style:none}
+.wfo-app .wfo-emps-rows li{margin:0;border-top:1px solid var(--wfo-line)}
+.wfo-app .wfo-emps-rows li[hidden]{display:none}
+.wfo-app .wfo-emps-rows a{min-height:60px;color:var(--wfo-muted);font-size:13.5px;text-decoration:none}
+.wfo-app .wfo-emps-rows a:hover{background:#FAFAFE}
+.wfo-app .wfo-emps-rows a:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:-2px}
+.wfo-emps-who{display:flex;align-items:center;gap:10px;min-width:0}
+.wfo-app .wfo-emps-who b{font-weight:600;color:var(--wfo-ink);overflow:hidden;text-overflow:ellipsis}
+.wfo-app .wfo-emps-avatar{width:36px;height:36px;flex:0 0 auto;border-radius:999px;background:var(--wfo-pri-soft);color:var(--wfo-pri);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.wfo-app .wfo-emps-avatar.tone-1{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-emps-avatar.tone-2{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-emps-avatar.tone-3{background:#E7EEFF;color:#1F4FB8}
+.wfo-app .wfo-emps-avatar.tone-4{background:#FFE8EC;color:#A51D3E}
+.wfo-emps-user,.wfo-emps-mail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wfo-emps-team{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.wfo-app .wfo-emps-go{color:#9AA0B8}
+[dir=rtl] .wfo-emps-go .wfo-icon{transform:scaleX(-1)}
+.wfo-app .wfo-emps-none{margin:0;padding:22px;text-align:center;color:var(--wfo-muted)}
+.wfo-app .wfo-emps-add{padding:18px;display:flex;flex-direction:column;gap:12px}
+.wfo-app .wfo-emps-add h3{margin:0;font-size:17px;font-weight:700;color:var(--wfo-ink)}
+.wfo-app .wfo-emps-add form{display:flex;flex-direction:column;gap:12px;margin:0}
+.wfo-app .wfo-emps-add p{margin:0;font-size:12px;color:var(--wfo-muted)}
+.wfo-emps-field{display:flex;flex-direction:column;gap:6px}
+.wfo-app .wfo-emps-field label{font-size:12.5px;font-weight:600;color:#3B4466}
+.wfo-app .wfo-emps-field input{width:100%;box-sizing:border-box;min-height:46px;margin:0;padding:10px 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:#fff;font:inherit;font-size:15px;color:var(--wfo-ink);box-shadow:none}
+.wfo-app .wfo-emps-field input:focus{outline:none;border-color:var(--wfo-pri);box-shadow:0 0 0 3px var(--wfo-pri-soft)}
+.wfo-app .wfo-emps-submit{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;margin:0;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-pri);color:#fff;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.wfo-app .wfo-emps-submit:hover{background:var(--wfo-pri-dark)}
+@media (max-width:1000px){.wfo-emps{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){
+    .wfo-app .wfo-emps-search{flex:1 1 100%}
+    .wfo-emps-cols{display:none}
+    .wfo-app .wfo-emps-rows a{grid-template-columns:minmax(0,1fr) 20px;grid-template-areas:"who go" "mail go" "team go";gap:4px 10px;padding:12px 16px}
+    .wfo-emps-who{grid-area:who}.wfo-emps-mail{grid-area:mail;padding-inline-start:46px;font-size:12.5px}.wfo-emps-team{grid-area:team;padding-inline-start:46px}.wfo-emps-go{grid-area:go}
+    .wfo-emps-user{display:none}
+}

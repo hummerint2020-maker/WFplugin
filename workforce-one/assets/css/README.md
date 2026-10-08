@@ -28,5 +28,9 @@ npx rtlcss@4 assets/css/app-profile.css assets/css/app-profile-rtl.css
 npx rtlcss@4 assets/css/app-people.css assets/css/app-people-rtl.css
 npx rtlcss@4 assets/css/app-attendance.css assets/css/app-attendance-rtl.css
 npx rtlcss@4 assets/css/app-reports.css assets/css/app-reports-rtl.css
+npx rtlcss@4 assets/css/app-requests.css assets/css/app-requests-rtl.css
+npx rtlcss@4 assets/css/app-presence.css assets/css/app-presence-rtl.css
+npx rtlcss@4 assets/css/app-employees.css assets/css/app-employees-rtl.css
+npx rtlcss@4 assets/css/app-pay.css assets/css/app-pay-rtl.css
 npx rtlcss@4 assets/css/app-insights.css assets/css/app-insights-rtl.css
 ```

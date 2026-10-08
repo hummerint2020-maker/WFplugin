@@ -188,7 +188,8 @@
     .wfo-app .wfo-sched .wfo-myweek{order:1}
     .wfo-app .wfo-sched .ews-swap-panel{order:2}
     .wfo-app .wfo-sched .ews-swap-panel{padding-bottom:0}
-    .wfo-app .wfo-sched .ews-swap-panel .wfo-rq-hero .wfo-rq-new{position:static;box-shadow:none}
+    .wfo-app .wfo-sched .ews-swap-panel .wfo-rq-hero{flex-wrap:wrap}
+    .wfo-app .wfo-sched .ews-swap-panel .wfo-rq-hero .wfo-rq-new{position:static;flex:1 1 100%;box-shadow:none}
     .wfo-app .wfo-sched .ews-schedule-card{order:3;padding:0;background:none;box-shadow:none;border-radius:0;gap:10px}
     .wfo-app .wfo-sched .wfo-sched-tools{display:none}
     .wfo-app .wfo-sched .wfo-desktop-only{display:none}

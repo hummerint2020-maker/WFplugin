@@ -85,6 +85,9 @@ dialog.wfo-sheet[open]{animation:wfo-sheet-in .2s ease-out}
 .wfo-rq-total{display:flex;align-items:center;gap:8px;margin:0;padding:10px 12px;border-radius:12px;background:var(--wfo-pri-soft,#EBE8FA);color:var(--wfo-pri-dark,#4B34B2);font-size:13.5px;font-weight:600}
 .wfo-rq-total.is-warn{background:#FFF2DE;color:#8A4F00}
 .wfo-sheet .wfo-sheet-submit{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin:0;border:0;border-radius:var(--wfo-r-ctl,14px);background:var(--wfo-pri,#5B3FD9);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:none}
+[dir=rtl] .wfo-sheet .wfo-sheet-submit[data-fwd] .wfo-icon{transform:scaleX(-1)}
+/* user text (a reason, a task) keeps its own direction inside the other language */
+.wfo-app .wfo-rq-meta,.wfo-app .wfo-rq-quote,.wfo-app .wfo-tk-title,.wfo-app .wfo-tk-desc{unicode-bidi:plaintext}
 .wfo-sheet .wfo-sheet-submit:hover{background:var(--wfo-pri-dark,#4B34B2)}
 
 /* ---------------------------------------------------------------- Tasks */

@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.31.69
+The last app pages in the new look, from the owner-approved HTML designs ("B" for Overtime, the same
+look for swap requests). Every new text is translated (Arabic).
+
+### Changed
+- **One request look** (assets/css/app-requests.css, assets/js/sheet.js): a dark summary card, the
+  requests grouped (waiting / decided) and the form in a sheet (`<dialog>`): from the bottom on a
+  phone, in the middle on a computer; Esc, ✕ or a tap outside closes it.
+- **Overtime:** the month's approved total and what is waiting; Today / Tomorrow buttons; a manager
+  sees the requests waiting for a decision first (Approve / Reject). A refused request opens the form
+  again.
+- **Swap requests (Schedule):** waiting for you (Accept / Reject), sent by you (Cancel), decided; the
+  form in the same sheet, opened from My week.
+- **Tasks:** a board by status on a computer, one list on a phone (In progress first); one button for
+  the next step (Start / Done), a menu for the rest (Back to To Do, Reopen, Edit, Delete, asked
+  first); search, priority filter, overdue count, Done list cut at 8 (Show all). The page moved from
+  PHP strings with an inline `<style>` to templates/app/tasks.php; its notifications are translated.
+- **Presence check:** a ring with the time left (counts down; the page reloads when it runs out), the
+  camera with a frame, the location status in colour, and clear "verified" / "nothing open" cards.
+  A request past its time shows as expired.
+- **My Pay:** dark net-pay card, coloured month figures, chevrons instead of text arrows, all text
+  translated.
+- **Employees (in the app):** a list with search, initials, email and team, rows open the profile;
+  Add employee beside it.
+- **Kiosk screen:** the Appearance colours, logo, location, a clock, three steps for the employee,
+  a large QR and a bar until the next code; side by side on a landscape screen, stacked on a tablet.
+
+### Tests
+- New tests/e2e_tasks_view.py (28 checks, in CI): create, refuse an empty title, Start / Done /
+  Reopen, To Do cannot jump to Done, Edit, priority filter, a manager assigns, the assignee cannot
+  edit or delete, delete, switched off.
+
 ## 3.31.68
 Attendance page (manager grid) made light, as shown in the owner-approved HTML preview. Measured on
 the local test site with 300 employees: page 4.5 MB → 2.0 MB, 4,222 dropdowns (25,327 options) → 8

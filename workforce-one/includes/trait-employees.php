@@ -3,7 +3,18 @@ if (!defined('ABSPATH')) exit;
 
 trait EWS_Employees_Trait {
 
-    private function employees_content(){global $wpdb;$rows=$wpdb->get_results("SELECT * FROM {$this->employees} WHERE active=1 ORDER BY name");ob_start();?><div class="ews-card ews-form"><h3>Add Employee</h3><form method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>"><input type="hidden" name="action" value="ews31_employee_save"><?php wp_nonce_field('ews31_employee_save');?><div class="ews-grid2"><label>Name<input name="name" required></label><label>Domain Name<input name="domain_name" required></label></div><label>Email Address<input type="email" name="email" placeholder="employee@company.com" required></label><button class="ews-btn">Add Employee</button></form></div><div class="ews-card ews-week"><table class="ews-table"><thead><tr><th>Name</th><th>Domain</th></tr></thead><tbody><?php foreach($rows as $r):?><tr><td><?php echo esc_html($r->name);?></td><td><?php echo esc_html($r->domain_name);?></td></tr><?php endforeach;?></tbody></table></div><?php return ob_get_clean();}
+    /** Employee app → Employees (managers): the active employees and Add employee (templates/app/employees.php). */
+    private function employees_content(){
+        global $wpdb;
+        $rows=(array)$wpdb->get_results("SELECT id,name,domain_name,email FROM {$this->employees} WHERE active=1 ORDER BY name");
+        $team_ids=$this->team_ids_by_employee(array_map(static function($r){return (int)$r->id;},$rows));
+        $names=[];$all=array_unique(array_merge([],...array_values($team_ids?:[[]])));
+        if($all){$t=$this->team_tables();$ph=implode(',',array_fill(0,count($all),'%d'));foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,name FROM {$t['teams']} WHERE id IN ($ph)",array_values($all))) as $tm)$names[(int)$tm->id]=(string)$tm->name;}
+        foreach($rows as $r){$r->teams=array_values(array_filter(array_map(static function($id)use($names){return $names[$id]??'';},$team_ids[(int)$r->id]??[])));$r->url=add_query_arg(['ews_view'=>'employee','employee_id'=>(int)$r->id],$this->app_view_url('people'));}
+        wp_enqueue_style('workforce-one-employees-page');
+        wp_enqueue_script('workforce-one-employees');
+        return $this->render_template('app/employees',['rows'=>$rows,'post_url'=>admin_url('admin-post.php'),'admin_url'=>current_user_can('manage_options')||$this->can('ews_manage_employees')?admin_url('admin.php?page=ews31-employees'):'']);
+    }
 
     private function ensure_employee_email_column(){
         if($this->ews_schema_is_current())return;

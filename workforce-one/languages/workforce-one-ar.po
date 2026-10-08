@@ -2863,3 +2863,402 @@ msgstr "لديك تغييرات لم تُحفظ بعد."
 
 msgid "Undo"
 msgstr "تراجع"
+
+msgid "Task Assigned"
+msgstr "تم إسناد مهمة"
+
+msgid "You have been assigned the task: %s."
+msgstr "تم إسناد المهمة إليك: %s."
+
+msgid "New Task"
+msgstr "مهمة جديدة"
+
+msgid "Task Status Updated"
+msgstr "تم تحديث حالة المهمة"
+
+msgid "%1$s is now %2$s."
+msgstr "%1$s أصبحت الآن %2$s."
+
+msgid "To Do"
+msgstr "قيد الانتظار"
+
+msgid "In Progress"
+msgstr "قيد التنفيذ"
+
+msgid "Urgent"
+msgstr "عاجلة"
+
+msgid "High"
+msgstr "عالية"
+
+msgid "Normal"
+msgstr "عادية"
+
+msgid "Low"
+msgstr "منخفضة"
+
+msgid "Tasks are currently disabled by your administrator."
+msgstr "المهام معطّلة حاليًا من قِبل المسؤول."
+
+msgid "%d active"
+msgid_plural "%d active"
+msgstr[0] "لا يوجد نشط"
+msgstr[1] "%d نشط"
+msgstr[2] "%d نشطان"
+msgstr[3] "%d نشطين"
+msgstr[4] "%d نشطًا"
+msgstr[5] "%d نشط"
+
+msgid "Search name or email"
+msgstr "ابحث بالاسم أو البريد"
+
+msgid "Domain Name"
+msgstr "اسم المستخدم"
+
+msgid "Email Address"
+msgstr "البريد الإلكتروني"
+
+msgid "No employee matches your search."
+msgstr "لا يوجد موظف يطابق البحث."
+
+msgid "Add Employee"
+msgstr "إضافة موظف"
+
+msgid "Teams, schedule, pay and access are set in wp-admin."
+msgstr "الفرق والجدول والراتب والصلاحيات تُضبط من لوحة wp-admin."
+
+msgid "Open Employees in wp-admin"
+msgstr "افتح الموظفين في wp-admin"
+
+msgid "%s · approved overtime"
+msgstr "%s · الوقت الإضافي المعتمد"
+
+msgid "None yet"
+msgstr "لا يوجد بعد"
+
+msgid "%1$d waiting · %2$s"
+msgid_plural "%1$d waiting · %2$s"
+msgstr[0] "%1$d بانتظار الموافقة · %2$s"
+msgstr[1] "طلب واحد بانتظار الموافقة · %2$s"
+msgstr[2] "طلبان بانتظار الموافقة · %2$s"
+msgstr[3] "%1$d طلبات بانتظار الموافقة · %2$s"
+msgstr[4] "%1$d طلبًا بانتظار الموافقة · %2$s"
+msgstr[5] "%1$d طلب بانتظار الموافقة · %2$s"
+
+msgid "%d request this month"
+msgid_plural "%d requests this month"
+msgstr[0] "لا طلبات هذا الشهر"
+msgstr[1] "طلب واحد هذا الشهر"
+msgstr[2] "طلبان هذا الشهر"
+msgstr[3] "%d طلبات هذا الشهر"
+msgstr[4] "%d طلبًا هذا الشهر"
+msgstr[5] "%d طلب هذا الشهر"
+
+msgid "%d waiting"
+msgid_plural "%d waiting"
+msgstr[0] "لا شيء بالانتظار"
+msgstr[1] "%d بالانتظار"
+msgstr[2] "%d بالانتظار"
+msgstr[3] "%d بالانتظار"
+msgstr[4] "%d بالانتظار"
+msgstr[5] "%d بالانتظار"
+
+msgid "Request overtime in advance: your manager approves it before you work the extra hours."
+msgstr "اطلب الوقت الإضافي مسبقًا: يوافق عليه مديرك قبل أن تعمل الساعات الإضافية."
+
+msgid "Waiting for your manager"
+msgstr "بانتظار موافقة مديرك"
+
+msgid "Decided"
+msgstr "تم البت فيها"
+
+msgid "Tomorrow"
+msgstr "غدًا"
+
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "0 يوم"
+msgstr[1] "يوم واحد"
+msgstr[2] "يومان"
+msgstr[3] "%d أيام"
+msgstr[4] "%d يومًا"
+msgstr[5] "%d يوم"
+
+msgid "Month"
+msgstr "الشهر"
+
+msgid "Earlier month"
+msgstr "الشهر السابق"
+
+msgid "Later month"
+msgstr "الشهر التالي"
+
+msgid "No payslip for %s."
+msgstr "لا توجد قسيمة راتب لشهر %s."
+
+msgid "Net pay · before tax and insurance"
+msgstr "صافي الراتب · قبل الضريبة والتأمينات"
+
+msgid "Expected net · if the rest of %s goes as scheduled"
+msgstr "الصافي المتوقع · إذا سار باقي %s حسب الجدول"
+
+msgid "Final · closed %s"
+msgstr "نهائي · أُغلق في %s"
+
+msgid "Estimate · changes until HR closes the month"
+msgstr "تقديري · يتغير حتى تغلق الموارد البشرية الشهر"
+
+msgid "Your payslip for %s is being prepared."
+msgstr "قسيمة راتب %s قيد الإعداد."
+
+msgid "Days worked"
+msgstr "أيام العمل"
+
+msgid "no Sign Out recorded. HR is reviewing this day; until then it counts as a full day."
+msgstr "لم يُسجَّل انصراف. الموارد البشرية تراجع هذا اليوم؛ وحتى ذلك يُحتسب يومًا كاملًا."
+
+msgid "Earnings"
+msgstr "المستحقات"
+
+msgid "Basic salary"
+msgstr "الراتب الأساسي"
+
+msgid "Allowances"
+msgstr "البدلات"
+
+msgid "Paid from %s"
+msgstr "مدفوع من %s"
+
+msgid "Overtime (approved)"
+msgstr "الوقت الإضافي (المعتمد)"
+
+msgid "%s worked"
+msgstr "عمل فعلي %s"
+
+msgid "day off"
+msgstr "يوم عطلة"
+
+msgid "Bonus"
+msgstr "مكافأة"
+
+msgid "Deductions"
+msgstr "الخصومات"
+
+msgid "None this month"
+msgstr "لا يوجد هذا الشهر"
+
+msgid "Absent without leave"
+msgstr "غياب بدون إجازة"
+
+msgid "Late arrival"
+msgstr "تأخير في الحضور"
+
+msgid "%1$d min on %2$s, after the grace period"
+msgstr "%1$d دقيقة على %2$s، بعد فترة السماح"
+
+msgid "in %s"
+msgstr "حضور %s"
+
+msgid "Early leave without approval"
+msgstr "انصراف مبكر بدون موافقة"
+
+msgid "out %s"
+msgstr "انصراف %s"
+
+msgid "%1$s, %2$s%% paid"
+msgstr "%1$s، مدفوع %2$s%%"
+
+msgid "Deduction"
+msgstr "خصم"
+
+msgid "Limited to %s day(s)' pay"
+msgstr "بحد أقصى أجر %s يوم"
+
+msgid "attendance deductions before the limit: %s"
+msgstr "خصومات الحضور قبل الحد: %s"
+
+msgid "Net pay"
+msgstr "صافي الراتب"
+
+msgid "Download payslip (PDF)"
+msgstr "تنزيل قسيمة الراتب (PDF)"
+
+msgid "The payslip PDF is ready when HR closes the month."
+msgstr "تجهز قسيمة الراتب PDF عندما تغلق الموارد البشرية الشهر."
+
+msgid "A day's pay = %1$s ÷ %2$d = %3$s. Amounts are before income tax and social insurance. A question about this month? Contact HR."
+msgstr "أجر اليوم = %1$s ÷ %2$d = %3$s. المبالغ قبل ضريبة الدخل والتأمينات الاجتماعية. لديك سؤال عن هذا الشهر؟ تواصل مع الموارد البشرية."
+
+msgid "basic"
+msgstr "الأساسي"
+
+msgid "(basic + allowances)"
+msgstr "(الأساسي + البدلات)"
+
+msgid "No presence check right now"
+msgstr "لا يوجد طلب تأكيد تواجد الآن"
+
+msgid "When your manager asks you to confirm where you are, you get a notification that opens it here."
+msgstr "عندما يطلب مديرك تأكيد مكانك، يصلك إشعار يفتح الطلب هنا."
+
+msgid "Your manager asked for a presence check"
+msgstr "طلب مديرك تأكيد تواجدك"
+
+msgid "Starting the camera…"
+msgstr "جارٍ تشغيل الكاميرا…"
+
+msgid "Point your camera at the code"
+msgstr "وجّه الكاميرا نحو الكود"
+
+msgid "You are verified"
+msgstr "تم تأكيد تواجدك"
+
+msgid "Shift swaps · %s"
+msgstr "تبديل الورديات · %s"
+
+msgid "%d swap waiting for you"
+msgid_plural "%d swaps waiting for you"
+msgstr[0] "لا طلبات تبديل بانتظارك"
+msgstr[1] "طلب تبديل واحد بانتظارك"
+msgstr[2] "طلبا تبديل بانتظارك"
+msgstr[3] "%d طلبات تبديل بانتظارك"
+msgstr[4] "%d طلب تبديل بانتظارك"
+msgstr[5] "%d طلب تبديل بانتظارك"
+
+msgid "%d request sent"
+msgid_plural "%d requests sent"
+msgstr[0] "لم تُرسل طلبات"
+msgstr[1] "طلب واحد مُرسل"
+msgstr[2] "طلبان مُرسلان"
+msgstr[3] "%d طلبات مُرسلة"
+msgstr[4] "%d طلبًا مُرسلًا"
+msgstr[5] "%d طلب مُرسل"
+
+msgid "Waiting for you"
+msgstr "بانتظارك"
+
+msgid "Sent by you"
+msgstr "أرسلتها أنت"
+
+msgid "Your colleague gets your day and you get theirs once they accept."
+msgstr "يأخذ زميلك يومك وتأخذ يومه بمجرد موافقته."
+
+msgid "Overdue · %s"
+msgstr "متأخرة · %s"
+
+msgid "Start"
+msgstr "ابدأ"
+
+msgid "Done"
+msgstr "تمت"
+
+msgid "Back to To Do"
+msgstr "إرجاع إلى قيد الانتظار"
+
+msgid "Reopen"
+msgstr "إعادة فتح"
+
+msgid "Edit"
+msgstr "تعديل"
+
+msgid "Delete this task?"
+msgstr "حذف هذه المهمة؟"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "More for %s"
+msgstr "المزيد لـ %s"
+
+msgid "That task can’t move to that status yet. Start it first, then you can complete it."
+msgstr "لا يمكن نقل المهمة إلى هذه الحالة بعد. ابدأها أولًا ثم يمكنك إنهاؤها."
+
+msgid "We couldn’t update the task status. No changes were applied."
+msgstr "تعذّر تحديث حالة المهمة. لم تُطبَّق أي تغييرات."
+
+msgid "We couldn’t save the task. No partial changes were applied."
+msgstr "تعذّر حفظ المهمة. لم تُطبَّق أي تغييرات جزئية."
+
+msgid "We couldn’t delete the task. No changes were applied."
+msgstr "تعذّر حذف المهمة. لم تُطبَّق أي تغييرات."
+
+msgid "Please enter a task title."
+msgstr "من فضلك أدخل عنوان المهمة."
+
+msgid "Edit Task"
+msgstr "تعديل المهمة"
+
+msgid "Title"
+msgstr "العنوان"
+
+msgid "What needs to be done?"
+msgstr "ما المطلوب إنجازه؟"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Add useful context, instructions or notes..."
+msgstr "أضف تفاصيل أو تعليمات أو ملاحظات مفيدة..."
+
+msgid "Priority"
+msgstr "الأولوية"
+
+msgid "Due Date"
+msgstr "تاريخ الاستحقاق"
+
+msgid "Assign To"
+msgstr "إسناد إلى"
+
+msgid "Myself / Personal Task"
+msgstr "أنا / مهمة شخصية"
+
+msgid "Save Changes"
+msgstr "حفظ التغييرات"
+
+msgid "Create Task"
+msgstr "إنشاء المهمة"
+
+msgid "My Tasks"
+msgstr "مهامي"
+
+msgid "Team Tasks"
+msgstr "مهام الفريق"
+
+msgid "Search tasks"
+msgstr "ابحث في المهام"
+
+msgid "All priorities"
+msgstr "كل الأولويات"
+
+msgid "Filter"
+msgstr "تصفية"
+
+msgid "%d task is overdue"
+msgid_plural "%d tasks are overdue"
+msgstr[0] "لا مهام متأخرة"
+msgstr[1] "مهمة واحدة متأخرة"
+msgstr[2] "مهمتان متأخرتان"
+msgstr[3] "%d مهام متأخرة"
+msgstr[4] "%d مهمة متأخرة"
+msgstr[5] "%d مهمة متأخرة"
+
+msgid "Nothing finished yet."
+msgstr "لم يكتمل شيء بعد."
+
+msgid "Nothing here."
+msgstr "لا شيء هنا."
+
+msgid "Show all %d"
+msgstr "عرض الكل (%d)"
+
+msgid "No task matches your search."
+msgstr "لا توجد مهمة تطابق البحث."
+
+msgid "Open Workforce One on your phone"
+msgstr "افتح Workforce One على هاتفك"
+
+msgid "Open Sign In or the presence request"
+msgstr "افتح تسجيل الحضور أو طلب تأكيد التواجد"
+
+msgid "Point the camera at this code"
+msgstr "وجّه الكاميرا نحو هذا الكود"

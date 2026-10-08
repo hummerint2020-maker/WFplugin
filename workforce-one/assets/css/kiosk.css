@@ -1,11 +1,35 @@
-/* The kiosk's screen (templates/kiosk.php). */
-html,body{margin:0;height:100%;background:#f7f8fb;font-family:Arial,sans-serif}
-body{display:flex;align-items:center;justify-content:center}
-.k{width:min(760px,92vw);text-align:center;background:#fff;border:1px solid #e4e7ec;border-radius:24px;padding:34px;box-shadow:0 12px 40px rgba(16,24,40,.08)}
-.brand{font-weight:800;font-size:24px;color:#101828}
-.sub{color:#667085;margin:8px 0 24px}
-.qr{width:min(420px,75vw);height:min(420px,75vw);margin:0 auto}
+/* The kiosk's screen (templates/kiosk.php, new look 3.31.69). The colours come from wp-admin →
+   Appearance as CSS variables on body (Appearance::cssVars()); the values below are the built-in look.
+   Works on a landscape screen (side by side) and a portrait tablet (stacked). */
+html,body{margin:0;min-height:100%}
+body{--wfo-hero:linear-gradient(135deg,#13235B 0%,#37319A 55%,#5B3FD9 100%);--wfo-hero-start:#13235B;--wfo-hl:#FFC83D;--wfo-hl-ink:#13235B;--wfo-pri:#5B3FD9;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--wfo-hero);color:#fff;
+    font-family:var(--wfo-font,'Alexandria',system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif)}
+.k{width:min(1200px,94vw);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);align-items:center;gap:6vw;padding:5vh 0;box-sizing:border-box}
+.k-brand{display:flex;align-items:center;gap:14px}
+.k-brand img,.k-brand>span{width:60px;height:60px;border-radius:18px;object-fit:contain;background:var(--wfo-hl);color:var(--wfo-hl-ink);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.k-brand img{background:#fff}
+.k-brand small{display:block;font-size:15px;opacity:.8}
+.k-brand strong{display:block;font-size:24px;font-weight:700}
+.k-clock{margin-top:6vh}
+.k-clock b{display:block;font-size:clamp(56px,9vw,104px);font-weight:700;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.k-clock span{display:block;margin-top:10px;font-size:clamp(16px,1.8vw,22px);opacity:.85}
+.k-steps{margin:6vh 0 0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:16px;font-size:clamp(15px,1.6vw,19px)}
+.k-steps li{counter-increment:s;display:flex;align-items:center;gap:14px}
+.k-steps li::before{content:counter(s);width:38px;height:38px;flex:0 0 auto;border-radius:999px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-weight:700}
+.k-card{background:#fff;color:#141A33;border-radius:32px;padding:34px;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 30px 60px rgba(0,0,0,.25)}
+.k-card h1{margin:0;font-size:22px;font-weight:700;text-align:center}
+.qr{width:min(400px,70vw,58vh);aspect-ratio:1}
 .qr svg{width:100%;height:100%;display:block}
-.timer{font-size:18px;font-weight:700;margin-top:18px;color:#344054}
-.loc{margin-top:8px;color:#667085}
-.offline{display:none;color:#b42318;margin-top:10px}
+.k-next{width:100%;display:flex;align-items:center;gap:12px}
+.k-bar{flex:1 1 auto;height:8px;border-radius:99px;background:#E8E9F2;overflow:hidden}
+.k-bar i{display:block;height:100%;width:100%;background:var(--wfo-pri);transition:width 1s linear}
+.timer{font-size:14px;font-weight:600;color:#6A7090;white-space:nowrap;font-variant-numeric:tabular-nums}
+.offline{display:none;padding:10px 14px;border-radius:12px;background:#FFE8EC;color:#A51D3E;font-size:14px;text-align:center}
+@media (max-width:900px),(orientation:portrait){
+    .k{grid-template-columns:minmax(0,1fr);gap:28px;max-width:560px}
+    .k-clock{margin-top:24px}
+    .k-steps{margin-top:24px}
+    .k-card{order:-1}
+}
+@media (prefers-reduced-motion:reduce){.k-bar i{transition:none}}
