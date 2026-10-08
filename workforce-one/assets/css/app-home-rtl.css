@@ -112,3 +112,17 @@
 .wfo-app .wfo-home .ews-empty-title{font-size:14px;font-weight:600;color:var(--wfo-ink)}
 .wfo-app .wfo-home .ews-empty-text{font-size:13px;line-height:1.5;color:var(--wfo-muted)}
 .wfo-app .wfo-home .ews-empty-action{margin-top:4px;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:var(--wfo-r-sm);background:var(--wfo-hero-start);color:#fff;text-decoration:none;font-size:13px;font-weight:600}
+
+/* My tasks today (3.31.70): the next step of each task in one tap */
+.wfo-home-tasks .wfo-home-link{font-size:13px;font-weight:600;color:var(--wfo-pri);text-decoration:none;white-space:nowrap}
+.wfo-home-tasks ul{margin:0;padding:0;list-style:none}
+.wfo-home-tasks li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--wfo-line)}
+.wfo-home-tasks li:first-child{border-top:0;padding-top:0}
+.wfo-home-tasks li form{margin:0;flex:0 0 auto}
+.wfo-app .wfo-home-task-btn{display:inline-flex;align-items:center;gap:4px;min-height:36px;margin:0;padding:0 12px;border:0;border-radius:10px;background:var(--wfo-pri-soft);color:var(--wfo-pri);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.wfo-app .wfo-home-task-btn.is-done{background:#E6F7EF;color:#0F6B43}
+.wfo-home-tasks li a{flex:1 1 auto;min-width:0;text-decoration:none;border-inline-start:3px solid #C9CDDB;padding-inline-start:10px}
+.wfo-home-tasks li.pr-urgent a{border-color:#E06A84}.wfo-home-tasks li.pr-high a{border-color:#E8A33A}.wfo-home-tasks li.pr-normal a{border-color:#6C8EEB}
+.wfo-home-tasks li b{display:block;font-size:14px;font-weight:600;color:var(--wfo-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.wfo-home-tasks li small{display:block;font-size:12px;color:var(--wfo-muted)}
+.wfo-home-tasks li small.is-late{color:#A51D3E;font-weight:600}

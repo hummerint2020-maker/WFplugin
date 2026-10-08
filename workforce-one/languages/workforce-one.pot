@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.68\n"
+"Project-Id-Version: Workforce One 3.31.69\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-08T09:35:01+00:00\n"
+"POT-Creation-Date: 2026-10-08T10:27:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -86,7 +86,7 @@ msgid "You do not have access to this."
 msgstr ""
 
 #: includes/trait-api-auth.php:91
-#: templates/app/tasks.php:101
+#: templates/app/tasks.php:197
 msgid "Something went wrong. Please try again."
 msgstr ""
 
@@ -106,6 +106,7 @@ msgid "Schedule"
 msgstr ""
 
 #: includes/trait-app-layout.php:64
+#: templates/app/tasks.php:185
 msgid "Time"
 msgstr ""
 
@@ -151,8 +152,9 @@ msgstr ""
 
 #: includes/trait-app-layout.php:64
 #: includes/trait-app-layout.php:74
-#: includes/trait-tasks.php:170
-#: templates/app/tasks.php:104
+#: includes/trait-tasks.php:250
+#: templates/admin/tasks.php:26
+#: templates/app/tasks.php:200
 msgid "Tasks"
 msgstr ""
 
@@ -191,7 +193,7 @@ msgid "Polls"
 msgstr ""
 
 #: includes/trait-app-layout.php:74
-#: templates/app/dashboard.php:88
+#: templates/app/dashboard.php:91
 msgid "Sign In / Out"
 msgstr ""
 
@@ -235,6 +237,15 @@ msgstr ""
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
 #: includes/trait-presence.php:98
+#: includes/trait-task-extras.php:103
+#: includes/trait-task-extras.php:118
+#: includes/trait-task-extras.php:130
+#: includes/trait-task-extras.php:161
+#: includes/trait-task-extras.php:192
+#: includes/trait-task-extras.php:220
+#: includes/trait-task-extras.php:372
+#: includes/trait-task-extras.php:380
+#: includes/trait-tasks.php:150
 msgid "Access denied"
 msgstr ""
 
@@ -337,12 +348,12 @@ msgstr ""
 msgid "Unable to record this action."
 msgstr ""
 
-#: includes/trait-dashboard-view.php:47
+#: includes/trait-dashboard-view.php:48
 msgid "Good to see you."
 msgstr ""
 
 #. translators: %s: employee first name
-#: includes/trait-dashboard-view.php:74
+#: includes/trait-dashboard-view.php:75
 #, php-format
 msgid "Good to see you, %s."
 msgstr ""
@@ -416,7 +427,8 @@ msgstr ""
 #: templates/app/overtime.php:114
 #: templates/app/schedule.php:219
 #: templates/app/schedule.php:236
-#: templates/app/tasks.php:84
+#: templates/app/tasks.php:152
+#: templates/app/tasks.php:262
 #: templates/app/time.php:159
 #: templates/app/time.php:176
 msgid "Close"
@@ -763,7 +775,32 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:334
+msgid "Task overdue"
+msgstr ""
+
+#: includes/trait-frontend.php:334
+msgid "Due today"
+msgstr ""
+
+#. translators: 1: task title, 2: due date
+#: includes/trait-frontend.php:337
+#, php-format
+msgid "%1$s was due on %2$s."
+msgstr ""
+
+#. translators: %s: task title
+#: includes/trait-frontend.php:337
+#, php-format
+msgid "%s is due today."
+msgstr ""
+
+#. translators: %s: task title
+#: includes/trait-frontend.php:338
+msgid "Open Task"
+msgstr ""
+
+#: includes/trait-frontend.php:456
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
@@ -772,56 +809,57 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:456
 msgid "Approved"
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:456
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:45
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:456
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:45
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:456
 #: templates/app/schedule.php:45
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:453
-#: includes/trait-tasks.php:166
-#: templates/app/tasks.php:69
+#: includes/trait-frontend.php:456
+#: includes/trait-tasks.php:246
+#: templates/app/tasks.php:41
+#: templates/app/tasks.php:104
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:456
 #: templates/app/presence.php:20
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:453
+#: includes/trait-frontend.php:456
 #: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:459
+#: includes/trait-frontend.php:462
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:459
+#: includes/trait-frontend.php:462
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:469
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:469
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1111,7 +1149,7 @@ msgstr ""
 #: includes/trait-schedule-view.php:59
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance.php:45
-#: templates/app/dashboard.php:42
+#: templates/app/dashboard.php:45
 #: templates/app/my-profile.php:37
 #: templates/app/schedule.php:31
 #: templates/app/time.php:60
@@ -1119,8 +1157,8 @@ msgid "Not Set"
 msgstr ""
 
 #: includes/trait-schedule-view.php:59
-#: templates/app/dashboard.php:43
-#: templates/app/dashboard.php:63
+#: templates/app/dashboard.php:46
+#: templates/app/dashboard.php:66
 #: templates/app/my-profile.php:37
 #: templates/app/schedule.php:31
 msgid "General Leave"
@@ -1154,76 +1192,351 @@ msgstr ""
 msgid "No employees to show."
 msgstr ""
 
-#: includes/trait-tasks.php:106
-msgid "Task Assigned"
+#: includes/trait-task-extras.php:92
+#: includes/trait-tasks.php:117
+msgid "You must be logged in."
+msgstr ""
+
+#: includes/trait-task-extras.php:93
+#: includes/trait-tasks.php:118
+#: includes/trait-tasks.php:250
+msgid "Tasks are currently disabled by your administrator."
+msgstr ""
+
+#: includes/trait-task-extras.php:182
+msgid "New comment on a task"
+msgstr ""
+
+#. translators: 1: person, 2: task title
+#: includes/trait-task-extras.php:182
+#, php-format
+msgid "%1$s commented on %2$s."
+msgstr ""
+
+#: includes/trait-task-extras.php:193
+#: includes/trait-task-extras.php:195
+msgid "File not found."
+msgstr ""
+
+#: includes/trait-task-extras.php:211
+msgid "Task taken"
+msgstr ""
+
+#. translators: 1: person, 2: task title
+#: includes/trait-task-extras.php:211
+#, php-format
+msgid "%1$s took %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-tasks.php:106
-#: includes/trait-tasks.php:119
+#: includes/trait-task-extras.php:265
+#, php-format
+msgid "A task for your team is waiting to be taken: %s."
+msgstr ""
+
+#. translators: %s: task title
+#: includes/trait-task-extras.php:266
 #, php-format
 msgid "You have been assigned the task: %s."
 msgstr ""
 
-#: includes/trait-tasks.php:119
-#: templates/app/tasks.php:84
-#: templates/app/tasks.php:112
+#. translators: %s: task title
+#: includes/trait-task-extras.php:267
+#: templates/app/tasks.php:152
+#: templates/app/tasks.php:214
 msgid "New Task"
 msgstr ""
 
-#: includes/trait-tasks.php:148
+#: includes/trait-task-extras.php:284
+msgid "Task reminder"
+msgstr ""
+
+#. translators: 1: task title, 2: due date and time
+#: includes/trait-task-extras.php:284
+#, php-format
+msgid "%1$s is due %2$s."
+msgstr ""
+
+#: includes/trait-tasks.php:224
 msgid "Task Status Updated"
 msgstr ""
 
 #. translators: 1: task title, 2: status
-#: includes/trait-tasks.php:148
+#: includes/trait-tasks.php:224
 #, php-format
 msgid "%1$s is now %2$s."
 msgstr ""
 
-#: includes/trait-tasks.php:166
-#: templates/app/tasks.php:67
+#. translators: %d: number of team tasks nobody took yet
+#: includes/trait-tasks.php:246
+#: templates/app/tasks.php:41
+#: templates/app/tasks.php:102
+#: templates/app/tasks.php:226
 msgid "To Do"
 msgstr ""
 
-#: includes/trait-tasks.php:166
-#: templates/app/tasks.php:68
+#. translators: %d: number of team tasks nobody took yet
+#: includes/trait-tasks.php:246
+#: templates/app/dashboard.php:119
+#: templates/app/tasks.php:41
+#: templates/app/tasks.php:103
+#: templates/app/tasks.php:226
 msgid "In Progress"
 msgstr ""
 
-#: includes/trait-tasks.php:167
-#: templates/app/tasks.php:29
+#: includes/trait-tasks.php:247
+#: templates/app/tasks.php:40
 msgid "Urgent"
 msgstr ""
 
-#: includes/trait-tasks.php:167
-#: templates/app/tasks.php:29
+#: includes/trait-tasks.php:247
+#: templates/app/tasks.php:40
 msgid "High"
 msgstr ""
 
-#: includes/trait-tasks.php:167
-#: templates/app/tasks.php:29
+#: includes/trait-tasks.php:247
+#: templates/app/tasks.php:40
 msgid "Normal"
 msgstr ""
 
-#: includes/trait-tasks.php:167
-#: templates/app/tasks.php:29
+#: includes/trait-tasks.php:247
+#: templates/app/tasks.php:40
 msgid "Low"
 msgstr ""
 
-#: includes/trait-tasks.php:170
-msgid "Tasks are currently disabled by your administrator."
+#: templates/admin/tasks.php:15
+msgid "On"
+msgstr ""
+
+#: templates/admin/tasks.php:24
+#: templates/app/tasks.php:188
+msgid "No reminder"
+msgstr ""
+
+#: templates/admin/tasks.php:24
+#: templates/app/tasks.php:143
+msgid "15 min before"
+msgstr ""
+
+#: templates/admin/tasks.php:24
+#: templates/app/tasks.php:143
+msgid "30 min before"
+msgstr ""
+
+#: templates/admin/tasks.php:24
+#: templates/app/tasks.php:143
+msgid "1 h before"
+msgstr ""
+
+#: templates/admin/tasks.php:24
+#: templates/app/tasks.php:143
+msgid "2 h before"
+msgstr ""
+
+#: templates/admin/tasks.php:24
+#: templates/app/tasks.php:143
+msgid "1 day before"
+msgstr ""
+
+#: templates/admin/tasks.php:27
+msgid "Tasks settings saved."
+msgstr ""
+
+#: templates/admin/tasks.php:28
+msgid "Tasks is switched off, so nobody sees it."
+msgstr ""
+
+#: templates/admin/tasks.php:28
+msgid "Switch it on in Feature Configuration"
+msgstr ""
+
+#: templates/admin/tasks.php:30
+msgid "Choose which parts of Tasks people see in the app. Switching a part off hides it; nothing that was saved is deleted."
+msgstr ""
+
+#: templates/admin/tasks.php:36
+msgid "Personal tasks"
+msgstr ""
+
+#: templates/admin/tasks.php:36
+msgid "Employees can create tasks for themselves. Managers can always create and assign tasks."
+msgstr ""
+
+#: templates/admin/tasks.php:37
+#: templates/app/tasks.php:81
+#: templates/app/tasks.php:287
+msgid "Checklist"
+msgstr ""
+
+#: templates/admin/tasks.php:37
+msgid "Small steps inside a task, with a progress bar."
+msgstr ""
+
+#: templates/admin/tasks.php:38
+#: templates/app/tasks.php:82
+#: templates/app/tasks.php:305
+msgid "Comments"
+msgstr ""
+
+#: templates/admin/tasks.php:38
+msgid "The people on a task can write to each other inside it."
+msgstr ""
+
+#: templates/admin/tasks.php:39
+msgid "Tell the people on the task about a new comment"
+msgstr ""
+
+#: templates/admin/tasks.php:41
+msgid "Files with comments"
+msgstr ""
+
+#: templates/admin/tasks.php:41
+msgid "A file can be attached to a comment. Files are kept private: only people who can see the task can download them."
+msgstr ""
+
+#: templates/admin/tasks.php:42
+msgid "Largest file (MB)"
+msgstr ""
+
+#: templates/admin/tasks.php:43
+msgid "Allowed file types"
+msgstr ""
+
+#: templates/admin/tasks.php:47
+#: templates/app/tasks.php:330
+msgid "Activity"
+msgstr ""
+
+#: templates/admin/tasks.php:47
+msgid "Show who created, moved, edited or commented on a task, and when."
+msgstr ""
+
+#: templates/admin/tasks.php:48
+msgid "Team tasks"
+msgstr ""
+
+#: templates/admin/tasks.php:48
+msgid "Managers can send a task to a whole team: a copy for each person, or one task the first person takes."
+msgstr ""
+
+#: templates/admin/tasks.php:49
+#: templates/admin/tasks.php:54
+msgid "Chosen at first"
+msgstr ""
+
+#: templates/admin/tasks.php:49
+#: templates/app/tasks.php:170
+msgid "One copy each"
+msgstr ""
+
+#: templates/admin/tasks.php:49
+#: templates/app/tasks.php:171
+msgid "First one takes it"
+msgstr ""
+
+#: templates/admin/tasks.php:51
+msgid "Repeating tasks"
+msgstr ""
+
+#: templates/admin/tasks.php:51
+msgid "A task can come back every day, on chosen week days or on a day of the month. Each date gets its own task; a missed date is not made up."
+msgstr ""
+
+#: templates/admin/tasks.php:52
+msgid "Due time"
+msgstr ""
+
+#: templates/admin/tasks.php:52
+msgid "A time can be set with the due date."
+msgstr ""
+
+#: templates/admin/tasks.php:53
+msgid "Reminders"
+msgstr ""
+
+#: templates/admin/tasks.php:53
+msgid "A notification before the due time. Needs a due time."
+msgstr ""
+
+#: templates/admin/tasks.php:58
+#: templates/app/tasks.php:203
+msgid "Workload"
+msgstr ""
+
+#: templates/admin/tasks.php:58
+msgid "A tab with each person's open, overdue and finished tasks."
+msgstr ""
+
+#: templates/admin/tasks.php:59
+msgid "Who sees it"
+msgstr ""
+
+#: templates/admin/tasks.php:59
+msgid "Everyone who manages tasks"
+msgstr ""
+
+#: templates/admin/tasks.php:59
+msgid "Site administrators only"
+msgstr ""
+
+#: templates/admin/tasks.php:61
+msgid "My tasks today on Home"
+msgstr ""
+
+#: templates/admin/tasks.php:61
+msgid "A card on the Home page with overdue tasks, tasks due today and tasks in progress, each with its next step."
+msgstr ""
+
+#: templates/admin/tasks.php:62
+msgid "Tasks shown"
+msgstr ""
+
+#: templates/admin/tasks.php:64
+msgid "Drag on the board"
+msgstr ""
+
+#: templates/admin/tasks.php:64
+msgid "On a computer, a card can be dragged to the next column."
+msgstr ""
+
+#: templates/admin/tasks.php:65
+msgid "Tell the creator about a new status"
+msgstr ""
+
+#: templates/admin/tasks.php:65
+msgid "When someone starts or finishes a task, the person who created it gets a notification."
+msgstr ""
+
+#: templates/admin/tasks.php:67
+msgid "Finished tasks shown"
+msgstr ""
+
+#: templates/admin/tasks.php:67
+msgid "How many finished tasks the Completed column shows before \"Show all\"."
+msgstr ""
+
+#: templates/admin/tasks.php:68
+msgid "Finished tasks"
+msgstr ""
+
+#: templates/admin/tasks.php:70
+msgid "Changes apply right away."
+msgstr ""
+
+#: templates/admin/tasks.php:70
+#: templates/app/tasks.php:190
+msgid "Save Changes"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance.php:64
-#: templates/app/dashboard.php:120
+#: templates/app/dashboard.php:143
 msgid "Office"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance.php:64
-#: templates/app/dashboard.php:120
+#: templates/app/dashboard.php:143
 msgid "WFH"
 msgstr ""
 
@@ -1250,10 +1563,12 @@ msgstr ""
 msgid "Missing Sign-out"
 msgstr ""
 
+#. translators: %s: due date
 #: templates/app/attendance-insights.php:29
 #: templates/app/attendance-insights.php:43
 #: templates/app/attendance.php:135
-#: templates/app/dashboard.php:74
+#: templates/app/dashboard.php:77
+#: templates/app/dashboard.php:118
 #: templates/app/notifications.php:19
 #: templates/app/overtime.php:117
 #: templates/app/schedule.php:148
@@ -1297,6 +1612,7 @@ msgstr ""
 #: templates/app/employees.php:22
 #: templates/app/my-profile.php:93
 #: templates/app/reports.php:52
+#: templates/app/tasks.php:168
 msgid "Team"
 msgstr ""
 
@@ -1514,45 +1830,45 @@ msgstr ""
 msgid "Download Sample CSV"
 msgstr ""
 
-#: templates/app/dashboard.php:67
+#: templates/app/dashboard.php:70
 msgid "Today in numbers"
 msgstr ""
 
-#: templates/app/dashboard.php:68
+#: templates/app/dashboard.php:71
 msgid "Active Employees"
 msgstr ""
 
-#: templates/app/dashboard.php:69
+#: templates/app/dashboard.php:72
 msgid "Office Today"
 msgstr ""
 
-#: templates/app/dashboard.php:70
+#: templates/app/dashboard.php:73
 msgid "WFH Today"
 msgstr ""
 
-#: templates/app/dashboard.php:71
-#: templates/app/dashboard.php:120
+#: templates/app/dashboard.php:74
+#: templates/app/dashboard.php:143
 msgid "Leave / Mission"
 msgstr ""
 
-#: templates/app/dashboard.php:77
+#: templates/app/dashboard.php:80
 msgid "TODAY'S SCHEDULE"
 msgstr ""
 
-#: templates/app/dashboard.php:79
+#: templates/app/dashboard.php:82
 msgid "Default location"
 msgstr ""
 
-#: templates/app/dashboard.php:81
+#: templates/app/dashboard.php:84
 msgid "Working day"
 msgstr ""
 
-#: templates/app/dashboard.php:81
+#: templates/app/dashboard.php:84
 msgid "No work scheduled"
 msgstr ""
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/dashboard.php:84
+#: templates/app/dashboard.php:87
 #: templates/app/my-profile.php:153
 #: templates/app/time.php:81
 #: templates/app/time.php:89
@@ -1562,15 +1878,15 @@ msgstr ""
 msgid "Sign In"
 msgstr ""
 
-#: templates/app/dashboard.php:84
-#: templates/app/dashboard.php:85
+#: templates/app/dashboard.php:87
+#: templates/app/dashboard.php:88
 #: templates/app/time.php:146
 #: templates/app/time.php:147
 #: templates/app/time.php:148
 msgid "Not recorded"
 msgstr ""
 
-#: templates/app/dashboard.php:85
+#: templates/app/dashboard.php:88
 #: templates/app/my-profile.php:153
 #: templates/app/time.php:79
 #: templates/app/time.php:102
@@ -1578,119 +1894,150 @@ msgstr ""
 msgid "Sign Out"
 msgstr ""
 
-#: templates/app/dashboard.php:86
+#: templates/app/dashboard.php:89
 msgid "Work Location"
 msgstr ""
 
-#: templates/app/dashboard.php:86
+#: templates/app/dashboard.php:89
 msgid "Default"
 msgstr ""
 
-#: templates/app/dashboard.php:88
+#: templates/app/dashboard.php:91
 msgid "View Attendance"
 msgstr ""
 
-#: templates/app/dashboard.php:92
+#: templates/app/dashboard.php:95
 msgid "Things that need your attention"
 msgstr ""
 
-#: templates/app/dashboard.php:97
+#: templates/app/dashboard.php:100
 msgid "Dismiss"
 msgstr ""
 
-#: templates/app/dashboard.php:104
-msgid "Quick Actions"
+#: templates/app/dashboard.php:109
+msgid "My tasks today"
 msgstr ""
 
-#: templates/app/dashboard.php:108
-msgid "Today's Moments"
+#: templates/app/dashboard.php:109
+msgid "All tasks"
 msgstr ""
 
-#: templates/app/dashboard.php:108
-msgid "A little celebration for the team."
+#: templates/app/dashboard.php:111
+#: templates/app/tasks.php:89
+#: templates/app/tasks.php:278
+msgid "Start"
 msgstr ""
 
-#: templates/app/dashboard.php:118
-msgid "Today at a glance"
+#: templates/app/dashboard.php:111
+#: templates/app/tasks.php:90
+#: templates/app/tasks.php:91
+#: templates/app/tasks.php:279
+msgid "Done"
 msgstr ""
 
-#: templates/app/dashboard.php:118
-msgid "Current schedule distribution"
+#. translators: %s: due date
+#: templates/app/dashboard.php:117
+#, php-format
+msgid "Overdue · since %s"
 msgstr ""
 
-#: templates/app/dashboard.php:126
-msgid "This Week"
-msgstr ""
-
-#: templates/app/dashboard.php:126
-msgid "Plan your week"
-msgstr ""
-
-#: templates/app/dashboard.php:126
-msgid "Review schedules and keep your team aligned."
+#: templates/app/dashboard.php:120
+msgid "repeats"
 msgstr ""
 
 #: templates/app/dashboard.php:127
+msgid "Quick Actions"
+msgstr ""
+
+#: templates/app/dashboard.php:131
+msgid "Today's Moments"
+msgstr ""
+
+#: templates/app/dashboard.php:131
+msgid "A little celebration for the team."
+msgstr ""
+
+#: templates/app/dashboard.php:141
+msgid "Today at a glance"
+msgstr ""
+
+#: templates/app/dashboard.php:141
+msgid "Current schedule distribution"
+msgstr ""
+
+#: templates/app/dashboard.php:149
+msgid "This Week"
+msgstr ""
+
+#: templates/app/dashboard.php:149
+msgid "Plan your week"
+msgstr ""
+
+#: templates/app/dashboard.php:149
+msgid "Review schedules and keep your team aligned."
+msgstr ""
+
+#: templates/app/dashboard.php:150
 msgid "No working days configured"
 msgstr ""
 
-#: templates/app/dashboard.php:128
-#: templates/app/dashboard.php:148
+#: templates/app/dashboard.php:151
+#: templates/app/dashboard.php:171
 #: templates/app/my-profile.php:121
 msgid "View Schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:135
+#: templates/app/dashboard.php:158
 msgid "Overtime Today"
 msgstr ""
 
-#: templates/app/dashboard.php:135
+#: templates/app/dashboard.php:158
 msgid "Approved overtime and actual attendance"
 msgstr ""
 
-#: templates/app/dashboard.php:137
+#: templates/app/dashboard.php:160
 msgid "Approved OT"
 msgstr ""
 
-#: templates/app/dashboard.php:138
+#: templates/app/dashboard.php:161
 msgid "Actual OT"
 msgstr ""
 
-#: templates/app/dashboard.php:139
+#: templates/app/dashboard.php:162
 msgid "Unapproved Extra"
 msgstr ""
 
-#: templates/app/dashboard.php:141
+#: templates/app/dashboard.php:164
 msgid "Sign Out:"
 msgstr ""
 
-#: templates/app/dashboard.php:145
+#: templates/app/dashboard.php:168
 #: templates/app/my-profile.php:121
 msgid "My Week"
 msgstr ""
 
-#: templates/app/dashboard.php:145
+#: templates/app/dashboard.php:168
 msgid "Your upcoming schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:145
+#: templates/app/dashboard.php:168
 msgid "View full schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:148
+#: templates/app/dashboard.php:171
 msgid "No Upcoming Schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:148
+#: templates/app/dashboard.php:171
 msgid "No schedule has been set for your upcoming days."
 msgstr ""
 
-#: templates/app/dashboard.php:157
+#: templates/app/dashboard.php:180
 #: templates/app/time.php:59
 msgid "Employee account not linked"
 msgstr ""
 
-#: templates/app/dashboard.php:157
+#: templates/app/dashboard.php:180
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr ""
 
@@ -2866,6 +3213,7 @@ msgstr ""
 
 #. translators: %d: break number
 #: templates/app/poll-card.php:15
+#: templates/app/tasks.php:93
 #: templates/app/time.php:152
 msgid "Open"
 msgstr ""
@@ -3314,156 +3662,505 @@ msgstr ""
 msgid "You have no Office or WFH days left this week to swap."
 msgstr ""
 
+#: templates/app/tasks.php:42
+msgid "Sun"
+msgstr ""
+
+#: templates/app/tasks.php:42
+msgid "Mon"
+msgstr ""
+
+#: templates/app/tasks.php:42
+msgid "Tue"
+msgstr ""
+
+#: templates/app/tasks.php:42
+msgid "Wed"
+msgstr ""
+
+#: templates/app/tasks.php:42
+msgid "Thu"
+msgstr ""
+
+#: templates/app/tasks.php:42
+msgid "Fri"
+msgstr ""
+
+#: templates/app/tasks.php:42
+msgid "Sat"
+msgstr ""
+
+#: templates/app/tasks.php:60
+msgid "Take it"
+msgstr ""
+
+#: templates/app/tasks.php:63
+msgid "Repeats every day"
+msgstr ""
+
+#. translators: %s: week days
+#: templates/app/tasks.php:64
+#, php-format
+msgid "Repeats every week on %s"
+msgstr ""
+
+#. translators: %d: day of the month
+#: templates/app/tasks.php:65
+#, php-format
+msgid "Repeats every month on day %d"
+msgstr ""
+
 #. translators: %s: due date
-#: templates/app/tasks.php:48
+#: templates/app/tasks.php:71
 #, php-format
 msgid "Overdue · %s"
 msgstr ""
 
-#: templates/app/tasks.php:53
-msgid "Start"
+#: templates/app/tasks.php:83
+msgid "Repeating task"
 msgstr ""
 
-#: templates/app/tasks.php:54
-#: templates/app/tasks.php:55
-msgid "Done"
+#. translators: %s: team name
+#: templates/app/tasks.php:84
+#, php-format
+msgid "For %s"
 msgstr ""
 
-#: templates/app/tasks.php:58
+#: templates/app/tasks.php:94
+#: templates/app/tasks.php:279
 msgid "Back to To Do"
 msgstr ""
 
-#: templates/app/tasks.php:59
+#: templates/app/tasks.php:95
+#: templates/app/tasks.php:280
 msgid "Reopen"
 msgstr ""
 
-#: templates/app/tasks.php:60
+#: templates/app/tasks.php:96
+#: templates/app/tasks.php:282
 msgid "Edit"
 msgstr ""
 
-#: templates/app/tasks.php:61
-msgid "Delete this task?"
-msgstr ""
-
-#: templates/app/tasks.php:62
+#: templates/app/tasks.php:97
 msgid "Delete"
 msgstr ""
 
+#: templates/app/tasks.php:97
+msgid "Delete this task?"
+msgstr ""
+
 #. translators: %s: task title
-#: templates/app/tasks.php:63
+#: templates/app/tasks.php:98
 #, php-format
 msgid "More for %s"
 msgstr ""
 
-#: templates/app/tasks.php:72
+#: templates/app/tasks.php:107
 msgid "That task can’t move to that status yet. Start it first, then you can complete it."
 msgstr ""
 
-#: templates/app/tasks.php:73
+#: templates/app/tasks.php:108
 msgid "We couldn’t update the task status. No changes were applied."
 msgstr ""
 
-#: templates/app/tasks.php:74
+#: templates/app/tasks.php:109
 msgid "We couldn’t save the task. No partial changes were applied."
 msgstr ""
 
-#: templates/app/tasks.php:75
+#: templates/app/tasks.php:110
 msgid "We couldn’t delete the task. No changes were applied."
 msgstr ""
 
-#: templates/app/tasks.php:76
+#: templates/app/tasks.php:111
 msgid "Please enter a task title."
 msgstr ""
 
-#: templates/app/tasks.php:84
+#: templates/app/tasks.php:112
+msgid "Only managers can create tasks here."
+msgstr ""
+
+#: templates/app/tasks.php:113
+msgid "Take this task first: it was sent to the whole team."
+msgstr ""
+
+#: templates/app/tasks.php:114
+msgid "Someone from your team already took this task."
+msgstr ""
+
+#: templates/app/tasks.php:115
+msgid "That team has nobody who can sign in, so no task was created."
+msgstr ""
+
+#: templates/app/tasks.php:116
+msgid "The file could not be uploaded. Please try again."
+msgstr ""
+
+#. translators: %d: megabytes
+#: templates/app/tasks.php:118
+#, php-format
+msgid "The file is too big. The limit is %d MB."
+msgstr ""
+
+#. translators: %s: list of file types
+#: templates/app/tasks.php:120
+#, php-format
+msgid "This type of file is not allowed. Allowed: %s."
+msgstr ""
+
+#: templates/app/tasks.php:125
+msgid "created the task"
+msgstr ""
+
+#. translators: %s: status
+#: templates/app/tasks.php:127
+#, php-format
+msgid "moved it to %s"
+msgstr ""
+
+#: templates/app/tasks.php:128
+msgid "edited the task"
+msgstr ""
+
+#. translators: %s: checklist step
+#: templates/app/tasks.php:130
+#, php-format
+msgid "added a step: %s"
+msgstr ""
+
+#. translators: %s: checklist step
+#: templates/app/tasks.php:132
+#, php-format
+msgid "ticked %s"
+msgstr ""
+
+#. translators: %s: checklist step
+#: templates/app/tasks.php:134
+#, php-format
+msgid "unticked %s"
+msgstr ""
+
+#. translators: %s: checklist step
+#: templates/app/tasks.php:136
+#, php-format
+msgid "removed the step %s"
+msgstr ""
+
+#. translators: %s: file name
+#: templates/app/tasks.php:137
+#, php-format
+msgid "commented with %s"
+msgstr ""
+
+#. translators: %s: file name
+#: templates/app/tasks.php:137
+msgid "commented"
+msgstr ""
+
+#. translators: %s: file name
+#: templates/app/tasks.php:138
+msgid "took the task"
+msgstr ""
+
+#: templates/app/tasks.php:139
+msgid "stopped the repeat"
+msgstr ""
+
+#: templates/app/tasks.php:152
 msgid "Edit Task"
 msgstr ""
 
-#: templates/app/tasks.php:85
+#: templates/app/tasks.php:153
 msgid "Title"
 msgstr ""
 
-#: templates/app/tasks.php:85
+#: templates/app/tasks.php:153
 msgid "What needs to be done?"
 msgstr ""
 
-#: templates/app/tasks.php:86
+#: templates/app/tasks.php:154
 msgid "Description"
 msgstr ""
 
-#: templates/app/tasks.php:86
+#: templates/app/tasks.php:154
 msgid "Add useful context, instructions or notes..."
 msgstr ""
 
-#: templates/app/tasks.php:87
-#: templates/app/tasks.php:108
+#: templates/app/tasks.php:155
+#: templates/app/tasks.php:209
 msgid "Priority"
 msgstr ""
 
-#: templates/app/tasks.php:91
-msgid "Due Date"
-msgstr ""
-
-#: templates/app/tasks.php:92
+#: templates/app/tasks.php:159
 msgid "Assign To"
 msgstr ""
 
-#: templates/app/tasks.php:92
-msgid "Myself / Personal Task"
+#: templates/app/tasks.php:161
+msgid "A person"
 msgstr ""
 
-#: templates/app/tasks.php:94
-msgid "Save Changes"
+#: templates/app/tasks.php:162
+msgid "A whole team"
 msgstr ""
 
-#: templates/app/tasks.php:94
+#: templates/app/tasks.php:163
+msgid "Myself"
+msgstr ""
+
+#: templates/app/tasks.php:166
+msgid "Person"
+msgstr ""
+
+#: templates/app/tasks.php:166
+msgid "Choose a person"
+msgstr ""
+
+#. translators: 1: team, 2: number of people
+#: templates/app/tasks.php:168
+#, php-format
+msgid "%1$s · %2$d person"
+msgid_plural "%1$s · %2$d people"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: team, 2: number of people
+#: templates/app/tasks.php:169
+msgid "How the team gets it"
+msgstr ""
+
+#: templates/app/tasks.php:177
+msgid "Repeat"
+msgstr ""
+
+#: templates/app/tasks.php:178
+msgid "Never"
+msgstr ""
+
+#: templates/app/tasks.php:178
+msgid "Daily"
+msgstr ""
+
+#: templates/app/tasks.php:178
+msgid "Weekly"
+msgstr ""
+
+#: templates/app/tasks.php:178
+msgid "Monthly"
+msgstr ""
+
+#: templates/app/tasks.php:180
+msgid "Days of the week"
+msgstr ""
+
+#: templates/app/tasks.php:181
+msgid "Day of the month"
+msgstr ""
+
+#: templates/app/tasks.php:184
+msgid "Due Date"
+msgstr ""
+
+#: templates/app/tasks.php:188
+msgid "Reminder"
+msgstr ""
+
+#: templates/app/tasks.php:188
+msgid "Needs a time."
+msgstr ""
+
+#: templates/app/tasks.php:190
 msgid "Create Task"
 msgstr ""
 
-#: templates/app/tasks.php:104
+#: templates/app/tasks.php:201
 msgid "My Tasks"
 msgstr ""
 
-#: templates/app/tasks.php:104
+#: templates/app/tasks.php:202
 msgid "Team Tasks"
 msgstr ""
 
-#: templates/app/tasks.php:105
+#: templates/app/tasks.php:206
 msgid "Search tasks"
 msgstr ""
 
-#: templates/app/tasks.php:109
+#: templates/app/tasks.php:210
 msgid "All priorities"
 msgstr ""
 
-#: templates/app/tasks.php:110
+#: templates/app/tasks.php:211
 msgid "Filter"
 msgstr ""
 
+#: templates/app/tasks.php:219
+msgid "Open tasks"
+msgstr ""
+
+#. translators: %d: number of team tasks nobody took yet
+#: templates/app/tasks.php:220
+#: templates/app/tasks.php:226
+msgid "Overdue"
+msgstr ""
+
+#: templates/app/tasks.php:221
+msgid "Done this month"
+msgstr ""
+
+#: templates/app/tasks.php:222
+msgid "On time"
+msgstr ""
+
+#: templates/app/tasks.php:225
+msgid "Team workload"
+msgstr ""
+
+#. translators: %d: number of team tasks nobody took yet
+#: templates/app/tasks.php:225
+#, php-format
+msgid "%d team task is waiting to be taken."
+msgid_plural "%d team tasks are waiting to be taken."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: to do, 2: in progress, 3: overdue
+#: templates/app/tasks.php:230
+#, php-format
+msgid "%1$d to do, %2$d in progress, %3$d overdue"
+msgstr ""
+
+#. translators: %d: open tasks
+#: templates/app/tasks.php:231
+#, php-format
+msgid "%d open"
+msgstr ""
+
+#. translators: %d: overdue tasks
+#: templates/app/tasks.php:232
+#, php-format
+msgid "%d overdue"
+msgstr ""
+
+#. translators: %d: tasks done this month
+#: templates/app/tasks.php:233
+#, php-format
+msgid "%d done this month"
+msgstr ""
+
 #. translators: %d: number of overdue tasks
-#: templates/app/tasks.php:114
+#: templates/app/tasks.php:238
 #, php-format
 msgid "%d task is overdue"
 msgid_plural "%d tasks are overdue"
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/app/tasks.php:121
+#: templates/app/tasks.php:245
 msgid "Nothing finished yet."
 msgstr ""
 
-#: templates/app/tasks.php:121
+#: templates/app/tasks.php:245
 msgid "Nothing here."
 msgstr ""
 
 #. translators: %d: number of finished tasks
-#: templates/app/tasks.php:122
+#: templates/app/tasks.php:246
 #, php-format
 msgid "Show all %d"
 msgstr ""
 
-#: templates/app/tasks.php:125
+#. translators: %d: number of finished tasks
+#: templates/app/tasks.php:247
+msgid "Drop here to start"
+msgstr ""
+
+#. translators: %d: number of finished tasks
+#: templates/app/tasks.php:247
+msgid "Drop here to finish"
+msgstr ""
+
+#. translators: %d: number of finished tasks
+#: templates/app/tasks.php:247
+msgid "Drop here to put it back"
+msgstr ""
+
+#: templates/app/tasks.php:250
 msgid "No task matches your search."
+msgstr ""
+
+#. translators: 1: creator, 2: team
+#: templates/app/tasks.php:269
+#, php-format
+msgid "From %1$s to the team %2$s: the first one to take it does it."
+msgstr ""
+
+#. translators: 1: creator, 2: assignee
+#: templates/app/tasks.php:270
+#, php-format
+msgid "From %1$s to %2$s"
+msgstr ""
+
+#. translators: %s: creator
+#: templates/app/tasks.php:271
+#, php-format
+msgid "Personal task of %s"
+msgstr ""
+
+#: templates/app/tasks.php:274
+msgid "Stop repeating"
+msgstr ""
+
+#: templates/app/tasks.php:274
+msgid "Stop making new copies of this task? This one stays."
+msgstr ""
+
+#. translators: %s: step
+#: templates/app/tasks.php:292
+#, php-format
+msgid "Tick %s"
+msgstr ""
+
+#. translators: %s: step
+#: templates/app/tasks.php:295
+#, php-format
+msgid "Remove %s"
+msgstr ""
+
+#: templates/app/tasks.php:299
+msgid "New step"
+msgstr ""
+
+#: templates/app/tasks.php:299
+msgid "Add a step"
+msgstr ""
+
+#: templates/app/tasks.php:299
+msgid "Add"
+msgstr ""
+
+#: templates/app/tasks.php:317
+msgid "Comment"
+msgstr ""
+
+#: templates/app/tasks.php:318
+msgid "Write a comment…"
+msgstr ""
+
+#: templates/app/tasks.php:320
+msgid "Attach a file"
+msgstr ""
+
+#. translators: 1: file types, 2: megabytes
+#: templates/app/tasks.php:321
+#, php-format
+msgid "%1$s · up to %2$d MB"
+msgstr ""
+
+#. translators: 1: file types, 2: megabytes
+#: templates/app/tasks.php:322
+msgid "Send"
+msgstr ""
+
+#: templates/app/tasks.php:332
+msgid "System"
 msgstr ""
 
 #: templates/app/time.php:48

@@ -15,6 +15,9 @@
  * @var callable $empty                  ews_empty_state(title, text, url, label)
  * @var array<int,array<string,mixed>> $tiles  menu items the user may open (not the Dashboard), in menu order
  * @var string $notifications_label
+ * @var object[] $home_tasks              My tasks today (3.31.70): overdue, due today, in progress (+ is_overdue, url)
+ * @var string $tasks_url
+ * @var string $post_url
  * Manager:
  * @var int $count
  * @var array{office:int,wfh:int,away:int} $snapshot
@@ -99,6 +102,26 @@ $nudge_icons = ['attendance' => 'clock', 'tasks' => 'tasks', 'leave' => 'leave',
         <?php endforeach; ?>
     </section>
     <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if (!empty($home_tasks)): ?>
+    <section class="wfo-card wfo-home-tasks" aria-labelledby="wfo-home-tasks-title">
+        <div class="wfo-card-head wfo-card-head-row"><h3 id="wfo-home-tasks-title"><?php esc_html_e('My tasks today', 'workforce-one'); ?></h3><a class="wfo-home-link" href="<?php echo esc_url($tasks_url); ?>"><?php esc_html_e('All tasks', 'workforce-one'); ?></a></div>
+        <ul>
+        <?php foreach ($home_tasks as $t): $next = $t->status === 'todo' ? ['in_progress', __('Start', 'workforce-one')] : ['completed', __('Done', 'workforce-one')]; ?>
+            <li class="pr-<?php echo esc_attr((string) $t->priority); ?>">
+                <form method="post" action="<?php echo esc_url($post_url); ?>"><?php wp_nonce_field('ews_task_status_' . (int) $t->id); ?><input type="hidden" name="action" value="ews_task_status_update"><input type="hidden" name="task_id" value="<?php echo (int) $t->id; ?>"><input type="hidden" name="status" value="<?php echo esc_attr($next[0]); ?>">
+                    <button type="submit" class="wfo-home-task-btn<?php echo $t->status === 'in_progress' ? ' is-done' : ''; ?>"><?php echo $t->status === 'in_progress' ? Icons::svg('check', 15, 2.6) : ''; ?><?php echo esc_html($next[1]); ?></button></form>
+                <a href="<?php echo esc_url($t->url); ?>"><b><?php echo esc_html($t->title); ?></b>
+                <small class="<?php echo $t->is_overdue ? 'is-late' : ''; ?>"><?php
+                    if ($t->is_overdue) printf(/* translators: %s: due date */ esc_html__('Overdue · since %s', 'workforce-one'), esc_html(date_i18n('D d M', strtotime((string) $t->due_date))));
+                    elseif (!empty($t->due_date)) echo esc_html(__('Today', 'workforce-one') . (!empty($t->due_time) ? ' · ' . substr((string) $t->due_time, 0, 5) : ''));
+                    else esc_html_e('In Progress', 'workforce-one');
+                    if (!empty($t->repeat_of)) echo ' · ' . esc_html__('repeats', 'workforce-one'); ?></small></a>
+            </li>
+        <?php endforeach; ?>
+        </ul>
+    </section>
     <?php endif; ?>
 
     <section class="wfo-card wfo-home-tiles" aria-label="<?php esc_attr_e('Quick Actions', 'workforce-one'); ?>"><?php echo $tiles_html; ?></section>

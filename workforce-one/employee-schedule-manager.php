@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.69
+ * Version: 3.31.70
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.69');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.70');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -63,6 +63,7 @@ require_once __DIR__ . '/includes/trait-locations.php';
 require_once __DIR__ . '/includes/trait-admin.php';
 require_once __DIR__ . '/includes/trait-notifications.php';
 require_once __DIR__ . '/includes/trait-tasks.php';
+require_once __DIR__ . '/includes/trait-task-extras.php';
 require_once __DIR__ . '/includes/trait-approvals.php';
 require_once __DIR__ . '/includes/trait-teams.php';
 require_once __DIR__ . '/includes/trait-auto-attendance.php';
@@ -76,7 +77,7 @@ require_once __DIR__ . '/includes/trait-settings-overview.php';
 require_once __DIR__ . '/includes/trait-payroll.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -165,6 +166,9 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
             add_action('admin_post_ews_task_delete',[$this,'task_delete']);
+            foreach(['task_item_add','task_item_toggle','task_item_delete','task_comment','task_file','task_take','task_repeat_stop'] as $a)add_action('admin_post_ews_'.$a,[$this,$a]);
+            add_action('admin_post_ews_tasks_settings_save',[$this,'tasks_settings_save']);
+            add_action('ews_tasks_tick',[$this,'tasks_tick']);
 
 
             add_action('admin_post_ews_notification_settings_save',[$this,'admin_notification_settings_save']);
@@ -178,6 +182,7 @@ class EWS_Manager_V31_1 {
             if(wp_next_scheduled('ews_auto_attendance_tick')===false) $this->auto_attendance_schedule();
             $this->privacy_schedule();
             if(wp_next_scheduled('ews_smart_nudges_tick')===false) wp_schedule_event(time()+120,'ews_auto_five_minutes','ews_smart_nudges_tick');
+            if(wp_next_scheduled('ews_tasks_tick')===false) wp_schedule_event(time()+180,'ews_auto_five_minutes','ews_tasks_tick');
         }
 
     public function load_textdomain(){
@@ -246,7 +251,7 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
+    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
 
 }
 

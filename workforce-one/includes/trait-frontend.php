@@ -91,7 +91,7 @@ trait EWS_Frontend_Trait {
             // keeping it while navigating to Leave/Attendance causes Tasks to
             // reopen the previously selected task when the user returns.
             if($view!=='tasks') {
-                $url=remove_query_arg(['edit_task','task_tab','task_status','task_priority'],$url);
+                $url=remove_query_arg(['edit_task','task_tab','task_status','task_priority','task','task_done'],$url);
             }
             if($view!=='notifications') {
                 $url=remove_query_arg(['notification_tab'],$url);
@@ -296,7 +296,8 @@ trait EWS_Frontend_Trait {
     private function smart_nudge_for_employee($emp,$user_id=null){
         global $wpdb;
         if(!$emp)return [];
-        if(!$this->employee_attendance_enabled((int)$emp->id))return [];
+        // Without attendance tracking there is no Sign In reminder, but the other reminders still apply.
+        $tracks_attendance=$this->employee_attendance_enabled((int)$emp->id);
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return [];
         $cfg=$this->smart_nudge_settings();
@@ -309,7 +310,7 @@ trait EWS_Frontend_Trait {
             $nudges[]=['id'=>$id,'kind'=>$kind,'icon'=>$icon,'title'=>$title,'message'=>$message,'url'=>$url,'action'=>$action];
         };
 
-        if(!empty($cfg['items']['attendance'])){
+        if($tracks_attendance && !empty($cfg['items']['attendance'])){
             $sch=$this->today_schedule_for_employee((int)$emp->id);
             if($sch && $this->schedule_type_requires_sign_in($sch->status) && empty($this->company_leave_dates($today,$today))){
                 $events=$this->today_events((int)$emp->id);
@@ -328,11 +329,13 @@ trait EWS_Frontend_Trait {
 
         if($smart_enabled && !empty($cfg['items']['tasks']) && $this->tasks_enabled()){
             $this->ensure_tasks_schema();$table=$wpdb->prefix.'ews_tasks';$uid=$user_id;
-            $rows=$wpdb->get_results($wpdb->prepare("SELECT id,title,due_date,status,priority FROM $table WHERE status<>%s AND due_date IS NOT NULL AND due_date<=%s AND (assigned_to=%d OR (assigned_to IS NULL AND created_by=%d)) ORDER BY due_date ASC, id DESC LIMIT 5",'completed',$today,(int)$emp->id,$uid));
+            $rows=$wpdb->get_results($wpdb->prepare("SELECT id,title,due_date,status,priority FROM $table WHERE is_template=0 AND status<>%s AND due_date IS NOT NULL AND due_date<=%s AND (assigned_to=%d OR (assigned_to IS NULL AND created_by=%d)) ORDER BY due_date ASC, id DESC LIMIT 5",'completed',$today,(int)$emp->id,$uid));
             foreach($rows as $r){
-                $overdue=((string)$r->due_date<$today);$label=$overdue?'Task overdue':'Due today';
-                $message=$overdue?'“'.wp_strip_all_tags((string)$r->title).'” was due on '.date_i18n('D, d M',strtotime($r->due_date)).'.':'“'.wp_strip_all_tags((string)$r->title).'” is due today.';
-                $add('task-'.$r->id.'-'.$r->due_date,'task','📋',$label,$message,$this->app_view_url('tasks'),'Open Task');
+                $overdue=((string)$r->due_date<$today);$label=$overdue?__('Task overdue','workforce-one'):__('Due today','workforce-one');
+                $title='“'.wp_strip_all_tags((string)$r->title).'”';
+                /* translators: 1: task title, 2: due date */
+                $message=$overdue?sprintf(__('%1$s was due on %2$s.','workforce-one'),$title,date_i18n('D, d M',strtotime($r->due_date))):sprintf(/* translators: %s: task title */__('%s is due today.','workforce-one'),$title);
+                $add('task-'.$r->id.'-'.$r->due_date,'task','',$label,$message,add_query_arg('task',(int)$r->id,$this->app_view_url('tasks')),__('Open Task','workforce-one'));
             }
         }
 

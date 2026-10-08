@@ -3262,3 +3262,450 @@ msgstr "افتح تسجيل الحضور أو طلب تأكيد التواجد"
 
 msgid "Point the camera at this code"
 msgstr "وجّه الكاميرا نحو هذا الكود"
+
+msgid "Task overdue"
+msgstr "مهمة متأخرة"
+
+msgid "Due today"
+msgstr "مطلوبة اليوم"
+
+msgid "%1$s was due on %2$s."
+msgstr "كان موعد %1$s يوم %2$s."
+
+msgid "%s is due today."
+msgstr "موعد %s اليوم."
+
+msgid "Open Task"
+msgstr "افتح المهمة"
+
+msgid "You must be logged in."
+msgstr "يجب تسجيل الدخول."
+
+msgid "New comment on a task"
+msgstr "تعليق جديد على مهمة"
+
+msgid "%1$s commented on %2$s."
+msgstr "علّق %1$s على %2$s."
+
+msgid "File not found."
+msgstr "الملف غير موجود."
+
+msgid "Task taken"
+msgstr "تم أخذ المهمة"
+
+msgid "%1$s took %2$s."
+msgstr "أخذ %1$s المهمة %2$s."
+
+msgid "A task for your team is waiting to be taken: %s."
+msgstr "مهمة لفريقك تنتظر من يأخذها: %s."
+
+msgid "Task reminder"
+msgstr "تذكير بمهمة"
+
+msgid "%1$s is due %2$s."
+msgstr "موعد %1$s: %2$s."
+
+msgid "On"
+msgstr "مفعّل"
+
+msgid "No reminder"
+msgstr "بدون تذكير"
+
+msgid "15 min before"
+msgstr "قبلها بـ 15 دقيقة"
+
+msgid "30 min before"
+msgstr "قبلها بـ 30 دقيقة"
+
+msgid "1 h before"
+msgstr "قبلها بساعة"
+
+msgid "2 h before"
+msgstr "قبلها بساعتين"
+
+msgid "1 day before"
+msgstr "قبلها بيوم"
+
+msgid "Tasks settings saved."
+msgstr "تم حفظ إعدادات المهام."
+
+msgid "Tasks is switched off, so nobody sees it."
+msgstr "المهام معطّلة، فلا يراها أحد."
+
+msgid "Switch it on in Feature Configuration"
+msgstr "فعّلها من إعدادات الميزات"
+
+msgid "Choose which parts of Tasks people see in the app. Switching a part off hides it; nothing that was saved is deleted."
+msgstr "اختر أجزاء المهام التي تظهر في التطبيق. إيقاف جزء يخفيه فقط؛ لا يُحذف أي شيء محفوظ."
+
+msgid "Personal tasks"
+msgstr "المهام الشخصية"
+
+msgid "Employees can create tasks for themselves. Managers can always create and assign tasks."
+msgstr "يستطيع الموظفون إنشاء مهام لأنفسهم. المديرون يستطيعون دائمًا إنشاء المهام وإسنادها."
+
+msgid "Checklist"
+msgstr "قائمة الخطوات"
+
+msgid "Small steps inside a task, with a progress bar."
+msgstr "خطوات صغيرة داخل المهمة مع شريط تقدّم."
+
+msgid "Comments"
+msgstr "التعليقات"
+
+msgid "The people on a task can write to each other inside it."
+msgstr "يستطيع أصحاب المهمة الكتابة لبعضهم داخلها."
+
+msgid "Tell the people on the task about a new comment"
+msgstr "إبلاغ أصحاب المهمة بالتعليق الجديد"
+
+msgid "Files with comments"
+msgstr "ملفات مع التعليقات"
+
+msgid "A file can be attached to a comment. Files are kept private: only people who can see the task can download them."
+msgstr "يمكن إرفاق ملف بالتعليق. الملفات خاصة: لا ينزّلها إلا من يرى المهمة."
+
+msgid "Largest file (MB)"
+msgstr "أقصى حجم للملف (ميجابايت)"
+
+msgid "Allowed file types"
+msgstr "أنواع الملفات المسموحة"
+
+msgid "Activity"
+msgstr "السجل"
+
+msgid "Show who created, moved, edited or commented on a task, and when."
+msgstr "عرض من أنشأ المهمة أو نقلها أو عدّلها أو علّق عليها، ومتى."
+
+msgid "Team tasks"
+msgstr "مهام الفريق"
+
+msgid "Managers can send a task to a whole team: a copy for each person, or one task the first person takes."
+msgstr "يستطيع المديرون إرسال مهمة لفريق كامل: نسخة لكل شخص، أو مهمة واحدة يأخذها أول شخص."
+
+msgid "Chosen at first"
+msgstr "الاختيار المبدئي"
+
+msgid "One copy each"
+msgstr "نسخة لكل شخص"
+
+msgid "First one takes it"
+msgstr "أول واحد يأخذها"
+
+msgid "Repeating tasks"
+msgstr "المهام المتكررة"
+
+msgid "A task can come back every day, on chosen week days or on a day of the month. Each date gets its own task; a missed date is not made up."
+msgstr "يمكن أن تتكرر المهمة كل يوم، أو في أيام محددة من الأسبوع، أو في يوم من الشهر. لكل تاريخ مهمته؛ ولا يُعوَّض تاريخ فائت."
+
+msgid "Due time"
+msgstr "وقت التسليم"
+
+msgid "A time can be set with the due date."
+msgstr "يمكن تحديد وقت مع تاريخ التسليم."
+
+msgid "Reminders"
+msgstr "التذكيرات"
+
+msgid "A notification before the due time. Needs a due time."
+msgstr "إشعار قبل وقت التسليم. يحتاج إلى وقت تسليم."
+
+msgid "Workload"
+msgstr "حِمل العمل"
+
+msgid "A tab with each person's open, overdue and finished tasks."
+msgstr "تبويب بمهام كل شخص المفتوحة والمتأخرة والمنتهية."
+
+msgid "Who sees it"
+msgstr "من يراه"
+
+msgid "Everyone who manages tasks"
+msgstr "كل من يدير المهام"
+
+msgid "Site administrators only"
+msgstr "مديرو الموقع فقط"
+
+msgid "My tasks today on Home"
+msgstr "مهامي اليوم في الرئيسية"
+
+msgid "A card on the Home page with overdue tasks, tasks due today and tasks in progress, each with its next step."
+msgstr "بطاقة في الرئيسية بالمهام المتأخرة والمطلوبة اليوم والجارية، ولكل منها خطوتها التالية."
+
+msgid "Tasks shown"
+msgstr "عدد المهام المعروضة"
+
+msgid "Drag on the board"
+msgstr "السحب على اللوحة"
+
+msgid "On a computer, a card can be dragged to the next column."
+msgstr "على الكمبيوتر يمكن سحب البطاقة إلى العمود التالي."
+
+msgid "Tell the creator about a new status"
+msgstr "إبلاغ منشئ المهمة بالحالة الجديدة"
+
+msgid "When someone starts or finishes a task, the person who created it gets a notification."
+msgstr "عندما يبدأ أحد المهمة أو ينهيها، يصل إشعار لمن أنشأها."
+
+msgid "Finished tasks shown"
+msgstr "المهام المنتهية المعروضة"
+
+msgid "How many finished tasks the Completed column shows before \"Show all\"."
+msgstr "عدد المهام المنتهية في عمود \"مكتملة\" قبل \"عرض الكل\"."
+
+msgid "Finished tasks"
+msgstr "المهام المنتهية"
+
+msgid "Changes apply right away."
+msgstr "التغييرات تُطبّق فورًا."
+
+msgid "My tasks today"
+msgstr "مهامي اليوم"
+
+msgid "All tasks"
+msgstr "كل المهام"
+
+msgid "Overdue · since %s"
+msgstr "متأخرة · منذ %s"
+
+msgid "repeats"
+msgstr "متكررة"
+
+msgid "Sun"
+msgstr "أحد"
+
+msgid "Mon"
+msgstr "إثنين"
+
+msgid "Tue"
+msgstr "ثلاثاء"
+
+msgid "Wed"
+msgstr "أربعاء"
+
+msgid "Thu"
+msgstr "خميس"
+
+msgid "Fri"
+msgstr "جمعة"
+
+msgid "Sat"
+msgstr "سبت"
+
+msgid "Take it"
+msgstr "خذها"
+
+msgid "Repeats every day"
+msgstr "تتكرر كل يوم"
+
+msgid "Repeats every week on %s"
+msgstr "تتكرر كل أسبوع يوم %s"
+
+msgid "Repeats every month on day %d"
+msgstr "تتكرر كل شهر يوم %d"
+
+msgid "Repeating task"
+msgstr "مهمة متكررة"
+
+msgid "For %s"
+msgstr "لفريق %s"
+
+msgid "Only managers can create tasks here."
+msgstr "المديرون فقط يستطيعون إنشاء المهام هنا."
+
+msgid "Take this task first: it was sent to the whole team."
+msgstr "خذ هذه المهمة أولًا: أُرسلت للفريق كله."
+
+msgid "Someone from your team already took this task."
+msgstr "أخذ أحد زملائك هذه المهمة بالفعل."
+
+msgid "That team has nobody who can sign in, so no task was created."
+msgstr "لا يوجد في هذا الفريق من يستطيع تسجيل الدخول، فلم تُنشأ أي مهمة."
+
+msgid "The file could not be uploaded. Please try again."
+msgstr "تعذّر رفع الملف. حاول مرة أخرى."
+
+msgid "The file is too big. The limit is %d MB."
+msgstr "الملف كبير جدًا. الحد %d ميجابايت."
+
+msgid "This type of file is not allowed. Allowed: %s."
+msgstr "هذا النوع من الملفات غير مسموح. المسموح: %s."
+
+msgid "created the task"
+msgstr "أنشأ المهمة"
+
+msgid "moved it to %s"
+msgstr "نقلها إلى %s"
+
+msgid "edited the task"
+msgstr "عدّل المهمة"
+
+msgid "added a step: %s"
+msgstr "أضاف خطوة: %s"
+
+msgid "ticked %s"
+msgstr "أنهى خطوة %s"
+
+msgid "unticked %s"
+msgstr "ألغى إنهاء %s"
+
+msgid "removed the step %s"
+msgstr "حذف الخطوة %s"
+
+msgid "commented with %s"
+msgstr "علّق وأرفق %s"
+
+msgid "commented"
+msgstr "علّق"
+
+msgid "took the task"
+msgstr "أخذ المهمة"
+
+msgid "stopped the repeat"
+msgstr "أوقف التكرار"
+
+msgid "A person"
+msgstr "شخص"
+
+msgid "A whole team"
+msgstr "فريق كامل"
+
+msgid "Myself"
+msgstr "أنا"
+
+msgid "Person"
+msgstr "الشخص"
+
+msgid "Choose a person"
+msgstr "اختر شخصًا"
+
+msgid "%1$s · %2$d person"
+msgid_plural "%1$s · %2$d people"
+msgstr[0] "%1$s · %2$d شخص"
+msgstr[1] "%1$s · %2$d شخص"
+msgstr[2] "%1$s · %2$d شخص"
+msgstr[3] "%1$s · %2$d أشخاص"
+msgstr[4] "%1$s · %2$d شخصًا"
+msgstr[5] "%1$s · %2$d شخص"
+
+msgid "How the team gets it"
+msgstr "كيف يستلمها الفريق"
+
+msgid "Repeat"
+msgstr "التكرار"
+
+msgid "Never"
+msgstr "لا تتكرر"
+
+msgid "Daily"
+msgstr "يوميًا"
+
+msgid "Weekly"
+msgstr "أسبوعيًا"
+
+msgid "Monthly"
+msgstr "شهريًا"
+
+msgid "Days of the week"
+msgstr "أيام الأسبوع"
+
+msgid "Day of the month"
+msgstr "يوم الشهر"
+
+msgid "Reminder"
+msgstr "التذكير"
+
+msgid "Needs a time."
+msgstr "يحتاج إلى وقت."
+
+msgid "Open tasks"
+msgstr "المهام المفتوحة"
+
+msgid "Overdue"
+msgstr "متأخرة"
+
+msgid "Done this month"
+msgstr "أُنجزت هذا الشهر"
+
+msgid "On time"
+msgstr "في الموعد"
+
+msgid "Team workload"
+msgstr "حِمل الفريق"
+
+msgid "%d team task is waiting to be taken."
+msgid_plural "%d team tasks are waiting to be taken."
+msgstr[0] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[1] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[2] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[3] "%d مهام فريق تنتظر من يأخذها."
+msgstr[4] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[5] "%d مهمة فريق تنتظر من يأخذها."
+
+msgid "%1$d to do, %2$d in progress, %3$d overdue"
+msgstr "%1$d قيد الانتظار، %2$d قيد التنفيذ، %3$d متأخرة"
+
+msgid "%d open"
+msgstr "%d مفتوحة"
+
+msgid "%d overdue"
+msgstr "%d متأخرة"
+
+msgid "%d done this month"
+msgstr "%d أُنجزت هذا الشهر"
+
+msgid "Drop here to start"
+msgstr "أفلت هنا للبدء"
+
+msgid "Drop here to finish"
+msgstr "أفلت هنا للإنهاء"
+
+msgid "Drop here to put it back"
+msgstr "أفلت هنا لإرجاعها"
+
+msgid "From %1$s to the team %2$s: the first one to take it does it."
+msgstr "من %1$s إلى فريق %2$s: من يأخذها أولًا ينفّذها."
+
+msgid "From %1$s to %2$s"
+msgstr "من %1$s إلى %2$s"
+
+msgid "Personal task of %s"
+msgstr "مهمة شخصية لـ %s"
+
+msgid "Stop repeating"
+msgstr "إيقاف التكرار"
+
+msgid "Stop making new copies of this task? This one stays."
+msgstr "إيقاف إنشاء نسخ جديدة من هذه المهمة؟ هذه النسخة تبقى."
+
+msgid "Tick %s"
+msgstr "إنهاء %s"
+
+msgid "Remove %s"
+msgstr "حذف %s"
+
+msgid "New step"
+msgstr "خطوة جديدة"
+
+msgid "Add a step"
+msgstr "أضف خطوة"
+
+msgid "Add"
+msgstr "إضافة"
+
+msgid "Comment"
+msgstr "تعليق"
+
+msgid "Write a comment…"
+msgstr "اكتب تعليقًا…"
+
+msgid "Attach a file"
+msgstr "إرفاق ملف"
+
+msgid "%1$s · up to %2$d MB"
+msgstr "%1$s · حتى %2$d ميجابايت"
+
+msgid "Send"
+msgstr "إرسال"
+
+msgid "System"
+msgstr "النظام"

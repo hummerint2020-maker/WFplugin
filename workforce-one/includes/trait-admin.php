@@ -11,7 +11,7 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-schedule-config', $this->plugin_url('assets/css/admin-schedule-config.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-schedule-config', 'rtl', 'replace');
         }
-        if(substr((string)$hook_suffix,-strlen('ews31-features'))==='ews31-features'){
+        if(substr((string)$hook_suffix,-strlen('ews31-features'))==='ews31-features'||substr((string)$hook_suffix,-strlen('ews31-tasks'))==='ews31-tasks'){
             wp_enqueue_style('workforce-one-admin-features', $this->plugin_url('assets/css/admin-features.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-features', 'rtl', 'replace');
         }
@@ -102,6 +102,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Notification Settings','Notification Settings','ews_manage_settings','ews31-notifications',[$this,'admin_notification_settings']);
             add_submenu_page('ews31','Email Settings','Email Settings','ews_manage_settings','ews31-email',[$this,'admin_email']);
             add_submenu_page('ews31','Feature Configuration','Feature Configuration','ews_manage_settings','ews31-features',[$this,'admin_features']);
+            add_submenu_page('ews31','Tasks','Tasks','ews_manage_settings','ews31-tasks',[$this,'admin_tasks_settings']);
             add_submenu_page('ews31','Audit Log','Audit Log','ews_view_audit_log','ews31-audit',[$this,'admin_audit']);
             add_submenu_page('ews31','Employee Profile','Employee Profile','ews_manage_settings','ews31-employee-profile-settings',[$this,'admin_employee_profile_settings']);
             add_submenu_page('ews31','View Navigation','View Navigation','ews_manage_settings','ews31-navigation',[$this,'admin_navigation']);

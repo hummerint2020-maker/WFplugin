@@ -30,6 +30,7 @@ trait EWS_Dashboard_View_Trait {
             'holiday'=>$holidays[$today]??'',
             'urls'=>['schedule'=>$this->app_view_url('schedule'),'attendance'=>$this->app_view_url('attendance'),'notifications'=>$this->app_view_url('notifications'),'time'=>$this->app_view_url('time')],
             'empty'=>function($title,$text='',$url='',$label=''){return $this->ews_empty_state($title,$text,$url,$label);},
+            'home_tasks'=>$this->task_home_list(),'tasks_url'=>$this->app_view_url('tasks'),'post_url'=>admin_url('admin-post.php'),
         ];
 
         /* Managers get the workforce overview of the employees they manage. */
@@ -82,7 +83,8 @@ trait EWS_Dashboard_View_Trait {
                 'sign_out'=>$ot['sign_out']?date_i18n('g:i A',strtotime($ot['sign_out'])):'']:null,
             'upcoming'=>$upcoming,
             // Sign In Reminder is push-only; it never renders as a card.
-            'nudges'=>array_values(array_filter($this->smart_nudge_for_employee($emp),function($n){return ($n['kind']??'')!=='attendance';})),
+            // The task reminders are on the "My tasks today" card when it is shown.
+            'nudges'=>array_values(array_filter($this->smart_nudge_for_employee($emp),function($n)use($common){return ($n['kind']??'')!=='attendance' && !(($n['kind']??'')==='task' && !empty($common['home_tasks']));})),
             'dismiss_url'=>function($id){return wp_nonce_url(add_query_arg(['action'=>'ews_smart_nudge_dismiss','nudge_id'=>$id],admin_url('admin-post.php')),'ews_smart_nudge_dismiss_'.$id);},
         ]);
     }

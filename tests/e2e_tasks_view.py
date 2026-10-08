@@ -19,7 +19,7 @@ nextweek = (date.today() + timedelta(days=7)).isoformat()
 
 def column(page, key):
     m = re.search(r'<section class="wfo-tk-col is-%s".*?</section>' % key, page, re.S)
-    return re.findall(r'<h4 class="wfo-tk-title">([^<]*)</h4>', m.group(0)) if m else None
+    return re.findall(r'<h4 class="wfo-tk-title"><a [^>]*>([^<]*)</a></h4>', m.group(0)) if m else None
 
 
 def task(title):

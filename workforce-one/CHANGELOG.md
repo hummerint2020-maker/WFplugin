@@ -1,5 +1,36 @@
 # Changelog
 
+## 3.31.70
+Tasks: the five features from the owner-approved designs, each one switched on or off and tuned in
+the new wp-admin → Workforce One → **Tasks** page (src/Settings/TaskSettings.php, option
+ews_tasks_settings). Database version 3.31.70 (new task columns; ews_task_items, ews_task_comments,
+ews_task_activity).
+
+### Added
+- **Task details** (a task opens in a sheet): a checklist with a progress bar, comments between the
+  people on the task with a file (types and size set by the admin; kept outside the public uploads
+  space and sent only to people who can see the task), and the activity (who created, moved, edited,
+  ticked or commented, and when). People on the task are told about a new comment.
+- **New task**: a manager can send a task to a whole team (a copy each, or one task the first person
+  takes; "Take it"), make it repeat (daily, chosen week days, a day of the month; each date gets its
+  own task, a missed date is not made up, "Stop repeating"), add a due time and a reminder before it.
+  The repeats and reminders run every 5 minutes (and on a page view, at most once a minute).
+- **Workload** tab for managers (or administrators only): open, overdue and finished tasks per
+  person, the team's totals and on-time rate.
+- **My tasks today** on Home: overdue, due today and in progress, with the next step in one tap
+  (the task reminders are not repeated there as separate cards).
+- **Drag** a card to the next column on a computer (only the allowed moves accept it).
+- Admin settings also cover personal tasks, the Done list length, the Home card size and whether the
+  creator is told about a new status.
+
+### Fixed
+- The overdue / due today task reminders now reach employees whose attendance is not tracked (all
+  reminders were skipped for them), and their text is translated (no emoji).
+
+### Tests
+- New tests/e2e_tasks_more.py (41 checks, in CI) and tests/unit/TaskSettingsTest.php; the
+  tests/e2e_tasks_view.py parser follows the task title link.
+
 ## 3.31.69
 The last app pages in the new look, from the owner-approved HTML designs ("B" for Overtime, the same
 look for swap requests). Every new text is translated (Arabic).

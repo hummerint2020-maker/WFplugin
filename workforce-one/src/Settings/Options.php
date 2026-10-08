@@ -84,6 +84,7 @@ final class Options
         // Features
         'ews_feature_overtime' => ['group' => 'features', 'label' => 'Overtime requests', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_tasks' => ['group' => 'features', 'label' => 'Tasks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_tasks_settings' => ['group' => 'features', 'label' => 'Tasks: parts and limits', 'kind' => 'grouped', 'default' => [], 'builtin' => 'every part on; files up to 5 MB; reminder 1 h before', 'page' => 'ews31-tasks'],
         'ews_feature_achievements' => ['group' => 'features', 'label' => 'Achievements', 'kind' => 'bool', 'default' => true, 'page' => 'ews31-achievements'],
         'ews_feature_recognition' => ['group' => 'features', 'label' => 'Recognition', 'kind' => 'bool', 'default' => true, 'page' => 'ews31-features'],
         'ews_recognition_allow_kudos' => ['group' => 'features', 'label' => 'Kudos between colleagues', 'kind' => 'bool', 'default' => true, 'page' => 'ews31-features'],
