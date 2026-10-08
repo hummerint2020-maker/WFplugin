@@ -418,6 +418,12 @@ trait EWS_Approvals_Trait {
         if(!current_user_can('manage_options'))wp_die('Access denied');
         global $wpdb;$t=$this->approval_tables();$this->ensure_approval_schema();
         $employees=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+        // Supervisor Relationships: 50 employees per page with a search (3.31.71).
+        $sup_search=sanitize_text_field(wp_unslash($_GET['s']??''));$per=50;
+        $listed=$employees;
+        if($sup_search!==''){$n=function_exists('mb_strtolower')?'mb_strtolower':'strtolower';$q=$n($sup_search);$listed=array_values(array_filter($employees,function($e)use($q,$n){return strpos($n($e->name.' '.$e->domain_name),$q)!==false;}));}
+        $sup_total=count($listed);$sup_pages=max(1,(int)ceil($sup_total/$per));$sup_paged=min(max(1,absint($_GET['paged']??1)),$sup_pages);
+        $listed=array_slice($listed,($sup_paged-1)*$per,$per);
         $users=get_users(['fields'=>['ID','display_name','user_email'],'orderby'=>'display_name','order'=>'ASC']);
         $cards=[];
         foreach(\WorkforceOne\Approvals\Workflows::IN_USE as $key=>[$label,$supported]){
@@ -429,11 +435,11 @@ trait EWS_Approvals_Trait {
             $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>\WorkforceOne\Approvals\Workflows::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:'NONE','levels'=>$levels,
                 'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:''];
         }
-        $supervisors=$this->approval_supervisor_ids(array_map(function($e){return (int)$e->id;},(array)$employees));
+        $supervisors=$this->approval_supervisor_ids(array_map(function($e){return (int)$e->id;},$listed));
         $error='';
         if(isset($_GET['approval_error'])){$error='Could not save approval configuration. Please verify the selected approvers.';$detail=sanitize_text_field(wp_unslash($_GET['approval_error_message']??''));if($detail!=='')$error.=' '.$detail;}
         echo $this->render_template('admin/approvals',['cards'=>$cards,'not_in_use'=>\WorkforceOne\Approvals\Workflows::NOT_IN_USE,'mode_labels'=>\WorkforceOne\Approvals\Workflows::MODES,
-            'employees'=>$employees,'users'=>$users,'supervisors'=>$supervisors,'saved'=>isset($_GET['approval_saved']),'error'=>$error]); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
+            'employees'=>$employees,'listed'=>$listed,'search'=>$sup_search,'paged'=>$sup_paged,'pages'=>$sup_pages,'total'=>$sup_total,'page_url'=>admin_url('admin.php?page=ews31-approvals'),'users'=>$users,'supervisors'=>$supervisors,'saved'=>isset($_GET['approval_saved']),'error'=>$error]); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
     }
 
     public function approval_workflow_save(){
@@ -442,17 +448,27 @@ trait EWS_Approvals_Trait {
         $in_use=\WorkforceOne\Approvals\Workflows::IN_USE;
         if(!isset($in_use[$workflow_key]))wp_die('Invalid workflow.');
         $mode=strtoupper(sanitize_key($_POST['approval_mode']??'NONE'));$configs=[];
-        if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=2;$i++){$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']??''));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=absint($_POST['level_'.$i.'_employee']??0);elseif($type==='SPECIFIC_USER')$value=absint($_POST['level_'.$i.'_user']??0);$configs[$i]=['resolver_type'=>$type,'resolver_value'=>$value];}}
+        if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=2;$i++){$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']??''));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=$this->approval_picked('level_'.$i.'_employee');elseif($type==='SPECIFIC_USER')$value=$this->approval_picked('level_'.$i.'_user');$configs[$i]=['resolver_type'=>$type,'resolver_value'=>$value];}}
         $ok=$this->approval_configure_workflow($workflow_key,$mode,$configs,$in_use[$workflow_key][1]);
         if(is_wp_error($ok))wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_code'=>rawurlencode($ok->get_error_code()),'approval_error_message'=>rawurlencode($ok->get_error_message())],admin_url('admin.php?page=ews31-approvals')));else{$this->audit('approval_workflow_update','approval_workflow',0,$workflow_key.'='.$mode);wp_safe_redirect(add_query_arg('approval_saved',1,admin_url('admin.php?page=ews31-approvals')));}exit;
     }
 
     public function approval_relationship_save(){
         if(!current_user_can('manage_options'))wp_die('Access denied');check_admin_referer('ews_approval_relationship_save');
-        $employee_id=absint($_POST['employee_id']??0);$supervisor_id=absint($_POST['supervisor_employee_id']??0);
+        $employee_id=absint($_POST['employee_id']??0);$supervisor_id=isset($_POST['supervisor_employee_ref'])?\WorkforceOne\Support\Picker::parse((string)wp_unslash($_POST['supervisor_employee_ref'])):absint($_POST['supervisor_employee_id']??0);
         $this->ensure_approval_schema();global $wpdb;$t=$this->approval_tables();
+        // Back to the same page and search of the Supervisor Relationships list.
+        $back=['page'=>'ews31-approvals'];parse_str((string)wp_parse_url((string)wp_get_referer(),PHP_URL_QUERY),$q);foreach(['paged','s'] as $k)if(!empty($q[$k]))$back[$k]=$k==='paged'?absint($q[$k]):sanitize_text_field((string)$q[$k]);
+        $ok=$supervisor_id===0||($supervisor_id>0&&$supervisor_id!==$employee_id&&(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$supervisor_id)));
+        if(!$ok){wp_safe_redirect(add_query_arg($back+['approval_error'=>1,'approval_error_message'=>rawurlencode('Pick the supervisor from the list.')],admin_url('admin.php')).'#ews-supervisors');exit;}
         if($employee_id){$wpdb->query($wpdb->prepare("UPDATE {$t['relationships']} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type='supervisor' AND active=1",current_time('mysql'),$employee_id));if($supervisor_id)$this->approval_set_relationship($employee_id,'supervisor',$supervisor_id,0);}
-        $this->audit('approval_relationship_update','employee',$employee_id,'supervisor='.$supervisor_id);wp_safe_redirect(admin_url('admin.php?page=ews31-approvals&approval_saved=1'));exit;
+        $this->audit('approval_relationship_update','employee',$employee_id,'supervisor='.$supervisor_id);wp_safe_redirect(add_query_arg($back+['approval_saved'=>1],admin_url('admin.php')).'#ews-supervisors');exit;
+    }
+
+    /** A Specific Employee / User approver: "Name · #id" from the pick list (3.31.71), or the plain id. */
+    private function approval_picked($field){
+        if(isset($_POST[$field.'_ref']))return max(0,\WorkforceOne\Support\Picker::parse((string)wp_unslash($_POST[$field.'_ref'])));
+        return absint($_POST[$field]??0);
     }
 
 }

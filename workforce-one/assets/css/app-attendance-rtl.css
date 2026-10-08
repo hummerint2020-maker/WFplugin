@@ -241,3 +241,6 @@
     .wfo-app .wfo-att .ews-att-stat{flex-direction:row;align-items:center;gap:10px}
     .wfo-app .wfo-att .ews-att-stat.rate{grid-column:1/-1}
 }
+
+/* Long lists (3.31.71): nothing on this page matches the server search. */
+.wfo-app .wfo-att .ews-att-noresult{margin:12px 0 0;color:var(--wfo-muted);text-align:center}

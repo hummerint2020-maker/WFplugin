@@ -174,3 +174,10 @@ body.wfo-fullscreen .ews-app.wfo-app{max-width:none;margin:0;border-radius:0;min
     .wfo-app input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]),.wfo-app select,.wfo-app textarea,
     body.wfo-fullscreen input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]),body.wfo-fullscreen select,body.wfo-fullscreen textarea{font-size:16px!important}
 }
+
+/* Page links under a long people list (templates/app/list-pager.php, 3.31.71). */
+.wfo-app .wfo-list-pager{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin:14px 0 4px;color:var(--wfo-muted);font-size:13px}
+.wfo-app .wfo-list-pager-count{margin-left:auto;font-weight:600}
+.wfo-app .wfo-list-pager-page{font-variant-numeric:tabular-nums}
+.wfo-app .wfo-list-search{flex:1 1 220px;min-width:0;display:flex;margin:0}
+.wfo-app .wfo-list-search .wfo-sched-search{flex:1 1 auto}

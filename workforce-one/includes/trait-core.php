@@ -107,6 +107,13 @@ function current_employee(){
      * Render templates/<name>.php with $vars as local variables and return the HTML.
      * Templates run inside this object, so they can call its helpers via $this.
      */
+    /** The query values a server-side list search keeps (Ui\ListPage, 3.31.71): the view, the week, the page. @return array<string,string> */
+    private function list_keep_args($view){
+        $out=['ews_view'=>(string)$view];
+        foreach(['page_id','p','week'] as $k)if(isset($_GET[$k])&&is_scalar($_GET[$k])&&$_GET[$k]!=='')$out[$k]=sanitize_text_field(wp_unslash((string)$_GET[$k]));
+        return $out;
+    }
+
     private function render_template($name,array $vars=[]){
             $file=dirname(__DIR__).'/templates/'.$name.'.php';
             if(!is_file($file))return '';

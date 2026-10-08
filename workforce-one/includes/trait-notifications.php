@@ -169,12 +169,17 @@ trait EWS_Notifications_Trait {
 
     /** WP-Cron: sends a batch of queued pushes and records the outcome (ews_push_last_delivery). */
     public function push_deliver($batch,$key=''){
-        $sent=0;$failed=0;$errors=[];
-        foreach(is_array($batch)?$batch:[] as $p){
+        // Every device of every person in the batch goes out together (push_send_many, 3.31.71).
+        $jobs=[];
+        foreach(is_array($batch)?$batch:[] as $i=>$p){
             if(!is_array($p)||empty($p['user_id']))continue;
-            $r=$this->push_to_user((int)$p['user_id'],(string)($p['title']??''),(string)($p['message']??''),(string)($p['category']??''),(int)($p['entity_id']??0),(string)($p['url']??''));
-            $sent+=$r['sent'];$failed+=$r['failed'];
-            foreach($r['errors'] as $e)$errors[]=$e;
+            foreach($this->push_jobs_for_user((int)$p['user_id'],(string)($p['title']??''),(string)($p['message']??''),(string)($p['category']??''),(int)($p['entity_id']??0),(string)($p['url']??'')) as $device_id=>$job)$jobs[$i.':'.$device_id]=$job;
+        }
+        $results=[];
+        foreach($this->push_send_many($jobs) as $k=>$r)$results[(int)substr((string)$k,strpos((string)$k,':')+1)][]=$r;
+        $sent=0;$failed=0;$errors=[];
+        foreach($results as $device_id=>$list)foreach($list as $r){
+            $t=$this->push_tally([$device_id=>$r]);$sent+=$t['sent'];$failed+=$t['failed'];foreach($t['errors'] as $e)$errors[]=$e;
         }
         $last=['at'=>current_time('mysql'),'sent'=>$sent,'failed'=>$failed,'errors'=>array_slice(array_values(array_unique($errors)),0,5)];
         update_option('ews_push_last_delivery',$last,false);
@@ -193,23 +198,39 @@ trait EWS_Notifications_Trait {
     /** @return array{sent:int,failed:int,errors:array<int,string>} */
     private function push_to_user($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
             $none=['sent'=>0,'failed'=>0,'errors'=>[]];
+            if(!function_exists('curl_init')){
+                global $wpdb;$this->ensure_push_schema();
+                $n=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->push_table()} WHERE user_id=%d",$user_id));
+                return $n&&$this->notification_push_allowed(sanitize_key($type))?['sent'=>0,'failed'=>$n,'errors'=>['PHP cURL extension is not available.']]:$none;
+            }
+            $jobs=$this->push_jobs_for_user($user_id,$title,$message,$type,$entity_id,$url);
+            return $jobs?$this->push_tally($this->push_send_many($jobs)):$none;
+        }
+
+    /** One push per device of a user (the policy for $type permitting). @return array<int,array{0:object,1:array<string,mixed>}> by device id */
+    private function push_jobs_for_user($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+            $none=[];
             $category=sanitize_key($type);
             if(!$this->notification_push_allowed($category))return $none;
             $this->ensure_push_schema();
             global $wpdb;
             $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
             if(!$rows)return $none;
-            if(!function_exists('curl_init'))return ['sent'=>0,'failed'=>count($rows),'errors'=>['PHP cURL extension is not available.']];
             $resolved_url=$url;
             if(!$resolved_url){
                 $resolved_url=$this->notification_app_view_url($category);
             }
             $payload=['title'=>$title,'body'=>wp_strip_all_tags($message),'url'=>$resolved_url,'notification_id'=>0,'type'=>sanitize_key($type),'entity_id'=>absint($entity_id)];
-            $out=$none;
-            foreach($rows as $row){
-                $result=$this->send_push_payload($row,$payload);
+            $jobs=[];foreach($rows as $row)$jobs[(int)$row->id]=[$row,$payload];
+            return $jobs;
+        }
+
+    /** Counts results and removes expired devices. @param array<int,array<string,mixed>> $results by device id @return array{sent:int,failed:int,errors:array<int,string>} */
+    private function push_tally(array $results){
+            global $wpdb;$out=['sent'=>0,'failed'=>0,'errors'=>[]];
+            foreach($results as $device_id=>$result){
                 if(!empty($result['ok'])){$out['sent']++;continue;}
-                if(!empty($result['expired'])){$wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);continue;}
+                if(!empty($result['expired'])){$wpdb->delete($this->push_table(),['id'=>(int)$device_id],['%d']);continue;}
                 $out['failed']++;$out['errors'][]=(string)($result['error']??'unknown');
             }
             return $out;
@@ -488,6 +509,15 @@ trait EWS_Notifications_Trait {
     }
 
     private function vapid_jwt($audience){
+        // One token per push service per request (valid 12 h): a batch to 1,000 devices signs a handful, not 1,000.
+        static $made=[];
+        if(isset($made[$audience]))return $made[$audience];
+        $jwt=$this->vapid_jwt_make($audience);
+        if($jwt!==false)$made[$audience]=$jwt;
+        return $jwt;
+    }
+
+    private function vapid_jwt_make($audience){
         $private=$this->option('ews_vapid_private_key');
         $public=$this->option('ews_vapid_public_key');
         $subject=get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com'));
@@ -635,7 +665,48 @@ trait EWS_Notifications_Trait {
     }
 
     private function send_push_payload($row,$payload){
-        if(!function_exists('curl_init'))return ['ok'=>false,'error'=>'PHP cURL extension is not available.'];
+        $job=$this->push_prepare($row,$payload);
+        if(isset($job['result']))return $job['result'];
+        curl_exec($job['handle']);
+        $out=$this->push_finish($job['handle'],curl_errno($job['handle']));
+        curl_close($job['handle']);
+        return $out;
+    }
+
+    /**
+     * Sends many pushes at once, 20 at a time (curl_multi, 3.31.71): a poll to 1,000 devices
+     * took over a minute one by one. @param array<int|string,array{0:object,1:array<string,mixed>}> $jobs
+     * device row and payload, by key. @return array<int|string,array<string,mixed>> results by the same key
+     */
+    private function push_send_many(array $jobs){
+        $out=[];$queue=[];
+        foreach($jobs as $k=>[$row,$payload]){
+            $job=$this->push_prepare($row,$payload);
+            if(isset($job['result']))$out[$k]=$job['result'];else $queue[$k]=$job['handle'];
+        }
+        if(!$queue)return $out;
+        if(count($queue)===1||!function_exists('curl_multi_init')){
+            foreach($queue as $k=>$ch){curl_exec($ch);$out[$k]=$this->push_finish($ch,curl_errno($ch));curl_close($ch);}
+            return $out;
+        }
+        foreach(array_chunk($queue,20,true) as $chunk){
+            $mh=curl_multi_init();
+            foreach($chunk as $ch)curl_multi_add_handle($mh,$ch);
+            $errno=[];
+            do{
+                $status=curl_multi_exec($mh,$running);
+                while($info=curl_multi_info_read($mh))foreach($chunk as $k=>$ch)if($ch===$info['handle'])$errno[$k]=(int)$info['result'];
+                if($running&&curl_multi_select($mh,1.0)===-1)usleep(10000);
+            }while($running&&$status===CURLM_OK);
+            foreach($chunk as $k=>$ch){$out[$k]=$this->push_finish($ch,$errno[$k]??curl_errno($ch));curl_multi_remove_handle($mh,$ch);curl_close($ch);}
+            curl_multi_close($mh);
+        }
+        return $out;
+    }
+
+    /** Checks, signs and encrypts one push. @return array{handle?:mixed,result?:array<string,mixed>} a ready cURL handle, or the result when it cannot be sent */
+    private function push_prepare($row,$payload){
+        if(!function_exists('curl_init'))return ['result'=>['ok'=>false,'error'=>'PHP cURL extension is not available.']];
         $target=$this->push_delivery_target($row->endpoint);
         if(!$target['ok']){
             // A stored endpoint that can never be valid (saved before 3.31.45) is removed; one whose host
@@ -645,13 +716,13 @@ trait EWS_Notifications_Trait {
                 $this->audit('push_endpoint_removed','push_subscription',(int)$row->id,'user_id='.(int)$row->user_id.'; '.$target['error']);
             }
             $this->push_debug('Endpoint refused',['device_id'=>(int)$row->id,'reason'=>$target['error']]);
-            return ['ok'=>false,'blocked'=>true,'error'=>PushEndpoint::message($target['error'])];
+            return ['result'=>['ok'=>false,'blocked'=>true,'error'=>PushEndpoint::message($target['error'])]];
         }
         $aud=$this->push_endpoint_audience($row->endpoint);
         $jwt=$aud?$this->vapid_jwt($aud):false;
-        if(!$jwt)return ['ok'=>false,'error'=>'Unable to create VAPID token. Check OpenSSL and VAPID settings.'];
+        if(!$jwt)return ['result'=>['ok'=>false,'error'=>'Unable to create VAPID token. Check OpenSSL and VAPID settings.']];
         $enc=$this->encrypt_webpush_payload($row,$payload);
-        if(!$enc['ok']){ $this->push_debug('Encryption failed',['error'=>$enc['error']??'unknown']); return $enc; }
+        if(!$enc['ok']){ $this->push_debug('Encryption failed',['error'=>$enc['error']??'unknown']); return ['result'=>$enc]; }
         $ch=curl_init($row->endpoint);
         curl_setopt_array($ch,[
             CURLOPT_POST=>true,
@@ -675,9 +746,12 @@ trait EWS_Notifications_Trait {
                 'Content-Length: '.strlen($enc['body'])
             ]
         ]);
-        curl_exec($ch);
-        $errno=curl_errno($ch);$error=curl_error($ch);$code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        return ['handle'=>$ch];
+    }
+
+    /** The outcome of a finished push request. @return array<string,mixed> */
+    private function push_finish($ch,$errno){
+        $error=$errno?(curl_error($ch)?:curl_strerror($errno)):'';$code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);
         if($errno){ $this->push_debug('cURL failed',['error'=>$error]); return ['ok'=>false,'error'=>'cURL error: '.$error]; }
         if($code>=200&&$code<300){ $this->push_debug('Push accepted',['code'=>$code]); return ['ok'=>true,'code'=>$code]; }
         if($code===404||$code===410)return ['ok'=>false,'expired'=>true,'code'=>$code,'error'=>'Push subscription is expired or no longer valid.'];

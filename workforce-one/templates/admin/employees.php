@@ -2,30 +2,54 @@
 /**
  * wp-admin "Employees" page. Each table row is one update form: its fields point at the row's
  * <form> through the form="" attribute (a <form> cannot wrap table cells).
+ * 3.31.71: 50 employees per page with a search; WordPress user and supervisor are typed into a field
+ * that suggests from one shared list (Support\Picker), not a <select> with every name in every row.
  *
- * @var array<int,array{row:object,supervisor_id:int,team_ids:int[]}> $employees
+ * @var array<int,array{row:object,supervisor_id:int,team_ids:int[]}> $employees  this page of the list
+ * @var array<int,object> $people         every employee (id, name, domain_name, active), by id
  * @var array<int,object> $teams          active teams (id, name, manager_employee_id, department_id)
  * @var array<int,string> $users          WordPress user id => label
  * @var array<int,string> $shifts         active shift id => label
  * @var array<int,string> $all_shifts     every shift id => label (an employee keeps an inactive shift until changed)
  * @var array<int,object> $departments    active departments (id, name)
+ * @var string $search
+ * @var int $paged
+ * @var int $pages
+ * @var int $total
+ * @var string $page_url
  * @var string|null $notice
  * @var string|null $error
  * @var string $post_url
  * @var string $profile_url
  */
 if (!defined('ABSPATH')) exit;
+use WorkforceOne\Support\Picker;
 $options = static function (array $items, int $selected, string $none) {
     $html = '<option value="0">' . esc_html($none) . '</option>';
     foreach ($items as $value => $label) $html .= '<option value="' . (int) $value . '"' . selected($selected, (int) $value, false) . '>' . esc_html($label) . '</option>';
     return $html;
 };
-$active_names = [];
-foreach ($employees as $e) if ((int) $e['row']->active) $active_names[(int) $e['row']->id] = $e['row']->name . ' (' . $e['row']->domain_name . ')';
+$person = static function (int $id) use ($people) {
+    return isset($people[$id]) ? Picker::label($people[$id]->name . ' (' . $people[$id]->domain_name . ')', $id) : '';
+};
+$user_label = static function (int $id) use ($users) {
+    return isset($users[$id]) ? Picker::label($users[$id], $id) : ($id ? '#' . $id : '');
+};
 $department_names = [];
 foreach ($departments as $d) $department_names[(int) $d->id] = $d->name;
+$pager = static function () use ($paged, $pages, $total, $search, $page_url) {
+    if ($pages < 2) { echo '<span class="displaying-num">' . esc_html(sprintf('%d employees', $total)) . '</span>'; return; }
+    $link = static function (int $n) use ($search, $page_url) { return esc_url(add_query_arg(array_filter(['paged' => $n > 1 ? $n : null, 's' => $search !== '' ? $search : null]), $page_url)); };
+    echo '<span class="displaying-num">' . esc_html(sprintf('%d employees', $total)) . '</span> <span class="pagination-links">';
+    echo $paged > 1 ? '<a class="button" href="' . $link($paged - 1) . '">&lsaquo; Previous</a> ' : '';
+    echo '<span class="paging-input">' . esc_html(sprintf('Page %1$d of %2$d', $paged, $pages)) . '</span>';
+    echo $paged < $pages ? ' <a class="button" href="' . $link($paged + 1) . '">Next &rsaquo;</a>' : '';
+    echo '</span>';
+};
 ?>
 <div class="wrap"><h1>Employees</h1>
+<datalist id="ews-pick-users"><?php foreach ($users as $uid => $label): ?><option value="<?php echo esc_attr(Picker::label($label, (int) $uid)); ?>"></option><?php endforeach; ?></datalist>
+<datalist id="ews-pick-employees"><?php foreach ($people as $p): if (!(int) $p->active) continue; ?><option value="<?php echo esc_attr($person((int) $p->id)); ?>"></option><?php endforeach; ?></datalist>
 <?php if ($notice): ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html($notice); ?></p></div><?php endif; ?>
 <?php if ($error): ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
 
@@ -35,24 +59,30 @@ foreach ($departments as $d) $department_names[(int) $d->id] = $d->name;
     <p><input name="name" required placeholder="Employee Name" style="width:100%"></p>
     <p><input name="domain_name" required placeholder="Domain Name" style="width:100%"></p>
     <p><input type="email" name="email" required placeholder="Employee Email" style="width:100%"></p>
-    <p><select name="wp_user_id" style="width:100%"><?php echo $options($users, 0, '-- Link WordPress User --'); ?></select></p>
+    <p><input name="wp_user_ref" list="ews-pick-users" autocomplete="off" placeholder="Link WordPress User (type to search)" style="width:100%"></p>
     <p><select name="department_id" style="width:100%"><?php echo $options($department_names, 0, '-- No Department --'); ?></select></p>
-    <p><select name="supervisor_employee_id" style="width:100%"><?php echo $options($active_names, 0, '-- No Direct Supervisor --'); ?></select></p>
+    <p><input name="supervisor_employee_ref" list="ews-pick-employees" autocomplete="off" placeholder="Direct Supervisor (type to search)" style="width:100%"></p>
     <p><select name="default_shift_id" style="width:100%"><?php echo $options($shifts, 0, '-- Company Working Hours --'); ?></select></p>
     <p><label><input type="checkbox" name="attendance_enabled" value="1" checked> Attendance Tracking</label><br><small>Disable this for employees who should not have attendance tracking.</small></p>
     <p><button class="button button-primary">Add Employee</button></p>
 </form><br>
 
-<p>Update an employee's details below. Each WordPress user can be linked to one employee only.</p>
+<p>Update an employee's details below. Each WordPress user can be linked to one employee only. In the WordPress User and Supervisor fields, type a few letters and pick from the list; clear the field to remove the link.</p>
+<form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" class="tablenav top" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;height:auto">
+    <input type="hidden" name="page" value="ews31-employees">
+    <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Name, domain name or email" aria-label="Search employees">
+    <button class="button">Search</button><?php if ($search !== ''): ?> <a class="button-link" href="<?php echo esc_url($page_url); ?>">Clear</a><?php endif; ?>
+    <span style="margin-inline-start:auto"><?php $pager(); ?></span>
+</form>
 <table class="widefat striped"><thead><tr><th>Name</th><th>Domain Name</th><th>Email</th><th>WordPress User</th><th>Department</th><th>Supervisor</th><th>Teams</th><th>Default Shift</th><th>Attendance Tracking</th><th>Status</th><th>Action</th></tr></thead><tbody>
 <?php foreach ($employees as $e): $r = $e['row']; $id = (int) $r->id; $f = 'ews-employee-' . $id; ?>
     <tr<?php echo !(int) $r->active ? ' style="opacity:.72"' : ''; ?>>
         <td><input form="<?php echo $f; ?>" name="name" value="<?php echo esc_attr($r->name); ?>" required></td>
         <td><input form="<?php echo $f; ?>" name="domain_name" value="<?php echo esc_attr($r->domain_name); ?>" required></td>
         <td><input form="<?php echo $f; ?>" type="email" name="email" value="<?php echo esc_attr($r->email); ?>" required></td>
-        <td><select form="<?php echo $f; ?>" name="wp_user_id"><?php echo $options($users, (int) $r->wp_user_id, '-- Not linked --'); ?></select></td>
+        <td><input form="<?php echo $f; ?>" name="wp_user_ref" list="ews-pick-users" autocomplete="off" value="<?php echo esc_attr($user_label((int) $r->wp_user_id)); ?>" placeholder="Not linked" aria-label="<?php echo esc_attr('WordPress user of ' . $r->name); ?>"></td>
         <td><select form="<?php echo $f; ?>" name="department_id"><?php echo $options($department_names, (int) ($r->department_id ?? 0), '-- No Department --'); ?></select></td>
-        <td><select form="<?php echo $f; ?>" name="supervisor_employee_id"><?php $others = $active_names; unset($others[$id]); echo $options($others, $e['supervisor_id'], '-- No Supervisor --'); ?></select></td>
+        <td><input form="<?php echo $f; ?>" name="supervisor_employee_ref" list="ews-pick-employees" autocomplete="off" value="<?php echo esc_attr($person((int) $e['supervisor_id'])); ?>" placeholder="No supervisor" aria-label="<?php echo esc_attr('Supervisor of ' . $r->name); ?>"></td>
         <td><select form="<?php echo $f; ?>" name="team_ids[]" multiple size="3" style="min-width:180px">
             <?php foreach ($teams as $tm): ?><option value="<?php echo (int) $tm->id; ?>"<?php echo in_array((int) $tm->id, $e['team_ids'], true) ? ' selected' : ''; ?>><?php echo esc_html($tm->name . ((int) $tm->manager_employee_id === $id ? ' — Manager' : '')); ?></option><?php endforeach; ?>
         </select></td>
@@ -68,5 +98,7 @@ foreach ($departments as $d) $department_names[(int) $d->id] = $d->name;
         </td>
     </tr>
 <?php endforeach; ?>
+<?php if (!$employees): ?><tr><td colspan="11"><?php echo $search !== '' ? 'No employee matches this search.' : 'No employees yet.'; ?></td></tr><?php endif; ?>
 </tbody></table>
+<div class="tablenav bottom" style="height:auto"><?php $pager(); ?></div>
 </div>

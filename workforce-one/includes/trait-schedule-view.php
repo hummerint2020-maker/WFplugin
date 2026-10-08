@@ -74,6 +74,10 @@ trait EWS_Schedule_View_Trait {
 
     private function schedule_content(){
         $g=$this->schedule_week_grid();
+        // A long list is searched and paged on the server (Ui\ListPage, 3.31.71); the swap form still offers everyone.
+        $swap_people=$g['emps'];
+        $list=\WorkforceOne\Ui\ListPage::apply($g['emps'],wp_unslash($_GET));
+        $g['emps']=$list['rows'];
         ['current_emp_id'=>$current_emp_id,'emps'=>$emps,'dates'=>$dates,'sun'=>$sun,'today'=>$today,'week_end'=>$week_end,'map'=>$map,'company_leave'=>$company_leave,'cells'=>$cells]=$g;
         $people=[];
         foreach($emps as $e)$people[(int)$e->id]=['picture'=>$this->employee_picture_url($e),'initials'=>\WorkforceOne\Employees\ProfileSummary::initials((string)$e->name)?:'·'];
@@ -97,7 +101,7 @@ trait EWS_Schedule_View_Trait {
         wp_enqueue_style('workforce-one-requests');
         wp_enqueue_style('workforce-one-schedule-page');
         return $this->render_template('app/schedule',[
-            'emps'=>$emps,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'cells'=>$cells,'people'=>$people,'legend'=>$legend,
+            'emps'=>$emps,'list'=>$list,'list_keep'=>$this->list_keep_args('schedule'),'swap_people'=>$swap_people,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'cells'=>$cells,'people'=>$people,'legend'=>$legend,
             'range'=>$range,'week_start'=>date('Y-m-d',$sun),
             'week_label'=>TeamOrder::weekLabel(date('Y-m-d',$sun),date('Y-m-d',$this_week))??$range,
             'prev_url'=>add_query_arg(['ews_view'=>'schedule','week'=>date('Y-m-d',strtotime('-7 days',$sun))]),

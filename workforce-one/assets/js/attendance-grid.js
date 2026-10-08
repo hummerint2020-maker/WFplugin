@@ -153,8 +153,15 @@
                 row.style.display = (!q || name.indexOf(q) !== -1) && (team === 'all' || teams.indexOf(team) !== -1) ? '' : 'none';
             });
         }
-        if (search) search.addEventListener('input', filterAttendance);
-        if (teamFilter) teamFilter.addEventListener('change', filterAttendance);
+        // A long list (3.31.71) is searched and filtered on the server: Enter or a team change sends the form.
+        var server = search && search.closest('[data-ews-server-list]');
+        if (server) {
+            // Unsaved changes still get the browser's leave-page warning (beforeunload below).
+            if (teamFilter) teamFilter.addEventListener('change', function () { server.submit(); });
+        } else {
+            if (search) search.addEventListener('input', filterAttendance);
+            if (teamFilter) teamFilter.addEventListener('change', filterAttendance);
+        }
 
         form.addEventListener('submit', function () {
             submitting = true;

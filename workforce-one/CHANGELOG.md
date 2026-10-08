@@ -1,5 +1,41 @@
 # Changelog
 
+## 3.31.71
+Large companies: found with a load test (nginx + PHP-FPM + MariaDB on 2 cores, 1,000 and 3,000
+employees with 3 months of data). Signing in at the start of a shift was already fast and did not
+depend on the number of employees; some manager and admin pages grew with it, and two ran out of
+memory. No database change.
+
+### Fixed
+- **wp-admin → Employees** and **Approval Workflows** no longer run out of memory with thousands of
+  employees: every row had a list of every employee (3,000 × 3,000 options). The WordPress user and
+  the supervisor are now typed into a field that suggests from one shared list (src/Support/Picker.php,
+  "Name · #id"); a name typed but not picked is refused. Both pages show 50 employees at a time with a
+  search, and saving returns to the same page and search. A WordPress user that does not exist is
+  refused.
+- **Team Schedule** and **Attendance** (app): above 60 people, the search and the team filter run on
+  the server and the page shows 50 people at a time (src/Ui/ListPage.php); the cards and day counts
+  still count everyone, the swap form still offers everyone. Smaller teams see no change.
+- **wp-admin → Sign In / Out Report**: 100 records a page with a search by employee (a month for
+  3,000 people was 30,000 rows in one page).
+- **Push notifications** to many devices go out 20 at a time instead of one by one, and the VAPID
+  token is signed once per push service per batch (30 devices: about 2 s instead of one request
+  time each).
+
+### Measured (3,000 employees, 2 cores)
+| Page | Before | After |
+|---|---|---|
+| wp-admin Employees | out of memory | 0.06 s, 621 KB |
+| wp-admin Approval Workflows | out of memory | 0.06 s, 515 KB |
+| Attendance (app, manager) | 1.5 s, 13.7 MB | 0.47 s, 303 KB |
+| Team Schedule (app, manager) | 0.66 s, 11.7 MB | 0.11 s, 263 KB |
+| Team Schedule (app, employee) | 0.14 s, 1.2 MB | 0.11 s, 274 KB |
+| wp-admin Sign In / Out Report | 2.1 s, 31 MB | 0.19 s, 192 KB |
+
+### Tests
+- New `tests/e2e_big_lists.py` (in CI), `tests/unit/PickerTest.php`; `e2e_employees`,
+  `e2e_approvals` and `e2e_push` cover the pick lists and the parallel sending.
+
 ## 3.31.70
 Tasks: the five features from the owner-approved designs, each one switched on or off and tuned in
 the new wp-admin → Workforce One → **Tasks** page (src/Settings/TaskSettings.php, option

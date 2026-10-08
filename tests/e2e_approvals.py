@@ -101,7 +101,17 @@ sups = q("SELECT related_employee_id FROM {p}ews_employee_relationships WHERE em
 check('a supervisor is saved, and replacing them keeps one active supervisor', [s['related_employee_id'] for s in sups] == [str(ids['boss'])], sups)
 st, page, _ = adm.req(PAGE)
 rel = next((f for f in forms(page, 'ews_approval_relationship_save') if 'name="employee_id" value="%d"' % ids['emp'] in f), '')
-check('...shown as selected', re.search(r'<option value="%d" selected' % ids['boss'], rel) is not None)
+check('...shown in the supervisor field', re.search(r'name="supervisor_employee_ref"[^>]*value="[^"]*#%d"' % ids['boss'], rel) is not None, rel[:600])
+# 3.31.71: the field is a pick list ("Name · #id"); a typed name that is not on the list is refused.
+adm.req('/wp-admin/admin-post.php', {'action': 'ews_approval_relationship_save', '_wpnonce': rnonce, 'employee_id': ids['emp'], 'supervisor_employee_ref': 'Tina · #%d' % ids['tina']})
+sups = q("SELECT related_employee_id FROM {p}ews_employee_relationships WHERE employee_id=%d AND relationship_type='supervisor' AND active=1" % ids['emp'])
+check('a supervisor picked from the list is saved', [s['related_employee_id'] for s in sups] == [str(ids['tina'])], sups)
+st, _, h = adm.req('/wp-admin/admin-post.php', {'action': 'ews_approval_relationship_save', '_wpnonce': rnonce, 'employee_id': ids['emp'], 'supervisor_employee_ref': 'somebody'})
+sups = q("SELECT related_employee_id FROM {p}ews_employee_relationships WHERE employee_id=%d AND relationship_type='supervisor' AND active=1" % ids['emp'])
+check('a name typed but not picked is refused and changes nothing', 'approval_error=1' in h.get('Location', '') and [s['related_employee_id'] for s in sups] == [str(ids['tina'])], (h.get('Location'), sups))
+st, page, _ = adm.req(PAGE)
+adm.req('/wp-admin/admin-post.php', {'action': 'ews_approval_relationship_save', '_wpnonce': rnonce, 'employee_id': ids['emp'], 'supervisor_employee_ref': 'Boss · #%d' % ids['boss']})  # back to the boss for the steps below
+check('the page has one shared employee list instead of a list in every row', page.count('<datalist id="ews-pick-employees">') == 1 and page.count('name="supervisor_employee_id"') == 0 and '<select name="supervisor_employee_id"' not in page)
 
 # ---------------------------------------------------------------- the two-level flow (Leave)
 boss, tina, emp = Session('boss', 'bosspass'), Session('tina', 'tinapass'), Session('emp1', 'emp1pass')

@@ -51,7 +51,8 @@
         // Colleague search: the table rows (desktop) and the cards (phones) alike.
         var search = document.getElementById('wfo-sched-search');
         var none = document.querySelector('.wfo-sched-noresult');
-        if (search) search.addEventListener('input', function () {
+        // A long list (3.31.71) is searched on the server: the field sits in a form that Enter submits.
+        if (search && !search.closest('[data-ews-server-list]')) search.addEventListener('input', function () {
             var q = search.value.trim().toLowerCase();
             var shown = 0;
             document.querySelectorAll('.wfo-sched-pcard, .wfo-sched-table tbody tr[data-employee-name]').forEach(function (el) {

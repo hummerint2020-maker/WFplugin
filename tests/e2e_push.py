@@ -90,6 +90,20 @@ bad = [r for r in out if r['endpoint'] not in LEGIT]
 check('stored endpoints to private addresses are never contacted at delivery', len(bad) == 3 and all(r['blocked'] and r['seconds'] < 1 for r in bad), bad)
 check('...and are removed, with an Audit Log entry each', not q("SELECT id FROM {p}ews_push_subscriptions WHERE endpoint NOT LIKE 'https://%%.com/%%'") and len(q("SELECT id FROM {p}ews_audit_log WHERE action='push_endpoint_removed'")) == 3)
 
+# 3.31.71: a batch goes out in parallel (curl_multi, 20 at a time); every device gets an outcome.
+many = json.loads(php("""
+    $k=openssl_pkey_new(['curve_name'=>'prime256v1','private_key_type'=>OPENSSL_KEYTYPE_EC]); $d=openssl_pkey_get_details($k);
+    $pub=rtrim(strtr(base64_encode("\\x04".str_pad($d['ec']['x'],32,"\\0",STR_PAD_LEFT).str_pad($d['ec']['y'],32,"\\0",STR_PAD_LEFT)),'+/','-_'),'=');
+    $auth=rtrim(strtr(base64_encode(random_bytes(16)),'+/','-_'),'=');
+    $wpdb->query("DELETE FROM {$p}ews_push_subscriptions");
+    for($i=0;$i<30;$i++){$e='https://fcm.googleapis.com/fcm/send/wfo-load-'.$i;$wpdb->insert($p.'ews_push_subscriptions',['user_id'=>%d,'endpoint'=>$e,'endpoint_hash'=>hash('sha256',$e),'p256dh'=>$pub,'auth'=>$auth,'content_encoding'=>'aes128gcm','created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);}
+    $o=new EWS_Manager_V31_1(); $m=new ReflectionMethod('EWS_Manager_V31_1','push_send_many'); $m->setAccessible(true);
+    $jobs=[]; foreach($wpdb->get_results("SELECT * FROM {$p}ews_push_subscriptions ORDER BY id") as $row)$jobs['d'.$row->id]=[$row,['title'=>'t','body'=>'b','url'=>home_url('/')]];
+    $t=microtime(true); $res=$m->invoke($o,$jobs);
+    echo wp_json_encode(['jobs'=>count($jobs),'results'=>count($res),'same_keys'=>!array_diff_key($jobs,$res),'seconds'=>round(microtime(true)-$t,1),'sample'=>array_slice($res,0,2)]);""" % I['uid']))
+check('a batch to 30 devices returns an outcome for every device, by its key', many['jobs'] == 30 and many['results'] == 30 and many['same_keys'], many)
+check('...and takes about one request time, not thirty (sent 20 at a time)', many['seconds'] <= 15, many['seconds'])
+
 php("$wpdb->query(\"DELETE FROM {$p}ews_push_subscriptions\");")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

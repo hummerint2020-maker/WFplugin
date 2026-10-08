@@ -177,6 +177,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_tasks_view.py "$S"
       - name: Tasks, more (settings, checklist, comments and files, team tasks, repeats, reminders, Workload, Home)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_tasks_more.py "$S"
+      - name: Long lists (Team Schedule, Attendance and Sign In / Out Report paged on the server)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_big_lists.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

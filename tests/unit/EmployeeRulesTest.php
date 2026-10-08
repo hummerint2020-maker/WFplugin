@@ -23,6 +23,7 @@ final class EmployeeRulesTest extends TestCase
         $this->assertSame('required', R::check($this->f(['email_valid' => false])));
         $this->assertSame('department', R::check($this->f(['department_ok' => false])));
         $this->assertSame('domain_taken', R::check($this->f(['domain_taken' => true])));
+        $this->assertSame('user', R::check($this->f(['user_ok' => false, 'user_taken' => true])));
         $this->assertSame('user_taken', R::check($this->f(['user_taken' => true])));
         $this->assertSame('self_supervisor', R::check($this->f(['supervisor_id' => 7])));
         $this->assertSame('supervisor', R::check($this->f(['supervisor_ok' => false])));
@@ -34,6 +35,7 @@ final class EmployeeRulesTest extends TestCase
     public function testMessages(): void
     {
         $this->assertStringContainsString('already linked', R::errorMessage('user_taken'));
+        $this->assertStringContainsString('from the list', R::errorMessage('user'));
         $this->assertSame('Employee archived.', R::noticeMessage('archived'));
         $this->assertNull(R::noticeMessage('x'));
     }

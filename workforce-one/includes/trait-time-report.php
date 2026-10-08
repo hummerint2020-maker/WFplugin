@@ -29,7 +29,13 @@ trait EWS_Time_Report_Trait {
         $start=sanitize_text_field(wp_unslash($_GET['start']??date('Y-m-01',current_time('timestamp'))));
         $end=sanitize_text_field(wp_unslash($_GET['end']??current_time('Y-m-d')));
         if(!$this->valid_date($start)||!$this->valid_date($end)){$start=date('Y-m-01',current_time('timestamp'));$end=current_time('Y-m-d');}
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s ORDER BY l.work_date DESC,l.event_at DESC",$start,$end));
+        // 100 records a page, with a search by employee (3.31.71: a month for 3,000 people was 30,000 rows in one page).
+        $search=sanitize_text_field(wp_unslash($_GET['s']??''));$per=100;
+        $where=$wpdb->prepare(" WHERE l.work_date BETWEEN %s AND %s",$start,$end);
+        if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);}
+        $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where}");
+        $pages=max(1,(int)ceil($total/$per));$paged=min(max(1,absint($_GET['paged']??1)),$pages);
+        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where} ORDER BY l.work_date DESC,l.event_at DESC,l.id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
         $edit_id=absint($_GET['edit_time_id']??0);
         $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE id=%d",$edit_id)):null;
         $integrity_labels=['verified'=>'Verified','unreliable'=>'Unreliable','suspicious'=>'Suspicious','not_evaluated'=>'Not evaluated'];
@@ -66,7 +72,7 @@ trait EWS_Time_Report_Trait {
             ];
         }
         echo $this->render_template('admin/time-report',[
-            'start'=>$start,'end'=>$end,'records'=>$records,'form'=>$form,
+            'start'=>$start,'end'=>$end,'records'=>$records,'form'=>$form,'search'=>$search,'paged'=>$paged,'pages'=>$pages,'total'=>$total,
             'employees'=>(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1".($form&&$form['employee_id']?$wpdb->prepare(" OR id=%d",$form['employee_id']):'')." ORDER BY name ASC"),
             'event_types'=>ManualRecordRules::EVENT_TYPES,
             'saved'=>($_GET['time_notice']??'')==='saved',

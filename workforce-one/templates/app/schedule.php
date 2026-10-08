@@ -4,6 +4,9 @@
  * (new look, 3.31.52); script: assets/js/schedule.js (swap form toggle, PDF print and WhatsApp share
  * via data attributes).
  *
+ * @var array{rows:object[],paged:bool,page:int,pages:int,total:int,all:int,q:string,team:string} $list  Ui\ListPage (3.31.71)
+ * @var array<string,string> $list_keep  query values the server search keeps (view, week)
+ * @var object[] $swap_people  everyone in the list (the swap form offers them all)
  * @var object[] $emps                  ordered by TeamOrder, annotated with _schedule_* fields
  * @var string[] $dates
  * @var string $today
@@ -88,10 +91,16 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
     <section class="wfo-sched-card ews-schedule-card" aria-labelledby="wfo-team-title">
         <div class="wfo-card-title">
             <span class="wfo-card-icon is-teal wfo-desktop-only"><?php echo Icons::svg('people', 20); ?></span>
-            <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?> <span class="wfo-sched-count"><?php echo esc_html(sprintf(/* translators: %d: number of people */ _n('%d person', '%d people', count($emps), 'workforce-one'), count($emps))); ?></span></h3></div>
+            <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?> <span class="wfo-sched-count"><?php echo esc_html(sprintf(/* translators: %d: number of people */ _n('%d person', '%d people', $list['total'], 'workforce-one'), $list['total'])); ?></span></h3></div>
         </div>
         <div class="wfo-sched-bar ews-no-print">
+            <?php if ($list['paged']): // a long list: the search runs on the server (Enter) ?>
+            <form method="get" class="wfo-list-search" data-ews-server-list><?php foreach ($list_keep as $k => $v): ?><input type="hidden" name="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($v); ?>"><?php endforeach; ?>
+                <label class="wfo-sched-search"><?php echo Icons::svg('search', 17, 2); ?><input type="search" name="q" id="wfo-sched-search" value="<?php echo esc_attr($list['q']); ?>" placeholder="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" aria-label="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" autocomplete="off"></label>
+            </form>
+            <?php else: ?>
             <label class="wfo-sched-search"><?php echo Icons::svg('search', 17, 2); ?><input type="search" id="wfo-sched-search" placeholder="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" aria-label="<?php esc_attr_e('Search colleague', 'workforce-one'); ?>" autocomplete="off"></label>
+            <?php endif; ?>
             <div class="ews-schedule-tool-actions wfo-sched-actions">
                 <a class="ews-btn secondary ews-pdf-btn wfo-btn-ghost" href="<?php echo esc_url($pdf_url); ?>" download><?php echo Icons::svg('download', 16); ?><span>PDF</span></a>
                 <button type="button" class="ews-btn secondary ews-wa-btn wfo-btn-ghost" data-ews-share-pdf="<?php echo esc_url($pdf_url); ?>" data-ews-share-name="<?php echo esc_attr($pdf_name); ?>" data-ews-share-text="<?php echo esc_attr(__('Team Schedule', 'workforce-one') . ' · ' . $range); ?>" data-ews-share-fallback="<?php esc_attr_e('The schedule PDF was downloaded. Attach it to your WhatsApp message.', 'workforce-one'); ?>" data-ews-share-error="<?php esc_attr_e('The PDF could not be prepared. Please try again.', 'workforce-one'); ?>"><?php echo Icons::svg('share', 16); ?><span>WhatsApp</span></button>
@@ -151,7 +160,8 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             </li>
             <?php endforeach; ?>
         </ul>
-        <p class="wfo-sched-noresult" hidden><?php esc_html_e('No colleague matches your search.', 'workforce-one'); ?></p>
+        <p class="wfo-sched-noresult"<?php echo $list['paged'] && !$emps ? '' : ' hidden'; ?>><?php esc_html_e('No colleague matches your search.', 'workforce-one'); ?></p>
+        <?php include __DIR__ . '/list-pager.php'; ?>
     </section>
 
     <?php if ($current_emp_id):
@@ -226,7 +236,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                 </select></div>
                 <div class="wfo-rq-field"><label for="wfo-swap-with"><?php esc_html_e('Swap with', 'workforce-one'); ?></label><select name="target_employee_id" id="wfo-swap-with" required>
                     <option value=""><?php esc_html_e('Select colleague', 'workforce-one'); ?></option>
-                    <?php foreach ($emps as $e): if ((int) $e->id !== $current_emp_id): ?><option value="<?php echo (int) $e->id; ?>"><?php echo esc_html($e->name); ?></option><?php endif; endforeach; ?>
+                    <?php foreach ($swap_people as $e): if ((int) $e->id !== $current_emp_id): ?><option value="<?php echo (int) $e->id; ?>"><?php echo esc_html($e->name); ?></option><?php endif; endforeach; ?>
                 </select></div>
                 <button class="wfo-sheet-submit" type="submit" data-fwd><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Send Request', 'workforce-one'); ?></button>
                 <p class="wfo-sheet-note"><?php esc_html_e('Your colleague gets your day and you get theirs once they accept.', 'workforce-one'); ?></p>

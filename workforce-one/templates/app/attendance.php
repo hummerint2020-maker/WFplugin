@@ -17,6 +17,8 @@
  * @var array<string,int> $summary      Present / Late / Absent / Leave day counts
  * @var array<string,array{recorded:int,absent:int}> $day_summary
  * @var string[] $team_options
+ * @var array{rows:object[],paged:bool,page:int,pages:int,total:int,all:int,q:string,team:string} $list  Ui\ListPage (3.31.71); $emps is its page
+ * @var array<string,string> $list_keep  query values the server search keeps (view, week)
  * @var int $rate
  * @var string[] $statuses              active schedule types
  * @var array{text:string,error:bool}|null $message
@@ -85,7 +87,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
     </section>
 
     <div class="ews-att-summary wfo-att-stats">
-        <div class="ews-att-stat people"><span><?php echo Icons::svg('people', 20); ?></span><div><b><?php echo count($emps); ?></b><small><?php esc_html_e('Employees', 'workforce-one'); ?></small></div></div>
+        <div class="ews-att-stat people"><span><?php echo Icons::svg('people', 20); ?></span><div><b><?php echo (int) $list['total']; ?></b><small><?php esc_html_e('Employees', 'workforce-one'); ?></small></div></div>
         <div class="ews-att-stat present"><span><?php echo Icons::svg('check', 20, 2.4); ?></span><div><b><?php echo (int) $summary['Present']; ?></b><small><?php esc_html_e('Present days', 'workforce-one'); ?></small></div></div>
         <div class="ews-att-stat late"><span><?php echo Icons::svg('overtime', 20); ?></span><div><b><?php echo (int) $summary['Late']; ?></b><small><?php esc_html_e('Late days', 'workforce-one'); ?></small></div></div>
         <div class="ews-att-stat absent"><span><?php echo Icons::svg('alert', 20); ?></span><div><b><?php echo (int) $summary['Absent']; ?></b><small><?php esc_html_e('Absent days', 'workforce-one'); ?></small></div></div>
@@ -94,14 +96,18 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
 
     <section class="ews-att-controls wfo-att-card">
         <div class="ews-att-control-head">
-            <div class="ews-att-control-title"><strong><?php esc_html_e('Schedule Controls', 'workforce-one'); ?></strong><span><?php esc_html_e('Set the planned schedule for everyone on a specific day.', 'workforce-one'); ?></span></div>
+            <div class="ews-att-control-title"><strong><?php esc_html_e('Schedule Controls', 'workforce-one'); ?></strong><span><?php echo $list['paged'] ? esc_html__('Set the planned schedule for everyone on this page on a specific day.', 'workforce-one') : esc_html__('Set the planned schedule for everyone on a specific day.', 'workforce-one'); ?></span></div>
+            <?php if ($list['paged']): // a long list: search (Enter) and team filter run on the server ?>
+            <form method="get" class="ews-att-tools" data-ews-server-list><?php foreach ($list_keep as $k => $v): ?><input type="hidden" name="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($v); ?>"><?php endforeach; ?>
+            <?php else: ?>
             <div class="ews-att-tools">
-                <label class="ews-att-search"><?php echo Icons::svg('search', 17, 2); ?><input type="search" id="ews-att-search" placeholder="<?php esc_attr_e('Search employee...', 'workforce-one'); ?>" autocomplete="off" aria-label="<?php esc_attr_e('Search employee...', 'workforce-one'); ?>"></label>
-                <label class="ews-att-filter"><span><?php esc_html_e('Team', 'workforce-one'); ?></span><select id="ews-att-team">
+            <?php endif; ?>
+                <label class="ews-att-search"><?php echo Icons::svg('search', 17, 2); ?><input type="search" id="ews-att-search"<?php echo $list['paged'] ? ' name="q" value="' . esc_attr($list['q']) . '"' : ''; ?> placeholder="<?php esc_attr_e('Search employee...', 'workforce-one'); ?>" autocomplete="off" aria-label="<?php esc_attr_e('Search employee...', 'workforce-one'); ?>"></label>
+                <label class="ews-att-filter"><span><?php esc_html_e('Team', 'workforce-one'); ?></span><select id="ews-att-team"<?php echo $list['paged'] ? ' name="team"' : ''; ?>>
                     <option value="all"><?php esc_html_e('All teams', 'workforce-one'); ?></option>
-                    <?php foreach ($team_options as $team_name): ?><option value="<?php echo esc_attr($team_name); ?>"><?php echo esc_html($team_name); ?></option><?php endforeach; ?>
+                    <?php foreach ($team_options as $team_name): ?><option value="<?php echo esc_attr($team_name); ?>"<?php selected(strtolower($list['team']), strtolower($team_name)); ?>><?php echo esc_html($team_name); ?></option><?php endforeach; ?>
                 </select></label>
-            </div>
+            <?php echo $list['paged'] ? '</form>' : '</div>'; ?>
         </div>
         <div class="ews-day-quick-actions">
             <?php foreach ($dates as $i => $d): ?>
@@ -152,6 +158,8 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                 </tbody>
             </table>
         </div>
+        <?php if ($list['paged'] && !$emps): ?><p class="ews-att-noresult"><?php esc_html_e('No employee matches this search.', 'workforce-one'); ?></p><?php endif; ?>
+        <?php include __DIR__ . '/list-pager.php'; ?>
 
         <?php /* the one picker for every day of every employee (attendance-grid.js moves it next to the day) */ ?>
         <div class="wfo-attg-scrim" hidden></div>

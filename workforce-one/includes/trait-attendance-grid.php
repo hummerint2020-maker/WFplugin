@@ -21,6 +21,12 @@ trait EWS_Attendance_Grid_Trait {
         if(!$dates)$dates=[$today];
         $week_end=$dates[count($dates)-1];
         $holidays=$this->company_leave_dates($dates[0],$week_end);
+        // A long list is searched, filtered by team and paged on the server (Ui\ListPage, 3.31.71): the
+        // cards and day counts count everyone the search and filter keep; the grid shows this page.
+        $all_emps=$emps;
+        $list=\WorkforceOne\Ui\ListPage::apply($emps,wp_unslash($_GET));
+        $on_page=array_flip(array_map(function($e){return (int)$e->id;},$list['rows']));
+        $emps=$list['matched'];
         [$schedule,$events]=$this->insights_load(array_map(function($e){return (int)$e->id;},$emps),$dates[0],$week_end);
 
         // One result per employee and day, plus the summary cards and per-day counts.
@@ -35,11 +41,12 @@ trait EWS_Attendance_Grid_Trait {
                 if(isset($summary[$day['actual']]))$summary[$day['actual']]++;
                 if(in_array($day['actual'],['Present','Late'],true))$day_summary[$d]['recorded']++;
                 if($day['actual']==='Absent')$day_summary[$d]['absent']++;
-                $days[$eid][$d]=['planned'=>$planned,'actual'=>$day['actual'],'badge'=>GridRules::badge($day['actual'],isset($holidays[$d])?(string)$holidays[$d]:$day['time'])];
+                if(isset($on_page[$eid]))$days[$eid][$d]=['planned'=>$planned,'actual'=>$day['actual'],'badge'=>GridRules::badge($day['actual'],isset($holidays[$d])?(string)$holidays[$d]:$day['time'])];
             }
         }
+        $emps=$list['rows'];
         $team_options=[];
-        foreach($emps as $e){
+        foreach($all_emps as $e){
             foreach(array_merge((array)($e->_schedule_team_names??[]),[(string)($e->_schedule_primary_team??'')]) as $team_name){
                 $team_name=trim((string)$team_name);
                 if($team_name!=='')$team_options[$team_name]=$team_name;
@@ -55,7 +62,7 @@ trait EWS_Attendance_Grid_Trait {
         foreach($emps as $e)$people[(int)$e->id]=['picture'=>$this->employee_picture_url($e),'initials'=>\WorkforceOne\Employees\ProfileSummary::initials((string)$e->name)?:'·'];
         return $this->render_template('app/attendance',[
             'people'=>$people,
-            'emps'=>$emps,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
+            'emps'=>$emps,'list'=>$list,'list_keep'=>$this->list_keep_args('attendance'),'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
             'summary'=>$summary,'day_summary'=>$day_summary,'team_options'=>array_values($team_options),
             'rate'=>Insights::rate($summary['Present'],$summary['Late'],$summary['Absent']),
             'statuses'=>$this->schedule_type_names(true),

@@ -3709,3 +3709,24 @@ msgstr "إرسال"
 
 msgid "System"
 msgstr "النظام"
+
+msgid "%1$d–%2$d of %3$d"
+msgstr "%1$d–%2$d من %3$d"
+
+msgid "Next"
+msgstr "التالي"
+
+msgid "No employee matches this search."
+msgstr "لا يوجد موظف يطابق هذا البحث."
+
+msgid "Page %1$d of %2$d"
+msgstr "صفحة %1$d من %2$d"
+
+msgid "Pages"
+msgstr "الصفحات"
+
+msgid "Previous"
+msgstr "السابق"
+
+msgid "Set the planned schedule for everyone on this page on a specific day."
+msgstr "حدّد الجدول المخطط لكل من في هذه الصفحة في يوم معيّن."
