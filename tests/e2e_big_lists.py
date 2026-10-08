@@ -14,7 +14,8 @@ N = 70
 EMP1 = ids()['eid']
 made = php("""
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'big%%'");
-    $wpdb->query("DELETE FROM {$p}ews_teams WHERE name='Big Team'");
+    foreach($wpdb->get_col("SELECT id FROM {$p}ews_teams WHERE name IN ('Big Team','Small Team')") as $old)$wpdb->query("DELETE FROM {$p}ews_team_members WHERE team_id=".(int)$old);
+    $wpdb->query("DELETE FROM {$p}ews_teams WHERE name IN ('Big Team','Small Team')");
     $wpdb->insert($p.'ews_teams',['name'=>'Big Team','active'=>1]); $tm=(int)$wpdb->insert_id;
     $today=current_time('Y-m-d'); $ids=[];
     for($i=1;$i<=%d;$i++){

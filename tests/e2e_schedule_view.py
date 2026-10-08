@@ -40,7 +40,10 @@ check('the Schedule page opens', st == 200 and 'Team Schedule' in page, st)
 heads = re.findall(r'<th class="(today)?">\s*([A-Z][a-z]{2})\s*<small>([^<]+)</small>', page)
 check('one column per working day, today marked', len(heads) == 7 and sum(1 for h in heads if h[0] == 'today') == 1, heads)
 order = re.findall(r'<div class="ews-person">([^<]+)<', page)
-check('team order: manager first, then you, then the team, then people without a team', order == ['Zed Boss', 'Me Myself', 'Ann Alpha', 'Aaron Loner'], order)
+check('an employee sees their team first: manager, then you, then the team (3.31.71)', order == ['Zed Boss', 'Me Myself', 'Ann Alpha'] and 'aria-current="page">My team' in page, order)
+st, dept, _ = emp.req(PAGE + '&scope=department')
+order = re.findall(r'<div class="ews-person">([^<]+)<', dept)
+check('...and My department adds people without a team, last', order == ['Zed Boss', 'Me Myself', 'Ann Alpha', 'Aaron Loner'] and 'aria-current="page">My department' in dept, order)
 check('"You" and "Manager" badges', 'ews-me-badge' in page and 'ews-manager-badge' in page)
 check('the week label says This week only for this week', 'This week' in page)
 nxt = re.search(r'href="([^"]*week=[^"]*)" aria-label="Next week"', page)
@@ -85,7 +88,7 @@ content = page.split('<div class="wfo-content">', 1)[-1]
 check('no emoji on the Schedule page', not re.search('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content), re.findall('[\U0001F300-\U0001FAFF\u2600-\u27BF]', content))
 check('the page stylesheet is loaded in the head', 'app-schedule.css' in page.split('</head>')[0])
 check('no explanation blurbs (owner review, 3.31.63)', not any(t in page for t in ('Everyone can view', 'No approval is required', 'Use this shared schedule')))
-check('phones get a card per colleague (not for me: My week shows mine)', len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)) == 3 and 'Request a swap' in page, len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)))
+check('phones get a card per teammate (not for me: My week shows mine)', len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)) == 2 and 'Request a swap' in page, len(re.findall(r'<li class="wfo-sched-pcard[ "]', page)))
 pdf = re.search(r'class="[^"]*ews-pdf-btn[^"]*" href="([^"]+)"', page)
 pdf_path = pdf.group(1).replace('&#038;', '&').replace('&amp;', '&').split('127.0.0.1:8080')[-1] if pdf else ''
 check('the PDF and WhatsApp buttons use the same PDF link', bool(pdf) and 'data-ews-share-pdf="' + pdf.group(1) + '"' in page and 'action=ews_schedule_pdf' in pdf_path)
@@ -112,5 +115,9 @@ finally:
     os.remove(mu_file)
 check('the page script is a file (no inline onclick)', 'schedule.js' in page and 'onclick="(function(){document.title' not in page)
 
+# The swap form offers the whole department, in My team too (3.31.71).
+set_day(people['me'], d(1), 'Office')
+swaps = [re.search(r'<select name="target_employee_id".*?</select>', emp.req(PAGE + x)[1], re.S) for x in ('', '&scope=department')]
+check('the swap form offers the whole department in My team and My department', all(m and 'Aaron Loner' in m.group(0) for m in swaps), [bool(m) for m in swaps])
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
