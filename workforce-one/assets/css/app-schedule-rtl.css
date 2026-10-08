@@ -219,3 +219,8 @@
     .wfo-sched-cards,.wfo-sched-bar{display:none!important}
     .wfo-app .wfo-sched .wfo-sched-scroll{display:block!important}
 }
+
+/* My team / My department (3.31.71). */
+.wfo-app .wfo-sched .wfo-sched-scope{display:inline-flex;gap:2px;margin:0 0 12px;padding:4px;border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
+.wfo-app .wfo-sched .wfo-sched-scope a{display:flex;align-items:center;min-height:36px;padding:0 16px;border-radius:10px;color:var(--wfo-muted);font-size:13.5px;font-weight:600;text-decoration:none}
+.wfo-app .wfo-sched .wfo-sched-scope a[aria-current=page]{background:var(--wfo-hero-start);color:#fff;font-weight:700}

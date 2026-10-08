@@ -8,9 +8,10 @@ Needs tests/e2e_setup.php users (admin/admin) at http://127.0.0.1:8080. Adds and
 import os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, php, q, results  # noqa: E402
+from e2e_support import Session, check, ids, php, q, results  # noqa: E402
 
 N = 70
+EMP1 = ids()['eid']
 made = php("""
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'big%%'");
     $wpdb->query("DELETE FROM {$p}ews_teams WHERE name='Big Team'");
@@ -46,6 +47,23 @@ check('search finds one person', rows(page) == 1 and 'Big Person 07' in page and
 st, page, _ = adm.req('/app/?ews_view=schedule&q=nobody-here')
 check('...and says when nobody matches', rows(page) == 0 and re.search(r'<p class="wfo-sched-noresult">', page) is not None)
 
+# An employee's schedule: their team first, their whole department on request.
+php("""$wpdb->query("DELETE FROM {$p}ews_departments WHERE code='BIGD'");
+    $wpdb->insert($p.'ews_departments',['name'=>'Big Dept','code'=>'BIGD','active'=>1,'created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]); $d=(int)$wpdb->insert_id;
+    $wpdb->query("UPDATE {$p}ews_employees SET department_id=$d WHERE domain_name LIKE 'big%%' OR id=%d");
+    $wpdb->insert($p.'ews_teams',['name'=>'Small Team','active'=>1,'department_id'=>$d]); $t=(int)$wpdb->insert_id;
+    foreach($wpdb->get_col("SELECT id FROM {$p}ews_employees WHERE domain_name IN ('big1','big2','big3') OR id=%d") as $e)$wpdb->insert($p.'ews_team_members',['team_id'=>$t,'employee_id'=>$e,'active'=>1]);""" % (EMP1, EMP1))
+emp = Session('emp1', 'emp1pass')
+st, page, _ = emp.req('/app/?ews_view=schedule')
+check('an employee sees their own team first', rows(page) == 4 and '4 people' in page and 'aria-current="page">My team' in page and 'wfo-list-pager' not in page, rows(page))
+check('...with a link to their whole department', 'scope=department' in page and 'My department' in page)
+st, page, _ = emp.req('/app/?ews_view=schedule&scope=department')
+check('...which shows everyone in the department (paged: %d people)' % (N + 1), rows(page) == 50 and '%d people' % (N + 1) in page and 'aria-current="page">My department' in page and 'name="scope" value="department"' in page, rows(page))
+st, page, _ = emp.req('/app/?ews_view=schedule&scope=department&q=big+person+70')
+check('...and its search stays in the department', rows(page) == 1, rows(page))
+swap = re.search(r'<select name="target_employee_id".*?</select>', page, re.S)
+check('the swap form still offers the whole department', swap is not None and swap.group(0).count('<option value="') - 1 == N, swap.group(0).count('<option value="') if swap else None)
+
 # Attendance
 st, page, _ = adm.req('/app/?ews_view=attendance')
 check('a long Attendance grid shows 50 people a page', st == 200 and rows(page) == 50 and 'Page 1 of 2' in page, (st, rows(page)))
@@ -69,6 +87,8 @@ check('...and searches by employee', page.count('name="action" value="ews31_time
 
 php("""$ids=$wpdb->get_col("SELECT id FROM {$p}ews_employees WHERE domain_name LIKE 'big%%'"); if($ids){$in=implode(',',array_map('intval',$ids));
     foreach(['ews_schedule','ews_time_logs','ews_team_members'] as $t)$wpdb->query("DELETE FROM {$p}$t WHERE employee_id IN ($in)");
-    $wpdb->query("DELETE FROM {$p}ews_employees WHERE id IN ($in)");} $wpdb->query("DELETE FROM {$p}ews_teams WHERE id=%d");""" % TEAM)
+    $wpdb->query("DELETE FROM {$p}ews_employees WHERE id IN ($in)");} $wpdb->query("DELETE FROM {$p}ews_teams WHERE id=%d OR name='Small Team'");
+    $wpdb->query("DELETE FROM {$p}ews_team_members WHERE employee_id=%d"); $wpdb->query("UPDATE {$p}ews_employees SET department_id=NULL WHERE id=%d");
+    $wpdb->query("DELETE FROM {$p}ews_departments WHERE code='BIGD'");""" % (TEAM, EMP1, EMP1))
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

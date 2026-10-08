@@ -3730,3 +3730,12 @@ msgstr "السابق"
 
 msgid "Set the planned schedule for everyone on this page on a specific day."
 msgstr "حدّد الجدول المخطط لكل من في هذه الصفحة في يوم معيّن."
+
+msgid "My team"
+msgstr "فريقي"
+
+msgid "My department"
+msgstr "إدارتي"
+
+msgid "Whose schedule"
+msgstr "جدول مَن"

@@ -38,6 +38,9 @@ trait EWS_Schedule_View_Trait {
         $current_emp=$this->current_employee();
         $current_emp_id=$current_emp?(int)$current_emp->id:0;
         $emps=$this->schedule_employees_ordered($this->department_scoped_employees(),$current_emp_id);
+        $dept_emps=$emps;   // the swap form offers the whole department, whichever list is shown
+        $scope=$this->schedule_scope($emps,$current_emp_id);
+        $emps=$scope['emps'];
         [$dates,$sun]=$this->week_dates();
         $today=current_time('Y-m-d');
         if(!$dates)$dates=[$today];
@@ -48,7 +51,24 @@ trait EWS_Schedule_View_Trait {
         $company_leave=$this->company_leave_dates($dates[0],$week_end);
         $cells=[];
         foreach($emps as $e)foreach($dates as $d)$cells[(int)$e->id][$d]=isset($company_leave[$d])?'General Leave':($map[(int)$e->id][$d]??'Not Set');
-        return compact('current_emp_id','emps','dates','sun','today','week_end','map','company_leave','cells');
+        $scope=$scope['scope'];
+        return compact('current_emp_id','emps','dates','sun','today','week_end','map','company_leave','cells','scope','dept_emps');
+    }
+
+    /**
+     * Whose schedule an employee sees (3.31.71): their team(s) first, and their whole department when
+     * they choose (?scope=department). Administrators, and employees without a team, see the list as
+     * before. @param object[] $emps the department list, in display order
+     * @return array{emps:object[],scope:string} scope '' when there is no choice to make
+     */
+    private function schedule_scope($emps,$current_emp_id){
+        if(!$current_emp_id||current_user_can('manage_options'))return ['emps'=>$emps,'scope'=>''];
+        global $wpdb;$t=$this->team_tables();
+        $mates=array_map('intval',(array)$wpdb->get_col($wpdb->prepare("SELECT DISTINCT m.employee_id FROM {$t['members']} m INNER JOIN {$t['teams']} tm ON tm.id=m.team_id AND tm.active=1 INNER JOIN {$t['members']} me ON me.team_id=m.team_id AND me.active=1 AND me.employee_id=%d WHERE m.active=1",$current_emp_id)));
+        if(!$mates)return ['emps'=>$emps,'scope'=>''];
+        if(sanitize_key($_GET['scope']??'')==='department')return ['emps'=>$emps,'scope'=>'department'];
+        $mates=array_flip($mates);$mates[$current_emp_id]=true;
+        return ['emps'=>array_values(array_filter($emps,function($e)use($mates){return isset($mates[(int)$e->id]);})),'scope'=>'team'];
     }
 
     /** Team Schedule → PDF / WhatsApp: the shown week as a PDF file (src/Schedule/SchedulePdf.php). */
@@ -75,7 +95,7 @@ trait EWS_Schedule_View_Trait {
     private function schedule_content(){
         $g=$this->schedule_week_grid();
         // A long list is searched and paged on the server (Ui\ListPage, 3.31.71); the swap form still offers everyone.
-        $swap_people=$g['emps'];
+        $swap_people=$g['dept_emps'];
         $list=\WorkforceOne\Ui\ListPage::apply($g['emps'],wp_unslash($_GET));
         $g['emps']=$list['rows'];
         ['current_emp_id'=>$current_emp_id,'emps'=>$emps,'dates'=>$dates,'sun'=>$sun,'today'=>$today,'week_end'=>$week_end,'map'=>$map,'company_leave'=>$company_leave,'cells'=>$cells]=$g;
@@ -106,7 +126,8 @@ trait EWS_Schedule_View_Trait {
             'week_label'=>TeamOrder::weekLabel(date('Y-m-d',$sun),date('Y-m-d',$this_week))??$range,
             'prev_url'=>add_query_arg(['ews_view'=>'schedule','week'=>date('Y-m-d',strtotime('-7 days',$sun))]),
             'next_url'=>add_query_arg(['ews_view'=>'schedule','week'=>date('Y-m-d',strtotime('+7 days',$sun))]),
-            'pdf_url'=>wp_nonce_url(add_query_arg(['action'=>'ews_schedule_pdf','week'=>date('Y-m-d',$sun)],admin_url('admin-post.php')),'ews_schedule_pdf'),
+            'pdf_url'=>wp_nonce_url(add_query_arg(array_filter(['action'=>'ews_schedule_pdf','week'=>date('Y-m-d',$sun),'scope'=>$g['scope']==='department'?'department':null]),admin_url('admin-post.php')),'ews_schedule_pdf'),
+            'scope'=>$g['scope'],'scope_urls'=>$g['scope']===''?[]:['team'=>remove_query_arg(['scope','pg','q']),'department'=>add_query_arg('scope','department',remove_query_arg(['pg','q']))],
             'pdf_name'=>'team-schedule-'.$dates[0].'.pdf',
             'email_url'=>$this->can('ews_view_reports')?wp_nonce_url(add_query_arg(['action'=>'ews31_report_email','start'=>$dates[0],'end'=>$week_end],admin_url('admin-post.php')),'ews31_report'):'',
             'email'=>$email,'swap_days'=>$swap_days,

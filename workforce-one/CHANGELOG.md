@@ -16,6 +16,10 @@ memory. No database change.
 - **Team Schedule** and **Attendance** (app): above 60 people, the search and the team filter run on
   the server and the page shows 50 people at a time (src/Ui/ListPage.php); the cards and day counts
   still count everyone, the swap form still offers everyone. Smaller teams see no change.
+- **Team Schedule for employees** opens on **My team** (the people in their teams) with a **My
+  department** switch for everyone in their department (owner request). Employees without a team and
+  administrators see the list as before. The PDF follows what is shown; the swap form still offers the
+  whole department.
 - **wp-admin → Sign In / Out Report**: 100 records a page with a search by employee (a month for
   3,000 people was 30,000 rows in one page).
 - **Push notifications** to many devices go out 20 at a time instead of one by one, and the VAPID

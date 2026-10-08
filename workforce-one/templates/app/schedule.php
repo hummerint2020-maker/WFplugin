@@ -6,7 +6,9 @@
  *
  * @var array{rows:object[],paged:bool,page:int,pages:int,total:int,all:int,q:string,team:string} $list  Ui\ListPage (3.31.71)
  * @var array<string,string> $list_keep  query values the server search keeps (view, week)
- * @var object[] $swap_people  everyone in the list (the swap form offers them all)
+ * @var object[] $swap_people  the whole department (the swap form offers them all)
+ * @var string $scope  'team' or 'department' for an employee in a team (3.31.71), '' when there is no choice
+ * @var array<string,string> $scope_urls  team / department links
  * @var object[] $emps                  ordered by TeamOrder, annotated with _schedule_* fields
  * @var string[] $dates
  * @var string $today
@@ -93,6 +95,12 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             <span class="wfo-card-icon is-teal wfo-desktop-only"><?php echo Icons::svg('people', 20); ?></span>
             <div class="wfo-card-title-text"><h3 id="wfo-team-title"><?php esc_html_e('Team Schedule', 'workforce-one'); ?> <span class="wfo-sched-count"><?php echo esc_html(sprintf(/* translators: %d: number of people */ _n('%d person', '%d people', $list['total'], 'workforce-one'), $list['total'])); ?></span></h3></div>
         </div>
+        <?php if ($scope !== ''): // an employee in a team: their team first, their department on request (3.31.71) ?>
+        <nav class="wfo-sched-scope ews-no-print" aria-label="<?php esc_attr_e('Whose schedule', 'workforce-one'); ?>">
+            <a href="<?php echo esc_url($scope_urls['team']); ?>"<?php echo $scope === 'team' ? ' aria-current="page"' : ''; ?>><?php esc_html_e('My team', 'workforce-one'); ?></a>
+            <a href="<?php echo esc_url($scope_urls['department']); ?>"<?php echo $scope === 'department' ? ' aria-current="page"' : ''; ?>><?php esc_html_e('My department', 'workforce-one'); ?></a>
+        </nav>
+        <?php endif; ?>
         <div class="wfo-sched-bar ews-no-print">
             <?php if ($list['paged']): // a long list: the search runs on the server (Enter) ?>
             <form method="get" class="wfo-list-search" data-ews-server-list><?php foreach ($list_keep as $k => $v): ?><input type="hidden" name="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($v); ?>"><?php endforeach; ?>
