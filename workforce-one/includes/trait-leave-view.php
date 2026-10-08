@@ -104,10 +104,18 @@ trait EWS_Leave_View_Trait {
         global $wpdb;
         $table=$wpdb->prefix.'ews_overtime_requests';
         $emp=$this->current_employee();
-        $mine=[];
+        $mine=[];$summary=null;
         if($emp){
             $mine=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d ORDER BY requested_at DESC LIMIT 20",(int)$emp->id));
             foreach($mine as $r){$r->duration=$this->duration_label($r->requested_minutes);$r->status_text=$this->status_label($r->status);}
+            // The summary card: approved this month, and what is still waiting (any month).
+            $month=current_time('Y-m');
+            $sum=$wpdb->get_row($wpdb->prepare("SELECT COALESCE(SUM(CASE WHEN status='Approved' AND overtime_date BETWEEN %s AND %s THEN requested_minutes ELSE 0 END),0) approved,
+                COALESCE(SUM(CASE WHEN status='Pending' THEN 1 ELSE 0 END),0) waiting,COALESCE(SUM(CASE WHEN status='Pending' THEN requested_minutes ELSE 0 END),0) waiting_minutes,
+                COALESCE(SUM(CASE WHEN overtime_date BETWEEN %s AND %s THEN 1 ELSE 0 END),0) month_count
+                FROM {$table} WHERE employee_id=%d",$month.'-01',$month.'-31',$month.'-01',$month.'-31',(int)$emp->id));
+            $summary=['month'=>date_i18n('F',strtotime($month.'-01')),'approved'=>$this->duration_label((int)($sum->approved??0)),'approved_minutes'=>(int)($sum->approved??0),
+                'waiting'=>(int)($sum->waiting??0),'waiting_time'=>$this->duration_label((int)($sum->waiting_minutes??0)),'month_count'=>(int)($sum->month_count??0)];
         }
         $approvals=null;
         $workflow=$this->approval_workflow('overtime');
@@ -119,8 +127,10 @@ trait EWS_Leave_View_Trait {
         }
         if($approvals)foreach($approvals['rows'] as $r)$r->duration=$this->duration_label($r->requested_minutes);
         wp_enqueue_script('workforce-one-overtime');
+        wp_enqueue_script('workforce-one-sheet');
+        wp_enqueue_style('workforce-one-requests');
         return $this->render_template('app/overtime',[
-            'emp'=>$emp,'today'=>current_time('Y-m-d'),'mine'=>$mine,'approvals'=>$approvals,
+            'emp'=>$emp,'today'=>current_time('Y-m-d'),'tomorrow'=>gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +1 day')),'mine'=>$mine,'summary'=>$summary,'approvals'=>$approvals,
             'request_url'=>$this->app_view_url('overtime'),'post_url'=>admin_url('admin-post.php'),'empty'=>$this->leave_view_empty_state(),
         ]);
     }

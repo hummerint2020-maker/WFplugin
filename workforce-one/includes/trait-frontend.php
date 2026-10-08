@@ -197,6 +197,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-app-attendance-insights', $root.'assets/js/app-attendance-insights.js', [], $ver, true);
             wp_register_script('workforce-one-leave', $root.'assets/js/leave.js', [], $ver, true);
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
+            wp_register_script('workforce-one-sheet', $root.'assets/js/sheet.js', [], $ver, true);
             wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
             wp_register_script('workforce-one-people', $root.'assets/js/people.js', [], $ver, true);
             wp_register_script('workforce-one-reports', $root.'assets/js/reports.js', [], $ver, true);
@@ -213,6 +214,8 @@ trait EWS_Frontend_Trait {
             wp_register_style('workforce-one-home', $root.'assets/css/app-home.css', ['workforce-one'], $ver);
             wp_register_style('workforce-one-time-page', $root.'assets/css/app-time.css', ['workforce-one'], $ver);
             wp_register_style('workforce-one-leave-page', $root.'assets/css/app-leave.css', ['workforce-one'], $ver);
+            wp_register_style('workforce-one-requests', $root.'assets/css/app-requests.css', ['workforce-one'], $ver);
+            wp_style_add_data('workforce-one-requests', 'rtl', 'replace');
             wp_style_add_data('workforce-one-leave-page', 'rtl', 'replace');
             wp_register_style('workforce-one-schedule-page', $root.'assets/css/app-schedule.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-schedule-page', 'rtl', 'replace');
@@ -247,6 +250,7 @@ trait EWS_Frontend_Trait {
             if($view==='time')wp_enqueue_style('workforce-one-time-page');
             if($view==='vacation')wp_enqueue_style('workforce-one-leave-page');
             if($view==='schedule')wp_enqueue_style('workforce-one-schedule-page');
+            if($view==='overtime'||$view==='schedule'||$view==='tasks')wp_enqueue_style('workforce-one-requests');
             if($view==='notifications')wp_enqueue_style('workforce-one-notifications-page');
             if($view==='polls'||$view==='dashboard')wp_enqueue_style('workforce-one-polls-page');
             if($view==='profile'||$view==='employee')wp_enqueue_style('workforce-one-profile-page');

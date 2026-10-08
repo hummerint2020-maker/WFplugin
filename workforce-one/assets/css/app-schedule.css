@@ -23,7 +23,7 @@
 .wfo-app .wfo-sched .wfo-btn-solid:hover{filter:brightness(1.12)}
 .wfo-app .wfo-sched .wfo-btn-ghost{background:var(--wfo-surface);border:1px solid var(--wfo-line);color:var(--wfo-ink)}
 .wfo-app .wfo-sched .wfo-btn-ghost:hover{border-color:var(--wfo-pri);color:var(--wfo-pri)}
-.wfo-app .wfo-sched .ews-btn:focus-visible,.wfo-sched .wfo-weeknav a:focus-visible,.wfo-sched .ews-swap-small:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .wfo-sched .ews-btn:focus-visible,.wfo-sched .wfo-weeknav a:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
 
 /* week switcher + tools */
 .wfo-sched-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -76,9 +76,7 @@
 .wfo-app .wfo-sched .ews-manager-badge{background:#FFF2DE;color:#8A4F00}
 
 /* avatars */
-.wfo-app .wfo-sched .ews-swap-request-main .wfo-sched-avatar{display:flex;margin:0;font-size:13px;color:#5B34B5}
 .wfo-app .wfo-sched .wfo-chip>span{display:inline;margin:0;font-size:inherit;color:inherit;font-weight:inherit}
-.wfo-app .wfo-sched .ews-swap-request-main .wfo-chip{display:inline-flex;margin:0}
 .wfo-sched-avatar{width:38px;height:38px;flex:0 0 auto;border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#F1EAFF;color:#5B34B5}
 .wfo-sched-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .wfo-sched-avatar.tone-1{background:#E7EEFF;color:#1F4FB8}
@@ -90,42 +88,17 @@
 .wfo-sched .wfo-empty-icon{width:52px;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--wfo-pri-soft);color:var(--wfo-pri)}
 .wfo-app .wfo-sched .ews-schedule-empty strong{color:var(--wfo-ink);font-size:15px}
 
-/* swap panel */
-.wfo-app .wfo-sched .ews-swap-panel-head{display:flex;align-items:center;justify-content:flex-start;gap:12px}
-.wfo-app .wfo-sched .ews-swap-panel-head h3{margin:0;font-size:16px}
-.wfo-app .wfo-sched .ews-swap-panel[hidden]{display:none}
-.wfo-app .wfo-sched .ews-swap-form-wrap{margin:0;padding:14px;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
-.wfo-app .wfo-sched .ews-swap-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;margin:0}
-.wfo-sched .wfo-field{display:flex;flex-direction:column;gap:6px;min-width:0}
-.wfo-app .wfo-sched .ews-swap-form label{margin:0;font-size:13px;font-weight:600;color:var(--wfo-ink)}
-.wfo-app .wfo-sched .ews-swap-form select{width:100%;height:auto;min-height:46px;box-sizing:border-box;padding:10px 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;font-size:15px;min-width:0}
-.wfo-app .wfo-sched .ews-swap-form select:focus{outline:none;border-color:var(--wfo-pri);box-shadow:0 0 0 3px var(--wfo-pri-soft)}
-.wfo-app .wfo-sched .ews-swap-form-actions{display:flex;gap:8px}
-.wfo-app .wfo-sched .ews-swap-form-actions .ews-btn{min-height:46px;font-size:14px;padding:0 16px}
-[dir=rtl] .wfo-sched .ews-swap-form-actions .wfo-icon{transform:scaleX(-1)}
-.wfo-app .wfo-sched .ews-swap-week-empty{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:0;color:var(--wfo-muted);font-size:14px}
-.wfo-app .wfo-sched .ews-swap-requests{margin:0;padding:0;border:0;display:flex;flex-direction:column}
-.wfo-app .wfo-sched .ews-swap-requests-title{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--wfo-muted)}
-.wfo-app .wfo-sched .ews-swap-request{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0;padding:12px 0;border:0;border-bottom:1px solid var(--wfo-line);border-radius:0}
-.wfo-app .wfo-sched .ews-swap-request:last-of-type{border-bottom:0}
-.wfo-app .wfo-sched .ews-swap-request-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 260px}
-.wfo-app .wfo-sched .ews-swap-request-main strong{display:block;font-size:14px;font-weight:600;color:var(--wfo-ink)}
-.wfo-app .wfo-sched .ews-swap-request-main .wfo-swap-dir{display:block;margin-top:2px;font-size:12px;color:var(--wfo-muted)}
-.wfo-app .wfo-sched .wfo-swap-trade{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px;color:var(--wfo-muted)}
-.wfo-app .wfo-sched .wfo-swap-trade .wfo-chip{font-size:11px;padding:3px 8px}
-.wfo-app .wfo-sched .ews-swap-request-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.wfo-app .wfo-sched .ews-swap-request-right form{display:flex;gap:8px;margin:0}
-.wfo-app .wfo-sched .ews-swap-state{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:#EEF0F5;color:#3B4466}
-.wfo-app .wfo-sched .ews-swap-state.pending{background:#FFF2DE;color:#8A4F00}
-.wfo-app .wfo-sched .ews-swap-state.accepted{background:#E6F7EF;color:#0F6B43}
-.wfo-app .wfo-sched .ews-swap-state.rejected,.wfo-app .wfo-sched .ews-swap-state.cancelled{background:#FFE8EC;color:#A51D3E}
-.wfo-app .wfo-sched .ews-swap-small{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;border-radius:var(--wfo-r-sm);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-.wfo-app .wfo-sched .ews-swap-small.accept{background:var(--wfo-hero-start);border:0;color:#fff}
-.wfo-app .wfo-sched .ews-swap-small.reject{background:var(--wfo-surface);border:1px solid var(--wfo-line);color:#A51D3E}
 .wfo-app .wfo-sched .ews-empty-state{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 12px;text-align:center;border:1px dashed var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
 .wfo-app .wfo-sched .ews-empty-icon{width:44px;height:44px;border-radius:999px;background:var(--wfo-pri-soft);color:var(--wfo-pri);display:flex;align-items:center;justify-content:center;font-size:18px}
 .wfo-app .wfo-sched .ews-empty-title{font-weight:600;color:var(--wfo-ink);font-size:14px}
 .wfo-app .wfo-sched .ews-empty-text{font-size:13px;color:var(--wfo-muted)}
+
+/* swap requests: the request look (assets/css/app-requests.css); a person's picture in a row */
+.wfo-app .wfo-sched .ews-swap-panel{max-width:none;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.wfo-app .wfo-sched .wfo-rq-row .wfo-sched-avatar{display:flex;width:40px;height:40px;margin:0;font-size:13px}
+.wfo-app .wfo-sched .wfo-swap-trade{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px;color:var(--wfo-muted)}
+.wfo-app .wfo-sched .wfo-swap-trade .wfo-chip{font-size:11px;padding:3px 8px}
+.wfo-sheet-form{display:flex;flex-direction:column;gap:14px;margin:0}
 
 /* My week: the signed-in employee first, on the hero colours, with Request a swap */
 .wfo-app .wfo-sched .wfo-myweek{background:var(--wfo-hero);color:#fff;box-shadow:0 12px 28px rgba(19,35,91,.2)}
@@ -210,13 +183,12 @@
     .wfo-app .wfo-sched .wfo-sched-table thead th:first-child,.wfo-app .wfo-sched .wfo-sched-table tbody .wfo-sched-who{padding-inline-start:16px;min-width:150px;max-width:170px}
     .wfo-sched-avatar{width:32px;height:32px;font-size:12px}
     .wfo-app .wfo-sched .ews-person{font-size:13px}
-    .wfo-app .wfo-sched .ews-swap-form{grid-template-columns:minmax(0,1fr)}
-    .wfo-app .wfo-sched .ews-swap-form-actions .ews-btn{flex:1 1 0}
-    .wfo-app .wfo-sched .ews-swap-panel-head .ews-btn{width:100%}
     /* phones: My week, then swap requests, then the team as cards (no table, legend or blurb) */
     .wfo-app .wfo-sched .wfo-sched-top{order:0}
     .wfo-app .wfo-sched .wfo-myweek{order:1}
     .wfo-app .wfo-sched .ews-swap-panel{order:2}
+    .wfo-app .wfo-sched .ews-swap-panel{padding-bottom:0}
+    .wfo-app .wfo-sched .ews-swap-panel .wfo-rq-hero .wfo-rq-new{position:static;box-shadow:none}
     .wfo-app .wfo-sched .ews-schedule-card{order:3;padding:0;background:none;box-shadow:none;border-radius:0;gap:10px}
     .wfo-app .wfo-sched .wfo-sched-tools{display:none}
     .wfo-app .wfo-sched .wfo-desktop-only{display:none}
@@ -233,10 +205,6 @@
     .wfo-app .wfo-sched .wfo-sched-actions .ews-pdf-btn{background:var(--wfo-ink);border-color:var(--wfo-ink);color:#fff}
     .wfo-app .wfo-sched .wfo-sched-actions .ews-wa-btn{background:#138A73;border-color:#138A73;color:#fff}
     .wfo-app .wfo-sched .wfo-phone-only{display:inline}
-    .wfo-app .wfo-sched .ews-swap-request{padding:10px 0;gap:8px}
-    .wfo-app .wfo-sched .ews-swap-request-main{flex-basis:100%}
-    .wfo-app .wfo-sched .ews-swap-request-right{width:100%;justify-content:flex-end}
-    .wfo-app .wfo-sched .ews-swap-small{min-height:36px;padding:0 12px}
     .wfo-app .wfo-sched .wfo-myweek-head .wfo-myweek-today .wfo-chip{font-size:11px;padding:4px 9px}
 }
 

@@ -93,6 +93,8 @@ trait EWS_Schedule_View_Trait {
         $email=null;
         if(isset($_GET['email_sent'])||isset($_GET['email_skipped'])||isset($_GET['email_failed']))$email=['sent'=>absint($_GET['email_sent']??0),'skipped'=>absint($_GET['email_skipped']??0),'failed'=>absint($_GET['email_failed']??0)];
         wp_enqueue_script('workforce-one-schedule');
+        wp_enqueue_script('workforce-one-sheet');
+        wp_enqueue_style('workforce-one-requests');
         wp_enqueue_style('workforce-one-schedule-page');
         return $this->render_template('app/schedule',[
             'emps'=>$emps,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'cells'=>$cells,'people'=>$people,'legend'=>$legend,

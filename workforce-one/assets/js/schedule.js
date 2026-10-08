@@ -1,4 +1,5 @@
-/* Employee app Team Schedule (templates/app/schedule.php): swap form, colleague search, PDF / WhatsApp. */
+/* Employee app Team Schedule (templates/app/schedule.php): colleague search, PDF / WhatsApp. The swap
+   form is a sheet (assets/js/sheet.js). */
 (function () {
     'use strict';
 
@@ -47,27 +48,6 @@
     }
 
     function init() {
-        var open = document.getElementById('ews-open-swap');
-        var wrap = document.getElementById('ews-swap-form-wrap');
-        var panel = wrap ? wrap.closest('.ews-swap-panel') : null;
-        function showSwap() {
-            if (!wrap) return;
-            if (panel) panel.hidden = false;
-            wrap.hidden = false;
-            if (open) open.style.display = 'none';
-            wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            var first = wrap.querySelector('select,button');
-            if (first) first.focus({ preventScroll: true });
-        }
-        if (open && wrap) open.addEventListener('click', showSwap);
-        document.querySelectorAll('[data-ews-open-swap]').forEach(function (b) { b.addEventListener('click', showSwap); });
-        // The panel holds no requests (data-ews-swap-empty): it goes away again with the form.
-        document.querySelectorAll('#ews-close-swap').forEach(function (b) { b.addEventListener('click', function () {
-            wrap.hidden = true;
-            if (open) open.style.display = '';
-            if (panel && panel.hasAttribute('data-ews-swap-empty')) panel.hidden = true;
-        }); });
-
         // Colleague search: the table rows (desktop) and the cards (phones) alike.
         var search = document.getElementById('wfo-sched-search');
         var none = document.querySelector('.wfo-sched-noresult');
