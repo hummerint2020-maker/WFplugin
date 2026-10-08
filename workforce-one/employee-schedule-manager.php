@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.66
+ * Version: 3.31.67
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.66');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.67');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -93,10 +93,12 @@ class EWS_Manager_V31_1 {
             /* Schema maintenance is version-gated. The old build ran multiple
                SHOW COLUMNS/dbDelta checks on every front-end page request, which
                made navigation unnecessarily slow. */
+            $this->prime_options();
             $this->maybe_upgrade_schema();
             add_action('init',[$this,'load_textdomain'],1);
             add_shortcode('employee_app',[$this,'app']);
             add_filter('template_include',[$this,'app_fullscreen_template'],99); // Appearance → Full-screen app page
+            add_filter('show_admin_bar',[$this,'app_admin_bar']); // no WordPress toolbar in the app for employees
             \WorkforceOne\Api\Hooks::register($this); // REST routes (src/Api/Routes.php)
             add_shortcode('employee_login',[$this,'login_page']);
             add_action('wp_logout',[$this,'after_logout']);

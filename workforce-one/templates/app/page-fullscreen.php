@@ -7,6 +7,9 @@
  */
 if (!defined('ABSPATH')) exit;
 $wfo_nozoom = (\WorkforceOne\Settings\Appearance::config(get_option('ews_appearance'))['nozoom'] ?? '0') === '1';
+// The site theme's own fonts are not used on this page (the app has its own): do not download them.
+remove_action('wp_head', 'wp_print_font_faces', 50);
+remove_action('wp_head', 'wp_print_font_faces_from_style_variations', 50);
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>

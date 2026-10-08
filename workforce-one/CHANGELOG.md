@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.31.67
+Performance, after the owner asked for it. Nothing a user does changes; pages need fewer database
+queries and the app downloads less. Measured on the local test site (PHP built-in server).
+
+### Changed
+- **Settings in one query.** Most Workforce One settings are not autoloaded, so every page read
+  them one by one (about 20 queries per page). They are now loaded together at start-up
+  (`prime_options()`, WordPress 6.4+). App pages: 40–60 → 22–40 queries.
+- **No query per employee in lists.** With 300 employees:
+  - Attendance and Attendance Insights: 361 → 30 queries (each employee's shift came from its own
+    query; the shifts now come with the employee list).
+  - wp-admin → Employees: 655 → 28 queries, 433 → 167 ms (supervisor and teams per employee are now
+    two queries for the whole list).
+  - wp-admin → Approvals: 346 → 31 queries, 333 → 159 ms (supervisors in one query).
+- **Polls** are looked up once per page instead of up to three times (Home, menu, Polls page).
+- **The app downloads less:** 433 KB in 14 files → 291 KB in 9 files on Home.
+  - Employees no longer get the WordPress toolbar on the app page (it covered the app's header and
+    cost two stylesheets, about 80 KB, plus a few queries). Site administrators keep it.
+  - The full-screen app page no longer downloads the site theme's fonts (about 50 KB); the app uses
+    its own.
+
+### Checked, no change needed
+- Indexes on the large tables (attendance, schedule, notifications, audit log, swaps, leave) cover
+  the queries the pages run.
+- The old stylesheet is already compact (about 21 KB once the server compresses it).
+
 ## 3.31.66
 New look: the Notifications page (look A, chosen by the owner). Opening a notification, Mark read,
 Mark all read, All / Unread and turning phone alerts on or off work as before (same admin-post

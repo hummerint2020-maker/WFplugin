@@ -75,6 +75,19 @@ trait EWS_Teams_Trait {
         return array_map('intval',$wpdb->get_col($wpdb->prepare("SELECT team_id FROM {$t['members']} WHERE employee_id=%d AND active=1 ORDER BY team_id ASC",absint($employee_id))));
     }
 
+    /** team_ids_for_employee() for many employees in one query. @param list<int> $employee_ids @return array<int,list<int>> */
+    private function team_ids_by_employee(array $employee_ids){
+        global $wpdb; $t=$this->team_tables();
+        $this->ensure_teams_schema();
+        $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));
+        $out=array_fill_keys($ids,[]);
+        foreach(array_chunk($ids,500) as $chunk){
+            $ph=implode(',',array_fill(0,count($chunk),'%d'));
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,team_id FROM {$t['members']} WHERE employee_id IN ($ph) AND active=1 ORDER BY team_id ASC",$chunk)) as $r)$out[(int)$r->employee_id][]=(int)$r->team_id;
+        }
+        return $out;
+    }
+
     private function sync_employee_teams($employee_id,$team_ids){
         global $wpdb; $t=$this->team_tables();
         $employee_id=absint($employee_id);

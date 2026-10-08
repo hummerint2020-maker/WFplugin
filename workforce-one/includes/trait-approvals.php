@@ -151,6 +151,25 @@ trait EWS_Approvals_Trait {
         ));
     }
 
+    /**
+     * Each employee's active supervisor id (0 = none) for many employees in one query; the same
+     * answer as approval_related_employee($id,'supervisor') per employee (the newest relationship).
+     * @param list<int> $employee_ids @return array<int,int>
+     */
+    private function approval_supervisor_ids(array $employee_ids){
+        global $wpdb;
+        $t=$this->approval_tables();
+        $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));
+        $out=array_fill_keys($ids,0);
+        foreach(array_chunk($ids,500) as $chunk){
+            $ph=implode(',',array_fill(0,count($chunk),'%d'));
+            $rows=$wpdb->get_results($wpdb->prepare("SELECT r.employee_id,r.related_employee_id FROM {$t['relationships']} r JOIN {$this->employees} e ON e.id=r.related_employee_id
+                WHERE r.employee_id IN ($ph) AND r.relationship_type='supervisor' AND r.active=1 AND e.active=1 ORDER BY r.id DESC",$chunk));
+            foreach((array)$rows as $r){ if(empty($out[(int)$r->employee_id]))$out[(int)$r->employee_id]=(int)$r->related_employee_id; }
+        }
+        return $out;
+    }
+
     /** Resolve the actual approver from the configured resolver. */
     private function approval_resolve_approver($requester_employee_id,$resolver_type,$resolver_value=null,$entity_context=[]){
         global $wpdb;
@@ -410,7 +429,7 @@ trait EWS_Approvals_Trait {
             $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>\WorkforceOne\Approvals\Workflows::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:'NONE','levels'=>$levels,
                 'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:''];
         }
-        $supervisors=[];foreach($employees as $e){$sup=$this->approval_related_employee((int)$e->id,'supervisor');$supervisors[(int)$e->id]=$sup?(int)$sup->id:0;}
+        $supervisors=$this->approval_supervisor_ids(array_map(function($e){return (int)$e->id;},(array)$employees));
         $error='';
         if(isset($_GET['approval_error'])){$error='Could not save approval configuration. Please verify the selected approvers.';$detail=sanitize_text_field(wp_unslash($_GET['approval_error_message']??''));if($detail!=='')$error.=' '.$detail;}
         echo $this->render_template('admin/approvals',['cards'=>$cards,'not_in_use'=>\WorkforceOne\Approvals\Workflows::NOT_IN_USE,'mode_labels'=>\WorkforceOne\Approvals\Workflows::MODES,

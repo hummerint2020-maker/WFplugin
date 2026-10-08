@@ -21,6 +21,16 @@ trait EWS_Appearance_Trait {
      * is on. templates/app/page-fullscreen.php still runs wp_head() / wp_footer(), so the theme's and
      * other plugins' head and footer hooks (styles, the PWA tags, analytics) keep working.
      */
+    /**
+     * show_admin_bar: employees do not get the WordPress toolbar on the app page. It covered the app's
+     * own header and cost two stylesheets (about 80 KB) and a few queries on every page. Site
+     * administrators keep it.
+     */
+    public function app_admin_bar($show){
+        if(!$show||is_admin()||current_user_can('manage_options'))return $show;
+        return $this->pwa_is_employee_app_page()?false:$show;
+    }
+
     public function app_fullscreen_template($template){
         if(is_admin()||!is_singular()||($this->appearance()['fullscreen']??'1')!=='1')return $template;
         $post=get_queried_object();

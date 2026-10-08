@@ -38,6 +38,16 @@ trait EWS_Core_Trait {
         }
 
     /** A Workforce One setting, or its default from src/Settings/Options.php when none is saved. */
+    /**
+     * Loads every Workforce One setting (and the few core ones read on each app page) with one query.
+     * Most of them are not autoloaded, so without this each get_option() was its own query: about 20
+     * per page. Settings that were never saved are remembered as missing in the same pass.
+     */
+    private function prime_options(){
+        if(!function_exists('wp_prime_option_caches'))return; // WordPress 6.4+
+        wp_prime_option_caches(array_merge(array_keys(\WorkforceOne\Settings\Options::all()),['timezone_string','site_logo','theme_switched']));
+    }
+
     private function option($name){
             return get_option($name,\WorkforceOne\Settings\Options::defaultOf($name));
         }
@@ -197,6 +207,8 @@ function current_employee(){
             if(self::$ews_emps_cache!==null)return self::$ews_emps_cache;
             global $wpdb;
             self::$ews_emps_cache=$wpdb->get_results("SELECT * FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+            // Their shifts come with the rows: no query per employee in lists (Attendance, Insights, …).
+            if(method_exists($this,'prime_shift_cache'))$this->prime_shift_cache((array)self::$ews_emps_cache);
             return self::$ews_emps_cache;
         }
 

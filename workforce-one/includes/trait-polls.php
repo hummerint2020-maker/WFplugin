@@ -126,6 +126,16 @@ trait EWS_Polls_Trait {
      * @return array{0:object[],1:object[]} [open, past]
      */
     private function employee_polls($emp){
+        // Home, the menu and the Polls page all ask in one request: one query per employee per request
+        // (a vote is its own request, so this never shows a stale answer).
+        static $memo=[];
+        $key=(int)$emp->id.'|'.(int)$emp->department_id;
+        if(isset($memo[$key]))return $memo[$key];
+        return $memo[$key]=$this->employee_polls_load($emp);
+    }
+
+    /** @return array{0:object[],1:object[]} */
+    private function employee_polls_load($emp){
         global $wpdb; $t=$this->polls_table_names();
         $this->ensure_polls_schema();
         $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT p.*,(SELECT COUNT(*) FROM {$t['votes']} v WHERE v.poll_id=p.id AND v.employee_id=%d) answered FROM {$t['polls']} p WHERE p.status IN ('active','archived') AND (p.audience_department_id IS NULL OR p.audience_department_id=%d) ORDER BY p.id DESC LIMIT 60",(int)$emp->id,(int)$emp->department_id));

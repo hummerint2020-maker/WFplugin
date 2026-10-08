@@ -133,9 +133,11 @@ trait EWS_Employee_Admin_Trait {
             if(!empty($shift['active']))$shifts[(int)$shift['id']]=$label;
         }
         $employees=[];
+        $row_ids=array_map(function($r){return (int)$r->id;},(array)$rows);
+        $sup_ids=$this->approval_supervisor_ids($row_ids);   // one query, not one per employee
+        $team_ids=$this->team_ids_by_employee($row_ids);     // idem
         foreach($rows as $r){
-            $supervisor=$this->approval_related_employee((int)$r->id,'supervisor');
-            $employees[]=['row'=>$r,'supervisor_id'=>$supervisor?(int)$supervisor->id:0,'team_ids'=>$this->team_ids_for_employee((int)$r->id)];
+            $employees[]=['row'=>$r,'supervisor_id'=>$sup_ids[(int)$r->id]??0,'team_ids'=>$team_ids[(int)$r->id]??[]];
         }
         $error=sanitize_key($_GET['employee_error']??'');
         echo $this->render_template('admin/employees',[
