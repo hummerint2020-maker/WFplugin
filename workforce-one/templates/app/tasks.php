@@ -182,7 +182,7 @@ $sheet = static function (string $id, ?object $task) use ($post_url, $priorities
             <?php endif; ?>
             <div class="wfo-rq-two">
                 <div class="wfo-rq-field"><label for="<?php echo esc_attr($id); ?>-due"><?php esc_html_e('Due Date', 'workforce-one'); ?></label><input id="<?php echo esc_attr($id); ?>-due" type="date" name="due_date" value="<?php echo esc_attr($task->due_date ?? ''); ?>"></div>
-                <?php if ($cfg['due_time']): ?><div class="wfo-rq-field"><label for="<?php echo esc_attr($id); ?>-time"><?php esc_html_e('Time', 'workforce-one'); ?></label><input id="<?php echo esc_attr($id); ?>-time" type="time" name="due_time" value="<?php echo esc_attr(isset($task->due_time) ? substr((string) $task->due_time, 0, 5) : ''); ?>"></div><?php endif; ?>
+                <?php if ($cfg['due_time']): ?><div class="wfo-rq-field"><label for="<?php echo esc_attr($id); ?>-time"><?php esc_html_e('Due time', 'workforce-one'); ?></label><input id="<?php echo esc_attr($id); ?>-time" type="time" name="due_time" value="<?php echo esc_attr(isset($task->due_time) ? substr((string) $task->due_time, 0, 5) : ''); ?>"></div><?php endif; ?>
             </div>
             <?php if ($cfg['reminders']): ?>
             <div class="wfo-rq-field"><label for="<?php echo esc_attr($id); ?>-remind"><?php esc_html_e('Reminder', 'workforce-one'); ?></label><select id="<?php echo esc_attr($id); ?>-remind" name="remind_minutes"><option value="0"><?php esc_html_e('No reminder', 'workforce-one'); ?></option><?php foreach ($remind_choices as $m => $label): ?><option value="<?php echo (int) $m; ?>"<?php selected($remind, $m); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select><small class="wfo-tk-hint"><?php esc_html_e('Needs a time.', 'workforce-one'); ?></small></div>
@@ -284,7 +284,7 @@ $sheet = static function (string $id, ?object $task) use ($post_url, $priorities
 
             <?php if ($cfg['checklist'] && ($all_n || $detail['can_work'])): ?>
             <section class="wfo-tk-sec" aria-labelledby="wfo-tk-check-title">
-                <h3 id="wfo-tk-check-title"><?php esc_html_e('Checklist', 'workforce-one'); ?> <span><?php echo (int) $done_n; ?> / <?php echo (int) $all_n; ?></span></h3>
+                <h3 id="wfo-tk-check-title"><?php esc_html_e('Checklist', 'workforce-one'); ?> <span dir="ltr"><?php echo (int) $done_n; ?> / <?php echo (int) $all_n; ?></span></h3>
                 <?php if ($all_n): ?><span class="wfo-tk-progress" aria-hidden="true"><i style="width:<?php echo (int) round(100 * $done_n / max(1, $all_n)); ?>%"></i></span><?php endif; ?>
                 <ul class="wfo-tk-items">
                 <?php foreach ($detail['items'] as $it): ?>
