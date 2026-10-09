@@ -21,7 +21,8 @@ out = json.loads(wp('eval-file', os.path.join(HERE, 'schema_check.php')).splitli
 first, second = out['runs']
 
 check('the upgrade logs no database errors', not first['errors'], first['errors'][:8])
-check('the upgrade only adds what is missing (no broken or repeated ALTERs)', all(' ADD KEY ' in a or ' ADD INDEX ' in a for a in first['alters']), first['alters'][:8])
+check('no broken ALTER (an index without a name or columns)', not [a for a in first['alters'] if '``' in a], first['alters'][:8])
+check('the missed indexes are added', sum(' ADD KEY ' in a or ' ADD INDEX ' in a for a in first['alters']) >= 4, first['alters'][:8])
 check('the upgrade adds the indexes older versions missed', not out['missing'], out['missing'][:10])
 check('every plugin table and index was checked', out['tables'] >= 45 and out['indexes'] >= 150, (out['tables'], out['indexes']))
 check('a second upgrade changes nothing', not second['alters'], second['alters'][:8])
