@@ -6,7 +6,7 @@
  * @var object|null $edit                the location being edited
  * @var object[] $rows                   all locations, active first
  * @var array<string,mixed> $form        the form's values
- * @var object[] $employees              active employees with their assigned location_id
+ * @var string $branches_html            the Employee Branches list (templates/admin/employee-branches.php, 3.31.72)
  * @var object[] $active_locations       active locations (id, name) for assignment
  * @var string $notice                   confirmation after a save / archive ('' = none)
  * @var int $warn_pct                    Location Capacity: a day is near capacity from this occupancy
@@ -41,21 +41,8 @@ $post = admin_url('admin-post.php');
     <button class="button">Save</button>
 </form>
 
-<h2 style="margin-top:30px">Employees by Location</h2>
-<table class="widefat striped"><thead><tr><th>Employee</th><th>Domain</th><th>Assigned Location</th></tr></thead><tbody>
-<?php if (!$employees): ?><tr><td colspan="3">No active employees configured.</td></tr><?php endif; ?>
-<?php foreach ($employees as $emp): ?>
-    <tr><td><?php echo esc_html($emp->name); ?></td><td><?php echo esc_html($emp->domain_name); ?></td><td>
-        <form method="post" action="<?php echo esc_url($post); ?>">
-            <input type="hidden" name="_wpnonce" value="<?php echo esc_attr(wp_create_nonce('ews_employee_location_save_v321')); ?>">
-            <input type="hidden" name="action" value="ews_employee_location_save_v321"><input type="hidden" name="employee_id" value="<?php echo (int) $emp->id; ?>">
-            <select name="location_id" aria-label="<?php echo esc_attr('Location of ' . $emp->name); ?>"><option value="0">-- Default location --</option>
-                <?php foreach ($active_locations as $loc): ?><option value="<?php echo (int) $loc->id; ?>" <?php selected((int) $emp->location_id, (int) $loc->id); ?>><?php echo esc_html($loc->name); ?></option><?php endforeach; ?>
-            </select> <button class="button button-small">Save</button>
-        </form>
-    </td></tr>
-<?php endforeach; ?>
-</tbody></table>
+<h2 style="margin-top:30px" id="ews-employee-branches">Employee Branches</h2>
+<?php echo $branches_html; // phpcs:ignore WordPress.Security.EscapeOutput -- built and escaped in templates/admin/employee-branches.php ?>
 
 <h2 style="margin-top:30px">Configured Locations</h2>
 <table class="widefat striped"><thead><tr><th>Name</th><th>Coordinates</th><th>Radius</th><th>Seats</th><th>Enforcement</th><th>Status</th><th>Actions</th></tr></thead><tbody>

@@ -110,7 +110,7 @@ function current_employee(){
     /** The query values a server-side list search keeps (Ui\ListPage, 3.31.71): the view, the week, the page. @return array<string,string> */
     private function list_keep_args($view){
         $out=['ews_view'=>(string)$view];
-        foreach(['page_id','p','week','scope'] as $k)if(isset($_GET[$k])&&is_scalar($_GET[$k])&&$_GET[$k]!=='')$out[$k]=sanitize_text_field(wp_unslash((string)$_GET[$k]));
+        foreach(['page_id','p','week','scope','branch'] as $k)if(isset($_GET[$k])&&is_scalar($_GET[$k])&&$_GET[$k]!=='')$out[$k]=sanitize_text_field(wp_unslash((string)$_GET[$k]));
         return $out;
     }
 

@@ -126,3 +126,7 @@
 .wfo-home-tasks li b{display:block;font-size:14px;font-weight:600;color:var(--wfo-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
 .wfo-home-tasks li small{display:block;font-size:12px;color:var(--wfo-muted)}
 .wfo-home-tasks li small.is-late{color:#A51D3E;font-weight:600}
+
+/* Branches (3.31.72): "Planned for today" beside the branch, and an upcoming day's branch. */
+.wfo-app .wfo-home-branch-note{color:var(--wfo-pri);font-weight:600}
+.wfo-app .wfo-week-list .wfo-week-branch{display:block;font-size:11.5px;color:var(--wfo-muted);font-weight:500}

@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.31.72
+Branches (owner-approved design): an employee can work at more than one branch (a branch is a Work
+Location), and each company chooses how the branch is decided. Database version 3.31.72
+(ews_employee_branches; ews_schedule.location_id; ews_time_logs.location_id and branch_flag).
+
+### Added
+- **Feature Configuration → Branches** (src/Settings/BranchSettings.php, option ews_branch_settings):
+  **One branch** (as before, the built-in choice), **Any of their branches** (the branch they were at
+  is recorded) or **By the schedule** (each Office day has a branch). Options: also allow their other
+  branches (accepted and flagged), a kiosk QR counts at any branch allowed today, show today's branch
+  to employees, managers see their department's branches only.
+- **Employee Branches** (Work Locations, and its own page): main branch + other branches, 50 a page
+  with a search. A new permission, **Manage Employee Branches**: administrators always; a manager
+  given it changes their department's people only, with the branches they may give. Every change is
+  in the Audit Log.
+- **Attendance grid** ("By the schedule"): each Office day shows its branch; the picker offers that
+  employee's branches; "Branch…" above a day sets it for everyone who has it; a Branch filter.
+- **Sign In** (src/Attendance/BranchRules.php): checked against the day's branch; at another of their
+  branches it is recorded there (and flagged "At Another Branch" by the schedule, the employee is
+  told); at a branch that is not theirs the expected branch's rule decides, as before.
+- **Home and Sign In** show today's branch ("Planned for today"); upcoming days show theirs.
+- **Reports**: "At Another Branch" in the daily log (filter and flag) and a column in the Attendance
+  Summary; Location Capacity counts planned at the day's branch and actual where they signed in.
+
+### Tests
+- New `tests/e2e_branches.py` (30, in CI) and `tests/unit/BranchRulesTest.php`; AttendanceService and
+  Capacity unit tests cover branches; `e2e_locations` follows the Employee Branches list.
+
 ## 3.31.71
 Large companies: found with a load test (nginx + PHP-FPM + MariaDB on 2 cores, 1,000 and 3,000
 employees with 3 months of data). Signing in at the start of a shift was already fast and did not

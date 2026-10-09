@@ -23,6 +23,7 @@ trait EWS_Permissions_Trait {
                 'ews_manage_tasks'=>'Manage Tasks',
                 'ews_manage_roles'=>'Manage Roles & Permissions',
                 'ews_manage_payroll'=>'Manage Payroll',
+                'ews_manage_employee_branches'=>'Manage Employee Branches',   // 3.31.72: a manager with it changes their department's people's branches
             ];
         }
 

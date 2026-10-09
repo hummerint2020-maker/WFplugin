@@ -12,6 +12,9 @@
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
+ * @var array<string,mixed> $branch        Settings\BranchSettings (3.31.72)
+ * @var int $branch_count                  active work locations
+ * @var string $locations_url
  * @var string $privacy_html                    section rendered by the Privacy module
  * @var int $presence_minutes                   time an employee has to answer a presence request
  * @var bool $saved
@@ -110,6 +113,26 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
         <label><span class="wfo-field-label">Allow employees to give Kudos</span><input type="checkbox" name="recognition_allow_kudos" value="1" <?php checked($on['kudos']); ?>> Employees can send Kudos to colleagues.</label>
         <label><span class="wfo-field-label">Weekly sending limit</span><select name="recognition_weekly_limit_mode" style="width:100%;min-height:40px;border:1px solid #cfd3d8;border-radius:8px;padding:7px 11px;box-sizing:border-box"><option value="limited" <?php selected($recognition['mode'], 'limited'); ?>>Limited</option><option value="unlimited" <?php selected($recognition['mode'], 'unlimited'); ?>>Unlimited</option></select></label>
         <label><span class="wfo-field-label">Maximum Kudos per employee / week</span><input type="number" min="1" max="1000" name="recognition_weekly_limit" value="<?php echo (int) $recognition['limit']; ?>"><span style="display:block;color:#667085;font-size:12px;margin-top:4px">Calendar week: Monday through Sunday. Ignored when Unlimited is selected.</span></label>
+    </div>
+</div>
+
+<div class="wfo-feature-section" id="ews-branches">
+    <div class="wfo-feature-title">Branches</div>
+    <div class="wfo-feature-desc">How an employee's branch is decided when they sign in. A branch is a <a href="<?php echo esc_url($locations_url); ?>">Work Location</a> (<?php echo (int) $branch_count; ?> active); each employee's branches are set on Work Locations.</div>
+    <div class="wfo-branch-modes" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">
+    <?php foreach (['single' => ['One branch', 'Each employee signs in at their main branch only.', 'One office, or people who never move.'], 'any' => ['Any of their branches', 'An employee can sign in at their main branch or any of their other branches. The branch they were at is recorded.', 'Sales, support, supervisors who move between branches.'], 'schedule' => ['By the schedule', 'Each Office day in the Attendance planner has a branch. The employee signs in at that day\'s branch; a day without one uses their main branch.', 'Shifts across branches: clinics, shops, security.']] as $mode => [$title, $desc, $fits]): ?>
+        <label style="border:<?php echo $branch['mode'] === $mode ? '2px solid #2271b1;background:#f0f6fc' : '1px solid #dcdcde'; ?>;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer">
+            <span style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="radio" name="branch_mode" value="<?php echo esc_attr($mode); ?>" <?php checked($branch['mode'], $mode); ?>> <?php echo esc_html($title); ?></span>
+            <span style="font-size:13px;color:#50575e"><?php echo esc_html($desc); ?></span>
+            <span style="font-size:12px;background:#f6f7f7;border-radius:6px;padding:6px 8px">Fits: <?php echo esc_html($fits); ?></span>
+        </label>
+    <?php endforeach; ?>
+    </div>
+    <div class="wfo-feature-fields" style="margin-top:12px">
+        <label><input type="checkbox" name="branch_allow_others" value="1" <?php checked(!empty($branch['allow_others'])); ?>> <strong>Also allow their other branches</strong><span style="display:block;color:#646970;font-size:12px">With "By the schedule": if the employee is at one of their other branches instead, accept it and flag it for the manager.</span></label>
+        <label><input type="checkbox" name="branch_kiosk_any" value="1" <?php checked(!empty($branch['kiosk_any'])); ?>> <strong>Kiosk QR at any allowed branch</strong><span style="display:block;color:#646970;font-size:12px">A branch's kiosk counts as the employee's place for everyone allowed there today, not only people whose main branch it is.</span></label>
+        <label><input type="checkbox" name="branch_show_branch" value="1" <?php checked(!empty($branch['show_branch'])); ?>> <strong>Show today's branch to employees</strong><span style="display:block;color:#646970;font-size:12px">On Home and the Sign In page (when there is more than one branch).</span></label>
+        <label><input type="checkbox" name="branch_manager_scope" value="1" <?php checked(!empty($branch['manager_scope'])); ?>> <strong>Managers see their department's branches only</strong><span style="display:block;color:#646970;font-size:12px">Limits the branches a manager can plan or give to the branches their people use.</span></label>
     </div>
 </div>
 

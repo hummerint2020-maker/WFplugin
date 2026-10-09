@@ -1,6 +1,8 @@
 <?php
 namespace WorkforceOne\Attendance;
 
+use WorkforceOne\Support\Geo;
+
 if (!defined('ABSPATH')) exit;
 
 /**
@@ -122,7 +124,9 @@ final class AttendanceService
         $eid = $emp ? (int) $emp->id : 0;
         $sch = $emp ? $c->schedule($eid) : null;
         $ev = $emp ? $c->events($eid) : [];
-        $assigned = $emp ? $c->assignedLocation($eid) : null;
+        // 3.31.72: with branches the expected branch replaces the single assigned location.
+        $branches = $emp ? $c->branches($eid) : null;
+        $assigned = $branches ? $branches['expected'] : ($emp ? $c->assignedLocation($eid) : null);
         $requiresLocation = $sch ? $c->requiresLocation((string) $sch->status) : false;
 
         // 1. May this event be recorded at all?
@@ -153,6 +157,21 @@ final class AttendanceService
         $prev = ($lat !== null && $lng !== null) ? $c->lastDeviceLocation($eid) : null;
         // The phone's location timestamp is Unix time (UTC): compare it with time(), not local time.
         [$integrityStatus, $integrityReason] = LocationAssessment::integrity($lat, $lng, $cmd->accuracy, $cmd->locationTimestampMs, $c->unixTime(), $prev ?: null);
+        $branchFlag = '';
+        if ($branches && $assigned) {
+            // Which of today's branches is the employee at? A kiosk QR names it; otherwise the position does.
+            $expectedId = (int) $assigned->id;
+            $qrBranch = $cmd->qrLocation ? (int) ($cmd->qrLocation['id'] ?? 0) : 0;
+            if ($qrBranch && isset($branches['allowed'][$qrBranch]) && BranchRules::kioskAllowed($qrBranch, array_keys($branches['allowed']), !empty($branches['kiosk_any']), $expectedId)) {
+                $at = $qrBranch;
+                $branchFlag = ($at !== $expectedId && !empty($branches['flag_other'])) ? BranchRules::OTHER : '';
+            } else {
+                $sites = [];
+                foreach ($branches['allowed'] as $id => $l) $sites[(int) $id] = ['distance' => Geo::distanceMeters($lat, $lng, $l->latitude, $l->longitude), 'radius' => (float) $l->radius];
+                [$at, $branchFlag] = BranchRules::pick(array_keys($branches['allowed']), $expectedId, $sites, !empty($branches['flag_other']));
+            }
+            $assigned = $branches['allowed'][$at] ?? $assigned;
+        }
         [$siteLat, $siteLng, $siteRadius] = $assigned ? [$assigned->latitude, $assigned->longitude, (float) $assigned->radius] : $c->defaultSite();
         [$locationStatus, $distance] = LocationAssessment::geofence($lat, $lng, $siteLat, $siteLng, (float) $siteRadius);
         if ($cmd->qrLocation) {
@@ -172,7 +191,8 @@ final class AttendanceService
         $id = $c->insertTimeLog(['employee_id' => $eid, 'user_id' => $c->currentUserId(), 'work_date' => $day, 'event_type' => $type, 'event_at' => $now,
             'scheduled_status' => $sch->status, 'ip_address' => $c->clientIp(), 'latitude' => $lat, 'longitude' => $lng, 'accuracy' => $cmd->accuracy,
             'location_status' => $locationStatus, 'distance_meters' => $distance, 'location_timestamp' => $cmd->locationTimestampMs,
-            'integrity_status' => $integrityStatus, 'integrity_reason' => $integrityReason, 'created_at' => $now]);
+            'integrity_status' => $integrityStatus, 'integrity_reason' => $integrityReason, 'created_at' => $now]
+            + ($branches ? ['location_id' => $assigned ? (int) $assigned->id : null, 'branch_flag' => $branchFlag !== '' ? $branchFlag : null] : []));
         if (!$id) {
             $detail = $c->insertError() ?: 'Database insert failed.';
             $c->audit('time_' . $type . '_failed', 'time_log', 0, $emp->name . ' / ' . $detail);
@@ -190,7 +210,8 @@ final class AttendanceService
         // The audit row's id is the last insert, as before 3.31.46 (after an achievement award that is the award's notification).
         $c->audit('time_' . $type, 'time_log', $c->lastInsertId(), $emp->name . ' / ' . $sch->status . ' / ' . $now . ' / ' . $classification
             . ' / face_verified=' . ($cmd->faceOk ? 'yes' : 'no') . ' / source=' . ($cmd->qrKiosk ? 'qr_kiosk_' . (int) $cmd->qrKiosk['id'] : 'normal'));
-        return AttendanceResult::success(['event_id' => $id, 'event_type' => $type, 'event_at' => $now, 'work_date' => $day, 'classification' => $classification]);
+        return AttendanceResult::success(['event_id' => $id, 'event_type' => $type, 'event_at' => $now, 'work_date' => $day, 'classification' => $classification]
+            + ($branches ? ['branch_id' => $assigned ? (int) $assigned->id : 0, 'branch_flag' => $branchFlag] : []));
     }
 
     private function startBreakUnlocked(?object $emp): AttendanceResult

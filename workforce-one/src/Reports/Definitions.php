@@ -26,6 +26,7 @@ final class Definitions
             'Expected Hours' => 'Shift length minus the allowed break, on expected days.',
             'Balance' => 'Net hours minus expected hours.',
             'Missing Sign-out' => 'A day with a Sign In and no Sign Out, once the day (or shift) is over.',
+            'At Another Branch' => 'Branches "By the schedule": the employee signed in at another of their branches than the one planned for the day.',
             'Overtime Approved' => 'Length of the approved overtime windows.',
             'Overtime Worked' => 'Approved overtime covered by attendance: before the shift by the first Sign In, after it by the last Sign Out.',
             'Unapproved Extra' => 'Time after the shift end, up to the last Sign Out, not covered by approved overtime. On a day off: all presence outside approved overtime.',

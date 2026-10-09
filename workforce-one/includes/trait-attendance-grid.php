@@ -24,6 +24,16 @@ trait EWS_Attendance_Grid_Trait {
         // A long list is searched, filtered by team and paged on the server (Ui\ListPage, 3.31.71): the
         // cards and day counts count everyone the search and filter keep; the grid shows this page.
         $all_emps=$emps;
+        // Branch filter (3.31.72): people whose main or other branches include it.
+        $branch_filter=0;$branch_filter_names=[];
+        if(count($this->branch_locations())>1&&$this->branch_settings()['mode']!=='single'){
+            $branch_filter_names=array_map(function($l){return (string)$l->name;},$this->branch_choices());
+            $branch_filter=absint($_GET['branch']??0);
+            if($branch_filter&&isset($branch_filter_names[$branch_filter])){
+                $ids=array_map(function($e){return (int)$e->id;},$emps);$others=$this->branch_other_ids_bulk($ids);
+                $emps=array_values(array_filter($emps,function($e)use($branch_filter,$others){return $this->branch_main_id((int)$e->id)===$branch_filter||in_array($branch_filter,$others[(int)$e->id]??[],true);}));
+            }else $branch_filter=0;
+        }
         $list=\WorkforceOne\Ui\ListPage::apply($emps,wp_unslash($_GET));
         $on_page=array_flip(array_map(function($e){return (int)$e->id;},$list['rows']));
         $emps=$list['matched'];
@@ -60,9 +70,18 @@ trait EWS_Attendance_Grid_Trait {
         wp_enqueue_style('workforce-one-attendance-page');
         $people=[];
         foreach($emps as $e)$people[(int)$e->id]=['picture'=>$this->employee_picture_url($e),'initials'=>\WorkforceOne\Employees\ProfileSummary::initials((string)$e->name)?:'·'];
+        // Branches "By the schedule" (3.31.72): each Office day carries a branch, one of the employee's.
+        $branch=null;
+        if($this->branch_settings()['mode']==='schedule'&&count($this->branch_locations())>1){
+            $page_ids=array_map(function($e){return (int)$e->id;},$emps);
+            $choices=$this->branch_choices();$others=$this->branch_other_ids_bulk($page_ids);$mine=[];$main=[];
+            foreach($page_ids as $eid){$main[$eid]=$this->branch_main_id($eid);$mine[$eid]=array_values(array_filter(array_unique(array_merge([$main[$eid]],$others[$eid]??[])),function($id)use($choices){return isset($choices[$id]);}));}
+            $branch=['names'=>array_map(function($l){return (string)$l->name;},$choices),'planned'=>$this->branch_planned_bulk($page_ids,$dates),'mine'=>$mine,'main'=>$main,
+                'statuses'=>array_values(array_filter($this->schedule_type_names(true),function($st){return $this->schedule_type_requires_location($st);}))];
+        }
         return $this->render_template('app/attendance',[
             'people'=>$people,
-            'emps'=>$emps,'list'=>$list,'list_keep'=>$this->list_keep_args('attendance'),'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
+            'emps'=>$emps,'list'=>$list,'branch'=>$branch,'branch_filter'=>$branch_filter,'branch_filter_names'=>$branch_filter_names,'list_keep'=>$this->list_keep_args('attendance'),'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
             'summary'=>$summary,'day_summary'=>$day_summary,'team_options'=>array_values($team_options),
             'rate'=>Insights::rate($summary['Present'],$summary['Late'],$summary['Absent']),
             'statuses'=>$this->schedule_type_names(true),

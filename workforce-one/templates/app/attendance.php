@@ -18,6 +18,11 @@
  * @var array<string,array{recorded:int,absent:int}> $day_summary
  * @var string[] $team_options
  * @var array{rows:object[],paged:bool,page:int,pages:int,total:int,all:int,q:string,team:string} $list  Ui\ListPage (3.31.71); $emps is its page
+ * @var array{names:array<int,string>,planned:array<int,array<string,int>>,mine:array<int,int[]>,main:array<int,int>,statuses:string[]}|null $branch
+ *      "By the schedule" branches (3.31.72): branch names, the planned branch per employee and day, each
+ *      employee's branches, their main branch, and the statuses that take a branch; null when off
+ * @var int $branch_filter                     the branch the list is filtered by (0 = all), 3.31.72
+ * @var array<int,string> $branch_filter_names   branches to filter by (empty: no filter shown)
  * @var array<string,string> $list_keep  query values the server search keeps (view, week)
  * @var int $rate
  * @var string[] $statuses              active schedule types
@@ -108,6 +113,15 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                     <?php foreach ($team_options as $team_name): ?><option value="<?php echo esc_attr($team_name); ?>"<?php selected(strtolower($list['team']), strtolower($team_name)); ?>><?php echo esc_html($team_name); ?></option><?php endforeach; ?>
                 </select></label>
             <?php echo $list['paged'] ? '</form>' : '</div>'; ?>
+            <?php if ($branch_filter_names): ?>
+            <form method="get" class="ews-att-branch-filter"><?php foreach ($list_keep as $k => $v): if ($k === 'branch') continue; ?><input type="hidden" name="<?php echo esc_attr($k); ?>" value="<?php echo esc_attr($v); ?>"><?php endforeach; ?>
+                <?php if ($list['team'] !== ''): ?><input type="hidden" name="team" value="<?php echo esc_attr($list['team']); ?>"><?php endif; ?>
+                <label class="ews-att-filter"><span><?php esc_html_e('Branch', 'workforce-one'); ?></span><select name="branch" data-ews-autosubmit>
+                    <option value="0"><?php esc_html_e('All branches', 'workforce-one'); ?></option>
+                    <?php foreach ($branch_filter_names as $bid => $bname): ?><option value="<?php echo (int) $bid; ?>" <?php selected($branch_filter, (int) $bid); ?>><?php echo esc_html($bname); ?></option><?php endforeach; ?>
+                </select></label>
+            </form>
+            <?php endif; ?>
         </div>
         <div class="ews-day-quick-actions">
             <?php foreach ($dates as $i => $d): ?>
@@ -117,13 +131,18 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                         <option value=""><?php esc_html_e('Set…', 'workforce-one'); ?></option>
                         <?php foreach ($statuses as $s): ?><option value="<?php echo esc_attr($s); ?>"><?php echo esc_html($s); ?></option><?php endforeach; ?>
                     </select>
+                    <?php if ($branch): ?><select class="wfo-attg-fill-branch" data-ews-fill-branch="<?php echo (int) $i; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: day */ __('Branch for everyone on %s', 'workforce-one'), date_i18n('D d M', strtotime($d)))); ?>">
+                        <option value=""><?php esc_html_e('Branch…', 'workforce-one'); ?></option>
+                        <option value="main"><?php esc_html_e('Their main branch', 'workforce-one'); ?></option>
+                        <?php foreach ($branch['names'] as $bid => $bname): ?><option value="<?php echo (int) $bid; ?>"><?php echo esc_html($bname); ?></option><?php endforeach; ?>
+                    </select><?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
         <div class="ews-att-plan-legend"><?php foreach ($plan_dots as $k => $l): ?><span><i class="<?php echo esc_attr($k); ?>"></i> <?php echo esc_html($l); ?></span><?php endforeach; ?></div>
     </section>
 
-    <form method="post" action="<?php echo esc_url($post_url); ?>" id="ews-grid-form">
+    <form method="post" action="<?php echo esc_url($post_url); ?>" id="ews-grid-form"<?php if ($branch): ?> data-ews-branch-statuses="<?php echo esc_attr(wp_json_encode($branch['statuses'])); ?>"<?php endif; ?>>
         <input type="hidden" name="action" value="ews31_att_grid_save">
         <input type="hidden" name="week" value="<?php echo esc_attr($week); ?>">
         <input type="hidden" name="attendance_client" value="desktop">
@@ -148,8 +167,8 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                     <tr class="ews-att-employee-row <?php echo esc_attr(trim(($current_emp_id === $eid ? 'current-user ' : '') . (!empty($e->_schedule_team_manager) ? 'team-manager' : ''))); ?>" <?php echo $row_attrs($e); ?>>
                         <td class="ews-att-employee"><?php echo $avatar($e); ?><div><strong><?php echo $badges($e); ?></strong><small><?php echo esc_html($e->domain_name); ?></small><?php if (!empty($e->_schedule_primary_team)): ?><span class="ews-att-team-label"><?php echo esc_html($e->_schedule_primary_team); ?></span><?php endif; ?></div></td>
                         <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; $planned = (string) $day['planned']; ?>
-                        <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?><?php echo esc_attr($plan_class($planned)); ?>" data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($planned); ?>">
-                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip" data-ews-cell aria-haspopup="dialog" data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b></button>
+                        <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?><?php echo esc_attr($plan_class($planned)); ?>" data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($planned); ?>"<?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); ?> data-branch="<?php echo $pb ? $pb : ''; ?>" data-branches="<?php echo esc_attr(implode(',', $branch['mine'][$eid] ?? [])); ?>" data-main-name="<?php echo esc_attr($branch['names'][$branch['main'][$eid] ?? 0] ?? ''); ?>"<?php endif; ?>>
+                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip" data-ews-cell aria-haspopup="dialog" data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b><?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); $takes = in_array($planned, $branch['statuses'], true); ?><small class="wfo-attg-branch<?php echo $pb ? '' : ' is-main'; ?>"<?php echo $takes ? '' : ' hidden'; ?>><?php echo esc_html($pb && isset($branch['names'][$pb]) ? $branch['names'][$pb] : ($branch['names'][$branch['main'][$eid] ?? 0] ?? '')); ?></small><?php endif; ?></button>
                             <div class="ews-att-result <?php echo esc_attr($day['badge']['class']); ?>"><?php echo $result($day['badge'], 'small'); ?></div>
                         </td>
                         <?php endforeach; ?>
@@ -169,6 +188,13 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                 <button type="button" role="option" data-value="" class="ews-plan-not-set"><i></i><?php echo esc_html($not_set); ?></button>
                 <?php foreach ($statuses as $st): ?><button type="button" role="option" data-value="<?php echo esc_attr($st); ?>" class="<?php echo esc_attr($plan_class($st)); ?>"><i></i><?php echo esc_html($st); ?></button><?php endforeach; ?>
             </div>
+            <?php if ($branch): ?><div class="wfo-attg-branches" data-ews-branches hidden>
+                <span class="wfo-attg-branches-title"><?php esc_html_e('Branch for this day', 'workforce-one'); ?></span>
+                <div class="wfo-attg-branch-list">
+                    <button type="button" data-branch="" class="wfo-attg-branch-btn"><?php esc_html_e('Main branch', 'workforce-one'); ?></button>
+                    <?php foreach ($branch['names'] as $bid => $bname): ?><button type="button" data-branch="<?php echo (int) $bid; ?>" class="wfo-attg-branch-btn"><?php echo esc_html($bname); ?></button><?php endforeach; ?>
+                </div>
+            </div><?php endif; ?>
         </div>
 
         <div class="ews-att-savebar">

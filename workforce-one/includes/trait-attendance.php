@@ -49,11 +49,13 @@ trait EWS_Attendance_Trait {
             [$cmd->latitude,$cmd->longitude,$cmd->accuracy,$cmd->locationTimestampMs]=$this->posted_device_location();
             $cmd->faceOk=!empty($ctx['face_ok']);
             if(!empty($ctx['qr_kiosk']))$cmd->qrKiosk=['id'=>(int)$ctx['qr_kiosk']->id];
-            if(!empty($ctx['qr_location'])){$l=$ctx['qr_location'];$cmd->qrLocation=['name'=>(string)$l->name,'latitude'=>$l->latitude,'longitude'=>$l->longitude,'radius'=>$l->radius];}
+            if(!empty($ctx['qr_location'])){$l=$ctx['qr_location'];$cmd->qrLocation=['id'=>(int)$l->id,'name'=>(string)$l->name,'latitude'=>$l->latitude,'longitude'=>$l->longitude,'radius'=>$l->radius];}
             $r=$this->attendance_service()->record($cmd);
             if(!$r->ok){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($this->attendance_error_message($r,$cmd->type))]);return;}
             $type=$cmd->type;$classification=(string)($r->details['classification']??'');
             $success=$type==='sign_in'&&$classification==='Late Arrival'?__('Late Arrival recorded successfully.','workforce-one'):($type==='sign_out'?__('Sign Out recorded successfully.','workforce-one'):__('Sign In recorded successfully.','workforce-one'));
+            // At another of their branches than the one planned for today (3.31.72): say so; the manager sees it too.
+            if(($r->details['branch_flag']??'')===\WorkforceOne\Attendance\BranchRules::OTHER){$l=$this->branch_locations()[(int)($r->details['branch_id']??0)]??null;if($l)$success.=' '.sprintf(/* translators: %s: branch */__('You were at %s, not the branch planned for today; your manager will see this.','workforce-one'),(string)$l->name);}
             $this->redirect(['ews_view'=>'time','time_success'=>rawurlencode($success)]);
         }
 
@@ -94,6 +96,7 @@ trait EWS_Attendance_Trait {
                 'windowBounds'=>function($eid){return $this->sign_in_window_bounds($eid);},
                 'classify'=>function($at,$eid){return $this->sign_in_classification($at,$eid);},
                 'assignedLocation'=>function($eid){return $this->ews_v321_employee_location($eid);},
+                'branches'=>function($eid){return $this->branches_for_sign_in($eid);},
                 'defaultSite'=>function(){return [$this->option('ews_location_latitude'),$this->option('ews_location_longitude'),(float)$this->option('ews_location_radius')];},
                 'lastDeviceLocation'=>function($eid){return $this->last_device_location($eid);},
                 'localTime'=>function(){return current_time('timestamp');},
@@ -292,6 +295,8 @@ trait EWS_Attendance_Trait {
                         $invalid++;
                         continue;
                     }
+                    // "By the schedule" (3.31.72): the day's branch, one of the employee's that this manager may plan.
+                    if(array_key_exists('branch',$change))$this->branch_plan_day($eid,$date,$status,absint($change['branch']));
 
                     $saved++;
                     if(!empty($result['id']) && !empty($result['changed'])){

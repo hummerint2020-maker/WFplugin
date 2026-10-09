@@ -23,7 +23,8 @@ final class Capacity
 
     /**
      * @param array<int,array{id:int,name:string,seats:?int}> $locations active locations, in display order
-     * @param array<int,array{location_id:int,date:string,signed_in:bool,mine:bool}> $seated one entry per employee-day taking a seat
+     * @param array<int,array{location_id:int,date:string,signed_in:bool,mine:bool,actual_location_id?:int}> $seated one entry per employee-day taking a seat;
+     *        actual_location_id (3.31.72): the branch they signed in at, when it is another than location_id
      * @param string[] $dates the days of the report, in order
      * @param string $today 'Y-m-d': later days have no actual figure
      * @param int $warnPct occupancy from which a day is near capacity
@@ -44,8 +45,12 @@ final class Capacity
             $day = &$out[$id]['days'][$d];
             $day['planned']++;
             if ($s['mine']) $day['mine']++;
-            if ($s['signed_in'] && $day['actual'] !== null) $day['actual']++;
             unset($day);
+            if ($s['signed_in']) {
+                $at = (int) ($s['actual_location_id'] ?? 0) ?: $id;
+                if (!isset($out[$at]['days'][$d])) $at = $id;
+                if ($out[$at]['days'][$d]['actual'] !== null) $out[$at]['days'][$d]['actual']++;
+            }
         }
         foreach ($out as $id => $l) {
             $peak = 0; $over = 0; $warn = 0;

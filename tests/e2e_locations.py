@@ -52,7 +52,7 @@ def lid(name):
 ids = seed()
 adm = Session('admin', 'admin')
 st, page, _ = adm.req(PAGE)
-check('the page opens with the add form, employees and locations', st == 200 and forms(page, 'ews_multi_location_save_v321') and 'Employees by Location' in page and 'No locations configured.' in page)
+check('the page opens with the add form, employees and locations', st == 200 and forms(page, 'ews_multi_location_save_v321') and 'Employee Branches' in page and 'No locations configured.' in page)
 n_save = nonce(forms(page, 'ews_multi_location_save_v321')[0])
 
 # ---------------------------------------------------------------- add, validate, default
@@ -77,12 +77,13 @@ check('saving an edit renames it, clears the seats and can make it the default a
 # ---------------------------------------------------------------- employees
 st, page, _ = adm.req(PAGE)
 emp_form = next((f for f in forms(page, 'ews_employee_location_save_v321') if 'name="employee_id" value="%d"' % ids['emp'] in f), '')
-check('active employees are listed for assignment (inactive ones are not)', emp_form and 'Old Timer' not in page.split('Employees by Location')[1].split('Configured Locations')[0])
+check('active employees are listed for assignment (inactive ones are not)', emp_form and 'Old Timer' not in page.split('Employee Branches')[1].split('Configured Locations')[0])
 adm.req('/wp-admin/admin-post.php', {'action': 'ews_employee_location_save_v321', '_wpnonce': nonce(emp_form), 'employee_id': ids['emp'], 'location_id': lid('Branch')})
 check('an employee is assigned a location', q("SELECT location_id FROM {p}ews_employee_locations_v321 WHERE employee_id=%d" % ids['emp'])[0]['location_id'] in (str(lid('Branch')), lid('Branch')))
 st, page, _ = adm.req(PAGE)
 emp_form = next((f for f in forms(page, 'ews_employee_location_save_v321') if 'name="employee_id" value="%d"' % ids['emp'] in f), '')
-check('...shown as selected', re.search(r'<option value="%d"\s+selected' % lid('Branch'), emp_form) is not None)
+row = next((r for r in re.findall(r'<tr>.*?</tr>', page, re.S) if 'ews-branches-%d"' % ids['emp'] in r), '')
+check('...shown as selected', re.search(r'name="location_id"[^>]*>.*?<option value="%d"\s+selected' % lid('Branch'), row, re.S) is not None, row[:500])
 adm.req('/wp-admin/admin-post.php', {'action': 'ews_employee_location_save_v321', '_wpnonce': nonce(emp_form), 'employee_id': ids['emp'], 'location_id': 0})
 check('...and can be cleared (then Sign In uses the default location)', not q("SELECT location_id FROM {p}ews_employee_locations_v321 WHERE employee_id=%d" % ids['emp']))
 
@@ -94,7 +95,7 @@ adm.req('/wp-admin/admin-post.php', {'action': 'ews_multi_location_archive_v321'
 check('a location is archived (kept, inactive)', locations()[-1][:3] == ('Far', '0', '0'), locations())
 st, page, _ = adm.req(PAGE)
 check('...listed as Archived without an Archive button', re.search(r'<strong>Far</strong>.*?Archived</td><td><a class="button button-small"[^>]*>Edit</a>\s*</td>', page, re.S) is not None)
-check('...and not offered for assignment', '>Far</option>' not in page.split('Employees by Location')[1].split('Configured Locations')[0])
+check('...and not offered for assignment', '>Far</option>' not in page.split('Employee Branches')[1].split('Configured Locations')[0])
 head = next((f for f in forms(page, 'ews_multi_location_archive_v321') if 'name="location_id" value="%d"' % lid('Head Office') in f), '')
 adm.req('/wp-admin/admin-post.php', {'action': 'ews_multi_location_archive_v321', '_wpnonce': nonce(head), 'location_id': lid('Head Office')})
 adm.req(PAGE)

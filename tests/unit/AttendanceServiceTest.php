@@ -39,7 +39,7 @@ final class AttendanceServiceTest extends TestCase
             foreach ($w['logs'] as $l) $out[$l['event_type']] = (object) $l;
             return $out;
         };
-        return new AttendanceService(new AttendanceContext([
+        $c = [
             'employee' => function () use (&$w) { return $w['employee']; },
             'attendanceEnabled' => function () use (&$w) { return $w['enabled']; },
             'schedule' => function () use (&$w) { return $w['status'] === null ? null : (object) ['status' => $w['status']]; },
@@ -113,7 +113,10 @@ final class AttendanceServiceTest extends TestCase
                 return false;
             },
             'breakEnded' => function ($emp, $id, $min) use (&$w) { $w['notified'][] = [$id, $min]; },
-        ]));
+        ];
+        // Branches (3.31.72): only when a test sets them; without them the assigned location decides, as before.
+        if (array_key_exists('branches', $w)) $c['branches'] = function () use (&$w) { return $w['branches']; };
+        return new AttendanceService(new AttendanceContext($c));
     }
 
     private function cmd(string $type, array $where = ['lat' => 30.0445, 'lng' => 31.2358]): Cmd
@@ -327,6 +330,39 @@ final class AttendanceServiceTest extends TestCase
         $this->assertSame(B::NO_OPEN_BREAK, $svc->resumeBreak()->code);
         $this->assertSame([], $this->w['notified'], 'no second notification');
         $this->assertSame([], $this->w['audit'], 'and no second audit row');
+    }
+
+    /** Branches (3.31.72): the branch they are at is recorded; another of theirs is flagged "By the schedule". */
+    public function testBranches(): void
+    {
+        $planned = (object) ['id' => 1, 'latitude' => 30.03, 'longitude' => 31.47, 'radius' => 300, 'enforcement' => 1];
+        $other = (object) ['id' => 2, 'latitude' => 30.06, 'longitude' => 31.33, 'radius' => 300, 'enforcement' => 1];
+        $this->w['branches'] = ['expected' => $planned, 'allowed' => [1 => $planned, 2 => $other], 'flag_other' => true, 'kiosk_any' => true];
+        $r = $this->service()->signIn($this->cmd('sign_in', ['lat' => 30.0601, 'lng' => 31.3301]));
+        $this->assertTrue($r->ok);
+        $this->assertSame([2, 'other_branch', 'inside'], [$this->w['logs'][0]['location_id'], $this->w['logs'][0]['branch_flag'], $this->w['logs'][0]['location_status']]);
+        $this->assertSame([2, 'other_branch'], [$r->details['branch_id'], $r->details['branch_flag']]);
+
+        $this->w['logs'] = [];
+        $r = $this->service()->signIn($this->cmd('sign_in', ['lat' => 30.0301, 'lng' => 31.4701]));
+        $this->assertSame([1, null], [$this->w['logs'][0]['location_id'], $this->w['logs'][0]['branch_flag']], 'the planned branch is not flagged');
+
+        $this->w['logs'] = [];
+        $r = $this->service()->signIn($this->cmd('sign_in', ['lat' => 29.0, 'lng' => 31.0]));
+        $this->assertSame(R::OUTSIDE_LOCATION, $r->code, 'none of their branches: the planned branch\'s rule decides');
+
+        // A kiosk QR at another of their branches counts as that branch.
+        $qr = $this->cmd('sign_in', ['lat' => 30.0601, 'lng' => 31.3301]);
+        $qr->qrKiosk = ['id' => 9];
+        $qr->qrLocation = ['id' => 2, 'name' => 'Nasr City', 'latitude' => 30.06, 'longitude' => 31.33, 'radius' => 300];
+        $this->assertTrue($this->service()->signIn($qr)->ok);
+        $this->assertSame([2, 'other_branch'], [$this->w['logs'][0]['location_id'], $this->w['logs'][0]['branch_flag']]);
+
+        // Without branches the service records what it always did (no branch columns).
+        unset($this->w['branches']);
+        $this->w['logs'] = [];
+        $this->service()->signIn($this->cmd('sign_in'));
+        $this->assertArrayNotHasKey('location_id', $this->w['logs'][0]);
     }
 
     public function testTheContextNeedsEveryEntry(): void

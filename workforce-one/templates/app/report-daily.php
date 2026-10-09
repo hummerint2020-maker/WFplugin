@@ -19,7 +19,7 @@
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Reports\DayMetrics;
-$icons = ['Present' => ['check', 'green'], 'Late' => ['overtime', 'amber'], 'Absent' => ['alert', 'red'], 'Leave' => ['leave', 'blue'], 'Holiday' => ['sparkle', 'blue'], 'Business Trip' => ['briefcase', 'purple'], 'Pending' => ['clock', 'gray'], 'Not Scheduled' => ['calendar', 'gray'], 'Missing Sign-out' => ['alert', 'amber']];
+$icons = ['Present' => ['check', 'green'], 'Late' => ['overtime', 'amber'], 'Absent' => ['alert', 'red'], 'Leave' => ['leave', 'blue'], 'Holiday' => ['sparkle', 'blue'], 'Business Trip' => ['briefcase', 'purple'], 'Pending' => ['clock', 'gray'], 'Not Scheduled' => ['calendar', 'gray'], 'Missing Sign-out' => ['alert', 'amber'], 'At Another Branch' => ['pin', 'amber']];
 ?>
 <div class="ews-report-summary-card">
     <div class="ews-report-section-head"><div><h3>Report Summary</h3><p><?php echo esc_html($period_label); ?></p></div><span><?php echo (int) $employee_count; ?> Employees <i>•</i> <?php echo (int) $working_days; ?> configured working days</span></div>

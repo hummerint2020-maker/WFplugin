@@ -24,4 +24,16 @@ final class CapacityTest extends TestCase
         $this->assertSame([4, 1, 0], [$hq['peak'], $hq['days_over'], $hq['days_warn']]);
         $this->assertSame(['none', null, 1], [$g[2]['days']['2026-01-06']['level'], $g[2]['days']['2026-01-06']['pct'], $g[2]['days']['2026-01-06']['planned']]);
     }
+
+    /** Branches (3.31.72): someone planned at one branch who signs in at another counts there as actual. */
+    public function testActualAtAnotherBranch(): void
+    {
+        $g = C::grid([['id' => 1, 'name' => 'HQ', 'seats' => 3], ['id' => 2, 'name' => 'Branch', 'seats' => null]], [
+            ['location_id' => 1, 'date' => '2026-01-04', 'signed_in' => true, 'mine' => false, 'actual_location_id' => 2],
+            ['location_id' => 1, 'date' => '2026-01-04', 'signed_in' => true, 'mine' => false, 'actual_location_id' => 9],
+            ['location_id' => 1, 'date' => '2026-01-04', 'signed_in' => true, 'mine' => false],
+        ], ['2026-01-04'], '2026-01-05');
+        $this->assertSame([3, 2], [$g[1]['days']['2026-01-04']['planned'], $g[1]['days']['2026-01-04']['actual']], 'planned where planned; an unknown branch counts where planned');
+        $this->assertSame([0, 1], [$g[2]['days']['2026-01-04']['planned'], $g[2]['days']['2026-01-04']['actual']]);
+    }
 }

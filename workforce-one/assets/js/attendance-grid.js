@@ -3,7 +3,9 @@
    all: next to the day on a computer, a sheet from the bottom on a phone (700px and narrower, the
    width the grid turns into cards). Only changed days are sent, each with the value it had when the
    page loaded, so a stale page cannot overwrite another manager's newer work (the server reports it
-   as a conflict). */
+   as a conflict). "By the schedule" branches (3.31.72): a day that takes a branch shows it under its
+   status; the picker offers that employee's branches; "Branch…" above a day sets it for everyone
+   who has that branch. */
 (function () {
     'use strict';
 
@@ -21,10 +23,32 @@
         var current = null;
         var submitting = false;
 
+        var branchStatuses = [];
+        try { branchStatuses = JSON.parse(form.getAttribute('data-ews-branch-statuses') || '[]'); } catch (err) { branchStatuses = []; }
+        var branchMode = form.hasAttribute('data-ews-branch-statuses');
+        var branchBox = picker ? picker.querySelector('[data-ews-branches]') : null;
+
         cells.forEach(function (td) {
             td.dataset.value = td.getAttribute('data-planned') || '';
             td.dataset.original = td.dataset.value;
+            if (branchMode) td.dataset.originalBranch = td.getAttribute('data-branch') || '';
         });
+
+        function takesBranch(value) { return branchMode && branchStatuses.indexOf(value) !== -1; }
+        function cellBranches(td) { return (td.getAttribute('data-branches') || '').split(',').filter(Boolean); }
+        function isChanged(td) { return td.dataset.value !== td.dataset.original || (branchMode && (td.getAttribute('data-branch') || '') !== td.dataset.originalBranch); }
+
+        function setBranch(td, id) {
+            td.setAttribute('data-branch', id || '');
+            var label = td.querySelector('.wfo-attg-branch');
+            if (label) {
+                var btn = id && branchBox ? branchBox.querySelector('[data-branch="' + id + '"]') : null;
+                label.textContent = btn ? btn.textContent : (td.getAttribute('data-main-name') || '');
+                label.classList.toggle('is-main', !id);
+                label.hidden = !takesBranch(td.dataset.value);
+            }
+            td.classList.toggle('is-changed', isChanged(td));
+        }
 
         // Week picker: open the chosen week straight away.
         document.querySelectorAll('[data-ews-autosubmit]').forEach(function (input) {
@@ -33,7 +57,7 @@
 
         function planClass(value) { return 'ews-plan-' + (value || 'not-set').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 
-        function changedCells() { return cells.filter(function (td) { return td.dataset.value !== td.dataset.original; }); }
+        function changedCells() { return cells.filter(isChanged); }
 
         function updateCount() {
             if (!count) return;
@@ -48,9 +72,12 @@
             td.setAttribute('data-planned', value);
             Array.prototype.slice.call(td.classList).forEach(function (c) { if (c.indexOf('ews-plan-') === 0) td.classList.remove(c); });
             td.classList.add(planClass(value));
-            td.classList.toggle('is-changed', value !== td.dataset.original);
             var b = td.querySelector('.wfo-attg-chip b');
             if (b) b.textContent = value || notSet;
+            if (branchMode) {
+                if (!takesBranch(value)) td.setAttribute('data-branch', '');
+                setBranch(td, td.getAttribute('data-branch') || '');
+            } else td.classList.toggle('is-changed', value !== td.dataset.original);
         }
 
         function closePicker(focusBack) {
@@ -74,6 +101,15 @@
             picker.querySelectorAll('[role=option]').forEach(function (o) {
                 o.setAttribute('aria-selected', o.getAttribute('data-value') === td.dataset.value ? 'true' : 'false');
             });
+            if (branchBox) {
+                var mine = cellBranches(td), now = td.getAttribute('data-branch') || '';
+                branchBox.hidden = !takesBranch(td.dataset.value);
+                branchBox.querySelectorAll('[data-branch]').forEach(function (btn) {
+                    var id = btn.getAttribute('data-branch');
+                    btn.hidden = id !== '' && mine.indexOf(id) === -1;
+                    btn.setAttribute('aria-pressed', id === now ? 'true' : 'false');
+                });
+            }
             picker.hidden = false;
             if (chip) chip.setAttribute('aria-expanded', 'true');
             if (phone.matches) {
@@ -100,11 +136,15 @@
         if (picker) {
             picker.addEventListener('click', function (e) {
                 if (e.target.closest('.wfo-attg-picker-close')) { closePicker(true); return; }
+                var branchBtn = e.target.closest('[data-branch]');
+                if (branchBtn && current) { setBranch(current, branchBtn.getAttribute('data-branch')); updateCount(); closePicker(true); return; }
                 var opt = e.target.closest('[role=option]');
                 if (!opt || !current) return;
                 var td = current;
                 setValue(td, opt.getAttribute('data-value') || '');
                 updateCount();
+                // A day that takes a branch keeps the picker open on its branches (when there is a choice).
+                if (branchBox && takesBranch(td.dataset.value) && cellBranches(td).length > 1) { closePicker(false); openPicker(td); return; }
                 closePicker(true);
             });
             picker.addEventListener('keydown', function (e) {
@@ -135,9 +175,29 @@
             });
         });
 
+        // "Branch…" above a day: that branch for everyone who has it and works there that day.
+        document.querySelectorAll('[data-ews-fill-branch]').forEach(function (select) {
+            select.addEventListener('change', function () {
+                var day = select.getAttribute('data-ews-fill-branch'), id = select.value;
+                if (id !== '') {
+                    cells.forEach(function (td) {
+                        if (td.getAttribute('data-day') !== day || !takesBranch(td.dataset.value)) return;
+                        if (id === 'main') setBranch(td, '');
+                        else if (cellBranches(td).indexOf(id) !== -1) setBranch(td, id);
+                    });
+                    updateCount();
+                }
+                select.value = '';
+            });
+        });
+
         // Undo: every day back to what it was when the page opened.
         if (undo) undo.addEventListener('click', function () {
-            cells.forEach(function (td) { if (td.dataset.value !== td.dataset.original) setValue(td, td.dataset.original); });
+            cells.forEach(function (td) {
+                if (!isChanged(td)) return;
+                if (branchMode) td.setAttribute('data-branch', td.dataset.originalBranch);
+                setValue(td, td.dataset.original);
+            });
             updateCount();
         });
 
@@ -169,12 +229,14 @@
             if (marker) marker.value = phone.matches ? 'mobile' : 'desktop';
             var payload = form.querySelector('#ews-att-changes-json');
             if (payload) payload.value = JSON.stringify(changedCells().map(function (td) {
-                return {
+                var c = {
                     employee: parseInt(td.getAttribute('data-employee') || '0', 10),
                     day: parseInt(td.getAttribute('data-day') || '-1', 10),
                     status: td.dataset.value,
                     original: td.dataset.original === '' ? null : td.dataset.original
                 };
+                if (branchMode) c.branch = td.getAttribute('data-branch') || '';
+                return c;
             }));
         });
 

@@ -492,7 +492,8 @@ trait EWS_Frontend_Trait {
             wp_enqueue_style('workforce-one-time-page');
             wp_enqueue_script('workforce-one-time');
             if($qr_enabled)wp_enqueue_script('workforce-one-jsqr');
-            return $this->render_template('app/time',compact('emp','sch','ev','working','today','sign_in_open','hours','grace_period','face_signin_enabled','requires_location','break_data',
+            $branch_today=$emp?$this->branch_today((int)$emp->id):null;   // 3.31.72
+            return $this->render_template('app/time',compact('emp','sch','ev','working','today','sign_in_open','hours','grace_period','face_signin_enabled','requires_location','break_data','branch_today',
                 'signin_bounds','hours_start_label','hours_end_label','sign_in_status_label','face_enrolled','face_settings','face_vendor_url','qr_enabled','presence_enabled','presence_url',
                 'clock_state','clock_progress','signed_in_at','picture','initials'));
         }

@@ -12,7 +12,7 @@ use WorkforceOne\Attendance\Insights;
 final class EmployeeSummary
 {
     private const ZERO = ['expected_days' => 0, 'present' => 0, 'late' => 0, 'absent' => 0, 'leave' => 0, 'holiday' => 0, 'trip' => 0,
-        'late_minutes' => 0, 'early_minutes' => 0, 'missing_sign_out' => 0, 'net_minutes' => 0, 'expected_minutes' => 0, 'first_in_total' => 0, 'first_in_days' => 0];
+        'late_minutes' => 0, 'early_minutes' => 0, 'missing_sign_out' => 0, 'other_branch' => 0, 'net_minutes' => 0, 'expected_minutes' => 0, 'first_in_total' => 0, 'first_in_days' => 0];
 
     /**
      * @param array<int,array<string,mixed>> $days report_days() rows
@@ -60,6 +60,7 @@ final class EmployeeSummary
         $t['late_minutes'] += (int) $d['late_minutes'];
         $t['early_minutes'] += (int) $d['early_minutes'];
         $t['missing_sign_out'] += !empty($d['missing_sign_out']) ? 1 : 0;
+        $t['other_branch'] += !empty($d['other_branch']) ? 1 : 0;   // 3.31.72
         $t['net_minutes'] += (int) $d['net_minutes'];
         $t['expected_minutes'] += (int) $d['expected_minutes'];
         if (in_array($bucket, ['Present', 'Late'], true) && preg_match('/^(\d{1,2}):(\d{2})$/', (string) ($d['sign_in'] ?? ''), $m)) {

@@ -29,6 +29,9 @@ final class AttendanceContext
         'scheduleBreakEvents', 'closeBreak', 'breakEnded',
     ];
 
+    /** Entries a site may leave out (3.31.72: 'branches'; without it the assigned location decides, as before). */
+    public const OPTIONAL = ['branches'];
+
     /** @var array<string,callable> */
     private $f;
 
@@ -67,6 +70,17 @@ final class AttendanceContext
 
     /** The employee's assigned work location (latitude, longitude, radius, enforcement), or null. */
     public function assignedLocation(int $employeeId): ?object { $l = $this->call('assignedLocation', $employeeId); return is_object($l) ? $l : null; }
+    /**
+     * Today's branches (3.31.72), or null when the site does not provide them.
+     * @return array{expected:?object, allowed:array<int,object>, flag_other:bool, kiosk_any:bool}|null
+     *   allowed: the accepted branches by id (id, latitude, longitude, radius, enforcement), expected first
+     */
+    public function branches(int $employeeId): ?array
+    {
+        if (!isset($this->f['branches'])) return null;
+        $b = $this->call('branches', $employeeId);
+        return is_array($b) ? $b : null;
+    }
     /** @return array{0:mixed,1:mixed,2:float} the company location settings: latitude, longitude, radius */
     public function defaultSite(): array { return (array) $this->call('defaultSite'); }
     /** @return array{latitude:mixed,longitude:mixed,location_timestamp:mixed}|null */

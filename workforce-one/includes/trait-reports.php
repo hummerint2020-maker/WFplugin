@@ -64,7 +64,7 @@ trait EWS_Reports_Trait {
         wp_enqueue_style('workforce-one-reports-page');
         return $this->render_template('app/reports',[
             'type'=>$type,'tabs'=>$tabs,'start'=>$s,'end'=>$e,'team'=>$team,'employee_id'=>$employee_id,'status'=>$status,'employee_status'=>$employee_status,
-            'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>\WorkforceOne\Reports\Summary::BUCKETS,'body'=>$body,'views'=>$views,'range'=>$range,
+            'team_options'=>$team_options,'emps'=>$emps,'quick'=>$quick_urls,'statuses'=>array_merge(\WorkforceOne\Reports\Summary::BUCKETS,$this->branch_settings()['mode']==='schedule'?['At Another Branch']:[]),'body'=>$body,'views'=>$views,'range'=>$range,
             'period_label'=>date_i18n('d M Y',strtotime($s)).' – '.date_i18n('d M Y',strtotime($e)),
         ]);
     }
@@ -162,17 +162,19 @@ trait EWS_Reports_Trait {
         $where_loc=[];foreach((array)$wpdb->get_results("SELECT employee_id,location_id FROM {$map_table}") as $m)$where_loc[(int)$m->employee_id]=(int)$m->location_id;
         $active=[];foreach((array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1 AND (attendance_enabled IS NULL OR attendance_enabled=1)") as $id)$active[(int)$id]=true;
         $signed=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT DISTINCT employee_id,work_date FROM {$this->time_logs} WHERE event_type IN ('sign_in','late_sign_in') AND work_date BETWEEN %s AND %s",$s,$e)) as $r)$signed[(int)$r->employee_id][$r->work_date]=true;
+        // The branch they signed in at (3.31.72), else where they were planned.
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,MAX(location_id) location_id FROM {$this->time_logs} WHERE event_type IN ('sign_in','late_sign_in') AND work_date BETWEEN %s AND %s GROUP BY employee_id,work_date",$s,$e)) as $r)$signed[(int)$r->employee_id][$r->work_date]=(int)$r->location_id;
         $valid=array_fill_keys(array_column($locations,'id'),true);$dateset=array_fill_keys($dates,true);
         $seated=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE work_date BETWEEN %s AND %s",$s,$e)) as $r){
+        $by_schedule=$this->branch_settings()['mode']==='schedule';
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status,location_id FROM {$this->schedule} WHERE work_date BETWEEN %s AND %s",$s,$e)) as $r){
             $eid=(int)$r->employee_id;$d=(string)$r->work_date;
             if(!isset($active[$eid],$dateset[$d])||isset($holidays[$d]))continue;
             $type=$this->schedule_type_config(trim((string)$r->status));
             if(!$type||empty($type['requires_location']))continue; // WFH, leave, missions take no seat
-            $lid=$where_loc[$eid]??$default_id;
+            $lid=$by_schedule&&!empty($r->location_id)&&isset($valid[(int)$r->location_id])?(int)$r->location_id:($where_loc[$eid]??$default_id);   // the day's branch "By the schedule"
             if(!isset($valid[$lid]))$lid=$default_id; // an archived location falls back to the default, as at Sign In
-            $seated[]=['location_id'=>$lid,'date'=>$d,'signed_in'=>isset($signed[$eid][$d]),'mine'=>isset($mine[$eid])];
+            $seated[]=['location_id'=>$lid,'date'=>$d,'signed_in'=>isset($signed[$eid][$d]),'mine'=>isset($mine[$eid]),'actual_location_id'=>isset($signed[$eid][$d])&&isset($valid[$signed[$eid][$d]])?$signed[$eid][$d]:0];
         }
         return [\WorkforceOne\Reports\Capacity::grid($locations,$seated,$dates,current_time('Y-m-d'),\WorkforceOne\Reports\Capacity::warnPercent($this->option('ews_capacity_warn_percent'))),$split];
     }
@@ -279,7 +281,7 @@ trait EWS_Reports_Trait {
         $ph=implode(',',array_fill(0,count($ids),'%d'));
         $schedule=[];$first=[];$last=[];$breaks=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s",array_merge($ids,[$s,$e]))) as $r)$schedule[(int)$r->employee_id][$r->work_date]=trim((string)$r->status);
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s ORDER BY event_at ASC",array_merge($ids,[$s,$e]))) as $r){
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at,branch_flag FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s ORDER BY event_at ASC",array_merge($ids,[$s,$e]))) as $r){
             $k=(int)$r->employee_id;
             if($r->event_type==='sign_out')$last[$k][$r->work_date]=$r;
             elseif(in_array($r->event_type,['sign_in','late_sign_in'],true) && !isset($first[$k][$r->work_date]))$first[$k][$r->work_date]=$r;
@@ -321,7 +323,8 @@ trait EWS_Reports_Trait {
                     :\WorkforceOne\Reports\DayMetrics::overtime($d,$h['start'],$h['end'],$in?$in->event_at:null,$out?$out->event_at:null,$windows[$eid][$d]??[]));
                 $rows[]=$m+['ot_approved'=>$ot['approved'],'ot_actual'=>$ot['actual'],'ot_extra'=>$ot['extra'],'rule'=>$type?$type['attendance_rule']:null,'employee_id'=>$eid,'employee'=>$emp->name,'domain'=>$emp->domain_name,'date'=>$d,'planned'=>$planned!==''?$planned:'Not Set',
                     'bucket'=>$type && $type['attendance_rule']==='business_trip' && $m['result']===$planned?'Business Trip':$m['result'],
-                    'holiday'=>$holidays[$d]??'','sign_in'=>$in?date_i18n('H:i',strtotime($in->event_at)):'','sign_out'=>$out?date_i18n('H:i',strtotime($out->event_at)):''];
+                    'holiday'=>$holidays[$d]??'','sign_in'=>$in?date_i18n('H:i',strtotime($in->event_at)):'','sign_out'=>$out?date_i18n('H:i',strtotime($out->event_at)):'',
+                    'other_branch'=>$in&&($in->branch_flag??'')===\WorkforceOne\Attendance\BranchRules::OTHER];
             }
         }
         return $rows;
@@ -344,6 +347,7 @@ trait EWS_Reports_Trait {
         $rows=[];$summary=array_fill_keys(\WorkforceOne\Reports\Summary::BUCKETS,0)+['records'=>0];
         foreach($this->report_days($emps,$s,$e,$off_days) as $day){
             $flags=$day['missing_sign_out']?['Missing Sign-out']:[];
+            if(!empty($day['other_branch']))$flags[]='At Another Branch';   // 3.31.72: signed in at another of their branches than planned
             $summary=\WorkforceOne\Reports\Summary::add($summary,$day);
             if($status_filter!=='all'&&$day['bucket']!==$status_filter&&$day['result']!==$status_filter&&!in_array($status_filter,$flags,true))continue;
             $rows[]=$day+['teams'=>$team_names_by_emp[$day['employee_id']]??[],'flags'=>$flags,'note'=>$day['holiday']];
@@ -354,7 +358,7 @@ trait EWS_Reports_Trait {
     private function report_status_badge($status){
         $map=[
             'Present'=>['check','present'],'Late'=>['overtime','late'],'Absent'=>['alert','absent'],'Leave'=>['leave','leave'],
-            'Business Trip'=>['briefcase','trip'],'Holiday'=>['sparkle','leave'],'Pending'=>['clock','pending'],'Not Scheduled'=>['calendar','neutral'],'Missing Sign-out'=>['alert','missing'],'Not Set'=>['calendar','neutral']
+            'Business Trip'=>['briefcase','trip'],'Holiday'=>['sparkle','leave'],'Pending'=>['clock','pending'],'Not Scheduled'=>['calendar','neutral'],'Missing Sign-out'=>['alert','missing'],'At Another Branch'=>['pin','missing'],'Not Set'=>['calendar','neutral']
         ];
         $v=$map[$status]??['calendar','neutral'];
         return '<span class="ews-report-status '.$v[1].'">'.\WorkforceOne\Ui\Icons::svg($v[0],13,2.2).esc_html($status).'</span>';

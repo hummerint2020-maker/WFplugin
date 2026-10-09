@@ -3739,3 +3739,36 @@ msgstr "إدارتي"
 
 msgid "Whose schedule"
 msgstr "جدول مَن"
+
+msgid "All branches"
+msgstr "كل الفروع"
+
+msgid "At %s, planned for today"
+msgstr "في %s، المخطط لليوم"
+
+msgid "At %s, your branch"
+msgstr "في %s، فرعك"
+
+msgid "Branch"
+msgstr "الفرع"
+
+msgid "Branch for everyone on %s"
+msgstr "الفرع للجميع يوم %s"
+
+msgid "Branch for this day"
+msgstr "فرع هذا اليوم"
+
+msgid "Branch…"
+msgstr "الفرع…"
+
+msgid "Main branch"
+msgstr "الفرع الأساسي"
+
+msgid "Planned for today"
+msgstr "المخطط لليوم"
+
+msgid "Their main branch"
+msgstr "فرعهم الأساسي"
+
+msgid "You were at %s, not the branch planned for today; your manager will see this."
+msgstr "كنت في %s وليس الفرع المخطط لليوم، وسيرى مديرك ذلك."

@@ -18,6 +18,7 @@ trait EWS_Features_Trait {
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         $error=sanitize_key($_GET['features_error']??'');
         echo $this->render_template('admin/features',[
+            'branch'=>$this->branch_settings(),'branch_count'=>count($this->branch_locations()),'locations_url'=>admin_url('admin.php?page=ews31-multi-locations'),
             'presence_minutes'=>\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes')),
             'on'=>[
                 'tasks'=>$this->tasks_enabled(),
@@ -86,6 +87,12 @@ trait EWS_Features_Trait {
         update_option('ews_early_leave_monthly_minutes',$early['monthly'],false);
         update_option('ews_early_leave_office_only',$flag('early_leave_office_only')?1:0,false);
         update_option('ews_confirm_global',$flag('confirm_global')?1:0,false);
+        // A form without the field (an older page) keeps the saved branch settings.
+        if(isset($post['branch_mode'])){
+            $branch_before=$this->branch_settings();$branch=\WorkforceOne\Settings\BranchSettings::fromPost($post);
+            update_option('ews_branch_settings',$branch,false);
+            if($branch!==$branch_before)$this->audit('branch_settings_update','settings',0,'mode='.$branch['mode'].'; allow_others='.$branch['allow_others'].'; kiosk_any='.$branch['kiosk_any'].'; show_branch='.$branch['show_branch'].'; manager_scope='.$branch['manager_scope']);
+        }
         update_option('ews_confirmation_actions',FeatureSettings::confirmActions($post['confirm_actions']??[]),false);
 
         $state=function($on){return $on?'enabled':'disabled';};

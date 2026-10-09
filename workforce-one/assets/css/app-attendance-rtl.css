@@ -244,3 +244,20 @@
 
 /* Long lists (3.31.71): nothing on this page matches the server search. */
 .wfo-app .wfo-att .ews-att-noresult{margin:12px 0 0;color:var(--wfo-muted);text-align:center}
+
+/* Branches "By the schedule" (3.31.72): the day's branch under its status, the picker's branch row and
+   "Branch…" above a day. */
+.wfo-app .wfo-att .wfo-attg-chip .wfo-attg-branch{display:block;font-size:11px;font-weight:500;color:var(--wfo-pri);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.wfo-app .wfo-att .wfo-attg-chip .wfo-attg-branch.is-main{color:var(--wfo-muted)}
+.wfo-app .wfo-att .wfo-attg-chip .wfo-attg-branch[hidden]{display:none}
+.wfo-app .wfo-att .ews-day-quick select.wfo-attg-fill-branch{margin-top:6px}
+.wfo-attg-branches{margin-top:8px;padding-top:8px;border-top:1px solid var(--wfo-line);display:flex;flex-direction:column;gap:6px}
+.wfo-attg-branches[hidden]{display:none}
+.wfo-attg-branches-title{font-size:12px;font-weight:600;color:var(--wfo-muted)}
+.wfo-attg-branch-list{display:flex;flex-wrap:wrap;gap:6px}
+.wfo-app .wfo-attg-branch-btn{min-height:34px;margin:0;padding:0 12px;border:0;border-radius:99px;background:var(--wfo-bg);color:var(--wfo-ink);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.wfo-app .wfo-attg-branch-btn[hidden]{display:none}
+.wfo-app .wfo-attg-branch-btn[aria-pressed=true]{background:var(--wfo-pri);color:#fff}
+.wfo-app .wfo-attg-branch-btn:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .wfo-att .wfo-attg-chip:has(.wfo-attg-branch:not([hidden])){flex-direction:column;gap:0;padding:4px 10px;border-radius:14px}
+.wfo-app .wfo-att .ews-att-branch-filter{margin:0;display:flex}

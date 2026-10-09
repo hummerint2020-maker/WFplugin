@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-08T15:06:00+00:00\n"
+"POT-Creation-Date: 2026-10-09T00:05:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -112,13 +112,13 @@ msgstr ""
 #: includes/trait-app-layout.php:64
 #: includes/trait-app-layout.php:74
 #: templates/app/attendance-insights.php:61
-#: templates/app/attendance.php:133
+#: templates/app/attendance.php:152
 msgid "Attendance"
 msgstr ""
 
 #: includes/trait-app-layout.php:64
 #: templates/app/attendance-insights.php:82
-#: templates/app/attendance.php:90
+#: templates/app/attendance.php:95
 #: templates/app/employees.php:19
 msgid "Employees"
 msgstr ""
@@ -138,8 +138,8 @@ msgstr ""
 #: includes/trait-app-layout.php:74
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:58
-#: templates/app/attendance.php:66
+#: templates/app/attendance.php:63
+#: templates/app/attendance.php:71
 msgid "Leave"
 msgstr ""
 
@@ -182,7 +182,7 @@ msgid "Employee Profile"
 msgstr ""
 
 #: includes/trait-app-layout.php:64
-#: templates/app/time.php:163
+#: templates/app/time.php:164
 msgid "Presence Verification"
 msgstr ""
 
@@ -192,7 +192,7 @@ msgid "Polls"
 msgstr ""
 
 #: includes/trait-app-layout.php:74
-#: templates/app/dashboard.php:91
+#: templates/app/dashboard.php:92
 msgid "Sign In / Out"
 msgstr ""
 
@@ -264,86 +264,92 @@ msgstr ""
 msgid "Sign In recorded successfully."
 msgstr ""
 
-#: includes/trait-attendance.php:64
-msgid "Attendance tracking is disabled for your employee profile."
-msgstr ""
-
-#: includes/trait-attendance.php:65
-msgid "This Kiosk location has no coordinates configured. Please contact your administrator."
+#. translators: %s: branch
+#: includes/trait-attendance.php:58
+#, php-format
+msgid "You were at %s, not the branch planned for today; your manager will see this."
 msgstr ""
 
 #: includes/trait-attendance.php:66
+msgid "Attendance tracking is disabled for your employee profile."
+msgstr ""
+
+#: includes/trait-attendance.php:67
+msgid "This Kiosk location has no coordinates configured. Please contact your administrator."
+msgstr ""
+
+#: includes/trait-attendance.php:68
 msgid "Location access is required for QR Sign In. Please allow Location Services and try again."
 msgstr ""
 
 #. translators: 1: work location name, 2: distance
-#: includes/trait-attendance.php:67
+#: includes/trait-attendance.php:69
 #, php-format
 msgid "You must be at %1$s to use QR Sign In. Distance: %2$s"
 msgstr ""
 
 #. translators: %s: distance
-#: includes/trait-attendance.php:68
+#: includes/trait-attendance.php:70
 #, php-format
 msgid "You are outside your assigned work location. Distance: %s"
 msgstr ""
 
 #. translators: %s: distance
-#: includes/trait-attendance.php:69
+#: includes/trait-attendance.php:71
 msgid "Unable to record Sign Out. Please contact the administrator."
 msgstr ""
 
 #. translators: %s: distance
-#: includes/trait-attendance.php:69
+#: includes/trait-attendance.php:71
 msgid "Unable to record Sign In. Please contact the administrator."
 msgstr ""
 
-#: includes/trait-attendance.php:195
+#: includes/trait-attendance.php:198
 msgid "Your WordPress account is not linked to an active employee."
 msgstr ""
 
-#: includes/trait-attendance.php:196
+#: includes/trait-attendance.php:199
 msgid "Face verification is required before Sign In. Please complete Face Verification and try again."
 msgstr ""
 
-#: includes/trait-attendance.php:197
+#: includes/trait-attendance.php:200
 msgid "Today is a General Leave day. Sign In is not required."
 msgstr ""
 
-#: includes/trait-attendance.php:198
+#: includes/trait-attendance.php:201
 msgid "Today is not a working day for you."
 msgstr ""
 
 #. translators: %s: start time
-#: includes/trait-attendance.php:199
+#: includes/trait-attendance.php:202
 #, php-format
 msgid "Sign In is not available yet. Your working hours start at %s."
 msgstr ""
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:202
+#: includes/trait-attendance.php:205
 #, php-format
 msgid "Sign In is no longer available. The Sign In cutoff was %s."
 msgstr ""
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:203
+#: includes/trait-attendance.php:206
 msgid "You have already signed in today."
 msgstr ""
 
-#: includes/trait-attendance.php:204
+#: includes/trait-attendance.php:207
 msgid "Please Resume Work before signing out."
 msgstr ""
 
-#: includes/trait-attendance.php:205
+#: includes/trait-attendance.php:208
 msgid "You cannot sign out before signing in."
 msgstr ""
 
-#: includes/trait-attendance.php:206
+#: includes/trait-attendance.php:209
 msgid "You have already signed out today."
 msgstr ""
 
-#: includes/trait-attendance.php:208
+#: includes/trait-attendance.php:211
 msgid "Unable to record this action."
 msgstr ""
 
@@ -352,9 +358,13 @@ msgid "Good to see you."
 msgstr ""
 
 #. translators: %s: employee first name
-#: includes/trait-dashboard-view.php:75
+#: includes/trait-dashboard-view.php:81
 #, php-format
 msgid "Good to see you, %s."
+msgstr ""
+
+#: includes/trait-dashboard-view.php:86
+msgid "Planned for today"
 msgstr ""
 
 #: includes/trait-frontend.php:10
@@ -404,7 +414,7 @@ msgid "Confirm"
 msgstr ""
 
 #: includes/trait-frontend.php:104
-#: templates/app/attendance.php:211
+#: templates/app/attendance.php:237
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
 #: templates/app/schedule.php:225
@@ -418,7 +428,7 @@ msgstr ""
 
 #: includes/trait-frontend.php:109
 #: templates/app/attendance-insights.php:82
-#: templates/app/attendance.php:167
+#: templates/app/attendance.php:186
 #: templates/app/layout.php:104
 #: templates/app/leave.php:44
 #: templates/app/my-profile.php:157
@@ -428,8 +438,8 @@ msgstr ""
 #: templates/app/schedule.php:254
 #: templates/app/tasks.php:152
 #: templates/app/tasks.php:262
-#: templates/app/time.php:159
-#: templates/app/time.php:176
+#: templates/app/time.php:160
+#: templates/app/time.php:177
 msgid "Close"
 msgstr ""
 
@@ -1147,17 +1157,17 @@ msgstr ""
 #. translators: %s: today's schedule status
 #: includes/trait-schedule-view.php:79
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:47
-#: templates/app/dashboard.php:45
+#: templates/app/attendance.php:52
+#: templates/app/dashboard.php:46
 #: templates/app/my-profile.php:37
 #: templates/app/schedule.php:36
-#: templates/app/time.php:60
+#: templates/app/time.php:61
 msgid "Not Set"
 msgstr ""
 
 #: includes/trait-schedule-view.php:79
-#: templates/app/dashboard.php:46
-#: templates/app/dashboard.php:66
+#: templates/app/dashboard.php:47
+#: templates/app/dashboard.php:67
 #: templates/app/my-profile.php:37
 #: templates/app/schedule.php:36
 msgid "General Leave"
@@ -1166,7 +1176,7 @@ msgstr ""
 #: includes/trait-schedule-view.php:79
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:58
+#: templates/app/attendance.php:63
 #: templates/app/my-profile.php:37
 #: templates/app/pay.php:60
 #: templates/app/schedule.php:36
@@ -1180,8 +1190,8 @@ msgid "Team Schedule"
 msgstr ""
 
 #: includes/trait-schedule-view.php:90
-#: templates/app/attendance.php:136
-#: templates/app/attendance.php:190
+#: templates/app/attendance.php:155
+#: templates/app/attendance.php:216
 #: templates/app/reports.php:53
 #: templates/app/schedule.php:125
 msgid "Employee"
@@ -1276,7 +1286,7 @@ msgstr ""
 
 #. translators: %d: number of team tasks nobody took yet
 #: includes/trait-tasks.php:246
-#: templates/app/dashboard.php:119
+#: templates/app/dashboard.php:120
 #: templates/app/tasks.php:41
 #: templates/app/tasks.php:103
 #: templates/app/tasks.php:226
@@ -1529,19 +1539,19 @@ msgid "Save Changes"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:66
-#: templates/app/dashboard.php:143
+#: templates/app/attendance.php:71
+#: templates/app/dashboard.php:144
 msgid "Office"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:66
-#: templates/app/dashboard.php:143
+#: templates/app/attendance.php:71
+#: templates/app/dashboard.php:144
 msgid "WFH"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:66
+#: templates/app/attendance.php:71
 msgid "Business Trip"
 msgstr ""
 
@@ -1550,12 +1560,12 @@ msgid "Other"
 msgstr ""
 
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:58
+#: templates/app/attendance.php:63
 msgid "Present"
 msgstr ""
 
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:58
+#: templates/app/attendance.php:63
 msgid "Late"
 msgstr ""
 
@@ -1566,13 +1576,13 @@ msgstr ""
 #. translators: %s: due date
 #: templates/app/attendance-insights.php:29
 #: templates/app/attendance-insights.php:43
-#: templates/app/attendance.php:141
-#: templates/app/dashboard.php:77
-#: templates/app/dashboard.php:118
+#: templates/app/attendance.php:160
+#: templates/app/dashboard.php:78
+#: templates/app/dashboard.php:119
 #: templates/app/notifications.php:19
 #: templates/app/overtime.php:117
 #: templates/app/schedule.php:165
-#: templates/app/time.php:62
+#: templates/app/time.php:63
 msgid "Today"
 msgstr ""
 
@@ -1581,7 +1591,7 @@ msgid "Selected Day"
 msgstr ""
 
 #: templates/app/attendance-insights.php:34
-#: templates/app/attendance.php:76
+#: templates/app/attendance.php:81
 #: templates/app/schedule.php:48
 #: templates/app/schedule.php:59
 msgid "Previous week"
@@ -1593,7 +1603,7 @@ msgid "Week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:36
-#: templates/app/attendance.php:85
+#: templates/app/attendance.php:90
 #: templates/app/schedule.php:48
 #: templates/app/schedule.php:61
 msgid "Next week"
@@ -1608,7 +1618,7 @@ msgid "Next day"
 msgstr ""
 
 #: templates/app/attendance-insights.php:46
-#: templates/app/attendance.php:106
+#: templates/app/attendance.php:111
 #: templates/app/employees.php:22
 #: templates/app/my-profile.php:93
 #: templates/app/reports.php:52
@@ -1656,287 +1666,318 @@ msgstr ""
 msgid "No employees in this category."
 msgstr ""
 
-#: templates/app/attendance.php:40
+#: templates/app/attendance.php:45
 #: templates/app/schedule.php:143
 msgid "You"
 msgstr ""
 
-#: templates/app/attendance.php:41
+#: templates/app/attendance.php:46
 #: templates/app/schedule.php:143
 #: templates/app/schedule.php:161
 msgid "Manager"
 msgstr ""
 
-#: templates/app/attendance.php:59
+#: templates/app/attendance.php:64
 msgid "Awaiting sign in"
 msgstr ""
 
-#: templates/app/attendance.php:59
+#: templates/app/attendance.php:64
 msgid "Not scheduled"
 msgstr ""
 
-#: templates/app/attendance.php:72
+#: templates/app/attendance.php:77
 msgid "MANAGER CONTROL CENTER"
 msgstr ""
 
-#: templates/app/attendance.php:73
+#: templates/app/attendance.php:78
 msgid "Manage your team schedule and see attendance results in one place."
 msgstr ""
 
-#: templates/app/attendance.php:79
+#: templates/app/attendance.php:84
 msgid "Choose a date"
 msgstr ""
 
-#: templates/app/attendance.php:82
+#: templates/app/attendance.php:87
 msgid "Choose week"
 msgstr ""
 
-#: templates/app/attendance.php:91
+#: templates/app/attendance.php:96
 msgid "Present days"
 msgstr ""
 
-#: templates/app/attendance.php:92
+#: templates/app/attendance.php:97
 #: templates/app/pay.php:59
 msgid "Late days"
 msgstr ""
 
-#: templates/app/attendance.php:93
+#: templates/app/attendance.php:98
 msgid "Absent days"
 msgstr ""
 
-#: templates/app/attendance.php:94
+#: templates/app/attendance.php:99
 msgid "Attendance rate"
 msgstr ""
 
-#: templates/app/attendance.php:99
+#: templates/app/attendance.php:104
 msgid "Schedule Controls"
 msgstr ""
 
-#: templates/app/attendance.php:99
+#: templates/app/attendance.php:104
 msgid "Set the planned schedule for everyone on this page on a specific day."
 msgstr ""
 
-#: templates/app/attendance.php:99
+#: templates/app/attendance.php:104
 msgid "Set the planned schedule for everyone on a specific day."
 msgstr ""
 
-#: templates/app/attendance.php:105
+#: templates/app/attendance.php:110
 msgid "Search employee..."
 msgstr ""
 
-#: templates/app/attendance.php:107
+#: templates/app/attendance.php:112
 msgid "All teams"
 msgstr ""
 
-#: templates/app/attendance.php:117
+#: templates/app/attendance.php:119
+msgid "Branch"
+msgstr ""
+
+#: templates/app/attendance.php:120
+msgid "All branches"
+msgstr ""
+
+#: templates/app/attendance.php:131
 msgid "Set…"
 msgstr ""
 
+#. translators: %s: day
+#: templates/app/attendance.php:134
+#, php-format
+msgid "Branch for everyone on %s"
+msgstr ""
+
+#. translators: %s: day
+#: templates/app/attendance.php:135
+msgid "Branch…"
+msgstr ""
+
+#: templates/app/attendance.php:136
+msgid "Their main branch"
+msgstr ""
+
 #. translators: 1: people with a record, 2: people absent
-#: templates/app/attendance.php:142
+#: templates/app/attendance.php:161
 #, php-format
 msgid "%1$d recorded · %2$d absent"
 msgstr ""
 
-#: templates/app/attendance.php:161
+#: templates/app/attendance.php:180
 msgid "No employee matches this search."
 msgstr ""
 
+#: templates/app/attendance.php:192
+msgid "Branch for this day"
+msgstr ""
+
+#: templates/app/attendance.php:194
+msgid "Main branch"
+msgstr ""
+
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:175
+#: templates/app/attendance.php:201
 msgid "No changes yet. Tap a day to change it."
 msgstr ""
 
-#: templates/app/attendance.php:175
+#: templates/app/attendance.php:201
 msgid "1 change not saved yet"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:175
+#: templates/app/attendance.php:201
 #, php-format
 msgid "%d changes not saved yet"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:175
+#: templates/app/attendance.php:201
 msgid "You have changes that are not saved yet."
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:176
+#: templates/app/attendance.php:202
 msgid "Undo"
 msgstr ""
 
-#: templates/app/attendance.php:177
+#: templates/app/attendance.php:203
 msgid "Save Schedule & Attendance"
 msgstr ""
 
-#: templates/app/attendance.php:182
+#: templates/app/attendance.php:208
 msgid "The CSV preview has expired. Please upload the file again."
 msgstr ""
 
-#: templates/app/attendance.php:187
+#: templates/app/attendance.php:213
 msgid "CSV Preview"
 msgstr ""
 
-#: templates/app/attendance.php:188
+#: templates/app/attendance.php:214
 msgid "Existing entries for the same employee and date will be replaced."
 msgstr ""
 
-#: templates/app/attendance.php:190
+#: templates/app/attendance.php:216
 msgid "Line"
 msgstr ""
 
-#: templates/app/attendance.php:190
+#: templates/app/attendance.php:216
 #: templates/app/leave.php:141
 #: templates/app/my-profile.php:153
 #: templates/app/overtime.php:115
 msgid "Date"
 msgstr ""
 
-#: templates/app/attendance.php:190
+#: templates/app/attendance.php:216
 #: templates/app/my-profile.php:153
 msgid "Status"
 msgstr ""
 
-#: templates/app/attendance.php:190
+#: templates/app/attendance.php:216
 msgid "Note"
 msgstr ""
 
-#: templates/app/attendance.php:190
+#: templates/app/attendance.php:216
 #: templates/app/reports.php:56
 msgid "Result"
 msgstr ""
 
 #. translators: %d: number of rows
-#: templates/app/attendance.php:208
+#: templates/app/attendance.php:234
 #, php-format
 msgid "Import %d row(s)"
 msgstr ""
 
-#: templates/app/attendance.php:217
+#: templates/app/attendance.php:243
 msgid "Advanced: Bulk CSV Import"
 msgstr ""
 
-#: templates/app/attendance.php:217
+#: templates/app/attendance.php:243
 msgid "Use this when you have many rows from Excel."
 msgstr ""
 
-#: templates/app/attendance.php:219
+#: templates/app/attendance.php:245
 msgid "Download the sample, fill it in Excel, upload it, review validation, then import."
 msgstr ""
 
-#: templates/app/attendance.php:223
+#: templates/app/attendance.php:249
 msgid "Upload CSV"
 msgstr ""
 
-#: templates/app/attendance.php:224
+#: templates/app/attendance.php:250
 msgid "Validate & Preview"
 msgstr ""
 
-#: templates/app/attendance.php:227
+#: templates/app/attendance.php:253
 msgid "Download Sample CSV"
 msgstr ""
 
-#: templates/app/dashboard.php:70
+#: templates/app/dashboard.php:71
 msgid "Today in numbers"
 msgstr ""
 
-#: templates/app/dashboard.php:71
+#: templates/app/dashboard.php:72
 msgid "Active Employees"
 msgstr ""
 
-#: templates/app/dashboard.php:72
+#: templates/app/dashboard.php:73
 msgid "Office Today"
 msgstr ""
 
-#: templates/app/dashboard.php:73
+#: templates/app/dashboard.php:74
 msgid "WFH Today"
 msgstr ""
 
-#: templates/app/dashboard.php:74
-#: templates/app/dashboard.php:143
+#: templates/app/dashboard.php:75
+#: templates/app/dashboard.php:144
 msgid "Leave / Mission"
 msgstr ""
 
-#: templates/app/dashboard.php:80
+#: templates/app/dashboard.php:81
 msgid "TODAY'S SCHEDULE"
 msgstr ""
 
-#: templates/app/dashboard.php:82
+#: templates/app/dashboard.php:83
 msgid "Default location"
 msgstr ""
 
-#: templates/app/dashboard.php:84
+#: templates/app/dashboard.php:85
 msgid "Working day"
 msgstr ""
 
-#: templates/app/dashboard.php:84
+#: templates/app/dashboard.php:85
 msgid "No work scheduled"
 msgstr ""
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/dashboard.php:87
+#: templates/app/dashboard.php:88
 #: templates/app/my-profile.php:153
-#: templates/app/time.php:81
-#: templates/app/time.php:89
-#: templates/app/time.php:101
-#: templates/app/time.php:109
-#: templates/app/time.php:146
+#: templates/app/time.php:82
+#: templates/app/time.php:90
+#: templates/app/time.php:102
+#: templates/app/time.php:110
+#: templates/app/time.php:147
 msgid "Sign In"
 msgstr ""
 
-#: templates/app/dashboard.php:87
 #: templates/app/dashboard.php:88
-#: templates/app/time.php:146
+#: templates/app/dashboard.php:89
 #: templates/app/time.php:147
 #: templates/app/time.php:148
+#: templates/app/time.php:149
 msgid "Not recorded"
 msgstr ""
 
-#: templates/app/dashboard.php:88
+#: templates/app/dashboard.php:89
 #: templates/app/my-profile.php:153
-#: templates/app/time.php:79
-#: templates/app/time.php:102
-#: templates/app/time.php:148
+#: templates/app/time.php:80
+#: templates/app/time.php:103
+#: templates/app/time.php:149
 msgid "Sign Out"
 msgstr ""
 
-#: templates/app/dashboard.php:89
+#: templates/app/dashboard.php:90
 msgid "Work Location"
 msgstr ""
 
-#: templates/app/dashboard.php:89
+#: templates/app/dashboard.php:90
 msgid "Default"
 msgstr ""
 
-#: templates/app/dashboard.php:91
+#: templates/app/dashboard.php:92
 msgid "View Attendance"
 msgstr ""
 
-#: templates/app/dashboard.php:95
+#: templates/app/dashboard.php:96
 msgid "Things that need your attention"
 msgstr ""
 
-#: templates/app/dashboard.php:100
+#: templates/app/dashboard.php:101
 msgid "Dismiss"
 msgstr ""
 
-#: templates/app/dashboard.php:109
+#: templates/app/dashboard.php:110
 msgid "My tasks today"
 msgstr ""
 
-#: templates/app/dashboard.php:109
+#: templates/app/dashboard.php:110
 msgid "All tasks"
 msgstr ""
 
-#: templates/app/dashboard.php:111
+#: templates/app/dashboard.php:112
 #: templates/app/tasks.php:89
 #: templates/app/tasks.php:278
 msgid "Start"
 msgstr ""
 
-#: templates/app/dashboard.php:111
+#: templates/app/dashboard.php:112
 #: templates/app/tasks.php:90
 #: templates/app/tasks.php:91
 #: templates/app/tasks.php:279
@@ -1944,108 +1985,108 @@ msgid "Done"
 msgstr ""
 
 #. translators: %s: due date
-#: templates/app/dashboard.php:117
+#: templates/app/dashboard.php:118
 #, php-format
 msgid "Overdue · since %s"
 msgstr ""
 
-#: templates/app/dashboard.php:120
+#: templates/app/dashboard.php:121
 msgid "repeats"
 msgstr ""
 
-#: templates/app/dashboard.php:127
+#: templates/app/dashboard.php:128
 msgid "Quick Actions"
 msgstr ""
 
-#: templates/app/dashboard.php:131
+#: templates/app/dashboard.php:132
 msgid "Today's Moments"
 msgstr ""
 
-#: templates/app/dashboard.php:131
+#: templates/app/dashboard.php:132
 msgid "A little celebration for the team."
 msgstr ""
 
-#: templates/app/dashboard.php:141
+#: templates/app/dashboard.php:142
 msgid "Today at a glance"
 msgstr ""
 
-#: templates/app/dashboard.php:141
+#: templates/app/dashboard.php:142
 msgid "Current schedule distribution"
 msgstr ""
 
-#: templates/app/dashboard.php:149
+#: templates/app/dashboard.php:150
 msgid "This Week"
 msgstr ""
 
-#: templates/app/dashboard.php:149
+#: templates/app/dashboard.php:150
 msgid "Plan your week"
 msgstr ""
 
-#: templates/app/dashboard.php:149
+#: templates/app/dashboard.php:150
 msgid "Review schedules and keep your team aligned."
 msgstr ""
 
-#: templates/app/dashboard.php:150
+#: templates/app/dashboard.php:151
 msgid "No working days configured"
 msgstr ""
 
-#: templates/app/dashboard.php:151
-#: templates/app/dashboard.php:171
+#: templates/app/dashboard.php:152
+#: templates/app/dashboard.php:172
 #: templates/app/my-profile.php:121
 msgid "View Schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:158
+#: templates/app/dashboard.php:159
 msgid "Overtime Today"
 msgstr ""
 
-#: templates/app/dashboard.php:158
+#: templates/app/dashboard.php:159
 msgid "Approved overtime and actual attendance"
 msgstr ""
 
-#: templates/app/dashboard.php:160
+#: templates/app/dashboard.php:161
 msgid "Approved OT"
 msgstr ""
 
-#: templates/app/dashboard.php:161
+#: templates/app/dashboard.php:162
 msgid "Actual OT"
 msgstr ""
 
-#: templates/app/dashboard.php:162
+#: templates/app/dashboard.php:163
 msgid "Unapproved Extra"
 msgstr ""
 
-#: templates/app/dashboard.php:164
+#: templates/app/dashboard.php:165
 msgid "Sign Out:"
 msgstr ""
 
-#: templates/app/dashboard.php:168
+#: templates/app/dashboard.php:169
 #: templates/app/my-profile.php:121
 msgid "My Week"
 msgstr ""
 
-#: templates/app/dashboard.php:168
+#: templates/app/dashboard.php:169
 msgid "Your upcoming schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:168
+#: templates/app/dashboard.php:169
 msgid "View full schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:171
+#: templates/app/dashboard.php:172
 msgid "No Upcoming Schedule"
 msgstr ""
 
-#: templates/app/dashboard.php:171
+#: templates/app/dashboard.php:172
 msgid "No schedule has been set for your upcoming days."
 msgstr ""
 
-#: templates/app/dashboard.php:180
-#: templates/app/time.php:59
+#: templates/app/dashboard.php:181
+#: templates/app/time.php:60
 msgid "Employee account not linked"
 msgstr ""
 
-#: templates/app/dashboard.php:180
+#: templates/app/dashboard.php:181
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr ""
 
@@ -3140,10 +3181,10 @@ msgstr ""
 #: templates/app/pay.php:89
 #: templates/app/pay.php:92
 #: templates/app/pay.php:93
-#: templates/app/time.php:122
-#: templates/app/time.php:128
-#: templates/app/time.php:137
-#: templates/app/time.php:152
+#: templates/app/time.php:123
+#: templates/app/time.php:129
+#: templates/app/time.php:138
+#: templates/app/time.php:153
 #, php-format
 msgid "%d min"
 msgstr ""
@@ -3248,12 +3289,12 @@ msgstr ""
 #. translators: %d: break number
 #: templates/app/poll-card.php:15
 #: templates/app/tasks.php:93
-#: templates/app/time.php:152
+#: templates/app/time.php:153
 msgid "Open"
 msgstr ""
 
 #: templates/app/poll-card.php:15
-#: templates/app/time.php:112
+#: templates/app/time.php:113
 msgid "Closed"
 msgstr ""
 
@@ -4210,290 +4251,305 @@ msgstr ""
 msgid "System"
 msgstr ""
 
-#: templates/app/time.php:48
+#: templates/app/time.php:49
 msgid "Location permission required"
 msgstr ""
 
-#: templates/app/time.php:51
+#: templates/app/time.php:52
 msgid "Location Services Required"
 msgstr ""
 
-#: templates/app/time.php:52
+#: templates/app/time.php:53
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr ""
 
-#: templates/app/time.php:54
+#: templates/app/time.php:55
 msgid "Allow Location / Try Again"
 msgstr ""
 
-#: templates/app/time.php:59
+#: templates/app/time.php:60
 msgid "Your WordPress account is not linked to an active employee. Please contact your manager."
 msgstr ""
 
-#: templates/app/time.php:60
+#: templates/app/time.php:61
 msgid "Today is not a working day for you"
 msgstr ""
 
 #. translators: %s: today's schedule status
-#: templates/app/time.php:60
+#: templates/app/time.php:61
 #, php-format
 msgid "Your schedule today is %s. Sign In / Sign Out is only available on working days."
 msgstr ""
 
-#: templates/app/time.php:77
+#: templates/app/time.php:78
 msgid "Now"
 msgstr ""
 
-#: templates/app/time.php:87
+#: templates/app/time.php:88
 msgid "You signed out today."
 msgstr ""
 
 #. translators: 1: sign-in time, 2: sign-out time
-#: templates/app/time.php:87
+#: templates/app/time.php:88
 #, php-format
 msgid "Sign In was recorded at %1$s and Sign Out at %2$s."
 msgstr ""
 
-#: templates/app/time.php:89
+#: templates/app/time.php:90
 msgid "You are signed in."
 msgstr ""
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/time.php:89
+#: templates/app/time.php:90
 #, php-format
 msgid "%1$s recorded at %2$s."
 msgstr ""
 
-#: templates/app/time.php:91
+#: templates/app/time.php:92
 msgid "Sign In is available now."
 msgstr ""
 
 #. translators: 1: start time, 2: end time, 3: sign-in cutoff time
-#: templates/app/time.php:91
+#: templates/app/time.php:92
 #, php-format
 msgid "Allowed window: %1$s – %2$s, with Sign In cutoff at %3$s."
 msgstr ""
 
-#: templates/app/time.php:94
+#: templates/app/time.php:95
 msgid "Sign In is not available yet."
 msgstr ""
 
 #. translators: %s: start time
-#: templates/app/time.php:94
+#: templates/app/time.php:95
 #, php-format
 msgid "Your working hours start at %s."
 msgstr ""
 
-#: templates/app/time.php:96
+#: templates/app/time.php:97
 msgid "Sign In is no longer available."
 msgstr ""
 
 #. translators: %s: cutoff time
-#: templates/app/time.php:96
+#: templates/app/time.php:97
 #, php-format
 msgid "The Sign In cutoff was %s."
 msgstr ""
 
-#: templates/app/time.php:106
+#: templates/app/time.php:107
 msgid "Before you sign in"
 msgstr ""
 
-#: templates/app/time.php:107
+#: templates/app/time.php:108
 msgid "Location"
 msgstr ""
 
-#: templates/app/time.php:107
+#. translators: %s: branch
+#: templates/app/time.php:108
+#, php-format
+msgid "At %s, planned for today"
+msgstr ""
+
+#. translators: %s: branch
+#: templates/app/time.php:108
+#, php-format
+msgid "At %s, your branch"
+msgstr ""
+
+#. translators: %s: branch
+#: templates/app/time.php:108
 msgid "Needed for this schedule"
 msgstr ""
 
-#: templates/app/time.php:107
+#. translators: %s: branch
+#: templates/app/time.php:108
 msgid "Not needed today"
 msgstr ""
 
-#: templates/app/time.php:108
+#. translators: %s: branch
+#: templates/app/time.php:109
 msgid "Sign-in window"
 msgstr ""
 
 #. translators: %s: sign-in cutoff time
-#: templates/app/time.php:111
+#: templates/app/time.php:112
 #, php-format
 msgid "Open until %s"
 msgstr ""
 
-#: templates/app/time.php:114
+#: templates/app/time.php:115
 msgid "Face check"
 msgstr ""
 
-#: templates/app/time.php:114
-#: templates/app/time.php:163
+#: templates/app/time.php:115
+#: templates/app/time.php:164
 msgid "Optional"
 msgstr ""
 
-#: templates/app/time.php:114
+#: templates/app/time.php:115
 msgid "Camera opens on Sign In"
 msgstr ""
 
-#: templates/app/time.php:114
+#: templates/app/time.php:115
 msgid "Set up your face first"
 msgstr ""
 
-#: templates/app/time.php:121
+#: templates/app/time.php:122
 msgid "BREAK MANAGEMENT"
 msgstr ""
 
-#: templates/app/time.php:121
+#: templates/app/time.php:122
 msgid "You are on break"
 msgstr ""
 
-#: templates/app/time.php:121
+#: templates/app/time.php:122
 msgid "Take a break"
 msgstr ""
 
 #. translators: %s: minutes
-#: templates/app/time.php:122
+#: templates/app/time.php:123
 #, php-format
 msgid "Your break is being tracked. The standard break duration is %s."
 msgstr ""
 
 #. translators: %s: minutes
-#: templates/app/time.php:122
+#: templates/app/time.php:123
 msgid "Each break session is limited to the configured duration. Breaks are informative and do not affect attendance or overtime calculations."
 msgstr ""
 
 #. translators: %s: minutes
-#: templates/app/time.php:123
+#: templates/app/time.php:124
 msgid "remaining"
 msgstr ""
 
-#: templates/app/time.php:127
+#: templates/app/time.php:128
 msgid "ON BREAK"
 msgstr ""
 
-#: templates/app/time.php:127
+#: templates/app/time.php:128
 msgid "Elapsed time"
 msgstr ""
 
-#: templates/app/time.php:128
+#: templates/app/time.php:129
 msgid "Standard duration"
 msgstr ""
 
 #. translators: %d: minutes
-#: templates/app/time.php:128
+#: templates/app/time.php:129
 #, php-format
 msgid "Manager alert at %d min"
 msgstr ""
 
-#: templates/app/time.php:132
+#: templates/app/time.php:133
 msgid "Resume Work"
 msgstr ""
 
-#: templates/app/time.php:137
+#: templates/app/time.php:138
 msgid "Start Break"
 msgstr ""
 
 #. translators: %d: number of break sessions
-#: templates/app/time.php:140
+#: templates/app/time.php:141
 #, php-format
 msgid "You have used all %d break sessions available today."
 msgstr ""
 
-#: templates/app/time.php:145
+#: templates/app/time.php:146
 msgid "Today's Record"
 msgstr ""
 
-#: templates/app/time.php:147
+#: templates/app/time.php:148
 msgid "Attendance Status"
 msgstr ""
 
-#: templates/app/time.php:150
+#: templates/app/time.php:151
 msgid "Break Sessions"
 msgstr ""
 
 #. translators: %d: break number
-#: templates/app/time.php:152
+#: templates/app/time.php:153
 #, php-format
 msgid "Break %d"
 msgstr ""
 
-#: templates/app/time.php:157
+#: templates/app/time.php:158
 msgid "QR Sign In"
 msgstr ""
 
-#: templates/app/time.php:157
+#: templates/app/time.php:158
 msgid "Scan the dynamic QR displayed at your workplace. This is an additional Sign In method; your normal Sign In remains available."
 msgstr ""
 
-#: templates/app/time.php:157
+#: templates/app/time.php:158
 msgid "Rotating QR"
 msgstr ""
 
-#: templates/app/time.php:158
 #: templates/app/time.php:159
+#: templates/app/time.php:160
 msgid "Scan Workplace QR"
 msgstr ""
 
-#: templates/app/time.php:159
+#: templates/app/time.php:160
 msgid "Point your camera at the QR displayed at your workplace."
 msgstr ""
 
-#: templates/app/time.php:159
+#: templates/app/time.php:160
 msgid "Starting camera…"
 msgstr ""
 
-#: templates/app/time.php:159
+#: templates/app/time.php:160
 msgid "Sign In with QR"
 msgstr ""
 
-#: templates/app/time.php:163
+#: templates/app/time.php:164
 msgid "If a manager requests a physical presence check, the request will appear here and in your notifications."
 msgstr ""
 
-#: templates/app/time.php:169
+#: templates/app/time.php:170
 msgid "Face Sign In"
 msgstr ""
 
-#: templates/app/time.php:169
+#: templates/app/time.php:170
 msgid "Face verification is required before Sign In."
 msgstr ""
 
-#: templates/app/time.php:169
+#: templates/app/time.php:170
 msgid "Face verification is available but currently optional."
 msgstr ""
 
-#: templates/app/time.php:169
+#: templates/app/time.php:170
 msgid "Face processing runs in this browser."
 msgstr ""
 
-#: templates/app/time.php:170
+#: templates/app/time.php:171
 msgid "Not enrolled"
 msgstr ""
 
-#: templates/app/time.php:172
-#: templates/app/time.php:181
+#: templates/app/time.php:173
+#: templates/app/time.php:182
 msgid "Verify Face"
 msgstr ""
 
-#: templates/app/time.php:172
+#: templates/app/time.php:173
 msgid "Set Up / Verify Face"
 msgstr ""
 
-#: templates/app/time.php:176
+#: templates/app/time.php:177
 msgid "Face Verification"
 msgstr ""
 
-#: templates/app/time.php:176
+#: templates/app/time.php:177
 msgid "Blink once and gently move your head. Face processing stays on this device."
 msgstr ""
 
-#: templates/app/time.php:178
+#: templates/app/time.php:179
 msgid "Loading face model…"
 msgstr ""
 
-#: templates/app/time.php:180
+#: templates/app/time.php:181
 msgid "Enroll Face"
 msgstr ""
 
-#: templates/app/time.php:182
+#: templates/app/time.php:183
 msgid "Request Reset"
 msgstr ""
 

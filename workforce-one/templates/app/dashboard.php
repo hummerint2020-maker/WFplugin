@@ -28,11 +28,12 @@
  * @var string $first_name
  * @var string $status
  * @var bool $is_working
- * @var string $location
+ * @var string $location        today's branch (3.31.72) or the assigned work location
+ * @var string $location_note   "Planned for today" when the branch comes from the schedule
  * @var string $sign_in
  * @var string $sign_out
  * @var array{approved:string,actual:string,extra:string,sign_out:string}|null $overtime
- * @var array<int,array{date:string,status:string}> $upcoming
+ * @var array<int,array{date:string,status:string,branch:string}> $upcoming
  * @var array<int,array<string,string>> $nudges
  * @var callable $dismiss_url
  */
@@ -79,7 +80,7 @@ $nudge_icons = ['attendance' => 'clock', 'tasks' => 'tasks', 'leave' => 'leave',
             <div>
                 <span class="wfo-kicker"><?php esc_html_e('TODAY\'S SCHEDULE', 'workforce-one'); ?></span>
                 <h2 class="wfo-home-status"><?php echo esc_html($status_label($status)); ?></h2>
-                <p class="wfo-muted"><?php echo Icons::svg('pin', 16); ?><?php echo esc_html($location !== '' ? $location : __('Default location', 'workforce-one')); ?></p>
+                <p class="wfo-muted"><?php echo Icons::svg('pin', 16); ?><?php echo esc_html($location !== '' ? $location : __('Default location', 'workforce-one')); ?><?php if ($location_note !== ''): ?> · <span class="wfo-home-branch-note"><?php echo esc_html($location_note); ?></span><?php endif; ?></p>
             </div>
             <span class="wfo-chip <?php echo $is_working ? 'is-office' : 'is-none'; ?>"><?php echo Icons::svg($is_working ? 'check' : 'sun', 14, 2.2); ?><?php echo esc_html($is_working ? __('Working day', 'workforce-one') : __('No work scheduled', 'workforce-one')); ?></span>
         </div>
@@ -167,7 +168,7 @@ $nudge_icons = ['attendance' => 'clock', 'tasks' => 'tasks', 'leave' => 'leave',
         <section class="wfo-card wfo-home-week">
             <div class="wfo-card-head wfo-card-head-row"><div><h3><?php esc_html_e('My Week', 'workforce-one'); ?></h3><p class="wfo-muted"><?php esc_html_e('Your upcoming schedule', 'workforce-one'); ?></p></div><a class="wfo-link" href="<?php echo esc_url($urls['schedule']); ?>"><?php esc_html_e('View full schedule', 'workforce-one'); ?></a></div>
             <?php if ($upcoming): ?>
-                <ul class="wfo-week-list"><?php foreach ($upcoming as $u): ?><li data-status="<?php echo esc_attr($u['status']); ?>"><span><?php echo esc_html($u['date']); ?></span><?php echo $chip($u['status']); ?></li><?php endforeach; ?></ul>
+                <ul class="wfo-week-list"><?php foreach ($upcoming as $u): ?><li data-status="<?php echo esc_attr($u['status']); ?>"><span><?php echo esc_html($u['date']); ?><?php if ($u['branch'] !== ''): ?><small class="wfo-week-branch"><?php echo esc_html($u['branch']); ?></small><?php endif; ?></span><?php echo $chip($u['status']); ?></li><?php endforeach; ?></ul>
             <?php else: echo $empty(__('No Upcoming Schedule', 'workforce-one'), __('No schedule has been set for your upcoming days.', 'workforce-one'), $urls['schedule'], __('View Schedule', 'workforce-one')); ?>
             <?php endif; ?>
         </section>

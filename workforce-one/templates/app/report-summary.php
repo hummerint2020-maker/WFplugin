@@ -72,7 +72,7 @@ $count = static function (int $n, int $employee, string $result) use ($drill): s
     <div class="ews-report-table-wrap"><table class="ews-report-table ews-rc-summary" data-ews-sortable>
         <thead><tr>
             <th data-sort="text">Employee</th><th data-sort="num">Expected Days</th><th data-sort="num">Present</th><th data-sort="num">Late</th><th data-sort="num">Absent</th><th data-sort="num">Leave</th>
-            <th data-sort="num">Attendance</th><th data-sort="num">Punctuality</th><th data-sort="num">Late (min)</th><th data-sort="num">Early Leave (min)</th><th data-sort="num">Missing Sign-out</th><th data-sort="text">Avg Sign In</th><th data-sort="num">Net Hours</th><th data-sort="num">Expected</th><th data-sort="num">Balance</th>
+            <th data-sort="num">Attendance</th><th data-sort="num">Punctuality</th><th data-sort="num">Late (min)</th><th data-sort="num">Early Leave (min)</th><th data-sort="num">Missing Sign-out</th><?php if (!empty($totals['other_branch'])): ?><th data-sort="num">At Another Branch</th><?php endif; ?><th data-sort="text">Avg Sign In</th><th data-sort="num">Net Hours</th><th data-sort="num">Expected</th><th data-sort="num">Balance</th>
         </tr></thead>
         <tbody>
         <?php if (!$people): ?><tr><td colspan="15" class="ews-report-empty">No employees match the selected filters.</td></tr><?php endif; ?>
@@ -91,6 +91,7 @@ $count = static function (int $n, int $employee, string $result) use ($drill): s
                 <td data-col="late_minutes" data-value="<?php echo (int) $p['late_minutes']; ?>"><?php echo (int) $p['late_minutes']; ?></td>
                 <td data-col="early_minutes" data-value="<?php echo (int) $p['early_minutes']; ?>"><?php echo (int) $p['early_minutes']; ?></td>
                 <td data-col="missing_sign_out" data-value="<?php echo (int) $p['missing_sign_out']; ?>"><?php echo $count((int) $p['missing_sign_out'], $id, 'Missing Sign-out'); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+                <?php if (!empty($totals['other_branch'])): ?><td data-col="other_branch" data-value="<?php echo (int) $p['other_branch']; ?>"><?php echo $count((int) $p['other_branch'], $id, 'At Another Branch'); // phpcs:ignore WordPress.Security.EscapeOutput ?></td><?php endif; ?>
                 <td data-col="avg_first_in" data-value="<?php echo esc_attr($p['avg_first_in']); ?>"><?php echo esc_html($p['avg_first_in'] !== '' ? $p['avg_first_in'] : '—'); ?></td>
                 <td data-col="net" data-value="<?php echo (int) $p['net_minutes']; ?>"><?php echo esc_html(DayMetrics::hm((int) $p['net_minutes'])); ?></td>
                 <td data-col="expected" data-value="<?php echo (int) $p['expected_minutes']; ?>"><?php echo esc_html(DayMetrics::hm((int) $p['expected_minutes'])); ?></td>

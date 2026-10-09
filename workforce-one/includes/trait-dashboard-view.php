@@ -59,11 +59,17 @@ trait EWS_Dashboard_View_Trait {
         $sch=$this->today_schedule_for_employee($emp->id);
         $events=$this->today_events($emp->id);
         $loc=$this->ews_v321_employee_location($emp->id)?:$this->ews_default_location();
-        $next=(array)$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date>%s ORDER BY work_date ASC LIMIT 5",$emp->id,$today));
+        // Branches (3.31.72): today's branch, and each upcoming day's when it is planned "By the schedule".
+        $branch_today=$this->branch_today((int)$emp->id);
+        $branch_names=$branch_today&&$this->branch_settings()['mode']==='schedule'?array_map(function($l){return (string)$l->name;},$this->branch_locations()):[];
+        $next=(array)$wpdb->get_results($wpdb->prepare("SELECT work_date,status,location_id FROM {$this->schedule} WHERE employee_id=%d AND work_date>%s ORDER BY work_date ASC LIMIT 5",$emp->id,$today));
         $upcoming=[];
         if($next){
             $later=$this->company_leave_dates($next[0]->work_date,$next[count($next)-1]->work_date);
-            foreach($next as $r)$upcoming[]=['date'=>date_i18n('D, d M',strtotime($r->work_date)),'status'=>$this->dashboard_day_status($r->status,$r->work_date,$later)];
+            foreach($next as $r){
+                $st=$this->dashboard_day_status($r->status,$r->work_date,$later);
+                $upcoming[]=['date'=>date_i18n('D, d M',strtotime($r->work_date)),'status'=>$st,'branch'=>$branch_names&&$r->location_id&&$this->schedule_type_requires_location($st)?($branch_names[(int)$r->location_id]??''):''];
+            }
         }
         $status=$this->dashboard_day_status($sch?$sch->status:'',$today,$holidays);
         $sign_in=$events['sign_in']->event_at??($events['late_sign_in']->event_at??null);
@@ -76,7 +82,8 @@ trait EWS_Dashboard_View_Trait {
         return $this->render_template('app/dashboard',$common+[
             'manager'=>false,'emp'=>$emp,'first_name'=>$first_name!==''?$first_name:(string)$emp->name,
             'status'=>$status,'is_working'=>$sch && !$holidays && $this->schedule_type_requires_sign_in($sch->status),
-            'location'=>$loc?(string)$loc->name:'',
+            'location'=>$branch_today?$branch_today['name']:($loc?(string)$loc->name:''),
+            'location_note'=>$branch_today&&$branch_today['planned']?__('Planned for today','workforce-one'):'',
             'sign_in'=>$sign_in?date_i18n('h:i A',strtotime($sign_in)):'','sign_out'=>$sign_out?date_i18n('h:i A',strtotime($sign_out)):'',
             'overtime'=>$ot?['approved'=>$this->format_duration_minutes($ot['approved_minutes']),'actual'=>$this->format_duration_minutes($ot['actual_approved_minutes']),
                 'extra'=>$ot['unapproved_extra_minutes']>0?$this->format_duration_minutes($ot['unapproved_extra_minutes']):'',

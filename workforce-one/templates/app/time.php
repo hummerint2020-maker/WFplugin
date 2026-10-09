@@ -13,6 +13,7 @@
  * @var array       $hours      Working hours.
  * @var bool        $face_signin_enabled
  * @var bool        $requires_location
+ * @var array{id:int,name:string,planned:bool,main_name:string}|null $branch_today  today's branch (3.31.72), null when not shown
  * @var array|null  $break_data
  * @var array       $signin_bounds       Sign-in window (start/cutoff/end timestamps).
  * @var string      $hours_start_label
@@ -104,7 +105,7 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
             </section>
 
             <ul class="wfo-clock-checks" aria-label="<?php esc_attr_e('Before you sign in','workforce-one'); ?>">
-                <li class="<?php echo $requires_location ? 'is-info' : 'is-ok'; ?>"><span class="wfo-check-icon"><?php echo Icons::svg('pin', 18); ?></span><span><strong><?php esc_html_e('Location','workforce-one'); ?></strong><small><?php echo esc_html($requires_location ? __('Needed for this schedule','workforce-one') : __('Not needed today','workforce-one')); ?></small></span></li>
+                <li class="<?php echo $requires_location ? 'is-info' : 'is-ok'; ?>"><span class="wfo-check-icon"><?php echo Icons::svg('pin', 18); ?></span><span><strong><?php esc_html_e('Location','workforce-one'); ?></strong><small><?php echo esc_html($requires_location ? ($branch_today ? sprintf($branch_today['planned'] ? /* translators: %s: branch */ __('At %s, planned for today','workforce-one') : /* translators: %s: branch */ __('At %s, your branch','workforce-one'), $branch_today['name']) : __('Needed for this schedule','workforce-one')) : __('Not needed today','workforce-one')); ?></small></span></li>
                 <li class="<?php echo $signed_in ? 'is-ok' : ($sign_in_open ? 'is-ok' : 'is-warn'); ?>"><span class="wfo-check-icon"><?php echo Icons::svg('clock', 18); ?></span><span><strong><?php esc_html_e('Sign-in window','workforce-one'); ?></strong><small dir="auto"><?php
                     if ($signed_in) echo esc_html($sign_in_status_label !== '' ? $sign_in_status_label : __('Sign In','workforce-one'));
                     /* translators: %s: sign-in cutoff time */
