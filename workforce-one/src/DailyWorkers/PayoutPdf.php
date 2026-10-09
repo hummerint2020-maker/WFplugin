@@ -23,7 +23,7 @@ final class PayoutPdf
     private const BOTTOM = 790.0;
     private const ROW = 26.0;
     /** Column widths (points), in reading order: #, name, trade, days, rate, extra, amount, advance, net, signature. */
-    private const COLS = [22, 108, 66, 36, 44, 36, 50, 44, 52, 77];
+    private const COLS = [22, 104, 64, 36, 44, 46, 50, 44, 52, 73];
 
     /**
      * @param array{rtl:bool,company:string,title:string,subtitle:string,meta:list<array{0:string,1:string}>,heads:list<string>,

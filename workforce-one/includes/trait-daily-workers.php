@@ -949,7 +949,7 @@ trait EWS_Daily_Workers_Trait {
         $rows=[];$i=0;
         foreach($p['lines'] as $l){
             $i++;
-            $rows[]=[(string)$i,$l['name'],$this->dw_trade_label($l['trade']),$num($l['days']),$num($l['rate']),$l['extra_hours']>0?$num($l['extra_hours']):'—',$num($l['amount']),$l['advance']>0?$num($l['advance']):'—',$num($l['net']),''];
+            $rows[]=[(string)$i,$l['name'],$this->dw_trade_label($l['trade']),number_format_i18n((float)$l['days'],abs((float)$l['days']-round((float)$l['days']))>0.01?1:0),$num($l['rate']),$l['extra_hours']>0?$num($l['extra_hours']):'—',$num($l['amount']),$l['advance']>0?$num($l['advance']):'—',$num($l['net']),''];
         }
         $foremen=$this->dw_site_foremen($loc);
         $look=$this->appearance();
