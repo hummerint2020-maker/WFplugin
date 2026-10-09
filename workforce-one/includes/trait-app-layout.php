@@ -16,6 +16,8 @@ trait EWS_App_Layout_Trait {
     private $app_header_greeting=null;
 
     public function app(){
+        // A daily worker's own page (mobile + PIN, no WordPress account): open without logging in.
+        if(sanitize_key($_GET['ews_view']??'')==='worker')return $this->dw_worker_page();
         if(!is_user_logged_in())return $this->login_page();
         return $this->render_app_view(sanitize_key($_GET['ews_view']??'dashboard'));
     }
@@ -37,6 +39,7 @@ trait EWS_App_Layout_Trait {
             case 'polls': return $this->polls_available();
             case 'pay': return $this->payroll_view_available();
             case 'corrections': return $this->corrections_enabled();
+            case 'sites': case 'payout': return $this->dw_view_allowed($view);
         }
         return false;
     }
@@ -53,6 +56,8 @@ trait EWS_App_Layout_Trait {
             case 'vacation': $content=$this->vacation_content(); break;
             case 'overtime': $content=$this->overtime_content(); break;
             case 'corrections': $content=$this->corrections_content(); break;
+            case 'sites': $content=$this->dw_sites_content(); break;
+            case 'payout': $content=$this->dw_payout_content(); break;
             case 'tasks': $content=$this->tasks_content(); break;
             case 'notifications': $content=$this->notifications_content(); break;
             case 'profile': $content=$this->my_profile_content(); break;
@@ -63,7 +68,7 @@ trait EWS_App_Layout_Trait {
             case 'pay': $content=$this->pay_content(); break;
             default: $content=$this->dashboard_content();
         }
-        $titles=['pay'=>__('My Pay','workforce-one'),'dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'corrections'=>__('Corrections','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>__('Polls','workforce-one')];
+        $titles=['pay'=>__('My Pay','workforce-one'),'dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'corrections'=>__('Corrections','workforce-one'),'sites'=>__('My sites','workforce-one'),'payout'=>__('Payout','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>__('Polls','workforce-one')];
         // A colleague's profile belongs to People in the menu.
         return $this->layout($titles[$view]??ucwords(str_replace('-',' ',$view)),$content,$view==='employee'?'people':$view);
     }
@@ -73,7 +78,7 @@ trait EWS_App_Layout_Trait {
         $cfg=$this->option('ews_frontend_navigation');
         if(!is_array($cfg))$cfg=[];
         // Labels still equal to the built-in English defaults are translated; custom labels are shown as entered.
-        $i18n=['Dashboard'=>__('Dashboard','workforce-one'),'Schedule'=>__('Schedule','workforce-one'),'Sign In / Out'=>__('Sign In / Out','workforce-one'),'Leave'=>__('Leave','workforce-one'),'Overtime'=>__('Overtime','workforce-one'),'Corrections'=>__('Corrections','workforce-one'),'Tasks'=>__('Tasks','workforce-one'),'Attendance'=>__('Attendance','workforce-one'),'Reports'=>__('Reports','workforce-one'),'Attendance Insights'=>__('Attendance Insights','workforce-one'),'People'=>__('People','workforce-one'),'Polls'=>__('Polls','workforce-one'),'My Pay'=>__('My Pay','workforce-one')];
+        $i18n=['Dashboard'=>__('Dashboard','workforce-one'),'Schedule'=>__('Schedule','workforce-one'),'Sign In / Out'=>__('Sign In / Out','workforce-one'),'Leave'=>__('Leave','workforce-one'),'Overtime'=>__('Overtime','workforce-one'),'Corrections'=>__('Corrections','workforce-one'),'My sites'=>__('My sites','workforce-one'),'Payout'=>__('Payout','workforce-one'),'Tasks'=>__('Tasks','workforce-one'),'Attendance'=>__('Attendance','workforce-one'),'Reports'=>__('Reports','workforce-one'),'Attendance Insights'=>__('Attendance Insights','workforce-one'),'People'=>__('People','workforce-one'),'Polls'=>__('Polls','workforce-one'),'My Pay'=>__('My Pay','workforce-one')];
         $items=[];
         foreach(\WorkforceOne\Settings\Navigation::DEFAULTS as $key=>$def){
             if(!$this->app_view_allowed($key))continue;
@@ -149,7 +154,7 @@ trait EWS_App_Layout_Trait {
         $brand=['app_name'=>$cfg['app_name'],'company_name'=>$cfg['company_name'],'tagline'=>$cfg['tagline'],'logo_url'=>$cfg['logo_url'],'show'=>$cfg['login_brand']==='1'];
         if(is_user_logged_in()){
             $url=remove_query_arg(['login','loggedout','login_error'])?:home_url('/');
-            return $this->render_template('app/login',['signed_in'=>true,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>$url,'logout_url'=>wp_logout_url($url),'form'=>'','lost_password_url'=>'','error'=>'','message'=>'']);
+            return $this->render_template('app/login',['signed_in'=>true,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>$url,'logout_url'=>wp_logout_url($url),'form'=>'','lost_password_url'=>'','error'=>'','message'=>'','worker_url'=>'']);
         }
         $redirect=esc_url_raw(remove_query_arg(['login_error','loggedout'],wp_unslash($_GET['redirect_to']??(get_permalink()?:home_url('/')))));
         // Mark this form so a failed login comes back here (app_login_failed) instead of wp-login.php.
@@ -172,7 +177,7 @@ trait EWS_App_Layout_Trait {
         $form=str_replace('id="ews_login_password"','id="ews_login_password" placeholder="'.esc_attr__('Password','workforce-one').'" autocomplete="current-password"',$form);
         return $this->render_template('app/login',[
             'signed_in'=>false,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>'','logout_url'=>'',
-            'form'=>$form,'lost_password_url'=>$lost,
+            'form'=>$form,'lost_password_url'=>$lost,'worker_url'=>$this->dw_self_anywhere()?$this->dw_worker_url():'',
             'error'=>isset($_GET['login_error'])?__('The username or password is incorrect. Please try again.','workforce-one'):'',
             'message'=>isset($_GET['loggedout'])?__('You have been logged out successfully.','workforce-one'):'',
         ]);

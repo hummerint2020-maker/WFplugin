@@ -39,6 +39,11 @@ final class Icons
         'alert' => '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
         'check' => '<path d="M20 6 9 17l-5-5"/>',
         'plus' => '<path d="M12 5v14M5 12h14"/>',
+        'minus' => '<path d="M5 12h14"/>',
+        'site' => '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01"/>',
+        'cash' => '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+        'printer' => '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+        'upload' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>',
         'dots' => '<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',
         'sun' => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
         'pin' => '<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
@@ -60,7 +65,7 @@ final class Icons
     private const VIEWS = [
         'dashboard' => 'home', 'schedule' => 'calendar', 'time' => 'clock', 'vacation' => 'leave', 'overtime' => 'overtime',
         'tasks' => 'tasks', 'polls' => 'polls', 'attendance' => 'attendance', 'people' => 'people', 'reports' => 'reports',
-        'pay' => 'pay', 'attendance-insights' => 'insights', 'profile' => 'user', 'notifications' => 'bell', 'corrections' => 'history',
+        'pay' => 'pay', 'attendance-insights' => 'insights', 'profile' => 'user', 'notifications' => 'bell', 'corrections' => 'history', 'sites' => 'site', 'payout' => 'cash',
     ];
 
     public static function svg(string $name, int $size = 22, float $stroke = 1.8): string

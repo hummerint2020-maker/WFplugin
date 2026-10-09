@@ -13,6 +13,7 @@
  * @var string $message
  * @var string $open_url
  * @var string $logout_url
+ * @var string $worker_url                 daily workers' own sign-in ('' = hidden)
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
@@ -47,6 +48,7 @@ $line = implode(' · ', array_filter([$brand['company_name'], $brand['tagline']]
             <?php endif; ?>
         </div>
 
+        <?php if (!$signed_in && $worker_url !== ''): ?><a class="wfo-login-help wfo-dw-worker-link" href="<?php echo esc_url($worker_url); ?>"><?php esc_html_e('Daily worker? Sign in with your mobile', 'workforce-one'); ?></a><?php endif; ?>
         <?php if (!$signed_in && $cfg['login_help'] !== ''): ?><p class="wfo-login-help"><?php echo esc_html($cfg['login_help']); ?></p><?php endif; ?>
     </div>
 </div>

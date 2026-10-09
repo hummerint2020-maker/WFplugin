@@ -20,7 +20,7 @@ function ews_uninstall_site() {
     if ((int) get_option('ews_delete_data_on_uninstall', 0) !== 1) return;
 
     // Private folders: files attached to task comments (3.31.70), correction request photos (3.31.74).
-    foreach (['workforce-one-tasks', 'workforce-one-corrections'] as $folder) {
+    foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers'] as $folder) {
         $task_dir = trailingslashit(wp_upload_dir()['basedir']) . $folder;
         if (is_dir($task_dir) && !is_link($task_dir)) {
             foreach ((array) scandir($task_dir) as $name) if ($name !== '.' && $name !== '..' && is_file($task_dir . '/' . $name)) @unlink($task_dir . '/' . $name);
@@ -48,7 +48,7 @@ function ews_uninstall_site() {
         'ews_company_calendar', 'ews_departments', 'ews_early_leave_requests', 'ews_employee_achievements', 'ews_employee_branches',
         'ews_employee_locations_v321', 'ews_employee_relationships', 'ews_employees', 'ews_face_profiles',
         'ews_kiosks', 'ews_kudos', 'ews_leave_balances', 'ews_leave_requests', 'ews_leave_schedule_snapshots',
-        'ews_leave_types', 'ews_attendance_corrections', 'ews_locations', 'ews_notifications', 'ews_overtime_requests', 'ews_pay_adjustments', 'ews_pay_rates', 'ews_payroll_runs', 'ews_payslips', 'ews_poll_options',
+        'ews_leave_types', 'ews_attendance_corrections', 'ews_dw_workers', 'ews_dw_sites', 'ews_dw_foremen', 'ews_dw_moves', 'ews_dw_days', 'ews_dw_sheets', 'ews_dw_advances', 'ews_dw_payouts', 'ews_dw_lines', 'ews_dw_changes', 'ews_locations', 'ews_notifications', 'ews_overtime_requests', 'ews_pay_adjustments', 'ews_pay_rates', 'ews_payroll_runs', 'ews_payslips', 'ews_poll_options',
         'ews_poll_votes', 'ews_polls', 'ews_presence_verifications', 'ews_push_subscriptions', 'ews_schedule',
         'ews_schedule_swaps', 'ews_shift_swaps', 'ews_tasks', 'ews_task_items', 'ews_task_comments', 'ews_task_activity', 'ews_team_members', 'ews_teams', 'ews_time_logs',
         'ews_vacation_requests',

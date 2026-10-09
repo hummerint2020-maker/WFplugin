@@ -41,6 +41,13 @@ final class Routes
             ['path' => '/corrections', 'methods' => 'POST', 'handler' => 'api_corrections_create', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/corrections/pending', 'methods' => 'GET', 'handler' => 'api_corrections_pending', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/corrections/(?P<id>\\d+)/decision', 'methods' => 'POST', 'handler' => 'api_corrections_decide', 'access' => 'token', 'kind' => 'native'],
+            // Daily workers (3.31.75): foremen's sites, the day sheet, quick-add, payouts (EWS_Daily_Workers_Trait).
+            ['path' => '/daily-workers/sites', 'methods' => 'GET', 'handler' => 'api_dw_sites', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/daily-workers/sites/(?P<id>\\d+)/day', 'methods' => 'GET', 'handler' => 'api_dw_day', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/daily-workers/sites/(?P<id>\\d+)/day', 'methods' => 'POST', 'handler' => 'api_dw_day_save', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/daily-workers/sites/(?P<id>\\d+)/workers', 'methods' => 'POST', 'handler' => 'api_dw_worker_add', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/daily-workers/sites/(?P<id>\\d+)/payout', 'methods' => 'GET', 'handler' => 'api_dw_payout', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/daily-workers/sites/(?P<id>\\d+)/payout', 'methods' => 'POST', 'handler' => 'api_dw_payout_paid', 'access' => 'token', 'kind' => 'native'],
         ];
     }
 

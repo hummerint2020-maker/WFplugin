@@ -1,5 +1,59 @@
 # Changelog
 
+## 3.31.75
+Daily workers (owner-approved mockups, docs/mockups/daily-workers/): day labourers with no email and
+often no smartphone, recorded on site by a foreman (or by themselves with a mobile + PIN), paid daily or
+weekly in cash, with the labour cost of every project. Off by default: Feature Configuration → Daily
+Workers. Database version 3.31.75 (ten new tables ews_dw_*).
+
+### Design decision
+- **Workers live in their own tables, not in ews_employees.** The brief suggested an employee row of type
+  "daily"; 141 queries in 37 files list employees (pick lists, Attendance, Team Schedule, reports,
+  Payroll, exports, counts, push, achievements…), and every one of them would have needed a filter and a
+  test. Separate tables make it impossible for a daily worker to appear in any staff screen, and nothing
+  built for staff changed. A future gate tablet can still link a worker to a face profile by worker id.
+
+### Added
+- **App → My sites** (foremen): each assigned site with today's state; **the site's day sheet**: every
+  worker present / half day / absent with extra hours, the live counts and cost of the day, a group photo
+  from the camera, and "Confirm today's sheet", which needs the foreman's position inside the site (the
+  same integrity rules as Sign In: no position, a stale phone clock or an impossible movement is
+  refused). A saved day is locked; a later change is a request with a reason that a manager approves in
+  wp-admin (the original values stay with the request). Quick-add a worker (no account) and move a
+  worker to another site from today or tomorrow (the history stays).
+- **App → Payout** (foremen, cashiers, managers): what each worker is owed for the period, advances
+  deducted (up to the payout; the rest waits), earlier unpaid periods, record an advance, print the
+  **payout sheet** (A4 PDF, Arabic, with a signature / thumbprint column), then "Paid · lock the period"
+  with a photo of the signed sheet. A paid period is locked (no new days, no changes).
+- **The worker's own page** (?ews_view=worker, "Daily worker? Sign in with your mobile" on the login
+  page when a site allows it): mobile + PIN, "I am at the site" (GPS inside the site), recent days and
+  what he is owed. Recording mode per company, overridable per site: foreman only, workers themselves,
+  or both (the foreman's sheet then sets the day).
+- **wp-admin → Daily Workers**: the list (search by name, mobile, code or the full national ID; trade,
+  subcontractor, site, status, rating), the profile (sites, payouts, owed, advances), add / edit (PIN,
+  photo, rating, "Do not rehire"), delete (only without paid days), change requests, settings (mode,
+  pay period and week start, default hourly rate, group photo, project sites with project name, dates,
+  foremen / cashiers, mode and period per site; trades and subcontractors), reports (labour cost per
+  project / site / subcontractor / trade, the project so far, owed, workers per site and day, unpaid
+  balances) with Excel, PDF and the **social insurance report** for the accountant (CSV per month).
+- **National ID**: Egyptian numbers checked (14 digits, century, birth date, governorate) with a clear
+  message; other nationalities as text. Sealed with libsodium secretbox (authenticated) under a key
+  derived from the wp-config salts (never stored); searched by a keyed hash; shown masked
+  (2900••••••1234). The full number only with the new permission "View national IDs" (not given to EWS
+  Administrator by default), and every reveal or full export is in the Audit Log. Never in plain text in
+  the database, logs or the Audit Log.
+- Permissions: Manage Daily Workers, Foreman (daily workers), Pay daily workers, View national IDs; role
+  "EWS Site Foreman". Notifications category "Daily Workers".
+- API (token): GET /daily-workers/sites, GET/POST /daily-workers/sites/{id}/day, POST
+  /daily-workers/sites/{id}/workers, GET/POST /daily-workers/sites/{id}/payout — the same rules as the Web.
+- Pay: present = daily rate, half day = rate ÷ 2, extra hours × the worker's hourly rate (else the
+  company default); the rates are kept on each day. Amounts never go to the Audit Log ("payout
+  recorded", "advance recorded").
+
+### Tests
+- tests/e2e_daily_workers.py (CI), tests/unit/DailyWorkersTest.php (national ID, pay, periods, payout
+  with advances, site rules, settings).
+
 ## 3.31.74
 Attendance corrections (owner-approved mockups, docs/mockups/attendance-corrections/): an employee who
 forgot to sign in or out, or whose time is wrong, asks for a correction; the manager decides with the

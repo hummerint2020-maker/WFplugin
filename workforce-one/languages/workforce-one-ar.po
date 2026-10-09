@@ -4384,3 +4384,840 @@ msgstr "في انتظار القرار"
 
 msgid "No corrections waiting"
 msgstr "لا توجد تصحيحات في الانتظار"
+
+msgid "Daily Workers"
+msgstr "العمالة اليومية"
+
+msgid "My sites"
+msgstr "مواقعي"
+
+msgid "Payout"
+msgstr "اليومية"
+
+msgid "Formwork carpenter"
+msgstr "نجّار مسلّح"
+
+msgid "Steel fixer"
+msgstr "حدّاد مسلّح"
+
+msgid "Helper"
+msgstr "مساعد"
+
+msgid "Plasterer"
+msgstr "مبيّض محارة"
+
+msgid "Plumber"
+msgstr "سبّاك"
+
+msgid "Electrician"
+msgstr "كهربائي"
+
+msgid "Painter"
+msgstr "نقّاش"
+
+msgid "EGP %s"
+msgstr "%s ج.م"
+
+msgid "%s days"
+msgstr "%s يوم"
+
+msgid "Half day"
+msgstr "نص يوم"
+
+msgid "Foreman only records attendance"
+msgstr "المشرف بس يسجّل اليومية"
+
+msgid "Workers sign in themselves (mobile + PIN, no email)"
+msgstr "العامل يسجّل لنفسه (موبايل + رقم سري، بدون إيميل)"
+
+msgid "Both"
+msgstr "الاتنين"
+
+msgid "Other ID"
+msgstr "إثبات آخر"
+
+msgid "Daily workers are switched off."
+msgstr "العمالة اليومية مقفولة."
+
+msgid "You do not have access to this site."
+msgstr "مالكش صلاحية على الموقع ده."
+
+msgid "This site has no map position. Ask the site manager to set it in Work Locations."
+msgstr "الموقع ده مالوش مكان على الخريطة. اطلب من مدير الموقع يحدده في مواقع العمل."
+
+msgid "Your position could not be read. Turn on location (GPS) and try again."
+msgstr "مش قادرين نقرا مكانك. شغّل الموقع (GPS) وجرّب تاني."
+
+msgid "Your position does not look real (it moved too fast). Try again from the site."
+msgstr "مكانك مش منطقي (اتحرك بسرعة مستحيلة). جرّب تاني من الموقع."
+
+msgid "You are outside the site. The day sheet is saved from inside the site only."
+msgstr "أنت برّه الموقع. اليومية بتتسجّل من جوّه الموقع بس."
+
+msgid "Take the group photo first. A photo is needed to confirm the day, from the camera, not the gallery."
+msgstr "صوّر العمال الأول. الصورة مطلوبة لتأكيد اليومية، بالكاميرا مش من المعرض."
+
+msgid "The photo could not be read. Take it again (JPG, PNG or WebP)."
+msgstr "الصورة مش مقروءة. صوّرها تاني (JPG أو PNG أو WebP)."
+
+msgid "The photo is larger than 10 MB."
+msgstr "الصورة أكبر من 10 ميجا."
+
+msgid "This day is already saved and locked. Ask for a change instead."
+msgstr "اليوم ده اتسجّل واتقفل. اطلب تعديل بدل كده."
+
+msgid "This period is paid and locked."
+msgstr "الفترة دي اتصرفت واتقفلت."
+
+msgid "At this site the workers sign in themselves; the foreman does not record the day."
+msgstr "في الموقع ده العمال بيسجّلوا لنفسهم؛ المشرف مش بيسجّل اليومية."
+
+msgid "At this site the foreman records the day; workers do not sign in themselves."
+msgstr "في الموقع ده المشرف هو اللي بيسجّل اليومية؛ العمال مش بيسجّلوا لنفسهم."
+
+msgid "Choose present, half day or absent for every worker."
+msgstr "اختار حاضر أو نص يوم أو غايب لكل عامل."
+
+msgid "Extra hours are between 0 and 12, in half hours."
+msgstr "الساعات الإضافية من 0 لـ 12، بنص ساعة."
+
+msgid "There are no workers at this site today."
+msgstr "مفيش عمال في الموقع ده النهارده."
+
+msgid "A worker in the list was already recorded at another site today."
+msgstr "فيه عامل في القائمة اتسجّل في موقع تاني النهارده."
+
+msgid "Enter the worker's name."
+msgstr "اكتب اسم العامل."
+
+msgid "Enter a daily rate above zero."
+msgstr "اكتب يومية أكبر من صفر."
+
+msgid "The hourly rate cannot be negative."
+msgstr "سعر الساعة ماينفعش يكون بالسالب."
+
+msgid "The mobile number is not valid (8 to 15 digits)."
+msgstr "رقم الموبايل مش صحيح (من 8 لـ 15 رقم)."
+
+msgid "Another active worker has this mobile number."
+msgstr "فيه عامل تاني نشط بنفس رقم الموبايل."
+
+msgid "The national ID is not valid: it must contain digits only."
+msgstr "الرقم القومي غير صحيح: لازم يكون أرقام بس."
+
+msgid "The national ID is not valid: it must be 14 digits."
+msgstr "الرقم القومي غير صحيح: لازم يكون 14 رقم."
+
+msgid "The national ID is not valid: the first digit must be 2 or 3."
+msgstr "الرقم القومي غير صحيح: أول رقم لازم يكون 2 أو 3."
+
+msgid "The national ID is not valid: the birth date in it is not a real date."
+msgstr "الرقم القومي غير صحيح: تاريخ الميلاد اللي فيه مش تاريخ حقيقي."
+
+msgid "The national ID is not valid: the governorate code is unknown."
+msgstr "الرقم القومي غير صحيح: كود المحافظة مش معروف."
+
+msgid "Enter the ID number (4 to 30 letters or digits)."
+msgstr "اكتب رقم الإثبات (من 4 لـ 30 حرف أو رقم)."
+
+msgid "A worker with this national ID is already registered."
+msgstr "فيه عامل متسجّل بنفس الرقم القومي."
+
+msgid "This national ID belongs to a worker marked \"Do not rehire\"."
+msgstr "الرقم القومي ده لعامل متعلّم عليه «لا يُعاد تشغيله»."
+
+msgid "The PIN must be 4 to 6 digits."
+msgstr "الرقم السري لازم يكون من 4 لـ 6 أرقام."
+
+msgid "Choose a trade from the list."
+msgstr "اختار مهنة من القائمة."
+
+msgid "Choose today or a later day."
+msgstr "اختار النهارده أو يوم بعده."
+
+msgid "The worker is already at that site."
+msgstr "العامل موجود في الموقع ده أصلاً."
+
+msgid "Enter an amount above zero."
+msgstr "اكتب مبلغ أكبر من صفر."
+
+msgid "There is nothing to pay in this period."
+msgstr "مفيش حاجة تتصرف في الفترة دي."
+
+msgid "Write the reason for the change."
+msgstr "اكتب سبب التعديل."
+
+msgid "Nothing was changed."
+msgstr "مفيش حاجة اتغيّرت."
+
+msgid "A change for this day is already waiting."
+msgstr "فيه طلب تعديل لليوم ده مستني بالفعل."
+
+msgid "Write why you reject the change."
+msgstr "اكتب سبب رفض التعديل."
+
+msgid "This change was already decided."
+msgstr "الطلب ده اتبتّ فيه خلاص."
+
+msgid "This worker has paid days, so the record stays for the accounts. Mark him \"Do not rehire\" instead."
+msgstr "العامل ده ليه أيام اتصرفت، فسجلّه لازم يفضل للحسابات. علّم عليه «لا يُعاد تشغيله» بدل الحذف."
+
+msgid "Worker not found."
+msgstr "العامل مش موجود."
+
+msgid "The mobile number or PIN is incorrect."
+msgstr "رقم الموبايل أو الرقم السري غلط."
+
+msgid "Too many attempts. Try again in 15 minutes."
+msgstr "محاولات كتير. جرّب تاني بعد 15 دقيقة."
+
+msgid "You are not assigned to a site today. Ask your foreman."
+msgstr "مش متسجّل لك موقع النهارده. اسأل المشرف."
+
+msgid "Your day is already recorded."
+msgstr "يومك اتسجّل بالفعل."
+
+msgid "Could not save. Please try again."
+msgstr "ماتحفظش. جرّب تاني."
+
+msgid "%1$d workers at %2$s: %3$d present, %4$d half day, %5$d absent. Cost of the day %6$s."
+msgstr "%1$d عامل في %2$s: %3$d حاضر، %4$d نص يوم، %5$d غايب. تكلفة اليوم %6$s."
+
+msgid "Day sheet saved"
+msgstr "تم تسجيل اليومية"
+
+msgid "Worker added"
+msgstr "تمت إضافة العامل"
+
+msgid "No email or account needed. He is in today's list of this site."
+msgstr "مش محتاج إيميل ولا حساب. اتضاف لقائمة النهارده في الموقع ده."
+
+msgid "Worker moved"
+msgstr "تم نقل العامل"
+
+msgid "His days at the old site stay in his history and in that project's cost."
+msgstr "أيامه في الموقع القديم بتفضل في سجلّه وفي تكلفة المشروع ده."
+
+msgid "Advance recorded"
+msgstr "تم تسجيل السلفة"
+
+msgid "It comes off his next payout."
+msgstr "هتتخصم من اليومية الجاية."
+
+msgid "Payout recorded"
+msgstr "تم تسجيل الصرف"
+
+msgid "The period is paid and locked. A new advance comes off the next payout."
+msgstr "الفترة اتصرفت واتقفلت. أي سلفة جديدة تتخصم من الصرف الجاي."
+
+msgid "Change requested"
+msgstr "تم طلب التعديل"
+
+msgid "The day stays as saved until a manager approves the change."
+msgstr "اليوم بيفضل زي ما اتسجّل لحد ما مدير يوافق على التعديل."
+
+msgid "Day sheet change to review"
+msgstr "تعديل يومية محتاج مراجعة"
+
+msgid "A foreman asks to change %1$s's day on %2$s."
+msgstr "مشرف بيطلب تعديل يوم %1$s بتاريخ %2$s."
+
+msgid "Day sheet change approved"
+msgstr "تمت الموافقة على تعديل اليومية"
+
+msgid "Day sheet change rejected"
+msgstr "اترفض تعديل اليومية"
+
+msgid "The day is changed. The original values are kept with the request."
+msgstr "اليوم اتعدّل. القيم الأصلية محفوظة مع الطلب."
+
+msgid "%1$s – %2$s"
+msgstr "%1$s – %2$s"
+
+msgid "Daily wages sheet"
+msgstr "كشف اليومية"
+
+msgid "%s · amounts in Egyptian pounds"
+msgstr "%s · المبالغ بالجنيه المصري"
+
+msgid "Site"
+msgstr "الموقع"
+
+msgid "Period"
+msgstr "الفترة"
+
+msgid "Foreman"
+msgstr "المشرف"
+
+msgid "Sheet no."
+msgstr "رقم الكشف"
+
+msgid "Not paid yet"
+msgstr "لسه ما اتصرفش"
+
+msgid "Trade"
+msgstr "المهنة"
+
+msgid "Days"
+msgstr "الأيام"
+
+msgid "Rate"
+msgstr "اليومية"
+
+msgid "Extra h"
+msgstr "س إضافي"
+
+msgid "Amount"
+msgstr "المبلغ"
+
+msgid "Advance"
+msgstr "سلفة"
+
+msgid "Net"
+msgstr "الصافي"
+
+msgid "Signature / thumbprint"
+msgstr "التوقيع / البصمة"
+
+msgid "By signing next to my name I confirm I received the net amount shown for my work at this site in this period. Deducted advances were paid before."
+msgstr "أقرّ أنا الموقّع أمام اسمي باستلام المبلغ الصافي الموضّح نظير عملي في الموقع خلال الفترة المذكورة. السلف المخصومة سبق صرفها."
+
+msgid "Cashier"
+msgstr "أمين الصندوق"
+
+msgid "Site manager"
+msgstr "مدير الموقع"
+
+msgid "By site"
+msgstr "حسب الموقع"
+
+msgid "Project"
+msgstr "المشروع"
+
+msgid "Workers"
+msgstr "العمال"
+
+msgid "By trade"
+msgstr "حسب المهنة"
+
+msgid "By subcontractor"
+msgstr "حسب مقاول الباطن"
+
+msgid "Subcontractor"
+msgstr "مقاول الباطن"
+
+msgid "None (direct)"
+msgstr "بدون (عمالة مباشرة)"
+
+msgid "Unpaid"
+msgstr "غير مصروف"
+
+msgid "Worker"
+msgstr "العامل"
+
+msgid "Paid"
+msgstr "اتصرف"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
+
+msgid "Daily workers reports"
+msgstr "تقارير العمالة اليومية"
+
+msgid "Labour cost in the period"
+msgstr "تكلفة العمالة في الفترة"
+
+msgid "Owed, not paid yet"
+msgstr "مستحق ولسه ما اتصرفش"
+
+msgid "%s: labour so far"
+msgstr "%s: تكلفة العمالة لحد النهارده"
+
+msgid "By project / site"
+msgstr "حسب المشروع / الموقع"
+
+msgid "Changes"
+msgstr "التعديلات"
+
+msgid "Worker saved."
+msgstr "تم حفظ العامل."
+
+msgid "Worker deleted with his national ID."
+msgstr "تم حذف العامل ومعاه رقمه القومي."
+
+msgid "Change approved. The original values are kept with the request."
+msgstr "تمت الموافقة على التعديل. القيم الأصلية محفوظة مع الطلب."
+
+msgid "Change rejected."
+msgstr "اترفض التعديل."
+
+msgid "Add worker"
+msgstr "إضافة عامل"
+
+msgid "Name, mobile or full national ID"
+msgstr "الاسم أو الموبايل أو الرقم القومي كامل"
+
+msgid "All trades"
+msgstr "كل المهن"
+
+msgid "All subcontractors"
+msgstr "كل مقاولي الباطن"
+
+msgid "All sites"
+msgstr "كل المواقع"
+
+msgid "All statuses"
+msgstr "كل الحالات"
+
+msgid "Do not rehire"
+msgstr "لا يُعاد تشغيله"
+
+msgid "Any rating"
+msgstr "أي تقييم"
+
+msgid "%d worker"
+msgid_plural "%d workers"
+msgstr[0] "%d عامل"
+msgstr[1] "%d عامل"
+msgstr[2] "%d عامل"
+msgstr[3] "%d عمال"
+msgstr[4] "%d عامل"
+msgstr[5] "%d عامل"
+
+msgid "Mobile"
+msgstr "الموبايل"
+
+msgid "National ID"
+msgstr "الرقم القومي"
+
+msgid "Daily rate"
+msgstr "اليومية"
+
+msgid "Site today"
+msgstr "موقع النهارده"
+
+msgid "Rating"
+msgstr "التقييم"
+
+msgid "No workers match these filters."
+msgstr "مفيش عمال مطابقين للتصفية دي."
+
+msgid "No workers yet. Add the first one, or let a foreman add them on site."
+msgstr "مفيش عمال لسه. أضف أول عامل، أو خلّي المشرف يضيفهم من الموقع."
+
+msgid "Daily workers do not appear in staff lists, Attendance or monthly Payroll. National IDs are encrypted and shown in full only with \"View national IDs\"."
+msgstr "العمالة اليومية مش بتظهر في قوائم الموظفين ولا الحضور ولا الرواتب الشهرية. الرقم القومي متشفّر ومش بيظهر كامل غير لصلاحية «عرض الأرقام القومية»."
+
+msgid "The full national ID is shown because you have \"View national IDs\". This reveal is logged under your name."
+msgstr "الرقم القومي الكامل ظاهر لك لأن عندك صلاحية «عرض الأرقام القومية». الإظهار ده اتسجّل باسمك."
+
+msgid "since %s"
+msgstr "من %s"
+
+msgid "Born"
+msgstr "مواليد"
+
+msgid "Extra hour"
+msgstr "الساعة الإضافية"
+
+msgid "Company default"
+msgstr "زي إعداد الشركة"
+
+msgid "Self sign-in"
+msgstr "التسجيل الذاتي"
+
+msgid "PIN set"
+msgstr "فيه رقم سري"
+
+msgid "No PIN"
+msgstr "مفيش رقم سري"
+
+msgid "Delete this worker with his national ID and all his days? This cannot be undone."
+msgstr "تحذف العامل ده ومعاه رقمه القومي وكل أيامه؟ مش هينفع ترجّعه."
+
+msgid "Delete worker"
+msgstr "حذف العامل"
+
+msgid "Advances not deducted yet"
+msgstr "سلف لسه ما اتخصمتش"
+
+msgid "Sites"
+msgstr "المواقع"
+
+msgid "No days recorded yet."
+msgstr "مفيش أيام متسجّلة لسه."
+
+msgid "Payouts"
+msgstr "اليوميات"
+
+msgid "No payouts yet."
+msgstr "مفيش صرف لسه."
+
+msgid "Extra hour rate"
+msgstr "سعر الساعة الإضافية"
+
+msgid "Empty: the company default (%s)."
+msgstr "فاضي: زي إعداد الشركة (%s)."
+
+msgid "Saved. Enter a number only to replace it."
+msgstr "محفوظ. اكتب رقم بس لو عايز تغيّره."
+
+msgid "Egyptian (14 digits)"
+msgstr "مصري (14 رقم)"
+
+msgid "Other nationality (passport or ID)"
+msgstr "جنسية تانية (جواز سفر أو إثبات)"
+
+msgid "— None —"
+msgstr "— بدون —"
+
+msgid "Site from today"
+msgstr "الموقع من النهارده"
+
+msgid "Leave empty to keep his current site."
+msgstr "سيبه فاضي عشان يفضل في موقعه الحالي."
+
+msgid "PIN for self sign-in"
+msgstr "الرقم السري للتسجيل الذاتي"
+
+msgid "A PIN is set. Enter 4 to 6 digits to change it."
+msgstr "فيه رقم سري. اكتب من 4 لـ 6 أرقام لو عايز تغيّره."
+
+msgid "4 to 6 digits. The worker signs in with his mobile and this PIN."
+msgstr "من 4 لـ 6 أرقام. العامل بيدخل بموبايله والرقم ده."
+
+msgid "For the future gate tablet with face recognition."
+msgstr "لتابلت البوابة بالتعرّف على الوجه بعدين."
+
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgid "All projects"
+msgstr "كل المشاريع"
+
+msgid "Export to Excel"
+msgstr "تصدير Excel"
+
+msgid "Insurance report for the accountant"
+msgstr "تقرير التأمينات للمحاسب"
+
+msgid "No days in this period."
+msgstr "مفيش أيام في الفترة دي."
+
+msgid "Workers per site and day"
+msgstr "العمال في كل موقع كل يوم"
+
+msgid "Unpaid balances"
+msgstr "المستحقات اللي ما اتصرفتش"
+
+msgid "Everything is paid."
+msgstr "كل حاجة اتصرفت."
+
+msgid "No change requests."
+msgstr "مفيش طلبات تعديل."
+
+msgid "Who records attendance"
+msgstr "مين يسجّل الحضور"
+
+msgid "Each site can override it below."
+msgstr "ممكن كل موقع يغيّرها في الجدول تحت."
+
+msgid "Pay"
+msgstr "الحساب"
+
+msgid "Full day = daily rate · half day = rate ÷ 2 · extra hours × hourly rate"
+msgstr "يوم كامل = اليومية · نص يوم = اليومية ÷ 2 · الساعات الإضافية × سعر الساعة"
+
+msgid "Pay period"
+msgstr "الصرف"
+
+msgid "Week starts on"
+msgstr "الأسبوع يبدأ يوم"
+
+msgid "Default hourly rate"
+msgstr "سعر الساعة الافتراضي"
+
+msgid "When recording"
+msgstr "عند التسجيل"
+
+msgid "The foreman must be inside the site (same rules as Sign In)"
+msgstr "المشرف لازم يكون جوّه الموقع (نفس قواعد تسجيل الحضور)"
+
+msgid "A group photo with the camera (not the gallery)"
+msgstr "صورة جماعية بالكاميرا (مش من المعرض)"
+
+msgid "Add work locations first (Work Locations)."
+msgstr "أضف مواقع العمل الأول (مواقع العمل)."
+
+msgid "Project site"
+msgstr "موقع مشروع"
+
+msgid "Dates"
+msgstr "التواريخ"
+
+msgid "Foremen / cashiers"
+msgstr "المشرفين / الصرّافين"
+
+msgid "Recording"
+msgstr "التسجيل"
+
+msgid "Project name"
+msgstr "اسم المشروع"
+
+msgid "Company setting"
+msgstr "زي إعداد الشركة"
+
+msgid "Workers themselves"
+msgstr "العمال بنفسهم"
+
+msgid "No one has \"Foreman (daily workers)\" or \"Pay daily workers\" yet."
+msgstr "مفيش حد عنده «مشرف عمالة يومية» أو «صرف العمالة اليومية» لسه."
+
+msgid "Trades"
+msgstr "المهن"
+
+msgid "One per line."
+msgstr "واحد في كل سطر."
+
+msgid "Subcontractors"
+msgstr "مقاولو الباطن"
+
+msgid "Permissions"
+msgstr "الصلاحيات"
+
+msgid "\"Foreman (daily workers)\", \"Pay daily workers\" and \"View national IDs\" are in"
+msgstr "«مشرف عمالة يومية» و«صرف العمالة اليومية» و«عرض الأرقام القومية» موجودين في"
+
+msgid "Roles & Permissions"
+msgstr "الأدوار والصلاحيات"
+
+msgid "Today · %s"
+msgstr "النهارده · %s"
+
+msgid "extra h"
+msgstr "س إضافي"
+
+msgid "Your position is checked when you confirm."
+msgstr "مكانك بيتأكد لما تأكّد اليومية."
+
+msgid "The day is saved from inside the site"
+msgstr "اليومية بتتسجّل من جوّه الموقع"
+
+msgid "Your position is checked when you confirm (within %d m)."
+msgstr "مكانك بيتأكد لما تأكّد (في نطاق %d م)."
+
+msgid "Workers (%d)"
+msgstr "العمال (%d)"
+
+msgid "New worker"
+msgstr "عامل جديد"
+
+msgid "Add a worker with \"New worker\", or move one here from another site."
+msgstr "أضف عامل من «عامل جديد»، أو انقل واحد هنا من موقع تاني."
+
+msgid "signed in himself"
+msgstr "سجّل لنفسه"
+
+msgid "recorded at another site today"
+msgstr "متسجّل في موقع تاني النهارده"
+
+msgid "change waiting"
+msgstr "تعديل مستني"
+
+msgid "Less"
+msgstr "أقل"
+
+msgid "Cost of the day"
+msgstr "تكلفة اليوم"
+
+msgid "Group photo"
+msgstr "الصورة الجماعية"
+
+msgid "%s m from the site centre"
+msgstr "%s م من نص الموقع"
+
+msgid "Saved at %1$s by %2$s. Changing a saved day is a request with a reason and an approval."
+msgstr "اتسجّلت %1$s بواسطة %2$s. أي تعديل على يوم متسجّل بيبقى طلب بسبب وموافقة."
+
+msgid "Photo taken · tap to take it again"
+msgstr "الصورة اتاخدت · دوس عشان تصوّر تاني"
+
+msgid "Group photo of the workers"
+msgstr "صورة جماعية للعمال"
+
+msgid "Taken with the camera when you record"
+msgstr "تتاخد بالكاميرا وقت التسجيل"
+
+msgid "Checking your position…"
+msgstr "بنتأكد من مكانك…"
+
+msgid "Confirm today's sheet"
+msgstr "تأكيد يومية النهارده"
+
+msgid "Once confirmed, the day is locked."
+msgstr "بعد التأكيد اليوم يتقفل."
+
+msgid "Add a worker"
+msgstr "إضافة عامل"
+
+msgid "Looks valid: 14 digits"
+msgstr "شكله صحيح: 14 رقم"
+
+msgid "An Egyptian national ID is 14 digits"
+msgstr "الرقم القومي المصري 14 رقم"
+
+msgid "Subcontractor (optional)"
+msgstr "مقاول الباطن (اختياري)"
+
+msgid "No email or account needed. He is added to %s from today."
+msgstr "مش محتاج إيميل ولا حساب. هيتضاف لموقع %s من النهارده."
+
+msgid "Move to another site"
+msgstr "نقل لموقع تاني"
+
+msgid "Starting"
+msgstr "من يوم"
+
+msgid "Move"
+msgstr "نقل"
+
+msgid "His days at this site stay in his history and in this project's cost."
+msgstr "أيامه في الموقع ده بتفضل في سجلّه وفي تكلفة المشروع."
+
+msgid "Ask to change a saved day"
+msgstr "طلب تعديل يوم متسجّل"
+
+msgid "Extra hours"
+msgstr "الساعات الإضافية"
+
+msgid "The day stays as saved until a manager approves the change. The original values are kept."
+msgstr "اليوم بيفضل زي ما اتسجّل لحد ما مدير يوافق. القيم الأصلية بتتحفظ."
+
+msgid "No sites to pay"
+msgstr "مفيش مواقع للصرف"
+
+msgid "Ask the site manager to assign you to a site in wp-admin."
+msgstr "اطلب من مدير الموقع يضيفك على موقع من لوحة التحكم."
+
+msgid "Paid daily"
+msgstr "اليومية يومية"
+
+msgid "Paid weekly"
+msgstr "اليومية أسبوعية"
+
+msgid "Paid · locked"
+msgstr "اتصرف · مقفول"
+
+msgid "Earlier periods not paid:"
+msgstr "فترات قبل كده ما اتصرفتش:"
+
+msgid "advance −%s"
+msgstr "سلفة −%s"
+
+msgid "net"
+msgstr "الصافي"
+
+msgid "Total after advances"
+msgstr "الإجمالي بعد السلف"
+
+msgid "Advances in this period"
+msgstr "السلف في الفترة دي"
+
+msgid "Signed sheet photo"
+msgstr "صورة الكشف الموقّع"
+
+msgid "Uploaded by %1$s, %2$s"
+msgstr "رفعها %1$s، %2$s"
+
+msgid "Print the sheet"
+msgstr "طباعة الكشف"
+
+msgid "Photo ready · tap to change it"
+msgstr "الصورة جاهزة · دوس عشان تغيّرها"
+
+msgid "After the workers sign or thumbprint it"
+msgstr "بعد ما العمال يوقّعوا أو يبصموا"
+
+msgid "Paid · lock the period"
+msgstr "تم الصرف · اقفل الفترة"
+
+msgid "Amounts are not written to the Audit Log, only \"payout recorded\"."
+msgstr "المبالغ ما بتتكتبش في سجل التدقيق، بيتكتب «تم الصرف» بس."
+
+msgid "Record an advance"
+msgstr "تسجيل سلفة"
+
+msgid "Note (optional)"
+msgstr "ملاحظة (اختياري)"
+
+msgid "Record"
+msgstr "تسجيل"
+
+msgid "No sites assigned to you"
+msgstr "مفيش مواقع متسجّلة لك"
+
+msgid "Ask the site manager to add you as foreman of a site in wp-admin."
+msgstr "اطلب من مدير الموقع يضيفك كمشرف على موقع من لوحة التحكم."
+
+msgid "%d site"
+msgid_plural "%d sites"
+msgstr[0] "%d موقع"
+msgstr[1] "%d موقع"
+msgstr[2] "%d موقع"
+msgstr[3] "%d مواقع"
+msgstr[4] "%d موقع"
+msgstr[5] "%d موقع"
+
+msgid "%d site not recorded yet"
+msgid_plural "%d sites not recorded yet"
+msgstr[0] "%d موقع لسه ما اتسجّلش"
+msgstr[1] "%d موقع لسه ما اتسجّلش"
+msgstr[2] "%d موقع لسه ما اتسجّلوش"
+msgstr[3] "%d مواقع لسه ما اتسجّلتش"
+msgstr[4] "%d موقع لسه ما اتسجّلش"
+msgstr[5] "%d موقع لسه ما اتسجّلش"
+
+msgid "Workers sign in themselves"
+msgstr "العمال بيسجّلوا لنفسهم"
+
+msgid "Recorded %1$s · %2$d present"
+msgstr "اتسجّلت %1$s · %2$d حاضر"
+
+msgid "Record today"
+msgstr "سجّل يومية النهارده"
+
+msgid "See today"
+msgstr "شوف النهارده"
+
+msgid "Daily workers"
+msgstr "العمالة اليومية"
+
+msgid "Sign in with your mobile"
+msgstr "ادخل برقم موبايلك"
+
+msgid "Use the PIN the site manager gave you."
+msgstr "استخدم الرقم السري اللي مدير الموقع إدّاهولك."
+
+msgid "PIN"
+msgstr "الرقم السري"
+
+msgid "Staff sign in"
+msgstr "دخول الموظفين"
+
+msgid "Your day is recorded."
+msgstr "يومك اتسجّل."
+
+msgid "Today: %1$s (%2$s)"
+msgstr "النهارده: %1$s (%2$s)"
+
+msgid "I am at the site"
+msgstr "أنا في الموقع"
+
+msgid "Owed to you, not paid yet"
+msgstr "مستحق لك ولسه ما اتصرفش"
+
+msgid "Daily worker? Sign in with your mobile"
+msgstr "عامل يومية؟ ادخل برقم موبايلك"

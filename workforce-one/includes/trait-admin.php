@@ -46,6 +46,10 @@ trait EWS_Admin_Trait {
         if(substr((string)$hook_suffix,-strlen('ews31-approvals'))==='ews31-approvals'){
             wp_enqueue_script('workforce-one-admin-approvals', $this->plugin_url('assets/js/admin-approvals.js'), [], EWS_VERSION, true);
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-daily-workers'))==='ews31-daily-workers'){
+            wp_enqueue_style('workforce-one-admin-daily-workers', $this->plugin_url('assets/css/admin-daily-workers.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-daily-workers', 'rtl', 'replace');
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-corrections'))==='ews31-corrections'){
             wp_enqueue_style('workforce-one-admin-corrections', $this->plugin_url('assets/css/admin-corrections.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-corrections', 'rtl', 'replace');
@@ -88,6 +92,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Leaves','Leaves','ews_manage_settings','ews31-leaves',[$this,'admin_leaves']);
             add_submenu_page('ews31','Payroll','Payroll','ews_manage_payroll','ews31-payroll',[$this,'admin_payroll']);
             if($this->corrections_enabled())add_submenu_page('ews31',__('Attendance Corrections','workforce-one'),__('Attendance Corrections','workforce-one'),'ews_manage_corrections','ews31-corrections',[$this,'admin_corrections']);
+            if($this->dw_enabled())add_submenu_page('ews31',__('Daily Workers','workforce-one'),__('Daily Workers','workforce-one'),'ews_manage_daily_workers','ews31-daily-workers',[$this,'admin_daily_workers']);
             add_submenu_page('ews31','Face Reset Requests','Face Reset Requests','ews_manage_employees','ews31-face-reset-requests',[$this,'admin_face_reset_requests']);
 
             add_submenu_page('ews31','Departments','Departments','manage_options','ews31-departments',[$this,'admin_departments']);

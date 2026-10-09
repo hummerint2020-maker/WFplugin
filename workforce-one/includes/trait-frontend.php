@@ -120,6 +120,7 @@ trait EWS_Frontend_Trait {
                 return $this->ux_modal(__('Schedule Conflict','workforce-one'),$message,'warning');
             }
             if(isset($_GET['cx_sent'])||isset($_GET['cx_done'])||isset($_GET['cx_error']))return $this->cx_notice();
+            foreach(['dw_error','dw_saved','dw_added','dw_moved','dw_adv','dw_paid','dw_change'] as $k)if(isset($_GET[$k]))return $this->dw_notice();
             $map=[
 
                 'saved'=>['success',__('Saved Successfully','workforce-one'),__('Your changes have been saved.','workforce-one')],
@@ -200,6 +201,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
             wp_register_script('workforce-one-sheet', $root.'assets/js/sheet.js', [], $ver, true);
             wp_register_script('workforce-one-corrections', $root.'assets/js/corrections.js', [], $ver, true);
+            wp_register_script('workforce-one-daily-workers', $root.'assets/js/daily-workers.js', [], $ver, true);
             wp_register_script('workforce-one-tasks', $root.'assets/js/tasks.js', [], $ver, true);
             wp_register_script('workforce-one-employees', $root.'assets/js/employees.js', [], $ver, true);
             wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
@@ -226,6 +228,8 @@ trait EWS_Frontend_Trait {
             wp_style_add_data('workforce-one-requests', 'rtl', 'replace');
             wp_register_style('workforce-one-corrections', $root.'assets/css/app-corrections.css', ['workforce-one-requests'], $ver);
             wp_style_add_data('workforce-one-corrections', 'rtl', 'replace');
+            wp_register_style('workforce-one-daily-workers', $root.'assets/css/app-daily-workers.css', ['workforce-one-requests'], $ver);
+            wp_style_add_data('workforce-one-daily-workers', 'rtl', 'replace');
             wp_style_add_data('workforce-one-leave-page', 'rtl', 'replace');
             wp_register_style('workforce-one-schedule-page', $root.'assets/css/app-schedule.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-schedule-page', 'rtl', 'replace');
@@ -262,6 +266,7 @@ trait EWS_Frontend_Trait {
             if($view==='schedule')wp_enqueue_style('workforce-one-schedule-page');
             if($view==='overtime'||$view==='schedule'||$view==='tasks'||$view==='corrections')wp_enqueue_style('workforce-one-requests');
             if(($view==='corrections'||$view==='time') && $this->corrections_enabled()){wp_enqueue_style('workforce-one-requests');wp_enqueue_style('workforce-one-corrections');}
+            if(in_array($view,['sites','payout','worker'],true) && $this->dw_enabled()){wp_enqueue_style('workforce-one-requests');wp_enqueue_style('workforce-one-daily-workers');}
             if($view==='presence')wp_enqueue_style('workforce-one-presence-page');
             if($view==='employees')wp_enqueue_style('workforce-one-employees-page');
             if($view==='notifications')wp_enqueue_style('workforce-one-notifications-page');

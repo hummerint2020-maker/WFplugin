@@ -25,16 +25,22 @@ trait EWS_Permissions_Trait {
                 'ews_manage_payroll'=>'Manage Payroll',
                 'ews_manage_corrections'=>'Manage Attendance Corrections',   // 3.31.74: HR — the second level, direct corrections, the wp-admin page
                 'ews_manage_employee_branches'=>'Manage Employee Branches',   // 3.31.72: a manager with it changes their department's people's branches
+                // 3.31.75 daily workers: the wp-admin page; foreman of assigned sites (the app's My sites); pays sites; sees full national IDs (audited).
+                'ews_manage_daily_workers'=>'Manage Daily Workers',
+                'ews_dw_foreman'=>'Foreman (daily workers)',
+                'ews_dw_cashier'=>'Pay daily workers',
+                'ews_view_national_ids'=>'View national IDs',
             ];
         }
 
     private function role_defs(){
             return [
                 // Salaries: only WordPress administrators until a role is given "Manage Payroll" on the Roles page.
-                'ews_administrator'=>['name'=>'EWS Administrator','caps'=>array_values(array_diff(array_keys($this->permission_defs()),['ews_manage_payroll']))],
+                'ews_administrator'=>['name'=>'EWS Administrator','caps'=>array_values(array_diff(array_keys($this->permission_defs()),['ews_manage_payroll','ews_view_national_ids']))],
                 'ews_manager'=>['name'=>'EWS Manager','caps'=>['ews_view_dashboard','ews_view_people','ews_manage_employees','ews_manage_schedule','ews_manage_attendance','ews_view_reports','ews_manage_time','ews_manage_auto_attendance','ews_view_audit_log','ews_manage_locations','ews_manage_settings','ews_manage_tasks']],
                 'ews_supervisor'=>['name'=>'EWS Supervisor','caps'=>['ews_view_dashboard','ews_view_people','ews_manage_schedule','ews_manage_attendance','ews_view_reports','ews_manage_time']],
                 'ews_employee'=>['name'=>'EWS Employee','caps'=>['ews_view_people']],
+                'ews_foreman'=>['name'=>'EWS Site Foreman','caps'=>['ews_dw_foreman']],
             ];
         }
 
