@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.72
+ * Version: 3.31.73
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.72');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.73');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -21,6 +21,7 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
 }
 
 require_once __DIR__ . '/src/autoload.php';
+add_filter('dbdelta_queries', ['WorkforceOne\\Support\\SchemaSql', 'filterQueries']); // one column or key per line for dbDelta (3.31.73)
 require_once __DIR__ . '/includes/trait-core.php';
 require_once __DIR__ . '/includes/trait-schema.php';
 require_once __DIR__ . '/includes/trait-work-time.php';
@@ -190,14 +191,14 @@ class EWS_Manager_V31_1 {
             load_plugin_textdomain('workforce-one',false,dirname(plugin_basename(__FILE__)).'/languages');
         }
 
-    static function activate(){
-            ob_start();
+    /** The base tables (activation, and again on each schema upgrade so new indexes reach installed sites, 3.31.73). */
+    static function base_tables(){
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php'; $c=$wpdb->get_charset_collate();
             $e=$wpdb->prefix.'ews_employees';$s=$wpdb->prefix.'ews_schedule';$l=$wpdb->prefix.'ews_leave_requests';$a=$wpdb->prefix.'ews_audit_log';
-            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id)) $c;");
+            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id),KEY default_shift_id(default_shift_id)) $c;");
             dbDelta("CREATE TABLE $s (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,status VARCHAR(40) NOT NULL DEFAULT 'Office',note TEXT NULL,updated_by BIGINT UNSIGNED NULL,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY employee_date(employee_id,work_date),KEY work_date(work_date),KEY employee_id(employee_id)) $c;");
             dbDelta("CREATE TABLE {$wpdb->prefix}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at)) $c;");
-            dbDelta("CREATE TABLE $l (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,leave_type VARCHAR(40) NOT NULL DEFAULT 'Vacation',start_date DATE NOT NULL,end_date DATE NOT NULL,reason TEXT NULL,status VARCHAR(20) NOT NULL DEFAULT 'Pending',requested_by BIGINT UNSIGNED NULL,approved_by BIGINT UNSIGNED NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_id(employee_id),KEY dates(start_date,end_date),KEY status(status)) $c;");
+            dbDelta("CREATE TABLE $l (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,leave_type VARCHAR(40) NOT NULL DEFAULT 'Vacation',start_date DATE NOT NULL,end_date DATE NOT NULL,reason TEXT NULL,status VARCHAR(30) NOT NULL DEFAULT 'Pending',requested_by BIGINT UNSIGNED NULL,approved_by BIGINT UNSIGNED NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_id(employee_id),KEY dates(start_date,end_date),KEY status(status)) $c;");
             dbDelta("CREATE TABLE $a (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NULL,action VARCHAR(80) NOT NULL,entity VARCHAR(80) NOT NULL,entity_id BIGINT UNSIGNED NULL,details TEXT NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY user_id(user_id),KEY entity(entity,entity_id),KEY created_at(created_at)) $c;");
             dbDelta("CREATE TABLE {$wpdb->prefix}ews_tasks (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -222,6 +223,11 @@ class EWS_Manager_V31_1 {
             dbDelta("CREATE TABLE $n (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NOT NULL,title VARCHAR(190) NOT NULL,message TEXT NOT NULL,type VARCHAR(30) NOT NULL DEFAULT 'info',entity VARCHAR(80) NULL,entity_id BIGINT UNSIGNED NULL,is_read TINYINT(1) NOT NULL DEFAULT 0,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,read_at DATETIME NULL,PRIMARY KEY(id),KEY user_unread(user_id,is_read),KEY created_at(created_at),KEY entity(entity,entity_id)) $c;");
             $p=$wpdb->prefix.'ews_push_subscriptions';
             dbDelta("CREATE TABLE $p (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NOT NULL,endpoint TEXT NOT NULL,endpoint_hash CHAR(64) NOT NULL,p256dh TEXT NOT NULL,auth TEXT NOT NULL,content_encoding VARCHAR(30) NULL,user_agent TEXT NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY endpoint_hash(endpoint_hash),KEY user_id(user_id)) $c;");
+        }
+
+    static function activate(){
+            ob_start();
+            self::base_tables();
             self::activate_vapid_keys();
             add_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com'));
 

@@ -181,6 +181,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_big_lists.py "$S"
       - name: Branches (modes, other branches, planned branch, Sign In, reports, permission)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_branches.py "$S"
+      - name: Schema upgrade (dbDelta-readable tables, indexes added, no DB errors, nothing left to change)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_schema.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

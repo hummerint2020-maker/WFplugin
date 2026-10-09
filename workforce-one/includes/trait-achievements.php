@@ -19,6 +19,7 @@ trait EWS_Achievements_Trait {
         $c=$wpdb->get_charset_collate();
         $defs=$wpdb->prefix.'ews_achievements';
         $awards=$wpdb->prefix.'ews_employee_achievements';
+        // icon has no emoji default: MariaDB kept it as '?' and dbDelta reset it on every upgrade (3.31.73); every insert sets it.
         dbDelta("CREATE TABLE {$defs} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             slug VARCHAR(80) NOT NULL,
@@ -27,7 +28,7 @@ trait EWS_Achievements_Trait {
             category VARCHAR(40) NOT NULL,
             rule_type VARCHAR(30) NOT NULL,
             threshold INT UNSIGNED NOT NULL DEFAULT 1,
-            icon VARCHAR(20) NOT NULL DEFAULT '🏅',
+            icon VARCHAR(20) NOT NULL DEFAULT '',
             badge_style VARCHAR(20) NOT NULL DEFAULT 'circle',
             sort_order INT NOT NULL DEFAULT 0,
             active TINYINT(1) NOT NULL DEFAULT 1,

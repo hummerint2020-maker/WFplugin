@@ -321,7 +321,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.72'; }
+        private function ews_schema_target(){ return '3.31.73'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -343,6 +343,7 @@ private function ensure_break_schema(){
             // them now; otherwise the column upgrades below would be skipped yet marked done.
             global $wpdb;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->employees))!==$this->employees)self::activate();
+            else self::base_tables();   // indexes added to the base tables reach installed sites (3.31.73)
 
             /* Existing schema routines are retained; they now run only once
                when the plugin schema version changes. */

@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.31.73
+Database upgrade fix (found by the load test): many tables were written on one line, which WordPress
+dbDelta() cannot read, so every upgrade sent broken ALTERs, logged database errors and never added
+indexes introduced after a site was installed. Database version 3.31.73 (indexes only, no data change).
+
+### Fixed
+- Every plugin CREATE TABLE goes through src/Support/SchemaSql.php (the dbdelta_queries filter): one
+  column or key per line, "KEY name (cols)", "PRIMARY KEY  (id)", no "IF NOT EXISTS", and integer
+  columns with their display width (MariaDB and MySQL before 8.0.17 report it; without it every
+  integer column was changed on every upgrade). On a 3,000-employee MariaDB site an upgrade went from
+  239 ALTERs and 124 database errors to none; a second upgrade changes nothing.
+- Installed sites now get the indexes they missed: notifications user_read_date, leave requests
+  employee_status and type_year, employees default_shift_id. The base tables (employees, schedule,
+  time logs, leave requests, audit log, tasks, notifications, push subscriptions) are re-checked on
+  each schema upgrade, not only on activation.
+- Leave requests status is VARCHAR(30) in both definitions (they changed it back and forth); the
+  achievements icon has no emoji default (MariaDB stored it as "?" and it was reset on every upgrade).
+
+### Tests
+- tests/e2e_schema.py (CI, MySQL 8): drops the indexes older versions missed, upgrades, and checks no
+  database errors, every index each CREATE TABLE defines exists with its columns, and a second upgrade
+  sends no ALTER. tests/unit/SchemaSqlTest.php.
+
 ## 3.31.72
 Branches (owner-approved design): an employee can work at more than one branch (a branch is a Work
 Location), and each company chooses how the branch is decided. Database version 3.31.72
