@@ -189,6 +189,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_corrections.py "$S"
       - name: Daily workers (day sheet from inside the site, national ID, modes, payouts, never mixed with staff)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_daily_workers.py "$S"
+      - name: Office minimum (counters, warning, team shares, leave note, weekly reminder, never blocks saving)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_office_minimum.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

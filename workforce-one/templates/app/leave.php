@@ -13,7 +13,7 @@
  * @var string $all_url
  * @var string $recent_url
  * @var string $request_url
- * @var array{mine:bool,rows:object[]}|null $approvals      leave requests I decide (null = none)
+ * @var array{mine:bool,rows:object[]}|null $approvals      leave requests I decide (null = none); ->om: what approving does to the office minimum (3.31.77) or null
  * @var array{mine:bool,rows:object[]}|null $cancellations  cancellation requests I decide
  * @var array{max:int,remaining:int,summary:string}|null $early
  * @var object[]|null $pending_early   (+ duration) for managers of time
@@ -111,6 +111,9 @@ $early_messages = [
         <div class="ews-vac-row"><div class="wfo-req-main">
             <div class="ews-vac-date"><strong><?php echo esc_html($r->employee_name); ?></strong><span><?php echo esc_html($r->type_name . $level($r)); ?></span></div>
             <div class="ews-vac-meta"><?php echo esc_html($range((string) $r->start_date, (string) $r->end_date) . ' · ' . $days_label($r->requested_days) . ($r->reason ? ' · ' . $r->reason : '')); ?></div>
+            <?php if (!empty($r->om)): ?><div class="wfo-om-note"><?php echo Icons::svg('office', 18, 2.2); ?><div><strong><?php echo esc_html(sprintf(/* translators: 1: day, 2: people in the office, 3: minimum */ __('Approving makes %1$s %2$d of %3$d in the office', 'workforce-one'), date_i18n('l j F', strtotime($r->om['date'])), $r->om['office'], $r->om['min'])); ?></strong><?php
+                if ($r->om['team'] !== '') echo esc_html(sprintf(/* translators: 1: team, 2: in the office, 3: the team's share */ __('%1$s would have %2$d of their share of %3$d.', 'workforce-one'), $r->om['team'], $r->om['team_office'], $r->om['share']) . ' ');
+                esc_html_e('This is only a warning; you can still approve.', 'workforce-one'); ?></div></div><?php endif; ?>
             <?php echo $decision_form('ews_vacation_request_respond', 'ews_vacation_respond', (int) $r->id, __('Approve', 'workforce-one')); ?>
         </div><span class="ews-vac-status ews-vac-pending"><?php echo Icons::svg('overtime', 14, 2.2); ?><?php esc_html_e('Pending', 'workforce-one'); ?></span></div>
     <?php endforeach; ?>

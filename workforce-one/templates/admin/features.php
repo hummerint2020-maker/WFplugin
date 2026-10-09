@@ -2,7 +2,7 @@
 /**
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
- * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, confirm_global)
+ * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, confirm_global)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
  * @var array<string,int|float> $face           face tuning values
@@ -17,6 +17,11 @@
  * @var string $locations_url
  * @var string $privacy_html                    section rendered by the Privacy module
  * @var int $presence_minutes                   time an employee has to answer a presence request
+ * @var array<string,mixed> $office_minimum   Settings\OfficeMinimumSettings (3.31.77)
+ * @var array<int,array{name:string,size:int,share:int}> $om_teams   teams with their size and automatic share
+ * @var string[] $om_statuses                  the schedule statuses that exist
+ * @var string[] $weekday_names                 0 = Sunday
+ * @var int[] $working_days
  * @var bool $saved
  * @var string|null $error
  * @var string $post_url
@@ -36,6 +41,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="action" value="ews31_features_save">
 <input type="hidden" name="corrections_present" value="1">
 <input type="hidden" name="daily_workers_present" value="1">
+<input type="hidden" name="office_minimum_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -46,6 +52,32 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <div><div class="wfo-feature-title">Attendance Corrections</div><div class="wfo-feature-desc">Employees ask to correct a forgotten Sign In / Sign Out or a wrong time; the manager decides with the day's evidence; HR can correct directly. Recorded events are never changed. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-corrections&tab=settings')); ?>">Settings</a></div></div>
     <?php $switch('corrections_enabled', $on['corrections']); ?>
 </div></div>
+
+<div class="wfo-feature-section" id="ews-office-minimum"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Office Minimum', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked.', 'workforce-one'); ?></div></div>
+    <?php $switch('office_minimum_enabled', $on['office_minimum'], __('Enabled', 'workforce-one')); ?>
+</div>
+<div class="wfo-om-admin"><table class="form-table" role="presentation">
+    <tr><th scope="row"><label for="ews-om-min"><?php esc_html_e('Minimum each day', 'workforce-one'); ?></label></th><td><input id="ews-om-min" type="number" min="1" name="om_min" class="small-text" value="<?php echo (int) $office_minimum['min']; ?>"> <?php esc_html_e('people in the office', 'workforce-one'); ?>
+        <p class="description"><?php esc_html_e('Working days only; company holidays and days off are not checked.', 'workforce-one'); ?></p></td></tr>
+    <tr><th scope="row"><?php esc_html_e('A different day (optional)', 'workforce-one'); ?></th><td><div class="wfo-om-wds">
+        <?php foreach ($working_days as $w): ?><label class="wfo-om-wd"><span><?php echo esc_html($weekday_names[$w] ?? (string) $w); ?></span><input type="number" min="0" name="om_days[<?php echo (int) $w; ?>]" class="small-text" placeholder="<?php echo (int) $office_minimum['min']; ?>" value="<?php echo isset($office_minimum['days'][$w]) ? (int) $office_minimum['days'][$w] : ''; ?>"></label><?php endforeach; ?>
+        </div><p class="description"><?php esc_html_e('Empty = the minimum above. 0 = no minimum that day.', 'workforce-one'); ?></p></td></tr>
+    <tr><th scope="row"><?php esc_html_e('Who counts as in the office', 'workforce-one'); ?></th><td>
+        <?php foreach ($om_statuses as $st): ?><label><input type="checkbox" name="om_statuses[]" value="<?php echo esc_attr($st); ?>" <?php checked(in_array($st, $office_minimum['statuses'], true)); ?>> <?php echo esc_html($st); ?></label><br><?php endforeach; ?>
+        <p class="description"><?php esc_html_e('Leave, trips and training count only if ticked here.', 'workforce-one'); ?></p></td></tr>
+    <tr><th scope="row"><?php esc_html_e('Each team\'s share', 'workforce-one'); ?></th><td>
+        <p><?php esc_html_e('Automatic, by team size. You can fix a number for a team.', 'workforce-one'); ?></p>
+        <?php if (!$om_teams): ?><p class="description"><?php esc_html_e('No teams yet: the minimum is checked for the whole company.', 'workforce-one'); ?></p><?php else: ?>
+        <table class="widefat striped wfo-om-share"><thead><tr><th><?php esc_html_e('Team', 'workforce-one'); ?></th><th><?php esc_html_e('People', 'workforce-one'); ?></th><th><?php esc_html_e('Automatic share', 'workforce-one'); ?></th><th><?php esc_html_e('Fixed number', 'workforce-one'); ?></th></tr></thead><tbody>
+        <?php foreach ($om_teams as $tid => $t): ?><tr><td><?php echo esc_html($t['name']); ?></td><td><?php echo (int) $t['size']; ?></td><td><?php echo (int) $t['share']; ?></td>
+            <td><?php if ($tid > 0): ?><input type="number" min="0" class="small-text" name="om_teams[<?php echo (int) $tid; ?>]" placeholder="<?php esc_attr_e('Auto', 'workforce-one'); ?>" value="<?php echo isset($office_minimum['teams'][$tid]) ? (int) $office_minimum['teams'][$tid] : ''; ?>"><?php else: ?>—<?php endif; ?></td></tr><?php endforeach; ?>
+        </tbody></table>
+        <p class="description"><?php esc_html_e('People in no team share one line ("No team").', 'workforce-one'); ?></p><?php endif; ?></td></tr>
+    <tr><th scope="row"><?php esc_html_e('Reminder', 'workforce-one'); ?></th><td><label><input type="checkbox" name="om_reminder" value="1" <?php checked((int) $office_minimum['reminder'], 1); ?>> <?php esc_html_e('Every week, send schedule managers the days below the minimum next week', 'workforce-one'); ?></label><br>
+        <label><?php esc_html_e('Reminder day', 'workforce-one'); ?> <select name="om_reminder_day"><?php foreach ($weekday_names as $w => $n): ?><option value="<?php echo (int) $w; ?>" <?php selected((int) $office_minimum['reminder_day'], (int) $w); ?>><?php echo esc_html($n); ?></option><?php endforeach; ?></select></label>
+        <input type="time" name="om_reminder_time" value="<?php echo esc_attr($office_minimum['reminder_time']); ?>"></td></tr>
+</table></div></div>
 
 <div class="wfo-feature-section" id="ews-daily-workers"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Daily Workers</div><div class="wfo-feature-desc">Day labourers without an email or an account: foremen record each site's day from inside the site with a group photo, workers can sign in with their mobile and a PIN, payout sheets and labour cost per project. Never mixed with staff. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-daily-workers&tab=settings')); ?>">Settings</a></div></div>

@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.76\n"
+"Project-Id-Version: Workforce One 3.31.77\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T13:10:25+00:00\n"
+"POT-Creation-Date: 2026-10-09T17:35:21+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -125,14 +125,14 @@ msgstr ""
 #: includes/trait-app-layout.php:81
 #: includes/trait-daily-workers.php:1418
 #: templates/app/attendance-insights.php:61
-#: templates/app/attendance.php:152
+#: templates/app/attendance.php:163
 #: templates/app/dw-day.php:162
 msgid "Attendance"
 msgstr ""
 
 #: includes/trait-app-layout.php:71
 #: templates/app/attendance-insights.php:82
-#: templates/app/attendance.php:95
+#: templates/app/attendance.php:103
 #: templates/app/employees.php:19
 msgid "Employees"
 msgstr ""
@@ -153,8 +153,8 @@ msgstr ""
 #: includes/trait-app-layout.php:81
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:63
 #: templates/app/attendance.php:71
+#: templates/app/attendance.php:79
 msgid "Leave"
 msgstr ""
 
@@ -190,8 +190,8 @@ msgstr ""
 
 #: includes/trait-app-layout.php:71
 #: includes/trait-dashboard-view.php:27
-#: includes/trait-notifications.php:820
-#: includes/trait-notifications.php:823
+#: includes/trait-notifications.php:821
+#: includes/trait-notifications.php:824
 msgid "Notifications"
 msgstr ""
 
@@ -204,6 +204,7 @@ msgstr ""
 
 #: includes/trait-app-layout.php:71
 #: includes/trait-app-layout.php:81
+#: templates/admin/features.php:72
 msgid "People"
 msgstr ""
 
@@ -476,7 +477,7 @@ msgstr ""
 #: includes/trait-corrections.php:551
 #: includes/trait-corrections.php:553
 #: includes/trait-corrections.php:554
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -487,7 +488,7 @@ msgstr ""
 #. translators: %d: number of requests
 #: includes/trait-corrections.php:455
 #: includes/trait-corrections.php:552
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -702,7 +703,7 @@ msgstr ""
 
 #: includes/trait-daily-workers.php:353
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:63
+#: templates/app/attendance.php:71
 #: templates/app/dw-day.php:48
 #: templates/app/dw-day.php:82
 #: templates/app/dw-day.php:162
@@ -720,7 +721,7 @@ msgstr ""
 #: includes/trait-schedule-view.php:79
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:63
+#: templates/app/attendance.php:71
 #: templates/app/dw-day.php:50
 #: templates/app/dw-day.php:82
 #: templates/app/dw-day.php:162
@@ -1166,6 +1167,7 @@ msgstr ""
 #. translators: %d: number of requests
 #: includes/trait-daily-workers.php:965
 #: templates/admin/corrections.php:118
+#: templates/app/office-minimum.php:48
 msgid "Total"
 msgstr ""
 
@@ -1238,8 +1240,8 @@ msgid "Worker"
 msgstr ""
 
 #: includes/trait-daily-workers.php:1418
-#: templates/app/attendance.php:216
-#: templates/app/leave.php:141
+#: templates/app/attendance.php:228
+#: templates/app/leave.php:144
 #: templates/app/my-profile.php:153
 #: templates/app/overtime.php:115
 msgid "Date"
@@ -1348,21 +1350,24 @@ msgid "Confirm"
 msgstr ""
 
 #: includes/trait-frontend.php:104
-#: templates/app/attendance.php:237
+#: templates/app/attendance.php:249
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
 #: templates/app/schedule.php:225
 msgid "Cancel"
 msgstr ""
 
+#. translators: 1: number of employees, 2: minimum
 #: includes/trait-frontend.php:108
 #: templates/app/leave.php:44
+#: templates/app/office-minimum.php:51
 msgid "OK"
 msgstr ""
 
+#. translators: %s: day
 #: includes/trait-frontend.php:109
 #: templates/app/attendance-insights.php:82
-#: templates/app/attendance.php:186
+#: templates/app/attendance.php:198
 #: templates/app/correction-sheet.php:28
 #: templates/app/dw-day.php:117
 #: templates/app/dw-day.php:140
@@ -1372,6 +1377,7 @@ msgstr ""
 #: templates/app/leave.php:44
 #: templates/app/my-profile.php:157
 #: templates/app/my-profile.php:176
+#: templates/app/office-minimum.php:33
 #: templates/app/overtime.php:114
 #: templates/app/schedule.php:237
 #: templates/app/schedule.php:254
@@ -1491,7 +1497,7 @@ msgid "Break Updated"
 msgstr ""
 
 #: includes/trait-frontend.php:141
-#: includes/trait-leave-view.php:101
+#: includes/trait-leave-view.php:107
 msgid "Overtime Requests are currently disabled."
 msgstr ""
 
@@ -1723,81 +1729,81 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:344
+#: includes/trait-frontend.php:345
 msgid "Task overdue"
 msgstr ""
 
-#: includes/trait-frontend.php:344
+#: includes/trait-frontend.php:345
 msgid "Due today"
 msgstr ""
 
 #. translators: 1: task title, 2: due date
-#: includes/trait-frontend.php:347
+#: includes/trait-frontend.php:348
 #, php-format
 msgid "%1$s was due on %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:347
+#: includes/trait-frontend.php:348
 #, php-format
 msgid "%s is due today."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:348
+#: includes/trait-frontend.php:349
 msgid "Open Task"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/app/attendance-insights.php:24
-#: templates/app/leave.php:115
-#: templates/app/leave.php:129
+#: templates/app/leave.php:118
+#: templates/app/leave.php:132
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:50
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:50
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/app/schedule.php:50
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: includes/trait-tasks.php:246
 #: templates/app/tasks.php:41
 #: templates/app/tasks.php:104
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/app/presence.php:20
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:466
+#: includes/trait-frontend.php:467
 #: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:473
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:473
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:479
+#: includes/trait-frontend.php:480
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:479
+#: includes/trait-frontend.php:480
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -1816,39 +1822,39 @@ msgid "%d h"
 msgstr ""
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-leave-view.php:72
+#: includes/trait-leave-view.php:78
 #, php-format
 msgid "Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours."
 msgstr ""
 
-#: includes/trait-notifications.php:378
+#: includes/trait-notifications.php:379
 msgid "Just now"
 msgstr ""
 
 #. translators: %s: time span like "5 mins"
 #. translators: %s: human-readable time difference
-#: includes/trait-notifications.php:378
-#: includes/trait-notifications.php:809
+#: includes/trait-notifications.php:379
+#: includes/trait-notifications.php:810
 #, php-format
 msgid "%s ago"
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-notifications.php:379
+#: includes/trait-notifications.php:380
 #, php-format
 msgid "Yesterday · %s"
 msgstr ""
 
-#: includes/trait-notifications.php:817
+#: includes/trait-notifications.php:818
 msgid "You’re all caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:817
+#: includes/trait-notifications.php:818
 msgid "No new notifications."
 msgstr ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:823
+#: includes/trait-notifications.php:824
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -1856,13 +1862,31 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:823
+#: includes/trait-notifications.php:824
 msgid "All caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:825
+#: includes/trait-notifications.php:826
 msgid "View all notifications →"
 msgstr ""
+
+#: includes/trait-office-minimum.php:48
+msgid "No team"
+msgstr ""
+
+#. translators: 1: day, 2: in the office, 3: minimum
+#: includes/trait-office-minimum.php:169
+#, php-format
+msgid "%1$s %2$d of %3$d"
+msgstr ""
+
+#. translators: %d: number of days
+#: includes/trait-office-minimum.php:176
+#, php-format
+msgid "%d day next week is below the office minimum"
+msgid_plural "%d days next week are below the office minimum"
+msgstr[0] ""
+msgstr[1] ""
 
 #. translators: %s: when the poll closes
 #: includes/trait-polls.php:112
@@ -2086,7 +2110,7 @@ msgstr ""
 #. translators: %s: today's schedule status
 #: includes/trait-schedule-view.php:79
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:52
+#: templates/app/attendance.php:60
 #: templates/app/dashboard.php:46
 #: templates/app/my-profile.php:37
 #: templates/app/schedule.php:36
@@ -2114,8 +2138,8 @@ msgstr ""
 #: templates/admin/corrections.php:80
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:163
-#: templates/app/attendance.php:155
-#: templates/app/attendance.php:216
+#: templates/app/attendance.php:166
+#: templates/app/attendance.php:228
 #: templates/app/reports.php:53
 #: templates/app/schedule.php:125
 msgid "Employee"
@@ -2322,7 +2346,7 @@ msgstr ""
 #: templates/app/correction-sheet.php:52
 #: templates/app/dw-day.php:165
 #: templates/app/leave.php:77
-#: templates/app/leave.php:144
+#: templates/app/leave.php:147
 #: templates/app/overtime.php:127
 msgid "Reason"
 msgstr ""
@@ -2332,7 +2356,7 @@ msgstr ""
 #: templates/admin/daily-workers.php:105
 #: templates/admin/daily-workers.php:141
 #: templates/admin/daily-workers.php:186
-#: templates/app/attendance.php:216
+#: templates/app/attendance.php:228
 #: templates/app/my-profile.php:153
 msgid "Status"
 msgstr ""
@@ -2395,8 +2419,8 @@ msgstr ""
 #: templates/admin/corrections.php:97
 #: templates/admin/daily-workers.php:195
 #: templates/app/corrections.php:108
-#: templates/app/leave.php:114
-#: templates/app/leave.php:157
+#: templates/app/leave.php:117
+#: templates/app/leave.php:160
 #: templates/app/overtime.php:90
 msgid "Approve"
 msgstr ""
@@ -3054,6 +3078,98 @@ msgstr ""
 msgid "Roles & Permissions"
 msgstr ""
 
+#: templates/admin/features.php:57
+msgid "Office Minimum"
+msgstr ""
+
+#: templates/admin/features.php:57
+msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
+msgstr ""
+
+#: templates/admin/features.php:58
+msgid "Enabled"
+msgstr ""
+
+#: templates/admin/features.php:61
+msgid "Minimum each day"
+msgstr ""
+
+#: templates/admin/features.php:61
+msgid "people in the office"
+msgstr ""
+
+#: templates/admin/features.php:62
+msgid "Working days only; company holidays and days off are not checked."
+msgstr ""
+
+#: templates/admin/features.php:63
+msgid "A different day (optional)"
+msgstr ""
+
+#: templates/admin/features.php:65
+msgid "Empty = the minimum above. 0 = no minimum that day."
+msgstr ""
+
+#: templates/admin/features.php:66
+msgid "Who counts as in the office"
+msgstr ""
+
+#: templates/admin/features.php:68
+msgid "Leave, trips and training count only if ticked here."
+msgstr ""
+
+#: templates/admin/features.php:69
+msgid "Each team's share"
+msgstr ""
+
+#: templates/admin/features.php:70
+msgid "Automatic, by team size. You can fix a number for a team."
+msgstr ""
+
+#: templates/admin/features.php:71
+msgid "No teams yet: the minimum is checked for the whole company."
+msgstr ""
+
+#: templates/admin/features.php:72
+#: templates/app/attendance-insights.php:46
+#: templates/app/attendance.php:119
+#: templates/app/employees.php:22
+#: templates/app/my-profile.php:93
+#: templates/app/office-minimum.php:37
+#: templates/app/reports.php:52
+#: templates/app/tasks.php:168
+msgid "Team"
+msgstr ""
+
+#: templates/admin/features.php:72
+msgid "Automatic share"
+msgstr ""
+
+#: templates/admin/features.php:72
+msgid "Fixed number"
+msgstr ""
+
+#: templates/admin/features.php:74
+msgid "Auto"
+msgstr ""
+
+#: templates/admin/features.php:76
+msgid "People in no team share one line (\"No team\")."
+msgstr ""
+
+#: templates/admin/features.php:77
+#: templates/app/tasks.php:188
+msgid "Reminder"
+msgstr ""
+
+#: templates/admin/features.php:77
+msgid "Every week, send schedule managers the days below the minimum next week"
+msgstr ""
+
+#: templates/admin/features.php:78
+msgid "Reminder day"
+msgstr ""
+
 #: templates/admin/tasks.php:15
 msgid "On"
 msgstr ""
@@ -3275,19 +3391,19 @@ msgid "Changes apply right away."
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:71
+#: templates/app/attendance.php:79
 #: templates/app/dashboard.php:144
 msgid "Office"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:71
+#: templates/app/attendance.php:79
 #: templates/app/dashboard.php:144
 msgid "WFH"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:71
+#: templates/app/attendance.php:79
 msgid "Business Trip"
 msgstr ""
 
@@ -3296,7 +3412,7 @@ msgid "Other"
 msgstr ""
 
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:63
+#: templates/app/attendance.php:71
 msgid "Late"
 msgstr ""
 
@@ -3307,7 +3423,7 @@ msgstr ""
 #. translators: %s: due date
 #: templates/app/attendance-insights.php:29
 #: templates/app/attendance-insights.php:43
-#: templates/app/attendance.php:160
+#: templates/app/attendance.php:171
 #: templates/app/dashboard.php:78
 #: templates/app/dashboard.php:119
 #: templates/app/dw-day.php:147
@@ -3323,7 +3439,7 @@ msgid "Selected Day"
 msgstr ""
 
 #: templates/app/attendance-insights.php:34
-#: templates/app/attendance.php:81
+#: templates/app/attendance.php:89
 #: templates/app/schedule.php:48
 #: templates/app/schedule.php:59
 msgid "Previous week"
@@ -3335,7 +3451,7 @@ msgid "Week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:36
-#: templates/app/attendance.php:90
+#: templates/app/attendance.php:98
 #: templates/app/schedule.php:48
 #: templates/app/schedule.php:61
 msgid "Next week"
@@ -3347,15 +3463,6 @@ msgstr ""
 
 #: templates/app/attendance-insights.php:41
 msgid "Next day"
-msgstr ""
-
-#: templates/app/attendance-insights.php:46
-#: templates/app/attendance.php:111
-#: templates/app/employees.php:22
-#: templates/app/my-profile.php:93
-#: templates/app/reports.php:52
-#: templates/app/tasks.php:168
-msgid "Team"
 msgstr ""
 
 #: templates/app/attendance-insights.php:46
@@ -3393,205 +3500,213 @@ msgstr ""
 msgid "No employees in this category."
 msgstr ""
 
-#: templates/app/attendance.php:45
+#: templates/app/attendance.php:46
+msgid "No minimum"
+msgstr ""
+
+#: templates/app/attendance.php:47
+msgid "In the office / minimum"
+msgstr ""
+
+#: templates/app/attendance.php:53
 #: templates/app/schedule.php:143
 msgid "You"
 msgstr ""
 
-#: templates/app/attendance.php:46
+#: templates/app/attendance.php:54
 #: templates/app/corrections.php:69
 #: templates/app/schedule.php:143
 #: templates/app/schedule.php:161
 msgid "Manager"
 msgstr ""
 
-#: templates/app/attendance.php:64
+#: templates/app/attendance.php:72
 msgid "Awaiting sign in"
 msgstr ""
 
-#: templates/app/attendance.php:64
+#: templates/app/attendance.php:72
 msgid "Not scheduled"
 msgstr ""
 
-#: templates/app/attendance.php:77
+#: templates/app/attendance.php:85
 msgid "MANAGER CONTROL CENTER"
 msgstr ""
 
-#: templates/app/attendance.php:78
+#: templates/app/attendance.php:86
 msgid "Manage your team schedule and see attendance results in one place."
 msgstr ""
 
-#: templates/app/attendance.php:84
+#: templates/app/attendance.php:92
 msgid "Choose a date"
 msgstr ""
 
-#: templates/app/attendance.php:87
+#: templates/app/attendance.php:95
 msgid "Choose week"
 msgstr ""
 
-#: templates/app/attendance.php:96
+#: templates/app/attendance.php:104
 msgid "Present days"
 msgstr ""
 
-#: templates/app/attendance.php:97
+#: templates/app/attendance.php:105
 #: templates/app/pay.php:59
 msgid "Late days"
 msgstr ""
 
-#: templates/app/attendance.php:98
+#: templates/app/attendance.php:106
 msgid "Absent days"
 msgstr ""
 
-#: templates/app/attendance.php:99
+#: templates/app/attendance.php:107
 msgid "Attendance rate"
 msgstr ""
 
-#: templates/app/attendance.php:104
+#: templates/app/attendance.php:112
 msgid "Schedule Controls"
 msgstr ""
 
-#: templates/app/attendance.php:104
+#: templates/app/attendance.php:112
 msgid "Set the planned schedule for everyone on this page on a specific day."
 msgstr ""
 
-#: templates/app/attendance.php:104
+#: templates/app/attendance.php:112
 msgid "Set the planned schedule for everyone on a specific day."
 msgstr ""
 
-#: templates/app/attendance.php:110
+#: templates/app/attendance.php:118
 msgid "Search employee..."
 msgstr ""
 
-#: templates/app/attendance.php:112
+#: templates/app/attendance.php:120
 msgid "All teams"
 msgstr ""
 
-#: templates/app/attendance.php:119
+#: templates/app/attendance.php:127
 msgid "Branch"
 msgstr ""
 
-#: templates/app/attendance.php:120
+#: templates/app/attendance.php:128
 msgid "All branches"
 msgstr ""
 
-#: templates/app/attendance.php:131
+#: templates/app/attendance.php:139
 msgid "Set…"
 msgstr ""
 
 #. translators: %s: day
-#: templates/app/attendance.php:134
+#: templates/app/attendance.php:143
 #, php-format
 msgid "Branch for everyone on %s"
 msgstr ""
 
 #. translators: %s: day
-#: templates/app/attendance.php:135
+#: templates/app/attendance.php:144
 msgid "Branch…"
 msgstr ""
 
-#: templates/app/attendance.php:136
+#: templates/app/attendance.php:145
 msgid "Their main branch"
 msgstr ""
 
 #. translators: 1: people with a record, 2: people absent
-#: templates/app/attendance.php:161
+#: templates/app/attendance.php:173
 #, php-format
 msgid "%1$d recorded · %2$d absent"
 msgstr ""
 
-#: templates/app/attendance.php:180
+#: templates/app/attendance.php:192
 msgid "No employee matches this search."
 msgstr ""
 
-#: templates/app/attendance.php:192
+#: templates/app/attendance.php:204
 msgid "Branch for this day"
 msgstr ""
 
-#: templates/app/attendance.php:194
+#: templates/app/attendance.php:206
 msgid "Main branch"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:201
+#: templates/app/attendance.php:213
 msgid "No changes yet. Tap a day to change it."
 msgstr ""
 
-#: templates/app/attendance.php:201
+#: templates/app/attendance.php:213
 msgid "1 change not saved yet"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:201
+#: templates/app/attendance.php:213
 #, php-format
 msgid "%d changes not saved yet"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:201
+#: templates/app/attendance.php:213
 msgid "You have changes that are not saved yet."
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:202
+#: templates/app/attendance.php:214
 msgid "Undo"
 msgstr ""
 
-#: templates/app/attendance.php:203
+#: templates/app/attendance.php:215
 msgid "Save Schedule & Attendance"
 msgstr ""
 
-#: templates/app/attendance.php:208
+#: templates/app/attendance.php:220
 msgid "The CSV preview has expired. Please upload the file again."
 msgstr ""
 
-#: templates/app/attendance.php:213
+#: templates/app/attendance.php:225
 msgid "CSV Preview"
 msgstr ""
 
-#: templates/app/attendance.php:214
+#: templates/app/attendance.php:226
 msgid "Existing entries for the same employee and date will be replaced."
 msgstr ""
 
-#: templates/app/attendance.php:216
+#: templates/app/attendance.php:228
 msgid "Line"
 msgstr ""
 
-#: templates/app/attendance.php:216
+#: templates/app/attendance.php:228
 msgid "Note"
 msgstr ""
 
-#: templates/app/attendance.php:216
+#: templates/app/attendance.php:228
 #: templates/app/reports.php:56
 msgid "Result"
 msgstr ""
 
 #. translators: %d: number of rows
-#: templates/app/attendance.php:234
+#: templates/app/attendance.php:246
 #, php-format
 msgid "Import %d row(s)"
 msgstr ""
 
-#: templates/app/attendance.php:243
+#: templates/app/attendance.php:255
 msgid "Advanced: Bulk CSV Import"
 msgstr ""
 
-#: templates/app/attendance.php:243
+#: templates/app/attendance.php:255
 msgid "Use this when you have many rows from Excel."
 msgstr ""
 
-#: templates/app/attendance.php:245
+#: templates/app/attendance.php:257
 msgid "Download the sample, fill it in Excel, upload it, review validation, then import."
 msgstr ""
 
-#: templates/app/attendance.php:249
+#: templates/app/attendance.php:261
 msgid "Upload CSV"
 msgstr ""
 
-#: templates/app/attendance.php:250
+#: templates/app/attendance.php:262
 msgid "Validate & Preview"
 msgstr ""
 
-#: templates/app/attendance.php:253
+#: templates/app/attendance.php:265
 msgid "Download Sample CSV"
 msgstr ""
 
@@ -3957,7 +4072,7 @@ msgstr ""
 
 #: templates/app/corrections.php:126
 #: templates/app/leave.php:109
-#: templates/app/leave.php:123
+#: templates/app/leave.php:126
 #: templates/app/notifications.php:51
 #: templates/app/overtime.php:80
 msgid "You're all caught up."
@@ -4544,7 +4659,9 @@ msgstr ""
 msgid "Work Profile"
 msgstr ""
 
+#. translators: %d: people missing
 #: templates/app/employee.php:50
+#: templates/app/office-minimum.php:24
 msgid "Teams"
 msgstr ""
 
@@ -4863,35 +4980,52 @@ msgstr ""
 msgid "No Pending Leave Requests"
 msgstr ""
 
-#: templates/app/leave.php:122
+#. translators: 1: day, 2: people in the office, 3: minimum
+#: templates/app/leave.php:114
+#, php-format
+msgid "Approving makes %1$s %2$d of %3$d in the office"
+msgstr ""
+
+#. translators: 1: team, 2: in the office, 3: the team's share
+#: templates/app/leave.php:115
+#, php-format
+msgid "%1$s would have %2$d of their share of %3$d."
+msgstr ""
+
+#. translators: 1: team, 2: in the office, 3: the team's share
+#: templates/app/leave.php:116
+msgid "This is only a warning; you can still approve."
+msgstr ""
+
+#: templates/app/leave.php:125
 msgid "Leave Cancellations Awaiting Your Approval"
 msgstr ""
 
-#: templates/app/leave.php:122
+#: templates/app/leave.php:125
 msgid "Cancellation Requests"
 msgstr ""
 
-#: templates/app/leave.php:123
+#: templates/app/leave.php:126
 msgid "No Cancellation Requests"
 msgstr ""
 
-#: templates/app/leave.php:128
+#: templates/app/leave.php:131
 msgid "Approve Cancellation"
 msgstr ""
 
-#: templates/app/leave.php:136
+#: templates/app/leave.php:139
 msgid "Early Leave"
 msgstr ""
 
-#: templates/app/leave.php:142
+#: templates/app/leave.php:145
 msgid "Duration (minutes)"
 msgstr ""
 
-#: templates/app/leave.php:145
+#: templates/app/leave.php:148
 msgid "Request Early Leave"
 msgstr ""
 
-#: templates/app/leave.php:152
+#: templates/app/leave.php:155
 msgid "Pending Early Leave"
 msgstr ""
 
@@ -5295,6 +5429,95 @@ msgstr ""
 msgid "Mark \"%s\" as read"
 msgstr ""
 
+#. translators: %d: number of days
+#: templates/app/office-minimum.php:17
+#, php-format
+msgid "%d day below the office minimum"
+msgid_plural "%d days below the office minimum"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of days
+#: templates/app/office-minimum.php:18
+msgid "This is only a warning: the schedule still saves."
+msgstr ""
+
+#. translators: 1: people in the office, 2: minimum
+#: templates/app/office-minimum.php:22
+#, php-format
+msgid "%1$d of %2$d in the office"
+msgstr ""
+
+#. translators: %d: people missing
+#: templates/app/office-minimum.php:23
+#: templates/app/office-minimum.php:45
+#: templates/app/office-minimum.php:48
+#, php-format
+msgid "%d short"
+msgstr ""
+
+#. translators: %s: day
+#: templates/app/office-minimum.php:32
+#, php-format
+msgid "Teams on %s"
+msgstr ""
+
+#. translators: %d: people missing
+#: templates/app/office-minimum.php:35
+#, php-format
+msgid "%d below the minimum"
+msgstr ""
+
+#: templates/app/office-minimum.php:37
+msgid "Share"
+msgstr ""
+
+#: templates/app/office-minimum.php:37
+msgid "In office"
+msgstr ""
+
+#: templates/app/office-minimum.php:37
+msgid "Short / above"
+msgstr ""
+
+#. translators: %d: people in the team
+#. translators: %d: number of people
+#: templates/app/office-minimum.php:40
+#: templates/app/people.php:23
+#: templates/app/schedule.php:96
+#, php-format
+msgid "%d person"
+msgid_plural "%d people"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum.php:42
+msgid "Could come in (working from home):"
+msgstr ""
+
+#. translators: %d: more people
+#: templates/app/office-minimum.php:42
+#, php-format
+msgid "and %d more"
+msgstr ""
+
+#. translators: %d: people above the share
+#: templates/app/office-minimum.php:45
+#, php-format
+msgid "+%d above"
+msgstr ""
+
+#. translators: %d: people above the share
+#: templates/app/office-minimum.php:45
+msgid "On share"
+msgstr ""
+
+#. translators: 1: number of employees, 2: minimum
+#: templates/app/office-minimum.php:50
+#, php-format
+msgid "Each team's share = minimum × team size ÷ all employees (%1$d), rounded so the shares add up to exactly %2$d."
+msgstr ""
+
 #: templates/app/overtime.php:44
 msgid "Select the times to see the requested duration."
 msgstr ""
@@ -5608,15 +5831,6 @@ msgstr ""
 #: templates/app/people.php:21
 msgid "Clear"
 msgstr ""
-
-#. translators: %d: number of people
-#: templates/app/people.php:23
-#: templates/app/schedule.php:96
-#, php-format
-msgid "%d person"
-msgid_plural "%d people"
-msgstr[0] ""
-msgstr[1] ""
 
 #: templates/app/people.php:35
 msgid "No people found"
@@ -6365,10 +6579,6 @@ msgstr ""
 
 #: templates/app/tasks.php:184
 msgid "Due Date"
-msgstr ""
-
-#: templates/app/tasks.php:188
-msgid "Reminder"
 msgstr ""
 
 #: templates/app/tasks.php:188

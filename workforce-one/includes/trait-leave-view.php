@@ -37,6 +37,12 @@ trait EWS_Leave_View_Trait {
         return ['mine'=>false,'rows'=>(array)$wpdb->get_results("{$select} {$from} WHERE {$where} ORDER BY r.requested_at ASC")];
     }
 
+    /** Office minimum (3.31.77): what approving each pending request does to the day (->om, or null). */
+    private function leave_view_office_minimum($approvals){
+        if($approvals)foreach($approvals['rows'] as $r)$r->om=$this->om_leave_impact((int)$r->employee_id,(string)$r->start_date,(string)$r->end_date);
+        return $approvals;
+    }
+
     private function vacation_content(){
         if(!is_user_logged_in())return $this->login_page();
         $this->ensure_leave_schema();
@@ -84,7 +90,7 @@ trait EWS_Leave_View_Trait {
             'all_url'=>add_query_arg('leave_history','all',remove_query_arg('leave_history',$this->app_view_url('vacation'))),
             'recent_url'=>remove_query_arg('leave_history',$this->app_view_url('vacation')),
             'request_url'=>$this->app_view_url('vacation'),
-            'approvals'=>$this->leave_view_manager_rows('leave',"r.status='Pending'"),
+            'approvals'=>$this->leave_view_office_minimum($this->leave_view_manager_rows('leave',"r.status='Pending'")),
             'cancellations'=>$this->leave_view_manager_rows('leave_cancellation',"r.status='Approved' AND r.cancellation_status='Pending'"),
             'early'=>$early,'pending_early'=>$pending_early,
             'working_days'=>array_values($this->working_days()),

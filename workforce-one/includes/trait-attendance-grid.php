@@ -79,7 +79,9 @@ trait EWS_Attendance_Grid_Trait {
             $branch=['names'=>array_map(function($l){return (string)$l->name;},$choices),'planned'=>$this->branch_planned_bulk($page_ids,$dates),'mine'=>$mine,'main'=>$main,
                 'statuses'=>array_values(array_filter($this->schedule_type_names(true),function($st){return $this->schedule_type_requires_location($st);}))];
         }
+        $office_min=$this->om_attendance($dates);
         return $this->render_template('app/attendance',[
+            'office_min'=>$office_min,'office_min_html'=>$office_min?$this->render_template('app/office-minimum',['om'=>$office_min]):'',
             'people'=>$people,
             'emps'=>$emps,'list'=>$list,'branch'=>$branch,'branch_filter'=>$branch_filter,'branch_filter_names'=>$branch_filter_names,'list_keep'=>$this->list_keep_args('attendance'),'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
             'summary'=>$summary,'day_summary'=>$day_summary,'team_options'=>array_values($team_options),

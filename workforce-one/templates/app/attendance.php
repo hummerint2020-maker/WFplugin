@@ -36,8 +36,16 @@
  * @var string $preview_cancel_url
  * @var string $sample_url
  * @var string $post_url
+ * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int}|null $office_min  Office minimum (3.31.77); null when off
+ * @var string $office_min_html     its warning card and teams sheets (templates/app/office-minimum.php)
  */
 if (!defined('ABSPATH')) exit;
+$om_counter = static function (string $d) use ($office_min): string {
+    if (!$office_min) return '';
+    $day = $office_min['days'][$d] ?? null;
+    if (!$day) return '<span class="wfo-om-day is-off" data-om-day="' . esc_attr($d) . '">' . esc_html__('No minimum', 'workforce-one') . '</span>';
+    return '<span class="wfo-om-day ' . ($day['short'] > 0 ? 'is-short' : 'is-ok') . '" data-om-day="' . esc_attr($d) . '" data-om-base="' . (int) $day['office'] . '" data-om-min="' . (int) $day['min'] . '" title="' . esc_attr__('In the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('office', 13, 2.2) . '<b>' . (int) $day['office'] . '</b><span>/ ' . (int) $day['min'] . '</span></span>';
+};
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; the helpers below escape their output.
 $badges = static function (object $e) use ($current_emp_id): string {
@@ -131,6 +139,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                         <option value=""><?php esc_html_e('Set…', 'workforce-one'); ?></option>
                         <?php foreach ($statuses as $s): ?><option value="<?php echo esc_attr($s); ?>"><?php echo esc_html($s); ?></option><?php endforeach; ?>
                     </select>
+                    <?php echo $om_counter($d); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?>
                     <?php if ($branch): ?><select class="wfo-attg-fill-branch" data-ews-fill-branch="<?php echo (int) $i; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: day */ __('Branch for everyone on %s', 'workforce-one'), date_i18n('D d M', strtotime($d)))); ?>">
                         <option value=""><?php esc_html_e('Branch…', 'workforce-one'); ?></option>
                         <option value="main"><?php esc_html_e('Their main branch', 'workforce-one'); ?></option>
@@ -142,6 +151,8 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
         <div class="ews-att-plan-legend"><?php foreach ($plan_dots as $k => $l): ?><span><i class="<?php echo esc_attr($k); ?>"></i> <?php echo esc_html($l); ?></span><?php endforeach; ?></div>
     </section>
 
+    <?php echo $office_min_html; // phpcs:ignore WordPress.Security.EscapeOutput -- templates/app/office-minimum.php escapes ?>
+
     <form method="post" action="<?php echo esc_url($post_url); ?>" id="ews-grid-form"<?php if ($branch): ?> data-ews-branch-statuses="<?php echo esc_attr(wp_json_encode($branch['statuses'])); ?>"<?php endif; ?>>
         <input type="hidden" name="action" value="ews31_att_grid_save">
         <input type="hidden" name="week" value="<?php echo esc_attr($week); ?>">
@@ -150,7 +161,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
         <?php wp_nonce_field('ews31_att_grid_save'); ?>
 
         <div class="ews-att-table-wrap wfo-att-card" tabindex="0" role="region" aria-label="<?php esc_attr_e('Attendance', 'workforce-one'); ?>">
-            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>">
+            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>"<?php if ($office_min): ?> data-om-statuses="<?php echo esc_attr(wp_json_encode($office_min['statuses'])); ?>" data-om-dates="<?php echo esc_attr(wp_json_encode(array_values($dates))); ?>"<?php endif; ?>>
                 <thead><tr>
                     <th class="employee-col" scope="col"><?php esc_html_e('Employee', 'workforce-one'); ?></th>
                     <?php foreach ($dates as $d): ?>
@@ -158,6 +169,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                             <div class="ews-att-day-name"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></div>
                             <small><?php echo esc_html(date_i18n('d M', strtotime($d))); ?></small>
                             <?php if ($d === $today): ?><em><?php esc_html_e('Today', 'workforce-one'); ?></em><?php endif; ?>
+                            <?php echo $om_counter($d); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?>
                             <div class="ews-att-day-meta"><?php echo esc_html(sprintf(/* translators: 1: people with a record, 2: people absent */ __('%1$d recorded · %2$d absent', 'workforce-one'), (int) $day_summary[$d]['recorded'], (int) $day_summary[$d]['absent'])); ?></div>
                         </th>
                     <?php endforeach; ?>

@@ -5230,3 +5230,138 @@ msgstr "مطلوب موافقة"
 #: includes/trait-approvals.php
 msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
 msgstr "الموافقة رقم %1$d، المستوى %2$d، مستنية أدمن: الموافِق هو نفسه صاحب الطلب. قرّر فيها من wp-admin ← Requests Hub."
+
+msgid "No team"
+msgstr "بدون فريق"
+
+msgid "%1$s %2$d of %3$d"
+msgstr "%1$s ‏%2$d من %3$d"
+
+msgid "%d day next week is below the office minimum"
+msgid_plural "%d days next week are below the office minimum"
+msgstr[0] "%d أيام الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[1] "%d يوم الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[2] "%d يوم الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[3] "%d أيام الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[4] "%d يومًا الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[5] "%d يوم الأسبوع القادم تحت الحد الأدنى للمكتب"
+
+msgid "Office Minimum"
+msgstr "الحد الأدنى للمكتب"
+
+msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
+msgstr "عدد ثابت من الأشخاص في المكتب كل يوم عمل. من يضع الجدول يرى تحذيرًا والفرق الأقل من حصتها؛ ولا يُمنع الحفظ أبدًا."
+
+msgid "Enabled"
+msgstr "مفعّل"
+
+msgid "Minimum each day"
+msgstr "الحد الأدنى كل يوم"
+
+msgid "people in the office"
+msgstr "شخص في المكتب"
+
+msgid "Working days only; company holidays and days off are not checked."
+msgstr "أيام العمل فقط؛ لا يتم فحص إجازات الشركة وأيام الراحة."
+
+msgid "A different day (optional)"
+msgstr "رقم مختلف ليوم معيّن (اختياري)"
+
+msgid "Empty = the minimum above. 0 = no minimum that day."
+msgstr "فارغ = الحد الأدنى أعلاه. 0 = لا يوجد حد أدنى في هذا اليوم."
+
+msgid "Who counts as in the office"
+msgstr "من يُحسب في المكتب"
+
+msgid "Leave, trips and training count only if ticked here."
+msgstr "الإجازات والمأموريات والتدريب لا تُحسب إلا إذا تم تحديدها هنا."
+
+msgid "Each team's share"
+msgstr "حصة كل فريق"
+
+msgid "Automatic, by team size. You can fix a number for a team."
+msgstr "تلقائية حسب حجم الفريق. يمكنك تثبيت رقم لفريق معيّن."
+
+msgid "No teams yet: the minimum is checked for the whole company."
+msgstr "لا توجد فرق بعد: يتم فحص الحد الأدنى للشركة كلها."
+
+msgid "Automatic share"
+msgstr "الحصة التلقائية"
+
+msgid "Fixed number"
+msgstr "رقم ثابت"
+
+msgid "Auto"
+msgstr "تلقائي"
+
+msgid "People in no team share one line (\"No team\")."
+msgstr "الأشخاص بدون فريق يشتركون في سطر واحد (\"بدون فريق\")."
+
+msgid "Every week, send schedule managers the days below the minimum next week"
+msgstr "كل أسبوع، أرسل لمديري الجدول الأيام الأقل من الحد الأدنى في الأسبوع القادم"
+
+msgid "Reminder day"
+msgstr "يوم التذكير"
+
+msgid "No minimum"
+msgstr "لا يوجد حد أدنى"
+
+msgid "In the office / minimum"
+msgstr "في المكتب / الحد الأدنى"
+
+msgid "Approving makes %1$s %2$d of %3$d in the office"
+msgstr "الموافقة تجعل %1$s ‏%2$d من %3$d في المكتب"
+
+msgid "%1$s would have %2$d of their share of %3$d."
+msgstr "سيكون لدى %1$s ‏%2$d من حصته البالغة %3$d."
+
+msgid "This is only a warning; you can still approve."
+msgstr "هذا مجرد تحذير؛ يمكنك الموافقة رغم ذلك."
+
+msgid "%d day below the office minimum"
+msgid_plural "%d days below the office minimum"
+msgstr[0] "%d أيام تحت الحد الأدنى للمكتب"
+msgstr[1] "%d يوم تحت الحد الأدنى للمكتب"
+msgstr[2] "%d يوم تحت الحد الأدنى للمكتب"
+msgstr[3] "%d أيام تحت الحد الأدنى للمكتب"
+msgstr[4] "%d يومًا تحت الحد الأدنى للمكتب"
+msgstr[5] "%d يوم تحت الحد الأدنى للمكتب"
+
+msgid "This is only a warning: the schedule still saves."
+msgstr "هذا مجرد تحذير: الجدول يُحفظ عادي."
+
+msgid "%1$d of %2$d in the office"
+msgstr "%1$d من %2$d في المكتب"
+
+msgid "%d short"
+msgstr "ناقص %d"
+
+msgid "Teams on %s"
+msgstr "الفرق يوم %s"
+
+msgid "%d below the minimum"
+msgstr "أقل من الحد الأدنى بـ %d"
+
+msgid "Share"
+msgstr "الحصة"
+
+msgid "In office"
+msgstr "في المكتب"
+
+msgid "Short / above"
+msgstr "ناقص / زيادة"
+
+msgid "Could come in (working from home):"
+msgstr "يمكنه الحضور (يعمل من المنزل):"
+
+msgid "and %d more"
+msgstr "و%d آخرين"
+
+msgid "+%d above"
+msgstr "+%d زيادة"
+
+msgid "On share"
+msgstr "على الحصة"
+
+msgid "Each team's share = minimum × team size ÷ all employees (%1$d), rounded so the shares add up to exactly %2$d."
+msgstr "حصة كل فريق = الحد الأدنى × حجم الفريق ÷ كل الموظفين (%1$d)، مقرّبة بحيث يكون مجموع الحصص %2$d بالضبط."

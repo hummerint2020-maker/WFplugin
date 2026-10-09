@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.76
+ * Version: 3.31.77
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.76');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.77');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -66,6 +66,7 @@ require_once __DIR__ . '/includes/trait-notifications.php';
 require_once __DIR__ . '/includes/trait-tasks.php';
 require_once __DIR__ . '/includes/trait-corrections.php';
 require_once __DIR__ . '/includes/trait-daily-workers.php';
+require_once __DIR__ . '/includes/trait-office-minimum.php';
 require_once __DIR__ . '/includes/trait-task-extras.php';
 require_once __DIR__ . '/includes/trait-branches.php';
 require_once __DIR__ . '/includes/trait-approvals.php';
@@ -81,7 +82,7 @@ require_once __DIR__ . '/includes/trait-settings-overview.php';
 require_once __DIR__ . '/includes/trait-payroll.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Office_Minimum_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -176,6 +177,7 @@ class EWS_Manager_V31_1 {
             // Attendance corrections (3.31.74)
             foreach(['correction_request','correction_decide','correction_photo','correction_direct','corrections_settings_save','corrections_export'] as $a)add_action('admin_post_ews_'.$a,[$this,$a]);
             add_action('ews_corrections_tick',[$this,'corrections_tick']);
+            add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
             // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
             foreach(['dw_sheet_save'=>'dw_sheet','dw_worker_add'=>'dw_worker_add','dw_move_save'=>'dw_move','dw_change_save'=>'dw_change','dw_change_decide'=>'dw_change_decide','dw_advance_save'=>'dw_advance',
                 'dw_paid_save'=>'dw_paid','dw_payout_pdf'=>'dw_payout_pdf','dw_file'=>'dw_file','dw_admin_worker_save'=>'dw_admin_worker','dw_worker_delete'=>'dw_worker_delete','dw_settings_save'=>'dw_settings','dw_export'=>'dw_export'] as $m=>$a)add_action('admin_post_ews_'.$a,[$this,$m]);
@@ -195,6 +197,7 @@ class EWS_Manager_V31_1 {
             if(wp_next_scheduled('ews_smart_nudges_tick')===false) wp_schedule_event(time()+120,'ews_auto_five_minutes','ews_smart_nudges_tick');
             if(wp_next_scheduled('ews_tasks_tick')===false) wp_schedule_event(time()+180,'ews_auto_five_minutes','ews_tasks_tick');
             if(wp_next_scheduled('ews_corrections_tick')===false) wp_schedule_event(time()+240,'ews_auto_five_minutes','ews_corrections_tick');
+            if(wp_next_scheduled('ews_office_minimum_tick')===false) wp_schedule_event(time()+270,'ews_auto_five_minutes','ews_office_minimum_tick');
         }
 
     public function load_textdomain(){
@@ -268,7 +271,7 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_corrections_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
+    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_corrections_tick'); wp_clear_scheduled_hook('ews_office_minimum_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
 
 }
 

@@ -27,3 +27,11 @@
 .wfo-confirm-grid{grid-template-columns:1fr}
 .wfo-feature-section,.wfo-features-intro,.wfo-savebar{padding:20px}
 }
+
+/* Office minimum (3.31.77) */
+.wfo-om-admin{margin-top:14px;border-top:1px solid #dcdcde}
+.wfo-om-wds{display:flex;flex-wrap:wrap;gap:10px}
+.wfo-om-wd{display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.wfo-om-share{max-width:640px}
+.wfo-om-share td,.wfo-om-share th{vertical-align:middle}
+.wfo-om-wds input{width:70px}

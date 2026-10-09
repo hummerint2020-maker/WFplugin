@@ -87,3 +87,9 @@
     .wfo-app .wfo-leave .wfo-leave-card{padding:16px}
     .wfo-app .wfo-leave .ews-vac-fields{gap:8px}
 }
+
+/* Office minimum (3.31.77): what approving does to the day */
+.wfo-om-note{display:flex;align-items:flex-start;gap:10px;margin:10px 0;padding:10px 12px;border-radius:14px;background:#FFF8E8;color:#7A5A1F;font-size:12.5px;line-height:1.55}
+.wfo-om-note strong{display:block;color:#5C3A00;font-size:13px}
+.wfo-om-note .wfo-icon{flex:0 0 auto;color:#B07400;margin-top:1px}
+

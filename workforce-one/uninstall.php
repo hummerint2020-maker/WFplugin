@@ -13,7 +13,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) exit;
 function ews_uninstall_site() {
     global $wpdb;
 
-    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_tasks_tick', 'ews_corrections_tick'] as $hook) {
+    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_tasks_tick', 'ews_corrections_tick', 'ews_office_minimum_tick'] as $hook) {
         wp_unschedule_hook($hook);
     }
 

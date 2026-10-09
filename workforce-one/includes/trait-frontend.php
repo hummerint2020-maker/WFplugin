@@ -196,6 +196,7 @@ trait EWS_Frontend_Trait {
             wp_set_script_translations('workforce-one-time', 'workforce-one', dirname(__DIR__).'/languages');
             wp_register_script('workforce-one-schedule', $root.'assets/js/schedule.js', [], $ver, true);
             wp_register_script('workforce-one-attendance-grid', $root.'assets/js/attendance-grid.js', [], $ver, true);
+            wp_register_script('workforce-one-office-minimum', $root.'assets/js/office-minimum.js', ['workforce-one-attendance-grid'], $ver, true);
             wp_register_script('workforce-one-app-attendance-insights', $root.'assets/js/app-attendance-insights.js', [], $ver, true);
             wp_register_script('workforce-one-leave', $root.'assets/js/leave.js', [], $ver, true);
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);

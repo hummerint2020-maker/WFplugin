@@ -35,6 +35,7 @@ trait EWS_Notifications_Trait {
             'recognition'=>['label'=>'Recognition','description'=>'Kudos and employee recognition notifications.','push_default'=>1],
             'payroll'=>['label'=>'Payroll','description'=>'A payslip is ready in My Pay.','push_default'=>1],
             'correction'=>['label'=>'Attendance Corrections','description'=>'Correction requests, decisions and the end-of-day reminder to sign out.','push_default'=>1],
+            'office_minimum'=>['label'=>'Office Minimum','description'=>'Weekly reminder of next week\'s days below the office minimum.','push_default'=>1],
             'daily_workers'=>['label'=>'Daily Workers','description'=>'Day sheet change requests and decisions.','push_default'=>1],
         ];
     }

@@ -87,6 +87,8 @@ final class Options
         'ews_feature_corrections' => ['group' => 'features', 'label' => 'Attendance corrections', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_correction_settings' => ['group' => 'features', 'label' => 'Attendance corrections: kinds, deadline, limit, reminder', 'kind' => 'grouped', 'default' => [], 'builtin' => 'all kinds; 7 days; 3 a month, then HR; earlier Sign In to HR; reminder 19:00', 'page' => 'ews31-corrections'],
         'ews_approval_allow_self' => ['group' => 'features', 'label' => 'Approval workflows: may the requester approve their own request (per workflow)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'allowed in every workflow', 'page' => 'ews31-approvals'],
+        'ews_feature_office_minimum' => ['group' => 'features', 'label' => 'Office minimum', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_office_minimum' => ['group' => 'features', 'label' => 'Office minimum: number, days, statuses, team numbers, reminder', 'kind' => 'grouped', 'default' => [], 'builtin' => '10 people; Office counts; reminder Thursday 12:00', 'page' => 'ews31-features'],
         'ews_feature_daily_workers' => ['group' => 'features', 'label' => 'Daily workers', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_dw_settings' => ['group' => 'features', 'label' => 'Daily workers: recording, pay period, trades, subcontractors', 'kind' => 'grouped', 'default' => [], 'builtin' => 'foreman records; weekly from Saturday; group photo required', 'page' => 'ews31-daily-workers'],
         'ews_branch_settings' => ['group' => 'features', 'label' => 'Branches: how the branch is decided', 'kind' => 'grouped', 'default' => [], 'builtin' => 'one branch per employee', 'page' => 'ews31-features'],
@@ -145,6 +147,7 @@ final class Options
 
         // System (written by the plugin itself)
         'ews_schema_version' => ['group' => 'system', 'label' => 'Database version', 'kind' => 'text', 'default' => '', 'internal' => true],
+        'ews_office_minimum_reminded' => ['group' => 'system', 'label' => 'Office minimum: last weekly reminder', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_corrections_reminded' => ['group' => 'system', 'label' => 'Attendance corrections: last end-of-day reminder', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_schedule_config_schema' => ['group' => 'system', 'label' => 'Schedule settings format', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_integrity_repair_done' => ['group' => 'system', 'label' => 'One-time data repair done', 'kind' => 'bool', 'default' => false, 'internal' => true],

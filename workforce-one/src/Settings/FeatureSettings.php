@@ -138,6 +138,14 @@ final class FeatureSettings
 
     public static function errorMessage(string $code): string
     {
+        $om = [
+            'om_min' => 'Office Minimum: enter a minimum of 1 or more people. Nothing was saved.',
+            'om_day' => 'Office Minimum: a weekday\'s number must be 0 or more. Nothing was saved.',
+            'om_team' => 'Office Minimum: a team\'s fixed number must be 0 or more. Nothing was saved.',
+            'om_statuses' => 'Office Minimum: tick at least one status that counts as in the office. Nothing was saved.',
+            'om_time' => 'Office Minimum: the reminder time is not valid. Nothing was saved.',
+        ];
+        if (isset($om[$code])) return $om[$code];
         return $code === 'early_leave_monthly'
             ? 'Early Leave: the Monthly allowance cannot be lower than the maximum per request. Nothing was saved.'
             : 'The configuration could not be saved.';

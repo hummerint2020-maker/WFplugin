@@ -1,5 +1,40 @@
 # Changelog
 
+## 3.31.77
+Office minimum (owner-approved mockups, docs/mockups/office-minimum/): a fixed number of people planned
+in the office every working day, for the whole company. Whoever sets the schedule is warned, never
+blocked. Off by default: Feature Configuration → Office Minimum. No database change.
+
+### Added
+- **Attendance page**: under each day "in the office / minimum" (red when below, green otherwise),
+  also in the "Set… for the whole day" row; it updates live while cells are changed, before saving.
+  A card above the grid lists only the days below the minimum ("This is only a warning: the schedule
+  still saves"). Saving shows nothing extra.
+- **Teams on a short day** (a sheet from the card): each team's share, how many it has in the office and
+  how many it is short or above, biggest shortfall first, with who could come in (people working from
+  home that day, never people on leave). A team's share is proportional to its size, rounded (largest
+  remainder) so the shares add up to exactly the minimum; people in no team share one line.
+- **Approving leave** (App → Leave): when approval would leave a day below the minimum, the manager sees
+  "Approving makes Thu 15 Oct 9 of 12 in the office" and the employee's team against its share. Only a
+  warning; the buttons stay.
+- **Weekly reminder** (on by default when the feature is on; day and time in the settings): schedule
+  managers get a notification with next week's days below the minimum, once a week. New notification
+  category "Office minimum".
+- **Feature Configuration → Office Minimum**: the switch, the minimum, a different number per weekday
+  (empty = the minimum, 0 = no minimum that day), which statuses count as in the office (Office by
+  default; business trips are not counted unless ticked), a fixed number per team (the rest is shared by
+  the others), and the reminder. Invalid values are refused and nothing is saved; changes are in the
+  Audit Log.
+- Company holidays and days that are not working days are never checked.
+
+### Not in this release
+- The Location Capacity report line and a "days below the minimum" report, and warnings on swap and
+  work-from-home requests (only leave approval warns for now).
+
+### Tests
+- tests/unit/OfficeMinimumTest.php (shares, fixed teams, ties, weekday numbers, the day check).
+- tests/e2e_office_minimum.py (43 checks), run in CI.
+
 ## 3.31.76
 Daily workers (owner-approved mockups, docs/mockups/daily-workers/): day labourers with no email and
 often no smartphone, recorded on site by a foreman (or by themselves with a mobile + PIN), paid daily or

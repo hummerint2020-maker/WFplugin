@@ -24,6 +24,7 @@ trait EWS_Features_Trait {
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
+                'office_minimum'=>$this->om_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
                 'presence_verification'=>(bool)(int)$this->option('ews_presence_verification'),
                 'breaks'=>$this->break_enabled(),
@@ -44,6 +45,8 @@ trait EWS_Features_Trait {
             'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
             'privacy_html'=>$this->privacy_settings_section(),
+            'office_minimum'=>$this->om_settings(),'om_teams'=>$this->om_admin_teams(),'om_statuses'=>$this->schedule_type_names(true),
+            'weekday_names'=>$this->working_day_names(),'working_days'=>$this->working_days(),
             'saved'=>isset($_GET['features_saved']),
             'error'=>$error!==''?FeatureSettings::errorMessage($error):null,
             'post_url'=>admin_url('admin-post.php'),
@@ -57,6 +60,11 @@ trait EWS_Features_Trait {
         $flag=function($key)use($post){return !empty($post[$key]);};
 
         // Validate everything before saving anything.
+        $om=null;
+        if(isset($post['office_minimum_present'])){
+            [$om,$om_error]=\WorkforceOne\Settings\OfficeMinimumSettings::fromPost($post,$this->schedule_type_names(true));
+            if($om_error!=='')$this->features_redirect(['features_error'=>'om_'.$om_error]);
+        }
         [$early,$error]=FeatureSettings::earlyLeave($post['early_leave_max']??120,$post['early_leave_monthly']??240);
         if($error)$this->features_redirect(['features_error'=>$error]);
 
@@ -100,6 +108,12 @@ trait EWS_Features_Trait {
             $branch_before=$this->branch_settings();$branch=\WorkforceOne\Settings\BranchSettings::fromPost($post);
             update_option('ews_branch_settings',$branch,false);
             if($branch!==$branch_before)$this->audit('branch_settings_update','settings',0,'mode='.$branch['mode'].'; allow_others='.$branch['allow_others'].'; kiosk_any='.$branch['kiosk_any'].'; show_branch='.$branch['show_branch'].'; manager_scope='.$branch['manager_scope']);
+        }
+        if($om!==null){
+            $om_before=$this->om_settings();$om_was=$this->om_enabled();
+            update_option('ews_office_minimum',$om,false);
+            update_option('ews_feature_office_minimum',$flag('office_minimum_enabled')?1:0,false);
+            if($om_before!==\WorkforceOne\Settings\OfficeMinimumSettings::config($om)||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om['min'].'; statuses='.implode(',',$om['statuses']).'; reminder='.($om['reminder']?'on':'off'));
         }
         update_option('ews_confirmation_actions',FeatureSettings::confirmActions($post['confirm_actions']??[]),false);
 
