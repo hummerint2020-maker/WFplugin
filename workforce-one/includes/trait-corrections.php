@@ -580,7 +580,7 @@ trait EWS_Corrections_Trait {
             elseif($d['sign_in']==='' && ($d['result']??'')==='Absent')$problem='absent';
             $open=$req && in_array($req->status,['pending','pending_hr'],true);
             $out[]=['date'=>$date,'in'=>(string)$d['sign_in'],'out'=>(string)$d['sign_out'],'result'=>(string)($d['result']??''),'planned'=>(string)($d['planned']??''),
-                'late'=>(int)($d['late_minutes']??0),'problem'=>$problem,'request'=>$req,'can'=>!$open,'today'=>$date===$today];
+                'late'=>(int)($d['late_minutes']??0),'holiday'=>(string)($d['holiday']??''),'problem'=>$problem,'request'=>$req,'can'=>!$open,'today'=>$date===$today];
         }
         return $out;
     }

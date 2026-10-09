@@ -12,6 +12,7 @@
  * @var int    $limit      monthly limit (0 = none)
  */
 if (!defined('ABSPATH')) exit;
+use WorkforceOne\Attendance\CorrectionRules;
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup
 $arrow = is_rtl() ? '←' : '→';
@@ -23,7 +24,8 @@ $arrow = is_rtl() ? '←' : '→';
     <?php endif; ?>
     <?php foreach ($days as $d):
         $req = $d['request'];
-        $none = '<span class="is-missing">' . esc_html__('none', 'workforce-one') . '</span>';
+        // "none" is red only on a day that needs a correction (a day off or leave has no Sign In by design).
+        $none = '<span class="' . ($d['problem'] && $d['problem'] !== 'today' ? 'is-missing' : 'is-none') . '">' . esc_html__('none', 'workforce-one') . '</span>';
         $times = ($d['in'] !== '' ? esc_html($d['in']) : $none) . ' ' . $arrow . ' ' . ($d['out'] !== '' ? esc_html($d['out']) : $none);
         $note = '';
         $chip = '';
@@ -34,7 +36,19 @@ $arrow = is_rtl() ? '←' : '→';
         elseif ($d['problem'] === 'absent') $note = __('No Sign In recorded', 'workforce-one');
         // A rejected request can be asked again (with what the manager wrote in mind).
         if ($req && $req->status === 'rejected') $note = __('Correction rejected', 'workforce-one') . ($note !== '' ? ' · ' . $note : '');
-        elseif ($note === '') $note = $d['late'] > 0 ? sprintf(/* translators: %d: minutes */ __('Late %d min', 'workforce-one'), $d['late']) : ($d['result'] === 'Off Day' ? __('Day off', 'workforce-one') : __('On time', 'workforce-one'));
+        elseif ($note === '') {
+            // Only a day with a Sign In is "On time"; a day without one says why it needs none.
+            $kind = CorrectionRules::dayNote($d['result'], $d['in'] !== '', $d['late']);
+            if ($kind === 'late') $note = $d['late'] > 0 ? sprintf(/* translators: %d: minutes */ __('Late %d min', 'workforce-one'), $d['late']) : __('Late', 'workforce-one');
+            elseif ($kind === 'on_time') $note = __('On time', 'workforce-one');
+            elseif ($kind === 'day_off') $note = __('Day off', 'workforce-one');
+            elseif ($kind === 'leave') $note = __('On leave', 'workforce-one');
+            elseif ($kind === 'holiday') $note = $d['holiday'] !== '' && $d['holiday'] !== 'Off Day' ? $d['holiday'] : __('Holiday', 'workforce-one');
+            elseif ($kind === 'pending') $note = __('Not signed in yet', 'workforce-one');
+            elseif ($kind === 'absent') $note = __('No Sign In recorded', 'workforce-one');
+            elseif ($kind === 'planned') $note = $d['result'];
+            else $note = __('Not scheduled', 'workforce-one');
+        }
         $type = in_array($d['problem'], ['today', 'no_out'], true) ? 'out' : ($d['problem'] === 'absent' ? ($d['in'] === '' && $d['out'] === '' ? 'day' : 'in') : 'time');
         $attrs = ' data-cx-open data-date="' . esc_attr($d['date']) . '" data-in="' . esc_attr($d['in']) . '" data-out="' . esc_attr($d['out']) . '" data-type="' . esc_attr($type) . '" data-label="' . esc_attr(date_i18n('l j F', strtotime($d['date']))) . '"';
         $ts = strtotime($d['date']);

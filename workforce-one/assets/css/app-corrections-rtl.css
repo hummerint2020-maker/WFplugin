@@ -15,6 +15,7 @@
 .wfo-cx-day-main{flex:1;min-width:0}
 .wfo-cx-times{margin:0;font-size:14px;font-weight:600;color:var(--wfo-ink)}
 .wfo-cx-times .is-missing{color:#B42318}
+.wfo-cx-times .is-none{color:var(--wfo-muted);font-weight:500}
 .wfo-cx-times .is-fixed{color:#0F6B43}
 .wfo-cx-note{margin:2px 0 0;font-size:12px;color:var(--wfo-muted)}
 .wfo-cx-day.is-problem{background:#FFFBF2}

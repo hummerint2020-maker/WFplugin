@@ -117,6 +117,20 @@ final class CorrectionRules
         return ['in' => $in !== null ? (string) $in : null, 'out' => $out !== null ? (string) $out : null];
     }
 
+    /**
+     * What "My recent days" says under a day that needs no correction, from its report_days() result:
+     * late | on_time | day_off | leave | holiday | not_scheduled | pending | absent | planned (show the
+     * planned status, e.g. a business trip). Only a day with a Sign In is "on time".
+     */
+    public static function dayNote(string $result, bool $signed_in, int $late_minutes): string
+    {
+        if ($late_minutes > 0 || $result === 'Late') return 'late';
+        $map = ['Present' => 'on_time', 'Off Day' => 'day_off', 'Leave' => 'leave', 'Holiday' => 'holiday',
+            'Not Scheduled' => 'not_scheduled', 'Pending' => 'pending', 'Absent' => 'absent'];
+        if (isset($map[$result])) return $map[$result];
+        return $result !== '' ? 'planned' : ($signed_in ? 'on_time' : 'not_scheduled');
+    }
+
     public static function isDate(string $d): bool
     {
         if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $m)) return false;

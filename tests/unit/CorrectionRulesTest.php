@@ -113,4 +113,20 @@ final class CorrectionRulesTest extends TestCase
         $this->assertSame('deadline', CorrectionSettings::fromPost(['cx_type_out' => 1, 'cx_deadline_days' => '0', 'cx_monthly_limit' => '3', 'cx_reminder_time' => '18:30'])[1]);
         $this->assertSame('types', CorrectionSettings::fromPost(['cx_deadline_days' => '7', 'cx_monthly_limit' => '3', 'cx_reminder_time' => '18:30'])[1]);
     }
+
+    public function testDayNoteOnlyCallsADayWithASignInOnTime(): void
+    {
+        $this->assertSame('on_time', CorrectionRules::dayNote('Present', true, 0));
+        $this->assertSame('late', CorrectionRules::dayNote('Late', true, 120));
+        $this->assertSame('late', CorrectionRules::dayNote('Late', true, 0));
+        // No Sign In and nothing expected: say why, never "On time" (Thu 8 Oct, schedule Not Set).
+        $this->assertSame('not_scheduled', CorrectionRules::dayNote('Not Scheduled', false, 0));
+        $this->assertSame('leave', CorrectionRules::dayNote('Leave', false, 0));
+        $this->assertSame('holiday', CorrectionRules::dayNote('Holiday', false, 0));
+        $this->assertSame('day_off', CorrectionRules::dayNote('Off Day', true, 0));
+        $this->assertSame('pending', CorrectionRules::dayNote('Pending', false, 0));
+        $this->assertSame('absent', CorrectionRules::dayNote('Absent', false, 0));
+        $this->assertSame('planned', CorrectionRules::dayNote('Business Trip', false, 0));
+        $this->assertSame('not_scheduled', CorrectionRules::dayNote('', false, 0));
+    }
 }

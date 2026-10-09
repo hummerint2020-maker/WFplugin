@@ -5365,3 +5365,15 @@ msgstr "على الحصة"
 
 msgid "Each team's share = minimum × team size ÷ all employees (%1$d), rounded so the shares add up to exactly %2$d."
 msgstr "حصة كل فريق = الحد الأدنى × حجم الفريق ÷ كل الموظفين (%1$d)، مقرّبة بحيث يكون مجموع الحصص %2$d بالضبط."
+
+#: templates/app/correction-days.php
+msgid "Holiday"
+msgstr "عطلة رسمية"
+
+#: templates/app/correction-days.php
+msgid "On leave"
+msgstr "في إجازة"
+
+#: templates/app/correction-days.php
+msgid "Not signed in yet"
+msgstr "لم يُسجَّل الحضور بعد"

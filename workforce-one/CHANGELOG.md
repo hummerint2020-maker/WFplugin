@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.31.78
+Two fixes in the employee app. No database change.
+
+### Fixed
+- **Approve / Reject did nothing useful** (Corrections, and every app form with Approve / Reject buttons):
+  the double-submit guard disabled the clicked button before the browser read it, so the choice
+  (`decision=approve`) was not sent and the page answered "Something went wrong". The clicked button's
+  value is now carried in a hidden field.
+- **"My recent days" said "On time" for a day with no Sign In** (Sign In / Out): only a day with a Sign In
+  is "On time"; otherwise the day says why none was needed: Not scheduled, On leave, the holiday,
+  Day off, Not signed in yet, or the planned status (a business trip). "none" is red only on a day that
+  needs a correction.
+
 ## 3.31.77
 Office minimum (owner-approved mockups, docs/mockups/office-minimum/): a fixed number of people planned
 in the office every working day, for the whole company. Whoever sets the schedule is warned, never

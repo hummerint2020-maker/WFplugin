@@ -16,6 +16,14 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
                     return false;
                 }
                 form.dataset.ewsSubmitting="1";
+                // A disabled button is left out of the posted data, so the clicked one's name=value
+                // (e.g. decision=approve) is carried in a hidden field before the buttons are disabled.
+                var sub=e.submitter;
+                if(sub&&sub.name){
+                    var carry=form.querySelector("input[data-ews-submitter]");
+                    if(!carry){carry=document.createElement("input");carry.type="hidden";carry.setAttribute("data-ews-submitter","1");form.appendChild(carry);}
+                    carry.name=sub.name;carry.value=sub.value;
+                }
                 var submitters=form.querySelectorAll("button[type=submit],input[type=submit]");
                 submitters.forEach(function(btn){
                     if(btn.dataset.ewsOriginalHtml===undefined) btn.dataset.ewsOriginalHtml=btn.innerHTML||btn.value||"";

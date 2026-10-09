@@ -7095,3 +7095,15 @@ msgstr ""
 #: templates/kiosk.php:43
 msgid "Connection unavailable. Please check this kiosk connection."
 msgstr ""
+
+#: templates/app/correction-days.php
+msgid "Holiday"
+msgstr ""
+
+#: templates/app/correction-days.php
+msgid "On leave"
+msgstr ""
+
+#: templates/app/correction-days.php
+msgid "Not signed in yet"
+msgstr ""
