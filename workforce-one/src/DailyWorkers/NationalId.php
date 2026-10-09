@@ -4,7 +4,7 @@ namespace WorkforceOne\DailyWorkers;
 if (!defined('ABSPATH')) exit;
 
 /**
- * A daily worker's national ID (3.31.75): checking an Egyptian number, keeping it encrypted
+ * A daily worker's national ID (3.31.76): checking an Egyptian number, keeping it encrypted
  * (authenticated encryption, libsodium secretbox), searching it by a keyed hash and showing it masked.
  * Pure: no WordPress calls; the keys come from the caller (derived from wp-config salts, never
  * stored in the database).

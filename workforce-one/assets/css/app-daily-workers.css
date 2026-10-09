@@ -1,4 +1,4 @@
-/* Daily workers in the app (3.31.75): My sites, the site's day sheet, Payout, the worker's own page.
+/* Daily workers in the app (3.31.76): My sites, the site's day sheet, Payout, the worker's own page.
    Builds on app-shell.css and app-requests.css (templates/app/dw-*.php). RTL: app-daily-workers-rtl.css (npx rtlcss@4). */
 /* ---------- foreman: my sites ---------- */
 .wfo-dw{display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto}

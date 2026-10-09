@@ -1,6 +1,6 @@
 <?php
 /**
- * A daily worker's own page (3.31.75, ?ews_view=worker): sign in with the mobile number and the PIN
+ * A daily worker's own page (3.31.76, ?ews_view=worker): sign in with the mobile number and the PIN
  * the site manager gave him (no email, no WordPress account), then "I am at the site" for today
  * (GPS inside the site) and his recent days and what he is owed. Styles: assets/css/app-login.css
  * and app-daily-workers.css; script: assets/js/daily-workers.js.

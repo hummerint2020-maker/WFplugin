@@ -4,7 +4,7 @@ namespace WorkforceOne\DailyWorkers;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Daily workers' pay (3.31.75): what a day is worth, the pay period a day falls in, and the payout
+ * Daily workers' pay (3.31.76): what a day is worth, the pay period a day falls in, and the payout
  * lines of a period with advances deducted. Pure: no WordPress calls. Amounts in the company
  * currency, rounded to 2 decimals.
  *

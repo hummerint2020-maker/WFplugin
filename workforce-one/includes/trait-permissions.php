@@ -25,7 +25,7 @@ trait EWS_Permissions_Trait {
                 'ews_manage_payroll'=>'Manage Payroll',
                 'ews_manage_corrections'=>'Manage Attendance Corrections',   // 3.31.74: HR — the second level, direct corrections, the wp-admin page
                 'ews_manage_employee_branches'=>'Manage Employee Branches',   // 3.31.72: a manager with it changes their department's people's branches
-                // 3.31.75 daily workers: the wp-admin page; foreman of assigned sites (the app's My sites); pays sites; sees full national IDs (audited).
+                // 3.31.76 daily workers: the wp-admin page; foreman of assigned sites (the app's My sites); pays sites; sees full national IDs (audited).
                 'ews_manage_daily_workers'=>'Manage Daily Workers',
                 'ews_dw_foreman'=>'Foreman (daily workers)',
                 'ews_dw_cashier'=>'Pay daily workers',

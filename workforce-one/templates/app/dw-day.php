@@ -1,6 +1,6 @@
 <?php
 /**
- * Daily workers → one site's day sheet (3.31.75): each worker present / half day / absent and
+ * Daily workers → one site's day sheet (3.31.76): each worker present / half day / absent and
  * extra hours, the group photo from the camera, the confirmation (GPS inside the site). Saved, the
  * day is locked and a change becomes a request (the ⋯ button). Also: quick-add a worker, move a
  * worker to another site. Script: assets/js/daily-workers.js; styles: assets/css/app-daily-workers.css.

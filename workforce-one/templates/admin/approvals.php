@@ -4,7 +4,7 @@
  * and each employee's supervisor (the "Employee Supervisor" approver).
  * Script: assets/js/admin-approvals.js (shows the fields of the chosen mode and approver source).
  *
- * @var array<string,array{label:string,modes:string[],none_means:string,mode:string,levels:array<int,array{resolver_type:string,resolver_value:string}>,unsupported:string}> $cards
+ * @var array<string,array{label:string,modes:string[],none_means:string,mode:string,levels:array<int,array{resolver_type:string,resolver_value:string}>,unsupported:string,allow_self:bool}> $cards
  * @var array<string,string> $not_in_use        workflow key => label
  * @var array<string,string> $mode_labels       mode => label
  * @var object[] $employees                     active employees (id, name, domain_name)
@@ -18,6 +18,7 @@
  * @var array<int,int> $supervisors             employee id => supervisor employee id (0 = none)
  * @var bool $saved
  * @var string $error
+ * @var object[] $self_decisions                the latest decisions taken by the requester themself (50)
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Support\Picker;
@@ -57,6 +58,10 @@ $sources = ['SUPERVISOR' => 'Employee Supervisor', 'TEAM_MANAGER' => 'Team Manag
             <div class="ews-approval-help" style="margin-top:8px;line-height:1.6">
                 <?php foreach ($c['modes'] as $m): ?><div data-mode="<?php echo esc_attr($m); ?>"><strong><?php echo esc_html($mode_labels[$m]); ?>:</strong> <?php echo esc_html($m === 'NONE' ? $c['none_means'] : $help[$m]); ?></div><?php endforeach; ?>
             </div>
+        </td></tr>
+        <tr><th>Own requests</th><td>
+            <label><input type="checkbox" name="allow_self" value="1"<?php checked($c['allow_self']); ?>> Allow the requester to approve their own request</label>
+            <p class="description" style="max-width:720px">Allowed: when the approver of a level is the person who made the request (for example the owner or the head of HR), they decide it, and it is listed under Self-decisions below and in the Audit Log. Not allowed: that level waits for an administrator on the Requests Hub instead.</p>
         </td></tr></table>
         <?php for ($i = 1; $i <= 2; $i++): $lv = $c['levels'][$i]; ?>
         <div class="ews-approval-level" data-visible-modes="<?php echo esc_attr($i === 1 ? 'LEVEL_1 LEVEL_2 SEQUENTIAL' : 'LEVEL_2 SEQUENTIAL'); ?>" style="border:1px solid #dcdcde;padding:16px;margin:12px 0">
@@ -75,6 +80,18 @@ $sources = ['SUPERVISOR' => 'Employee Supervisor', 'TEAM_MANAGER' => 'Team Manag
 
 <div style="background:#fff;border:1px solid #dcdcde;padding:16px 22px;max-width:1100px;margin:0 0 18px">
     <p style="margin:0"><strong><?php echo esc_html(implode(' and ', $not_in_use)); ?></strong> requests do not use approval workflows yet: managers decide them in the app and on the Requests page.</p>
+</div>
+
+ <div id="ews-self-decisions" style="background:#fff;border:1px solid #dcdcde;padding:22px;max-width:1100px;margin:0 0 18px">
+    <h2 style="margin-top:0">Self-decisions</h2>
+    <p>Requests decided by the person who made them, newest first (latest 50). Also in the Audit Log as "approval_self_decision".</p>
+    <?php if ($self_decisions): ?>
+    <table class="widefat striped"><thead><tr><th>Date</th><th>Employee</th><th>Workflow</th><th>Request</th><th>Level</th><th>Decision</th></tr></thead><tbody>
+    <?php foreach ($self_decisions as $sd): ?>
+        <tr data-self-decision="<?php echo (int) $sd->approval_request_id; ?>"><td><?php echo esc_html((string) $sd->acted_at); ?></td><td><?php echo esc_html((string) ($sd->employee_name ?? '')); ?></td><td><?php echo esc_html((string) $sd->workflow_name); ?></td><td><?php echo esc_html('Approval #' . (int) $sd->approval_request_id . ' · ' . $sd->entity_type . ' #' . (int) $sd->entity_id); ?></td><td><?php echo (int) $sd->step_order; ?></td><td><?php echo esc_html($sd->decision === 'approve' ? 'Self-approved' : 'Self-rejected'); ?></td></tr>
+    <?php endforeach; ?>
+    </tbody></table>
+    <?php else: ?><p><em>No self-decisions yet.</em></p><?php endif; ?>
 </div>
 
 <div id="ews-supervisors" style="background:#fff;border:1px solid #dcdcde;padding:22px;max-width:1100px"><h2 style="margin-top:0">Supervisor Relationships</h2><p>Assign the direct supervisor used by the <strong>Employee Supervisor</strong> approver. Type a few letters and pick from the list; clear the field to remove the supervisor.</p>

@@ -47,8 +47,10 @@ def rest(path, payload, method='POST'):
 # ---------------------------------------------------------------- routes
 st, index, _ = rest('', None, 'GET')
 routes = sorted((index or {}).get('routes', {}).keys()) if isinstance(index, dict) else []
-check('the v1 namespace lists the four Face routes and the native auth routes (3.31.47), nothing else', routes == sorted(['/workforce-one/v1', '/workforce-one/v1/face/delete', '/workforce-one/v1/face/enroll', '/workforce-one/v1/face/reset-request', '/workforce-one/v1/face/verify',
-      '/workforce-one/v1/meta', '/workforce-one/v1/auth/login', '/workforce-one/v1/auth/refresh', '/workforce-one/v1/auth/logout', '/workforce-one/v1/me', '/workforce-one/v1/me/devices', '/workforce-one/v1/me/devices/(?P<id>[a-f0-9]{32})']), routes)
+check('the v1 namespace lists the four Face routes, the native auth routes (3.31.47) the corrections routes (3.31.74) and the daily workers routes (3.31.76), nothing else', routes == sorted(['/workforce-one/v1', '/workforce-one/v1/face/delete', '/workforce-one/v1/face/enroll', '/workforce-one/v1/face/reset-request', '/workforce-one/v1/face/verify',
+      '/workforce-one/v1/meta', '/workforce-one/v1/auth/login', '/workforce-one/v1/auth/refresh', '/workforce-one/v1/auth/logout', '/workforce-one/v1/me', '/workforce-one/v1/me/devices', '/workforce-one/v1/me/devices/(?P<id>[a-f0-9]{32})',
+      '/workforce-one/v1/corrections', '/workforce-one/v1/corrections/days', '/workforce-one/v1/corrections/pending', '/workforce-one/v1/corrections/(?P<id>\\d+)/decision',
+      '/workforce-one/v1/daily-workers/sites', '/workforce-one/v1/daily-workers/sites/(?P<id>\\d+)/day', '/workforce-one/v1/daily-workers/sites/(?P<id>\\d+)/workers', '/workforce-one/v1/daily-workers/sites/(?P<id>\\d+)/payout']), routes)
 anon = urllib.request.build_opener()
 try:
     anon.open(urllib.request.Request(B + '/wp-json/workforce-one/v1/face/verify', data=b'{}', headers={'Content-Type': 'application/json'}))

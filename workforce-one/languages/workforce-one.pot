@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.75\n"
+"Project-Id-Version: Workforce One 3.31.76\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T12:50:22+00:00\n"
+"POT-Creation-Date: 2026-10-09T13:10:25+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -123,7 +123,7 @@ msgstr ""
 
 #: includes/trait-app-layout.php:71
 #: includes/trait-app-layout.php:81
-#: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 #: templates/app/attendance-insights.php:61
 #: templates/app/attendance.php:152
 #: templates/app/dw-day.php:162
@@ -263,16 +263,26 @@ msgstr ""
 msgid "You have been logged out successfully."
 msgstr ""
 
+#: includes/trait-approvals.php:147
+msgid "Approval needed"
+msgstr ""
+
+#. translators: 1: approval request number, 2: approval level
+#: includes/trait-approvals.php:148
+#, php-format
+msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
+msgstr ""
+
 #: includes/trait-attendance-insights.php:150
 #: includes/trait-corrections.php:173
 #: includes/trait-daily-workers.php:428
-#: includes/trait-daily-workers.php:808
-#: includes/trait-daily-workers.php:943
-#: includes/trait-daily-workers.php:1230
-#: includes/trait-daily-workers.php:1284
-#: includes/trait-daily-workers.php:1303
-#: includes/trait-daily-workers.php:1318
-#: includes/trait-daily-workers.php:1384
+#: includes/trait-daily-workers.php:811
+#: includes/trait-daily-workers.php:946
+#: includes/trait-daily-workers.php:1233
+#: includes/trait-daily-workers.php:1287
+#: includes/trait-daily-workers.php:1306
+#: includes/trait-daily-workers.php:1321
+#: includes/trait-daily-workers.php:1387
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
@@ -902,7 +912,7 @@ msgid "Enter an amount above zero."
 msgstr ""
 
 #: includes/trait-daily-workers.php:476
-#: includes/trait-daily-workers.php:965
+#: includes/trait-daily-workers.php:968
 #: templates/app/dw-payout.php:42
 msgid "There is nothing to pay in this period."
 msgstr ""
@@ -932,7 +942,7 @@ msgid "This worker has paid days, so the record stays for the accounts. Mark him
 msgstr ""
 
 #: includes/trait-daily-workers.php:483
-#: includes/trait-daily-workers.php:1251
+#: includes/trait-daily-workers.php:1254
 msgid "Worker not found."
 msgstr ""
 
@@ -1010,76 +1020,76 @@ msgstr ""
 msgid "The day stays as saved until a manager approves the change."
 msgstr ""
 
-#: includes/trait-daily-workers.php:764
+#: includes/trait-daily-workers.php:767
 msgid "Day sheet change to review"
 msgstr ""
 
 #. translators: 1: worker, 2: date
-#: includes/trait-daily-workers.php:766
+#: includes/trait-daily-workers.php:769
 #, php-format
 msgid "A foreman asks to change %1$s's day on %2$s."
 msgstr ""
 
-#: includes/trait-daily-workers.php:802
+#: includes/trait-daily-workers.php:805
 msgid "Day sheet change approved"
 msgstr ""
 
-#: includes/trait-daily-workers.php:802
+#: includes/trait-daily-workers.php:805
 msgid "Day sheet change rejected"
 msgstr ""
 
-#: includes/trait-daily-workers.php:803
+#: includes/trait-daily-workers.php:806
 msgid "The day is changed. The original values are kept with the request."
 msgstr ""
 
 #. translators: 1: first day, 2: last day
-#: includes/trait-daily-workers.php:931
+#: includes/trait-daily-workers.php:934
 #, php-format
 msgid "%1$s – %2$s"
 msgstr ""
 
-#: includes/trait-daily-workers.php:956
+#: includes/trait-daily-workers.php:959
 msgid "Daily wages sheet"
 msgstr ""
 
 #. translators: %s: company name
-#: includes/trait-daily-workers.php:958
+#: includes/trait-daily-workers.php:961
 #, php-format
 msgid "%s · amounts in Egyptian pounds"
 msgstr ""
 
-#: includes/trait-daily-workers.php:959
-#: includes/trait-daily-workers.php:1409
-#: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:962
+#: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:1418
 #: templates/admin/daily-workers.php:114
 #: templates/admin/daily-workers.php:118
 #: templates/admin/daily-workers.php:186
 msgid "Site"
 msgstr ""
 
-#: includes/trait-daily-workers.php:959
+#: includes/trait-daily-workers.php:962
 #: templates/admin/daily-workers.php:114
 #: templates/admin/daily-workers.php:118
 msgid "Period"
 msgstr ""
 
-#: includes/trait-daily-workers.php:959
-#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:962
+#: includes/trait-daily-workers.php:967
 #: templates/admin/daily-workers.php:217
 msgid "Foreman"
 msgstr ""
 
-#: includes/trait-daily-workers.php:960
+#: includes/trait-daily-workers.php:963
 msgid "Sheet no."
 msgstr ""
 
 #. translators: %d: number of workers
-#: includes/trait-daily-workers.php:960
+#: includes/trait-daily-workers.php:963
 #: templates/app/dw-payout.php:38
 msgid "Not paid yet"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
+#: includes/trait-daily-workers.php:964
 #: templates/admin/daily-workers.php:129
 #: templates/app/dw-day.php:118
 #: templates/app/employees.php:22
@@ -1088,10 +1098,10 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
-#: includes/trait-daily-workers.php:1410
-#: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:1413
 #: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 #: templates/admin/daily-workers.php:76
 #: templates/admin/daily-workers.php:95
 #: templates/admin/daily-workers.php:131
@@ -1100,33 +1110,33 @@ msgstr ""
 msgid "Trade"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
-#: includes/trait-daily-workers.php:1409
-#: includes/trait-daily-workers.php:1410
-#: includes/trait-daily-workers.php:1411
+#: includes/trait-daily-workers.php:964
 #: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:1413
+#: includes/trait-daily-workers.php:1414
 #: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 #: templates/admin/daily-workers.php:114
 #: templates/admin/daily-workers.php:118
 #: templates/admin/daily-workers.php:180
 msgid "Days"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
+#: includes/trait-daily-workers.php:964
 msgid "Rate"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
-#: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:1418
 msgid "Extra h"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
-#: includes/trait-daily-workers.php:1409
-#: includes/trait-daily-workers.php:1410
-#: includes/trait-daily-workers.php:1411
+#: includes/trait-daily-workers.php:964
 #: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:1413
+#: includes/trait-daily-workers.php:1414
 #: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 #: templates/admin/daily-workers.php:114
 #: templates/admin/daily-workers.php:118
 #: templates/admin/daily-workers.php:180
@@ -1134,92 +1144,92 @@ msgstr ""
 msgid "Amount"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
-#: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:1415
 #: templates/admin/daily-workers.php:118
 #: templates/admin/daily-workers.php:180
 #: templates/app/dw-payout.php:64
 msgid "Advance"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
-#: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:1415
 #: templates/admin/daily-workers.php:118
 #: templates/admin/daily-workers.php:180
 msgid "Net"
 msgstr ""
 
-#: includes/trait-daily-workers.php:961
+#: includes/trait-daily-workers.php:964
 msgid "Signature / thumbprint"
 msgstr ""
 
 #. translators: %d: number of requests
-#: includes/trait-daily-workers.php:962
+#: includes/trait-daily-workers.php:965
 #: templates/admin/corrections.php:118
 msgid "Total"
 msgstr ""
 
-#: includes/trait-daily-workers.php:963
+#: includes/trait-daily-workers.php:966
 msgid "By signing next to my name I confirm I received the net amount shown for my work at this site in this period. Deducted advances were paid before."
 msgstr ""
 
-#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:967
 msgid "Cashier"
 msgstr ""
 
-#: includes/trait-daily-workers.php:964
+#: includes/trait-daily-workers.php:967
 msgid "Site manager"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1409
+#: includes/trait-daily-workers.php:1412
 msgid "By site"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1409
+#: includes/trait-daily-workers.php:1412
 #: templates/admin/daily-workers.php:211
 msgid "Project"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1409
-#: includes/trait-daily-workers.php:1410
-#: includes/trait-daily-workers.php:1411
+#: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:1413
+#: includes/trait-daily-workers.php:1414
 #: templates/admin/daily-workers.php:53
 msgid "Workers"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1410
-#: includes/trait-daily-workers.php:1438
-#: includes/trait-daily-workers.php:1446
+#: includes/trait-daily-workers.php:1413
+#: includes/trait-daily-workers.php:1441
+#: includes/trait-daily-workers.php:1449
 #: templates/admin/daily-workers.php:171
 msgid "By trade"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1411
-#: includes/trait-daily-workers.php:1438
-#: includes/trait-daily-workers.php:1447
+#: includes/trait-daily-workers.php:1414
+#: includes/trait-daily-workers.php:1441
+#: includes/trait-daily-workers.php:1450
 #: templates/admin/daily-workers.php:162
 msgid "By subcontractor"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1411
+#: includes/trait-daily-workers.php:1414
 #: templates/admin/daily-workers.php:76
 #: templates/admin/daily-workers.php:102
 #: templates/admin/daily-workers.php:138
 msgid "Subcontractor"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1411
-#: includes/trait-daily-workers.php:1447
+#: includes/trait-daily-workers.php:1414
+#: includes/trait-daily-workers.php:1450
 #: templates/admin/daily-workers.php:165
 msgid "None (direct)"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1412
+#: includes/trait-daily-workers.php:1415
 msgid "Unpaid"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1412
 #: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 #: templates/admin/daily-workers.php:76
 #: templates/admin/daily-workers.php:180
 #: templates/admin/daily-workers.php:186
@@ -1227,7 +1237,7 @@ msgstr ""
 msgid "Worker"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 #: templates/app/attendance.php:216
 #: templates/app/leave.php:141
 #: templates/app/my-profile.php:153
@@ -1235,30 +1245,30 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1415
+#: includes/trait-daily-workers.php:1418
 msgid "Paid"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1416
+#: includes/trait-daily-workers.php:1419
 msgid "Yes"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1416
+#: includes/trait-daily-workers.php:1419
 msgid "No"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1428
-#: includes/trait-daily-workers.php:1433
+#: includes/trait-daily-workers.php:1431
+#: includes/trait-daily-workers.php:1436
 msgid "Daily workers reports"
 msgstr ""
 
 #. translators: %s: project or site
-#: includes/trait-daily-workers.php:1435
+#: includes/trait-daily-workers.php:1438
 #: templates/admin/daily-workers.php:158
 msgid "Labour cost in the period"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1435
+#: includes/trait-daily-workers.php:1438
 #: templates/admin/daily-workers.php:113
 #: templates/admin/daily-workers.php:159
 msgid "Owed, not paid yet"
@@ -1266,13 +1276,13 @@ msgstr ""
 
 #. translators: %s: site
 #. translators: %s: project or site
-#: includes/trait-daily-workers.php:1436
+#: includes/trait-daily-workers.php:1439
 #: templates/admin/daily-workers.php:157
 #, php-format
 msgid "%s: labour so far"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1438
+#: includes/trait-daily-workers.php:1441
 #: templates/admin/daily-workers.php:162
 msgid "By project / site"
 msgstr ""

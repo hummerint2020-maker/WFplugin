@@ -1,6 +1,6 @@
 <?php
 /**
- * Daily workers → Payout (3.31.75): what each worker of a site is owed for a period, advances
+ * Daily workers → Payout (3.31.76): what each worker of a site is owed for a period, advances
  * deducted; print the sheet (PDF), record an advance, then mark the period paid with a photo of the
  * signed sheet (locks it). Without a site: the choice of site. Styles: assets/css/app-daily-workers.css.
  *

@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) exit;
 use WorkforceOne\Attendance\LocationAssessment;
 
 /**
- * Where and by whom a daily workers' day may be recorded (3.31.75). Pure: no WordPress calls.
+ * Where and by whom a daily workers' day may be recorded (3.31.76). Pure: no WordPress calls.
  *
  * The foreman's day sheet and a worker's own Sign In both need the phone's position inside the site,
  * checked with the same integrity rules as the staff Sign In (src/Attendance/LocationAssessment.php):

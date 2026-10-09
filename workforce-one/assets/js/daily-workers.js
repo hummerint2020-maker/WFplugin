@@ -1,4 +1,4 @@
-/* Daily workers in the app (3.31.75, templates/app/dw-*.php).
+/* Daily workers in the app (3.31.76, templates/app/dw-*.php).
    - Day sheet: present / half day / absent and extra hours per worker, the live counts and cost of
      the day; the ⋯ button opens "Move" (before saving) or "Ask to change" (after); a quick check of
      the national ID's length while typing.

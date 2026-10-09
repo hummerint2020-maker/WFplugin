@@ -1,4 +1,4 @@
-"""Behaviour tests for daily workers (3.31.75), HTTP on a real site.
+"""Behaviour tests for daily workers (3.31.76), HTTP on a real site.
 
 Pins: the feature switch; quick-add on site without a WordPress user; national ID validation,
 encryption at rest (the raw column never holds the digits), masking, the reveal permission and its

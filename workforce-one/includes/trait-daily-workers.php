@@ -9,7 +9,7 @@ use WorkforceOne\Settings\DailyWorkerSettings;
 use WorkforceOne\Support\Download;
 
 /**
- * Daily workers (3.31.75, Feature Configuration → Daily Workers).
+ * Daily workers (3.31.76, Feature Configuration → Daily Workers).
  *
  * Day labourers with no email and often no smartphone, at project sites, paid daily or weekly in
  * cash. They live in their own tables (ews_dw_*), not in ews_employees: none of the staff screens,

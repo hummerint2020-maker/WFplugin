@@ -110,9 +110,44 @@ trait EWS_Approvals_Trait {
             KEY approver_user(approver_wp_user_id,status),
             KEY request_status(approval_request_id,status)
         ) {$c};");
+        // 3.31.75: who actually decided a step (an administrator may decide for the approver), whether
+        // that person was the requester, and steps sent to administrators because the approver was the
+        // requester and the workflow does not allow self-approval.
+        foreach(['acted_by_wp_user_id'=>"BIGINT UNSIGNED NULL AFTER acted_at",'self_decision'=>"TINYINT(1) NOT NULL DEFAULT 0 AFTER acted_by_wp_user_id",'rerouted'=>"TINYINT(1) NOT NULL DEFAULT 0 AFTER self_decision"] as $col=>$def){
+            if(!$wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$t['instances']} LIKE %s",$col)))$wpdb->query("ALTER TABLE {$t['instances']} ADD COLUMN {$col} {$def}");
+        }
 
         $this->approval_seed_workflows();
         return true;
+    }
+
+    /** Whether a workflow lets the requester approve their own request (the default: yes). */
+    private function approval_self_allowed($workflow_key){
+        $all=get_option('ews_approval_allow_self',[]);
+        $key=sanitize_key((string)$workflow_key);
+        return !is_array($all) || !array_key_exists($key,$all) || !empty($all[$key]);
+    }
+
+    /** The WordPress user of the employee who made an approval request (0 = none). */
+    private function approval_requester_user_id($request){
+        global $wpdb;
+        if(!$request)return 0;
+        return (int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d",(int)$request->requester_employee_id));
+    }
+
+    private function approval_workflow_key_by_id($workflow_id){
+        global $wpdb;$t=$this->approval_tables();
+        return (string)$wpdb->get_var($wpdb->prepare("SELECT workflow_key FROM {$t['workflows']} WHERE id=%d",(int)$workflow_id));
+    }
+
+    /** Tells the site's administrators that a step waits for them (its approver was the requester). */
+    private function approval_notify_administrators($approval_request_id,$step_order){
+        $request_id=(int)$approval_request_id;
+        foreach(get_users(['capability'=>'manage_options','fields'=>'ID']) as $uid){
+            $this->notify((int)$uid,'system',__('Approval needed','workforce-one'),
+                sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,(int)$step_order),
+                ['entity'=>'approval','entity_id'=>$request_id,'push'=>true]);
+        }
     }
 
     private function approval_seed_workflows(){
@@ -338,9 +373,18 @@ trait EWS_Approvals_Trait {
         if($ok===false){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
         $approval_id=(int)$wpdb->insert_id;
 
+        $self_allowed=$this->approval_self_allowed($workflow_key);
+        $requester_uid=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d",(int)$requester_employee_id));
+        $first_rerouted=false;
         foreach($steps as $step){
             $approver=$this->approval_resolve_approver($requester_employee_id,$step->resolver_type,$step->resolver_value,$entity_context);
-            if(!$approver && (int)$step->required){
+            $rerouted=false;
+            if($approver && !$self_allowed && $family!=='PEER'
+                && (((int)($approver->id??0) && (int)$approver->id===(int)$requester_employee_id) || ($requester_uid && (int)$approver->wp_user_id===$requester_uid))){
+                $approver=null;$rerouted=true;   // decided by an administrator instead (approval_can_act)
+                if((int)$step->step_order===1)$first_rerouted=true;
+            }
+            if(!$approver && !$rerouted && (int)$step->required){
                 if($manage_transaction)$wpdb->query('ROLLBACK');
                 return new WP_Error('approval_approver_missing','Approval step '.$step->step_order.' could not resolve an approver.');
             }
@@ -348,7 +392,7 @@ trait EWS_Approvals_Trait {
                 if($manage_transaction)$wpdb->query('ROLLBACK');
                 return new WP_Error('approval_approver_unlinked','The configured approver is not linked to a WordPress user.');
             }
-            $status=\WorkforceOne\Approvals\StateMachine::stepStatus((int)$step->step_order,(bool)$approver);
+            $status=\WorkforceOne\Approvals\StateMachine::stepStatus((int)$step->step_order,(bool)$approver||$rerouted);
             $ok=$wpdb->insert($t['instances'],[
                 'approval_request_id'=>$approval_id,
                 'step_order'=>(int)$step->step_order,
@@ -357,10 +401,12 @@ trait EWS_Approvals_Trait {
                 'resolver_type'=>$step->resolver_type,
                 'resolver_value'=>$step->resolver_value,
                 'status'=>$status,
-            ],['%d','%d','%d','%d','%s','%s','%s']);
+                'rerouted'=>$rerouted?1:0,
+            ],['%d','%d','%d','%d','%s','%s','%s','%d']);
             if($ok===false){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
         }
         if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval request.');}
+        if($first_rerouted)$this->approval_notify_administrators($approval_id,1);
         return $approval_id;
     }
 
@@ -373,7 +419,26 @@ trait EWS_Approvals_Trait {
         if($step_order!==null){$sql.=' AND step_order=%d';$args[]=(int)$step_order;}
         $sql.=' LIMIT 1';
         $step=$wpdb->get_row($wpdb->prepare($sql,$args));
-        return $step && (int)$step->approver_wp_user_id===(int)get_current_user_id();
+        if(!$step)return false;
+        return $this->approval_may_decide($step,(int)get_current_user_id(),false)===true;
+    }
+
+    /**
+     * Whether $uid may decide this pending step: its approver, or (a step sent to administrators, or
+     * $admin_override) an administrator. A requester deciding their own request needs the workflow to
+     * allow self-approval. @return true|WP_Error
+     */
+    private function approval_may_decide($step,$uid,$admin_override){
+        global $wpdb;$t=$this->approval_tables();
+        $request=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['requests']} WHERE id=%d",(int)$step->approval_request_id));
+        if(!$request)return new WP_Error('approval_not_found','Approval request not found.');
+        $is_self=$uid && $uid===$this->approval_requester_user_id($request);
+        if($is_self && !$this->approval_self_allowed($this->approval_workflow_key_by_id((int)$request->workflow_id)))
+            return new WP_Error('approval_self_not_allowed','This workflow does not allow approving your own request.');
+        if($admin_override)return true;
+        if($uid && (int)$step->approver_wp_user_id===$uid)return true;
+        if(!empty($step->rerouted) && !(int)$step->approver_wp_user_id && $uid && user_can($uid,'manage_options'))return true;
+        return new WP_Error('approval_not_authorized','You are not the assigned approver.');
     }
 
     /** Apply a decision to the current pending step and advance the state machine. */
@@ -388,7 +453,11 @@ trait EWS_Approvals_Trait {
         if(!$request)return new WP_Error('approval_not_found','Approval request not found.');
         $step=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='PENDING' ORDER BY step_order ASC LIMIT 1",$approval_request_id));
         if(!$step)return new WP_Error('approval_not_pending','No pending approval step.');
-        if(!$allow_admin_override && (!is_user_logged_in() || (int)$step->approver_wp_user_id!==(int)get_current_user_id()))return new WP_Error('approval_not_authorized','You are not the assigned approver.');
+        $uid=(int)get_current_user_id();
+        if(!$allow_admin_override && !is_user_logged_in())return new WP_Error('approval_not_authorized','You are not the assigned approver.');
+        $may=$this->approval_may_decide($step,$uid,(bool)$allow_admin_override);
+        if(is_wp_error($may))return $may;
+        $is_self=$uid && $uid===$this->approval_requester_user_id($request);
 
         $now=current_time('mysql');
         $next=$decision==='approve'?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='WAITING' ORDER BY step_order ASC LIMIT 1",$approval_request_id)):null;
@@ -399,7 +468,9 @@ trait EWS_Approvals_Trait {
             'decision'=>$decision,
             'comment'=>$comment,
             'acted_at'=>$now,
-        ],['id'=>(int)$step->id,'status'=>'PENDING'],['%s','%s','%s','%s'],['%d','%s']);
+            'acted_by_wp_user_id'=>$uid?:null,
+            'self_decision'=>$is_self?1:0,
+        ],['id'=>(int)$step->id,'status'=>'PENDING'],['%s','%s','%s','%s','%d','%d'],['%d','%s']);
         if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_stale','Approval step was already handled.');}
         if($next){
             $ok=$wpdb->update($t['instances'],['status'=>'PENDING'],['id'=>(int)$next->id,'status'=>'WAITING'],['%s'],['%d','%s']);
@@ -412,6 +483,9 @@ trait EWS_Approvals_Trait {
         }
         if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
         if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval decision.');}
+        if($is_self)$this->audit('approval_self_decision','approval_request',$approval_request_id,
+            $this->approval_workflow_key_by_id((int)$request->workflow_id).' · level '.(int)$step->step_order.' · '.$decision);
+        if($next && !empty($next->rerouted) && !(int)$next->approver_wp_user_id)$this->approval_notify_administrators($approval_request_id,(int)$next->step_order);
         return true;
     }
     /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */
@@ -434,13 +508,16 @@ trait EWS_Approvals_Trait {
             $mode=strtoupper((string)($workflow->approval_mode??'NONE'));
             $active=$workflow&&(int)$workflow->active===1;
             $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>\WorkforceOne\Approvals\Workflows::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:'NONE','levels'=>$levels,
-                'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:''];
+                'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:'','allow_self'=>$this->approval_self_allowed($key)];
         }
         $supervisors=$this->approval_supervisor_ids(array_map(function($e){return (int)$e->id;},$listed));
+        $self_decisions=(array)$wpdb->get_results("SELECT s.approval_request_id,s.step_order,s.decision,s.acted_at,w.name workflow_name,r.entity_type,r.entity_id,e.name employee_name
+            FROM {$t['instances']} s JOIN {$t['requests']} r ON r.id=s.approval_request_id JOIN {$t['workflows']} w ON w.id=r.workflow_id
+            LEFT JOIN {$this->employees} e ON e.id=r.requester_employee_id WHERE s.self_decision=1 ORDER BY s.acted_at DESC,s.id DESC LIMIT 50");
         $error='';
         if(isset($_GET['approval_error'])){$error='Could not save approval configuration. Please verify the selected approvers.';$detail=sanitize_text_field(wp_unslash($_GET['approval_error_message']??''));if($detail!=='')$error.=' '.$detail;}
         echo $this->render_template('admin/approvals',['cards'=>$cards,'not_in_use'=>\WorkforceOne\Approvals\Workflows::NOT_IN_USE,'mode_labels'=>\WorkforceOne\Approvals\Workflows::MODES,
-            'employees'=>$employees,'listed'=>$listed,'search'=>$sup_search,'paged'=>$sup_paged,'pages'=>$sup_pages,'total'=>$sup_total,'page_url'=>admin_url('admin.php?page=ews31-approvals'),'users'=>$users,'supervisors'=>$supervisors,'saved'=>isset($_GET['approval_saved']),'error'=>$error]); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
+            'employees'=>$employees,'listed'=>$listed,'search'=>$sup_search,'paged'=>$sup_paged,'pages'=>$sup_pages,'total'=>$sup_total,'page_url'=>admin_url('admin.php?page=ews31-approvals'),'users'=>$users,'supervisors'=>$supervisors,'saved'=>isset($_GET['approval_saved']),'error'=>$error,'self_decisions'=>$self_decisions]); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
     }
 
     public function approval_workflow_save(){
@@ -451,6 +528,12 @@ trait EWS_Approvals_Trait {
         $mode=strtoupper(sanitize_key($_POST['approval_mode']??'NONE'));$configs=[];
         if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=2;$i++){$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']??''));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=$this->approval_picked('level_'.$i.'_employee');elseif($type==='SPECIFIC_USER')$value=$this->approval_picked('level_'.$i.'_user');$configs[$i]=['resolver_type'=>$type,'resolver_value'=>$value];}}
         $ok=$this->approval_configure_workflow($workflow_key,$mode,$configs,$in_use[$workflow_key][1]);
+        if(!is_wp_error($ok)){
+            $allow=!empty($_POST['allow_self']);
+            $all=get_option('ews_approval_allow_self',[]);if(!is_array($all))$all=[];
+            if($this->approval_self_allowed($workflow_key)!==$allow)$this->audit('approval_self_setting','approval_workflow',0,$workflow_key.'='.($allow?'allowed':'not allowed'));
+            $all[$workflow_key]=$allow?1:0;update_option('ews_approval_allow_self',$all,false);
+        }
         if(is_wp_error($ok))wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_code'=>rawurlencode($ok->get_error_code()),'approval_error_message'=>rawurlencode($ok->get_error_message())],admin_url('admin.php?page=ews31-approvals')));else{$this->audit('approval_workflow_update','approval_workflow',0,$workflow_key.'='.$mode);wp_safe_redirect(add_query_arg('approval_saved',1,admin_url('admin.php?page=ews31-approvals')));}exit;
     }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * wp-admin → Daily Workers (3.31.75): the workers list (search by name, mobile or the full national
+ * wp-admin → Daily Workers (3.31.76): the workers list (search by name, mobile or the full national
  * ID), a worker's profile (national ID masked; "Show" for "View national IDs", audited), add / edit,
  * reports (labour cost, workers per site and day, unpaid; Excel, PDF, the insurance report), changes
  * to saved days, settings (recording, pay, sites and foremen, trades, subcontractors).

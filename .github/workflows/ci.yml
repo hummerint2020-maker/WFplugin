@@ -161,6 +161,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_capacity.py "$S"
       - name: Approval workflows (settings and the two-level flow)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_approvals.py "$S"
+      - name: Self-approval in approval workflows
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_self_approval.py "$S"
       - name: Work Locations page
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_locations.py "$S"
       - name: Kiosks and Presence Verification

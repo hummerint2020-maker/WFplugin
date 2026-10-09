@@ -127,7 +127,7 @@ final class ApiAuthTest extends TestCase
             // 3.31.74: attendance corrections (docs/tasks/attendance-corrections.md), token only.
             'GET /corrections/days' => 'token', 'GET /corrections' => 'token', 'POST /corrections' => 'token', 'GET /corrections/pending' => 'token',
             'POST /corrections/(?P<id>\\d+)/decision' => 'token',
-            // 3.31.75: daily workers (docs/tasks/daily-workers.md), token only.
+            // 3.31.76: daily workers (docs/tasks/daily-workers.md), token only.
             'GET /daily-workers/sites' => 'token', 'GET /daily-workers/sites/(?P<id>\\d+)/day' => 'token', 'POST /daily-workers/sites/(?P<id>\\d+)/day' => 'token',
             'POST /daily-workers/sites/(?P<id>\\d+)/workers' => 'token', 'GET /daily-workers/sites/(?P<id>\\d+)/payout' => 'token', 'POST /daily-workers/sites/(?P<id>\\d+)/payout' => 'token',
         ], $native, 'exactly the Phase 0B endpoints and the attendance correction ones, all token-authenticated');

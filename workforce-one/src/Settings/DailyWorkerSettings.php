@@ -4,7 +4,7 @@ namespace WorkforceOne\Settings;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Daily workers settings (3.31.75, option ews_dw_settings; each site can override the recording
+ * Daily workers settings (3.31.76, option ews_dw_settings; each site can override the recording
  * mode and the pay period). Pure: no WordPress calls.
  */
 final class DailyWorkerSettings

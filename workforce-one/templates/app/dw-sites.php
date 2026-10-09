@@ -1,6 +1,6 @@
 <?php
 /**
- * Daily workers → My sites (3.31.75): the foreman's sites with today's state. A card opens the
+ * Daily workers → My sites (3.31.76): the foreman's sites with today's state. A card opens the
  * site's day sheet (templates/app/dw-day.php). Styles: assets/css/app-daily-workers.css.
  *
  * @var array<int,array{site:object,workers:int,sheet:?object,present:int,foreman:bool,url:string}> $cards

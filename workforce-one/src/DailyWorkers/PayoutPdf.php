@@ -7,7 +7,7 @@ use WorkforceOne\Pdf\Document;
 use WorkforceOne\Pdf\TrueTypeFont;
 
 /**
- * The printed payout sheet (كشف اليومية, 3.31.75): A4, one row per worker with days, rate, extra
+ * The printed payout sheet (كشف اليومية, 3.31.76): A4, one row per worker with days, rate, extra
  * hours, amount, advance, net and an empty column for the signature or thumbprint; totals; the
  * workers' declaration; signature lines for the foreman, the cashier and the site manager.
  * Right-to-left when the labels are Arabic ($s['rtl']). Pure: no WordPress calls.

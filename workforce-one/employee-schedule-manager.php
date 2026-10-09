@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.75
+ * Version: 3.31.76
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.75');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.76');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -176,7 +176,7 @@ class EWS_Manager_V31_1 {
             // Attendance corrections (3.31.74)
             foreach(['correction_request','correction_decide','correction_photo','correction_direct','corrections_settings_save','corrections_export'] as $a)add_action('admin_post_ews_'.$a,[$this,$a]);
             add_action('ews_corrections_tick',[$this,'corrections_tick']);
-            // Daily workers (3.31.75); a worker's own sign-in has no WordPress account (nopriv).
+            // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
             foreach(['dw_sheet_save'=>'dw_sheet','dw_worker_add'=>'dw_worker_add','dw_move_save'=>'dw_move','dw_change_save'=>'dw_change','dw_change_decide'=>'dw_change_decide','dw_advance_save'=>'dw_advance',
                 'dw_paid_save'=>'dw_paid','dw_payout_pdf'=>'dw_payout_pdf','dw_file'=>'dw_file','dw_admin_worker_save'=>'dw_admin_worker','dw_worker_delete'=>'dw_worker_delete','dw_settings_save'=>'dw_settings','dw_export'=>'dw_export'] as $m=>$a)add_action('admin_post_ews_'.$a,[$this,$m]);
             foreach(['dw_worker_login'=>'dw_worker_login','dw_worker_logout'=>'dw_worker_logout','dw_self_signin'=>'dw_self'] as $m=>$a){add_action('admin_post_ews_'.$a,[$this,$m]);add_action('admin_post_nopriv_ews_'.$a,[$this,$m]);}
