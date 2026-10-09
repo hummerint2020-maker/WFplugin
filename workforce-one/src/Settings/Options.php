@@ -86,6 +86,7 @@ final class Options
         'ews_feature_tasks' => ['group' => 'features', 'label' => 'Tasks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_corrections' => ['group' => 'features', 'label' => 'Attendance corrections', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_correction_settings' => ['group' => 'features', 'label' => 'Attendance corrections: kinds, deadline, limit, reminder', 'kind' => 'grouped', 'default' => [], 'builtin' => 'all kinds; 7 days; 3 a month, then HR; earlier Sign In to HR; reminder 19:00', 'page' => 'ews31-corrections'],
+        'ews_approval_allow_self' => ['group' => 'features', 'label' => 'Approval workflows: may the requester approve their own request (per workflow)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'allowed in every workflow', 'page' => 'ews31-approvals'],
         'ews_feature_daily_workers' => ['group' => 'features', 'label' => 'Daily workers', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_dw_settings' => ['group' => 'features', 'label' => 'Daily workers: recording, pay period, trades, subcontractors', 'kind' => 'grouped', 'default' => [], 'builtin' => 'foreman records; weekly from Saturday; group photo required', 'page' => 'ews31-daily-workers'],
         'ews_branch_settings' => ['group' => 'features', 'label' => 'Branches: how the branch is decided', 'kind' => 'grouped', 'default' => [], 'builtin' => 'one branch per employee', 'page' => 'ews31-features'],
