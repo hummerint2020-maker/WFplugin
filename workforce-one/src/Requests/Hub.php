@@ -45,11 +45,11 @@ final class Hub
     }
 
     /** "Approval" column: workflow level, peer (swaps) or a direct decision. */
-    public static function approvalLabel(string $type, int $approvalId, ?int $stepOrder, bool $assigned): string
+    public static function approvalLabel(string $type, int $approvalId, ?int $stepOrder, bool $assigned, bool $forAdministrators = false): string
     {
         if ($approvalId) {
             $label = 'Approval #' . $approvalId;
-            if ($stepOrder !== null) $label .= ' · Level ' . $stepOrder . ($assigned ? ' · Assigned' : '');
+            if ($stepOrder !== null) $label .= ' · Level ' . $stepOrder . ($assigned ? ' · Assigned' : ($forAdministrators ? ' · For an administrator (the approver made the request)' : ''));
             return $label;
         }
         return $type === 'shift_swap' ? 'Peer' : 'Legacy / direct';

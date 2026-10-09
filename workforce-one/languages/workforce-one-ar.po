@@ -4384,3 +4384,12 @@ msgstr "في انتظار القرار"
 
 msgid "No corrections waiting"
 msgstr "لا توجد تصحيحات في الانتظار"
+
+#: includes/trait-approvals.php
+msgid "Approval needed"
+msgstr "مطلوب موافقة"
+
+#. translators: 1: approval request number, 2: approval level
+#: includes/trait-approvals.php
+msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
+msgstr "الموافقة رقم %1$d، المستوى %2$d، مستنية أدمن: الموافِق هو نفسه صاحب الطلب. قرّر فيها من wp-admin ← Requests Hub."

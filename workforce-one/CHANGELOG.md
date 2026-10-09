@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.31.75
+Self-approval in approval workflows: each workflow says whether the person who made a request may
+approve it when they are its approver (for example the owner or the head of HR, who has nobody above).
+Allowed by default, so nothing changes for anyone until a workflow turns it off. Every self-decision is
+marked. Database version 3.31.75 (ews_approval_steps.acted_by_wp_user_id, self_decision, rerouted).
+
+### Added
+- **Approval Workflows → each workflow → "Allow the requester to approve their own request"**
+  (on by default; option ews_approval_allow_self). Off: a level whose approver is the requester goes
+  to the site's administrators instead (Requests Hub, "For an administrator (the approver made the
+  request)"); administrators get an "Approval needed" notification; the requester cannot decide it,
+  administrators included. Peer approval (swaps) is not affected. Changing it is in the Audit Log.
+- **Self-decisions** on the Approval Workflows page: the latest 50 decisions taken by the requester
+  (date, employee, workflow, request, level, Self-approved / Self-rejected), and an Audit Log entry
+  `approval_self_decision` for each.
+- Every decided step records **who actually decided** it (`acted_by_wp_user_id`), so a decision an
+  administrator takes for the approver no longer looks like the approver's own.
+
+### Tests
+- tests/e2e_self_approval.py (CI).
+
 ## 3.31.74
 Attendance corrections (owner-approved mockups, docs/mockups/attendance-corrections/): an employee who
 forgot to sign in or out, or whose time is wrong, asks for a correction; the manager decides with the

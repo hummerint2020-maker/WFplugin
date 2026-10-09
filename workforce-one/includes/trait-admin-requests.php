@@ -28,7 +28,7 @@ trait EWS_Admin_Requests_Trait {
             $step=$ar?$this->approval_current_step((int)$ar->id):null;
             $rows[$key]=[
                 'type'=>$type,'id'=>(int)$id,'title'=>$title,'employee'=>$names[$employee_id],'detail'=>$detail,
-                'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id),
+                'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted)),
                 'requested_at'=>(string)$requested_at,
                 'nonce'=>wp_create_nonce('ews_admin_request_decision_'.$type.'_'.(int)$id),
             ];
