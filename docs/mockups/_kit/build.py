@@ -9,7 +9,8 @@ from WordPress, GPL).
     python3 docs/mockups/_kit/build.py                 # writes into docs/mockups/
     python3 docs/mockups/_kit/build.py --out DIR --assets assets/   # a self-contained copy for publishing
 
-Screens live in _kit/screens_corrections.py and _kit/screens_workers.py.
+Screens live in _kit/screens_corrections.py, _kit/screens_workers.py and _kit/screens_office.py
+(the last starts from snapshots of the real Attendance page in _kit/snap/).
 """
 import argparse, html, json, os, re, sys
 
@@ -236,9 +237,10 @@ def main():
     sys.path.insert(0, KIT)
     import build as module   # the screens import this file as "build", a second copy when run as a script
     module.Build.out, module.Build.assets = Build.out, Build.assets
-    import screens_corrections, screens_workers
+    import screens_corrections, screens_workers, screens_office
     screens_corrections.build()
     screens_workers.build()
+    screens_office.build()
     # the start page: _kit/home.html (written without <html>/<head>, as the Artifact page is published)
     home = open(os.path.join(KIT, 'home.html')).read().replace('url(assets/', 'url(' + Build.assets.replace('../../../', '../../', 1))
     open(os.path.join(Build.out, 'index.html'), 'w').write('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
