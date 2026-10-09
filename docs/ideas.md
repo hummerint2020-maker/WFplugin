@@ -10,6 +10,30 @@ brief in `docs/tasks/` (like `docs/tasks/multisite.md`) and mark it here as **Sc
 | [WhatsApp assistant](#whatsapp-assistant) | Idea | 2026-10-09 |
 | [Payroll to accounting](#payroll-to-accounting) | Idea | 2026-10-09 |
 | [Ramadan hours and Hijri calendar](#ramadan-hours-and-hijri-calendar) | Idea | 2026-10-09 |
+| [Guard patrol tours](#guard-patrol-tours) | Idea | 2026-10-09 |
+| [Expense claims](#expense-claims) | Idea | 2026-10-09 |
+| [Health and safety](#health-and-safety) | Idea | 2026-10-09 |
+| [Certificates and training expiry](#certificates-and-training-expiry) | Idea | 2026-10-09 |
+| [Cost of lateness and absence](#cost-of-lateness-and-absence) | Idea | 2026-10-09 |
+| [Manager's morning summary](#managers-morning-summary) | Idea | 2026-10-09 |
+| [Overtime budget per department](#overtime-budget-per-department) | Idea | 2026-10-09 |
+| [Self-service free trial](#self-service-free-trial) | Idea | 2026-10-09 |
+| [Reseller programme](#reseller-programme) | Idea | 2026-10-09 |
+| [Company groups (holding)](#company-groups-holding) | Idea | 2026-10-09 |
+| [Automatic shift scheduling](#automatic-shift-scheduling) | Idea | 2026-10-09 |
+| [Burnout warning](#burnout-warning) | Idea | 2026-10-09 |
+| [Team leave planner](#team-leave-planner) | Idea | 2026-10-09 |
+| [Anonymous suggestion and complaint box](#anonymous-suggestion-and-complaint-box) | Idea | 2026-10-09 |
+| [Company buses](#company-buses) | Idea | 2026-10-09 |
+| [Shift handover notes](#shift-handover-notes) | Idea | 2026-10-09 |
+| [Meal count for the canteen](#meal-count-for-the-canteen) | Idea | 2026-10-09 |
+| [Policy acknowledgement with signature](#policy-acknowledgement-with-signature) | Idea | 2026-10-09 |
+| [Official holidays per country, updated](#official-holidays-per-country-updated) | Idea | 2026-10-09 |
+| [Hands-free sign-in on office Wi-Fi](#hands-free-sign-in-on-office-wi-fi) | Idea | 2026-10-09 |
+| [Voice sign-in](#voice-sign-in) | Idea | 2026-10-09 |
+| [Owner's app](#owners-app) | Idea | 2026-10-09 |
+| [Resignation risk signals](#resignation-risk-signals) | Idea | 2026-10-09 |
+| [Employee perks and discounts](#employee-perks-and-discounts) | Idea | 2026-10-09 |
 
 ---
 
@@ -299,3 +323,127 @@ already used by attendance and payroll); the admin confirms.
 
 Expected hours are lower during the period: 6 worked hours is not a shortfall, and overtime starts
 after the reduced hours, not the normal ones.
+
+---
+
+# Shorter ideas (2026-10-09)
+
+One paragraph each; expand into a full entry above when one gets closer.
+
+### Group: New segments
+
+## Guard patrol tours
+
+Security companies (large market in Egypt and the Gulf). A guard walks a route of checkpoints and records each one with a cheap **NFC tag** (Web NFC works in Chrome on Android) or a QR sticker; time, GPS and integrity rules as for Sign In. The supervisor sees missed or late checkpoints live and per shift. Sold per site.
+
+## Expense claims
+
+Reps and technicians photograph a receipt (fuel, transport, client lunch), pick a category and amount; the manager approves through the existing Approvals engine; approved amounts are added to the month's Payroll. Pairs with Field visits. Camera-only photo, duplicate-receipt check (same amount + date + photo hash).
+
+## Health and safety
+
+Incident and hazard reports with photo and location, severity, follow-up actions and owner; optional pre-shift PPE confirmation ("I am wearing helmet, vest, shoes"). For construction and factories; monthly safety report.
+
+## Certificates and training expiry
+
+Per employee: licences, safety certificates, health cards (restaurants), courses, with expiry dates and file; alerts to the employee and HR 30/7 days before; optional block on scheduling someone whose required certificate expired. Today "Training Course" exists only as a schedule type.
+
+### Group: Owner value
+
+## Cost of lateness and absence
+
+Turn attendance into money: "Lateness cost you EGP 18,400 this month", per department and employee, from Payroll's day rate and the report engine's late / absent figures. A dashboard card and a monthly line in the owner's summary. Sells the product and supports renewals. Data already exists.
+
+## Manager's morning summary
+
+Every working day at a set time (e.g. 09:30): absent, late, on leave, requests waiting for the manager, by web push (free) and optionally email. Brings managers into the app daily. Uses the existing notification policy and push batching.
+
+## Overtime budget per department
+
+A monthly overtime budget (hours or money) per department; the approver sees what is left when approving and is warned near the limit; report of budget vs actual.
+
+### Group: Selling
+
+## Self-service free trial
+
+A visitor signs up on the website and gets a trial site with realistic sample data and a step-by-step setup wizard (company, locations, shifts, first employees, invite links). Built on `tools/new_company.sh` plus a sample-data seeder; trial expiry and conversion to paid. Sells without a live demo for every lead.
+
+## Reseller programme
+
+Small IT companies in the governorates and the Gulf sell and support Workforce One for a monthly commission per subscription: reseller portal with their customers, commission report, white-label option later.
+
+## Company groups (holding)
+
+A holding with several companies: one login for group management, consolidated reports across companies, transfers of employees between companies. Brings large contracts. Depends on the multi-company model (Multisite or the Laravel move).
+
+### Group: Smart features
+
+## Automatic shift scheduling
+
+The manager sets the need (e.g. 5 cashiers mornings, 3 nights per day); the system drafts the roster from availability, approved leave, swap requests, contracted hours and labour-law limits; the manager adjusts and publishes. Start with a simple greedy algorithm, explain every assignment.
+
+### Group: Team health
+
+## Burnout warning
+
+Alert the manager when an employee has taken no leave for a long time, or overtime is high over several months ("Ahmed: no leave for 8 months, 60 h overtime in 3 months"). Thresholds per company. Framed as care, private to the manager and HR.
+
+## Team leave planner
+
+Team calendar of leave; a minimum staffing per team or department per day; approving a request that breaks the minimum warns or blocks (policy choice). Uses Leave, Teams and Departments.
+
+## Anonymous suggestion and complaint box
+
+A safe channel to raise problems or ideas, truly anonymous (no user id stored, no IP), optional follow-up via a random case code; handled by named HR roles. A compliance requirement in large companies and the Gulf.
+
+### Group: Factories and hospitals
+
+## Company buses
+
+Factories in new cities depend on company buses: routes, stops, who rides which bus, "bus arriving" notifications, and when a bus is late its riders are not marked late automatically (the driver or supervisor records the delay). Solves a daily argument in every factory.
+
+## Shift handover notes
+
+The outgoing shift leaves notes for the incoming one (machine 3 faulty, patient in room 5 needs follow-up), with acknowledgement by the incoming lead; searchable history per line or ward.
+
+## Meal count for the canteen
+
+At a set time the canteen sees how many people are actually present per site (and dietary counts if stored), to cook the right amount and cut waste.
+
+### Group: Compliance
+
+## Policy acknowledgement with signature
+
+HR publishes a policy or penalty regulation; every concerned employee reads it in the app and signs (drawn signature or confirmation with time, device, IP); HR sees who has not signed and reminds them; signed PDF per employee. Protects the company in disputes.
+
+## Official holidays per country, updated
+
+Official holidays per country loaded into the company calendar each year, suggested for the admin to confirm (Egypt's announced holidays move every year). Shares the confirmation flow with the Ramadan / Eid idea.
+
+### Group: Attendance experience
+
+## Hands-free sign-in on office Wi-Fi
+
+In the Flutter app: when the phone joins the office Wi-Fi during the sign-in window, sign in automatically and confirm with a notification; GPS still checked; the employee can turn it off. Not possible in a PWA.
+
+## Voice sign-in
+
+In the Flutter app: "Sign me in" through Siri Shortcuts / Google Assistant app actions, then the same rules as the button (face or passkey can still be required).
+
+### Group: Owner value
+
+## Owner's app
+
+A separate, very simple screen for the owner: today's numbers for every branch, month trends, branch comparison on punctuality, cost of lateness. Read-only.
+
+### Group: Team health
+
+## Resignation risk signals
+
+A quiet signal to the manager when someone's pattern changes (lateness rising, more sick days, sudden drop in punctuality) to start a conversation. **A prompt to talk, never a label**: visible only to the direct manager and HR, explained, no score shown to anyone else, easy to dismiss. Check privacy law before building.
+
+### Group: Extra revenue
+
+## Employee perks and discounts
+
+Agreements with gyms, restaurants and shops; employees get discounts from the app; Workforce One takes a commission. A benefit for employees, revenue for us, and a reason for companies not to cancel.
