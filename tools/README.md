@@ -35,3 +35,18 @@ WP_CLI="wp --path=/var/www/html" python3 tools/load_signin.py cleanup
 ```
 
 `--ramp 300` spreads each burst over 5 minutes instead of one moment; `--json` saves the results.
+
+# New company on the VPS
+
+`tools/new_company.sh` sets up one company on a CloudPanel VPS: its own site at
+`https://<slug>.<base domain>` (own Linux user, database and PHP-FPM pool), WordPress, Workforce One,
+the app page, Cairo time, a real cron job instead of WP-Cron and a Let's Encrypt certificate. The
+logins are saved in `/root/wfo-companies/<slug>.txt` (root only).
+
+```bash
+cd /path/to/repo && zip -r /root/workforce-one.zip workforce-one
+sudo bash tools/new_company.sh --slug acme --name "Acme Trading" \
+     --base workforceone.example --email it@acme.com --plugin /root/workforce-one.zip
+```
+
+Needs CloudPanel installed and a DNS record `*.<base domain>` pointing to the VPS.
