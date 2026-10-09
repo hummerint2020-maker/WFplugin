@@ -1,0 +1,61 @@
+<title>Workforce One Mockups</title>
+<style>
+/* Layout: one narrow column, two feature cards, then the questions to decide. */
+:root{--bg:#F3F4FA;--card:#FFFFFF;--ink:#141A33;--muted:#5F6584;--line:#E1E3EE;--pri:#5B3FD9;--hl:#FFC83D;
+  --display:'Alexandria',system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;--body:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121528;--card:#1B1F38;--ink:#E8EAF6;--muted:#A3A8C6;--line:#2C3150;--pri:#A996EE;--hl:#FFC83D;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121528;--card:#1B1F38;--ink:#E8EAF6;--muted:#A3A8C6;--line:#2C3150;--pri:#A996EE;--hl:#FFC83D;color-scheme:dark}
+@font-face{font-family:'Alexandria';font-weight:400 700;font-display:swap;src:url(assets/fonts/alexandria/alexandria-latin.woff2) format('woff2')}
+@font-face{font-family:'Alexandria';font-weight:400 700;font-display:swap;src:url(assets/fonts/alexandria/alexandria-arabic.woff2) format('woff2');unicode-range:U+0600-06FF,U+FB50-FDFF,U+FE70-FEFC}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body)}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:36px 56px;display:flex;flex-direction:column;gap:22px}
+.eyebrow{margin:0;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pri)}
+h1{margin:4px 0 6px;font:700 30px/1.2 var(--display);text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:65ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:18px;background:var(--card);border:1px solid var(--line);color:inherit;text-decoration:none}
+.card:hover,.card:focus-visible{border-color:var(--pri);outline:none}
+.card h2{margin:0;font:700 19px/1.3 var(--display)}
+.card .ar{font-family:var(--display);color:var(--muted)}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.card .go{margin-top:8px;font-weight:700;color:var(--pri)}
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.facts span{padding:2px 10px;border-radius:99px;border:1px solid var(--line);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+section h3{margin:0 0 8px;font:700 17px/1.3 var(--display)}
+ol{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:8px;max-width:70ch}
+li{color:var(--ink)}
+li b{font-weight:700}
+.note{color:var(--muted);font-size:13.5px;max-width:70ch}
+</style>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Step 1 · for owner review</p>
+    <h1>Workforce One mockups</h1>
+    <p class="lead">Static screens for two new features, before any code. Every screen is in Arabic and English, built on the plugin's own stylesheets, fonts and icons, so it looks the way the product will.</p>
+  </header>
+  <div class="cards">
+    <a class="card" href="attendance-corrections/index.html">
+      <h2>Attendance corrections</h2><span class="ar">تصحيح الحضور</span>
+      <p>An employee who forgot to sign in or out asks for a correction; the manager decides with the day's evidence in front of them; the original record is never changed.</p>
+      <div class="facts"><span>25 screens</span><span>employee · manager · HR</span><span>AR + EN</span></div>
+      <span class="go">Open the screens →</span>
+    </a>
+    <a class="card" href="daily-workers/index.html">
+      <h2>Daily workers</h2><span class="ar">العمالة اليومية</span>
+      <p>Register a day labourer in a minute, record the site's day with GPS and a group photo, pay weekly against a signed sheet, and see the labour cost of each project.</p>
+      <div class="facts"><span>20 screens</span><span>foreman · cashier · HR</span><span>AR + EN · A4 sheet</span></div>
+      <span class="go">Open the screens →</span>
+    </a>
+  </div>
+  <section>
+    <h3>Decisions in the mockups to confirm</h3>
+    <ol>
+      <li><b>Where employees see past days.</b> A new "My recent days" list sits under Sign In / Out, with the yellow Request correction button on any day that needs one. "My corrections" is its own page, reached from that list.</li>
+      <li><b>Manager reviews in the app.</b> Requests appear on a Corrections page in the Overtime look, each with a read-only evidence panel. HR keeps the full list, direct corrections, settings and the report in wp-admin.</li>
+      <li><b>Reset Day in wp-admin.</b> The Sign In / Out Report's "Reset Day" deletes a day's records today, which conflicts with "never change the original". Proposal: keep it for genuine mistakes, but write it to the Audit Log and steer HR to a direct correction instead.</li>
+      <li><b>Foreman's menu.</b> A foreman's tab bar shows My sites and Payout in place of Schedule and Leave; their own Sign In stays in the middle.</li>
+      <li><b>wp-admin language.</b> The plugin's existing wp-admin pages are still in English on an Arabic site. The new pages are drawn translated, which is how they will ship.</li>
+    </ol>
+  </section>
+  <p class="note">Open any screen in a new tab to see it at full size. The sample company, people, dates and amounts are invented for the mockups.</p>
+</div>
