@@ -34,6 +34,8 @@ brief in `docs/tasks/` (like `docs/tasks/multisite.md`) and mark it here as **Sc
 | [Owner's app](#owners-app) | Idea | 2026-10-09 |
 | [Resignation risk signals](#resignation-risk-signals) | Idea | 2026-10-09 |
 | [Employee perks and discounts](#employee-perks-and-discounts) | Idea | 2026-10-09 |
+| Attendance correction requests → [`docs/tasks/attendance-corrections.md`](tasks/attendance-corrections.md) | **Scheduled** (mockups first) | 2026-10-09 |
+| Daily workers → [`docs/tasks/daily-workers.md`](tasks/daily-workers.md) | **Scheduled** (mockups first) | 2026-10-09 |
 
 ---
 
