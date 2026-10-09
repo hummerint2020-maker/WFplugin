@@ -8,6 +8,8 @@ brief in `docs/tasks/` (like `docs/tasks/multisite.md`) and mark it here as **Sc
 | [Field visits and missions](#field-visits-and-missions) | Idea | 2026-10-09 |
 | [Attendance fraud detection](#attendance-fraud-detection) | Idea | 2026-10-09 |
 | [WhatsApp assistant](#whatsapp-assistant) | Idea | 2026-10-09 |
+| [Payroll to accounting](#payroll-to-accounting) | Idea | 2026-10-09 |
+| [Ramadan hours and Hijri calendar](#ramadan-hours-and-hijri-calendar) | Idea | 2026-10-09 |
 
 ---
 
@@ -200,3 +202,100 @@ A verified Meta Business account, a dedicated phone number (not a personal one),
 name, approved templates (a day or two each). Twilio or 360dialog can help with onboarding.
 One shared "Workforce One" number for all companies at first (employee recognised by number); a
 company's own number and name as a premium option.
+
+---
+
+## Payroll to accounting
+
+**For:** the accountant. Today Payroll (wp-admin → Payroll, phase 1 in 3.31.14) closes the month and
+exports Excel with one row per employee. Accountants need a **journal entry** instead, so they
+retype the totals by hand. This removes that step.
+
+### Depends on
+
+Payroll amounts are **before income tax and social insurance** (CHANGELOG 3.31.14). The entry would
+be incomplete without them, so Egyptian social insurance + salary tax (and the Gulf equivalents)
+come first or together with this.
+
+### The entry
+
+One balanced entry per closed month: **debit** salary expense (split by department as cost center),
+**credit** salaries payable, deductions, insurance and tax payable, advances. Debit must equal
+credit to the piaster before anything is exported.
+
+### Account mapping (once per company)
+
+A screen where the accountant maps every pay component (basic, each allowance, overtime, each
+deduction type, advances, insurance, tax) to an account code of their own chart of accounts, and
+each department to a cost center. Without this the export is useless.
+
+### Outputs, in order
+
+1. **Excel in the company's own layout:** the accountant picks the columns, their order and headers
+   once; works with any accounting program that imports Excel, including local Egyptian ones.
+   Cheapest, covers everyone; do this first.
+2. **Odoo** (widespread in Egypt and the Gulf): its external API creates the entry directly, as a
+   draft.
+3. **Zoho Books** (common in the Gulf): journal API.
+4. **QuickBooks Online:** needs an app registered with Intuit and OAuth; wait until a customer asks.
+
+### Rules
+
+- **Always a draft** in the accounting system; the accountant posts it. Workforce One never posts
+  into someone's books on its own.
+- **One entry per month:** exporting twice never duplicates it; reopening and changing the month
+  updates the same entry (keep the external id).
+- The Audit Log records that an export happened and where, never the amounts (same rule as
+  salaries today).
+
+---
+
+## Ramadan hours and Hijri calendar
+
+**For:** every customer in the Gulf (it is the law) and many in Egypt (company decision).
+
+### The rules differ by country (private sector, per Morgan Lewis, Feb 2026)
+
+| Country | Ramadan limit | Applies to |
+|---|---|---|
+| Saudi Arabia | 6 h/day or 36 h/week | Muslim employees |
+| UAE (onshore) | regular hours − 2 h/day | everyone |
+| Kuwait | 36 h/week | everyone |
+| Oman | 6 h/day or 30 h/week | Muslim employees |
+| Qatar | 36 h/week | everyone |
+| Bahrain | 6 h/day or 36 h/week | Muslim employees |
+| Egypt | no private-sector obligation; often a company decision | — |
+
+Re-check before building: these change and some come by yearly decree.
+
+### Seasonal working-hours periods (Ramadan is the first)
+
+- The admin sets a date range and the new hours (new times, or "minus N hours"), and who it applies
+  to (everyone, departments, chosen employees).
+- **Country presets** fill the rules (pick "Saudi Arabia"); the admin can change them.
+- **Never store an employee's religion** (sensitive data). Where the law covers Muslim employees
+  only, the admin ticks "Ramadan hours apply" per employee or department.
+
+### Where it plugs in
+
+Every rule reads an employee's hours from one function, `working_hours()` in
+`includes/trait-work-time.php` (sign-in window, late, absent, early leave, overtime). Make it
+date-aware (its cache is per employee today, not per date) and return the seasonal hours when the
+day falls in a period; everything else follows without changes.
+
+### Hijri calendar
+
+- Show the Hijri date next to the Gregorian one in the app and reports (Umm al-Qura via PHP `intl`;
+  a built-in fallback for shared hosting without `intl`).
+- **Ramadan really starts with the moon sighting** and can differ by a day from the calculation, so
+  the system **suggests** the dates two weeks ahead and asks the admin to confirm or adjust.
+
+### Eid
+
+Suggest Eid al-Fitr and Eid al-Adha days in the company holiday calendar (`ews_company_calendar`,
+already used by attendance and payroll); the admin confirms.
+
+### Payroll and reports
+
+Expected hours are lower during the period: 6 worked hours is not a shortfall, and overtime starts
+after the reduced hours, not the normal ones.
