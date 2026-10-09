@@ -222,7 +222,7 @@ check('pay: present with 2 extra hours = 450 + 2 × 50 (company hourly rate)', d
 check('pay: half day = 300 ÷ 2', d2['mark'] == 'half' and float(d2['amount']) == 150.0, d2)
 sh = q("SELECT * FROM {p}ews_dw_sheets")[0]
 check('sheet: position, distance, integrity and the photo kept outside the public uploads', sh['integrity_status'] == 'verified' and float(sh['distance_meters']) < 150 and sh['photo_key']
-      and os.path.exists(os.path.join(os.environ.get('S', ''), 'wp/wp-content/uploads/workforce-one-daily-workers/.htaccess')))
+      and php("$d=trailingslashit(wp_upload_dir()['basedir']).'workforce-one-daily-workers/'; echo (file_exists($d.'.htaccess') && file_exists($d.%s))?'yes':'no';" % json.dumps(sh['photo_key'])).strip() == 'yes')
 check('sheet: saving again is refused (locked)', post(fm, dict(base, **pos()), {'photo': PNG}).get('dw_error') == 'locked')
 locked = app(fm, 'sites', site=A)
 furl = link(locked, 'ews_dw_file')
@@ -383,7 +383,8 @@ qs = post(hr, {'action': 'ews_dw_worker_delete', '_wpnonce': form_nonce(dp, 'ews
 check('delete: a worker without paid days goes with his national ID, days and moves', qs.get('done') == 'deleted' and not q("SELECT * FROM {p}ews_dw_workers WHERE id=%d" % W4) and not q("SELECT * FROM {p}ews_dw_moves WHERE worker_id=%d" % W4))
 un = open(os.path.join(HERE, '..', 'workforce-one', 'uninstall.php')).read()
 check('uninstall removes the tables and the photo folder', 'ews_dw_workers' in un and 'ews_dw_changes' in un and 'workforce-one-daily-workers' in un)
-check('no PHP errors', 'PHP Fatal' not in open(os.path.join(os.environ.get('S', ''), 'wp/wp-content/debug.log')).read()[-20000:] if os.path.exists(os.path.join(os.environ.get('S', ''), 'wp/wp-content/debug.log')) else True)
+dbg = php("$f=WP_CONTENT_DIR.'/debug.log'; echo file_exists($f)?substr((string)file_get_contents($f),-20000):'';")
+check('no PHP fatal errors', 'PHP Fatal' not in dbg)
 
 # Leave the switch off for the next tests.
 php("update_option('ews_feature_daily_workers',0,false);")
