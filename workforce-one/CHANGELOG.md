@@ -8,6 +8,9 @@ Two fixes in the employee app. No database change.
   the double-submit guard disabled the clicked button before the browser read it, so the choice
   (`decision=approve`) was not sent and the page answered "Something went wrong". The clicked button's
   value is now carried in a hidden field.
+- **A corrections pop-up on every page**: after a request or a decision, the result (`cx_error`, `cx_done`,
+  `cx_sent`) stayed in the address, and the menu links kept it, so "Not saved" came back on each page.
+  The menu links and the address now drop it, as they already did for Leave, Overtime and the others.
 - **"My recent days" said "On time" for a day with no Sign In** (Sign In / Out): only a day with a Sign In
   is "On time"; otherwise the day says why none was needed: Not scheduled, On leave, the holiday,
   Day off, Not signed in yet, or the planned status (a business trip). "none" is red only on a day that

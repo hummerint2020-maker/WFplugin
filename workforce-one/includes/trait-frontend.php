@@ -83,7 +83,8 @@ trait EWS_Frontend_Trait {
             $url=remove_query_arg([
                 'ews_view','leave_error','leave_sent','leave_done','leave_cancel_sent',
                 'early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','saved','imported','grid_saved',
-                'time_reset','time_saved','swap_error','swap_sent','swap_done','vacation_sent','vacation_error','vacation_done','vacation_rejected','profile_updated','profile_error','password_updated','password_error'
+                'time_reset','time_saved','swap_error','swap_sent','swap_done','vacation_sent','vacation_error','vacation_done','vacation_rejected','profile_updated','profile_error','password_updated','password_error',
+                'cx_sent','cx_done','cx_error','cx_retry','cx','cx_date'   // corrections: a result shown once, not on every page
             ]);
             $view=sanitize_key($view);
             // Module-specific state must not leak into another module.
