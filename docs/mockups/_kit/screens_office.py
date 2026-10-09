@@ -94,22 +94,10 @@ def teams_sheet(i):
     return sheet(T('الفرق يوم %s' % day_label(i, True), 'Teams on %s' % day_label(i, True)), body, T('تمام', 'OK'), icon_name='check')
 
 
-def confirm_modal(i, n):
-    return ('<div class="ews-ux-modal is-open mock-open" data-type="warning" role="dialog" aria-modal="true"><div class="ews-ux-modal-card wfo-om-confirm">'
-            '<button type="button" class="ews-ux-close" aria-label="%s">×</button><div class="ews-ux-icon">!</div><h3>%s</h3><p>%s</p>%s'
-            '<div class="ews-ux-actions"><button type="button" class="ews-ux-cancel">%s</button><button type="button" class="ews-ux-confirm">%s</button></div></div></div>') % (
-                esc(T('إغلاق', 'Close')), esc(T('اليوم ده هيبقى تحت الحد الأدنى', 'This day will be below the minimum')),
-                esc(T('%s هيبقى %d من %d في المكتب (ناقص %d). تحفظ برضه؟' % (day_label(i, True), n, MIN, MIN - n),
-                      '%s will have %d of %d in the office (%d short). Save anyway?' % (day_label(i, True), n, MIN, MIN - n))),
-                '<ul class="wfo-om-mini"><li><b>%s</b> %s</li><li><b>%s</b> %s</li></ul>' % (
-                    esc(T('المبيعات', 'Sales')), esc(T('1 من 4 · ناقص 3', '1 of 4 · 3 short')), esc(T('الحسابات', 'Accounts')), esc(T('1 من 2 · ناقص 1', '1 of 2 · 1 short'))),
-                esc(T('أرجع أعدّل', 'Go back')), esc(T('احفظ برضه', 'Save anyway')))
-
-
 # ---------------------------------------------------------------- the Attendance page (from the real page)
 
 def attendance(variant):
-    """variant: week | teams | save | phone"""
+    """variant: week | teams | phone"""
     def make():
         h = open(os.path.join(KIT, 'snap', 'attendance.%s.html' % Lang.code)).read()
         h = h.replace('{{ASSETS}}', Build.assets).replace('BA Team', T('شركة النيل للمقاولات', 'Nile Contracting'))
@@ -119,20 +107,16 @@ def attendance(variant):
         # the counter under each day: the table head and the "Set… for the whole day" pills
         heads = list(re.finditer(r'(<div class="ews-att-day-meta">)', h))
         for i, m in reversed(list(enumerate(heads))):
-            h = h[:m.start()] + counter(i, 9 if (variant == 'save' and i == 4) else None) + h[m.start():]
+            h = h[:m.start()] + counter(i) + h[m.start():]
         quick = list(re.finditer(r'(</select>\s*</div>)', h[h.index('ews-day-quick-actions'):h.index('ews-att-table-wrap')]))
         base = h.index('ews-day-quick-actions')
         for i, m in reversed(list(enumerate(quick))):
             if i < 7:
                 pos = base + m.end() - len('</div>')
-                h = h[:pos] + counter(i, 9 if (variant == 'save' and i == 4) else None) + h[pos:]
+                h = h[:pos] + counter(i) + h[pos:]
         # the short days' columns
         h = re.sub(r'(<th class=")([^"]*)(" scope="col">\s*<div class="ews-att-day-name">)', lambda m: m.group(1) + m.group(2) + ' wfo-om-col' + m.group(3), h)
-        h = h.replace('<div class="ews-att-table-wrap', banner({4: 9} if variant == 'save' else None) + '<div class="ews-att-table-wrap', 1)
-        if variant == 'save':
-            # one change not saved yet: Thursday, Ahmed Samir Office → Vacation
-            h = h.replace('No changes yet. Tap a day to change it.', '1 change not saved yet').replace('لا توجد تغييرات بعد. اضغط على يوم لتغييره.', 'تغيير واحد لم يُحفظ بعد')
-            h = h.replace('</body>', confirm_modal(4, 9) + '</body>', 1)
+        h = h.replace('<div class="ews-att-table-wrap', banner() + '<div class="ews-att-table-wrap', 1)
         if variant == 'teams':
             h = h.replace('</body>', teams_sheet(4) + '</body>', 1)
         return h
@@ -204,16 +188,16 @@ def admin_settings(state='default'):
 
 
 def build():
-    for slug, make in [('week', attendance('week')), ('teams', attendance('teams')), ('save', attendance('save')), ('phone', attendance('phone')),
+    for slug, make in [('week', attendance('week')), ('teams', attendance('teams')), ('phone', attendance('phone')),
                        ('leave', leave_decide()), ('settings', admin_settings())]:
         write(F, slug, make)
     P, D = 'phone', 'desk'
     gallery(F, 'Office minimum — mockups (Step 1)', (
         '<p>A fixed number of people in the office every working day (here <b>12</b> of 40). The Attendance page is the real page (a test site with 4 teams of 12, 10, 8 and 6 people '
         'and 4 people without a team, next week\'s schedule) with the new parts added. Only a warning: nothing is blocked. Each team\'s share is proportional to its size.</p>'), [
-        ('Whoever sets the schedule — app → Attendance', 'Every day shows "in the office / minimum"; days below it are red and listed at the top with their teams.', [
+        ('Whoever sets the schedule — app → Attendance', 'Every day shows "in the office / minimum"; days below it are red and listed at the top with their teams. Saving shows nothing extra: the warning on the page is enough.', [
             ('week', 'The week: Tuesday 9 of 12, Thursday 10 of 12', D), ('teams', 'Teams on Thursday: who is under their share, who could come in', D),
-            ('save', 'Saving a change that makes a day short: warning, "Save anyway"', D), ('phone', 'On a phone', P)]),
+            ('phone', 'On a phone', P)]),
         ('Approving leave', '', [('leave', 'The manager sees what approving does to the day', P)]),
         ('wp-admin', '', [('settings', 'Feature Configuration → Office Minimum (on / off and its settings)', D)]),
     ])
