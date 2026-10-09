@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.71\n"
+"Project-Id-Version: Workforce One 3.31.74\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T00:05:14+00:00\n"
+"POT-Creation-Date: 2026-10-09T08:01:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -27,6 +27,11 @@ msgstr ""
 #. Author of the plugin
 #: employee-schedule-manager.php
 msgid "Internal"
+msgstr ""
+
+#: includes/trait-admin.php:90
+#: templates/admin/corrections.php:52
+msgid "Attendance Corrections"
 msgstr ""
 
 #: includes/trait-api-auth.php:76
@@ -86,56 +91,58 @@ msgid "You do not have access to this."
 msgstr ""
 
 #: includes/trait-api-auth.php:91
+#: includes/trait-corrections.php:504
 #: templates/app/tasks.php:197
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 msgid "My Pay"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 msgid "Dashboard"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
+#: templates/app/corrections.php:97
 msgid "Schedule"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:66
 msgid "Time"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 #: templates/app/attendance-insights.php:61
 #: templates/app/attendance.php:152
 msgid "Attendance"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:66
 #: templates/app/attendance-insights.php:82
 #: templates/app/attendance.php:95
 #: templates/app/employees.php:19
 msgid "Employees"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 #: templates/app/reports.php:30
 msgid "Reports"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 msgid "Attendance Insights"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
 #: templates/app/attendance.php:63
@@ -143,95 +150,101 @@ msgstr ""
 msgid "Leave"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 #: templates/app/pay.php:61
 msgid "Overtime"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
+msgid "Corrections"
+msgstr ""
+
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 #: includes/trait-tasks.php:250
 #: templates/admin/tasks.php:26
 #: templates/app/tasks.php:200
 msgid "Tasks"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:66
 #: includes/trait-dashboard-view.php:27
-#: includes/trait-notifications.php:818
-#: includes/trait-notifications.php:821
+#: includes/trait-notifications.php:819
+#: includes/trait-notifications.php:822
 msgid "Notifications"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:66
 #: templates/app/layout.php:72
 #: templates/app/layout.php:101
 #: templates/app/my-profile.php:64
 msgid "My Profile"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 msgid "People"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
+#: includes/trait-app-layout.php:66
 #: templates/app/employee.php:34
 msgid "Employee Profile"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: templates/app/time.php:164
+#: includes/trait-app-layout.php:66
+#: templates/app/time.php:166
 msgid "Presence Verification"
 msgstr ""
 
-#: includes/trait-app-layout.php:64
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:66
+#: includes/trait-app-layout.php:76
 msgid "Polls"
 msgstr ""
 
-#: includes/trait-app-layout.php:74
+#: includes/trait-app-layout.php:76
 #: templates/app/dashboard.php:92
 msgid "Sign In / Out"
 msgstr ""
 
-#: includes/trait-app-layout.php:118
+#: includes/trait-app-layout.php:121
 msgid "One Platform. One Team. One Goal."
 msgstr ""
 
-#: includes/trait-app-layout.php:157
+#: includes/trait-app-layout.php:160
 msgid "Forgot password?"
 msgstr ""
 
-#: includes/trait-app-layout.php:161
-#: includes/trait-app-layout.php:168
+#: includes/trait-app-layout.php:164
+#: includes/trait-app-layout.php:171
 msgid "Username or Email"
 msgstr ""
 
-#: includes/trait-app-layout.php:161
-#: includes/trait-app-layout.php:169
+#: includes/trait-app-layout.php:164
+#: includes/trait-app-layout.php:172
 msgid "Password"
 msgstr ""
 
-#: includes/trait-app-layout.php:161
+#: includes/trait-app-layout.php:164
 msgid "Remember me"
 msgstr ""
 
-#: includes/trait-app-layout.php:161
+#: includes/trait-app-layout.php:164
 msgctxt "log in to the app"
 msgid "Sign In"
 msgstr ""
 
-#: includes/trait-app-layout.php:173
+#: includes/trait-app-layout.php:176
 msgid "The username or password is incorrect. Please try again."
 msgstr ""
 
-#: includes/trait-app-layout.php:174
+#: includes/trait-app-layout.php:177
 msgid "You have been logged out successfully."
 msgstr ""
 
 #: includes/trait-attendance-insights.php:150
+#: includes/trait-corrections.php:173
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
@@ -353,6 +366,257 @@ msgstr ""
 msgid "Unable to record this action."
 msgstr ""
 
+#: includes/trait-corrections.php:174
+#: includes/trait-corrections.php:176
+#: includes/trait-task-extras.php:193
+#: includes/trait-task-extras.php:195
+msgid "File not found."
+msgstr ""
+
+#: includes/trait-corrections.php:308
+msgid "Attendance correction to review"
+msgstr ""
+
+#. translators: 1: employee, 2: day, 3: the change
+#: includes/trait-corrections.php:310
+#, php-format
+msgid "%1$s asks to correct %2$s: %3$s."
+msgstr ""
+
+#: includes/trait-corrections.php:368
+#: templates/app/correction-days.php:36
+msgid "Correction rejected"
+msgstr ""
+
+#. translators: 1: day, 2: the manager's note
+#: includes/trait-corrections.php:370
+#, php-format
+msgid "Your correction for %1$s was rejected: %2$s"
+msgstr ""
+
+#: includes/trait-corrections.php:402
+#: includes/trait-corrections.php:545
+msgid "Correction approved"
+msgstr ""
+
+#. translators: 1: day, 2: the change
+#: includes/trait-corrections.php:404
+#, php-format
+msgid "Your correction for %1$s was approved: %2$s."
+msgstr ""
+
+#: includes/trait-corrections.php:450
+msgid "Forgot Sign Out"
+msgstr ""
+
+#: includes/trait-corrections.php:450
+msgid "Forgot Sign In"
+msgstr ""
+
+#: includes/trait-corrections.php:450
+msgid "Wrong time"
+msgstr ""
+
+#: includes/trait-corrections.php:450
+msgid "Whole day missing"
+msgstr ""
+
+#: includes/trait-corrections.php:455
+#: templates/admin/corrections.php:64
+msgid "Waiting"
+msgstr ""
+
+#: includes/trait-corrections.php:455
+#: templates/admin/corrections.php:64
+msgid "Waiting for HR"
+msgstr ""
+
+#. translators: %d: number of requests
+#: includes/trait-corrections.php:455
+#: includes/trait-corrections.php:551
+#: includes/trait-corrections.php:553
+#: includes/trait-corrections.php:554
+#: includes/trait-frontend.php:461
+#: templates/admin/corrections.php:64
+#: templates/admin/corrections.php:118
+#: templates/admin/corrections.php:125
+msgid "Approved"
+msgstr ""
+
+#. translators: %d: number of requests
+#: includes/trait-corrections.php:455
+#: includes/trait-corrections.php:552
+#: includes/trait-frontend.php:461
+#: templates/admin/corrections.php:64
+#: templates/admin/corrections.php:118
+#: templates/admin/corrections.php:125
+#: templates/app/presence.php:20
+#: templates/app/schedule.php:50
+msgid "Rejected"
+msgstr ""
+
+#: includes/trait-corrections.php:475
+#: includes/trait-corrections.php:685
+#: templates/admin/corrections.php:55
+msgid "Attendance corrections are switched off."
+msgstr ""
+
+#: includes/trait-corrections.php:476
+msgid "Your account is not linked to an employee."
+msgstr ""
+
+#: includes/trait-corrections.php:477
+msgid "This kind of correction is not available."
+msgstr ""
+
+#: includes/trait-corrections.php:478
+msgid "Choose a valid day."
+msgstr ""
+
+#: includes/trait-corrections.php:479
+msgid "You cannot correct a day that has not come yet."
+msgstr ""
+
+#. translators: %d: number of days
+#: includes/trait-corrections.php:481
+#, php-format
+msgid "This day is more than %d day ago, so it cannot be corrected from the app. Ask HR to correct it."
+msgid_plural "This day is more than %d days ago, so it cannot be corrected from the app. Ask HR to correct it."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-corrections.php:482
+msgid "You already asked to correct this day. Wait for the decision."
+msgstr ""
+
+#: includes/trait-corrections.php:483
+msgid "Write what happened."
+msgstr ""
+
+#: includes/trait-corrections.php:484
+msgid "Attach a photo for this kind of correction."
+msgstr ""
+
+#: includes/trait-corrections.php:485
+msgid "The photo could not be saved. Use a JPG, PNG or WebP image."
+msgstr ""
+
+#: includes/trait-corrections.php:486
+msgid "The photo is larger than 8 MB."
+msgstr ""
+
+#: includes/trait-corrections.php:487
+msgid "Enter the correct time."
+msgstr ""
+
+#: includes/trait-corrections.php:488
+msgid "That time has not come yet today."
+msgstr ""
+
+#: includes/trait-corrections.php:489
+msgid "A Sign In is already recorded for this day: choose \"Wrong time\" to change it."
+msgstr ""
+
+#: includes/trait-corrections.php:490
+msgid "There is no Sign In on this day: choose \"Forgot Sign In\" or \"Whole day missing\"."
+msgstr ""
+
+#: includes/trait-corrections.php:491
+msgid "A Sign Out is already recorded for this day: choose \"Wrong time\" to change it."
+msgstr ""
+
+#: includes/trait-corrections.php:492
+msgid "This day already has a Sign In or Sign Out: choose another kind of correction."
+msgstr ""
+
+#: includes/trait-corrections.php:493
+msgid "That time is not recorded on this day."
+msgstr ""
+
+#: includes/trait-corrections.php:494
+msgid "Sign Out must be after Sign In."
+msgstr ""
+
+#: includes/trait-corrections.php:495
+msgid "That is the time already recorded."
+msgstr ""
+
+#: includes/trait-corrections.php:496
+#: templates/app/correction-sheet.php:55
+msgid "You have used all your corrections for this month."
+msgstr ""
+
+#: includes/trait-corrections.php:497
+msgid "Write why you reject it: the employee will see it."
+msgstr ""
+
+#: includes/trait-corrections.php:498
+msgid "You cannot decide your own request."
+msgstr ""
+
+#: includes/trait-corrections.php:499
+msgid "You cannot decide this request."
+msgstr ""
+
+#: includes/trait-corrections.php:500
+msgid "This request was already decided."
+msgstr ""
+
+#: includes/trait-corrections.php:501
+msgid "The day changed since this request was made, so it cannot be applied. Reject it, or ask HR to correct the day."
+msgstr ""
+
+#: includes/trait-corrections.php:502
+msgid "The approval could not be recorded. Please try again."
+msgstr ""
+
+#: includes/trait-corrections.php:540
+msgid "Not saved"
+msgstr ""
+
+#: includes/trait-corrections.php:545
+msgid "No approval was needed: your day is corrected."
+msgstr ""
+
+#: includes/trait-corrections.php:546
+#: includes/trait-corrections.php:547
+msgid "Request sent"
+msgstr ""
+
+#: includes/trait-corrections.php:546
+msgid "Your request went to HR for approval. You will get a notification when it is decided."
+msgstr ""
+
+#: includes/trait-corrections.php:547
+msgid "Your manager will review it. You will get a notification when it is decided."
+msgstr ""
+
+#: includes/trait-corrections.php:551
+msgid "The day is corrected. The original record is kept, and the correction is in the Audit Log under your name."
+msgstr ""
+
+#: includes/trait-corrections.php:552
+msgid "The employee will see your note."
+msgstr ""
+
+#: includes/trait-corrections.php:553
+msgid "The request moved to the next approval level."
+msgstr ""
+
+#: includes/trait-corrections.php:554
+msgid "The request now goes to HR for the second approval."
+msgstr ""
+
+#: includes/trait-corrections.php:738
+msgid "You did not sign out today"
+msgstr ""
+
+#. translators: %s: time
+#: includes/trait-corrections.php:740
+#, php-format
+msgid "You signed in at %s. If you have left, request a correction with the time you left."
+msgstr ""
+
 #: includes/trait-dashboard-view.php:48
 msgid "Good to see you."
 msgstr ""
@@ -429,6 +693,7 @@ msgstr ""
 #: includes/trait-frontend.php:109
 #: templates/app/attendance-insights.php:82
 #: templates/app/attendance.php:186
+#: templates/app/correction-sheet.php:28
 #: templates/app/layout.php:104
 #: templates/app/leave.php:44
 #: templates/app/my-profile.php:157
@@ -438,8 +703,8 @@ msgstr ""
 #: templates/app/schedule.php:254
 #: templates/app/tasks.php:152
 #: templates/app/tasks.php:262
-#: templates/app/time.php:160
-#: templates/app/time.php:177
+#: templates/app/time.php:162
+#: templates/app/time.php:179
 msgid "Close"
 msgstr ""
 
@@ -467,349 +732,349 @@ msgstr ""
 msgid "Schedule Conflict"
 msgstr ""
 
-#: includes/trait-frontend.php:124
+#: includes/trait-frontend.php:125
 msgid "Saved Successfully"
 msgstr ""
 
-#: includes/trait-frontend.php:124
+#: includes/trait-frontend.php:125
 msgid "Your changes have been saved."
 msgstr ""
 
-#: includes/trait-frontend.php:125
+#: includes/trait-frontend.php:126
 msgid "Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:125
+#: includes/trait-frontend.php:126
 msgid "Your leave request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:126
+#: includes/trait-frontend.php:127
 msgid "Request Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:126
+#: includes/trait-frontend.php:127
 msgid "The leave request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:127
+#: includes/trait-frontend.php:128
 msgid "Cancellation Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:127
+#: includes/trait-frontend.php:128
 msgid "Your cancellation request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:128
+#: includes/trait-frontend.php:129
 msgid "Attendance Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:128
+#: includes/trait-frontend.php:129
 msgid "Your attendance action was completed successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:129
+#: includes/trait-frontend.php:130
 msgid "Day Reset"
 msgstr ""
 
-#: includes/trait-frontend.php:129
+#: includes/trait-frontend.php:130
 msgid "The selected attendance day has been reset successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:130
+#: includes/trait-frontend.php:131
 msgid "Attendance Saved"
 msgstr ""
 
-#: includes/trait-frontend.php:130
+#: includes/trait-frontend.php:131
 msgid "The attendance schedule has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:131
+#: includes/trait-frontend.php:132
 msgid "Overtime Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:131
+#: includes/trait-frontend.php:132
 msgid "The overtime request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:132
+#: includes/trait-frontend.php:133
 msgid "Overtime Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:132
+#: includes/trait-frontend.php:133
 msgid "The overtime request has been rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:135
+#: includes/trait-frontend.php:136
 msgid "Attendance Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:136
+#: includes/trait-frontend.php:137
 msgid "Break Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:137
+#: includes/trait-frontend.php:138
 msgid "Break Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 #: includes/trait-leave-view.php:101
 msgid "Overtime Requests are currently disabled."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: includes/trait-frontend.php:139
 #: includes/trait-frontend.php:140
+#: includes/trait-frontend.php:141
 msgid "Please review the overtime request and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "The overtime request could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "The overtime request could not be updated. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:139
-#: includes/trait-frontend.php:144
-#: includes/trait-frontend.php:160
+#: includes/trait-frontend.php:140
+#: includes/trait-frontend.php:145
+#: includes/trait-frontend.php:161
 #: includes/trait-presence.php:128
 #: includes/trait-presence.php:171
 #: includes/trait-presence.php:186
 msgid "Your account is not linked to an active employee."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "Please select a valid future date."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "Please enter a valid overtime time range."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "Please enter a reason for the overtime request."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:140
 msgid "The requested overtime overlaps another overtime request."
 msgstr ""
 
-#: includes/trait-frontend.php:140
+#: includes/trait-frontend.php:141
 msgid "Overtime Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:142
+#: includes/trait-frontend.php:143
 msgid "Overtime Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:142
+#: includes/trait-frontend.php:143
 msgid "Your overtime request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:144
-#: includes/trait-frontend.php:160
+#: includes/trait-frontend.php:145
+#: includes/trait-frontend.php:161
 msgid "Please select a valid future date range."
 msgstr ""
 
-#: includes/trait-frontend.php:144
-#: includes/trait-frontend.php:160
+#: includes/trait-frontend.php:145
+#: includes/trait-frontend.php:161
 msgid "The selected range contains no working days."
 msgstr ""
 
-#: includes/trait-frontend.php:144
+#: includes/trait-frontend.php:145
 msgid "You already have a pending or approved vacation overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:144
+#: includes/trait-frontend.php:145
 msgid "We could not save the vacation request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:145
+#: includes/trait-frontend.php:146
 msgid "Vacation Request Not Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:145
+#: includes/trait-frontend.php:146
 msgid "Please review the vacation details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:147
+#: includes/trait-frontend.php:148
 msgid "Vacation Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:147
+#: includes/trait-frontend.php:148
 msgid "Your vacation request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:148
+#: includes/trait-frontend.php:149
 msgid "Vacation Request Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:148
+#: includes/trait-frontend.php:149
 msgid "The vacation request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "Please select a valid employee and work date for the shift swap."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "The selected employee could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "These schedules cannot be swapped. Both employees must have different Office/WFH schedules on this day."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "A pending swap request already exists for this day."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "The shift swap could not be saved. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "The shift swap request could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "The schedule changed after the swap request was created, so it can no longer be accepted."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "The swap request has already been processed or expired."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:152
 msgid "This day has already passed, so it can no longer be swapped."
 msgstr ""
 
-#: includes/trait-frontend.php:152
+#: includes/trait-frontend.php:153
 msgid "Shift Swap Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:152
+#: includes/trait-frontend.php:153
 msgid "Please review the shift swap and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:154
+#: includes/trait-frontend.php:155
 msgid "Shift Swap Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:154
+#: includes/trait-frontend.php:155
 msgid "Your shift swap request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:156
+#: includes/trait-frontend.php:157
 msgid "The shift swap was accepted and both schedules were updated."
 msgstr ""
 
-#: includes/trait-frontend.php:156
+#: includes/trait-frontend.php:157
 msgid "The shift swap request was rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:156
+#: includes/trait-frontend.php:157
 msgid "The shift swap request was cancelled."
 msgstr ""
 
-#: includes/trait-frontend.php:157
+#: includes/trait-frontend.php:158
 msgid "Shift Swap Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:157
+#: includes/trait-frontend.php:158
 msgid "The shift swap has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:160
+#: includes/trait-frontend.php:161
 msgid "You already have a pending or approved leave overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:160
+#: includes/trait-frontend.php:161
 msgid "Insufficient available balance for this Leave Type."
 msgstr ""
 
-#: includes/trait-frontend.php:160
+#: includes/trait-frontend.php:161
 msgid "A leave cannot span two calendar years. Please submit one request for each year."
 msgstr ""
 
-#: includes/trait-frontend.php:161
+#: includes/trait-frontend.php:162
 msgid "Leave Request Not Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:161
+#: includes/trait-frontend.php:162
 msgid "Please review the leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 msgid "Please select a future date for Early Leave."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 #: templates/app/leave.php:47
 msgid "Early Leave is available only on a configured working day."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 msgid "Early Leave is available only on an Office workday. It cannot be requested on Work From Home or Leave/Vacation days."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 #: templates/app/leave.php:48
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 #: templates/app/leave.php:49
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 msgid "We could not submit the Early Leave request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:165
 msgid "This request can no longer be approved because the employee is no longer scheduled for an eligible Office workday."
 msgstr ""
 
-#: includes/trait-frontend.php:165
+#: includes/trait-frontend.php:166
 #: templates/app/leave.php:44
 msgid "Early Leave Not Available"
 msgstr ""
 
-#: includes/trait-frontend.php:165
+#: includes/trait-frontend.php:166
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:334
+#: includes/trait-frontend.php:339
 msgid "Task overdue"
 msgstr ""
 
-#: includes/trait-frontend.php:334
+#: includes/trait-frontend.php:339
 msgid "Due today"
 msgstr ""
 
 #. translators: 1: task title, 2: due date
-#: includes/trait-frontend.php:337
+#: includes/trait-frontend.php:342
 #, php-format
 msgid "%1$s was due on %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:337
+#: includes/trait-frontend.php:342
 #, php-format
 msgid "%s is due today."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:338
+#: includes/trait-frontend.php:343
 msgid "Open Task"
 msgstr ""
 
-#: includes/trait-frontend.php:456
+#: includes/trait-frontend.php:461
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:115
 #: templates/app/leave.php:129
@@ -818,57 +1083,47 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:456
-msgid "Approved"
-msgstr ""
-
-#: includes/trait-frontend.php:456
-#: templates/app/presence.php:20
-#: templates/app/schedule.php:50
-msgid "Rejected"
-msgstr ""
-
-#: includes/trait-frontend.php:456
+#: includes/trait-frontend.php:461
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:50
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:456
+#: includes/trait-frontend.php:461
 #: templates/app/schedule.php:50
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:456
+#: includes/trait-frontend.php:461
 #: includes/trait-tasks.php:246
 #: templates/app/tasks.php:41
 #: templates/app/tasks.php:104
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:456
+#: includes/trait-frontend.php:461
 #: templates/app/presence.php:20
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:456
+#: includes/trait-frontend.php:461
 #: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:462
+#: includes/trait-frontend.php:467
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:462
+#: includes/trait-frontend.php:467
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:469
+#: includes/trait-frontend.php:474
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:469
+#: includes/trait-frontend.php:474
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -892,34 +1147,34 @@ msgstr ""
 msgid "Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours."
 msgstr ""
 
-#: includes/trait-notifications.php:376
+#: includes/trait-notifications.php:377
 msgid "Just now"
 msgstr ""
 
 #. translators: %s: time span like "5 mins"
 #. translators: %s: human-readable time difference
-#: includes/trait-notifications.php:376
-#: includes/trait-notifications.php:807
+#: includes/trait-notifications.php:377
+#: includes/trait-notifications.php:808
 #, php-format
 msgid "%s ago"
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-notifications.php:377
+#: includes/trait-notifications.php:378
 #, php-format
 msgid "Yesterday · %s"
 msgstr ""
 
-#: includes/trait-notifications.php:815
+#: includes/trait-notifications.php:816
 msgid "You’re all caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:815
+#: includes/trait-notifications.php:816
 msgid "No new notifications."
 msgstr ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:821
+#: includes/trait-notifications.php:822
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -927,11 +1182,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:821
+#: includes/trait-notifications.php:822
 msgid "All caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:823
+#: includes/trait-notifications.php:824
 msgid "View all notifications →"
 msgstr ""
 
@@ -1161,7 +1416,7 @@ msgstr ""
 #: templates/app/dashboard.php:46
 #: templates/app/my-profile.php:37
 #: templates/app/schedule.php:36
-#: templates/app/time.php:61
+#: templates/app/time.php:62
 msgid "Not Set"
 msgstr ""
 
@@ -1189,7 +1444,12 @@ msgstr ""
 msgid "Team Schedule"
 msgstr ""
 
+#. translators: %d: number of requests
 #: includes/trait-schedule-view.php:90
+#: templates/admin/corrections.php:73
+#: templates/admin/corrections.php:80
+#: templates/admin/corrections.php:118
+#: templates/admin/corrections.php:163
 #: templates/app/attendance.php:155
 #: templates/app/attendance.php:216
 #: templates/app/reports.php:53
@@ -1220,11 +1480,6 @@ msgstr ""
 #: includes/trait-task-extras.php:182
 #, php-format
 msgid "%1$s commented on %2$s."
-msgstr ""
-
-#: includes/trait-task-extras.php:193
-#: includes/trait-task-extras.php:195
-msgid "File not found."
 msgstr ""
 
 #: includes/trait-task-extras.php:211
@@ -1311,6 +1566,425 @@ msgstr ""
 #: includes/trait-tasks.php:247
 #: templates/app/tasks.php:40
 msgid "Low"
+msgstr ""
+
+#: templates/admin/corrections.php:43
+#: templates/admin/corrections.php:125
+msgid "Requests"
+msgstr ""
+
+#: templates/admin/corrections.php:43
+msgid "Report"
+msgstr ""
+
+#: templates/admin/corrections.php:43
+msgid "Settings"
+msgstr ""
+
+#: templates/admin/corrections.php:46
+msgid "All departments"
+msgstr ""
+
+#: templates/admin/corrections.php:53
+msgid "Correct directly"
+msgstr ""
+
+#: templates/admin/corrections.php:55
+msgid "Feature Configuration"
+msgstr ""
+
+#: templates/admin/corrections.php:57
+msgid "Correction saved. The original record is kept and the correction is in the Audit Log."
+msgstr ""
+
+#: templates/admin/corrections.php:58
+msgid "Approved: the day is corrected."
+msgstr ""
+
+#: templates/admin/corrections.php:58
+msgid "Rejected. The employee will see your note."
+msgstr ""
+
+#: templates/admin/corrections.php:58
+msgid "Approved at this level."
+msgstr ""
+
+#: templates/admin/corrections.php:64
+#: templates/app/my-profile.php:59
+#: templates/app/notifications.php:36
+msgid "All"
+msgstr ""
+
+#: templates/admin/corrections.php:71
+msgid "All types"
+msgstr ""
+
+#: templates/admin/corrections.php:75
+#: templates/app/tasks.php:211
+msgid "Filter"
+msgstr ""
+
+#. translators: %d: number of requests
+#: templates/admin/corrections.php:77
+#, php-format
+msgid "%d request"
+msgid_plural "%d requests"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/admin/corrections.php:80
+#: templates/admin/corrections.php:164
+#: templates/app/attendance-insights.php:47
+#: templates/app/correction-sheet.php:31
+#: templates/app/schedule.php:242
+msgid "Day"
+msgstr ""
+
+#: templates/admin/corrections.php:80
+msgid "Type"
+msgstr ""
+
+#: templates/admin/corrections.php:80
+msgid "Change"
+msgstr ""
+
+#: templates/admin/corrections.php:80
+#: templates/admin/corrections.php:169
+#: templates/app/correction-sheet.php:52
+#: templates/app/leave.php:77
+#: templates/app/leave.php:144
+#: templates/app/overtime.php:127
+msgid "Reason"
+msgstr ""
+
+#: templates/admin/corrections.php:80
+#: templates/app/attendance.php:216
+#: templates/app/my-profile.php:153
+msgid "Status"
+msgstr ""
+
+#: templates/admin/corrections.php:80
+msgid "Requested"
+msgstr ""
+
+#: templates/admin/corrections.php:80
+msgid "Decision"
+msgstr ""
+
+#: templates/admin/corrections.php:82
+msgid "No correction requests with these filters."
+msgstr ""
+
+#: templates/admin/corrections.php:84
+#: templates/app/corrections.php:69
+msgid "HR"
+msgstr ""
+
+#: templates/admin/corrections.php:89
+msgid "Direct by HR"
+msgstr ""
+
+#. translators: %s: month and amount
+#: templates/admin/corrections.php:90
+#, php-format
+msgid "Payroll: carried to %s"
+msgstr ""
+
+#. translators: %s: month and amount
+#. translators: 1: count, 2: limit
+#: templates/admin/corrections.php:91
+#: templates/admin/corrections.php:140
+#: templates/app/corrections.php:100
+#: templates/app/my-profile.php:171
+msgid "Photo"
+msgstr ""
+
+#: templates/admin/corrections.php:92
+msgid "Sign In earlier"
+msgstr ""
+
+#: templates/admin/corrections.php:92
+msgid "Above the limit"
+msgstr ""
+
+#: templates/admin/corrections.php:96
+msgid "Note (required to reject)"
+msgstr ""
+
+#: templates/admin/corrections.php:96
+#: templates/app/corrections.php:106
+msgid "Note to the employee"
+msgstr ""
+
+#: templates/admin/corrections.php:97
+#: templates/app/corrections.php:108
+#: templates/app/leave.php:114
+#: templates/app/leave.php:157
+#: templates/app/overtime.php:90
+msgid "Approve"
+msgstr ""
+
+#: templates/admin/corrections.php:97
+#: templates/app/corrections.php:108
+#: templates/app/leave.php:30
+#: templates/app/overtime.php:90
+#: templates/app/schedule.php:218
+msgid "Reject"
+msgstr ""
+
+#: templates/admin/corrections.php:109
+msgid "Show"
+msgstr ""
+
+#: templates/admin/corrections.php:109
+msgid "Download CSV"
+msgstr ""
+
+#: templates/admin/corrections.php:111
+msgid "requests"
+msgstr ""
+
+#. translators: %d: percent
+#: templates/admin/corrections.php:112
+#, php-format
+msgid "approved (%d%%)"
+msgstr ""
+
+#. translators: %d: percent
+#: templates/admin/corrections.php:112
+msgid "approved"
+msgstr ""
+
+#. translators: %d: percent
+#: templates/admin/corrections.php:113
+msgid "rejected"
+msgstr ""
+
+#: templates/admin/corrections.php:114
+#: templates/app/correction-sheet.php:33
+msgid "waiting"
+msgstr ""
+
+#: templates/admin/corrections.php:116
+msgid "By employee"
+msgstr ""
+
+#. translators: %d: number of requests
+#: templates/admin/corrections.php:117
+#, php-format
+msgid "\"Frequent\" = %d or more requests in a month: a pattern worth a look."
+msgstr ""
+
+#. translators: %d: number of requests
+#: templates/admin/corrections.php:118
+#: templates/admin/corrections.php:125
+msgid "Department"
+msgstr ""
+
+#. translators: %d: number of requests
+#: templates/admin/corrections.php:118
+msgid "Total"
+msgstr ""
+
+#: templates/admin/corrections.php:119
+msgid "No correction requests this month."
+msgstr ""
+
+#: templates/admin/corrections.php:120
+msgid "frequent"
+msgstr ""
+
+#: templates/admin/corrections.php:124
+msgid "By department"
+msgstr ""
+
+#: templates/admin/corrections.php:127
+msgid "No department"
+msgstr ""
+
+#: templates/admin/corrections.php:132
+msgid "The deadline must be between 1 and 60 days."
+msgstr ""
+
+#: templates/admin/corrections.php:132
+msgid "The monthly limit must be between 0 and 31."
+msgstr ""
+
+#: templates/admin/corrections.php:132
+msgid "Enter the reminder time as HH:MM."
+msgstr ""
+
+#: templates/admin/corrections.php:132
+msgid "Keep at least one kind of correction."
+msgstr ""
+
+#: templates/admin/corrections.php:134
+msgid "Settings saved."
+msgstr ""
+
+#: templates/admin/corrections.php:139
+msgid "Kinds and photo"
+msgstr ""
+
+#: templates/admin/corrections.php:140
+#: templates/admin/corrections.php:165
+msgid "Kind"
+msgstr ""
+
+#: templates/admin/corrections.php:142
+msgid "Off"
+msgstr ""
+
+#: templates/admin/corrections.php:142
+#: templates/app/time.php:116
+#: templates/app/time.php:166
+msgid "Optional"
+msgstr ""
+
+#: templates/admin/corrections.php:142
+msgid "Required"
+msgstr ""
+
+#: templates/admin/corrections.php:144
+msgid "Deadline"
+msgstr ""
+
+#: templates/admin/corrections.php:144
+msgid "days after the day"
+msgstr ""
+
+#: templates/admin/corrections.php:144
+msgid "After that, only HR can correct the day, directly."
+msgstr ""
+
+#: templates/admin/corrections.php:145
+msgid "Monthly limit per employee"
+msgstr ""
+
+#: templates/admin/corrections.php:145
+msgid "0 = no limit"
+msgstr ""
+
+#: templates/admin/corrections.php:146
+msgid "Above it: refused"
+msgstr ""
+
+#: templates/admin/corrections.php:146
+msgid "Above it: allowed, and HR approves it too (second level)"
+msgstr ""
+
+#: templates/admin/corrections.php:147
+msgid "Earlier Sign In"
+msgstr ""
+
+#: templates/admin/corrections.php:147
+msgid "A request that moves Sign In earlier needs the second level (HR)"
+msgstr ""
+
+#: templates/admin/corrections.php:147
+msgid "It removes lateness, which changes pay."
+msgstr ""
+
+#: templates/admin/corrections.php:148
+msgid "End-of-day reminder"
+msgstr ""
+
+#: templates/admin/corrections.php:148
+msgid "Notify anyone still without a Sign Out at"
+msgstr ""
+
+#: templates/admin/corrections.php:148
+msgid "\"You did not sign out today. Request a correction?\" The notification opens the request form."
+msgstr ""
+
+#: templates/admin/corrections.php:149
+msgid "Approvals"
+msgstr ""
+
+#: templates/admin/corrections.php:149
+msgid "Who approves, and how many levels:"
+msgstr ""
+
+#: templates/admin/corrections.php:149
+msgid "Approval Workflows → Attendance Correction"
+msgstr ""
+
+#: templates/admin/corrections.php:149
+msgid "Without an active workflow, managers with \"Manage Time\" decide for their department. The second level is anyone with \"Manage Attendance Corrections\"."
+msgstr ""
+
+#: templates/admin/corrections.php:151
+#: templates/admin/tasks.php:70
+#: templates/app/tasks.php:190
+msgid "Save Changes"
+msgstr ""
+
+#: templates/admin/corrections.php:157
+msgid "Correct attendance directly"
+msgstr ""
+
+#: templates/admin/corrections.php:158
+msgid "For cases the employee cannot request from the app (for example after the deadline). Same path as requests: the original record never changes."
+msgstr ""
+
+#: templates/admin/corrections.php:158
+msgid "Back to the requests"
+msgstr ""
+
+#: templates/admin/corrections.php:163
+msgid "Type a few letters and pick from the list."
+msgstr ""
+
+#: templates/admin/corrections.php:166
+#: templates/app/correction-sheet.php:45
+msgid "Which time is wrong?"
+msgstr ""
+
+#. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
+#: templates/admin/corrections.php:166
+#: templates/admin/corrections.php:168
+#: templates/app/correction-sheet.php:36
+#: templates/app/correction-sheet.php:46
+#: templates/app/dashboard.php:88
+#: templates/app/my-profile.php:153
+#: templates/app/time.php:83
+#: templates/app/time.php:91
+#: templates/app/time.php:103
+#: templates/app/time.php:111
+#: templates/app/time.php:148
+msgid "Sign In"
+msgstr ""
+
+#: templates/admin/corrections.php:166
+#: templates/admin/corrections.php:168
+#: templates/app/correction-sheet.php:36
+#: templates/app/correction-sheet.php:46
+#: templates/app/dashboard.php:89
+#: templates/app/my-profile.php:153
+#: templates/app/time.php:81
+#: templates/app/time.php:104
+#: templates/app/time.php:150
+msgid "Sign Out"
+msgstr ""
+
+#: templates/admin/corrections.php:167
+msgid "\"Which time\" is used for \"Wrong time\" only."
+msgstr ""
+
+#: templates/admin/corrections.php:168
+msgid "Correct times"
+msgstr ""
+
+#: templates/admin/corrections.php:168
+msgid "Fill the time the kind needs: Sign Out for \"Forgot Sign Out\", Sign In for \"Forgot Sign In\", both for a whole day."
+msgstr ""
+
+#: templates/admin/corrections.php:169
+msgid "Required. The employee sees it, and it goes to the Audit Log."
+msgstr ""
+
+#: templates/admin/corrections.php:171
+msgid "Save correction"
 msgstr ""
 
 #: templates/admin/tasks.php:15
@@ -1533,11 +2207,6 @@ msgstr ""
 msgid "Changes apply right away."
 msgstr ""
 
-#: templates/admin/tasks.php:70
-#: templates/app/tasks.php:190
-msgid "Save Changes"
-msgstr ""
-
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance.php:71
 #: templates/app/dashboard.php:144
@@ -1582,7 +2251,7 @@ msgstr ""
 #: templates/app/notifications.php:19
 #: templates/app/overtime.php:117
 #: templates/app/schedule.php:165
-#: templates/app/time.php:63
+#: templates/app/time.php:64
 msgid "Today"
 msgstr ""
 
@@ -1632,11 +2301,6 @@ msgstr ""
 msgid "All Teams"
 msgstr ""
 
-#: templates/app/attendance-insights.php:47
-#: templates/app/schedule.php:242
-msgid "Day"
-msgstr ""
-
 #: templates/app/attendance-insights.php:52
 msgid "Workforce Overview"
 msgstr ""
@@ -1672,6 +2336,7 @@ msgid "You"
 msgstr ""
 
 #: templates/app/attendance.php:46
+#: templates/app/corrections.php:69
 #: templates/app/schedule.php:143
 #: templates/app/schedule.php:161
 msgid "Manager"
@@ -1836,11 +2501,6 @@ msgid "Date"
 msgstr ""
 
 #: templates/app/attendance.php:216
-#: templates/app/my-profile.php:153
-msgid "Status"
-msgstr ""
-
-#: templates/app/attendance.php:216
 msgid "Note"
 msgstr ""
 
@@ -1877,6 +2537,378 @@ msgstr ""
 
 #: templates/app/attendance.php:253
 msgid "Download Sample CSV"
+msgstr ""
+
+#: templates/app/correction-days.php:20
+msgid "My recent days"
+msgstr ""
+
+#: templates/app/correction-days.php:20
+msgid "My corrections"
+msgstr ""
+
+#: templates/app/correction-days.php:22
+msgid "No days recorded yet"
+msgstr ""
+
+#: templates/app/correction-days.php:22
+msgid "Your days appear here after your first Sign In, with a button to request a correction if you forget one."
+msgstr ""
+
+#: templates/app/correction-days.php:26
+msgid "none"
+msgstr ""
+
+#: templates/app/correction-days.php:30
+msgid "Corrected"
+msgstr ""
+
+#: templates/app/correction-days.php:31
+msgid "Correction waiting"
+msgstr ""
+
+#: templates/app/correction-days.php:32
+msgid "Today · not signed out yet"
+msgstr ""
+
+#. translators: %s: time
+#: templates/app/correction-days.php:33
+#: templates/app/corrections.php:92
+msgid "No Sign Out recorded"
+msgstr ""
+
+#: templates/app/correction-days.php:34
+#: templates/app/corrections.php:93
+msgid "No Sign In recorded"
+msgstr ""
+
+#. translators: %d: minutes
+#: templates/app/correction-days.php:37
+#, php-format
+msgid "Late %d min"
+msgstr ""
+
+#. translators: %d: minutes
+#: templates/app/correction-days.php:37
+msgid "Day off"
+msgstr ""
+
+#. translators: %d: minutes
+#: templates/app/correction-days.php:37
+#: templates/app/tasks.php:222
+msgid "On time"
+msgstr ""
+
+#: templates/app/correction-days.php:46
+#: templates/app/corrections.php:56
+msgid "Request correction"
+msgstr ""
+
+#: templates/app/correction-days.php:48
+msgid "Correct"
+msgstr ""
+
+#. translators: %d: number of days
+#: templates/app/correction-days.php:55
+#, php-format
+msgid "You can ask to correct a day within %d day"
+msgid_plural "You can ask to correct a day within %d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: used, 2: monthly limit
+#: templates/app/correction-days.php:56
+#, php-format
+msgid "%1$d of %2$d requests used this month"
+msgstr ""
+
+#: templates/app/correction-sheet.php:28
+msgid "Request a correction"
+msgstr ""
+
+#: templates/app/correction-sheet.php:38
+#: templates/app/correction-sheet.php:52
+msgid "What happened?"
+msgstr ""
+
+#: templates/app/correction-sheet.php:49
+msgid "Correct Sign In time"
+msgstr ""
+
+#: templates/app/correction-sheet.php:50
+msgid "Correct Sign Out time"
+msgstr ""
+
+#: templates/app/correction-sheet.php:53
+msgid "Photo (optional)"
+msgstr ""
+
+#: templates/app/correction-sheet.php:53
+msgid "Photo (required)"
+msgstr ""
+
+#: templates/app/correction-sheet.php:53
+msgid "For example, a photo from the customer's site"
+msgstr ""
+
+#: templates/app/correction-sheet.php:55
+msgid "You have used this month's corrections: this request goes to HR."
+msgstr ""
+
+#. translators: 1: this request's number, 2: monthly limit
+#: templates/app/correction-sheet.php:57
+#, php-format
+msgid "This is request %1$d of the %2$d allowed this month"
+msgstr ""
+
+#: templates/app/correction-sheet.php:59
+msgid "Send request"
+msgstr ""
+
+#. translators: %s: manager's name
+#: templates/app/correction-sheet.php:60
+#, php-format
+msgid "Your manager %s reviews it. The original record never changes."
+msgstr ""
+
+#. translators: %s: manager's name
+#: templates/app/correction-sheet.php:60
+msgid "Your manager reviews it. The original record never changes."
+msgstr ""
+
+#: templates/app/corrections.php:38
+msgid "with HR"
+msgstr ""
+
+#. translators: %s: month name
+#: templates/app/corrections.php:48
+#, php-format
+msgid "%s · corrections"
+msgstr ""
+
+#. translators: 1: used, 2: limit
+#. translators: 1: count, 2: limit
+#: templates/app/corrections.php:49
+#: templates/app/corrections.php:99
+#, php-format
+msgid "%1$d of %2$d"
+msgstr ""
+
+#. translators: %d: number of requests
+#. translators: %d: number of requests waiting
+#: templates/app/corrections.php:51
+#: templates/app/corrections.php:64
+#: templates/app/overtime.php:78
+#, php-format
+msgid "%d waiting"
+msgid_plural "%d waiting"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of requests
+#: templates/app/corrections.php:52
+msgid "Limit reached · new requests go to HR"
+msgstr ""
+
+#. translators: %d: number of requests
+#: templates/app/corrections.php:52
+msgid "Limit reached"
+msgstr ""
+
+#. translators: %s: date
+#: templates/app/corrections.php:53
+#, php-format
+msgid "Resets on %s"
+msgstr ""
+
+#: templates/app/corrections.php:63
+msgid "Corrections to approve"
+msgstr ""
+
+#: templates/app/corrections.php:63
+msgid "Your team's requests, each with what the system knows about the day."
+msgstr ""
+
+#: templates/app/corrections.php:69
+#: templates/app/leave.php:33
+#: templates/app/overtime.php:82
+msgid "Level"
+msgstr ""
+
+#: templates/app/corrections.php:72
+msgid "Moves Sign In earlier, which removes lateness: HR approves it too."
+msgstr ""
+
+#: templates/app/corrections.php:72
+msgid "Above the monthly limit: HR approves it too."
+msgstr ""
+
+#: templates/app/corrections.php:74
+msgid "What the system knows about the day"
+msgstr ""
+
+#: templates/app/corrections.php:74
+msgid "read-only"
+msgstr ""
+
+#: templates/app/corrections.php:76
+msgid "Nothing recorded that day"
+msgstr ""
+
+#: templates/app/corrections.php:78
+msgid "Signed out"
+msgstr ""
+
+#: templates/app/corrections.php:78
+msgid "Signed in"
+msgstr ""
+
+#: templates/app/corrections.php:80
+msgid "a correction"
+msgstr ""
+
+#: templates/app/corrections.php:81
+msgid "QR"
+msgstr ""
+
+#: templates/app/corrections.php:82
+msgid "automatic"
+msgstr ""
+
+#. translators: %d: metres
+#: templates/app/corrections.php:84
+#, php-format
+msgid "inside the area (%d m)"
+msgstr ""
+
+#. translators: %d: metres
+#: templates/app/corrections.php:84
+msgid "inside the area"
+msgstr ""
+
+#. translators: %d: metres
+#: templates/app/corrections.php:85
+#, php-format
+msgid "outside the area (%d m)"
+msgstr ""
+
+#. translators: %d: metres
+#: templates/app/corrections.php:85
+msgid "outside the area"
+msgstr ""
+
+#. translators: %d: metres
+#: templates/app/corrections.php:86
+msgid "device check: needs a look"
+msgstr ""
+
+#: templates/app/corrections.php:87
+msgid "device check passed"
+msgstr ""
+
+#: templates/app/corrections.php:88
+msgid "replaced by a correction"
+msgstr ""
+
+#: templates/app/corrections.php:91
+msgid "Presence check: passed"
+msgstr ""
+
+#: templates/app/corrections.php:91
+msgid "Presence check: not answered"
+msgstr ""
+
+#. translators: %s: time
+#: templates/app/corrections.php:91
+#, php-format
+msgid "answered at %s"
+msgstr ""
+
+#. translators: %s: time
+#: templates/app/corrections.php:91
+msgid "kiosk"
+msgstr ""
+
+#. translators: %s: time
+#: templates/app/corrections.php:92
+msgid "and no kiosk or QR event"
+msgstr ""
+
+#: templates/app/corrections.php:94
+msgid "Last device location"
+msgstr ""
+
+#: templates/app/corrections.php:94
+msgid "at the work location"
+msgstr ""
+
+#: templates/app/corrections.php:94
+msgid "away from the work location"
+msgstr ""
+
+#: templates/app/corrections.php:97
+msgid "Not set"
+msgstr ""
+
+#: templates/app/corrections.php:98
+#: templates/app/my-profile.php:95
+msgid "Shift"
+msgstr ""
+
+#: templates/app/corrections.php:99
+msgid "Corrections this month"
+msgstr ""
+
+#. translators: 1: count, 2: limit
+#. translators: %d: break number
+#: templates/app/corrections.php:100
+#: templates/app/poll-card.php:15
+#: templates/app/tasks.php:93
+#: templates/app/time.php:154
+msgid "Open"
+msgstr ""
+
+#. translators: 1: count, 2: limit
+#: templates/app/corrections.php:100
+msgid "None"
+msgstr ""
+
+#: templates/app/corrections.php:107
+msgid "Note to the employee (required to reject)"
+msgstr ""
+
+#: templates/app/corrections.php:118
+msgid "No correction requests"
+msgstr ""
+
+#. translators: %d: days
+#: templates/app/corrections.php:120
+#, php-format
+msgid "If you forget to sign in or out, or a time is wrong, ask for a correction within %d day and your manager reviews it."
+msgid_plural "If you forget to sign in or out, or a time is wrong, ask for a correction within %d days and your manager reviews it."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/corrections.php:122
+msgid "Waiting for a decision"
+msgstr ""
+
+#: templates/app/corrections.php:123
+#: templates/app/overtime.php:106
+#: templates/app/schedule.php:228
+msgid "Decided"
+msgstr ""
+
+#: templates/app/corrections.php:126
+msgid "No corrections waiting"
+msgstr ""
+
+#: templates/app/corrections.php:126
+#: templates/app/leave.php:109
+#: templates/app/leave.php:123
+#: templates/app/notifications.php:51
+#: templates/app/overtime.php:80
+msgid "You're all caught up."
 msgstr ""
 
 #: templates/app/dashboard.php:71
@@ -1916,31 +2948,12 @@ msgstr ""
 msgid "No work scheduled"
 msgstr ""
 
-#. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/dashboard.php:88
-#: templates/app/my-profile.php:153
-#: templates/app/time.php:82
-#: templates/app/time.php:90
-#: templates/app/time.php:102
-#: templates/app/time.php:110
-#: templates/app/time.php:147
-msgid "Sign In"
-msgstr ""
-
 #: templates/app/dashboard.php:88
 #: templates/app/dashboard.php:89
-#: templates/app/time.php:147
 #: templates/app/time.php:148
 #: templates/app/time.php:149
+#: templates/app/time.php:150
 msgid "Not recorded"
-msgstr ""
-
-#: templates/app/dashboard.php:89
-#: templates/app/my-profile.php:153
-#: templates/app/time.php:80
-#: templates/app/time.php:103
-#: templates/app/time.php:149
-msgid "Sign Out"
 msgstr ""
 
 #: templates/app/dashboard.php:90
@@ -2082,7 +3095,7 @@ msgid "No schedule has been set for your upcoming days."
 msgstr ""
 
 #: templates/app/dashboard.php:181
-#: templates/app/time.php:60
+#: templates/app/time.php:61
 msgid "Employee account not linked"
 msgstr ""
 
@@ -2328,17 +3341,6 @@ msgstr ""
 msgid "Add to Home Screen"
 msgstr ""
 
-#: templates/app/leave.php:30
-#: templates/app/overtime.php:90
-#: templates/app/schedule.php:218
-msgid "Reject"
-msgstr ""
-
-#: templates/app/leave.php:33
-#: templates/app/overtime.php:82
-msgid "Level"
-msgstr ""
-
 #. translators: %s: number of days
 #: templates/app/leave.php:36
 #, php-format
@@ -2416,12 +3418,6 @@ msgstr ""
 msgid "Select dates to calculate working days."
 msgstr ""
 
-#: templates/app/leave.php:77
-#: templates/app/leave.php:144
-#: templates/app/overtime.php:127
-msgid "Reason"
-msgstr ""
-
 #: templates/app/leave.php:78
 msgid "Submit Leave Request"
 msgstr ""
@@ -2478,19 +3474,6 @@ msgstr ""
 
 #: templates/app/leave.php:109
 msgid "No Pending Leave Requests"
-msgstr ""
-
-#: templates/app/leave.php:109
-#: templates/app/leave.php:123
-#: templates/app/notifications.php:51
-#: templates/app/overtime.php:80
-msgid "You're all caught up."
-msgstr ""
-
-#: templates/app/leave.php:114
-#: templates/app/leave.php:157
-#: templates/app/overtime.php:90
-msgid "Approve"
 msgstr ""
 
 #: templates/app/leave.php:122
@@ -2630,11 +3613,6 @@ msgid "Company Default"
 msgstr ""
 
 #: templates/app/my-profile.php:59
-#: templates/app/notifications.php:36
-msgid "All"
-msgstr ""
-
-#: templates/app/my-profile.php:59
 msgid "Men"
 msgstr ""
 
@@ -2704,10 +3682,6 @@ msgstr ""
 
 #: templates/app/my-profile.php:92
 msgid "Email"
-msgstr ""
-
-#: templates/app/my-profile.php:95
-msgid "Shift"
 msgstr ""
 
 #: templates/app/my-profile.php:101
@@ -2822,10 +3796,6 @@ msgstr ""
 
 #: templates/app/my-profile.php:169
 msgid "Save Avatar"
-msgstr ""
-
-#: templates/app/my-profile.php:171
-msgid "Photo"
 msgstr ""
 
 #: templates/app/my-profile.php:171
@@ -3000,14 +3970,6 @@ msgstr ""
 msgid "Review overtime requests. Any Manager can approve or reject."
 msgstr ""
 
-#. translators: %d: number of requests waiting
-#: templates/app/overtime.php:78
-#, php-format
-msgid "%d waiting"
-msgid_plural "%d waiting"
-msgstr[0] ""
-msgstr[1] ""
-
 #: templates/app/overtime.php:80
 msgid "No Pending Overtime Approvals"
 msgstr ""
@@ -3026,11 +3988,6 @@ msgstr ""
 
 #: templates/app/overtime.php:102
 msgid "Waiting for your manager"
-msgstr ""
-
-#: templates/app/overtime.php:106
-#: templates/app/schedule.php:228
-msgid "Decided"
 msgstr ""
 
 #: templates/app/overtime.php:118
@@ -3181,10 +4138,10 @@ msgstr ""
 #: templates/app/pay.php:89
 #: templates/app/pay.php:92
 #: templates/app/pay.php:93
-#: templates/app/time.php:123
-#: templates/app/time.php:129
-#: templates/app/time.php:138
-#: templates/app/time.php:153
+#: templates/app/time.php:124
+#: templates/app/time.php:130
+#: templates/app/time.php:139
+#: templates/app/time.php:154
 #, php-format
 msgid "%d min"
 msgstr ""
@@ -3286,15 +4243,8 @@ msgstr ""
 msgid "Try another name or team."
 msgstr ""
 
-#. translators: %d: break number
 #: templates/app/poll-card.php:15
-#: templates/app/tasks.php:93
-#: templates/app/time.php:153
-msgid "Open"
-msgstr ""
-
-#: templates/app/poll-card.php:15
-#: templates/app/time.php:113
+#: templates/app/time.php:114
 msgid "Closed"
 msgstr ""
 
@@ -4075,10 +5025,6 @@ msgstr ""
 msgid "All priorities"
 msgstr ""
 
-#: templates/app/tasks.php:211
-msgid "Filter"
-msgstr ""
-
 #: templates/app/tasks.php:219
 msgid "Open tasks"
 msgstr ""
@@ -4091,10 +5037,6 @@ msgstr ""
 
 #: templates/app/tasks.php:221
 msgid "Done this month"
-msgstr ""
-
-#: templates/app/tasks.php:222
-msgid "On time"
 msgstr ""
 
 #: templates/app/tasks.php:225
@@ -4251,305 +5193,300 @@ msgstr ""
 msgid "System"
 msgstr ""
 
-#: templates/app/time.php:49
+#: templates/app/time.php:50
 msgid "Location permission required"
 msgstr ""
 
-#: templates/app/time.php:52
+#: templates/app/time.php:53
 msgid "Location Services Required"
 msgstr ""
 
-#: templates/app/time.php:53
+#: templates/app/time.php:54
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr ""
 
-#: templates/app/time.php:55
+#: templates/app/time.php:56
 msgid "Allow Location / Try Again"
 msgstr ""
 
-#: templates/app/time.php:60
+#: templates/app/time.php:61
 msgid "Your WordPress account is not linked to an active employee. Please contact your manager."
 msgstr ""
 
-#: templates/app/time.php:61
+#: templates/app/time.php:62
 msgid "Today is not a working day for you"
 msgstr ""
 
 #. translators: %s: today's schedule status
-#: templates/app/time.php:61
+#: templates/app/time.php:62
 #, php-format
 msgid "Your schedule today is %s. Sign In / Sign Out is only available on working days."
 msgstr ""
 
-#: templates/app/time.php:78
+#: templates/app/time.php:79
 msgid "Now"
 msgstr ""
 
-#: templates/app/time.php:88
+#: templates/app/time.php:89
 msgid "You signed out today."
 msgstr ""
 
 #. translators: 1: sign-in time, 2: sign-out time
-#: templates/app/time.php:88
+#: templates/app/time.php:89
 #, php-format
 msgid "Sign In was recorded at %1$s and Sign Out at %2$s."
 msgstr ""
 
-#: templates/app/time.php:90
+#: templates/app/time.php:91
 msgid "You are signed in."
 msgstr ""
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: templates/app/time.php:90
+#: templates/app/time.php:91
 #, php-format
 msgid "%1$s recorded at %2$s."
 msgstr ""
 
-#: templates/app/time.php:92
+#: templates/app/time.php:93
 msgid "Sign In is available now."
 msgstr ""
 
 #. translators: 1: start time, 2: end time, 3: sign-in cutoff time
-#: templates/app/time.php:92
+#: templates/app/time.php:93
 #, php-format
 msgid "Allowed window: %1$s – %2$s, with Sign In cutoff at %3$s."
 msgstr ""
 
-#: templates/app/time.php:95
+#: templates/app/time.php:96
 msgid "Sign In is not available yet."
 msgstr ""
 
 #. translators: %s: start time
-#: templates/app/time.php:95
+#: templates/app/time.php:96
 #, php-format
 msgid "Your working hours start at %s."
 msgstr ""
 
-#: templates/app/time.php:97
+#: templates/app/time.php:98
 msgid "Sign In is no longer available."
 msgstr ""
 
 #. translators: %s: cutoff time
-#: templates/app/time.php:97
+#: templates/app/time.php:98
 #, php-format
 msgid "The Sign In cutoff was %s."
 msgstr ""
 
-#: templates/app/time.php:107
+#: templates/app/time.php:108
 msgid "Before you sign in"
 msgstr ""
 
-#: templates/app/time.php:108
+#: templates/app/time.php:109
 msgid "Location"
 msgstr ""
 
 #. translators: %s: branch
-#: templates/app/time.php:108
+#: templates/app/time.php:109
 #, php-format
 msgid "At %s, planned for today"
 msgstr ""
 
 #. translators: %s: branch
-#: templates/app/time.php:108
+#: templates/app/time.php:109
 #, php-format
 msgid "At %s, your branch"
 msgstr ""
 
 #. translators: %s: branch
-#: templates/app/time.php:108
+#: templates/app/time.php:109
 msgid "Needed for this schedule"
 msgstr ""
 
 #. translators: %s: branch
-#: templates/app/time.php:108
+#: templates/app/time.php:109
 msgid "Not needed today"
 msgstr ""
 
 #. translators: %s: branch
-#: templates/app/time.php:109
+#: templates/app/time.php:110
 msgid "Sign-in window"
 msgstr ""
 
 #. translators: %s: sign-in cutoff time
-#: templates/app/time.php:112
+#: templates/app/time.php:113
 #, php-format
 msgid "Open until %s"
 msgstr ""
 
-#: templates/app/time.php:115
+#: templates/app/time.php:116
 msgid "Face check"
 msgstr ""
 
-#: templates/app/time.php:115
-#: templates/app/time.php:164
-msgid "Optional"
-msgstr ""
-
-#: templates/app/time.php:115
+#: templates/app/time.php:116
 msgid "Camera opens on Sign In"
 msgstr ""
 
-#: templates/app/time.php:115
+#: templates/app/time.php:116
 msgid "Set up your face first"
 msgstr ""
 
-#: templates/app/time.php:122
+#: templates/app/time.php:123
 msgid "BREAK MANAGEMENT"
 msgstr ""
 
-#: templates/app/time.php:122
+#: templates/app/time.php:123
 msgid "You are on break"
 msgstr ""
 
-#: templates/app/time.php:122
+#: templates/app/time.php:123
 msgid "Take a break"
 msgstr ""
 
 #. translators: %s: minutes
-#: templates/app/time.php:123
+#: templates/app/time.php:124
 #, php-format
 msgid "Your break is being tracked. The standard break duration is %s."
 msgstr ""
 
 #. translators: %s: minutes
-#: templates/app/time.php:123
+#: templates/app/time.php:124
 msgid "Each break session is limited to the configured duration. Breaks are informative and do not affect attendance or overtime calculations."
 msgstr ""
 
 #. translators: %s: minutes
-#: templates/app/time.php:124
+#: templates/app/time.php:125
 msgid "remaining"
 msgstr ""
 
-#: templates/app/time.php:128
+#: templates/app/time.php:129
 msgid "ON BREAK"
 msgstr ""
 
-#: templates/app/time.php:128
+#: templates/app/time.php:129
 msgid "Elapsed time"
 msgstr ""
 
-#: templates/app/time.php:129
+#: templates/app/time.php:130
 msgid "Standard duration"
 msgstr ""
 
 #. translators: %d: minutes
-#: templates/app/time.php:129
+#: templates/app/time.php:130
 #, php-format
 msgid "Manager alert at %d min"
 msgstr ""
 
-#: templates/app/time.php:133
+#: templates/app/time.php:134
 msgid "Resume Work"
 msgstr ""
 
-#: templates/app/time.php:138
+#: templates/app/time.php:139
 msgid "Start Break"
 msgstr ""
 
 #. translators: %d: number of break sessions
-#: templates/app/time.php:141
+#: templates/app/time.php:142
 #, php-format
 msgid "You have used all %d break sessions available today."
 msgstr ""
 
-#: templates/app/time.php:146
+#: templates/app/time.php:147
 msgid "Today's Record"
 msgstr ""
 
-#: templates/app/time.php:148
+#: templates/app/time.php:149
 msgid "Attendance Status"
 msgstr ""
 
-#: templates/app/time.php:151
+#: templates/app/time.php:152
 msgid "Break Sessions"
 msgstr ""
 
 #. translators: %d: break number
-#: templates/app/time.php:153
+#: templates/app/time.php:154
 #, php-format
 msgid "Break %d"
 msgstr ""
 
-#: templates/app/time.php:158
+#: templates/app/time.php:160
 msgid "QR Sign In"
 msgstr ""
 
-#: templates/app/time.php:158
+#: templates/app/time.php:160
 msgid "Scan the dynamic QR displayed at your workplace. This is an additional Sign In method; your normal Sign In remains available."
 msgstr ""
 
-#: templates/app/time.php:158
+#: templates/app/time.php:160
 msgid "Rotating QR"
 msgstr ""
 
-#: templates/app/time.php:159
-#: templates/app/time.php:160
+#: templates/app/time.php:161
+#: templates/app/time.php:162
 msgid "Scan Workplace QR"
 msgstr ""
 
-#: templates/app/time.php:160
+#: templates/app/time.php:162
 msgid "Point your camera at the QR displayed at your workplace."
 msgstr ""
 
-#: templates/app/time.php:160
+#: templates/app/time.php:162
 msgid "Starting camera…"
 msgstr ""
 
-#: templates/app/time.php:160
+#: templates/app/time.php:162
 msgid "Sign In with QR"
 msgstr ""
 
-#: templates/app/time.php:164
+#: templates/app/time.php:166
 msgid "If a manager requests a physical presence check, the request will appear here and in your notifications."
 msgstr ""
 
-#: templates/app/time.php:170
+#: templates/app/time.php:172
 msgid "Face Sign In"
 msgstr ""
 
-#: templates/app/time.php:170
+#: templates/app/time.php:172
 msgid "Face verification is required before Sign In."
 msgstr ""
 
-#: templates/app/time.php:170
+#: templates/app/time.php:172
 msgid "Face verification is available but currently optional."
 msgstr ""
 
-#: templates/app/time.php:170
+#: templates/app/time.php:172
 msgid "Face processing runs in this browser."
 msgstr ""
 
-#: templates/app/time.php:171
+#: templates/app/time.php:173
 msgid "Not enrolled"
 msgstr ""
 
-#: templates/app/time.php:173
-#: templates/app/time.php:182
+#: templates/app/time.php:175
+#: templates/app/time.php:184
 msgid "Verify Face"
 msgstr ""
 
-#: templates/app/time.php:173
+#: templates/app/time.php:175
 msgid "Set Up / Verify Face"
 msgstr ""
 
-#: templates/app/time.php:177
+#: templates/app/time.php:179
 msgid "Face Verification"
 msgstr ""
 
-#: templates/app/time.php:177
+#: templates/app/time.php:179
 msgid "Blink once and gently move your head. Face processing stays on this device."
 msgstr ""
 
-#: templates/app/time.php:179
+#: templates/app/time.php:181
 msgid "Loading face model…"
 msgstr ""
 
-#: templates/app/time.php:181
+#: templates/app/time.php:183
 msgid "Enroll Face"
 msgstr ""
 
-#: templates/app/time.php:183
+#: templates/app/time.php:185
 msgid "Request Reset"
 msgstr ""
 

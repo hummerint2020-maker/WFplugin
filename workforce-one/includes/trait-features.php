@@ -22,6 +22,7 @@ trait EWS_Features_Trait {
             'presence_minutes'=>\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes')),
             'on'=>[
                 'tasks'=>$this->tasks_enabled(),
+                'corrections'=>$this->corrections_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
                 'presence_verification'=>(bool)(int)$this->option('ews_presence_verification'),
                 'breaks'=>$this->break_enabled(),
@@ -76,6 +77,8 @@ trait EWS_Features_Trait {
         update_option('ews_recognition_weekly_limit_mode',$recognition['mode'],false);
         update_option('ews_recognition_weekly_limit',$recognition['limit'],false);
         update_option('ews_feature_tasks',$flag('tasks_enabled'),false);
+        // A form without the field (an older page) keeps the saved state.
+        if(isset($post['corrections_present']))update_option('ews_feature_corrections',$flag('corrections_enabled')?1:0,false);
         update_option('ews_feature_overtime',$flag('overtime_enabled'),false);
         update_option('ews_feature_face_signin',$flag('face_signin_enabled'),false);
         update_option('ews_face_signin_settings',FeatureSettings::face($post['face_signin_settings']??[]),false);
@@ -97,7 +100,7 @@ trait EWS_Features_Trait {
 
         $state=function($on){return $on?'enabled':'disabled';};
         $this->audit('feature_update','settings',0,implode(';',[
-            'tasks='.$state($flag('tasks_enabled')),'overtime_requests='.$state($flag('overtime_enabled')),
+            'tasks='.$state($flag('tasks_enabled')),'corrections='.$state($this->corrections_enabled()),'overtime_requests='.$state($flag('overtime_enabled')),
             'face_signin='.$state($flag('face_signin_enabled')),'breaks='.$state($flag('break_enabled')),
             'breaks_per_day='.$breaks['per_day'],'break_duration='.$breaks['duration'],'break_escalation='.$breaks['escalation'],
             'early_leave='.$early['max'].'/'.$early['monthly'],'presence_qr='.$state($flag('presence_qr_signin')),

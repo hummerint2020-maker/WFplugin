@@ -35,6 +35,12 @@ final class Routes
             ['path' => '/me', 'methods' => 'GET', 'handler' => 'api_me', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/me/devices', 'methods' => 'GET', 'handler' => 'api_me_devices', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/me/devices/(?P<id>[a-f0-9]{32})', 'methods' => 'DELETE', 'handler' => 'api_me_device_delete', 'access' => 'token', 'kind' => 'native'],
+            // Attendance corrections (3.31.74): the same rules as the Web (EWS_Corrections_Trait).
+            ['path' => '/corrections/days', 'methods' => 'GET', 'handler' => 'api_corrections_days', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/corrections', 'methods' => 'GET', 'handler' => 'api_corrections_mine', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/corrections', 'methods' => 'POST', 'handler' => 'api_corrections_create', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/corrections/pending', 'methods' => 'GET', 'handler' => 'api_corrections_pending', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/corrections/(?P<id>\\d+)/decision', 'methods' => 'POST', 'handler' => 'api_corrections_decide', 'access' => 'token', 'kind' => 'native'],
         ];
     }
 

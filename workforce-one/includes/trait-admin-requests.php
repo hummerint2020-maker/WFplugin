@@ -59,6 +59,9 @@ trait EWS_Admin_Requests_Trait {
                 $add('legacy_vacation',$r->id,$r->employee_id,'Legacy Vacation',$r->requested_at??'',Hub::details($r->start_date.' → '.$r->end_date,(float)$r->requested_days.' day(s)',(string)($r->reason??'')));
             }
         }
+        foreach($this->cx_hub_rows() as $r){
+            $add('correction',$r->id,$r->employee_id,'Attendance Correction',$r->requested_at,Hub::details($r->work_date,$this->cx_type_label((string)$r->type),$this->cx_change_text($r,'en'),(string)$r->reason,$r->status==='pending_hr'?'Second level (HR)':''),$this->approval_find_request('attendance_correction','attendance_correction',(int)$r->id));
+        }
         foreach($this->face_reset_requests() as $employee_id=>$r){
             if(!is_array($r)||($r['status']??'')!=='pending')continue;
             $add('face_reset',$employee_id,$employee_id,'Face Reset',$r['requested_at']??'',$r['current_note']??'Reset requested',$this->approval_find_request('face_reset','face_reset_request',(int)$employee_id));
@@ -93,6 +96,7 @@ trait EWS_Admin_Requests_Trait {
             case 'early_leave':        $outcome=$this->early_leave_admin_decide($id,$decision);break;
             case 'shift_swap':         $outcome=$this->swap_admin_decide($id,$decision)===true?Hub::outcome($decision):Hub::ERROR;break;
             case 'legacy_vacation':    $outcome=$this->legacy_vacation_admin_decide($id,$decision);break;
+            case 'correction':         $outcome=$this->cx_hub_decide($id,$decision);break;
             default:                   $outcome=$this->face_reset_decide($id,$decision,true);
         }
         wp_safe_redirect(add_query_arg('request_notice',$outcome,admin_url('admin.php?page=ews31-requests')));

@@ -15,6 +15,7 @@ final class Navigation
         'time' => ['label' => 'Sign In / Out', 'mobile_label' => 'Sign In / Out', 'icon' => '🕘', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 30, 'mobile_order' => 30],
         'vacation' => ['label' => 'Leave', 'mobile_label' => 'Leave', 'icon' => '📝', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 40, 'mobile_order' => 40],
         'overtime' => ['label' => 'Overtime', 'mobile_label' => 'Overtime', 'icon' => '⏱️', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 50, 'mobile_order' => 50],
+        'corrections' => ['label' => 'Corrections', 'mobile_label' => 'Corrections', 'icon' => '🕘', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 55, 'mobile_order' => 52],
         'tasks' => ['label' => 'Tasks', 'mobile_label' => 'Tasks', 'icon' => '✅', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 60, 'mobile_order' => 60],
         'polls' => ['label' => 'Polls', 'mobile_label' => 'Polls', 'icon' => '🗳️', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 65, 'mobile_order' => 65],
         'attendance' => ['label' => 'Attendance', 'mobile_label' => 'Attendance', 'icon' => '📝', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 70, 'mobile_order' => 50],

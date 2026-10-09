@@ -163,7 +163,7 @@ trait EWS_Reports_Trait {
         $active=[];foreach((array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1 AND (attendance_enabled IS NULL OR attendance_enabled=1)") as $id)$active[(int)$id]=true;
         $signed=[];
         // The branch they signed in at (3.31.72), else where they were planned.
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,MAX(location_id) location_id FROM {$this->time_logs} WHERE event_type IN ('sign_in','late_sign_in') AND work_date BETWEEN %s AND %s GROUP BY employee_id,work_date",$s,$e)) as $r)$signed[(int)$r->employee_id][$r->work_date]=(int)$r->location_id;
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,MAX(location_id) location_id FROM {$this->time_logs} WHERE event_type IN ('sign_in','late_sign_in') AND work_date BETWEEN %s AND %s".$this->tl_live()." GROUP BY employee_id,work_date",$s,$e)) as $r)$signed[(int)$r->employee_id][$r->work_date]=(int)$r->location_id;
         $valid=array_fill_keys(array_column($locations,'id'),true);$dateset=array_fill_keys($dates,true);
         $seated=[];
         $by_schedule=$this->branch_settings()['mode']==='schedule';
@@ -281,7 +281,7 @@ trait EWS_Reports_Trait {
         $ph=implode(',',array_fill(0,count($ids),'%d'));
         $schedule=[];$first=[];$last=[];$breaks=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s",array_merge($ids,[$s,$e]))) as $r)$schedule[(int)$r->employee_id][$r->work_date]=trim((string)$r->status);
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at,branch_flag FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s ORDER BY event_at ASC",array_merge($ids,[$s,$e]))) as $r){
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at,branch_flag,correction_id FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s".$this->tl_live()." ORDER BY event_at ASC",array_merge($ids,[$s,$e]))) as $r){
             $k=(int)$r->employee_id;
             if($r->event_type==='sign_out')$last[$k][$r->work_date]=$r;
             elseif(in_array($r->event_type,['sign_in','late_sign_in'],true) && !isset($first[$k][$r->work_date]))$first[$k][$r->work_date]=$r;

@@ -169,7 +169,7 @@ trait EWS_Achievements_Trait {
         $end=$cursor->format('Y-m-d');
         $schedule_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date BETWEEN %s AND %s",$employee_id,$start,$end));
         $schedules=[]; foreach((array)$schedule_rows as $row)$schedules[(string)$row->work_date]=$row;
-        $log_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY work_date ASC,event_at ASC",$employee_id,$start,$end));
+        $log_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY work_date ASC,event_at ASC",$employee_id,$start,$end));
         $logs=[]; foreach((array)$log_rows as $row)$logs[(string)$row->work_date][]=$row;
         return $this->calc_streak_for_employee_from_data($employee_id,$cursor,$schedules,$logs,$this->company_leave_dates($start,$end),$working_days,$calendar_days);
     }
@@ -315,7 +315,7 @@ trait EWS_Achievements_Trait {
             foreach((array)$schedule_rows as $r)$schedules[(int)$r->employee_id][$r->work_date]=(string)$r->status;
 
             $logs=[];
-            $log_rows=$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN (".implode(',',array_map('absint',$ids)).") AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY event_at ASC",$start,$today));
+            $log_rows=$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN (".implode(',',array_map('absint',$ids)).") AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY event_at ASC",$start,$today));
             foreach((array)$log_rows as $r){
                 $eid=(int)$r->employee_id;$date=(string)$r->work_date;
                 if(!isset($logs[$eid]))$logs[$eid]=[];

@@ -1,5 +1,45 @@
 # Changelog
 
+## 3.31.74
+Attendance corrections (owner-approved mockups, docs/mockups/attendance-corrections/): an employee who
+forgot to sign in or out, or whose time is wrong, asks for a correction; the manager decides with the
+day's evidence; HR can correct directly. Recorded events are never changed or deleted. Off by default:
+Feature Configuration → Attendance Corrections. Database version 3.31.74 (ews_attendance_corrections;
+ews_time_logs.source, corrects_id, correction_id).
+
+### Added
+- **Sign In / Out → My recent days**: the days within the deadline; a day without a Sign Out (or Sign
+  In) has the yellow "Request correction" button, the others "Correct". The request sheet: the day's
+  record, the kind (forgot Sign Out, forgot Sign In, wrong time, whole day missing), the correct
+  time(s), the reason and a photo (off / optional / required per kind).
+- **Corrections page** (app): my requests (waiting / decided, the monthly count) and, for managers and
+  HR, the requests to decide with **what the system knows about the day** (the day's events with
+  their location and device checks, presence checks, the last device location, the schedule and
+  shift, this month's count, the photo); approve, or reject with a note (required).
+- **Approval**: workflow `attendance_correction` (No approval / Level 1 / Level 1 + 2) on Approval
+  Workflows; without it, managers with Manage Time decide for their department. A second level (HR,
+  the new permission "Manage Attendance Corrections") for a Sign In moved earlier and, if set, above
+  the monthly limit. Never one's own request. The Requests Hub lists and decides them.
+- **wp-admin → Attendance Corrections**: requests (status, kind, department, employee, month),
+  a direct correction by HR (reason required, no deadline), settings (kinds, photo, deadline, monthly
+  limit and what happens above it, earlier Sign In to HR, end-of-day reminder), and a report by
+  employee and department with "frequent" flagged, as CSV.
+- **End-of-day reminder** (19:00 by default): a notification to anyone still without a Sign Out;
+  it opens the form on today with "Forgot Sign Out".
+- **API**: GET /corrections/days, GET and POST /corrections, GET /corrections/pending,
+  POST /corrections/{id}/decision (token, the same rules as the Web).
+
+### Changed
+- Every reader of ews_time_logs skips an event a correction replaced (reports, payroll, insights,
+  dashboard, My Profile, employee profile, achievements, overtime, auto attendance, Sign In).
+- The Sign In / Out report and its CSV show where each event came from (App, QR, Automatic, Admin,
+  Correction) and mark a replaced original "(kept)".
+- Payroll: a correction in a closed month never reopens it; the difference goes to the next open
+  month as an adjustment with its reason. Days to review (no Sign Out) clear once corrected.
+
+### Tests
+- tests/e2e_corrections.py (75 checks, CI) and tests/unit/CorrectionRulesTest.php.
+
 ## 3.31.73
 Database upgrade fix (found by the load test): many tables were written on one line, which WordPress
 dbDelta() cannot read, so every upgrade sent broken ALTERs, logged database errors and never added

@@ -191,7 +191,7 @@ final class AttendanceService
         $id = $c->insertTimeLog(['employee_id' => $eid, 'user_id' => $c->currentUserId(), 'work_date' => $day, 'event_type' => $type, 'event_at' => $now,
             'scheduled_status' => $sch->status, 'ip_address' => $c->clientIp(), 'latitude' => $lat, 'longitude' => $lng, 'accuracy' => $cmd->accuracy,
             'location_status' => $locationStatus, 'distance_meters' => $distance, 'location_timestamp' => $cmd->locationTimestampMs,
-            'integrity_status' => $integrityStatus, 'integrity_reason' => $integrityReason, 'created_at' => $now]
+            'integrity_status' => $integrityStatus, 'integrity_reason' => $integrityReason, 'created_at' => $now, 'source' => $cmd->qrKiosk ? 'qr' : 'app']
             + ($branches ? ['location_id' => $assigned ? (int) $assigned->id : null, 'branch_flag' => $branchFlag !== '' ? $branchFlag : null] : []));
         if (!$id) {
             $detail = $c->insertError() ?: 'Database insert failed.';

@@ -34,6 +34,7 @@ trait EWS_Notifications_Trait {
             'achievement'=>['label'=>'Achievements','description'=>'Employee achievement and recognition notifications.','push_default'=>1],
             'recognition'=>['label'=>'Recognition','description'=>'Kudos and employee recognition notifications.','push_default'=>1],
             'payroll'=>['label'=>'Payroll','description'=>'A payslip is ready in My Pay.','push_default'=>1],
+            'correction'=>['label'=>'Attendance Corrections','description'=>'Correction requests, decisions and the end-of-day reminder to sign out.','push_default'=>1],
         ];
     }
 

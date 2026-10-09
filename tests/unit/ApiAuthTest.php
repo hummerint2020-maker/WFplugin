@@ -124,7 +124,10 @@ final class ApiAuthTest extends TestCase
         $this->assertSame([
             'GET /meta' => 'public', 'POST /auth/login' => 'credentials', 'POST /auth/refresh' => 'credentials', 'POST /auth/logout' => 'token',
             'GET /me' => 'token', 'GET /me/devices' => 'token', 'DELETE /me/devices/(?P<id>[a-f0-9]{32})' => 'token',
-        ], $native, 'exactly the Phase 0B endpoints; no attendance or other data endpoints');
+            // 3.31.74: attendance corrections (docs/tasks/attendance-corrections.md), token only.
+            'GET /corrections/days' => 'token', 'GET /corrections' => 'token', 'POST /corrections' => 'token', 'GET /corrections/pending' => 'token',
+            'POST /corrections/(?P<id>\\d+)/decision' => 'token',
+        ], $native, 'exactly the Phase 0B endpoints and the attendance correction ones, all token-authenticated');
         $web = array_values(array_filter(Routes::table(), function ($r) { return $r['kind'] === 'web'; }));
         $this->assertSame(['logged_in'], array_values(array_unique(array_column($web, 'access'))), 'the Web Face routes keep WordPress login');
     }

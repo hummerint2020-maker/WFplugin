@@ -32,7 +32,7 @@ trait EWS_Employee_Profile_Trait {
         // Today: the first Sign In is judged against this employee's own shift.
         $today=current_time('Y-m-d');
         $schedule=$this->schedule_for_employee_date($employee_id,$today);
-        $events=(array)$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY event_at ASC",$employee_id,$today));
+        $events=(array)$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY event_at ASC",$employee_id,$today));
         $in=null;$out='';
         foreach($events as $ev){
             if(!$in && ($ev->event_type==='sign_in'||$ev->event_type==='late_sign_in'))$in=$ev;

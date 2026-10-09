@@ -40,7 +40,7 @@ trait EWS_Admin_Dashboard_Trait {
             if($expected){
                 $ids=array_map(function($s){return (int)$s->id;},$expected);
                 $ph=implode(',',array_fill(0,count($ids),'%d'));
-                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,event_type,event_at FROM {$this->time_logs} WHERE work_date=%s AND employee_id IN ($ph) AND event_type IN ('sign_in','late_sign_in') ORDER BY event_at ASC,id ASC",array_merge([$today],$ids))) as $ev){
+                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,event_type,event_at FROM {$this->time_logs} WHERE work_date=%s AND employee_id IN ($ph) AND event_type IN ('sign_in','late_sign_in')".$this->tl_live()." ORDER BY event_at ASC,id ASC",array_merge([$today],$ids))) as $ev){
                     if(!isset($first[(int)$ev->employee_id]))$first[(int)$ev->employee_id]=$ev;
                 }
             }

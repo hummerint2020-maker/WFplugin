@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 final class Hub
 {
     /** Request types the hub can decide; the value is the row title prefix. */
-    public const TYPES = ['leave', 'leave_cancellation', 'overtime', 'early_leave', 'shift_swap', 'face_reset', 'legacy_vacation'];
+    public const TYPES = ['leave', 'leave_cancellation', 'overtime', 'early_leave', 'shift_swap', 'face_reset', 'legacy_vacation', 'correction'];
 
     /** Outcomes of a decision; also the ?request_notice= / ?face_reset_notice= values. */
     public const APPROVED = 'approved';

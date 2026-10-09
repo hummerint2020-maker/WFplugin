@@ -15,7 +15,7 @@ trait EWS_My_Profile_Trait {
     private function my_profile_recent($employee_id,$today){
         global $wpdb;
         $days=[];
-        $rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY work_date DESC,event_at ASC",(int)$employee_id,date('Y-m-d',strtotime($today.' -6 days')),$today));
+        $rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s".$this->tl_live()." ORDER BY work_date DESC,event_at ASC",(int)$employee_id,date('Y-m-d',strtotime($today.' -6 days')),$today));
         foreach((array)$rows as $r){
             $day=&$days[$r->work_date];
             if(!isset($day))$day=['in'=>null,'out'=>null];

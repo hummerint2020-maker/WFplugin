@@ -19,7 +19,7 @@ trait EWS_Attendance_Insights_Trait {
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s",array_merge($ids,[$start,$end]))) as $r){
             $schedule[(int)$r->employee_id][$r->work_date]=trim((string)$r->status);
         }
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s ORDER BY event_at ASC",array_merge($ids,[$start,$end]))) as $r){
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s".$this->tl_live()." ORDER BY event_at ASC",array_merge($ids,[$start,$end]))) as $r){
             // Keep the first Sign In and the last Sign Out of each day.
             $slot=&$events[(int)$r->employee_id][$r->work_date];
             if($r->event_type==='sign_out')$slot['sign_out']=$r;

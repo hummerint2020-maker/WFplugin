@@ -15,6 +15,9 @@ final class Icons
         'clock' => '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>',
         'leave' => '<path d="M12 3a8 8 0 0 0-8 8h16a8 8 0 0 0-8-8z"/><path d="M12 11v8a2 2 0 0 1-4 0"/>',
         'overtime' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        'history' => '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+        'camera' => '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.2"/>',
+        'shield' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
         'tasks' => '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
         'polls' => '<path d="M5 20V10M12 20V4M19 20v-7"/>',
         'attendance' => '<path d="M9 4h6v3H9z"/><path d="M9 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-3"/><path d="M9 14l2 2 4-4"/>',
@@ -57,7 +60,7 @@ final class Icons
     private const VIEWS = [
         'dashboard' => 'home', 'schedule' => 'calendar', 'time' => 'clock', 'vacation' => 'leave', 'overtime' => 'overtime',
         'tasks' => 'tasks', 'polls' => 'polls', 'attendance' => 'attendance', 'people' => 'people', 'reports' => 'reports',
-        'pay' => 'pay', 'attendance-insights' => 'insights', 'profile' => 'user', 'notifications' => 'bell',
+        'pay' => 'pay', 'attendance-insights' => 'insights', 'profile' => 'user', 'notifications' => 'bell', 'corrections' => 'history',
     ];
 
     public static function svg(string $name, int $size = 22, float $stroke = 1.8): string

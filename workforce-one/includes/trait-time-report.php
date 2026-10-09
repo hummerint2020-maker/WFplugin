@@ -35,7 +35,7 @@ trait EWS_Time_Report_Trait {
         if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);}
         $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where}");
         $pages=max(1,(int)ceil($total/$per));$paged=min(max(1,absint($_GET['paged']??1)),$pages);
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where} ORDER BY l.work_date DESC,l.event_at DESC,l.id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
+        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where} ORDER BY l.work_date DESC,l.event_at DESC,l.id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
         $edit_id=absint($_GET['edit_time_id']??0);
         $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE id=%d",$edit_id)):null;
         $integrity_labels=['verified'=>'Verified','unreliable'=>'Unreliable','suspicious'=>'Suspicious','not_evaluated'=>'Not evaluated'];
@@ -58,6 +58,8 @@ trait EWS_Time_Report_Trait {
                 'accuracy'=>$r->accuracy!==null?round((float)$r->accuracy,1).' m':'—',
                 'integrity'=>$integrity_labels[$integrity]??ucfirst(str_replace('_',' ',$integrity)),'integrity_key'=>$integrity,
                 'integrity_reason'=>$r->integrity_reason?ucwords(str_replace('_',' ',$r->integrity_reason)):'',
+                // 3.31.74: where the event came from; a correction shows next to the original, which stays.
+                'source'=>$this->time_source_label((string)($r->source??'')),'correction_id'=>(int)($r->correction_id??0),'replaced_by'=>(int)($r->replaced_by??0),
             ];
         }
         $error=sanitize_key($_GET['time_error']??'');
@@ -99,7 +101,7 @@ trait EWS_Time_Report_Trait {
         $emp=$employee_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d".($id?'':' AND active=1'),$employee_id)):null;
         $facts=['type'=>$type,'date_valid'=>$this->valid_date($work_date),'work_date'=>$work_date,'event_at'=>$event_at,'employee_found'=>(bool)$emp];
         if(!ManualRecordRules::check($facts)){
-            $others=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND id<>%d AND event_type IN ('sign_in','late_sign_in','sign_out')",$employee_id,$work_date,$id));
+            $others=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND id<>%d AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()."",$employee_id,$work_date,$id));
             $facts['others']=array_map(function($o){return ['type'=>$o->event_type,'at'=>$o->event_at];},(array)$others);
         }
         if($error=ManualRecordRules::check($facts))$this->time_report_redirect($back+['time_error'=>$error]);
@@ -116,6 +118,7 @@ trait EWS_Time_Report_Trait {
             $action='time_manual_edit';$detail='Admin edited '.$label.' for '.$emp->name.' on '.$work_date;
         }else{
             $data['user_id']=$emp->wp_user_id?(int)$emp->wp_user_id:get_current_user_id();
+            $data['source']='admin';
             $ok=$wpdb->insert($this->time_logs,$data);$id=(int)$wpdb->insert_id;
             $action='time_manual_add';$detail='Admin added '.$label.' for '.$emp->name.' on '.$work_date;
         }
@@ -155,7 +158,7 @@ trait EWS_Time_Report_Trait {
         if(!$this->valid_date($start)||!$this->valid_date($end)||$end<$start)wp_die('Invalid date range.');
         global $wpdb;
         $rows=$wpdb->get_results($wpdb->prepare(
-            "SELECT l.*,e.name,e.domain_name FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
+            "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
             $start,$end
         ));
         nocache_headers();
@@ -163,7 +166,7 @@ trait EWS_Time_Report_Trait {
         header('Content-Disposition:attachment; filename=sign_in_out_'.$start.'_to_'.$end.'.csv');
         $f=fopen('php://output','w');
         fprintf($f,"\xEF\xBB\xBF");
-        fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason']);
+        fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason','Source','Correction','Replaced by correction']);
         $radius=[];
         $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},(array)$rows));
         foreach((array)$rows as $r){
@@ -179,9 +182,16 @@ trait EWS_Time_Report_Trait {
                 $radius[$eid],$r->location_status?:'Not available',
                 $r->accuracy!==null?round((float)$r->accuracy,1).' m':'',
                 $r->integrity_status?:'not_evaluated',$r->integrity_reason?:'',
+                $this->time_source_label((string)($r->source??'')),(int)($r->correction_id??0)?'#'.(int)$r->correction_id:'',(int)($r->replaced_by??0)?'#'.(int)$r->replaced_by:'',
             ]));
         }
         fclose($f);
         exit;
+    }
+
+    /** "App", "QR", "Correction"… for the Source column (3.31.74; older rows have none and came from the app). */
+    private function time_source_label($source){
+        $l=['app'=>'App','qr'=>'QR','kiosk'=>'Kiosk','auto'=>'Automatic','import'=>'Import','correction'=>'Correction','admin'=>'Admin'];
+        return $l[$source]??($source===''?'App':ucfirst($source));
     }
 }

@@ -321,7 +321,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.73'; }
+        private function ews_schema_target(){ return '3.31.74'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -374,6 +374,7 @@ private function ensure_break_schema(){
             $this->ews_v321_ensure_locations_table();
             $this->ews_v321_ensure_employee_map();
             $this->ensure_branches_schema();
+            $this->ensure_corrections_schema();
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);
             if(get_option('ews_presence_qr_signin',null)===null)update_option('ews_presence_qr_signin',false,false);
             if(get_option('ews_presence_verification',null)===null)update_option('ews_presence_verification',false,false);

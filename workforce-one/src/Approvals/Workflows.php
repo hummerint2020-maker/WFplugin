@@ -23,6 +23,7 @@ final class Workflows
         'vacation' => ['Vacation', ['NONE', 'LEVEL_1', 'LEVEL_2']],
         'overtime' => ['Overtime', ['NONE', 'LEVEL_1', 'LEVEL_2']],
         'face_reset' => ['Face Reset', ['NONE', 'LEVEL_1', 'LEVEL_2', 'SEQUENTIAL']],
+        'attendance_correction' => ['Attendance Correction', ['NONE', 'LEVEL_1', 'LEVEL_2']],
     ];
 
     /** What "No approval" does in each module (they differ). */
@@ -30,6 +31,7 @@ final class Workflows
         'vacation' => 'No approval chain: managers decide in the app or on the Requests page.',
         'overtime' => 'Requests are approved automatically.',
         'face_reset' => 'Requests are approved automatically.',
+        'attendance_correction' => 'No manager level: requests are approved at once, or go straight to HR when they need the second level (a Sign In moved earlier, above the monthly limit). Without an active workflow, managers with Manage Time decide.',
     ];
 
     /** Workflows seeded in the database that no module uses yet. */

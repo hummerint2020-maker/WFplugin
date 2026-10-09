@@ -30,6 +30,7 @@
  * @var string|null $signed_in_at        Sign In time (local, MySQL format) or null
  * @var string      $picture             photo / avatar URL, '' = initials
  * @var string      $initials
+ * @var string      $corrections_html    My recent days + the correction sheet (3.31.74), '' when corrections are off
  *
  * Templates only display prepared values; they do not call back into the plugin.
  */
@@ -153,6 +154,7 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
                     <div class="ews-time-row ews-break-history-row is-done"><span><?php echo esc_html(sprintf(/* translators: %d: break number */__('Break %d','workforce-one'),(int)$bs->id)); ?> · <?php echo esc_html($bs->status); ?></span><strong><?php echo esc_html(date_i18n('h:i A',strtotime($bs->start_at))); ?><?php echo $bs->end_at?' – '.esc_html(date_i18n('h:i A',strtotime($bs->end_at))):' · '.esc_html__('Open','workforce-one'); ?><?php if($bs->end_at!==null): ?> · <?php echo esc_html(sprintf(__('%d min','workforce-one'),(int)$bs->actual_minutes)); ?><?php endif; ?></strong></div>
                 <?php endforeach; ?>
             <?php endif; ?></div><?php endif; ?></div>
+            <?php echo $corrections_html; // phpcs:ignore WordPress.Security.EscapeOutput -- templates/app/correction-days.php and correction-sheet.php escape ?>
             <?php if($working && $qr_enabled && !isset($ev['sign_in']) && !isset($ev['late_sign_in']) && $sign_in_open): ?>
             <div class="ews-face-lab wfo-panel" id="wfo-qr-signin-card">
               <div class="ews-face-lab-head"><span class="wfo-panel-icon"><?php echo Icons::svg('attendance', 22); ?></span><div><h3><?php esc_html_e('QR Sign In','workforce-one'); ?></h3><p><?php esc_html_e('Scan the dynamic QR displayed at your workplace. This is an additional Sign In method; your normal Sign In remains available.','workforce-one'); ?></p></div><span class="wfo-panel-tag"><?php esc_html_e('Rotating QR','workforce-one'); ?></span></div>

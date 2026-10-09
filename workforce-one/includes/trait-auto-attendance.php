@@ -78,7 +78,7 @@ trait EWS_Auto_Attendance_Trait {
         // One indexed attendance lookup is enough for both duplicate protection
         // and Sign Out eligibility.
         $events=[];
-        foreach($wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s ORDER BY event_at ASC",$employee_id,$date)) as $r)$events[$r->event_type]=$r;
+        foreach($wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s".$this->tl_live()." ORDER BY event_at ASC",$employee_id,$date)) as $r)$events[$r->event_type]=$r;
         if($type==='sign_in' && (isset($events['sign_in'])||isset($events['late_sign_in']))) return ['ok'=>false,'reason'=>'already_signed_in'];
         if($type==='sign_out'){
             if(!isset($events['sign_in'])&&!isset($events['late_sign_in'])) return ['ok'=>false,'reason'=>'no_sign_in'];
@@ -107,7 +107,8 @@ trait EWS_Auto_Attendance_Trait {
             'location_status'=>'auto',
             'distance_meters'=>null,
             'created_at'=>$now,
-        ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
+            'source'=>'auto',
+        ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
         if($ok===false){$this->audit('auto_'.$type.'_failed','time_log',0,$emp->name.' / Rule #'.$rule_id.' / '.$wpdb->last_error);return ['ok'=>false,'reason'=>'db_error'];}
         $this->audit('auto_'.$type,'time_log',(int)$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$event_at.' / source=Auto / rule='.$rule_id);
         return ['ok'=>true,'id'=>(int)$wpdb->insert_id];
@@ -208,7 +209,7 @@ trait EWS_Auto_Attendance_Trait {
         $rows=$wpdb->get_results($wpdb->prepare("SELECT s.employee_id, MAX(s.id) AS sign_in_id
             FROM {$this->time_logs} s
             WHERE s.work_date=%s
-              AND s.event_type IN ('sign_in','late_sign_in')
+              AND s.event_type IN ('sign_in','late_sign_in')".$this->tl_live('s.id')."
               AND NOT EXISTS (
                   SELECT 1 FROM {$this->time_logs} o
                   WHERE o.employee_id=s.employee_id AND o.work_date=s.work_date AND o.event_type='sign_out'
@@ -235,7 +236,8 @@ trait EWS_Auto_Attendance_Trait {
                 'location_status'=>'auto',
                 'distance_meters'=>null,
                 'created_at'=>$now,
-            ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
+                'source'=>'auto',
+            ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
             if($ok===false){$failed++;continue;}
             $signed_out++;
             $emp=$wpdb->get_row($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d LIMIT 1",(int)$sign_in->employee_id));

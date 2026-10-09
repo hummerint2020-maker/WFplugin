@@ -2,7 +2,7 @@
 /**
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
- * @var array<string,bool> $on                 feature switches (tasks, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, confirm_global)
+ * @var array<string,bool> $on                 feature switches (tasks, corrections, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, confirm_global)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
  * @var array<string,int|float> $face           face tuning values
@@ -34,10 +34,16 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <form method="post" action="<?php echo esc_url($post_url); ?>">
 <?php wp_nonce_field('ews_features_save'); ?>
 <input type="hidden" name="action" value="ews31_features_save">
+<input type="hidden" name="corrections_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
     <?php $switch('tasks_enabled', $on['tasks']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-corrections"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title">Attendance Corrections</div><div class="wfo-feature-desc">Employees ask to correct a forgotten Sign In / Sign Out or a wrong time; the manager decides with the day's evidence; HR can correct directly. Recorded events are never changed. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-corrections&tab=settings')); ?>">Settings</a></div></div>
+    <?php $switch('corrections_enabled', $on['corrections']); ?>
 </div></div>
 
 <div class="wfo-feature-section">

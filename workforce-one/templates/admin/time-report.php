@@ -71,7 +71,7 @@ $time_pager = static function () use ($paged, $pages, $total, $start, $end, $sea
 $time_pager();
 $reset_nonce = wp_create_nonce('ews31_time_reset');
 ?>
-<table class="widefat striped"><thead><tr><th>Date</th><th>Employee</th><th>Domain</th><th>Scheduled Status</th><th>Event</th><th>Attendance Status</th><th>Time</th><th>Location</th><th>Distance</th><th>Radius</th><th>Result</th><th>Accuracy</th><th>Integrity</th><th>Admin Action</th></tr></thead><tbody>
+<table class="widefat striped"><thead><tr><th>Date</th><th>Employee</th><th>Domain</th><th>Scheduled Status</th><th>Event</th><th>Attendance Status</th><th>Time</th><th>Location</th><th>Distance</th><th>Radius</th><th>Result</th><th>Accuracy</th><th>Integrity</th><th>Source</th><th>Admin Action</th></tr></thead><tbody>
 <?php foreach ($records as $r): ?>
     <tr>
         <td><?php echo esc_html($r['work_date']); ?></td><td><?php echo esc_html($r['name']); ?></td><td><?php echo esc_html($r['domain']); ?></td>
@@ -79,13 +79,14 @@ $reset_nonce = wp_create_nonce('ews31_time_reset');
         <td><?php echo esc_html($r['time']); ?></td><td><?php echo esc_html($r['location']); ?></td><td><?php echo esc_html($r['distance']); ?></td><td><?php echo esc_html($r['radius']); ?></td>
         <td><?php echo esc_html($r['result']); ?></td><td><?php echo esc_html($r['accuracy']); ?></td>
         <td><span style="<?php echo esc_attr($integrity_style[$r['integrity_key']] ?? ''); ?>"><?php echo esc_html($r['integrity']); ?></span><?php if ($r['integrity_reason']): ?><br><small><?php echo esc_html($r['integrity_reason']); ?></small><?php endif; ?></td>
+        <td><?php echo esc_html($r['source']); ?><?php if ($r['correction_id']): ?><br><small>#<?php echo (int) $r['correction_id']; ?></small><?php endif; ?><?php if ($r['replaced_by']): ?><br><small style="color:#b32d2e"><?php echo esc_html('Replaced by correction #' . $r['replaced_by'] . ' (kept)'); ?></small><?php endif; ?></td>
         <td>
             <a class="button button-small" href="<?php echo esc_url(add_query_arg('edit_time_id', $r['id'], $range_url)); ?>">Edit</a>
             <form method="post" action="<?php echo esc_url($post_url); ?>" data-ews-confirm-key="attendance_reset" style="display:inline"><input type="hidden" name="_wpnonce" value="<?php echo esc_attr($reset_nonce); ?>"><input type="hidden" name="action" value="ews31_time_reset"><input type="hidden" name="employee_id" value="<?php echo (int) $r['employee_id']; ?>"><input type="hidden" name="work_date" value="<?php echo esc_attr($r['work_date']); ?>"><button class="button button-small">Reset Day</button></form>
         </td>
     </tr>
 <?php endforeach; ?>
-<?php if (!$records): ?><tr><td colspan="14"><?php echo $search !== '' ? 'No record matches this search.' : 'No records in this period.'; ?></td></tr><?php endif; ?>
+<?php if (!$records): ?><tr><td colspan="15"><?php echo $search !== '' ? 'No record matches this search.' : 'No records in this period.'; ?></td></tr><?php endif; ?>
 </tbody></table>
 <?php $time_pager(); ?>
 <p><em>Reset Day removes all time events for the selected employee and date, allowing the employee to sign in again.</em></p>

@@ -84,6 +84,8 @@ final class Options
         // Features
         'ews_feature_overtime' => ['group' => 'features', 'label' => 'Overtime requests', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_tasks' => ['group' => 'features', 'label' => 'Tasks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_feature_corrections' => ['group' => 'features', 'label' => 'Attendance corrections', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_correction_settings' => ['group' => 'features', 'label' => 'Attendance corrections: kinds, deadline, limit, reminder', 'kind' => 'grouped', 'default' => [], 'builtin' => 'all kinds; 7 days; 3 a month, then HR; earlier Sign In to HR; reminder 19:00', 'page' => 'ews31-corrections'],
         'ews_branch_settings' => ['group' => 'features', 'label' => 'Branches: how the branch is decided', 'kind' => 'grouped', 'default' => [], 'builtin' => 'one branch per employee', 'page' => 'ews31-features'],
         'ews_tasks_settings' => ['group' => 'features', 'label' => 'Tasks: parts and limits', 'kind' => 'grouped', 'default' => [], 'builtin' => 'every part on; files up to 5 MB; reminder 1 h before', 'page' => 'ews31-tasks'],
         'ews_feature_achievements' => ['group' => 'features', 'label' => 'Achievements', 'kind' => 'bool', 'default' => true, 'page' => 'ews31-achievements'],
@@ -140,6 +142,7 @@ final class Options
 
         // System (written by the plugin itself)
         'ews_schema_version' => ['group' => 'system', 'label' => 'Database version', 'kind' => 'text', 'default' => '', 'internal' => true],
+        'ews_corrections_reminded' => ['group' => 'system', 'label' => 'Attendance corrections: last end-of-day reminder', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_schedule_config_schema' => ['group' => 'system', 'label' => 'Schedule settings format', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_integrity_repair_done' => ['group' => 'system', 'label' => 'One-time data repair done', 'kind' => 'bool', 'default' => false, 'internal' => true],
         'ews_app_page_id' => ['group' => 'system', 'label' => 'Employee app page', 'kind' => 'int', 'default' => 0, 'internal' => true],

@@ -119,6 +119,7 @@ trait EWS_Frontend_Trait {
                 $message.=' '.__('Please refresh the Attendance page and review the latest schedule.','workforce-one');
                 return $this->ux_modal(__('Schedule Conflict','workforce-one'),$message,'warning');
             }
+            if(isset($_GET['cx_sent'])||isset($_GET['cx_done'])||isset($_GET['cx_error']))return $this->cx_notice();
             $map=[
 
                 'saved'=>['success',__('Saved Successfully','workforce-one'),__('Your changes have been saved.','workforce-one')],
@@ -198,6 +199,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-leave', $root.'assets/js/leave.js', [], $ver, true);
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
             wp_register_script('workforce-one-sheet', $root.'assets/js/sheet.js', [], $ver, true);
+            wp_register_script('workforce-one-corrections', $root.'assets/js/corrections.js', [], $ver, true);
             wp_register_script('workforce-one-tasks', $root.'assets/js/tasks.js', [], $ver, true);
             wp_register_script('workforce-one-employees', $root.'assets/js/employees.js', [], $ver, true);
             wp_register_script('workforce-one-my-profile', $root.'assets/js/my-profile.js', [], $ver, true);
@@ -222,6 +224,8 @@ trait EWS_Frontend_Trait {
             wp_register_style('workforce-one-presence-page', $root.'assets/css/app-presence.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-presence-page', 'rtl', 'replace');
             wp_style_add_data('workforce-one-requests', 'rtl', 'replace');
+            wp_register_style('workforce-one-corrections', $root.'assets/css/app-corrections.css', ['workforce-one-requests'], $ver);
+            wp_style_add_data('workforce-one-corrections', 'rtl', 'replace');
             wp_style_add_data('workforce-one-leave-page', 'rtl', 'replace');
             wp_register_style('workforce-one-schedule-page', $root.'assets/css/app-schedule.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-schedule-page', 'rtl', 'replace');
@@ -256,7 +260,8 @@ trait EWS_Frontend_Trait {
             if($view==='time')wp_enqueue_style('workforce-one-time-page');
             if($view==='vacation')wp_enqueue_style('workforce-one-leave-page');
             if($view==='schedule')wp_enqueue_style('workforce-one-schedule-page');
-            if($view==='overtime'||$view==='schedule'||$view==='tasks')wp_enqueue_style('workforce-one-requests');
+            if($view==='overtime'||$view==='schedule'||$view==='tasks'||$view==='corrections')wp_enqueue_style('workforce-one-requests');
+            if(($view==='corrections'||$view==='time') && $this->corrections_enabled()){wp_enqueue_style('workforce-one-requests');wp_enqueue_style('workforce-one-corrections');}
             if($view==='presence')wp_enqueue_style('workforce-one-presence-page');
             if($view==='employees')wp_enqueue_style('workforce-one-employees-page');
             if($view==='notifications')wp_enqueue_style('workforce-one-notifications-page');
@@ -495,7 +500,7 @@ trait EWS_Frontend_Trait {
             $branch_today=$emp?$this->branch_today((int)$emp->id):null;   // 3.31.72
             return $this->render_template('app/time',compact('emp','sch','ev','working','today','sign_in_open','hours','grace_period','face_signin_enabled','requires_location','break_data','branch_today',
                 'signin_bounds','hours_start_label','hours_end_label','sign_in_status_label','face_enrolled','face_settings','face_vendor_url','qr_enabled','presence_enabled','presence_url',
-                'clock_state','clock_progress','signed_in_at','picture','initials'));
+                'clock_state','clock_progress','signed_in_at','picture','initials')+['corrections_html'=>$this->cx_time_panel($emp)]);
         }
     private function redirect($args=[]){
             $u=wp_get_referer()?:$this->app_home_url();

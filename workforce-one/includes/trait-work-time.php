@@ -19,7 +19,7 @@ trait EWS_Work_Time_Trait {
             global $wpdb;
             $table=$wpdb->prefix.'ews_overtime_requests';
             $requests=(array)$wpdb->get_results($wpdb->prepare("SELECT id,start_time,end_time FROM {$table} WHERE employee_id=%d AND overtime_date=%s AND status='Approved' ORDER BY start_time ASC",$eid,$date));
-            $events=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY event_at ASC",$eid,$date));
+            $events=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY event_at ASC",$eid,$date));
             $sign_in=null;$sign_out=null;
             foreach($events as $ev){
                 if(($ev->event_type==='sign_in'||$ev->event_type==='late_sign_in') && !$sign_in)$sign_in=$ev->event_at;
@@ -48,7 +48,7 @@ trait EWS_Work_Time_Trait {
             if($overnight && $eid){
                 global $wpdb;
                 $yesterday=date('Y-m-d',strtotime($today.' -1 day'));
-                $types=(array)$wpdb->get_col($wpdb->prepare("SELECT event_type FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",$eid,$yesterday));
+                $types=(array)$wpdb->get_col($wpdb->prepare("SELECT event_type FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s".$this->tl_live()."",$eid,$yesterday));
                 $open=(in_array('sign_in',$types,true)||in_array('late_sign_in',$types,true)) && !in_array('sign_out',$types,true);
             }
             return $cache[$key]=\WorkforceOne\Attendance\ShiftDay::resolve($today,current_time('H:i'),(string)$h['start'],(string)$h['end'],$overnight,$open);
@@ -60,7 +60,7 @@ trait EWS_Work_Time_Trait {
         }
 
     private function today_events($eid){
-            global $wpdb;$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s ORDER BY event_at ASC",$eid,$this->attendance_day($eid)));
+            global $wpdb;$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s".$this->tl_live()." ORDER BY event_at ASC",$eid,$this->attendance_day($eid)));
             $o=[];foreach($rows as $r)$o[$r->event_type]=$r;return $o;
         }
 

@@ -183,6 +183,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_branches.py "$S"
       - name: Schema upgrade (dbDelta-readable tables, indexes added, no DB errors, nothing left to change)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_schema.py "$S"
+      - name: Attendance corrections (requests, evidence, approvals, HR, originals kept, readers, payroll carry-over)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_corrections.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
       - name: Departments and Teams

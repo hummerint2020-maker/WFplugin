@@ -124,6 +124,7 @@ trait EWS_Approvals_Trait {
             'early_leave'=>['Early Leave','NONE'],
             'face_reset'=>['Face Reset','NONE'],
             'shift_swap'=>['Shift Swap','PEER'],
+            'attendance_correction'=>['Attendance Correction','NONE'],
         ];
         foreach($defaults as $key=>$def){
             $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",$key));
