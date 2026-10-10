@@ -150,6 +150,11 @@
         }
     }
 
+    /* Back to a page from the browser history: read the position again before the next send. */
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('form[data-located]').forEach(function (f) { f.removeAttribute('data-located'); });
+    });
+
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();

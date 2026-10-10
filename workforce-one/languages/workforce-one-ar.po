@@ -4559,8 +4559,8 @@ msgstr "اكتب سبب رفض التعديل."
 msgid "This change was already decided."
 msgstr "الطلب ده اتبتّ فيه خلاص."
 
-msgid "This worker has paid days, so the record stays for the accounts. Mark him \"Do not rehire\" instead."
-msgstr "العامل ده ليه أيام اتصرفت، فسجلّه لازم يفضل للحسابات. علّم عليه «لا يُعاد تشغيله» بدل الحذف."
+msgid "This worker has paid days, so the record stays for the accounts. Mark the worker \"Do not rehire\" instead."
+msgstr "فيه أيام اتصرفت للعامل ده، فالسجل لازم يفضل للحسابات. اختار «لا يُعاد تشغيله» بدل الحذف."
 
 msgid "Worker not found."
 msgstr "العامل مش موجود."
@@ -4589,20 +4589,20 @@ msgstr "تم تسجيل اليومية"
 msgid "Worker added"
 msgstr "تمت إضافة العامل"
 
-msgid "No email or account needed. He is in today's list of this site."
-msgstr "مش محتاج إيميل ولا حساب. اتضاف لقائمة النهارده في الموقع ده."
+msgid "No email or account needed. The worker is in today's list for this site."
+msgstr "مش محتاج إيميل ولا حساب. الاسم اتضاف لقائمة النهارده في الموقع ده."
 
 msgid "Worker moved"
 msgstr "تم نقل العامل"
 
-msgid "His days at the old site stay in his history and in that project's cost."
-msgstr "أيامه في الموقع القديم بتفضل في سجلّه وفي تكلفة المشروع ده."
+msgid "Days at the old site stay in the worker's history and in that project's cost."
+msgstr "الأيام في الموقع القديم بتفضل في سجل العامل وفي تكلفة المشروع ده."
 
 msgid "Advance recorded"
 msgstr "تم تسجيل السلفة"
 
-msgid "It comes off his next payout."
-msgstr "هتتخصم من اليومية الجاية."
+msgid "It comes off the worker's next payout."
+msgstr "هتتخصم من الصرفية الجاية."
 
 msgid "Payout recorded"
 msgstr "تم تسجيل الصرف"
@@ -4745,8 +4745,8 @@ msgstr "التعديلات"
 msgid "Worker saved."
 msgstr "تم حفظ العامل."
 
-msgid "Worker deleted with his national ID."
-msgstr "تم حذف العامل ومعاه رقمه القومي."
+msgid "Worker and national ID deleted."
+msgstr "تم حذف العامل والرقم القومي."
 
 msgid "Change approved. The original values are kept with the request."
 msgstr "تمت الموافقة على التعديل. القيم الأصلية محفوظة مع الطلب."
@@ -4835,8 +4835,8 @@ msgstr "فيه رقم سري"
 msgid "No PIN"
 msgstr "مفيش رقم سري"
 
-msgid "Delete this worker with his national ID and all his days? This cannot be undone."
-msgstr "تحذف العامل ده ومعاه رقمه القومي وكل أيامه؟ مش هينفع ترجّعه."
+msgid "Delete this worker, the national ID and all their days? This cannot be undone."
+msgstr "تحذف العامل ده والرقم القومي وكل الأيام المسجّلة؟ مش هينفع ترجّع الحذف."
 
 msgid "Delete worker"
 msgstr "حذف العامل"
@@ -4877,8 +4877,8 @@ msgstr "— بدون —"
 msgid "Site from today"
 msgstr "الموقع من النهارده"
 
-msgid "Leave empty to keep his current site."
-msgstr "سيبه فاضي عشان يفضل في موقعه الحالي."
+msgid "Leave empty to keep the current site."
+msgstr "سيبه فاضي عشان الموقع الحالي يفضل زي ما هو."
 
 msgid "PIN for self sign-in"
 msgstr "الرقم السري للتسجيل الذاتي"
@@ -4886,8 +4886,8 @@ msgstr "الرقم السري للتسجيل الذاتي"
 msgid "A PIN is set. Enter 4 to 6 digits to change it."
 msgstr "فيه رقم سري. اكتب من 4 لـ 6 أرقام لو عايز تغيّره."
 
-msgid "4 to 6 digits. The worker signs in with his mobile and this PIN."
-msgstr "من 4 لـ 6 أرقام. العامل بيدخل بموبايله والرقم ده."
+msgid "4 to 6 digits. The worker signs in with their mobile number and this PIN."
+msgstr "من 4 لـ 6 أرقام. الدخول برقم الموبايل والرقم ده."
 
 msgid "For the future gate tablet with face recognition."
 msgstr "لتابلت البوابة بالتعرّف على الوجه بعدين."
@@ -5018,8 +5018,8 @@ msgstr "عامل جديد"
 msgid "Add a worker with \"New worker\", or move one here from another site."
 msgstr "أضف عامل من «عامل جديد»، أو انقل واحد هنا من موقع تاني."
 
-msgid "signed in himself"
-msgstr "سجّل لنفسه"
+msgid "self sign-in"
+msgstr "تسجيل ذاتي"
 
 msgid "recorded at another site today"
 msgstr "متسجّل في موقع تاني النهارده"
@@ -5072,8 +5072,8 @@ msgstr "الرقم القومي المصري 14 رقم"
 msgid "Subcontractor (optional)"
 msgstr "مقاول الباطن (اختياري)"
 
-msgid "No email or account needed. He is added to %s from today."
-msgstr "مش محتاج إيميل ولا حساب. هيتضاف لموقع %s من النهارده."
+msgid "No email or account needed. The worker is added to %s from today."
+msgstr "مش محتاج إيميل ولا حساب. الاسم بيتضاف لـ %s من النهارده."
 
 msgid "Move to another site"
 msgstr "نقل لموقع تاني"
@@ -5084,8 +5084,8 @@ msgstr "من يوم"
 msgid "Move"
 msgstr "نقل"
 
-msgid "His days at this site stay in his history and in this project's cost."
-msgstr "أيامه في الموقع ده بتفضل في سجلّه وفي تكلفة المشروع."
+msgid "Days at this site stay in the worker's history and in this project's cost."
+msgstr "الأيام في الموقع ده بتفضل في سجل العامل وفي تكلفة المشروع."
 
 msgid "Ask to change a saved day"
 msgstr "طلب تعديل يوم متسجّل"
@@ -5385,3 +5385,11 @@ msgstr "لا يوجد ما يُصحَّح"
 #: templates/app/correction-sheet.php
 msgid "Nothing on this day can be corrected from the app. If a time is wrong, ask HR."
 msgstr "لا يوجد في هذا اليوم ما يمكن تصحيحه من التطبيق. إذا كان هناك وقت غير صحيح، تواصل مع الموارد البشرية."
+
+#: includes/trait-daily-workers.php
+msgid "This period is not over yet. Pay it on its last day or later: paying locks the period, so the days still to come could not be recorded."
+msgstr "الفترة دي لسه ما خلصتش. اصرفها في آخر يوم فيها أو بعده: الصرف بيقفل الفترة، فالأيام اللي جاية مش هينفع تتسجّل."
+
+#: includes/trait-daily-workers.php
+msgid "Save today's day sheet first: paying locks the period, today included."
+msgstr "احفظ كشف النهارده الأول: الصرف بيقفل الفترة، والنهارده منها."

@@ -10,6 +10,8 @@
  * @var array<string,mixed> $p EWS_Daily_Workers_Trait::dw_payout()
  * @var string $period
  * @var string $paid_by
+ * @var string $open      '' when the period may be paid now, else why not (open | open_today)
+ * @var callable $open_text
  * @var list<array{start:string,label:string,url:string}> $earlier
  * @var string $pdf_url
  * @var string $photo_url
@@ -62,7 +64,9 @@ use WorkforceOne\Ui\Icons;
     <?php else: ?>
         <div class="wfo-dw-pay-actions"><a class="wfo-dw-btn" href="<?php echo esc_url($pdf_url); ?>"><?php echo Icons::svg('printer', 18, 2); ?><?php esc_html_e('Print the sheet', 'workforce-one'); ?></a>
             <button class="wfo-dw-btn" type="button" data-wfo-sheet="wfo-dw-advance"<?php echo $workers ? '' : ' disabled'; ?>><?php echo Icons::svg('plus', 18, 2.2); ?><?php esc_html_e('Advance', 'workforce-one'); ?></button></div>
-        <?php if ($p['lines']): ?>
+        <?php if ($p['lines'] && $open !== ''): ?>
+        <div class="wfo-dw-locked"><?php echo Icons::svg('clock', 18, 2.2); ?><?php echo esc_html($open_text($open)); ?></div>
+        <?php elseif ($p['lines']): ?>
         <form method="post" action="<?php echo esc_url($post_url); ?>" enctype="multipart/form-data" class="wfo-dw" data-dw-paid-form>
             <?php wp_nonce_field('ews_dw_paid'); ?><input type="hidden" name="action" value="ews_dw_paid"><input type="hidden" name="site" value="<?php echo (int) $site->location_id; ?>"><input type="hidden" name="start" value="<?php echo esc_attr($p['start']); ?>">
             <label class="wfo-dw-photo" data-dw-photo data-taken="<?php esc_attr_e('Photo ready · tap to change it', 'workforce-one'); ?>"><span class="wfo-dw-site-ico"><?php echo Icons::svg('upload', 22, 2.2); ?></span><div><strong><?php esc_html_e('Signed sheet photo', 'workforce-one'); ?></strong><span data-dw-photo-text><?php esc_html_e('After the workers sign or thumbprint it', 'workforce-one'); ?></span></div>
@@ -80,7 +84,7 @@ use WorkforceOne\Ui\Icons;
                 <div class="wfo-rq-two"><div class="wfo-rq-field"><label for="wfo-dw-adv-a"><?php esc_html_e('Amount', 'workforce-one'); ?></label><input id="wfo-dw-adv-a" type="number" name="amount" min="1" step="0.01" required inputmode="decimal"></div>
                     <div class="wfo-rq-field"><label for="wfo-dw-adv-n"><?php esc_html_e('Note (optional)', 'workforce-one'); ?></label><input id="wfo-dw-adv-n" type="text" name="note" maxlength="190"></div></div>
                 <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('check', 18, 2.2); ?><?php esc_html_e('Record', 'workforce-one'); ?></button>
-                <p class="wfo-sheet-note"><?php esc_html_e('It comes off his next payout.', 'workforce-one'); ?></p>
+                <p class="wfo-sheet-note"><?php esc_html_e('It comes off the worker\'s next payout.', 'workforce-one'); ?></p>
             </form>
         </dialog>
     <?php endif; ?>

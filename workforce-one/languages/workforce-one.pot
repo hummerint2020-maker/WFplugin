@@ -939,7 +939,7 @@ msgid "This change was already decided."
 msgstr ""
 
 #: includes/trait-daily-workers.php:482
-msgid "This worker has paid days, so the record stays for the accounts. Mark him \"Do not rehire\" instead."
+msgid "This worker has paid days, so the record stays for the accounts. Mark the worker \"Do not rehire\" instead."
 msgstr ""
 
 #: includes/trait-daily-workers.php:483
@@ -984,7 +984,7 @@ msgid "Worker added"
 msgstr ""
 
 #: includes/trait-daily-workers.php:515
-msgid "No email or account needed. He is in today's list of this site."
+msgid "No email or account needed. The worker is in today's list for this site."
 msgstr ""
 
 #: includes/trait-daily-workers.php:516
@@ -992,7 +992,7 @@ msgid "Worker moved"
 msgstr ""
 
 #: includes/trait-daily-workers.php:516
-msgid "His days at the old site stay in his history and in that project's cost."
+msgid "Days at the old site stay in the worker's history and in that project's cost."
 msgstr ""
 
 #: includes/trait-daily-workers.php:517
@@ -1001,7 +1001,7 @@ msgstr ""
 
 #: includes/trait-daily-workers.php:517
 #: templates/app/dw-payout.php:83
-msgid "It comes off his next payout."
+msgid "It comes off the worker's next payout."
 msgstr ""
 
 #: includes/trait-daily-workers.php:518
@@ -2698,7 +2698,7 @@ msgid "Worker saved."
 msgstr ""
 
 #: templates/admin/daily-workers.php:55
-msgid "Worker deleted with his national ID."
+msgid "Worker and national ID deleted."
 msgstr ""
 
 #: templates/admin/daily-workers.php:55
@@ -2858,7 +2858,7 @@ msgid "Edit"
 msgstr ""
 
 #: templates/admin/daily-workers.php:110
-msgid "Delete this worker with his national ID and all his days? This cannot be undone."
+msgid "Delete this worker, the national ID and all their days? This cannot be undone."
 msgstr ""
 
 #: templates/admin/daily-workers.php:111
@@ -2918,7 +2918,7 @@ msgid "Site from today"
 msgstr ""
 
 #: templates/admin/daily-workers.php:139
-msgid "Leave empty to keep his current site."
+msgid "Leave empty to keep the current site."
 msgstr ""
 
 #: templates/admin/daily-workers.php:142
@@ -2930,7 +2930,7 @@ msgid "A PIN is set. Enter 4 to 6 digits to change it."
 msgstr ""
 
 #: templates/admin/daily-workers.php:142
-msgid "4 to 6 digits. The worker signs in with his mobile and this PIN."
+msgid "4 to 6 digits. The worker signs in with their mobile number and this PIN."
 msgstr ""
 
 #: templates/admin/daily-workers.php:143
@@ -4311,7 +4311,7 @@ msgid "Add a worker with \"New worker\", or move one here from another site."
 msgstr ""
 
 #: templates/app/dw-day.php:73
-msgid "signed in himself"
+msgid "self sign-in"
 msgstr ""
 
 #: templates/app/dw-day.php:73
@@ -4403,7 +4403,7 @@ msgstr ""
 #. translators: %s: site
 #: templates/app/dw-day.php:130
 #, php-format
-msgid "No email or account needed. He is added to %s from today."
+msgid "No email or account needed. The worker is added to %s from today."
 msgstr ""
 
 #: templates/app/dw-day.php:140
@@ -4436,7 +4436,7 @@ msgid "Move"
 msgstr ""
 
 #: templates/app/dw-day.php:149
-msgid "His days at this site stay in his history and in this project's cost."
+msgid "Days at this site stay in the worker's history and in this project's cost."
 msgstr ""
 
 #: templates/app/dw-day.php:159
@@ -7114,4 +7114,12 @@ msgstr ""
 
 #: templates/app/correction-sheet.php
 msgid "Nothing on this day can be corrected from the app. If a time is wrong, ask HR."
+msgstr ""
+
+#: includes/trait-daily-workers.php
+msgid "This period is not over yet. Pay it on its last day or later: paying locks the period, so the days still to come could not be recorded."
+msgstr ""
+
+#: includes/trait-daily-workers.php
+msgid "Save today's day sheet first: paying locks the period, today included."
 msgstr ""

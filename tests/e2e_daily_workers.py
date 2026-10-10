@@ -297,7 +297,7 @@ check('impossible movement: site A seconds ago, site B 1.4 km away now: refused'
 # The foreman saved site A seconds ago, 1.4 km away: as if that was an hour ago (else it is an impossible movement).
 php("$wpdb->query(\"UPDATE {$p}ews_dw_sheets SET saved_at='%s'\");" % (datetime.datetime.now() - datetime.timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S'))
 bpg = app(fm, 'sites', site=Bsite)
-check('mode both: the foreman sees "signed in himself" and can still confirm the day', 'signed in himself' in bpg and 'wfo-dw-confirm' in bpg)
+check('mode both: the foreman sees "self sign-in" and can still confirm the day', 'self sign-in' in bpg and 'wfo-dw-confirm' in bpg)
 qs = post(fm, {'action': 'ews_dw_sheet', '_wpnonce': form_nonce(bpg, 'ews_dw_sheet'), 'site': Bsite, 'mark[%d]' % W3: 'half', 'extra[%d]' % W3: '0', **pos(30.0401, 31.4801)}, {'photo': PNG})
 check('mode both: the foreman\'s sheet sets the day (half day, his own rate)', 'dw_saved' in qs and day_row(W3)['mark'] == 'half' and day_row(W3)['source'] == 'foreman' and float(day_row(W3)['amount']) == 150.0, qs)
 php("$wpdb->delete($p.'ews_dw_foremen',['location_id'=>%d,'user_id'=>%d]);" % (Bsite, setup['fm']))
@@ -332,6 +332,14 @@ pdf_url = link(ppg, 'ews_dw_payout_pdf')
 pst, pbody, ph = cash.req(pdf_url)
 check('payout sheet: a PDF', pst == 200 and ph.get('Content-Type', '').startswith('application/pdf') and pbody.startswith('%PDF'), (pst, ph.get('Content-Type')))
 npd = form_nonce(ppg, 'ews_dw_paid')
+# Paying locks the period, so a week that is still running cannot be paid yet (3.31.83).
+if p['end'] > TODAY:
+    check('paid: a week not over yet is refused', post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {'photo': PNG}).get('dw_error') == 'open')
+    check('paid: the page says why instead of the Paid button', 'not over yet' in ppg and 'data-dw-paid-form' not in ppg)
+# The rest pays the site daily: today is the period's last day and today's sheet is saved.
+php("$wpdb->update($p.'ews_dw_sites',['period'=>'daily'],['location_id'=>%d]);" % A)
+p = json.loads(call('dw_payout', str(A), "'%s'" % TODAY).splitlines()[-1])
+check('paid: the day\'s payout has the same figures', (p['amount'], p['advance'], p['net']) == (900, 200, 700), (p['amount'], p['advance'], p['net']))
 check('paid: the signed sheet photo is required', post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {}).get('dw_error') == 'photo')
 check('paid: an employee cannot', post(emp, {'action': 'ews_dw_paid', '_wpnonce': nonce_for(emp, 'ews_dw_paid'), 'site': A, 'start': p['start']}, {'photo': PNG}).get('dw_error') == 'access')
 qs = post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {'photo': PNG})

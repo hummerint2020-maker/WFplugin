@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.83
+Daily workers review. No database change.
+
+### Fixed
+- **The day sheet could not be sent from a browser** ("Confirm the day" did nothing; the same for a
+  worker's "I am at the site"): the page reads the GPS first and then sends the form again, and the
+  app's double-submit guard counted the first try and blocked the real send. The guard now runs after
+  each form's own handlers and ignores a send that a handler held back (also for confirmations).
+- **Paying a period before it ended locked the rest of it**: paying a week on Wednesday made Thursday's
+  and Friday's sheets (and self sign-ins) fail with "This period is paid and locked". A period is now
+  paid on its last day or later, and on its last day only after that day's sheet is saved; the Payout
+  page says so instead of showing the Paid button.
+- **Worker sign-in (mobile + PIN)**: the 5-tries limit was per phone *and* network, so trying from
+  several networks could go on. A mobile number is now also locked after 10 wrong PINs in 15 minutes.
+- **Advances** can be recorded only for a worker of that site (there today, or with unpaid days there).
+- **A site whose work location was switched off** no longer breaks "My sites" when opened from an old link.
+- **The worker's page** shows what the next payout will hand over (unpaid days less advances not yet
+  deducted), not the days alone.
+- A change decision other than approve / reject is refused.
+- Going back to the day sheet in the browser reads the position again before the next send.
+
+### Changed
+- Neutral wording for workers: "The worker is in today's list for this site", "self sign-in",
+  "Days at the old site stay in the worker's history…", and the others that said he / his / him.
+
 ## 3.31.82
 ### Fixed
 - **A popup on every page after Daily Workers** ("Worker added", "Day sheet saved", "Worker moved"…) and

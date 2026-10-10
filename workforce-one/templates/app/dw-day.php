@@ -70,7 +70,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
                 $dis = $locked || $r['elsewhere'] ? ' disabled' : ''; ?>
                 <div class="wfo-dw-worker<?php echo $r['mark'] === 'out' ? ' is-out' : ''; ?>" data-dw-worker="<?php echo (int) $r['id']; ?>" data-rate="<?php echo esc_attr((string) $r['rate']); ?>" data-hourly="<?php echo esc_attr((string) $r['hourly']); ?>"<?php echo $r['elsewhere'] ? ' data-elsewhere' : ''; ?>>
                     <div class="wfo-dw-who"><span class="wfo-dw-av"><?php echo esc_html($r['initials']); ?></span><div><strong><?php echo esc_html($r['name']); ?></strong>
-                        <small><?php echo esc_html(implode(' · ', array_filter([$r['trade'], $money($r['rate']), $r['sub']]))); ?><?php if ($r['self']): ?> · <span class="is-self"><?php esc_html_e('signed in himself', 'workforce-one'); ?></span><?php endif; ?><?php if ($r['elsewhere']): ?> · <?php esc_html_e('recorded at another site today', 'workforce-one'); ?><?php endif; ?><?php if ($r['pending']): ?> · <span class="is-self"><?php esc_html_e('change waiting', 'workforce-one'); ?></span><?php endif; ?></small></div>
+                        <small><?php echo esc_html(implode(' · ', array_filter([$r['trade'], $money($r['rate']), $r['sub']]))); ?><?php if ($r['self']): ?> · <span class="is-self"><?php esc_html_e('self sign-in', 'workforce-one'); ?></span><?php endif; ?><?php if ($r['elsewhere']): ?> · <?php esc_html_e('recorded at another site today', 'workforce-one'); ?><?php endif; ?><?php if ($r['pending']): ?> · <span class="is-self"><?php esc_html_e('change waiting', 'workforce-one'); ?></span><?php endif; ?></small></div>
                         <?php if (!$paid && !$r['elsewhere'] && (($sheet && $r['day_id'] && !$r['pending']) || (!$sheet && $others))): ?>
                             <button type="button" class="wfo-dw-more" aria-label="<?php esc_attr_e('More', 'workforce-one'); ?>" data-dw-more="<?php echo $sheet ? 'change' : 'move'; ?>" data-worker="<?php echo (int) $r['id']; ?>" data-name="<?php echo esc_attr($r['name']); ?>" data-day="<?php echo (int) $r['day_id']; ?>" data-mark="<?php echo esc_attr($r['mark']); ?>" data-extra="<?php echo esc_attr((string) $r['extra']); ?>"><?php echo Icons::svg('dots', 18, 2); ?></button>
                         <?php endif; ?>
@@ -127,7 +127,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
             <div class="wfo-rq-field"><label for="wfo-dw-sub"><?php esc_html_e('Subcontractor (optional)', 'workforce-one'); ?></label><select id="wfo-dw-sub" name="subcontractor"><option value=""><?php esc_html_e('— None —', 'workforce-one'); ?></option><?php foreach ($subs as $s): ?><option value="<?php echo esc_attr($s); ?>"><?php echo esc_html($s); ?></option><?php endforeach; ?></select></div>
         <?php endif; ?>
         <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('plus', 18, 2.2); ?><?php esc_html_e('Add', 'workforce-one'); ?></button>
-        <p class="wfo-sheet-note"><?php /* translators: %s: site */ echo esc_html(sprintf(__('No email or account needed. He is added to %s from today.', 'workforce-one'), $site->name)); ?></p>
+        <p class="wfo-sheet-note"><?php /* translators: %s: site */ echo esc_html(sprintf(__('No email or account needed. The worker is added to %s from today.', 'workforce-one'), $site->name)); ?></p>
     </form>
 </dialog>
 <?php endif; ?>
@@ -146,7 +146,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
         <div class="wfo-rq-field" role="group" aria-labelledby="wfo-dw-start-label"><span class="wfo-rq-label" id="wfo-dw-start-label"><?php esc_html_e('Starting', 'workforce-one'); ?></span>
             <div class="wfo-dw-when"><label><input type="radio" name="from" value="<?php echo esc_attr($date); ?>"> <?php esc_html_e('Today', 'workforce-one'); ?></label><label><input type="radio" name="from" value="<?php echo esc_attr($tomorrow); ?>" checked> <?php esc_html_e('Tomorrow', 'workforce-one'); ?></label></div></div>
         <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Move', 'workforce-one'); ?></button>
-        <p class="wfo-sheet-note"><?php esc_html_e('His days at this site stay in his history and in this project\'s cost.', 'workforce-one'); ?></p>
+        <p class="wfo-sheet-note"><?php esc_html_e('Days at this site stay in the worker\'s history and in this project\'s cost.', 'workforce-one'); ?></p>
     </form>
 </dialog>
 <?php endif; ?>

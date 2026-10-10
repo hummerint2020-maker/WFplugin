@@ -3,45 +3,47 @@
 var ewsI18n=(window.wp&&window.wp.i18n)?window.wp.i18n:{__:function(s){return s;},sprintf:function(f){var a=[].slice.call(arguments,1),i=0;return f.replace(/%%|%(\d+\$)?[sd]/g,function(m,n){return m==='%%'?'%':a[n?parseInt(n,10)-1:i++];});}};
 var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
 (function(){
-    function initEwsSubmitGuard(){
-        document.querySelectorAll("form").forEach(function(form){
-            if(form.dataset.ewsSubmitGuard==="1") return;
-            form.dataset.ewsSubmitGuard="1";
-            form.addEventListener("submit",function(e){
-                if(form.dataset.ewsConfirmPending==="1" && form.dataset.ewsConfirmApproved!=="1"){
-                    return;
+    // One guard for every form, after the form's own handlers (bubble phase on document): a submit that
+    // another script holds back (a confirmation, reading the GPS first) is not counted, so its re-send
+    // goes through; a second click while a form is really being sent is ignored.
+    function ewsGuardSubmit(e){
+        var form=e.target;
+        if(!form||form.tagName!=="FORM"||e.defaultPrevented)return;
+        if(form.dataset.ewsSubmitting==="1"){
+            e.preventDefault();
+            return false;
+        }
+        form.dataset.ewsSubmitGuard="1";
+        form.dataset.ewsSubmitting="1";
+        // A disabled button is left out of the posted data, so the clicked one's name=value
+        // (e.g. decision=approve) is carried in a hidden field before the buttons are disabled.
+        var sub=e.submitter;
+        if(sub&&sub.name){
+            var carry=form.querySelector("input[data-ews-submitter]");
+            if(!carry){carry=document.createElement("input");carry.type="hidden";carry.setAttribute("data-ews-submitter","1");form.appendChild(carry);}
+            carry.name=sub.name;carry.value=sub.value;
+        }
+        var submitters=form.querySelectorAll("button[type=submit],input[type=submit]");
+        submitters.forEach(function(btn){
+            if(btn.dataset.ewsOriginalHtml===undefined) btn.dataset.ewsOriginalHtml=btn.innerHTML||btn.value||"";
+            btn.disabled=true;
+            btn.classList.add("ews-submit-loading");
+            if(btn.tagName==="BUTTON"){
+                var spinner=btn.querySelector(".ews-btn-spinner");
+                if(!spinner){
+                    spinner=document.createElement("span");
+                    spinner.className="ews-btn-spinner";
+                    spinner.setAttribute("aria-hidden","true");
+                    btn.insertBefore(spinner,btn.firstChild);
                 }
-                if(form.dataset.ewsSubmitting==="1"){
-                    e.preventDefault();
-                    return false;
-                }
-                form.dataset.ewsSubmitting="1";
-                // A disabled button is left out of the posted data, so the clicked one's name=value
-                // (e.g. decision=approve) is carried in a hidden field before the buttons are disabled.
-                var sub=e.submitter;
-                if(sub&&sub.name){
-                    var carry=form.querySelector("input[data-ews-submitter]");
-                    if(!carry){carry=document.createElement("input");carry.type="hidden";carry.setAttribute("data-ews-submitter","1");form.appendChild(carry);}
-                    carry.name=sub.name;carry.value=sub.value;
-                }
-                var submitters=form.querySelectorAll("button[type=submit],input[type=submit]");
-                submitters.forEach(function(btn){
-                    if(btn.dataset.ewsOriginalHtml===undefined) btn.dataset.ewsOriginalHtml=btn.innerHTML||btn.value||"";
-                    btn.disabled=true;
-                    btn.classList.add("ews-submit-loading");
-                    if(btn.tagName==="BUTTON"){
-                        var spinner=btn.querySelector(".ews-btn-spinner");
-                        if(!spinner){
-                            spinner=document.createElement("span");
-                            spinner.className="ews-btn-spinner";
-                            spinner.setAttribute("aria-hidden","true");
-                            btn.insertBefore(spinner,btn.firstChild);
-                        }
-                    }
-                    btn.setAttribute("aria-busy","true");
-                });
-            },{capture:true});
+            }
+            btn.setAttribute("aria-busy","true");
         });
+    }
+    function initEwsSubmitGuard(){
+        if(window.ewsSubmitGuardOn)return;
+        window.ewsSubmitGuardOn=true;
+        document.addEventListener("submit",ewsGuardSubmit);
     }
     function ewsConfirmationMeta(form,submitter){
         var action=(form.querySelector("input[name=\"action\"]")||{}).value||"";

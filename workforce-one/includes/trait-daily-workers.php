@@ -474,12 +474,14 @@ trait EWS_Daily_Workers_Trait {
             'same'=>__('The worker is already at that site.','workforce-one'),
             'amount'=>__('Enter an amount above zero.','workforce-one'),
             'nothing'=>__('There is nothing to pay in this period.','workforce-one'),
+            'open'=>__('This period is not over yet. Pay it on its last day or later: paying locks the period, so the days still to come could not be recorded.','workforce-one'),
+            'open_today'=>__('Save today\'s day sheet first: paying locks the period, today included.','workforce-one'),
             'reason'=>__('Write the reason for the change.','workforce-one'),
             'no_change'=>__('Nothing was changed.','workforce-one'),
             'pending'=>__('A change for this day is already waiting.','workforce-one'),
             'note'=>__('Write why you reject the change.','workforce-one'),
             'done'=>__('This change was already decided.','workforce-one'),
-            'has_paid'=>__('This worker has paid days, so the record stays for the accounts. Mark him "Do not rehire" instead.','workforce-one'),
+            'has_paid'=>__('This worker has paid days, so the record stays for the accounts. Mark the worker "Do not rehire" instead.','workforce-one'),
             'worker'=>__('Worker not found.','workforce-one'),
             'login'=>__('The mobile number or PIN is incorrect.','workforce-one'),
             'too_many'=>__('Too many attempts. Try again in 15 minutes.','workforce-one'),
@@ -512,9 +514,9 @@ trait EWS_Daily_Workers_Trait {
             $msg=sprintf(__('%1$d workers at %2$s: %3$d present, %4$d half day, %5$d absent. Cost of the day %6$s.','workforce-one'),(int)$c->n,$site?$site->name:'',(int)$c->p,(int)$c->h,(int)$c->a,$this->dw_money((float)$c->t));
             return $this->ux_modal(__('Day sheet saved','workforce-one'),$msg,'success');
         }
-        if(isset($_GET['dw_added']))return $this->ux_modal(__('Worker added','workforce-one'),__('No email or account needed. He is in today\'s list of this site.','workforce-one'),'success');
-        if(isset($_GET['dw_moved']))return $this->ux_modal(__('Worker moved','workforce-one'),__('His days at the old site stay in his history and in that project\'s cost.','workforce-one'),'success');
-        if(isset($_GET['dw_adv']))return $this->ux_modal(__('Advance recorded','workforce-one'),__('It comes off his next payout.','workforce-one'),'success');
+        if(isset($_GET['dw_added']))return $this->ux_modal(__('Worker added','workforce-one'),__('No email or account needed. The worker is in today\'s list for this site.','workforce-one'),'success');
+        if(isset($_GET['dw_moved']))return $this->ux_modal(__('Worker moved','workforce-one'),__('Days at the old site stay in the worker\'s history and in that project\'s cost.','workforce-one'),'success');
+        if(isset($_GET['dw_adv']))return $this->ux_modal(__('Advance recorded','workforce-one'),__('It comes off the worker\'s next payout.','workforce-one'),'success');
         if(isset($_GET['dw_paid']))return $this->ux_modal(__('Payout recorded','workforce-one'),__('The period is paid and locked. A new advance comes off the next payout.','workforce-one'),'success');
         if(isset($_GET['dw_change']))return $this->ux_modal(__('Change requested','workforce-one'),__('The day stays as saved until a manager approves the change.','workforce-one'),'success');
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
@@ -783,6 +785,7 @@ trait EWS_Daily_Workers_Trait {
     private function dw_decide_change($id,$decision,$note){
         global $wpdb;
         if(!$this->dw_is_manager())return 'access';
+        if(!in_array($decision,['approve','reject'],true))return 'save';
         $c=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->dw_t('changes')} WHERE id=%d",(int)$id));
         if(!$c)return 'worker';
         if($c->status!=='pending')return 'done';
@@ -872,6 +875,9 @@ trait EWS_Daily_Workers_Trait {
         if(!$this->dw_site($location_id) || !$this->dw_can_pay($location_id))return 'access';
         $w=$this->dw_worker($worker_id);
         if(!$w)return 'worker';
+        // A worker of this site: there today, or with days not paid yet there.
+        if($this->dw_worker_site((int)$w->id,current_time('Y-m-d'))!==(int)$location_id
+            && !(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->dw_t('days')} WHERE worker_id=%d AND location_id=%d AND payout_id IS NULL",(int)$w->id,(int)$location_id)))return 'access';
         if(!is_numeric($amount) || (float)$amount<=0 || (float)$amount>1000000)return 'amount';
         $ok=$wpdb->insert($this->dw_t('advances'),['worker_id'=>(int)$w->id,'location_id'=>(int)$location_id,'amount'=>round((float)$amount,2),'given_on'=>current_time('Y-m-d'),
             'note'=>$note!==''?mb_substr((string)$note,0,190):null,'by_user'=>get_current_user_id(),'created_at'=>current_time('mysql')]);
@@ -902,6 +908,9 @@ trait EWS_Daily_Workers_Trait {
         if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',(string)$start) || $start>current_time('Y-m-d'))return ['error'=>'date'];
         $p=$this->dw_payout($location_id,$start);
         if($p['paid'])return ['error'=>'paid'];
+        // Paying locks the period: days still to come in it could not be recorded any more.
+        $err=$this->dw_period_open($location_id,$p['end']);
+        if($err!=='')return ['error'=>$err];
         if(!$p['lines'] || $p['amount']<=0)return ['error'=>'nothing'];
         [$key,$perr]=$this->dw_save_photo($photo);
         if($perr!=='')return ['error'=>$perr];
@@ -918,6 +927,15 @@ trait EWS_Daily_Workers_Trait {
         $wpdb->query('COMMIT');
         $this->audit('dw_payout','daily_site',(int)$location_id,'Payout recorded: '.$p['site']->name.' '.$p['start'].' – '.$p['end']);
         return ['id'=>$id];
+    }
+
+    /** '' when a period ending on $end may be paid now; open (days still to come) or open_today (today's sheet not saved). */
+    private function dw_period_open($location_id,$end){
+        $today=current_time('Y-m-d');
+        if($end>$today)return 'open';
+        $site=$this->dw_site($location_id);
+        if($end===$today && $site && SiteRules::allows($site->eff_mode,'foreman') && !$this->dw_sheet($location_id,$today))return 'open_today';
+        return '';
     }
 
     public function dw_paid_save(){
@@ -1020,8 +1038,9 @@ trait EWS_Daily_Workers_Trait {
         $pin=NationalId::normalize(sanitize_text_field(wp_unslash((string)($_POST['pin']??''))));
         $ip=sanitize_text_field(wp_unslash((string)($_SERVER['REMOTE_ADDR']??'')));
         $tk='ews_dw_login_'.md5($ip.'|'.$mobile);
-        $tries=(int)get_transient($tk);
-        if($tries>=5){wp_safe_redirect($this->dw_worker_url(['dw_error'=>'too_many']));exit;}
+        $mk='ews_dw_login_m_'.md5($mobile);
+        $tries=(int)get_transient($tk);$mtries=(int)get_transient($mk);
+        if($tries>=5 || $mtries>=10){wp_safe_redirect($this->dw_worker_url(['dw_error'=>'too_many']));exit;}
         global $wpdb;$found=null;
         if($mobile!=='' && $pin!==''){
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->dw_t('workers')} WHERE mobile_norm=%s AND status='active' AND pin_hash IS NOT NULL",$mobile)) as $w){
@@ -1030,9 +1049,10 @@ trait EWS_Daily_Workers_Trait {
         }
         if(!$found){
             set_transient($tk,$tries+1,15*MINUTE_IN_SECONDS);
+            if($mobile!=='')set_transient($mk,$mtries+1,15*MINUTE_IN_SECONDS);
             wp_safe_redirect($this->dw_worker_url(['dw_error'=>'login']));exit;
         }
-        delete_transient($tk);
+        delete_transient($tk);delete_transient($mk);
         $exp=time()+30*DAY_IN_SECONDS;
         $sig=hash_hmac('sha256',$found->id.'|'.$exp.'|'.substr((string)$found->pin_hash,-16),$this->dw_key('session'));
         $this->dw_set_cookie($found->id.'|'.$exp.'|'.$sig,$exp);
@@ -1093,7 +1113,9 @@ trait EWS_Daily_Workers_Trait {
             $data['can_self']=$site && SiteRules::allows($site->eff_mode,'self');
             $data['today']=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->dw_t('days')} WHERE worker_id=%d AND work_date=%s",(int)$w->id,$date));
             $data['days']=(array)$wpdb->get_results($wpdb->prepare("SELECT d.*,l.name site_name FROM {$this->dw_t('days')} d LEFT JOIN {$this->locations} l ON l.id=d.location_id WHERE d.worker_id=%d ORDER BY d.work_date DESC LIMIT 14",(int)$w->id));
-            $data['owed']=(float)$wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(amount),0) FROM {$this->dw_t('days')} WHERE worker_id=%d AND payout_id IS NULL",(int)$w->id));
+            // What the next payout will hand over: unpaid days less the advances not deducted yet.
+            $gross=(float)$wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(amount),0) FROM {$this->dw_t('days')} WHERE worker_id=%d AND payout_id IS NULL",(int)$w->id));
+            $data['owed']=max(0.0,$gross-max(0.0,(float)($this->dw_outstanding([(int)$w->id],$date)[(int)$w->id]??0)));
             $data['mark_label']=function($m){return $this->dw_mark_label($m);};
             $data['money']=function($v){return $this->dw_money($v);};
         }
@@ -1121,7 +1143,7 @@ trait EWS_Daily_Workers_Trait {
         $this->ensure_dw_schema_once();
         $this->dw_enqueue();
         $site_id=absint($_GET['site']??0); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- navigation
-        if($site_id && in_array($site_id,$this->dw_my_site_ids(),true))return $this->dw_day_content($site_id);
+        if($site_id && in_array($site_id,$this->dw_my_site_ids(),true) && $this->dw_site($site_id))return $this->dw_day_content($site_id);
         global $wpdb;
         $date=current_time('Y-m-d');$cards=[];$todo=0;$workers=0;
         foreach($this->dw_my_site_ids() as $id){
@@ -1189,7 +1211,7 @@ trait EWS_Daily_Workers_Trait {
         return $this->render_template('app/dw-payout',[
             'sites'=>$sites,'site'=>$p['site'],'p'=>$p,'period'=>$this->dw_period_text($p['start'],$p['end']),'paid_by'=>$by?$by->display_name:'',
             'earlier'=>array_map(function($s)use($site_id){$r=$this->dw_payout($site_id,$s);return ['start'=>$r['start'],'label'=>$this->dw_period_text($r['start'],$r['end']),'url'=>add_query_arg(['ews_view'=>'payout','site'=>$site_id,'start'=>$r['start']],$this->app_home_url())];},$this->dw_unpaid_periods($site_id,$p['start'])),
-            'pdf_url'=>$this->dw_pdf_url($site_id,$p['start']),'photo_url'=>$p['paid']&&$p['paid']->photo_key?$this->dw_file_url('payout',(int)$p['paid']->id):'',
+            'pdf_url'=>$this->dw_pdf_url($site_id,$p['start']),'open'=>$p['paid']?'':$this->dw_period_open($site_id,$p['end']),'open_text'=>function($code){return $this->dw_error_message($code);},'photo_url'=>$p['paid']&&$p['paid']->photo_key?$this->dw_file_url('payout',(int)$p['paid']->id):'',
             'workers'=>$workers,'money'=>function($v){return $this->dw_money($v);},'days_text'=>function($d){return $this->dw_days_text($d);},
             'post_url'=>admin_url('admin-post.php'),'url'=>function($id){return add_query_arg(['ews_view'=>'payout','site'=>$id],$this->app_home_url());},
             'advances'=>(array)$wpdb->get_results($wpdb->prepare("SELECT a.*,w.name FROM {$this->dw_t('advances')} a JOIN {$this->dw_t('workers')} w ON w.id=a.worker_id WHERE a.location_id=%d AND a.given_on BETWEEN %s AND %s ORDER BY a.id DESC",$site_id,$p['start'],$p['end'])),
@@ -1313,7 +1335,7 @@ trait EWS_Daily_Workers_Trait {
         foreach(['days','moves','advances','changes'] as $t)$wpdb->delete($this->dw_t($t),['worker_id'=>$id]);
         $wpdb->delete($this->dw_t('workers'),['id'=>$id]);
         $this->dw_delete_file($w->photo_key);
-        $this->audit('dw_worker_delete','daily_worker',$id,$w->name.' deleted with his national ID');
+        $this->audit('dw_worker_delete','daily_worker',$id,$w->name.' deleted with the national ID');
         wp_safe_redirect($this->dw_admin_url(['done'=>'deleted']));exit;
     }
 
