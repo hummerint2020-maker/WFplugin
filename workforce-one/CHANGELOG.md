@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.31.79
+### Fixed
+- **Sign In / Out layout**: "My recent days" sat against the left edge and was wider than the cards above
+  and below it (the app's `.wfo-app .wfo-panel{margin:0}` overrode its centring). It is now centred at
+  the same 760px width.
+
 ## 3.31.78
 Two fixes in the employee app. No database change.
 

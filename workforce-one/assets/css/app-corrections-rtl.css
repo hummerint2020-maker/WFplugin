@@ -4,7 +4,7 @@
    RTL: app-corrections-rtl.css (npx rtlcss@4, assets/css/README.md). */
 
 /* ---------- employee app: my recent days (Sign In / Out page) ---------- */
-.wfo-cx-days{max-width:760px;margin:0 auto 14px;padding:0;overflow:hidden}
+.wfo-cx-days,.wfo-app .wfo-cx-days.wfo-panel{max-width:760px;margin:0 auto 14px;padding:0;overflow:hidden;box-sizing:border-box}   /* centred like the cards above and below (.wfo-app .wfo-panel sets margin:0) */
 .wfo-cx-days-head{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}
 .wfo-cx-days-head h3{flex:1;margin:0;font-size:16px;font-weight:600;color:var(--wfo-ink)}
 .wfo-cx-days-head a{font-size:12.5px;font-weight:600;color:var(--wfo-pri);text-decoration:none}
