@@ -176,7 +176,8 @@ trait EWS_Corrections_Trait {
         if(!is_readable($path))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
         $ext=strtolower((string)pathinfo((string)$c->photo_key,PATHINFO_EXTENSION));
         $all=['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];
-        Download::send((string)file_get_contents($path),$all[$ext]??'application/octet-stream',(string)$c->photo_name); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+        if(isset($all[$ext]))Download::image((string)file_get_contents($path),$all[$ext],(string)$c->photo_name); // shown on the page, opens on a phone too
+        else Download::send((string)file_get_contents($path),'application/octet-stream',(string)$c->photo_name); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
     }
 
     private function cx_photo_url($c){

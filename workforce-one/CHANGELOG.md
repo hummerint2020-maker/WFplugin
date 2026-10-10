@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.84
+### Fixed
+- **Day sheet and payout pages were slow, and a photo could not be opened on a phone.** The small photo
+  on the page was the full camera photo (often several MB), sent as a download with caching turned
+  off, so it was fetched again on every visit; tapping it opened a download, which the installed app
+  on phones ignores. Now:
+  - the page shows a small copy (made the first time it is asked for, also for photos already saved);
+  - photos are sent to be shown, not downloaded, and the browser keeps them for a day;
+  - a new photo is stored at most 2000 px on its long side (still sharp for a signed sheet), upright;
+  - tapping a photo opens it over the page (day sheet, signed payout sheet, a correction's photo).
+
 ## 3.31.83
 Daily workers review. No database change.
 

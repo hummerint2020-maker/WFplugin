@@ -97,7 +97,7 @@ $row = static function ($c) use ($icons, $state, $change, $type_label, $status_l
                         <div><?php esc_html_e('Schedule', 'workforce-one'); ?><strong><?php echo esc_html($ev['schedule'] !== '' ? __($ev['schedule'], 'workforce-one') : __('Not set', 'workforce-one')); // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText ?></strong></div>
                         <div><?php esc_html_e('Shift', 'workforce-one'); ?><strong dir="ltr"><?php echo esc_html($ev['shift']); ?></strong></div>
                         <div class="<?php echo $ev['limit'] > 0 && $ev['month_count'] >= $ev['limit'] ? 'is-warn' : ''; ?>"><?php esc_html_e('Corrections this month', 'workforce-one'); ?><strong><?php echo esc_html($ev['limit'] > 0 ? sprintf(/* translators: 1: count, 2: limit */ __('%1$d of %2$d', 'workforce-one'), $ev['month_count'], $ev['limit']) : (string) $ev['month_count']); ?></strong></div>
-                        <div><?php esc_html_e('Photo', 'workforce-one'); ?><strong><?php if ($ev['photo_url'] !== ''): ?><a href="<?php echo esc_url($ev['photo_url']); ?>" target="_blank" rel="noopener"><?php esc_html_e('Open', 'workforce-one'); ?></a><?php else: esc_html_e('None', 'workforce-one'); endif; ?></strong></div>
+                        <div><?php esc_html_e('Photo', 'workforce-one'); ?><strong><?php if ($ev['photo_url'] !== ''): ?><a href="<?php echo esc_url($ev['photo_url']); ?>" target="_blank" rel="noopener" data-wfo-photo><?php esc_html_e('Open', 'workforce-one'); ?></a><?php else: esc_html_e('None', 'workforce-one'); endif; ?></strong></div>
                     </div>
                 </details>
                 <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-cx-decide">

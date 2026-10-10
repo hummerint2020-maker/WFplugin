@@ -181,3 +181,12 @@ body.wfo-fullscreen .ews-app.wfo-app{max-width:none;margin:0;border-radius:0;min
 .wfo-app .wfo-list-pager-page{font-variant-numeric:tabular-nums}
 .wfo-app .wfo-list-search{flex:1 1 220px;min-width:0;display:flex;margin:0}
 .wfo-app .wfo-list-search .wfo-sched-search{flex:1 1 auto}
+
+/* A photo opened over the page (data-wfo-photo links, assets/js/workforce-one.js). */
+.wfo-photo-view{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:56px 16px 16px;background:rgba(10,14,32,.88)}
+.wfo-photo-view img{max-width:100%;max-height:100%;border-radius:12px;opacity:0;transition:opacity .15s}
+.wfo-photo-view.is-ready img{opacity:1}
+.wfo-photo-view.is-ready .wfo-photo-wait{display:none}
+.wfo-photo-wait{position:absolute;width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:wfo-photo-spin .8s linear infinite}
+@keyframes wfo-photo-spin{to{transform:rotate(360deg)}}
+.wfo-photo-x{position:absolute;top:12px;inset-inline-end:12px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:26px;line-height:1;cursor:pointer}

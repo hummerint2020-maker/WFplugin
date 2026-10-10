@@ -15,6 +15,7 @@
  * @var list<array{start:string,label:string,url:string}> $earlier
  * @var string $pdf_url
  * @var string $photo_url
+ * @var string $photo_thumb  the small copy for the page
  * @var array<int,object> $workers  the site's workers today (advance)
  * @var array<int,object> $advances advances given at this site in the period
  * @var callable $money
@@ -57,7 +58,7 @@ use WorkforceOne\Ui\Icons;
     <?php endif; ?>
 
     <?php if ($paid): ?>
-        <div class="wfo-dw-photo is-set"><?php if ($photo_url): ?><a href="<?php echo esc_url($photo_url); ?>" target="_blank" rel="noopener" class="wfo-dw-shot" style="background-image:url('<?php echo esc_url($photo_url); ?>')" aria-label="<?php esc_attr_e('Signed sheet photo', 'workforce-one'); ?>"></a><?php endif; ?>
+        <div class="wfo-dw-photo is-set"><?php if ($photo_url): ?><a href="<?php echo esc_url($photo_url); ?>" target="_blank" rel="noopener" class="wfo-dw-shot" data-wfo-photo style="background-image:url('<?php echo esc_url($photo_thumb); ?>')" aria-label="<?php esc_attr_e('Signed sheet photo', 'workforce-one'); ?>"></a><?php endif; ?>
             <div><strong><?php esc_html_e('Signed sheet photo', 'workforce-one'); ?></strong><?php /* translators: 1: name, 2: date and time */ echo esc_html(sprintf(__('Uploaded by %1$s, %2$s', 'workforce-one'), $paid_by, mysql2date('D H:i', $paid->paid_at))); ?></div></div>
         <div class="wfo-dw-pay-actions is-one"><a class="wfo-dw-btn" href="<?php echo esc_url($pdf_url); ?>"><?php echo Icons::svg('printer', 18, 2); ?><?php esc_html_e('Print the sheet', 'workforce-one'); ?></a></div>
         <div class="wfo-dw-locked"><?php echo Icons::svg('lock', 18, 2.2); ?><?php esc_html_e('The period is paid and locked. A new advance comes off the next payout.', 'workforce-one'); ?></div>

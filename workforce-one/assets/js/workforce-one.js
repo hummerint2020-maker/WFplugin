@@ -503,3 +503,26 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
     }
     if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initEwsAppFrame);else initEwsAppFrame();
 })();
+
+/* A photo link (data-wfo-photo: a day sheet's group photo, a signed payout sheet, a correction's photo)
+   opens over the page. A new tab does nothing in the installed app on phones. */
+(function(){
+    function close(v){if(v&&v.parentNode)v.parentNode.removeChild(v);document.removeEventListener("keydown",onKey);}
+    function onKey(e){if(e.key==="Escape")close(document.querySelector(".wfo-photo-view"));}
+    document.addEventListener("click",function(e){
+        var a=e.target.closest?e.target.closest("a[data-wfo-photo]"):null;
+        if(!a)return;
+        e.preventDefault();
+        var v=document.createElement("div");
+        v.className="wfo-photo-view";v.setAttribute("role","dialog");v.setAttribute("aria-modal","true");
+        v.innerHTML='<button type="button" class="wfo-photo-x" aria-label="Close">×</button><span class="wfo-photo-wait" aria-hidden="true"></span><img alt="">';
+        var img=v.querySelector("img");
+        img.onload=function(){v.classList.add("is-ready");};
+        img.src=a.href;
+        img.alt=a.getAttribute("aria-label")||"";
+        v.addEventListener("click",function(ev){if(ev.target===v||ev.target.classList.contains("wfo-photo-x"))close(v);});
+        document.addEventListener("keydown",onKey);
+        document.body.appendChild(v);
+        v.querySelector(".wfo-photo-x").focus();
+    });
+})();

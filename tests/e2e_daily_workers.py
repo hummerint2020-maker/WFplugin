@@ -227,6 +227,11 @@ check('sheet: saving again is refused (locked)', post(fm, dict(base, **pos()), {
 locked = app(fm, 'sites', site=A)
 furl = link(locked, 'ews_dw_file')
 check('sheet photo: opens for the foreman, not for an employee', bool(furl) and fm.req(furl)[0] == 200 and emp.req(furl)[0] != 200)
+fst, _, fh = fm.req(furl)
+check('sheet photo: shown in the page, not downloaded (phones ignore downloads), and cached', fh.get('Content-Disposition', '').startswith('inline') and 'max-age' in fh.get('Cache-Control', ''), dict(fh))
+tm = re.search(r"background-image:url\('([^']*size=thumb[^']*)'\)", locked)
+turl = tm.group(1).replace('&#038;', '&').replace('&amp;', '&').replace(B, '') if tm else ''
+check('sheet photo: the page shows a small copy (size=thumb)', bool(turl) and fm.req(turl)[0] == 200 and emp.req(turl)[0] != 200)
 check('day sheet: locked, with "Ask to change"', 'wfo-dw-locked' in locked and 'data-dw-more="change"' in locked and 'wfo-dw-confirm' not in locked)
 check('popup after saving', 'Day sheet saved' in app(fm, 'sites', site=A, dw_saved=sh['id']))
 check('My sites: recorded', 'Recorded' in app(fm, 'sites'))

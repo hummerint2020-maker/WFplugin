@@ -14,6 +14,7 @@
  * @var bool   $paid           the period is paid (locked)
  * @var bool   $photo          a group photo is required
  * @var string $photo_url
+ * @var string $photo_thumb  the small copy for the page
  * @var array<int,string> $others   other sites (move)
  * @var list<string> $trades
  * @var list<string> $subs
@@ -91,7 +92,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
         </section>
 
         <?php if ($sheet): ?>
-            <div class="wfo-dw-photo is-set"><?php if ($photo_url): ?><a href="<?php echo esc_url($photo_url); ?>" target="_blank" rel="noopener" class="wfo-dw-shot" style="background-image:url('<?php echo esc_url($photo_url); ?>')" aria-label="<?php esc_attr_e('Group photo', 'workforce-one'); ?>"></a><?php else: ?><span class="wfo-dw-site-ico"><?php echo Icons::svg('check', 22, 2.2); ?></span><?php endif; ?>
+            <div class="wfo-dw-photo is-set"><?php if ($photo_url): ?><a href="<?php echo esc_url($photo_url); ?>" target="_blank" rel="noopener" class="wfo-dw-shot" data-wfo-photo style="background-image:url('<?php echo esc_url($photo_thumb); ?>')" aria-label="<?php esc_attr_e('Group photo', 'workforce-one'); ?>"></a><?php else: ?><span class="wfo-dw-site-ico"><?php echo Icons::svg('check', 22, 2.2); ?></span><?php endif; ?>
                 <div><strong><?php esc_html_e('Group photo', 'workforce-one'); ?></strong><?php /* translators: %s: distance */ echo esc_html(mysql2date('H:i', $sheet->saved_at) . ($sheet->distance_meters !== null ? ' · ' . sprintf(__('%s m from the site centre', 'workforce-one'), number_format_i18n((float) $sheet->distance_meters)) : '')); ?></div></div>
             <div class="wfo-dw-locked"><?php echo Icons::svg('lock', 18, 2.2); ?><?php /* translators: 1: time, 2: foreman */ echo esc_html(sprintf(__('Saved at %1$s by %2$s. Changing a saved day is a request with a reason and an approval.', 'workforce-one'), mysql2date('H:i', $sheet->saved_at), $saved_by)); ?></div>
         <?php elseif ($paid): ?>

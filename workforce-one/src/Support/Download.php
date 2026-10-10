@@ -29,4 +29,27 @@ final class Download
         echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary file
         flush();
     }
+
+    /**
+     * Sends a stored image to be shown (an <img>, a tap that opens it), not saved as a download: a
+     * download is ignored by the installed app on phones, and without caching the photo is fetched
+     * again on every visit. Cached privately (only this browser), as the file never changes.
+     */
+    public static function image(string $body, string $type, string $filename, int $maxAge = 86400): void
+    {
+        while (ob_get_level() > 0 && @ob_end_clean()) {
+        }
+        if (!headers_sent()) {
+            @ini_set('zlib.output_compression', 'Off'); // phpcs:ignore WordPress.PHP.IniSet.Risky -- binary file, must not be re-compressed
+            header_remove('Pragma');
+            header_remove('Expires');
+            header('Cache-Control: private, max-age=' . max(0, $maxAge));
+            header('Content-Type: ' . $type);
+            header('Content-Disposition: inline; filename="' . str_replace(['"', "\r", "\n"], '', $filename) . '"');
+            header('X-Content-Type-Options: nosniff');
+            if (!ini_get('zlib.output_compression') && ob_get_level() === 0) header('Content-Length: ' . strlen($body));
+        }
+        echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary file
+        flush();
+    }
 }

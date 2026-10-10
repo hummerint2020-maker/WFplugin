@@ -405,16 +405,52 @@ trait EWS_Daily_Workers_Trait {
         if(empty($check['ext']) || !isset($mimes[strtolower((string)$check['ext'])]))return [null,'photo_file'];
         $key=wp_generate_password(32,false).'.'.strtolower((string)$check['ext']);
         if(!@move_uploaded_file((string)$f['tmp_name'],$this->dw_file_dir().'/'.$key))return [null,'photo_file']; // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,Generic.PHP.ForbiddenFunctions.Found
+        $this->dw_shrink($this->dw_file_dir().'/'.$key,2000);
         return [$key,''];
     }
 
+    /**
+     * A phone photo is often 4–10 MB: kept at most $max px on its long side (still sharp enough to read
+     * a signed sheet), turned upright from its EXIF orientation. Left as it is when the server has no
+     * image library.
+     */
+    private function dw_shrink($path,$max,$dest=null){
+        if(!function_exists('wp_get_image_editor'))require_once ABSPATH.'wp-admin/includes/image.php';
+        $ed=wp_get_image_editor($path);
+        if(is_wp_error($ed))return false;
+        if(method_exists($ed,'maybe_exif_rotate'))$ed->maybe_exif_rotate();
+        $size=$ed->get_size();
+        if($dest===null && max((int)$size['width'],(int)$size['height'])<=$max)return true;
+        $ed->resize($max,$max,false);
+        $ed->set_quality(82);
+        $r=$ed->save($dest??$path);
+        if(is_wp_error($r))return false;
+        // save() may pick another file name (e.g. when the type changes): keep the one asked for.
+        $want=$dest??$path;
+        if(!empty($r['path']) && $r['path']!==$want && is_file($r['path'])){@rename($r['path'],$want);} // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.rename_rename
+        return is_file($want);
+    }
+
+    /** The small copy shown on the pages (made the first time it is asked for). */
+    private function dw_thumb_path($key){
+        $full=$this->dw_file_dir().'/'.$key;
+        $thumb=$this->dw_file_dir().'/'.preg_replace('/\.([a-z]{3,4})$/','_t.$1',$key);
+        if(is_file($thumb))return $thumb;
+        return $this->dw_shrink($full,360,$thumb)?$thumb:$full;
+    }
+
     private function dw_delete_file($key){
-        if($key && preg_match('/^[A-Za-z0-9]{32}\.[a-z]{3,4}$/',(string)$key))@unlink($this->dw_file_dir().'/'.$key); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        if($key && preg_match('/^[A-Za-z0-9]{32}\.[a-z]{3,4}$/',(string)$key)){
+            @unlink($this->dw_file_dir().'/'.$key); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+            @unlink($this->dw_file_dir().'/'.preg_replace('/\.([a-z]{3,4})$/','_t.$1',(string)$key)); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        }
     }
 
     /** A photo: kind sheet (the day's group photo), payout (the signed sheet) or worker. */
-    private function dw_file_url($kind,$id){
-        return wp_nonce_url(add_query_arg(['action'=>'ews_dw_file','kind'=>$kind,'id'=>(int)$id],admin_url('admin-post.php')),'ews_dw_file_'.$kind.'_'.(int)$id);
+    private function dw_file_url($kind,$id,$thumb=false){
+        $args=['action'=>'ews_dw_file','kind'=>$kind,'id'=>(int)$id];
+        if($thumb)$args['size']='thumb';
+        return wp_nonce_url(add_query_arg($args,admin_url('admin-post.php')),'ews_dw_file_'.$kind.'_'.(int)$id);
     }
 
     public function dw_file(){
@@ -429,9 +465,10 @@ trait EWS_Daily_Workers_Trait {
         if(!preg_match('/^[A-Za-z0-9]{32}\.[a-z]{3,4}$/',$key))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
         $path=$this->dw_file_dir().'/'.$key;
         if(!is_readable($path))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
+        if(($_GET['size']??'')==='thumb')$path=$this->dw_thumb_path($key);
         $ext=strtolower((string)pathinfo($key,PATHINFO_EXTENSION));
         $all=['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];
-        Download::send((string)file_get_contents($path),$all[$ext]??'application/octet-stream',$kind.'-'.$id.'.'.$ext); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+        Download::image((string)file_get_contents($path),$all[$ext]??'application/octet-stream',$kind.'-'.$id.'.'.$ext); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
     }
 
     /* ------------------------------------------------------------------ messages */
@@ -1182,7 +1219,7 @@ trait EWS_Daily_Workers_Trait {
         return $this->render_template('app/dw-day',[
             'site'=>$s,'rows'=>$rows,'sheet'=>$sheet,'saved_by'=>$by?$by->display_name:'','today'=>date_i18n('l j F',current_time('timestamp')),
             'foreman_ok'=>SiteRules::allows($s->eff_mode,'foreman'),'paid'=>(bool)$this->dw_paid_for($site_id,$date),'photo'=>(int)$set['photo']===1,
-            'photo_url'=>$sheet&&$sheet->photo_key?$this->dw_file_url('sheet',(int)$sheet->id):'','others'=>$others,'trades'=>$set['trades'],'subs'=>$set['subcontractors'],
+            'photo_url'=>$sheet&&$sheet->photo_key?$this->dw_file_url('sheet',(int)$sheet->id):'','photo_thumb'=>$sheet&&$sheet->photo_key?$this->dw_file_url('sheet',(int)$sheet->id,true):'','others'=>$others,'trades'=>$set['trades'],'subs'=>$set['subcontractors'],
             'trade_label'=>function($t){return $this->dw_trade_label($t);},'money'=>function($v){return $this->dw_money($v);},
             'post_url'=>admin_url('admin-post.php'),'back_url'=>add_query_arg('ews_view','sites',$this->app_home_url()),
             'open'=>sanitize_key($_GET['dw_open']??''), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
@@ -1211,7 +1248,7 @@ trait EWS_Daily_Workers_Trait {
         return $this->render_template('app/dw-payout',[
             'sites'=>$sites,'site'=>$p['site'],'p'=>$p,'period'=>$this->dw_period_text($p['start'],$p['end']),'paid_by'=>$by?$by->display_name:'',
             'earlier'=>array_map(function($s)use($site_id){$r=$this->dw_payout($site_id,$s);return ['start'=>$r['start'],'label'=>$this->dw_period_text($r['start'],$r['end']),'url'=>add_query_arg(['ews_view'=>'payout','site'=>$site_id,'start'=>$r['start']],$this->app_home_url())];},$this->dw_unpaid_periods($site_id,$p['start'])),
-            'pdf_url'=>$this->dw_pdf_url($site_id,$p['start']),'open'=>$p['paid']?'':$this->dw_period_open($site_id,$p['end']),'open_text'=>function($code){return $this->dw_error_message($code);},'photo_url'=>$p['paid']&&$p['paid']->photo_key?$this->dw_file_url('payout',(int)$p['paid']->id):'',
+            'pdf_url'=>$this->dw_pdf_url($site_id,$p['start']),'open'=>$p['paid']?'':$this->dw_period_open($site_id,$p['end']),'open_text'=>function($code){return $this->dw_error_message($code);},'photo_url'=>$p['paid']&&$p['paid']->photo_key?$this->dw_file_url('payout',(int)$p['paid']->id):'','photo_thumb'=>$p['paid']&&$p['paid']->photo_key?$this->dw_file_url('payout',(int)$p['paid']->id,true):'',
             'workers'=>$workers,'money'=>function($v){return $this->dw_money($v);},'days_text'=>function($d){return $this->dw_days_text($d);},
             'post_url'=>admin_url('admin-post.php'),'url'=>function($id){return add_query_arg(['ews_view'=>'payout','site'=>$id],$this->app_home_url());},
             'advances'=>(array)$wpdb->get_results($wpdb->prepare("SELECT a.*,w.name FROM {$this->dw_t('advances')} a JOIN {$this->dw_t('workers')} w ON w.id=a.worker_id WHERE a.location_id=%d AND a.given_on BETWEEN %s AND %s ORDER BY a.id DESC",$site_id,$p['start'],$p['end'])),
