@@ -465,35 +465,79 @@ trait EWS_Notifications_Trait {
         return true;
     }
 
-    public function push_subscribe(){
-        if(!is_user_logged_in())wp_die('You must be logged in.');
-        check_admin_referer('ews_push_subscription');
-        $raw=wp_unslash($_POST['subscription']??'');
-        $data=json_decode($raw,true);
-        if(!is_array($data)||empty($data['endpoint'])||empty($data['keys']['p256dh'])||empty($data['keys']['auth']))wp_die('Invalid push subscription.');
+    /**
+     * A browser's subscription (PushSubscription.toJSON()) as a row, or the reason it is refused.
+     * Only public HTTPS push services (src/Notifications/PushEndpoint.php). A host name that does not
+     * resolve now is accepted; delivery checks again and connects only to public addresses.
+     * @return array{0:array<string,string>|null,1:string}
+     */
+    private function push_parse_subscription($raw){
+        $data=json_decode((string)$raw,true);
+        if(!is_array($data)||empty($data['endpoint'])||empty($data['keys']['p256dh'])||empty($data['keys']['auth']))return [null,'Invalid push subscription.'];
         $endpoint=esc_url_raw($data['endpoint']);
-        if(!$endpoint)wp_die('Invalid push endpoint.');
-        // Only public HTTPS push services (src/Notifications/PushEndpoint.php). A host name that does not
-        // resolve now is accepted; delivery checks again and connects only to public addresses.
+        if(!$endpoint)return [null,'Invalid push endpoint.'];
         [$bad,$host]=PushEndpoint::check($endpoint);
         if(!$bad){$ips=$this->push_endpoint_ips($host);if($ips)$bad=PushEndpoint::checkResolved($ips);}
-        if($bad){$this->push_debug('Subscription refused',['reason'=>$bad,'user_id'=>get_current_user_id()]);wp_die(esc_html(PushEndpoint::message($bad)),'',['response'=>400]);}
-        $this->ensure_push_schema();
-        global $wpdb;$table=$this->push_table();$hash=hash('sha256',$endpoint);
-        $row=$wpdb->get_row($wpdb->prepare("SELECT id FROM {$table} WHERE endpoint_hash=%s",$hash));
-        $payload=[
-            'user_id'=>get_current_user_id(),
+        if($bad){$this->push_debug('Subscription refused',['reason'=>$bad,'user_id'=>get_current_user_id()]);return [null,PushEndpoint::message($bad)];}
+        return [[
             'endpoint'=>$endpoint,
-            'endpoint_hash'=>$hash,
+            'endpoint_hash'=>hash('sha256',$endpoint),
             'p256dh'=>sanitize_text_field($data['keys']['p256dh']),
             'auth'=>sanitize_text_field($data['keys']['auth']),
             'content_encoding'=>sanitize_text_field($data['contentEncoding']??'aesgcm'),
-            'user_agent'=>sanitize_text_field($_SERVER['HTTP_USER_AGENT']??''),
-            'updated_at'=>current_time('mysql')
-        ];
-        if($row)$wpdb->update($table,$payload,['id'=>(int)$row->id]);
-        else{$payload['created_at']=current_time('mysql');$wpdb->insert($table,$payload);}
+            'user_agent'=>sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']??'')),
+            'updated_at'=>current_time('mysql'),
+        ],''];
+    }
+
+    /**
+     * Saves this browser's subscription for the signed-in user. Called when push is turned on, and
+     * again by the app itself (3.31.87, footer): at most once a day, or at once when the server has no
+     * device for the user (an expired one was removed), so a subscription the browser renewed is never
+     * left unknown to the server.
+     */
+    public function push_subscribe(){
+        if(!is_user_logged_in())wp_die('You must be logged in.');
+        check_admin_referer('ews_push_subscription');
+        [$row,$err]=$this->push_parse_subscription(wp_unslash($_POST['subscription']??''));
+        if(!$row)wp_die(esc_html($err),'',['response'=>400]);
+        $this->ensure_push_schema();
+        global $wpdb;$table=$this->push_table();
+        $id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE endpoint_hash=%s",$row['endpoint_hash']));
+        $row['user_id']=get_current_user_id();
+        if($id)$wpdb->update($table,$row,['id'=>$id]);
+        else{$row['created_at']=current_time('mysql');$wpdb->insert($table,$row);}
         wp_send_json_success(['subscribed'=>true]);
+    }
+
+    /**
+     * The service worker's pushsubscriptionchange (3.31.87): the push service replaced a subscription
+     * while the app was closed. There is no WordPress nonce in a service worker, so the old endpoint is
+     * the proof (a secret URL only that browser and this server know): the device keeps its user, with
+     * the new endpoint and keys. An unknown old endpoint changes nothing; the app re-saves its
+     * subscription the next time it is opened.
+     */
+    public function push_resubscribe(){
+        $old=esc_url_raw(wp_unslash((string)($_POST['old_endpoint']??'')));
+        if(!$old)wp_send_json_error(['reason'=>'old_endpoint'],400);
+        [$row,$err]=$this->push_parse_subscription(wp_unslash($_POST['subscription']??''));
+        if(!$row)wp_send_json_error(['reason'=>$err],400);
+        $this->ensure_push_schema();
+        global $wpdb;$table=$this->push_table();
+        $dev=$wpdb->get_row($wpdb->prepare("SELECT id,user_id FROM {$table} WHERE endpoint_hash=%s",hash('sha256',$old)));
+        if(!$dev)wp_send_json_error(['reason'=>'unknown'],404);
+        // The new endpoint may already be saved (the app re-saved it first): keep one row.
+        $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE endpoint_hash=%s AND id<>%d",$row['endpoint_hash'],(int)$dev->id));
+        $wpdb->update($table,$row,['id'=>(int)$dev->id]);
+        wp_send_json_success(['subscribed'=>true]);
+    }
+
+    /** How many devices the signed-in user has for push (the app re-saves its subscription when 0). */
+    private function push_device_count($user_id){
+        if(!$user_id)return 0;
+        $this->ensure_push_schema();
+        global $wpdb;
+        return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->push_table()} WHERE user_id=%d",(int)$user_id));
     }
 
     public function push_unsubscribe(){
@@ -741,8 +785,10 @@ trait EWS_Notifications_Trait {
             CURLOPT_CONNECTTIMEOUT=>3,
             CURLOPT_TIMEOUT=>5,
             CURLOPT_HTTPHEADER=>[
-                'TTL: 300',
-                'Urgency: normal',
+                // Kept by the push service for a day: a phone that is asleep, in battery saving or offline
+                // still gets it when it wakes (with 300 s most never arrived). High: shown when it arrives.
+                'TTL: 86400',
+                'Urgency: high',
                 'Content-Type: application/octet-stream',
                 'Content-Encoding: aes128gcm',
                 'Authorization: vapid t='.$jwt.', k='.$this->option('ews_vapid_public_key'),

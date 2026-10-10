@@ -104,6 +104,48 @@ many = json.loads(php("""
 check('a batch to 30 devices returns an outcome for every device, by its key', many['jobs'] == 30 and many['results'] == 30 and many['same_keys'], many)
 check('...and takes about one request time, not thirty (sent 20 at a time)', many['seconds'] <= 15, many['seconds'])
 
+# 3.31.87: subscriptions stay current. The browser renews a subscription now and then; the service
+# worker reports it (no nonce: the old endpoint is the proof), and the app re-saves its own.
+import urllib.request, urllib.parse, urllib.error
+
+
+def anon_post(fields):
+    try:
+        r = urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8080/wp-admin/admin-post.php', data=urllib.parse.urlencode(fields).encode()))
+        return r.status, r.read().decode()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode()
+
+
+def sub_json(endpoint):
+    return json.dumps({'endpoint': endpoint, 'keys': KEYS, 'contentEncoding': 'aes128gcm'})
+
+
+php("$wpdb->query(\"DELETE FROM {$p}ews_push_subscriptions\");")
+st, page, _ = emp.req('/app/?ews_view=notifications')
+check('the app tells the page the user has no device yet (it re-saves its subscription at once)', 'window.EWS_PUSH_DEVICES=0;' in page and 'function ewsPushSync' in page, re.findall(r'EWS_PUSH_DEVICES=\d+', page))
+OLD, NEW = 'https://fcm.googleapis.com/fcm/send/e2e-old', 'https://fcm.googleapis.com/fcm/send/e2e-renewed'
+subscribe(OLD)
+dev = q("SELECT id,user_id FROM {p}ews_push_subscriptions WHERE endpoint='%s'" % OLD)
+st, page, _ = emp.req('/app/?ews_view=notifications')
+check('...and that it has one once saved (then it re-saves at most once a day)', 'window.EWS_PUSH_DEVICES=1;' in page)
+st, body = anon_post({'action': 'ews_push_resubscribe', 'old_endpoint': OLD, 'subscription': sub_json(NEW)})
+row = q("SELECT id,user_id,endpoint FROM {p}ews_push_subscriptions")
+check('renewed subscription (service worker, no login): the same device, same user, the new endpoint', st == 200 and len(row) == 1 and dev and row[0]['id'] == dev[0]['id'] and row[0]['user_id'] == dev[0]['user_id'] and row[0]['endpoint'] == NEW, (st, body[:120], row))
+st, body = anon_post({'action': 'ews_push_resubscribe', 'old_endpoint': 'https://fcm.googleapis.com/fcm/send/never-seen', 'subscription': sub_json('https://fcm.googleapis.com/fcm/send/e2e-intruder')})
+check('...an unknown old endpoint changes nothing (404)', st == 404 and not stored('https://fcm.googleapis.com/fcm/send/e2e-intruder'), (st, body[:120]))
+st, body = anon_post({'action': 'ews_push_resubscribe', 'old_endpoint': NEW, 'subscription': sub_json('https://127.0.0.1/push')})
+check('...a new endpoint to a private address is refused, the device kept', st == 400 and stored(NEW) and not stored('https://127.0.0.1/push'), (st, body[:120]))
+st, body = anon_post({'action': 'ews_push_resubscribe', 'old_endpoint': '', 'subscription': sub_json(OLD)})
+check('...no old endpoint is refused', st == 400 and not stored(OLD), st)
+subscribe(OLD)  # the app saved the renewed one first, then the service worker reports the change
+anon_post({'action': 'ews_push_resubscribe', 'old_endpoint': NEW, 'subscription': sub_json(OLD)})
+check('...the same endpoint saved twice ends as one device', int(q("SELECT COUNT(*) c FROM {p}ews_push_subscriptions")[0]['c']) == 1 and stored(OLD))
+sw = emp.req('/?ews_pwa=sw')[1]
+check('the service worker handles a renewed subscription and knows where to report it', "addEventListener('pushsubscriptionchange'" in sw and 'ews_push_resubscribe' in sw and 'const PUSH_URL=' in sw and 'const VAPID_KEY="' in sw)
+ttl = php("$f=file_get_contents(WP_PLUGIN_DIR.'/workforce-one/includes/trait-notifications.php');echo (int)preg_match(\"/'TTL: 86400'/\",$f).(int)preg_match(\"/'TTL: 300'/\",$f);").strip()
+check('a push is kept a day for a phone that is asleep or offline (TTL 86400, was 300)', ttl == '10', ttl)
+
 php("$wpdb->query(\"DELETE FROM {$p}ews_push_subscriptions\");")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

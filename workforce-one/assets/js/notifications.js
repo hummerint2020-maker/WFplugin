@@ -28,6 +28,14 @@
                 return r.text();
             });
         }
+        function sameKey(sub) {
+            var k = sub.options && sub.options.applicationServerKey, want = b64(key);
+            if (!k) return true;
+            k = new Uint8Array(k);
+            if (k.length !== want.length) return false;
+            for (var i = 0; i < k.length; i++) if (k[i] !== want[i]) return false;
+            return true;
+        }
         function state() {
             navigator.serviceWorker.ready
                 .then(function (reg) { return reg.pushManager.getSubscription(); })
@@ -40,19 +48,23 @@
                 return Notification.requestPermission().then(function (p) {
                     if (p !== 'granted') throw new Error('Notification permission was not granted.');
                     return reg.pushManager.getSubscription().then(function (s) {
+                        // Made with another server key (the site's keys were renewed): it can never receive.
+                        if (s && !sameKey(s)) return s.unsubscribe().then(function () { return null; });
+                        return s;
+                    }).then(function (s) {
                         return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(key) });
                     });
                 });
             }).then(function (sub) {
                 return post({ action: 'ews_push_subscribe', subscription: JSON.stringify(sub.toJSON()) });
-            }).catch(function () {}).then(function () { on.disabled = false; state(); });
+            }).then(function () { if (window.ewsPushOff) window.ewsPushOff(false); }).catch(function () {}).then(function () { on.disabled = false; state(); });
         });
         off.addEventListener('click', function () {
             off.disabled = true;
             navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
                 if (!sub) return null;
                 return post({ action: 'ews_push_unsubscribe', endpoint: sub.endpoint }).then(function () { return sub.unsubscribe(); });
-            }).catch(function () {}).then(function () { off.disabled = false; state(); });
+            }).then(function () { if (window.ewsPushOff) window.ewsPushOff(true); }).catch(function () {}).then(function () { off.disabled = false; state(); });
         });
         state();
     }

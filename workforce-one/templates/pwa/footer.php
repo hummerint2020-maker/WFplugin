@@ -7,6 +7,7 @@
  * @var string $vapid_key   push server public key
  * @var string $push_url    where subscriptions are saved
  * @var string $push_nonce
+ * @var int    $push_devices  devices the server has for this user (0: re-save this one now)
  * @var string $sw          service worker URL
  */
 if (!defined('ABSPATH')) exit;
@@ -38,6 +39,7 @@ if (!defined('ABSPATH')) exit;
               window.EWS_PUSH_PUBLIC_KEY=<?php echo wp_json_encode($vapid_key); ?>;
               window.EWS_PUSH_URL=<?php echo wp_json_encode($push_url); ?>;
               window.EWS_PUSH_NONCE=<?php echo wp_json_encode($push_nonce); ?>;
+              window.EWS_PUSH_DEVICES=<?php echo (int) $push_devices; ?>;
               function ewsUrlBase64ToUint8Array(base64String){var padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=window.atob(base64),out=new Uint8Array(raw.length);for(var i=0;i<raw.length;++i)out[i]=raw.charCodeAt(i);return out;}
               window.ewsEnablePush=function(){
                 if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){alert('Push notifications are not supported by this browser. On iPhone, add Workforce One to the Home Screen first.');return;}
@@ -54,7 +56,7 @@ if (!defined('ABSPATH')) exit;
                   var body=new URLSearchParams();
                   body.set('action','ews_push_subscribe');body.set('_wpnonce',window.EWS_PUSH_NONCE);body.set('subscription',JSON.stringify(data));
                   return fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body});
-                }).then(function(r){if(!r.ok)throw new Error('Subscription save failed');return r.text();}).then(function(){alert('Push notifications are enabled on this device.');}).catch(function(e){alert(e.message||'Unable to enable push notifications.');});
+                }).then(function(r){if(!r.ok)throw new Error('Subscription save failed');return r.text();}).then(function(){ewsPushOff(false);alert('Push notifications are enabled on this device.');}).catch(function(e){alert(e.message||'Unable to enable push notifications.');});
               };
               window.ewsDisablePush=function(){
                 if(!('serviceWorker' in navigator))return;
@@ -62,9 +64,38 @@ if (!defined('ABSPATH')) exit;
                   if(!sub)return;
                   var body=new URLSearchParams();body.set('action','ews_push_unsubscribe');body.set('_wpnonce',window.EWS_PUSH_NONCE);body.set('endpoint',sub.endpoint);
                   return fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body}).then(function(){return sub.unsubscribe();});
-                }).then(function(){alert('Push notifications disabled on this device.');});
+                }).then(function(){ewsPushOff(true);alert('Push notifications disabled on this device.');});
               };
-              if('serviceWorker' in navigator){navigator.serviceWorker.register(<?php echo wp_json_encode($sw); ?>,{updateViaCache:'none'}).catch(function(){});}
+              // Turned off on this device by the user: the app does not turn it back on by itself.
+              function ewsPushOff(v){try{if(v===undefined)return localStorage.getItem('ewsPushOff')==='1';if(v)localStorage.setItem('ewsPushOff','1');else localStorage.removeItem('ewsPushOff');}catch(e){}return false;}
+              window.ewsPushOff=ewsPushOff;
+              /* Keeps the server's copy of this device's subscription current (3.31.87). Browsers renew a
+                 subscription from time to time (and after an update or a cleared cache); the server only
+                 learned of it when the user pressed "Enable", so push stopped for them while the phone still
+                 showed it as on. When permission is granted: a subscription made with another server key is
+                 replaced, a missing one is made again, and it is re-saved once a day, or at once when the
+                 server has no device for this user. */
+              function ewsPushSync(){
+                if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return;
+                if(Notification.permission!=='granted'||!window.EWS_PUSH_PUBLIC_KEY||ewsPushOff())return;
+                var key=ewsUrlBase64ToUint8Array(window.EWS_PUSH_PUBLIC_KEY);
+                function sameKey(sub){var k=sub.options&&sub.options.applicationServerKey;if(!k)return true;k=new Uint8Array(k);if(k.length!==key.length)return false;for(var i=0;i<k.length;i++)if(k[i]!==key[i])return false;return true;}
+                navigator.serviceWorker.ready.then(function(reg){
+                  return reg.pushManager.getSubscription().then(function(sub){
+                    if(sub&&!sameKey(sub))return sub.unsubscribe().then(function(){return null;});
+                    return sub;
+                  }).then(function(sub){return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});});
+                }).then(function(sub){
+                  var mark=sub.endpoint+'|'+new Date().toISOString().slice(0,10),last='';
+                  try{last=localStorage.getItem('ewsPushSynced')||'';}catch(e){}
+                  if(window.EWS_PUSH_DEVICES>0&&last===mark)return;
+                  var body=new URLSearchParams();
+                  body.set('action','ews_push_subscribe');body.set('_wpnonce',window.EWS_PUSH_NONCE);body.set('subscription',JSON.stringify(sub.toJSON()));
+                  return fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body}).then(function(r){if(r.ok){try{localStorage.setItem('ewsPushSynced',mark);}catch(e){}}});
+                }).catch(function(){});
+              }
+              window.ewsPushSync=ewsPushSync;
+              if('serviceWorker' in navigator){navigator.serviceWorker.register(<?php echo wp_json_encode($sw); ?>,{updateViaCache:'none'}).then(ewsPushSync).catch(function(){});}
             })();
             </script>
             

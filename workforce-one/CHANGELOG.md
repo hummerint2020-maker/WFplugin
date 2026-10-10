@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.87
+Push notifications that stopped reaching some employees. No database change.
+
+### Fixed
+- **A notification was dropped if the phone did not take it within 5 minutes.** Every push was sent
+  with `TTL: 300`, so a phone asleep in a pocket, in battery saving or briefly offline never got it.
+  Now the push service keeps it for a day (`TTL: 86400`) and delivers it with high urgency.
+- **Push stopped for good when the browser renewed the subscription.** Browsers replace a
+  subscription from time to time (and after an update, a reinstall or cleared data); the server only
+  learned of a subscription when the user pressed "Enable", kept sending to the old one, got "gone"
+  (410) and removed it, while the phone still showed notifications as on. Now:
+  - the service worker handles `pushsubscriptionchange`: it subscribes again and reports the new
+    subscription (new action `ews_push_resubscribe`; no login needed, the old endpoint is the proof;
+    an unknown old endpoint changes nothing);
+  - the app re-saves its subscription by itself when permission is granted: once a day, or at once when
+    the server has no device for the user;
+  - a subscription made with other server keys (the site's push keys were renewed) is replaced instead
+    of reused, which could never receive;
+  - turning push off on a device is remembered, so the app does not turn it back on.
+
+### Tests
+- tests/e2e_push.py: renewed subscription keeps the device and user, unknown / private / missing old
+  endpoint refused, one row per endpoint, the app page and service worker carry the sync, TTL a day.
+
 ## 3.31.86
 Review of 3.31.78–3.31.85. No database change.
 
