@@ -14,8 +14,9 @@ Push notifications that stopped reaching some employees. No database change.
   - the service worker handles `pushsubscriptionchange`: it subscribes again and reports the new
     subscription (new action `ews_push_resubscribe`; no login needed, the old endpoint is the proof;
     an unknown old endpoint changes nothing);
-  - the app re-saves its subscription by itself when permission is granted: once a day, or at once when
-    the server has no device for the user;
+  - the app re-saves its subscription by itself when permission is granted: every 3 days, 1 to 5
+    minutes after it opens (at random, so it never adds to the rush at shift start), or at once when the
+    server has no device for the user;
   - a subscription made with other server keys (the site's push keys were renewed) is replaced instead
     of reused, which could never receive;
   - turning push off on a device is remembered, so the app does not turn it back on.
@@ -23,6 +24,8 @@ Push notifications that stopped reaching some employees. No database change.
 ### Tests
 - tests/e2e_push.py: renewed subscription keeps the device and user, unknown / private / missing old
   endpoint refused, one row per endpoint, the app page and service worker carry the sync, TTL a day.
+- tests/push_sync_browser.js (Chromium, in CI): saved at once when the server has none, not again
+  within 3 days, then after a 1–5 minute wait; off is kept; a subscription with other keys is replaced.
 
 ## 3.31.86
 Review of 3.31.78–3.31.85. No database change.

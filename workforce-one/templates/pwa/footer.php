@@ -73,7 +73,8 @@ if (!defined('ABSPATH')) exit;
                  subscription from time to time (and after an update or a cleared cache); the server only
                  learned of it when the user pressed "Enable", so push stopped for them while the phone still
                  showed it as on. When permission is granted: a subscription made with another server key is
-                 replaced, a missing one is made again, and it is re-saved once a day, or at once when the
+                 replaced, a missing one is made again, and it is re-saved every 3 days, 1 to 5 minutes after
+                 the app opens (at random, so it never adds to the rush at shift start), or at once when the
                  server has no device for this user. */
               function ewsPushSync(){
                 if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return;
@@ -86,12 +87,16 @@ if (!defined('ABSPATH')) exit;
                     return sub;
                   }).then(function(sub){return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});});
                 }).then(function(sub){
-                  var mark=sub.endpoint+'|'+new Date().toISOString().slice(0,10),last='';
-                  try{last=localStorage.getItem('ewsPushSynced')||'';}catch(e){}
-                  if(window.EWS_PUSH_DEVICES>0&&last===mark)return;
-                  var body=new URLSearchParams();
-                  body.set('action','ews_push_subscribe');body.set('_wpnonce',window.EWS_PUSH_NONCE);body.set('subscription',JSON.stringify(sub.toJSON()));
-                  return fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body}).then(function(r){if(r.ok){try{localStorage.setItem('ewsPushSynced',mark);}catch(e){}}});
+                  var last=[],now=Date.now(),none=!(window.EWS_PUSH_DEVICES>0);
+                  try{last=(localStorage.getItem('ewsPushSynced')||'').split('|');}catch(e){}
+                  // Same subscription saved less than 3 days ago, and the server has it: nothing to do.
+                  if(!none&&last.length===2&&last[0]===sub.endpoint&&now-Number(last[1])<3*864e5)return;
+                  var send=function(){
+                    var body=new URLSearchParams();
+                    body.set('action','ews_push_subscribe');body.set('_wpnonce',window.EWS_PUSH_NONCE);body.set('subscription',JSON.stringify(sub.toJSON()));
+                    fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body}).then(function(r){if(r.ok){try{localStorage.setItem('ewsPushSynced',sub.endpoint+'|'+Date.now());}catch(e){}}}).catch(function(){});
+                  };
+                  if(none)send();else setTimeout(send,60000+Math.floor(Math.random()*240000));
                 }).catch(function(){});
               }
               window.ewsPushSync=ewsPushSync;

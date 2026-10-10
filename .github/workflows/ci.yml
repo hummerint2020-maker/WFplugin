@@ -226,6 +226,8 @@ jobs:
         run: node tests/browser_smoke.js
       - name: Installable app in Chromium (service worker, cache, manifest, splash)
         run: node tests/pwa_browser.js
+      - name: Push subscription kept current in Chromium (saved at once / every 3 days after a random wait / off kept / other key replaced)
+        run: WP_CLI="wp --path=$WP" node tests/push_sync_browser.js
       - name: Arabic (RTL) pass
         run: |
           wp language core install ar --path="$WP"
