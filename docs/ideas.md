@@ -3,6 +3,14 @@
 Future features the owner wants to keep, not scheduled yet. When one is picked up, turn it into a
 brief in `docs/tasks/` (like `docs/tasks/multisite.md`) and mark it here as **Scheduled**.
 
+## Important: next up
+
+| Idea | Status | Added |
+|---|---|---|
+| **Organization chart** → [`docs/tasks/org-chart.md`](tasks/org-chart.md), mockups [`docs/mockups/org-chart/`](mockups/org-chart/) | **Important, to build soon** (decisions taken, mockups ready) | 2026-10-10 |
+
+## All ideas
+
 | Idea | Status | Added |
 |---|---|---|
 | [Field visits and missions](#field-visits-and-missions) | Idea | 2026-10-09 |
