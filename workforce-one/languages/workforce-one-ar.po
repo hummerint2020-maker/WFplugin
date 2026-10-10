@@ -5469,3 +5469,76 @@ msgstr "مثلاً: موبايل المسؤول كان بايظ؛ الحضور �
 #: daily-workers
 msgid "Save the day"
 msgstr "احفظ اليوم"
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "Schedule & places"
+msgstr "الجدول والأماكن"
+
+msgid "Engagement"
+msgstr "التفاعل"
+
+msgid "Departments"
+msgstr "الأقسام"
+
+msgid "Branches"
+msgstr "الفروع"
+
+msgid "Insights"
+msgstr "التحليلات"
+
+msgid "Auto attendance"
+msgstr "الحضور التلقائي"
+
+msgid "Face resets"
+msgstr "إعادة الوجه"
+
+msgid "Requests Hub"
+msgstr "مركز الطلبات"
+
+msgid "Leaves"
+msgstr "الإجازات"
+
+msgid "Approval workflows"
+msgstr "مسارات الموافقة"
+
+msgid "Work locations"
+msgstr "أماكن العمل"
+
+msgid "Kiosks"
+msgstr "أكشاك الحضور"
+
+msgid "Payroll"
+msgstr "المرتبات"
+
+msgid "Moments"
+msgstr "المناسبات"
+
+msgid "Nudges"
+msgstr "التنبيهات الذكية"
+
+msgid "Features"
+msgstr "المميزات"
+
+msgid "Roles & permissions"
+msgstr "الصلاحيات"
+
+msgid "Appearance"
+msgstr "الشكل"
+
+msgid "App menu"
+msgstr "قائمة التطبيق"
+
+msgid "Profile page"
+msgstr "صفحة الملف"
+
+msgid "Overview"
+msgstr "نظرة عامة"
+
+msgid "Audit log"
+msgstr "سجل التغييرات"
+
+msgctxt "admin menu section"
+msgid "Pay"
+msgstr "المرتبات"

@@ -80,10 +80,9 @@ trait EWS_Admin_Trait {
             if(!$this->has_ews_admin_access()) return;
             // The parent menu is visible to EWS users with at least one management capability.
             // Each submenu keeps its own capability, so permissions remain independent.
-            add_menu_page('Employee Schedule','Employee Schedule','read','ews31',[$this,'admin_home_router'],'dashicons-groups',26);
-            // Keep the Workforce One admin menu flat and workflow-oriented.
-            // No custom section headers or deep nesting: daily operational screens first,
-            // configuration and administration later. Capabilities and page handlers remain unchanged.
+            add_menu_page('Workforce One','Workforce One','read','ews31',[$this,'admin_home_router'],'dashicons-groups',26);
+            // Every page is registered here with its own capability; admin_nav_apply() (below) then shows
+            // them as 8 sections with tabs (3.31.88, includes/trait-admin-nav.php).
             add_submenu_page('ews31','Employees','Employees','ews_manage_employees','ews31-employees',[$this,'admin_employees']);
             add_submenu_page('ews31','Employee Profile','Employee Profile','ews_manage_employees','ews31-employee-profile',[$this,'admin_employee_profile']);
             add_submenu_page('ews31','Attendance Insights','Attendance Insights','ews_view_reports','ews31-attendance-insights',[$this,'admin_attendance_insights']);
@@ -120,12 +119,9 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Appearance','Appearance','ews_manage_settings','ews31-appearance',[$this,'admin_appearance']);
             add_submenu_page('ews31','Approval Workflows','Approval Workflows','manage_options','ews31-approvals',[$this,'admin_approval_workflows']);
             add_submenu_page('ews31','Settings Overview','Settings Overview','manage_options','ews31-settings-overview',[$this,'admin_settings_overview']);
-            // Keep Employee Profile registered so direct URLs remain authorized (removing the
-            // submenu entry would make WordPress refuse the page), but hide its menu link on every
-            // screen: profiles are opened from Employees.
-            add_action('admin_head', function(){
-                echo '<style>#toplevel_page_ews31 .wp-submenu a[href="admin.php?page=ews31-employee-profile"]{display:none!important}</style>';
-            });
+            // The menu in sections: one item per section, the other pages kept (WordPress refuses a page
+            // that is not in the menu) but hidden, Employee Profile included (opened from Employees).
+            $this->admin_nav_apply();
         }
 
 

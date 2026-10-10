@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.88
+wp-admin menu in sections (owner-approved mockup, docs/mockups/admin-menu/). No database change.
+
+### Changed
+- **The menu is "Workforce One" with 8 sections instead of 32 items**: Home, People, Attendance,
+  Requests, Schedule & places, Pay, Engagement, Settings. Each section opens its first page, and every
+  page of a section shows the section's pages as tabs at the top (none for a section with one page).
+  The section of the page being shown stays highlighted, also for pages opened from another page (an
+  employee's profile is under People → Employees).
+- **Every page keeps its address and its permission.** Old links, bookmarks and links in emails and
+  notifications still open the same page, now inside its section. A person sees only the sections and
+  tabs they may open (a manager allowed only Sign In / Out and reports sees Home and Attendance).
+- **A tab whose feature is off is not shown** (Tasks, Recognition, Face resets; Corrections and Daily
+  workers as before); its page still opens from a link.
+- Section and tab names are translated (Arabic).
+
+### Tests
+- tests/unit/AdminNavTest.php; tests/e2e_admin_nav.py (18 checks, in CI).
+
 ## 3.31.87
 Push notifications that stopped reaching some employees. No database change.
 
