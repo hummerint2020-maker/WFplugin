@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.31.81
+### Changed
+- **Face Sign In off means no Face card.** With "Face Verification for Sign In" off (Feature
+  Configuration), Sign In / Out no longer shows the Face Sign In card ("available but currently
+  optional"), its camera dialog or the "Face check" line. Turning it back on shows them again; enrolled
+  faces are kept.
+
 ## 3.31.80
 ### Changed
 - **A correction request offers only what fits the day.** Before, every enabled kind could be picked for

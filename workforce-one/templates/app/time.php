@@ -113,7 +113,7 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
                     elseif ($sign_in_open) echo esc_html(sprintf(__('Open until %s','workforce-one'), $signin_bounds['cutoff'] ? date_i18n('g:i A', $signin_bounds['cutoff']) : $hours_end_label));
                     else echo esc_html__('Closed','workforce-one');
                 ?></small></span></li>
-                <li class="<?php echo !$face_signin_enabled ? 'is-none' : ($face_enrolled ? 'is-info' : 'is-warn'); ?>"><span class="wfo-check-icon"><?php echo Icons::svg('user', 18); ?></span><span><strong><?php esc_html_e('Face check','workforce-one'); ?></strong><small><?php echo esc_html(!$face_signin_enabled ? __('Optional','workforce-one') : ($face_enrolled ? __('Camera opens on Sign In','workforce-one') : __('Set up your face first','workforce-one'))); ?></small></span></li>
+                <?php if($face_signin_enabled): ?><li class="<?php echo !$face_signin_enabled ? 'is-none' : ($face_enrolled ? 'is-info' : 'is-warn'); ?>"><span class="wfo-check-icon"><?php echo Icons::svg('user', 18); ?></span><span><strong><?php esc_html_e('Face check','workforce-one'); ?></strong><small><?php echo esc_html(!$face_signin_enabled ? __('Optional','workforce-one') : ($face_enrolled ? __('Camera opens on Sign In','workforce-one') : __('Set up your face first','workforce-one'))); ?></small></span></li><?php endif; ?>
             </ul>
 
             <?php if($break_data && $signed_in && !isset($ev['sign_out'])): ?>
@@ -165,6 +165,7 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
             <?php if($working && $presence_enabled && $emp): ?>
             <div class="ews-face-lab wfo-panel"><div class="ews-face-lab-head"><span class="wfo-panel-icon is-blue"><?php echo Icons::svg('alert', 22); ?></span><div><h3><?php esc_html_e('Presence Verification','workforce-one'); ?></h3><p><?php esc_html_e('If a manager requests a physical presence check, the request will appear here and in your notifications.','workforce-one'); ?></p></div><span class="wfo-panel-tag"><?php esc_html_e('Optional','workforce-one'); ?></span></div><a class="ews-face-lab-btn" href="<?php echo esc_url($presence_url); ?>"><?php echo Icons::svg('arrow', 18); ?><span>Open Presence Verification</span></a></div>
             <?php endif; ?>
+            <?php if($face_signin_enabled): // Face Sign In off: no card, no camera, no face model ?>
             <div class="ews-face-module" id="ews-face-module" data-vendor-base="<?php echo esc_attr($face_vendor_url); ?>" data-api-base="<?php echo esc_attr(rest_url('workforce-one/v1/')); ?>" data-wp-nonce="<?php echo esc_attr(wp_create_nonce('wp_rest')); ?>" data-server-enrolled="<?php echo $face_enrolled?'1':'0'; ?>" data-face-required="<?php echo $face_signin_enabled?'1':'0'; ?>" data-face-config="<?php echo esc_attr(wp_json_encode($face_settings)); ?>">
             <div class="ews-face-lab wfo-panel">
               <div class="ews-face-lab-head">
@@ -186,3 +187,5 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
                 </div>
               </div>
             </div>
+            </div>
+            <?php endif; ?>
