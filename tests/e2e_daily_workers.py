@@ -336,7 +336,8 @@ ppg = app(cash, 'payout', site=A)
 pdf_url = link(ppg, 'ews_dw_payout_pdf')
 pst, pbody, ph = cash.req(pdf_url)
 check('payout sheet: a PDF', pst == 200 and ph.get('Content-Type', '').startswith('application/pdf') and pbody.startswith('%PDF'), (pst, ph.get('Content-Type')))
-npd = form_nonce(ppg, 'ews_dw_paid')
+# The Paid form is shown only once the period can be paid (3.31.83), so the nonce may not be on the page.
+npd = form_nonce(ppg, 'ews_dw_paid') or nonce_for(cash, 'ews_dw_paid')
 # Paying locks the period, so a week that is still running cannot be paid yet (3.31.83).
 if p['end'] > TODAY:
     check('paid: a week not over yet is refused', post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {'photo': PNG}).get('dw_error') == 'open')
@@ -406,7 +407,8 @@ check('Days: the change is kept (Not recorded → Present, approved, with the re
 qs = post(hr, dict(base_day, _wpnonce=form_nonce(page(hr, '/wp-admin/admin.php?page=ews31-daily-workers&tab=days&site=%d&day=%s' % (A, EARLY)), 'ews_dw_admin_day'), **{'mark[%d]' % W1: 'half', 'extra[%d]' % W1: '0'}, reason='Left at noon'))
 check('Days: correcting it again keeps both steps in Changes', qs.get('done') == 'day_saved' and len(q("SELECT * FROM {p}ews_dw_changes WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))) == 2
       and q("SELECT mark FROM {p}ews_dw_days WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))[0]['mark'] == 'half')
-past = app(fm, 'sites', site=A, day=EARLY)
+past = app(fm, 'sites', site=A, dw_day=EARLY)
+check('app: an earlier day is a page, not a 404 (?dw_day=, not the WordPress date var ?day=)', fm.req('/app/?ews_view=sites&site=%d&dw_day=%s' % (A, EARLY))[0] == 200)
 check('app: the foreman opens an earlier day, read-only, with "Ask to change"', 'Mohamed Abdallah' in past and 'wfo-dw-confirm' not in past and 'data-dw-more="change"' in past and 'in wp-admin' in past)
 check('app: today\'s sheet has the arrows to earlier days', 'wfo-dw-days' in app(fm, 'sites', site=A))
 check('Days: a paid day cannot be set', post(hr, dict(base_day, _wpnonce=nd, day=TODAY, reason='x')).get('dw_error') == 'paid')

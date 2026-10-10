@@ -1202,9 +1202,9 @@ trait EWS_Daily_Workers_Trait {
     private function dw_day_content($site_id){
         global $wpdb;
         $s=$this->dw_site($site_id);
-        // ?day= an earlier day, shown as it was recorded (read-only; a change is a request).
+        // ?dw_day= an earlier day (not ?day=: a WordPress date query var, the page would be a 404), shown as it was recorded (read-only; a change is a request).
         $today=current_time('Y-m-d');
-        $date=sanitize_text_field(wp_unslash((string)($_GET['day']??''))); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- navigation
+        $date=sanitize_text_field(wp_unslash((string)($_GET['dw_day']??''))); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- navigation
         if(!$this->dw_is_date($date) || $date>$today)$date=$today;
         $past=$date<$today;
         $workers=$this->dw_site_workers($site_id,$date);
@@ -1239,10 +1239,10 @@ trait EWS_Daily_Workers_Trait {
         return is_string($d) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/',$d,$m) && checkdate((int)$m[2],(int)$m[3],(int)$m[1]);
     }
 
-    /** A site's day sheet in the app: today without ?day=. */
+    /** A site's day sheet in the app: today without ?dw_day=. */
     private function dw_day_url($site_id,$date){
         $args=['ews_view'=>'sites','site'=>(int)$site_id];
-        if($date<current_time('Y-m-d'))$args['day']=$date;
+        if($date<current_time('Y-m-d'))$args['dw_day']=$date;
         return add_query_arg($args,$this->app_home_url());
     }
 

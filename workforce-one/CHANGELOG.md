@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.86
+Review of 3.31.78–3.31.85. No database change.
+
+### Fixed
+- **An earlier day of a site opened "Page not found"** (App → My sites → ‹): the link used `?day=`,
+  which WordPress reads as a date archive. It is now `?dw_day=`. wp-admin → Daily Workers → Days is
+  not affected.
+- **Daily workers test (CI)**: the Paid form is shown only once a period can be paid (3.31.83), so the
+  test took its nonce from a form that was not on the page and failed on every day but the period's
+  last. It now asks for the nonce directly, and checks that an earlier day is a page, not a 404.
+
 ## 3.31.85
 Daily workers: earlier days. No database change.
 
