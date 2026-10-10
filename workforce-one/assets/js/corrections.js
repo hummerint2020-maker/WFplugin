@@ -21,6 +21,8 @@
         var recIn = form.querySelector('[data-cx-rec-in]');
         var recOut = form.querySelector('[data-cx-rec-out]');
         var photoHint = photoName ? photoName.textContent : '';
+        var none = form.querySelector('[data-cx-none]');
+        var submit = form.querySelector('.wfo-sheet-submit');
 
         function type() {
             var r = form.querySelector('[name=type]:checked');
@@ -29,11 +31,33 @@
 
         function day() {
             var o = date.options[date.selectedIndex];
-            return o ? { inTime: o.getAttribute('data-in') || '', outTime: o.getAttribute('data-out') || '' } : { inTime: '', outTime: '' };
+            return o ? { inTime: o.getAttribute('data-in') || '', outTime: o.getAttribute('data-out') || '', kinds: (o.getAttribute('data-kinds') || '').split(' ').filter(Boolean), off: o.disabled }
+                : { inTime: '', outTime: '', kinds: [], off: true };
+        }
+
+        // Only the kinds that fit the chosen day can be picked (no "Forgot Sign Out" on a day that has one).
+        function fit(d) {
+            var radios = form.querySelectorAll('[name=type]'), cur = form.querySelector('[name=type]:checked'), first = null;
+            radios.forEach(function (r) {
+                var ok = !d.off && d.kinds.indexOf(r.value) !== -1;
+                r.disabled = !ok;
+                r.closest('.wfo-cx-type').classList.toggle('is-off', !ok);
+                if (ok && !first) first = r;
+            });
+            if (first && (!cur || cur.disabled)) first.checked = true;
+            if (!first && cur) cur.checked = false;
+            if (none) none.hidden = !!first;
+            if (submit) submit.disabled = !first;
+            // "Wrong time" can only change a time that is recorded.
+            target.options[0].disabled = !d.inTime;
+            target.options[1].disabled = !d.outTime;
+            if (target.options[target.selectedIndex].disabled) target.selectedIndex = d.inTime ? 0 : 1;
         }
 
         function update() {
-            var t = type(), d = day();
+            var d = day();
+            fit(d);
+            var t = type();
             if (recIn) { recIn.textContent = d.inTime || '—'; recIn.classList.toggle('is-missing', !d.inTime); }
             if (recOut) { recOut.textContent = d.outTime || '—'; recOut.classList.toggle('is-missing', !d.outTime); }
             var keys = [t];

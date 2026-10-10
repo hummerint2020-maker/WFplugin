@@ -7107,3 +7107,11 @@ msgstr ""
 #: templates/app/correction-days.php
 msgid "Not signed in yet"
 msgstr ""
+
+#: templates/app/correction-sheet.php
+msgid "nothing to correct"
+msgstr ""
+
+#: templates/app/correction-sheet.php
+msgid "Nothing on this day can be corrected from the app. If a time is wrong, ask HR."
+msgstr ""

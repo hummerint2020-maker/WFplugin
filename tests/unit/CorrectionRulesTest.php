@@ -129,4 +129,18 @@ final class CorrectionRulesTest extends TestCase
         $this->assertSame('planned', CorrectionRules::dayNote('Business Trip', false, 0));
         $this->assertSame('not_scheduled', CorrectionRules::dayNote('', false, 0));
     }
+
+    public function testKindsOfferOnlyWhatFitsTheDay(): void
+    {
+        $all = ['out' => 1, 'in' => 1, 'time' => 1, 'day' => 1];
+        $this->assertSame(['out', 'time'], CorrectionRules::kinds(true, false, $all));   // forgot to sign out
+        $this->assertSame(['in', 'day'], CorrectionRules::kinds(false, false, $all));    // nothing recorded
+        $this->assertSame(['in', 'time'], CorrectionRules::kinds(false, true, $all));    // Sign Out only
+        $this->assertSame(['time'], CorrectionRules::kinds(true, true, $all));           // a complete day
+        // Only the two "forgot" kinds enabled: a complete day has nothing to request.
+        $forgot = ['out' => 1, 'in' => 1, 'time' => 0, 'day' => 0];
+        $this->assertSame([], CorrectionRules::kinds(true, true, $forgot));
+        $this->assertSame(['out'], CorrectionRules::kinds(true, false, $forgot));
+        $this->assertSame(['in'], CorrectionRules::kinds(false, false, $forgot));
+    }
 }

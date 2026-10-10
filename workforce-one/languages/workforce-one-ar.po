@@ -5377,3 +5377,11 @@ msgstr "في إجازة"
 #: templates/app/correction-days.php
 msgid "Not signed in yet"
 msgstr "لم يُسجَّل الحضور بعد"
+
+#: templates/app/correction-sheet.php
+msgid "nothing to correct"
+msgstr "لا يوجد ما يُصحَّح"
+
+#: templates/app/correction-sheet.php
+msgid "Nothing on this day can be corrected from the app. If a time is wrong, ask HR."
+msgstr "لا يوجد في هذا اليوم ما يمكن تصحيحه من التطبيق. إذا كان هناك وقت غير صحيح، تواصل مع الموارد البشرية."

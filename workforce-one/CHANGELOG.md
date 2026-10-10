@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.80
+### Changed
+- **A correction request offers only what fits the day.** Before, every enabled kind could be picked for
+  any day and the request was refused only after sending (e.g. "Forgot Sign Out" on a day that has a
+  Sign Out). Now: Forgot Sign Out needs a Sign In and no Sign Out, Forgot Sign In needs no Sign In,
+  Whole day missing needs neither, Wrong time needs a recorded time (and only that time can be chosen).
+  The others are greyed out, and the first that fits is chosen.
+- **"Correct" only on days that can be corrected.** A day where no enabled kind fits (with only the two
+  "Forgot" kinds on, a complete day) has no button, and is "nothing to correct" in the form's day list.
+  If no day fits, the form says so and Send is off. The server still refuses anything that does not fit.
+- API `GET corrections/days`: each day has `kinds`; `can_request` is false when none fit.
+
 ## 3.31.79
 ### Fixed
 - **Sign In / Out layout**: "My recent days" sat against the left edge and was wider than the cards above

@@ -45,6 +45,10 @@
 .wfo-cx-type input:checked+span{border-color:var(--wfo-pri);background:var(--wfo-pri-soft);color:var(--wfo-pri)}
 .wfo-cx-type input:checked+span .wfo-icon{color:var(--wfo-pri)}
 .wfo-cx-type input:focus-visible+span{outline:3px solid var(--wfo-pri-soft);outline-offset:1px}
+.wfo-cx-type.is-off{cursor:not-allowed}
+.wfo-cx-type.is-off span{opacity:.45;background:#F5F6FA}   /* a kind that does not fit the chosen day */
+.wfo-cx-none{display:flex;align-items:center;gap:8px;margin:0;padding:10px 12px;border-radius:12px;background:#FFF2DE;color:#8A4F00;font-size:12.5px;font-weight:600}
+.wfo-cx-none[hidden]{display:none}
 .wfo-cx-photo{cursor:pointer}
 .wfo-cx-photo span{display:block}
 .wfo-cx-record .is-missing{color:#B42318}

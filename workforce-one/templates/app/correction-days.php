@@ -50,15 +50,18 @@ $arrow = is_rtl() ? '←' : '→';
             else $note = __('Not scheduled', 'workforce-one');
         }
         $type = in_array($d['problem'], ['today', 'no_out'], true) ? 'out' : ($d['problem'] === 'absent' ? ($d['in'] === '' && $d['out'] === '' ? 'day' : 'in') : 'time');
+        // A button only when a kind of request fits the day (a complete day needs "Wrong time").
+        $can = $d['can'] && $d['kinds'];
+        if ($can && !in_array($type, $d['kinds'], true)) $type = $d['kinds'][0];
         $attrs = ' data-cx-open data-date="' . esc_attr($d['date']) . '" data-in="' . esc_attr($d['in']) . '" data-out="' . esc_attr($d['out']) . '" data-type="' . esc_attr($type) . '" data-label="' . esc_attr(date_i18n('l j F', strtotime($d['date']))) . '"';
         $ts = strtotime($d['date']);
     ?>
-        <div class="wfo-cx-day<?php echo $d['problem'] && $d['problem'] !== 'today' && $d['can'] ? ' is-problem' : ''; ?>">
+        <div class="wfo-cx-day<?php echo $d['problem'] && $d['problem'] !== 'today' && $can ? ' is-problem' : ''; ?>">
             <div class="wfo-cx-date"><b><?php echo esc_html(date_i18n('j', $ts)); ?></b><small><?php echo esc_html(date_i18n('D', $ts)); ?></small></div>
             <div class="wfo-cx-day-main"><p class="wfo-cx-times"><?php echo $times; ?></p><p class="wfo-cx-note"><?php echo esc_html($note); ?></p></div>
-            <?php if ($chip): echo $chip; elseif ($d['can'] && $d['problem'] && $d['problem'] !== 'today'): ?>
+            <?php if ($chip): echo $chip; elseif ($can && $d['problem'] && $d['problem'] !== 'today'): ?>
                 <button type="button" class="wfo-cx-fix"<?php echo $attrs; ?>><?php echo Icons::svg('edit', 15, 2.2); ?><?php esc_html_e('Request correction', 'workforce-one'); ?></button>
-            <?php elseif ($d['can']): ?>
+            <?php elseif ($can): ?>
                 <button type="button" class="wfo-cx-fix is-soft"<?php echo $attrs; ?>><?php esc_html_e('Correct', 'workforce-one'); ?></button>
             <?php endif; ?>
         </div>

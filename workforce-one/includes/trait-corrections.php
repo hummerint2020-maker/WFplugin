@@ -579,7 +579,8 @@ trait EWS_Corrections_Trait {
             elseif($d['sign_in']!=='' && $d['sign_out']==='')$problem='no_out';
             elseif($d['sign_in']==='' && ($d['result']??'')==='Absent')$problem='absent';
             $open=$req && in_array($req->status,['pending','pending_hr'],true);
-            $out[]=['date'=>$date,'in'=>(string)$d['sign_in'],'out'=>(string)$d['sign_out'],'result'=>(string)($d['result']??''),'planned'=>(string)($d['planned']??''),
+            $kinds=CorrectionRules::kinds((string)$d['sign_in']!=='',(string)$d['sign_out']!=='',$s['types']);   // only what fits the day
+            $out[]=['date'=>$date,'in'=>(string)$d['sign_in'],'out'=>(string)$d['sign_out'],'kinds'=>$kinds,'result'=>(string)($d['result']??''),'planned'=>(string)($d['planned']??''),
                 'late'=>(int)($d['late_minutes']??0),'holiday'=>(string)($d['holiday']??''),'problem'=>$problem,'request'=>$req,'can'=>!$open,'today'=>$date===$today];
         }
         return $out;
@@ -896,7 +897,7 @@ trait EWS_Corrections_Trait {
         if($e=$this->cx_api_guard())return $e;
         $emp=self::$api_session['employee'];$s=$this->correction_settings();
         $days=array_map(function($d){return ['date'=>$d['date'],'sign_in'=>$d['in']?:null,'sign_out'=>$d['out']?:null,'result'=>$d['result'],'problem'=>$d['problem']?:null,
-            'can_request'=>(bool)$d['can'],'request'=>$d['request']?$this->cx_api_view($d['request']):null];},$this->cx_recent_days($emp));
+            'can_request'=>(bool)$d['can'] && $d['kinds'],'kinds'=>$d['kinds'],'request'=>$d['request']?$this->cx_api_view($d['request']):null];},$this->cx_recent_days($emp));
         $types=[];foreach(CorrectionSettings::TYPES as $t)if(!empty($s['types'][$t]))$types[]=['type'=>$t,'label'=>$this->cx_type_label($t),'photo'=>$s['photo'][$t]];
         return $this->api_ok(['days'=>$days,'types'=>$types,'deadline_days'=>(int)$s['deadline_days'],'monthly_limit'=>(int)$s['monthly_limit'],'used_this_month'=>$this->cx_month_count((int)$emp->id,current_time('Y-m-d'))]);
     }

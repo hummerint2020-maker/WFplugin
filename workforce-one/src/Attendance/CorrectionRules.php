@@ -118,6 +118,21 @@ final class CorrectionRules
     }
 
     /**
+     * The kinds of request that fit a day as it is recorded, among the enabled ones (the form offers
+     * only these; check() refuses the others): Forgot Sign Out needs a Sign In and no Sign Out, Forgot
+     * Sign In needs no Sign In, Whole day missing needs neither, Wrong time needs one of them.
+     * @param array<string,int|bool> $enabled  CorrectionSettings::config()['types']
+     * @return string[] in CorrectionSettings::TYPES order
+     */
+    public static function kinds(bool $has_in, bool $has_out, array $enabled): array
+    {
+        $fits = ['out' => $has_in && !$has_out, 'in' => !$has_in, 'time' => $has_in || $has_out, 'day' => !$has_in && !$has_out];
+        $out = [];
+        foreach (['out', 'in', 'time', 'day'] as $t) if (!empty($enabled[$t]) && $fits[$t]) $out[] = $t;
+        return $out;
+    }
+
+    /**
      * What "My recent days" says under a day that needs no correction, from its report_days() result:
      * late | on_time | day_off | leave | holiday | not_scheduled | pending | absent | planned (show the
      * planned status, e.g. a business trip). Only a day with a Sign In is "on time".

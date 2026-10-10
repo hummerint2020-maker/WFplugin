@@ -5,7 +5,7 @@
  * push (?cx=out&cx_date=…). assets/js/corrections.js fills the day and shows the right fields.
  *
  * @var array<string,array{label:string,photo:string}> $types  enabled types
- * @var array<int,array<string,mixed>> $days   recent days (the day picker)
+ * @var array<int,array<string,mixed>> $days   recent days (the day picker); ->kinds: the kinds that fit the day
  * @var array<string,mixed> $settings
  * @var int    $used
  * @var string $post_url
@@ -30,7 +30,7 @@ $limit = (int) $settings['monthly_limit'];
 
         <div class="wfo-rq-field"><label for="wfo-cx-date"><?php esc_html_e('Day', 'workforce-one'); ?></label>
             <select id="wfo-cx-date" name="date" required>
-                <?php foreach ($days as $d): ?><option value="<?php echo esc_attr($d['date']); ?>" data-in="<?php echo esc_attr($d['in']); ?>" data-out="<?php echo esc_attr($d['out']); ?>"<?php disabled(!$d['can']); ?>><?php echo esc_html(date_i18n('l j F', strtotime($d['date'])) . ($d['can'] ? '' : ' · ' . __('waiting', 'workforce-one'))); ?></option><?php endforeach; ?>
+                <?php foreach ($days as $d): $fits = $d['can'] && $d['kinds']; ?><option value="<?php echo esc_attr($d['date']); ?>" data-in="<?php echo esc_attr($d['in']); ?>" data-out="<?php echo esc_attr($d['out']); ?>" data-kinds="<?php echo esc_attr(implode(' ', $d['kinds'])); ?>"<?php disabled(!$fits); ?>><?php echo esc_html(date_i18n('l j F', strtotime($d['date'])) . (!$d['can'] ? ' · ' . __('waiting', 'workforce-one') : ($fits ? '' : ' · ' . __('nothing to correct', 'workforce-one')))); ?></option><?php endforeach; ?>
             </select>
         </div>
         <div class="wfo-cx-record" aria-live="polite"><div><span><?php esc_html_e('Sign In', 'workforce-one'); ?></span><strong data-cx-rec-in>—</strong></div><div><span><?php esc_html_e('Sign Out', 'workforce-one'); ?></span><strong data-cx-rec-out>—</strong></div></div>
@@ -42,6 +42,7 @@ $limit = (int) $settings['monthly_limit'];
                 <?php $first = false; endforeach; ?>
             </div>
         </div>
+        <p class="wfo-cx-none" data-cx-none hidden><?php echo Icons::svg('alert', 16, 2.4); ?><span><?php esc_html_e('Nothing on this day can be corrected from the app. If a time is wrong, ask HR.', 'workforce-one'); ?></span></p>
         <div class="wfo-rq-field" data-cx-show="time"><label for="wfo-cx-target"><?php esc_html_e('Which time is wrong?', 'workforce-one'); ?></label>
             <select id="wfo-cx-target" name="target"><option value="sign_in"><?php esc_html_e('Sign In', 'workforce-one'); ?></option><option value="sign_out"><?php esc_html_e('Sign Out', 'workforce-one'); ?></option></select>
         </div>
