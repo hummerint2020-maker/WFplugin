@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.31.85
+Daily workers: earlier days. No database change.
+
+### Added
+- **Earlier days in the app.** A site's day sheet has ‹ Today › arrows: an earlier day shows as it was
+  recorded (workers, marks, extra hours, cost, group photo), read-only. A wrong day is fixed with
+  "Ask to change" (⋮), the same request a manager approves in Changes. Before, the page showed today
+  only, so an earlier day could not even be asked to change.
+- **wp-admin → Daily Workers → Days.** HR picks a site and a day (today or earlier) and sets each
+  worker's attendance and extra hours: a day the foreman did not record (no position or photo; the
+  app shows "Set by … in wp-admin"), or a correction. A reason is required; every changed worker gets
+  an approved entry in Changes ("Not recorded → Present", by whom, why) and the Audit Log. A paid
+  period, a day recorded at another site and a day with a change waiting cannot be set there.
+
 ## 3.31.84
 ### Fixed
 - **Day sheet and payout pages were slow, and a photo could not be opened on a phone.** The small photo

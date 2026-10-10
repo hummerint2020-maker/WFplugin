@@ -25,11 +25,15 @@
  * @var string $open            a sheet to open (add)
  * @var string $tomorrow
  * @var string $date
+ * @var bool   $past         an earlier day (?day=): shown as recorded, read-only
+ * @var string $prev_url
+ * @var string $next_url     '' on today
+ * @var string $today_url
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup
-$locked = (bool) $sheet || $paid || !$foreman_ok;
+$locked = (bool) $sheet || $paid || !$foreman_ok || $past;
 $count = ['in' => 0, 'half' => 0, 'out' => 0];
 $extra = 0.0;
 $cost = 0.0;
@@ -44,7 +48,12 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
 ?>
 <div class="wfo-dw" data-dw-day data-money="<?php echo esc_attr($money(1234)); ?>">
     <a class="wfo-dw-back" href="<?php echo esc_url($back_url); ?>"><?php echo Icons::svg('chevron', 16, 2.2); ?><?php esc_html_e('My sites', 'workforce-one'); ?></a>
-    <section class="wfo-dw-hero"><small><?php /* translators: %s: date */ echo esc_html(sprintf(__('Today · %s', 'workforce-one'), $today)); ?></small><strong><?php echo esc_html($site->name); ?></strong>
+    <nav class="wfo-dw-days" aria-label="<?php esc_attr_e('Day', 'workforce-one'); ?>">
+        <a href="<?php echo esc_url($prev_url); ?>" aria-label="<?php esc_attr_e('Previous day', 'workforce-one'); ?>"><?php echo Icons::svg('chevron', 16, 2.4); ?></a>
+        <?php if ($past): ?><a class="is-today" href="<?php echo esc_url($today_url); ?>"><?php esc_html_e('Today', 'workforce-one'); ?></a><?php endif; ?>
+        <?php if ($next_url): ?><a href="<?php echo esc_url($next_url); ?>" aria-label="<?php esc_attr_e('Next day', 'workforce-one'); ?>" class="is-next"><?php echo Icons::svg('chevron', 16, 2.4); ?></a><?php else: ?><span class="is-next" aria-hidden="true"><?php echo Icons::svg('chevron', 16, 2.4); ?></span><?php endif; ?>
+    </nav>
+    <section class="wfo-dw-hero"><small><?php /* translators: %s: date */ echo esc_html($past ? $today : sprintf(__('Today · %s', 'workforce-one'), $today)); ?></small><strong><?php echo esc_html($site->name); ?></strong>
         <div class="wfo-dw-counts">
             <div><b data-dw-count="in"><?php echo (int) $count['in']; ?></b><span><?php esc_html_e('Present', 'workforce-one'); ?></span></div>
             <div><b data-dw-count="half"><?php echo (int) $count['half']; ?></b><span><?php esc_html_e('Half day', 'workforce-one'); ?></span></div>
@@ -63,17 +72,21 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
         <input type="hidden" name="latitude" value=""><input type="hidden" name="longitude" value=""><input type="hidden" name="accuracy" value=""><input type="hidden" name="location_timestamp" value="">
         <section class="wfo-dw-list">
             <div class="wfo-dw-list-head"><h3><?php /* translators: %d: number of workers */ echo esc_html(sprintf(__('Workers (%d)', 'workforce-one'), count($rows))); ?></h3>
-                <?php if (!$sheet && !$paid): ?><button type="button" data-wfo-sheet="wfo-dw-add"><?php echo Icons::svg('plus', 15, 2.4); ?><?php esc_html_e('New worker', 'workforce-one'); ?></button><?php endif; ?></div>
+                <?php if (!$sheet && !$paid && !$past): ?><button type="button" data-wfo-sheet="wfo-dw-add"><?php echo Icons::svg('plus', 15, 2.4); ?><?php esc_html_e('New worker', 'workforce-one'); ?></button><?php endif; ?></div>
             <?php if (!$rows): ?>
-                <div class="wfo-rq-empty"><span class="wfo-rq-ico" aria-hidden="true"><?php echo Icons::svg('people', 24, 2); ?></span><strong><?php esc_html_e('There are no workers at this site today.', 'workforce-one'); ?></strong><p><?php esc_html_e('Add a worker with "New worker", or move one here from another site.', 'workforce-one'); ?></p></div>
+                <div class="wfo-rq-empty"><span class="wfo-rq-ico" aria-hidden="true"><?php echo Icons::svg('people', 24, 2); ?></span><strong><?php echo esc_html($past ? __('Nobody was recorded at this site on this day.', 'workforce-one') : __('There are no workers at this site today.', 'workforce-one')); ?></strong><p><?php esc_html_e('Add a worker with "New worker", or move one here from another site.', 'workforce-one'); ?></p></div>
             <?php endif; ?>
             <?php foreach ($rows as $r):
                 $dis = $locked || $r['elsewhere'] ? ' disabled' : ''; ?>
                 <div class="wfo-dw-worker<?php echo $r['mark'] === 'out' ? ' is-out' : ''; ?>" data-dw-worker="<?php echo (int) $r['id']; ?>" data-rate="<?php echo esc_attr((string) $r['rate']); ?>" data-hourly="<?php echo esc_attr((string) $r['hourly']); ?>"<?php echo $r['elsewhere'] ? ' data-elsewhere' : ''; ?>>
                     <div class="wfo-dw-who"><span class="wfo-dw-av"><?php echo esc_html($r['initials']); ?></span><div><strong><?php echo esc_html($r['name']); ?></strong>
                         <small><?php echo esc_html(implode(' · ', array_filter([$r['trade'], $money($r['rate']), $r['sub']]))); ?><?php if ($r['self']): ?> · <span class="is-self"><?php esc_html_e('self sign-in', 'workforce-one'); ?></span><?php endif; ?><?php if ($r['elsewhere']): ?> · <?php esc_html_e('recorded at another site today', 'workforce-one'); ?><?php endif; ?><?php if ($r['pending']): ?> · <span class="is-self"><?php esc_html_e('change waiting', 'workforce-one'); ?></span><?php endif; ?></small></div>
-                        <?php if (!$paid && !$r['elsewhere'] && (($sheet && $r['day_id'] && !$r['pending']) || (!$sheet && $others))): ?>
-                            <button type="button" class="wfo-dw-more" aria-label="<?php esc_attr_e('More', 'workforce-one'); ?>" data-dw-more="<?php echo $sheet ? 'change' : 'move'; ?>" data-worker="<?php echo (int) $r['id']; ?>" data-name="<?php echo esc_attr($r['name']); ?>" data-day="<?php echo (int) $r['day_id']; ?>" data-mark="<?php echo esc_attr($r['mark']); ?>" data-extra="<?php echo esc_attr((string) $r['extra']); ?>"><?php echo Icons::svg('dots', 18, 2); ?></button>
+                        <?php
+                        // A recorded day (saved today, or any earlier day) can only be changed by a request; a worker is moved only before today's sheet.
+                        $can_change = !$paid && $r['day_id'] && !$r['pending'] && ($sheet || $past);
+                        $can_move = !$paid && !$sheet && !$past && !$r['elsewhere'] && $others;
+                        if ($can_change || $can_move): ?>
+                            <button type="button" class="wfo-dw-more" aria-label="<?php esc_attr_e('More', 'workforce-one'); ?>" data-dw-more="<?php echo $can_change ? 'change' : 'move'; ?>" data-worker="<?php echo (int) $r['id']; ?>" data-name="<?php echo esc_attr($r['name']); ?>" data-day="<?php echo (int) $r['day_id']; ?>" data-mark="<?php echo esc_attr($r['mark']); ?>" data-extra="<?php echo esc_attr((string) $r['extra']); ?>"><?php echo Icons::svg('dots', 18, 2); ?></button>
                         <?php endif; ?>
                     </div>
                     <div class="wfo-dw-mark">
@@ -91,12 +104,16 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
             <div class="wfo-dw-total"><span><?php esc_html_e('Cost of the day', 'workforce-one'); ?></span><b data-dw-cost><?php echo esc_html($money($cost)); ?></b></div>
         </section>
 
-        <?php if ($sheet): ?>
+        <?php if ($sheet && $sheet->integrity_status === 'admin'): ?>
+            <div class="wfo-dw-locked"><?php echo Icons::svg('lock', 18, 2.2); ?><?php /* translators: %s: name */ echo esc_html(sprintf(__('Set by %s in wp-admin (no position or photo). Changing it is a request with a reason and an approval.', 'workforce-one'), $saved_by)); ?></div>
+        <?php elseif ($sheet): ?>
             <div class="wfo-dw-photo is-set"><?php if ($photo_url): ?><a href="<?php echo esc_url($photo_url); ?>" target="_blank" rel="noopener" class="wfo-dw-shot" data-wfo-photo style="background-image:url('<?php echo esc_url($photo_thumb); ?>')" aria-label="<?php esc_attr_e('Group photo', 'workforce-one'); ?>"></a><?php else: ?><span class="wfo-dw-site-ico"><?php echo Icons::svg('check', 22, 2.2); ?></span><?php endif; ?>
                 <div><strong><?php esc_html_e('Group photo', 'workforce-one'); ?></strong><?php /* translators: %s: distance */ echo esc_html(mysql2date('H:i', $sheet->saved_at) . ($sheet->distance_meters !== null ? ' · ' . sprintf(__('%s m from the site centre', 'workforce-one'), number_format_i18n((float) $sheet->distance_meters)) : '')); ?></div></div>
             <div class="wfo-dw-locked"><?php echo Icons::svg('lock', 18, 2.2); ?><?php /* translators: 1: time, 2: foreman */ echo esc_html(sprintf(__('Saved at %1$s by %2$s. Changing a saved day is a request with a reason and an approval.', 'workforce-one'), mysql2date('H:i', $sheet->saved_at), $saved_by)); ?></div>
         <?php elseif ($paid): ?>
             <div class="wfo-dw-locked"><?php echo Icons::svg('lock', 18, 2.2); ?><?php esc_html_e('This period is paid and locked.', 'workforce-one'); ?></div>
+        <?php elseif ($past): ?>
+            <div class="wfo-dw-locked"><?php echo Icons::svg('lock', 18, 2.2); ?><?php echo esc_html($rows ? __('No day sheet was saved for this day; these are the workers\' own sign-ins. A change is a request with a reason and an approval.', 'workforce-one') : __('No day sheet was saved for this day. HR can set it in wp-admin → Daily Workers → Days.', 'workforce-one')); ?></div>
         <?php elseif (!$foreman_ok): ?>
             <div class="wfo-dw-locked"><?php echo Icons::svg('people', 18, 2.2); ?><?php esc_html_e('At this site the workers sign in themselves; the foreman does not record the day.', 'workforce-one'); ?></div>
         <?php else: ?>
@@ -110,7 +127,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
     </form>
 </div>
 
-<?php if (!$sheet && !$paid): ?>
+<?php if (!$sheet && !$paid && !$past): ?>
 <dialog class="wfo-sheet" id="wfo-dw-add" aria-labelledby="wfo-dw-add-title"<?php echo $open === 'add' ? ' data-wfo-sheet-start' : ''; ?>>
     <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-sheet-body">
         <?php wp_nonce_field('ews_dw_worker_add'); ?><input type="hidden" name="action" value="ews_dw_worker_add"><input type="hidden" name="site" value="<?php echo (int) $site->location_id; ?>">
@@ -133,7 +150,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
 </dialog>
 <?php endif; ?>
 
-<?php if (!$sheet && $others): ?>
+<?php if (!$sheet && !$past && $others): ?>
 <dialog class="wfo-sheet" id="wfo-dw-move" aria-labelledby="wfo-dw-move-title">
     <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-sheet-body">
         <?php wp_nonce_field('ews_dw_move'); ?><input type="hidden" name="action" value="ews_dw_move"><input type="hidden" name="worker" value="">
@@ -152,7 +169,7 @@ $num = static function ($v) { return number_format_i18n((float) $v, abs((float) 
 </dialog>
 <?php endif; ?>
 
-<?php if ($sheet && !$paid): ?>
+<?php if (($sheet || $past) && !$paid): ?>
 <dialog class="wfo-sheet" id="wfo-dw-change" aria-labelledby="wfo-dw-change-title">
     <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-sheet-body">
         <?php wp_nonce_field('ews_dw_change'); ?><input type="hidden" name="action" value="ews_dw_change"><input type="hidden" name="day" value="">

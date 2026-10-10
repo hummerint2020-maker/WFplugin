@@ -106,3 +106,14 @@ a.wfo-dw-btn{text-decoration:none}
 .wfo-dw-linkbtn{border:0;background:none;cursor:pointer;font:inherit;width:100%}
 .wfo-dw-me label{display:block;margin-bottom:4px;font-size:13px;font-weight:600}
 .wfo-dw-worker-link{display:block;text-align:center;color:inherit;font-weight:600}
+
+/* Earlier days (3.31.85): ‹ Today › above the sheet. */
+.wfo-dw-days{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:-4px 0 0}
+.wfo-dw-days a,.wfo-dw-days span{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;padding:0 10px;border-radius:12px;background:var(--wfo-pri-soft);color:var(--wfo-pri);font-size:13px;font-weight:700;text-decoration:none;box-sizing:border-box}
+.wfo-dw-days span{opacity:.35}
+.wfo-dw-days .wfo-icon{transform:scaleX(-1)}
+.wfo-dw-days .is-next .wfo-icon{transform:none}
+/*rtl:ignore*/
+html[dir=rtl] .wfo-dw-days .wfo-icon{transform:none}
+/*rtl:ignore*/
+html[dir=rtl] .wfo-dw-days .is-next .wfo-icon{transform:scaleX(-1)}

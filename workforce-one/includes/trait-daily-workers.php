@@ -508,6 +508,7 @@ trait EWS_Daily_Workers_Trait {
             'pin'=>__('The PIN must be 4 to 6 digits.','workforce-one'),
             'trade'=>__('Choose a trade from the list.','workforce-one'),
             'date'=>__('Choose today or a later day.','workforce-one'),
+            'date_past'=>__('Choose today or an earlier day.','workforce-one'),
             'same'=>__('The worker is already at that site.','workforce-one'),
             'amount'=>__('Enter an amount above zero.','workforce-one'),
             'nothing'=>__('There is nothing to pay in this period.','workforce-one'),
@@ -1201,8 +1202,13 @@ trait EWS_Daily_Workers_Trait {
     private function dw_day_content($site_id){
         global $wpdb;
         $s=$this->dw_site($site_id);
-        $date=current_time('Y-m-d');
+        // ?day= an earlier day, shown as it was recorded (read-only; a change is a request).
+        $today=current_time('Y-m-d');
+        $date=sanitize_text_field(wp_unslash((string)($_GET['day']??''))); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- navigation
+        if(!$this->dw_is_date($date) || $date>$today)$date=$today;
+        $past=$date<$today;
         $workers=$this->dw_site_workers($site_id,$date);
+        if($past)$workers=array_filter($workers,function($w)use($site_id){return $w->day && (int)$w->day->location_id===(int)$site_id;});
         $sheet=$this->dw_sheet($site_id,$date);
         $rows=[];
         foreach($workers as $w){
@@ -1217,7 +1223,9 @@ trait EWS_Daily_Workers_Trait {
         $set=$this->dw_settings();
         $by=$sheet?get_userdata((int)$sheet->by_user):null;
         return $this->render_template('app/dw-day',[
-            'site'=>$s,'rows'=>$rows,'sheet'=>$sheet,'saved_by'=>$by?$by->display_name:'','today'=>date_i18n('l j F',current_time('timestamp')),
+            'site'=>$s,'rows'=>$rows,'sheet'=>$sheet,'saved_by'=>$by?$by->display_name:'','today'=>date_i18n('l j F',strtotime($date)),'past'=>$past,
+            'prev_url'=>$this->dw_day_url($site_id,date('Y-m-d',strtotime($date.' -1 day'))),'next_url'=>$past?$this->dw_day_url($site_id,date('Y-m-d',strtotime($date.' +1 day'))):'',
+            'today_url'=>$this->dw_day_url($site_id,$today),
             'foreman_ok'=>SiteRules::allows($s->eff_mode,'foreman'),'paid'=>(bool)$this->dw_paid_for($site_id,$date),'photo'=>(int)$set['photo']===1,
             'photo_url'=>$sheet&&$sheet->photo_key?$this->dw_file_url('sheet',(int)$sheet->id):'','photo_thumb'=>$sheet&&$sheet->photo_key?$this->dw_file_url('sheet',(int)$sheet->id,true):'','others'=>$others,'trades'=>$set['trades'],'subs'=>$set['subcontractors'],
             'trade_label'=>function($t){return $this->dw_trade_label($t);},'money'=>function($v){return $this->dw_money($v);},
@@ -1225,6 +1233,17 @@ trait EWS_Daily_Workers_Trait {
             'open'=>sanitize_key($_GET['dw_open']??''), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
             'tomorrow'=>date('Y-m-d',strtotime($date.' +1 day')),'date'=>$date,
         ]);
+    }
+
+    private function dw_is_date($d){
+        return is_string($d) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/',$d,$m) && checkdate((int)$m[2],(int)$m[3],(int)$m[1]);
+    }
+
+    /** A site's day sheet in the app: today without ?day=. */
+    private function dw_day_url($site_id,$date){
+        $args=['ews_view'=>'sites','site'=>(int)$site_id];
+        if($date<current_time('Y-m-d'))$args['day']=$date;
+        return add_query_arg($args,$this->app_home_url());
     }
 
     /** The payout of a site (?site=, ?start=), or the choice of site. */
@@ -1335,6 +1354,23 @@ trait EWS_Daily_Workers_Trait {
             $fm=[];foreach((array)$wpdb->get_results("SELECT * FROM {$this->dw_t('foremen')}") as $r)$fm[(int)$r->location_id][]=(int)$r->user_id;
             $data+=['locations'=>$locs,'foremen'=>$fm,'people'=>get_users(['capability__in'=>['ews_dw_foreman','ews_dw_cashier'],'fields'=>['ID','display_name'],'orderby'=>'display_name']),
                 'saved'=>isset($_GET['saved']),'roles_url'=>admin_url('admin.php?page=ews31-roles')];
+        }elseif($tab==='days'){
+            $today=current_time('Y-m-d');
+            $day=sanitize_text_field(wp_unslash((string)($_GET['day']??$today)));
+            if(!$this->dw_is_date($day) || $day>$today)$day=$today;
+            $site=absint($_GET['site']??0);
+            if(!$site || !isset($sites[$site]))$site=$sites?(int)array_key_first($sites):0;
+            $rows=[];
+            if($site){
+                foreach($this->dw_site_workers($site,$day) as $w){
+                    $d=$w->day&&(int)$w->day->location_id===$site?$w->day:null;
+                    $rows[]=['w'=>$w,'day'=>$d,'elsewhere'=>$w->day&&!$d?$this->dw_site((int)$w->day->location_id):null,
+                        'pending'=>$d?(bool)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->dw_t('changes')} WHERE day_id=%d AND status='pending'",(int)$d->id)):false];
+                }
+            }
+            $sheet=$site?$this->dw_sheet($site,$day):null;
+            $data+=['day'=>$day,'site'=>$site,'day_rows'=>$rows,'sheet'=>$sheet,'paid'=>$site?(bool)$this->dw_paid_for($site,$day):false,
+                'sheet_by'=>$sheet?(($u=get_userdata((int)$sheet->by_user))?$u->display_name:''):'','today'=>$today];
         }elseif($tab==='changes'){
             $data+=['changes'=>(array)$wpdb->get_results("SELECT c.*,w.name,l.name site_name FROM {$this->dw_t('changes')} c LEFT JOIN {$this->dw_t('workers')} w ON w.id=c.worker_id LEFT JOIN {$this->locations} l ON l.id=c.location_id ORDER BY c.status='pending' DESC,c.requested_at DESC LIMIT 100")];
         }
@@ -1359,6 +1395,85 @@ trait EWS_Daily_Workers_Trait {
         if($site && $this->dw_site($site) && $this->dw_worker_site($id,current_time('Y-m-d'))!==$site)$this->dw_move_to($id,$site,current_time('Y-m-d'));
         $this->audit(absint($_POST['id']??0)?'dw_worker_update':'dw_worker_add','daily_worker',$id,$in['name'].($in['nid']!==''?' (national ID set)':'').($in['pin']!==''?' (PIN set)':''));
         wp_safe_redirect($this->dw_admin_url(['worker'=>$id,'done'=>'saved']));exit;
+    }
+
+    /**
+     * wp-admin → Days: HR sets a site's day directly, for any earlier day or today (a missed sheet, a
+     * mistake found later). No GPS or photo; a reason is required, and every changed worker gets an
+     * approved entry in Changes (old → new, by whom, why) and the Audit Log. A paid period stays locked.
+     * @param array<int,string> $marks worker id => '' (no record) | in | half | out
+     * @param array<int,mixed>  $extra
+     * @return array{changed?:int,error?:string}
+     */
+    private function dw_admin_set_day($location_id,$date,array $marks,array $extra,$reason){
+        global $wpdb;
+        if(!$this->dw_enabled())return ['error'=>'disabled'];
+        if(!$this->dw_is_manager())return ['error'=>'access'];
+        $site=$this->dw_site($location_id);
+        if(!$site)return ['error'=>'access'];
+        if(!$this->dw_is_date($date) || $date>current_time('Y-m-d'))return ['error'=>'date_past'];
+        if($this->dw_paid_for($location_id,$date))return ['error'=>'paid'];
+        $reason=trim((string)$reason);
+        if($reason==='')return ['error'=>'reason'];
+        $workers=$this->dw_site_workers($location_id,$date);
+        $plan=[];
+        foreach($marks as $wid=>$mark){
+            $wid=(int)$wid;$mark=(string)$mark;
+            if(!isset($workers[$wid]) || $mark==='')continue;
+            $w=$workers[$wid];
+            if($w->day && (int)$w->day->location_id!==(int)$location_id)continue;   // recorded at another site that day
+            if(!in_array($mark,PayRules::MARKS,true))return ['error'=>'mark'];
+            $x=PayRules::extra($extra[$wid]??0);
+            if($x===null)return ['error'=>'extra'];
+            if($mark==='out')$x=0.0;
+            if($w->day){
+                if($w->day->payout_id)return ['error'=>'paid'];
+                if($mark===(string)$w->day->mark && abs($x-(float)$w->day->extra_hours)<0.01)continue;
+                if((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->dw_t('changes')} WHERE day_id=%d AND status='pending'",(int)$w->day->id)))return ['error'=>'pending'];
+            }
+            $plan[$wid]=[$mark,$x];
+        }
+        if(!$plan)return ['error'=>'no_change'];
+        $me=get_current_user_id();$now=current_time('mysql');
+        $wpdb->query('START TRANSACTION');
+        $sheet=$this->dw_sheet($location_id,$date);
+        if(!$sheet){
+            // The day counts as recorded (the app shows it locked), entered by HR: no position, no photo.
+            if(!$wpdb->insert($this->dw_t('sheets'),['location_id'=>(int)$location_id,'work_date'=>$date,'by_user'=>$me,'integrity_status'=>'admin','saved_at'=>$now])){$wpdb->query('ROLLBACK');return ['error'=>'save'];}
+            $sheet_id=(int)$wpdb->insert_id;
+        }else $sheet_id=(int)$sheet->id;
+        foreach($plan as $wid=>[$mark,$x]){
+            $w=$workers[$wid];$d=$w->day;
+            $rate=$d?(float)$d->daily_rate:(float)$w->daily_rate;$hr=$d?(float)$d->hourly_rate:$this->dw_hourly($w);
+            $row=['mark'=>$mark,'extra_hours'=>$x,'amount'=>PayRules::dayAmount($mark,$x,$rate,$hr),'updated_at'=>$now];
+            if($d){
+                $ok=$wpdb->update($this->dw_t('days'),$row,['id'=>(int)$d->id])!==false;$day_id=(int)$d->id;
+            }else{
+                $ok=(bool)$wpdb->insert($this->dw_t('days'),$row+['worker_id'=>$wid,'location_id'=>(int)$location_id,'work_date'=>$date,'daily_rate'=>$rate,'hourly_rate'=>$hr,'source'=>'admin','sheet_id'=>$sheet_id,'by_user'=>$me,'created_at'=>$now]);
+                $day_id=(int)$wpdb->insert_id;
+            }
+            $ok=$ok && $wpdb->insert($this->dw_t('changes'),['day_id'=>$day_id,'worker_id'=>$wid,'location_id'=>(int)$location_id,'work_date'=>$date,
+                'old_mark'=>$d?(string)$d->mark:'','old_extra'=>$d?(float)$d->extra_hours:0,'new_mark'=>$mark,'new_extra'=>$x,'reason'=>mb_substr($reason,0,1000),
+                'status'=>'approved','requested_by'=>$me,'requested_at'=>$now,'decided_by'=>$me,'decided_at'=>$now,'note'=>__('Set directly in wp-admin → Days','workforce-one')]);
+            if(!$ok){$wpdb->query('ROLLBACK');return ['error'=>'save'];}
+        }
+        $wpdb->query('COMMIT');
+        $this->audit('dw_admin_day','daily_site',(int)$location_id,$site->name.' '.$date.': '.count($plan).' workers set in wp-admin — '.$reason);
+        return ['changed'=>count($plan)];
+    }
+
+    public function dw_admin_day_save(){
+        if(!$this->dw_is_manager())wp_die(esc_html__('Access denied','workforce-one'));
+        check_admin_referer('ews_dw_admin_day');
+        $this->ensure_dw_schema_once();
+        $site=absint($_POST['site']??0);$day=sanitize_text_field(wp_unslash((string)($_POST['day']??'')));
+        $marks=[];$extra=[];
+        foreach((array)wp_unslash($_POST['mark']??[]) as $k=>$v)$marks[(int)$k]=sanitize_key((string)$v);
+        foreach((array)wp_unslash($_POST['extra']??[]) as $k=>$v)$extra[(int)$k]=sanitize_text_field((string)$v);
+        $r=$this->dw_admin_set_day($site,$day,$marks,$extra,sanitize_textarea_field(wp_unslash((string)($_POST['reason']??''))));
+        $args=['tab'=>'days','site'=>$site,'day'=>$day];
+        $args+=isset($r['error'])?['dw_error'=>$r['error']]:['done'=>'day_saved'];
+        wp_safe_redirect($this->dw_admin_url($args));exit;
     }
 
     public function dw_worker_delete(){

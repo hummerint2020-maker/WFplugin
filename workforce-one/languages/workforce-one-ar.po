@@ -5393,3 +5393,79 @@ msgstr "الفترة دي لسه ما خلصتش. اصرفها في آخر يو�
 #: includes/trait-daily-workers.php
 msgid "Save today's day sheet first: paying locks the period, today included."
 msgstr "احفظ كشف النهارده الأول: الصرف بيقفل الفترة، والنهارده منها."
+
+#: daily-workers
+msgid "Nobody was recorded at this site on this day."
+msgstr "محدش اتسجّل في الموقع ده في اليوم ده."
+
+#: daily-workers
+msgid "Set by %s in wp-admin (no position or photo). Changing it is a request with a reason and an approval."
+msgstr "اتسجّل بواسطة %s من wp-admin (من غير موقع ولا صورة). تعديله بيكون طلب بسبب وموافقة."
+
+#: daily-workers
+msgid "No day sheet was saved for this day; these are the workers' own sign-ins. A change is a request with a reason and an approval."
+msgstr "مفيش كشف اتحفظ لليوم ده؛ دول تسجيلات العمال بنفسهم. أي تعديل بيكون طلب بسبب وموافقة."
+
+#: daily-workers
+msgid "No day sheet was saved for this day. HR can set it in wp-admin → Daily Workers → Days."
+msgstr "مفيش كشف اتحفظ لليوم ده. الموارد البشرية تقدر تسجّله من wp-admin ← Daily Workers ← Days."
+
+#: daily-workers
+msgid "Set directly in wp-admin → Days"
+msgstr "اتسجّل مباشرة من wp-admin ← Days"
+
+#: daily-workers
+msgid "Choose today or an earlier day."
+msgstr "اختار النهارده أو يوم قبله."
+
+#: daily-workers
+msgid "Day saved. Each change is in the Changes tab with your reason, and in the Audit Log."
+msgstr "اليوم اتحفظ. كل تعديل موجود في تاب Changes بالسبب، وفي سجل المراجعة."
+
+#: daily-workers
+msgid "A site's day as recorded, for any earlier day or today. Set a day the foreman did not record, or correct one: a reason is required, and each change is kept in Changes (old → new) and the Audit Log. A paid period cannot be changed."
+msgstr "يوم الموقع زي ما اتسجّل، لأي يوم فات أو النهارده. سجّل يوم المسؤول ما سجّلوش أو صحّح يوم: لازم تكتب سبب، وكل تعديل بيتحفظ في Changes (القديم ← الجديد) وفي سجل المراجعة. الفترة اللي اتصرفت ما ينفعش تتعدل."
+
+#: daily-workers
+msgid "No project sites yet: add one in Settings."
+msgstr "لسه مفيش مواقع مشروعات: ضيف موقع من Settings."
+
+#: daily-workers
+msgid "Set by %1$s in wp-admin, %2$s"
+msgstr "اتسجّل بواسطة %1$s من wp-admin، %2$s"
+
+#: daily-workers
+msgid "Recorded by %1$s at %2$s"
+msgstr "سجّله %1$s الساعة %2$s"
+
+#: daily-workers
+msgid "No day sheet saved"
+msgstr "مفيش كشف محفوظ"
+
+#: daily-workers
+msgid "Recorded"
+msgstr "المتسجّل"
+
+#: daily-workers
+msgid "No workers at this site on this day."
+msgstr "مفيش عمال في الموقع ده في اليوم ده."
+
+#: daily-workers
+msgid "At %s that day"
+msgstr "في %s اليوم ده"
+
+#: daily-workers
+msgid "Change waiting"
+msgstr "تعديل مستني"
+
+#: daily-workers
+msgid "— Not recorded —"
+msgstr "— مش متسجّل —"
+
+#: daily-workers
+msgid "e.g. The foreman's phone was broken; attendance from the paper list."
+msgstr "مثلاً: موبايل المسؤول كان بايظ؛ الحضور من الكشف الورق."
+
+#: daily-workers
+msgid "Save the day"
+msgstr "احفظ اليوم"

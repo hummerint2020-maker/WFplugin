@@ -7123,3 +7123,79 @@ msgstr ""
 #: includes/trait-daily-workers.php
 msgid "Save today's day sheet first: paying locks the period, today included."
 msgstr ""
+
+#: daily-workers
+msgid "Nobody was recorded at this site on this day."
+msgstr ""
+
+#: daily-workers
+msgid "Set by %s in wp-admin (no position or photo). Changing it is a request with a reason and an approval."
+msgstr ""
+
+#: daily-workers
+msgid "No day sheet was saved for this day; these are the workers' own sign-ins. A change is a request with a reason and an approval."
+msgstr ""
+
+#: daily-workers
+msgid "No day sheet was saved for this day. HR can set it in wp-admin → Daily Workers → Days."
+msgstr ""
+
+#: daily-workers
+msgid "Set directly in wp-admin → Days"
+msgstr ""
+
+#: daily-workers
+msgid "Choose today or an earlier day."
+msgstr ""
+
+#: daily-workers
+msgid "Day saved. Each change is in the Changes tab with your reason, and in the Audit Log."
+msgstr ""
+
+#: daily-workers
+msgid "A site's day as recorded, for any earlier day or today. Set a day the foreman did not record, or correct one: a reason is required, and each change is kept in Changes (old → new) and the Audit Log. A paid period cannot be changed."
+msgstr ""
+
+#: daily-workers
+msgid "No project sites yet: add one in Settings."
+msgstr ""
+
+#: daily-workers
+msgid "Set by %1$s in wp-admin, %2$s"
+msgstr ""
+
+#: daily-workers
+msgid "Recorded by %1$s at %2$s"
+msgstr ""
+
+#: daily-workers
+msgid "No day sheet saved"
+msgstr ""
+
+#: daily-workers
+msgid "Recorded"
+msgstr ""
+
+#: daily-workers
+msgid "No workers at this site on this day."
+msgstr ""
+
+#: daily-workers
+msgid "At %s that day"
+msgstr ""
+
+#: daily-workers
+msgid "Change waiting"
+msgstr ""
+
+#: daily-workers
+msgid "— Not recorded —"
+msgstr ""
+
+#: daily-workers
+msgid "e.g. The foreman's phone was broken; attendance from the paper list."
+msgstr ""
+
+#: daily-workers
+msgid "Save the day"
+msgstr ""

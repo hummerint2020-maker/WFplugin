@@ -386,6 +386,31 @@ check('insurance report: masked for a manager without "View national IDs"', 'Moh
 csv_adm = adm.req(link(page(adm, '/wp-admin/admin.php?page=ews31-daily-workers&tab=reports'), 'format=insurance'))[1]
 check('insurance report: full for the administrator, and audited', NID1 in csv_adm and 'with full national IDs' in audit_text())
 
+# ---------------------------------------------------------------- earlier days (3.31.85)
+EARLY = (today - datetime.timedelta(days=2)).isoformat()
+php("$wpdb->insert($p.'ews_dw_moves',['worker_id'=>%d,'location_id'=>%d,'from_date'=>'%s','created_at'=>current_time('mysql')]);" % (W1, A, EARLY))
+dpg = page(hr, '/wp-admin/admin.php?page=ews31-daily-workers&tab=days&site=%d&day=%s' % (A, EARLY))
+check('Days (wp-admin): an earlier day with no sheet lists the site\'s workers that day', 'No day sheet saved' in dpg and 'Mohamed Abdallah' in dpg)
+nd = form_nonce(dpg, 'ews_dw_admin_day')
+base_day = {'action': 'ews_dw_admin_day', '_wpnonce': nd, 'site': A, 'day': EARLY, 'mark[%d]' % W1: 'in', 'extra[%d]' % W1: '1'}
+check('Days: a reason is required', post(hr, dict(base_day, reason='')).get('dw_error') == 'reason')
+check('Days: a future day is refused', post(hr, dict(base_day, day=(today + datetime.timedelta(days=1)).isoformat(), reason='x')).get('dw_error') == 'date_past')
+check('Days: a foreman cannot', post(fm, dict(base_day, _wpnonce=nonce_for(fm, 'ews_dw_admin_day'), reason='x')).get('done') != 'day_saved')
+qs = post(hr, dict(base_day, reason='Paper list, the foreman\'s phone was broken'))
+ed = q("SELECT * FROM {p}ews_dw_days WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))
+ch = q("SELECT * FROM {p}ews_dw_changes WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))
+check('Days: set — present + 1 h, source admin, a locked sheet with no position', qs.get('done') == 'day_saved' and ed and ed[0]['mark'] == 'in' and ed[0]['source'] == 'admin'
+      and q("SELECT integrity_status FROM {p}ews_dw_sheets WHERE location_id=%d AND work_date='%s'" % (A, EARLY))[0]['integrity_status'] == 'admin', (qs, ed))
+check('Days: the change is kept (Not recorded → Present, approved, with the reason) and audited', ch and ch[0]['old_mark'] == '' and ch[0]['new_mark'] == 'in' and ch[0]['status'] == 'approved'
+      and 'set in wp-admin' in audit_text())
+qs = post(hr, dict(base_day, _wpnonce=form_nonce(page(hr, '/wp-admin/admin.php?page=ews31-daily-workers&tab=days&site=%d&day=%s' % (A, EARLY)), 'ews_dw_admin_day'), **{'mark[%d]' % W1: 'half', 'extra[%d]' % W1: '0'}, reason='Left at noon'))
+check('Days: correcting it again keeps both steps in Changes', qs.get('done') == 'day_saved' and len(q("SELECT * FROM {p}ews_dw_changes WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))) == 2
+      and q("SELECT mark FROM {p}ews_dw_days WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))[0]['mark'] == 'half')
+past = app(fm, 'sites', site=A, day=EARLY)
+check('app: the foreman opens an earlier day, read-only, with "Ask to change"', 'Mohamed Abdallah' in past and 'wfo-dw-confirm' not in past and 'data-dw-more="change"' in past and 'in wp-admin' in past)
+check('app: today\'s sheet has the arrows to earlier days', 'wfo-dw-days' in app(fm, 'sites', site=A))
+check('Days: a paid day cannot be set', post(hr, dict(base_day, _wpnonce=nd, day=TODAY, reason='x')).get('dw_error') == 'paid')
+
 # ---------------------------------------------------------------- API, delete, uninstall
 st_, idx, _ = adm.req('/wp-json/workforce-one/v1')
 check('API: the daily workers routes are registered', all(r in idx for r in ['daily-workers\\/sites', 'day', 'payout']))

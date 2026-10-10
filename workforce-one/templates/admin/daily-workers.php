@@ -6,7 +6,7 @@
  * to saved days, settings (recording, pay, sites and foremen, trades, subcontractors).
  * Styles: assets/css/admin-daily-workers.css.
  *
- * @var string $tab        list | worker | edit | reports | settings | changes
+ * @var string $tab        list | worker | edit | days | reports | settings | changes
  * @var array<string,mixed> $settings
  * @var array<int,object> $sites
  * @var string $post_url
@@ -46,13 +46,20 @@
  * @var bool $saved
  * @var string $roles_url
  * @var array<int,object> $changes
+ * Days tab (3.31.85):
+ * @var string $day
+ * @var array<int,array{w:object,day:?object,elsewhere:?object,pending:bool}> $day_rows
+ * @var object|null $sheet
+ * @var bool $paid
+ * @var string $sheet_by
+ * @var string $today
  */
 if (!defined('ABSPATH')) exit;
 $stars = static function ($n) { $n = max(0, min(5, (int) $n)); return '<span class="ews-dw-stars">' . str_repeat('★', $n) . '<i>' . str_repeat('★', 5 - $n) . '</i></span>'; };
 $initials = static function ($name) { $o = ''; foreach (array_slice(preg_split('/\s+/u', trim((string) $name)) ?: [], 0, 2) as $p) $o .= mb_substr($p, 0, 1); return $o; };
-$tabs = ['list' => __('Workers', 'workforce-one'), 'reports' => __('Reports', 'workforce-one'), 'changes' => __('Changes', 'workforce-one'), 'settings' => __('Settings', 'workforce-one')];
+$tabs = ['list' => __('Workers', 'workforce-one'), 'days' => __('Days', 'workforce-one'), 'reports' => __('Reports', 'workforce-one'), 'changes' => __('Changes', 'workforce-one'), 'settings' => __('Settings', 'workforce-one')];
 $current = in_array($tab, ['worker', 'edit'], true) ? 'list' : $tab;
-$notices = ['saved' => __('Worker saved.', 'workforce-one'), 'deleted' => __('Worker and national ID deleted.', 'workforce-one'), 'approved' => __('Change approved. The original values are kept with the request.', 'workforce-one'), 'rejected' => __('Change rejected.', 'workforce-one')];
+$notices = ['day_saved' => __('Day saved. Each change is in the Changes tab with your reason, and in the Audit Log.', 'workforce-one'), 'saved' => __('Worker saved.', 'workforce-one'), 'deleted' => __('Worker and national ID deleted.', 'workforce-one'), 'approved' => __('Change approved. The original values are kept with the request.', 'workforce-one'), 'rejected' => __('Change rejected.', 'workforce-one')];
 ?>
 <div class="wrap ews-dw-wrap">
 <h1 class="wp-heading-inline"><?php esc_html_e('Daily Workers', 'workforce-one'); ?></h1> <a href="<?php echo esc_url($url(['edit' => 0])); ?>" class="page-title-action"><?php esc_html_e('Add worker', 'workforce-one'); ?></a>
@@ -182,11 +189,48 @@ $notices = ['saved' => __('Worker saved.', 'workforce-one'), 'deleted' => __('Wo
         <?php foreach ($r['unpaid'] as $x): ?><tr><td><a href="<?php echo esc_url($url(['worker' => (int) $x->worker_id])); ?>"><?php echo esc_html($x->name); ?></a></td><td><?php echo esc_html($trade_label($x->trade)); ?></td><td><?php echo esc_html($days_text($x->days)); ?></td><td><?php echo esc_html($money($x->amount)); ?></td><td><?php echo esc_html($x->advance > 0 ? $money($x->advance) : '—'); ?></td><td><strong><?php echo esc_html($money($x->net)); ?></strong></td></tr><?php endforeach; ?>
     </tbody></table></div>
 
+<?php elseif ($tab === 'days'):
+    $go = static function ($d) use ($url, $site) { return $url(['tab' => 'days', 'site' => $site, 'day' => $d]); };
+    $prev = gmdate('Y-m-d', strtotime($day . ' 12:00:00 UTC') - 86400); $next = gmdate('Y-m-d', strtotime($day . ' 12:00:00 UTC') + 86400); ?>
+    <p class="description"><?php esc_html_e('A site\'s day as recorded, for any earlier day or today. Set a day the foreman did not record, or correct one: a reason is required, and each change is kept in Changes (old → new) and the Audit Log. A paid period cannot be changed.', 'workforce-one'); ?></p>
+    <?php if (!$sites): ?><p><?php esc_html_e('No project sites yet: add one in Settings.', 'workforce-one'); ?></p><?php else: ?>
+    <form method="get" class="ews-dw-filters"><input type="hidden" name="page" value="ews31-daily-workers"><input type="hidden" name="tab" value="days">
+        <select name="site"><?php foreach ($sites as $id => $s_): ?><option value="<?php echo (int) $id; ?>"<?php selected($site, (int) $id); ?>><?php echo esc_html($s_->name); ?></option><?php endforeach; ?></select>
+        <input type="date" name="day" value="<?php echo esc_attr($day); ?>" max="<?php echo esc_attr($today); ?>">
+        <button class="button"><?php esc_html_e('Show', 'workforce-one'); ?></button>
+        <a class="button" href="<?php echo esc_url($go($prev)); ?>">‹ <?php esc_html_e('Previous day', 'workforce-one'); ?></a>
+        <?php if ($day < $today): ?><a class="button" href="<?php echo esc_url($go($next)); ?>"><?php esc_html_e('Next day', 'workforce-one'); ?> ›</a><?php endif; ?>
+    </form>
+    <p><strong><?php echo esc_html(date_i18n('l j F Y', strtotime($day))); ?></strong> ·
+        <?php if ($paid): ?><span class="ews-dw-badge is-ok"><?php esc_html_e('Paid · locked', 'workforce-one'); ?></span>
+        <?php elseif ($sheet): ?><span class="ews-dw-badge"><?php /* translators: 1: name, 2: time */ echo esc_html(sprintf($sheet->integrity_status === 'admin' ? __('Set by %1$s in wp-admin, %2$s', 'workforce-one') : __('Recorded by %1$s at %2$s', 'workforce-one'), $sheet_by, mysql2date('H:i', $sheet->saved_at))); ?></span>
+        <?php else: ?><span class="ews-dw-badge is-wait"><?php esc_html_e('No day sheet saved', 'workforce-one'); ?></span><?php endif; ?></p>
+    <form method="post" action="<?php echo esc_url($post_url); ?>">
+        <?php wp_nonce_field('ews_dw_admin_day'); ?><input type="hidden" name="action" value="ews_dw_admin_day"><input type="hidden" name="site" value="<?php echo (int) $site; ?>"><input type="hidden" name="day" value="<?php echo esc_attr($day); ?>">
+        <table class="widefat striped"><thead><tr><th><?php esc_html_e('Worker', 'workforce-one'); ?></th><th><?php esc_html_e('Recorded', 'workforce-one'); ?></th><th><?php esc_html_e('Attendance', 'workforce-one'); ?></th><th><?php esc_html_e('Extra hours', 'workforce-one'); ?></th></tr></thead><tbody>
+        <?php if (!$day_rows): ?><tr><td colspan="4"><?php esc_html_e('No workers at this site on this day.', 'workforce-one'); ?></td></tr><?php endif; ?>
+        <?php foreach ($day_rows as $r): $w_ = $r['w']; $d_ = $r['day']; $id_ = (int) $w_->id;
+            $off = $paid || $r['elsewhere'] || $r['pending'] || ($d_ && $d_->payout_id); ?>
+            <tr><td><strong><?php echo esc_html($w_->name); ?></strong><span class="ews-dw-sub"><?php echo esc_html(implode(' · ', array_filter([$trade_label($w_->trade), $money($d_ ? $d_->daily_rate : $w_->daily_rate)]))); ?></span></td>
+                <td><?php if ($r['elsewhere']): /* translators: %s: site */ echo esc_html(sprintf(__('At %s that day', 'workforce-one'), $r['elsewhere']->name));
+                    elseif ($d_): echo esc_html($mark_label($d_->mark) . ((float) $d_->extra_hours > 0 ? ' +' . (float) $d_->extra_hours . 'h' : '') . ' · ' . $money($d_->amount)); ?><?php if ($r['pending']): ?> <span class="ews-dw-badge is-wait"><?php esc_html_e('Change waiting', 'workforce-one'); ?></span><?php endif; ?>
+                    <?php else: echo '—'; endif; ?></td>
+                <td><select name="mark[<?php echo $id_; ?>]"<?php disabled($off); ?>><?php if (!$d_): ?><option value=""><?php esc_html_e('— Not recorded —', 'workforce-one'); ?></option><?php endif; ?>
+                    <?php foreach (['in', 'half', 'out'] as $m_): ?><option value="<?php echo esc_attr($m_); ?>"<?php selected($d_ ? (string) $d_->mark : '', $m_); ?>><?php echo esc_html($mark_label($m_)); ?></option><?php endforeach; ?></select></td>
+                <td><input type="number" class="small-text" name="extra[<?php echo $id_; ?>]" min="0" max="12" step="0.5" value="<?php echo esc_attr((string) ($d_ ? (float) $d_->extra_hours : 0)); ?>"<?php disabled($off); ?>></td></tr>
+        <?php endforeach; ?></tbody></table>
+        <?php if ($day_rows && !$paid): ?>
+        <p><label for="ews-dw-day-reason"><strong><?php esc_html_e('Reason', 'workforce-one'); ?></strong></label><br><textarea id="ews-dw-day-reason" name="reason" rows="2" class="large-text" required placeholder="<?php esc_attr_e('e.g. The foreman\'s phone was broken; attendance from the paper list.', 'workforce-one'); ?>"></textarea></p>
+        <?php submit_button(__('Save the day', 'workforce-one'), 'primary', 'submit', false); ?>
+        <?php endif; ?>
+    </form>
+    <?php endif; ?>
+
 <?php elseif ($tab === 'changes'): ?>
     <table class="widefat striped ews-dw-changes"><thead><tr><th><?php esc_html_e('Worker', 'workforce-one'); ?></th><th><?php esc_html_e('Site', 'workforce-one'); ?></th><th><?php esc_html_e('Day', 'workforce-one'); ?></th><th><?php esc_html_e('Change', 'workforce-one'); ?></th><th><?php esc_html_e('Reason', 'workforce-one'); ?></th><th><?php esc_html_e('Status', 'workforce-one'); ?></th></tr></thead><tbody>
     <?php if (!$changes): ?><tr><td colspan="6"><?php esc_html_e('No change requests.', 'workforce-one'); ?></td></tr><?php endif; ?>
     <?php foreach ($changes as $c):
-        $from_t = $mark_label($c->old_mark) . ((float) $c->old_extra > 0 ? ' +' . (float) $c->old_extra . 'h' : '');
+        $from_t = ((string) $c->old_mark === '' ? __('Not recorded', 'workforce-one') : $mark_label($c->old_mark)) . ((float) $c->old_extra > 0 ? ' +' . (float) $c->old_extra . 'h' : '');
         $to_t = $mark_label($c->new_mark) . ((float) $c->new_extra > 0 ? ' +' . (float) $c->new_extra . 'h' : ''); $by = get_userdata((int) $c->requested_by); ?>
         <tr><td><?php echo esc_html($c->name); ?></td><td><?php echo esc_html($c->site_name); ?></td><td><?php echo esc_html(mysql2date('D j M', $c->work_date)); ?></td><td><?php echo esc_html($from_t . ' → ' . $to_t); ?></td>
             <td><?php echo esc_html($c->reason); ?><br><span class="ews-dw-sub"><?php echo esc_html(($by ? $by->display_name : '') . ' · ' . mysql2date('j M H:i', $c->requested_at)); ?></span></td>
