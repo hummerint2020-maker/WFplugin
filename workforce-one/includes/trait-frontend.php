@@ -84,8 +84,12 @@ trait EWS_Frontend_Trait {
                 'ews_view','leave_error','leave_sent','leave_done','leave_cancel_sent',
                 'early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','saved','imported','grid_saved',
                 'time_reset','time_saved','swap_error','swap_sent','swap_done','vacation_sent','vacation_error','vacation_done','vacation_rejected','profile_updated','profile_error','password_updated','password_error',
-                'cx_sent','cx_done','cx_error','cx_retry','cx','cx_date'   // corrections: a result shown once, not on every page
+                'cx','cx_date','dw_open'
             ]);
+            // Any one-time result of a form (dw_added, overtime_done, cx_error…) is shown once, then dropped
+            // from the menu links; otherwise its popup comes back on every page.
+            $once=array_filter(array_map('strval',array_keys($_GET)),function($k){return (bool)preg_match('/^(?:[a-z0-9]+_)*(?:error|sent|done|saved|added|moved|paid|adv|change|retry|success|rejected|updated|reset|conflict|imported)$/',$k);}); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- key names only
+            if($once)$url=remove_query_arg(array_values($once),$url);
             $view=sanitize_key($view);
             // Module-specific state must not leak into another module.
             // In particular, edit_task is an instruction to render a task editor;

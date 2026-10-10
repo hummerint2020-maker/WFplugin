@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.82
+### Fixed
+- **A popup on every page after Daily Workers** ("Worker added", "Day sheet saved", "Worker moved"…) and
+  after a few other forms (Overtime updated / rejected, Kudos sent, Polls): the result stayed in the
+  address and the menu links kept it. The menu links and the address now drop any one-time result of a
+  form (a key ending in _error, _sent, _done, _saved, _added…), in one place, so a new feature cannot
+  forget it again.
+
 ## 3.31.81
 ### Changed
 - **Face Sign In off means no Face card.** With "Face Verification for Sign In" off (Feature
