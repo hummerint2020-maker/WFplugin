@@ -36,6 +36,7 @@ brief in `docs/tasks/` (like `docs/tasks/multisite.md`) and mark it here as **Sc
 | [Employee perks and discounts](#employee-perks-and-discounts) | Idea | 2026-10-09 |
 | Attendance correction requests → [`docs/tasks/attendance-corrections.md`](tasks/attendance-corrections.md) | **Scheduled** (mockups first) | 2026-10-09 |
 | Daily workers → [`docs/tasks/daily-workers.md`](tasks/daily-workers.md) | **Scheduled** (mockups first) | 2026-10-09 |
+| Bugs from the code review → [`docs/tasks/bug-review-2026-10.md`](tasks/bug-review-2026-10.md) | **To do** (not urgent) | 2026-10-10 |
 
 ---
 
