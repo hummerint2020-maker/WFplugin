@@ -1,5 +1,44 @@
 # Changelog
 
+## 3.31.90
+Money and permission fixes from the second code review (docs/tasks/bug-review-2026-10.md, items 3, 4, 5,
+7, 8, 9, 15, 16). Database: a new employee column, `last_working_day`.
+
+### Fixed
+- **Closing a payroll month is all or nothing.** The run and every payslip are saved in one transaction;
+  if one payslip cannot be saved nothing is closed and the page says so ("try again"). Before, the month
+  could be left closed with payslips missing.
+- **An archived employee is paid up to their last working day.** Archive now asks for the last working
+  day (today suggested). Payroll includes an archived employee in every month not closed yet up to that
+  day, paid for the days to it (day value × days, as for a mid-month start), and days after it are not
+  counted. The payroll list marks them "Archived · last working day …"; payslip, PDF and Excel show
+  "Paid from … to …". Employees archived before this version have no last working day: when they signed
+  in during a month, Payroll names them in a warning until it is set (Employees → Inactive → Last
+  working day).
+- **Sign In / Out Report: a manager sees and changes their own department only** (list, add / edit,
+  Reset Day, CSV), archived employees included. Administrators see everyone. A manager without a
+  department sees nothing.
+- **Daily workers payout**: every line and every day link is checked; the first failure undoes the
+  payout and removes its photo. The payout is worked out again under a lock, so an advance is deducted
+  once even when two payouts are saved at the same moment, and a change approved in between is either
+  in the payout or refused.
+- **Daily workers change approved after the day was paid**: refused ("already paid"); the day changes
+  only while it is still unpaid, in one transaction. Days set in wp-admin take the same lock.
+- **Correction carried to the next payroll month**: added once (a retry never adds it twice); when the
+  adjustment cannot be saved the correction says "NOT CARRIED" and the Audit Log asks HR to add it by
+  hand, instead of saying it was carried.
+- **Push after switching accounts on the same phone**: the app re-saves the device for the account now
+  signed in, at once (before, it stayed with the previous account for up to 3 days). Logging out alone
+  changes nothing: the phone keeps receiving the last account's notifications (owner's decision).
+
+### Tests
+- New `tests/e2e_money_safety.py` (28): payroll close with a payslip that fails, archived employee pay,
+  department scope of the report, correction carry-over. Writes are made to fail on purpose with
+  `tests/e2e_break_writes.php` (copied into mu-plugins only while a check needs it).
+- `tests/e2e_daily_workers.py`: a payout line that fails, a change approved after the payout.
+- `tests/push_sync_browser.js`: account switch on the same phone (15 checks).
+- Unit: last working day in `PayCalculator`.
+
 ## 3.31.89
 Approval Workflows: what is really in force, and Shift Swap approvals. No database change.
 

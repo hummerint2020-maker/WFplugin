@@ -9,6 +9,7 @@
  * @var string $page_url
  * @var string $notice     rate | deleted | rules | adjustment | adjustment_removed | closed | reopened | ''
  * @var string $error      message ('' = none)
+ * @var array<int,object> $no_last_day  archived employees with no last working day who signed in this month (not paid)
  * @var array{employee:object,pay:?array<string,mixed>}|null $detail
  * @var array<int,array{employee:object,pay:?array<string,mixed>}> $people
  * @var array<int,array{employee:object,current:?array<string,mixed>,upcoming:array<int,array<string,mixed>>,history:array<int,array<string,mixed>>}> $salaries
@@ -52,6 +53,7 @@ $adjust_remove = static function ($id) {
 <?php if ($notice === 'closed'): ?><div class="notice notice-success is-dismissible"><p>Month closed. Its payslips are kept as they are now<?php echo !empty($rules['employee_view']) ? ' and employees can see them in My Pay' : ''; ?>.</p></div><?php endif; ?>
 <?php if ($notice === 'reopened'): ?><div class="notice notice-warning is-dismissible"><p>Month reopened: its figures follow attendance again until it is closed.</p></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
+<?php if (!empty($no_last_day)): ?><div class="notice notice-warning" data-no-last-day><p><strong>Archived without a last working day:</strong> <?php echo esc_html(implode(', ', array_map(static function ($e) { return $e->name; }, $no_last_day))); ?>. They signed in this month but are not paid until their last working day is set in <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-employees')); ?>">Employees</a> (Inactive → Last working day).</p></div><?php endif; ?>
 
 <?php if ($tab === 'month' && $run): ?>
     <div class="ews-pay-closed"><strong>✓ Closed</strong> on <?php echo esc_html($run['closed_at']); ?><?php echo $run['closed_by'] !== '' ? esc_html(' by ' . $run['closed_by']) : ''; ?>. These are the figures as they were when the month was closed; later attendance changes do not change them.</div>
@@ -78,7 +80,7 @@ $adjust_remove = static function ($id) {
     <table class="widefat ews-pay-lines"><thead><tr><th colspan="2">Earnings</th></tr></thead><tbody>
         <tr><td>Basic salary</td><td class="num"><?php echo esc_html($money($p['basic'])); ?></td></tr>
         <?php foreach ($p['allowances'] as $a): ?><tr><td><?php echo esc_html($a['name']); ?> <span class="ews-pay-sub">allowance</span></td><td class="num"><?php echo esc_html($money($a['amount'])); ?></td></tr><?php endforeach; ?>
-        <?php if ($p['prorated']): ?><tr><td>Paid from <?php echo esc_html($day($p['prorated']['from'])); ?> <span class="ews-pay-sub"><?php echo (int) $p['prorated']['days']; ?> days × <?php echo esc_html($money($p['day_value'])); ?></span></td><td class="num"><?php echo esc_html($money($p['earned'])); ?></td></tr><?php endif; ?>
+        <?php if ($p['prorated']): ?><tr><td>Paid from <?php echo esc_html($day($p['prorated']['from'])); ?><?php if (!empty($p['prorated']['left'])): ?> to <?php echo esc_html($day($p['prorated']['to'])); ?> (last working day)<?php endif; ?> <span class="ews-pay-sub"><?php echo (int) $p['prorated']['days']; ?> days × <?php echo esc_html($money($p['day_value'])); ?></span></td><td class="num"><?php echo esc_html($money($p['earned'])); ?></td></tr><?php endif; ?>
         <tr><td>Overtime (approved and worked) <span class="ews-pay-sub"><?php echo esc_html(PayCalculator::hm((int) $p['overtime']['minutes'])); ?></span></td><td class="num plus"><?php echo esc_html($plus($p['overtime']['amount'])); ?></td></tr>
         <?php foreach ($p['overtime']['days'] as $d): ?><tr class="ews-pay-day"><td><?php echo esc_html($day($d['date']) . ' · ' . PayCalculator::hm((int) $d['minutes']) . ' × ' . $num($d['rate']) . ($d['off'] ? ' (day off)' : '')); ?></td><td class="num"><?php echo esc_html($plus($d['amount'])); ?></td></tr><?php endforeach; ?>
         <?php foreach ($p['bonuses']['items'] as $a): ?><tr><td>Bonus <span class="ews-pay-sub"><?php echo esc_html($a['reason']); ?></span><?php echo $run ? '' : $adjust_remove($a['id']); ?></td><td class="num plus"><?php echo esc_html($plus($a['amount'])); ?></td></tr><?php endforeach; ?>
@@ -136,11 +138,11 @@ $adjust_remove = static function ($id) {
         <tbody>
         <?php foreach ($people as $x): $e = $x['employee']; $p = $x['pay']; $link = add_query_arg(['month' => $month, 'employee' => (int) $e->id], $page_url); ?>
             <tr data-employee="<?php echo (int) $e->id; ?>">
-                <td><a href="<?php echo esc_url($link); ?>"><strong><?php echo esc_html($e->name); ?></strong></a></td>
+                <td><a href="<?php echo esc_url($link); ?>"><strong><?php echo esc_html($e->name); ?></strong></a><?php if (!(int) $e->active): ?> <span class="ews-pay-sub" data-archived>Archived<?php echo !empty($e->last_working_day) ? ' · last working day ' . esc_html($day((string) $e->last_working_day)) : ''; ?></span><?php endif; ?></td>
                 <?php if (!$p): ?>
                     <td colspan="4" class="ews-pay-none">No salary set · <a href="<?php echo esc_url(add_query_arg(['tab' => 'salaries', 'employee' => (int) $e->id], $page_url)); ?>">Set salary</a></td><td></td>
                 <?php else: $total += $p['net']; $paid++; ?>
-                    <td class="num"><?php echo esc_html($money($p['earned'])); ?><?php if ($p['prorated']): ?><br><span class="ews-pay-sub">from <?php echo esc_html($day($p['prorated']['from'])); ?></span><?php endif; ?></td>
+                    <td class="num"><?php echo esc_html($money($p['earned'])); ?><?php if ($p['prorated']): ?><br><span class="ews-pay-sub"><?php echo esc_html(!empty($p['prorated']['left']) ? 'to ' . $day($p['prorated']['to']) : 'from ' . $day($p['prorated']['from'])); ?></span><?php endif; ?></td>
                     <td class="num plus"><?php echo esc_html($plus($p['overtime']['amount'])); ?></td>
                     <td class="num minus"><?php echo esc_html($minus($p['total_deductions'] ?? $p['deductions'])); ?><?php if (!empty($p['bonuses']['amount'])): ?><br><span class="ews-pay-sub">bonus <?php echo esc_html($plus($p['bonuses']['amount'])); ?></span><?php endif; ?></td>
                     <td class="num"><strong><?php echo esc_html($money($p['net'])); ?></strong></td>

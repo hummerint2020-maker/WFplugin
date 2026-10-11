@@ -20,17 +20,17 @@ notifications, employee screens.
 
 ## Money
 
-- [ ] **Payroll skips employees archived before the month is closed** (`includes/trait-payroll.php`
+- [x] **Payroll skips employees archived before the month is closed** (`includes/trait-payroll.php`
   ~line 119, `active=1`): someone who left on the 20th and was archived on the 21st gets no payslip
   for 20 worked days. Include anyone active on any day of the month.
 - [ ] **Daily workers: HR setting *today* in wp-admin → Days locks the foreman out**
   (`trait-daily-workers.php` `dw_admin_set_day` ~line 1440): it creates today's sheet, so
   `dw_save_sheet` answers "locked" and the other workers are never recorded (not paid), and the period
   looks recorded for payment. Either refuse today in the Days tab, or do not create a sheet for today.
-- [ ] **Daily workers payout: a failed line insert is ignored** (`dw_mark_paid` ~line 960): the payout
+- [x] **Daily workers payout: a failed line insert is ignored** (`dw_mark_paid` ~line 960): the payout
   and the locked days are committed without that worker's line (missing from the sheet, advance not
   deducted). Check every insert; roll back on failure.
-- [ ] **Daily workers payout race** (`dw_mark_paid` ~line 947): the payout is computed before the
+- [x] **Daily workers payout race** (`dw_mark_paid` ~line 947): the payout is computed before the
   transaction; a change approved in between is locked at the old amount. Re-read inside the
   transaction (lock the days) or refuse when a change is pending in the period.
 - [ ] **Payslip PDF arithmetic** (`src/Payroll/PayslipPdf.php` ~line 104): "15 days × 333.33" next to
@@ -110,6 +110,8 @@ Owner decisions: archived employees are paid up to a **last working day** asked 
 **photo at Face Sign In** (feature, off by default); after **Log out** the phone keeps receiving that
 person's push (only an account switch on the same phone moves it).
 
+Done in 3.31.90: 3, 4, 5, 7, 8, 9, 15, 16 (and the three matching items above).
+
 Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** security (1, 2, 6,
 14, 17) · **3.31.92** correctness / operations (10, 11, 12, 13) with the rest of the list above.
 
@@ -117,18 +119,18 @@ Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** 
   server challenge, optional photo at Sign In.
 - [ ] 2 Sensitive files under public uploads (Nginx ignores .htaccess) → store outside the web root
   where possible, self-test a direct URL, admin warning.
-- [ ] 3 Payroll close leaves a closed month with missing payslips (no transaction).
-- [ ] 4 Sign In / Out Report ignores the manager's department (view, save, reset day, CSV).
-- [ ] 5 Archived employee dropped from an unclosed earlier month (`active=1`) → last working day.
+- [x] 3 Payroll close leaves a closed month with missing payslips (no transaction).
+- [x] 4 Sign In / Out Report ignores the manager's department (view, save, reset day, CSV).
+- [x] 5 Archived employee dropped from an unclosed earlier month (`active=1`) → last working day.
 - [ ] 6 Concurrent leave requests can exceed the balance / overlap (no lock, unconditional pending).
-- [ ] 7 Daily workers payout recorded as successful while lines / day links failed.
-- [ ] 8 The same worker advance deducted twice by two concurrent payouts.
-- [ ] 9 Account switch on the same browser keeps push bound to the previous account (3.31.87 marker).
+- [x] 7 Daily workers payout recorded as successful while lines / day links failed.
+- [x] 8 The same worker advance deducted twice by two concurrent payouts.
+- [x] 9 Account switch on the same browser keeps push bound to the previous account (3.31.87 marker).
 - [ ] 10 Service worker activate deletes other apps' caches on the same origin.
 - [ ] 11 Schema upgrade marked done when a table / column failed.
 - [ ] 12 Manual Sign Out after midnight refused for overnight shifts (also in the list above).
 - [ ] 13 Overtime after an overnight shift is placed on the wrong day.
 - [ ] 14 Concurrent overtime requests pass the overlap check; minutes counted twice.
-- [ ] 15 Correction payroll carry-over: a failed adjustment insert is reported as done.
-- [ ] 16 Approving a day change races a payout; can change a paid day.
+- [x] 15 Correction payroll carry-over: a failed adjustment insert is reported as done.
+- [x] 16 Approving a day change races a payout; can change a paid day.
 - [ ] 17 Sensitive photos stay in the browser cache after logout / losing access.

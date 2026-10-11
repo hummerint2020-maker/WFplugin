@@ -56,6 +56,7 @@ final class ManualRecordRules
             'order' => 'Sign Out must be after Sign In.',
             'not_found' => 'Attendance record not found.',
             'save' => 'The attendance record could not be saved.',
+            'scope' => 'This employee is not in your department.',
         ];
         return $messages[$code] ?? 'The attendance record could not be saved.';
     }

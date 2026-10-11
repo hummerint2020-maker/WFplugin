@@ -159,6 +159,28 @@ trait EWS_Attendance_Trait {
             $wpdb->suppress_errors($prev);
         }
 
+    /**
+     * Runs $fn holding a named lock (3.31.90), so two requests touching the same money (a payout and a
+     * change approval, two payouts) never interleave: each reads the data after the other committed.
+     * GET_LOCK as attendance_lock(); where it is not available (SQLite) $fn runs unlocked. Returns
+     * $fn's result, or $busy when the lock could not be taken in $wait seconds.
+     */
+    private function ews_with_lock($scope,callable $fn,$busy=null,$wait=10){
+            global $wpdb;
+            $name='wfo_'.substr(md5((defined('DB_NAME')?DB_NAME:'').'|'.$wpdb->prefix),0,12).'_'.substr(preg_replace('/[^a-z0-9_]/','',strtolower((string)$scope)),0,40);
+            $supported=!(defined('DB_ENGINE') && DB_ENGINE==='sqlite');
+            if($supported){
+                $prev=$wpdb->suppress_errors(true);
+                $got=$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,%d)',$name,(int)$wait));
+                $wpdb->suppress_errors($prev);
+                if((string)$got!=='1' && $got!==null)return $busy;
+            }
+            try{ return $fn(); }
+            finally{
+                if($supported){$prev=$wpdb->suppress_errors(true);$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$name));$wpdb->suppress_errors($prev);}
+            }
+        }
+
     /** Lock names are server-wide: include the site (database + table prefix). At most 64 characters. */
     private function attendance_lock_name($employee_id){
             global $wpdb;

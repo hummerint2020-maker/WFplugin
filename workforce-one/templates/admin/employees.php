@@ -21,6 +21,7 @@
  * @var string|null $error
  * @var string $post_url
  * @var string $profile_url
+ * @var string $today          site date, the last working day suggested when archiving
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Support\Picker;
@@ -88,12 +89,13 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
         </select></td>
         <td><select form="<?php echo $f; ?>" name="default_shift_id"><?php $row_shifts = $shifts; if (isset($all_shifts[(int) $r->default_shift_id])) $row_shifts[(int) $r->default_shift_id] = $all_shifts[(int) $r->default_shift_id]; echo $options($row_shifts, (int) $r->default_shift_id, 'Company Hours'); ?></select></td>
         <td><label style="display:inline-flex;align-items:center;gap:5px"><input form="<?php echo $f; ?>" type="checkbox" name="attendance_enabled" value="1" <?php checked((int) ($r->attendance_enabled ?? 1), 1); ?>> Enabled</label><br><small>Attendance</small></td>
-        <td><select form="<?php echo $f; ?>" name="active" style="min-width:100px"><option value="1" <?php selected((int) $r->active, 1); ?>>Active</option><option value="0" <?php selected((int) $r->active, 0); ?>>Inactive</option></select></td>
+        <td><select form="<?php echo $f; ?>" name="active" style="min-width:100px"><option value="1" <?php selected((int) $r->active, 1); ?>>Active</option><option value="0" <?php selected((int) $r->active, 0); ?>>Inactive</option></select>
+            <?php if (!(int) $r->active): ?><br><label><small>Last working day</small><br><input form="<?php echo $f; ?>" type="date" name="last_working_day" value="<?php echo esc_attr((string) ($r->last_working_day ?? '')); ?>" data-ews-last-day></label><?php endif; ?></td>
         <td style="white-space:nowrap">
             <form id="<?php echo $f; ?>" method="post" action="<?php echo esc_url($post_url); ?>" style="display:inline"><input type="hidden" name="action" value="ews31_employee_update"><input type="hidden" name="id" value="<?php echo $id; ?>"><?php wp_nonce_field('ews31_employee_update'); ?><button class="button">Save</button></form>
             <a class="button" href="<?php echo esc_url(add_query_arg('employee_id', $id, $profile_url)); ?>">View Profile</a>
             <?php if ((int) $r->active): ?>
-            <form method="post" action="<?php echo esc_url($post_url); ?>" style="display:inline"><input type="hidden" name="action" value="ews31_employee_archive"><input type="hidden" name="id" value="<?php echo $id; ?>"><?php wp_nonce_field('ews31_employee_archive'); ?><button class="button" data-ews-confirm-key="employee_delete" style="color:#b32d2e">Archive</button></form>
+            <form method="post" action="<?php echo esc_url($post_url); ?>" style="display:inline"><input type="hidden" name="action" value="ews31_employee_archive"><input type="hidden" name="id" value="<?php echo $id; ?>"><?php wp_nonce_field('ews31_employee_archive'); ?><label style="font-size:12px">Last working day <input type="date" name="last_working_day" value="<?php echo esc_attr($today); ?>" required title="Payroll pays them up to this day in months not closed yet" data-ews-last-day></label> <button class="button" data-ews-confirm-key="employee_delete" style="color:#b32d2e">Archive</button></form>
             <?php endif; ?>
         </td>
     </tr>

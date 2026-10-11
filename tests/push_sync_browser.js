@@ -5,7 +5,9 @@
    - saved less than 3 days ago and the server has it: nothing is sent;
    - older than 3 days: re-saved 1 to 5 minutes after the app opens (never at once: shift start);
    - turned off on this device: nothing is made or sent;
-   - made with another server key: replaced by a new one.
+   - made with another server key: replaced by a new one;
+   - another account opens the app on the same device (3.31.90): re-saved at once, the device moves to
+     that account; a mark from before 3.31.90 (no account in it) is re-saved too.
    Usage: node tests/push_sync_browser.js   (needs tests/e2e_setup.php users at http://127.0.0.1:8080) */
 const { chromium } = require('playwright');
 const B = 'http://127.0.0.1:8080';
@@ -48,8 +50,14 @@ function stub(opts) {
   const wp = (process.env.WP_CLI || 'wp').split(' ').filter(Boolean);
   // No shell in between, so the quotes in a query reach PHP as they are.
   const sql = q => execFileSync(wp[0], wp.slice(1).concat(['eval', "global $wpdb; echo $wpdb->get_var(str_replace('{p}', $wpdb->prefix, '" + q.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'));"])).toString().trim();
+  const php = code => execFileSync(wp[0], wp.slice(1).concat(['eval', code])).toString().trim();
   const devices = () => Number(sql("SELECT COUNT(*) FROM {p}ews_push_subscriptions WHERE endpoint LIKE '" + EP + "%'"));
   sql('DELETE FROM {p}ews_push_subscriptions');
+  // A second account with its own employee record (the same phone, another person).
+  const U1 = Number(php("echo get_user_by('login','emp1')->ID;"));
+  const U2 = Number(php("global $wpdb; $u=get_user_by('login','pushsync2'); if($u){$wpdb->delete($wpdb->prefix.'ews_employees',['wp_user_id'=>$u->ID]); require_once ABSPATH.'wp-admin/includes/user.php'; wp_delete_user($u->ID);}"
+    + " $id=wp_create_user('pushsync2','pushsync2pass','pushsync2@example.com'); $wpdb->insert($wpdb->prefix.'ews_employees',['name'=>'Push Two','domain_name'=>'pushsync2','email'=>'pushsync2@example.com','wp_user_id'=>$id,'active'=>1,'attendance_enabled'=>1]); echo $id;"));
+  const owner = () => Number(sql("SELECT user_id FROM {p}ews_push_subscriptions WHERE endpoint='" + EP + "'") || 0);
 
   // One run of the app page with the given simulated state; returns what the page did.
   const run = async (opts) => {
@@ -58,7 +66,8 @@ function stub(opts) {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.goto(B + '/wp-login.php');
-    await page.fill('#user_login', 'emp1'); await page.fill('#user_pass', 'emp1pass'); await page.click('#wp-submit');
+    const login = opts.login || 'emp1';
+    await page.fill('#user_login', login); await page.fill('#user_pass', login + 'pass'); await page.click('#wp-submit');
     await page.addInitScript(stub, Object.assign({ endpoint: EP }, opts));
     await page.goto(B + '/app/');
     await page.waitForTimeout(2500);
@@ -69,16 +78,28 @@ function stub(opts) {
 
   let t = await run({ has: true });
   check('the server has no device for the user: the subscription is saved at once, no waiting', t.posts === 1 && t.delays.length === 0 && devices() === 1, t);
-  check('...and the time it was saved is remembered on the device', t.synced && t.synced.startsWith(EP + '|'), t.synced);
+  check('...and the account and time it was saved are remembered on the device', t.synced && t.synced === U1 + '|' + t.synced.split('|')[1] + '|' + t.synced.split('|')[2] && t.synced.split('|')[1] === EP, t.synced);
 
-  t = await run({ has: true, synced: EP + '|' + Date.now() });
+  t = await run({ has: true, synced: U1 + '|' + EP + '|' + Date.now() });
   check('saved less than 3 days ago and the server has it: nothing is sent', t.posts === 0 && t.delays.length === 0, t);
 
-  t = await run({ has: true, synced: EP + '|' + (Date.now() - 4 * 864e5) });
+  t = await run({ has: true, synced: U1 + '|' + EP + '|' + (Date.now() - 4 * 864e5) });
   check('saved more than 3 days ago: re-saved 1 to 5 minutes after the app opens, never at once', t.posts === 1 && t.delays.length === 1 && t.delays[0] >= 60000 && t.delays[0] <= 300000, t);
 
-  t = await run({ has: true, synced: 'https://fcm.googleapis.com/fcm/send/another|' + Date.now() });
+  t = await run({ has: true, synced: U1 + '|https://fcm.googleapis.com/fcm/send/another|' + Date.now() });
   check('the browser has another subscription than the one saved: re-saved (after the random wait)', t.posts === 1, t);
+
+  // pushsync2 has a device of their own elsewhere, so only the account in the mark tells this phone apart.
+  php("global $wpdb; $wpdb->insert($wpdb->prefix.'ews_push_subscriptions',['user_id'=>" + U2 + ",'endpoint'=>'https://fcm.googleapis.com/fcm/send/pushsync2-other','endpoint_hash'=>hash('sha256','https://fcm.googleapis.com/fcm/send/pushsync2-other'),'p256dh'=>'x','auth'=>'y','created_at'=>current_time('mysql')]);");
+  check('(this phone is saved for emp1)', owner() === U1, owner());
+  t = await run({ has: true, login: 'pushsync2', synced: U1 + '|' + EP + '|' + Date.now() });
+  check('another account opens the app on this phone: re-saved at once (no wait), even though they have another device', t.posts === 1 && t.delays.length === 0, t);
+  check('...the phone now receives that account\'s notifications, not emp1\'s', owner() === U2, owner());
+  check('...and the mark carries the new account', t.synced && t.synced.split('|')[0] === String(U2), t.synced);
+  t = await run({ has: true, login: 'pushsync2', synced: U2 + '|' + EP + '|' + Date.now() });
+  check('the same account again: nothing is sent', t.posts === 0, t);
+  t = await run({ has: true, synced: EP + '|' + Date.now() });
+  check('a mark saved before 3.31.90 (no account in it): re-saved at once for the account signed in', t.posts === 1 && t.delays.length === 0 && owner() === U1, [t, owner()]);
 
   t = await run({ has: true, off: true });
   check('turned off on this device: nothing is made or sent', t.posts === 0 && t.subscribed === 0, t);
@@ -93,6 +114,7 @@ function stub(opts) {
   check('no JavaScript errors', !t.errors.length, t.errors);
 
   sql('DELETE FROM {p}ews_push_subscriptions');
+  php("global $wpdb; $u=get_user_by('login','pushsync2'); if($u){$wpdb->delete($wpdb->prefix.'ews_employees',['wp_user_id'=>$u->ID]); require_once ABSPATH.'wp-admin/includes/user.php'; wp_delete_user($u->ID);}");
   await browser.close();
   console.log(`${ok} / ${ok + fail}`);
   process.exit(fail ? 1 : 0);

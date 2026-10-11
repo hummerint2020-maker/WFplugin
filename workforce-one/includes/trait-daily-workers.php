@@ -514,6 +514,7 @@ trait EWS_Daily_Workers_Trait {
             'nothing'=>__('There is nothing to pay in this period.','workforce-one'),
             'open'=>__('This period is not over yet. Pay it on its last day or later: paying locks the period, so the days still to come could not be recorded.','workforce-one'),
             'open_today'=>__('Save today\'s day sheet first: paying locks the period, today included.','workforce-one'),
+            'busy'=>__('Another payout or change is being saved. Try again in a moment.','workforce-one'),
             'reason'=>__('Write the reason for the change.','workforce-one'),
             'no_change'=>__('Nothing was changed.','workforce-one'),
             'pending'=>__('A change for this day is already waiting.','workforce-one'),
@@ -820,7 +821,12 @@ trait EWS_Daily_Workers_Trait {
     }
 
     /** A manager's decision. @return string approved | rejected, or an error code */
+    /** A change decision and a payout never interleave (3.31.90): both hold the daily workers' money lock. */
     private function dw_decide_change($id,$decision,$note){
+        return $this->ews_with_lock('dw_money',function()use($id,$decision,$note){return $this->dw_decide_change_locked($id,$decision,$note);},'busy');
+    }
+
+    private function dw_decide_change_locked($id,$decision,$note){
         global $wpdb;
         if(!$this->dw_is_manager())return 'access';
         if(!in_array($decision,['approve','reject'],true))return 'save';
@@ -834,9 +840,14 @@ trait EWS_Daily_Workers_Trait {
         if($decision==='approve'){
             $d=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->dw_t('days')} WHERE id=%d",(int)$c->day_id));
             if(!$d || $d->payout_id || $this->dw_paid_for((int)$d->location_id,(string)$d->work_date))return 'paid';
+            // One transaction, and the day only if it is still unpaid: a payout that got in first wins.
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
             $ok=$wpdb->update($this->dw_t('changes'),['status'=>'approved','decided_by'=>get_current_user_id(),'decided_at'=>$now,'note'=>$note!==''?$note:null],['id'=>(int)$id,'status'=>'pending']);
-            if($ok!==1)return 'done';
-            $wpdb->update($this->dw_t('days'),['mark'=>$c->new_mark,'extra_hours'=>(float)$c->new_extra,'amount'=>PayRules::dayAmount((string)$c->new_mark,(float)$c->new_extra,(float)$d->daily_rate,(float)$d->hourly_rate),'updated_at'=>$now],['id'=>(int)$d->id]);
+            if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
+            $n=$wpdb->query($wpdb->prepare("UPDATE {$this->dw_t('days')} SET mark=%s,extra_hours=%f,amount=%f,updated_at=%s WHERE id=%d AND payout_id IS NULL",
+                (string)$c->new_mark,(float)$c->new_extra,PayRules::dayAmount((string)$c->new_mark,(float)$c->new_extra,(float)$d->daily_rate,(float)$d->hourly_rate),$now,(int)$d->id));
+            if($n!==1){$wpdb->query('ROLLBACK');return 'paid';}
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
             $this->audit('dw_change_approve','daily_worker',(int)$c->worker_id,$c->work_date.': '.$c->old_mark.' -> '.$c->new_mark);
         }else{
             $ok=$wpdb->update($this->dw_t('changes'),['status'=>'rejected','decided_by'=>get_current_user_id(),'decided_at'=>$now,'note'=>$note],['id'=>(int)$id,'status'=>'pending']);
@@ -939,11 +950,18 @@ trait EWS_Daily_Workers_Trait {
      * @return array{id?:int,error?:string}
      */
     private function dw_mark_paid($location_id,$start,$photo){
-        global $wpdb;
         if(!$this->dw_enabled())return ['error'=>'disabled'];
         $this->ensure_dw_schema_once();
         if(!$this->dw_site($location_id) || !$this->dw_can_pay($location_id))return ['error'=>'access'];
         if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',(string)$start) || $start>current_time('Y-m-d'))return ['error'=>'date'];
+        // Under the daily workers' money lock (3.31.90): the payout is worked out after any other payout
+        // or change has committed, so a worker's advance is deducted once even when two sites or two
+        // periods are paid at the same moment, and an approved change is either in it or refused.
+        return $this->ews_with_lock('dw_money',function()use($location_id,$start,$photo){return $this->dw_mark_paid_locked($location_id,$start,$photo);},['error'=>'busy']);
+    }
+
+    private function dw_mark_paid_locked($location_id,$start,$photo){
+        global $wpdb;
         $p=$this->dw_payout($location_id,$start);
         if($p['paid'])return ['error'=>'paid'];
         // Paying locks the period: days still to come in it could not be recorded any more.
@@ -952,17 +970,24 @@ trait EWS_Daily_Workers_Trait {
         if(!$p['lines'] || $p['amount']<=0)return ['error'=>'nothing'];
         [$key,$perr]=$this->dw_save_photo($photo);
         if($perr!=='')return ['error'=>$perr];
-        $wpdb->query('START TRANSACTION');
+        // Every write is checked; the first failure undoes the payout (3.31.90: lines and day links
+        // that failed were ignored, leaving a payout without its lines or days not marked paid).
+        $fail=function($code='save')use($wpdb,$key){$wpdb->query('ROLLBACK');$this->dw_delete_file($key);return ['error'=>$code];};
+        if($wpdb->query('START TRANSACTION')===false){$this->dw_delete_file($key);return ['error'=>'save'];}
         $ok=$wpdb->insert($this->dw_t('payouts'),['location_id'=>(int)$location_id,'period_start'=>$p['start'],'period_end'=>$p['end'],'amount'=>$p['amount'],'advance'=>$p['advance'],'net'=>$p['net'],
             'photo_key'=>$key,'paid_by'=>get_current_user_id(),'paid_at'=>current_time('mysql')]);
-        if(!$ok){$wpdb->query('ROLLBACK');$this->dw_delete_file($key);return ['error'=>'paid'];}
+        if(!$ok)return $fail('paid');
         $id=(int)$wpdb->insert_id;
         foreach($p['lines'] as $l){
-            $wpdb->insert($this->dw_t('lines'),['payout_id'=>$id,'worker_id'=>(int)$l['worker_id'],'days'=>$l['days'],'extra_hours'=>$l['extra_hours'],'amount'=>$l['amount'],'advance'=>$l['advance'],'net'=>$l['net']]);
+            $ok=$wpdb->insert($this->dw_t('lines'),['payout_id'=>$id,'worker_id'=>(int)$l['worker_id'],'days'=>$l['days'],'extra_hours'=>$l['extra_hours'],'amount'=>$l['amount'],'advance'=>$l['advance'],'net'=>$l['net']]);
+            if(!$ok)return $fail();
         }
-        $ids=implode(',',array_map('intval',$p['day_ids']??[]));
-        if($ids!=='')$wpdb->query($wpdb->prepare("UPDATE {$this->dw_t('days')} SET payout_id=%d WHERE id IN ($ids) AND payout_id IS NULL",$id));
-        $wpdb->query('COMMIT');
+        $day_ids=array_map('intval',$p['day_ids']??[]);
+        if($day_ids){
+            $n=$wpdb->query($wpdb->prepare("UPDATE {$this->dw_t('days')} SET payout_id=%d WHERE id IN (".implode(',',$day_ids).") AND payout_id IS NULL",$id));
+            if($n!==count($day_ids))return $fail();
+        }
+        if($wpdb->query('COMMIT')===false)return $fail();
         $this->audit('dw_payout','daily_site',(int)$location_id,'Payout recorded: '.$p['site']->name.' '.$p['start'].' – '.$p['end']);
         return ['id'=>$id];
     }
@@ -1406,6 +1431,10 @@ trait EWS_Daily_Workers_Trait {
      * @return array{changed?:int,error?:string}
      */
     private function dw_admin_set_day($location_id,$date,array $marks,array $extra,$reason){
+        return $this->ews_with_lock('dw_money',function()use($location_id,$date,$marks,$extra,$reason){return $this->dw_admin_set_day_locked($location_id,$date,$marks,$extra,$reason);},['error'=>'busy']);
+    }
+
+    private function dw_admin_set_day_locked($location_id,$date,array $marks,array $extra,$reason){
         global $wpdb;
         if(!$this->dw_enabled())return ['error'=>'disabled'];
         if(!$this->dw_is_manager())return ['error'=>'access'];

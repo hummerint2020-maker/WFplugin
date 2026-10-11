@@ -12,6 +12,8 @@ if (!defined('ABSPATH')) exit;
  * - $rate['effective_from'] is when the employee's first salary started: if that is after the 1st,
  *   the month is paid for the days from it (day value × days, at most the full month) and days
  *   before it are not counted. The plugin passes the salary in effect on the month's last day.
+ * - $rate['last_working_day'] (an archived employee, 3.31.90): the month is paid up to that day, the
+ *   same way (day value × days, at most the full month), and days after it are not counted.
  * - Absent (a planned working day with no Sign In): absence days × day value.
  * - Late: the report's late minutes (counted from the shift start, only once past the grace), each
  *   minute at the minute value; or, by tiers, the share of a day of the highest tier passed
@@ -30,7 +32,7 @@ if (!defined('ABSPATH')) exit;
 final class PayCalculator
 {
     /**
-     * @param array{basic:float,allowances:array<int,array{name:string,amount:float}>,effective_from:string} $rate
+     * @param array{basic:float,allowances:array<int,array{name:string,amount:float}>,effective_from:string,last_working_day?:string} $rate
      * @param array{day_divisor:int,day_base:string,absence_days:float,overtime_rate:float,overtime_rate_off:float,max_deduction_days:float} $rules
      * @param array<int,array<string,mixed>> $days report_days() rows of this employee and month (with off days), each
      *        with 'approved_early' (minutes) and, on leave days, 'leave_paid' (0–100) and 'leave_type'
@@ -52,12 +54,16 @@ final class PayCalculator
         $first = $month . '-01';
         $last = date('Y-m-t', (int) strtotime($first));
         $from = max($first, (string) $rate['effective_from']);
+        $to = !empty($rate['last_working_day']) ? min($last, (string) $rate['last_working_day']) : $last;
         $earned = $monthly;
         $prorated = null;
-        if ($from > $first) {
-            $paidDays = (int) ((strtotime($last) - strtotime($from)) / 86400) + 1;
+        if ($to < $from) {
+            $earned = 0.0;
+            $prorated = ['from' => $from, 'to' => $to, 'left' => true, 'days' => 0, 'amount' => 0.0];
+        } elseif ($from > $first || $to < $last) {
+            $paidDays = (int) ((strtotime($to) - strtotime($from)) / 86400) + 1;
             $earned = min($monthly, round($monthly / $divisor * $paidDays, 2));
-            $prorated = ['from' => $from, 'days' => $paidDays, 'amount' => $earned];
+            $prorated = ['from' => $from, 'to' => $to, 'left' => $to < $last, 'days' => $paidDays, 'amount' => $earned];
         }
 
         $out = [
@@ -74,7 +80,7 @@ final class PayCalculator
         ];
         foreach ($days as $d) {
             $date = (string) $d['date'];
-            if ($date < $from || $date > $last) continue;
+            if ($date < $from || $date > $to) continue;
             $off = $d['result'] === 'Off Day' || $d['result'] === 'Holiday';
             if (!empty($d['expected'])) $out['stats']['expected_days']++;
             if (!empty($d['expected']) && ((int) ($d['net_minutes'] ?? 0) > 0 || !empty($d['missing_sign_out']))) $out['stats']['worked_days']++;

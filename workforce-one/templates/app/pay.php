@@ -67,7 +67,11 @@ $days_list = static function (array $rows) {
     <div class="ews-pay-card"><h3><?php esc_html_e('Earnings', 'workforce-one'); ?></h3>
         <?php echo $line(esc_html__('Basic salary', 'workforce-one'), '', $money($p['basic'])); ?>
         <?php if ($p['allowances']): echo $line(esc_html__('Allowances', 'workforce-one'), implode(' · ', array_map(static function ($a) use ($money) { return $a['name'] . ' ' . $money($a['amount']); }, $p['allowances'])), $money($p['allowances_total'])); endif; ?>
-        <?php if ($p['prorated']): echo $line(esc_html(sprintf(/* translators: %s: date */ __('Paid from %s', 'workforce-one'), $day($p['prorated']['from']))), $days_n((int) $p['prorated']['days']), $money($p['earned'])); endif; ?>
+        <?php if ($p['prorated']): echo $line(esc_html(!empty($p['prorated']['left'])
+            /* translators: 1: first paid date, 2: last working day */
+            ? sprintf(__('Paid from %1$s to %2$s', 'workforce-one'), $day($p['prorated']['from']), $day($p['prorated']['to']))
+            /* translators: %s: date */
+            : sprintf(__('Paid from %s', 'workforce-one'), $day($p['prorated']['from']))), $days_n((int) $p['prorated']['days']), $money($p['earned'])); endif; ?>
         <?php if ($p['overtime']['days']): ?>
             <details><summary><?php echo $line(esc_html__('Overtime (approved)', 'workforce-one') . ' ' . $chev, sprintf(/* translators: %s: hours:minutes */ __('%s worked', 'workforce-one'), PayCalculator::hm((int) $p['overtime']['minutes'])), '+ ' . $money($p['overtime']['amount']), 'plus'); ?></summary>
             <?php echo $days_list(array_map(static function ($d) use ($day) { return [$day($d['date']) . ' · ' . PayCalculator::hm((int) $d['minutes']) . ($d['off'] ? ' (' . __('day off', 'workforce-one') . ')' : ''), '× ' . rtrim(rtrim(number_format((float) $d['rate'], 2, '.', ''), '0'), '.') . ' · +' . PayRules::money((float) $d['amount'])]; }, $p['overtime']['days'])); ?></details>

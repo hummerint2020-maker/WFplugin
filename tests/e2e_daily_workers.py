@@ -17,7 +17,7 @@ Wipes Workforce One test data; never run against a real site.
 import datetime, json, os, re, sys, time, urllib.parse, urllib.request, uuid
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, php, q, results, today, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, php, q, results, today, wp, HERE  # noqa: E402
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 
@@ -348,6 +348,14 @@ p = json.loads(call('dw_payout', str(A), "'%s'" % TODAY).splitlines()[-1])
 check('paid: the day\'s payout has the same figures', (p['amount'], p['advance'], p['net']) == (900, 200, 700), (p['amount'], p['advance'], p['net']))
 check('paid: the signed sheet photo is required', post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {}).get('dw_error') == 'photo')
 check('paid: an employee cannot', post(emp, {'action': 'ews_dw_paid', '_wpnonce': nonce_for(emp, 'ews_dw_paid'), 'site': A, 'start': p['start']}, {'photo': PNG}).get('dw_error') == 'access')
+# 3.31.90: a line that cannot be saved undoes the whole payout (it was recorded without that worker).
+photos = lambda: int(php("echo count(glob(wp_upload_dir()['basedir'].'/workforce-one-daily-workers/*'));").strip() or 0)
+n_photos = photos()
+break_writes('ews_dw_lines')
+qs = post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {'photo': PNG})
+break_writes('')
+check('paid: a worker\'s line that cannot be saved: nothing is recorded (no payout, days not locked, photo removed)', qs.get('dw_error') == 'save' and not q("SELECT id FROM {p}ews_dw_payouts")
+      and q("SELECT COUNT(*) n FROM {p}ews_dw_days WHERE location_id=%d AND payout_id IS NOT NULL" % A)[0]['n'] == '0' and photos() == n_photos, (qs, photos(), n_photos))
 qs = post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {'photo': PNG})
 check('paid: recorded', 'dw_paid' in qs, qs)
 po = q("SELECT * FROM {p}ews_dw_payouts")[0]
@@ -356,6 +364,15 @@ check('paid: the payout and its lines are stored; the days carry the payout', fl
 check('paid: the Audit Log says "Payout recorded" without the figures', 'Payout recorded' in audit_text() and '700' not in audit_text() and '550' not in audit_text())
 check('paid: paying again is refused', post(cash, {'action': 'ews_dw_paid', '_wpnonce': npd, 'site': A, 'start': p['start']}, {'photo': PNG}).get('dw_error') == 'paid')
 check('paid: a change to a paid day is refused', post(fm, {'action': 'ews_dw_change', '_wpnonce': nc, 'day': d1['id'], 'mark': 'half', 'extra': '0', 'reason': 'x'}).get('dw_error') == 'paid')
+# A change asked before the payout and approved after it (3.31.90): refused, the paid day stays as paid.
+php("$wpdb->insert($p.'ews_dw_changes',['day_id'=>%s,'worker_id'=>%d,'location_id'=>%d,'work_date'=>'%s','old_mark'=>'%s','old_extra'=>0,'new_mark'=>'half','new_extra'=>0,'reason'=>'asked before the payout','requested_by'=>(int)get_user_by('login','dwfm')->ID,'requested_at'=>current_time('mysql')]);"
+    % (d1['id'], W1, A, d1['work_date'], day_row(W1)['mark']))
+late = int(q("SELECT id FROM {p}ews_dw_changes WHERE reason='asked before the payout'")[0]['id'])
+before = day_row(W1)
+qs = post(hr, {'action': 'ews_dw_change_decide', '_wpnonce': nd, 'change': late, 'decision': 'approve', 'note': ''})
+check('paid: a change asked before the payout cannot be approved after it; the paid day is unchanged', qs.get('dw_error') == 'paid' and day_row(W1)['mark'] == before['mark'] and day_row(W1)['amount'] == before['amount']
+      and q("SELECT status FROM {p}ews_dw_changes WHERE id=%d" % late)[0]['status'] == 'pending', qs)
+php("$wpdb->update($p.'ews_dw_changes',['status'=>'rejected','note'=>'paid'],['id'=>%d]);" % late)
 check('paid: the page shows it locked', 'Paid · locked' in app(cash, 'payout', site=A))
 check('paid: the advance is used up (none outstanding)', json.loads(call('dw_outstanding', '[%d]' % W1, "'%s'" % TODAY).splitlines()[-1]).get(str(W1), 0) == 0)
 

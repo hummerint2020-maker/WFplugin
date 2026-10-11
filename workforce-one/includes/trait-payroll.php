@@ -108,7 +108,8 @@ trait EWS_Payroll_Trait {
     }
 
     /**
-     * Pay of every active employee for a month: [employee, pay (null = no salary)] ordered by name.
+     * Pay of every active employee for a month, and of those archived with a last working day in or
+     * after it: [employee, pay (null = no salary)] ordered by name.
      * @return array<int,array{employee:object,pay:?array<string,mixed>}>
      */
     private function payroll_month($month,$only_employee=0){
@@ -116,7 +117,9 @@ trait EWS_Payroll_Trait {
         $this->ensure_payroll_schema();
         $first=$month.'-01';$last=date('Y-m-t',strtotime($first));
         $where=$only_employee?$wpdb->prepare(' AND id=%d',$only_employee):'';
-        $emps=(array)$wpdb->get_results("SELECT * FROM {$this->employees} WHERE active=1{$where} ORDER BY name ASC");
+        // Archived employees are paid up to their last working day (3.31.90): someone who left on the 20th
+        // and was archived on the 21st still gets that month's payslip, for the days to the 20th.
+        $emps=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->employees} WHERE (active=1 OR (last_working_day IS NOT NULL AND last_working_day>=%s)){$where} ORDER BY name ASC",$first));
         $rates=$this->payroll_rates_on($last);
         // The salary in effect on the month's last day covers the whole month; only an employee's
         // first salary is a start date (days before it are not paid).
@@ -146,7 +149,9 @@ trait EWS_Payroll_Trait {
                 if(isset($leave[$eid][$d['date']])){$d['leave_type']=$leave[$eid][$d['date']]['type'];$d['leave_paid']=$leave[$eid][$d['date']]['paid'];}
                 $rows[]=$d;
             }
-            $out[]=['employee'=>$e,'pay'=>PayCalculator::month($rates[$eid],$rules,$rows,$this->payroll_day_minutes($eid),$month,$adjust[$eid]??[])];
+            $rate=$rates[$eid];
+            if(!(int)$e->active && !empty($e->last_working_day))$rate['last_working_day']=(string)$e->last_working_day;
+            $out[]=['employee'=>$e,'pay'=>PayCalculator::month($rate,$rules,$rows,$this->payroll_day_minutes($eid),$month,$adjust[$eid]??[])];
         }
         return $out;
     }
@@ -178,6 +183,12 @@ trait EWS_Payroll_Trait {
             $people=$run?$this->payroll_payslips((int)$run->id,$employee):$this->payroll_month($month,$employee);
             if($employee&&$people)$vars['detail']=$people[0];
             else $vars['people']=$people;
+            // Archived before 3.31.90 (no last working day) but signed in this month: not paid until it is set.
+            if(!$run){
+                global $wpdb;
+                $first=$month.'-01';
+                $vars['no_last_day']=(array)$wpdb->get_results($wpdb->prepare("SELECT e.id,e.name FROM {$this->employees} e WHERE e.active=0 AND e.last_working_day IS NULL AND EXISTS (SELECT 1 FROM {$this->time_logs} l WHERE l.employee_id=e.id AND l.work_date BETWEEN %s AND %s) ORDER BY e.name ASC LIMIT 50",$first,date('Y-m-t',strtotime($first))));
+            }
             $vars['export_url']=wp_nonce_url(add_query_arg(['action'=>'ews_payroll_export','month'=>$month],admin_url('admin-post.php')),'ews_payroll_export');
             $vars['pdf_url']=$run&&$employee?wp_nonce_url(add_query_arg(['action'=>'ews_payroll_pdf','month'=>$month,'employee'=>$employee],admin_url('admin-post.php')),'ews_payroll_pdf'):'';
         }elseif($tab==='salaries'){
@@ -194,7 +205,7 @@ trait EWS_Payroll_Trait {
             $vars['default_from']=current_time('Y-m').'-01';
             $vars['selected']=absint($_GET['employee']??0);
         }
-        echo $this->render_template('admin/payroll',$vars+['run'=>null,'can_close'=>false,'pdf_url'=>'']);
+        echo $this->render_template('admin/payroll',$vars+['run'=>null,'can_close'=>false,'pdf_url'=>'','no_last_day'=>[]]);
     }
 
     /** The closed run of a month, if any. */
@@ -265,13 +276,19 @@ trait EWS_Payroll_Trait {
         foreach($people as $x)if($x['pay']['review'])$this->payroll_redirect($back+['payroll_error'=>'review']);
         $rules=$this->payroll_rules();
         $total=round(array_sum(array_map(function($x){return (float)$x['pay']['net'];},$people)),2);
+        // One transaction (3.31.90): the month is closed with every payslip, or not at all. Before, a
+        // payslip that failed to save left a closed month with missing payslips, reported as closed.
+        if($wpdb->query('START TRANSACTION')===false)$this->payroll_redirect($back+['payroll_error'=>'save']);
         $ok=$wpdb->insert($t['runs'],['month'=>$month,'employees'=>count($people),'total_net'=>$total,'currency'=>$rules['currency'],'closed_by'=>get_current_user_id(),'closed_at'=>current_time('mysql')],['%s','%d','%f','%s','%d','%s']);
-        if(!$ok)$this->payroll_redirect($back+['payroll_error'=>'already_closed']);
+        if(!$ok){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'already_closed']);}
         $run_id=(int)$wpdb->insert_id;
         foreach($people as $x){
-            $wpdb->insert($t['payslips'],['run_id'=>$run_id,'employee_id'=>(int)$x['employee']->id,'net'=>$x['pay']['net'],
+            $ok=$wpdb->insert($t['payslips'],['run_id'=>$run_id,'employee_id'=>(int)$x['employee']->id,'net'=>$x['pay']['net'],
                 'data'=>wp_json_encode(['employee'=>['id'=>(int)$x['employee']->id,'name'=>(string)$x['employee']->name],'currency'=>$rules['currency'],'rules'=>$rules,'pay'=>$x['pay']])],['%d','%d','%f','%s']);
+            if(!$ok){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
         }
+        if((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['payslips']} WHERE run_id=%d",$run_id))!==count($people)){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
         $this->audit('payroll_closed','payroll',$run_id,$month.': '.count($people).' payslips');
         if($rules['employee_view']){
             $label=date('F Y',strtotime($month.'-01'));
@@ -446,7 +463,7 @@ trait EWS_Payroll_Trait {
         $rows=[];$days=[];
         foreach($people as $x){
             $p=$x['pay'];$name=(string)$x['employee']->name;
-            $rows[]=[$name,$p['basic'],$p['allowances_total'],$p['monthly'],$p['prorated']?'From '.$p['prorated']['from']:'Full month',PayCalculator::hm((int)$p['overtime']['minutes']),$p['overtime']['amount'],
+            $rows[]=[$name,$p['basic'],$p['allowances_total'],$p['monthly'],$p['prorated']?'From '.$p['prorated']['from'].(!empty($p['prorated']['left'])?' to '.$p['prorated']['to']:''):'Full month',PayCalculator::hm((int)$p['overtime']['minutes']),$p['overtime']['amount'],
                 count($p['absence']['days']),-$p['absence']['amount'],(int)$p['late']['minutes'],-$p['late']['amount'],(int)$p['early']['minutes'],-$p['early']['amount'],
                 count($p['leave']['days']),-$p['leave']['amount'],-$p['deductions'],$p['bonuses']['amount'],-$p['manual']['amount'],$p['net'],count($p['review'])];
             foreach($p['absence']['days'] as $d)$days[]=[$name,$d['date'],'Absent','',-$d['amount']];

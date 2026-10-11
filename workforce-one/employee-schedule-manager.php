@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.89
+ * Version: 3.31.90
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.89');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.90');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -216,7 +216,7 @@ class EWS_Manager_V31_1 {
     static function base_tables(){
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php'; $c=$wpdb->get_charset_collate();
             $e=$wpdb->prefix.'ews_employees';$s=$wpdb->prefix.'ews_schedule';$l=$wpdb->prefix.'ews_leave_requests';$a=$wpdb->prefix.'ews_audit_log';
-            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id),KEY default_shift_id(default_shift_id)) $c;");
+            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,last_working_day DATE NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id),KEY default_shift_id(default_shift_id)) $c;");
             dbDelta("CREATE TABLE $s (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,status VARCHAR(40) NOT NULL DEFAULT 'Office',note TEXT NULL,updated_by BIGINT UNSIGNED NULL,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY employee_date(employee_id,work_date),KEY work_date(work_date),KEY employee_id(employee_id)) $c;");
             dbDelta("CREATE TABLE {$wpdb->prefix}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,source VARCHAR(20) NULL,corrects_id BIGINT UNSIGNED NULL,correction_id BIGINT UNSIGNED NULL,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at),KEY corrects_id(corrects_id)) $c;");
             dbDelta("CREATE TABLE $l (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,leave_type VARCHAR(40) NOT NULL DEFAULT 'Vacation',start_date DATE NOT NULL,end_date DATE NOT NULL,reason TEXT NULL,status VARCHAR(30) NOT NULL DEFAULT 'Pending',requested_by BIGINT UNSIGNED NULL,approved_by BIGINT UNSIGNED NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_id(employee_id),KEY dates(start_date,end_date),KEY status(status)) $c;");

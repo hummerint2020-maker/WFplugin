@@ -436,10 +436,22 @@ trait EWS_Corrections_Trait {
         for($i=0;$i<36;$i++){$to=date('Y-m',strtotime($to.'-01 +1 month'));if(!$this->payroll_run($to))break;}
         global $wpdb;
         $reason=sprintf('Attendance correction #%d for %s (closed month %s)',(int)$c->id,$c->work_date,$month);
-        $wpdb->insert($this->payroll_tables()['adjustments'],['employee_id'=>(int)$c->employee_id,'month'=>$to,'kind'=>$diff>0?'bonus':'deduction','amount'=>abs($diff),'reason'=>$reason,'created_by'=>get_current_user_id(),'created_at'=>current_time('mysql')],['%d','%s','%s','%f','%s','%d','%s']);
+        $t=$this->payroll_tables()['adjustments'];
+        // Once per correction (3.31.90): a retry never adds the difference twice.
+        $done=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t} WHERE employee_id=%d AND reason=%s",(int)$c->employee_id,$reason));
         $note=$to.' '.($diff>0?'+':'−').number_format(abs($diff),2);
+        if(!$done){
+            $ok=$wpdb->insert($t,['employee_id'=>(int)$c->employee_id,'month'=>$to,'kind'=>$diff>0?'bonus':'deduction','amount'=>abs($diff),'reason'=>$reason,'created_by'=>get_current_user_id(),'created_at'=>current_time('mysql')],['%d','%s','%s','%f','%s','%d','%s']);
+            if(!$ok){
+                // Not saved: say so on the correction (shown to HR) instead of a note that it was carried.
+                $note='NOT CARRIED: '.$note;
+                $wpdb->update($this->cx_table(),['payroll_note'=>$note],['id'=>(int)$c->id],['%s'],['%d']);
+                $this->audit('pay_adjustment_failed','employee',(int)$c->employee_id,$c->employee_name.' '.$to.': '.$reason.' — add it in Payroll → Adjustments');
+                return $note;
+            }
+            $this->audit('pay_adjustment_added','employee',(int)$c->employee_id,$c->employee_name.' '.$to.': '.($diff>0?'bonus':'deduction').' — '.$reason);
+        }
         $wpdb->update($this->cx_table(),['payroll_note'=>$note],['id'=>(int)$c->id],['%s'],['%d']);
-        $this->audit('pay_adjustment_added','employee',(int)$c->employee_id,$c->employee_name.' '.$to.': '.($diff>0?'bonus':'deduction').' — '.$reason);
         return $note;
     }
 

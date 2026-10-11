@@ -8,6 +8,7 @@
  * @var string $push_url    where subscriptions are saved
  * @var string $push_nonce
  * @var int    $push_devices  devices the server has for this user (0: re-save this one now)
+ * @var int    $push_user     the signed-in user (another account on this device: re-save at once)
  * @var string $sw          service worker URL
  */
 if (!defined('ABSPATH')) exit;
@@ -40,6 +41,7 @@ if (!defined('ABSPATH')) exit;
               window.EWS_PUSH_URL=<?php echo wp_json_encode($push_url); ?>;
               window.EWS_PUSH_NONCE=<?php echo wp_json_encode($push_nonce); ?>;
               window.EWS_PUSH_DEVICES=<?php echo (int) $push_devices; ?>;
+              window.EWS_PUSH_USER=<?php echo (int) $push_user; ?>;
               function ewsUrlBase64ToUint8Array(base64String){var padding='='.repeat((4-base64String.length%4)%4),base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/'),raw=window.atob(base64),out=new Uint8Array(raw.length);for(var i=0;i<raw.length;++i)out[i]=raw.charCodeAt(i);return out;}
               window.ewsEnablePush=function(){
                 if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){alert('Push notifications are not supported by this browser. On iPhone, add Workforce One to the Home Screen first.');return;}
@@ -75,7 +77,10 @@ if (!defined('ABSPATH')) exit;
                  showed it as on. When permission is granted: a subscription made with another server key is
                  replaced, a missing one is made again, and it is re-saved every 3 days, 1 to 5 minutes after
                  the app opens (at random, so it never adds to the rush at shift start), or at once when the
-                 server has no device for this user. */
+                 server has no device for this user. The saved mark carries the account (3.31.90): when
+                 another account opens the app on this device, the subscription is re-saved at once and
+                 moves to that account. Logging out alone changes nothing: the phone keeps receiving the
+                 last account's notifications (owner's decision). */
               function ewsPushSync(){
                 if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return;
                 if(Notification.permission!=='granted'||!window.EWS_PUSH_PUBLIC_KEY||ewsPushOff())return;
@@ -87,16 +92,18 @@ if (!defined('ABSPATH')) exit;
                     return sub;
                   }).then(function(sub){return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});});
                 }).then(function(sub){
-                  var last=[],now=Date.now(),none=!(window.EWS_PUSH_DEVICES>0);
+                  var last=[],now=Date.now(),user=String(window.EWS_PUSH_USER||0),none=!(window.EWS_PUSH_DEVICES>0);
                   try{last=(localStorage.getItem('ewsPushSynced')||'').split('|');}catch(e){}
-                  // Same subscription saved less than 3 days ago, and the server has it: nothing to do.
-                  if(!none&&last.length===2&&last[0]===sub.endpoint&&now-Number(last[1])<3*864e5)return;
+                  // Saved for another account (or by a version before 3.31.90): re-save at once.
+                  var other=last.length!==3||last[0]!==user;
+                  // Same account and subscription saved less than 3 days ago, and the server has it: nothing to do.
+                  if(!none&&!other&&last[1]===sub.endpoint&&now-Number(last[2])<3*864e5)return;
                   var send=function(){
                     var body=new URLSearchParams();
                     body.set('action','ews_push_subscribe');body.set('_wpnonce',window.EWS_PUSH_NONCE);body.set('subscription',JSON.stringify(sub.toJSON()));
-                    fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body}).then(function(r){if(r.ok){try{localStorage.setItem('ewsPushSynced',sub.endpoint+'|'+Date.now());}catch(e){}}}).catch(function(){});
+                    fetch(window.EWS_PUSH_URL,{method:'POST',credentials:'same-origin',body:body}).then(function(r){if(r.ok){try{localStorage.setItem('ewsPushSynced',user+'|'+sub.endpoint+'|'+Date.now());}catch(e){}}}).catch(function(){});
                   };
-                  if(none)send();else setTimeout(send,60000+Math.floor(Math.random()*240000));
+                  if(none||other)send();else setTimeout(send,60000+Math.floor(Math.random()*240000));
                 }).catch(function(){});
               }
               window.ewsPushSync=ewsPushSync;

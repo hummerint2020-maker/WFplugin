@@ -5593,3 +5593,9 @@ msgstr[2] "%d تبديل مستنيين الاعتماد"
 msgstr[3] "%d تبديلات مستنية الاعتماد"
 msgstr[4] "%d تبديل مستني الاعتماد"
 msgstr[5] "%d تبديل مستني الاعتماد"
+
+msgid "Another payout or change is being saved. Try again in a moment."
+msgstr "فيه صرف أو تعديل تاني بيتحفظ دلوقتي. حاول تاني بعد لحظة."
+
+msgid "Paid from %1$s to %2$s"
+msgstr "مدفوع من %1$s إلى %2$s"

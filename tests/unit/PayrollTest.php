@@ -69,12 +69,27 @@ final class PayrollTest extends TestCase
         $rate = ['basic' => 6000.0, 'allowances' => [], 'effective_from' => '2026-09-16'];
         $days = [self::day('2026-09-02', ['result' => 'Absent']), self::day('2026-09-17', ['result' => 'Late', 'late_minutes' => 15])];
         $p = C::month($rate, self::RULES, $days, 480, '2026-09');
-        $this->assertSame(['from' => '2026-09-16', 'days' => 15, 'amount' => 3000.0], $p['prorated']);
+        $this->assertSame(['from' => '2026-09-16', 'to' => '2026-09-30', 'left' => false, 'days' => 15, 'amount' => 3000.0], $p['prorated']);
         $this->assertSame([], $p['absence']['days'], 'days before the salary started are not counted');
         $this->assertSame(1, count($p['late']['days']));
         $this->assertSame(6000.0, C::month(['effective_from' => '2026-09-01'] + $rate, self::RULES, [], 480, '2026-09')['earned']);
         $feb = C::month(['basic' => 3000.0, 'allowances' => [], 'effective_from' => '2026-01-01'], self::RULES, [], 480, '2026-02');
         $this->assertSame(3000.0, $feb['earned'], 'a full month is the monthly pay, whatever its length');
+    }
+
+    public function testAnArchivedEmployeeIsPaidUpToTheLastWorkingDay(): void
+    {
+        $rate = ['basic' => 6000.0, 'allowances' => [], 'effective_from' => '2026-01-01', 'last_working_day' => '2026-09-20'];
+        $days = [self::day('2026-09-10', ['late_minutes' => 30]), self::day('2026-09-22', ['result' => 'Absent'])];
+        $p = C::month($rate, self::RULES, $days, 480, '2026-09');
+        $this->assertSame(['from' => '2026-09-01', 'to' => '2026-09-20', 'left' => true, 'days' => 20, 'amount' => 4000.0], $p['prorated']);
+        $this->assertSame(1, count($p['late']['days']), 'days up to the last working day count');
+        $this->assertSame([], $p['absence']['days'], 'days after it are not counted (not absent)');
+        $this->assertSame(6000.0, C::month(['last_working_day' => '2026-10-02'] + $rate, self::RULES, [], 480, '2026-09')['earned'], 'leaving after the month: a full month');
+        $this->assertNull(C::month(['last_working_day' => '2026-10-02'] + $rate, self::RULES, [], 480, '2026-09')['prorated']);
+        $both = C::month(['effective_from' => '2026-09-11'] + $rate, self::RULES, [], 480, '2026-09');
+        $this->assertSame(['from' => '2026-09-11', 'to' => '2026-09-20', 'left' => true, 'days' => 10, 'amount' => 2000.0], $both['prorated'], 'joined and left in the same month');
+        $this->assertSame(0.0, C::month(['effective_from' => '2026-09-25'] + $rate, self::RULES, [], 480, '2026-09')['earned'], 'left before the salary started: nothing');
     }
 
     public function testBonusesAndManualDeductionsAreOutsideTheCap(): void

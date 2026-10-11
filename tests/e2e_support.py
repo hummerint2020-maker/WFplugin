@@ -99,3 +99,11 @@ def ids():
     return json.load(open(os.path.join(S, 'ids.json')))
 
 
+
+
+def break_writes(table=''):
+    """Make every INSERT / UPDATE on one table fail ('' = stop), through tests/e2e_break_writes.php."""
+    if table:
+        php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-break-writes.php'); file_put_contents($d.'/ews-e2e-break-writes.txt','%s');" % (os.path.join(HERE, 'e2e_break_writes.php'), table))
+    else:
+        php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-break-writes.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-break-writes.txt');")

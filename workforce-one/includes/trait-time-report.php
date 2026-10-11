@@ -23,6 +23,28 @@ trait EWS_Time_Report_Trait {
         return [$this->option('ews_location_latitude'),$this->option('ews_location_longitude'),(float)$this->option('ews_location_radius')];
     }
 
+    /**
+     * Department scope (3.31.90): a manager sees and changes the records of their own department only,
+     * archived employees included (their history); administrators see everyone. As the Attendance page.
+     * The SQL to add to a query joined on employees as "e".
+     */
+    private function time_report_scope_sql(){
+        if(current_user_can('manage_options'))return '';
+        $dept=$this->current_department_id();
+        global $wpdb;
+        return $dept?$wpdb->prepare(' AND e.department_id=%d',$dept):' AND 1=0';
+    }
+
+    /** May the current user see / change this employee's records here (archived ones included)? */
+    private function time_report_may_manage($employee_id){
+        if(!$employee_id)return false;
+        if(current_user_can('manage_options'))return true;
+        $dept=$this->current_department_id();
+        if(!$dept)return false;
+        global $wpdb;
+        return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND department_id=%d",(int)$employee_id,$dept));
+    }
+
     public function admin_time_report(){
         if(!$this->can('ews_manage_time'))wp_die('Access denied');
         global $wpdb;
@@ -31,13 +53,14 @@ trait EWS_Time_Report_Trait {
         if(!$this->valid_date($start)||!$this->valid_date($end)){$start=date('Y-m-01',current_time('timestamp'));$end=current_time('Y-m-d');}
         // 100 records a page, with a search by employee (3.31.71: a month for 3,000 people was 30,000 rows in one page).
         $search=sanitize_text_field(wp_unslash($_GET['s']??''));$per=100;
-        $where=$wpdb->prepare(" WHERE l.work_date BETWEEN %s AND %s",$start,$end);
+        $where=$wpdb->prepare(" WHERE l.work_date BETWEEN %s AND %s",$start,$end).$this->time_report_scope_sql();
         if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);}
         $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where}");
         $pages=max(1,(int)ceil($total/$per));$paged=min(max(1,absint($_GET['paged']??1)),$pages);
         $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where} ORDER BY l.work_date DESC,l.event_at DESC,l.id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
         $edit_id=absint($_GET['edit_time_id']??0);
         $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE id=%d",$edit_id)):null;
+        if($edit && !$this->time_report_may_manage((int)$edit->employee_id))$edit=null;
         $integrity_labels=['verified'=>'Verified','unreliable'=>'Unreliable','suspicious'=>'Suspicious','not_evaluated'=>'Not evaluated'];
         $radius_by_employee=[];
         $records=[];
@@ -75,7 +98,7 @@ trait EWS_Time_Report_Trait {
         }
         echo $this->render_template('admin/time-report',[
             'start'=>$start,'end'=>$end,'records'=>$records,'form'=>$form,'search'=>$search,'paged'=>$paged,'pages'=>$pages,'total'=>$total,
-            'employees'=>(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1".($form&&$form['employee_id']?$wpdb->prepare(" OR id=%d",$form['employee_id']):'')." ORDER BY name ASC"),
+            'employees'=>(array)$wpdb->get_results("SELECT e.id,e.name,e.domain_name FROM {$this->employees} e WHERE (e.active=1".($form&&$form['employee_id']?$wpdb->prepare(" OR e.id=%d",$form['employee_id']):'').")".$this->time_report_scope_sql()." ORDER BY e.name ASC"),
             'event_types'=>ManualRecordRules::EVENT_TYPES,
             'saved'=>($_GET['time_notice']??'')==='saved',
             'reset'=>isset($_GET['time_reset'])?[absint($_GET['time_reset']),absint($_GET['break_reset']??0)]:null,
@@ -96,7 +119,10 @@ trait EWS_Time_Report_Trait {
         $type=sanitize_key($_POST['event_type']??'');
         $event_at=ManualRecordRules::eventAt(sanitize_text_field(wp_unslash($_POST['event_at']??'')));
         $back=['start'=>$this->valid_date($work_date)?$work_date:current_time('Y-m-d')];$back['end']=$back['start'];
-        if($id && !$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->time_logs} WHERE id=%d",$id)))$this->time_report_redirect($back+['time_error'=>'not_found']);
+        $existing=$id?$wpdb->get_row($wpdb->prepare("SELECT id,employee_id FROM {$this->time_logs} WHERE id=%d",$id)):null;
+        if($id && !$existing)$this->time_report_redirect($back+['time_error'=>'not_found']);
+        // Both the record's employee and the chosen one must be in the manager's department (3.31.90).
+        if(($existing && !$this->time_report_may_manage((int)$existing->employee_id)) || ($employee_id && !$this->time_report_may_manage($employee_id)))$this->time_report_redirect($back+['time_error'=>'scope']);
         // A new record needs an active employee; an existing record may belong to an archived one.
         $emp=$employee_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d".($id?'':' AND active=1'),$employee_id)):null;
         $facts=['type'=>$type,'date_valid'=>$this->valid_date($work_date),'work_date'=>$work_date,'event_at'=>$event_at,'employee_found'=>(bool)$emp];
@@ -137,6 +163,7 @@ trait EWS_Time_Report_Trait {
         $employee_id=absint($_POST['employee_id']??0);
         $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
         if(!$employee_id||!$this->valid_date($date))$this->time_report_redirect(['time_error'=>'invalid']);
+        if(!$this->time_report_may_manage($employee_id))$this->time_report_redirect(['start'=>$date,'end'=>$date,'time_error'=>'scope']);
         $deleted=(int)$wpdb->query($wpdb->prepare("DELETE FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",$employee_id,$date));
         // Breaks belong to the attendance day too: clear them (and their pending reminders).
         $this->ensure_break_schema();
@@ -158,7 +185,7 @@ trait EWS_Time_Report_Trait {
         if(!$this->valid_date($start)||!$this->valid_date($end)||$end<$start)wp_die('Invalid date range.');
         global $wpdb;
         $rows=$wpdb->get_results($wpdb->prepare(
-            "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
+            "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s".$this->time_report_scope_sql()." ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
             $start,$end
         ));
         nocache_headers();

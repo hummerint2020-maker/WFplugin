@@ -34,6 +34,7 @@ final class PayRules
         'review' => 'Some days still need review (a missing Sign Out). Fix them in the Sign In / Out report, then close the month.',
         'not_ended' => 'A month can be closed only after it ends.',
         'already_closed' => 'This month is already closed.',
+        'save' => 'The month could not be closed: a payslip was not saved. Nothing was closed; try again.',
         'not_closed' => 'This month is not closed.',
         'nothing' => 'No employee has a salary for this month.',
         'month' => 'Choose a month.',

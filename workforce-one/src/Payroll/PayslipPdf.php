@@ -101,7 +101,7 @@ final class PayslipPdf
         $this->heading('Earnings', $s);
         $this->row('Basic salary', '', $money($p['basic']), self::INK, $s);
         foreach ($p['allowances'] as $a) $this->row((string) $a['name'], 'allowance', $money($a['amount']), self::INK, $s);
-        if (!empty($p['prorated'])) $this->row('Paid from ' . $day($p['prorated']['from']), $p['prorated']['days'] . ' days × ' . $money($p['day_value']), $money($p['earned']), self::INK, $s);
+        if (!empty($p['prorated'])) $this->row('Paid from ' . $day($p['prorated']['from']) . (!empty($p['prorated']['left']) ? ' to ' . $day($p['prorated']['to']) : ''), $p['prorated']['days'] . ' days × ' . $money($p['day_value']), $money($p['earned']), self::INK, $s);
         if ($p['overtime']['days']) {
             $this->row('Overtime (approved and worked)', PayCalculator::hm((int) $p['overtime']['minutes']), '+' . $money($p['overtime']['amount']), self::GREEN, $s);
             foreach ($p['overtime']['days'] as $o) $this->detail($day($o['date']) . ' · ' . PayCalculator::hm((int) $o['minutes']) . ' × ' . rtrim(rtrim(number_format((float) $o['rate'], 2, '.', ''), '0'), '.') . ($o['off'] ? ' (day off)' : ''), '+' . $money($o['amount']), $s);

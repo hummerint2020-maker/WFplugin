@@ -24,6 +24,16 @@ trait EWS_Employee_Admin_Trait {
         exit;
     }
 
+    /**
+     * The last working day posted with an archive (3.31.90): payroll pays an archived employee up to it,
+     * in the months not closed yet. Today when none (or an invalid date) is sent.
+     */
+    private function employee_last_working_day_input($fallback=''){
+        $d=sanitize_text_field(wp_unslash($_POST['last_working_day']??''));
+        if(preg_match('/^\d{4}-\d{2}-\d{2}$/',$d) && strtotime($d)!==false && date('Y-m-d',strtotime($d))===$d)return $d;
+        return $fallback!==''?$fallback:current_time('Y-m-d');
+    }
+
     /** Reads and validates the posted employee. @return array{0: array<string,mixed>, 1: ?string} */
     private function employee_admin_input($id,$old_department=null){
         global $wpdb;
@@ -92,11 +102,13 @@ trait EWS_Employee_Admin_Trait {
         check_admin_referer('ews31_employee_update');
         global $wpdb;
         $id=absint($_POST['id']??0);
-        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id,wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
+        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id,wp_user_id,last_working_day FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
         if(!$old)$this->employee_admin_redirect(['employee_error'=>'not_found']);
         [$in,$error]=$this->employee_admin_input($id,(int)$old->department_id);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
-        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'updated_at'=>current_time('mysql')],['id'=>$id]);
+        // Inactive: paid up to the last working day (kept from before when not sent); active again: none.
+        $last_day=$in['active']?null:$this->employee_last_working_day_input((string)($old->last_working_day??''));
+        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')],['id'=>$id]);
         if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
         // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).
@@ -104,7 +116,7 @@ trait EWS_Employee_Admin_Trait {
         if(!$this->employee_admin_set_supervisor($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
         if(is_wp_error($this->sync_employee_teams($id,$in['team_ids'])))$this->employee_admin_redirect(['employee_error'=>'teams']);
         $this->audit('employee_update','employee',$id,$in['name'].' / '.$in['domain_name'].' / '.$in['email'].' / teams='.count($in['team_ids']));
-        if((int)$old->active!==$in['active'])$this->audit('employee_status_change','employee',$id,'Status: '.((int)$old->active?'Active':'Inactive').' -> '.($in['active']?'Active':'Inactive'));
+        if((int)$old->active!==$in['active'])$this->audit('employee_status_change','employee',$id,'Status: '.((int)$old->active?'Active':'Inactive').' -> '.($in['active']?'Active':'Inactive').($last_day?' / last working day '.$last_day:''));
         $this->employee_admin_redirect(['employee_notice'=>'updated']);
     }
 
@@ -116,11 +128,12 @@ trait EWS_Employee_Admin_Trait {
         $row=$id?$wpdb->get_row($wpdb->prepare("SELECT active,wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
         $old=$row?$row->active:null;
         if($old===null)$this->employee_admin_redirect(['employee_error'=>'not_found']);
-        if($wpdb->update($this->employees,['active'=>0,'updated_at'=>current_time('mysql')],['id'=>$id])===false)$this->employee_admin_redirect(['employee_error'=>'save']);
+        $last_day=$this->employee_last_working_day_input();
+        if($wpdb->update($this->employees,['active'=>0,'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')],['id'=>$id])===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id);
         // An archived employee is signed out of the app on every device (3.31.47).
         if(!empty($row->wp_user_id))$this->api_revoke_user_sessions((int)$row->wp_user_id,'employee_archived');
-        if((int)$old!==0)$this->audit('employee_status_change','employee',$id,'Status: Active -> Inactive');
+        if((int)$old!==0)$this->audit('employee_status_change','employee',$id,'Status: Active -> Inactive / last working day '.$last_day);
         $this->employee_admin_redirect(['employee_notice'=>'archived']);
     }
 
@@ -160,7 +173,7 @@ trait EWS_Employee_Admin_Trait {
             'notice'=>EmployeeRules::noticeMessage(sanitize_key($_GET['employee_notice']??'')),
             'error'=>$error!==''?EmployeeRules::errorMessage($error):null,
             'post_url'=>admin_url('admin-post.php'),
-            'profile_url'=>admin_url('admin.php?page=ews31-employee-profile'),
+            'profile_url'=>admin_url('admin.php?page=ews31-employee-profile'),'today'=>current_time('Y-m-d'),
         ]);
     }
 }
