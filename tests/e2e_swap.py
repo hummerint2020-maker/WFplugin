@@ -19,6 +19,7 @@ def seed():
     wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
     out = php("""
         $wpdb->query("DELETE FROM {$p}ews_schedule_swaps");
+        $wpdb->query("UPDATE {$p}ews_approval_workflows SET active=0 WHERE workflow_key='shift_swap'");   // the colleague alone decides until a test sets levels
         $wpdb->query("DELETE FROM {$p}ews_departments");
         $wpdb->insert($p.'ews_departments',['name'=>'Ops','code'=>'ops','active'=>1]); $d1=$wpdb->insert_id;
         $wpdb->insert($p.'ews_departments',['name'=>'Sales','code'=>'sales','active'=>1]); $d2=$wpdb->insert_id;
@@ -164,7 +165,7 @@ _, qs, _ = create(e2)
 check('...and no second request for the same day while it waits', qs.get('swap_error') == 'pending', qs)
 check('only the approver sees "To approve" with the decision form', swap_form_nonce(emp3, 'ews_swap_decide', s6) is not None and swap_form_nonce(emp1, 'ews_swap_decide', s6) is None and swap_form_nonce(emp2, 'ews_swap_decide', s6) is None)
 st, page, _ = emp1.req('/app/?ews_view=schedule')
-check('the requester sees it as waiting for approval', 'Waiting for approval' in page)
+check('the requester sees it in its own "Waiting for approval" group, not under Decided', 'data-swap-awaiting' in page and re.search(r'data-swap-awaiting.*?Waiting for approval', page, re.S) is not None)
 _, qs, _ = emp1.post('ews_swap_decide', _wpnonce=emp1.nonce('ews_swap_create', view='schedule'), swap_id=s6, decision='approve')
 check('someone else cannot approve it', swap(s6)['status'] == 'Awaiting', (qs, swap(s6)))
 _, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s6), swap_id=s6, decision='approve')

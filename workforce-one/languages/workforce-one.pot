@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-10T23:52:07+00:00\n"
+"POT-Creation-Date: 2026-10-11T00:45:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -1536,7 +1536,7 @@ msgstr ""
 #: templates/app/attendance.php:249
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
-#: templates/app/schedule.php:239
+#: templates/app/schedule.php:241
 msgid "Cancel"
 msgstr ""
 
@@ -1562,8 +1562,8 @@ msgstr ""
 #: templates/app/my-profile.php:176
 #: templates/app/office-minimum.php:33
 #: templates/app/overtime.php:114
-#: templates/app/schedule.php:251
-#: templates/app/schedule.php:268
+#: templates/app/schedule.php:257
+#: templates/app/schedule.php:274
 #: templates/app/tasks.php:152
 #: templates/app/tasks.php:262
 #: templates/app/time.php:162
@@ -2537,7 +2537,7 @@ msgstr[1] ""
 #: templates/app/attendance-insights.php:47
 #: templates/app/correction-sheet.php:31
 #: templates/app/dw-day.php:51
-#: templates/app/schedule.php:256
+#: templates/app/schedule.php:262
 msgid "Day"
 msgstr ""
 
@@ -2633,7 +2633,7 @@ msgstr ""
 #: templates/app/leave.php:117
 #: templates/app/leave.php:160
 #: templates/app/overtime.php:90
-#: templates/app/schedule.php:225
+#: templates/app/schedule.php:227
 msgid "Approve"
 msgstr ""
 
@@ -2642,8 +2642,8 @@ msgstr ""
 #: templates/app/corrections.php:108
 #: templates/app/leave.php:30
 #: templates/app/overtime.php:90
-#: templates/app/schedule.php:225
-#: templates/app/schedule.php:232
+#: templates/app/schedule.php:227
+#: templates/app/schedule.php:234
 msgid "Reject"
 msgstr ""
 
@@ -4369,7 +4369,7 @@ msgstr ""
 
 #: templates/app/corrections.php:123
 #: templates/app/overtime.php:106
-#: templates/app/schedule.php:242
+#: templates/app/schedule.php:248
 msgid "Decided"
 msgstr ""
 
@@ -6436,6 +6436,7 @@ msgid "This week"
 msgstr ""
 
 #: templates/app/schedule.php:51
+#: templates/app/schedule.php:244
 msgid "Waiting for approval"
 msgstr ""
 
@@ -6460,7 +6461,7 @@ msgid "My week"
 msgstr ""
 
 #: templates/app/schedule.php:90
-#: templates/app/schedule.php:251
+#: templates/app/schedule.php:257
 msgid "Request a swap"
 msgstr ""
 
@@ -6514,22 +6515,22 @@ msgstr ""
 msgid "No colleague matches your search."
 msgstr ""
 
-#: templates/app/schedule.php:193
+#: templates/app/schedule.php:194
 msgid "Asked you"
 msgstr ""
 
-#: templates/app/schedule.php:193
+#: templates/app/schedule.php:194
 msgid "You asked"
 msgstr ""
 
 #. translators: %s: "This week", "Next week" or a date range
-#: templates/app/schedule.php:206
+#: templates/app/schedule.php:207
 #, php-format
 msgid "Shift swaps · %s"
 msgstr ""
 
 #. translators: %d: number of swaps
-#: templates/app/schedule.php:208
+#: templates/app/schedule.php:209
 #, php-format
 msgid "%d swap to approve"
 msgid_plural "%d swaps to approve"
@@ -6537,16 +6538,24 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of swap requests
-#: templates/app/schedule.php:209
+#: templates/app/schedule.php:210
 #, php-format
 msgid "%d swap waiting for you"
 msgid_plural "%d swaps waiting for you"
 msgstr[0] ""
 msgstr[1] ""
 
+#. translators: %d: number of swaps
+#: templates/app/schedule.php:211
+#, php-format
+msgid "%d swap waiting for approval"
+msgid_plural "%d swaps waiting for approval"
+msgstr[0] ""
+msgstr[1] ""
+
 #. translators: %d: number of swap requests
-#: templates/app/schedule.php:210
-#: templates/app/schedule.php:213
+#: templates/app/schedule.php:212
+#: templates/app/schedule.php:215
 #, php-format
 msgid "%d request sent"
 msgid_plural "%d requests sent"
@@ -6554,51 +6563,51 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of swap requests
-#: templates/app/schedule.php:211
+#: templates/app/schedule.php:213
 msgid "Need to swap a day?"
 msgstr ""
 
-#: templates/app/schedule.php:215
+#: templates/app/schedule.php:217
 msgid "Request Swap"
 msgstr ""
 
-#: templates/app/schedule.php:218
+#: templates/app/schedule.php:220
 msgid "To approve"
 msgstr ""
 
-#: templates/app/schedule.php:223
+#: templates/app/schedule.php:225
 msgid "Both agreed"
 msgstr ""
 
-#: templates/app/schedule.php:230
+#: templates/app/schedule.php:232
 msgid "Waiting for you"
 msgstr ""
 
-#: templates/app/schedule.php:234
+#: templates/app/schedule.php:236
 msgid "Accept"
 msgstr ""
 
-#: templates/app/schedule.php:237
+#: templates/app/schedule.php:239
 msgid "Sent by you"
 msgstr ""
 
-#: templates/app/schedule.php:259
+#: templates/app/schedule.php:265
 msgid "Swap with"
 msgstr ""
 
-#: templates/app/schedule.php:260
+#: templates/app/schedule.php:266
 msgid "Select colleague"
 msgstr ""
 
-#: templates/app/schedule.php:263
+#: templates/app/schedule.php:269
 msgid "Send Request"
 msgstr ""
 
-#: templates/app/schedule.php:264
+#: templates/app/schedule.php:270
 msgid "Your colleague gets your day and you get theirs once they accept."
 msgstr ""
 
-#: templates/app/schedule.php:267
+#: templates/app/schedule.php:273
 msgid "You have no Office or WFH days left this week to swap."
 msgstr ""
 

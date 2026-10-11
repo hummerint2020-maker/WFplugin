@@ -5584,3 +5584,12 @@ msgstr "محتاج موافقتك"
 
 msgid "Both agreed"
 msgstr "الاتنين وافقوا"
+
+msgid "%d swap waiting for approval"
+msgid_plural "%d swaps waiting for approval"
+msgstr[0] "%d تبديل مستني الاعتماد"
+msgstr[1] "%d تبديل مستني الاعتماد"
+msgstr[2] "%d تبديل مستنيين الاعتماد"
+msgstr[3] "%d تبديلات مستنية الاعتماد"
+msgstr[4] "%d تبديل مستني الاعتماد"
+msgstr[5] "%d تبديل مستني الاعتماد"

@@ -175,9 +175,10 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
 
     <?php if ($current_emp_id):
         $has_myweek = isset($cells[$current_emp_id]);
-        $incoming = $outgoing = $decided = [];
+        $incoming = $outgoing = $decided = $awaiting = [];
         foreach ($swap_requests as $sr) {
-            if ((string) $sr->status !== 'Pending') $decided[] = $sr;
+            if ((string) $sr->status === 'Awaiting') $awaiting[] = $sr;   // both agreed, waiting for the approvers (3.31.89)
+            elseif ((string) $sr->status !== 'Pending') $decided[] = $sr;
             elseif ((int) $sr->target_employee_id === $current_emp_id) $incoming[] = $sr;
             else $outgoing[] = $sr;
         }
@@ -207,6 +208,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                 <h3 class="wfo-rq-hero-value" id="wfo-swap-title"><?php
                     if ($swap_approvals) printf(esc_html(/* translators: %d: number of swaps */ _n('%d swap to approve', '%d swaps to approve', count($swap_approvals), 'workforce-one')), count($swap_approvals));
                     elseif ($incoming) printf(esc_html(/* translators: %d: number of swap requests */ _n('%d swap waiting for you', '%d swaps waiting for you', count($incoming), 'workforce-one')), count($incoming));
+                    elseif ($awaiting && !$outgoing) printf(esc_html(/* translators: %d: number of swaps */ _n('%d swap waiting for approval', '%d swaps waiting for approval', count($awaiting), 'workforce-one')), count($awaiting));
                     elseif ($outgoing) printf(esc_html(/* translators: %d: number of swap requests */ _n('%d request sent', '%d requests sent', count($outgoing), 'workforce-one')), count($outgoing));
                     else esc_html_e('Need to swap a day?', 'workforce-one');
                 ?></h3>
@@ -237,6 +239,10 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             <h4 class="wfo-rq-group"><?php esc_html_e('Sent by you', 'workforce-one'); ?></h4>
             <div class="wfo-rq-card"><?php foreach ($outgoing as $sr) echo $swap_row($sr, $form_open('ews_swap_cancel', 'ews_swap_cancel_' . (int) $sr->id, (int) $sr->id)
                 . '<button class="wfo-rq-btn is-no" type="submit">' . Icons::svg('close', 16, 2.2) . esc_html__('Cancel', 'workforce-one') . '</button></form>'); ?></div>
+        <?php endif; ?>
+        <?php if ($awaiting): ?>
+            <h4 class="wfo-rq-group"><?php esc_html_e('Waiting for approval', 'workforce-one'); ?></h4>
+            <div class="wfo-rq-card" data-swap-awaiting><?php foreach ($awaiting as $sr) echo $swap_row($sr, ''); ?></div>
         <?php endif; ?>
         <?php if ($decided): ?>
             <h4 class="wfo-rq-group"><?php esc_html_e('Decided', 'workforce-one'); ?></h4>

@@ -17,7 +17,7 @@ Approval Workflows: what is really in force, and Shift Swap approvals. No databa
   above the monthly limit), from Attendance Corrections → Settings, with a link there.
 - **Shift Swap approvals.** Approval Workflows → Shift Swap: "Colleague only" (as before: the days are
   swapped when the colleague accepts), "Colleague, then Level 1" or "Colleague, then Level 1 + Level 2".
-  With levels, an accepted swap waits for approval (the requester sees "Waiting for approval"); the
+  With levels, an accepted swap waits for approval (both see it in its own "Waiting for approval" group); the
   approver gets a notification and decides in App → Schedule ("To approve"); the days are swapped only
   when the last level approves, and only if neither schedule changed. A rejection closes it and tells
   both. Administrators can still decide it on the Requests Hub (the approval request is closed too).
