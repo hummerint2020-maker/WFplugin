@@ -145,5 +145,51 @@ set_schedule(e2, 'WFH')
 adm.post('ews31_requests_decision', _wpnonce=n, request_type='shift_swap', request_id=s5, decision='reject')
 check('admin Requests page rejects the swap', swap(s5)['status'] == 'Rejected' and sched(e1) == 'Office', (swap(s5), sched(e1)))
 
+# 3.31.89: the Shift Swap workflow can add approvers after the colleague (here Level 1 = Emp Three).
+def configure_swap(mode, approver=0):
+    php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod('EWS_Manager_V31_1','approval_configure_workflow'); $m->setAccessible(true);
+    $r=$m->invoke($o,'shift_swap','%s',%s,\\WorkforceOne\\Approvals\\Workflows::IN_USE['shift_swap'][1]); echo is_wp_error($r)?$r->get_error_message():'ok';""" % (
+        mode, "[1=>['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0]]" if mode == 'PEER' else "[1=>['resolver_type'=>'SPECIFIC_EMPLOYEE','resolver_value'=>%d]]" % approver))
+
+
+configure_swap('LEVEL_1', e3)
+emp3 = Session('emp3', 'emp3pass')
+set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+_, qs, _ = create(e2)
+s6 = last()
+_, qs, _ = emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s6), swap_id=s6, decision='accept')
+check('with an approver: the colleague accepts, the swap waits for approval, the days are not swapped yet', qs.get('swap_done') == 'awaiting' and swap(s6)['status'] == 'Awaiting' and sched(e1) == 'Office' and sched(e2) == 'WFH', (qs, swap(s6)))
+check('...the approver is notified', int(q("SELECT COUNT(*) c FROM {p}ews_notifications WHERE user_id=(SELECT wp_user_id FROM {p}ews_employees WHERE id=%d) AND entity='swap' AND entity_id=%d" % (e3, s6))[0]['c']) >= 1)
+_, qs, _ = create(e2)
+check('...and no second request for the same day while it waits', qs.get('swap_error') == 'pending', qs)
+check('only the approver sees "To approve" with the decision form', swap_form_nonce(emp3, 'ews_swap_decide', s6) is not None and swap_form_nonce(emp1, 'ews_swap_decide', s6) is None and swap_form_nonce(emp2, 'ews_swap_decide', s6) is None)
+st, page, _ = emp1.req('/app/?ews_view=schedule')
+check('the requester sees it as waiting for approval', 'Waiting for approval' in page)
+_, qs, _ = emp1.post('ews_swap_decide', _wpnonce=emp1.nonce('ews_swap_create', view='schedule'), swap_id=s6, decision='approve')
+check('someone else cannot approve it', swap(s6)['status'] == 'Awaiting', (qs, swap(s6)))
+_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s6), swap_id=s6, decision='approve')
+check('the approver approves: the days are swapped', qs.get('swap_done') == 'approved' and swap(s6)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(s6), sched(e1), sched(e2)))
+
+_, qs, _ = create(e2)
+s7 = last()
+emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s7), swap_id=s7, decision='accept')
+_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7), swap_id=s7, decision='reject')
+check('the approver rejects: closed, the days unchanged', qs.get('swap_done') == 'rejected' and swap(s7)['status'] == 'Rejected' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(s7)))
+
+_, qs, _ = create(e2)
+s8 = last()
+emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s8), swap_id=s8, decision='accept')
+n = adm.admin_request_nonce('shift_swap', s8)
+check('the Requests Hub lists a swap waiting for approval', bool(n))
+adm.post('ews31_requests_decision', _wpnonce=n, request_type='shift_swap', request_id=s8, decision='approve')
+check('...an administrator approves it there: swapped, and the approval request is closed', swap(s8)['status'] == 'Accepted' and sched(e1) == 'Office' and sched(e2) == 'WFH'
+      and q("SELECT status FROM {p}ews_approval_requests WHERE entity_type='schedule_swap' AND entity_id=%d" % s8)[0]['status'] == 'APPROVED', (swap(s8), sched(e1)))
+
+configure_swap('PEER')
+_, qs, _ = create(e2)
+s9 = last()
+_, qs, _ = emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s9), swap_id=s9, decision='accept')
+check('back to "Colleague only": accepting swaps at once, as before', qs.get('swap_done') == 'accepted' and swap(s9)['status'] == 'Accepted', (qs, swap(s9)))
+
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

@@ -488,6 +488,17 @@ trait EWS_Approvals_Trait {
         if($next && !empty($next->rerouted) && !(int)$next->approver_wp_user_id)$this->approval_notify_administrators($approval_request_id,(int)$next->step_order);
         return true;
     }
+    /**
+     * The correction requests that go to HR whatever the mode (Attendance Corrections → Settings), for
+     * the Attendance Correction card. @return array{on:bool,cases:list<string>,url:string}
+     */
+    private function approval_correction_hr_cases(){
+        $s=$this->correction_settings();$cases=[];
+        if(!empty($s['earlier_needs_hr']))$cases[]='a Sign In moved earlier (it removes lateness)';
+        if(($s['above_limit']??'')==='hr' && (int)$s['monthly_limit']>0)$cases[]='a request above the monthly limit of '.(int)$s['monthly_limit'];
+        return ['on'=>$this->corrections_enabled(),'cases'=>$cases,'url'=>admin_url('admin.php?page=ews31-corrections&tab=settings')];
+    }
+
     /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */
     public function admin_approval_workflows(){
         if(!current_user_can('manage_options'))wp_die('Access denied');
@@ -507,8 +518,13 @@ trait EWS_Approvals_Trait {
             if($workflow)foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['steps']} WHERE workflow_id=%d ORDER BY step_order",(int)$workflow->id)) as $st)$levels[(int)$st->step_order]=['resolver_type'=>$st->resolver_type,'resolver_value'=>$st->resolver_value];
             $mode=strtoupper((string)($workflow->approval_mode??'NONE'));
             $active=$workflow&&(int)$workflow->active===1;
-            $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>\WorkforceOne\Approvals\Workflows::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:'NONE','levels'=>$levels,
-                'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:'','allow_self'=>$this->approval_self_allowed($key)];
+            $W=\WorkforceOne\Approvals\Workflows::class;
+            $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>$W::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:$supported[0],'levels'=>$levels,
+                'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:'','allow_self'=>$this->approval_self_allowed($key),
+                // Never saved: the module's own fallback applies, shown instead of a mode that is not in force (3.31.89).
+                'active'=>$active,'not_set'=>$W::NOT_SET_MEANS[$key]??'',
+                'mode_labels'=>($W::MODE_LABELS[$key]??[])+$W::MODES,'mode_help'=>$W::MODE_HELP[$key]??[],
+                'hr_cases'=>$key==='attendance_correction'?$this->approval_correction_hr_cases():null];
         }
         $supervisors=$this->approval_supervisor_ids(array_map(function($e){return (int)$e->id;},$listed));
         $self_decisions=(array)$wpdb->get_results("SELECT s.approval_request_id,s.step_order,s.decision,s.acted_at,w.name workflow_name,r.entity_type,r.entity_id,e.name employee_name

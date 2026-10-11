@@ -12,6 +12,7 @@ final class Hooks
         add_action('admin_post_ews_swap_create', [$plugin, 'swap_request_create']);
         add_action('admin_post_ews_swap_respond', [$plugin, 'swap_request_respond']);
         add_action('admin_post_ews_swap_cancel', [$plugin, 'swap_request_cancel']);
+        add_action('admin_post_ews_swap_decide', [$plugin, 'swap_manager_decide']); // an approver decides a swap (Shift Swap workflow with levels, 3.31.89)
         add_action('admin_post_ews_schedule_pdf', [$plugin, 'schedule_pdf']); // the Team Schedule week as a PDF (PDF / WhatsApp buttons)
     }
 }

@@ -132,6 +132,7 @@ trait EWS_Schedule_View_Trait {
             'email_url'=>$this->can('ews_view_reports')?wp_nonce_url(add_query_arg(['action'=>'ews31_report_email','start'=>$dates[0],'end'=>$week_end],admin_url('admin-post.php')),'ews31_report'):'',
             'email'=>$email,'swap_days'=>$swap_days,
             'swap_requests'=>$current_emp_id?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[],
+            'swap_approvals'=>$this->swap_awaiting_my_approval(),
             'post_url'=>admin_url('admin-post.php'),
         ]);
     }

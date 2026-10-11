@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.31.89
+Approval Workflows: what is really in force, and Shift Swap approvals. No database change.
+
+### Fixed
+- **"No approval" was shown for workflows that were never saved, while something else applied.** A
+  workflow is created inactive; until its card is saved each module uses its own rule (Attendance
+  Correction and Overtime: managers with Manage Time decide; Face Reset: Manage Settings), which is not
+  what "No approval" does once saved. A card never saved now says "Not set yet" and what happens until
+  it is saved.
+- The note about the workflows not in use said managers decide Shift Swaps; it is Early Leave only now
+  (managers with Manage Time in the app, administrators on the Requests Hub).
+
+### Added
+- **Attendance Correction card**: which requests go to HR whatever the mode (a Sign In moved earlier,
+  above the monthly limit), from Attendance Corrections → Settings, with a link there.
+- **Shift Swap approvals.** Approval Workflows → Shift Swap: "Colleague only" (as before: the days are
+  swapped when the colleague accepts), "Colleague, then Level 1" or "Colleague, then Level 1 + Level 2".
+  With levels, an accepted swap waits for approval (the requester sees "Waiting for approval"); the
+  approver gets a notification and decides in App → Schedule ("To approve"); the days are swapped only
+  when the last level approves, and only if neither schedule changed. A rejection closes it and tells
+  both. Administrators can still decide it on the Requests Hub (the approval request is closed too).
+  No second request for the same day while one waits.
+
+### Tests
+- tests/e2e_swap.py (37), tests/e2e_approvals.py (35).
+
 ## 3.31.88
 wp-admin menu in sections (owner-approved mockup, docs/mockups/admin-menu/). No database change.
 

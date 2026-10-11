@@ -27,6 +27,7 @@
  * @var array{sent:int,skipped:int,failed:int}|null $email
  * @var array<string,string> $swap_days  date => my status
  * @var object[] $swap_requests
+ * @var object[] $swap_approvals  swaps waiting for this person's approval (Shift Swap workflow with levels, 3.31.89)
  * @var string $post_url
  */
 if (!defined('ABSPATH')) exit;
@@ -47,7 +48,7 @@ $avatar = static function (int $id, string $name) use ($people): string {
 };
 $week_labels = ['This week' => __('This week', 'workforce-one'), 'Next week' => __('Next week', 'workforce-one'), 'Previous week' => __('Previous week', 'workforce-one')];
 $week_text = $week_labels[$week_label] ?? $week_label;
-$swap_states = ['pending' => ['overtime', __('Pending', 'workforce-one')], 'accepted' => ['check', __('Accepted', 'workforce-one')], 'rejected' => ['close', __('Rejected', 'workforce-one')], 'cancelled' => ['close', __('Cancelled', 'workforce-one')]];
+$swap_states = ['awaiting' => ['overtime', __('Waiting for approval', 'workforce-one')], 'pending' => ['overtime', __('Pending', 'workforce-one')], 'accepted' => ['check', __('Accepted', 'workforce-one')], 'rejected' => ['close', __('Rejected', 'workforce-one')], 'cancelled' => ['close', __('Cancelled', 'workforce-one')]];
 $by_id = [];
 foreach ($emps as $e) $by_id[(int) $e->id] = $e;
 ?>
@@ -196,7 +197,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             return '<form method="post" action="' . esc_url($post_url) . '">' . wp_nonce_field($nonce, '_wpnonce', true, false)
                 . '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="swap_id" value="' . $id . '">';
         };
-        $show_panel = !$has_myweek || $swap_requests;
+        $show_panel = !$has_myweek || $swap_requests || $swap_approvals;
         ?>
     <?php if ($show_panel): ?>
     <section class="wfo-rq ews-swap-panel ews-no-print" aria-labelledby="wfo-swap-title">
@@ -204,7 +205,8 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             <div class="wfo-rq-hero-main">
                 <p class="wfo-rq-hero-label"><?php /* translators: %s: "This week", "Next week" or a date range */ printf(esc_html__('Shift swaps · %s', 'workforce-one'), esc_html($week_text)); ?></p>
                 <h3 class="wfo-rq-hero-value" id="wfo-swap-title"><?php
-                    if ($incoming) printf(esc_html(/* translators: %d: number of swap requests */ _n('%d swap waiting for you', '%d swaps waiting for you', count($incoming), 'workforce-one')), count($incoming));
+                    if ($swap_approvals) printf(esc_html(/* translators: %d: number of swaps */ _n('%d swap to approve', '%d swaps to approve', count($swap_approvals), 'workforce-one')), count($swap_approvals));
+                    elseif ($incoming) printf(esc_html(/* translators: %d: number of swap requests */ _n('%d swap waiting for you', '%d swaps waiting for you', count($incoming), 'workforce-one')), count($incoming));
                     elseif ($outgoing) printf(esc_html(/* translators: %d: number of swap requests */ _n('%d request sent', '%d requests sent', count($outgoing), 'workforce-one')), count($outgoing));
                     else esc_html_e('Need to swap a day?', 'workforce-one');
                 ?></h3>
@@ -212,6 +214,18 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             </div>
             <?php if (!$has_myweek): /* with My week, its own "Request a swap" button opens the form */ ?><button type="button" class="wfo-rq-new" id="ews-open-swap" data-wfo-sheet="wfo-swap-sheet" aria-haspopup="dialog"><?php echo Icons::svg('swap', 18, 2.2); ?><?php esc_html_e('Request Swap', 'workforce-one'); ?></button><?php endif; ?>
         </div>
+        <?php if ($swap_approvals): ?>
+            <h4 class="wfo-rq-group"><?php esc_html_e('To approve', 'workforce-one'); ?></h4>
+            <div class="wfo-rq-card" data-swap-approvals><?php foreach ($swap_approvals as $sr):
+                $f = $form_open('ews_swap_decide', 'ews_swap_decide_' . (int) $sr->id, (int) $sr->id); ?>
+                <div class="wfo-rq-row has-actions"><?php echo $avatar((int) $sr->requester_employee_id, (string) $sr->requester_name); ?>
+                    <div class="wfo-rq-main"><p class="wfo-rq-title"><?php echo esc_html($sr->requester_name . ' ↔ ' . $sr->target_name); ?></p>
+                        <p class="wfo-rq-meta"><?php echo esc_html(__('Both agreed', 'workforce-one') . ' · ' . date_i18n('D, d M', strtotime((string) $sr->work_date))); ?></p>
+                        <span class="wfo-swap-trade"><?php echo $chip((string) $sr->requester_status) . Icons::svg('swap', 14) . $chip((string) $sr->target_status); ?></span></div>
+                    <div class="wfo-rq-actions"><?php echo $f; ?><button class="wfo-rq-btn is-no" name="decision" value="reject"><?php echo Icons::svg('close', 16, 2.2); ?><?php esc_html_e('Reject', 'workforce-one'); ?></button></form><?php echo $f; ?><button class="wfo-rq-btn is-yes" name="decision" value="approve"><?php echo Icons::svg('check', 16, 2.4); ?><?php esc_html_e('Approve', 'workforce-one'); ?></button></form></div>
+                </div>
+            <?php endforeach; ?></div>
+        <?php endif; ?>
         <?php if ($incoming): ?>
             <h4 class="wfo-rq-group"><?php esc_html_e('Waiting for you', 'workforce-one'); ?></h4>
             <div class="wfo-rq-card"><?php foreach ($incoming as $sr) echo $swap_row($sr, $form_open('ews_swap_respond', 'ews_swap_respond_' . (int) $sr->id, (int) $sr->id)

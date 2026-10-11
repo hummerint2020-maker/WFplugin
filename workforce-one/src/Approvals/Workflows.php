@@ -24,6 +24,34 @@ final class Workflows
         'overtime' => ['Overtime', ['NONE', 'LEVEL_1', 'LEVEL_2']],
         'face_reset' => ['Face Reset', ['NONE', 'LEVEL_1', 'LEVEL_2', 'SEQUENTIAL']],
         'attendance_correction' => ['Attendance Correction', ['NONE', 'LEVEL_1', 'LEVEL_2']],
+        // 3.31.89: the colleague always accepts first; the levels, when chosen, decide after them.
+        'shift_swap' => ['Shift Swap', ['PEER', 'LEVEL_1', 'LEVEL_2']],
+    ];
+
+    /** Mode names that read differently for one workflow. */
+    public const MODE_LABELS = [
+        'shift_swap' => ['PEER' => 'Colleague only', 'LEVEL_1' => 'Colleague, then Level 1', 'LEVEL_2' => 'Colleague, then Level 1 + Level 2'],
+    ];
+
+    /** What a mode does in one workflow, when it differs from the general help. */
+    public const MODE_HELP = [
+        'shift_swap' => [
+            'PEER' => 'The colleague decides: the two days are swapped as soon as they accept.',
+            'LEVEL_1' => 'After the colleague accepts, one approver decides; the days are swapped when they approve.',
+            'LEVEL_2' => 'After the colleague accepts, two approvers decide in order; the days are swapped when the last one approves.',
+        ],
+    ];
+
+    /**
+     * What happens while a workflow has never been saved (it is inactive): each module falls back to
+     * its own rule, which is not always what "No approval" does once saved (3.31.89).
+     */
+    public const NOT_SET_MEANS = [
+        'vacation' => 'Managers decide in the app and on the Requests Hub (the same as No approval).',
+        'overtime' => 'Managers with Manage Time decide in the app and on the Requests Hub. Saved as No approval, requests are approved automatically.',
+        'face_reset' => 'Users with Manage Settings decide on the Face Reset Requests page. Saved as No approval, requests are approved automatically.',
+        'attendance_correction' => 'Managers with Manage Time decide in the app. Saved as No approval, requests are approved at once, except the cases that go to HR.',
+        'shift_swap' => 'The colleague decides: the two days are swapped as soon as they accept (the same as Colleague only).',
     ];
 
     /** What "No approval" does in each module (they differ). */
@@ -31,11 +59,12 @@ final class Workflows
         'vacation' => 'No approval chain: managers decide in the app or on the Requests page.',
         'overtime' => 'Requests are approved automatically.',
         'face_reset' => 'Requests are approved automatically.',
-        'attendance_correction' => 'No manager level: requests are approved at once, or go straight to HR when they need the second level (a Sign In moved earlier, above the monthly limit). Without an active workflow, managers with Manage Time decide.',
+        'attendance_correction' => 'No manager level: requests are approved at once, or go straight to HR when they need the second level (a Sign In moved earlier, above the monthly limit).',
+        'shift_swap' => '',
     ];
 
     /** Workflows seeded in the database that no module uses yet. */
-    public const NOT_IN_USE = ['early_leave' => 'Early Leave', 'shift_swap' => 'Shift Swap'];
+    public const NOT_IN_USE = ['early_leave' => 'Early Leave'];
 
     public const RESOLVERS = ['SUPERVISOR', 'TEAM_MANAGER', 'SPECIFIC_EMPLOYEE', 'SPECIFIC_USER'];
 

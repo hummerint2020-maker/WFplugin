@@ -20,6 +20,7 @@ def seed():
         foreach(['ews_leave_requests','ews_leave_balances','ews_leave_schedule_snapshots','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps','ews_employee_relationships','ews_audit_log','ews_notifications'] as $t) $wpdb->query("DELETE FROM {$p}$t");
         $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
         update_option('ews_working_days',[0,1,2,3,4,5,6],false);
+        update_option('ews_feature_corrections',1,false); delete_option('ews_correction_settings');
         $user=function($login){$u=username_exists($login)?:wp_create_user($login,$login.'pass',$login.'@example.com');return (int)$u;};
         $emp=function($name,$uid)use($wpdb,$p){$dn=strtolower(strtok($name,' '));$wpdb->insert($p.'ews_employees',['name'=>$name,'domain_name'=>$dn,'email'=>$dn.'@example.com','wp_user_id'=>$uid?:null,'active'=>1,'attendance_enabled'=>1]);return (int)$wpdb->insert_id;};
         $ids=['emp'=>$eid,'boss'=>$emp('Boss Person',$user('boss')),'tina'=>$emp('Tina Lead',$user('tina')),'nouser'=>$emp('Nora Nouser',0)];
@@ -76,8 +77,15 @@ adm = Session('admin', 'admin')
 # ---------------------------------------------------------------- the settings page
 st, page, _ = adm.req(PAGE)
 check('the page shows a card for each workflow in use (Vacation, Overtime, Face Reset)', all(card(page, k) for k in ('vacation', 'overtime', 'face_reset')), [k for k in ('vacation', 'overtime', 'face_reset') if not card(page, k)])
-check('...and no settings for Early Leave or Shift Swap, which do not use approval workflows', not forms(card(page, 'early_leave'), 'ews_approval_workflow_save') and not forms(card(page, 'shift_swap'), 'ews_approval_workflow_save')
-      and 'Early Leave' in page and 'not use approval workflows' in page)
+check('...and no settings for Early Leave, which does not use approval workflows', not forms(card(page, 'early_leave'), 'ews_approval_workflow_save')
+      and 'Early Leave' in page and 'not use approval workflows' in page and 'Manage Time decide them in the app' in page)
+# 3.31.89: Shift Swap has its card; a workflow never saved says what applies until it is saved.
+check('Shift Swap has a card: Colleague only, or Colleague then 1 or 2 levels', modes(page, 'shift_swap') == ['PEER', 'LEVEL_1', 'LEVEL_2'] and 'Colleague only' in card(page, 'shift_swap') and 'Colleague, then Level 1' in card(page, 'shift_swap'), modes(page, 'shift_swap'))
+check('a workflow never saved says "Not set yet" and what happens until then (Overtime: managers decide; saved as No approval, automatic)',
+      'Not set yet' in card(page, 'overtime') and 'Manage Time decide' in card(page, 'overtime') and 'approved automatically' in card(page, 'overtime'), card(page, 'overtime')[:600])
+check('...Attendance Correction: managers decide until saved', 'Not set yet' in card(page, 'attendance_correction') and 'Managers with Manage Time decide in the app' in card(page, 'attendance_correction'))
+check('...the Attendance Correction card says which requests go to HR whatever the mode, with a link to the settings',
+      'these requests also go to HR' in card(page, 'attendance_correction') and 'Sign In moved earlier' in card(page, 'attendance_correction') and 'page=ews31-corrections&#038;tab=settings' in card(page, 'attendance_correction'), card(page, 'attendance_correction')[-900:])
 check('Vacation and Overtime offer only the modes they support (none, 1 level, 2 levels)', modes(page, 'vacation') == ['NONE', 'LEVEL_1', 'LEVEL_2'] and modes(page, 'overtime') == ['NONE', 'LEVEL_1', 'LEVEL_2'], (modes(page, 'vacation'), modes(page, 'overtime')))
 check('"No approval" says what it does: managers decide a leave, overtime is approved automatically',
       'No approval chain: managers decide' in card(page, 'vacation') and 'approved automatically' in card(page, 'overtime'))
@@ -90,6 +98,7 @@ check('saving Level 1 + Level 2 stores both steps', 'approval_saved=1' in loc an
 check('...and is in the Audit Log', q("SELECT details FROM {p}ews_audit_log WHERE action='approval_workflow_update'")[-1]['details'] == 'vacation=LEVEL_2')
 st, page, _ = adm.req(PAGE)
 check('...and shows as saved', re.search(r'<option value="LEVEL_2" selected', card(page, 'vacation')) is not None)
+check('...and no longer says "Not set yet"', 'Not set yet' not in card(page, 'vacation') and 'Not set yet' in card(page, 'overtime'))
 
 # ---------------------------------------------------------------- supervisors
 st, page, _ = adm.req(PAGE)
@@ -165,8 +174,10 @@ st, loc, _ = save(adm, nonce, 'overtime', 'LEVEL_1', level_1_type='SPECIFIC_EMPL
 check('a specific approver with nobody chosen is refused, with the reason', 'approval_error=1' in loc and 'A specific approver is required for step 1.' in loc and workflow('overtime')[0] == 'NONE', (loc, workflow('overtime')))
 st, loc, _ = save(adm, nonce, 'vacation', 'SEQUENTIAL')
 check('a mode the workflow does not support is refused', 'approval_error=1' in loc and workflow('vacation')[0] == 'LEVEL_2', (loc, workflow('vacation')))
+st, loc, body = save(adm, nonce, 'early_leave', 'LEVEL_1')
+check('Early Leave (not using workflows) cannot be saved', workflow('early_leave')[1] == '0' and 'approval_saved' not in loc, (st, loc, workflow('early_leave')))
 st, loc, body = save(adm, nonce, 'shift_swap', 'PEER')
-check('Shift Swap (not using workflows) cannot be saved', workflow('shift_swap')[1] == '0' and 'approval_saved' not in loc, (st, loc, workflow('shift_swap')))
+check('Shift Swap is saved as "Colleague only" (3.31.89)', workflow('shift_swap')[:2] == ('PEER', '1') and 'approval_saved' in loc, (st, loc, workflow('shift_swap')))
 st, loc, body = save(adm, nonce, 'payroll', 'NONE')
 check('an unknown workflow is refused', 'approval_saved' not in loc and 'Invalid workflow.' in body, (st, loc))
 st, loc, _ = save(emp, nonce, 'vacation', 'NONE')

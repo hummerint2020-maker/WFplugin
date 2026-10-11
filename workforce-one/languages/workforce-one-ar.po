@@ -5542,3 +5542,45 @@ msgstr "سجل التغييرات"
 msgctxt "admin menu section"
 msgid "Pay"
 msgstr "المرتبات"
+
+msgid "This swap is not waiting for your approval."
+msgstr "طلب التبديل ده مش مستني موافقتك."
+
+msgid "You accepted the swap. It is applied once it is approved."
+msgstr "وافقت على التبديل. هيتنفذ أول ما يتعتمد."
+
+msgid "The swap was approved and both schedules were updated."
+msgstr "التبديل اتعتمد واتحدّث جدول الاتنين."
+
+msgid "Approved. The swap now waits for the next approver."
+msgstr "تمت الموافقة. التبديل دلوقتي مستني الموافقة التالية."
+
+msgid "Swap accepted, waiting for approval"
+msgstr "التبديل اتقبل ومستني الاعتماد"
+
+msgid "%1$s accepted your swap for %2$s. It is applied once it is approved."
+msgstr "%1$s وافق على تبديل %2$s. هيتنفذ أول ما يتعتمد."
+
+msgid "Shift swap to approve"
+msgstr "طلب تبديل محتاج موافقتك"
+
+msgid "%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s."
+msgstr "%1$s و%2$s اتفقوا يبدّلوا %3$s: %4$s ↔ %5$s."
+
+msgid "Waiting for approval"
+msgstr "مستني الاعتماد"
+
+msgid "%d swap to approve"
+msgid_plural "%d swaps to approve"
+msgstr[0] "%d طلب تبديل محتاج موافقتك"
+msgstr[1] "%d طلب تبديل محتاج موافقتك"
+msgstr[2] "%d طلبين تبديل محتاجين موافقتك"
+msgstr[3] "%d طلبات تبديل محتاجة موافقتك"
+msgstr[4] "%d طلب تبديل محتاج موافقتك"
+msgstr[5] "%d طلب تبديل محتاج موافقتك"
+
+msgid "To approve"
+msgstr "محتاج موافقتك"
+
+msgid "Both agreed"
+msgstr "الاتنين وافقوا"

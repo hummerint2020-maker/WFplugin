@@ -4,7 +4,7 @@
  * and each employee's supervisor (the "Employee Supervisor" approver).
  * Script: assets/js/admin-approvals.js (shows the fields of the chosen mode and approver source).
  *
- * @var array<string,array{label:string,modes:string[],none_means:string,mode:string,levels:array<int,array{resolver_type:string,resolver_value:string}>,unsupported:string,allow_self:bool}> $cards
+ * @var array<string,array{label:string,modes:string[],none_means:string,mode:string,levels:array<int,array{resolver_type:string,resolver_value:string}>,unsupported:string,allow_self:bool,active:bool,not_set:string,mode_labels:array<string,string>,mode_help:array<string,string>,hr_cases:?array{on:bool,cases:list<string>,url:string}}> $cards
  * @var array<string,string> $not_in_use        workflow key => label
  * @var array<string,string> $mode_labels       mode => label
  * @var object[] $employees                     active employees (id, name, domain_name)
@@ -45,6 +45,9 @@ $sources = ['SUPERVISOR' => 'Employee Supervisor', 'TEAM_MANAGER' => 'Team Manag
 <?php foreach ($cards as $key => $c): ?>
 <div class="ews-approval-card" data-approval-card="ews-approval-workflow-<?php echo esc_attr($key); ?>" style="background:#fff;border:1px solid #dcdcde;padding:22px;max-width:1100px;margin:0 0 18px">
     <h2 style="margin-top:0"><?php echo esc_html($c['label']); ?> Approval</h2>
+    <?php if (!$c['active'] && $c['not_set'] !== ''): ?>
+    <div class="notice notice-info inline" data-not-set><p><strong>Not set yet.</strong> Until this card is saved: <?php echo esc_html($c['not_set']); ?></p></div>
+    <?php endif; ?>
     <?php if ($c['unsupported'] !== ''): ?>
     <div class="notice notice-warning inline"><p><?php echo esc_html('The saved mode "' . ($mode_labels[$c['unsupported']] ?? $c['unsupported']) . '" is not supported by ' . $c['label'] . ' requests, so managers decide them in the app and on the Requests page. Choose a mode and save.'); ?></p></div>
     <?php endif; ?>
@@ -53,11 +56,17 @@ $sources = ['SUPERVISOR' => 'Employee Supervisor', 'TEAM_MANAGER' => 'Team Manag
         <input type="hidden" name="action" value="ews_approval_workflow_save"><input type="hidden" name="workflow_key" value="<?php echo esc_attr($key); ?>">
         <table class="form-table"><tr><th>Approval Mode</th><td>
             <select class="ews-approval-mode" name="approval_mode" aria-label="Approval Mode">
-                <?php foreach ($c['modes'] as $m): ?><option value="<?php echo esc_attr($m); ?>"<?php selected($c['mode'], $m); ?>><?php echo esc_html($mode_labels[$m]); ?></option><?php endforeach; ?>
+                <?php foreach ($c['modes'] as $m): ?><option value="<?php echo esc_attr($m); ?>"<?php selected($c['mode'], $m); ?>><?php echo esc_html($c['mode_labels'][$m]); ?></option><?php endforeach; ?>
             </select>
             <div class="ews-approval-help" style="margin-top:8px;line-height:1.6">
-                <?php foreach ($c['modes'] as $m): ?><div data-mode="<?php echo esc_attr($m); ?>"><strong><?php echo esc_html($mode_labels[$m]); ?>:</strong> <?php echo esc_html($m === 'NONE' ? $c['none_means'] : $help[$m]); ?></div><?php endforeach; ?>
+                <?php foreach ($c['modes'] as $m): ?><div data-mode="<?php echo esc_attr($m); ?>"><strong><?php echo esc_html($c['mode_labels'][$m]); ?>:</strong> <?php echo esc_html($c['mode_help'][$m] ?? ($m === 'NONE' ? $c['none_means'] : ($help[$m] ?? ''))); ?></div><?php endforeach; ?>
             </div>
+            <?php if ($c['hr_cases'] && $c['hr_cases']['on']): ?>
+            <p class="description" data-hr-cases style="max-width:720px;margin-top:10px"><?php
+                if ($c['hr_cases']['cases']) echo esc_html('Whatever the mode, these requests also go to HR: ' . implode('; ', $c['hr_cases']['cases']) . '. ');
+                else echo esc_html('No request goes to HR: the HR cases are turned off. ');
+            ?><a href="<?php echo esc_url($c['hr_cases']['url']); ?>">Change in Attendance Corrections → Settings</a></p>
+            <?php endif; ?>
         </td></tr>
         <tr><th>Own requests</th><td>
             <label><input type="checkbox" name="allow_self" value="1"<?php checked($c['allow_self']); ?>> Allow the requester to approve their own request</label>
@@ -79,7 +88,7 @@ $sources = ['SUPERVISOR' => 'Employee Supervisor', 'TEAM_MANAGER' => 'Team Manag
 <?php endforeach; ?>
 
 <div style="background:#fff;border:1px solid #dcdcde;padding:16px 22px;max-width:1100px;margin:0 0 18px">
-    <p style="margin:0"><strong><?php echo esc_html(implode(' and ', $not_in_use)); ?></strong> requests do not use approval workflows yet: managers decide them in the app and on the Requests page.</p>
+    <p style="margin:0"><strong><?php echo esc_html(implode(' and ', $not_in_use)); ?></strong> requests do not use approval workflows yet: managers with Manage Time decide them in the app, and administrators on the Requests Hub.</p>
 </div>
 
  <div id="ews-self-decisions" style="background:#fff;border:1px solid #dcdcde;padding:22px;max-width:1100px;margin:0 0 18px">

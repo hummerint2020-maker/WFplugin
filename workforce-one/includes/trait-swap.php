@@ -7,6 +7,8 @@ use WorkforceOne\Schedule\SwapRules;
  * Schedule Swap requests: an employee offers to exchange an Office/WFH day with a colleague
  * in the same department; the colleague accepts or rejects, the requester may cancel, and an
  * administrator can decide from the wp-admin Requests page.
+ * With the Shift Swap workflow on "Colleague, then Level 1 (+ Level 2)" (3.31.89), an accepted swap
+ * waits for the approvers (status Awaiting) and the days are exchanged only when the last one approves.
  * Validation rules live in src/Schedule/SwapRules.php (pure, unit tested).
  * Behaviour is pinned by tests/e2e_swap.py.
  */
@@ -40,10 +42,18 @@ trait EWS_Swap_Trait {
             return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Pending' {$extra_where} LIMIT 1",$id,...$extra_args));
         }
 
-    /** Moves a Pending swap to $status. Returns 1 on success, 0 if it was no longer Pending, false on a DB error. */
-    private function swap_close($id,$status){
+    /** Moves a swap from $from (Pending, or Awaiting the approvers) to $status. Returns 1 on success, 0 if it had moved on, false on a DB error. */
+    private function swap_close($id,$status,$from='Pending'){
             global $wpdb;$table=$this->ensure_swap_schema();
-            return $wpdb->update($table,['status'=>$status,'responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);
+            return $wpdb->update($table,['status'=>$status,'responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>$id,'status'=>$from],['%s','%d','%s'],['%d','%s']);
+        }
+
+    /** The Shift Swap workflow's levels after the colleague: LEVEL_1, LEVEL_2, or '' (the colleague alone decides). */
+    private function swap_manager_mode(){
+            $w=$this->approval_workflow('shift_swap');
+            if(!$w || (int)$w->active!==1)return '';
+            $m=strtoupper((string)$w->approval_mode);
+            return in_array($m,['LEVEL_1','LEVEL_2'],true)?$m:'';
         }
 
     /**
@@ -62,7 +72,7 @@ trait EWS_Swap_Trait {
             $ok1=$wpdb->update($this->schedule,['status'=>$r->target_status,'updated_by'=>$uid,'updated_at'=>$now],['id'=>$a->id],['%s','%d','%s'],['%d']);
             $ok2=$wpdb->update($this->schedule,['status'=>$r->requester_status,'updated_by'=>$uid,'updated_at'=>$now],['id'=>$b->id],['%s','%d','%s'],['%d']);
             if($ok1===false||$ok2===false){$wpdb->query('ROLLBACK');return 'save';}
-            $updated=$this->swap_close((int)$r->id,'Accepted');
+            $updated=$this->swap_close((int)$r->id,'Accepted',(string)$r->status);
             if($updated!==1){$wpdb->query('ROLLBACK');return $updated===false?'save':'expired';}
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
             return true;
@@ -96,7 +106,7 @@ trait EWS_Swap_Trait {
             $b=$this->schedule_for_employee_date($target,$date);
             $error=SwapRules::checkSwappable($a?$a->status:null,$b?$b->status:null);
             if($error)$this->swap_redirect(['swap_error'=>$error]);
-            $exists=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE work_date=%s AND status='Pending' AND ((requester_employee_id=%d AND target_employee_id=%d) OR (requester_employee_id=%d AND target_employee_id=%d))",$date,$requester->id,$target,$target,$requester->id));
+            $exists=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE work_date=%s AND status IN ('Pending','Awaiting') AND ((requester_employee_id=%d AND target_employee_id=%d) OR (requester_employee_id=%d AND target_employee_id=%d))",$date,$requester->id,$target,$target,$requester->id));
             if($exists)$this->swap_redirect(['swap_error'=>'pending']);
             $ok=$wpdb->insert($table,[
                 'requester_employee_id'=>(int)$requester->id,'target_employee_id'=>$target,'work_date'=>$date,
@@ -128,6 +138,11 @@ trait EWS_Swap_Trait {
             }
             $past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));
             if($past)$this->swap_redirect(['swap_error'=>$past]);
+            if($this->swap_manager_mode()!==''){
+                $out=$this->swap_to_approvers($r,$emp);
+                if($out!==true)$this->swap_redirect(['swap_error'=>$out]);
+                $this->swap_redirect(['swap_done'=>'awaiting']);
+            }
             $applied=$this->swap_apply($r);
             if($applied!==true)$this->swap_redirect(['swap_error'=>$applied]);
             $this->achievement_evaluate_swap_acceptance((int)$r->target_employee_id,(int)$r->requester_employee_id,(int)$id);
@@ -155,13 +170,16 @@ trait EWS_Swap_Trait {
      * redirects. Unlike a peer acceptance it does not count towards collaboration achievements.
      */
     private function swap_admin_decide($id,$decision){
-            $r=$this->swap_pending_row($id);
+            global $wpdb;$table=$this->ensure_swap_schema();
+            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status IN ('Pending','Awaiting') LIMIT 1",(int)$id));
             if(!$r)return 'not_found';
             $approve=$decision==='approve';
+            // Waiting for the approvers: the administrator's decision closes the approval request too.
+            if($r->status==='Awaiting'){$ar=$this->approval_find_request('shift_swap','schedule_swap',(int)$id);if($ar&&strpos((string)$ar->status,'WAITING')===0&&is_wp_error($this->approval_act((int)$ar->id,$approve?'approve':'reject','',true,true)))return 'approval';}
             if($approve){
                 $applied=$this->swap_apply($r);
                 if($applied!==true)return $applied;
-            }elseif($this->swap_close($id,'Rejected')!==1)return 'save';
+            }elseif($this->swap_close($id,'Rejected',(string)$r->status)!==1)return 'save';
             $actor=wp_get_current_user()->display_name;
             $this->swap_audit($approve?'SCHEDULE_SWAP_ACCEPTED':'SCHEDULE_SWAP_REJECTED',$r,($approve?'Swap approved by administrator ':'Swap rejected by administrator ').$actor);
             $title=$approve?'Schedule Swap Completed':'Schedule Swap Rejected';
@@ -174,7 +192,91 @@ trait EWS_Swap_Trait {
     /** Pending swaps for the wp-admin Requests page. */
     private function swap_pending_rows(){
             global $wpdb;$table=$this->ensure_swap_schema();
-            return (array)$wpdb->get_results("SELECT * FROM {$table} WHERE status='Pending' ORDER BY created_at ASC");
+            return (array)$wpdb->get_results("SELECT * FROM {$table} WHERE status IN ('Pending','Awaiting') ORDER BY created_at ASC");
+        }
+
+    /**
+     * The colleague accepted and the workflow has levels: the swap waits for the approvers. Returns
+     * true or an error code. An approval request that is approved at once (no approver) swaps now.
+     */
+    private function swap_to_approvers($r,$emp){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
+            $ok=$wpdb->update($table,['status'=>'Awaiting','responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>(int)$r->id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);
+            if($ok!==1){$wpdb->query('ROLLBACK');return $ok===false?'save':'expired';}
+            if(is_wp_error($this->approval_start('shift_swap','schedule_swap',(int)$r->id,(int)$r->requester_employee_id,[],false))){$wpdb->query('ROLLBACK');return 'approval';}
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+            $r->status='Awaiting';
+            $this->swap_audit('SCHEDULE_SWAP_ACCEPTED',$r,'Swap accepted by '.$emp->name.', waiting for approval');
+            $ar=$this->approval_find_request('shift_swap','schedule_swap',(int)$r->id);
+            if($ar&&$ar->status==='APPROVED')return $this->swap_finish_approved($r);
+            $this->swap_notify_approver($ar,$r);
+            $this->swap_notify($this->swap_employee_user_id($r->requester_employee_id),__('Swap accepted, waiting for approval','workforce-one'),
+                /* translators: 1: colleague, 2: day */
+                sprintf(__('%1$s accepted your swap for %2$s. It is applied once it is approved.','workforce-one'),$emp->name,date_i18n('l, d M',strtotime($r->work_date))),'info',(int)$r->id);
+            return true;
+        }
+
+    private function swap_notify_approver($ar,$r){
+            $step=$ar?$this->approval_current_step((int)$ar->id):null;
+            if(!$step||!$step->approver_wp_user_id)return;
+            global $wpdb;
+            $a=$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",(int)$r->requester_employee_id));
+            $b=$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",(int)$r->target_employee_id));
+            $this->notify((int)$step->approver_wp_user_id,'swap',__('Shift swap to approve','workforce-one'),
+                /* translators: 1: employee, 2: colleague, 3: day, 4: status, 5: status */
+                sprintf(__('%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s.','workforce-one'),(string)$a,(string)$b,date_i18n('l, d M',strtotime($r->work_date)),$r->requester_status,$r->target_status),
+                ['type'=>'info','entity_id'=>(int)$r->id,'url'=>add_query_arg('ews_view','schedule',$this->app_home_url())]);
+        }
+
+    /** The last approver approved: the days are exchanged (if the schedules have not changed since). */
+    private function swap_finish_approved($r){
+            $applied=$this->swap_apply($r);
+            if($applied!==true)return $applied;
+            $this->swap_audit('SCHEDULE_SWAP_APPROVED',$r,'Swap approved');
+            foreach([(int)$r->requester_employee_id,(int)$r->target_employee_id] as $eid)
+                $this->swap_notify($this->swap_employee_user_id($eid),'Schedule Swap Completed',sprintf('Your schedule swap for %s was approved: %s ↔ %s.',date_i18n('l, d M',strtotime($r->work_date)),$r->requester_status,$r->target_status),'success',(int)$r->id);
+            return true;
+        }
+
+    /** An approver decides a swap waiting for them (app → Schedule). */
+    public function swap_manager_decide(){
+            if(!is_user_logged_in())wp_die('You must be logged in.');
+            $id=absint($_POST['swap_id']??0);$decision=sanitize_key($_POST['decision']??'');
+            check_admin_referer('ews_swap_decide_'.$id);
+            if(!in_array($decision,['approve','reject'],true))$this->swap_redirect(['swap_error'=>'invalid']);
+            global $wpdb;$table=$this->ensure_swap_schema();
+            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Awaiting' LIMIT 1",$id));
+            if(!$r)$this->swap_redirect(['swap_error'=>'not_found']);
+            $ar=$this->approval_find_request('shift_swap','schedule_swap',$id);
+            if(!$ar||!$this->approval_can_act((int)$ar->id))$this->swap_redirect(['swap_error'=>'access']);
+            if($decision==='approve'){$past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));if($past)$this->swap_redirect(['swap_error'=>$past]);}
+            if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true)))$this->swap_redirect(['swap_error'=>'approval']);
+            $fresh=$this->approval_find_request('shift_swap','schedule_swap',$id);
+            if($fresh&&$fresh->status==='APPROVED'){
+                $out=$this->swap_finish_approved($r);
+                $this->swap_redirect($out===true?['swap_done'=>'approved']:['swap_error'=>$out]);
+            }
+            if($fresh&&$fresh->status==='REJECTED'){
+                if($this->swap_close($id,'Rejected','Awaiting')!==1)$this->swap_redirect(['swap_error'=>'save']);
+                $this->swap_audit('SCHEDULE_SWAP_REJECTED',$r,'Swap rejected by approver '.wp_get_current_user()->display_name);
+                foreach([(int)$r->requester_employee_id,(int)$r->target_employee_id] as $eid)
+                    $this->swap_notify($this->swap_employee_user_id($eid),'Schedule Swap Rejected',sprintf('The schedule swap for %s was not approved.',date_i18n('l, d M',strtotime($r->work_date))),'warning',$id);
+                $this->swap_redirect(['swap_done'=>'rejected']);
+            }
+            $this->swap_notify_approver($fresh,$r);
+            $this->swap_redirect(['swap_done'=>'advanced']);
+        }
+
+    /** Swaps waiting for the signed-in user's approval. @return object[] */
+    private function swap_awaiting_my_approval(){
+            if($this->swap_manager_mode()==='')return [];
+            global $wpdb;$table=$this->ensure_swap_schema();$at=$this->approval_tables();
+            return (array)$wpdb->get_results($wpdb->prepare("SELECT s.*,a.name requester_name,b.name target_name FROM {$table} s
+                INNER JOIN {$at['requests']} ar ON ar.entity_type='schedule_swap' AND ar.entity_id=s.id AND ar.status LIKE 'WAITING%%'
+                INNER JOIN {$at['instances']} st ON st.approval_request_id=ar.id AND st.status='PENDING' AND st.approver_wp_user_id=%d
+                LEFT JOIN {$this->employees} a ON a.id=s.requester_employee_id LEFT JOIN {$this->employees} b ON b.id=s.target_employee_id
+                WHERE s.status='Awaiting' ORDER BY s.work_date ASC LIMIT 50",get_current_user_id()));
         }
 
     private function swap_requests_for_user($emp_id,$week_start=null,$week_end=null){
