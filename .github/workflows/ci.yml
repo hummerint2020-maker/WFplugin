@@ -40,6 +40,10 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=2G --no-progress
       - name: PHPCompatibility (PHP 7.4+)
         run: vendor/bin/phpcs --standard=phpcs.xml.dist
+      - name: Unit tests
+        run: vendor/bin/phpunit
+      - name: Translations complete
+        run: python3 tests/check_translations.py
 
   e2e:
     name: WordPress + MySQL e2e
@@ -64,6 +68,14 @@ jobs:
           extensions: mysqli, gd, openssl
           coverage: none
           tools: wp-cli
+      # setup-php's wp-cli tool is not always installed; fall back to the official phar.
+      - name: Install WP-CLI
+        run: |
+          if ! command -v wp >/dev/null 2>&1; then
+            curl -fsSL --retry 3 -o /tmp/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+            sudo install -m 0755 /tmp/wp-cli.phar /usr/local/bin/wp
+          fi
+          wp --version
       - name: Install WordPress
         run: |
           mkdir -p "$S"
@@ -73,13 +85,15 @@ jobs:
           wp config set --path="$WP" WP_DEBUG_LOG true --raw
           wp config set --path="$WP" WP_DEBUG_DISPLAY false --raw
           wp config set --path="$WP" DISABLE_WP_CRON true --raw
+          # Native API over HTTP for the test server only; a request sending X-E2E-Require-Https gets the production HTTPS rule.
+          wp config set --path="$WP" WORKFORCE_ONE_API_ALLOW_HTTP "empty(\$_SERVER['HTTP_X_E2E_REQUIRE_HTTPS'])" --raw
           wp core install --path="$WP" --url=http://127.0.0.1:8080 --title=CI --admin_user=admin --admin_password=admin --admin_email=ci@example.com --skip-email
           wp rewrite structure '/%postname%/' --path="$WP"
           ln -s "$GITHUB_WORKSPACE/workforce-one" "$WP/wp-content/plugins/workforce-one"
       - name: Activate plugin (schema install on MySQL)
         run: |
           wp plugin activate workforce-one --path="$WP"
-          test "$(wp option get ews_schema_version --path="$WP")" = "$(grep -oP "ews_schema_target\(\)\{ return '\K[0-9.]+" workforce-one/includes/trait-core.php)"
+          test "$(wp option get ews_schema_version --path="$WP")" = "$(grep -oP "ews_schema_target\(\)\{ return '\K[0-9.]+" workforce-one/includes/trait-schema.php)"
           wp eval 'global $wpdb; $n=count($wpdb->get_col("SHOW TABLES LIKE \"{$wpdb->prefix}ews\\_%\"")); echo "ews tables: $n\n"; if($n<37) exit(1);' --path="$WP"
       - name: Seed test data
         run: wp eval-file tests/e2e_setup.php --path="$WP"
@@ -89,6 +103,118 @@ jobs:
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8080/ && break; sleep 1; done
       - name: Security e2e (face / QR / kiosk)
         run: python3 tests/e2e_presence_face.py "$S"
+      - name: Sign In / Sign Out behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance.py "$S"
+      - name: Leave behaviour tests (normal + approval workflow)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave.py "$S"
+      - name: Overtime and Early Leave behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_overtime.py "$S"
+      - name: Schedule Swap behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_swap.py "$S"
+      - name: Admin request pages behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_admin_requests.py "$S"
+      - name: Leaves admin page behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_admin.py "$S"
+      - name: Schedule Configuration page behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_schedule_config.py "$S"
+      - name: Feature Configuration page behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_features.py "$S"
+      - name: Employees page behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_employees.py "$S"
+      - name: Sign In / Out Report behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_time_report.py "$S"
+      - name: Roles and Notification Settings behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_settings_pages.py "$S"
+      - name: Achievements page behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_achievements.py "$S"
+      - name: Engagement settings pages behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_engagement.py "$S"
+      - name: Employee profile and shift-based lateness tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_employee_profile.py "$S"
+      - name: Admin dashboard and Audit Log tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_dashboard_audit.py "$S"
+      - name: Attendance Insights tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_insights.py "$S"
+      - name: Team Schedule page (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_schedule_view.py "$S"
+      - name: Attendance grid (employee app, managers)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_grid.py "$S"
+      - name: Attendance Insights (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_app_insights.py "$S"
+      - name: Leave and Overtime pages (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_view.py "$S"
+      - name: Dashboard (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_dashboard_view.py "$S"
+      - name: My Profile (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_my_profile.py "$S"
+      - name: People and colleague profiles (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
+      - name: App frame, navigation and login (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_layout.py "$S"
+      - name: Appearance (theme) and the app frame's phone bar
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_appearance.py "$S"
+      - name: Reports (employee app) and exports
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports.py "$S"
+      - name: Reports phase 2 (overtime, leave, trend, saved views)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports_more.py "$S"
+      - name: Location seats and the Location Capacity report
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_capacity.py "$S"
+      - name: Approval workflows (settings and the two-level flow)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_approvals.py "$S"
+      - name: Self-approval in approval workflows
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_self_approval.py "$S"
+      - name: Work Locations page
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_locations.py "$S"
+      - name: Kiosks and Presence Verification
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_presence.py "$S"
+      - name: Attendance parity (Web Sign In / Out, QR, Face token, breaks; concurrent duplicates)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_parity.py "$S"
+      - name: API foundation (Face verify without distance, attempt limit, routes, idempotency, concurrency)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_foundation.py "$S"
+      - name: Native app authentication (tokens, refresh rotation, devices, rate limits, isolation)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_auth.py "$S"
+      - name: Notifications page (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_notifications_view.py "$S"
+      - name: Tasks page (employee app)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_tasks_view.py "$S"
+      - name: Tasks, more (settings, checklist, comments and files, team tasks, repeats, reminders, Workload, Home)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_tasks_more.py "$S"
+      - name: Long lists (Team Schedule, Attendance and Sign In / Out Report paged on the server)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_big_lists.py "$S"
+      - name: Branches (modes, other branches, planned branch, Sign In, reports, permission)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_branches.py "$S"
+      - name: Schema upgrade (dbDelta-readable tables, indexes added, no DB errors, nothing left to change)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_schema.py "$S"
+      - name: Attendance corrections (requests, evidence, approvals, HR, originals kept, readers, payroll carry-over)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_corrections.py "$S"
+      - name: Daily workers (day sheet from inside the site, national ID, modes, payouts, never mixed with staff)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_daily_workers.py "$S"
+      - name: Office minimum (counters, warning, team shares, leave note, weekly reminder, never blocks saving)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_office_minimum.py "$S"
+      - name: wp-admin menu in sections (8 sections, tabs, old links, permissions, features off, Arabic)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_admin_nav.py "$S"
+      - name: Web Push endpoints (SSRF hardening) and delivery
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_push.py "$S"
+      - name: Departments and Teams
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_organization.py "$S"
+      - name: Auto Attendance
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_auto_attendance.py "$S"
+      - name: Employee Polls
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_polls.py "$S"
+      - name: Installable app (PWA)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_pwa.py "$S"
+      - name: Settings Overview (all settings, defaults, export)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_settings_overview.py "$S"
+      - name: Payroll (salaries, rules, monthly pay from attendance, export)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_payroll.py "$S"
+      - name: Payroll close, adjustments, My Pay and payslip PDF
+        run: |
+          command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }
+          WP_CLI="wp --path=$WP" python3 tests/e2e_payroll_close.py "$S"
+      - name: Time zones (Cairo) and overnight shifts
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_timezone.py "$S"
+      - name: Re-seed after behaviour tests
+        run: wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Smoke test (every admin page and app view)
         run: python3 tests/smoke.py "$WP/wp-content/debug.log"
       - uses: actions/setup-node@v4
@@ -100,6 +226,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Browser smoke test (JavaScript errors on every view)
         run: node tests/browser_smoke.js
+      - name: Installable app in Chromium (service worker, cache, manifest, splash)
+        run: node tests/pwa_browser.js
+      - name: Push subscription kept current in Chromium (saved at once / every 3 days after a random wait / off kept / other key replaced)
+        run: WP_CLI="wp --path=$WP" node tests/push_sync_browser.js
       - name: Arabic (RTL) pass
         run: |
           wp language core install ar --path="$WP"
@@ -111,6 +241,7 @@ jobs:
           curl -s -b /tmp/cj 'http://127.0.0.1:8080/app/?ews_view=time' > /tmp/time_ar.html
           grep -q 'dir="rtl"' /tmp/time_ar.html
           grep -q 'workforce-one-rtl.css' /tmp/time_ar.html
+          grep -q 'app-shell-rtl.css' /tmp/time_ar.html
           grep -q 'تسجيل الحضور' /tmp/time_ar.html
           wp site switch-language en_US --path="$WP"
       - name: Uninstall keeps data unless opted in

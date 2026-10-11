@@ -28,91 +28,92 @@ msgstr "منصة لإدارة فرق العمل: الجداول والحضور �
 msgid "Internal"
 msgstr "داخلي"
 
-#: includes/trait-attendance.php:26
+#: includes/trait-attendance.php:30
 msgid "Attendance tracking is disabled for your employee profile."
 msgstr "تسجيل الحضور غير مفعّل في ملفك الوظيفي."
 
-#: includes/trait-attendance.php:33
+#: includes/trait-attendance.php:97
 msgid "Face verification is required before Sign In. Please complete Face Verification and try again."
 msgstr "يجب التحقق من الوجه قبل تسجيل الحضور. أكمل التحقق من الوجه ثم حاول مرة أخرى."
 
-#: includes/trait-attendance.php:34
+#: includes/trait-attendance.php:96
 msgid "Your WordPress account is not linked to an active employee."
 msgstr "حسابك غير مرتبط بموظف نشط."
 
-#: includes/trait-attendance.php:35
+#: includes/trait-attendance.php:98
 msgid "Today is a General Leave day. Sign In is not required."
 msgstr "اليوم إجازة عامة، ولا يلزم تسجيل الحضور."
 
-#: includes/trait-attendance.php:36
+#: includes/trait-attendance.php:99
 msgid "Today is not a working day for you."
 msgstr "اليوم ليس يوم عمل بالنسبة لك."
 
 #. translators: %s: start time
-#: includes/trait-attendance.php:39
+#: includes/trait-attendance.php:100
 #, php-format
 msgid "Sign In is not available yet. Your working hours start at %s."
 msgstr "تسجيل الحضور غير متاح بعد. تبدأ ساعات عملك في %s."
 
 #. translators: %s: cutoff time
-#: includes/trait-attendance.php:40
+#: includes/trait-attendance.php:103
 #, php-format
 msgid "Sign In is no longer available. The Sign In cutoff was %s."
 msgstr "انتهى وقت تسجيل الحضور. كان آخر موعد للتسجيل %s."
 
-#: includes/trait-attendance.php:42
+#. translators: %s: cutoff time
+#: includes/trait-attendance.php:104
 msgid "You have already signed in today."
 msgstr "لقد سجّلت حضورك اليوم بالفعل."
 
-#: includes/trait-attendance.php:43
+#: includes/trait-attendance.php:105
 msgid "Please Resume Work before signing out."
 msgstr "يرجى استئناف العمل قبل تسجيل الانصراف."
 
-#: includes/trait-attendance.php:44
+#: includes/trait-attendance.php:106
 msgid "You cannot sign out before signing in."
 msgstr "لا يمكنك تسجيل الانصراف قبل تسجيل الحضور."
 
-#: includes/trait-attendance.php:45
+#: includes/trait-attendance.php:107
 msgid "You have already signed out today."
 msgstr "لقد سجّلت انصرافك اليوم بالفعل."
 
-#: includes/trait-attendance.php:78
+#: includes/trait-attendance.php:76
 msgid "This Kiosk location has no coordinates configured. Please contact your administrator."
 msgstr "لم يتم ضبط إحداثيات موقع هذا الكشك. يرجى التواصل مع المسؤول."
 
-#: includes/trait-attendance.php:79
+#: includes/trait-attendance.php:77
 msgid "Location access is required for QR Sign In. Please allow Location Services and try again."
 msgstr "يلزم الوصول إلى موقعك لتسجيل الحضور عبر QR. اسمح بخدمات الموقع ثم حاول مرة أخرى."
 
 #. translators: 1: work location name, 2: distance
-#: includes/trait-attendance.php:80
+#: includes/trait-attendance.php:78
 #, php-format
 msgid "You must be at %1$s to use QR Sign In. Distance: %2$s"
 msgstr "يجب أن تكون في %1$s لتسجيل الحضور عبر QR. المسافة: %2$s"
 
 #. translators: %s: distance
-#: includes/trait-attendance.php:82
+#: includes/trait-attendance.php:80
 #, php-format
 msgid "You are outside your assigned work location. Distance: %s"
 msgstr "أنت خارج موقع العمل المخصص لك. المسافة: %s"
 
-#: includes/trait-attendance.php:84
+#: includes/trait-attendance.php:85
 msgid "Unable to record Sign Out. Please contact the administrator."
 msgstr "تعذّر تسجيل الانصراف. يرجى التواصل مع المسؤول."
 
-#: includes/trait-attendance.php:84
+#: includes/trait-attendance.php:85
 msgid "Unable to record Sign In. Please contact the administrator."
 msgstr "تعذّر تسجيل الحضور. يرجى التواصل مع المسؤول."
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Late Arrival recorded successfully."
 msgstr "تم تسجيل الحضور المتأخر بنجاح."
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Sign Out recorded successfully."
 msgstr "تم تسجيل الانصراف بنجاح."
 
-#: includes/trait-attendance.php:88
+#: includes/trait-attendance.php:89
 msgid "Sign In recorded successfully."
 msgstr "تم تسجيل الحضور بنجاح."
 
@@ -154,206 +155,198 @@ msgstr "تعذّر إرسال طلب إعادة تعيين الوجه."
 msgid "You cannot remove this face profile"
 msgstr "لا يمكنك حذف بيانات هذا الوجه"
 
-#: includes/trait-presence.php:50
-#: includes/trait-presence.php:52
+#: includes/trait-presence.php:56
+#: includes/trait-presence.php:112
 msgid "Invalid QR code."
 msgstr "رمز QR غير صالح."
 
-#: includes/trait-presence.php:53
-#: includes/trait-presence.php:60
+#: includes/trait-presence.php:57
+#: includes/trait-presence.php:62
+#: includes/trait-presence.php:114
 msgid "This kiosk is inactive."
 msgstr "هذا الكشك غير نشط."
 
-#: includes/trait-presence.php:55
+#: includes/trait-presence.php:58
+#: includes/trait-presence.php:113
 msgid "This QR code has expired. Please scan the current code."
 msgstr "انتهت صلاحية رمز QR. امسح الرمز الحالي."
 
-#: includes/trait-presence.php:57
+#: includes/trait-presence.php:59
 msgid "Invalid QR signature."
 msgstr "توقيع رمز QR غير صالح."
 
-#: includes/trait-frontend.php:520
-#: includes/trait-presence.php:66
-#: includes/trait-presence.php:86
-#: includes/trait-presence.php:99
-#: includes/trait-presence.php:102
+#: includes/trait-attendance-insights.php:150
+#: includes/trait-presence.php:69
+#: includes/trait-presence.php:80
+#: includes/trait-presence.php:93
+#: includes/trait-presence.php:96
 msgid "Access denied"
 msgstr "غير مسموح بالدخول"
 
-#: includes/trait-presence.php:87
+#: includes/trait-presence.php:81
 msgid "Invalid kiosk."
 msgstr "كشك غير صالح."
 
-#: includes/trait-presence.php:88
+#: includes/trait-presence.php:82
 msgid "Invalid work location."
 msgstr "موقع عمل غير صالح."
 
-#: includes/trait-presence.php:93
+#: includes/trait-presence.php:87
 msgid "Could not create kiosk."
 msgstr "تعذّر إنشاء الكشك."
 
-#: includes/trait-presence.php:99
+#: includes/trait-presence.php:93
 msgid "Kiosk not found."
 msgstr "لم يتم العثور على الكشك."
 
-#: includes/trait-presence.php:103
+#: includes/trait-presence.php:97
 msgid "Invalid employee or location."
 msgstr "موظف أو موقع غير صالح."
 
-#: includes/trait-presence.php:104
+#: includes/trait-presence.php:98
 msgid "You cannot manage presence outside your Department."
 msgstr "لا يمكنك إدارة التحقق من الحضور خارج إدارتك."
 
-#: includes/trait-presence.php:105
+#: includes/trait-presence.php:99
 msgid "Employee or location not found."
 msgstr "لم يتم العثور على الموظف أو الموقع."
 
-#: includes/trait-presence.php:106
+#: includes/trait-presence.php:100
 msgid "Could not create presence verification request."
 msgstr "تعذّر إنشاء طلب التحقق من التواجد."
 
-#: includes/trait-presence.php:114
-#: includes/trait-presence.php:164
+#: includes/trait-presence.php:122
+#: includes/trait-presence.php:168
 msgid "Please log in."
 msgstr "يرجى تسجيل الدخول."
 
 #: includes/trait-frontend.php:130
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:372
-#: includes/trait-frontend.php:485
-#: includes/trait-presence.php:115
-#: includes/trait-presence.php:151
-#: includes/trait-presence.php:166
+#: includes/trait-presence.php:123
+#: includes/trait-presence.php:157
+#: includes/trait-presence.php:170
 msgid "Your account is not linked to an active employee."
 msgstr "حسابك غير مرتبط بموظف نشط."
 
-#: includes/trait-presence.php:116
+#: includes/trait-presence.php:124
 msgid "Presence request not found."
 msgstr "لم يتم العثور على طلب التحقق."
 
-#: includes/trait-presence.php:117
+#: includes/trait-presence.php:110
 msgid "This presence request has already been processed."
 msgstr "تمت معالجة طلب التحقق هذا بالفعل."
 
-#: includes/trait-presence.php:118
+#: includes/trait-presence.php:111
 msgid "This presence request has expired."
 msgstr "انتهت صلاحية طلب التحقق هذا."
 
-#: includes/trait-presence.php:120
+#: includes/trait-presence.php:115
 msgid "This QR belongs to a different work location."
 msgstr "رمز QR هذا خاص بموقع عمل آخر."
 
-#: includes/trait-presence.php:121
+#: includes/trait-presence.php:116
 msgid "The request changed before it could be verified."
 msgstr "تغيّر الطلب قبل إتمام التحقق."
 
-#: includes/trait-presence.php:126
+#: includes/trait-presence.php:136
 msgid "Kiosk access denied."
 msgstr "غير مسموح بالدخول إلى الكشك."
 
-#: includes/trait-presence.php:127
+#: includes/trait-presence.php:137
 msgid "Kiosk is inactive."
 msgstr "الكشك غير نشط."
 
-#: includes/trait-presence.php:132
+#: templates/kiosk.php:21
 msgid "Scan to continue"
 msgstr "امسح الرمز للمتابعة"
 
-#: includes/trait-presence.php:132
+#: templates/kiosk.php:22
 msgid "Dynamic Workforce One QR"
 msgstr "رمز QR المتغيّر من Workforce One"
 
-#: includes/trait-presence.php:132
+#: templates/kiosk.php:27
 msgid "Connection unavailable. Please check this kiosk connection."
 msgstr "الاتصال غير متاح. يرجى التحقق من اتصال هذا الكشك."
 
 #. translators: %d: seconds
-#: includes/trait-presence.php:134
+#: templates/kiosk.php:24
 #, php-format
 msgid "Changes in %ds"
 msgstr "يتغيّر خلال %d ث"
 
-#: includes/trait-presence.php:150
+#: includes/trait-presence.php:156
 msgid "Presence Verification is disabled"
 msgstr "التحقق من التواجد غير مفعّل"
 
-#: includes/trait-presence.php:150
+#: includes/trait-presence.php:156
 msgid "Please contact your administrator."
 msgstr "يرجى التواصل مع المسؤول."
 
-#: includes/trait-presence.php:151
+#: includes/trait-presence.php:157
 msgid "Employee profile required"
 msgstr "يلزم وجود ملف موظف"
 
-#: includes/trait-frontend.php:727
-#: includes/trait-frontend.php:1772
-#: includes/trait-presence.php:153
+#: includes/trait-app-layout.php:57
+#: templates/app/presence.php:13
+#: templates/app/time.php:110
 msgid "Presence Verification"
 msgstr "التحقق من التواجد"
 
-#: includes/trait-presence.php:154
+#: templates/app/presence.php:14
 msgid "Presence verified successfully."
 msgstr "تم التحقق من تواجدك بنجاح."
 
-#: includes/trait-presence.php:156
+#: templates/app/presence.php:17
 msgid "No active presence verification request was found."
 msgstr "لا يوجد طلب تحقق من التواجد نشط."
 
 #. translators: %s: work location name
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:19
 #, php-format
 msgid "Please scan the QR code displayed at %s."
 msgstr "يرجى مسح رمز QR المعروض في %s."
 
 #. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:20
 #, php-format
 msgid "Expires in %s"
 msgstr "ينتهي خلال %s"
 
-#. translators: %s: mm:ss
-#: includes/trait-frontend.php:1766
-#: includes/trait-frontend.php:1769
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:23
+#: templates/app/time.php:106
 msgid "Starting camera…"
 msgstr "جارٍ تشغيل الكاميرا…"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:24
 msgid "Camera scanning uses the browser camera permission. If scanning is unavailable on this device, use a QR-capable browser/device."
 msgstr "يستخدم المسح إذن الكاميرا في المتصفح. إذا لم يكن المسح متاحًا على هذا الجهاز، استخدم متصفحًا أو جهازًا يدعم QR."
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:25
 msgid "Verify Presence"
 msgstr "تأكيد التواجد"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:158
+#: templates/app/presence.php:23
 msgid "Camera scanning is unavailable. Please use a QR-capable device."
 msgstr "المسح بالكاميرا غير متاح. يرجى استخدام جهاز يدعم QR."
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
+#: templates/app/presence.php:28
 msgid "Status:"
 msgstr "الحالة:"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
+#: templates/app/presence.php:29
 msgid "Location:"
 msgstr "الموقع:"
 
-#. translators: %s: mm:ss
-#: includes/trait-presence.php:159
+#: templates/app/presence.php:30
 msgid "Verified at:"
 msgstr "وقت التحقق:"
 
-#: includes/trait-presence.php:163
+#: includes/trait-presence.php:167
 msgid "Dynamic QR Sign-In is disabled."
 msgstr "تسجيل الحضور عبر QR غير مفعّل."
 
-#: includes/trait-presence.php:169
+#: includes/trait-presence.php:173
 msgid "The Kiosk location is unavailable."
 msgstr "موقع الكشك غير متاح."
 
@@ -419,142 +412,141 @@ msgstr "يحذف جميع الجداول والإعدادات والأدوار �
 msgid "Last cleanup run:"
 msgstr "آخر تنظيف:"
 
-#: includes/trait-frontend.php:1652
+#: includes/trait-frontend.php:391
 msgid "On Time"
 msgstr "في الموعد"
 
-#: includes/trait-frontend.php:1652
+#: includes/trait-frontend.php:391
 msgid "Late Arrival"
 msgstr "حضور متأخر"
 
-#: includes/trait-frontend.php:1659
+#: includes/trait-frontend.php:398
 msgid "Attendance tracking is disabled"
 msgstr "تسجيل الحضور غير مفعّل"
 
-#: includes/trait-frontend.php:1659
+#: includes/trait-frontend.php:398
 msgid "Attendance is not required for your employee profile."
 msgstr "الحضور غير مطلوب في ملفك الوظيفي."
 
-#: includes/trait-frontend.php:1669
+#: templates/app/time.php:33
 msgid "Location permission required"
 msgstr "مطلوب إذن الوصول إلى الموقع"
 
-#: includes/trait-frontend.php:1672
+#: templates/app/time.php:36
 msgid "Location Services Required"
 msgstr "خدمات الموقع مطلوبة"
 
-#: includes/trait-frontend.php:1673
-#: includes/trait-frontend.php:1818
+#: templates/app/time.php:37
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr "اسمح بالوصول إلى موقعك عندما يطلب المتصفح ذلك. موقعك مطلوب لتسجيل الحضور والانصراف."
 
-#: includes/trait-frontend.php:1675
+#: templates/app/time.php:39
 msgid "Allow Location / Try Again"
 msgstr "السماح بالموقع / حاول مرة أخرى"
 
-#: includes/trait-frontend.php:1305
-#: includes/trait-frontend.php:1680
+#: templates/app/dashboard.php:145
+#: templates/app/time.php:44
 msgid "Employee account not linked"
 msgstr "حساب الموظف غير مرتبط"
 
-#: includes/trait-frontend.php:1680
+#: templates/app/time.php:44
 msgid "Your WordPress account is not linked to an active employee. Please contact your manager."
 msgstr "حسابك غير مرتبط بموظف نشط. يرجى التواصل مع مديرك."
 
-#: includes/trait-frontend.php:1681
+#: templates/app/time.php:45
 msgid "Today is not a working day for you"
 msgstr "اليوم ليس يوم عمل بالنسبة لك"
 
 #. translators: %s: today's schedule status
-#: includes/trait-frontend.php:1681
+#: templates/app/time.php:45
 #, php-format
 msgid "Your schedule today is %s. Sign In / Sign Out is only available on working days."
 msgstr "جدولك اليوم: %s. تسجيل الحضور والانصراف متاح في أيام العمل فقط."
 
 #. translators: %s: today's schedule status
-#: includes/trait-frontend.php:1335
-#: includes/trait-frontend.php:1681
+#: templates/app/dashboard.php:106
+#: templates/app/time.php:45
 msgid "Not Set"
 msgstr "غير محدد"
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: includes/trait-frontend.php:1340
-#: includes/trait-frontend.php:1684
-#: includes/trait-frontend.php:1691
-#: includes/trait-frontend.php:1738
+#: templates/app/dashboard.php:111
+#: templates/app/time.php:48
+#: templates/app/time.php:55
+#: templates/app/time.php:93
 msgid "Sign In"
 msgstr "تسجيل الحضور"
 
-#: includes/trait-frontend.php:1341
-#: includes/trait-frontend.php:1685
-#: includes/trait-frontend.php:1740
+#: templates/app/dashboard.php:112
+#: templates/app/time.php:49
+#: templates/app/time.php:95
 msgid "Sign Out"
 msgstr "تسجيل الانصراف"
 
-#: includes/trait-frontend.php:1689
+#: templates/app/time.php:53
 msgid "You signed out today."
 msgstr "لقد سجّلت انصرافك اليوم."
 
 #. translators: 1: sign-in time, 2: sign-out time
-#: includes/trait-frontend.php:1689
+#: templates/app/time.php:53
 #, php-format
 msgid "Sign In was recorded at %1$s and Sign Out at %2$s."
 msgstr "تم تسجيل الحضور في %1$s والانصراف في %2$s."
 
-#: includes/trait-frontend.php:1691
+#: templates/app/time.php:55
 msgid "You are signed in."
 msgstr "أنت مسجّل الحضور."
 
 #. translators: 1: "On Time" / "Late Arrival" / "Sign In", 2: time
-#: includes/trait-frontend.php:1691
+#: templates/app/time.php:55
 #, php-format
 msgid "%1$s recorded at %2$s."
 msgstr "%1$s — تم التسجيل في %2$s."
 
-#: includes/trait-frontend.php:1694
+#: templates/app/time.php:57
 msgid "Sign In is available now."
 msgstr "تسجيل الحضور متاح الآن."
 
 #. translators: 1: start time, 2: end time, 3: sign-in cutoff time
-#: includes/trait-frontend.php:1694
+#: templates/app/time.php:57
 #, php-format
 msgid "Allowed window: %1$s – %2$s, with Sign In cutoff at %3$s."
 msgstr "الفترة المسموحة: %1$s – %2$s، وآخر موعد لتسجيل الحضور %3$s."
 
-#: includes/trait-frontend.php:1698
+#: templates/app/time.php:60
 msgid "Sign In is not available yet."
 msgstr "تسجيل الحضور غير متاح بعد."
 
 #. translators: %s: start time
-#: includes/trait-frontend.php:1698
+#: templates/app/time.php:60
 #, php-format
 msgid "Your working hours start at %s."
 msgstr "تبدأ ساعات عملك في %s."
 
-#: includes/trait-frontend.php:1700
+#: templates/app/time.php:62
 msgid "Sign In is no longer available."
 msgstr "انتهى وقت تسجيل الحضور."
 
 #. translators: %s: cutoff time
-#: includes/trait-frontend.php:1700
+#: templates/app/time.php:62
 #, php-format
 msgid "The Sign In cutoff was %s."
 msgstr "كان آخر موعد لتسجيل الحضور %s."
 
-#: includes/trait-frontend.php:1707
+#: templates/app/time.php:69
 msgid "BREAK MANAGEMENT"
 msgstr "إدارة الاستراحات"
 
-#: includes/trait-frontend.php:1707
+#: templates/app/time.php:69
 msgid "You are on break"
 msgstr "أنت في استراحة"
 
-#: includes/trait-frontend.php:1707
+#: templates/app/time.php:69
 msgid "Take a break"
 msgstr "خذ استراحة"
 
 #. translators: %s: minutes
-#: includes/trait-frontend.php:1708
+#: templates/app/time.php:70
 #, php-format
 msgid "Your break is being tracked. The standard break duration is %s."
 msgstr "يتم احتساب استراحتك. مدة الاستراحة المعتادة %s."
@@ -562,354 +554,168 @@ msgstr "يتم احتساب استراحتك. مدة الاستراحة المع
 #. translators: %s: minutes
 #. translators: %d: minutes
 #. translators: %d: break number
-#: includes/trait-frontend.php:1708
-#: includes/trait-frontend.php:1714
-#: includes/trait-frontend.php:1730
-#: includes/trait-frontend.php:1744
+#: templates/app/time.php:70
+#: templates/app/time.php:76
+#: templates/app/time.php:85
+#: templates/app/time.php:99
 #, php-format
 msgid "%d min"
 msgstr "%d دقيقة"
 
 #. translators: %s: minutes
-#: includes/trait-frontend.php:1708
+#: templates/app/time.php:70
 msgid "Each break session is limited to the configured duration. Breaks are informative and do not affect attendance or overtime calculations."
 msgstr "كل استراحة محددة بالمدة المضبوطة. الاستراحات للمتابعة فقط ولا تؤثر على حساب الحضور أو العمل الإضافي."
 
 #. translators: %s: minutes
-#: includes/trait-frontend.php:1709
+#: templates/app/time.php:71
 msgid "remaining"
 msgstr "متبقية"
 
-#: includes/trait-frontend.php:1713
+#: templates/app/time.php:75
 msgid "ON BREAK"
 msgstr "في استراحة"
 
-#: includes/trait-frontend.php:1713
+#: templates/app/time.php:75
 msgid "Elapsed time"
 msgstr "الوقت المنقضي"
 
-#: includes/trait-frontend.php:1714
+#: templates/app/time.php:76
 msgid "Standard duration"
 msgstr "المدة المعتادة"
 
 #. translators: %d: minutes
-#: includes/trait-frontend.php:1714
+#: templates/app/time.php:76
 #, php-format
 msgid "Manager alert at %d min"
 msgstr "تنبيه المدير بعد %d دقيقة"
 
-#: includes/trait-frontend.php:1718
+#: templates/app/time.php:80
 msgid "Resume Work"
 msgstr "استئناف العمل"
 
-#: includes/trait-frontend.php:1730
+#: templates/app/time.php:85
 msgid "Start Break"
 msgstr "بدء الاستراحة"
 
 #. translators: %d: number of break sessions
-#: includes/trait-frontend.php:1733
+#: templates/app/time.php:88
 #, php-format
 msgid "You have used all %d break sessions available today."
 msgstr "لقد استخدمت كل الاستراحات المتاحة اليوم (%d)."
 
-#: includes/trait-frontend.php:1737
+#: templates/app/time.php:92
 msgid "Today's Record"
 msgstr "سجل اليوم"
 
-#: includes/trait-frontend.php:1340
-#: includes/trait-frontend.php:1341
-#: includes/trait-frontend.php:1738
-#: includes/trait-frontend.php:1739
-#: includes/trait-frontend.php:1740
+#: templates/app/dashboard.php:111
+#: templates/app/dashboard.php:112
+#: templates/app/time.php:93
+#: templates/app/time.php:94
+#: templates/app/time.php:95
 msgid "Not recorded"
 msgstr "لم يُسجَّل"
 
-#: includes/trait-frontend.php:1739
+#: templates/app/time.php:94
 msgid "Attendance Status"
 msgstr "حالة الحضور"
 
-#: includes/trait-frontend.php:1742
+#: templates/app/time.php:97
 msgid "Break Sessions"
 msgstr "الاستراحات"
 
 #. translators: %d: break number
-#: includes/trait-frontend.php:1744
+#: templates/app/time.php:99
 #, php-format
 msgid "Break %d"
 msgstr "استراحة %d"
 
 #. translators: %d: break number
-#: includes/trait-frontend.php:1744
+#: templates/app/time.php:99
 msgid "Open"
 msgstr "مفتوحة"
 
-#: includes/trait-frontend.php:1764
+#: templates/app/time.php:104
 msgid "QR Sign In"
 msgstr "تسجيل الحضور عبر QR"
 
-#: includes/trait-frontend.php:1764
+#: templates/app/time.php:104
 msgid "Scan the dynamic QR displayed at your workplace. This is an additional Sign In method; your normal Sign In remains available."
 msgstr "امسح رمز QR المتغيّر المعروض في مكان عملك. هذه طريقة إضافية لتسجيل الحضور، وتسجيل الحضور العادي ما زال متاحًا."
 
-#: includes/trait-frontend.php:1764
+#: templates/app/time.php:104
 msgid "Rotating QR"
 msgstr "رمز QR متغيّر"
 
-#: includes/trait-frontend.php:1765
-#: includes/trait-frontend.php:1766
+#: templates/app/time.php:105
+#: templates/app/time.php:106
 msgid "Scan Workplace QR"
 msgstr "مسح رمز QR الخاص بمكان العمل"
 
-#: includes/trait-frontend.php:1766
+#: templates/app/time.php:106
 msgid "Point your camera at the QR displayed at your workplace."
 msgstr "وجّه الكاميرا إلى رمز QR المعروض في مكان عملك."
 
-#: includes/trait-frontend.php:1766
+#: templates/app/time.php:106
 msgid "Sign In with QR"
 msgstr "تسجيل الحضور عبر QR"
 
-#: includes/trait-frontend.php:1769
-msgid "QR detected. Waiting for your location…"
-msgstr "تم التعرف على الرمز. في انتظار تحديد موقعك…"
-
-#: includes/trait-frontend.php:1769
-msgid "QR detected. Review and tap Sign In with QR."
-msgstr "تم التعرف على الرمز. راجع ثم اضغط «تسجيل الحضور عبر QR»."
-
-#: includes/trait-frontend.php:1769
-msgid "Location Services are required for QR Sign In."
-msgstr "خدمات الموقع مطلوبة لتسجيل الحضور عبر QR."
-
-#: includes/trait-frontend.php:1769
-msgid "Location permission is required for QR Sign In. Please allow Location Services and try again."
-msgstr "إذن الموقع مطلوب لتسجيل الحضور عبر QR. اسمح بخدمات الموقع ثم حاول مرة أخرى."
-
-#: includes/trait-frontend.php:1769
-msgid "Camera QR scanning is unavailable on this browser/device."
-msgstr "المسح بالكاميرا غير متاح على هذا المتصفح أو الجهاز."
-
-#: includes/trait-frontend.php:1769
-msgid "Point the camera at the workplace QR."
-msgstr "وجّه الكاميرا إلى رمز QR الخاص بمكان العمل."
-
-#: includes/trait-frontend.php:1769
-msgid "Camera permission was denied or unavailable."
-msgstr "تم رفض إذن الكاميرا أو أنها غير متاحة."
-
-#: includes/trait-frontend.php:1772
+#: templates/app/time.php:110
 msgid "If a manager requests a physical presence check, the request will appear here and in your notifications."
 msgstr "إذا طلب المدير التحقق من تواجدك، سيظهر الطلب هنا وفي الإشعارات."
 
-#: includes/trait-frontend.php:1772
+#: templates/app/time.php:110
 msgid "Optional"
 msgstr "اختياري"
 
-#: includes/trait-frontend.php:1777
+#: templates/app/time.php:115
 msgid "Face Sign In"
 msgstr "تسجيل الحضور بالوجه"
 
-#: includes/trait-frontend.php:1777
+#: templates/app/time.php:115
 msgid "Face verification is required before Sign In."
 msgstr "التحقق من الوجه مطلوب قبل تسجيل الحضور."
 
-#: includes/trait-frontend.php:1777
+#: templates/app/time.php:115
 msgid "Face verification is available but currently optional."
 msgstr "التحقق من الوجه متاح لكنه اختياري حاليًا."
 
-#: includes/trait-frontend.php:1777
+#: templates/app/time.php:115
 msgid "Face processing runs in this browser."
 msgstr "تتم معالجة الوجه داخل هذا المتصفح."
 
-#: includes/trait-frontend.php:1778
-#: assets/js/workforce-one.js:176
+#: templates/app/time.php:116
 msgid "Not enrolled"
 msgstr "غير مسجّل"
 
-#: includes/trait-frontend.php:1780
-#: includes/trait-frontend.php:1789
-#: assets/js/workforce-one.js:178
+#: templates/app/time.php:118
+#: templates/app/time.php:127
 msgid "Verify Face"
 msgstr "تحقق من الوجه"
 
-#: includes/trait-frontend.php:1780
-#: assets/js/workforce-one.js:178
+#: templates/app/time.php:118
 msgid "Set Up / Verify Face"
 msgstr "تسجيل / تحقق من الوجه"
 
-#: includes/trait-frontend.php:1784
+#: templates/app/time.php:122
 msgid "Face Verification"
 msgstr "التحقق من الوجه"
 
-#: includes/trait-frontend.php:1784
+#: templates/app/time.php:122
 msgid "Blink once and gently move your head. Face processing stays on this device."
 msgstr "ارمش مرة واحدة وحرّك رأسك بهدوء. تبقى معالجة الوجه على هذا الجهاز."
 
-#: includes/trait-frontend.php:1786
-#: assets/js/workforce-one.js:292
+#: templates/app/time.php:124
 msgid "Loading face model…"
 msgstr "جارٍ تحميل نموذج الوجه…"
 
-#: includes/trait-frontend.php:1788
+#: templates/app/time.php:126
 msgid "Enroll Face"
 msgstr "تسجيل الوجه"
 
-#: includes/trait-frontend.php:1790
+#: templates/app/time.php:128
 msgid "Request Reset"
 msgstr "طلب إعادة التعيين"
-
-#: includes/trait-frontend.php:1819
-msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
-msgstr "الوصول إلى الموقع يتطلب HTTPS. افتح Workforce One عبر اتصال آمن."
-
-#: includes/trait-frontend.php:1820
-msgid "Location Services are not supported by this browser. Please use a modern browser."
-msgstr "هذا المتصفح لا يدعم خدمات الموقع. استخدم متصفحًا حديثًا."
-
-#: includes/trait-frontend.php:1822
-msgid "Location permission was denied. Please allow Location Services for this site, then try again."
-msgstr "تم رفض إذن الموقع. اسمح بخدمات الموقع لهذا الموقع ثم حاول مرة أخرى."
-
-#: includes/trait-frontend.php:1823
-msgid "Your location could not be determined. Turn on Location Services/GPS and try again."
-msgstr "تعذّر تحديد موقعك. شغّل خدمات الموقع / GPS ثم حاول مرة أخرى."
-
-#: includes/trait-frontend.php:1824
-msgid "Location request timed out. Turn on Location Services/GPS and try again."
-msgstr "انتهت مهلة تحديد الموقع. شغّل خدمات الموقع / GPS ثم حاول مرة أخرى."
-
-#: includes/trait-frontend.php:1825
-msgid "We need your location to continue. Please allow Location Services for this site."
-msgstr "نحتاج إلى موقعك للمتابعة. اسمح بخدمات الموقع لهذا الموقع."
-
-#. translators: %d: number of samples
-#: assets/js/workforce-one.js:176
-#, js-format
-msgid "Enrolled (%d samples)"
-msgstr "مسجّل (%d عينات)"
-
-#: assets/js/workforce-one.js:189
-msgid "Could not load face-api.js."
-msgstr "تعذّر تحميل مكتبة التعرف على الوجه."
-
-#: assets/js/workforce-one.js:194
-msgid "Camera is not supported by this browser."
-msgstr "هذا المتصفح لا يدعم الكاميرا."
-
-#: assets/js/workforce-one.js:204
-msgid "No face detected. Center your face and try again."
-msgstr "لم يتم اكتشاف وجه. ضع وجهك في المنتصف وحاول مرة أخرى."
-
-#: assets/js/workforce-one.js:205
-msgid "More than one face detected. Only one person may be in the camera."
-msgstr "تم اكتشاف أكثر من وجه. يجب أن يظهر شخص واحد فقط أمام الكاميرا."
-
-#: assets/js/workforce-one.js:220
-msgid "Liveness calibration: keep your eyes open and look at the camera…"
-msgstr "معايرة التحقق الحي: أبقِ عينيك مفتوحتين وانظر إلى الكاميرا…"
-
-#: assets/js/workforce-one.js:229
-msgid "Liveness: blink once slowly…"
-msgstr "التحقق الحي: ارمش مرة واحدة ببطء…"
-
-#. translators: 1: blink state, 2: movement state, 3: eye change percentage
-#: assets/js/workforce-one.js:243
-#, js-format
-msgid "Liveness: %1$s · %2$s · eye change %3$s%%"
-msgstr "التحقق الحي: %1$s · %2$s · تغيّر العين %3$s%%"
-
-#: assets/js/workforce-one.js:243
-msgid "✓ blink"
-msgstr "✓ رمش"
-
-#: assets/js/workforce-one.js:243
-msgid "blink once"
-msgstr "ارمش مرة"
-
-#: assets/js/workforce-one.js:243
-msgid "✓ movement"
-msgstr "✓ حركة"
-
-#: assets/js/workforce-one.js:243
-msgid "gently move head"
-msgstr "حرّك رأسك بهدوء"
-
-#: assets/js/workforce-one.js:244
-msgid "✓ Liveness passed."
-msgstr "✓ تم التحقق الحي."
-
-#: assets/js/workforce-one.js:247
-msgid "Blink was not detected. Make one clear slow blink while looking at the camera."
-msgstr "لم يتم اكتشاف رمش. ارمش مرة واحدة ببطء وأنت تنظر إلى الكاميرا."
-
-#: assets/js/workforce-one.js:248
-msgid "Blink detected. Gently move your head left or right and try again."
-msgstr "تم اكتشاف الرمش. حرّك رأسك بهدوء يمينًا أو يسارًا ثم حاول مرة أخرى."
-
-#: assets/js/workforce-one.js:252
-msgid "A face is already enrolled. Verify it or clear the existing enrollment first."
-msgstr "يوجد وجه مسجّل بالفعل. تحقق منه أو اطلب إعادة التعيين أولًا."
-
-#. translators: %d: total samples
-#: assets/js/workforce-one.js:253
-#, js-format
-msgid "Enrollment: sample 1 of %d"
-msgstr "التسجيل: العينة 1 من %d"
-
-#. translators: %d: sample number
-#: assets/js/workforce-one.js:257
-#, js-format
-msgid "Enrollment: sample %d captured. Slightly change your angle…"
-msgstr "التسجيل: تم التقاط العينة %d. غيّر زاوية وجهك قليلًا…"
-
-#: assets/js/workforce-one.js:260
-msgid "✓ Face enrollment saved to Workforce One."
-msgstr "✓ تم حفظ تسجيل الوجه."
-
-#: assets/js/workforce-one.js:266
-msgid "No face is enrolled. Press Enroll Face first."
-msgstr "لا يوجد وجه مسجّل. اضغط «تسجيل الوجه» أولًا."
-
-#: assets/js/workforce-one.js:275
-msgid "✓ Face verified."
-msgstr "✓ تم التحقق من الوجه."
-
-#. translators: %s: match distance
-#: assets/js/workforce-one.js:286
-#, js-format
-msgid "✕ Face did not match — distance %s."
-msgstr "✕ الوجه غير مطابق — المسافة %s."
-
-#: assets/js/workforce-one.js:299
-msgid "No face enrollment to reset."
-msgstr "لا يوجد تسجيل وجه لإعادة تعيينه."
-
-#: assets/js/workforce-one.js:300
-msgid "Request a face reset? Your current enrollment will remain active until an administrator approves the reset."
-msgstr "هل تريد طلب إعادة تعيين الوجه؟ سيظل تسجيلك الحالي فعّالًا حتى يوافق المسؤول على الطلب."
-
-#: assets/js/workforce-one.js:301
-msgid "Submitting face reset request…"
-msgstr "جارٍ إرسال طلب إعادة التعيين…"
-
-#: assets/js/workforce-one.js:305
-msgid "✓ Reset request submitted. Your current face enrollment is still active."
-msgstr "✓ تم إرسال طلب إعادة التعيين. تسجيل وجهك الحالي ما زال فعّالًا."
-
-#: assets/js/workforce-one.js:361
-msgid "Preparing CSV…"
-msgstr "جارٍ تجهيز ملف CSV…"
-
-#: assets/js/workforce-one.js:364
-msgid "Could not generate the CSV report."
-msgstr "تعذّر إنشاء تقرير CSV."
-
-#: assets/js/workforce-one.js:420
-msgid "Preparing Excel…"
-msgstr "جارٍ تجهيز ملف Excel…"
-
-#: assets/js/workforce-one.js:423
-msgid "Could not generate the Excel report."
-msgstr "تعذّر إنشاء تقرير Excel."
 
 #: includes/trait-frontend.php:94
 msgid "Confirm"
@@ -920,12 +726,12 @@ msgid "Cancel"
 msgstr "إلغاء"
 
 #: includes/trait-frontend.php:99
-#: includes/trait-frontend.php:385
-#: includes/trait-frontend.php:454
+#: templates/app/leave.php:37
 msgid "OK"
 msgstr "حسنًا"
 
 #: includes/trait-frontend.php:100
+#: templates/app/leave.php:37
 msgid "Close"
 msgstr "إغلاق"
 
@@ -1046,7 +852,7 @@ msgid "Break Updated"
 msgstr "تم تحديث الاستراحة"
 
 #: includes/trait-frontend.php:130
-#: includes/trait-frontend.php:479
+#: includes/trait-leave-view.php:100
 msgid "Overtime Requests are currently disabled."
 msgstr "طلبات العمل الإضافي غير مفعّلة حاليًا."
 
@@ -1076,7 +882,6 @@ msgid "Please enter a valid overtime time range."
 msgstr "يرجى إدخال فترة عمل إضافي صالحة."
 
 #: includes/trait-frontend.php:130
-#: includes/trait-frontend.php:485
 msgid "Please enter a reason for the overtime request."
 msgstr "يرجى كتابة سبب طلب العمل الإضافي."
 
@@ -1098,13 +903,11 @@ msgstr "تم إرسال طلب العمل الإضافي."
 
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:372
 msgid "Please select a valid future date range."
 msgstr "يرجى اختيار فترة مستقبلية صالحة."
 
 #: includes/trait-frontend.php:135
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:372
 msgid "The selected range contains no working days."
 msgstr "الفترة المحددة لا تحتوي على أيام عمل."
 
@@ -1209,12 +1012,10 @@ msgid "The shift swap has been updated."
 msgstr "تم تحديث تبديل الوردية."
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:372
 msgid "You already have a pending or approved leave overlapping this period."
 msgstr "لديك بالفعل إجازة معلقة أو معتمدة تتداخل مع هذه الفترة."
 
 #: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:372
 msgid "Insufficient available balance for this Leave Type."
 msgstr "رصيدك المتاح لا يكفي لنوع الإجازة هذا."
 
@@ -1227,729 +1028,658 @@ msgid "Please review the leave details and try again."
 msgstr "يرجى مراجعة بيانات الإجازة والمحاولة مرة أخرى."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:376
 msgid "Please select a future date for Early Leave."
 msgstr "يرجى اختيار تاريخ مستقبلي للانصراف المبكر."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:377
-#: includes/trait-frontend.php:468
+#: templates/app/leave.php:40
 msgid "Early Leave is available only on a configured working day."
 msgstr "الانصراف المبكر متاح فقط في أيام العمل المحددة."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:378
 msgid "Early Leave is available only on an Office workday. It cannot be requested on Work From Home or Leave/Vacation days."
 msgstr "الانصراف المبكر متاح فقط في أيام العمل من المكتب، ولا يمكن طلبه في أيام العمل من المنزل أو الإجازات."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:379
-#: includes/trait-frontend.php:469
+#: templates/app/leave.php:41
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr "مدة الانصراف المبكر المطلوبة تتجاوز الحد الأقصى المسموح للطلب الواحد."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:380
-#: includes/trait-frontend.php:470
+#: templates/app/leave.php:42
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr "مدة الانصراف المبكر المطلوبة تتجاوز الرصيد الشهري المتبقي."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:381
 msgid "We could not submit the Early Leave request. Please try again."
 msgstr "تعذّر إرسال طلب الانصراف المبكر. حاول مرة أخرى."
 
 #: includes/trait-frontend.php:155
-#: includes/trait-frontend.php:382
 msgid "This request can no longer be approved because the employee is no longer scheduled for an eligible Office workday."
 msgstr "لم يعد من الممكن اعتماد هذا الطلب لأن الموظف لم يعد مجدولًا في يوم عمل مناسب من المكتب."
 
 #: includes/trait-frontend.php:156
-#: includes/trait-frontend.php:385
-#: includes/trait-frontend.php:454
+#: templates/app/leave.php:37
 msgid "Early Leave Not Available"
 msgstr "الانصراف المبكر غير متاح"
 
 #: includes/trait-frontend.php:156
-#: includes/trait-frontend.php:384
 msgid "Please review the Early Leave details and try again."
 msgstr "يرجى مراجعة بيانات الانصراف المبكر والمحاولة مرة أخرى."
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
 msgid "Dashboard"
 msgstr "الرئيسية"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
-#: includes/trait-frontend.php:1294
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
+#: templates/app/dashboard.php:78
 msgid "Schedule"
 msgstr "الجدول"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:1343
-#: includes/trait-frontend.php:1365
+#: includes/trait-app-layout.php:67
+#: templates/app/dashboard.php:114
+#: templates/app/dashboard.php:139
 msgid "Sign In / Out"
 msgstr "الحضور / الانصراف"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
 msgid "Leave"
 msgstr "الإجازات"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:484
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
+#: templates/app/overtime.php:34
 msgid "Overtime"
 msgstr "العمل الإضافي"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
 msgid "Tasks"
 msgstr "المهام"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:672
-#: includes/trait-frontend.php:727
-#: includes/trait-frontend.php:1294
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
+#: templates/app/attendance-insights.php:51
+#: templates/app/dashboard.php:78
 msgid "Attendance"
 msgstr "الحضور"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
 msgid "Reports"
 msgstr "التقارير"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
 msgid "Attendance Insights"
 msgstr "تحليلات الحضور"
 
-#: includes/trait-frontend.php:229
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: includes/trait-app-layout.php:67
 msgid "People"
 msgstr "الموظفون"
 
-#: includes/trait-frontend.php:254
+#: templates/app/layout.php:23
 msgid "Workforce One navigation"
 msgstr "قائمة Workforce One"
 
-#: includes/trait-frontend.php:268
-#: includes/trait-frontend.php:303
+#: templates/app/layout.php:33
+#: templates/app/layout.php:53
 msgid "Log out"
 msgstr "تسجيل الخروج"
 
-#: includes/trait-frontend.php:272
+#: templates/app/layout.php:38
 msgid "Mobile shortcut:"
 msgstr "اختصار الموبايل:"
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:272
+#: templates/app/layout.php:38
 #, php-format
 msgid "Use your browser menu → %s to keep Workforce One one tap away."
 msgstr "من قائمة المتصفح اختر ← %s ليكون Workforce One على بُعد لمسة واحدة."
 
 #. translators: %s: "Add to Home Screen"
-#: includes/trait-frontend.php:272
+#: templates/app/layout.php:38
 msgid "Add to Home Screen"
 msgstr "إضافة إلى الشاشة الرئيسية"
 
-#: includes/trait-frontend.php:277
+#: templates/app/layout.php:43
 msgid "Workforce Management Platform"
 msgstr "منصة إدارة فرق العمل"
 
-#: includes/trait-frontend.php:277
+#: templates/app/layout.php:43
 msgid "One Platform. One Team. One Goal."
 msgstr "منصة واحدة. فريق واحد. هدف واحد."
 
-#: includes/trait-frontend.php:292
+#: templates/app/layout.php:48
 msgid "My Profile menu"
 msgstr "قائمة ملفي الشخصي"
 
-#: includes/trait-frontend.php:302
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: templates/app/layout.php:52
 msgid "My Profile"
 msgstr "ملفي الشخصي"
 
-#: includes/trait-frontend.php:371
+#: templates/app/leave.php:46
 msgid "TIME OFF"
 msgstr "الإجازات"
 
-#: includes/trait-frontend.php:371
+#: templates/app/leave.php:46
 msgid "Leave Management"
 msgstr "إدارة الإجازات"
 
-#: includes/trait-frontend.php:371
+#: templates/app/leave.php:46
 msgid "Request time off, track your balance and follow approvals in one place. Leave Types marked “No balance deduction” are recorded without consuming leave balance."
 msgstr "اطلب إجازة، وتابع رصيدك والموافقات في مكان واحد. أنواع الإجازات المعلَّمة بـ«بدون خصم من الرصيد» تُسجَّل دون استهلاك رصيد الإجازات."
 
-#: includes/trait-frontend.php:372
-msgid "Could not submit the leave request."
-msgstr "تعذّر إرسال طلب الإجازة."
-
-#: includes/trait-frontend.php:373
-msgid "Leave request submitted successfully."
-msgstr "تم إرسال طلب الإجازة بنجاح."
-
-#: includes/trait-frontend.php:374
-msgid "Cancellation request submitted to your Manager."
-msgstr "تم إرسال طلب الإلغاء إلى مديرك."
-
-#: includes/trait-frontend.php:389
-#: includes/trait-frontend.php:406
+#: templates/app/leave.php:51
+#: templates/app/leave.php:79
 msgid "Request Leave"
 msgstr "طلب إجازة"
 
-#: includes/trait-frontend.php:389
+#: templates/app/leave.php:52
 msgid "Select a Leave Type and future date range. Working days are calculated automatically."
 msgstr "اختر نوع الإجازة وفترة مستقبلية. يتم حساب أيام العمل تلقائيًا."
 
-#: includes/trait-frontend.php:389
+#: templates/app/leave.php:54
 msgid "Leave Type"
 msgstr "نوع الإجازة"
 
-#. translators: %s: available days
-#: includes/trait-frontend.php:391
-#: includes/trait-frontend.php:491
+#: templates/app/leave.php:61
+#: templates/app/overtime.php:44
 msgid "From"
 msgstr "من"
 
-#. translators: %s: available days
-#: includes/trait-frontend.php:391
-#: includes/trait-frontend.php:491
+#: templates/app/leave.php:62
+#: templates/app/overtime.php:45
 msgid "To"
 msgstr "إلى"
 
-#. translators: %s: available days
-#: includes/trait-frontend.php:391
+#. translators: %d: number of working days
+#: templates/app/leave.php:65
 msgid "Select dates to calculate working days."
 msgstr "اختر التواريخ لحساب أيام العمل."
 
-#. translators: %s: available days
-#. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:391
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:491
+#: templates/app/leave.php:66
+#: templates/app/leave.php:136
+#: templates/app/overtime.php:48
 msgid "Reason"
 msgstr "السبب"
 
-#. translators: %s: available days
-#: includes/trait-frontend.php:391
+#: templates/app/leave.php:66
 msgid "(optional)"
 msgstr "(اختياري)"
 
-#. translators: %s: available days
-#: includes/trait-frontend.php:391
+#: templates/app/leave.php:67
 msgid "Submit Leave Request"
 msgstr "إرسال طلب الإجازة"
 
-#: includes/trait-frontend.php:393
+#: templates/app/leave.php:70
 msgid "Available"
 msgstr "المتاح"
 
-#: includes/trait-frontend.php:399
+#: templates/app/leave.php:75
 msgid "My Leave Requests"
 msgstr "طلبات إجازتي"
 
-#: includes/trait-frontend.php:402
+#: templates/app/leave.php:76
 msgid "Back to recent requests"
 msgstr "العودة إلى أحدث الطلبات"
 
-#: includes/trait-frontend.php:406
+#: templates/app/leave.php:79
 msgid "No Leave Requests Yet"
 msgstr "لا توجد طلبات إجازة بعد"
 
-#: includes/trait-frontend.php:406
+#: templates/app/leave.php:79
 msgid "You haven't submitted any leave requests yet."
 msgstr "لم تُرسل أي طلبات إجازة بعد."
 
-#: includes/trait-frontend.php:409
+#: templates/app/leave.php:85
 msgid "Cancellation Pending"
 msgstr "الإلغاء قيد المراجعة"
 
-#: includes/trait-frontend.php:410
+#: templates/app/leave.php:86
 msgid "Cancellation Rejected — cannot be submitted again."
 msgstr "تم رفض الإلغاء — لا يمكن إرساله مرة أخرى."
 
-#: includes/trait-frontend.php:411
+#: templates/app/leave.php:87
 msgid "Request Cancellation"
 msgstr "طلب إلغاء"
 
-#: includes/trait-frontend.php:412
+#: templates/app/leave.php:88
 msgid "Cancellation unavailable — leave has started."
 msgstr "الإلغاء غير متاح — بدأت الإجازة بالفعل."
 
-#: includes/trait-frontend.php:416
+#: templates/app/leave.php:93
 msgid "View all leave requests"
 msgstr "عرض كل طلبات الإجازة"
 
-#: includes/trait-frontend.php:425
+#: templates/app/leave.php:100
 msgid "Leave Requests Awaiting Your Approval"
 msgstr "طلبات إجازة بانتظار موافقتك"
 
-#: includes/trait-frontend.php:425
-#: includes/trait-frontend.php:428
-#: includes/trait-frontend.php:445
-#: includes/trait-frontend.php:506
-#: includes/trait-frontend.php:513
+#: templates/app/leave.php:106
+#: templates/app/leave.php:149
+#: templates/app/overtime.php:78
 msgid "Approve"
 msgstr "موافقة"
 
-#: includes/trait-frontend.php:425
-#: includes/trait-frontend.php:428
-#: includes/trait-frontend.php:434
-#: includes/trait-frontend.php:437
-#: includes/trait-frontend.php:445
-#: includes/trait-frontend.php:506
-#: includes/trait-frontend.php:513
+#: templates/app/leave.php:28
+#: templates/app/overtime.php:78
 msgid "Reject"
 msgstr "رفض"
 
-#: includes/trait-frontend.php:425
-#: includes/trait-frontend.php:428
-#: includes/trait-frontend.php:434
-#: includes/trait-frontend.php:513
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
+#: templates/app/leave.php:107
+#: templates/app/leave.php:121
+#: templates/app/overtime.php:79
 msgid "Pending"
 msgstr "قيد المراجعة"
 
-#: includes/trait-frontend.php:428
+#: templates/app/leave.php:100
 msgid "Pending Leave Requests"
 msgstr "طلبات إجازة قيد المراجعة"
 
-#: includes/trait-frontend.php:434
+#: templates/app/leave.php:114
 msgid "Leave Cancellations Awaiting Your Approval"
 msgstr "طلبات إلغاء إجازة بانتظار موافقتك"
 
-#: includes/trait-frontend.php:434
-#: includes/trait-frontend.php:437
+#: templates/app/leave.php:120
 msgid "Approve Cancellation"
 msgstr "الموافقة على الإلغاء"
 
-#: includes/trait-frontend.php:437
+#: templates/app/leave.php:114
 msgid "Cancellation Requests"
 msgstr "طلبات الإلغاء"
 
-#: includes/trait-frontend.php:441
+#: templates/app/leave.php:128
 msgid "Early Leave"
 msgstr "الانصراف المبكر"
 
 #. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:441
+#: includes/trait-leave-view.php:72
 #, php-format
 msgid "Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours."
 msgstr "متاح فقط في أيام العمل من المكتب · الحد الأقصى للطلب: %1$s ساعة · الرصيد الشهري: %2$s ساعة · المتبقي هذا الشهر: %3$s ساعة."
 
-#. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:441
-#: includes/trait-frontend.php:491
+#: templates/app/leave.php:133
+#: templates/app/overtime.php:43
 msgid "Date"
 msgstr "التاريخ"
 
-#. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:441
+#: templates/app/leave.php:134
 msgid "Duration (minutes)"
 msgstr "المدة (بالدقائق)"
 
-#. translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours
-#: includes/trait-frontend.php:441
+#: templates/app/leave.php:137
 msgid "Request Early Leave"
 msgstr "طلب انصراف مبكر"
 
-#: includes/trait-frontend.php:445
+#: templates/app/leave.php:144
 msgid "Pending Early Leave"
 msgstr "طلبات انصراف مبكر قيد المراجعة"
 
-#: includes/trait-frontend.php:484
+#: templates/app/overtime.php:34
 msgid "EXTRA HOURS"
 msgstr "ساعات إضافية"
 
-#: includes/trait-frontend.php:484
+#: templates/app/overtime.php:34
 msgid "Request overtime in advance and know exactly what you are asking to work."
 msgstr "اطلب العمل الإضافي مسبقًا واعرف بالضبط عدد الساعات التي تطلبها."
 
-#: includes/trait-frontend.php:485
-msgid "Please select today or a future date."
-msgstr "يرجى اختيار تاريخ اليوم أو تاريخ مستقبلي."
-
-#: includes/trait-frontend.php:485
-msgid "Please select a valid time range."
-msgstr "يرجى اختيار فترة زمنية صالحة."
-
-#: includes/trait-frontend.php:485
-msgid "You already have a pending or approved overtime request overlapping this period."
-msgstr "لديك بالفعل طلب عمل إضافي معلق أو معتمد يتداخل مع هذه الفترة."
-
-#: includes/trait-frontend.php:485
-msgid "Could not submit the overtime request."
-msgstr "تعذّر إرسال طلب العمل الإضافي."
-
-#. translators: %s: requested hours
-#: includes/trait-frontend.php:486
-#, php-format
-msgid "Overtime request submitted. You are requesting %s hour(s)."
-msgstr "تم إرسال طلب العمل الإضافي. المدة المطلوبة: %s ساعة."
-
-#. translators: %s: requested hours
-#: includes/trait-frontend.php:487
-msgid "Overtime request approved."
-msgstr "تمت الموافقة على طلب العمل الإضافي."
-
-#: includes/trait-frontend.php:488
-msgid "Overtime request rejected."
-msgstr "تم رفض طلب العمل الإضافي."
-
-#: includes/trait-frontend.php:491
-#: includes/trait-frontend.php:494
+#: templates/app/overtime.php:39
+#: templates/app/overtime.php:56
 msgid "Request Overtime"
 msgstr "طلب عمل إضافي"
 
-#: includes/trait-frontend.php:491
+#: templates/app/overtime.php:40
 msgid "Submit your overtime request before you work the extra hours. Manager approval is required."
 msgstr "أرسل طلب العمل الإضافي قبل أن تعمل الساعات الإضافية. يلزم موافقة المدير."
 
-#. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:491
-#: includes/trait-frontend.php:497
+#: templates/app/overtime.php:23
 msgid "Select the times to see the requested duration."
 msgstr "اختر الأوقات لمعرفة المدة المطلوبة."
 
-#: includes/trait-frontend.php:491
+#: templates/app/overtime.php:49
 msgid "Submit Overtime Request"
 msgstr "إرسال طلب العمل الإضافي"
 
-#: includes/trait-frontend.php:493
+#: templates/app/overtime.php:53
 msgid "My Overtime Requests"
 msgstr "طلبات العمل الإضافي الخاصة بي"
 
-#: includes/trait-frontend.php:493
+#: templates/app/overtime.php:54
 msgid "Track your pending and completed overtime requests."
 msgstr "تابع طلبات العمل الإضافي المعلقة والمكتملة."
 
-#: includes/trait-frontend.php:494
+#: templates/app/overtime.php:56
 msgid "No Overtime Requests Yet"
 msgstr "لا توجد طلبات عمل إضافي بعد"
 
-#: includes/trait-frontend.php:494
+#: templates/app/overtime.php:56
 msgid "You haven't submitted any overtime requests yet."
 msgstr "لم تُرسل أي طلبات عمل إضافي بعد."
 
 #. translators: %s: duration
-#: includes/trait-frontend.php:497
+#: templates/app/overtime.php:26
 #, php-format
 msgid "You are requesting %s."
 msgstr "المدة المطلوبة: %s."
 
 #. translators: %d: hours
-#: includes/trait-frontend.php:497
+#: includes/trait-leave-view.php:21
+#: templates/app/overtime.php:28
 #, php-format
 msgid "%d h"
 msgstr "%d س"
 
 #. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:497
+#: includes/trait-leave-view.php:19
+#: templates/app/overtime.php:30
 #, php-format
 msgid "%1$d h %2$d min"
 msgstr "%1$d س %2$d د"
 
-#. translators: 1: hours, 2: minutes
-#: includes/trait-frontend.php:497
+#: templates/app/overtime.php:24
 msgid "End time must be after start time."
 msgstr "يجب أن يكون وقت الانتهاء بعد وقت البدء."
 
-#: includes/trait-frontend.php:504
+#: templates/app/overtime.php:70
 msgid "My Pending Overtime Approvals"
 msgstr "طلبات عمل إضافي بانتظار موافقتي"
 
-#: includes/trait-frontend.php:504
+#: templates/app/overtime.php:71
 msgid "Requests currently assigned to you by the approval workflow."
 msgstr "الطلبات المسندة إليك حاليًا في مسار الموافقات."
 
-#: includes/trait-frontend.php:505
+#: templates/app/overtime.php:72
 msgid "No Pending Overtime Approvals"
 msgstr "لا توجد طلبات عمل إضافي بانتظار موافقتك"
 
-#: includes/trait-frontend.php:505
-#: includes/trait-frontend.php:512
+#: templates/app/leave.php:101
+#: templates/app/leave.php:115
+#: templates/app/overtime.php:72
 msgid "You're all caught up."
 msgstr "لا يوجد شيء بانتظارك."
 
-#: includes/trait-frontend.php:506
+#: templates/app/leave.php:31
+#: templates/app/overtime.php:73
 msgid "Level"
 msgstr "المستوى"
 
-#: includes/trait-frontend.php:511
+#: templates/app/overtime.php:70
 msgid "Pending Overtime Requests"
 msgstr "طلبات عمل إضافي قيد المراجعة"
 
-#: includes/trait-frontend.php:511
+#: templates/app/overtime.php:71
 msgid "Review overtime requests. Any Manager can approve or reject."
 msgstr "راجع طلبات العمل الإضافي. يمكن لأي مدير الموافقة أو الرفض."
 
-#: includes/trait-frontend.php:512
+#: templates/app/overtime.php:72
 msgid "No Pending Overtime Requests"
 msgstr "لا توجد طلبات عمل إضافي قيد المراجعة"
 
-#: includes/trait-frontend.php:520
+#: includes/trait-attendance-insights.php:150
 msgid "Attendance Insights is not available for your account."
 msgstr "تحليلات الحضور غير متاحة لحسابك."
 
-#: includes/trait-frontend.php:649
+#: templates/app/attendance-insights.php:28
 msgid "Week"
 msgstr "أسبوع"
 
-#: includes/trait-frontend.php:653
+#: templates/app/attendance-insights.php:32
 msgid "All Teams"
 msgstr "كل الفرق"
 
-#: includes/trait-frontend.php:654
+#: templates/app/attendance-insights.php:33
 msgid "Day"
 msgstr "يوم"
 
-#: includes/trait-frontend.php:659
+#: templates/app/attendance-insights.php:38
 msgid "Today"
 msgstr "اليوم"
 
-#: includes/trait-frontend.php:663
+#: templates/app/attendance-insights.php:42
 msgid "Workforce Overview"
 msgstr "نظرة عامة على فريق العمل"
 
-#: includes/trait-frontend.php:663
+#: templates/app/attendance-insights.php:42
 msgid "Planned workforce distribution. Click a count to see the employees behind it."
 msgstr "التوزيع المخطط لفريق العمل. اضغط على أي رقم لعرض الموظفين."
 
-#: includes/trait-frontend.php:672
+#: templates/app/attendance-insights.php:51
 msgid "Actual attendance classification based on schedule and time logs. Planned Office/WFH is not inferred from sign-in."
 msgstr "تصنيف الحضور الفعلي بناءً على الجدول وسجلات الوقت. لا يُستنتج المكتب / العمل من المنزل المخطط من تسجيل الحضور."
 
-#: includes/trait-frontend.php:675
+#: templates/app/attendance-insights.php:54
 msgid "Missing Sign-out"
 msgstr "انصراف غير مسجّل"
 
-#: includes/trait-frontend.php:680
+#: templates/app/attendance-insights.php:60
 msgid "Weekly Workforce Overview"
 msgstr "نظرة أسبوعية على فريق العمل"
 
-#: includes/trait-frontend.php:680
+#: templates/app/attendance-insights.php:60
 msgid "Configured working days for the selected week. Counts are planned schedule values."
 msgstr "أيام العمل المحددة للأسبوع المختار. الأرقام تمثل الجدول المخطط."
 
-#: includes/trait-frontend.php:681
+#: templates/app/attendance-insights.php:61
 msgid "Workforce"
 msgstr "فريق العمل"
 
-#: includes/trait-frontend.php:684
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
+#: templates/app/attendance-insights.php:72
 msgid "Employees"
 msgstr "الموظفون"
 
-#: includes/trait-frontend.php:689
+#: templates/app/attendance-insights.php:72
 msgid "No employees in this category."
 msgstr "لا يوجد موظفون في هذه الفئة."
 
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
 msgid "Time"
 msgstr "الحضور"
 
-#: includes/trait-frontend.php:727
-#: includes/trait-frontend.php:1294
-#: includes/trait-frontend.php:1365
-#: includes/trait-notifications.php:685
-#: includes/trait-notifications.php:688
+#: includes/trait-app-layout.php:57
+#: includes/trait-notifications.php:686
+#: includes/trait-notifications.php:689
+#: templates/app/dashboard.php:36
 msgid "Notifications"
 msgstr "الإشعارات"
 
-#: includes/trait-frontend.php:727
+#: includes/trait-app-layout.php:57
 msgid "Employee Profile"
 msgstr "ملف الموظف"
 
-#: includes/trait-frontend.php:1282
-#: includes/trait-frontend.php:1324
+#: templates/app/dashboard.php:41
 msgid "BA Team · Workforce One"
 msgstr "BA Team · Workforce One"
 
-#: includes/trait-frontend.php:1282
+#: templates/app/dashboard.php:43
 msgid "Good to see you."
 msgstr "أهلًا بك."
 
-#: includes/trait-frontend.php:1282
+#: templates/app/dashboard.php:43
 msgid "Here’s today’s workforce snapshot."
 msgstr "هذه نظرة سريعة على فريق العمل اليوم."
 
-#: includes/trait-frontend.php:1285
+#: templates/app/dashboard.php:54
 msgid "Active Employees"
 msgstr "الموظفون النشطون"
 
-#: includes/trait-frontend.php:1286
+#: templates/app/dashboard.php:55
 msgid "Office Today"
 msgstr "في المكتب اليوم"
 
-#: includes/trait-frontend.php:1287
+#: templates/app/dashboard.php:56
 msgid "WFH Today"
 msgstr "من المنزل اليوم"
 
-#: includes/trait-frontend.php:1288
-#: includes/trait-frontend.php:1296
+#: templates/app/dashboard.php:57
+#: templates/app/dashboard.php:83
 msgid "Leave / Mission"
 msgstr "إجازة / مأمورية"
 
-#: includes/trait-frontend.php:1293
+#: templates/app/dashboard.php:74
 msgid "This Week"
 msgstr "هذا الأسبوع"
 
-#: includes/trait-frontend.php:1293
+#: templates/app/dashboard.php:74
 msgid "No working days configured"
 msgstr "لم يتم تحديد أيام عمل"
 
-#: includes/trait-frontend.php:1293
+#: templates/app/dashboard.php:75
 msgid "Plan your week"
 msgstr "خطط لأسبوعك"
 
-#: includes/trait-frontend.php:1293
+#: templates/app/dashboard.php:75
 msgid "Review schedules and keep your team aligned."
 msgstr "راجع الجداول وحافظ على تنسيق فريقك."
 
-#: includes/trait-frontend.php:1293
-#: includes/trait-frontend.php:1360
+#: templates/app/dashboard.php:75
+#: templates/app/dashboard.php:133
 msgid "View Schedule"
 msgstr "عرض الجدول"
 
-#: includes/trait-frontend.php:1294
-#: includes/trait-frontend.php:1364
+#: templates/app/dashboard.php:77
+#: templates/app/dashboard.php:138
 msgid "Quick Actions"
 msgstr "إجراءات سريعة"
 
-#: includes/trait-frontend.php:1294
+#: templates/app/dashboard.php:77
 msgid "Common tasks"
 msgstr "المهام الشائعة"
 
-#: includes/trait-frontend.php:1296
+#: templates/app/dashboard.php:81
 msgid "Today at a glance"
 msgstr "اليوم في لمحة"
 
-#: includes/trait-frontend.php:1296
+#: templates/app/dashboard.php:81
 msgid "Current schedule distribution"
 msgstr "توزيع الجدول الحالي"
 
-#: includes/trait-frontend.php:1296
+#: templates/app/dashboard.php:83
 msgid "Office"
 msgstr "المكتب"
 
-#: includes/trait-frontend.php:1296
+#: templates/app/dashboard.php:83
 msgid "WFH"
 msgstr "من المنزل"
 
-#: includes/trait-frontend.php:1305
+#: templates/app/dashboard.php:145
 msgid "Your WordPress account is not linked to an active employee record. Please contact your manager."
 msgstr "حسابك غير مرتبط بسجل موظف نشط. يرجى التواصل مع مديرك."
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:1324
+#: templates/app/dashboard.php:46
 #, php-format
 msgid "Good to see you, %s."
 msgstr "أهلًا بك يا %s."
 
 #. translators: %s: employee first name
-#: includes/trait-frontend.php:1324
+#: templates/app/dashboard.php:46
 msgid "Here’s your day at a glance."
 msgstr "هذا يومك في لمحة."
 
-#: includes/trait-frontend.php:1335
+#: templates/app/dashboard.php:106
 msgid "TODAY'S SCHEDULE"
 msgstr "جدول اليوم"
 
-#: includes/trait-frontend.php:1335
+#: templates/app/dashboard.php:106
 msgid "Default location"
 msgstr "الموقع الافتراضي"
 
-#: includes/trait-frontend.php:1336
+#: templates/app/dashboard.php:107
 msgid "Working day"
 msgstr "يوم عمل"
 
-#: includes/trait-frontend.php:1336
+#: templates/app/dashboard.php:107
 msgid "No work scheduled"
 msgstr "لا يوجد عمل مجدول"
 
-#: includes/trait-frontend.php:1339
+#: templates/app/dashboard.php:110
 msgid "Work Location"
 msgstr "موقع العمل"
 
-#: includes/trait-frontend.php:1339
+#: templates/app/dashboard.php:110
 msgid "Default"
 msgstr "افتراضي"
 
-#: includes/trait-frontend.php:1343
+#: templates/app/dashboard.php:114
 msgid "View Attendance"
 msgstr "عرض الحضور"
 
-#: includes/trait-frontend.php:1349
+#: templates/app/dashboard.php:120
 msgid "Overtime Today"
 msgstr "العمل الإضافي اليوم"
 
-#: includes/trait-frontend.php:1349
+#: templates/app/dashboard.php:120
 msgid "Approved overtime and actual attendance"
 msgstr "العمل الإضافي المعتمد والحضور الفعلي"
 
-#: includes/trait-frontend.php:1351
+#: templates/app/dashboard.php:122
 msgid "Approved OT"
 msgstr "إضافي معتمد"
 
-#: includes/trait-frontend.php:1352
+#: templates/app/dashboard.php:123
 msgid "Actual OT"
 msgstr "إضافي فعلي"
 
-#: includes/trait-frontend.php:1353
+#: templates/app/dashboard.php:124
 msgid "Unapproved Extra"
 msgstr "وقت إضافي غير معتمد"
 
-#: includes/trait-frontend.php:1355
+#: templates/app/dashboard.php:126
 msgid "Sign Out:"
 msgstr "الانصراف:"
 
-#: includes/trait-frontend.php:1359
+#: templates/app/dashboard.php:130
 msgid "My Week"
 msgstr "أسبوعي"
 
-#: includes/trait-frontend.php:1359
+#: templates/app/dashboard.php:130
 msgid "Your upcoming schedule"
 msgstr "جدولك القادم"
 
-#: includes/trait-frontend.php:1360
+#: templates/app/dashboard.php:133
 msgid "No Upcoming Schedule"
 msgstr "لا يوجد جدول قادم"
 
-#: includes/trait-frontend.php:1360
+#: templates/app/dashboard.php:133
 msgid "No schedule has been set for your upcoming days."
 msgstr "لم يتم تحديد جدول لأيامك القادمة."
 
-#: includes/trait-frontend.php:1361
+#: templates/app/dashboard.php:135
 msgid "View full schedule"
 msgstr "عرض الجدول الكامل"
 
-#: includes/trait-frontend.php:1364
+#: templates/app/dashboard.php:138
 msgid "What do you need?"
 msgstr "ماذا تحتاج؟"
 
-#: includes/trait-frontend.php:1365
+#: templates/app/dashboard.php:139
 msgid "My Schedule"
 msgstr "جدولي"
 
 #. translators: %s: human-readable time difference
-#: includes/trait-notifications.php:674
+#: includes/trait-notifications.php:675
 #, php-format
 msgid "%s ago"
 msgstr "منذ %s"
 
-#: includes/trait-notifications.php:682
+#: includes/trait-notifications.php:683
 msgid "You’re all caught up"
 msgstr "لا يوجد جديد"
 
-#: includes/trait-notifications.php:682
+#: includes/trait-notifications.php:683
 msgid "No new notifications."
 msgstr "لا توجد إشعارات جديدة."
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:688
+#: includes/trait-notifications.php:689
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -1961,57 +1691,3905 @@ msgstr[4] "%d غير مقروءة"
 msgstr[5] "%d غير مقروءة"
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:688
+#: includes/trait-notifications.php:689
 msgid "All caught up"
 msgstr "لا يوجد جديد"
 
-#: includes/trait-notifications.php:690
+#: includes/trait-notifications.php:691
 msgid "View all notifications →"
 msgstr "عرض كل الإشعارات ←"
 
-#: includes/trait-frontend.php:464
+#: templates/app/leave.php:38
 msgid "Please select a date for Early Leave."
 msgstr "يرجى اختيار تاريخ للانصراف المبكر."
 
-#: includes/trait-frontend.php:466
+#: templates/app/leave.php:39
 msgid "Early Leave must be requested for a future date."
 msgstr "يجب طلب الانصراف المبكر لتاريخ مستقبلي."
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:390
+#: templates/app/leave.php:57
 #, php-format
 msgid "Available: %s"
 msgstr "المتاح: %s"
 
 #. translators: %s: available days
-#: includes/trait-frontend.php:390
+#: templates/app/leave.php:57
 msgid "No balance deduction"
 msgstr "بدون خصم من الرصيد"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Approved"
 msgstr "معتمد"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Rejected"
 msgstr "مرفوض"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Cancelled"
 msgstr "ملغى"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Accepted"
 msgstr "مقبول"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Completed"
 msgstr "مكتمل"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Expired"
 msgstr "منتهي"
 
-#: includes/trait-frontend.php:1646
+#: includes/trait-frontend.php:385
 msgid "Verified"
 msgstr "تم التحقق"
+
+#: includes/trait-attendance.php:109
+msgid "Unable to record this action."
+msgstr "تعذّر تسجيل هذا الإجراء."
+
+#: includes/trait-frontend.php:151
+msgid "A leave cannot span two calendar years. Please submit one request for each year."
+msgstr "لا يمكن أن تمتد الإجازة عبر سنتين. يرجى تقديم طلب منفصل لكل سنة."
+
+#: includes/trait-frontend.php:142
+msgid "This day has already passed, so it can no longer be swapped."
+msgstr "هذا اليوم انتهى بالفعل، لذا لا يمكن تبديله."
+
+#. translators: %s: number of days
+#: templates/app/leave.php:34
+#, php-format
+msgid "%s day(s)"
+msgstr "%s يوم"
+
+#. translators: %d: number of working days
+#: templates/app/leave.php:65
+msgid "Select a valid date range."
+msgstr "اختر نطاق تواريخ صحيحًا."
+
+#. translators: %d: number of working days
+#: templates/app/leave.php:65
+#, php-format
+msgid "%d working day(s) requested."
+msgstr "عدد أيام العمل المطلوبة: %d."
+
+#. translators: %s: number of working days
+#: templates/app/leave.php:84
+#, php-format
+msgid "%s working day(s)"
+msgstr "%s يوم عمل"
+
+#: templates/app/leave.php:101
+msgid "No Pending Leave Requests"
+msgstr "لا توجد طلبات إجازة معلّقة"
+
+#: templates/app/leave.php:115
+msgid "No Cancellation Requests"
+msgstr "لا توجد طلبات إلغاء"
+
+#: templates/app/overtime.php:48
+msgid "Why is overtime required?"
+msgstr "لماذا تحتاج إلى العمل الإضافي؟"
+
+#: templates/app/dashboard.php:48
+#: templates/app/dashboard.php:106
+#: templates/app/dashboard.php:132
+msgid "General Leave"
+msgstr "إجازة رسمية"
+
+#: includes/trait-presence.php
+msgid "Location access is required to verify your presence. Please allow Location Services and try again."
+msgstr "يلزم الوصول إلى موقعك لتأكيد تواجدك. اسمح بخدمات الموقع ثم حاول مرة أخرى."
+
+#: includes/trait-presence.php
+msgid "You must be at the requested work location to verify your presence."
+msgstr "يجب أن تكون في موقع العمل المطلوب لتأكيد تواجدك."
+
+#: includes/trait-presence.php
+msgid "This work location has no coordinates configured. Please contact your administrator."
+msgstr "لم يتم ضبط إحداثيات موقع العمل هذا. يرجى التواصل مع المسؤول."
+
+#: templates/app/presence.php
+msgid "Getting your location… Please allow location access when your browser asks."
+msgstr "جارٍ تحديد موقعك… اسمح بالوصول إلى الموقع عندما يطلب المتصفح ذلك."
+
+#: templates/app/presence.php
+msgid "Location ready."
+msgstr "تم تحديد الموقع."
+
+#: templates/app/presence.php
+msgid "Location permission was denied. Presence can only be verified with your location: allow Location Services for this site, then reload this page."
+msgstr "تم رفض إذن الموقع. لا يمكن تأكيد التواجد إلا بموقعك: اسمح بخدمات الموقع لهذا الموقع ثم أعد تحميل الصفحة."
+
+#: templates/app/presence.php
+msgid "Your location could not be determined. Turn on Location Services/GPS and reload this page."
+msgstr "تعذر تحديد موقعك. فعّل خدمات الموقع/GPS ثم أعد تحميل الصفحة."
+
+#: templates/app/presence.php
+msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
+msgstr "يتطلب الوصول إلى الموقع اتصال HTTPS. افتح Workforce One عبر اتصال آمن."
+
+#: includes/trait-frontend.php
+msgid "Too many Face verification attempts. Please wait a few minutes and try again."
+msgstr "محاولات كثيرة للتحقق من الوجه. يرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "The user name or password is incorrect."
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة."
+
+#: includes/trait-api-auth.php
+msgid "Too many sign-in attempts. Please try again later."
+msgstr "محاولات دخول كثيرة. يرجى المحاولة لاحقًا."
+
+#: includes/trait-api-auth.php
+msgid "Please sign in to continue."
+msgstr "يرجى تسجيل الدخول للمتابعة."
+
+#: includes/trait-api-auth.php
+msgid "Your session is not valid. Please sign in again."
+msgstr "جلستك غير صالحة. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "Your session has expired."
+msgstr "انتهت صلاحية جلستك."
+
+#: includes/trait-api-auth.php
+msgid "Your session has ended. Please sign in again."
+msgstr "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "For your security this session was ended. Please sign in again."
+msgstr "لحمايتك تم إنهاء هذه الجلسة. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "This device was signed out. Please sign in again."
+msgstr "تم تسجيل خروج هذا الجهاز. يرجى تسجيل الدخول مرة أخرى."
+
+#: includes/trait-api-auth.php
+msgid "Your account is not active in Workforce One."
+msgstr "حسابك غير مفعّل في Workforce One."
+
+#: includes/trait-api-auth.php
+msgid "Your account is not linked to an employee in Workforce One."
+msgstr "حسابك غير مرتبط بموظف في Workforce One."
+
+#: includes/trait-api-auth.php
+msgid "A secure connection (HTTPS) is required."
+msgstr "يلزم اتصال آمن (HTTPS)."
+
+#: includes/trait-api-auth.php
+msgid "Some fields are missing or invalid."
+msgstr "بعض الحقول ناقصة أو غير صحيحة."
+
+#: includes/trait-api-auth.php
+msgid "Not found."
+msgstr "غير موجود."
+
+#: includes/trait-api-auth.php
+msgid "You do not have access to this."
+msgstr "ليست لديك صلاحية الوصول إلى هذا."
+
+#: includes/trait-api-auth.php
+msgid "Something went wrong. Please try again."
+msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+
+#: templates/app/layout.php
+msgid "signed in"
+msgstr "تم تسجيل الحضور"
+
+#: templates/app/layout.php
+msgid "not signed in yet"
+msgstr "لم يتم تسجيل الحضور بعد"
+
+#: templates/app/layout.php
+msgid "signed out"
+msgstr "تم تسجيل الانصراف"
+
+#: templates/app/layout.php
+msgid "More"
+msgstr "المزيد"
+
+#: templates/app/dashboard.php
+msgid "Today in numbers"
+msgstr "اليوم بالأرقام"
+
+#: templates/app/dashboard.php
+msgid "Things that need your attention"
+msgstr "أمور تحتاج إلى انتباهك"
+
+#: templates/app/dashboard.php
+msgid "Dismiss"
+msgstr "تجاهل"
+
+#: templates/app/dashboard.php
+msgid "Today's Moments"
+msgstr "لحظات اليوم"
+
+#: templates/app/dashboard.php
+msgid "A little celebration for the team."
+msgstr "احتفال صغير مع الفريق."
+
+#: templates/app/time.php
+msgid "Now"
+msgstr "الآن"
+
+#: templates/app/time.php
+msgid "Before you sign in"
+msgstr "قبل تسجيل الحضور"
+
+#: templates/app/time.php
+msgid "Location"
+msgstr "الموقع"
+
+#: templates/app/time.php
+msgid "Needed for this schedule"
+msgstr "مطلوب لهذا الجدول"
+
+#: templates/app/time.php
+msgid "Not needed today"
+msgstr "غير مطلوب اليوم"
+
+#: templates/app/time.php
+msgid "Sign-in window"
+msgstr "نافذة تسجيل الحضور"
+
+#: templates/app/time.php
+msgid "Closed"
+msgstr "مغلقة"
+
+#: templates/app/time.php
+msgid "Face check"
+msgstr "التحقق بالوجه"
+
+#: templates/app/time.php
+msgid "Camera opens on Sign In"
+msgstr "تفتح الكاميرا عند تسجيل الحضور"
+
+#: templates/app/time.php
+msgid "Set up your face first"
+msgstr "سجّل وجهك أولًا"
+
+#: templates/app/time.php
+#. translators: %s: sign-in cutoff time
+msgid "Open until %s"
+msgstr "مفتوحة حتى %s"
+
+#: templates/app/leave.php
+msgid "Leave balance"
+msgstr "رصيد الإجازات"
+
+msgid "My Pay"
+msgstr "راتبي"
+
+msgid "Absent"
+msgstr "غائب"
+
+msgid "This week"
+msgstr "هذا الأسبوع"
+
+msgid "Next week"
+msgstr "الأسبوع القادم"
+
+msgid "Previous week"
+msgstr "الأسبوع السابق"
+
+msgid "Schedule emails sent:"
+msgstr "رسائل الجدول المرسلة:"
+
+msgid "skipped:"
+msgstr "تم تخطيها:"
+
+msgid "failed:"
+msgstr "فشلت:"
+
+msgid "View Week"
+msgstr "عرض الأسبوع"
+
+msgid "Send each active employee their own schedule for this week?"
+msgstr "هل تريد إرسال جدول هذا الأسبوع لكل موظف نشط؟"
+
+msgid "Send schedules"
+msgstr "إرسال الجداول"
+
+msgid "My week"
+msgstr "أسبوعي"
+
+msgid "Team Schedule"
+msgstr "جدول الفريق"
+
+msgid "Everyone can view the team's schedule to coordinate coverage and arrange swaps with colleagues."
+msgstr "يمكن للجميع رؤية جدول الفريق لتنسيق التغطية وترتيب التبديل مع الزملاء."
+
+msgid "Employee"
+msgstr "الموظف"
+
+msgid "No employees found"
+msgstr "لا يوجد موظفون"
+
+msgid "There are no active employees to display."
+msgstr "لا يوجد موظفون نشطون لعرضهم."
+
+msgid "You"
+msgstr "أنت"
+
+msgid "Manager"
+msgstr "المدير"
+
+msgid "No Team"
+msgstr "بدون فريق"
+
+msgid "Need to swap a day?"
+msgstr "تحتاج تبديل يوم؟"
+
+msgid "Choose a colleague and request a direct schedule swap. No approval is required."
+msgstr "اختر زميلًا واطلب تبديل الجدول مباشرة. لا يحتاج إلى موافقة."
+
+msgid "Request Swap"
+msgstr "طلب تبديل"
+
+msgid "Swap with"
+msgstr "التبديل مع"
+
+msgid "Select colleague"
+msgstr "اختر زميلًا"
+
+msgid "Send Request"
+msgstr "إرسال الطلب"
+
+msgid "You have no Office or WFH days left this week to swap."
+msgstr "لا توجد لديك أيام مكتب أو عمل من المنزل متبقية هذا الأسبوع للتبديل."
+
+msgid "Swap Requests"
+msgstr "طلبات التبديل"
+
+msgid "Asked you"
+msgstr "طلب منك"
+
+msgid "You asked"
+msgstr "طلبت أنت"
+
+msgid "Accept"
+msgstr "قبول"
+
+msgid "Use this shared schedule to find a colleague with a compatible day. You can request a swap directly from this page."
+msgstr "استخدم هذا الجدول المشترك لإيجاد زميل بيوم مناسب، ويمكنك طلب التبديل مباشرة من هذه الصفحة."
+
+msgid "Thanks! The results are shared with the admins only."
+msgstr "شكرًا! النتائج متاحة للمسؤولين فقط."
+
+msgid "Results will be shown when the poll closes (%s)."
+msgstr "ستظهر النتائج عند إغلاق التصويت (%s)."
+
+msgid "Results will be shown when the poll closes."
+msgstr "ستظهر النتائج عند إغلاق التصويت."
+
+msgid "Thanks for voting!"
+msgstr "شكرًا على تصويتك!"
+
+msgid "This poll is closed."
+msgstr "هذا التصويت مغلق."
+
+msgid "This poll is not for your department."
+msgstr "هذا التصويت ليس لقسمك."
+
+msgid "Please choose one of the poll's choices."
+msgstr "من فضلك اختر أحد خيارات التصويت."
+
+msgid "You have already voted in this poll."
+msgstr "لقد صوّت في هذا التصويت من قبل."
+
+msgid "Closes tomorrow"
+msgstr "يُغلق غدًا"
+
+msgid "Closes soon"
+msgstr "يُغلق قريبًا"
+
+msgid "Closes in %d day"
+msgid_plural "Closes in %d days"
+msgstr[0] "يُغلق خلال %d يوم"
+msgstr[1] "يُغلق خلال %d يوم"
+msgstr[2] "يُغلق خلال %d يوم"
+msgstr[3] "يُغلق خلال %d أيام"
+msgstr[4] "يُغلق خلال %d يومًا"
+msgstr[5] "يُغلق خلال %d يوم"
+
+msgid "Closes in %d hour"
+msgid_plural "Closes in %d hours"
+msgstr[0] "يُغلق خلال %d ساعة"
+msgstr[1] "يُغلق خلال %d ساعة"
+msgstr[2] "يُغلق خلال %d ساعة"
+msgstr[3] "يُغلق خلال %d ساعات"
+msgstr[4] "يُغلق خلال %d ساعة"
+msgstr[5] "يُغلق خلال %d ساعة"
+
+msgid "Employee poll"
+msgstr "تصويت الموظفين"
+
+msgid "Anonymous"
+msgstr "بدون أسماء"
+
+msgid "Your vote has been recorded. Here’s the current result."
+msgstr "تم تسجيل صوتك. هذه النتيجة الحالية."
+
+msgid "You voted in this poll. Here’s the final result."
+msgstr "لقد صوّت في هذا التصويت. هذه النتيجة النهائية."
+
+msgid "your vote"
+msgstr "صوتك"
+
+msgid "%d vote"
+msgid_plural "%d votes"
+msgstr[0] "%d صوت"
+msgstr[1] "%d صوت"
+msgstr[2] "%d صوت"
+msgstr[3] "%d أصوات"
+msgstr[4] "%d صوتًا"
+msgstr[5] "%d صوت"
+
+msgid "%d person has voted"
+msgid_plural "%d people have voted"
+msgstr[0] "صوّت %d شخص"
+msgstr[1] "صوّت %d شخص"
+msgstr[2] "صوّت %d شخص"
+msgstr[3] "صوّت %d أشخاص"
+msgstr[4] "صوّت %d شخصًا"
+msgstr[5] "صوّت %d شخص"
+
+msgid "Change vote"
+msgstr "تغيير الصوت"
+
+msgid "You can change your vote until the poll closes."
+msgstr "يمكنك تغيير صوتك حتى يُغلق التصويت."
+
+msgid "Be part of the decision"
+msgstr "شارك في القرار"
+
+msgid "Vote"
+msgstr "صوّت"
+
+msgid "%d more open poll"
+msgid_plural "%d more open polls"
+msgstr[0] "%d تصويت آخر مفتوح"
+msgstr[1] "%d تصويت آخر مفتوح"
+msgstr[2] "%d تصويت آخر مفتوح"
+msgstr[3] "%d تصويتات أخرى مفتوحة"
+msgstr[4] "%d تصويتًا آخر مفتوحًا"
+msgstr[5] "%d تصويت آخر مفتوح"
+
+msgid "See all polls"
+msgstr "كل التصويتات"
+
+msgid "Open polls"
+msgstr "تصويتات مفتوحة"
+
+msgid "No open polls right now."
+msgstr "لا توجد تصويتات مفتوحة الآن."
+
+msgid "New polls will appear here, and you will get a notification."
+msgstr "ستظهر التصويتات الجديدة هنا، وسيصلك إشعار بها."
+
+msgid "Past polls"
+msgstr "تصويتات سابقة"
+
+msgid "Polls"
+msgstr "التصويت"
+
+msgid "Profile picture reset to initials."
+msgstr "تمت إعادة صورة الملف الشخصي إلى الحروف الأولى."
+
+msgid "Avatar selected successfully."
+msgstr "تم اختيار الأفاتار بنجاح."
+
+msgid "Profile picture updated successfully."
+msgstr "تم تحديث صورة الملف الشخصي بنجاح."
+
+msgid "Image must be 2 MB or smaller."
+msgstr "يجب ألا يزيد حجم الصورة عن 2 ميجابايت."
+
+msgid "Please upload a JPG, PNG, or WebP image."
+msgstr "من فضلك ارفع صورة بصيغة JPG أو PNG أو WebP."
+
+msgid "Could not upload the profile picture. Please try again."
+msgstr "تعذّر رفع صورة الملف الشخصي. حاول مرة أخرى."
+
+msgid "Password updated successfully."
+msgstr "تم تحديث كلمة المرور بنجاح."
+
+msgid "Current password is incorrect."
+msgstr "كلمة المرور الحالية غير صحيحة."
+
+msgid "New passwords do not match."
+msgstr "كلمتا المرور الجديدتان غير متطابقتين."
+
+msgid "New password must be at least 8 characters and include uppercase, lowercase, number and special character."
+msgstr "يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل وتحتوي على حرف كبير وحرف صغير ورقم ورمز خاص."
+
+msgid "New password must be different from the current password."
+msgstr "يجب أن تختلف كلمة المرور الجديدة عن الحالية."
+
+msgid "Could not update your password. Please try again."
+msgstr "تعذّر تحديث كلمة المرور. حاول مرة أخرى."
+
+msgid "Company Default"
+msgstr "الافتراضي للشركة"
+
+msgid "All"
+msgstr "الكل"
+
+msgid "Men"
+msgstr "رجال"
+
+msgid "Women"
+msgstr "سيدات"
+
+msgid "Professional"
+msgstr "رسمي"
+
+msgid "Casual"
+msgstr "كاجوال"
+
+msgid "Fun"
+msgstr "مرح"
+
+msgid "Edit profile picture"
+msgstr "تعديل صورة الملف الشخصي"
+
+msgid "Active"
+msgstr "نشط"
+
+msgid "Today · Planned"
+msgstr "اليوم · المخطط"
+
+msgid "Schedule status"
+msgstr "حالة الجدول"
+
+msgid "Today · Attendance"
+msgstr "اليوم · الحضور"
+
+msgid "In %s"
+msgstr "حضور %s"
+
+msgid "Not signed in"
+msgstr "لم يسجّل الحضور"
+
+msgid "Working Hours"
+msgstr "ساعات العمل"
+
+msgid "My Information"
+msgstr "بياناتي"
+
+msgid "Your personal and work information"
+msgstr "بياناتك الشخصية وبيانات العمل"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Domain"
+msgstr "اسم الدخول"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "Team"
+msgstr "الفريق"
+
+msgid "Supervisor"
+msgstr "المشرف"
+
+msgid "Shift"
+msgstr "الوردية"
+
+msgid "Security"
+msgstr "الأمان"
+
+msgid "Keep your Workforce One account secure."
+msgstr "حافظ على أمان حسابك في Workforce One."
+
+msgid "Reset Password"
+msgstr "تغيير كلمة المرور"
+
+msgid "Achievements"
+msgstr "الإنجازات"
+
+msgid "Your earned milestones"
+msgstr "الإنجازات التي حققتها"
+
+msgid "%d earned"
+msgid_plural "%d earned"
+msgstr[0] "%d إنجاز"
+msgstr[1] "%d إنجاز"
+msgstr[2] "%d إنجاز"
+msgstr[3] "%d إنجازات"
+msgstr[4] "%d إنجازًا"
+msgstr[5] "%d إنجاز"
+
+msgid "Your achievements will appear here as you reach milestones."
+msgstr "ستظهر إنجازاتك هنا عند تحقيقها."
+
+msgid "Earned %s"
+msgstr "تحقق في %s"
+
+msgid "Your schedule for this week"
+msgstr "جدولك لهذا الأسبوع"
+
+msgid "Leave Balance"
+msgstr "رصيد الإجازات"
+
+msgid "Your leave entitlement and usage"
+msgstr "استحقاقك من الإجازات وما استخدمته"
+
+msgid "View Leave"
+msgstr "عرض الإجازات"
+
+msgid "available"
+msgstr "متاح"
+
+msgid "%d%% used"
+msgstr "%d%% مستخدم"
+
+msgid "Used %1$s · Pending %2$s · %3$d%% used"
+msgstr "المستخدم %1$s · قيد المراجعة %2$s · %3$d%% مستخدم"
+
+msgid "Recent Attendance"
+msgstr "الحضور الأخير"
+
+msgid "Your latest attendance records"
+msgstr "آخر سجلات حضورك"
+
+msgid "View All"
+msgstr "عرض الكل"
+
+msgid "Total Hours"
+msgstr "إجمالي الساعات"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "No attendance records in the selected period."
+msgstr "لا توجد سجلات حضور في هذه الفترة."
+
+msgid "Profile Picture"
+msgstr "صورة الملف الشخصي"
+
+msgid "Choose how you appear across Workforce One."
+msgstr "اختر كيف تظهر في Workforce One."
+
+msgid "Your profile picture belongs to your Workforce One employee profile, not the WordPress user profile."
+msgstr "صورتك مرتبطة بملفك كموظف في Workforce One، وليست صورة مستخدم ووردبريس."
+
+msgid "Choose Avatar"
+msgstr "اختيار أفاتار"
+
+msgid "Upload Photo"
+msgstr "رفع صورة"
+
+msgid "Use Initials"
+msgstr "استخدام الحروف الأولى"
+
+msgid "Choose your avatar"
+msgstr "اختر الأفاتار"
+
+msgid "Pick an avatar to use across Workforce One."
+msgstr "اختر أفاتار يظهر لك في Workforce One."
+
+msgid "Filter avatars"
+msgstr "تصفية الأفاتار"
+
+msgid "Save Avatar"
+msgstr "حفظ الأفاتار"
+
+msgid "Photo"
+msgstr "الصورة"
+
+msgid "JPG, PNG or WebP · maximum 2 MB"
+msgstr "JPG أو PNG أو WebP · بحد أقصى 2 ميجابايت"
+
+msgid "Current Password"
+msgstr "كلمة المرور الحالية"
+
+msgid "New Password"
+msgstr "كلمة المرور الجديدة"
+
+msgid "Confirm New Password"
+msgstr "تأكيد كلمة المرور الجديدة"
+
+msgid "Password requirements"
+msgstr "شروط كلمة المرور"
+
+msgid "At least 8 characters"
+msgstr "8 أحرف على الأقل"
+
+msgid "One uppercase letter"
+msgstr "حرف كبير واحد"
+
+msgid "One lowercase letter"
+msgstr "حرف صغير واحد"
+
+msgid "One number"
+msgstr "رقم واحد"
+
+msgid "One special character"
+msgstr "رمز خاص واحد"
+
+msgid "Update Password"
+msgstr "تحديث كلمة المرور"
+
+msgid "You have reached your weekly Kudos limit. You can send more next week."
+msgstr "وصلت للحد الأسبوعي من التقديرات. يمكنك إرسال المزيد الأسبوع القادم."
+
+msgid "You already sent this Kudos to this colleague today."
+msgstr "أرسلت هذا التقدير لهذا الزميل اليوم بالفعل."
+
+msgid "Please choose what you are recognizing."
+msgstr "من فضلك اختر ما تقدّره."
+
+msgid "This colleague is no longer available."
+msgstr "هذا الزميل لم يعد متاحًا."
+
+msgid "Back to People"
+msgstr "العودة إلى الموظفين"
+
+msgid "Work Profile"
+msgstr "بيانات العمل"
+
+msgid "Teams"
+msgstr "الفرق"
+
+msgid "No team assigned"
+msgstr "لا يوجد فريق"
+
+msgid "Work Email"
+msgstr "بريد العمل"
+
+msgid "Not provided"
+msgstr "غير متوفر"
+
+msgid "Not assigned"
+msgstr "غير محدد"
+
+msgid "Earned milestones"
+msgstr "الإنجازات المحققة"
+
+msgid "No achievements earned yet."
+msgstr "لا توجد إنجازات بعد."
+
+msgid "Recognition"
+msgstr "التقدير"
+
+msgid "Appreciation from colleagues"
+msgstr "تقدير من الزملاء"
+
+msgid "%d received"
+msgid_plural "%d received"
+msgstr[0] "%d تقدير"
+msgstr[1] "%d تقدير"
+msgstr[2] "%d تقدير"
+msgstr[3] "%d تقديرات"
+msgstr[4] "%d تقديرًا"
+msgstr[5] "%d تقدير"
+
+msgid "Kudos sent successfully."
+msgstr "تم إرسال التقدير بنجاح."
+
+msgid "Unable to send Kudos. Please check the details and try again."
+msgstr "تعذّر إرسال التقدير. راجع البيانات وحاول مرة أخرى."
+
+msgid "Give Kudos"
+msgstr "أرسل تقديرًا"
+
+msgid "What are you recognizing?"
+msgstr "ماذا تقدّر؟"
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Write a short thank-you..."
+msgstr "اكتب كلمة شكر قصيرة..."
+
+msgid "Send Kudos"
+msgstr "إرسال التقدير"
+
+msgid "A colleague"
+msgstr "زميل"
+
+msgid "No recognition yet. Recognition from colleagues will appear here."
+msgstr "لا يوجد تقدير بعد. سيظهر تقدير الزملاء هنا."
+
+msgid "Search people..."
+msgstr "ابحث عن زميل..."
+
+msgid "Search people"
+msgstr "البحث عن الموظفين"
+
+msgid "Filter by team"
+msgstr "تصفية حسب الفريق"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Clear"
+msgstr "مسح"
+
+msgid "%d person"
+msgid_plural "%d people"
+msgstr[0] "%d شخص"
+msgstr[1] "%d شخص"
+msgstr[2] "%d شخص"
+msgstr[3] "%d أشخاص"
+msgstr[4] "%d شخصًا"
+msgstr[5] "%d شخص"
+
+msgid "No people found"
+msgstr "لا يوجد نتائج"
+
+msgid "Try another name or team."
+msgstr "جرّب اسمًا أو فريقًا آخر."
+
+msgid "Present"
+msgstr "حاضر"
+
+msgid "Late"
+msgstr "متأخر"
+
+msgid "Awaiting sign in"
+msgstr "في انتظار تسجيل الحضور"
+
+msgid "Not scheduled"
+msgstr "غير مجدول"
+
+msgid "Business Trip"
+msgstr "مهمة عمل"
+
+msgid "MANAGER CONTROL CENTER"
+msgstr "مركز تحكم المدير"
+
+msgid "Manage your team schedule and see attendance results in one place."
+msgstr "أدر جدول فريقك وتابع نتائج الحضور في مكان واحد."
+
+msgid "Choose a date"
+msgstr "اختر تاريخًا"
+
+msgid "Choose week"
+msgstr "اختر الأسبوع"
+
+msgid "Present days"
+msgstr "أيام الحضور"
+
+msgid "Late days"
+msgstr "أيام التأخير"
+
+msgid "Absent days"
+msgstr "أيام الغياب"
+
+msgid "Attendance rate"
+msgstr "نسبة الحضور"
+
+msgid "Schedule Controls"
+msgstr "التحكم في الجدول"
+
+msgid "Set the planned schedule for everyone on a specific day."
+msgstr "حدد الجدول المخطط للجميع في يوم معين."
+
+msgid "Search employee..."
+msgstr "ابحث عن موظف..."
+
+msgid "All teams"
+msgstr "كل الفرق"
+
+msgid "Set…"
+msgstr "تحديد…"
+
+msgid "%1$d recorded · %2$d absent"
+msgstr "%1$d مسجّل · %2$d غائب"
+
+msgid "Empty cells are not changed."
+msgstr "الخانات الفارغة لا تتغير."
+
+msgid "Save Schedule & Attendance"
+msgstr "حفظ الجدول والحضور"
+
+msgid "The CSV preview has expired. Please upload the file again."
+msgstr "انتهت صلاحية معاينة الملف. من فضلك ارفعه مرة أخرى."
+
+msgid "CSV Preview"
+msgstr "معاينة الملف"
+
+msgid "Existing entries for the same employee and date will be replaced."
+msgstr "سيتم استبدال السجلات الموجودة لنفس الموظف والتاريخ."
+
+msgid "Line"
+msgstr "السطر"
+
+msgid "Note"
+msgstr "ملاحظة"
+
+msgid "Result"
+msgstr "النتيجة"
+
+msgid "Import %d row(s)"
+msgstr "استيراد %d صف"
+
+msgid "Advanced: Bulk CSV Import"
+msgstr "متقدم: استيراد جماعي من ملف CSV"
+
+msgid "Use this when you have many rows from Excel."
+msgstr "استخدمه عندما يكون لديك صفوف كثيرة من Excel."
+
+msgid "Download the sample, fill it in Excel, upload it, review validation, then import."
+msgstr "نزّل النموذج، املأه في Excel، ارفعه، راجع التحقق، ثم استورد."
+
+msgid "Upload CSV"
+msgstr "رفع ملف CSV"
+
+msgid "Validate & Preview"
+msgstr "تحقق ومعاينة"
+
+msgid "Download Sample CSV"
+msgstr "تنزيل نموذج CSV"
+
+msgid "Export CSV"
+msgstr "تصدير CSV"
+
+msgid "Export Excel"
+msgstr "تصدير Excel"
+
+msgid "Saved views"
+msgstr "العروض المحفوظة"
+
+msgid "Remove saved view %s"
+msgstr "حذف العرض المحفوظ %s"
+
+msgid "Remove"
+msgstr "حذف"
+
+msgid "Report Period"
+msgstr "فترة التقرير"
+
+msgid "Quick Range"
+msgstr "فترة سريعة"
+
+msgid "From Date"
+msgstr "من تاريخ"
+
+msgid "To Date"
+msgstr "إلى تاريخ"
+
+msgid "All Employees"
+msgstr "كل الموظفين"
+
+msgid "Inactive"
+msgstr "غير نشط"
+
+msgid "Employee Status"
+msgstr "حالة الموظف"
+
+msgid "Active Only"
+msgstr "النشطون فقط"
+
+msgid "Inactive Only"
+msgstr "غير النشطين فقط"
+
+msgid "All Results"
+msgstr "كل النتائج"
+
+msgid "Generate Report"
+msgstr "إنشاء التقرير"
+
+msgid "Save this report as a view"
+msgstr "احفظ هذا التقرير كعرض"
+
+msgid "View name"
+msgstr "اسم العرض"
+
+msgid "e.g. Ops team this month"
+msgstr "مثال: فريق العمليات هذا الشهر"
+
+msgid "Save view"
+msgstr "حفظ العرض"
+
+msgid "The period is saved as \"%s\", so the view always opens on the current one."
+msgstr "تُحفظ الفترة كـ \"%s\"، فيفتح العرض دائمًا على الفترة الحالية."
+
+msgid "The view keeps these dates."
+msgstr "يحتفظ العرض بهذه التواريخ."
+
+msgid "Other"
+msgstr "أخرى"
+
+msgid "Selected Day"
+msgstr "اليوم المحدد"
+
+msgid "Previous day"
+msgstr "اليوم السابق"
+
+msgid "Next day"
+msgstr "اليوم التالي"
+
+msgid "Email everyone"
+msgstr "إرسال بالبريد للجميع"
+
+msgid "No colleague matches your search."
+msgstr "لا يوجد زميل يطابق البحث."
+
+msgid "No employees to show."
+msgstr "لا يوجد موظفون للعرض."
+
+msgid "Please sign in."
+msgstr "يرجى تسجيل الدخول."
+
+msgid "Request a swap"
+msgstr "طلب تبديل"
+
+msgid "Search colleague"
+msgstr "ابحث عن زميل"
+
+msgid "The schedule PDF was downloaded. Attach it to your WhatsApp message."
+msgstr "تم تنزيل ملف PDF للجدول. أرفقه برسالة واتساب."
+
+msgid "The PDF could not be prepared. Please try again."
+msgstr "تعذّر تجهيز ملف PDF. حاول مرة أخرى."
+
+msgctxt "short button label"
+msgid "Email"
+msgstr "بريد"
+
+msgid "Forgot password?"
+msgstr "نسيت كلمة المرور؟"
+
+msgid "Hide password"
+msgstr "إخفاء كلمة المرور"
+
+msgid "Open %s"
+msgstr "فتح %s"
+
+msgid "Password"
+msgstr "كلمة المرور"
+
+msgid "Remember me"
+msgstr "تذكرني"
+
+msgid "Show password"
+msgstr "إظهار كلمة المرور"
+
+msgid "Sign in with your work account"
+msgstr "سجّل الدخول بحساب العمل"
+
+msgid "The username or password is incorrect. Please try again."
+msgstr "اسم المستخدم أو كلمة المرور غير صحيحة. حاول مرة أخرى."
+
+msgid "Username or Email"
+msgstr "اسم المستخدم أو البريد الإلكتروني"
+
+msgid "Welcome back"
+msgstr "أهلًا بعودتك"
+
+msgid "You are already signed in"
+msgstr "أنت مسجّل الدخول بالفعل"
+
+msgid "You have been logged out successfully."
+msgstr "تم تسجيل الخروج بنجاح."
+
+msgctxt "log in to the app"
+msgid "Sign In"
+msgstr "تسجيل الدخول"
+
+msgid "Alerts are off on this device"
+msgstr "التنبيهات متوقفة على هذا الجهاز"
+
+msgid "Alerts are on on this device"
+msgstr "التنبيهات تعمل على هذا الجهاز"
+
+msgid "Earlier"
+msgstr "أقدم"
+
+msgid "Get leave, swap and schedule news as it happens."
+msgstr "اعرف أخبار الإجازات والتبديل والجدول فور حدوثها."
+
+msgid "Just now"
+msgstr "الآن"
+
+msgid "Mark \"%s\" as read"
+msgstr "تعليم \"%s\" كمقروء"
+
+msgid "Mark all read"
+msgstr "تعليم الكل كمقروء"
+
+msgid "Mark read"
+msgstr "تعليم كمقروء"
+
+msgid "News about your leave, schedule and requests will show up here."
+msgstr "ستظهر هنا أخبار إجازاتك وجدولك وطلباتك."
+
+msgid "No notifications yet."
+msgstr "لا توجد إشعارات بعد."
+
+msgid "No unread notifications."
+msgstr "لا توجد إشعارات غير مقروءة."
+
+msgid "Notification filter"
+msgstr "تصفية الإشعارات"
+
+msgid "Turn off"
+msgstr "إيقاف"
+
+msgid "Turn on"
+msgstr "تشغيل"
+
+msgid "Unread"
+msgstr "غير مقروء"
+
+msgid "Yesterday"
+msgstr "أمس"
+
+msgid "Yesterday · %s"
+msgstr "أمس · %s"
+
+msgid "unread"
+msgstr "غير مقروء"
+
+msgid "No changes yet. Tap a day to change it."
+msgstr "لا توجد تغييرات بعد. اضغط على أي يوم لتغييره."
+
+msgid "1 change not saved yet"
+msgstr "تغيير واحد لم يُحفظ بعد"
+
+msgid "%d changes not saved yet"
+msgstr "%d تغييرات لم تُحفظ بعد"
+
+msgid "You have changes that are not saved yet."
+msgstr "لديك تغييرات لم تُحفظ بعد."
+
+msgid "Undo"
+msgstr "تراجع"
+
+msgid "Task Assigned"
+msgstr "تم إسناد مهمة"
+
+msgid "You have been assigned the task: %s."
+msgstr "تم إسناد المهمة إليك: %s."
+
+msgid "New Task"
+msgstr "مهمة جديدة"
+
+msgid "Task Status Updated"
+msgstr "تم تحديث حالة المهمة"
+
+msgid "%1$s is now %2$s."
+msgstr "%1$s أصبحت الآن %2$s."
+
+msgid "To Do"
+msgstr "قيد الانتظار"
+
+msgid "In Progress"
+msgstr "قيد التنفيذ"
+
+msgid "Urgent"
+msgstr "عاجلة"
+
+msgid "High"
+msgstr "عالية"
+
+msgid "Normal"
+msgstr "عادية"
+
+msgid "Low"
+msgstr "منخفضة"
+
+msgid "Tasks are currently disabled by your administrator."
+msgstr "المهام معطّلة حاليًا من قِبل المسؤول."
+
+msgid "%d active"
+msgid_plural "%d active"
+msgstr[0] "%d نشط"
+msgstr[1] "%d نشط"
+msgstr[2] "%d نشط"
+msgstr[3] "%d نشط"
+msgstr[4] "%d نشط"
+msgstr[5] "%d نشط"
+
+msgid "Search name or email"
+msgstr "ابحث بالاسم أو البريد"
+
+msgid "Domain Name"
+msgstr "اسم المستخدم"
+
+msgid "Email Address"
+msgstr "البريد الإلكتروني"
+
+msgid "No employee matches your search."
+msgstr "لا يوجد موظف يطابق البحث."
+
+msgid "Add Employee"
+msgstr "إضافة موظف"
+
+msgid "Teams, schedule, pay and access are set in wp-admin."
+msgstr "الفرق والجدول والراتب والصلاحيات تُضبط من لوحة wp-admin."
+
+msgid "Open Employees in wp-admin"
+msgstr "افتح الموظفين في wp-admin"
+
+msgid "%s · approved overtime"
+msgstr "%s · الوقت الإضافي المعتمد"
+
+msgid "None yet"
+msgstr "لا يوجد بعد"
+
+msgid "%1$d waiting · %2$s"
+msgid_plural "%1$d waiting · %2$s"
+msgstr[0] "%1$d بانتظار الموافقة · %2$s"
+msgstr[1] "%1$d بانتظار الموافقة · %2$s"
+msgstr[2] "%1$d بانتظار الموافقة · %2$s"
+msgstr[3] "%1$d بانتظار الموافقة · %2$s"
+msgstr[4] "%1$d بانتظار الموافقة · %2$s"
+msgstr[5] "%1$d بانتظار الموافقة · %2$s"
+
+msgid "%d request this month"
+msgid_plural "%d requests this month"
+msgstr[0] "%d طلب هذا الشهر"
+msgstr[1] "%d طلب هذا الشهر"
+msgstr[2] "%d طلب هذا الشهر"
+msgstr[3] "%d طلبات هذا الشهر"
+msgstr[4] "%d طلبًا هذا الشهر"
+msgstr[5] "%d طلب هذا الشهر"
+
+msgid "%d waiting"
+msgid_plural "%d waiting"
+msgstr[0] "%d بالانتظار"
+msgstr[1] "%d بالانتظار"
+msgstr[2] "%d بالانتظار"
+msgstr[3] "%d بالانتظار"
+msgstr[4] "%d بالانتظار"
+msgstr[5] "%d بالانتظار"
+
+msgid "Request overtime in advance: your manager approves it before you work the extra hours."
+msgstr "اطلب الوقت الإضافي مسبقًا: يوافق عليه مديرك قبل أن تعمل الساعات الإضافية."
+
+msgid "Waiting for your manager"
+msgstr "بانتظار موافقة مديرك"
+
+msgid "Decided"
+msgstr "تم البت فيها"
+
+msgid "Tomorrow"
+msgstr "غدًا"
+
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d يوم"
+msgstr[1] "%d يوم"
+msgstr[2] "%d يوم"
+msgstr[3] "%d أيام"
+msgstr[4] "%d يومًا"
+msgstr[5] "%d يوم"
+
+msgid "Month"
+msgstr "الشهر"
+
+msgid "Earlier month"
+msgstr "الشهر السابق"
+
+msgid "Later month"
+msgstr "الشهر التالي"
+
+msgid "No payslip for %s."
+msgstr "لا توجد قسيمة راتب لشهر %s."
+
+msgid "Net pay · before tax and insurance"
+msgstr "صافي الراتب · قبل الضريبة والتأمينات"
+
+msgid "Expected net · if the rest of %s goes as scheduled"
+msgstr "الصافي المتوقع · إذا سار باقي %s حسب الجدول"
+
+msgid "Final · closed %s"
+msgstr "نهائي · أُغلق في %s"
+
+msgid "Estimate · changes until HR closes the month"
+msgstr "تقديري · يتغير حتى تغلق الموارد البشرية الشهر"
+
+msgid "Your payslip for %s is being prepared."
+msgstr "قسيمة راتب %s قيد الإعداد."
+
+msgid "Days worked"
+msgstr "أيام العمل"
+
+msgid "no Sign Out recorded. HR is reviewing this day; until then it counts as a full day."
+msgstr "لم يُسجَّل انصراف. الموارد البشرية تراجع هذا اليوم؛ وحتى ذلك يُحتسب يومًا كاملًا."
+
+msgid "Earnings"
+msgstr "المستحقات"
+
+msgid "Basic salary"
+msgstr "الراتب الأساسي"
+
+msgid "Allowances"
+msgstr "البدلات"
+
+msgid "Paid from %s"
+msgstr "مدفوع من %s"
+
+msgid "Overtime (approved)"
+msgstr "الوقت الإضافي (المعتمد)"
+
+msgid "%s worked"
+msgstr "عمل فعلي %s"
+
+msgid "day off"
+msgstr "يوم عطلة"
+
+msgid "Bonus"
+msgstr "مكافأة"
+
+msgid "Deductions"
+msgstr "الخصومات"
+
+msgid "None this month"
+msgstr "لا يوجد هذا الشهر"
+
+msgid "Absent without leave"
+msgstr "غياب بدون إجازة"
+
+msgid "Late arrival"
+msgstr "تأخير في الحضور"
+
+msgid "%1$d min on %2$s, after the grace period"
+msgstr "%1$d دقيقة على %2$s، بعد فترة السماح"
+
+msgid "in %s"
+msgstr "حضور %s"
+
+msgid "Early leave without approval"
+msgstr "انصراف مبكر بدون موافقة"
+
+msgid "out %s"
+msgstr "انصراف %s"
+
+msgid "%1$s, %2$s%% paid"
+msgstr "%1$s، مدفوع %2$s%%"
+
+msgid "Deduction"
+msgstr "خصم"
+
+msgid "Limited to %s day(s)' pay"
+msgstr "بحد أقصى أجر %s يوم"
+
+msgid "attendance deductions before the limit: %s"
+msgstr "خصومات الحضور قبل الحد: %s"
+
+msgid "Net pay"
+msgstr "صافي الراتب"
+
+msgid "Download payslip (PDF)"
+msgstr "تنزيل قسيمة الراتب (PDF)"
+
+msgid "The payslip PDF is ready when HR closes the month."
+msgstr "تجهز قسيمة الراتب PDF عندما تغلق الموارد البشرية الشهر."
+
+msgid "A day's pay = %1$s ÷ %2$d = %3$s. Amounts are before income tax and social insurance. A question about this month? Contact HR."
+msgstr "أجر اليوم = %1$s ÷ %2$d = %3$s. المبالغ قبل ضريبة الدخل والتأمينات الاجتماعية. لديك سؤال عن هذا الشهر؟ تواصل مع الموارد البشرية."
+
+msgid "basic"
+msgstr "الأساسي"
+
+msgid "(basic + allowances)"
+msgstr "(الأساسي + البدلات)"
+
+msgid "No presence check right now"
+msgstr "لا يوجد طلب تأكيد تواجد الآن"
+
+msgid "When your manager asks you to confirm where you are, you get a notification that opens it here."
+msgstr "عندما يطلب مديرك تأكيد مكانك، يصلك إشعار يفتح الطلب هنا."
+
+msgid "Your manager asked for a presence check"
+msgstr "طلب مديرك تأكيد تواجدك"
+
+msgid "Starting the camera…"
+msgstr "جارٍ تشغيل الكاميرا…"
+
+msgid "Point your camera at the code"
+msgstr "وجّه الكاميرا نحو الكود"
+
+msgid "You are verified"
+msgstr "تم تأكيد تواجدك"
+
+msgid "Shift swaps · %s"
+msgstr "تبديل الورديات · %s"
+
+msgid "%d swap waiting for you"
+msgid_plural "%d swaps waiting for you"
+msgstr[0] "%d طلب تبديل بانتظارك"
+msgstr[1] "%d طلب تبديل بانتظارك"
+msgstr[2] "%d طلب تبديل بانتظارك"
+msgstr[3] "%d طلبات تبديل بانتظارك"
+msgstr[4] "%d طلب تبديل بانتظارك"
+msgstr[5] "%d طلب تبديل بانتظارك"
+
+msgid "%d request sent"
+msgid_plural "%d requests sent"
+msgstr[0] "%d طلب مُرسل"
+msgstr[1] "%d طلب مُرسل"
+msgstr[2] "%d طلب مُرسل"
+msgstr[3] "%d طلبات مُرسلة"
+msgstr[4] "%d طلبًا مُرسلًا"
+msgstr[5] "%d طلب مُرسل"
+
+msgid "Waiting for you"
+msgstr "بانتظارك"
+
+msgid "Sent by you"
+msgstr "أرسلتها أنت"
+
+msgid "Your colleague gets your day and you get theirs once they accept."
+msgstr "يأخذ زميلك يومك وتأخذ يومه بمجرد موافقته."
+
+msgid "Overdue · %s"
+msgstr "متأخرة · %s"
+
+msgid "Start"
+msgstr "ابدأ"
+
+msgid "Done"
+msgstr "تمت"
+
+msgid "Back to To Do"
+msgstr "إرجاع إلى قيد الانتظار"
+
+msgid "Reopen"
+msgstr "إعادة فتح"
+
+msgid "Edit"
+msgstr "تعديل"
+
+msgid "Delete this task?"
+msgstr "حذف هذه المهمة؟"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "More for %s"
+msgstr "المزيد لـ %s"
+
+msgid "That task can’t move to that status yet. Start it first, then you can complete it."
+msgstr "لا يمكن نقل المهمة إلى هذه الحالة بعد. ابدأها أولًا ثم يمكنك إنهاؤها."
+
+msgid "We couldn’t update the task status. No changes were applied."
+msgstr "تعذّر تحديث حالة المهمة. لم تُطبَّق أي تغييرات."
+
+msgid "We couldn’t save the task. No partial changes were applied."
+msgstr "تعذّر حفظ المهمة. لم تُطبَّق أي تغييرات جزئية."
+
+msgid "We couldn’t delete the task. No changes were applied."
+msgstr "تعذّر حذف المهمة. لم تُطبَّق أي تغييرات."
+
+msgid "Please enter a task title."
+msgstr "من فضلك أدخل عنوان المهمة."
+
+msgid "Edit Task"
+msgstr "تعديل المهمة"
+
+msgid "Title"
+msgstr "العنوان"
+
+msgid "What needs to be done?"
+msgstr "ما المطلوب إنجازه؟"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Add useful context, instructions or notes..."
+msgstr "أضف تفاصيل أو تعليمات أو ملاحظات مفيدة..."
+
+msgid "Priority"
+msgstr "الأولوية"
+
+msgid "Due Date"
+msgstr "تاريخ الاستحقاق"
+
+msgid "Assign To"
+msgstr "إسناد إلى"
+
+msgid "Myself / Personal Task"
+msgstr "أنا / مهمة شخصية"
+
+msgid "Save Changes"
+msgstr "حفظ التغييرات"
+
+msgid "Create Task"
+msgstr "إنشاء المهمة"
+
+msgid "My Tasks"
+msgstr "مهامي"
+
+msgid "Team Tasks"
+msgstr "مهام الفريق"
+
+msgid "Search tasks"
+msgstr "ابحث في المهام"
+
+msgid "All priorities"
+msgstr "كل الأولويات"
+
+msgid "Filter"
+msgstr "تصفية"
+
+msgid "%d task is overdue"
+msgid_plural "%d tasks are overdue"
+msgstr[0] "%d مهمة متأخرة"
+msgstr[1] "%d مهمة متأخرة"
+msgstr[2] "%d مهمة متأخرة"
+msgstr[3] "%d مهام متأخرة"
+msgstr[4] "%d مهمة متأخرة"
+msgstr[5] "%d مهمة متأخرة"
+
+msgid "Nothing finished yet."
+msgstr "لم يكتمل شيء بعد."
+
+msgid "Nothing here."
+msgstr "لا شيء هنا."
+
+msgid "Show all %d"
+msgstr "عرض الكل (%d)"
+
+msgid "No task matches your search."
+msgstr "لا توجد مهمة تطابق البحث."
+
+msgid "Open Workforce One on your phone"
+msgstr "افتح Workforce One على هاتفك"
+
+msgid "Open Sign In or the presence request"
+msgstr "افتح تسجيل الحضور أو طلب تأكيد التواجد"
+
+msgid "Point the camera at this code"
+msgstr "وجّه الكاميرا نحو هذا الكود"
+
+msgid "Task overdue"
+msgstr "مهمة متأخرة"
+
+msgid "Due today"
+msgstr "مطلوبة اليوم"
+
+msgid "%1$s was due on %2$s."
+msgstr "كان موعد %1$s يوم %2$s."
+
+msgid "%s is due today."
+msgstr "موعد %s اليوم."
+
+msgid "Open Task"
+msgstr "افتح المهمة"
+
+msgid "You must be logged in."
+msgstr "يجب تسجيل الدخول."
+
+msgid "New comment on a task"
+msgstr "تعليق جديد على مهمة"
+
+msgid "%1$s commented on %2$s."
+msgstr "علّق %1$s على %2$s."
+
+msgid "File not found."
+msgstr "الملف غير موجود."
+
+msgid "Task taken"
+msgstr "تم أخذ المهمة"
+
+msgid "%1$s took %2$s."
+msgstr "أخذ %1$s المهمة %2$s."
+
+msgid "A task for your team is waiting to be taken: %s."
+msgstr "مهمة لفريقك تنتظر من يأخذها: %s."
+
+msgid "Task reminder"
+msgstr "تذكير بمهمة"
+
+msgid "%1$s is due %2$s."
+msgstr "موعد %1$s: %2$s."
+
+msgid "On"
+msgstr "مفعّل"
+
+msgid "No reminder"
+msgstr "بدون تذكير"
+
+msgid "15 min before"
+msgstr "قبلها بـ 15 دقيقة"
+
+msgid "30 min before"
+msgstr "قبلها بـ 30 دقيقة"
+
+msgid "1 h before"
+msgstr "قبلها بساعة"
+
+msgid "2 h before"
+msgstr "قبلها بساعتين"
+
+msgid "1 day before"
+msgstr "قبلها بيوم"
+
+msgid "Tasks settings saved."
+msgstr "تم حفظ إعدادات المهام."
+
+msgid "Tasks is switched off, so nobody sees it."
+msgstr "المهام معطّلة، فلا يراها أحد."
+
+msgid "Switch it on in Feature Configuration"
+msgstr "فعّلها من إعدادات الميزات"
+
+msgid "Choose which parts of Tasks people see in the app. Switching a part off hides it; nothing that was saved is deleted."
+msgstr "اختر أجزاء المهام التي تظهر في التطبيق. إيقاف جزء يخفيه فقط؛ لا يُحذف أي شيء محفوظ."
+
+msgid "Personal tasks"
+msgstr "المهام الشخصية"
+
+msgid "Employees can create tasks for themselves. Managers can always create and assign tasks."
+msgstr "يستطيع الموظفون إنشاء مهام لأنفسهم. المديرون يستطيعون دائمًا إنشاء المهام وإسنادها."
+
+msgid "Checklist"
+msgstr "قائمة الخطوات"
+
+msgid "Small steps inside a task, with a progress bar."
+msgstr "خطوات صغيرة داخل المهمة مع شريط تقدّم."
+
+msgid "Comments"
+msgstr "التعليقات"
+
+msgid "The people on a task can write to each other inside it."
+msgstr "يستطيع أصحاب المهمة الكتابة لبعضهم داخلها."
+
+msgid "Tell the people on the task about a new comment"
+msgstr "إبلاغ أصحاب المهمة بالتعليق الجديد"
+
+msgid "Files with comments"
+msgstr "ملفات مع التعليقات"
+
+msgid "A file can be attached to a comment. Files are kept private: only people who can see the task can download them."
+msgstr "يمكن إرفاق ملف بالتعليق. الملفات خاصة: لا ينزّلها إلا من يرى المهمة."
+
+msgid "Largest file (MB)"
+msgstr "أقصى حجم للملف (ميجابايت)"
+
+msgid "Allowed file types"
+msgstr "أنواع الملفات المسموحة"
+
+msgid "Activity"
+msgstr "السجل"
+
+msgid "Show who created, moved, edited or commented on a task, and when."
+msgstr "عرض من أنشأ المهمة أو نقلها أو عدّلها أو علّق عليها، ومتى."
+
+msgid "Team tasks"
+msgstr "مهام الفريق"
+
+msgid "Managers can send a task to a whole team: a copy for each person, or one task the first person takes."
+msgstr "يستطيع المديرون إرسال مهمة لفريق كامل: نسخة لكل شخص، أو مهمة واحدة يأخذها أول شخص."
+
+msgid "Chosen at first"
+msgstr "الاختيار المبدئي"
+
+msgid "One copy each"
+msgstr "نسخة لكل شخص"
+
+msgid "First one takes it"
+msgstr "أول واحد يأخذها"
+
+msgid "Repeating tasks"
+msgstr "المهام المتكررة"
+
+msgid "A task can come back every day, on chosen week days or on a day of the month. Each date gets its own task; a missed date is not made up."
+msgstr "يمكن أن تتكرر المهمة كل يوم، أو في أيام محددة من الأسبوع، أو في يوم من الشهر. لكل تاريخ مهمته؛ ولا يُعوَّض تاريخ فائت."
+
+msgid "Due time"
+msgstr "وقت التسليم"
+
+msgid "A time can be set with the due date."
+msgstr "يمكن تحديد وقت مع تاريخ التسليم."
+
+msgid "Reminders"
+msgstr "التذكيرات"
+
+msgid "A notification before the due time. Needs a due time."
+msgstr "إشعار قبل وقت التسليم. يحتاج إلى وقت تسليم."
+
+msgid "Workload"
+msgstr "حِمل العمل"
+
+msgid "A tab with each person's open, overdue and finished tasks."
+msgstr "تبويب بمهام كل شخص المفتوحة والمتأخرة والمنتهية."
+
+msgid "Who sees it"
+msgstr "من يراه"
+
+msgid "Everyone who manages tasks"
+msgstr "كل من يدير المهام"
+
+msgid "Site administrators only"
+msgstr "مديرو الموقع فقط"
+
+msgid "My tasks today on Home"
+msgstr "مهامي اليوم في الرئيسية"
+
+msgid "A card on the Home page with overdue tasks, tasks due today and tasks in progress, each with its next step."
+msgstr "بطاقة في الرئيسية بالمهام المتأخرة والمطلوبة اليوم والجارية، ولكل منها خطوتها التالية."
+
+msgid "Tasks shown"
+msgstr "عدد المهام المعروضة"
+
+msgid "Drag on the board"
+msgstr "السحب على اللوحة"
+
+msgid "On a computer, a card can be dragged to the next column."
+msgstr "على الكمبيوتر يمكن سحب البطاقة إلى العمود التالي."
+
+msgid "Tell the creator about a new status"
+msgstr "إبلاغ منشئ المهمة بالحالة الجديدة"
+
+msgid "When someone starts or finishes a task, the person who created it gets a notification."
+msgstr "عندما يبدأ أحد المهمة أو ينهيها، يصل إشعار لمن أنشأها."
+
+msgid "Finished tasks shown"
+msgstr "المهام المنتهية المعروضة"
+
+msgid "How many finished tasks the Completed column shows before \"Show all\"."
+msgstr "عدد المهام المنتهية في عمود \"مكتملة\" قبل \"عرض الكل\"."
+
+msgid "Finished tasks"
+msgstr "المهام المنتهية"
+
+msgid "Changes apply right away."
+msgstr "التغييرات تُطبّق فورًا."
+
+msgid "My tasks today"
+msgstr "مهامي اليوم"
+
+msgid "All tasks"
+msgstr "كل المهام"
+
+msgid "Overdue · since %s"
+msgstr "متأخرة · منذ %s"
+
+msgid "repeats"
+msgstr "متكررة"
+
+msgid "Sun"
+msgstr "أحد"
+
+msgid "Mon"
+msgstr "إثنين"
+
+msgid "Tue"
+msgstr "ثلاثاء"
+
+msgid "Wed"
+msgstr "أربعاء"
+
+msgid "Thu"
+msgstr "خميس"
+
+msgid "Fri"
+msgstr "جمعة"
+
+msgid "Sat"
+msgstr "سبت"
+
+msgid "Take it"
+msgstr "خذها"
+
+msgid "Repeats every day"
+msgstr "تتكرر كل يوم"
+
+msgid "Repeats every week on %s"
+msgstr "تتكرر كل أسبوع يوم %s"
+
+msgid "Repeats every month on day %d"
+msgstr "تتكرر كل شهر يوم %d"
+
+msgid "Repeating task"
+msgstr "مهمة متكررة"
+
+msgid "For %s"
+msgstr "لفريق %s"
+
+msgid "Only managers can create tasks here."
+msgstr "المديرون فقط يستطيعون إنشاء المهام هنا."
+
+msgid "Take this task first: it was sent to the whole team."
+msgstr "خذ هذه المهمة أولًا: أُرسلت للفريق كله."
+
+msgid "Someone from your team already took this task."
+msgstr "أخذ أحد زملائك هذه المهمة بالفعل."
+
+msgid "That team has nobody who can sign in, so no task was created."
+msgstr "لا يوجد في هذا الفريق من يستطيع تسجيل الدخول، فلم تُنشأ أي مهمة."
+
+msgid "The file could not be uploaded. Please try again."
+msgstr "تعذّر رفع الملف. حاول مرة أخرى."
+
+msgid "The file is too big. The limit is %d MB."
+msgstr "الملف كبير جدًا. الحد %d ميجابايت."
+
+msgid "This type of file is not allowed. Allowed: %s."
+msgstr "هذا النوع من الملفات غير مسموح. المسموح: %s."
+
+msgid "created the task"
+msgstr "أنشأ المهمة"
+
+msgid "moved it to %s"
+msgstr "نقلها إلى %s"
+
+msgid "edited the task"
+msgstr "عدّل المهمة"
+
+msgid "added a step: %s"
+msgstr "أضاف خطوة: %s"
+
+msgid "ticked %s"
+msgstr "أنهى خطوة %s"
+
+msgid "unticked %s"
+msgstr "ألغى إنهاء %s"
+
+msgid "removed the step %s"
+msgstr "حذف الخطوة %s"
+
+msgid "commented with %s"
+msgstr "علّق وأرفق %s"
+
+msgid "commented"
+msgstr "علّق"
+
+msgid "took the task"
+msgstr "أخذ المهمة"
+
+msgid "stopped the repeat"
+msgstr "أوقف التكرار"
+
+msgid "A person"
+msgstr "شخص"
+
+msgid "A whole team"
+msgstr "فريق كامل"
+
+msgid "Myself"
+msgstr "أنا"
+
+msgid "Person"
+msgstr "الشخص"
+
+msgid "Choose a person"
+msgstr "اختر شخصًا"
+
+msgid "%1$s · %2$d person"
+msgid_plural "%1$s · %2$d people"
+msgstr[0] "%1$s · %2$d شخص"
+msgstr[1] "%1$s · %2$d شخص"
+msgstr[2] "%1$s · %2$d شخص"
+msgstr[3] "%1$s · %2$d أشخاص"
+msgstr[4] "%1$s · %2$d شخصًا"
+msgstr[5] "%1$s · %2$d شخص"
+
+msgid "How the team gets it"
+msgstr "كيف يستلمها الفريق"
+
+msgid "Repeat"
+msgstr "التكرار"
+
+msgid "Never"
+msgstr "لا تتكرر"
+
+msgid "Daily"
+msgstr "يوميًا"
+
+msgid "Weekly"
+msgstr "أسبوعيًا"
+
+msgid "Monthly"
+msgstr "شهريًا"
+
+msgid "Days of the week"
+msgstr "أيام الأسبوع"
+
+msgid "Day of the month"
+msgstr "يوم الشهر"
+
+msgid "Reminder"
+msgstr "التذكير"
+
+msgid "Needs a time."
+msgstr "يحتاج إلى وقت."
+
+msgid "Open tasks"
+msgstr "المهام المفتوحة"
+
+msgid "Overdue"
+msgstr "متأخرة"
+
+msgid "Done this month"
+msgstr "أُنجزت هذا الشهر"
+
+msgid "On time"
+msgstr "في الموعد"
+
+msgid "Team workload"
+msgstr "حِمل الفريق"
+
+msgid "%d team task is waiting to be taken."
+msgid_plural "%d team tasks are waiting to be taken."
+msgstr[0] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[1] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[2] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[3] "%d مهام فريق تنتظر من يأخذها."
+msgstr[4] "%d مهمة فريق تنتظر من يأخذها."
+msgstr[5] "%d مهمة فريق تنتظر من يأخذها."
+
+msgid "%1$d to do, %2$d in progress, %3$d overdue"
+msgstr "%1$d قيد الانتظار، %2$d قيد التنفيذ، %3$d متأخرة"
+
+msgid "%d open"
+msgstr "%d مفتوحة"
+
+msgid "%d overdue"
+msgstr "%d متأخرة"
+
+msgid "%d done this month"
+msgstr "%d أُنجزت هذا الشهر"
+
+msgid "Drop here to start"
+msgstr "أفلت هنا للبدء"
+
+msgid "Drop here to finish"
+msgstr "أفلت هنا للإنهاء"
+
+msgid "Drop here to put it back"
+msgstr "أفلت هنا لإرجاعها"
+
+msgid "From %1$s to the team %2$s: the first one to take it does it."
+msgstr "من %1$s إلى فريق %2$s: من يأخذها أولًا ينفّذها."
+
+msgid "From %1$s to %2$s"
+msgstr "من %1$s إلى %2$s"
+
+msgid "Personal task of %s"
+msgstr "مهمة شخصية لـ %s"
+
+msgid "Stop repeating"
+msgstr "إيقاف التكرار"
+
+msgid "Stop making new copies of this task? This one stays."
+msgstr "إيقاف إنشاء نسخ جديدة من هذه المهمة؟ هذه النسخة تبقى."
+
+msgid "Tick %s"
+msgstr "إنهاء %s"
+
+msgid "Remove %s"
+msgstr "حذف %s"
+
+msgid "New step"
+msgstr "خطوة جديدة"
+
+msgid "Add a step"
+msgstr "أضف خطوة"
+
+msgid "Add"
+msgstr "إضافة"
+
+msgid "Comment"
+msgstr "تعليق"
+
+msgid "Write a comment…"
+msgstr "اكتب تعليقًا…"
+
+msgid "Attach a file"
+msgstr "إرفاق ملف"
+
+msgid "%1$s · up to %2$d MB"
+msgstr "%1$s · حتى %2$d ميجابايت"
+
+msgid "Send"
+msgstr "إرسال"
+
+msgid "System"
+msgstr "النظام"
+
+msgid "%1$d–%2$d of %3$d"
+msgstr "%1$d–%2$d من %3$d"
+
+msgid "Next"
+msgstr "التالي"
+
+msgid "No employee matches this search."
+msgstr "لا يوجد موظف يطابق هذا البحث."
+
+msgid "Page %1$d of %2$d"
+msgstr "صفحة %1$d من %2$d"
+
+msgid "Pages"
+msgstr "الصفحات"
+
+msgid "Previous"
+msgstr "السابق"
+
+msgid "Set the planned schedule for everyone on this page on a specific day."
+msgstr "حدّد الجدول المخطط لكل من في هذه الصفحة في يوم معيّن."
+
+msgid "My team"
+msgstr "فريقي"
+
+msgid "My department"
+msgstr "إدارتي"
+
+msgid "Whose schedule"
+msgstr "جدول مَن"
+
+msgid "All branches"
+msgstr "كل الفروع"
+
+msgid "At %s, planned for today"
+msgstr "في %s، المخطط لليوم"
+
+msgid "At %s, your branch"
+msgstr "في %s، فرعك"
+
+msgid "Branch"
+msgstr "الفرع"
+
+msgid "Branch for everyone on %s"
+msgstr "الفرع للجميع يوم %s"
+
+msgid "Branch for this day"
+msgstr "فرع هذا اليوم"
+
+msgid "Branch…"
+msgstr "الفرع…"
+
+msgid "Main branch"
+msgstr "الفرع الأساسي"
+
+msgid "Planned for today"
+msgstr "المخطط لليوم"
+
+msgid "Their main branch"
+msgstr "فرعهم الأساسي"
+
+msgid "You were at %s, not the branch planned for today; your manager will see this."
+msgstr "كنت في %s وليس الفرع المخطط لليوم، وسيرى مديرك ذلك."
+
+msgid "Attendance Corrections"
+msgstr "تصحيحات الحضور"
+
+msgid "Corrections"
+msgstr "التصحيحات"
+
+msgid "Attendance correction to review"
+msgstr "تصحيح حضور ينتظر المراجعة"
+
+msgid "%1$s asks to correct %2$s: %3$s."
+msgstr "%1$s يطلب تصحيح يوم %2$s: %3$s."
+
+msgid "Correction rejected"
+msgstr "رُفض التصحيح"
+
+msgid "Your correction for %1$s was rejected: %2$s"
+msgstr "رُفض طلب تصحيح يوم %1$s: %2$s"
+
+msgid "Correction approved"
+msgstr "تمت الموافقة على التصحيح"
+
+msgid "Your correction for %1$s was approved: %2$s."
+msgstr "تمت الموافقة على تصحيح يوم %1$s: %2$s."
+
+msgid "Forgot Sign Out"
+msgstr "نسيت الانصراف"
+
+msgid "Forgot Sign In"
+msgstr "نسيت الحضور"
+
+msgid "Wrong time"
+msgstr "وقت غلط"
+
+msgid "Whole day missing"
+msgstr "يوم كامل ناقص"
+
+msgid "Waiting"
+msgstr "في الانتظار"
+
+msgid "Waiting for HR"
+msgstr "عند الموارد البشرية"
+
+msgid "Attendance corrections are switched off."
+msgstr "تصحيحات الحضور متوقفة."
+
+msgid "Your account is not linked to an employee."
+msgstr "حسابك غير مرتبط بموظف."
+
+msgid "This kind of correction is not available."
+msgstr "هذا النوع من التصحيح غير متاح."
+
+msgid "Choose a valid day."
+msgstr "اختر يومًا صحيحًا."
+
+msgid "You cannot correct a day that has not come yet."
+msgstr "لا يمكن تصحيح يوم لم يأتِ بعد."
+
+msgid "This day is more than %d day ago, so it cannot be corrected from the app. Ask HR to correct it."
+msgid_plural "This day is more than %d days ago, so it cannot be corrected from the app. Ask HR to correct it."
+msgstr[0] "مرّ على هذا اليوم أكثر من %d يوم، فلا يمكن تصحيحه من التطبيق. اطلب من الموارد البشرية تصحيحه."
+msgstr[1] "مرّ على هذا اليوم أكثر من %d يوم، فلا يمكن تصحيحه من التطبيق. اطلب من الموارد البشرية تصحيحه."
+msgstr[2] "مرّ على هذا اليوم أكثر من %d يوم، فلا يمكن تصحيحه من التطبيق. اطلب من الموارد البشرية تصحيحه."
+msgstr[3] "مرّ على هذا اليوم أكثر من %d أيام، فلا يمكن تصحيحه من التطبيق. اطلب من الموارد البشرية تصحيحه."
+msgstr[4] "مرّ على هذا اليوم أكثر من %d يومًا، فلا يمكن تصحيحه من التطبيق. اطلب من الموارد البشرية تصحيحه."
+msgstr[5] "مرّ على هذا اليوم أكثر من %d يوم، فلا يمكن تصحيحه من التطبيق. اطلب من الموارد البشرية تصحيحه."
+
+msgid "You already asked to correct this day. Wait for the decision."
+msgstr "طلبت تصحيح هذا اليوم بالفعل. انتظر القرار."
+
+msgid "Write what happened."
+msgstr "اكتب ما حدث."
+
+msgid "Attach a photo for this kind of correction."
+msgstr "أرفق صورة لهذا النوع من التصحيح."
+
+msgid "The photo could not be saved. Use a JPG, PNG or WebP image."
+msgstr "تعذّر حفظ الصورة. استخدم صورة JPG أو PNG أو WebP."
+
+msgid "The photo is larger than 8 MB."
+msgstr "حجم الصورة أكبر من 8 ميجابايت."
+
+msgid "Enter the correct time."
+msgstr "أدخل الوقت الصحيح."
+
+msgid "That time has not come yet today."
+msgstr "هذا الوقت لم يأتِ بعد اليوم."
+
+msgid "A Sign In is already recorded for this day: choose \"Wrong time\" to change it."
+msgstr "هناك تسجيل حضور لهذا اليوم: اختر «وقت غلط» لتغييره."
+
+msgid "There is no Sign In on this day: choose \"Forgot Sign In\" or \"Whole day missing\"."
+msgstr "لا يوجد تسجيل حضور في هذا اليوم: اختر «نسيت الحضور» أو «يوم كامل ناقص»."
+
+msgid "A Sign Out is already recorded for this day: choose \"Wrong time\" to change it."
+msgstr "هناك تسجيل انصراف لهذا اليوم: اختر «وقت غلط» لتغييره."
+
+msgid "This day already has a Sign In or Sign Out: choose another kind of correction."
+msgstr "هذا اليوم فيه تسجيل حضور أو انصراف: اختر نوعًا آخر من التصحيح."
+
+msgid "That time is not recorded on this day."
+msgstr "هذا الوقت غير مسجّل في هذا اليوم."
+
+msgid "Sign Out must be after Sign In."
+msgstr "يجب أن يكون الانصراف بعد الحضور."
+
+msgid "That is the time already recorded."
+msgstr "هذا هو الوقت المسجّل بالفعل."
+
+msgid "You have used all your corrections for this month."
+msgstr "استخدمت كل طلبات التصحيح المسموحة هذا الشهر."
+
+msgid "Write why you reject it: the employee will see it."
+msgstr "اكتب سبب الرفض: سيراه الموظف."
+
+msgid "You cannot decide your own request."
+msgstr "لا يمكنك اتخاذ قرار في طلبك أنت."
+
+msgid "You cannot decide this request."
+msgstr "لا يمكنك اتخاذ قرار في هذا الطلب."
+
+msgid "This request was already decided."
+msgstr "تم اتخاذ قرار في هذا الطلب بالفعل."
+
+msgid "The day changed since this request was made, so it cannot be applied. Reject it, or ask HR to correct the day."
+msgstr "تغيّر اليوم منذ تقديم هذا الطلب، فلا يمكن تطبيقه. ارفضه، أو اطلب من الموارد البشرية تصحيح اليوم."
+
+msgid "The approval could not be recorded. Please try again."
+msgstr "تعذّر تسجيل الموافقة. حاول مرة أخرى."
+
+msgid "Not saved"
+msgstr "لم يُحفظ"
+
+msgid "No approval was needed: your day is corrected."
+msgstr "لم يكن الطلب يحتاج موافقة: تم تصحيح يومك."
+
+msgid "Request sent"
+msgstr "تم إرسال الطلب"
+
+msgid "Your request went to HR for approval. You will get a notification when it is decided."
+msgstr "وصل طلبك إلى الموارد البشرية للموافقة. سيصلك إشعار عند اتخاذ القرار."
+
+msgid "Your manager will review it. You will get a notification when it is decided."
+msgstr "سيراجعه مديرك. سيصلك إشعار عند اتخاذ القرار."
+
+msgid "The day is corrected. The original record is kept, and the correction is in the Audit Log under your name."
+msgstr "تم تصحيح اليوم. السجل الأصلي محفوظ، والتصحيح مسجّل باسمك في سجل التدقيق."
+
+msgid "The employee will see your note."
+msgstr "سيرى الموظف ملاحظتك."
+
+msgid "The request moved to the next approval level."
+msgstr "انتقل الطلب إلى مستوى الموافقة التالي."
+
+msgid "The request now goes to HR for the second approval."
+msgstr "ينتقل الطلب الآن إلى الموارد البشرية للموافقة الثانية."
+
+msgid "You did not sign out today"
+msgstr "لم تسجّل الانصراف اليوم"
+
+msgid "You signed in at %s. If you have left, request a correction with the time you left."
+msgstr "سجّلت الحضور الساعة %s. لو غادرت بالفعل، اطلب تصحيحًا بوقت مغادرتك."
+
+msgid "Requests"
+msgstr "الطلبات"
+
+msgid "Report"
+msgstr "التقرير"
+
+msgid "Settings"
+msgstr "الإعدادات"
+
+msgid "All departments"
+msgstr "كل الإدارات"
+
+msgid "Correct directly"
+msgstr "تصحيح مباشر"
+
+msgid "Feature Configuration"
+msgstr "إعدادات الميزات"
+
+msgid "Correction saved. The original record is kept and the correction is in the Audit Log."
+msgstr "تم حفظ التصحيح. السجل الأصلي محفوظ، والتصحيح في سجل التدقيق."
+
+msgid "Approved: the day is corrected."
+msgstr "تمت الموافقة: تم تصحيح اليوم."
+
+msgid "Rejected. The employee will see your note."
+msgstr "تم الرفض. سيرى الموظف ملاحظتك."
+
+msgid "Approved at this level."
+msgstr "تمت الموافقة في هذا المستوى."
+
+msgid "All types"
+msgstr "كل الأنواع"
+
+msgid "%d request"
+msgid_plural "%d requests"
+msgstr[0] "%d طلب"
+msgstr[1] "%d طلب"
+msgstr[2] "%d طلب"
+msgstr[3] "%d طلبات"
+msgstr[4] "%d طلبًا"
+msgstr[5] "%d طلب"
+
+msgid "Type"
+msgstr "النوع"
+
+msgid "Change"
+msgstr "التغيير"
+
+msgid "Requested"
+msgstr "تاريخ الطلب"
+
+msgid "Decision"
+msgstr "القرار"
+
+msgid "No correction requests with these filters."
+msgstr "لا توجد طلبات تصحيح بهذه التصفية."
+
+msgid "HR"
+msgstr "الموارد البشرية"
+
+msgid "Direct by HR"
+msgstr "مباشر من الموارد البشرية"
+
+msgid "Payroll: carried to %s"
+msgstr "الرواتب: مُرحّل إلى %s"
+
+msgid "Sign In earlier"
+msgstr "حضور أبكر"
+
+msgid "Above the limit"
+msgstr "فوق الحد"
+
+msgid "Note (required to reject)"
+msgstr "ملاحظة (مطلوبة للرفض)"
+
+msgid "Note to the employee"
+msgstr "ملاحظة للموظف"
+
+msgid "Show"
+msgstr "عرض"
+
+msgid "Download CSV"
+msgstr "تنزيل CSV"
+
+msgid "requests"
+msgstr "طلبات"
+
+msgid "approved (%d%%)"
+msgstr "موافقة (%d%%)"
+
+msgid "approved"
+msgstr "موافقة"
+
+msgid "rejected"
+msgstr "مرفوض"
+
+msgid "waiting"
+msgstr "في الانتظار"
+
+msgid "By employee"
+msgstr "حسب الموظف"
+
+msgid "\"Frequent\" = %d or more requests in a month: a pattern worth a look."
+msgstr "«متكرر» = %d طلبات أو أكثر في الشهر: نمط يستحق المتابعة."
+
+msgid "Department"
+msgstr "الإدارة"
+
+msgid "Total"
+msgstr "الإجمالي"
+
+msgid "No correction requests this month."
+msgstr "لا توجد طلبات تصحيح هذا الشهر."
+
+msgid "frequent"
+msgstr "متكرر"
+
+msgid "By department"
+msgstr "حسب الإدارة"
+
+msgid "No department"
+msgstr "بدون إدارة"
+
+msgid "The deadline must be between 1 and 60 days."
+msgstr "يجب أن تكون المهلة بين 1 و60 يومًا."
+
+msgid "The monthly limit must be between 0 and 31."
+msgstr "يجب أن يكون الحد الشهري بين 0 و31."
+
+msgid "Enter the reminder time as HH:MM."
+msgstr "أدخل وقت التذكير بالصيغة HH:MM."
+
+msgid "Keep at least one kind of correction."
+msgstr "اترك نوعًا واحدًا على الأقل من التصحيح."
+
+msgid "Settings saved."
+msgstr "تم حفظ الإعدادات."
+
+msgid "Kinds and photo"
+msgstr "الأنواع والصورة"
+
+msgid "Kind"
+msgstr "النوع"
+
+msgid "Off"
+msgstr "بدون"
+
+msgid "Required"
+msgstr "مطلوبة"
+
+msgid "Deadline"
+msgstr "المهلة"
+
+msgid "days after the day"
+msgstr "يوم بعد اليوم"
+
+msgid "After that, only HR can correct the day, directly."
+msgstr "بعدها لا يصحّح اليوم إلا الموارد البشرية، مباشرة."
+
+msgid "Monthly limit per employee"
+msgstr "الحد الشهري لكل موظف"
+
+msgid "0 = no limit"
+msgstr "0 = بلا حد"
+
+msgid "Above it: refused"
+msgstr "فوق الحد: يُرفض"
+
+msgid "Above it: allowed, and HR approves it too (second level)"
+msgstr "فوق الحد: يُقبل، وتوافق عليه الموارد البشرية أيضًا (مستوى ثانٍ)"
+
+msgid "Earlier Sign In"
+msgstr "تقديم وقت الحضور"
+
+msgid "A request that moves Sign In earlier needs the second level (HR)"
+msgstr "الطلب الذي يقدّم وقت الحضور يحتاج المستوى الثاني (الموارد البشرية)"
+
+msgid "It removes lateness, which changes pay."
+msgstr "لأنه يلغي التأخير، وهذا يغيّر الراتب."
+
+msgid "End-of-day reminder"
+msgstr "تذكير نهاية اليوم"
+
+msgid "Notify anyone still without a Sign Out at"
+msgstr "أرسل إشعارًا لمن لم يسجّل الانصراف الساعة"
+
+msgid "\"You did not sign out today. Request a correction?\" The notification opens the request form."
+msgstr "«لم تسجّل الانصراف اليوم. تطلب تصحيحًا؟» الإشعار يفتح نموذج الطلب."
+
+msgid "Approvals"
+msgstr "الموافقات"
+
+msgid "Who approves, and how many levels:"
+msgstr "من يوافق، وكم مستوى:"
+
+msgid "Approval Workflows → Attendance Correction"
+msgstr "مسارات الموافقة ← تصحيح الحضور"
+
+msgid "Without an active workflow, managers with \"Manage Time\" decide for their department. The second level is anyone with \"Manage Attendance Corrections\"."
+msgstr "بدون مسار موافقة مفعّل، يقرّر المديرون أصحاب صلاحية «إدارة الوقت» لإدارتهم. المستوى الثاني هو أي شخص لديه صلاحية «إدارة تصحيحات الحضور»."
+
+msgid "Correct attendance directly"
+msgstr "تصحيح حضور مباشر"
+
+msgid "For cases the employee cannot request from the app (for example after the deadline). Same path as requests: the original record never changes."
+msgstr "للحالات التي لا يستطيع الموظف طلبها من التطبيق (مثلًا بعد انتهاء المهلة). نفس طريق الطلبات: السجل الأصلي لا يتغيّر."
+
+msgid "Back to the requests"
+msgstr "العودة إلى الطلبات"
+
+msgid "Type a few letters and pick from the list."
+msgstr "اكتب بعض الحروف واختر من القائمة."
+
+msgid "Which time is wrong?"
+msgstr "أي وقت غلط؟"
+
+msgid "\"Which time\" is used for \"Wrong time\" only."
+msgstr "«أي وقت» يُستخدم مع «وقت غلط» فقط."
+
+msgid "Correct times"
+msgstr "الأوقات الصحيحة"
+
+msgid "Fill the time the kind needs: Sign Out for \"Forgot Sign Out\", Sign In for \"Forgot Sign In\", both for a whole day."
+msgstr "املأ الوقت الذي يحتاجه النوع: الانصراف لـ«نسيت الانصراف»، والحضور لـ«نسيت الحضور»، والاثنان ليوم كامل."
+
+msgid "Required. The employee sees it, and it goes to the Audit Log."
+msgstr "مطلوب. يراه الموظف، ويُسجّل في سجل التدقيق."
+
+msgid "Save correction"
+msgstr "حفظ التصحيح"
+
+msgid "My recent days"
+msgstr "آخر أيامي"
+
+msgid "My corrections"
+msgstr "طلبات التصحيح"
+
+msgid "No days recorded yet"
+msgstr "لا توجد أيام مسجّلة بعد"
+
+msgid "Your days appear here after your first Sign In, with a button to request a correction if you forget one."
+msgstr "تظهر أيامك هنا بعد أول تسجيل حضور، ومعها زر لطلب التصحيح لو نسيت تسجيلًا."
+
+msgid "none"
+msgstr "لا يوجد"
+
+msgid "Corrected"
+msgstr "مُصحَّح"
+
+msgid "Correction waiting"
+msgstr "التصحيح في الانتظار"
+
+msgid "Today · not signed out yet"
+msgstr "اليوم · لم تسجّل الانصراف بعد"
+
+msgid "No Sign Out recorded"
+msgstr "لم يُسجَّل الانصراف"
+
+msgid "No Sign In recorded"
+msgstr "لم يُسجَّل الحضور"
+
+msgid "Late %d min"
+msgstr "متأخر %d دقيقة"
+
+msgid "Day off"
+msgstr "يوم إجازة"
+
+msgid "Request correction"
+msgstr "طلب تصحيح"
+
+msgid "Correct"
+msgstr "تصحيح"
+
+msgid "You can ask to correct a day within %d day"
+msgid_plural "You can ask to correct a day within %d days"
+msgstr[0] "يمكنك طلب تصحيح أي يوم خلال %d يوم"
+msgstr[1] "يمكنك طلب تصحيح أي يوم خلال %d يوم"
+msgstr[2] "يمكنك طلب تصحيح أي يوم خلال %d يوم"
+msgstr[3] "يمكنك طلب تصحيح أي يوم خلال %d أيام"
+msgstr[4] "يمكنك طلب تصحيح أي يوم خلال %d يومًا"
+msgstr[5] "يمكنك طلب تصحيح أي يوم خلال %d يوم"
+
+msgid "%1$d of %2$d requests used this month"
+msgstr "استخدمت %1$d من %2$d طلبات هذا الشهر"
+
+msgid "Request a correction"
+msgstr "طلب تصحيح حضور"
+
+msgid "What happened?"
+msgstr "ماذا حدث؟"
+
+msgid "Correct Sign In time"
+msgstr "وقت الحضور الصحيح"
+
+msgid "Correct Sign Out time"
+msgstr "وقت الانصراف الصحيح"
+
+msgid "Photo (optional)"
+msgstr "صورة (اختياري)"
+
+msgid "Photo (required)"
+msgstr "صورة (مطلوبة)"
+
+msgid "For example, a photo from the customer's site"
+msgstr "مثلًا صورة من عند العميل"
+
+msgid "You have used this month's corrections: this request goes to HR."
+msgstr "استخدمت طلبات التصحيح لهذا الشهر: هذا الطلب سيذهب إلى الموارد البشرية."
+
+msgid "This is request %1$d of the %2$d allowed this month"
+msgstr "هذا هو الطلب %1$d من %2$d المسموح بها هذا الشهر"
+
+msgid "Send request"
+msgstr "إرسال الطلب"
+
+msgid "Your manager %s reviews it. The original record never changes."
+msgstr "مديرك %s سيراجعه. السجل الأصلي لا يتغيّر."
+
+msgid "Your manager reviews it. The original record never changes."
+msgstr "مديرك سيراجعه. السجل الأصلي لا يتغيّر."
+
+msgid "with HR"
+msgstr "عند الموارد البشرية"
+
+msgid "%s · corrections"
+msgstr "%s · طلبات التصحيح"
+
+msgid "%1$d of %2$d"
+msgstr "%1$d من %2$d"
+
+msgid "Limit reached · new requests go to HR"
+msgstr "وصلت للحد · الطلبات الجديدة تذهب للموارد البشرية"
+
+msgid "Limit reached"
+msgstr "وصلت للحد"
+
+msgid "Resets on %s"
+msgstr "يتجدد يوم %s"
+
+msgid "Corrections to approve"
+msgstr "تصحيحات للموافقة"
+
+msgid "Your team's requests, each with what the system knows about the day."
+msgstr "طلبات فريقك، ومع كل طلب ما يعرفه النظام عن اليوم."
+
+msgid "Moves Sign In earlier, which removes lateness: HR approves it too."
+msgstr "يقدّم وقت الحضور فيلغي التأخير: توافق عليه الموارد البشرية أيضًا."
+
+msgid "Above the monthly limit: HR approves it too."
+msgstr "فوق الحد الشهري: توافق عليه الموارد البشرية أيضًا."
+
+msgid "What the system knows about the day"
+msgstr "ما يعرفه النظام عن اليوم"
+
+msgid "read-only"
+msgstr "للقراءة فقط"
+
+msgid "Nothing recorded that day"
+msgstr "لم يُسجَّل شيء في هذا اليوم"
+
+msgid "Signed out"
+msgstr "سجّل الانصراف"
+
+msgid "Signed in"
+msgstr "سجّل الحضور"
+
+msgid "a correction"
+msgstr "تصحيح"
+
+msgid "QR"
+msgstr "QR"
+
+msgid "automatic"
+msgstr "تلقائي"
+
+msgid "inside the area (%d m)"
+msgstr "داخل النطاق (%d م)"
+
+msgid "inside the area"
+msgstr "داخل النطاق"
+
+msgid "outside the area (%d m)"
+msgstr "خارج النطاق (%d م)"
+
+msgid "outside the area"
+msgstr "خارج النطاق"
+
+msgid "device check: needs a look"
+msgstr "فحص الجهاز: يحتاج مراجعة"
+
+msgid "device check passed"
+msgstr "فحص الجهاز سليم"
+
+msgid "replaced by a correction"
+msgstr "استُبدل بتصحيح"
+
+msgid "Presence check: passed"
+msgstr "تحقق الحضور: ناجح"
+
+msgid "Presence check: not answered"
+msgstr "تحقق الحضور: لم يُرد"
+
+msgid "answered at %s"
+msgstr "ردّ الساعة %s"
+
+msgid "kiosk"
+msgstr "كشك"
+
+msgid "and no kiosk or QR event"
+msgstr "ولا يوجد تسجيل من الكشك أو QR"
+
+msgid "Last device location"
+msgstr "آخر موقع للجهاز"
+
+msgid "at the work location"
+msgstr "في موقع العمل"
+
+msgid "away from the work location"
+msgstr "بعيدًا عن موقع العمل"
+
+msgid "Not set"
+msgstr "غير محدد"
+
+msgid "Corrections this month"
+msgstr "تصحيحات هذا الشهر"
+
+msgid "None"
+msgstr "لا يوجد"
+
+msgid "Note to the employee (required to reject)"
+msgstr "ملاحظة للموظف (مطلوبة عند الرفض)"
+
+msgid "No correction requests"
+msgstr "لا توجد طلبات تصحيح"
+
+msgid "If you forget to sign in or out, or a time is wrong, ask for a correction within %d day and your manager reviews it."
+msgid_plural "If you forget to sign in or out, or a time is wrong, ask for a correction within %d days and your manager reviews it."
+msgstr[0] "لو نسيت تسجيل الحضور أو الانصراف، أو سُجّل وقت غلط، اطلب تصحيحًا خلال %d يوم ويراجعه مديرك."
+msgstr[1] "لو نسيت تسجيل الحضور أو الانصراف، أو سُجّل وقت غلط، اطلب تصحيحًا خلال %d يوم ويراجعه مديرك."
+msgstr[2] "لو نسيت تسجيل الحضور أو الانصراف، أو سُجّل وقت غلط، اطلب تصحيحًا خلال %d يوم ويراجعه مديرك."
+msgstr[3] "لو نسيت تسجيل الحضور أو الانصراف، أو سُجّل وقت غلط، اطلب تصحيحًا خلال %d أيام ويراجعه مديرك."
+msgstr[4] "لو نسيت تسجيل الحضور أو الانصراف، أو سُجّل وقت غلط، اطلب تصحيحًا خلال %d يومًا ويراجعه مديرك."
+msgstr[5] "لو نسيت تسجيل الحضور أو الانصراف، أو سُجّل وقت غلط، اطلب تصحيحًا خلال %d يوم ويراجعه مديرك."
+
+msgid "Waiting for a decision"
+msgstr "في انتظار القرار"
+
+msgid "No corrections waiting"
+msgstr "لا توجد تصحيحات في الانتظار"
+
+msgid "Daily Workers"
+msgstr "العمالة اليومية"
+
+msgid "My sites"
+msgstr "مواقعي"
+
+msgid "Payout"
+msgstr "اليومية"
+
+msgid "Formwork carpenter"
+msgstr "نجّار مسلّح"
+
+msgid "Steel fixer"
+msgstr "حدّاد مسلّح"
+
+msgid "Helper"
+msgstr "مساعد"
+
+msgid "Plasterer"
+msgstr "مبيّض محارة"
+
+msgid "Plumber"
+msgstr "سبّاك"
+
+msgid "Electrician"
+msgstr "كهربائي"
+
+msgid "Painter"
+msgstr "نقّاش"
+
+msgid "EGP %s"
+msgstr "%s ج.م"
+
+msgid "%s days"
+msgstr "%s يوم"
+
+msgid "Half day"
+msgstr "نص يوم"
+
+msgid "Foreman only records attendance"
+msgstr "المشرف بس يسجّل اليومية"
+
+msgid "Workers sign in themselves (mobile + PIN, no email)"
+msgstr "العامل يسجّل لنفسه (موبايل + رقم سري، بدون إيميل)"
+
+msgid "Both"
+msgstr "الاتنين"
+
+msgid "Other ID"
+msgstr "إثبات آخر"
+
+msgid "Daily workers are switched off."
+msgstr "العمالة اليومية مقفولة."
+
+msgid "You do not have access to this site."
+msgstr "مالكش صلاحية على الموقع ده."
+
+msgid "This site has no map position. Ask the site manager to set it in Work Locations."
+msgstr "الموقع ده مالوش مكان على الخريطة. اطلب من مدير الموقع يحدده في مواقع العمل."
+
+msgid "Your position could not be read. Turn on location (GPS) and try again."
+msgstr "مش قادرين نقرا مكانك. شغّل الموقع (GPS) وجرّب تاني."
+
+msgid "Your position does not look real (it moved too fast). Try again from the site."
+msgstr "مكانك مش منطقي (اتحرك بسرعة مستحيلة). جرّب تاني من الموقع."
+
+msgid "You are outside the site. The day sheet is saved from inside the site only."
+msgstr "أنت برّه الموقع. اليومية بتتسجّل من جوّه الموقع بس."
+
+msgid "Take the group photo first. A photo is needed to confirm the day, from the camera, not the gallery."
+msgstr "صوّر العمال الأول. الصورة مطلوبة لتأكيد اليومية، بالكاميرا مش من المعرض."
+
+msgid "The photo could not be read. Take it again (JPG, PNG or WebP)."
+msgstr "الصورة مش مقروءة. صوّرها تاني (JPG أو PNG أو WebP)."
+
+msgid "The photo is larger than 10 MB."
+msgstr "الصورة أكبر من 10 ميجا."
+
+msgid "This day is already saved and locked. Ask for a change instead."
+msgstr "اليوم ده اتسجّل واتقفل. اطلب تعديل بدل كده."
+
+msgid "This period is paid and locked."
+msgstr "الفترة دي اتصرفت واتقفلت."
+
+msgid "At this site the workers sign in themselves; the foreman does not record the day."
+msgstr "في الموقع ده العمال بيسجّلوا لنفسهم؛ المشرف مش بيسجّل اليومية."
+
+msgid "At this site the foreman records the day; workers do not sign in themselves."
+msgstr "في الموقع ده المشرف هو اللي بيسجّل اليومية؛ العمال مش بيسجّلوا لنفسهم."
+
+msgid "Choose present, half day or absent for every worker."
+msgstr "اختار حاضر أو نص يوم أو غايب لكل عامل."
+
+msgid "Extra hours are between 0 and 12, in half hours."
+msgstr "الساعات الإضافية من 0 لـ 12، بنص ساعة."
+
+msgid "There are no workers at this site today."
+msgstr "مفيش عمال في الموقع ده النهارده."
+
+msgid "A worker in the list was already recorded at another site today."
+msgstr "فيه عامل في القائمة اتسجّل في موقع تاني النهارده."
+
+msgid "Enter the worker's name."
+msgstr "اكتب اسم العامل."
+
+msgid "Enter a daily rate above zero."
+msgstr "اكتب يومية أكبر من صفر."
+
+msgid "The hourly rate cannot be negative."
+msgstr "سعر الساعة ماينفعش يكون بالسالب."
+
+msgid "The mobile number is not valid (8 to 15 digits)."
+msgstr "رقم الموبايل مش صحيح (من 8 لـ 15 رقم)."
+
+msgid "Another active worker has this mobile number."
+msgstr "فيه عامل تاني نشط بنفس رقم الموبايل."
+
+msgid "The national ID is not valid: it must contain digits only."
+msgstr "الرقم القومي غير صحيح: لازم يكون أرقام بس."
+
+msgid "The national ID is not valid: it must be 14 digits."
+msgstr "الرقم القومي غير صحيح: لازم يكون 14 رقم."
+
+msgid "The national ID is not valid: the first digit must be 2 or 3."
+msgstr "الرقم القومي غير صحيح: أول رقم لازم يكون 2 أو 3."
+
+msgid "The national ID is not valid: the birth date in it is not a real date."
+msgstr "الرقم القومي غير صحيح: تاريخ الميلاد اللي فيه مش تاريخ حقيقي."
+
+msgid "The national ID is not valid: the governorate code is unknown."
+msgstr "الرقم القومي غير صحيح: كود المحافظة مش معروف."
+
+msgid "Enter the ID number (4 to 30 letters or digits)."
+msgstr "اكتب رقم الإثبات (من 4 لـ 30 حرف أو رقم)."
+
+msgid "A worker with this national ID is already registered."
+msgstr "فيه عامل متسجّل بنفس الرقم القومي."
+
+msgid "This national ID belongs to a worker marked \"Do not rehire\"."
+msgstr "الرقم القومي ده لعامل متعلّم عليه «لا يُعاد تشغيله»."
+
+msgid "The PIN must be 4 to 6 digits."
+msgstr "الرقم السري لازم يكون من 4 لـ 6 أرقام."
+
+msgid "Choose a trade from the list."
+msgstr "اختار مهنة من القائمة."
+
+msgid "Choose today or a later day."
+msgstr "اختار النهارده أو يوم بعده."
+
+msgid "The worker is already at that site."
+msgstr "العامل موجود في الموقع ده أصلاً."
+
+msgid "Enter an amount above zero."
+msgstr "اكتب مبلغ أكبر من صفر."
+
+msgid "There is nothing to pay in this period."
+msgstr "مفيش حاجة تتصرف في الفترة دي."
+
+msgid "Write the reason for the change."
+msgstr "اكتب سبب التعديل."
+
+msgid "Nothing was changed."
+msgstr "مفيش حاجة اتغيّرت."
+
+msgid "A change for this day is already waiting."
+msgstr "فيه طلب تعديل لليوم ده مستني بالفعل."
+
+msgid "Write why you reject the change."
+msgstr "اكتب سبب رفض التعديل."
+
+msgid "This change was already decided."
+msgstr "الطلب ده اتبتّ فيه خلاص."
+
+msgid "This worker has paid days, so the record stays for the accounts. Mark the worker \"Do not rehire\" instead."
+msgstr "فيه أيام اتصرفت للعامل ده، فالسجل لازم يفضل للحسابات. اختار «لا يُعاد تشغيله» بدل الحذف."
+
+msgid "Worker not found."
+msgstr "العامل مش موجود."
+
+msgid "The mobile number or PIN is incorrect."
+msgstr "رقم الموبايل أو الرقم السري غلط."
+
+msgid "Too many attempts. Try again in 15 minutes."
+msgstr "محاولات كتير. جرّب تاني بعد 15 دقيقة."
+
+msgid "You are not assigned to a site today. Ask your foreman."
+msgstr "مش متسجّل لك موقع النهارده. اسأل المشرف."
+
+msgid "Your day is already recorded."
+msgstr "يومك اتسجّل بالفعل."
+
+msgid "Could not save. Please try again."
+msgstr "ماتحفظش. جرّب تاني."
+
+msgid "%1$d workers at %2$s: %3$d present, %4$d half day, %5$d absent. Cost of the day %6$s."
+msgstr "%1$d عامل في %2$s: %3$d حاضر، %4$d نص يوم، %5$d غايب. تكلفة اليوم %6$s."
+
+msgid "Day sheet saved"
+msgstr "تم تسجيل اليومية"
+
+msgid "Worker added"
+msgstr "تمت إضافة العامل"
+
+msgid "No email or account needed. The worker is in today's list for this site."
+msgstr "مش محتاج إيميل ولا حساب. الاسم اتضاف لقائمة النهارده في الموقع ده."
+
+msgid "Worker moved"
+msgstr "تم نقل العامل"
+
+msgid "Days at the old site stay in the worker's history and in that project's cost."
+msgstr "الأيام في الموقع القديم بتفضل في سجل العامل وفي تكلفة المشروع ده."
+
+msgid "Advance recorded"
+msgstr "تم تسجيل السلفة"
+
+msgid "It comes off the worker's next payout."
+msgstr "هتتخصم من الصرفية الجاية."
+
+msgid "Payout recorded"
+msgstr "تم تسجيل الصرف"
+
+msgid "The period is paid and locked. A new advance comes off the next payout."
+msgstr "الفترة اتصرفت واتقفلت. أي سلفة جديدة تتخصم من الصرف الجاي."
+
+msgid "Change requested"
+msgstr "تم طلب التعديل"
+
+msgid "The day stays as saved until a manager approves the change."
+msgstr "اليوم بيفضل زي ما اتسجّل لحد ما مدير يوافق على التعديل."
+
+msgid "Day sheet change to review"
+msgstr "تعديل يومية محتاج مراجعة"
+
+msgid "A foreman asks to change %1$s's day on %2$s."
+msgstr "مشرف بيطلب تعديل يوم %1$s بتاريخ %2$s."
+
+msgid "Day sheet change approved"
+msgstr "تمت الموافقة على تعديل اليومية"
+
+msgid "Day sheet change rejected"
+msgstr "اترفض تعديل اليومية"
+
+msgid "The day is changed. The original values are kept with the request."
+msgstr "اليوم اتعدّل. القيم الأصلية محفوظة مع الطلب."
+
+msgid "%1$s – %2$s"
+msgstr "%1$s – %2$s"
+
+msgid "Daily wages sheet"
+msgstr "كشف اليومية"
+
+msgid "%s · amounts in Egyptian pounds"
+msgstr "%s · المبالغ بالجنيه المصري"
+
+msgid "Site"
+msgstr "الموقع"
+
+msgid "Period"
+msgstr "الفترة"
+
+msgid "Foreman"
+msgstr "المشرف"
+
+msgid "Sheet no."
+msgstr "رقم الكشف"
+
+msgid "Not paid yet"
+msgstr "لسه ما اتصرفش"
+
+msgid "Trade"
+msgstr "المهنة"
+
+msgid "Days"
+msgstr "الأيام"
+
+msgid "Rate"
+msgstr "اليومية"
+
+msgid "Extra h"
+msgstr "س إضافي"
+
+msgid "Amount"
+msgstr "المبلغ"
+
+msgid "Advance"
+msgstr "سلفة"
+
+msgid "Net"
+msgstr "الصافي"
+
+msgid "Signature / thumbprint"
+msgstr "التوقيع / البصمة"
+
+msgid "By signing next to my name I confirm I received the net amount shown for my work at this site in this period. Deducted advances were paid before."
+msgstr "أقرّ أنا الموقّع أمام اسمي باستلام المبلغ الصافي الموضّح نظير عملي في الموقع خلال الفترة المذكورة. السلف المخصومة سبق صرفها."
+
+msgid "Cashier"
+msgstr "أمين الصندوق"
+
+msgid "Site manager"
+msgstr "مدير الموقع"
+
+msgid "By site"
+msgstr "حسب الموقع"
+
+msgid "Project"
+msgstr "المشروع"
+
+msgid "Workers"
+msgstr "العمال"
+
+msgid "By trade"
+msgstr "حسب المهنة"
+
+msgid "By subcontractor"
+msgstr "حسب مقاول الباطن"
+
+msgid "Subcontractor"
+msgstr "مقاول الباطن"
+
+msgid "None (direct)"
+msgstr "بدون (عمالة مباشرة)"
+
+msgid "Unpaid"
+msgstr "غير مصروف"
+
+msgid "Worker"
+msgstr "العامل"
+
+msgid "Paid"
+msgstr "اتصرف"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
+
+msgid "Daily workers reports"
+msgstr "تقارير العمالة اليومية"
+
+msgid "Labour cost in the period"
+msgstr "تكلفة العمالة في الفترة"
+
+msgid "Owed, not paid yet"
+msgstr "مستحق ولسه ما اتصرفش"
+
+msgid "%s: labour so far"
+msgstr "%s: تكلفة العمالة لحد النهارده"
+
+msgid "By project / site"
+msgstr "حسب المشروع / الموقع"
+
+msgid "Changes"
+msgstr "التعديلات"
+
+msgid "Worker saved."
+msgstr "تم حفظ العامل."
+
+msgid "Worker and national ID deleted."
+msgstr "تم حذف العامل والرقم القومي."
+
+msgid "Change approved. The original values are kept with the request."
+msgstr "تمت الموافقة على التعديل. القيم الأصلية محفوظة مع الطلب."
+
+msgid "Change rejected."
+msgstr "اترفض التعديل."
+
+msgid "Add worker"
+msgstr "إضافة عامل"
+
+msgid "Name, mobile or full national ID"
+msgstr "الاسم أو الموبايل أو الرقم القومي كامل"
+
+msgid "All trades"
+msgstr "كل المهن"
+
+msgid "All subcontractors"
+msgstr "كل مقاولي الباطن"
+
+msgid "All sites"
+msgstr "كل المواقع"
+
+msgid "All statuses"
+msgstr "كل الحالات"
+
+msgid "Do not rehire"
+msgstr "لا يُعاد تشغيله"
+
+msgid "Any rating"
+msgstr "أي تقييم"
+
+msgid "%d worker"
+msgid_plural "%d workers"
+msgstr[0] "%d عامل"
+msgstr[1] "%d عامل"
+msgstr[2] "%d عامل"
+msgstr[3] "%d عمال"
+msgstr[4] "%d عامل"
+msgstr[5] "%d عامل"
+
+msgid "Mobile"
+msgstr "الموبايل"
+
+msgid "National ID"
+msgstr "الرقم القومي"
+
+msgid "Daily rate"
+msgstr "اليومية"
+
+msgid "Site today"
+msgstr "موقع النهارده"
+
+msgid "Rating"
+msgstr "التقييم"
+
+msgid "No workers match these filters."
+msgstr "مفيش عمال مطابقين للتصفية دي."
+
+msgid "No workers yet. Add the first one, or let a foreman add them on site."
+msgstr "مفيش عمال لسه. أضف أول عامل، أو خلّي المشرف يضيفهم من الموقع."
+
+msgid "Daily workers do not appear in staff lists, Attendance or monthly Payroll. National IDs are encrypted and shown in full only with \"View national IDs\"."
+msgstr "العمالة اليومية مش بتظهر في قوائم الموظفين ولا الحضور ولا الرواتب الشهرية. الرقم القومي متشفّر ومش بيظهر كامل غير لصلاحية «عرض الأرقام القومية»."
+
+msgid "The full national ID is shown because you have \"View national IDs\". This reveal is logged under your name."
+msgstr "الرقم القومي الكامل ظاهر لك لأن عندك صلاحية «عرض الأرقام القومية». الإظهار ده اتسجّل باسمك."
+
+msgid "since %s"
+msgstr "من %s"
+
+msgid "Born"
+msgstr "مواليد"
+
+msgid "Extra hour"
+msgstr "الساعة الإضافية"
+
+msgid "Company default"
+msgstr "زي إعداد الشركة"
+
+msgid "Self sign-in"
+msgstr "التسجيل الذاتي"
+
+msgid "PIN set"
+msgstr "فيه رقم سري"
+
+msgid "No PIN"
+msgstr "مفيش رقم سري"
+
+msgid "Delete this worker, the national ID and all their days? This cannot be undone."
+msgstr "تحذف العامل ده والرقم القومي وكل الأيام المسجّلة؟ مش هينفع ترجّع الحذف."
+
+msgid "Delete worker"
+msgstr "حذف العامل"
+
+msgid "Advances not deducted yet"
+msgstr "سلف لسه ما اتخصمتش"
+
+msgid "Sites"
+msgstr "المواقع"
+
+msgid "No days recorded yet."
+msgstr "مفيش أيام متسجّلة لسه."
+
+msgid "Payouts"
+msgstr "اليوميات"
+
+msgid "No payouts yet."
+msgstr "مفيش صرف لسه."
+
+msgid "Extra hour rate"
+msgstr "سعر الساعة الإضافية"
+
+msgid "Empty: the company default (%s)."
+msgstr "فاضي: زي إعداد الشركة (%s)."
+
+msgid "Saved. Enter a number only to replace it."
+msgstr "محفوظ. اكتب رقم بس لو عايز تغيّره."
+
+msgid "Egyptian (14 digits)"
+msgstr "مصري (14 رقم)"
+
+msgid "Other nationality (passport or ID)"
+msgstr "جنسية تانية (جواز سفر أو إثبات)"
+
+msgid "— None —"
+msgstr "— بدون —"
+
+msgid "Site from today"
+msgstr "الموقع من النهارده"
+
+msgid "Leave empty to keep the current site."
+msgstr "سيبه فاضي عشان الموقع الحالي يفضل زي ما هو."
+
+msgid "PIN for self sign-in"
+msgstr "الرقم السري للتسجيل الذاتي"
+
+msgid "A PIN is set. Enter 4 to 6 digits to change it."
+msgstr "فيه رقم سري. اكتب من 4 لـ 6 أرقام لو عايز تغيّره."
+
+msgid "4 to 6 digits. The worker signs in with their mobile number and this PIN."
+msgstr "من 4 لـ 6 أرقام. الدخول برقم الموبايل والرقم ده."
+
+msgid "For the future gate tablet with face recognition."
+msgstr "لتابلت البوابة بالتعرّف على الوجه بعدين."
+
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgid "All projects"
+msgstr "كل المشاريع"
+
+msgid "Export to Excel"
+msgstr "تصدير Excel"
+
+msgid "Insurance report for the accountant"
+msgstr "تقرير التأمينات للمحاسب"
+
+msgid "No days in this period."
+msgstr "مفيش أيام في الفترة دي."
+
+msgid "Workers per site and day"
+msgstr "العمال في كل موقع كل يوم"
+
+msgid "Unpaid balances"
+msgstr "المستحقات اللي ما اتصرفتش"
+
+msgid "Everything is paid."
+msgstr "كل حاجة اتصرفت."
+
+msgid "No change requests."
+msgstr "مفيش طلبات تعديل."
+
+msgid "Who records attendance"
+msgstr "مين يسجّل الحضور"
+
+msgid "Each site can override it below."
+msgstr "ممكن كل موقع يغيّرها في الجدول تحت."
+
+msgid "Pay"
+msgstr "الحساب"
+
+msgid "Full day = daily rate · half day = rate ÷ 2 · extra hours × hourly rate"
+msgstr "يوم كامل = اليومية · نص يوم = اليومية ÷ 2 · الساعات الإضافية × سعر الساعة"
+
+msgid "Pay period"
+msgstr "الصرف"
+
+msgid "Week starts on"
+msgstr "الأسبوع يبدأ يوم"
+
+msgid "Default hourly rate"
+msgstr "سعر الساعة الافتراضي"
+
+msgid "When recording"
+msgstr "عند التسجيل"
+
+msgid "The foreman must be inside the site (same rules as Sign In)"
+msgstr "المشرف لازم يكون جوّه الموقع (نفس قواعد تسجيل الحضور)"
+
+msgid "A group photo with the camera (not the gallery)"
+msgstr "صورة جماعية بالكاميرا (مش من المعرض)"
+
+msgid "Add work locations first (Work Locations)."
+msgstr "أضف مواقع العمل الأول (مواقع العمل)."
+
+msgid "Project site"
+msgstr "موقع مشروع"
+
+msgid "Dates"
+msgstr "التواريخ"
+
+msgid "Foremen / cashiers"
+msgstr "المشرفين / الصرّافين"
+
+msgid "Recording"
+msgstr "التسجيل"
+
+msgid "Project name"
+msgstr "اسم المشروع"
+
+msgid "Company setting"
+msgstr "زي إعداد الشركة"
+
+msgid "Workers themselves"
+msgstr "العمال بنفسهم"
+
+msgid "No one has \"Foreman (daily workers)\" or \"Pay daily workers\" yet."
+msgstr "مفيش حد عنده «مشرف عمالة يومية» أو «صرف العمالة اليومية» لسه."
+
+msgid "Trades"
+msgstr "المهن"
+
+msgid "One per line."
+msgstr "واحد في كل سطر."
+
+msgid "Subcontractors"
+msgstr "مقاولو الباطن"
+
+msgid "Permissions"
+msgstr "الصلاحيات"
+
+msgid "\"Foreman (daily workers)\", \"Pay daily workers\" and \"View national IDs\" are in"
+msgstr "«مشرف عمالة يومية» و«صرف العمالة اليومية» و«عرض الأرقام القومية» موجودين في"
+
+msgid "Roles & Permissions"
+msgstr "الأدوار والصلاحيات"
+
+msgid "Today · %s"
+msgstr "النهارده · %s"
+
+msgid "extra h"
+msgstr "س إضافي"
+
+msgid "Your position is checked when you confirm."
+msgstr "مكانك بيتأكد لما تأكّد اليومية."
+
+msgid "The day is saved from inside the site"
+msgstr "اليومية بتتسجّل من جوّه الموقع"
+
+msgid "Your position is checked when you confirm (within %d m)."
+msgstr "مكانك بيتأكد لما تأكّد (في نطاق %d م)."
+
+msgid "Workers (%d)"
+msgstr "العمال (%d)"
+
+msgid "New worker"
+msgstr "عامل جديد"
+
+msgid "Add a worker with \"New worker\", or move one here from another site."
+msgstr "أضف عامل من «عامل جديد»، أو انقل واحد هنا من موقع تاني."
+
+msgid "self sign-in"
+msgstr "تسجيل ذاتي"
+
+msgid "recorded at another site today"
+msgstr "متسجّل في موقع تاني النهارده"
+
+msgid "change waiting"
+msgstr "تعديل مستني"
+
+msgid "Less"
+msgstr "أقل"
+
+msgid "Cost of the day"
+msgstr "تكلفة اليوم"
+
+msgid "Group photo"
+msgstr "الصورة الجماعية"
+
+msgid "%s m from the site centre"
+msgstr "%s م من نص الموقع"
+
+msgid "Saved at %1$s by %2$s. Changing a saved day is a request with a reason and an approval."
+msgstr "اتسجّلت %1$s بواسطة %2$s. أي تعديل على يوم متسجّل بيبقى طلب بسبب وموافقة."
+
+msgid "Photo taken · tap to take it again"
+msgstr "الصورة اتاخدت · دوس عشان تصوّر تاني"
+
+msgid "Group photo of the workers"
+msgstr "صورة جماعية للعمال"
+
+msgid "Taken with the camera when you record"
+msgstr "تتاخد بالكاميرا وقت التسجيل"
+
+msgid "Checking your position…"
+msgstr "بنتأكد من مكانك…"
+
+msgid "Confirm today's sheet"
+msgstr "تأكيد يومية النهارده"
+
+msgid "Once confirmed, the day is locked."
+msgstr "بعد التأكيد اليوم يتقفل."
+
+msgid "Add a worker"
+msgstr "إضافة عامل"
+
+msgid "Looks valid: 14 digits"
+msgstr "شكله صحيح: 14 رقم"
+
+msgid "An Egyptian national ID is 14 digits"
+msgstr "الرقم القومي المصري 14 رقم"
+
+msgid "Subcontractor (optional)"
+msgstr "مقاول الباطن (اختياري)"
+
+msgid "No email or account needed. The worker is added to %s from today."
+msgstr "مش محتاج إيميل ولا حساب. الاسم بيتضاف لـ %s من النهارده."
+
+msgid "Move to another site"
+msgstr "نقل لموقع تاني"
+
+msgid "Starting"
+msgstr "من يوم"
+
+msgid "Move"
+msgstr "نقل"
+
+msgid "Days at this site stay in the worker's history and in this project's cost."
+msgstr "الأيام في الموقع ده بتفضل في سجل العامل وفي تكلفة المشروع."
+
+msgid "Ask to change a saved day"
+msgstr "طلب تعديل يوم متسجّل"
+
+msgid "Extra hours"
+msgstr "الساعات الإضافية"
+
+msgid "The day stays as saved until a manager approves the change. The original values are kept."
+msgstr "اليوم بيفضل زي ما اتسجّل لحد ما مدير يوافق. القيم الأصلية بتتحفظ."
+
+msgid "No sites to pay"
+msgstr "مفيش مواقع للصرف"
+
+msgid "Ask the site manager to assign you to a site in wp-admin."
+msgstr "اطلب من مدير الموقع يضيفك على موقع من لوحة التحكم."
+
+msgid "Paid daily"
+msgstr "اليومية يومية"
+
+msgid "Paid weekly"
+msgstr "اليومية أسبوعية"
+
+msgid "Paid · locked"
+msgstr "اتصرف · مقفول"
+
+msgid "Earlier periods not paid:"
+msgstr "فترات قبل كده ما اتصرفتش:"
+
+msgid "advance −%s"
+msgstr "سلفة −%s"
+
+msgid "net"
+msgstr "الصافي"
+
+msgid "Total after advances"
+msgstr "الإجمالي بعد السلف"
+
+msgid "Advances in this period"
+msgstr "السلف في الفترة دي"
+
+msgid "Signed sheet photo"
+msgstr "صورة الكشف الموقّع"
+
+msgid "Uploaded by %1$s, %2$s"
+msgstr "رفعها %1$s، %2$s"
+
+msgid "Print the sheet"
+msgstr "طباعة الكشف"
+
+msgid "Photo ready · tap to change it"
+msgstr "الصورة جاهزة · دوس عشان تغيّرها"
+
+msgid "After the workers sign or thumbprint it"
+msgstr "بعد ما العمال يوقّعوا أو يبصموا"
+
+msgid "Paid · lock the period"
+msgstr "تم الصرف · اقفل الفترة"
+
+msgid "Amounts are not written to the Audit Log, only \"payout recorded\"."
+msgstr "المبالغ ما بتتكتبش في سجل التدقيق، بيتكتب «تم الصرف» بس."
+
+msgid "Record an advance"
+msgstr "تسجيل سلفة"
+
+msgid "Note (optional)"
+msgstr "ملاحظة (اختياري)"
+
+msgid "Record"
+msgstr "تسجيل"
+
+msgid "No sites assigned to you"
+msgstr "مفيش مواقع متسجّلة لك"
+
+msgid "Ask the site manager to add you as foreman of a site in wp-admin."
+msgstr "اطلب من مدير الموقع يضيفك كمشرف على موقع من لوحة التحكم."
+
+msgid "%d site"
+msgid_plural "%d sites"
+msgstr[0] "%d موقع"
+msgstr[1] "%d موقع"
+msgstr[2] "%d موقع"
+msgstr[3] "%d مواقع"
+msgstr[4] "%d موقع"
+msgstr[5] "%d موقع"
+
+msgid "%d site not recorded yet"
+msgid_plural "%d sites not recorded yet"
+msgstr[0] "%d موقع لسه ما اتسجّلش"
+msgstr[1] "%d موقع لسه ما اتسجّلش"
+msgstr[2] "%d موقع لسه ما اتسجّلوش"
+msgstr[3] "%d مواقع لسه ما اتسجّلتش"
+msgstr[4] "%d موقع لسه ما اتسجّلش"
+msgstr[5] "%d موقع لسه ما اتسجّلش"
+
+msgid "Workers sign in themselves"
+msgstr "العمال بيسجّلوا لنفسهم"
+
+msgid "Recorded %1$s · %2$d present"
+msgstr "اتسجّلت %1$s · %2$d حاضر"
+
+msgid "Record today"
+msgstr "سجّل يومية النهارده"
+
+msgid "See today"
+msgstr "شوف النهارده"
+
+msgid "Daily workers"
+msgstr "العمالة اليومية"
+
+msgid "Sign in with your mobile"
+msgstr "ادخل برقم موبايلك"
+
+msgid "Use the PIN the site manager gave you."
+msgstr "استخدم الرقم السري اللي مدير الموقع إدّاهولك."
+
+msgid "PIN"
+msgstr "الرقم السري"
+
+msgid "Staff sign in"
+msgstr "دخول الموظفين"
+
+msgid "Your day is recorded."
+msgstr "يومك اتسجّل."
+
+msgid "Today: %1$s (%2$s)"
+msgstr "النهارده: %1$s (%2$s)"
+
+msgid "I am at the site"
+msgstr "أنا في الموقع"
+
+msgid "Owed to you, not paid yet"
+msgstr "مستحق لك ولسه ما اتصرفش"
+
+msgid "Daily worker? Sign in with your mobile"
+msgstr "عامل يومية؟ ادخل برقم موبايلك"
+
+#: includes/trait-approvals.php
+msgid "Approval needed"
+msgstr "مطلوب موافقة"
+
+#. translators: 1: approval request number, 2: approval level
+#: includes/trait-approvals.php
+msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
+msgstr "الموافقة رقم %1$d، المستوى %2$d، مستنية أدمن: الموافِق هو نفسه صاحب الطلب. قرّر فيها من wp-admin ← Requests Hub."
+
+msgid "No team"
+msgstr "بدون فريق"
+
+msgid "%1$s %2$d of %3$d"
+msgstr "%1$s ‏%2$d من %3$d"
+
+msgid "%d day next week is below the office minimum"
+msgid_plural "%d days next week are below the office minimum"
+msgstr[0] "%d أيام الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[1] "%d يوم الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[2] "%d يوم الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[3] "%d أيام الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[4] "%d يومًا الأسبوع القادم تحت الحد الأدنى للمكتب"
+msgstr[5] "%d يوم الأسبوع القادم تحت الحد الأدنى للمكتب"
+
+msgid "Office Minimum"
+msgstr "الحد الأدنى للمكتب"
+
+msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
+msgstr "عدد ثابت من الأشخاص في المكتب كل يوم عمل. من يضع الجدول يرى تحذيرًا والفرق الأقل من حصتها؛ ولا يُمنع الحفظ أبدًا."
+
+msgid "Enabled"
+msgstr "مفعّل"
+
+msgid "Minimum each day"
+msgstr "الحد الأدنى كل يوم"
+
+msgid "people in the office"
+msgstr "شخص في المكتب"
+
+msgid "Working days only; company holidays and days off are not checked."
+msgstr "أيام العمل فقط؛ لا يتم فحص إجازات الشركة وأيام الراحة."
+
+msgid "A different day (optional)"
+msgstr "رقم مختلف ليوم معيّن (اختياري)"
+
+msgid "Empty = the minimum above. 0 = no minimum that day."
+msgstr "فارغ = الحد الأدنى أعلاه. 0 = لا يوجد حد أدنى في هذا اليوم."
+
+msgid "Who counts as in the office"
+msgstr "من يُحسب في المكتب"
+
+msgid "Leave, trips and training count only if ticked here."
+msgstr "الإجازات والمأموريات والتدريب لا تُحسب إلا إذا تم تحديدها هنا."
+
+msgid "Each team's share"
+msgstr "حصة كل فريق"
+
+msgid "Automatic, by team size. You can fix a number for a team."
+msgstr "تلقائية حسب حجم الفريق. يمكنك تثبيت رقم لفريق معيّن."
+
+msgid "No teams yet: the minimum is checked for the whole company."
+msgstr "لا توجد فرق بعد: يتم فحص الحد الأدنى للشركة كلها."
+
+msgid "Automatic share"
+msgstr "الحصة التلقائية"
+
+msgid "Fixed number"
+msgstr "رقم ثابت"
+
+msgid "Auto"
+msgstr "تلقائي"
+
+msgid "People in no team share one line (\"No team\")."
+msgstr "الأشخاص بدون فريق يشتركون في سطر واحد (\"بدون فريق\")."
+
+msgid "Every week, send schedule managers the days below the minimum next week"
+msgstr "كل أسبوع، أرسل لمديري الجدول الأيام الأقل من الحد الأدنى في الأسبوع القادم"
+
+msgid "Reminder day"
+msgstr "يوم التذكير"
+
+msgid "No minimum"
+msgstr "لا يوجد حد أدنى"
+
+msgid "In the office / minimum"
+msgstr "في المكتب / الحد الأدنى"
+
+msgid "Approving makes %1$s %2$d of %3$d in the office"
+msgstr "الموافقة تجعل %1$s ‏%2$d من %3$d في المكتب"
+
+msgid "%1$s would have %2$d of their share of %3$d."
+msgstr "سيكون لدى %1$s ‏%2$d من حصته البالغة %3$d."
+
+msgid "This is only a warning; you can still approve."
+msgstr "هذا مجرد تحذير؛ يمكنك الموافقة رغم ذلك."
+
+msgid "%d day below the office minimum"
+msgid_plural "%d days below the office minimum"
+msgstr[0] "%d أيام تحت الحد الأدنى للمكتب"
+msgstr[1] "%d يوم تحت الحد الأدنى للمكتب"
+msgstr[2] "%d يوم تحت الحد الأدنى للمكتب"
+msgstr[3] "%d أيام تحت الحد الأدنى للمكتب"
+msgstr[4] "%d يومًا تحت الحد الأدنى للمكتب"
+msgstr[5] "%d يوم تحت الحد الأدنى للمكتب"
+
+msgid "This is only a warning: the schedule still saves."
+msgstr "هذا مجرد تحذير: الجدول يُحفظ عادي."
+
+msgid "%1$d of %2$d in the office"
+msgstr "%1$d من %2$d في المكتب"
+
+msgid "%d short"
+msgstr "ناقص %d"
+
+msgid "Teams on %s"
+msgstr "الفرق يوم %s"
+
+msgid "%d below the minimum"
+msgstr "أقل من الحد الأدنى بـ %d"
+
+msgid "Share"
+msgstr "الحصة"
+
+msgid "In office"
+msgstr "في المكتب"
+
+msgid "Short / above"
+msgstr "ناقص / زيادة"
+
+msgid "Could come in (working from home):"
+msgstr "يمكنه الحضور (يعمل من المنزل):"
+
+msgid "and %d more"
+msgstr "و%d آخرين"
+
+msgid "+%d above"
+msgstr "+%d زيادة"
+
+msgid "On share"
+msgstr "على الحصة"
+
+msgid "Each team's share = minimum × team size ÷ all employees (%1$d), rounded so the shares add up to exactly %2$d."
+msgstr "حصة كل فريق = الحد الأدنى × حجم الفريق ÷ كل الموظفين (%1$d)، مقرّبة بحيث يكون مجموع الحصص %2$d بالضبط."
+
+#: templates/app/correction-days.php
+msgid "Holiday"
+msgstr "عطلة رسمية"
+
+#: templates/app/correction-days.php
+msgid "On leave"
+msgstr "في إجازة"
+
+#: templates/app/correction-days.php
+msgid "Not signed in yet"
+msgstr "لم يُسجَّل الحضور بعد"
+
+#: templates/app/correction-sheet.php
+msgid "nothing to correct"
+msgstr "لا يوجد ما يُصحَّح"
+
+#: templates/app/correction-sheet.php
+msgid "Nothing on this day can be corrected from the app. If a time is wrong, ask HR."
+msgstr "لا يوجد في هذا اليوم ما يمكن تصحيحه من التطبيق. إذا كان هناك وقت غير صحيح، تواصل مع الموارد البشرية."
+
+#: includes/trait-daily-workers.php
+msgid "This period is not over yet. Pay it on its last day or later: paying locks the period, so the days still to come could not be recorded."
+msgstr "الفترة دي لسه ما خلصتش. اصرفها في آخر يوم فيها أو بعده: الصرف بيقفل الفترة، فالأيام اللي جاية مش هينفع تتسجّل."
+
+#: includes/trait-daily-workers.php
+msgid "Save today's day sheet first: paying locks the period, today included."
+msgstr "احفظ كشف النهارده الأول: الصرف بيقفل الفترة، والنهارده منها."
+
+#: daily-workers
+msgid "Nobody was recorded at this site on this day."
+msgstr "محدش اتسجّل في الموقع ده في اليوم ده."
+
+#: daily-workers
+msgid "Set by %s in wp-admin (no position or photo). Changing it is a request with a reason and an approval."
+msgstr "اتسجّل بواسطة %s من wp-admin (من غير موقع ولا صورة). تعديله بيكون طلب بسبب وموافقة."
+
+#: daily-workers
+msgid "No day sheet was saved for this day; these are the workers' own sign-ins. A change is a request with a reason and an approval."
+msgstr "مفيش كشف اتحفظ لليوم ده؛ دول تسجيلات العمال بنفسهم. أي تعديل بيكون طلب بسبب وموافقة."
+
+#: daily-workers
+msgid "No day sheet was saved for this day. HR can set it in wp-admin → Daily Workers → Days."
+msgstr "مفيش كشف اتحفظ لليوم ده. الموارد البشرية تقدر تسجّله من wp-admin ← Daily Workers ← Days."
+
+#: daily-workers
+msgid "Set directly in wp-admin → Days"
+msgstr "اتسجّل مباشرة من wp-admin ← Days"
+
+#: daily-workers
+msgid "Choose today or an earlier day."
+msgstr "اختار النهارده أو يوم قبله."
+
+#: daily-workers
+msgid "Day saved. Each change is in the Changes tab with your reason, and in the Audit Log."
+msgstr "اليوم اتحفظ. كل تعديل موجود في تاب Changes بالسبب، وفي سجل المراجعة."
+
+#: daily-workers
+msgid "A site's day as recorded, for any earlier day or today. Set a day the foreman did not record, or correct one: a reason is required, and each change is kept in Changes (old → new) and the Audit Log. A paid period cannot be changed."
+msgstr "يوم الموقع زي ما اتسجّل، لأي يوم فات أو النهارده. سجّل يوم المسؤول ما سجّلوش أو صحّح يوم: لازم تكتب سبب، وكل تعديل بيتحفظ في Changes (القديم ← الجديد) وفي سجل المراجعة. الفترة اللي اتصرفت ما ينفعش تتعدل."
+
+#: daily-workers
+msgid "No project sites yet: add one in Settings."
+msgstr "لسه مفيش مواقع مشروعات: ضيف موقع من Settings."
+
+#: daily-workers
+msgid "Set by %1$s in wp-admin, %2$s"
+msgstr "اتسجّل بواسطة %1$s من wp-admin، %2$s"
+
+#: daily-workers
+msgid "Recorded by %1$s at %2$s"
+msgstr "سجّله %1$s الساعة %2$s"
+
+#: daily-workers
+msgid "No day sheet saved"
+msgstr "مفيش كشف محفوظ"
+
+#: daily-workers
+msgid "Recorded"
+msgstr "المتسجّل"
+
+#: daily-workers
+msgid "No workers at this site on this day."
+msgstr "مفيش عمال في الموقع ده في اليوم ده."
+
+#: daily-workers
+msgid "At %s that day"
+msgstr "في %s اليوم ده"
+
+#: daily-workers
+msgid "Change waiting"
+msgstr "تعديل مستني"
+
+#: daily-workers
+msgid "— Not recorded —"
+msgstr "— مش متسجّل —"
+
+#: daily-workers
+msgid "e.g. The foreman's phone was broken; attendance from the paper list."
+msgstr "مثلاً: موبايل المسؤول كان بايظ؛ الحضور من الكشف الورق."
+
+#: daily-workers
+msgid "Save the day"
+msgstr "احفظ اليوم"
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "Schedule & places"
+msgstr "الجدول والأماكن"
+
+msgid "Engagement"
+msgstr "التفاعل"
+
+msgid "Departments"
+msgstr "الأقسام"
+
+msgid "Branches"
+msgstr "الفروع"
+
+msgid "Insights"
+msgstr "التحليلات"
+
+msgid "Auto attendance"
+msgstr "الحضور التلقائي"
+
+msgid "Face resets"
+msgstr "إعادة الوجه"
+
+msgid "Requests Hub"
+msgstr "مركز الطلبات"
+
+msgid "Leaves"
+msgstr "الإجازات"
+
+msgid "Approval workflows"
+msgstr "مسارات الموافقة"
+
+msgid "Work locations"
+msgstr "أماكن العمل"
+
+msgid "Kiosks"
+msgstr "أكشاك الحضور"
+
+msgid "Payroll"
+msgstr "المرتبات"
+
+msgid "Moments"
+msgstr "المناسبات"
+
+msgid "Nudges"
+msgstr "التنبيهات الذكية"
+
+msgid "Features"
+msgstr "المميزات"
+
+msgid "Roles & permissions"
+msgstr "الصلاحيات"
+
+msgid "Appearance"
+msgstr "الشكل"
+
+msgid "App menu"
+msgstr "قائمة التطبيق"
+
+msgid "Profile page"
+msgstr "صفحة الملف"
+
+msgid "Overview"
+msgstr "نظرة عامة"
+
+msgid "Audit log"
+msgstr "سجل التغييرات"
+
+msgctxt "admin menu section"
+msgid "Pay"
+msgstr "المرتبات"
+
+msgid "This swap is not waiting for your approval."
+msgstr "طلب التبديل ده مش مستني موافقتك."
+
+msgid "You accepted the swap. It is applied once it is approved."
+msgstr "وافقت على التبديل. هيتنفذ أول ما يتعتمد."
+
+msgid "The swap was approved and both schedules were updated."
+msgstr "التبديل اتعتمد واتحدّث جدول الاتنين."
+
+msgid "Approved. The swap now waits for the next approver."
+msgstr "تمت الموافقة. التبديل دلوقتي مستني الموافقة التالية."
+
+msgid "Swap accepted, waiting for approval"
+msgstr "التبديل اتقبل ومستني الاعتماد"
+
+msgid "%1$s accepted your swap for %2$s. It is applied once it is approved."
+msgstr "%1$s وافق على تبديل %2$s. هيتنفذ أول ما يتعتمد."
+
+msgid "Shift swap to approve"
+msgstr "طلب تبديل محتاج موافقتك"
+
+msgid "%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s."
+msgstr "%1$s و%2$s اتفقوا يبدّلوا %3$s: %4$s ↔ %5$s."
+
+msgid "Waiting for approval"
+msgstr "مستني الاعتماد"
+
+msgid "%d swap to approve"
+msgid_plural "%d swaps to approve"
+msgstr[0] "%d طلب تبديل محتاج موافقتك"
+msgstr[1] "%d طلب تبديل محتاج موافقتك"
+msgstr[2] "%d طلبين تبديل محتاجين موافقتك"
+msgstr[3] "%d طلبات تبديل محتاجة موافقتك"
+msgstr[4] "%d طلب تبديل محتاج موافقتك"
+msgstr[5] "%d طلب تبديل محتاج موافقتك"
+
+msgid "To approve"
+msgstr "محتاج موافقتك"
+
+msgid "Both agreed"
+msgstr "الاتنين وافقوا"
+
+msgid "%d swap waiting for approval"
+msgid_plural "%d swaps waiting for approval"
+msgstr[0] "%d تبديل مستني الاعتماد"
+msgstr[1] "%d تبديل مستني الاعتماد"
+msgstr[2] "%d تبديل مستنيين الاعتماد"
+msgstr[3] "%d تبديلات مستنية الاعتماد"
+msgstr[4] "%d تبديل مستني الاعتماد"
+msgstr[5] "%d تبديل مستني الاعتماد"

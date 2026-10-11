@@ -1,0 +1,37 @@
+/* wp-admin → Feature Configuration (templates/admin/features.php). RTL copy: npx rtlcss@4 */
+.wfo-features-shell{max-width:980px;background:#fff;border:1px solid #dcdcde;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(16,24,40,.04)}
+.wfo-features-intro{padding:24px 28px;background:linear-gradient(-180deg,#fafaff 0%,#fff 100%);border-bottom:1px solid #e8e8ec}
+.wfo-features-intro p{margin:0;max-width:760px;color:#667085;font-size:14px;line-height:1.6}
+.wfo-feature-section{padding:24px 28px;border-bottom:1px solid #ececf0}
+.wfo-feature-section:last-of-type{border-bottom:0}
+.wfo-feature-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.wfo-feature-title{margin:0;font-size:18px;font-weight:700;color:#172b24;line-height:1.3}
+.wfo-feature-desc{margin:5px 0 0;color:#667085;font-size:13px;line-height:1.5}
+.wfo-feature-status{display:flex;align-items:center;gap:8px;white-space:nowrap;font-weight:700;color:#344054}
+.wfo-feature-status input{margin:0}
+.wfo-feature-fields{margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.wfo-field label,.wfo-feature-fields>label{display:block}
+.wfo-field-label{display:block;font-size:12px;font-weight:700;color:#344054;margin-bottom:6px}
+.wfo-feature-fields input[type=text],.wfo-feature-fields input[type=url],.wfo-feature-fields input[type=number]{width:100%;min-height:40px;border:1px solid #cfd3d8;border-radius:8px;padding:7px 11px;box-sizing:border-box}
+.wfo-subpanel{margin-top:18px;padding:18px;border:1px solid #e2e5ea;border-radius:12px;background:#fafbfc}
+.wfo-subpanel-title{font-size:14px;font-weight:700;color:#1d2939}
+.wfo-subpanel-desc{margin:4px 0 14px;color:#667085;font-size:12px}
+.wfo-confirm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.wfo-confirm-item{display:flex;align-items:center;gap:8px;padding:11px 12px;background:#f8f9fa;border:1px solid #e2e4e7;border-radius:9px;color:#344054;font-size:13px}
+.wfo-confirm-item input{margin:0}
+.wfo-savebar{padding:20px 28px;background:#fafafa;border-top:1px solid #e8e8ec;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wfo-savebar .button-primary{min-height:40px;padding:0 18px;border-radius:8px}
+@media(max-width:782px){
+.wfo-feature-head{display:block}.wfo-feature-status{margin-top:14px}
+.wfo-feature-fields{grid-template-columns:1fr}
+.wfo-confirm-grid{grid-template-columns:1fr}
+.wfo-feature-section,.wfo-features-intro,.wfo-savebar{padding:20px}
+}
+
+/* Office minimum (3.31.77) */
+.wfo-om-admin{margin-top:14px;border-top:1px solid #dcdcde}
+.wfo-om-wds{display:flex;flex-wrap:wrap;gap:10px}
+.wfo-om-wd{display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.wfo-om-share{max-width:640px}
+.wfo-om-share td,.wfo-om-share th{vertical-align:middle}
+.wfo-om-wds input{width:70px}

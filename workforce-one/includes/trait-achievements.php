@@ -19,6 +19,7 @@ trait EWS_Achievements_Trait {
         $c=$wpdb->get_charset_collate();
         $defs=$wpdb->prefix.'ews_achievements';
         $awards=$wpdb->prefix.'ews_employee_achievements';
+        // icon has no emoji default: MariaDB kept it as '?' and dbDelta reset it on every upgrade (3.31.73); every insert sets it.
         dbDelta("CREATE TABLE {$defs} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             slug VARCHAR(80) NOT NULL,
@@ -27,7 +28,7 @@ trait EWS_Achievements_Trait {
             category VARCHAR(40) NOT NULL,
             rule_type VARCHAR(30) NOT NULL,
             threshold INT UNSIGNED NOT NULL DEFAULT 1,
-            icon VARCHAR(20) NOT NULL DEFAULT '🏅',
+            icon VARCHAR(20) NOT NULL DEFAULT '',
             badge_style VARCHAR(20) NOT NULL DEFAULT 'circle',
             sort_order INT NOT NULL DEFAULT 0,
             active TINYINT(1) NOT NULL DEFAULT 1,
@@ -67,7 +68,7 @@ trait EWS_Achievements_Trait {
         self::$ews_achievements_schema_ready=true;
     }
 
-    private function achievements_enabled(){ return (bool)get_option('ews_feature_achievements',true); }
+    private function achievements_enabled(){ return (bool)$this->option('ews_feature_achievements'); }
 
     private function achievement_definitions($category=''){
         if(!$this->achievements_enabled()) return [];
@@ -112,8 +113,7 @@ trait EWS_Achievements_Trait {
         $message=sprintf('%s %s — %s',$achievement->icon,$achievement->name,$achievement->description);
         $uid=(int)$emp->wp_user_id;
         if($uid){
-            $this->notify_user($uid,$title,$message,'achievement','achievement',(int)$achievement->id);
-            $this->push_custom_notification($uid,$title,$message,'achievement',(int)$achievement->id,$this->notification_app_view_url('profile'));
+            $this->notify($uid,'achievement',$title,$message,['entity_id'=>(int)$achievement->id,'url'=>$this->notification_app_view_url('profile')]);
         }
         $this->audit('achievement_earned','employee_achievement',(int)$wpdb->insert_id,sprintf('%s earned %s (%s)',$emp->name,$achievement->name,$achievement->slug));
         return true;
@@ -158,7 +158,7 @@ trait EWS_Achievements_Trait {
         $employee_id=absint($employee_id);
         if(!$employee_id)return 0;
         try{$cursor=new DateTimeImmutable($through_date.' 12:00:00',wp_timezone());}catch(Exception $e){return 0;}
-        $working_days=array_map('intval',(array)get_option('ews_working_days',['0','1','2','3','4']));
+        $working_days=array_map('intval',(array)$this->option('ews_working_days'));
         if(!$working_days)return 0;
         $definitions=$this->achievement_definitions('attendance');
         $max_threshold=1;
@@ -169,7 +169,7 @@ trait EWS_Achievements_Trait {
         $end=$cursor->format('Y-m-d');
         $schedule_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date BETWEEN %s AND %s",$employee_id,$start,$end));
         $schedules=[]; foreach((array)$schedule_rows as $row)$schedules[(string)$row->work_date]=$row;
-        $log_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY work_date ASC,event_at ASC",$employee_id,$start,$end));
+        $log_rows=$wpdb->get_results($wpdb->prepare("SELECT work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY work_date ASC,event_at ASC",$employee_id,$start,$end));
         $logs=[]; foreach((array)$log_rows as $row)$logs[(string)$row->work_date][]=$row;
         return $this->calc_streak_for_employee_from_data($employee_id,$cursor,$schedules,$logs,$this->company_leave_dates($start,$end),$working_days,$calendar_days);
     }
@@ -296,7 +296,7 @@ trait EWS_Achievements_Trait {
         // admin page does not execute hundreds of per-day queries for every employee.
         $attendance_streaks=[];
         if($ids){
-            $working_days=array_map('intval',(array)get_option('ews_working_days',['0','1','2','3','4']));
+            $working_days=array_map('intval',(array)$this->option('ews_working_days'));
             $today=current_time('Y-m-d');
             try{
                 $tz=wp_timezone();
@@ -315,7 +315,7 @@ trait EWS_Achievements_Trait {
             foreach((array)$schedule_rows as $r)$schedules[(int)$r->employee_id][$r->work_date]=(string)$r->status;
 
             $logs=[];
-            $log_rows=$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN (".implode(',',array_map('absint',$ids)).") AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out') ORDER BY event_at ASC",$start,$today));
+            $log_rows=$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at FROM {$this->time_logs} WHERE employee_id IN (".implode(',',array_map('absint',$ids)).") AND work_date BETWEEN %s AND %s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY event_at ASC",$start,$today));
             foreach((array)$log_rows as $r){
                 $eid=(int)$r->employee_id;$date=(string)$r->work_date;
                 if(!isset($logs[$eid]))$logs[$eid]=[];

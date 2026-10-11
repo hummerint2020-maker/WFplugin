@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.30.0
+ * Version: 3.31.89
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.30.0');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.89');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -20,8 +20,42 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
+require_once __DIR__ . '/src/autoload.php';
+add_filter('dbdelta_queries', ['WorkforceOne\\Support\\SchemaSql', 'filterQueries']); // one column or key per line for dbDelta (3.31.73)
 require_once __DIR__ . '/includes/trait-core.php';
+require_once __DIR__ . '/includes/trait-schema.php';
+require_once __DIR__ . '/includes/trait-work-time.php';
+require_once __DIR__ . '/includes/trait-schedule-types.php';
+require_once __DIR__ . '/includes/trait-breaks.php';
+require_once __DIR__ . '/includes/trait-face.php';
+require_once __DIR__ . '/includes/trait-permissions.php';
+require_once __DIR__ . '/includes/trait-profile-account.php';
 require_once __DIR__ . '/includes/trait-attendance.php';
+require_once __DIR__ . '/includes/trait-api-auth.php';
+require_once __DIR__ . '/includes/trait-leave.php';
+require_once __DIR__ . '/includes/trait-overtime.php';
+require_once __DIR__ . '/includes/trait-swap.php';
+require_once __DIR__ . '/includes/trait-face-reset.php';
+require_once __DIR__ . '/includes/trait-admin-requests.php';
+require_once __DIR__ . '/includes/trait-leave-admin.php';
+require_once __DIR__ . '/includes/trait-schedule-config.php';
+require_once __DIR__ . '/includes/trait-features.php';
+require_once __DIR__ . '/includes/trait-employee-admin.php';
+require_once __DIR__ . '/includes/trait-time-report.php';
+require_once __DIR__ . '/includes/trait-settings-pages.php';
+require_once __DIR__ . '/includes/trait-achievements-admin.php';
+require_once __DIR__ . '/includes/trait-engagement-admin.php';
+require_once __DIR__ . '/includes/trait-appearance.php';
+require_once __DIR__ . '/includes/trait-employee-profile.php';
+require_once __DIR__ . '/includes/trait-admin-dashboard.php';
+require_once __DIR__ . '/includes/trait-attendance-insights.php';
+require_once __DIR__ . '/includes/trait-schedule-view.php';
+require_once __DIR__ . '/includes/trait-attendance-grid.php';
+require_once __DIR__ . '/includes/trait-leave-view.php';
+require_once __DIR__ . '/includes/trait-dashboard-view.php';
+require_once __DIR__ . '/includes/trait-my-profile.php';
+require_once __DIR__ . '/includes/trait-people-view.php';
+require_once __DIR__ . '/includes/trait-app-layout.php';
 require_once __DIR__ . '/includes/trait-frontend.php';
 require_once __DIR__ . '/includes/trait-pwa.php';
 require_once __DIR__ . '/includes/trait-reports.php';
@@ -30,6 +64,12 @@ require_once __DIR__ . '/includes/trait-locations.php';
 require_once __DIR__ . '/includes/trait-admin.php';
 require_once __DIR__ . '/includes/trait-notifications.php';
 require_once __DIR__ . '/includes/trait-tasks.php';
+require_once __DIR__ . '/includes/trait-corrections.php';
+require_once __DIR__ . '/includes/trait-daily-workers.php';
+require_once __DIR__ . '/includes/trait-office-minimum.php';
+require_once __DIR__ . '/includes/trait-admin-nav.php';
+require_once __DIR__ . '/includes/trait-task-extras.php';
+require_once __DIR__ . '/includes/trait-branches.php';
 require_once __DIR__ . '/includes/trait-approvals.php';
 require_once __DIR__ . '/includes/trait-teams.php';
 require_once __DIR__ . '/includes/trait-auto-attendance.php';
@@ -39,9 +79,11 @@ require_once __DIR__ . '/includes/trait-recognition.php';
 require_once __DIR__ . '/includes/trait-departments.php';
 require_once __DIR__ . '/includes/trait-presence.php';
 require_once __DIR__ . '/includes/trait-privacy.php';
+require_once __DIR__ . '/includes/trait-settings-overview.php';
+require_once __DIR__ . '/includes/trait-payroll.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Attendance_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Office_Minimum_Trait, EWS_Admin_Nav_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -58,39 +100,32 @@ class EWS_Manager_V31_1 {
             /* Schema maintenance is version-gated. The old build ran multiple
                SHOW COLUMNS/dbDelta checks on every front-end page request, which
                made navigation unnecessarily slow. */
+            $this->prime_options();
             $this->maybe_upgrade_schema();
             add_action('init',[$this,'load_textdomain'],1);
             add_shortcode('employee_app',[$this,'app']);
-            add_action('rest_api_init',[$this,'face_rest_routes']);
+            add_filter('template_include',[$this,'app_fullscreen_template'],99); // Appearance → Full-screen app page
+            add_filter('show_admin_bar',[$this,'app_admin_bar']); // no WordPress toolbar in the app for employees
+            \WorkforceOne\Api\Hooks::register($this); // REST routes (src/Api/Routes.php)
             add_shortcode('employee_login',[$this,'login_page']);
             add_action('wp_logout',[$this,'after_logout']);
+            add_action('wp_login_failed',[$this,'app_login_failed']);
             add_action('init',[$this,'prevent_dynamic_page_cache'],0);
             add_action('template_redirect',[$this,'prevent_dynamic_page_cache'],0);
             add_action('send_headers',[$this,'send_dynamic_no_cache_headers'],0);
             add_shortcode('employee_schedule',function(){ return $this->app_forced_view('schedule'); });
             add_shortcode('employee_attendance',function(){ return $this->app_forced_view('time'); });
             add_shortcode('employee_reports',function(){ return $this->app_forced_view('reports'); });
-            add_action('wp_head',[$this,'pwa_head']);
             add_action('wp_enqueue_scripts',[$this,'enqueue_frontend_assets']);
-            add_action('wp_footer',[$this,'pwa_footer']);
-            add_action('template_redirect',[$this,'pwa_manifest_route']);
-            add_action('template_redirect',[$this,'pwa_sw_route']);
+            \WorkforceOne\Pwa\Hooks::register($this); // wp_head, wp_footer, manifest and service worker routes (same order as before)
             add_action('admin_menu',[$this,'admin_menu']);
-            add_action('admin_post_ews_presence_kiosk_save',[$this,'presence_kiosk_save']);
-            add_action('admin_post_ews_presence_kiosk_revoke',[$this,'presence_kiosk_revoke']);
-            add_action('admin_post_ews_presence_request',[$this,'presence_request']);
-            add_action('admin_post_ews_presence_verify',[$this,'presence_verify']);
-            add_action('admin_post_ews_presence_qr_signin',[$this,'presence_qr_signin']);
-            add_action('template_redirect',[$this,'presence_kiosk_payload_route'],1);
-            add_action('template_redirect',[$this,'presence_kiosk_route'],2);
+            // The menu in sections with tabs (3.31.88, includes/trait-admin-nav.php).
+            add_filter('parent_file',[$this,'admin_nav_parent_file']);
+            add_filter('submenu_file',[$this,'admin_nav_submenu_file']);
+            add_action('all_admin_notices',[$this,'admin_nav_tabs'],1);
             add_action('admin_enqueue_scripts',[$this,'enqueue_admin_ui_foundation']);
             add_action('admin_post_ews31_employee_save',[$this,'employee_save']);
-            add_action('admin_post_ews31_face_reset_approve',[$this,'face_reset_admin_approve']);
             add_action('admin_post_ews_kudos_submit',[$this,'recognition_submit']);
-            add_action('admin_post_ews_department_save',[$this,'department_save']);
-            add_action('admin_post_ews_department_delete',[$this,'department_delete']);
-            add_action('admin_post_ews31_face_reset_reject',[$this,'face_reset_admin_reject']);
-            add_action('admin_post_ews31_requests_decision',[$this,'admin_requests_decision']);
             add_action('admin_post_ews31_employee_update',[$this,'employee_update']);
             add_action('admin_post_ews31_employee_archive',[$this,'employee_archive']);
             add_action('admin_post_ews31_att_single',[$this,'att_single']);
@@ -100,102 +135,91 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_att_sample',[$this,'att_sample']);
             add_action('admin_post_ews31_report_download',[$this,'report_download']);
             add_action('admin_post_ews31_report_xlsx',[$this,'report_xlsx']);
+            add_action('admin_post_ews_report_view_save',[$this,'report_view_save']);
+            add_action('admin_post_ews_report_view_delete',[$this,'report_view_delete']);
             add_action('admin_post_ews31_report_email',[$this,'report_email']);
             add_action('admin_post_ews31_email_save',[$this,'email_save']);
-            add_action('admin_post_ews31_schedule_config_save',[$this,'schedule_config_save']);
-            add_action('admin_post_ews31_shifts_save',[$this,'shifts_save_handler']);
-            add_action('admin_post_ews31_working_hours_save',[$this,'working_hours_save_handler']);
-            add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
-            add_action('admin_post_ews31_employee_moments_save',[$this,'employee_moments_save']);
-            add_action('admin_post_ews_smart_nudges_save',[$this,'smart_nudges_save']);
             add_action('admin_post_ews_smart_nudge_dismiss',[$this,'smart_nudge_dismiss']);
-            add_action('admin_post_ews_smart_nudge_test_push',[$this,'smart_nudge_test_push']);
             add_action('admin_post_ews_achievements_settings_save',[$this,'achievements_settings_save']);
             add_action('admin_post_ews_achievement_manual_grant',[$this,'achievement_manual_grant']);
             add_action('admin_post_ews_achievement_award_delete',[$this,'achievement_award_delete']);
-            add_action('admin_post_ews_poll_save',[$this,'poll_save']);
-            add_action('admin_post_ews_poll_toggle',[$this,'poll_toggle']);
-            add_action('admin_post_ews_poll_homepage',[$this,'poll_homepage']);
-            add_action('admin_post_ews_poll_archive',[$this,'poll_archive']);
-            add_action('admin_post_ews_poll_vote',[$this,'poll_vote']);
             add_action('ews_smart_nudges_tick',[$this,'smart_nudges_cron']);
-            add_action('admin_post_ews_overtime_request_create',[$this,'overtime_request_create']);
-            add_action('admin_post_ews_overtime_request_respond',[$this,'overtime_request_respond']);
-            add_action('admin_post_ews31_working_days_save',[$this,'working_days_save_handler']);
-            add_action('admin_post_ews31_general_leave_save',[$this,'general_leave_save']);
-            add_action('admin_post_ews31_general_leave_delete',[$this,'general_leave_delete']);
             add_action('admin_post_ews31_leave_save',[$this,'leave_save']);
-            add_action('admin_post_ews31_time_event',[$this,'time_event']);
-            add_action('admin_post_ews_break_start',[$this,'break_start']);
-            add_action('admin_post_ews_break_resume',[$this,'break_resume']);
-            add_action('ews_break_duration_reminder',[$this,'break_duration_reminder'],10,1);
-            add_action('ews_break_manager_escalation',[$this,'break_manager_escalation'],10,1);
+            \WorkforceOne\Attendance\Hooks::register($this);
             add_action('admin_post_ews31_time_reset',[$this,'admin_time_reset']);
             add_action('admin_post_ews31_time_save',[$this,'admin_time_save']);
             add_action('admin_post_ews31_time_csv',[$this,'admin_time_csv']);
-            add_action('admin_post_ews31_location_save',[$this,'admin_location_save']);
-            add_action('admin_post_ews_multi_location_save_v321',[$this,'admin_multi_location_save_v321']);
-            add_action('admin_post_ews_multi_location_archive_v321',[$this,'admin_multi_location_archive_v321']);
-            add_action('admin_post_ews_employee_location_save_v321',[$this,'admin_employee_location_save_v321']);
             add_action('admin_post_ews31_roles_save',[$this,'admin_roles_save']);
             add_action('admin_post_ews_notification_read',[$this,'notification_read']);
             add_action('admin_post_ews_notification_open',[$this,'notification_open']);
             add_action('admin_post_ews_notification_read_all',[$this,'notification_read_all']);
             add_action('admin_post_ews_push_subscribe',[$this,'push_subscribe']);
             add_action('admin_post_ews_push_unsubscribe',[$this,'push_unsubscribe']);
+            // The service worker's pushsubscriptionchange (3.31.87): proven by the old endpoint, no nonce.
+            add_action('admin_post_ews_push_resubscribe',[$this,'push_resubscribe']);
+            add_action('admin_post_nopriv_ews_push_resubscribe',[$this,'push_resubscribe']);
             add_action('admin_post_ews_push_test',[$this,'push_test']);
             add_action('admin_post_ews_push_send_test',[$this,'push_send_test']);
-            add_action('admin_post_ews_swap_create',[$this,'swap_request_create']);
-            add_action('admin_post_ews_swap_respond',[$this,'swap_request_respond']);
-            add_action('admin_post_ews_swap_cancel',[$this,'swap_request_cancel']);
-            add_action('admin_post_ews_vacation_request_create',[$this,'leave_request_create']);
-            add_action('admin_post_ews_vacation_request_respond',[$this,'leave_request_respond']);
-            add_action('admin_post_ews_leave_cancel',[$this,'leave_cancel_request']);
-            add_action('admin_post_ews_leave_cancel_respond',[$this,'leave_cancel_respond']);
-            add_action('admin_post_ews_leave_type_save',[$this,'admin_leave_type_save']);
-            add_action('admin_post_ews_leave_balance_save',[$this,'admin_leave_balance_save']);
-            add_action('admin_post_ews_admin_leave_record',[$this,'admin_admin_leave_record']);
-            add_action('admin_post_ews_early_leave_create',[$this,'early_leave_create']);
-            add_action('admin_post_ews_early_leave_respond',[$this,'early_leave_respond']);
+            add_action('ews_push_deliver',[$this,'push_deliver'],10,2);
+            \WorkforceOne\Leave\Hooks::register($this);
+            \WorkforceOne\Overtime\Hooks::register($this);
+            \WorkforceOne\Schedule\Hooks::register($this);
+            \WorkforceOne\Schedule\ConfigHooks::register($this);
+            add_action('admin_post_ews31_features_save',[$this,'features_save_handler']);
+            \WorkforceOne\Requests\Hooks::register($this);
+            \WorkforceOne\Approvals\Hooks::register($this);
+            \WorkforceOne\Locations\Hooks::register($this);
+            \WorkforceOne\Presence\Hooks::register($this);
+            \WorkforceOne\Organization\Hooks::register($this);
+            \WorkforceOne\Attendance\AutoHooks::register($this);
+            \WorkforceOne\Polls\Hooks::register($this);
+            \WorkforceOne\Settings\EngagementHooks::register($this);
+            \WorkforceOne\Settings\OverviewHooks::register($this);
+            \WorkforceOne\Payroll\Hooks::register($this);
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
             add_action('admin_post_ews_task_delete',[$this,'task_delete']);
+            foreach(['task_item_add','task_item_toggle','task_item_delete','task_comment','task_file','task_take','task_repeat_stop'] as $a)add_action('admin_post_ews_'.$a,[$this,$a]);
+            add_action('admin_post_ews_tasks_settings_save',[$this,'tasks_settings_save']);
+            add_action('ews_tasks_tick',[$this,'tasks_tick']);
+            // Attendance corrections (3.31.74)
+            foreach(['correction_request','correction_decide','correction_photo','correction_direct','corrections_settings_save','corrections_export'] as $a)add_action('admin_post_ews_'.$a,[$this,$a]);
+            add_action('ews_corrections_tick',[$this,'corrections_tick']);
+            add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
+            // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
+            foreach(['dw_sheet_save'=>'dw_sheet','dw_worker_add'=>'dw_worker_add','dw_move_save'=>'dw_move','dw_change_save'=>'dw_change','dw_change_decide'=>'dw_change_decide','dw_advance_save'=>'dw_advance',
+                'dw_paid_save'=>'dw_paid','dw_payout_pdf'=>'dw_payout_pdf','dw_file'=>'dw_file','dw_admin_worker_save'=>'dw_admin_worker','dw_worker_delete'=>'dw_worker_delete','dw_settings_save'=>'dw_settings','dw_export'=>'dw_export','dw_admin_day_save'=>'dw_admin_day'] as $m=>$a)add_action('admin_post_ews_'.$a,[$this,$m]);
+            foreach(['dw_worker_login'=>'dw_worker_login','dw_worker_logout'=>'dw_worker_logout','dw_self_signin'=>'dw_self'] as $m=>$a){add_action('admin_post_ews_'.$a,[$this,$m]);add_action('admin_post_nopriv_ews_'.$a,[$this,$m]);}
 
 
             add_action('admin_post_ews_notification_settings_save',[$this,'admin_notification_settings_save']);
             add_action('admin_post_ews_notification_policy_save',[$this,'admin_notification_policy_save']);
-            add_action('admin_post_ews_approval_workflow_save',[$this,'approval_workflow_save']);
-            add_action('admin_post_ews_approval_relationship_save',[$this,'approval_relationship_save']);
-            add_action('admin_post_ews_team_save',[$this,'team_save']);
-            add_action('admin_post_ews_team_delete',[$this,'team_delete']);
-            add_action('admin_post_ews_auto_attendance_save',[$this,'auto_attendance_save']);
-            add_action('admin_post_ews_auto_attendance_toggle',[$this,'auto_attendance_toggle']);
-            add_action('admin_post_ews_auto_attendance_delete',[$this,'auto_attendance_delete']);
-            add_action('admin_post_ews_auto_attendance_bulk_sign_out',[$this,'auto_attendance_bulk_sign_out']);
             add_action('admin_post_ews_profile_photo_save',[$this,'profile_photo_save']);
             add_action('admin_post_ews_profile_password_change',[$this,'profile_password_change']);
             add_action('ews_notifications_cleanup',[$this,'cleanup_notifications']);
             add_action('ews_privacy_cleanup',[$this,'privacy_cleanup_cron']);
-            add_action('ews_auto_attendance_tick',[$this,'auto_attendance_cron']);
             add_filter('cron_schedules',function($s){if(!isset($s['ews_auto_five_minutes']))$s['ews_auto_five_minutes']=['interval'=>300,'display'=>'Every 5 minutes'];return $s;});
             // Keep the scheduler present after upgrades/reloads; wp_next_scheduled prevents duplicates.
             if(wp_next_scheduled('ews_auto_attendance_tick')===false) $this->auto_attendance_schedule();
             $this->privacy_schedule();
             if(wp_next_scheduled('ews_smart_nudges_tick')===false) wp_schedule_event(time()+120,'ews_auto_five_minutes','ews_smart_nudges_tick');
+            if(wp_next_scheduled('ews_tasks_tick')===false) wp_schedule_event(time()+180,'ews_auto_five_minutes','ews_tasks_tick');
+            if(wp_next_scheduled('ews_corrections_tick')===false) wp_schedule_event(time()+240,'ews_auto_five_minutes','ews_corrections_tick');
+            if(wp_next_scheduled('ews_office_minimum_tick')===false) wp_schedule_event(time()+270,'ews_auto_five_minutes','ews_office_minimum_tick');
         }
 
     public function load_textdomain(){
             load_plugin_textdomain('workforce-one',false,dirname(plugin_basename(__FILE__)).'/languages');
         }
 
-    static function activate(){
-            ob_start();
+    /** The base tables (activation, and again on each schema upgrade so new indexes reach installed sites, 3.31.73). */
+    static function base_tables(){
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php'; $c=$wpdb->get_charset_collate();
             $e=$wpdb->prefix.'ews_employees';$s=$wpdb->prefix.'ews_schedule';$l=$wpdb->prefix.'ews_leave_requests';$a=$wpdb->prefix.'ews_audit_log';
-            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id)) $c;");
+            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id),KEY default_shift_id(default_shift_id)) $c;");
             dbDelta("CREATE TABLE $s (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,status VARCHAR(40) NOT NULL DEFAULT 'Office',note TEXT NULL,updated_by BIGINT UNSIGNED NULL,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY employee_date(employee_id,work_date),KEY work_date(work_date),KEY employee_id(employee_id)) $c;");
-            dbDelta("CREATE TABLE {$wpdb->prefix}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at)) $c;");
-            dbDelta("CREATE TABLE $l (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,leave_type VARCHAR(40) NOT NULL DEFAULT 'Vacation',start_date DATE NOT NULL,end_date DATE NOT NULL,reason TEXT NULL,status VARCHAR(20) NOT NULL DEFAULT 'Pending',requested_by BIGINT UNSIGNED NULL,approved_by BIGINT UNSIGNED NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_id(employee_id),KEY dates(start_date,end_date),KEY status(status)) $c;");
+            dbDelta("CREATE TABLE {$wpdb->prefix}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,source VARCHAR(20) NULL,corrects_id BIGINT UNSIGNED NULL,correction_id BIGINT UNSIGNED NULL,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at),KEY corrects_id(corrects_id)) $c;");
+            dbDelta("CREATE TABLE $l (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,leave_type VARCHAR(40) NOT NULL DEFAULT 'Vacation',start_date DATE NOT NULL,end_date DATE NOT NULL,reason TEXT NULL,status VARCHAR(30) NOT NULL DEFAULT 'Pending',requested_by BIGINT UNSIGNED NULL,approved_by BIGINT UNSIGNED NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_id(employee_id),KEY dates(start_date,end_date),KEY status(status)) $c;");
             dbDelta("CREATE TABLE $a (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NULL,action VARCHAR(80) NOT NULL,entity VARCHAR(80) NOT NULL,entity_id BIGINT UNSIGNED NULL,details TEXT NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY user_id(user_id),KEY entity(entity,entity_id),KEY created_at(created_at)) $c;");
             dbDelta("CREATE TABLE {$wpdb->prefix}ews_tasks (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -220,6 +244,11 @@ class EWS_Manager_V31_1 {
             dbDelta("CREATE TABLE $n (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NOT NULL,title VARCHAR(190) NOT NULL,message TEXT NOT NULL,type VARCHAR(30) NOT NULL DEFAULT 'info',entity VARCHAR(80) NULL,entity_id BIGINT UNSIGNED NULL,is_read TINYINT(1) NOT NULL DEFAULT 0,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,read_at DATETIME NULL,PRIMARY KEY(id),KEY user_unread(user_id,is_read),KEY created_at(created_at),KEY entity(entity,entity_id)) $c;");
             $p=$wpdb->prefix.'ews_push_subscriptions';
             dbDelta("CREATE TABLE $p (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NOT NULL,endpoint TEXT NOT NULL,endpoint_hash CHAR(64) NOT NULL,p256dh TEXT NOT NULL,auth TEXT NOT NULL,content_encoding VARCHAR(30) NULL,user_agent TEXT NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY endpoint_hash(endpoint_hash),KEY user_id(user_id)) $c;");
+        }
+
+    static function activate(){
+            ob_start();
+            self::base_tables();
             self::activate_vapid_keys();
             add_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com'));
 
@@ -250,7 +279,7 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); }
+    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_corrections_tick'); wp_clear_scheduled_hook('ews_office_minimum_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
 
 }
 

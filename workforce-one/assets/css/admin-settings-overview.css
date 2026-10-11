@@ -1,0 +1,26 @@
+/* wp-admin → Settings Overview (templates/admin/settings-overview.php). RTL: admin-settings-overview-rtl.css (npx rtlcss@4). */
+.ews-settings-overview .ews-so-intro{max-width:900px}
+.ews-settings-overview .ews-so-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:12px 0 4px}
+.ews-settings-overview .ews-so-bar p{margin:0}
+.ews-settings-overview .ews-so-export .description{margin-left:8px}
+.ews-settings-overview .ews-so-table{max-width:1200px;margin-bottom:8px}
+.ews-settings-overview .ews-so-table td{vertical-align:top}
+.ews-settings-overview .ews-so-name{width:34%}
+.ews-settings-overview .ews-so-status{width:150px}
+.ews-settings-overview .ews-so-edit{width:50px;text-align:right}
+.ews-settings-overview .ews-so-name code{font-size:11px;background:none;padding:0;color:#646970}
+.ews-settings-overview tr.is-changed td{background:#fff8e5}
+.ews-settings-overview .ews-so-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:#f0f0f1;color:#3c434a}
+.ews-settings-overview .ews-so-badge.is-changed{background:#dba617;color:#1d2327;font-weight:600}
+.ews-settings-overview .ews-so-badge.is-unset{background:none;color:#646970;padding-left:0}
+.ews-settings-overview .ews-so-unknown code{font-size:12px}
+/* Phones: each setting becomes a card. */
+@media (max-width:782px){
+.ews-settings-overview .ews-so-table thead{display:none}
+.ews-settings-overview .ews-so-table tr{display:block;border-bottom:1px solid #dcdcde}
+.ews-settings-overview .ews-so-table td{display:block;width:auto;padding:4px 12px;text-align:left}
+.ews-settings-overview .ews-so-table td:first-child{padding-top:10px}
+.ews-settings-overview .ews-so-table td:last-child{padding-bottom:10px}
+.ews-settings-overview .ews-so-table td[data-label]::before{content:attr(data-label) ": ";color:#646970}
+.ews-settings-overview .ews-so-name code{overflow-wrap:anywhere}
+}

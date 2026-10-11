@@ -3,37 +3,47 @@
 var ewsI18n=(window.wp&&window.wp.i18n)?window.wp.i18n:{__:function(s){return s;},sprintf:function(f){var a=[].slice.call(arguments,1),i=0;return f.replace(/%%|%(\d+\$)?[sd]/g,function(m,n){return m==='%%'?'%':a[n?parseInt(n,10)-1:i++];});}};
 var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
 (function(){
-    function initEwsSubmitGuard(){
-        document.querySelectorAll("form").forEach(function(form){
-            if(form.dataset.ewsSubmitGuard==="1") return;
-            form.dataset.ewsSubmitGuard="1";
-            form.addEventListener("submit",function(e){
-                if(form.dataset.ewsConfirmPending==="1" && form.dataset.ewsConfirmApproved!=="1"){
-                    return;
+    // One guard for every form, after the form's own handlers (bubble phase on document): a submit that
+    // another script holds back (a confirmation, reading the GPS first) is not counted, so its re-send
+    // goes through; a second click while a form is really being sent is ignored.
+    function ewsGuardSubmit(e){
+        var form=e.target;
+        if(!form||form.tagName!=="FORM"||e.defaultPrevented)return;
+        if(form.dataset.ewsSubmitting==="1"){
+            e.preventDefault();
+            return false;
+        }
+        form.dataset.ewsSubmitGuard="1";
+        form.dataset.ewsSubmitting="1";
+        // A disabled button is left out of the posted data, so the clicked one's name=value
+        // (e.g. decision=approve) is carried in a hidden field before the buttons are disabled.
+        var sub=e.submitter;
+        if(sub&&sub.name){
+            var carry=form.querySelector("input[data-ews-submitter]");
+            if(!carry){carry=document.createElement("input");carry.type="hidden";carry.setAttribute("data-ews-submitter","1");form.appendChild(carry);}
+            carry.name=sub.name;carry.value=sub.value;
+        }
+        var submitters=form.querySelectorAll("button[type=submit],input[type=submit]");
+        submitters.forEach(function(btn){
+            if(btn.dataset.ewsOriginalHtml===undefined) btn.dataset.ewsOriginalHtml=btn.innerHTML||btn.value||"";
+            btn.disabled=true;
+            btn.classList.add("ews-submit-loading");
+            if(btn.tagName==="BUTTON"){
+                var spinner=btn.querySelector(".ews-btn-spinner");
+                if(!spinner){
+                    spinner=document.createElement("span");
+                    spinner.className="ews-btn-spinner";
+                    spinner.setAttribute("aria-hidden","true");
+                    btn.insertBefore(spinner,btn.firstChild);
                 }
-                if(form.dataset.ewsSubmitting==="1"){
-                    e.preventDefault();
-                    return false;
-                }
-                form.dataset.ewsSubmitting="1";
-                var submitters=form.querySelectorAll("button[type=submit],input[type=submit]");
-                submitters.forEach(function(btn){
-                    if(btn.dataset.ewsOriginalHtml===undefined) btn.dataset.ewsOriginalHtml=btn.innerHTML||btn.value||"";
-                    btn.disabled=true;
-                    btn.classList.add("ews-submit-loading");
-                    if(btn.tagName==="BUTTON"){
-                        var spinner=btn.querySelector(".ews-btn-spinner");
-                        if(!spinner){
-                            spinner=document.createElement("span");
-                            spinner.className="ews-btn-spinner";
-                            spinner.setAttribute("aria-hidden","true");
-                            btn.insertBefore(spinner,btn.firstChild);
-                        }
-                    }
-                    btn.setAttribute("aria-busy","true");
-                });
-            },{capture:true});
+            }
+            btn.setAttribute("aria-busy","true");
         });
+    }
+    function initEwsSubmitGuard(){
+        if(window.ewsSubmitGuardOn)return;
+        window.ewsSubmitGuardOn=true;
+        document.addEventListener("submit",ewsGuardSubmit);
     }
     function ewsConfirmationMeta(form,submitter){
         var action=(form.querySelector("input[name=\"action\"]")||{}).value||"";
@@ -115,10 +125,12 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
 })();
 
 (function(){
-function ewsCloseGlobalModal(m){if(!m)return;m.remove();try{var u=new URL(window.location.href);["leave_error","leave_sent","leave_done","leave_cancel_sent","early_error","time_success","time_error","break_success","break_error","overtime_sent","overtime_error","saved","imported","grid_saved","time_reset","time_saved"].forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString())}catch(e){}}
+// One-time results of a form (dw_added, cx_error, overtime_done…): same rule as app_view_url() in trait-frontend.php.
+function ewsOnceKeys(u){var out=[];u.searchParams.forEach(function(v,k){if(/^(?:[a-z0-9]+_)*(?:error|sent|done|saved|added|moved|paid|adv|change|retry|success|rejected|updated|reset|conflict|imported)$/.test(k)&&out.indexOf(k)===-1)out.push(k)});return out;}
+function ewsCloseGlobalModal(m){if(!m)return;m.remove();try{var u=new URL(window.location.href);ewsOnceKeys(u).forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString())}catch(e){}}
 document.addEventListener("click",function(e){var b=e.target.closest(".ews-ux-ok,.ews-ux-close,.ews-ux-cancel");if(b){var m=b.closest(".ews-ux-modal");if(m)ewsCloseGlobalModal(m)}if(e.target.classList&&e.target.classList.contains("ews-ux-modal"))ewsCloseGlobalModal(e.target)});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){var m=document.querySelector(".ews-ux-modal");if(m)ewsCloseGlobalModal(m)}});
-function ewsConsumeGlobalFlash(){var keys=["leave_error","leave_sent","leave_done","leave_cancel_sent","early_error","time_success","time_error","break_success","break_error","overtime_sent","overtime_error","swap_error","swap_sent","swap_done","vacation_sent","vacation_error","vacation_done","vacation_rejected","saved","imported","grid_saved","time_reset","time_saved","profile_updated","profile_error"];try{var u=new URL(window.location.href),flash=false;keys.forEach(function(k){if(u.searchParams.has(k))flash=true;});if(!flash)return;keys.forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString());var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}catch(e){var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}}
+function ewsConsumeGlobalFlash(){try{var u=new URL(window.location.href),keys=ewsOnceKeys(u);if(!keys.length)return;keys.forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString());var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}catch(e){var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}}
 document.addEventListener("DOMContentLoaded",ewsConsumeGlobalFlash);
 window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
 })();
@@ -175,7 +187,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 var p=profile();
                 if(state)state.textContent=p&&p.template?ewsSprintf(/* translators: %d: number of samples */__('Enrolled (%d samples)','workforce-one'),p.samples):__('Not enrolled','workforce-one');
                 var open=module.querySelector('#ews-face-open'),enrollBtn=module.querySelector('#ews-face-enroll'),resetBtn=module.querySelector('#ews-face-reset');
-                if(open)open.textContent='📷 '+(p&&p.template?__('Verify Face','workforce-one'):__('Set Up / Verify Face','workforce-one'));
+                if(open)open.textContent=(p&&p.template?__('Verify Face','workforce-one'):__('Set Up / Verify Face','workforce-one'));
                 if(enrollBtn)enrollBtn.style.display=p&&p.template?'none':'';
                 if(resetBtn)resetBtn.style.display=p&&p.template?'':'none';
               }
@@ -270,7 +282,6 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                   var r=await detect();
                   var vr=await fetch(apiBase+'face/verify',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:Array.from(r.descriptor)})});
                   var vj=await vr.json();if(!vr.ok)throw new Error(vj.message||'Face verification failed.');
-                  var d=parseFloat(vj.distance||99);
                   if(vj.ok){
                     setStatus(__('✓ Face verified.','workforce-one'));
                     if(pendingForm){
@@ -283,7 +294,7 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                       var f=pendingForm;pendingForm=null;
                       setTimeout(function(){if(f&&f.submit)f.submit();},250);
                     }
-                  }else{pendingForm=null;setStatus(ewsSprintf(/* translators: %s: match distance */__('✕ Face did not match — distance %s.','workforce-one'),d.toFixed(3)));}
+                  }else{pendingForm=null;setStatus(__('✕ Face did not match. Please try again.','workforce-one'));}
                 }catch(e){setStatus(e.message||'Verification failed.');}
                 finally{busy=false;}
               }
@@ -452,4 +463,66 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initEwsReportXlsxExport);
     else initEwsReportXlsxExport();
 })();
+})();
+
+/* App frame (templates/app/layout.php): the profile menu, the phone's "More" sheet, and inline notices that fade out after 3 s. */
+(function(){
+    function initEwsAppFrame(){
+        var trigger=document.querySelector(".ews-profile-menu-trigger");
+        var menu=document.getElementById("ews-profile-menu-dropdown");
+        if(trigger && menu){
+            trigger.addEventListener("click",function(e){
+                e.preventDefault();
+                var open=trigger.getAttribute("aria-expanded")==="true";
+                trigger.setAttribute("aria-expanded",open?"false":"true");
+                menu.hidden=open;
+            });
+            document.addEventListener("click",function(e){
+                if(!e.target.closest(".ews-profile-menu")){trigger.setAttribute("aria-expanded","false");menu.hidden=true;}
+            });
+        }
+        var more=document.getElementById("wfo-more"),moreBtn=document.querySelector("[data-wfo-more-open]");
+        if(more && moreBtn && typeof more.showModal==="function"){
+            moreBtn.addEventListener("click",function(){more.showModal();moreBtn.setAttribute("aria-expanded","true");});
+            more.addEventListener("close",function(){moreBtn.setAttribute("aria-expanded","false");moreBtn.focus();});
+            more.querySelectorAll("[data-wfo-more-close]").forEach(function(b){b.addEventListener("click",function(){more.close();});});
+            // A tap on the dimmed backdrop (outside the sheet) closes it.
+            more.addEventListener("click",function(e){if(e.target===more)more.close();});
+        }else if(more && moreBtn){
+            // No <dialog> support: show the sheet's content in place.
+            moreBtn.addEventListener("click",function(){var open=more.hasAttribute("open");if(open)more.removeAttribute("open");else more.setAttribute("open","");});
+            more.querySelectorAll("[data-wfo-more-close]").forEach(function(b){b.addEventListener("click",function(){more.removeAttribute("open");});});
+        }
+        document.querySelectorAll(".ews-main .ews-notice,.ews-main .ews-time-success,.ews-main .ews-time-error,.ews-main .ews-profile-notice").forEach(function(el){
+            setTimeout(function(){
+                el.style.transition="opacity .35s ease, max-height .35s ease, margin .35s ease, padding .35s ease";
+                el.style.opacity="0";el.style.maxHeight="0";el.style.marginTop="0";el.style.marginBottom="0";el.style.paddingTop="0";el.style.paddingBottom="0";
+                setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},400);
+            },3000);
+        });
+    }
+    if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initEwsAppFrame);else initEwsAppFrame();
+})();
+
+/* A photo link (data-wfo-photo: a day sheet's group photo, a signed payout sheet, a correction's photo)
+   opens over the page. A new tab does nothing in the installed app on phones. */
+(function(){
+    function close(v){if(v&&v.parentNode)v.parentNode.removeChild(v);document.removeEventListener("keydown",onKey);}
+    function onKey(e){if(e.key==="Escape")close(document.querySelector(".wfo-photo-view"));}
+    document.addEventListener("click",function(e){
+        var a=e.target.closest?e.target.closest("a[data-wfo-photo]"):null;
+        if(!a)return;
+        e.preventDefault();
+        var v=document.createElement("div");
+        v.className="wfo-photo-view";v.setAttribute("role","dialog");v.setAttribute("aria-modal","true");
+        v.innerHTML='<button type="button" class="wfo-photo-x" aria-label="Close">×</button><span class="wfo-photo-wait" aria-hidden="true"></span><img alt="">';
+        var img=v.querySelector("img");
+        img.onload=function(){v.classList.add("is-ready");};
+        img.src=a.href;
+        img.alt=a.getAttribute("aria-label")||"";
+        v.addEventListener("click",function(ev){if(ev.target===v||ev.target.classList.contains("wfo-photo-x"))close(v);});
+        document.addEventListener("keydown",onKey);
+        document.body.appendChild(v);
+        v.querySelector(".wfo-photo-x").focus();
+    });
 })();

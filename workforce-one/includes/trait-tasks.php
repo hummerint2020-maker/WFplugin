@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 trait EWS_Tasks_Trait {
     private static $ews_tasks_schema_ready = false;
-    private function tasks_enabled(){ return (bool)get_option('ews_feature_tasks',false); }
+    private function tasks_enabled(){ return (bool)$this->option('ews_feature_tasks'); }
 
     private function ensure_tasks_schema(){
         if($this->ews_schema_is_current())return;
@@ -24,19 +24,66 @@ trait EWS_Tasks_Trait {
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             completed_at DATETIME NULL,
+            due_time TIME NULL,
+            remind_minutes SMALLINT UNSIGNED NULL,
+            reminded_at DATETIME NULL,
+            team_id BIGINT UNSIGNED NULL,
+            team_mode VARCHAR(10) NULL,
+            batch VARCHAR(32) NULL,
+            is_template TINYINT(1) NOT NULL DEFAULT 0,
+            repeat_rule VARCHAR(40) NULL,
+            repeat_next DATE NULL,
+            repeat_of BIGINT UNSIGNED NULL,
             PRIMARY KEY  (id),
             KEY assigned_to (assigned_to),
             KEY created_by (created_by),
             KEY status (status),
             KEY priority (priority),
-            KEY due_date (due_date)
+            KEY due_date (due_date),
+            KEY team_id (team_id),
+            KEY is_template (is_template,repeat_next),
+            KEY repeat_of (repeat_of)
+        ) $c;");
+        // 3.31.70: steps inside a task, comments (with a file) and who did what.
+        dbDelta("CREATE TABLE {$wpdb->prefix}ews_task_items (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            task_id BIGINT UNSIGNED NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            done TINYINT(1) NOT NULL DEFAULT 0,
+            position INT NOT NULL DEFAULT 0,
+            done_by BIGINT UNSIGNED NULL,
+            done_at DATETIME NULL,
+            PRIMARY KEY  (id),
+            KEY task_id (task_id)
+        ) $c;");
+        dbDelta("CREATE TABLE {$wpdb->prefix}ews_task_comments (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            task_id BIGINT UNSIGNED NOT NULL,
+            user_id BIGINT UNSIGNED NOT NULL,
+            body TEXT NULL,
+            file_name VARCHAR(255) NULL,
+            file_key VARCHAR(80) NULL,
+            file_size INT UNSIGNED NULL,
+            created_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY task_id (task_id)
+        ) $c;");
+        dbDelta("CREATE TABLE {$wpdb->prefix}ews_task_activity (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            task_id BIGINT UNSIGNED NOT NULL,
+            user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            action VARCHAR(30) NOT NULL,
+            detail VARCHAR(255) NULL,
+            created_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY task_id (task_id)
         ) $c;");
         self::$ews_tasks_schema_ready=true;
     }
 
     private function tasks_redirect($args=[]){
         $url=wp_get_referer();
-        if(!$url || strpos($url,'admin-post.php')!==false)$url=home_url('/');
+        if(!$url || strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
         $url=remove_query_arg(['task_saved','task_updated','task_deleted','task_completed','task_error'],$url);
         if($args)$url=add_query_arg($args,$url);
         wp_safe_redirect($url); exit;
@@ -63,28 +110,35 @@ trait EWS_Tasks_Trait {
     private function task_notify_user($user_id,$title,$message,$task_id){
         $user_id=absint($user_id);
         if(!$user_id || $user_id===get_current_user_id()) return;
-        $this->notify_user($user_id,$title,$message,'info','task',$task_id);
-        if(method_exists($this,'push_custom_notification')){
-            $this->push_custom_notification($user_id,$title,$message,'task',$task_id,add_query_arg('ews_view','tasks',home_url('/')));
-        }
+        $this->notify($user_id,'task',$title,$message,['type'=>'info','entity_id'=>$task_id,'url'=>add_query_arg('ews_view','tasks',$this->app_home_url())]);
     }
 
     public function task_save(){
-        if(!is_user_logged_in())wp_die('You must be logged in.');
-        if(!$this->tasks_enabled())wp_die('Tasks are disabled.');
+        if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
+        if(!$this->tasks_enabled())wp_die(esc_html__('Tasks are currently disabled by your administrator.','workforce-one'));
         check_admin_referer('ews_task_save');
+        $this->ensure_tasks_schema();
+        $cfg=$this->task_settings();$manage=$this->task_can_manage_all();
         $id=absint($_POST['task_id']??0);
-        $title=trim(sanitize_text_field($_POST['title']??''));
-        $description=trim(sanitize_textarea_field($_POST['description']??''));
-        $status=sanitize_key($_POST['status']??'todo');
+        $title=trim(sanitize_text_field(wp_unslash($_POST['title']??'')));
+        $description=trim(sanitize_textarea_field(wp_unslash($_POST['description']??'')));
         $priority=sanitize_key($_POST['priority']??'normal');
-        $due=trim(sanitize_text_field($_POST['due_date']??''));
+        $due=trim(sanitize_text_field(wp_unslash($_POST['due_date']??'')));
         $assigned=absint($_POST['assigned_to']??0);
+        $time=trim(sanitize_text_field(wp_unslash($_POST['due_time']??'')));
+        $remind=isset($_POST['remind_minutes'])&&$_POST['remind_minutes']!==''?(int)$_POST['remind_minutes']:-1;
+        $kind=sanitize_key($_POST['assign_kind']??'');
+        $team_id=absint($_POST['team_id']??0);
+        $team_mode=in_array($_POST['team_mode']??'',\WorkforceOne\Settings\TaskSettings::TEAM_MODES,true)?(string)$_POST['team_mode']:$cfg['team_mode'];
         if($title==='')$this->tasks_redirect(['task_error'=>'title']);
-        if(!in_array($status,$this->task_allowed_statuses(),true))$status='todo';
+        if(!$id && !$manage && !$cfg['personal'])$this->tasks_redirect(['task_error'=>'personal']);
         if(!in_array($priority,$this->task_allowed_priorities(),true))$priority='normal';
         if($due!=='' && !preg_match('/^\d{4}-\d{2}-\d{2}$/',$due))$due='';
-        if(!$this->task_can_manage_all())$assigned=0;
+        $time=($cfg['due_time'] && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/',$time))?$time.':00':null;
+        $remind=($cfg['reminders'] && $time && in_array($remind,\WorkforceOne\Settings\TaskSettings::REMIND_CHOICES,true) && $remind>0)?$remind:null;
+        if(!$manage){$assigned=0;$kind='';}
+        if($kind==='team' && (!$cfg['teams'] || !$team_id))$kind='';
+        if($kind!=='person')$assigned=$kind===''?$assigned:0;
         if($assigned){
             global $wpdb;
             $valid=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->employees} WHERE id=%d AND active=1 AND wp_user_id>0",$assigned));
@@ -92,37 +146,54 @@ trait EWS_Tasks_Trait {
         }
         global $wpdb;$table=$wpdb->prefix.'ews_tasks';$now=current_time('mysql');
         if($id){
-            $task=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d LIMIT 1",$id));
-            if(!$task || !$this->task_user_can_edit($task))wp_die('Access denied');
+            $task=$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d AND is_template=0 LIMIT 1",$id));
+            if(!$task || !$this->task_user_can_edit($task))wp_die(esc_html__('Access denied','workforce-one'));
             $old_assigned=(int)($task->assigned_to??0);
-            // The edit form does not change workflow status. Preserve it for every role.
+            // The edit form does not change workflow status or the team. Preserve them for every role.
             $status=in_array($task->status,$this->task_allowed_statuses(),true)?$task->status:'todo';
             $completed=($status==='completed')?($task->completed_at?:$now):null;
-            $ok=$wpdb->update($table,['title'=>$title,'description'=>$description,'status'=>$status,'priority'=>$priority,'due_date'=>$due?:null,'assigned_to'=>$assigned?:null,'updated_at'=>$now,'completed_at'=>$completed],['id'=>$id],['%s','%s','%s','%s','%s','%d','%s','%s'],['%d']);
+            $row=['title'=>$title,'description'=>$description,'status'=>$status,'priority'=>$priority,'due_date'=>$due?:null,'assigned_to'=>$assigned?:null,'updated_at'=>$now,'completed_at'=>$completed,'due_time'=>$time,'remind_minutes'=>$remind];
+            // A new due time or reminder: remind again.
+            if((string)$task->due_date!==(string)($due?:'') || (string)$task->due_time!==(string)$time || (string)$task->remind_minutes!==(string)$remind)$row['reminded_at']=null;
+            if(empty($task->assigned_to) && !empty($task->team_id) && !$assigned)unset($row['assigned_to']);
+            $ok=$wpdb->update($table,$row,['id'=>$id]);
             if($ok===false)$this->tasks_redirect(['task_error'=>'save']);
             $this->audit('task_update','task',$id,$title);
-
-            // Notify the new assignee when an existing task is assigned/reassigned.
-            if($assigned && $assigned!==$old_assigned){
-                $assigned_user=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$assigned));
-                if($assigned_user){
-                    $this->task_notify_user($assigned_user,'Task Assigned','You have been assigned the task: <strong>'.esc_html($title).'</strong>.',$id);
-                }
-            }
+            $changes=[];
+            if((string)$task->title!==$title)$changes[]='title';
+            if((string)$task->priority!==$priority)$changes[]='priority';
+            if((string)$task->due_date!==(string)($due?:'') || (string)$task->due_time!==(string)$time)$changes[]='due';
+            if($old_assigned!==$assigned && $assigned)$changes[]='assignee';
+            if((string)$task->description!==$description)$changes[]='description';
+            $this->task_log($id,'edit',implode(',',$changes));
+            if($assigned && $assigned!==$old_assigned)$this->task_new_notify($this->task_get($id));
             $this->tasks_redirect(['task_updated'=>1]);
         }
-        if($status==='completed')$completed=$now; else $completed=null;
-        $ok=$wpdb->insert($table,['title'=>$title,'description'=>$description,'status'=>$status,'priority'=>$priority,'due_date'=>$due?:null,'assigned_to'=>$assigned?:null,'created_by'=>get_current_user_id(),'created_at'=>$now,'updated_at'=>$now,'completed_at'=>$completed],['%s','%s','%s','%s','%s','%d','%d','%s','%s','%s']);
-        if($ok===false)$this->tasks_redirect(['task_error'=>'save']);
-        $new_id=(int)$wpdb->insert_id;
-        $this->audit('task_create','task',$new_id,$title);
-        if($assigned){
-            $user_id=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$assigned));
-            if($user_id){
-                $this->task_notify_user($user_id,'New Task','You have been assigned the task: <strong>'.esc_html($title).'</strong>.',$new_id);
-            }
+        $base=['title'=>$title,'description'=>$description,'status'=>'todo','priority'=>$priority,'due_date'=>$due?:null,'due_time'=>$time,'remind_minutes'=>$remind,'created_by'=>get_current_user_id(),'created_at'=>$now,'updated_at'=>$now,'is_template'=>0];
+        $rule=$cfg['repeat']?\WorkforceOne\Settings\TaskSettings::ruleFromPost(wp_unslash($_POST)):'';
+        if($rule!=='' && !$due)$base['due_date']=$due=current_time('Y-m-d');
+        $tpl=null;
+        if($rule!==''){
+            // The repeat lives on a hidden template; each date gets its own task (task_generate_repeats()).
+            $wpdb->insert($table,array_merge($base,['is_template'=>1,'repeat_rule'=>$rule,'repeat_next'=>\WorkforceOne\Settings\TaskSettings::nextDate($rule,$due),'assigned_to'=>$kind==='team'?null:($assigned?:null),'team_id'=>$kind==='team'?$team_id:null,'team_mode'=>$kind==='team'?$team_mode:null]));
+            $tpl=(int)$wpdb->insert_id;
         }
-        $this->tasks_redirect(['task_saved'=>1]);
+        $ids=[];
+        if($kind==='team'){
+            $tobj=(object)($base+['id'=>$tpl,'team_id'=>$team_id,'team_mode'=>$team_mode,'assigned_to'=>null]);
+            foreach($this->task_from_template($tobj,$base['due_date']) as $new)$ids[]=$new;
+        }else{
+            $ok=$wpdb->insert($table,$base+['assigned_to'=>$assigned?:null,'repeat_of'=>$tpl]);
+            if($ok===false)$this->tasks_redirect(['task_error'=>'save']);
+            $ids[]=(int)$wpdb->insert_id;
+        }
+        if(!$ids)$this->tasks_redirect(['task_error'=>'team_empty']);
+        foreach($ids as $new){
+            $this->audit('task_create','task',$new,$title);
+            $this->task_log($new,'create',$rule);
+            $this->task_new_notify($this->task_get($new));
+        }
+        $this->tasks_redirect(['task_saved'=>count($ids)]);
     }
 
     public function task_status_update(){
@@ -136,6 +207,7 @@ trait EWS_Tasks_Trait {
         $is_assignee=false;
         if(!empty($task->assigned_to))$is_assignee=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",(int)$task->assigned_to))===$uid;
         if(!$this->task_can_manage_all() && !$is_assignee && (int)$task->created_by!==$uid)wp_die('Access denied');
+        if(empty($task->assigned_to) && !empty($task->team_id) && ($task->team_mode??'')==='first')$this->tasks_redirect(['task_error'=>'take']);
         $status=sanitize_key($_POST['status']??'todo');
         if(!in_array($status,$this->task_allowed_statuses(),true))wp_die('Invalid status.');
         $allowed_next=['todo'=>['in_progress'],'in_progress'=>['todo','completed'],'completed'=>['in_progress']];
@@ -144,11 +216,12 @@ trait EWS_Tasks_Trait {
         $ok=$wpdb->update($table,['status'=>$status,'updated_at'=>$now,'completed_at'=>$status==='completed'?($task->completed_at?:$now):null],['id'=>$id],['%s','%s','%s'],['%d']);
         if($ok===false)$this->tasks_redirect(['task_error'=>'status']);
         $this->audit('task_status','task',$id,$status);
+        $this->task_log($id,'status',$status);
 
         // Keep the task owner/creator informed when someone else changes workflow status.
         $creator=(int)$task->created_by;
-        if($creator && $creator!==$uid){
-            $this->task_notify_user($creator,'Task Status Updated','<strong>'.esc_html($task->title).'</strong> is now <strong>'.esc_html($this->task_display_status($status)).'</strong>.',$id);
+        if($creator && $creator!==$uid && $this->task_settings()['notify_status']){
+            $this->task_notify_user($creator,__('Task Status Updated','workforce-one'),sprintf(/* translators: 1: task title, 2: status */__('%1$s is now %2$s.','workforce-one'),'<strong>'.esc_html($task->title).'</strong>','<strong>'.esc_html($this->task_display_status($status)).'</strong>'),$id);
         }
         $this->tasks_redirect(['task_completed'=>$status==='completed'?1:0,'task_updated'=>$status!=='completed'?1:0]);
     }
@@ -163,41 +236,53 @@ trait EWS_Tasks_Trait {
         $ok=$wpdb->delete($table,['id'=>$id],['%d']);
         if($ok===false)$this->tasks_redirect(['task_error'=>'delete']);
         $this->audit('task_delete','task',$id,$task->title);
+        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT file_key FROM {$wpdb->prefix}ews_task_comments WHERE task_id=%d AND file_key IS NOT NULL",$id)) as $key){
+            if(preg_match('/^[A-Za-z0-9]{32}\.[a-z]{2,5}$/',(string)$key))wp_delete_file($this->task_file_dir().'/'.$key);
+        }
+        foreach(['ews_task_items','ews_task_comments','ews_task_activity'] as $x)$wpdb->delete($wpdb->prefix.$x,['task_id'=>$id],['%d']);
         $this->tasks_redirect(['task_deleted'=>1]);
     }
 
-    private function task_display_status($status){ return ['todo'=>'To Do','in_progress'=>'In Progress','completed'=>'Completed'][$status]??ucwords(str_replace('_',' ',$status)); }
-    private function task_display_priority($priority){ return ucfirst($priority); }
+    private function task_display_status($status){ return ['todo'=>__('To Do','workforce-one'),'in_progress'=>__('In Progress','workforce-one'),'completed'=>__('Completed','workforce-one')][$status]??ucwords(str_replace('_',' ',$status)); }
+    private function task_display_priority($priority){ return ['urgent'=>__('Urgent','workforce-one'),'high'=>__('High','workforce-one'),'normal'=>__('Normal','workforce-one'),'low'=>__('Low','workforce-one')][$priority]??ucfirst($priority); }
 
     public function tasks_content(){
-        if(!$this->tasks_enabled()) return '<div class="ews-card"><h3>Tasks</h3><p>Tasks are currently disabled by your administrator.</p></div>';
+        if(!$this->tasks_enabled()) return '<div class="ews-card"><h3>'.esc_html__('Tasks','workforce-one').'</h3><p>'.esc_html__('Tasks are currently disabled by your administrator.','workforce-one').'</p></div>';
+        $this->ensure_tasks_schema();
+        $this->tasks_tick_maybe();
+        $cfg=$this->task_settings();
 
         global $wpdb;
         $table=$wpdb->prefix.'ews_tasks';
         $uid=get_current_user_id();
         $manage=$this->task_can_manage_all();
         $tab=sanitize_key($_GET['task_tab']??'my');
-        if(!$manage) $tab='my';
+        if($tab==='workload' && !$this->task_workload_allowed())$tab='my';
+        if(!$manage && $tab!=='workload') $tab='my';
+        $my_teams=$this->task_my_team_ids();
+        $team_in=$my_teams?implode(',',array_map('intval',$my_teams)):'0';
 
         $status_filter=sanitize_key($_GET['task_status']??'all');
         if($status_filter!=='all' && !in_array($status_filter,$this->task_allowed_statuses(),true)) $status_filter='all';
         $priority_filter=sanitize_key($_GET['task_priority']??'all');
         if($priority_filter!=='all' && !in_array($priority_filter,$this->task_allowed_priorities(),true)) $priority_filter='all';
 
+        // My tasks: mine, assigned to me, and my teams' tasks waiting to be taken. Team: everyone's.
         if($manage && $tab==='team'){
-            $where=" AND t.assigned_to IN (SELECT id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL)";
+            $where=" AND t.is_template=0 AND (t.assigned_to IN (SELECT id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL) OR (t.assigned_to IS NULL AND t.team_id IS NOT NULL))";
             $args=[];
         } else {
-            $where=" AND (t.created_by=%d OR a.wp_user_id=%d)";
+            $where=" AND t.is_template=0 AND (t.created_by=%d OR a.wp_user_id=%d OR (t.assigned_to IS NULL AND t.team_mode='first' AND t.team_id IN ($team_in)))";
             $args=[$uid,$uid];
         }
         if($status_filter!=='all'){ $where.=' AND t.status=%s'; $args[]=$status_filter; }
         if($priority_filter!=='all'){ $where.=' AND t.priority=%s'; $args[]=$priority_filter; }
 
-        $sql="SELECT t.*,a.name assigned_name,a.wp_user_id assigned_wp_user_id,c.display_name creator_name
+        $sql="SELECT t.*,a.name assigned_name,a.wp_user_id assigned_wp_user_id,c.display_name creator_name,tm.name team_name
               FROM $table t
               LEFT JOIN {$this->employees} a ON a.id=t.assigned_to
               LEFT JOIN {$wpdb->users} c ON c.ID=t.created_by
+              LEFT JOIN {$wpdb->prefix}ews_teams tm ON tm.id=t.team_id
               WHERE 1=1 $where
               ORDER BY CASE t.status WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2 ELSE 3 END,
                        CASE t.priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END,
@@ -206,8 +291,8 @@ trait EWS_Tasks_Trait {
 
         // Dashboard counters use the same visibility rules as the list.
         $counter_where=($manage&&$tab==='team')
-            ? " AND t.assigned_to IN (SELECT id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL)"
-            : " AND (t.created_by=%d OR a.wp_user_id=%d)";
+            ? " AND t.is_template=0 AND (t.assigned_to IN (SELECT id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL) OR (t.assigned_to IS NULL AND t.team_id IS NOT NULL))"
+            : " AND t.is_template=0 AND (t.created_by=%d OR a.wp_user_id=%d OR (t.assigned_to IS NULL AND t.team_mode='first' AND t.team_id IN ($team_in)))";
         $counter_args=($manage&&$tab==='team')?[]:[$uid,$uid];
         $counter_sql="SELECT
             COALESCE(SUM(CASE WHEN t.status='todo' THEN 1 ELSE 0 END),0) todo_count,
@@ -222,7 +307,7 @@ trait EWS_Tasks_Trait {
 
         $employees=$manage?$this->tasks_employees():[];
         $edit_id=absint($_GET['edit_task']??0);
-        $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d LIMIT 1",$edit_id)):null;
+        $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d AND is_template=0 LIMIT 1",$edit_id)):null;
         if($edit && !$this->task_user_can_edit($edit)) $edit=null;
 
         $base=$this->app_view_url('tasks');
@@ -230,98 +315,59 @@ trait EWS_Tasks_Trait {
             // app_view_url() intentionally preserves unknown query args, so strip
             // Task filters first. Otherwise clicking "All" while already filtered
             // keeps the previous task_status/task_priority in the URL.
-            $url=remove_query_arg(['task_tab','task_status','task_priority','edit_task'],$base);
+            $url=remove_query_arg(['task_tab','task_status','task_priority','edit_task','task'],$base);
             $args=['task_tab'=>$tab];
             if($status!=='all') $args['task_status']=$status;
             if($priority!=='all') $args['task_priority']=$priority;
             return add_query_arg($args,$url);
         };
         $tab_url=function($target_tab) use ($base){
-            $url=remove_query_arg(['task_tab','task_status','task_priority','edit_task'],$base);
+            $url=remove_query_arg(['task_tab','task_status','task_priority','edit_task','task'],$base);
             return add_query_arg('task_tab',$target_tab,$url);
         };
 
-        ob_start();
-        ?>
-        <style>
-        .wfo-tasks{display:grid;gap:18px}.wfo-task-hero{background:linear-gradient(135deg,#172b4d,#315a85);color:#fff;border-radius:18px;padding:22px}.wfo-task-hero h2{margin:0 0 5px;font-size:26px}.wfo-task-hero p{margin:0;color:#dbeafe}.wfo-task-tabs{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}.wfo-task-tabs a{padding:8px 12px;border-radius:999px;background:#ffffff20;color:#fff;text-decoration:none;font-weight:700}.wfo-task-tabs a.active{background:#fff;color:#172b4d}.wfo-task-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}.wfo-task-kpi{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:13px}.wfo-task-kpi strong{display:block;font-size:22px;color:#101828}.wfo-task-kpi span{font-size:11px;color:#667085;font-weight:700}.wfo-task-kpi.overdue strong{color:#b42318}.wfo-task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.wfo-task-filters{display:flex;gap:7px;flex-wrap:wrap}.wfo-task-filters a{padding:7px 10px;border:1px solid #d0d5dd;border-radius:999px;text-decoration:none;color:#344054;background:#fff;font-size:12px;font-weight:700}.wfo-task-filters a.active{background:#172b4d;color:#fff;border-color:#172b4d}.wfo-task-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px}.wfo-task-list{display:grid;gap:10px}.wfo-task-card{background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:16px}.wfo-task-card.overdue{border-color:#fecdca}.wfo-task-head{display:flex;justify-content:space-between;gap:14px}.wfo-task-title{font-weight:800;color:#101828}.wfo-task-desc{color:#667085;font-size:13px;margin-top:6px;white-space:pre-wrap}.wfo-task-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.wfo-task-pill{font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;background:#f2f4f7;color:#344054}.wfo-task-pill.urgent{background:#fef3f2;color:#b42318}.wfo-task-pill.high{background:#fff7ed;color:#c2410c}.wfo-task-pill.completed{background:#ecfdf3;color:#027a48}.wfo-task-pill.overdue{background:#fef3f2;color:#b42318}.wfo-task-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.wfo-task-actions form{margin:0}.wfo-task-form{background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:18px}.wfo-task-form h3{margin-top:0}.wfo-task-form label{display:block;font-size:12px;font-weight:700;color:#344054;margin-bottom:12px}.wfo-task-form input,.wfo-task-form textarea,.wfo-task-form select{width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #d0d5dd;border-radius:9px;padding:9px 10px;background:#fff}.wfo-task-form textarea{min-height:100px;resize:vertical}.wfo-task-form .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wfo-task-empty{text-align:center;padding:35px;color:#667085;background:#fff;border:1px dashed #d0d5dd;border-radius:14px}.wfo-task-new{width:100%}
-        @media(max-width:800px){.wfo-task-kpis{grid-template-columns:repeat(2,1fr)}.wfo-task-grid{grid-template-columns:1fr}.wfo-task-form{order:-1}.wfo-task-form .row{grid-template-columns:1fr}}
-        </style>
-        <div class="wfo-tasks">
-            <div class="wfo-task-hero">
-                <h2>Tasks</h2><p>Keep workforce work organized, assigned and visible.</p>
-                <?php if($manage): ?><div class="wfo-task-tabs"><a class="<?php echo $tab==='my'?'active':''; ?>" href="<?php echo esc_url($tab_url('my')); ?>">My Tasks</a><a class="<?php echo $tab==='team'?'active':''; ?>" href="<?php echo esc_url($tab_url('team')); ?>">Team Tasks</a></div><?php endif; ?>
-                <div class="wfo-task-kpis">
-                    <div class="wfo-task-kpi"><strong><?php echo (int)($counter->todo_count??0); ?></strong><span>To Do</span></div>
-                    <div class="wfo-task-kpi"><strong><?php echo (int)($counter->progress_count??0); ?></strong><span>In Progress</span></div>
-                    <div class="wfo-task-kpi"><strong><?php echo (int)($counter->completed_count??0); ?></strong><span>Completed</span></div>
-                    <div class="wfo-task-kpi overdue"><strong><?php echo (int)($counter->overdue_count??0); ?></strong><span>Overdue</span></div>
-                </div>
-            </div>
-
-            <?php $task_error=sanitize_key($_GET['task_error']??''); if($task_error): ?>
-                <div class="wfo-task-notice error" role="alert">
-                    <?php if($task_error==='transition'): ?>That task can’t move to that status yet. Start Progress first, then you can complete it.
-                    <?php elseif($task_error==='status'): ?>We couldn’t update the task status. No changes were applied.
-                    <?php elseif($task_error==='save'): ?>We couldn’t save the task. No partial changes were applied.
-                    <?php elseif($task_error==='delete'): ?>We couldn’t delete the task. No changes were applied.
-                    <?php elseif($task_error==='title'): ?>Please enter a task title.
-                    <?php else: ?>Something went wrong. Please try again.
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="wfo-task-toolbar">
-                <div class="wfo-task-filters">
-                    <?php foreach(['all'=>'All','todo'=>'To Do','in_progress'=>'In Progress','completed'=>'Completed'] as $k=>$label): ?>
-                        <a class="<?php echo $status_filter===$k?'active':''; ?>" href="<?php echo esc_url($filter_url($k,$priority_filter)); ?>"><?php echo esc_html($label); ?></a>
-                    <?php endforeach; ?>
-                </div>
-                <div class="wfo-task-filters">
-                    <?php foreach(['all'=>'All Priority','urgent'=>'Urgent','high'=>'High','normal'=>'Normal','low'=>'Low'] as $k=>$label): ?>
-                        <a class="<?php echo $priority_filter===$k?'active':''; ?>" href="<?php echo esc_url($filter_url($status_filter,$k)); ?>"><?php echo esc_html($label); ?></a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <div class="wfo-task-grid">
-                <div class="wfo-task-list">
-                <?php if(!$rows): ?><div class="wfo-task-empty"><strong>No tasks found.</strong><br>Try changing the filters or create a new task.</div><?php endif; ?>
-                <?php foreach($rows as $t):
-                    $is_overdue=!empty($t->due_date) && $t->status!=='completed' && $t->due_date < current_time('Y-m-d');
-                    $is_assignee=!empty($t->assigned_wp_user_id) && (int)$t->assigned_wp_user_id===$uid;
-                ?>
-                    <div class="wfo-task-card <?php echo $is_overdue?'overdue':''; ?>">
-                        <div class="wfo-task-head"><div><div class="wfo-task-title"><?php echo esc_html($t->title); ?></div><?php if($t->description): ?><div class="wfo-task-desc"><?php echo esc_html($t->description); ?></div><?php endif; ?></div><span class="wfo-task-pill <?php echo esc_attr($t->status); ?>"><?php echo esc_html($this->task_display_status($t->status)); ?></span></div>
-                        <div class="wfo-task-meta"><span class="wfo-task-pill <?php echo esc_attr($t->priority); ?>">Priority: <?php echo esc_html($this->task_display_priority($t->priority)); ?></span><?php if($t->due_date): ?><span class="wfo-task-pill <?php echo $is_overdue?'overdue':''; ?>"><?php echo $is_overdue?'⚠ Overdue: ':'Due: '; ?><?php echo esc_html($t->due_date); ?></span><?php endif; ?><?php if($t->assigned_name): ?><span class="wfo-task-pill">Assigned: <?php echo esc_html($t->assigned_name); ?></span><?php endif; ?></div>
-                        <div class="wfo-task-actions">
-                            <?php if($manage||$is_assignee||(int)$t->created_by===$uid): ?>
-                                <?php if($t->status==='todo'): ?><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><?php wp_nonce_field('ews_task_status_'.(int)$t->id); ?><input type="hidden" name="action" value="ews_task_status_update"><input type="hidden" name="task_id" value="<?php echo (int)$t->id; ?>"><input type="hidden" name="status" value="in_progress"><button class="ews-btn" type="submit">▶ Start Progress</button></form><?php endif; ?>
-                                <?php if($t->status==='in_progress'): ?><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><?php wp_nonce_field('ews_task_status_'.(int)$t->id); ?><input type="hidden" name="action" value="ews_task_status_update"><input type="hidden" name="task_id" value="<?php echo (int)$t->id; ?>"><input type="hidden" name="status" value="todo"><button class="ews-btn secondary" type="submit">↩ To Do</button></form><?php endif; ?>
-                                <?php if($t->status==='in_progress'): ?><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><?php wp_nonce_field('ews_task_status_'.(int)$t->id); ?><input type="hidden" name="action" value="ews_task_status_update"><input type="hidden" name="task_id" value="<?php echo (int)$t->id; ?>"><input type="hidden" name="status" value="completed"><button class="ews-btn" type="submit">✓ Complete</button></form><?php endif; ?>
-                                <?php if($t->status==='completed'): ?><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><?php wp_nonce_field('ews_task_status_'.(int)$t->id); ?><input type="hidden" name="action" value="ews_task_status_update"><input type="hidden" name="task_id" value="<?php echo (int)$t->id; ?>"><input type="hidden" name="status" value="in_progress"><button class="ews-btn secondary" type="submit">↻ Reopen</button></form><?php endif; ?>
-                            <?php endif; ?>
-                            <?php if($this->task_user_can_edit($t)): ?><a class="ews-btn secondary" href="<?php echo esc_url(add_query_arg(['edit_task'=>(int)$t->id,'task_tab'=>$tab],$base)); ?>">Edit</a><?php endif; ?>
-                            <?php if($this->task_user_can_delete($t)): ?><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('Delete this task?');"><?php wp_nonce_field('ews_task_delete_'.(int)$t->id); ?><input type="hidden" name="action" value="ews_task_delete"><input type="hidden" name="task_id" value="<?php echo (int)$t->id; ?>"><button class="ews-btn secondary" type="submit">Delete</button></form><?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-                </div>
-                <div class="wfo-task-form">
-                    <h3><?php echo $edit?'Edit Task':'New Task'; ?></h3>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('ews_task_save'); ?><input type="hidden" name="action" value="ews_task_save"><input type="hidden" name="task_id" value="<?php echo $edit?(int)$edit->id:0; ?>">
-                        <label>Title<input name="title" value="<?php echo esc_attr($edit->title??''); ?>" required maxlength="255" placeholder="What needs to be done?"></label>
-                        <label>Description<textarea name="description" placeholder="Add useful context, instructions or notes..."><?php echo esc_textarea($edit->description??''); ?></textarea></label>
-                        <div class="row"><label>Priority<select name="priority"><?php foreach($this->task_allowed_priorities() as $p): ?><option value="<?php echo esc_attr($p); ?>" <?php selected($edit->priority??'normal',$p); ?>><?php echo esc_html(ucfirst($p)); ?></option><?php endforeach; ?></select></label><label>Due Date<input type="date" name="due_date" value="<?php echo esc_attr($edit->due_date??''); ?>"></label></div>
-                        <?php if($manage): ?><label>Assign To<select name="assigned_to"><option value="0">Myself / Personal Task</option><?php foreach($employees as $e): ?><option value="<?php echo (int)$e->id; ?>" <?php selected((int)($edit->assigned_to??0),(int)$e->id); ?>><?php echo esc_html($e->name); ?></option><?php endforeach; ?></select></label><?php endif; ?>
-                        <button class="ews-btn wfo-task-new" type="submit"><?php echo $edit?'Save Changes':'＋ Create Task'; ?></button><?php if($edit): ?> <a class="ews-btn secondary" href="<?php echo esc_url($base); ?>">Cancel</a><?php endif; ?>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <?php
-        return ob_get_clean();
+        $uid=(int)$uid;$today=current_time('Y-m-d');
+        $cards=['todo'=>[],'in_progress'=>[],'completed'=>[]];
+        foreach((array)$rows as $t){
+            $t->is_overdue=!empty($t->due_date) && $t->status!=='completed' && $t->due_date<$today;
+            $is_assignee=!empty($t->assigned_wp_user_id) && (int)$t->assigned_wp_user_id===$uid;
+            $t->is_pool=$this->task_is_pool($t);
+            $t->can_take=$t->is_pool && in_array((int)$t->team_id,$my_teams,true);
+            $t->can_status=!$t->is_pool && ($manage||$is_assignee||(int)$t->created_by===$uid);
+            $t->status_nonce=$t->can_status?wp_create_nonce('ews_task_status_'.(int)$t->id):'';
+            $t->view_url=add_query_arg(['task'=>(int)$t->id,'task_tab'=>$tab],remove_query_arg(['edit_task','task'],$base));
+            $t->can_edit=$this->task_user_can_edit($t);
+            $t->can_delete=$this->task_user_can_delete($t);
+            $t->edit_url=add_query_arg(['edit_task'=>(int)$t->id,'task_tab'=>$tab],$base);
+            $cards[isset($cards[$t->status])?$t->status:'todo'][]=$t;
+        }
+        // Done: the most recently finished first; a long list is cut (Show all).
+        usort($cards['completed'],static function($a,$b){return strcmp((string)$b->completed_at,(string)$a->completed_at);});
+        $done_all=isset($_GET['task_done']);
+        $done_total=count($cards['completed']);
+        if(!$done_all)$cards['completed']=array_slice($cards['completed'],0,(int)$cfg['done_limit']);
+        wp_enqueue_script('workforce-one-sheet');
+        wp_enqueue_script('workforce-one-tasks');
+        wp_enqueue_style('workforce-one-requests');
+        $detail_id=absint($_GET['task']??0);
+        $detail=$detail_id?$this->task_details($detail_id):null;
+        // Counts per item for the cards (checklist progress, comments).
+        $ids=[];foreach($cards as $list)foreach($list as $t)$ids[]=(int)$t->id;
+        $item_counts=$comment_counts=[];
+        if($ids){
+            $in=implode(',',$ids);
+            if($cfg['checklist'])foreach((array)$wpdb->get_results("SELECT task_id,COUNT(*) n,SUM(done) d FROM {$wpdb->prefix}ews_task_items WHERE task_id IN ($in) GROUP BY task_id") as $r)$item_counts[(int)$r->task_id]=[(int)$r->d,(int)$r->n];
+            if($cfg['comments'])foreach((array)$wpdb->get_results("SELECT task_id,COUNT(*) n FROM {$wpdb->prefix}ews_task_comments WHERE task_id IN ($in) GROUP BY task_id") as $r)$comment_counts[(int)$r->task_id]=(int)$r->n;
+        }
+        return $this->render_template('app/tasks',[
+            'cfg'=>$cfg,'detail'=>$detail,'item_counts'=>$item_counts,'comment_counts'=>$comment_counts,
+            'teams'=>($manage&&$cfg['teams'])?$this->task_teams():[],'workload'=>$tab==='workload'?$this->task_workload():null,
+            'can_create'=>$manage||$cfg['personal'],'can_workload'=>$this->task_workload_allowed(),
+            'manage'=>$manage,'tab'=>$tab,'priority_filter'=>$priority_filter,'counter'=>$counter,'cards'=>$cards,
+            'done_total'=>$done_total,'done_all'=>$done_all,'done_url'=>add_query_arg('task_done','all',$filter_url('all',$priority_filter)),
+            'employees'=>$employees,'edit'=>$edit,'base'=>$base,'tab_url'=>$tab_url,'filter_url'=>$filter_url,
+            'error'=>sanitize_key($_GET['task_error']??''),'post_url'=>admin_url('admin-post.php'),'today'=>$today,
+        ]);
     }
 
 }

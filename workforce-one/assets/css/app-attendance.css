@@ -1,0 +1,308 @@
+/* Employee app → manager Attendance grid (templates/app/attendance.php). Uses the theme variables of
+   app-shell.css; scoped to .wfo-att to win over the older .ews-att-* rules in workforce-one.css.
+   One grid for every screen: a table above 700px, the same rows as cards below (the width
+   attendance-grid.js treats as a phone). Each day is a coloured button; one picker serves them all.
+   assets/css/app-attendance-rtl.css is generated with rtlcss (assets/css/README.md). */
+
+.wfo-app .wfo-att{max-width:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.wfo-app .wfo-att p,.wfo-app .wfo-att h3{margin:0}
+.wfo-app .wfo-att-notice{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:12px 14px;border:0;border-radius:var(--wfo-r-ctl);background:#E6F7EF;color:#0F6B43;font-size:14px;font-weight:600}
+.wfo-app .wfo-att-notice.ews-notice-error{background:#FFE8EC;color:#A51D3E}
+.wfo-app .wfo-att .wfo-att-card{min-width:0;box-sizing:border-box;margin:0;padding:16px 18px;border:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+
+/* top: intro + week switcher */
+.wfo-att-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.wfo-att-intro{min-width:0;flex:1 1 280px;display:flex;flex-direction:column;gap:4px}
+.wfo-app .wfo-att .wfo-att-kicker{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--wfo-pri);margin:0}
+.wfo-app .wfo-att-intro p{font-size:14px;color:var(--wfo-muted)}
+.wfo-app .wfo-att .wfo-weeknav{display:flex;align-items:center;gap:6px;margin:0;padding:6px;border:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-app .wfo-att .wfo-weeknav .ews-week-arrow{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--wfo-r-sm);background:var(--wfo-pri-soft);color:var(--wfo-pri);text-decoration:none;font-size:0}
+.wfo-app .wfo-att .wfo-weeknav .ews-week-arrow:hover{background:var(--wfo-pri);color:#fff}
+.wfo-att .wfo-weeknav-prev .wfo-icon{transform:scaleX(-1)}
+[dir=rtl] .wfo-att .wfo-weeknav-prev .wfo-icon{transform:none}
+[dir=rtl] .wfo-att .wfo-weeknav-next .wfo-icon{transform:scaleX(-1)}
+.wfo-app .wfo-att .ews-att-week-form{margin:0}
+.wfo-app .wfo-att .ews-att-week-range{position:relative;display:flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0 12px;border:0;border-radius:var(--wfo-r-sm);background:transparent;color:var(--wfo-pri);cursor:pointer}
+.wfo-app .wfo-att .ews-att-week-range strong{font-size:14px;font-weight:700;color:var(--wfo-ink);white-space:nowrap}
+.wfo-app .wfo-att .ews-att-week-range input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.wfo-app .wfo-att .ews-att-week-range:focus-within{outline:2px solid var(--wfo-pri);outline-offset:2px}
+
+/* stats */
+.wfo-app .wfo-att .wfo-att-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:0}
+.wfo-app .wfo-att .ews-att-stat{display:flex;align-items:center;gap:12px;min-width:0;min-height:0;margin:0;padding:14px 16px;border:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);text-align:start}
+.wfo-app .wfo-att .ews-att-stat>span{width:42px;height:42px;flex:0 0 auto;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center;font-size:0;margin:0}
+.wfo-app .wfo-att .ews-att-stat.people>span{background:#E7EEFF;color:#2B5BD7}
+.wfo-app .wfo-att .ews-att-stat.present>span{background:#E6F7EF;color:#0F8A55}
+.wfo-app .wfo-att .ews-att-stat.late>span{background:#FFF2DE;color:#B86A00}
+.wfo-app .wfo-att .ews-att-stat.absent>span{background:#FFE8EC;color:#C2264B}
+.wfo-app .wfo-att .ews-att-stat.rate>span{background:var(--wfo-pri-soft);color:var(--wfo-pri)}
+.wfo-app .wfo-att .ews-att-stat>div{min-width:0}
+.wfo-app .wfo-att .ews-att-stat b{display:block;font-size:24px;font-weight:700;line-height:1.1;color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-att-stat small{display:block;margin-top:2px;font-size:12px;color:var(--wfo-muted)}
+
+/* schedule controls */
+.wfo-app .wfo-att .ews-att-controls{display:flex;flex-direction:column;gap:14px}
+.wfo-app .wfo-att .ews-att-control-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0;padding:0;border:0}
+.wfo-app .wfo-att .ews-att-control-title{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;margin:0;padding:0;text-align:start;flex:1 1 260px}
+.wfo-app .wfo-att .ews-att-control-title strong{font-size:16px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-att-control-title span{font-size:13px;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wfo-app .wfo-att .ews-att-search{display:flex;align-items:center;gap:8px;min-width:220px;min-height:42px;margin:0;padding:0 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-bg);color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-search:focus-within{border-color:var(--wfo-pri);box-shadow:0 0 0 3px var(--wfo-pri-soft)}
+.wfo-app .wfo-att .ews-att-search input{flex:1 1 auto;min-width:0;height:40px;margin:0;padding:0;border:0;background:transparent;color:var(--wfo-ink);font:inherit;font-size:14px;outline:none;box-shadow:none}
+.wfo-app .wfo-att .ews-att-filter{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-filter select{min-height:42px;margin:0;padding:0 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;font-size:14px}
+.wfo-app .wfo-att .ews-day-quick-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;max-width:none;margin:0}
+.wfo-app .wfo-att .ews-day-quick{display:flex;flex-direction:column;gap:6px;margin:0;padding:10px;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
+.wfo-app .wfo-att .ews-day-quick.is-today{box-shadow:inset 0 0 0 2px var(--wfo-pri)}
+.wfo-app .wfo-att .ews-day-quick label{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin:0;font-size:13px;font-weight:700;color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-day-quick label small{font-size:11px;font-weight:400;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-day-quick select{width:100%;min-height:36px;margin:0;padding:0 8px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-sm);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;font-size:13px}
+.wfo-app .wfo-att .ews-att-plan-legend{display:flex;flex-wrap:wrap;gap:14px;margin:0;font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-plan-legend span{display:inline-flex;align-items:center;gap:6px;padding:0;background:none;font-size:12px;font-weight:500;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-plan-legend i{width:12px;height:12px;border-radius:4px;display:inline-block}
+.wfo-app .wfo-att .ews-att-plan-legend i.office{background:#BDE9D2}
+.wfo-app .wfo-att .ews-att-plan-legend i.wfh{background:#C9D8FB}
+.wfo-app .wfo-att .ews-att-plan-legend i.leave{background:#DDCFFB}
+.wfo-app .wfo-att .ews-att-plan-legend i.trip{background:#FFDFAE}
+
+/* the table */
+.wfo-app .wfo-att .ews-att-table-wrap{overflow:auto;padding:0;max-height:none}
+.wfo-app .wfo-att .ews-att-table-wrap:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .wfo-att .ews-att-table{width:100%;min-width:980px;margin:0;border:0;border-collapse:separate;border-spacing:0;background:none;font-size:13px}
+.wfo-app .wfo-att .ews-att-table th{position:sticky;top:0;z-index:2;padding:12px 8px;border:0;border-bottom:1px solid var(--wfo-line);background:var(--wfo-bg);color:var(--wfo-muted);font-size:12px;font-weight:600;text-align:center;vertical-align:top}
+.wfo-app .wfo-att .ews-att-table th.employee-col{z-index:3;inset-inline-start:0;text-align:start;padding-inline-start:18px;min-width:220px}
+.wfo-app .wfo-att .ews-att-table th.is-today{background:var(--wfo-pri-soft);color:var(--wfo-pri)}
+.wfo-app .wfo-att .ews-att-day-name{font-size:13px;font-weight:700;color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-att-table th.is-today .ews-att-day-name{color:var(--wfo-pri)}
+.wfo-app .wfo-att .ews-att-table th small{display:block;font-size:11px;font-weight:400;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-table th em{display:inline-block;margin-top:4px;padding:1px 8px;border-radius:999px;background:var(--wfo-pri);color:#fff;font-size:10px;font-style:normal;font-weight:600}
+.wfo-app .wfo-att .ews-att-day-meta{margin-top:4px;font-size:11px;font-weight:400;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-table td{padding:8px 6px;border:0;border-bottom:1px solid var(--wfo-line);background:var(--wfo-surface);vertical-align:middle}
+.wfo-app .wfo-att .ews-att-table tr:last-child td{border-bottom:0}
+.wfo-app .wfo-att .ews-att-employee{position:sticky;inset-inline-start:0;z-index:1;display:table-cell;padding-inline-start:18px;min-width:220px;box-shadow:inset -1px 0 0 var(--wfo-line)}
+.wfo-app .wfo-att .ews-att-employee>div{display:inline-block;vertical-align:middle;max-width:170px}
+.wfo-app .wfo-att .ews-att-employee strong{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:14px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-att-employee small{display:block;font-size:12px;color:var(--wfo-muted);margin-top:1px}
+.wfo-app .wfo-att .ews-att-team-label{display:inline-block;margin-top:4px;padding:1px 8px;border-radius:999px;background:var(--wfo-bg);color:var(--wfo-muted);font-size:11px;font-weight:600}
+.wfo-app .wfo-att tr.current-user .ews-att-employee{box-shadow:inset 3px 0 0 var(--wfo-pri)}
+.wfo-app .wfo-att tr.team-manager .ews-att-employee{box-shadow:inset 3px 0 0 #D98A00}
+.wfo-app .wfo-att .ews-att-employee-row td,.wfo-app .wfo-att .ews-att-table tbody tr.team-manager td,.wfo-app .wfo-att .ews-att-table tbody tr.current-user td{background:var(--wfo-surface)}
+.wfo-app .wfo-att .ews-me-badge,.wfo-app .wfo-att .ews-manager-badge{margin:0;padding:1px 7px;border:0;border-radius:999px;font-size:10px;font-weight:600}
+.wfo-app .wfo-att .ews-me-badge{background:var(--wfo-pri-soft);color:var(--wfo-pri)}
+.wfo-app .wfo-att .ews-manager-badge{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-att .wfo-att-avatar{width:36px;height:36px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-inline-end:10px;border-radius:999px;overflow:hidden;background:#F1EAFF;color:#5B34B5;font-size:12px;font-weight:700}
+.wfo-app .wfo-att .wfo-att-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.wfo-app .wfo-att .wfo-att-avatar.tone-1{background:#E7EEFF;color:#1F4FB8}
+.wfo-app .wfo-att .wfo-att-avatar.tone-2{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-att .wfo-att-avatar.tone-3{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-att .wfo-att-avatar.tone-4{background:#E3F6F8;color:#0B6B79}
+
+/* a day cell: the planned plan as a coloured button, the result under it */
+.wfo-app .wfo-att .ews-att-day{text-align:center;min-width:112px}
+.wfo-app .wfo-att .ews-att-day.is-today{background:color-mix(in srgb,var(--wfo-pri-soft) 40%,var(--wfo-surface))}
+.wfo-app .wfo-att .wfo-attg-chip{position:relative;width:100%;min-height:34px;margin:0;padding:0 10px;border:0;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;
+    background:#EEF0F5;color:#3B4466;font:inherit;font-size:12.5px;font-weight:600;line-height:1.2;cursor:pointer;box-shadow:none}
+.wfo-app .wfo-att .wfo-attg-chip b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.wfo-app .wfo-att .wfo-attg-chip:hover{filter:brightness(.97)}
+.wfo-app .wfo-att .wfo-attg-chip:focus-visible,.wfo-app .wfo-att .wfo-attg-chip[aria-expanded=true]{outline:2px solid var(--wfo-pri);outline-offset:1px}
+.wfo-attg-dname{display:none}
+.wfo-app .wfo-att .ews-plan-office .wfo-attg-chip{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-att .ews-plan-wfh .wfo-attg-chip{background:#E7EEFF;color:#1F4FB8}
+.wfo-app .wfo-att .ews-plan-vacation .wfo-attg-chip,.wfo-app .wfo-att .ews-plan-sick-leave .wfo-attg-chip,.wfo-app .wfo-att .ews-plan-general-leave .wfo-attg-chip,.wfo-app .wfo-att .ews-plan-annual-leave .wfo-attg-chip{background:#F1EAFF;color:#5B34B5}
+.wfo-app .wfo-att .ews-plan-business-trip .wfo-attg-chip,.wfo-app .wfo-att .ews-plan-training-course .wfo-attg-chip,.wfo-app .wfo-att .ews-plan-official-mission .wfo-attg-chip{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-att .ews-plan-absent .wfo-attg-chip{background:#FFE8EC;color:#A51D3E}
+/* changed in this browser, not saved yet: an amber ring and dot */
+.wfo-app .wfo-att .ews-att-day.is-changed .wfo-attg-chip{box-shadow:inset 0 0 0 2px #E8A33A}
+.wfo-app .wfo-att .ews-att-day.is-changed .wfo-attg-chip::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:999px;background:#E8A33A;box-shadow:0 0 0 2px var(--wfo-surface)}
+.wfo-app .wfo-att .ews-att-result{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;margin-top:6px;padding:0;border:0;background:none;font-size:12px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-result small{flex-basis:100%;font-size:11px;font-weight:400;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-att-result.present{color:#0F6B43}
+.wfo-app .wfo-att .ews-att-result.late{color:#8A4F00}
+.wfo-app .wfo-att .ews-att-result.absent{color:#A51D3E}
+.wfo-app .wfo-att .ews-att-result.leave{color:#5B34B5}
+.wfo-app .wfo-att .ews-att-result.trip{color:#8A4F00}
+.wfo-app .wfo-att .ews-att-result.pending{color:#1F4FB8}
+
+/* the one picker: a menu next to the day (computer), a sheet from the bottom (phone) */
+.wfo-app .wfo-attg-picker{position:fixed;z-index:10001;width:230px;max-height:min(420px,calc(100vh - 16px));overflow:auto;margin:0;padding:6px;border-radius:14px;background:var(--wfo-surface);box-shadow:0 16px 40px rgba(19,35,91,.24);box-sizing:border-box}
+.wfo-app .wfo-attg-picker[hidden],.wfo-app .wfo-attg-scrim[hidden]{display:none}
+.wfo-attg-picker-head{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px}
+.wfo-app .wfo-attg-picker-head strong{flex:1 1 auto;min-width:0;font-size:12px;font-weight:600;color:var(--wfo-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wfo-app .wfo-attg-picker-close{width:30px;height:30px;flex:0 0 auto;margin:0;padding:0;border:0;border-radius:8px;background:transparent;color:var(--wfo-muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.wfo-attg-picker-list{display:flex;flex-direction:column;gap:2px}
+.wfo-app .wfo-attg-picker-list button{display:flex;align-items:center;gap:10px;min-height:38px;margin:0;padding:0 10px;border:0;border-radius:9px;background:transparent;color:var(--wfo-ink);font:inherit;font-size:13.5px;font-weight:500;text-align:start;cursor:pointer}
+.wfo-app .wfo-attg-picker-list button:hover,.wfo-app .wfo-attg-picker-list button:focus-visible{background:var(--wfo-bg);outline:none}
+.wfo-app .wfo-attg-picker-list button[aria-selected=true]{background:var(--wfo-pri-soft);font-weight:700}
+.wfo-attg-picker-list i{width:12px;height:12px;flex:0 0 auto;border-radius:4px;background:#C9CDDB}
+.wfo-attg-picker-list .ews-plan-office i{background:#4DBB86}
+.wfo-attg-picker-list .ews-plan-wfh i{background:#6C8EEB}
+.wfo-attg-picker-list .ews-plan-vacation i,.wfo-attg-picker-list .ews-plan-sick-leave i,.wfo-attg-picker-list .ews-plan-annual-leave i{background:#A487E8}
+.wfo-attg-picker-list .ews-plan-business-trip i,.wfo-attg-picker-list .ews-plan-training-course i,.wfo-attg-picker-list .ews-plan-official-mission i{background:#E8A33A}
+.wfo-attg-picker-list .ews-plan-absent i{background:#E06A84}
+.wfo-app .wfo-attg-scrim{position:fixed;inset:0;z-index:10000;background:rgba(10,16,40,.45)}
+
+/* save bar: stays at the bottom of the screen while you edit */
+.wfo-app .wfo-att .ews-att-savebar{position:sticky;bottom:12px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 0;padding:10px 10px 10px 18px;border-radius:var(--wfo-r-card);background:var(--wfo-hero-start);box-shadow:0 12px 30px rgba(19,35,91,.25)}
+.wfo-app .wfo-att .ews-att-savebar span{font-size:13px;color:rgba(255,255,255,.8)}
+.wfo-app .wfo-att .ews-att-savebar .ews-save-all{display:inline-flex;align-items:center;gap:8px;min-height:46px;margin:0;padding:0 20px!important;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-hl)!important;color:var(--wfo-hl-ink)!important;font:inherit;font-size:15px!important;font-weight:700;cursor:pointer;box-shadow:none}
+.wfo-app .wfo-att .ews-save-all:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.wfo-app .wfo-att .ews-att-savebar .wfo-attg-count{flex:1 1 auto;min-width:0}
+.wfo-app .wfo-att .has-changes .ews-att-savebar .wfo-attg-count{color:#fff;font-weight:600}
+.wfo-app .wfo-att .wfo-attg-undo{display:inline-flex;align-items:center;gap:6px;min-height:46px;margin:0;padding:0 14px;border:1px solid rgba(255,255,255,.35);border-radius:var(--wfo-r-ctl);background:transparent;color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.wfo-app .wfo-att .wfo-attg-undo[hidden]{display:none}
+
+/* CSV preview and import */
+.wfo-app .wfo-att .ews-csv-preview{display:flex;flex-direction:column;gap:12px}
+.wfo-app .wfo-att .ews-csv-preview h3{font-size:16px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-csv-preview p{font-size:14px;color:var(--wfo-ink)}
+.wfo-app .wfo-att .wfo-att-preview-scroll{overflow:auto;max-height:420px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl)}
+.wfo-app .wfo-att .ews-preview{width:100%;margin:0;border:0;border-collapse:collapse;font-size:13px}
+.wfo-app .wfo-att .ews-preview th{position:sticky;top:0;padding:10px;border:0;border-bottom:1px solid var(--wfo-line);background:var(--wfo-bg);color:var(--wfo-muted);font-size:12px;text-align:start}
+.wfo-app .wfo-att .ews-preview td{padding:10px;border:0;border-bottom:1px solid var(--wfo-line);text-align:start}
+.wfo-app .wfo-att .wfo-att-bad{display:inline-flex;align-items:center;gap:5px;color:#A51D3E;font-weight:600}
+.wfo-app .wfo-att .wfo-att-ok{display:inline-flex;align-items:center;gap:5px;color:#0F6B43;font-weight:600}
+.wfo-app .wfo-att .wfo-att-preview-actions{display:flex;gap:8px;flex-wrap:wrap}
+.wfo-app .wfo-att .wfo-att-preview-actions form{margin:0}
+.wfo-app .wfo-att .wfo-att-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin:0;padding:0 18px;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-hero-start);color:#fff;font:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;box-shadow:none}
+.wfo-app .wfo-att .wfo-att-btn.is-ghost{background:var(--wfo-surface);border:1px solid var(--wfo-line);color:var(--wfo-ink)}
+.wfo-app .wfo-att .ews-csv-details{padding:0}
+.wfo-app .wfo-att .ews-csv-details>summary{display:flex;align-items:center;gap:12px;padding:16px 18px;list-style:none;cursor:pointer}
+.wfo-app .wfo-att .ews-csv-details>summary::-webkit-details-marker{display:none}
+.wfo-att-csv-icon{width:38px;height:38px;flex:0 0 auto;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center;background:#EEF0F5;color:#3B4466}
+.wfo-att-csv-title{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wfo-app .wfo-att .wfo-att-csv-title strong{font-size:15px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-att .wfo-att-csv-title span{font-size:13px;color:var(--wfo-muted)}
+.wfo-app .wfo-att .ews-csv-inside{display:flex;flex-direction:column;gap:12px;margin:0;padding:0 18px 18px}
+.wfo-app .wfo-att .ews-csv-inside p{font-size:13px;color:var(--wfo-muted);margin:0}
+.wfo-app .wfo-att .ews-drop{margin:0;padding:14px;border:1px dashed var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-bg);text-align:start}
+.wfo-app .wfo-att .ews-drop form{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0}
+.wfo-app .wfo-att .wfo-att-file{flex:1 1 260px;min-width:0;display:flex;align-items:center;gap:8px;margin:0;font-size:13px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-att .wfo-att-file input{min-width:0;flex:1 1 auto;font:inherit;font-size:13px;font-weight:400}
+
+@media (max-width:1100px){
+    .wfo-app .wfo-att .wfo-att-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:700px){
+    .wfo-app .wfo-att{gap:12px}
+    .wfo-att-top{flex-direction:column;align-items:stretch}
+    .wfo-att-intro{flex:none}
+    .wfo-app .wfo-att .wfo-weeknav{justify-content:space-between}
+    .wfo-app .wfo-att .wfo-att-stats{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+    .wfo-app .wfo-att .ews-att-stat{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
+    .wfo-app .wfo-att .ews-att-stat>span{width:34px;height:34px}
+    .wfo-app .wfo-att .ews-att-stat b{font-size:20px}
+    .wfo-app .wfo-att .wfo-att-card{padding:14px}
+    .wfo-app .wfo-att .ews-att-control-head{flex-direction:column;align-items:stretch}
+    .wfo-app .wfo-att .ews-att-control-title{flex:none}
+    .wfo-app .wfo-att .ews-att-tools{width:100%}
+    .wfo-app .wfo-att .ews-att-search{flex:1 1 100%;min-width:0}
+    .wfo-app .wfo-att .ews-att-filter{flex:1 1 100%}
+    .wfo-app .wfo-att .ews-att-filter select{flex:1 1 auto}
+    .wfo-app .wfo-att .ews-day-quick-actions{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(104px,1fr);overflow-x:auto;padding-bottom:2px}
+    .wfo-app .wfo-att .ews-att-savebar{bottom:calc(84px + env(safe-area-inset-bottom));flex-wrap:wrap;padding:10px;text-align:center}
+    .wfo-app .wfo-att .ews-att-savebar .wfo-attg-count{flex:1 1 100%}
+    .wfo-app .wfo-att .ews-save-all{justify-content:center;flex:1 1 auto}
+    /* the grid as cards: one per employee, the days in one row under the name */
+    .wfo-app .wfo-att .ews-att-table-wrap{display:block;overflow:visible;padding:0;background:none;box-shadow:none;border-radius:0}
+    .wfo-app .wfo-att .ews-att-table,.wfo-app .wfo-att .ews-att-table tbody{display:block;width:auto;min-width:0}
+    .wfo-app .wfo-att .ews-att-table thead{display:none}
+    .wfo-app .wfo-att .ews-att-table tr.ews-att-employee-row{display:grid;grid-template-columns:repeat(var(--days,7),minmax(0,1fr));gap:4px;margin:0 0 8px;padding:10px 10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+    .wfo-app .wfo-att .ews-att-table tr.current-user{box-shadow:var(--wfo-shadow),inset 3px 0 0 var(--wfo-pri)}
+    .wfo-app .wfo-att .ews-att-table tr.team-manager{box-shadow:var(--wfo-shadow),inset 3px 0 0 #D98A00}
+    .wfo-app .wfo-att .ews-att-table td{display:block;padding:0;border:0;background:none}
+    .wfo-app .wfo-att .ews-att-table td.ews-att-employee{grid-column:1/-1;position:static;display:flex;align-items:center;min-width:0;padding:0 2px 6px;box-shadow:none}
+    .wfo-app .wfo-att .ews-att-employee>div{max-width:none;flex:1 1 auto;min-width:0}
+    .wfo-app .wfo-att tr.current-user .ews-att-employee,.wfo-app .wfo-att tr.team-manager .ews-att-employee{box-shadow:none}
+    .wfo-app .wfo-att .ews-att-table td.ews-att-day{min-width:0;background:none;box-shadow:none}
+    .wfo-app .wfo-att .wfo-attg-chip b{max-width:100%}
+    /* seven days in a phone row: an empty day shows a dash instead of the long "Not Set" (the picker title and the screen reader still say it) */
+    .wfo-app .wfo-att .ews-plan-not-set .wfo-attg-chip b{font-size:0}
+    .wfo-app .wfo-att .ews-plan-not-set .wfo-attg-chip b::before{content:"\2014";font-size:13px}
+    .wfo-app .wfo-att .wfo-attg-chip{flex-direction:column;gap:1px;min-height:46px;padding:4px 2px;border-radius:10px;font-size:10.5px}
+    .wfo-attg-dname{display:block;font-size:9.5px;font-weight:500;opacity:.8}
+    .wfo-app .wfo-att .ews-att-day.is-today .wfo-attg-dname{font-weight:700;opacity:1}
+    .wfo-app .wfo-att .ews-att-day.is-today .wfo-attg-chip{outline:1.5px solid var(--wfo-pri);outline-offset:-1.5px}
+    .wfo-app .wfo-att .ews-att-day .ews-att-result{display:block;margin-top:3px;font-size:10px;line-height:1.25;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wfo-app .wfo-att .ews-att-day .ews-att-result.muted{display:none}
+    .wfo-app .wfo-att .ews-att-day .ews-att-result .wfo-icon{display:none}
+    .wfo-app .wfo-att .ews-att-day .ews-att-result small{display:block;font-size:9.5px;overflow:hidden;text-overflow:ellipsis}
+    /* the picker becomes a sheet */
+    .wfo-app .wfo-attg-picker.is-sheet{left:0!important;right:0;top:auto!important;bottom:0;width:auto;max-height:80vh;padding:10px 14px calc(16px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0}
+    .wfo-app .wfo-attg-picker.is-sheet .wfo-attg-picker-head strong{font-size:14px;color:var(--wfo-ink)}
+    .wfo-app .wfo-attg-picker.is-sheet .wfo-attg-picker-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .wfo-app .wfo-attg-picker.is-sheet .wfo-attg-picker-list button{min-height:48px;background:var(--wfo-bg)}
+    .wfo-app .wfo-attg-picker.is-sheet .wfo-attg-picker-list button[aria-selected=true]{box-shadow:inset 0 0 0 2px var(--wfo-pri);background:var(--wfo-pri-soft)}
+    .wfo-app .wfo-att .ews-csv-details>summary{padding:14px}
+    .wfo-app .wfo-att .ews-csv-inside{padding:0 14px 14px}
+}
+@media (max-width:480px){
+    .wfo-app .wfo-att .wfo-att-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .wfo-app .wfo-att .ews-att-stat{flex-direction:row;align-items:center;gap:10px}
+    .wfo-app .wfo-att .ews-att-stat.rate{grid-column:1/-1}
+}
+
+/* Long lists (3.31.71): nothing on this page matches the server search. */
+.wfo-app .wfo-att .ews-att-noresult{margin:12px 0 0;color:var(--wfo-muted);text-align:center}
+
+/* Branches "By the schedule" (3.31.72): the day's branch under its status, the picker's branch row and
+   "Branch…" above a day. */
+.wfo-app .wfo-att .wfo-attg-chip .wfo-attg-branch{display:block;font-size:11px;font-weight:500;color:var(--wfo-pri);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.wfo-app .wfo-att .wfo-attg-chip .wfo-attg-branch.is-main{color:var(--wfo-muted)}
+.wfo-app .wfo-att .wfo-attg-chip .wfo-attg-branch[hidden]{display:none}
+.wfo-app .wfo-att .ews-day-quick select.wfo-attg-fill-branch{margin-top:6px}
+.wfo-attg-branches{margin-top:8px;padding-top:8px;border-top:1px solid var(--wfo-line);display:flex;flex-direction:column;gap:6px}
+.wfo-attg-branches[hidden]{display:none}
+.wfo-attg-branches-title{font-size:12px;font-weight:600;color:var(--wfo-muted)}
+.wfo-attg-branch-list{display:flex;flex-wrap:wrap;gap:6px}
+.wfo-app .wfo-attg-branch-btn{min-height:34px;margin:0;padding:0 12px;border:0;border-radius:99px;background:var(--wfo-bg);color:var(--wfo-ink);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.wfo-app .wfo-attg-branch-btn[hidden]{display:none}
+.wfo-app .wfo-attg-branch-btn[aria-pressed=true]{background:var(--wfo-pri);color:#fff}
+.wfo-app .wfo-attg-branch-btn:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .wfo-att .wfo-attg-chip:has(.wfo-attg-branch:not([hidden])){flex-direction:column;gap:0;padding:4px 10px;border-radius:14px}
+.wfo-app .wfo-att .ews-att-branch-filter{margin:0;display:flex}
+
+/* Office minimum (3.31.77, templates/app/office-minimum.php) */
+/* the counter under each day: in the office / minimum */
+.wfo-om-day{display:inline-flex;align-items:center;justify-content:center;gap:4px;margin:6px auto 2px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:#E6F7EF;color:#0F6B43;white-space:nowrap}
+.wfo-om-day b{font-size:13px}
+.wfo-om-day span{font-weight:600;opacity:.8}
+.wfo-om-day.is-short{background:#FFE8EC;color:#A51D3E}
+.wfo-om-day.is-off{background:#EEF0F5;color:#6A7090;font-weight:600}
+.ews-day-quick .wfo-om-day{display:flex;width:max-content;margin:6px 0 0}
+.ews-att-table th .wfo-om-day{display:flex;width:max-content}
+.ews-att-table th:has(.wfo-om-day.is-short){background:#FFF5F7;box-shadow:inset 0 -3px 0 #E5486B}
+
+/* the warning above the grid */
+.wfo-om-banner{margin:0 0 14px;padding:16px 18px;border-radius:var(--wfo-r-card,20px);background:#FFF8E8;border:1px solid #F5D9A0}
+.wfo-om-banner-head{display:flex;align-items:flex-start;gap:12px}
+.wfo-om-banner h3{margin:0;font-size:15.5px;font-weight:700;color:#5C3A00}
+.wfo-om-banner p{margin:2px 0 0;font-size:12.5px;color:#7A5A1F}
+.wfo-om-ico{width:38px;height:38px;flex:0 0 auto;border-radius:12px;background:#FFC83D;color:#13235B;display:flex;align-items:center;justify-content:center}
+.wfo-om-banner ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.wfo-om-banner li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-radius:14px;background:#fff;font-size:13px;color:#3B4466}
+.wfo-om-banner li strong{color:#A51D3E}
+.wfo-om-pill{padding:3px 10px;border-radius:999px;background:#13235B;color:#fff;font-size:12px;font-weight:700}
+.wfo-om-link{display:inline-flex;align-items:center;gap:6px;margin-inline-start:auto;min-height:32px;padding:0 12px;border:0;border-radius:10px;background:var(--wfo-pri-soft,#EBE8FA);color:var(--wfo-pri,#5B3FD9);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+
+/* the teams of a day (sheet) */
+.wfo-om-sheet-sum{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#FFF5F7}
+.wfo-om-sheet-sum .wfo-om-day{margin:0}
+.wfo-om-sheet-sum strong{display:block;font-size:14px;color:#13235B}
+.wfo-om-sheet-sum span{font-size:12.5px;color:#A51D3E;font-weight:600}
+.wfo-om-teams{width:100%;border-collapse:collapse;font-size:13px}
+.wfo-om-teams th,.wfo-om-teams td{padding:10px 8px;border-bottom:1px solid #ECEEF4;text-align:center;vertical-align:top}
+.wfo-om-teams thead th{font-size:11.5px;color:#6A7090;font-weight:600}
+.wfo-om-teams tbody th,.wfo-om-teams tfoot th{text-align:start;font-weight:700;color:#13235B}
+.wfo-om-teams small{display:block;font-weight:500;color:#6A7090;font-size:11.5px}
+.wfo-om-teams tr.is-short{background:#FFFAFB}
+.wfo-om-teams tfoot th,.wfo-om-teams tfoot td{border-bottom:0;background:#F7F8FC}
+.wfo-om-gap{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;background:#E6F7EF;color:#0F6B43}
+.wfo-om-gap.is-short{background:#FFE8EC;color:#A51D3E}
+.wfo-om-gap.is-over{background:#E7EEFF;color:#1F4FB8}
+.wfo-om-can{display:block;margin-top:6px;font-size:11.5px;font-weight:500;color:#3B4466;line-height:1.5}
+.wfo-om-can span{font-weight:700}
+.wfo-om-can .wfo-icon{display:inline-block;vertical-align:-2px;margin-inline-end:4px;color:#1F4FB8}
+.wfo-om-how{margin:2px 0 0;font-size:11.5px;color:#6A7090;line-height:1.6}
+
+.wfo-om-day.is-changed{outline:2px dashed currentColor;outline-offset:1px}
