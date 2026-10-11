@@ -101,3 +101,34 @@ notifications, employee screens.
 - [ ] One date check (`CorrectionRules::isDate`) instead of three in daily workers.
 - [ ] Office minimum: "could come in" depends on the status icon (`om_could_come`); use a real flag.
 - [ ] Small duplicates: `$initials` in the admin template, `approval_start` requester lookup.
+
+---
+
+# Second review (Codex, 3.31.89): 17 findings, all confirmed in the code (2026-10-11)
+
+Owner decisions: archived employees are paid up to a **last working day** asked when archiving; a
+**photo at Face Sign In** (feature, off by default); after **Log out** the phone keeps receiving that
+person's push (only an account switch on the same phone moves it).
+
+Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** security (1, 2, 6,
+14, 17) · **3.31.92** correctness / operations (10, 11, 12, 13) with the rest of the list above.
+
+- [ ] 1 Face template replay (no server challenge) → reject repeated / near-identical templates, a
+  server challenge, optional photo at Sign In.
+- [ ] 2 Sensitive files under public uploads (Nginx ignores .htaccess) → store outside the web root
+  where possible, self-test a direct URL, admin warning.
+- [ ] 3 Payroll close leaves a closed month with missing payslips (no transaction).
+- [ ] 4 Sign In / Out Report ignores the manager's department (view, save, reset day, CSV).
+- [ ] 5 Archived employee dropped from an unclosed earlier month (`active=1`) → last working day.
+- [ ] 6 Concurrent leave requests can exceed the balance / overlap (no lock, unconditional pending).
+- [ ] 7 Daily workers payout recorded as successful while lines / day links failed.
+- [ ] 8 The same worker advance deducted twice by two concurrent payouts.
+- [ ] 9 Account switch on the same browser keeps push bound to the previous account (3.31.87 marker).
+- [ ] 10 Service worker activate deletes other apps' caches on the same origin.
+- [ ] 11 Schema upgrade marked done when a table / column failed.
+- [ ] 12 Manual Sign Out after midnight refused for overnight shifts (also in the list above).
+- [ ] 13 Overtime after an overnight shift is placed on the wrong day.
+- [ ] 14 Concurrent overtime requests pass the overlap check; minutes counted twice.
+- [ ] 15 Correction payroll carry-over: a failed adjustment insert is reported as done.
+- [ ] 16 Approving a day change races a payout; can change a paid day.
+- [ ] 17 Sensitive photos stay in the browser cache after logout / losing access.
