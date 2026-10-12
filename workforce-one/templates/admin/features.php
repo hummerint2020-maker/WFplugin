@@ -10,6 +10,10 @@
  * @var int[] $detector_sizes
  * @var array{attempts:int,attempt_days:int,alert:int,photo:int,photo_days:int,photo_viewers:string} $evidence  Settings\SignInEvidence (3.31.92)
  * @var array<string,mixed> $splash
+ * @var array<string,mixed> $offline        Settings\OfflineScreen::config() (3.31.93)
+ * @var array<string,array> $offline_texts   OfflineScreen::TEXTS
+ * @var array<string,string[]> $offline_sections  OfflineScreen::SECTIONS
+ * @var string $offline_preview             the offline page in preview mode (add &preview=off|press|down)
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
@@ -44,6 +48,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="daily_workers_present" value="1">
 <input type="hidden" name="office_minimum_present" value="1">
 <input type="hidden" name="evidence_present" value="1">
+<input type="hidden" name="offline_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -155,6 +160,60 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
         <label><span class="wfo-field-label">Who can see them</span><select name="evidence_photo_viewers" style="width:100%;min-height:40px"><option value="hr_manager" <?php selected($evidence['photo_viewers'], 'hr_manager'); ?>>HR and the employee's department manager</option><option value="hr" <?php selected($evidence['photo_viewers'], 'hr'); ?>>HR only</option></select></label>
     </div>
 </div></div>
+
+<div class="wfo-feature-section" id="ews-offline-screen"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title">Installed App: Offline Screen</div><div class="wfo-feature-desc">When the phone has no internet, or the server does not answer, the installed app shows this screen instead of the browser's blank page. It is kept on the phone, so it works even when the server is down; it holds no employee data (the employee's own schedule is read from their phone). It shows from the first time the app is opened after this is turned on. Every text below can be changed; an empty box uses the default. In the texts, <code>{time}</code> is the time of the Sign In / Out that did not reach the server, <code>{action}</code> is "Sign In" or "Sign Out", and <code>{updated}</code> is when the schedule was last refreshed. The "pressed with no connection" part needs <a href="#ews-signin-attempts">Refused Sign In Attempts</a> on.</div></div>
+    <?php $switch('offline_enabled', (bool) $offline['enabled']); ?>
+</div>
+<div class="wfo-offline-grid" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;align-items:start;margin-top:12px">
+<div class="wfo-offline-form" style="display:grid;gap:12px;min-width:0">
+    <fieldset style="border:1px solid #dcdcde;border-radius:8px;padding:10px 14px 12px"><legend style="font-weight:600;padding:0 4px">When to show it</legend>
+        <label>Server not answering <input type="number" name="offline_timeout" min="5" max="60" value="<?php echo (int) $offline['timeout']; ?>" style="width:70px"> seconds, then show "not responding"</label><br>
+        <label><input type="checkbox" name="offline_schedule" value="1" <?php checked((bool) $offline['schedule']); ?> data-offline-live> Show the employee's schedule (today and the days after it, as last seen with the internet on; nothing else is kept on the phone)</label><br>
+        <label><input type="checkbox" name="offline_keep_note" value="1" <?php checked((bool) $offline['keep_note']); ?> data-offline-live> Show the "keep the app open" note</label>
+    </fieldset>
+    <?php foreach ($offline_sections as $title => $keys): ?>
+    <fieldset style="border:1px solid #dcdcde;border-radius:8px;padding:10px 14px 12px;display:grid;gap:8px"><legend style="font-weight:600;padding:0 4px"><?php echo esc_html($title); ?></legend>
+        <?php foreach ($keys as $k): [$label, $default, $max, $multi] = $offline_texts[$k]; $id = 'ews-offline-' . $k; $val = $offline['saved'][$k] ?? ''; ?>
+        <div style="display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 10px;align-items:start">
+            <label for="<?php echo esc_attr($id); ?>" style="padding-top:5px"><?php echo esc_html($label); ?></label>
+            <?php if ($multi): ?><textarea id="<?php echo esc_attr($id); ?>" name="offline_texts[<?php echo esc_attr($k); ?>]" rows="2" maxlength="<?php echo (int) $max; ?>" placeholder="<?php echo esc_attr($default); ?>" data-offline-text="<?php echo esc_attr($k); ?>" data-default="<?php echo esc_attr($default); ?>" style="width:100%"><?php echo esc_textarea($val); ?></textarea>
+            <?php else: ?><input type="text" id="<?php echo esc_attr($id); ?>" name="offline_texts[<?php echo esc_attr($k); ?>]" maxlength="<?php echo (int) $max; ?>" placeholder="<?php echo esc_attr($default); ?>" value="<?php echo esc_attr($val); ?>" data-offline-text="<?php echo esc_attr($k); ?>" data-default="<?php echo esc_attr($default); ?>" style="width:100%"><?php endif; ?>
+            <button type="button" class="button-link" data-offline-reset="<?php echo esc_attr($id); ?>" style="grid-column:2;justify-self:start;font-size:12px">Reset to default</button>
+        </div>
+        <?php endforeach; ?>
+    </fieldset>
+    <?php endforeach; ?>
+    <p class="description">Phones get new texts the next time the app is opened with the internet on.</p>
+</div>
+<div style="position:sticky;top:40px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" role="group" aria-label="Preview">
+        <button type="button" class="button button-primary" data-offline-state="off">No internet</button>
+        <button type="button" class="button" data-offline-state="press">Sign In pressed</button>
+        <button type="button" class="button" data-offline-state="down">Server down</button>
+    </div>
+    <iframe id="ews-offline-preview" title="Offline screen preview" src="<?php echo esc_url(add_query_arg('preview', 'off', $offline_preview)); ?>" style="width:100%;max-width:380px;height:640px;border:10px solid #101225;border-radius:30px;background:#f2f3f8"></iframe>
+    <p class="description">Preview with sample data. "Back online" is a short message shown in the app: <?php echo esc_html($offline['texts']['toast0']); ?></p>
+</div>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('ews-offline-preview');if(!f)return;
+  var box=document.getElementById('ews-offline-screen');
+  function send(){
+    var t={};box.querySelectorAll('[data-offline-text]').forEach(function(el){t[el.getAttribute('data-offline-text')]=el.value.trim()||el.getAttribute('data-default');});
+    var q=function(n){var i=box.querySelector('[name="'+n+'"]');return i&&i.checked?1:0;};
+    try{f.contentWindow.postMessage({wfoOffline:1,t:t,keep:q('offline_keep_note'),schedule:q('offline_schedule')},location.origin);}catch(e){}
+  }
+  box.addEventListener('input',send);box.addEventListener('change',send);f.addEventListener('load',send);
+  box.querySelectorAll('[data-offline-reset]').forEach(function(b){b.addEventListener('click',function(){var el=document.getElementById(b.getAttribute('data-offline-reset'));el.value='';send();});});
+  box.querySelectorAll('[data-offline-text]').forEach(function(el){el.addEventListener('focus',function(){var fs=el.closest('fieldset'),i=Array.prototype.indexOf.call(box.querySelectorAll('.wfo-offline-form fieldset'),fs);var st=[null,'off','down','press'][i];if(st)go(st);});});
+  function go(st){var u=new URL(f.src);if(u.searchParams.get('preview')===st)return;u.searchParams.set('preview',st);f.src=u.toString();box.querySelectorAll('[data-offline-state]').forEach(function(b){b.className=b.getAttribute('data-offline-state')===st?'button button-primary':'button';});}
+  box.querySelectorAll('[data-offline-state]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-offline-state'));});});
+})();
+</script>
+<style>@media (max-width:1100px){#ews-offline-screen .wfo-offline-grid{grid-template-columns:minmax(0,1fr)!important}}</style>
+</div>
 
 <div class="wfo-feature-section">
     <div class="wfo-feature-title">PWA Splash Screen</div>

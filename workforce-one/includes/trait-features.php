@@ -42,6 +42,8 @@ trait EWS_Features_Trait {
             'face_fields'=>FeatureSettings::FACE_FIELDS,
             'detector_sizes'=>FeatureSettings::DETECTOR_SIZES,
             'splash'=>$this->pwa_splash_settings(),
+            'offline'=>$this->offline_settings(),'offline_texts'=>\WorkforceOne\Settings\OfflineScreen::TEXTS,'offline_sections'=>\WorkforceOne\Settings\OfflineScreen::SECTIONS,
+            'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
             'recognition'=>FeatureSettings::recognition($this->option('ews_recognition_weekly_limit_mode'),$this->option('ews_recognition_weekly_limit')),
             'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
@@ -95,6 +97,13 @@ trait EWS_Features_Trait {
             update_option('ews_signin_evidence',$ev,false);
             if($ev['attempts']||$ev['photo'])$this->ensure_evidence_schema();
             if($ev!==$ev_before)$this->audit('signin_evidence_update','settings',0,'attempts='.($ev['attempts']?'on':'off').' '.$ev['attempt_days'].'d alert='.$ev['alert'].'; photo='.($ev['photo']?'on':'off').' '.$ev['photo_days'].'d viewers='.$ev['photo_viewers']);
+        }
+        // Offline screen of the installed app (3.31.93).
+        if(isset($post['offline_present'])){
+            $off_before=\WorkforceOne\Settings\OfflineScreen::summary(is_array($this->option('ews_offline_screen'))?$this->option('ews_offline_screen'):[]);
+            $off=\WorkforceOne\Settings\OfflineScreen::fromPost($post);
+            update_option('ews_offline_screen',$off,false);
+            if(\WorkforceOne\Settings\OfflineScreen::summary($off)!==$off_before)$this->audit('offline_screen_update','settings',0,\WorkforceOne\Settings\OfflineScreen::summary($off));
         }
         if(isset($post['daily_workers_present'])){
             update_option('ews_feature_daily_workers',$flag('daily_workers_enabled')?1:0,false);

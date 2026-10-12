@@ -50,6 +50,9 @@ trait EWS_PWA_Trait {
                     'sw'=>Manifest::serviceWorker($root,(string)wp_parse_url($root, PHP_URL_PATH),defined('EWS_VERSION') ? EWS_VERSION : '3.22.81'),
                     'scope'=>home_url('/'),'home'=>home_url('/'),
                     'push_url'=>admin_url('admin-post.php'),'vapid_key'=>$this->get_vapid_public_key(),
+                    'offline'=>['url'=>$this->offline_page_url(),'timeout'=>$this->offline_settings()['timeout'],
+                        'paths'=>array_values(array_unique([(string)wp_parse_url($this->app_home_url(),PHP_URL_PATH)?:'/'])),
+                        'post'=>(string)wp_parse_url(admin_url('admin-post.php'),PHP_URL_PATH)],
                 ]);
                 exit;
             }
@@ -69,7 +72,7 @@ trait EWS_PWA_Trait {
             if(!$this->pwa_is_employee_app_page()) return;
             echo $this->render_template('pwa/footer',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
                 'vapid_key'=>$this->get_vapid_public_key(),'push_url'=>admin_url('admin-post.php'),'push_nonce'=>wp_create_nonce('ews_push_subscription'),
-                'push_devices'=>$this->push_device_count(get_current_user_id()),'push_user'=>get_current_user_id(),'attempts'=>$this->evidence_app_config(),
+                'push_devices'=>$this->push_device_count(get_current_user_id()),'push_user'=>get_current_user_id(),'attempts'=>$this->evidence_app_config(),'offline'=>$this->offline_app_config(),
                 'sw'=>add_query_arg('ews_pwa','sw',home_url('/')),
             ]);
         }

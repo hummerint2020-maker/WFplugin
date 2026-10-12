@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.91\n"
+"Project-Id-Version: Workforce One 3.31.93\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-12T18:25:10+00:00\n"
+"POT-Creation-Date: 2026-10-12T22:16:19+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -36,7 +36,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:25
 #: includes/trait-app-layout.php:71
 #: includes/trait-app-layout.php:81
-#: templates/admin/features.php:83
+#: templates/admin/features.php:88
 msgid "People"
 msgstr ""
 
@@ -448,12 +448,13 @@ msgstr ""
 #: includes/trait-daily-workers.php:1502
 #: includes/trait-daily-workers.php:1517
 #: includes/trait-daily-workers.php:1583
+#: includes/trait-offline-screen.php:60
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
 #: includes/trait-presence.php:98
 #: includes/trait-private-files.php:128
-#: includes/trait-signin-evidence.php:252
+#: includes/trait-signin-evidence.php:273
 #: includes/trait-task-extras.php:103
 #: includes/trait-task-extras.php:118
 #: includes/trait-task-extras.php:130
@@ -575,8 +576,8 @@ msgstr ""
 #: includes/trait-corrections.php:169
 #: includes/trait-daily-workers.php:458
 #: includes/trait-daily-workers.php:460
-#: includes/trait-signin-evidence.php:254
-#: includes/trait-signin-evidence.php:256
+#: includes/trait-signin-evidence.php:275
+#: includes/trait-signin-evidence.php:277
 #: includes/trait-task-extras.php:186
 #: includes/trait-task-extras.php:188
 msgid "File not found."
@@ -2412,12 +2413,12 @@ msgid "It is tried again every 10 minutes. If this stays, send this to your host
 msgstr ""
 
 #. translators: 1: employee, 2: number of refused attempts
-#: includes/trait-signin-evidence.php:151
+#: includes/trait-signin-evidence.php:172
 msgid "Sign In refused several times"
 msgstr ""
 
 #. translators: 1: employee, 2: number of refused attempts
-#: includes/trait-signin-evidence.php:151
+#: includes/trait-signin-evidence.php:172
 #, php-format
 msgid "%1$s was refused %2$d times today. See what happened."
 msgstr ""
@@ -3458,59 +3459,59 @@ msgstr ""
 msgid "Roles & Permissions"
 msgstr ""
 
-#: templates/admin/features.php:68
+#: templates/admin/features.php:73
 msgid "Office Minimum"
 msgstr ""
 
-#: templates/admin/features.php:68
+#: templates/admin/features.php:73
 msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
 msgstr ""
 
-#: templates/admin/features.php:69
+#: templates/admin/features.php:74
 msgid "Enabled"
 msgstr ""
 
-#: templates/admin/features.php:72
+#: templates/admin/features.php:77
 msgid "Minimum each day"
 msgstr ""
 
-#: templates/admin/features.php:72
+#: templates/admin/features.php:77
 msgid "people in the office"
 msgstr ""
 
-#: templates/admin/features.php:73
+#: templates/admin/features.php:78
 msgid "Working days only; company holidays and days off are not checked."
 msgstr ""
 
-#: templates/admin/features.php:74
+#: templates/admin/features.php:79
 msgid "A different day (optional)"
 msgstr ""
 
-#: templates/admin/features.php:76
+#: templates/admin/features.php:81
 msgid "Empty = the minimum above. 0 = no minimum that day."
 msgstr ""
 
-#: templates/admin/features.php:77
+#: templates/admin/features.php:82
 msgid "Who counts as in the office"
 msgstr ""
 
-#: templates/admin/features.php:79
+#: templates/admin/features.php:84
 msgid "Leave, trips and training count only if ticked here."
 msgstr ""
 
-#: templates/admin/features.php:80
+#: templates/admin/features.php:85
 msgid "Each team's share"
 msgstr ""
 
-#: templates/admin/features.php:81
+#: templates/admin/features.php:86
 msgid "Automatic, by team size. You can fix a number for a team."
 msgstr ""
 
-#: templates/admin/features.php:82
+#: templates/admin/features.php:87
 msgid "No teams yet: the minimum is checked for the whole company."
 msgstr ""
 
-#: templates/admin/features.php:83
+#: templates/admin/features.php:88
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:119
 #: templates/app/employees.php:22
@@ -3521,32 +3522,32 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/admin/features.php:83
+#: templates/admin/features.php:88
 msgid "Automatic share"
 msgstr ""
 
-#: templates/admin/features.php:83
+#: templates/admin/features.php:88
 msgid "Fixed number"
 msgstr ""
 
-#: templates/admin/features.php:85
+#: templates/admin/features.php:90
 msgid "Auto"
 msgstr ""
 
-#: templates/admin/features.php:87
+#: templates/admin/features.php:92
 msgid "People in no team share one line (\"No team\")."
 msgstr ""
 
-#: templates/admin/features.php:88
+#: templates/admin/features.php:93
 #: templates/app/tasks.php:188
 msgid "Reminder"
 msgstr ""
 
-#: templates/admin/features.php:88
+#: templates/admin/features.php:93
 msgid "Every week, send schedule managers the days below the minimum next week"
 msgstr ""
 
-#: templates/admin/features.php:89
+#: templates/admin/features.php:94
 msgid "Reminder day"
 msgstr ""
 

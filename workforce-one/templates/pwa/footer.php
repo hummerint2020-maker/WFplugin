@@ -10,6 +10,7 @@
  * @var int    $push_devices  devices the server has for this user (0: re-save this one now)
  * @var int    $push_user     the signed-in user (another account on this device: re-save at once)
  * @var array<string,mixed> $attempts  refused attempts kept (3.31.92): url, nonce, serverMs (empty = off)
+ * @var array<string,mixed> $offline  offline screen (3.31.93): user, toast texts, schedule days (empty = off)
  * @var string $sw          service worker URL
  */
 if (!defined('ABSPATH')) exit;
@@ -125,7 +126,8 @@ if (!defined('ABSPATH')) exit;
                 if(p&&!answered){
                   var b=new URLSearchParams();b.set('action','ews_signin_offline');b.set('_wpnonce',C.nonce);
                   for(var k in p)if(Object.prototype.hasOwnProperty.call(p,k))b.set(k,p[k]==null?'':String(p[k]));
-                  fetch(C.url,{method:'POST',credentials:'same-origin',body:b}).then(function(r){if(r.ok)clear();}).catch(function(){});
+                  // The offline screen's "back online" message waits for this (3.31.93): the attempt sent, or null.
+                  window.ewsAttemptSent=fetch(C.url,{method:'POST',credentials:'same-origin',body:b}).then(function(r){if(r.ok){clear();return p;}return null;}).catch(function(){return null;});
                 }
                 window.ewsNoteAttempt=function(f){
                   if(!f||!f.querySelector)return;
@@ -136,6 +138,23 @@ if (!defined('ABSPATH')) exit;
                 // A form sent by its own button (a form held for the face check is noted when it is sent).
                 document.addEventListener('submit',function(e){if(!e.defaultPrevented)window.ewsNoteAttempt(e.target);},false);
               })(<?php echo wp_json_encode($attempts); ?>);
+              /* Offline screen (3.31.93). The employee's coming week is kept on this phone for the offline
+                 page (removed when nobody is signed in or the screen is off). Back from the offline page,
+                 a short message says so, with the Sign In / Out sent if there was one. */
+              (function(O){
+                try{if(O&&O.user&&O.days&&O.days.length)localStorage.setItem('ewsOfflineSchedule',JSON.stringify({user:O.user,saved_ms:Date.now(),days:O.days}));else localStorage.removeItem('ewsOfflineSchedule');}catch(e){}
+                var back=false;try{back=sessionStorage.getItem('ewsCameBack')==='1';sessionStorage.removeItem('ewsCameBack');}catch(e){}
+                if(!O||!O.user||!back)return;
+                (window.ewsAttemptSent||Promise.resolve(null)).then(function(p){
+                  var at=p?(Number(p.server_ms)>0?Number(p.server_ms)+Number(p.elapsed_ms||0):Number(p.phone_ms)):0,act=p&&p.event_type==='sign_out'?'Sign Out':'Sign In',hm='';
+                  try{hm=at?new Date(at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';}catch(e){}
+                  var msg=p?String(O.toast).replace(/\{time\}/g,hm).replace(/\{action\}/g,act):String(O.toast0);
+                  var t=document.createElement('div');t.id='ews-back-online';t.setAttribute('role','status');t.textContent=msg;
+                  t.style.cssText='position:fixed;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));z-index:2147483646;background:#e1f4ea;color:#12352a;border-radius:14px;padding:12px 14px;box-shadow:0 10px 26px rgba(16,24,40,.18);font:14px/1.45 system-ui,-apple-system,Arial,sans-serif;max-width:520px;margin:0 auto';
+                  t.addEventListener('click',function(){t.remove();});
+                  document.body.appendChild(t);setTimeout(function(){if(t.parentNode)t.remove();},8000);
+                });
+              })(<?php echo wp_json_encode($offline); ?>);
               if('serviceWorker' in navigator){navigator.serviceWorker.register(<?php echo wp_json_encode($sw); ?>,{updateViaCache:'none'}).then(ewsPushSync).catch(function(){});}
             })();
             </script>

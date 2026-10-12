@@ -215,6 +215,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_private_files.py "$S"
       - name: Sign In evidence (refused attempts, sent later, face photo)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_signin_evidence.py "$S"
+      - name: Offline screen (settings, page, service worker, preview)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_offline_screen.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }
@@ -238,6 +240,8 @@ jobs:
         run: node tests/pwa_browser.js
       - name: Push subscription kept current in Chromium (saved at once / every 3 days after a random wait / off kept / other key replaced)
         run: WP_CLI="wp --path=$WP" node tests/push_sync_browser.js
+      - name: Offline screen in Chromium (no internet, Sign In pressed, server down, back online)
+        run: WP_CLI="wp --path=$WP" node tests/offline_browser.js
       - name: Arabic (RTL) pass
         run: |
           wp language core install ar --path="$WP"

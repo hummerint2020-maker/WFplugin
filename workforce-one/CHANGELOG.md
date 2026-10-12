@@ -1,5 +1,36 @@
 # Changelog
 
+## 3.31.93
+The installed app's own offline screen instead of the browser's blank page (off until turned on in
+Features, owner-approved mockup docs/mockups/offline-page/). No database change.
+
+### Added
+- **Offline screen** (Features → Installed App: Offline Screen, off by default). When an app page cannot
+  be loaded, the installed app shows its own screen, in English:
+  - **No internet** ("No internet connection"), with the employee's schedule for today and the days
+    after it, as last seen with the internet on;
+  - **The server not responding** ("Workforce One is not responding": the internet works, the server
+    does not). It is shown when opening a page meets no network, a server error, or no answer within
+    the set time (20 seconds by default, 5 to 60). A Sign In / Out form is never timed out, as the
+    server may still record it: only no network or a server down (502/503/504) shows the screen;
+  - **Sign In / Out pressed with no connection** ("You are not signed in", with the time of the press
+    and a clock), using the note kept by Refused Sign In Attempts (3.31.92);
+  - **Back online**: the screen checks every 5 seconds and opens the app again by itself; the app then
+    says "You are back online", or that the Sign In / Out of 8:04 was sent to the manager.
+- **Every text on the screen can be changed** in Features (badge, title, message and button of each
+  state, the schedule card's words, the "back online" messages), each with "Reset to default"; an empty
+  box uses the default. `{time}`, `{action}` and `{updated}` are filled in. Also: the time to wait for
+  the server, the schedule card and the "keep the app open" note can be turned off. A live preview of
+  the real page, with sample data, follows what is typed. The app's name and colour are the ones on its
+  icon. Changes are written to the Audit Log (`offline_screen_update`).
+- The screen's page (`?ews_pwa=offline`) holds no employee data and is the same for everyone; the
+  service worker keeps it with the app's files and fetches it again when a text changes (the page's
+  revision is part of the service worker). The schedule is kept on the phone only while the screen and
+  its schedule card are on, and is removed when nobody is signed in on the app page.
+- Tests: `tests/e2e_offline_screen.py` (settings, page, service worker, preview access),
+  `tests/offline_browser.js` (Chromium with the service worker: no internet, Sign In pressed, server
+  down, slow server, back online, a changed text, logout, the preview), `tests/unit/OfflineScreenTest.php`.
+
 ## 3.31.92
 Sign In evidence (two features, both off until turned on in Features, owner-approved mockups
 docs/mockups/signin-attempts/ and face-photo/), the IP in the Sign In / Out Report, and the last four
