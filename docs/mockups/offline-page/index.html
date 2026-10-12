@@ -23,8 +23,9 @@ h1{font-size:clamp(24px,3.4vw,32px);margin:0;text-wrap:balance}
 .lead{max-width:72ch;color:var(--muted);margin:6px 0 0}
 .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px}
-.screens{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
-@media (max-width:1000px){.screens{grid-template-columns:minmax(0,1fr)}}
+.screens{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;align-items:start}
+@media (max-width:1250px){.screens{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.screens{grid-template-columns:minmax(0,1fr)}}
 figure{margin:0;min-width:0}
 .cap{font-weight:700;color:var(--accent);margin:0 0 10px;font-size:14px}
 figcaption{color:var(--muted);font-size:13.5px;margin-top:10px}
@@ -64,76 +65,98 @@ figcaption{color:var(--muted);font-size:13.5px;margin-top:10px}
 <div class="wrap" dir="rtl">
   <header>
     <h1>شاشة "مفيش إنترنت"</h1>
-    <p class="lead">بدل الصفحة البيضا اللي المتصفح بيطلعها لما النت يقطع، التطبيق يعرض شاشة بشكله هو، فيها اللي الموظف محتاج يعرفه. الشاشة دي بتتحفظ على الموبايل جوّه التطبيق المتثبّت، وما فيهاش أي بيانات حساسة.</p>
+    <p class="lead">بدل الصفحة البيضا اللي المتصفح بيطلعها لما النت يقطع أو السيرفر يقع، التطبيق يعرض شاشة بشكله هو، بالإنجليزي، فيها اللي الموظف محتاج يعرفه. الشاشة دي بتتحفظ على الموبايل جوّه التطبيق المتثبّت، فبتشتغل حتى لو السيرفر مش بيرد خالص، وما فيهاش أي بيانات حساسة.</p>
     <div class="chips">
       <span class="chip">مقفولة افتراضيًا · من Features</span>
-      <span class="chip">بترجع لوحدها أول ما النت يرجع</span>
+      <span class="chip">بتظهر لو النت مقطوع أو السيرفر واقع</span>
+      <span class="chip">بترجع لوحدها أول ما الاتصال يرجع</span>
       <span class="chip">محاولة Sign In بتتبعت بعدين (اتعملت في 3.31.92)</span>
       <span class="chip">الجدول بس، من غير مرتبات ولا صور</span>
     </div>
   </header>
 
-  <section class="screens">
+  <section class="screens" dir="ltr">
     <figure>
-      <p class="cap">1. فتح التطبيق والنت مقطوع</p>
+      <p class="cap">1 · Opening the app with no internet</p>
       <div class="phone"><div class="screen">
         <div class="bar"><span>8:03</span><span class="net">no signal</span></div>
-        <div class="top"><b>Workforce One</b><span class="badge off">مفيش إنترنت</span></div>
+        <div class="top"><b>Workforce One</b><span class="badge off">Offline</span></div>
         <div class="body">
           <div class="hero">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5.5 12.3a10 10 0 0 1 13 0"/><path d="M9 15.8a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/></svg>
-            <h2>مفيش إنترنت دلوقتي</h2>
-            <p>شغّل الواي فاي أو البيانات. الصفحة هتفتح لوحدها أول ما النت يرجع.</p>
+            <h2>No internet connection</h2>
+            <p>Turn on Wi-Fi or mobile data. This page opens by itself when you are back online.</p>
           </div>
-          <div class="btn">حاول تاني</div>
+          <div class="btn">Try again</div>
           <div class="card">
-            <h3>جدولك النهارده</h3>
-            <div class="row"><span>الاثنين 12 أكتوبر</span><span>مكتب · فرع مدينة نصر</span></div>
-            <div class="row"><span>المواعيد</span><span class="mono">09:00 – 17:00</span></div>
-            <div class="note">آخر تحديث: النهارده الساعة 7:58 ص</div>
+            <h3>Your schedule today</h3>
+            <div class="row"><span>Mon 12 Oct</span><span>Office · Nasr City</span></div>
+            <div class="row"><span>Hours</span><span class="mono">09:00 – 17:00</span></div>
+            <div class="note">Last updated today at 7:58 AM</div>
           </div>
           <div class="card">
-            <h3>باقي الأسبوع</h3>
-            <div class="row"><span>الثلاثاء</span><span>من البيت</span></div>
-            <div class="row"><span>الأربعاء</span><span>مكتب</span></div>
-            <div class="row"><span>الخميس</span><span>إجازة</span></div>
+            <h3>Rest of the week</h3>
+            <div class="row"><span>Tue</span><span>Work from home</span></div>
+            <div class="row"><span>Wed</span><span>Office</span></div>
+            <div class="row"><span>Thu</span><span>Leave</span></div>
           </div>
         </div>
       </div></div>
-      <figcaption>بدل الشاشة البيضا. الجدول ده هو آخر جدول الموظف شافه والنت شغال، ومتحفظ على موبايله. لو عمره ما فتح الجدول، الكارت ده مش بيظهر.</figcaption>
+      <figcaption dir="rtl">بدل الشاشة البيضا. الجدول ده هو آخر جدول الموظف شافه والنت شغال، ومتحفظ على موبايله. لو عمره ما فتح الجدول، الكارت ده مش بيظهر.</figcaption>
     </figure>
 
     <figure>
-      <p class="cap">2. داس Sign In والنت مقطوع</p>
+      <p class="cap">2 · Sign In pressed with no internet</p>
       <div class="phone"><div class="screen">
         <div class="bar"><span>8:04</span><span class="net">no signal</span></div>
-        <div class="top"><b>Sign In / Out</b><span class="badge off">مفيش إنترنت</span></div>
+        <div class="top"><b>Sign In / Out</b><span class="badge off">Offline</span></div>
         <div class="body">
-          <div class="clock"><span class="note">الساعة دلوقتي</span><span class="t">08:04</span></div>
+          <div class="clock"><span class="note">Time now</span><span class="t">08:04</span></div>
           <div class="saved">
-            <b>الـ Sign In ما اتسجلش</b>
-            <span>المحاولة اتحفظت على الموبايل الساعة 8:04 وهتتبعت للمدير أول ما النت يرجع. لما النت يرجع، اعمل Sign In تاني عشان حضورك يتسجل.</span>
+            <b>You are not signed in</b>
+            <span>Your attempt at 8:04 is saved on this phone and goes to your manager as soon as you are back online. When the connection returns, press Sign In again to record your attendance.</span>
           </div>
-          <div class="btn ghost">حاول تاني</div>
-          <div class="note">ما تقفلش التطبيق لو تقدر: أول ما النت يرجع الصفحة هتفتح لوحدها.</div>
+          <div class="btn ghost">Try again</div>
+          <div class="note">Keep the app open if you can: it reloads by itself when the connection returns.</div>
         </div>
       </div></div>
-      <figcaption>بدل صفحة المتصفح "ما فيش اتصال". بنقول للموظف بوضوح إن حضوره ما اتسجلش، عشان ما يفتكرش إنه خلص ويمشي.</figcaption>
+      <figcaption dir="rtl">بدل صفحة المتصفح "ما فيش اتصال". بنقول للموظف بوضوح إن حضوره ما اتسجلش، عشان ما يفتكرش إنه خلص ويمشي.</figcaption>
     </figure>
 
     <figure>
-      <p class="cap">3. النت رجع</p>
+      <p class="cap">3 · The internet works, the server does not answer</p>
       <div class="phone"><div class="screen">
-        <div class="bar"><span>8:06</span><span class="net">4G</span></div>
-        <div class="top"><b>Sign In / Out</b><span class="badge on">متصل</span></div>
+        <div class="bar"><span>8:04</span><span class="net">4G</span></div>
+        <div class="top"><b>Workforce One</b><span class="badge off">Not responding</span></div>
         <div class="body">
-          <div class="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>النت رجع. اتبعتت محاولة الـ Sign In بتاعتك الساعة 8:04 للمدير. سجّل دلوقتي.</span></div>
-          <div class="clock"><span class="note">الساعة دلوقتي</span><span class="t">08:06</span></div>
-          <div class="btn">Sign In</div>
-          <div class="note">الحضور بيتسجل بوقت السيرفر لما تدوس. محاولة 8:04 بتظهر عند المدير في سجل اليوم.</div>
+          <div class="hero">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M8 7h.01M8 17h.01M14 9l4 4M18 9l-4 4"/></svg>
+            <h2>Workforce One is not responding</h2>
+            <p>Your internet works, but the company server did not answer. It is not your phone. Try again in a few minutes.</p>
+          </div>
+          <div class="saved">
+            <b>You are not signed in</b>
+            <span>Your Sign In attempt at 8:04 is saved on this phone and goes to your manager when the server is back.</span>
+          </div>
+          <div class="btn">Try again</div>
         </div>
       </div></div>
-      <figcaption>الصفحة بتفتح لوحدها لما النت يرجع، والمحاولة اللي فاتت بتتبعت في نفس اللحظة. التسجيل الحقيقي لسه محتاج الموظف يدوس.</figcaption>
+      <figcaption dir="rtl">نفس الشاشة لما السيرفر نفسه واقع أو مش بيرد، بس الرسالة مختلفة عشان الموظف يعرف إن المشكلة مش من موبايله، وإنت تعرف إنها من السيرفر.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="cap">4 · Back online</p>
+      <div class="phone"><div class="screen">
+        <div class="bar"><span>8:06</span><span class="net">4G</span></div>
+        <div class="top"><b>Sign In / Out</b><span class="badge on">Online</span></div>
+        <div class="body">
+          <div class="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>You are back online. Your Sign In attempt at 8:04 was sent to your manager. Sign In now.</span></div>
+          <div class="clock"><span class="note">Time now</span><span class="t">08:06</span></div>
+          <div class="btn">Sign In</div>
+          <div class="note">Attendance is recorded with the server's time when you press. The 8:04 attempt shows in your manager's view of the day.</div>
+        </div>
+      </div></div>
+      <figcaption dir="rtl">الصفحة بتفتح لوحدها لما النت أو السيرفر يرجع، والمحاولة اللي فاتت بتتبعت في نفس اللحظة. التسجيل الحقيقي لسه محتاج الموظف يدوس.</figcaption>
     </figure>
   </section>
 
