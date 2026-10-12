@@ -7,6 +7,7 @@
    - a text changed in Features reaches the phone the next time the app opens online;
    - logging out removes the schedule kept on the phone;
    - wp-admin: the preview follows what is typed.
+   The server's state (cut off, down, slow) is set by a flag file read by a small mu-plugin.
    Usage: WP_CLI="wp --path=..." node tests/offline_browser.js   (tests/e2e_setup.php users at http://127.0.0.1:8080) */
 const { chromium } = require('playwright');
 const B = 'http://127.0.0.1:8080';
@@ -21,7 +22,7 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
 
   // The server "down" or "slow" for the app page and the ping, switched by a flag file.
   const MU = "WPMU_PLUGIN_DIR.'/ews-e2e-offline.php'";
-  php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents(" + MU + ", '<?php $f=__DIR__.\"/ews-e2e-offline.flag\"; $u=$_SERVER[\"REQUEST_URI\"]??\"\"; if(is_file($f) && (strpos($u,\"/app/\")===0 || strpos($u,\"ews_pwa=ping\")!==false)){ $m=trim((string)file_get_contents($f)); if($m===\"slow\"){sleep(7);} else {status_header(503); exit(\"down\");} }');");
+  php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents(" + MU + ", '<?php $f=__DIR__.\"/ews-e2e-offline.flag\"; $u=$_SERVER[\"REQUEST_URI\"]??\"\"; if(is_file($f)){ $m=trim((string)file_get_contents($f)); $app=strpos($u,\"/app/\")===0 || strpos($u,\"ews_pwa=ping\")!==false; if($m===\"cut\" && ($app || strpos($u,\"admin-post.php\")!==false)){ header(\"Content-Length: 5\"); header(\"Content-Length: 9\", false); exit(\"gone!\"); } if($app && $m===\"slow\"){sleep(7);} elseif($app && $m===\"down\"){status_header(503); exit(\"down\");} }');");
   const server = mode => php(mode ? "file_put_contents(WPMU_PLUGIN_DIR.'/ews-e2e-offline.flag','" + mode + "');" : "@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-offline.flag');");
   server('');
   const EID = Number(php("global $wpdb; echo (int)$wpdb->get_var($wpdb->prepare(\"SELECT id FROM {$wpdb->prefix}ews_employees WHERE wp_user_id=%d\",get_user_by('login','emp1')->ID));"));
@@ -47,21 +48,11 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
   const swText = () => page.evaluate(async () => (await fetch('/?ews_pwa=sw', { cache: 'no-store' })).text());
   const state = () => page.evaluate(() => { const m = document.getElementById('wfo-offline'); return m ? m.getAttribute('data-state') : null; }).catch(() => null);
   const text = sel => page.locator(sel).innerText().catch(() => '');
-  // No internet. Chromium's offline mode (setOffline) does not reach the service worker's own requests,
-  // so the service worker is put offline too, through the browser's debugging protocol.
-  let bcdp = null;
-  const offline = async on => {
-    await ctx.setOffline(on);
-    bcdp = bcdp || await browser.newBrowserCDPSession();
-    const { targetInfos } = await bcdp.send('Target.getTargets');
-    for (const t of targetInfos.filter(x => x.type === 'service_worker')) {
-      const { sessionId } = await bcdp.send('Target.attachToTarget', { targetId: t.targetId, flatten: false });
-      let id = 1;
-      const send = (method, params) => bcdp.send('Target.sendMessageToTarget', { sessionId, message: JSON.stringify({ id: id++, method, params }) });
-      await send('Network.enable', {});
-      await send('Network.emulateNetworkConditions', { offline: on, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
-    }
-  };
+  // No internet: the browser's offline mode (navigator.onLine, the page's own requests) and, for the
+  // service worker's requests (which that mode does not reach in every Chromium version), the test server
+  // answers the app's pages, the ping and admin-post.php with a response every browser refuses as a
+  // network failure (two different Content-Length headers).
+  const offline = async on => { await ctx.setOffline(on); server(on ? 'cut' : ''); };
 
   await page.goto(B + '/wp-login.php');
   await page.fill('#user_login', 'emp1'); await page.fill('#user_pass', 'emp1pass'); await page.click('#wp-submit');
