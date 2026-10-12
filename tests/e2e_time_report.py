@@ -110,5 +110,14 @@ check('...it is audited', int(q("SELECT COUNT(*) c FROM {p}ews_audit_log WHERE a
 emp.post('ews31_time_save', _wpnonce=n_save, employee_id=eid, work_date=DAY, event_type='sign_in', event_at=DAY + 'T09:00')
 check('employee cannot add records', not logs())
 
+# ---------------------------------------------------------------- the IP of each record (3.31.92: saved, now shown)
+php("$wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>0,'work_date'=>'%s','event_type'=>'sign_in','event_at'=>'%s 08:01:00','scheduled_status'=>'Office','source'=>'app','ip_address'=>'203.0.113.7']);" % (eid, DAY, DAY))
+pg = adm.req(PAGE + '&start=%s&end=%s' % (DAY, DAY))[1]
+check('the report shows the IP a record came from', '<th>IP</th>' in pg and '<td data-ip>203.0.113.7</td>' in pg)
+m = re.search(r'href="([^"]*action=ews31_time_csv[^"]*)"', pg)
+url = m.group(1).replace('&amp;', '&').replace('&#038;', '&') if m else '/none'
+csv = adm.req(url[url.index('/wp-admin'):] if '/wp-admin' in url else url)[1]
+check('...and so does the CSV', 'IP address' in csv and '203.0.113.7' in csv, csv[:300])
+
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

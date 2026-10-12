@@ -82,6 +82,7 @@ trait EWS_Time_Report_Trait {
                 'integrity'=>$integrity_labels[$integrity]??ucfirst(str_replace('_',' ',$integrity)),'integrity_key'=>$integrity,
                 'integrity_reason'=>$r->integrity_reason?ucwords(str_replace('_',' ',$r->integrity_reason)):'',
                 // 3.31.74: where the event came from; a correction shows next to the original, which stays.
+                'ip'=>(string)($r->ip_address??'')!==''?(string)$r->ip_address:'—',   // shown since 3.31.92 (it was saved, never shown)
                 'source'=>$this->time_source_label((string)($r->source??'')),'correction_id'=>(int)($r->correction_id??0),'replaced_by'=>(int)($r->replaced_by??0),
             ];
         }
@@ -193,7 +194,7 @@ trait EWS_Time_Report_Trait {
         header('Content-Disposition:attachment; filename=sign_in_out_'.$start.'_to_'.$end.'.csv');
         $f=fopen('php://output','w');
         fprintf($f,"\xEF\xBB\xBF");
-        fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason','Source','Correction','Replaced by correction']);
+        fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason','IP address','Source','Correction','Replaced by correction']);
         $radius=[];
         $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},(array)$rows));
         foreach((array)$rows as $r){
@@ -208,7 +209,7 @@ trait EWS_Time_Report_Trait {
                 $r->distance_meters!==null?$this->format_distance((float)$r->distance_meters):'',
                 $radius[$eid],$r->location_status?:'Not available',
                 $r->accuracy!==null?round((float)$r->accuracy,1).' m':'',
-                $r->integrity_status?:'not_evaluated',$r->integrity_reason?:'',
+                $r->integrity_status?:'not_evaluated',$r->integrity_reason?:'',(string)($r->ip_address??''),
                 $this->time_source_label((string)($r->source??'')),(int)($r->correction_id??0)?'#'.(int)$r->correction_id:'',(int)($r->replaced_by??0)?'#'.(int)$r->replaced_by:'',
             ]));
         }

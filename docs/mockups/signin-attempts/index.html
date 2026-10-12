@@ -1,0 +1,173 @@
+<title>Refused Sign In Attempts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: a short brief, the setting, then the report with refused attempts, then one employee's morning as a timeline. */
+:root{
+  --bg:#f3f4f8; --paper:#ffffff; --ink:#1d2033; --muted:#5d6280; --line:#dfe2ec;
+  --accent:#4338ca; --accent-soft:#eceafd; --ok:#0f7a4a; --ok-soft:#e3f5ec; --warn:#9a5b00; --warn-soft:#fdf1dc; --bad:#b42318; --bad-soft:#fde8e6;
+  --wp-bg:#f0f0f1; --wp-ink:#1d2327; --wp-line:#c3c4c7; --wp-blue:#2271b1;
+  --f-display:"Alexandria",system-ui,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12141f; --paper:#1b1e2d; --ink:#e8e9f3; --muted:#a3a8c6; --line:#2e3248;
+  --accent:#a5a0ff; --accent-soft:#262552; --ok:#5fd39b; --ok-soft:#173528; --warn:#f2b55a; --warn-soft:#3a2a12; --bad:#ff8a80; --bad-soft:#3d1a18;
+  --wp-bg:#1f2228; --wp-ink:#e6e7ea; --wp-line:#3a3f4a; --wp-blue:#72aee6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12141f; --paper:#1b1e2d; --ink:#e8e9f3; --muted:#a3a8c6; --line:#2e3248;
+  --accent:#a5a0ff; --accent-soft:#262552; --ok:#5fd39b; --ok-soft:#173528; --warn:#f2b55a; --warn-soft:#3a2a12; --bad:#ff8a80; --bad-soft:#3d1a18;
+  --wp-bg:#1f2228; --wp-ink:#e6e7ea; --wp-line:#3a3f4a; --wp-blue:#72aee6; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding:28px 16px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.4vw,34px);margin:0;text-wrap:balance}
+.lead{max-width:70ch;color:var(--muted);margin:6px 0 0;font-family:var(--f-display);font-size:14.5px;line-height:1.9}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;font-family:var(--f-display)}
+.chip b{font-weight:600}
+.cap{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--accent);margin:0 0 8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.cap span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:13px}
+figure{margin:0;min-width:0}
+figcaption{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:75ch;font-family:var(--f-display);line-height:1.8}
+.two{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:22px;align-items:start}
+@media (max-width:1000px){.two{grid-template-columns:minmax(0,1fr)}}
+.wp{background:var(--wp-bg);color:var(--wp-ink);border:1px solid var(--line);border-radius:6px;overflow:hidden;font:13px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif}
+.wp-top{background:#1d2327;color:#f0f0f1;padding:6px 12px;font-size:12px}
+.wp-body{padding:14px;display:grid;gap:10px;min-width:0}
+.wp h2{font-size:20px;font-weight:400;margin:0}
+.wp-tabs{display:flex;gap:4px;border-bottom:1px solid var(--wp-line);flex-wrap:wrap}
+.wp-tabs a{padding:6px 10px;border:1px solid var(--wp-line);border-bottom:0;background:var(--wp-bg);color:var(--wp-ink);text-decoration:none;font-weight:600;font-size:13px;margin-bottom:-1px}
+.wp-tabs a.on{background:var(--paper)}
+.card{background:var(--paper);border:1px solid var(--wp-line);padding:14px 16px;display:grid;gap:12px}
+.card h3{margin:0;font-size:14px}
+.row{display:flex;gap:12px;align-items:flex-start}
+.toggle{flex:none;width:36px;height:20px;border-radius:20px;background:var(--wp-line);position:relative;margin-top:2px}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.toggle.on{background:var(--wp-blue)}.toggle.on::after{left:18px}
+.row p{margin:2px 0 0;color:var(--muted)}
+.new{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:1px 6px;margin-inline-start:6px}
+.field{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-inline-start:48px}
+.field input,.field select{border:1px solid var(--wp-line);border-radius:4px;padding:3px 6px;background:var(--paper);color:var(--wp-ink);font:inherit}
+.field input{width:56px}
+.btn{display:inline-block;background:var(--wp-blue);color:#fff;border-radius:3px;padding:5px 12px;font-weight:600;justify-self:start}
+.btn.sm{padding:2px 8px;font-size:12px;font-weight:500;background:var(--paper);color:var(--wp-blue);border:1px solid var(--wp-blue);white-space:nowrap}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filters label{display:flex;gap:6px;align-items:center}
+.filters input{border:1px solid var(--wp-line);border-radius:4px;padding:3px 6px;background:var(--paper);color:var(--wp-ink);font:inherit;width:120px}
+.seg{display:inline-flex;border:1px solid var(--wp-line);border-radius:4px;overflow:hidden}
+.seg span{padding:3px 10px;background:var(--paper)}
+.seg span.on{background:var(--wp-blue);color:#fff}
+.sum{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--warn-soft);color:var(--warn);border-radius:4px;padding:8px 12px}
+.sum b{font-weight:600}
+.tbl-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--wp-line)}
+table{border-collapse:collapse;width:100%;min-width:900px;font-variant-numeric:tabular-nums}
+th,td{text-align:start;padding:8px 10px;border-bottom:1px solid var(--wp-line);vertical-align:top}
+th{font-weight:600;font-size:12.5px;white-space:nowrap}
+tr.refused td{background:var(--warn-soft)}
+tr.refused td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.no{background:var(--bad-soft);color:var(--bad)}
+.why{font-weight:600}
+.sub{display:block;color:var(--muted);font-size:12px}
+.mono{font-family:var(--f-mono);font-size:12px}
+.tl{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:14px;direction:rtl;font-family:var(--f-display)}
+.tl h3{margin:0;font-size:16px}
+.tl ol{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:56px 18px minmax(0,1fr);gap:10px;align-items:start}
+.tl time{font-family:var(--f-mono);font-size:13px;color:var(--muted);padding-top:1px;direction:ltr;text-align:end}
+.dot{width:12px;height:12px;border-radius:50%;margin-top:5px;background:var(--line);position:relative}
+.tl li:not(:last-child) .dot::after{content:"";position:absolute;top:14px;left:5px;width:2px;height:40px;background:var(--line)}
+.dot.no{background:var(--bad)}.dot.ok{background:var(--ok)}.dot.n{background:var(--accent)}
+.tl p{margin:0 0 14px;font-size:14px;line-height:1.7}
+.tl p small{display:block;color:var(--muted);font-size:12.5px}
+.decide{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:8px;font-family:var(--f-display)}
+.decide h2{font-size:18px;margin:0}
+.decide ol{margin:0;padding-inline-start:20px;display:grid;gap:6px;max-width:85ch;line-height:1.8}
+</style>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <h1>محاولات Sign In المرفوضة</h1>
+    <p class="lead">لما الموظف يحاول يسجل حضور أو انصراف والبرنامج يرفض، المحاولة بتتحفظ ومعاها السبب والوقت ومكانه والجهاز والـ IP. كده لما حد يقولك "أنا سجلت"، هتلاقي اللي حصل قدامك في تقرير Sign In / Out. ومعاها كمان عمود الـ IP اللي بقى ظاهر في التقرير (اتعمل خلاص).</p>
+    <div class="brief">
+      <span class="chip"><b>مقفولة افتراضيًا</b> · من Features</span>
+      <span class="chip">بتتمسح لوحدها بعد <b>60 يوم</b></span>
+      <span class="chip">بيشوفها <b>HR ومدير القسم</b> بس</span>
+      <span class="chip">الموظف <b>مش بيشوف حاجة جديدة</b></span>
+      <span class="chip">بتشمل <b>رفض الوش</b> كمان</span>
+    </div>
+  </header>
+
+  <section class="two">
+    <figure>
+      <p class="cap">الإعداد <span>wp-admin → Settings → Features → Attendance</span></p>
+      <div class="wp" dir="ltr">
+        <div class="wp-top">Workforce One</div>
+        <div class="wp-body">
+          <h2>Features</h2>
+          <div class="wp-tabs"><a class="on" href="#">Attendance</a><a href="#">Face Sign In</a><a href="#">Requests</a></div>
+          <div class="card">
+            <h3>Attendance</h3>
+            <div class="row"><span class="toggle on" aria-hidden="true"></span><div><strong>Keep refused Sign In / Out attempts</strong><span class="new">New</span><p>Each time the app refuses a Sign In or Sign Out (outside the work location, face not matched, not a working day, too early, ...), the attempt is kept with the reason, the time, where the phone was, the device and the IP. Shown in the Sign In / Out Report.</p></div></div>
+            <div class="field"><label for="keep">Keep them for</label><input id="keep" value="60"><span>days, then delete them</span></div>
+            <div class="field"><label for="alert">Tell the manager after</label><select id="alert"><option>3 refused attempts in one day</option><option>Never</option></select></div>
+            <span class="btn">Save</span>
+          </div>
+        </div>
+      </div>
+      <figcaption>مقفولة لحد ما تفتحها. مدة الحفظ ممكن تتغير، ومعاها اختيار إن المدير ياخد إشعار لو موظف اترفض 3 مرات في نفس اليوم.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="cap">إزاي هتعرف اللي حصل <span>اضغط على اسم الموظف في التقرير</span></p>
+      <div class="tl">
+        <h3>كريم فتحي · الأحد 12 أكتوبر</h3>
+        <ol>
+          <li><time>08:03</time><span class="dot n"></span><p>فتح صفحة الحضور<small>iPhone 13 · Safari · ‎41.233.17.90</small></p></li>
+          <li><time>08:04</time><span class="dot ok"></span><p>تأكيد الوش نجح</p></li>
+          <li><time>08:04</time><span class="dot no"></span><p>Sign In اترفض: برّه مكان الشغل<small>كان على بعد 1.4 كم من فرع مدينة نصر (المسموح 200 م) · دقة الـ GPS ‏35 م</small></p></li>
+          <li><time>08:06</time><span class="dot no"></span><p>Sign In اترفض تاني: برّه مكان الشغل<small>على بعد 1.3 كم</small></p></li>
+          <li><time>08:31</time><span class="dot ok"></span><p>Sign In اتسجل<small>جوّه مكان الشغل · على بعد 40 م</small></p></li>
+        </ol>
+      </div>
+      <figcaption>ده الموقف اللي حصل معاك: الموظف حاول فعلًا، بس كان لسه في الطريق. من غير السجل ده مكنتش هتعرف أي حاجة غير إنه اتأخر.</figcaption>
+    </figure>
+  </section>
+
+  <figure>
+    <p class="cap">التقرير <span>wp-admin → Attendance → Sign In / Out</span></p>
+    <div class="wp" dir="ltr">
+      <div class="wp-top">Workforce One</div>
+      <div class="wp-body">
+        <h2>Sign In / Out Report</h2>
+        <div class="filters">
+          <label>From <input value="2026-10-12" aria-label="From"></label><label>To <input value="2026-10-12" aria-label="To"></label>
+          <label>Employee <input value="" placeholder="Name" aria-label="Employee"></label>
+          <span class="seg" role="group" aria-label="Show"><span>Recorded</span><span>Refused</span><span class="on">Both</span></span>
+          <span class="btn">Filter</span>
+        </div>
+        <div class="sum"><b>3 refused attempts</b> on this day · Karim Fathy 2 · Sara Nabil 1</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Time</th><th>Employee</th><th>Event</th><th>Result</th><th>Location</th><th>Device</th><th>IP</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>07:52</td><td>Mona Adel</td><td>Sign In</td><td><span class="pill ok">Recorded</span><span class="sub">On time · face matched</span></td><td>Inside · 25 m</td><td>Samsung A54 · Chrome</td><td class="mono">196.204.11.3</td><td></td></tr>
+            <tr class="refused"><td>07:58</td><td>Sara Nabil</td><td>Sign In</td><td><span class="pill no">Refused</span><span class="why sub">Face did not match</span></td><td>Inside · 30 m</td><td>iPhone 12 · Safari</td><td class="mono">196.204.11.3</td><td></td></tr>
+            <tr class="refused"><td>08:04</td><td>Karim Fathy</td><td>Sign In</td><td><span class="pill no">Refused</span><span class="why sub">Outside the work location: 1.4 km away (allowed 200 m)</span></td><td>Outside · 1.4 km<span class="sub">GPS accuracy 35 m</span></td><td>iPhone 13 · Safari</td><td class="mono">41.233.17.90</td><td><span class="btn sm">Record it manually</span></td></tr>
+            <tr class="refused"><td>08:06</td><td>Karim Fathy</td><td>Sign In</td><td><span class="pill no">Refused</span><span class="why sub">Outside the work location: 1.3 km away</span></td><td>Outside · 1.3 km</td><td>iPhone 13 · Safari</td><td class="mono">41.233.17.90</td><td><span class="btn sm">Record it manually</span></td></tr>
+            <tr><td>08:31</td><td>Karim Fathy</td><td>Sign In</td><td><span class="pill ok">Recorded</span><span class="sub">Late · face matched</span></td><td>Inside · 40 m</td><td>iPhone 13 · Safari</td><td class="mono">41.233.17.90</td><td></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <figcaption>المحاولات المرفوضة بتظهر بلون مختلف جوّه نفس التقرير، وبتقدر تفلتر عليها لوحدها. زرار "Record it manually" بيفتح التسجيل اليدوي بنفس الوقت ونفس الموظف، لو الـ HR شاف إنه كان موجود فعلًا (الحفظ ده بيتسجل في الـ Audit Log). الأسباب المحتملة: برّه المكان، الوش ما اتطابقش، مفيش تأكيد وش، مش يوم شغل، بدري، متأخر جدًا، مسجّل قبل كده، في بريك، الـ QR من مكان تاني.</figcaption>
+  </figure>
+
+  <section class="decide">
+    <h2>محتاج رأيك في دول قبل ما أبني</h2>
+    <ol>
+      <li>الحفظ 60 يوم، تنفع؟</li>
+      <li>المدير ياخد إشعار لو موظف اترفض 3 مرات في نفس اليوم؟ (ممكن تتقفل من الإعداد)</li>
+      <li>المحاولة اللي ما وصلتش للسيرفر خالص (النت قاطع) مش هتظهر، لأن السيرفر ما شافهاش. هل نضيف إن التطبيق يحفظها على الموبايل ويبعتها أول ما النت يرجع؟ (ممكن تتعمل بعدين)</li>
+    </ol>
+  </section>
+</div>
