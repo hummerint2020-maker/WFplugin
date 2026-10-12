@@ -26,6 +26,9 @@ fixes from the second code review (items 10–13). Database: table `ews_signin_a
   Audit Log; never stored by the browser. Kept 30 days by default. The camera screen tells the employee.
   Stored as a private file (trait-private-files.php: the direct-link check and WFO_PRIVATE_DIR cover it).
 - **The IP of each record** in the Sign In / Out Report and its CSV (it was saved, never shown).
+- **In the Audit Log too** (owner's request): `signin_refused` (who, Sign In / Out, why, device, IP),
+  `face_check_failed`, and `signin_not_reached` (the real time from the server's clock, what the phone
+  said, and the gap when its clock was changed). A matched face check is not written there.
 
 ### Fixed
 - **Service worker** (10): on update it deleted every cache of the site, including other apps' on the
@@ -40,7 +43,7 @@ fixes from the second code review (items 10–13). Database: table `ews_signin_a
   before the shift on the same day and never counted as worked. It is now the next morning.
 
 ### Tests
-- New `tests/e2e_signin_evidence.py` (45), in CI. `e2e_schema` (an update that fails), `e2e_pwa`
+- New `tests/e2e_signin_evidence.py` (48), in CI. `e2e_schema` (an update that fails), `e2e_pwa`
   (caches), `e2e_time_report` (IP). Unit: `SignInEvidenceTest`, `DeviceLabelTest`, `SchemaCheckTest`,
   `DayMetricsOvernightOvertimeTest`, overnight cases in `ManualRecordRulesTest` and `CorrectionRulesTest`.
 

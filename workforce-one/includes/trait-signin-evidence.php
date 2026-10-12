@@ -112,8 +112,29 @@ trait EWS_Signin_Evidence_Trait {
         }
         if(!$wpdb->insert($this->attempts_table(),$row))return 0;
         $id=(int)$wpdb->insert_id;
-        if($row['result']!=='face_ok')$this->evidence_maybe_alert($emp,$row['work_date']);
+        if($row['result']!=='face_ok'){
+            $this->evidence_audit($emp,$id,(object)($row+['distance_meters'=>$row['distance_meters']??null]));
+            $this->evidence_maybe_alert($emp,$row['work_date']);
+        }
         return $id;
+    }
+
+    /**
+     * The Audit Log line of a refused or unsent attempt (3.31.92, owner's request: everything in one
+     * place). signin_refused (a Sign In / Out refused), face_check_failed, signin_not_reached (pressed
+     * with no network, sent later: the real time from the server's clock, the phone's own time, the gap).
+     */
+    private function evidence_audit($emp,$id,$a){
+        $action=$a->result==='not_reached'?'signin_not_reached':($a->event_type==='face'?'face_check_failed':'signin_refused');
+        $event=$a->event_type==='face'?'Face check':$this->time_event_label((string)$a->event_type);
+        $parts=[(string)$emp->name,$event,$this->evidence_reason_label($a)];
+        if($a->result==='not_reached'){
+            $parts[]='pressed at '.substr((string)$a->attempted_at,11,5).(empty($a->time_sure)?' (not certain)':'');
+            if(!empty($a->phone_time))$parts[]='phone said '.substr((string)$a->phone_time,11,5);
+            if(isset($a->clock_skew) && abs((int)$a->clock_skew)>120)$parts[]='phone clock off by '.round(abs((int)$a->clock_skew)/60).' min';
+        }
+        $parts[]=trim((string)$a->device.' '.(string)$a->ip_address);
+        $this->audit($action,'signin_attempt',$id,implode(' / ',array_filter($parts,'strlen')));
     }
 
     /** A Sign In / Out the app refused (record_time_event). */
