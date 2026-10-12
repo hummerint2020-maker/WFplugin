@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.31.91
+Security fixes from the second code review (docs/tasks/bug-review-2026-10.md, items 1, 2, 6, 14, 17). No
+database change. The photo kept with each Face Sign In (the owner's decision for item 1) is a mockup
+waiting for approval (docs/mockups/face-photo/), not in this release.
+
+### Fixed
+- **Face Sign In replay.** The browser works out the face descriptor, so one recorded once could be sent
+  again to sign in. Now each verification needs a single-use code from the server (new route
+  `GET /face/challenge`, valid 2 minutes, asked for by the page right before the check), and a
+  descriptor already seen (the enrolled one, or one accepted in the last 30 days) is refused like a
+  mismatch and written to the Audit Log ("face_replay"). Two live captures are never that close. The
+  recent descriptors are kept encrypted and deleted with the face.
+- **Private files on servers that ignore .htaccess (Nginx).** Correction photos, task files and daily
+  workers' photos are checked once a week (and on "Check again"): when one opens by a direct link, an
+  administrator sees a warning on Workforce One pages with the Nginx rule to add, or the option to set
+  `WFO_PRIVATE_DIR` in wp-config.php. With that set, new files go there and older ones are moved there
+  (the move is in the Audit Log); uninstall removes them there too. By default files stay in uploads, so
+  site backups keep them.
+- **Two leave requests sent at the same moment** could both pass the overlap and balance checks. Leave is
+  saved under a per-employee lock; inside the transaction the overlap is checked again and the days are
+  reserved only while the balance has them (a conditional update). The same for HR recording a leave.
+- **Two overtime requests sent at the same moment** could both pass the overlap check (minutes counted
+  twice). Overtime is saved under a per-employee lock and checked again after the insert.
+- **Private photos stayed in the browser's cache** after logging out or losing access (and a replaced
+  photo showed old for a day). Photos are sent with `no-store`, and logging out sends
+  `Clear-Site-Data: "cache"` (the cache only: the installed app and push notifications stay).
+
+### Tests
+- New `tests/e2e_request_races.py` (12) and `tests/e2e_private_files.py` (14), in CI.
+- `e2e_api_foundation`: challenge and replay checks; the Face tests send live-like descriptors and a
+  challenge. Unit: `FaceReplayTest`.
+
 ## 3.31.90
 Money and permission fixes from the second code review (docs/tasks/bug-review-2026-10.md, items 3, 4, 5,
 7, 8, 9, 15, 16). Database: a new employee column, `last_working_day`.

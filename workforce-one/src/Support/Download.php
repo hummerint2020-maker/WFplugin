@@ -32,10 +32,11 @@ final class Download
 
     /**
      * Sends a stored image to be shown (an <img>, a tap that opens it), not saved as a download: a
-     * download is ignored by the installed app on phones, and without caching the photo is fetched
-     * again on every visit. Cached privately (only this browser), as the file never changes.
+     * download is ignored by the installed app on phones. Never stored by the browser (3.31.91): these
+     * are private photos (correction proofs, workers, signed sheets) and a copy in the cache stayed
+     * after logging out or losing access; a replaced photo was also shown old for a day.
      */
-    public static function image(string $body, string $type, string $filename, int $maxAge = 86400): void
+    public static function image(string $body, string $type, string $filename): void
     {
         while (ob_get_level() > 0 && @ob_end_clean()) {
         }
@@ -43,7 +44,7 @@ final class Download
             @ini_set('zlib.output_compression', 'Off'); // phpcs:ignore WordPress.PHP.IniSet.Risky -- binary file, must not be re-compressed
             header_remove('Pragma');
             header_remove('Expires');
-            header('Cache-Control: private, max-age=' . max(0, $maxAge));
+            header('Cache-Control: private, no-store, max-age=0');
             header('Content-Type: ' . $type);
             header('Content-Disposition: inline; filename="' . str_replace(['"', "\r", "\n"], '', $filename) . '"');
             header('X-Content-Type-Options: nosniff');

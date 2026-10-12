@@ -29,11 +29,11 @@ trait EWS_Overtime_Trait {
             return OvertimeRules::isAllowedDate((string)$date,current_time('Y-m-d'));
         }
 
-    private function overtime_overlap($employee_id,$date,$start,$end){
+    private function overtime_overlap($employee_id,$date,$start,$end,$except_id=0){
             global $wpdb;
             return (bool)$wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}ews_overtime_requests WHERE employee_id=%d AND overtime_date=%s AND status IN ('Pending','Approved') AND start_time<%s AND end_time>%s LIMIT 1",
-                $employee_id,$date,OvertimeRules::withSeconds((string)$end),OvertimeRules::withSeconds((string)$start)
+                "SELECT id FROM {$wpdb->prefix}ews_overtime_requests WHERE employee_id=%d AND overtime_date=%s AND status IN ('Pending','Approved') AND start_time<%s AND end_time>%s AND id<>%d LIMIT 1",
+                $employee_id,$date,OvertimeRules::withSeconds((string)$end),OvertimeRules::withSeconds((string)$start),(int)$except_id
             ));
         }
 
@@ -84,30 +84,17 @@ trait EWS_Overtime_Trait {
             $reason=trim(sanitize_textarea_field(wp_unslash($_POST['reason']??'')));
             $facts=['date'=>$date,'today'=>current_time('Y-m-d'),'start'=>$start,'end'=>$end,'reason'=>$reason];
             $error=OvertimeRules::check($facts);
-            if(!$error){
-                $this->ensure_overtime_schema();
-                $facts['overlaps']=$this->overtime_overlap((int)$emp->id,$date,$start,$end);
-                $error=OvertimeRules::check($facts);
-            }
             if($error)$this->overtime_redirect(['overtime_error'=>$error]);
-
-            global $wpdb;$table=$wpdb->prefix.'ews_overtime_requests';$now=current_time('mysql');
+            $this->ensure_overtime_schema();
+            // One request at a time per employee (3.31.91): two requests sent together both passed the
+            // overlap check and the same minutes were counted twice. The overlap is checked again after
+            // the insert, inside the transaction.
+            $r=$this->ews_with_lock('overtime_emp_'.(int)$emp->id,function()use($emp,$date,$start,$end,$reason){return $this->overtime_create_locked($emp,$date,$start,$end,$reason);},['error'=>'busy']);
+            if(isset($r['error']))$this->overtime_redirect(['overtime_error'=>$r['error']]);
+            $id=(int)$r['id'];$ar=$r['ar'];
             $minutes=OvertimeRules::minutes($start,$end);$hours=OvertimeRules::hours($minutes);
-            $row=['employee_id'=>(int)$emp->id,'overtime_date'=>$date,'start_time'=>$start,'end_time'=>$end,'requested_minutes'=>$minutes,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'requested_at'=>$now];
-            $formats=['%d','%s','%s','%s','%d','%s','%s','%d','%s'];
-
-            // An active workflow in mode NONE auto-approves through the approval engine.
-            if(in_array($this->overtime_workflow_mode(),['NONE','LEVEL_1','LEVEL_2'],true)){
-                $fail=function($code)use($wpdb){$wpdb->query('ROLLBACK');$this->overtime_redirect(['overtime_error'=>$code]);};
-                if($wpdb->query('START TRANSACTION')===false)$this->overtime_redirect(['overtime_error'=>'save']);
-                if($wpdb->insert($table,$row,$formats)===false)$fail('save');
-                $id=(int)$wpdb->insert_id;
-                if(is_wp_error($this->approval_start('overtime','overtime_request',$id,(int)$emp->id,[],false)))$fail('approval');
-                $ar=$this->approval_find_request('overtime','overtime_request',$id);
-                if(!$ar)$fail('approval');
-                if($ar->status==='APPROVED'){$ok=$this->overtime_set_status($id,'Approved');if($ok!==true)$fail($ok);}
-                if($wpdb->query('COMMIT')===false)$fail('save');
-                $this->audit('overtime_request','overtime_request',$id,$emp->name.' requested '.$hours.' overtime hour(s) on '.$date);
+            $this->audit('overtime_request','overtime_request',$id,$emp->name.' requested '.$hours.' overtime hour(s) on '.$date);
+            if($ar){
                 if($ar->status==='APPROVED'){
                     if($emp->wp_user_id)$this->overtime_notify($emp->wp_user_id,'Overtime Approved','Your overtime request for '.$date.' ('.$start.'–'.$end.') has been approved.',$id);
                 }else{
@@ -116,16 +103,40 @@ trait EWS_Overtime_Trait {
                 }
                 $this->overtime_redirect(['overtime_sent'=>$hours]);
             }
-
-            if($wpdb->insert($table,$row,$formats)===false)wp_die('Could not submit overtime request. '.esc_html($wpdb->last_error));
-            $id=(int)$wpdb->insert_id;
-            $this->audit('overtime_request','overtime_request',$id,$emp->name.' requested '.$hours.' overtime hour(s) on '.$date);
             $msg=$emp->name.' requested '.$hours.' hour(s) of overtime on '.$date.' ('.$start.'–'.$end.'). Approval is required.';
             foreach(get_users(['capability'=>'ews_manage_time','fields'=>['ID']]) as $m){
                 if((int)$m->ID===(int)get_current_user_id())continue;
                 $this->overtime_notify($m->ID,'Overtime Request',$msg,$id);
             }
             $this->overtime_redirect(['overtime_sent'=>$hours]);
+        }
+
+    /**
+     * Saves an overtime request under the employee's lock, in one transaction: the overlap is checked
+     * before and again after the insert (a request saved at the same moment wins, this one is refused).
+     * @return array{error?:string,id?:int,ar?:?object}
+     */
+    private function overtime_create_locked($emp,$date,$start,$end,$reason){
+            global $wpdb;$table=$wpdb->prefix.'ews_overtime_requests';$now=current_time('mysql');
+            if($this->overtime_overlap((int)$emp->id,$date,$start,$end))return ['error'=>'overlap'];
+            $minutes=OvertimeRules::minutes($start,$end);
+            $row=['employee_id'=>(int)$emp->id,'overtime_date'=>$date,'start_time'=>$start,'end_time'=>$end,'requested_minutes'=>$minutes,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'requested_at'=>$now];
+            $formats=['%d','%s','%s','%s','%d','%s','%s','%d','%s'];
+            $fail=function($code)use($wpdb){$wpdb->query('ROLLBACK');return ['error'=>$code];};
+            if($wpdb->query('START TRANSACTION')===false)return ['error'=>'save'];
+            if($wpdb->insert($table,$row,$formats)===false)return $fail('save');
+            $id=(int)$wpdb->insert_id;
+            if($this->overtime_overlap((int)$emp->id,$date,$start,$end,$id))return $fail('overlap');
+            $ar=null;
+            // An active workflow in mode NONE auto-approves through the approval engine.
+            if(in_array($this->overtime_workflow_mode(),['NONE','LEVEL_1','LEVEL_2'],true)){
+                if(is_wp_error($this->approval_start('overtime','overtime_request',$id,(int)$emp->id,[],false)))return $fail('approval');
+                $ar=$this->approval_find_request('overtime','overtime_request',$id);
+                if(!$ar)return $fail('approval');
+                if($ar->status==='APPROVED'){$ok=$this->overtime_set_status($id,'Approved');if($ok!==true)return $fail($ok);}
+            }
+            if($wpdb->query('COMMIT')===false)return $fail('save');
+            return ['id'=>$id,'ar'=>$ar];
         }
 
     public function overtime_request_respond(){

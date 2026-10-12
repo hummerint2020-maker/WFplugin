@@ -5599,3 +5599,36 @@ msgstr "فيه صرف أو تعديل تاني بيتحفظ دلوقتي. حاو
 
 msgid "Paid from %1$s to %2$s"
 msgstr "مدفوع من %1$s إلى %2$s"
+
+msgid "Another request of yours is being saved. Try again in a moment."
+msgstr "يتم حفظ طلب آخر لك الآن. حاول مرة أخرى بعد لحظة."
+
+msgid "We could not save the leave request. Please try again."
+msgstr "تعذّر حفظ طلب الإجازة. حاول مرة أخرى."
+
+msgid "The face check expired. Please try again."
+msgstr "انتهت مهلة التحقق من الوجه. حاول مرة أخرى."
+
+msgid "Private files can be opened by a direct link on this server."
+msgstr "يمكن فتح الملفات الخاصة برابط مباشر على هذا الخادم."
+
+msgid "Correction photos, task files and daily workers' photos are protected by .htaccess, which this server ignores (Nginx, for example). Anyone with a file's link could open it."
+msgstr "صور طلبات التصحيح وملفات المهام وصور العمالة اليومية محمية بملف ‎.htaccess‎، وهذا الخادم يتجاهله (مثل Nginx). أي شخص لديه رابط الملف يمكنه فتحه."
+
+msgid "Fix it in one of two ways, then press \"Check again\":"
+msgstr "أصلح ذلك بإحدى طريقتين، ثم اضغط \"إعادة الفحص\":"
+
+msgid "Ask your host to add this rule to the site's Nginx configuration:"
+msgstr "اطلب من شركة الاستضافة إضافة هذه القاعدة إلى إعدادات Nginx للموقع:"
+
+msgid "Or keep new files outside the website folder: add %s to wp-config.php (a folder the web server does not publish; include it in your backups)."
+msgstr "أو احفظ الملفات الجديدة خارج مجلد الموقع: أضف %s إلى wp-config.php (مجلد لا ينشره خادم الويب، وأضفه إلى النسخ الاحتياطية)."
+
+msgid "Check again"
+msgstr "إعادة الفحص"
+
+msgid "Private files checked: they cannot be opened by a direct link."
+msgstr "تم فحص الملفات الخاصة: لا يمكن فتحها برابط مباشر."
+
+msgid "Private files could not be checked: the site did not answer. Try again later."
+msgstr "تعذّر فحص الملفات الخاصة: الموقع لم يستجب. حاول لاحقًا."

@@ -1,4 +1,4 @@
-import json,re,time,urllib.request,urllib.parse,http.cookiejar,hashlib,sys
+import json,random,re,time,urllib.request,urllib.parse,http.cookiejar,hashlib,sys
 S=sys.argv[1]; ids=json.load(open(S+'/ids.json')); B='http://127.0.0.1:8080'
 cj=http.cookiejar.CookieJar()
 class NoRedir(urllib.request.HTTPRedirectHandler):
@@ -41,9 +41,13 @@ tpl=[0.01*i for i in range(128)]
 st,b,_=req(api+'face/enroll',json.dumps({'template':tpl}).encode(),H); check('enroll first time',st==200,b)
 st,b,_=req(api+'face/enroll',json.dumps({'template':[0]*128}).encode(),H); check('re-enroll blocked (409)',st==409,b)
 st,b,_=req(api+'face/delete',json.dumps({'employee_id':ids['eid']}).encode(),H); check('employee cannot delete own face (403)',st==403,b)
-st,b,_=req(api+'face/verify',json.dumps({'template':[x+5 for x in tpl]}).encode(),H); check('non-matching face gets no token',st==200 and 'face_token' not in json.loads(b),b)
-def token():
-    st,b,_=req(api+'face/verify',json.dumps({'template':tpl}).encode(),H); return json.loads(b).get('face_token')
+def chal():  # a fresh single-use challenge before each verify (3.31.91)
+    st,b,_=req(api+'face/challenge',None,{'X-WP-Nonce':rest_nonce}); return json.loads(b).get('challenge','')
+st,b,_=req(api+'face/verify',json.dumps({'template':[x+5 for x in tpl],'challenge':chal()}).encode(),H); check('non-matching face gets no token',st==200 and 'face_token' not in json.loads(b),b)
+_n=[0]
+def token():  # a live capture: close to the enrolled face, never twice the same (3.31.91)
+    _n[0]+=1
+    st,b,_=req(api+'face/verify',json.dumps({'template':[x+random.uniform(-0.01,0.01) for x in tpl],'challenge':chal()}).encode(),H); return json.loads(b).get('face_token')
 t=token(); check('matching face gets token',bool(t))
 # 2. QR from far away (Alexandria)
 far={'latitude':'31.2001','longitude':'29.9187','accuracy':'20','location_timestamp':now_ms}

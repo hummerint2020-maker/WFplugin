@@ -7,7 +7,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_api_foundation.py <state
 Needs tests/e2e_setup.php users (emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import json, os, re, subprocess, sys, time, urllib.request
+import json, os, random, re, subprocess, sys, time, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import B, S, WP, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -47,7 +47,7 @@ def rest(path, payload, method='POST'):
 # ---------------------------------------------------------------- routes
 st, index, _ = rest('', None, 'GET')
 routes = sorted((index or {}).get('routes', {}).keys()) if isinstance(index, dict) else []
-check('the v1 namespace lists the four Face routes, the native auth routes (3.31.47) the corrections routes (3.31.74) and the daily workers routes (3.31.76), nothing else', routes == sorted(['/workforce-one/v1', '/workforce-one/v1/face/delete', '/workforce-one/v1/face/enroll', '/workforce-one/v1/face/reset-request', '/workforce-one/v1/face/verify',
+check('the v1 namespace lists the Face routes (challenge: 3.31.91), the native auth routes (3.31.47) the corrections routes (3.31.74) and the daily workers routes (3.31.76), nothing else', routes == sorted(['/workforce-one/v1', '/workforce-one/v1/face/challenge', '/workforce-one/v1/face/delete', '/workforce-one/v1/face/enroll', '/workforce-one/v1/face/reset-request', '/workforce-one/v1/face/verify',
       '/workforce-one/v1/meta', '/workforce-one/v1/auth/login', '/workforce-one/v1/auth/refresh', '/workforce-one/v1/auth/logout', '/workforce-one/v1/me', '/workforce-one/v1/me/devices', '/workforce-one/v1/me/devices/(?P<id>[a-f0-9]{32})',
       '/workforce-one/v1/corrections', '/workforce-one/v1/corrections/days', '/workforce-one/v1/corrections/pending', '/workforce-one/v1/corrections/(?P<id>\\d+)/decision',
       '/workforce-one/v1/daily-workers/sites', '/workforce-one/v1/daily-workers/sites/(?P<id>\\d+)/day', '/workforce-one/v1/daily-workers/sites/(?P<id>\\d+)/workers', '/workforce-one/v1/daily-workers/sites/(?P<id>\\d+)/payout']), routes)
@@ -62,23 +62,59 @@ check('...and still need a signed-in user', anon_status == 401, anon_status)
 # ---------------------------------------------------------------- Face: no oracle, limited attempts
 tpl = [0.01 * i for i in range(128)]
 far = [0.01 * i + 0.2 for i in range(128)]
+_n = [0]
+
+
+def live():
+    """The enrolled face as a camera sees it: close to the template, never twice the same (3.31.91)."""
+    _n[0] += 1
+    return [v + random.uniform(-0.01, 0.01) for v in tpl]
+
+
+def verify(template, challenge=True):
+    """POST face/verify with a fresh single-use challenge, as the Sign In page does (3.31.91)."""
+    c = rest('face/challenge', None, 'GET')[1] if challenge else {}
+    return rest('face/verify', {'template': template, 'challenge': (c or {}).get('challenge', '')})
+
+
 st, body, _ = rest('face/enroll', {'template': tpl})
 check('enrolment works as before', st == 200 and body == {'ok': True}, (st, body))
-st, body, _ = rest('face/verify', {'template': tpl})
+st, body, _ = verify(live())
 check('a match returns ok and a token, nothing else', st == 200 and set(body) == {'ok', 'face_token'} and body['ok'] is True and len(body['face_token']) == 40, body)
-st, body, _ = rest('face/verify', {'template': far})
+st, body, _ = verify(far)
 check('a mismatch returns only ok:false (no distance, no threshold)', st == 200 and body == {'ok': False}, body)
-st, body, _ = rest('face/verify', {'template': [0.1, 0.2]})
+st, body, _ = verify([0.1, 0.2])
 check('a descriptor of the wrong size is still refused (400)', st == 400 and body.get('code') == 'invalid_template', (st, body))
 for _ in range(3):
-    rest('face/verify', {'template': far})
-st, body, h = rest('face/verify', {'template': tpl})
+    verify(far)
+st, body, h = verify(live())
 check('after 5 failures even the right face is refused: 429 with Retry-After', st == 429 and body.get('code') == 'rate_limited' and 0 < int(h.get('Retry-After', 0)) <= 600 and 'distance' not in json.dumps(body), (st, body, h.get('Retry-After')))
 locked = q("SELECT details FROM {p}ews_audit_log WHERE action='face_verify_locked'")
 check('...and the lock-out is in the Audit Log once', len(locked) == 1 and '5 failed Face verifications' in locked[0]['details'], locked)
 php("update_user_meta(%d,'ews_face_verify_failures',['since'=>time()-601,'failures'=>5]);" % I['uid'])
-st, body, _ = rest('face/verify', {'template': tpl})
+st, body, _ = verify(live())
 check('after 10 minutes verification works again, and a success clears the count', st == 200 and body.get('ok') is True and php("echo wp_json_encode(get_user_meta(%d,'ews_face_verify_failures',true));" % I['uid']) == '""', (st, body))
+
+# ---------------------------------------------------------------- Face: no replay (3.31.91)
+st, body, _ = verify(live(), challenge=False)
+check('a verify without a challenge from the server is refused (400)', st == 400 and body.get('code') == 'face_challenge', (st, body))
+c = rest('face/challenge', None, 'GET')[1]['challenge']
+first = rest('face/verify', {'template': live(), 'challenge': c})
+again = rest('face/verify', {'template': live(), 'challenge': c})
+check('a challenge is used once: the same request sent again is refused', first[0] == 200 and first[1].get('ok') is True and again[0] == 400 and again[1].get('code') == 'face_challenge', (first[:2], again[:2]))
+seen = live()
+st1, b1, _ = verify(seen)
+st2, b2, _ = verify(list(seen))
+check('the same descriptor sent a second time is refused like a mismatch (no hint)', b1.get('ok') is True and st2 == 200 and b2 == {'ok': False}, (b1, b2))
+check('...and written to the Audit Log', len(q("SELECT id FROM {p}ews_audit_log WHERE action='face_replay'")) == 1)
+st, body, _ = verify([v + 0.0005 for v in seen])
+check('...a nearly identical copy too', body == {'ok': False}, body)
+st, body, _ = verify(tpl)
+check('the enrolled template itself is not a live face: refused', body == {'ok': False}, body)
+st, body, _ = verify(live())
+check('a new live capture still works', body.get('ok') is True, body)
+check('the descriptors kept against replays are encrypted', 'e-' not in php("echo get_user_meta(%d,'ews_face_recent',true);" % I['uid'])[:20] and '[' not in php("echo get_user_meta(%d,'ews_face_recent',true);" % I['uid']))
+php("delete_user_meta(%d,'ews_face_verify_failures');" % I['uid'])
 js = open(os.path.join(HERE, '..', 'workforce-one', 'assets', 'js', 'workforce-one.js'), encoding='utf-8').read()
 check('the Sign In page script no longer reads or shows a distance', 'vj.distance' not in js and 'match distance' not in js)
 

@@ -383,16 +383,9 @@ trait EWS_Daily_Workers_Trait {
 
     /* ------------------------------------------------------------------ files (photos) */
 
+    /** Private folder of the photos (trait-private-files.php). */
     private function dw_file_dir(){
-        $up=wp_upload_dir();$dir=trailingslashit($up['basedir']).'workforce-one-daily-workers';
-        if(!is_dir($dir)){
-            wp_mkdir_p($dir);
-            // Not reachable by URL: every photo goes through ews_dw_file (access checked).
-            @file_put_contents($dir.'/.htaccess',"Require all denied\nDeny from all\n"); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-            @file_put_contents($dir.'/index.php',"<?php\n// Silence is golden.\n"); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-            @file_put_contents($dir.'/web.config','<?xml version="1.0"?><configuration><system.webServer><authorization><deny users="*" /></authorization></system.webServer></configuration>'); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-        }
-        return $dir;
+        return $this->private_files_dir('workforce-one-daily-workers');
     }
 
     /** @param mixed $f an entry of $_FILES @return array{0:?string,1:string} [key, error: '' | photo | photo_file | photo_size] */
@@ -433,16 +426,16 @@ trait EWS_Daily_Workers_Trait {
 
     /** The small copy shown on the pages (made the first time it is asked for). */
     private function dw_thumb_path($key){
-        $full=$this->dw_file_dir().'/'.$key;
-        $thumb=$this->dw_file_dir().'/'.preg_replace('/\.([a-z]{3,4})$/','_t.$1',$key);
+        $full=$this->private_files_path('workforce-one-daily-workers',$key);
+        $thumb=dirname($full).'/'.preg_replace('/\.([a-z]{3,4})$/','_t.$1',$key);
         if(is_file($thumb))return $thumb;
         return $this->dw_shrink($full,360,$thumb)?$thumb:$full;
     }
 
     private function dw_delete_file($key){
         if($key && preg_match('/^[A-Za-z0-9]{32}\.[a-z]{3,4}$/',(string)$key)){
-            @unlink($this->dw_file_dir().'/'.$key); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-            @unlink($this->dw_file_dir().'/'.preg_replace('/\.([a-z]{3,4})$/','_t.$1',(string)$key)); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+            $this->private_files_delete('workforce-one-daily-workers',(string)$key);
+            $this->private_files_delete('workforce-one-daily-workers',(string)preg_replace('/\.([a-z]{3,4})$/','_t.$1',(string)$key));
         }
     }
 
@@ -463,7 +456,7 @@ trait EWS_Daily_Workers_Trait {
         elseif($kind==='worker'){$r=$this->dw_worker($id);if($r){$key=(string)$r->photo_key;$ok=$this->dw_is_manager()||($this->dw_is_foreman()&&in_array($this->dw_worker_site($id,current_time('Y-m-d')),$this->dw_my_site_ids(),true));}}
         if(!$ok)wp_die(esc_html__('Access denied','workforce-one'),'',['response'=>403]);
         if(!preg_match('/^[A-Za-z0-9]{32}\.[a-z]{3,4}$/',$key))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
-        $path=$this->dw_file_dir().'/'.$key;
+        $path=$this->private_files_path('workforce-one-daily-workers',$key);
         if(!is_readable($path))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
         if(($_GET['size']??'')==='thumb')$path=$this->dw_thumb_path($key);
         $ext=strtolower((string)pathinfo($key,PATHINFO_EXTENSION));

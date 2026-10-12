@@ -76,11 +76,20 @@ trait EWS_Leave_Admin_Trait {
         if($error=AdminRecordRules::check($facts))$fail($error,max(0,$remaining));
 
         $now=current_time('mysql');
+        // Under the employee's leave lock, as an employee's own request (3.31.91).
+        [$error,$id]=$this->ews_with_lock('leave_emp_'.$employee_id,function()use($wpdb,$emp,$type,$start,$end,$days,$reason,$bal,$now,$remaining){return $this->leave_admin_record_locked($wpdb,$emp,$type,$start,$end,$days,$reason,$bal,$now,$remaining);},['Another leave of this employee is being saved. Try again in a moment.',0]);
+        if($error)$this->leave_admin_redirect(['leave_record_error'=>rawurlencode($error)]);
+        $this->audit('admin_leave_record','leave_request',$id,$emp->name.' / '.$type->name.' / '.$start.' to '.$end.' / '.$days.' working day(s) / direct Admin approval');
+        $this->leave_admin_redirect(['leave_recorded'=>1]);
+    }
+
+    /** @return array{0:string,1:int} [error message ('' = saved), request id] */
+    private function leave_admin_record_locked($wpdb,$emp,$type,$start,$end,$days,$reason,$bal,$now,$remaining){
         $error='';$id=0;
         if($wpdb->query('START TRANSACTION')===false)$error='Could not start the database transaction.';
         if(!$error){
             $id=$this->leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal);
-            if(!$id)$error='Could not create the leave record.';
+            if(!is_int($id)){$error=$id==='overlap'||$id==='balance'?AdminRecordRules::message($id,max(0,$remaining)):'Could not create the leave record.';$id=0;}
         }
         if(!$error){
             // Direct Admin recording is an immediate approval through the normal final-approval path.
@@ -88,9 +97,8 @@ trait EWS_Leave_Admin_Trait {
             if(is_wp_error($final))$error=$final->get_error_message();
         }
         if(!$error && $wpdb->query('COMMIT')===false)$error='Could not commit the leave record.';
-        if($error){$wpdb->query('ROLLBACK');$this->leave_admin_redirect(['leave_record_error'=>rawurlencode($error)]);}
-        $this->audit('admin_leave_record','leave_request',$id,$emp->name.' / '.$type->name.' / '.$start.' to '.$end.' / '.$days.' working day(s) / direct Admin approval');
-        $this->leave_admin_redirect(['leave_recorded'=>1]);
+        if($error)$wpdb->query('ROLLBACK');
+        return [$error,(int)$id];
     }
 
     public function admin_leave_type_save(){

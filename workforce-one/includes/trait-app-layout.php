@@ -193,5 +193,9 @@ trait EWS_App_Layout_Trait {
 
     public function after_logout(){
         // WordPress ends the session; the app page shows the login screen on the next request.
+        // The browser drops what it cached from this site (3.31.91): pages and photos seen before
+        // are not kept for the next person on a shared phone or computer. Only the HTTP cache: the
+        // installed app, its sign-in screen and push notifications stay.
+        if(!headers_sent())header('Clear-Site-Data: "cache"');
     }
 }

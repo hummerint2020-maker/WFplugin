@@ -146,6 +146,7 @@ final class Options
         'ews_payroll_max_deduction_days' => ['group' => 'payroll', 'label' => 'Deductions limited to', 'kind' => 'number', 'default' => PayRules::DEFAULTS['max_deduction_days'], 'unit' => 'days\' pay', 'zero' => 'No limit', 'page' => 'ews31-payroll&tab=rules'],
 
         // System (written by the plugin itself)
+        'ews_private_files_check' => ['group' => 'system', 'label' => 'Private files: last direct-link check', 'kind' => 'data', 'default' => [], 'internal' => true],
         'ews_schema_version' => ['group' => 'system', 'label' => 'Database version', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_office_minimum_reminded' => ['group' => 'system', 'label' => 'Office minimum: last weekly reminder', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_corrections_reminded' => ['group' => 'system', 'label' => 'Attendance corrections: last end-of-day reminder', 'kind' => 'text', 'default' => '', 'internal' => true],

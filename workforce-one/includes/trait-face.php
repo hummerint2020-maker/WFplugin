@@ -33,6 +33,21 @@ private function face_signin_enabled(){ return (bool)$this->option('ews_feature_
         return $cipher===false?false:base64_encode($iv.$cipher);
     }
 
+    /** Any JSON kept with the face data (recent descriptors, 3.31.91), encrypted with the same key. */
+    private function face_encrypt_json($json){
+        if(!function_exists('openssl_encrypt'))return '';
+        try{$iv=random_bytes(16);}catch(Throwable $e){return '';}
+        $cipher=openssl_encrypt((string)$json,'AES-256-CBC',$this->face_biometric_key(),OPENSSL_RAW_DATA,$iv);
+        return $cipher===false?'':base64_encode($iv.$cipher);
+    }
+
+    private function face_decrypt_json($payload){
+        $raw=is_string($payload)?base64_decode($payload,true):false;
+        if($raw===false || strlen($raw)<17 || !function_exists('openssl_decrypt'))return '';
+        $json=openssl_decrypt(substr($raw,16),'AES-256-CBC',$this->face_biometric_key(),OPENSSL_RAW_DATA,substr($raw,0,16));
+        return $json===false?'':$json;
+    }
+
     private function face_decrypt_template($payload){
         if(!$payload || !function_exists('openssl_decrypt')) return false;
         $raw=base64_decode($payload,true);
@@ -108,6 +123,9 @@ private function face_signin_enabled(){ return (bool)$this->option('ews_feature_
         global $wpdb;
         $employee_id=absint($employee_id);
         if(!$employee_id) return false;
+        // The recent descriptors kept against replays go with the face (3.31.91).
+        $uid=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d",$employee_id));
+        if($uid)delete_user_meta($uid,'ews_face_recent');
         return $wpdb->delete(
             $wpdb->prefix.'ews_face_profiles',
             array('employee_id'=>$employee_id),

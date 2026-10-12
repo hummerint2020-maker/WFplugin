@@ -209,6 +209,10 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_payroll.py "$S"
       - name: Money safety (payroll close, archived pay, report scope, correction carry)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_money_safety.py "$S"
+      - name: Requests sent at the same moment (leave, overtime)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_request_races.py "$S"
+      - name: Private files (direct-link check, WFO_PRIVATE_DIR, no-store, logout)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_private_files.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }

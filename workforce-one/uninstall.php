@@ -19,9 +19,13 @@ function ews_uninstall_site() {
 
     if ((int) get_option('ews_delete_data_on_uninstall', 0) !== 1) return;
 
-    // Private folders: files attached to task comments (3.31.70), correction request photos (3.31.74).
-    foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers'] as $folder) {
-        $task_dir = trailingslashit(wp_upload_dir()['basedir']) . $folder;
+    // Private folders: files attached to task comments (3.31.70), correction request photos (3.31.74),
+    // daily workers' photos (3.31.76); in uploads and, when set, in WFO_PRIVATE_DIR (3.31.91).
+    $private_bases = [trailingslashit(wp_upload_dir()['basedir'])];
+    $custom = (string) apply_filters('wfo_private_dir', defined('WFO_PRIVATE_DIR') ? (string) WFO_PRIVATE_DIR : '');
+    if ($custom !== '') $private_bases[] = trailingslashit($custom);
+    foreach ($private_bases as $private_base) foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers'] as $folder) {
+        $task_dir = $private_base . $folder;
         if (is_dir($task_dir) && !is_link($task_dir)) {
             foreach ((array) scandir($task_dir) as $name) if ($name !== '.' && $name !== '..' && is_file($task_dir . '/' . $name)) @unlink($task_dir . '/' . $name);
             @rmdir($task_dir);

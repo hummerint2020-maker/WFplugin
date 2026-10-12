@@ -82,7 +82,7 @@ notifications, employee screens.
   notify after commit.
 - [ ] Leave decision from the Requests Hub: the final apply runs outside a transaction
   (`trait-leave.php` ~line 455; same in `overtime_admin_decide`).
-- [ ] Worker photo cached for a day after it is replaced (`src/Support/Download.php` ~line 45): add the
+- [x] Worker photo cached for a day after it is replaced (`src/Support/Download.php` ~line 45): add the
   file key to the URL or a shorter cache.
 - [ ] Payout PDF accepts an invalid `start` (`dw_payout_pdf` ~line 1003): validate the date.
 - [ ] A correction rolled back leaves its photo on disk (`trait-corrections.php` ~line 276).
@@ -97,7 +97,7 @@ notifications, employee screens.
 
 ## Clean-up (no behaviour change)
 
-- [ ] One private-upload helper for corrections and daily workers (`dw_file_dir` / `cx_file_dir`).
+- [x] One private-upload helper for corrections and daily workers (`dw_file_dir` / `cx_file_dir`).
 - [ ] One date check (`CorrectionRules::isDate`) instead of three in daily workers.
 - [ ] Office minimum: "could come in" depends on the status icon (`om_could_come`); use a real flag.
 - [ ] Small duplicates: `$initials` in the admin template, `approval_start` requester lookup.
@@ -110,19 +110,20 @@ Owner decisions: archived employees are paid up to a **last working day** asked 
 **photo at Face Sign In** (feature, off by default); after **Log out** the phone keeps receiving that
 person's push (only an account switch on the same phone moves it).
 
-Done in 3.31.90: 3, 4, 5, 7, 8, 9, 15, 16 (and the three matching items above).
+Done in 3.31.90: 3, 4, 5, 7, 8, 9, 15, 16 (and the three matching items above). Done in 3.31.91: 1 (challenge +
+replay check; the photo at Face Sign In is a mockup waiting for approval), 2, 6, 14, 17.
 
 Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** security (1, 2, 6,
 14, 17) · **3.31.92** correctness / operations (10, 11, 12, 13) with the rest of the list above.
 
-- [ ] 1 Face template replay (no server challenge) → reject repeated / near-identical templates, a
+- [x] 1 Face template replay (no server challenge) → reject repeated / near-identical templates, a
   server challenge, optional photo at Sign In.
-- [ ] 2 Sensitive files under public uploads (Nginx ignores .htaccess) → store outside the web root
+- [x] 2 Sensitive files under public uploads (Nginx ignores .htaccess) → store outside the web root
   where possible, self-test a direct URL, admin warning.
 - [x] 3 Payroll close leaves a closed month with missing payslips (no transaction).
 - [x] 4 Sign In / Out Report ignores the manager's department (view, save, reset day, CSV).
 - [x] 5 Archived employee dropped from an unclosed earlier month (`active=1`) → last working day.
-- [ ] 6 Concurrent leave requests can exceed the balance / overlap (no lock, unconditional pending).
+- [x] 6 Concurrent leave requests can exceed the balance / overlap (no lock, unconditional pending).
 - [x] 7 Daily workers payout recorded as successful while lines / day links failed.
 - [x] 8 The same worker advance deducted twice by two concurrent payouts.
 - [x] 9 Account switch on the same browser keeps push bound to the previous account (3.31.87 marker).
@@ -130,7 +131,7 @@ Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** 
 - [ ] 11 Schema upgrade marked done when a table / column failed.
 - [ ] 12 Manual Sign Out after midnight refused for overnight shifts (also in the list above).
 - [ ] 13 Overtime after an overnight shift is placed on the wrong day.
-- [ ] 14 Concurrent overtime requests pass the overlap check; minutes counted twice.
+- [x] 14 Concurrent overtime requests pass the overlap check; minutes counted twice.
 - [x] 15 Correction payroll carry-over: a failed adjustment insert is reported as done.
 - [x] 16 Approving a day change races a payout; can change a paid day.
-- [ ] 17 Sensitive photos stay in the browser cache after logout / losing access.
+- [x] 17 Sensitive photos stay in the browser cache after logout / losing access.

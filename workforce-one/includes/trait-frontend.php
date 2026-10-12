@@ -14,15 +14,59 @@ trait EWS_Frontend_Trait {
         if($this->face_template_for_employee($emp->id))return new WP_Error('already_enrolled',__('A face is already enrolled. Request a reset to enroll again.','workforce-one'),array('status'=>409));
         return $this->face_save_template($emp->id,$tpl)?array('ok'=>true):new WP_Error('save_failed',__('Could not save face template','workforce-one'),array('status'=>500));
     }
+    /**
+     * A single-use code the next verify must carry (3.31.91): a verify request recorded once cannot be
+     * sent again later. Valid 2 minutes; asked for by the page right before each verification.
+     */
+    public function face_rest_challenge($request){
+        $uid=get_current_user_id(); if(!$uid)return new WP_Error('no_user','',array('status'=>401));
+        $code=wp_generate_password(32,false,false);
+        set_transient('ews_face_challenge_'.$uid,hash('sha256',$code),120);
+        $r=new WP_REST_Response(array('challenge'=>$code));$r->header('Cache-Control','no-store');
+        return $r;
+    }
+
+    /** Uses up the challenge (whatever the outcome). */
+    private function face_consume_challenge($code){
+        $uid=get_current_user_id();$stored=get_transient('ews_face_challenge_'.$uid);
+        delete_transient('ews_face_challenge_'.$uid);
+        return is_string($code) && $code!=='' && is_string($stored) && hash_equals($stored,hash('sha256',$code));
+    }
+
+    /** Descriptors accepted in the last 30 days (at most 10), encrypted like the enrolled one. @return array<int,array{at:int,d:array<int,float>}> */
+    private function face_recent($uid){
+        $raw=get_user_meta($uid,'ews_face_recent',true);
+        $list=is_string($raw)&&$raw!==''?json_decode((string)$this->face_decrypt_json($raw),true):[];
+        $list=is_array($list)?$list:[];
+        return array_values(array_filter($list,function($x){return is_array($x)&&isset($x['at'],$x['d'])&&(int)$x['at']>time()-30*DAY_IN_SECONDS;}));
+    }
+
+    private function face_remember($uid,array $tpl){
+        $list=$this->face_recent($uid);
+        $list[]=['at'=>time(),'d'=>array_map('floatval',array_values($tpl))];
+        update_user_meta($uid,'ews_face_recent',$this->face_encrypt_json((string)wp_json_encode(array_slice($list,-10))));
+    }
+
     public function face_rest_verify($request){
         $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
         $p=$request->get_json_params(); $tpl=isset($p['template'])&&is_array($p['template'])?$p['template']:array();
+        // A fresh code from /face/challenge (3.31.91): a recorded request cannot be replayed.
+        if(!$this->face_consume_challenge($p['challenge']??''))return new WP_Error('face_challenge',__('The face check expired. Please try again.','workforce-one'),array('status'=>400));
         $stored=$this->face_template_for_employee($emp->id); if(!$stored)return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));
         // Only the decision is returned (no distance or threshold: that was a similarity oracle), and
         // failed attempts are limited per user (src/Attendance/FaceMatch.php: 5 in 10 minutes).
         $uid=get_current_user_id();$state=get_user_meta($uid,'ews_face_verify_failures',true);$state=is_array($state)?$state:null;
         if(FaceMatch::lockedOut($state,time()))return $this->face_rate_limited(FaceMatch::retryAfter($state,time()));
         $ok=FaceMatch::matches($tpl,$stored,(float)$this->face_signin_setting('face_match_threshold',.60));
+        // The same descriptor again (the enrolled one, or one accepted before) is not a live capture: refused
+        // as a failed attempt, answered like a mismatch (no hint), written to the Audit Log (3.31.91).
+        if($ok===true){
+            $seen=array_merge([$stored],array_map(function($x){return $x['d'];},$this->face_recent($uid)));
+            if(FaceMatch::isReplay($tpl,$seen)){
+                $ok=false;
+                $this->audit('face_replay','employee',(int)$emp->id,$emp->name.' / a face descriptor already used was sent again (refused)');
+            }
+        }
         if($ok!==true){
             $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,'ews_face_verify_failures',$state);
             if($state['failures']===FaceMatch::MAX_FAILURES)$this->audit('face_verify_locked','employee',(int)$emp->id,$emp->name.' / '.FaceMatch::MAX_FAILURES.' failed Face verifications in '.(FaceMatch::WINDOW_SECONDS/60).' minutes');
@@ -30,6 +74,7 @@ trait EWS_Frontend_Trait {
             return array('ok'=>false);
         }
         delete_user_meta($uid,'ews_face_verify_failures');
+        $this->face_remember($uid,$tpl);
         return array('ok'=>true,'face_token'=>$this->face_issue_token());
     }
 
@@ -143,7 +188,7 @@ trait EWS_Frontend_Trait {
             if(isset($_GET['break_error']))return $this->ux_modal(__('Break Action Not Completed','workforce-one'),rawurldecode(sanitize_text_field(wp_unslash($_GET['break_error']))),'error');
             if(isset($_GET['break_success']))return $this->ux_modal(__('Break Updated','workforce-one'),rawurldecode(sanitize_text_field(wp_unslash($_GET['break_success']))),'success');
             if(isset($_GET['overtime_error'])){
-                $m=['disabled'=>__('Overtime Requests are currently disabled.','workforce-one'),'access'=>__('You do not have permission to perform this action.','workforce-one'),'invalid'=>__('Please review the overtime request and try again.','workforce-one'),'not_found'=>__('The overtime request could not be found.','workforce-one'),'save'=>__('The overtime request could not be updated. Please try again.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'date'=>__('Please select a valid future date.','workforce-one'),'time'=>__('Please enter a valid overtime time range.','workforce-one'),'reason'=>__('Please enter a reason for the overtime request.','workforce-one'),'overlap'=>__('The requested overtime overlaps another overtime request.','workforce-one')];
+                $m=['disabled'=>__('Overtime Requests are currently disabled.','workforce-one'),'access'=>__('You do not have permission to perform this action.','workforce-one'),'invalid'=>__('Please review the overtime request and try again.','workforce-one'),'not_found'=>__('The overtime request could not be found.','workforce-one'),'save'=>__('The overtime request could not be updated. Please try again.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'date'=>__('Please select a valid future date.','workforce-one'),'time'=>__('Please enter a valid overtime time range.','workforce-one'),'reason'=>__('Please enter a reason for the overtime request.','workforce-one'),'overlap'=>__('The requested overtime overlaps another overtime request.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one')];
                 return $this->ux_modal(__('Overtime Action Not Completed','workforce-one'),$m[sanitize_key($_GET['overtime_error'])]??__('Please review the overtime request and try again.','workforce-one'),'error');
             }
             if(isset($_GET['overtime_sent']))return $this->ux_modal(__('Overtime Request Submitted','workforce-one'),__('Your overtime request has been submitted.','workforce-one'),'success');
@@ -164,7 +209,7 @@ trait EWS_Frontend_Trait {
                 return $this->ux_modal(__('Shift Swap Updated','workforce-one'),$m[sanitize_key($_GET['swap_done'])]??__('The shift swap has been updated.','workforce-one'),'success');
             }
             if(isset($_GET['leave_error'])){
-                $m=['date'=>__('Please select a valid future date range.','workforce-one'),'no_working_days'=>__('The selected range contains no working days.','workforce-one'),'overlap'=>__('You already have a pending or approved leave overlapping this period.','workforce-one'),'balance'=>__('Insufficient available balance for this Leave Type.','workforce-one'),'cross_year'=>__('A leave cannot span two calendar years. Please submit one request for each year.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one')];
+                $m=['date'=>__('Please select a valid future date range.','workforce-one'),'no_working_days'=>__('The selected range contains no working days.','workforce-one'),'overlap'=>__('You already have a pending or approved leave overlapping this period.','workforce-one'),'balance'=>__('Insufficient available balance for this Leave Type.','workforce-one'),'cross_year'=>__('A leave cannot span two calendar years. Please submit one request for each year.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'save'=>__('We could not save the leave request. Please try again.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one')];
                 return $this->ux_modal(__('Leave Request Not Submitted','workforce-one'),$m[sanitize_key($_GET['leave_error'])]??__('Please review the leave details and try again.','workforce-one'),'error');
             }
             if(isset($_GET['early_error'])){

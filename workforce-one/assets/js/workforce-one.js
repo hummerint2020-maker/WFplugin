@@ -280,7 +280,10 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                 try{
                   await calibratedLiveness();
                   var r=await detect();
-                  var vr=await fetch(apiBase+'face/verify',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:Array.from(r.descriptor)})});
+                  // A single-use code from the server, asked for right before each check (3.31.91).
+                  var cr=await fetch(apiBase+'face/challenge',{method:'GET',credentials:'same-origin',cache:'no-store',headers:{'X-WP-Nonce':wpNonce}});
+                  var cj=await cr.json();if(!cr.ok||!cj.challenge)throw new Error(cj.message||'Face verification failed.');
+                  var vr=await fetch(apiBase+'face/verify',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:Array.from(r.descriptor),challenge:cj.challenge})});
                   var vj=await vr.json();if(!vr.ok)throw new Error(vj.message||'Face verification failed.');
                   if(vj.ok){
                     setStatus(__('✓ Face verified.','workforce-one'));

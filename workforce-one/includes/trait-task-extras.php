@@ -135,16 +135,9 @@ trait EWS_Task_Extras_Trait {
 
     /* ------------------------------------------------------------------ comments and files */
 
+    /** Private folder of the comment files (trait-private-files.php). */
     private function task_file_dir(){
-        $up=wp_upload_dir();$dir=trailingslashit($up['basedir']).'workforce-one-tasks';
-        if(!is_dir($dir)){
-            wp_mkdir_p($dir);
-            // Not reachable by URL: every download goes through ews_task_file (access checked).
-            @file_put_contents($dir.'/.htaccess',"Require all denied\nDeny from all\n"); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-            @file_put_contents($dir.'/index.php',"<?php\n// Silence is golden.\n"); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-            @file_put_contents($dir.'/web.config','<?xml version="1.0"?><configuration><system.webServer><authorization><deny users="*" /></authorization></system.webServer></configuration>'); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-        }
-        return $dir;
+        return $this->private_files_dir('workforce-one-tasks');
     }
 
     /** MIME types for the allowed file types. @return array<string,string> ext => mime */
@@ -191,7 +184,7 @@ trait EWS_Task_Extras_Trait {
         global $wpdb;$c=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_task_comments WHERE id=%d",$cid));
         if(!$c || !$c->file_key || !$this->task_can_view($this->task_get((int)$c->task_id)))wp_die(esc_html__('Access denied','workforce-one'),'',['response'=>403]);
         if(!preg_match('/^[A-Za-z0-9]{32}\.[a-z]{2,5}$/',(string)$c->file_key))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
-        $path=$this->task_file_dir().'/'.$c->file_key;
+        $path=$this->private_files_path('workforce-one-tasks',(string)$c->file_key);
         if(!is_readable($path))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
         $ext=strtolower((string)pathinfo((string)$c->file_key,PATHINFO_EXTENSION));
         $all=['pdf'=>'application/pdf','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];

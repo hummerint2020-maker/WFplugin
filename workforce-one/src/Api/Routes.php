@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
  * (/wp-json/workforce-one/v1/...). Routes are only ever added within v1; a breaking change gets /v2/.
  *
  * Two kinds of route:
- * - 'web': the four Face routes the Web Sign In page uses (moved here unchanged in 3.31.46: same
+ * - 'web': the Face routes the Web Sign In page uses (moved here unchanged in 3.31.46: same
  *   paths, handlers, response shape and WordPress cookie + X-WP-Nonce authentication).
  * - 'native': the API for the apps (3.31.47). Responses use the Api\Response envelope, and access is
  *   one of: 'public' (GET /meta), 'credentials' (login and refresh: HTTPS, no session), 'token'
@@ -25,6 +25,7 @@ final class Routes
     {
         return [
             ['path' => '/face/enroll', 'methods' => 'POST', 'handler' => 'face_rest_enroll', 'access' => 'logged_in', 'kind' => 'web'],
+            ['path' => '/face/challenge', 'methods' => 'GET', 'handler' => 'face_rest_challenge', 'access' => 'logged_in', 'kind' => 'web'],   // 3.31.91: single-use, asked for before each verify
             ['path' => '/face/verify', 'methods' => 'POST', 'handler' => 'face_rest_verify', 'access' => 'logged_in', 'kind' => 'web'],
             ['path' => '/face/reset-request', 'methods' => 'POST', 'handler' => 'face_rest_reset_request', 'access' => 'logged_in', 'kind' => 'web'],
             ['path' => '/face/delete', 'methods' => 'POST', 'handler' => 'face_rest_delete', 'access' => 'logged_in', 'kind' => 'web'],

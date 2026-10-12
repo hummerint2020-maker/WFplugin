@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.89\n"
+"Project-Id-Version: Workforce One 3.31.90\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-11T23:11:40+00:00\n"
+"POT-Creation-Date: 2026-10-12T01:05:56+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -43,7 +43,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:26
 #: includes/trait-app-layout.php:71
 #: includes/trait-app-layout.php:81
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:210
 #: templates/app/attendance-insights.php:61
 #: templates/app/attendance.php:163
@@ -317,7 +317,7 @@ msgid "You do not have access to this."
 msgstr ""
 
 #: includes/trait-api-auth.php:91
-#: includes/trait-corrections.php:517
+#: includes/trait-corrections.php:510
 #: templates/app/tasks.php:197
 msgid "Something went wrong. Please try again."
 msgstr ""
@@ -438,28 +438,29 @@ msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is t
 msgstr ""
 
 #: includes/trait-attendance-insights.php:150
-#: includes/trait-corrections.php:173
-#: includes/trait-daily-workers.php:464
-#: includes/trait-daily-workers.php:863
-#: includes/trait-daily-workers.php:1027
-#: includes/trait-daily-workers.php:1336
-#: includes/trait-daily-workers.php:1407
-#: includes/trait-daily-workers.php:1495
-#: includes/trait-daily-workers.php:1509
-#: includes/trait-daily-workers.php:1524
-#: includes/trait-daily-workers.php:1590
+#: includes/trait-corrections.php:166
+#: includes/trait-daily-workers.php:457
+#: includes/trait-daily-workers.php:856
+#: includes/trait-daily-workers.php:1020
+#: includes/trait-daily-workers.php:1329
+#: includes/trait-daily-workers.php:1400
+#: includes/trait-daily-workers.php:1488
+#: includes/trait-daily-workers.php:1502
+#: includes/trait-daily-workers.php:1517
+#: includes/trait-daily-workers.php:1583
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
 #: includes/trait-presence.php:98
+#: includes/trait-private-files.php:128
 #: includes/trait-task-extras.php:103
 #: includes/trait-task-extras.php:118
 #: includes/trait-task-extras.php:130
-#: includes/trait-task-extras.php:161
-#: includes/trait-task-extras.php:192
-#: includes/trait-task-extras.php:220
-#: includes/trait-task-extras.php:372
-#: includes/trait-task-extras.php:380
+#: includes/trait-task-extras.php:154
+#: includes/trait-task-extras.php:185
+#: includes/trait-task-extras.php:213
+#: includes/trait-task-extras.php:365
+#: includes/trait-task-extras.php:373
 #: includes/trait-tasks.php:150
 msgid "Access denied"
 msgstr ""
@@ -569,79 +570,79 @@ msgstr ""
 msgid "Unable to record this action."
 msgstr ""
 
-#: includes/trait-corrections.php:174
-#: includes/trait-corrections.php:176
-#: includes/trait-daily-workers.php:465
-#: includes/trait-daily-workers.php:467
-#: includes/trait-task-extras.php:193
-#: includes/trait-task-extras.php:195
+#: includes/trait-corrections.php:167
+#: includes/trait-corrections.php:169
+#: includes/trait-daily-workers.php:458
+#: includes/trait-daily-workers.php:460
+#: includes/trait-task-extras.php:186
+#: includes/trait-task-extras.php:188
 msgid "File not found."
 msgstr ""
 
-#: includes/trait-corrections.php:309
+#: includes/trait-corrections.php:302
 msgid "Attendance correction to review"
 msgstr ""
 
 #. translators: 1: employee, 2: day, 3: the change
-#: includes/trait-corrections.php:311
+#: includes/trait-corrections.php:304
 #, php-format
 msgid "%1$s asks to correct %2$s: %3$s."
 msgstr ""
 
-#: includes/trait-corrections.php:369
+#: includes/trait-corrections.php:362
 #: templates/app/correction-days.php:38
 msgid "Correction rejected"
 msgstr ""
 
 #. translators: 1: day, 2: the manager's note
-#: includes/trait-corrections.php:371
+#: includes/trait-corrections.php:364
 #, php-format
 msgid "Your correction for %1$s was rejected: %2$s"
 msgstr ""
 
-#: includes/trait-corrections.php:403
-#: includes/trait-corrections.php:558
+#: includes/trait-corrections.php:396
+#: includes/trait-corrections.php:551
 msgid "Correction approved"
 msgstr ""
 
 #. translators: 1: day, 2: the change
-#: includes/trait-corrections.php:405
+#: includes/trait-corrections.php:398
 #, php-format
 msgid "Your correction for %1$s was approved: %2$s."
 msgstr ""
 
-#: includes/trait-corrections.php:463
+#: includes/trait-corrections.php:456
 msgid "Forgot Sign Out"
 msgstr ""
 
-#: includes/trait-corrections.php:463
+#: includes/trait-corrections.php:456
 msgid "Forgot Sign In"
 msgstr ""
 
-#: includes/trait-corrections.php:463
+#: includes/trait-corrections.php:456
 msgid "Wrong time"
 msgstr ""
 
-#: includes/trait-corrections.php:463
+#: includes/trait-corrections.php:456
 msgid "Whole day missing"
 msgstr ""
 
-#: includes/trait-corrections.php:468
+#: includes/trait-corrections.php:461
 #: templates/admin/corrections.php:64
 msgid "Waiting"
 msgstr ""
 
-#: includes/trait-corrections.php:468
+#: includes/trait-corrections.php:461
 #: templates/admin/corrections.php:64
 msgid "Waiting for HR"
 msgstr ""
 
 #. translators: %d: number of requests
-#: includes/trait-corrections.php:468
-#: includes/trait-corrections.php:564
-#: includes/trait-corrections.php:566
-#: includes/trait-corrections.php:567
-#: includes/trait-frontend.php:472
+#: includes/trait-corrections.php:461
+#: includes/trait-corrections.php:557
+#: includes/trait-corrections.php:559
+#: includes/trait-corrections.php:560
+#: includes/trait-frontend.php:517
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -650,9 +651,9 @@ msgid "Approved"
 msgstr ""
 
 #. translators: %d: number of requests
-#: includes/trait-corrections.php:468
-#: includes/trait-corrections.php:565
-#: includes/trait-frontend.php:472
+#: includes/trait-corrections.php:461
+#: includes/trait-corrections.php:558
+#: includes/trait-frontend.php:517
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -662,166 +663,166 @@ msgstr ""
 msgid "Rejected"
 msgstr ""
 
-#: includes/trait-corrections.php:488
-#: includes/trait-corrections.php:699
+#: includes/trait-corrections.php:481
+#: includes/trait-corrections.php:692
 #: templates/admin/corrections.php:55
 msgid "Attendance corrections are switched off."
 msgstr ""
 
-#: includes/trait-corrections.php:489
+#: includes/trait-corrections.php:482
 msgid "Your account is not linked to an employee."
 msgstr ""
 
-#: includes/trait-corrections.php:490
+#: includes/trait-corrections.php:483
 msgid "This kind of correction is not available."
 msgstr ""
 
-#: includes/trait-corrections.php:491
+#: includes/trait-corrections.php:484
 msgid "Choose a valid day."
 msgstr ""
 
-#: includes/trait-corrections.php:492
+#: includes/trait-corrections.php:485
 msgid "You cannot correct a day that has not come yet."
 msgstr ""
 
 #. translators: %d: number of days
-#: includes/trait-corrections.php:494
+#: includes/trait-corrections.php:487
 #, php-format
 msgid "This day is more than %d day ago, so it cannot be corrected from the app. Ask HR to correct it."
 msgid_plural "This day is more than %d days ago, so it cannot be corrected from the app. Ask HR to correct it."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-corrections.php:495
+#: includes/trait-corrections.php:488
 msgid "You already asked to correct this day. Wait for the decision."
 msgstr ""
 
-#: includes/trait-corrections.php:496
+#: includes/trait-corrections.php:489
 msgid "Write what happened."
 msgstr ""
 
-#: includes/trait-corrections.php:497
+#: includes/trait-corrections.php:490
 msgid "Attach a photo for this kind of correction."
 msgstr ""
 
-#: includes/trait-corrections.php:498
+#: includes/trait-corrections.php:491
 msgid "The photo could not be saved. Use a JPG, PNG or WebP image."
 msgstr ""
 
-#: includes/trait-corrections.php:499
+#: includes/trait-corrections.php:492
 msgid "The photo is larger than 8 MB."
 msgstr ""
 
-#: includes/trait-corrections.php:500
+#: includes/trait-corrections.php:493
 msgid "Enter the correct time."
 msgstr ""
 
-#: includes/trait-corrections.php:501
+#: includes/trait-corrections.php:494
 msgid "That time has not come yet today."
 msgstr ""
 
-#: includes/trait-corrections.php:502
+#: includes/trait-corrections.php:495
 msgid "A Sign In is already recorded for this day: choose \"Wrong time\" to change it."
 msgstr ""
 
-#: includes/trait-corrections.php:503
+#: includes/trait-corrections.php:496
 msgid "There is no Sign In on this day: choose \"Forgot Sign In\" or \"Whole day missing\"."
 msgstr ""
 
-#: includes/trait-corrections.php:504
+#: includes/trait-corrections.php:497
 msgid "A Sign Out is already recorded for this day: choose \"Wrong time\" to change it."
 msgstr ""
 
-#: includes/trait-corrections.php:505
+#: includes/trait-corrections.php:498
 msgid "This day already has a Sign In or Sign Out: choose another kind of correction."
 msgstr ""
 
-#: includes/trait-corrections.php:506
+#: includes/trait-corrections.php:499
 msgid "That time is not recorded on this day."
 msgstr ""
 
-#: includes/trait-corrections.php:507
+#: includes/trait-corrections.php:500
 msgid "Sign Out must be after Sign In."
 msgstr ""
 
-#: includes/trait-corrections.php:508
+#: includes/trait-corrections.php:501
 msgid "That is the time already recorded."
 msgstr ""
 
-#: includes/trait-corrections.php:509
+#: includes/trait-corrections.php:502
 #: templates/app/correction-sheet.php:56
 msgid "You have used all your corrections for this month."
 msgstr ""
 
-#: includes/trait-corrections.php:510
+#: includes/trait-corrections.php:503
 msgid "Write why you reject it: the employee will see it."
 msgstr ""
 
-#: includes/trait-corrections.php:511
+#: includes/trait-corrections.php:504
 msgid "You cannot decide your own request."
 msgstr ""
 
-#: includes/trait-corrections.php:512
+#: includes/trait-corrections.php:505
 msgid "You cannot decide this request."
 msgstr ""
 
-#: includes/trait-corrections.php:513
+#: includes/trait-corrections.php:506
 msgid "This request was already decided."
 msgstr ""
 
-#: includes/trait-corrections.php:514
+#: includes/trait-corrections.php:507
 msgid "The day changed since this request was made, so it cannot be applied. Reject it, or ask HR to correct the day."
 msgstr ""
 
-#: includes/trait-corrections.php:515
-#: includes/trait-frontend.php:158
+#: includes/trait-corrections.php:508
+#: includes/trait-frontend.php:203
 msgid "The approval could not be recorded. Please try again."
 msgstr ""
 
-#: includes/trait-corrections.php:553
-#: includes/trait-daily-workers.php:545
+#: includes/trait-corrections.php:546
+#: includes/trait-daily-workers.php:538
 msgid "Not saved"
 msgstr ""
 
-#: includes/trait-corrections.php:558
+#: includes/trait-corrections.php:551
 msgid "No approval was needed: your day is corrected."
 msgstr ""
 
-#: includes/trait-corrections.php:559
-#: includes/trait-corrections.php:560
+#: includes/trait-corrections.php:552
+#: includes/trait-corrections.php:553
 msgid "Request sent"
 msgstr ""
 
-#: includes/trait-corrections.php:559
+#: includes/trait-corrections.php:552
 msgid "Your request went to HR for approval. You will get a notification when it is decided."
 msgstr ""
 
-#: includes/trait-corrections.php:560
+#: includes/trait-corrections.php:553
 msgid "Your manager will review it. You will get a notification when it is decided."
 msgstr ""
 
-#: includes/trait-corrections.php:564
+#: includes/trait-corrections.php:557
 msgid "The day is corrected. The original record is kept, and the correction is in the Audit Log under your name."
 msgstr ""
 
-#: includes/trait-corrections.php:565
+#: includes/trait-corrections.php:558
 msgid "The employee will see your note."
 msgstr ""
 
-#: includes/trait-corrections.php:566
+#: includes/trait-corrections.php:559
 msgid "The request moved to the next approval level."
 msgstr ""
 
-#: includes/trait-corrections.php:567
+#: includes/trait-corrections.php:560
 msgid "The request now goes to HR for the second approval."
 msgstr ""
 
-#: includes/trait-corrections.php:752
+#: includes/trait-corrections.php:745
 msgid "You did not sign out today"
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-corrections.php:754
+#: includes/trait-corrections.php:747
 #, php-format
 msgid "You signed in at %s. If you have left, request a correction with the time you left."
 msgstr ""
@@ -930,348 +931,348 @@ msgstr ""
 msgid "Other ID"
 msgstr ""
 
-#: includes/trait-daily-workers.php:478
+#: includes/trait-daily-workers.php:471
 #: templates/app/dw-worker.php:32
 msgid "Daily workers are switched off."
 msgstr ""
 
-#: includes/trait-daily-workers.php:479
+#: includes/trait-daily-workers.php:472
 msgid "You do not have access to this site."
 msgstr ""
 
-#: includes/trait-daily-workers.php:480
+#: includes/trait-daily-workers.php:473
 msgid "This site has no map position. Ask the site manager to set it in Work Locations."
 msgstr ""
 
-#: includes/trait-daily-workers.php:481
+#: includes/trait-daily-workers.php:474
 #: templates/app/dw-day.php:66
 #: templates/app/dw-worker.php:55
 msgid "Your position could not be read. Turn on location (GPS) and try again."
 msgstr ""
 
-#: includes/trait-daily-workers.php:482
+#: includes/trait-daily-workers.php:475
 msgid "Your position does not look real (it moved too fast). Try again from the site."
 msgstr ""
 
-#: includes/trait-daily-workers.php:483
+#: includes/trait-daily-workers.php:476
 msgid "You are outside the site. The day sheet is saved from inside the site only."
 msgstr ""
 
-#: includes/trait-daily-workers.php:484
+#: includes/trait-daily-workers.php:477
 msgid "Take the group photo first. A photo is needed to confirm the day, from the camera, not the gallery."
 msgstr ""
 
-#: includes/trait-daily-workers.php:485
+#: includes/trait-daily-workers.php:478
 msgid "The photo could not be read. Take it again (JPG, PNG or WebP)."
 msgstr ""
 
-#: includes/trait-daily-workers.php:486
+#: includes/trait-daily-workers.php:479
 msgid "The photo is larger than 10 MB."
 msgstr ""
 
-#: includes/trait-daily-workers.php:487
+#: includes/trait-daily-workers.php:480
 msgid "This day is already saved and locked. Ask for a change instead."
 msgstr ""
 
-#: includes/trait-daily-workers.php:488
+#: includes/trait-daily-workers.php:481
 #: templates/app/dw-day.php:114
 msgid "This period is paid and locked."
 msgstr ""
 
-#: includes/trait-daily-workers.php:489
+#: includes/trait-daily-workers.php:482
 #: templates/app/dw-day.php:118
 msgid "At this site the workers sign in themselves; the foreman does not record the day."
 msgstr ""
 
-#: includes/trait-daily-workers.php:490
+#: includes/trait-daily-workers.php:483
 #: templates/app/dw-worker.php:58
 msgid "At this site the foreman records the day; workers do not sign in themselves."
 msgstr ""
 
-#: includes/trait-daily-workers.php:491
+#: includes/trait-daily-workers.php:484
 msgid "Choose present, half day or absent for every worker."
 msgstr ""
 
-#: includes/trait-daily-workers.php:492
+#: includes/trait-daily-workers.php:485
 msgid "Extra hours are between 0 and 12, in half hours."
 msgstr ""
 
-#: includes/trait-daily-workers.php:493
+#: includes/trait-daily-workers.php:486
 #: templates/app/dw-day.php:77
 msgid "There are no workers at this site today."
 msgstr ""
 
-#: includes/trait-daily-workers.php:494
+#: includes/trait-daily-workers.php:487
 msgid "A worker in the list was already recorded at another site today."
 msgstr ""
 
-#: includes/trait-daily-workers.php:495
+#: includes/trait-daily-workers.php:488
 msgid "Enter the worker's name."
 msgstr ""
 
-#: includes/trait-daily-workers.php:496
+#: includes/trait-daily-workers.php:489
 msgid "Enter a daily rate above zero."
 msgstr ""
 
-#: includes/trait-daily-workers.php:497
+#: includes/trait-daily-workers.php:490
 msgid "The hourly rate cannot be negative."
 msgstr ""
 
-#: includes/trait-daily-workers.php:498
+#: includes/trait-daily-workers.php:491
 msgid "The mobile number is not valid (8 to 15 digits)."
 msgstr ""
 
-#: includes/trait-daily-workers.php:499
+#: includes/trait-daily-workers.php:492
 msgid "Another active worker has this mobile number."
 msgstr ""
 
-#: includes/trait-daily-workers.php:500
+#: includes/trait-daily-workers.php:493
 msgid "The national ID is not valid: it must contain digits only."
 msgstr ""
 
-#: includes/trait-daily-workers.php:501
+#: includes/trait-daily-workers.php:494
 msgid "The national ID is not valid: it must be 14 digits."
 msgstr ""
 
-#: includes/trait-daily-workers.php:502
+#: includes/trait-daily-workers.php:495
 msgid "The national ID is not valid: the first digit must be 2 or 3."
 msgstr ""
 
-#: includes/trait-daily-workers.php:503
+#: includes/trait-daily-workers.php:496
 msgid "The national ID is not valid: the birth date in it is not a real date."
 msgstr ""
 
-#: includes/trait-daily-workers.php:504
+#: includes/trait-daily-workers.php:497
 msgid "The national ID is not valid: the governorate code is unknown."
 msgstr ""
 
-#: includes/trait-daily-workers.php:505
+#: includes/trait-daily-workers.php:498
 msgid "Enter the ID number (4 to 30 letters or digits)."
 msgstr ""
 
-#: includes/trait-daily-workers.php:506
+#: includes/trait-daily-workers.php:499
 msgid "A worker with this national ID is already registered."
 msgstr ""
 
-#: includes/trait-daily-workers.php:507
+#: includes/trait-daily-workers.php:500
 msgid "This national ID belongs to a worker marked \"Do not rehire\"."
 msgstr ""
 
-#: includes/trait-daily-workers.php:508
+#: includes/trait-daily-workers.php:501
 msgid "The PIN must be 4 to 6 digits."
 msgstr ""
 
-#: includes/trait-daily-workers.php:509
+#: includes/trait-daily-workers.php:502
 msgid "Choose a trade from the list."
 msgstr ""
 
-#: includes/trait-daily-workers.php:510
+#: includes/trait-daily-workers.php:503
 msgid "Choose today or a later day."
 msgstr ""
 
-#: includes/trait-daily-workers.php:511
+#: includes/trait-daily-workers.php:504
 msgid "Choose today or an earlier day."
 msgstr ""
 
-#: includes/trait-daily-workers.php:512
+#: includes/trait-daily-workers.php:505
 msgid "The worker is already at that site."
 msgstr ""
 
-#: includes/trait-daily-workers.php:513
+#: includes/trait-daily-workers.php:506
 msgid "Enter an amount above zero."
 msgstr ""
 
-#: includes/trait-daily-workers.php:514
-#: includes/trait-daily-workers.php:1049
+#: includes/trait-daily-workers.php:507
+#: includes/trait-daily-workers.php:1042
 #: templates/app/dw-payout.php:45
 msgid "There is nothing to pay in this period."
 msgstr ""
 
-#: includes/trait-daily-workers.php:515
+#: includes/trait-daily-workers.php:508
 msgid "This period is not over yet. Pay it on its last day or later: paying locks the period, so the days still to come could not be recorded."
 msgstr ""
 
-#: includes/trait-daily-workers.php:516
+#: includes/trait-daily-workers.php:509
 msgid "Save today's day sheet first: paying locks the period, today included."
 msgstr ""
 
-#: includes/trait-daily-workers.php:517
+#: includes/trait-daily-workers.php:510
 msgid "Another payout or change is being saved. Try again in a moment."
 msgstr ""
 
-#: includes/trait-daily-workers.php:518
+#: includes/trait-daily-workers.php:511
 msgid "Write the reason for the change."
 msgstr ""
 
-#: includes/trait-daily-workers.php:519
+#: includes/trait-daily-workers.php:512
 msgid "Nothing was changed."
 msgstr ""
 
-#: includes/trait-daily-workers.php:520
+#: includes/trait-daily-workers.php:513
 msgid "A change for this day is already waiting."
 msgstr ""
 
-#: includes/trait-daily-workers.php:521
+#: includes/trait-daily-workers.php:514
 msgid "Write why you reject the change."
 msgstr ""
 
-#: includes/trait-daily-workers.php:522
+#: includes/trait-daily-workers.php:515
 msgid "This change was already decided."
 msgstr ""
 
-#: includes/trait-daily-workers.php:523
+#: includes/trait-daily-workers.php:516
 msgid "This worker has paid days, so the record stays for the accounts. Mark the worker \"Do not rehire\" instead."
 msgstr ""
 
-#: includes/trait-daily-workers.php:524
-#: includes/trait-daily-workers.php:1357
+#: includes/trait-daily-workers.php:517
+#: includes/trait-daily-workers.php:1350
 msgid "Worker not found."
 msgstr ""
 
-#: includes/trait-daily-workers.php:525
+#: includes/trait-daily-workers.php:518
 msgid "The mobile number or PIN is incorrect."
 msgstr ""
 
-#: includes/trait-daily-workers.php:526
+#: includes/trait-daily-workers.php:519
 msgid "Too many attempts. Try again in 15 minutes."
 msgstr ""
 
-#: includes/trait-daily-workers.php:527
+#: includes/trait-daily-workers.php:520
 #: templates/app/dw-worker.php:46
 msgid "You are not assigned to a site today. Ask your foreman."
 msgstr ""
 
-#: includes/trait-daily-workers.php:528
+#: includes/trait-daily-workers.php:521
 msgid "Your day is already recorded."
 msgstr ""
 
-#: includes/trait-daily-workers.php:529
-#: includes/trait-daily-workers.php:531
+#: includes/trait-daily-workers.php:522
+#: includes/trait-daily-workers.php:524
 msgid "Could not save. Please try again."
 msgstr ""
 
 #. translators: 1: workers, 2: site, 3: present, 4: half day, 5: absent, 6: amount
-#: includes/trait-daily-workers.php:553
+#: includes/trait-daily-workers.php:546
 #, php-format
 msgid "%1$d workers at %2$s: %3$d present, %4$d half day, %5$d absent. Cost of the day %6$s."
 msgstr ""
 
-#: includes/trait-daily-workers.php:554
+#: includes/trait-daily-workers.php:547
 msgid "Day sheet saved"
 msgstr ""
 
-#: includes/trait-daily-workers.php:556
+#: includes/trait-daily-workers.php:549
 msgid "Worker added"
 msgstr ""
 
-#: includes/trait-daily-workers.php:556
+#: includes/trait-daily-workers.php:549
 msgid "No email or account needed. The worker is in today's list for this site."
 msgstr ""
 
-#: includes/trait-daily-workers.php:557
+#: includes/trait-daily-workers.php:550
 msgid "Worker moved"
 msgstr ""
 
-#: includes/trait-daily-workers.php:557
+#: includes/trait-daily-workers.php:550
 msgid "Days at the old site stay in the worker's history and in that project's cost."
 msgstr ""
 
-#: includes/trait-daily-workers.php:558
+#: includes/trait-daily-workers.php:551
 msgid "Advance recorded"
 msgstr ""
 
-#: includes/trait-daily-workers.php:558
+#: includes/trait-daily-workers.php:551
 #: templates/app/dw-payout.php:88
 msgid "It comes off the worker's next payout."
 msgstr ""
 
-#: includes/trait-daily-workers.php:559
+#: includes/trait-daily-workers.php:552
 msgid "Payout recorded"
 msgstr ""
 
-#: includes/trait-daily-workers.php:559
+#: includes/trait-daily-workers.php:552
 #: templates/app/dw-payout.php:64
 msgid "The period is paid and locked. A new advance comes off the next payout."
 msgstr ""
 
-#: includes/trait-daily-workers.php:560
+#: includes/trait-daily-workers.php:553
 msgid "Change requested"
 msgstr ""
 
-#: includes/trait-daily-workers.php:560
+#: includes/trait-daily-workers.php:553
 msgid "The day stays as saved until a manager approves the change."
 msgstr ""
 
-#: includes/trait-daily-workers.php:808
+#: includes/trait-daily-workers.php:801
 msgid "Day sheet change to review"
 msgstr ""
 
 #. translators: 1: worker, 2: date
-#: includes/trait-daily-workers.php:810
+#: includes/trait-daily-workers.php:803
 #, php-format
 msgid "A foreman asks to change %1$s's day on %2$s."
 msgstr ""
 
-#: includes/trait-daily-workers.php:857
+#: includes/trait-daily-workers.php:850
 msgid "Day sheet change approved"
 msgstr ""
 
-#: includes/trait-daily-workers.php:857
+#: includes/trait-daily-workers.php:850
 msgid "Day sheet change rejected"
 msgstr ""
 
-#: includes/trait-daily-workers.php:858
+#: includes/trait-daily-workers.php:851
 msgid "The day is changed. The original values are kept with the request."
 msgstr ""
 
 #. translators: 1: first day, 2: last day
-#: includes/trait-daily-workers.php:1015
+#: includes/trait-daily-workers.php:1008
 #, php-format
 msgid "%1$s – %2$s"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1040
+#: includes/trait-daily-workers.php:1033
 msgid "Daily wages sheet"
 msgstr ""
 
 #. translators: %s: company name
-#: includes/trait-daily-workers.php:1042
+#: includes/trait-daily-workers.php:1035
 #, php-format
 msgid "%s · amounts in Egyptian pounds"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1043
-#: includes/trait-daily-workers.php:1615
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1036
+#: includes/trait-daily-workers.php:1608
+#: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:121
 #: templates/admin/daily-workers.php:125
 #: templates/admin/daily-workers.php:230
 msgid "Site"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1043
+#: includes/trait-daily-workers.php:1036
 #: templates/admin/daily-workers.php:121
 #: templates/admin/daily-workers.php:125
 msgid "Period"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1043
-#: includes/trait-daily-workers.php:1048
+#: includes/trait-daily-workers.php:1036
+#: includes/trait-daily-workers.php:1041
 #: templates/admin/daily-workers.php:261
 msgid "Foreman"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1044
+#: includes/trait-daily-workers.php:1037
 msgid "Sheet no."
 msgstr ""
 
 #. translators: %d: number of workers
-#: includes/trait-daily-workers.php:1044
+#: includes/trait-daily-workers.php:1037
 #: templates/app/dw-payout.php:41
 msgid "Not paid yet"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
+#: includes/trait-daily-workers.php:1038
 #: templates/admin/daily-workers.php:136
 #: templates/app/dw-day.php:136
 #: templates/app/employees.php:22
@@ -1280,10 +1281,10 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
-#: includes/trait-daily-workers.php:1616
-#: includes/trait-daily-workers.php:1618
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1038
+#: includes/trait-daily-workers.php:1609
+#: includes/trait-daily-workers.php:1611
+#: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:83
 #: templates/admin/daily-workers.php:102
 #: templates/admin/daily-workers.php:138
@@ -1292,12 +1293,12 @@ msgstr ""
 msgid "Trade"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
-#: includes/trait-daily-workers.php:1615
-#: includes/trait-daily-workers.php:1616
-#: includes/trait-daily-workers.php:1617
-#: includes/trait-daily-workers.php:1618
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1038
+#: includes/trait-daily-workers.php:1608
+#: includes/trait-daily-workers.php:1609
+#: includes/trait-daily-workers.php:1610
+#: includes/trait-daily-workers.php:1611
+#: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:60
 #: templates/admin/daily-workers.php:121
 #: templates/admin/daily-workers.php:125
@@ -1305,21 +1306,21 @@ msgstr ""
 msgid "Days"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
+#: includes/trait-daily-workers.php:1038
 msgid "Rate"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1038
+#: includes/trait-daily-workers.php:1614
 msgid "Extra h"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
-#: includes/trait-daily-workers.php:1615
-#: includes/trait-daily-workers.php:1616
-#: includes/trait-daily-workers.php:1617
-#: includes/trait-daily-workers.php:1618
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1038
+#: includes/trait-daily-workers.php:1608
+#: includes/trait-daily-workers.php:1609
+#: includes/trait-daily-workers.php:1610
+#: includes/trait-daily-workers.php:1611
+#: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:121
 #: templates/admin/daily-workers.php:125
 #: templates/admin/daily-workers.php:187
@@ -1327,97 +1328,97 @@ msgstr ""
 msgid "Amount"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
-#: includes/trait-daily-workers.php:1618
+#: includes/trait-daily-workers.php:1038
+#: includes/trait-daily-workers.php:1611
 #: templates/admin/daily-workers.php:125
 #: templates/admin/daily-workers.php:187
 #: templates/app/dw-payout.php:67
 msgid "Advance"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
-#: includes/trait-daily-workers.php:1618
+#: includes/trait-daily-workers.php:1038
+#: includes/trait-daily-workers.php:1611
 #: templates/admin/daily-workers.php:125
 #: templates/admin/daily-workers.php:187
 msgid "Net"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1045
+#: includes/trait-daily-workers.php:1038
 msgid "Signature / thumbprint"
 msgstr ""
 
 #. translators: %d: number of requests
-#: includes/trait-daily-workers.php:1046
+#: includes/trait-daily-workers.php:1039
 #: templates/admin/corrections.php:118
 #: templates/app/office-minimum.php:48
 msgid "Total"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1047
+#: includes/trait-daily-workers.php:1040
 msgid "By signing next to my name I confirm I received the net amount shown for my work at this site in this period. Deducted advances were paid before."
 msgstr ""
 
-#: includes/trait-daily-workers.php:1048
+#: includes/trait-daily-workers.php:1041
 msgid "Cashier"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1048
+#: includes/trait-daily-workers.php:1041
 msgid "Site manager"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1486
+#: includes/trait-daily-workers.php:1479
 msgid "Set directly in wp-admin → Days"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1615
+#: includes/trait-daily-workers.php:1608
 msgid "By site"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1615
+#: includes/trait-daily-workers.php:1608
 #: templates/admin/daily-workers.php:255
 msgid "Project"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1615
-#: includes/trait-daily-workers.php:1616
-#: includes/trait-daily-workers.php:1617
+#: includes/trait-daily-workers.php:1608
+#: includes/trait-daily-workers.php:1609
+#: includes/trait-daily-workers.php:1610
 #: templates/admin/daily-workers.php:60
 msgid "Workers"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1616
-#: includes/trait-daily-workers.php:1644
-#: includes/trait-daily-workers.php:1652
+#: includes/trait-daily-workers.php:1609
+#: includes/trait-daily-workers.php:1637
+#: includes/trait-daily-workers.php:1645
 #: templates/admin/daily-workers.php:178
 msgid "By trade"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1617
-#: includes/trait-daily-workers.php:1644
-#: includes/trait-daily-workers.php:1653
+#: includes/trait-daily-workers.php:1610
+#: includes/trait-daily-workers.php:1637
+#: includes/trait-daily-workers.php:1646
 #: templates/admin/daily-workers.php:169
 msgid "By subcontractor"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1617
+#: includes/trait-daily-workers.php:1610
 #: templates/admin/daily-workers.php:83
 #: templates/admin/daily-workers.php:109
 #: templates/admin/daily-workers.php:145
 msgid "Subcontractor"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1617
-#: includes/trait-daily-workers.php:1653
+#: includes/trait-daily-workers.php:1610
+#: includes/trait-daily-workers.php:1646
 #: templates/admin/daily-workers.php:172
 msgid "None (direct)"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1618
+#: includes/trait-daily-workers.php:1611
 msgid "Unpaid"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1618
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1611
+#: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:83
 #: templates/admin/daily-workers.php:187
 #: templates/admin/daily-workers.php:210
@@ -1426,7 +1427,7 @@ msgstr ""
 msgid "Worker"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1614
 #: templates/app/attendance.php:228
 #: templates/app/leave.php:144
 #: templates/app/my-profile.php:153
@@ -1434,30 +1435,30 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1621
+#: includes/trait-daily-workers.php:1614
 msgid "Paid"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1622
+#: includes/trait-daily-workers.php:1615
 msgid "Yes"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1622
+#: includes/trait-daily-workers.php:1615
 msgid "No"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1634
-#: includes/trait-daily-workers.php:1639
+#: includes/trait-daily-workers.php:1627
+#: includes/trait-daily-workers.php:1632
 msgid "Daily workers reports"
 msgstr ""
 
 #. translators: %s: project or site
-#: includes/trait-daily-workers.php:1641
+#: includes/trait-daily-workers.php:1634
 #: templates/admin/daily-workers.php:165
 msgid "Labour cost in the period"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1641
+#: includes/trait-daily-workers.php:1634
 #: templates/admin/daily-workers.php:120
 #: templates/admin/daily-workers.php:166
 msgid "Owed, not paid yet"
@@ -1465,13 +1466,13 @@ msgstr ""
 
 #. translators: %s: site
 #. translators: %s: project or site
-#: includes/trait-daily-workers.php:1642
+#: includes/trait-daily-workers.php:1635
 #: templates/admin/daily-workers.php:164
 #, php-format
 msgid "%s: labour so far"
 msgstr ""
 
-#: includes/trait-daily-workers.php:1644
+#: includes/trait-daily-workers.php:1637
 #: templates/admin/daily-workers.php:169
 msgid "By project / site"
 msgstr ""
@@ -1491,8 +1492,8 @@ msgid "Planned for today"
 msgstr ""
 
 #: includes/trait-frontend.php:10
-#: includes/trait-frontend.php:18
-#: includes/trait-frontend.php:43
+#: includes/trait-frontend.php:51
+#: includes/trait-frontend.php:88
 msgid "Employee account not found"
 msgstr ""
 
@@ -1508,35 +1509,39 @@ msgstr ""
 msgid "Could not save face template"
 msgstr ""
 
-#: includes/trait-frontend.php:20
+#: includes/trait-frontend.php:54
+msgid "The face check expired. Please try again."
+msgstr ""
+
+#: includes/trait-frontend.php:55
 msgid "No face enrolled for this employee"
 msgstr ""
 
-#: includes/trait-frontend.php:29
+#: includes/trait-frontend.php:73
 msgid "Template size mismatch"
 msgstr ""
 
-#: includes/trait-frontend.php:37
+#: includes/trait-frontend.php:82
 msgid "Too many Face verification attempts. Please wait a few minutes and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:44
+#: includes/trait-frontend.php:89
 msgid "No face is currently enrolled."
 msgstr ""
 
-#: includes/trait-frontend.php:47
+#: includes/trait-frontend.php:92
 msgid "Could not submit the face reset request."
 msgstr ""
 
-#: includes/trait-frontend.php:54
+#: includes/trait-frontend.php:99
 msgid "You cannot remove this face profile"
 msgstr ""
 
-#: includes/trait-frontend.php:108
+#: includes/trait-frontend.php:153
 msgid "Confirm"
 msgstr ""
 
-#: includes/trait-frontend.php:109
+#: includes/trait-frontend.php:154
 #: templates/app/attendance.php:249
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
@@ -1545,14 +1550,14 @@ msgid "Cancel"
 msgstr ""
 
 #. translators: 1: number of employees, 2: minimum
-#: includes/trait-frontend.php:113
+#: includes/trait-frontend.php:158
 #: templates/app/leave.php:44
 #: templates/app/office-minimum.php:51
 msgid "OK"
 msgstr ""
 
 #. translators: %s: day
-#: includes/trait-frontend.php:114
+#: includes/trait-frontend.php:159
 #: templates/app/attendance-insights.php:82
 #: templates/app/attendance.php:198
 #: templates/app/correction-sheet.php:28
@@ -1576,7 +1581,7 @@ msgid "Close"
 msgstr ""
 
 #. translators: %d: number of schedule changes
-#: includes/trait-frontend.php:121
+#: includes/trait-frontend.php:166
 #, php-format
 msgid "%d schedule change was not saved because another manager changed the same cell before you saved."
 msgid_plural "%d schedule changes were not saved because another manager changed the same cell before you saved."
@@ -1584,380 +1589,389 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of schedule changes
-#: includes/trait-frontend.php:123
+#: includes/trait-frontend.php:168
 #, php-format
 msgid "%d other change was saved successfully."
 msgid_plural "%d other changes were saved successfully."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-frontend.php:124
+#: includes/trait-frontend.php:169
 msgid "Please refresh the Attendance page and review the latest schedule."
 msgstr ""
 
-#: includes/trait-frontend.php:125
+#: includes/trait-frontend.php:170
 msgid "Schedule Conflict"
 msgstr ""
 
-#: includes/trait-frontend.php:131
+#: includes/trait-frontend.php:176
 msgid "Saved Successfully"
 msgstr ""
 
-#: includes/trait-frontend.php:131
+#: includes/trait-frontend.php:176
 msgid "Your changes have been saved."
 msgstr ""
 
-#: includes/trait-frontend.php:132
+#: includes/trait-frontend.php:177
 msgid "Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:132
+#: includes/trait-frontend.php:177
 msgid "Your leave request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:133
+#: includes/trait-frontend.php:178
 msgid "Request Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:133
+#: includes/trait-frontend.php:178
 msgid "The leave request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:134
+#: includes/trait-frontend.php:179
 msgid "Cancellation Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:134
+#: includes/trait-frontend.php:179
 msgid "Your cancellation request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:135
+#: includes/trait-frontend.php:180
 msgid "Attendance Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:135
+#: includes/trait-frontend.php:180
 msgid "Your attendance action was completed successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:136
+#: includes/trait-frontend.php:181
 msgid "Day Reset"
 msgstr ""
 
-#: includes/trait-frontend.php:136
+#: includes/trait-frontend.php:181
 msgid "The selected attendance day has been reset successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:137
+#: includes/trait-frontend.php:182
 msgid "Attendance Saved"
 msgstr ""
 
-#: includes/trait-frontend.php:137
+#: includes/trait-frontend.php:182
 msgid "The attendance schedule has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:138
+#: includes/trait-frontend.php:183
 msgid "Overtime Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:138
+#: includes/trait-frontend.php:183
 msgid "The overtime request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:184
 msgid "Overtime Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:139
+#: includes/trait-frontend.php:184
 msgid "The overtime request has been rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:142
+#: includes/trait-frontend.php:187
 msgid "Attendance Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:143
+#: includes/trait-frontend.php:188
 msgid "Break Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:144
+#: includes/trait-frontend.php:189
 msgid "Break Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 #: includes/trait-leave-view.php:107
 msgid "Overtime Requests are currently disabled."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: includes/trait-frontend.php:146
-#: includes/trait-frontend.php:147
+#: includes/trait-frontend.php:191
+#: includes/trait-frontend.php:192
 msgid "Please review the overtime request and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "The overtime request could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "The overtime request could not be updated. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:146
-#: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:167
+#: includes/trait-frontend.php:191
+#: includes/trait-frontend.php:196
+#: includes/trait-frontend.php:212
 #: includes/trait-presence.php:128
 #: includes/trait-presence.php:171
 #: includes/trait-presence.php:186
 msgid "Your account is not linked to an active employee."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "Please select a valid future date."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "Please enter a valid overtime time range."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "Please enter a reason for the overtime request."
 msgstr ""
 
-#: includes/trait-frontend.php:146
+#: includes/trait-frontend.php:191
 msgid "The requested overtime overlaps another overtime request."
 msgstr ""
 
-#: includes/trait-frontend.php:147
+#: includes/trait-frontend.php:191
+#: includes/trait-frontend.php:212
+msgid "Another request of yours is being saved. Try again in a moment."
+msgstr ""
+
+#: includes/trait-frontend.php:192
 msgid "Overtime Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:149
+#: includes/trait-frontend.php:194
 msgid "Overtime Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:149
+#: includes/trait-frontend.php:194
 msgid "Your overtime request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:167
+#: includes/trait-frontend.php:196
+#: includes/trait-frontend.php:212
 msgid "Please select a valid future date range."
 msgstr ""
 
-#: includes/trait-frontend.php:151
-#: includes/trait-frontend.php:167
+#: includes/trait-frontend.php:196
+#: includes/trait-frontend.php:212
 msgid "The selected range contains no working days."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:196
 msgid "You already have a pending or approved vacation overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:151
+#: includes/trait-frontend.php:196
 msgid "We could not save the vacation request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:152
+#: includes/trait-frontend.php:197
 msgid "Vacation Request Not Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:152
+#: includes/trait-frontend.php:197
 msgid "Please review the vacation details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:154
+#: includes/trait-frontend.php:199
 msgid "Vacation Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:154
+#: includes/trait-frontend.php:199
 msgid "Your vacation request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:155
+#: includes/trait-frontend.php:200
 msgid "Vacation Request Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:155
+#: includes/trait-frontend.php:200
 msgid "The vacation request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "Please select a valid employee and work date for the shift swap."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "The selected employee could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "These schedules cannot be swapped. Both employees must have different Office/WFH schedules on this day."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "A pending swap request already exists for this day."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "The shift swap could not be saved. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "The shift swap request could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "The schedule changed after the swap request was created, so it can no longer be accepted."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "The swap request has already been processed or expired."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "This day has already passed, so it can no longer be swapped."
 msgstr ""
 
-#: includes/trait-frontend.php:158
+#: includes/trait-frontend.php:203
 msgid "This swap is not waiting for your approval."
 msgstr ""
 
-#: includes/trait-frontend.php:159
+#: includes/trait-frontend.php:204
 msgid "Shift Swap Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:159
+#: includes/trait-frontend.php:204
 msgid "Please review the shift swap and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:161
+#: includes/trait-frontend.php:206
 msgid "Shift Swap Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:161
+#: includes/trait-frontend.php:206
 msgid "Your shift swap request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:163
+#: includes/trait-frontend.php:208
 msgid "The shift swap was accepted and both schedules were updated."
 msgstr ""
 
-#: includes/trait-frontend.php:163
+#: includes/trait-frontend.php:208
 msgid "The shift swap request was rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:163
+#: includes/trait-frontend.php:208
 msgid "The shift swap request was cancelled."
 msgstr ""
 
-#: includes/trait-frontend.php:163
+#: includes/trait-frontend.php:208
 msgid "You accepted the swap. It is applied once it is approved."
 msgstr ""
 
-#: includes/trait-frontend.php:163
+#: includes/trait-frontend.php:208
 msgid "The swap was approved and both schedules were updated."
 msgstr ""
 
-#: includes/trait-frontend.php:163
+#: includes/trait-frontend.php:208
 msgid "Approved. The swap now waits for the next approver."
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:209
 msgid "Shift Swap Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:164
+#: includes/trait-frontend.php:209
 msgid "The shift swap has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:167
+#: includes/trait-frontend.php:212
 msgid "You already have a pending or approved leave overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:167
+#: includes/trait-frontend.php:212
 msgid "Insufficient available balance for this Leave Type."
 msgstr ""
 
-#: includes/trait-frontend.php:167
+#: includes/trait-frontend.php:212
 msgid "A leave cannot span two calendar years. Please submit one request for each year."
 msgstr ""
 
-#: includes/trait-frontend.php:168
+#: includes/trait-frontend.php:212
+msgid "We could not save the leave request. Please try again."
+msgstr ""
+
+#: includes/trait-frontend.php:213
 msgid "Leave Request Not Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:168
+#: includes/trait-frontend.php:213
 msgid "Please review the leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 msgid "Please select a future date for Early Leave."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 #: templates/app/leave.php:47
 msgid "Early Leave is available only on a configured working day."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 msgid "Early Leave is available only on an Office workday. It cannot be requested on Work From Home or Leave/Vacation days."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 #: templates/app/leave.php:48
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 #: templates/app/leave.php:49
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 msgid "We could not submit the Early Leave request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:171
+#: includes/trait-frontend.php:216
 msgid "This request can no longer be approved because the employee is no longer scheduled for an eligible Office workday."
 msgstr ""
 
-#: includes/trait-frontend.php:172
+#: includes/trait-frontend.php:217
 #: templates/app/leave.php:44
 msgid "Early Leave Not Available"
 msgstr ""
 
-#: includes/trait-frontend.php:172
+#: includes/trait-frontend.php:217
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:350
+#: includes/trait-frontend.php:395
 msgid "Task overdue"
 msgstr ""
 
-#: includes/trait-frontend.php:350
+#: includes/trait-frontend.php:395
 msgid "Due today"
 msgstr ""
 
 #. translators: 1: task title, 2: due date
-#: includes/trait-frontend.php:353
+#: includes/trait-frontend.php:398
 #, php-format
 msgid "%1$s was due on %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:353
+#: includes/trait-frontend.php:398
 #, php-format
 msgid "%s is due today."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:354
+#: includes/trait-frontend.php:399
 msgid "Open Task"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:517
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:118
 #: templates/app/leave.php:132
@@ -1966,47 +1980,47 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:517
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:51
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:517
 #: templates/app/schedule.php:51
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:517
 #: includes/trait-tasks.php:246
 #: templates/app/tasks.php:41
 #: templates/app/tasks.php:104
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:517
 #: templates/app/presence.php:20
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:472
+#: includes/trait-frontend.php:517
 #: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:478
+#: includes/trait-frontend.php:523
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:478
+#: includes/trait-frontend.php:523
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:485
+#: includes/trait-frontend.php:530
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:485
+#: includes/trait-frontend.php:530
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -2306,6 +2320,40 @@ msgstr ""
 msgid "Last cleanup run:"
 msgstr ""
 
+#: includes/trait-private-files.php:143
+msgid "Private files could not be checked: the site did not answer. Try again later."
+msgstr ""
+
+#: includes/trait-private-files.php:147
+msgid "Private files checked: they cannot be opened by a direct link."
+msgstr ""
+
+#: includes/trait-private-files.php:153
+msgid "Private files can be opened by a direct link on this server."
+msgstr ""
+
+#: includes/trait-private-files.php:154
+msgid "Correction photos, task files and daily workers' photos are protected by .htaccess, which this server ignores (Nginx, for example). Anyone with a file's link could open it."
+msgstr ""
+
+#: includes/trait-private-files.php:155
+msgid "Fix it in one of two ways, then press \"Check again\":"
+msgstr ""
+
+#: includes/trait-private-files.php:156
+msgid "Ask your host to add this rule to the site's Nginx configuration:"
+msgstr ""
+
+#. translators: %s: the line to add
+#: includes/trait-private-files.php:158
+#, php-format
+msgid "Or keep new files outside the website folder: add %s to wp-config.php (a folder the web server does not publish; include it in your backups)."
+msgstr ""
+
+#: includes/trait-private-files.php:159
+msgid "Check again"
+msgstr ""
+
 #: includes/trait-schedule-view.php:76
 msgid "Please sign in."
 msgstr ""
@@ -2383,51 +2431,51 @@ msgstr ""
 msgid "Tasks are currently disabled by your administrator."
 msgstr ""
 
-#: includes/trait-task-extras.php:182
+#: includes/trait-task-extras.php:175
 msgid "New comment on a task"
 msgstr ""
 
 #. translators: 1: person, 2: task title
-#: includes/trait-task-extras.php:182
+#: includes/trait-task-extras.php:175
 #, php-format
 msgid "%1$s commented on %2$s."
 msgstr ""
 
-#: includes/trait-task-extras.php:211
+#: includes/trait-task-extras.php:204
 msgid "Task taken"
 msgstr ""
 
 #. translators: 1: person, 2: task title
-#: includes/trait-task-extras.php:211
+#: includes/trait-task-extras.php:204
 #, php-format
 msgid "%1$s took %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-task-extras.php:265
+#: includes/trait-task-extras.php:258
 #, php-format
 msgid "A task for your team is waiting to be taken: %s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-task-extras.php:266
+#: includes/trait-task-extras.php:259
 #, php-format
 msgid "You have been assigned the task: %s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-task-extras.php:267
+#: includes/trait-task-extras.php:260
 #: templates/app/tasks.php:152
 #: templates/app/tasks.php:214
 msgid "New Task"
 msgstr ""
 
-#: includes/trait-task-extras.php:284
+#: includes/trait-task-extras.php:277
 msgid "Task reminder"
 msgstr ""
 
 #. translators: 1: task title, 2: due date and time
-#: includes/trait-task-extras.php:284
+#: includes/trait-task-extras.php:277
 #, php-format
 msgid "%1$s is due %2$s."
 msgstr ""
@@ -7385,7 +7433,7 @@ msgid "Blink once and gently move your head. Face processing stays on this devic
 msgstr ""
 
 #: templates/app/time.php:182
-#: assets/js/workforce-one.js:303
+#: assets/js/workforce-one.js:306
 msgid "Loading face model…"
 msgstr ""
 
@@ -7563,42 +7611,42 @@ msgstr ""
 msgid "No face is enrolled. Press Enroll Face first."
 msgstr ""
 
-#: assets/js/workforce-one.js:286
+#: assets/js/workforce-one.js:289
 msgid "✓ Face verified."
 msgstr ""
 
-#: assets/js/workforce-one.js:297
+#: assets/js/workforce-one.js:300
 msgid "✕ Face did not match. Please try again."
 msgstr ""
 
-#: assets/js/workforce-one.js:310
+#: assets/js/workforce-one.js:313
 msgid "No face enrollment to reset."
 msgstr ""
 
-#: assets/js/workforce-one.js:311
+#: assets/js/workforce-one.js:314
 msgid "Request a face reset? Your current enrollment will remain active until an administrator approves the reset."
 msgstr ""
 
-#: assets/js/workforce-one.js:312
+#: assets/js/workforce-one.js:315
 msgid "Submitting face reset request…"
 msgstr ""
 
-#: assets/js/workforce-one.js:316
+#: assets/js/workforce-one.js:319
 msgid "✓ Reset request submitted. Your current face enrollment is still active."
 msgstr ""
 
-#: assets/js/workforce-one.js:372
+#: assets/js/workforce-one.js:375
 msgid "Preparing CSV…"
 msgstr ""
 
-#: assets/js/workforce-one.js:375
+#: assets/js/workforce-one.js:378
 msgid "Could not generate the CSV report."
 msgstr ""
 
-#: assets/js/workforce-one.js:431
+#: assets/js/workforce-one.js:434
 msgid "Preparing Excel…"
 msgstr ""
 
-#: assets/js/workforce-one.js:434
+#: assets/js/workforce-one.js:437
 msgid "Could not generate the Excel report."
 msgstr ""

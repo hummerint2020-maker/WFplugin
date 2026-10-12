@@ -134,16 +134,9 @@ trait EWS_Corrections_Trait {
 
     /* ------------------------------------------------------------------ files */
 
+    /** Private folder of the request photos (trait-private-files.php). */
     private function cx_file_dir(){
-        $up=wp_upload_dir();$dir=trailingslashit($up['basedir']).'workforce-one-corrections';
-        if(!is_dir($dir)){
-            wp_mkdir_p($dir);
-            // Not reachable by URL: every photo goes through ews_correction_photo (access checked).
-            @file_put_contents($dir.'/.htaccess',"Require all denied\nDeny from all\n"); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-            @file_put_contents($dir.'/index.php',"<?php\n// Silence is golden.\n"); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-            @file_put_contents($dir.'/web.config','<?xml version="1.0"?><configuration><system.webServer><authorization><deny users="*" /></authorization></system.webServer></configuration>'); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-        }
-        return $dir;
+        return $this->private_files_dir('workforce-one-corrections');
     }
 
     /** @param mixed $f an entry of $_FILES @return bool */
@@ -172,7 +165,7 @@ trait EWS_Corrections_Trait {
         $c=$this->cx_get($id);
         if(!$c || !$c->photo_key || !$this->cx_can_view($c))wp_die(esc_html__('Access denied','workforce-one'),'',['response'=>403]);
         if(!preg_match('/^[A-Za-z0-9]{32}\.[a-z]{3,4}$/',(string)$c->photo_key))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
-        $path=$this->cx_file_dir().'/'.$c->photo_key;
+        $path=$this->private_files_path('workforce-one-corrections',(string)$c->photo_key);
         if(!is_readable($path))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
         $ext=strtolower((string)pathinfo((string)$c->photo_key,PATHINFO_EXTENSION));
         $all=['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];

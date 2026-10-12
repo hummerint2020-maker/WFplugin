@@ -10,7 +10,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_attendance_parity.py <st
 Needs tests/e2e_setup.php users (emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import datetime, json, os, re, subprocess, sys, time, urllib.parse
+import datetime, json, os, random, re, subprocess, sys, time, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import S, WP, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -199,6 +199,9 @@ def qr_payload():
     return emp.req('/?ews_kiosk=%d&kiosk_key=%s&kiosk_payload=1' % (I['kid'], I['secret']))[1]
 
 
+_live = [0]
+
+
 def face_token():
     """Enrol (once) and verify through the Face REST routes; returns the single-use token."""
     tpl = [0.01 * i for i in range(128)]
@@ -212,7 +215,11 @@ def face_token():
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read().decode() or 'null')
     rest('face/enroll', {'template': tpl})
-    st, body = rest('face/verify', {'template': tpl})
+    # A fresh challenge, and a live capture (never the enrolled template itself): 3.31.91.
+    r = urllib.request.Request('http://127.0.0.1:8080/wp-json/workforce-one/v1/face/challenge', headers=h)
+    c = json.loads(emp.op.open(r).read().decode()).get('challenge', '')
+    _live[0] += 1
+    st, body = rest('face/verify', {'template': [v + random.uniform(-0.01, 0.01) for v in tpl], 'challenge': c})
     return (body or {}).get('face_token', '')
 
 

@@ -237,7 +237,7 @@ trait EWS_Tasks_Trait {
         if($ok===false)$this->tasks_redirect(['task_error'=>'delete']);
         $this->audit('task_delete','task',$id,$task->title);
         foreach((array)$wpdb->get_col($wpdb->prepare("SELECT file_key FROM {$wpdb->prefix}ews_task_comments WHERE task_id=%d AND file_key IS NOT NULL",$id)) as $key){
-            if(preg_match('/^[A-Za-z0-9]{32}\.[a-z]{2,5}$/',(string)$key))wp_delete_file($this->task_file_dir().'/'.$key);
+            if(preg_match('/^[A-Za-z0-9]{32}\.[a-z]{2,5}$/',(string)$key))$this->private_files_delete('workforce-one-tasks',(string)$key);
         }
         foreach(['ews_task_items','ews_task_comments','ews_task_activity'] as $x)$wpdb->delete($wpdb->prefix.$x,['task_id'=>$id],['%d']);
         $this->tasks_redirect(['task_deleted'=>1]);

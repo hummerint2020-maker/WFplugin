@@ -44,9 +44,9 @@ trait EWS_Leave_Trait {
             return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE id=%d",(int)$wpdb->insert_id));
         }
 
-    private function leave_overlap($employee_id,$start,$end){
+    private function leave_overlap($employee_id,$start,$end,$except_id=0){
             global $wpdb;
-            return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_leave_requests WHERE employee_id=%d AND status IN ('Pending','Approved') AND start_date<=%s AND end_date>=%s LIMIT 1",$employee_id,$end,$start));
+            return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_leave_requests WHERE employee_id=%d AND status IN ('Pending','Approved') AND start_date<=%s AND end_date>=%s AND id<>%d LIMIT 1",$employee_id,$end,$start,(int)$except_id));
         }
 
     private function vacation_working_days_count($start,$end){
@@ -106,15 +106,23 @@ trait EWS_Leave_Trait {
 
     /* ------------------------------------------------------------------ state changes (caller owns the transaction) */
 
-    /** Insert a Pending request and reserve the days. @return int|false request id */
+    /**
+     * Insert a Pending request and reserve the days (caller owns the transaction and holds the
+     * employee's leave lock). Checked again here, after the insert (3.31.91): no other pending or
+     * approved leave of this employee overlaps it, and the reservation never takes the balance below
+     * zero (a conditional update, so two requests sent together cannot both use the last days).
+     * @return int|string request id, or an error code: save | overlap | balance
+     */
     private function leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal){
             global $wpdb;
             $ok=$wpdb->insert($wpdb->prefix.'ews_leave_requests',['employee_id'=>$emp->id,'leave_type_id'=>(int)$type->id,'start_date'=>$start,'end_date'=>$end,'requested_days'=>$days,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'balance_id'=>$bal?(int)$bal->id:null],['%d','%d','%s','%s','%f','%s','%s','%d','%d']);
-            if($ok===false)return false;
+            if($ok===false)return 'save';
             $id=(int)$wpdb->insert_id;
+            if($this->leave_overlap((int)$emp->id,$start,$end,$id))return 'overlap';
             if((int)$type->deduct_balance){
-                $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET pending=pending+%f,updated_at=%s WHERE id=%d",$days,current_time('mysql'),$bal->id));
-                if($q===false)return false;
+                $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET pending=pending+%f,updated_at=%s WHERE id=%d AND entitlement-used-pending>=%f",$days,current_time('mysql'),$bal->id,(float)$days-0.0001));
+                if($q===false)return 'save';
+                if($q!==1)return 'balance';
             }
             return $id;
         }
@@ -235,13 +243,21 @@ trait EWS_Leave_Trait {
                 $error=RequestRules::check($facts);
             }
             if($error)$this->leave_redirect(['leave_error'=>$error]);
+            // One request at a time per employee (3.31.91): two requests sent together could both pass the
+            // overlap and balance checks. leave_insert_request() checks both again inside the transaction.
+            // The rest always ends in a redirect; the lock goes with the database connection.
+            $this->ews_with_lock('leave_emp_'.(int)$emp->id,function()use($emp,$type,$start,$end,$days,$reason,$bal){$this->leave_request_create_locked($emp,$type,$start,$end,$days,$reason,$bal);});
+            $this->leave_redirect(['leave_error'=>'busy']);
+        }
 
+    /** The second half of leave_request_create(), under the employee's leave lock. Always redirects. */
+    private function leave_request_create_locked($emp,$type,$start,$end,$days,$reason,$bal){
             $request_msg=$emp->name.' requested '.$days.' day(s) of '.$type->name.' from '.$start.' to '.$end.'. Approval is required.';
             if($this->leave_approval_active()){
                 $id=0; $approval=0; $ar=null;
                 $this->leave_transaction(function()use(&$id,&$approval,&$ar,$emp,$type,$start,$end,$days,$reason,$bal){
                     $id=$this->leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal);
-                    if(!$id)return 'save';
+                    if(!is_int($id))return $id;
                     $approval=$this->approval_start('vacation','leave',$id,(int)$emp->id,[],false);
                     if(is_wp_error($approval))return 'approval';
                     $ar=$this->approval_find_request('vacation','leave',$id);
@@ -264,7 +280,7 @@ trait EWS_Leave_Trait {
             $id=0;
             $this->leave_transaction(function()use(&$id,$emp,$type,$start,$end,$days,$reason,$bal){
                 $id=$this->leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal);
-                return $id?true:'save';
+                return is_int($id)?true:$id;
             });
             $this->audit('leave_request','leave_request',$id,$emp->name.' requested '.$days.' day(s) of '.$type->name);
             foreach(get_users(['capability'=>'ews_manage_settings','fields'=>['ID']]) as $m){

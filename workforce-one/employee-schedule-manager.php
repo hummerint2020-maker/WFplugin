@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.90
+ * Version: 3.31.91
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.90');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.91');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -66,6 +66,7 @@ require_once __DIR__ . '/includes/trait-notifications.php';
 require_once __DIR__ . '/includes/trait-tasks.php';
 require_once __DIR__ . '/includes/trait-corrections.php';
 require_once __DIR__ . '/includes/trait-daily-workers.php';
+require_once __DIR__ . '/includes/trait-private-files.php';
 require_once __DIR__ . '/includes/trait-office-minimum.php';
 require_once __DIR__ . '/includes/trait-admin-nav.php';
 require_once __DIR__ . '/includes/trait-task-extras.php';
@@ -83,7 +84,7 @@ require_once __DIR__ . '/includes/trait-settings-overview.php';
 require_once __DIR__ . '/includes/trait-payroll.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Office_Minimum_Trait, EWS_Admin_Nav_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Private_Files_Trait, EWS_Office_Minimum_Trait, EWS_Admin_Nav_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -123,6 +124,10 @@ class EWS_Manager_V31_1 {
             add_filter('parent_file',[$this,'admin_nav_parent_file']);
             add_filter('submenu_file',[$this,'admin_nav_submenu_file']);
             add_action('all_admin_notices',[$this,'admin_nav_tabs'],1);
+            // Private files: a weekly direct-link check and its warning (3.31.91, includes/trait-private-files.php).
+            add_action('admin_init',[$this,'private_files_maybe_check']);
+            add_action('admin_post_ews_private_files_check',[$this,'private_files_check_now']);
+            add_action('all_admin_notices',[$this,'private_files_notice'],2);
             add_action('admin_enqueue_scripts',[$this,'enqueue_admin_ui_foundation']);
             add_action('admin_post_ews31_employee_save',[$this,'employee_save']);
             add_action('admin_post_ews_kudos_submit',[$this,'recognition_submit']);
