@@ -65,7 +65,7 @@ trait EWS_Private_Files_Trait {
     private function private_files_move_legacy(){
         if($this->private_files_base()==='')return 0;
         $n=0;
-        foreach(['workforce-one-corrections','workforce-one-tasks','workforce-one-daily-workers'] as $folder){
+        foreach(['workforce-one-corrections','workforce-one-tasks','workforce-one-daily-workers','workforce-one-face-photos'] as $folder){
             $old=$this->private_files_legacy_dir($folder);
             if(!is_dir($old) || is_link($old))continue;
             $new=$this->private_files_dir($folder);
@@ -149,9 +149,9 @@ trait EWS_Private_Files_Trait {
         }
         if(!is_array($last) || ($last['status']??'')!=='exposed')return;
         $again=wp_nonce_url(admin_url('admin-post.php?action=ews_private_files_check'),'ews_private_files_check');
-        $rule='location ~* ^/wp-content/uploads/workforce-one-(corrections|tasks|daily-workers)/ { deny all; }';
+        $rule='location ~* ^/wp-content/uploads/workforce-one-(corrections|tasks|daily-workers|face-photos)/ { deny all; }';
         echo '<div class="notice notice-error" data-private-files-exposed><p><strong>'.esc_html__('Private files can be opened by a direct link on this server.','workforce-one').'</strong> '
-            .esc_html__('Correction photos, task files and daily workers\' photos are protected by .htaccess, which this server ignores (Nginx, for example). Anyone with a file\'s link could open it.','workforce-one').'</p><p>'
+            .esc_html__('Correction photos, task files, daily workers\' photos and Face Sign In photos are protected by .htaccess, which this server ignores (Nginx, for example). Anyone with a file\'s link could open it.','workforce-one').'</p><p>'
             .esc_html__('Fix it in one of two ways, then press "Check again":','workforce-one').'</p><ol><li>'
             .esc_html__('Ask your host to add this rule to the site\'s Nginx configuration:','workforce-one').' <code>'.esc_html($rule).'</code></li><li>'
             /* translators: %s: the line to add */

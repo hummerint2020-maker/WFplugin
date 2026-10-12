@@ -5632,3 +5632,24 @@ msgstr "تم فحص الملفات الخاصة: لا يمكن فتحها برا
 
 msgid "Private files could not be checked: the site did not answer. Try again later."
 msgstr "تعذّر فحص الملفات الخاصة: الموقع لم يستجب. حاول لاحقًا."
+
+msgid "%1$s was refused %2$d times today. See what happened."
+msgstr "تم رفض تسجيل %1$s %2$d مرات اليوم. اطّلع على ما حدث."
+
+msgid "A photo is kept with this Sign In. Only HR and your manager can see it, and it is deleted after %d days."
+msgstr "يتم حفظ صورة مع تسجيل الحضور هذا. لا يراها إلا الموارد البشرية ومديرك، وتُحذف بعد %d يومًا."
+
+msgid "A photo is kept with this Sign In. Only HR can see it, and it is deleted after %d days."
+msgstr "يتم حفظ صورة مع تسجيل الحضور هذا. لا يراها إلا الموارد البشرية، وتُحذف بعد %d يومًا."
+
+msgid "Correction photos, task files, daily workers' photos and Face Sign In photos are protected by .htaccess, which this server ignores (Nginx, for example). Anyone with a file's link could open it."
+msgstr "صور طلبات التصحيح وملفات المهام وصور العمالة اليومية وصور تسجيل الحضور بالوجه محمية بملف ‎.htaccess‎، وهذا الخادم يتجاهله (مثل Nginx). أي شخص لديه رابط الملف يمكنه فتحه."
+
+msgid "It is tried again every 10 minutes. If this stays, send this to your host or developer:"
+msgstr "تتم المحاولة مرة أخرى كل 10 دقائق. إذا استمرت المشكلة، أرسل ما يلي إلى الاستضافة أو المطوّر:"
+
+msgid "Sign In refused several times"
+msgstr "رُفض تسجيل الحضور عدة مرات"
+
+msgid "The Workforce One database update did not finish."
+msgstr "لم يكتمل تحديث قاعدة بيانات Workforce One."

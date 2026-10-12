@@ -33,6 +33,8 @@
  * @var string      $corrections_html    My recent days + the correction sheet (3.31.74), '' when corrections are off
  *
  * Templates only display prepared values; they do not call back into the plugin.
+ * @var int    $face_photo_days     a photo is kept with each face check for this many days (0 = off, 3.31.92)
+ * @var string $face_photo_viewers  hr_manager | hr
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
@@ -166,7 +168,7 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
             <div class="ews-face-lab wfo-panel"><div class="ews-face-lab-head"><span class="wfo-panel-icon is-blue"><?php echo Icons::svg('alert', 22); ?></span><div><h3><?php esc_html_e('Presence Verification','workforce-one'); ?></h3><p><?php esc_html_e('If a manager requests a physical presence check, the request will appear here and in your notifications.','workforce-one'); ?></p></div><span class="wfo-panel-tag"><?php esc_html_e('Optional','workforce-one'); ?></span></div><a class="ews-face-lab-btn" href="<?php echo esc_url($presence_url); ?>"><?php echo Icons::svg('arrow', 18); ?><span>Open Presence Verification</span></a></div>
             <?php endif; ?>
             <?php if($face_signin_enabled): // Face Sign In off: no card, no camera, no face model ?>
-            <div class="ews-face-module" id="ews-face-module" data-vendor-base="<?php echo esc_attr($face_vendor_url); ?>" data-api-base="<?php echo esc_attr(rest_url('workforce-one/v1/')); ?>" data-wp-nonce="<?php echo esc_attr(wp_create_nonce('wp_rest')); ?>" data-server-enrolled="<?php echo $face_enrolled?'1':'0'; ?>" data-face-required="<?php echo $face_signin_enabled?'1':'0'; ?>" data-face-config="<?php echo esc_attr(wp_json_encode($face_settings)); ?>">
+            <div class="ews-face-module" id="ews-face-module" data-vendor-base="<?php echo esc_attr($face_vendor_url); ?>" data-api-base="<?php echo esc_attr(rest_url('workforce-one/v1/')); ?>" data-wp-nonce="<?php echo esc_attr(wp_create_nonce('wp_rest')); ?>" data-server-enrolled="<?php echo $face_enrolled?'1':'0'; ?>" data-face-required="<?php echo $face_signin_enabled?'1':'0'; ?>" data-face-config="<?php echo esc_attr(wp_json_encode($face_settings)); ?>" data-face-photo="<?php echo !empty($face_photo_days)?'1':'0'; ?>">
             <div class="ews-face-lab wfo-panel">
               <div class="ews-face-lab-head">
                 <span class="wfo-panel-icon is-purple"><?php echo Icons::svg('user', 22); ?></span>
@@ -179,6 +181,13 @@ $pips = ['out' => 'clock', 'in' => 'check', 'break' => 'overtime', 'done' => 'lo
               <div class="ews-face-card" role="dialog" aria-modal="true">
                 <div class="ews-face-top"><div><h3><?php esc_html_e('Face Verification','workforce-one'); ?></h3><p><?php esc_html_e('Blink once and gently move your head. Face processing stays on this device.','workforce-one'); ?></p></div><button type="button" class="ews-face-close" id="ews-face-close" aria-label="<?php esc_attr_e('Close','workforce-one'); ?>"><?php echo Icons::svg('close', 20, 2); ?></button></div>
                 <div class="ews-face-stage"><video id="ews-face-video" autoplay muted playsinline></video><div class="ews-face-guide"></div></div>
+                <?php if (!empty($face_photo_days)): ?><p class="ews-face-photo-note" data-face-photo-note style="display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--wfo-primary-soft,#eceafd);font-size:13px;line-height:1.6"><?php echo Icons::svg('camera', 18); ?><span><?php echo esc_html(sprintf(
+                    $face_photo_viewers === 'hr'
+                        /* translators: %d: days */
+                        ? __('A photo is kept with this Sign In. Only HR can see it, and it is deleted after %d days.', 'workforce-one')
+                        /* translators: %d: days */
+                        : __('A photo is kept with this Sign In. Only HR and your manager can see it, and it is deleted after %d days.', 'workforce-one'),
+                    (int) $face_photo_days)); ?></span></p><?php endif; ?>
                 <div class="ews-face-status" id="ews-face-status"><?php esc_html_e('Loading face model…','workforce-one'); ?></div>
                 <div class="ews-face-actions">
                   <button type="button" class="ews-face-enroll" id="ews-face-enroll" <?php echo $face_enrolled?'style="display:none"':''; ?>><?php esc_html_e('Enroll Face','workforce-one'); ?></button>

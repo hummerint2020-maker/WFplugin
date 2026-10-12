@@ -69,7 +69,7 @@ trait EWS_PWA_Trait {
             if(!$this->pwa_is_employee_app_page()) return;
             echo $this->render_template('pwa/footer',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
                 'vapid_key'=>$this->get_vapid_public_key(),'push_url'=>admin_url('admin-post.php'),'push_nonce'=>wp_create_nonce('ews_push_subscription'),
-                'push_devices'=>$this->push_device_count(get_current_user_id()),'push_user'=>get_current_user_id(),
+                'push_devices'=>$this->push_device_count(get_current_user_id()),'push_user'=>get_current_user_id(),'attempts'=>$this->evidence_app_config(),
                 'sw'=>add_query_arg('ews_pwa','sw',home_url('/')),
             ]);
         }

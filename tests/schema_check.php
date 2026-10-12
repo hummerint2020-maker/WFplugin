@@ -15,7 +15,7 @@ $runs = [];
 for ($i = 0; $i < 2; $i++) {
     $GLOBALS['e2e_alters'] = [];
     $EZSQL_ERROR = [];
-    delete_option('ews_schema_version');
+    delete_option('ews_schema_version'); delete_transient('ews_schema_retry');
     new EWS_Manager_V31_1();   // the constructor runs maybe_upgrade_schema()
     $runs[] = [
         'alters' => $GLOBALS['e2e_alters'],

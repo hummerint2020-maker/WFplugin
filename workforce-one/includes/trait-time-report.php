@@ -55,21 +55,55 @@ trait EWS_Time_Report_Trait {
         $search=sanitize_text_field(wp_unslash($_GET['s']??''));$per=100;
         $where=$wpdb->prepare(" WHERE l.work_date BETWEEN %s AND %s",$start,$end).$this->time_report_scope_sql();
         if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);}
-        $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where}");
+        // With refused attempts kept (3.31.92): recorded, refused, or both in time order.
+        $attempts=$this->attempts_enabled() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->attempts_table()))===$this->attempts_table();
+        $show=$attempts?sanitize_key($_GET['show']??'both'):'recorded';
+        if(!in_array($show,['recorded','refused','both'],true))$show='both';
+        $aw='';
+        if($attempts){
+            $aw=$wpdb->prepare(" WHERE a.work_date BETWEEN %s AND %s AND a.result<>'face_ok'",$start,$end).$this->time_report_scope_sql();
+            if($search!=='')$aw.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);
+        }
+        $parts=[];
+        if($show!=='refused')$parts[]="SELECT 'log' kind,l.id id,l.work_date d,l.event_at t FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where}";
+        if($show!=='recorded')$parts[]="SELECT 'attempt' kind,a.id id,a.work_date d,a.attempted_at t FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id{$aw}";
+        $union=implode(' UNION ALL ',$parts);
+        $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM ({$union}) x");
         $pages=max(1,(int)ceil($total/$per));$paged=min(max(1,absint($_GET['paged']??1)),$pages);
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where} ORDER BY l.work_date DESC,l.event_at DESC,l.id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
+        $page_ids=(array)$wpdb->get_results($wpdb->prepare("SELECT kind,id FROM ({$union}) x ORDER BY d DESC,t DESC,id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
+        $ids=['log'=>[],'attempt'=>[]];
+        foreach($page_ids as $x)$ids[(string)$x->kind][]=(int)$x->id;
+        $rows=[];$attempt_rows=[];
+        if($ids['log']){
+            $in=implode(',',array_map('intval',$ids['log']));
+            foreach((array)$wpdb->get_results("SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.id IN ($in)") as $r)$rows[(int)$r->id]=$r;
+        }
+        if($ids['attempt']){
+            $in=implode(',',array_map('intval',$ids['attempt']));
+            foreach((array)$wpdb->get_results("SELECT a.*,e.name,e.domain_name FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id WHERE a.id IN ($in)") as $r)$attempt_rows[(int)$r->id]=$r;
+        }
         $edit_id=absint($_GET['edit_time_id']??0);
         $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE id=%d",$edit_id)):null;
         if($edit && !$this->time_report_may_manage((int)$edit->employee_id))$edit=null;
         $integrity_labels=['verified'=>'Verified','unreliable'=>'Unreliable','suspicious'=>'Suspicious','not_evaluated'=>'Not evaluated'];
         $radius_by_employee=[];
         $records=[];
-        $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},$rows));
-        foreach($rows as $r){
+        $range_url=add_query_arg(['start'=>$start,'end'=>$end],admin_url('admin.php?page=ews31-time-report'));
+        $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},array_values($rows)));
+        foreach($page_ids as $x){
+            if($x->kind==='attempt'){
+                $a=$attempt_rows[(int)$x->id]??null;
+                if(!$a)continue;
+                $records[]=$this->evidence_row($a)+['record_url'=>in_array($a->result,['refused','not_reached'],true)&&$a->event_type!=='face'?$this->evidence_record_url($a,$range_url):''];
+                continue;
+            }
+            $r=$rows[(int)$x->id]??null;
+            if(!$r)continue;
             $eid=(int)$r->employee_id;
             if(!isset($radius_by_employee[$eid]))$radius_by_employee[$eid]=(int)$this->time_report_site($eid)[2];
             $integrity=$r->integrity_status?:'not_evaluated';
             $records[]=[
+                'kind'=>'log',
                 'id'=>(int)$r->id,'employee_id'=>$eid,'work_date'=>$r->work_date,'name'=>(string)$r->name,'domain'=>(string)$r->domain_name,
                 'scheduled'=>(string)$r->scheduled_status,'event'=>$this->time_event_label($r->event_type),
                 'status'=>$r->event_type==='sign_in'?$this->sign_in_classification($r->event_at,(int)$r->employee_id):($r->event_type==='late_sign_in'?'Late Arrival':'—'),
@@ -81,18 +115,33 @@ trait EWS_Time_Report_Trait {
                 'accuracy'=>$r->accuracy!==null?round((float)$r->accuracy,1).' m':'—',
                 'integrity'=>$integrity_labels[$integrity]??ucfirst(str_replace('_',' ',$integrity)),'integrity_key'=>$integrity,
                 'integrity_reason'=>$r->integrity_reason?ucwords(str_replace('_',' ',$r->integrity_reason)):'',
-                // 3.31.74: where the event came from; a correction shows next to the original, which stays.
                 'ip'=>(string)($r->ip_address??'')!==''?(string)$r->ip_address:'—',   // shown since 3.31.92 (it was saved, never shown)
+                // 3.31.74: where the event came from; a correction shows next to the original, which stays.
                 'source'=>$this->time_source_label((string)($r->source??'')),'correction_id'=>(int)($r->correction_id??0),'replaced_by'=>(int)($r->replaced_by??0),
+                'photo'=>!empty($r->photo_key)&&$this->face_photo_may_view($eid)?$this->face_photo_url('log',(int)$r->id):'',
+                'photo_full'=>!empty($r->photo_key)&&$this->face_photo_may_view($eid)?$this->face_photo_url('log',(int)$r->id,true):'',
             ];
         }
+        // How many were refused in the period, by employee (the summary above the table).
+        $refused_summary=null;
+        if($attempts){
+            $by=(array)$wpdb->get_results("SELECT a.employee_id,e.name,COUNT(*) n FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id{$aw} AND a.result IN ('refused','face_failed','not_reached') GROUP BY a.employee_id,e.name ORDER BY n DESC,e.name ASC LIMIT 6");
+            $refused_summary=['total'=>(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id{$aw} AND a.result IN ('refused','face_failed','not_reached')"),'by'=>$by];
+        }
+        $timeline=isset($_GET['timeline'])&&$attempts?$this->evidence_timeline(absint($_GET['timeline']),sanitize_text_field(wp_unslash($_GET['tdate']??''))):null;
         $error=sanitize_key($_GET['time_error']??'');
         $form=null;
         if(isset($_GET['add_time'])||$edit){
+            // "Record it manually" on a refused attempt fills in its employee, event and time (3.31.92).
+            $pre_emp=absint($_GET['prefill_employee']??0);
+            $pre_type=in_array($_GET['prefill_type']??'',['sign_in','sign_out'],true)?sanitize_key($_GET['prefill_type']):'sign_in';
+            $pre_date=$this->valid_date(sanitize_text_field(wp_unslash($_GET['prefill_date']??'')))?sanitize_text_field(wp_unslash($_GET['prefill_date'])):$start;
+            $pre_at=preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/',(string)($_GET['prefill_at']??''))?str_replace('T',' ',(string)$_GET['prefill_at']):$pre_date.' 09:00';
+            if($pre_emp && !$this->time_report_may_manage($pre_emp))$pre_emp=0;
             $form=[
-                'id'=>$edit?(int)$edit->id:0,'employee_id'=>$edit?(int)$edit->employee_id:0,
-                'work_date'=>$edit?$edit->work_date:$start,'event_type'=>$edit?$edit->event_type:'sign_in',
-                'event_at'=>str_replace(' ','T',$edit?substr($edit->event_at,0,16):$start.' 09:00'),
+                'id'=>$edit?(int)$edit->id:0,'employee_id'=>$edit?(int)$edit->employee_id:$pre_emp,
+                'work_date'=>$edit?$edit->work_date:$pre_date,'event_type'=>$edit?$edit->event_type:$pre_type,
+                'event_at'=>str_replace(' ','T',$edit?substr($edit->event_at,0,16):$pre_at),
                 'latitude'=>$edit&&$edit->latitude!==null?$edit->latitude:'','longitude'=>$edit&&$edit->longitude!==null?$edit->longitude:'',
                 'accuracy'=>$edit&&$edit->accuracy!==null?$edit->accuracy:'',
             ];
@@ -107,6 +156,7 @@ trait EWS_Time_Report_Trait {
             'page_url'=>admin_url('admin.php?page=ews31-time-report'),
             'post_url'=>admin_url('admin-post.php'),
             'csv_url'=>wp_nonce_url(add_query_arg(['action'=>'ews31_time_csv','start'=>$start,'end'=>$end],admin_url('admin-post.php')),'ews31_time_csv'),
+            'attempts'=>$attempts,'show'=>$show,'refused_summary'=>$refused_summary,'timeline'=>$timeline,'photos'=>$this->face_photo_enabled(),
         ]);
     }
 
@@ -127,6 +177,8 @@ trait EWS_Time_Report_Trait {
         // A new record needs an active employee; an existing record may belong to an archived one.
         $emp=$employee_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d".($id?'':' AND active=1'),$employee_id)):null;
         $facts=['type'=>$type,'date_valid'=>$this->valid_date($work_date),'work_date'=>$work_date,'event_at'=>$event_at,'employee_found'=>(bool)$emp];
+        // A shift that ends after midnight: its Sign Out may be on the next calendar day (3.31.92).
+        if($emp){$h=$this->working_hours((int)$emp->id);$facts['overnight']=isset($h['start'],$h['end'])&&(string)$h['end']<=(string)$h['start'];}
         if(!ManualRecordRules::check($facts)){
             $others=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND id<>%d AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()."",$employee_id,$work_date,$id));
             $facts['others']=array_map(function($o){return ['type'=>$o->event_type,'at'=>$o->event_at];},(array)$others);

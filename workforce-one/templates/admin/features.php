@@ -8,6 +8,7 @@
  * @var array<string,int|float> $face           face tuning values
  * @var array<string,array> $face_fields        key => [label, min, max, step]
  * @var int[] $detector_sizes
+ * @var array{attempts:int,attempt_days:int,alert:int,photo:int,photo_days:int,photo_viewers:string} $evidence  Settings\SignInEvidence (3.31.92)
  * @var array<string,mixed> $splash
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
@@ -42,6 +43,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="corrections_present" value="1">
 <input type="hidden" name="daily_workers_present" value="1">
 <input type="hidden" name="office_minimum_present" value="1">
+<input type="hidden" name="evidence_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -51,6 +53,15 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-corrections"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Attendance Corrections</div><div class="wfo-feature-desc">Employees ask to correct a forgotten Sign In / Sign Out or a wrong time; the manager decides with the day's evidence; HR can correct directly. Recorded events are never changed. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-corrections&tab=settings')); ?>">Settings</a></div></div>
     <?php $switch('corrections_enabled', $on['corrections']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-signin-attempts"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title">Refused Sign In Attempts</div><div class="wfo-feature-desc">Each time the app refuses a Sign In or Sign Out (outside the work location, no face check, not a working day, too early, ...), the attempt is kept with the reason, the time, where the phone was, the device and the IP. A Sign In pressed with no network is sent by the phone later and shown apart; it never counts as attendance. Shown in <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-time-report')); ?>">Sign In / Out</a>.</div></div>
+    <?php $switch('evidence_attempts', (bool) $evidence['attempts']); ?>
+</div>
+<div class="wfo-feature-fields">
+    <label><span class="wfo-field-label">Keep them for (days)</span><input type="number" name="evidence_attempt_days" min="7" max="365" value="<?php echo (int) $evidence['attempt_days']; ?>"></label>
+    <label><span class="wfo-field-label">Tell the department's managers after this many refusals in a day (0 = never)</span><input type="number" name="evidence_alert" min="0" max="20" value="<?php echo (int) $evidence['alert']; ?>"></label>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-office-minimum"><div class="wfo-feature-head">
@@ -134,6 +145,14 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
         <label><span class="wfo-field-label">Detector input size</span><select name="face_signin_settings[detector_input_size]" style="width:100%;min-height:40px">
         <?php foreach ($detector_sizes as $size): ?><option value="<?php echo (int) $size; ?>" <?php selected((int) $face['detector_input_size'], $size); ?>><?php echo (int) $size; ?></option><?php endforeach; ?>
         </select></label>
+    </div>
+</div>
+<div class="wfo-subpanel" id="ews-face-photo">
+    <div class="wfo-subpanel-title"><label><input type="checkbox" name="evidence_photo" value="1" <?php checked((bool) $evidence['photo']); ?>> Keep a photo with each Face Sign In / Out</label></div>
+    <div class="wfo-subpanel-desc">A small photo from the same camera frame as the face check is kept with the Sign In or Sign Out (and with a refused face check), for HR to check a doubtful record. Employees see a line on the camera screen saying a photo is kept and for how long; check that your staff policy covers photos at work. Each time a photo is opened it is written to the Audit Log.</div>
+    <div class="wfo-feature-fields">
+        <label><span class="wfo-field-label">Keep photos for (days)</span><input type="number" name="evidence_photo_days" min="7" max="90" value="<?php echo (int) $evidence['photo_days']; ?>"></label>
+        <label><span class="wfo-field-label">Who can see them</span><select name="evidence_photo_viewers" style="width:100%;min-height:40px"><option value="hr_manager" <?php selected($evidence['photo_viewers'], 'hr_manager'); ?>>HR and the employee's department manager</option><option value="hr" <?php selected($evidence['photo_viewers'], 'hr'); ?>>HR only</option></select></label>
     </div>
 </div></div>
 

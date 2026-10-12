@@ -67,7 +67,8 @@ final class CorrectionRules
         }
         if ($p['in'] && $p['out'] && $p['out'] <= $p['in']) return 'order';
         $latest = $p['out'] ?: $p['in'];
-        if ($date === (string) $f['today'] && $latest && substr($latest, 0, 16) > $date . ' ' . (string) $f['now']) return 'future_time';
+        // The final time, whatever its date (3.31.92): on an overnight shift yesterday's Sign Out is today.
+        if ($latest && substr($latest, 0, 16) > (string) $f['today'] . ' ' . (string) $f['now']) return 'future_time';
         if (!$hr && (int) $s['monthly_limit'] > 0 && (int) ($f['month_count'] ?? 0) >= (int) $s['monthly_limit'] && $s['above_limit'] === 'refuse') return 'limit';
         return '';
     }

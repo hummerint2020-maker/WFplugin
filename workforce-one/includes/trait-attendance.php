@@ -51,7 +51,14 @@ trait EWS_Attendance_Trait {
             if(!empty($ctx['qr_kiosk']))$cmd->qrKiosk=['id'=>(int)$ctx['qr_kiosk']->id];
             if(!empty($ctx['qr_location'])){$l=$ctx['qr_location'];$cmd->qrLocation=['id'=>(int)$l->id,'name'=>(string)$l->name,'latitude'=>$l->latitude,'longitude'=>$l->longitude,'radius'=>$l->radius];}
             $r=$this->attendance_service()->record($cmd);
-            if(!$r->ok){$this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($this->attendance_error_message($r,$cmd->type))]);return;}
+            if(!$r->ok){
+                $message=$this->attendance_error_message($r,$cmd->type);
+                $this->evidence_refused($cmd->type,$cmd,$r,$message);   // kept with its reason when turned on (3.31.92)
+                $this->redirect(['ews_view'=>'time','time_error'=>rawurlencode($message)]);return;
+            }
+            // The photo of the face check that allowed it, when kept (3.31.92).
+            $photo=$cmd->faceOk?$this->face_photo_take():null;
+            if($photo && !empty($r->details['event_id'])){global $wpdb;$wpdb->update($this->time_logs,['photo_key'=>$photo],['id'=>(int)$r->details['event_id']]);}
             $type=$cmd->type;$classification=(string)($r->details['classification']??'');
             $success=$type==='sign_in'&&$classification==='Late Arrival'?__('Late Arrival recorded successfully.','workforce-one'):($type==='sign_out'?__('Sign Out recorded successfully.','workforce-one'):__('Sign In recorded successfully.','workforce-one'));
             // At another of their branches than the one planned for today (3.31.72): say so; the manager sees it too.

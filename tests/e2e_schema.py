@@ -11,7 +11,7 @@ Needs a site with the plugin active; changes no data. Meant for MySQL / MariaDB.
 import json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import check, php, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, php, results, wp, HERE  # noqa: E402
 
 OLD = {'ews_notifications': 'user_read_date', 'ews_leave_requests': 'employee_status', 'ews_employees': 'default_shift_id'}
 for table, key in list(OLD.items()) + [('ews_leave_requests', 'type_year')]:
@@ -28,6 +28,21 @@ check('every plugin table and index was checked', out['tables'] >= 45 and out['i
 check('a second upgrade changes nothing', not second['alters'], second['alters'][:8])
 check('a second upgrade logs no database errors', not second['errors'], second['errors'][:8])
 check('the schema version is recorded', first['version'] == second['version'] == php("$m=new ReflectionMethod('EWS_Manager_V31_1','ews_schema_target'); $m->setAccessible(true); echo $m->invoke(new EWS_Manager_V31_1());"), (first['version'], second['version']))
+
+# ---------------------------------------------------------------- an update that does not finish (3.31.92)
+RUN = "delete_option('ews_schema_version'); delete_transient('ews_schema_retry'); new EWS_Manager_V31_1(); echo wp_json_encode(['v'=>get_option('ews_schema_version'),'f'=>get_option('ews_schema_failed'),'retry'=>(bool)get_transient('ews_schema_retry')]);"
+php("$wpdb->query(\"DROP TABLE IF EXISTS {$p}ews_signin_attempts\");")
+break_writes('ews_signin_attempts')
+r = json.loads(php("$wpdb->suppress_errors(true); " + RUN).splitlines()[-1])
+break_writes('')
+check('a table that cannot be created: the update is not marked done', r['v'] in (False, None, '') and r['f'] and any('ews_signin_attempts' in e for e in r['f']['errors']), r)
+check('...it is tried again in 10 minutes, not on every request', r['retry'] is True)
+adm = Session('admin', 'admin')
+pg = adm.req('/wp-admin/admin.php?page=ews31-features')[1]
+check('...and administrators see what failed on Workforce One pages', 'data-schema-failed' in pg and 'ews_signin_attempts' in pg)
+r = json.loads(php(RUN).splitlines()[-1])
+check('once it works, it is marked done and the warning goes', r['v'] == first['version'] and r['f'] is False and php("echo $wpdb->get_var(\"SHOW TABLES LIKE '{$p}ews_signin_attempts'\");").strip().endswith('ews_signin_attempts'), r)
+check('...gone from the page too', 'data-schema-failed' not in adm.req('/wp-admin/admin.php?page=ews31-features')[1])
 
 print('%d / %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

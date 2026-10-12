@@ -27,13 +27,18 @@ final class ManualRecordRules
 
     /**
      * @param array{type: string, date_valid: bool, work_date: string, event_at: ?string, employee_found?: bool,
-     *   others?: array<int, array{type: string, at: string}>} $f others = the employee's other events that day
+     *   others?: array<int, array{type: string, at: string}>, overnight?: bool} $f others = the employee's other events that day;
+     *   overnight = the employee's shift ends after midnight (a Sign Out may then be on the next calendar day, 3.31.92)
      */
     public static function check(array $f): ?string
     {
         if (!isset(self::EVENT_TYPES[$f['type']]) || empty($f['date_valid']) || $f['event_at'] === null) return 'invalid';
         if (array_key_exists('employee_found', $f) && !$f['employee_found']) return 'employee';
-        if (substr($f['event_at'], 0, 10) !== $f['work_date']) return 'date_mismatch';
+        $day = substr($f['event_at'], 0, 10);
+        if ($day !== $f['work_date']) {
+            $next = date('Y-m-d', (int) strtotime($f['work_date'] . ' +1 day'));
+            if (self::isSignIn($f['type']) || empty($f['overnight']) || $day !== $next) return 'date_mismatch';
+        }
         $signIn = self::isSignIn($f['type']);
         foreach ($f['others'] ?? [] as $o) {
             $otherIsSignIn = self::isSignIn($o['type']);
@@ -51,7 +56,7 @@ final class ManualRecordRules
         $messages = [
             'invalid' => 'Choose an event and enter a valid Work Date and time.',
             'employee' => 'Employee not found.',
-            'date_mismatch' => 'The event time must be on the Work Date.',
+            'date_mismatch' => 'The event time must be on the Work Date (a Sign Out may be on the next day only for a shift that ends after midnight).',
             'duplicate' => 'This employee already has that event on this day. Edit the existing record instead.',
             'order' => 'Sign Out must be after Sign In.',
             'not_found' => 'Attendance record not found.',

@@ -38,6 +38,7 @@ trait EWS_Features_Trait {
             'breaks'=>['per_day'=>$this->break_per_day(),'duration'=>$this->break_duration_minutes(),'escalation'=>$this->break_escalation_minutes()],
             'early_leave'=>['max'=>(int)$this->option('ews_early_leave_max_minutes'),'monthly'=>(int)$this->option('ews_early_leave_monthly_minutes')],
             'face'=>$this->face_signin_settings(),
+            'evidence'=>$this->evidence_settings(),
             'face_fields'=>FeatureSettings::FACE_FIELDS,
             'detector_sizes'=>FeatureSettings::DETECTOR_SIZES,
             'splash'=>$this->pwa_splash_settings(),
@@ -88,6 +89,13 @@ trait EWS_Features_Trait {
         update_option('ews_feature_tasks',$flag('tasks_enabled'),false);
         // A form without the field (an older page) keeps the saved state.
         if(isset($post['corrections_present']))update_option('ews_feature_corrections',$flag('corrections_enabled')?1:0,false);
+        // Sign In evidence (3.31.92): refused attempts and the photo with Face Sign In.
+        if(isset($post['evidence_present'])){
+            $ev_before=$this->evidence_settings();$ev=\WorkforceOne\Settings\SignInEvidence::fromPost($post);
+            update_option('ews_signin_evidence',$ev,false);
+            if($ev['attempts']||$ev['photo'])$this->ensure_evidence_schema();
+            if($ev!==$ev_before)$this->audit('signin_evidence_update','settings',0,'attempts='.($ev['attempts']?'on':'off').' '.$ev['attempt_days'].'d alert='.$ev['alert'].'; photo='.($ev['photo']?'on':'off').' '.$ev['photo_days'].'d viewers='.$ev['photo_viewers']);
+        }
         if(isset($post['daily_workers_present'])){
             update_option('ews_feature_daily_workers',$flag('daily_workers_enabled')?1:0,false);
             if($this->dw_enabled())$this->ensure_dw_schema();

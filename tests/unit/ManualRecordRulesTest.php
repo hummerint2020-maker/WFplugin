@@ -32,6 +32,15 @@ final class ManualRecordRulesTest extends TestCase
         $this->assertNull(R::check($this->f(['type' => 'sign_out', 'event_at' => '2026-10-01 17:00:00', 'others' => [['type' => 'sign_in', 'at' => '2026-10-01 09:00:00']]])));
     }
 
+    public function testAnOvernightShiftsSignOutOnTheNextDay(): void
+    {
+        $out = ['type' => 'sign_out', 'event_at' => '2026-10-02 06:00:00', 'others' => [['type' => 'sign_in', 'at' => '2026-10-01 22:00:00']]];
+        $this->assertSame('date_mismatch', R::check($this->f($out)), 'a day shift: not the next day');
+        $this->assertNull(R::check($this->f($out + ['overnight' => true])), 'a shift past midnight: its Sign Out the next morning');
+        $this->assertSame('date_mismatch', R::check($this->f(['type' => 'sign_out', 'event_at' => '2026-10-03 06:00:00', 'overnight' => true])), 'never two days later');
+        $this->assertSame('date_mismatch', R::check($this->f(['event_at' => '2026-10-02 06:00:00', 'overnight' => true])), 'a Sign In stays on its day');
+    }
+
     public function testCsvCells(): void
     {
         $this->assertSame("'=HYPERLINK(1)", Csv::cell('=HYPERLINK(1)'));

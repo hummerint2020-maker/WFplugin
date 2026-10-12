@@ -46,6 +46,7 @@ assets = json.loads(re.search(r'const STATIC_ASSETS=(\[.*?\]);', sw).group(1)) i
 check('...the assets it stores offline all load', len(assets) == 5 and all(emp.req(a.split('127.0.0.1:8080')[-1])[0] == 200 for a in assets), assets)
 apath = json.loads(re.search(r'const ASSETS_PATH=(".*?");', sw).group(1)) if 'ASSETS_PATH' in sw else ''
 check('...it caches only the plugin\'s own static files', 'u.pathname.startsWith(ASSETS_PATH)' in sw and apath == '/wp-content/plugins/workforce-one/assets/', apath)
+check('...on activate it removes only its own older caches, not other apps\' on the same site (3.31.92)', "k!==CACHE&&k.indexOf('employee-hub-v')===0" in sw and 'keys.filter(k=>k!==CACHE).map' not in sw)
 check('...and handles install, activate, fetch, push and notification clicks', all("self.addEventListener('%s'" % e in sw for e in ('install', 'activate', 'fetch', 'push', 'notificationclick')))
 check('...a notification opens its link, else the site', 'data:{url:d.url||HOME_URL}' in sw and 'client.navigate(url)' in sw)
 

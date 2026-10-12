@@ -213,6 +213,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_request_races.py "$S"
       - name: Private files (direct-link check, WFO_PRIVATE_DIR, no-store, logout)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_private_files.py "$S"
+      - name: Sign In evidence (refused attempts, sent later, face photo)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_signin_evidence.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }

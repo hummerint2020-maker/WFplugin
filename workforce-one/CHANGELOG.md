@@ -1,5 +1,49 @@
 # Changelog
 
+## 3.31.92
+Sign In evidence (two features, both off until turned on in Features, owner-approved mockups
+docs/mockups/signin-attempts/ and face-photo/), the IP in the Sign In / Out Report, and the last four
+fixes from the second code review (items 10–13). Database: table `ews_signin_attempts`, column
+`ews_time_logs.photo_key` (schema 3.31.92).
+
+### Added
+- **Refused Sign In attempts** (Features → Refused Sign In Attempts, off by default): every Sign In /
+  Out the app refuses is kept with the reason, the time, where the phone was and how far, the device
+  ("iPhone · Safari") and the IP; face checks too (matched or not). In Sign In / Out: "Show" recorded /
+  refused / both, refused rows marked with the reason, a summary by employee, **Record it manually**
+  (the add form filled in with the employee, the event and the time), and each employee's day as a
+  timeline (click the name). The department's managers are told when one employee is refused N times
+  in a day (3 by default; 0 = never). Kept 60 days by default.
+- **A Sign In pressed with no network**: the phone notes it when the button is pressed and sends it the
+  next time the app opens. Shown as "Did not reach the server", apart from records and never counted as
+  attendance. Its time is counted from the server's clock when the page opened plus the time since
+  (changing the phone's clock does not move it); the phone's own time is kept and a gap of more than 2
+  minutes is shown ("the phone's clock was off by 47 min"). One that did reach the server is not kept
+  again; at most 5 a day per employee.
+- **Photo with Face Sign In** (Features → Face Verification, off by default; needs Face Sign In): a small
+  photo from the same camera frame as the face check is kept with the Sign In / Out, and with a refused
+  face check. Seen by HR and the employee's department manager, or HR only; every opening is in the
+  Audit Log; never stored by the browser. Kept 30 days by default. The camera screen tells the employee.
+  Stored as a private file (trait-private-files.php: the direct-link check and WFO_PRIVATE_DIR cover it).
+- **The IP of each record** in the Sign In / Out Report and its CSV (it was saved, never shown).
+
+### Fixed
+- **Service worker** (10): on update it deleted every cache of the site, including other apps' on the
+  same domain. Only its own older caches now.
+- **Database update** (11): it was marked done even when a table or a column could not be created. Each
+  step's database errors are collected and the core tables and later columns are checked; on a failure
+  it is not marked done, it is tried again after 10 minutes, and administrators see what failed.
+- **Overnight shifts** (12): an administrator could not add a Sign Out after midnight on the Sign In /
+  Out Report ("must be on the Work Date"); for a shift that ends after midnight the next calendar day
+  is allowed. A correction could also add a Sign Out later than now on such a shift.
+- **Overtime after an overnight shift** (13): a window after a 22:00–06:00 shift (06:00–08:00) was put
+  before the shift on the same day and never counted as worked. It is now the next morning.
+
+### Tests
+- New `tests/e2e_signin_evidence.py` (45), in CI. `e2e_schema` (an update that fails), `e2e_pwa`
+  (caches), `e2e_time_report` (IP). Unit: `SignInEvidenceTest`, `DeviceLabelTest`, `SchemaCheckTest`,
+  `DayMetricsOvernightOvertimeTest`, overnight cases in `ManualRecordRulesTest` and `CorrectionRulesTest`.
+
 ## 3.31.91
 Security fixes from the second code review (docs/tasks/bug-review-2026-10.md, items 1, 2, 6, 14, 17). No
 database change. The photo kept with each Face Sign In (the owner's decision for item 1) is a mockup

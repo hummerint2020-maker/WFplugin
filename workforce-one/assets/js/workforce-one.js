@@ -283,7 +283,10 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                   // A single-use code from the server, asked for right before each check (3.31.91).
                   var cr=await fetch(apiBase+'face/challenge',{method:'GET',credentials:'same-origin',cache:'no-store',headers:{'X-WP-Nonce':wpNonce}});
                   var cj=await cr.json();if(!cr.ok||!cj.challenge)throw new Error(cj.message||'Face verification failed.');
-                  var vr=await fetch(apiBase+'face/verify',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:Array.from(r.descriptor),challenge:cj.challenge})});
+                  // With "photo with Face Sign In" on: a small frame from the same camera image (3.31.92).
+                  var photo='';
+                  if(module.getAttribute('data-face-photo')==='1'&&video&&video.videoWidth){try{var cw=320,ch=Math.round(video.videoHeight*cw/video.videoWidth),cv=document.createElement('canvas');cv.width=cw;cv.height=ch;cv.getContext('2d').drawImage(video,0,0,cw,ch);photo=cv.toDataURL('image/jpeg',0.72);}catch(pe){photo='';}}
+                  var vr=await fetch(apiBase+'face/verify',{method:'POST',headers:{'Content-Type':'application/json','X-WP-Nonce':wpNonce},body:JSON.stringify({template:Array.from(r.descriptor),challenge:cj.challenge,photo:photo})});
                   var vj=await vr.json();if(!vr.ok)throw new Error(vj.message||'Face verification failed.');
                   if(vj.ok){
                     setStatus(__('✓ Face verified.','workforce-one'));
@@ -295,6 +298,8 @@ window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
                       if(!tok){tok=document.createElement('input');tok.type='hidden';tok.name='face_token';pendingForm.appendChild(tok);}
                       tok.value=vj.face_token||'';
                       var f=pendingForm;pendingForm=null;
+                      // f.submit() fires no submit event: note the attempt here (templates/pwa/footer.php, 3.31.92).
+                      if(window.ewsNoteAttempt)window.ewsNoteAttempt(f);
                       setTimeout(function(){if(f&&f.submit)f.submit();},250);
                     }
                   }else{pendingForm=null;setStatus(__('✕ Face did not match. Please try again.','workforce-one'));}

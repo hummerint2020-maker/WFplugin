@@ -321,7 +321,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.90'; }
+        private function ews_schema_target(){ return '3.31.92'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -338,6 +338,8 @@ private function ensure_break_schema(){
             $target=$this->ews_schema_target();
             $done=$this->option('ews_schema_version');
             if($done===$target)return;
+            // A failed update is tried again after 10 minutes, not on every request (3.31.92).
+            if(get_transient('ews_schema_retry'))return;
             // The base tables come from activate(). If this runs before activation has
             // created them (e.g. WP-CLI loads the plugin before the activation hook), create
             // them now; otherwise the column upgrades below would be skipped yet marked done.
@@ -346,42 +348,69 @@ private function ensure_break_schema(){
             else self::base_tables();   // indexes added to the base tables reach installed sites (3.31.73)
 
             /* Existing schema routines are retained; they now run only once
-               when the plugin schema version changes. */
-            $this->ensure_time_feature_schema();
-            $this->ensure_schedule_config_schema();
-            $this->ensure_employee_email_column();
-            $this->ensure_employee_profile_schema();
-            $this->ensure_employee_attendance_schema();
-            $this->ensure_roles_permissions();
-            $this->ensure_vacation_schema();
-            $this->ensure_overtime_schema();
-            $this->ensure_break_schema();
-            $this->ensure_tasks_schema();
-            $this->ensure_notifications_schema(true);
-            $this->ensure_approval_schema();
-            $this->ensure_teams_schema();
-            $this->ensure_departments_schema();
-            $this->ensure_auto_attendance_schema();
-            $this->ensure_achievements_schema();
-            $this->ensure_polls_schema();
-            $this->ensure_swap_schema();
-            $this->ensure_leave_schema();
-            $this->ensure_push_schema();
-            $this->ensure_recognition_schema();
-            $this->ensure_payroll_schema();
-            $this->ensure_api_idempotency_schema();
-            $this->ensure_api_auth_schema();
-            $this->ews_v321_ensure_locations_table();
-            $this->ews_v321_ensure_employee_map();
-            $this->ensure_branches_schema();
-            $this->ensure_corrections_schema();
-            $this->ensure_dw_schema();
+               when the plugin schema version changes. Each one's database errors are collected
+               (3.31.92): the version is marked done only when every step worked. */
+            $failed=[];
+            $step=function($name,callable $fn)use($wpdb,&$failed){
+                $wpdb->last_error='';
+                $fn();
+                if($wpdb->last_error!=='')$failed[]=$name.': '.$wpdb->last_error;
+            };
+            foreach(['ensure_time_feature_schema','ensure_schedule_config_schema','ensure_employee_email_column','ensure_employee_profile_schema',
+                'ensure_employee_attendance_schema','ensure_roles_permissions','ensure_vacation_schema','ensure_overtime_schema','ensure_break_schema',
+                'ensure_tasks_schema','ensure_notifications_schema','ensure_approval_schema','ensure_teams_schema','ensure_departments_schema',
+                'ensure_auto_attendance_schema','ensure_achievements_schema','ensure_polls_schema','ensure_swap_schema','ensure_leave_schema',
+                'ensure_push_schema','ensure_recognition_schema','ensure_payroll_schema','ensure_api_idempotency_schema','ensure_api_auth_schema',
+                'ews_v321_ensure_locations_table','ews_v321_ensure_employee_map','ensure_branches_schema','ensure_corrections_schema','ensure_dw_schema',
+                'ensure_evidence_schema'] as $m){
+                $step($m,$m==='ensure_notifications_schema'?function(){$this->ensure_notifications_schema(true);}:function()use($m){$this->$m();});
+            }
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);
             if(get_option('ews_presence_qr_signin',null)===null)update_option('ews_presence_qr_signin',false,false);
             if(get_option('ews_presence_verification',null)===null)update_option('ews_presence_verification',false,false);
-            if(method_exists($this,'ensure_presence_schema'))$this->ensure_presence_schema();
+            if(method_exists($this,'ensure_presence_schema'))$step('ensure_presence_schema',function(){$this->ensure_presence_schema();});
             $this->repair_stale_location_integrity();
+            // And what the steps were for is there: the core tables and the columns added to them later.
+            foreach(\WorkforceOne\Support\SchemaCheck::missing($this->ews_schema_tables(),$this->ews_schema_columns()) as $m)$failed[]='missing '.$m;
+            if($failed){
+                // Not marked done: tried again in 10 minutes, and the administrator is told what failed.
+                update_option('ews_schema_failed',['at'=>current_time('mysql'),'target'=>$target,'errors'=>array_slice($failed,0,10)],false);
+                set_transient('ews_schema_retry',1,10*MINUTE_IN_SECONDS);
+                return;
+            }
+            delete_option('ews_schema_failed');
             update_option('ews_schema_version',$target,false);
+        }
+
+        /** The plugin's tables that exist (without the prefix). @return string[] */
+        private function ews_schema_tables(){
+            global $wpdb;
+            $n=strlen($wpdb->prefix);
+            return array_map(function($t)use($n){return substr((string)$t,$n);},(array)$wpdb->get_col($wpdb->prepare("SHOW TABLES LIKE %s",$wpdb->esc_like($wpdb->prefix.'ews_').'%')));
+        }
+
+        /** The columns of the tables SchemaCheck looks at. @return array<string,string[]> */
+        private function ews_schema_columns(){
+            global $wpdb;
+            $out=[];
+            foreach(array_keys(\WorkforceOne\Support\SchemaCheck::COLUMNS) as $t){
+                $full=$wpdb->prefix.$t;
+                $out[$t]=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$full))===$full?array_map('strtolower',(array)$wpdb->get_col("SHOW COLUMNS FROM {$full}",0)):[];
+            }
+            return $out;
+        }
+
+        /** The warning while the database update has not finished (on Workforce One pages, for administrators). */
+        public function ews_schema_notice(){
+            if(!current_user_can('manage_options'))return;
+            $page=sanitize_key($_GET['page']??''); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which page is open
+            if(strpos($page,'ews31')!==0)return;
+            $f=get_option('ews_schema_failed');
+            if(!is_array($f) || empty($f['errors']))return;
+            echo '<div class="notice notice-error" data-schema-failed><p><strong>'.esc_html__('The Workforce One database update did not finish.','workforce-one').'</strong> '
+                .esc_html__('It is tried again every 10 minutes. If this stays, send this to your host or developer:','workforce-one').'</p><ul style="list-style:disc;margin-left:20px">';
+            foreach((array)$f['errors'] as $e)echo '<li><code>'.esc_html((string)$e).'</code></li>';
+            echo '</ul></div>';
         }
 
         /**

@@ -9,6 +9,7 @@
  * @var string $push_nonce
  * @var int    $push_devices  devices the server has for this user (0: re-save this one now)
  * @var int    $push_user     the signed-in user (another account on this device: re-save at once)
+ * @var array<string,mixed> $attempts  refused attempts kept (3.31.92): url, nonce, serverMs (empty = off)
  * @var string $sw          service worker URL
  */
 if (!defined('ABSPATH')) exit;
@@ -107,6 +108,34 @@ if (!defined('ABSPATH')) exit;
                 }).catch(function(){});
               }
               window.ewsPushSync=ewsPushSync;
+              /* A Sign In / Out pressed with no network never reaches the server (3.31.92). The phone notes it
+                 when the button is pressed; the page the server answers with (time_error / time_success)
+                 clears the note. A note still there the next time the app opens is sent then. Its time is
+                 counted from the server's clock when this page opened (serverMs) plus the milliseconds since,
+                 which changing the phone's clock does not move; the server keeps both and shows any gap. */
+              (function(C){
+                if(!C||!C.url)return;
+                var K='ewsPendingAttempt',t0=(window.performance&&performance.now)?performance.now():0;
+                function now(){return (window.performance&&performance.now)?performance.now():0;}
+                function get(){try{return JSON.parse(localStorage.getItem(K)||'null');}catch(e){return null;}}
+                function clear(){try{localStorage.removeItem(K);}catch(e){}}
+                var answered=/[?&](time_error|time_success)=/.test(location.search);
+                if(answered)clear();
+                var p=get();
+                if(p&&!answered){
+                  var b=new URLSearchParams();b.set('action','ews_signin_offline');b.set('_wpnonce',C.nonce);
+                  for(var k in p)if(Object.prototype.hasOwnProperty.call(p,k))b.set(k,p[k]==null?'':String(p[k]));
+                  fetch(C.url,{method:'POST',credentials:'same-origin',body:b}).then(function(r){if(r.ok)clear();}).catch(function(){});
+                }
+                window.ewsNoteAttempt=function(f){
+                  if(!f||!f.querySelector)return;
+                  var a=f.querySelector('input[name="action"]');if(!a||(a.value!=='ews31_time_event'&&a.value!=='ews_presence_qr_signin'))return;
+                  var g=function(n){var i=f.querySelector('input[name="'+n+'"]');return i&&i.value?i.value:'';};
+                  try{localStorage.setItem(K,JSON.stringify({event_type:g('event_type')||'sign_in',phone_ms:Date.now(),server_ms:C.serverMs,elapsed_ms:Math.max(0,Math.round(now()-t0)),latitude:g('latitude'),longitude:g('longitude'),accuracy:g('accuracy')}));}catch(e){}
+                };
+                // A form sent by its own button (a form held for the face check is noted when it is sent).
+                document.addEventListener('submit',function(e){if(!e.defaultPrevented)window.ewsNoteAttempt(e.target);},false);
+              })(<?php echo wp_json_encode($attempts); ?>);
               if('serviceWorker' in navigator){navigator.serviceWorker.register(<?php echo wp_json_encode($sw); ?>,{updateViaCache:'none'}).then(ewsPushSync).catch(function(){});}
             })();
             </script>

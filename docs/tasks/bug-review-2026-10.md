@@ -46,10 +46,10 @@ notifications, employee screens.
 
 ## Attendance
 
-- [ ] **Overnight shift: admins cannot add / edit a Sign Out after midnight**
+- [x] **Overnight shift: admins cannot add / edit a Sign Out after midnight**
   (`src/Attendance/ManualRecordRules.php` ~line 36, `date_mismatch`): allow the next calendar day for
   a shift that crosses midnight.
-- [ ] **Overnight shift: a correction can add a Sign Out in the future**
+- [x] **Overnight shift: a correction can add a Sign Out in the future**
   (`src/Attendance/CorrectionRules.php` ~line 70): the future-time check runs only when the date is
   today; check the final timestamp instead.
 - [ ] **Corrections monthly limit uses `month-31`** (`trait-corrections.php` `cx_month_count` ~line 101):
@@ -111,7 +111,8 @@ Owner decisions: archived employees are paid up to a **last working day** asked 
 person's push (only an account switch on the same phone moves it).
 
 Done in 3.31.90: 3, 4, 5, 7, 8, 9, 15, 16 (and the three matching items above). Done in 3.31.91: 1 (challenge +
-replay check; the photo at Face Sign In is a mockup waiting for approval), 2, 6, 14, 17.
+replay check), 2, 6, 14, 17. Done in 3.31.92: 10, 11, 12, 13 (and the two overnight items above), the photo
+at Face Sign In, refused Sign In attempts, the IP in the report.
 
 Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** security (1, 2, 6,
 14, 17) · **3.31.92** correctness / operations (10, 11, 12, 13) with the rest of the list above.
@@ -127,10 +128,10 @@ Plan: **3.31.90** money + permissions (3, 4, 5, 7, 8, 9, 15, 16) · **3.31.91** 
 - [x] 7 Daily workers payout recorded as successful while lines / day links failed.
 - [x] 8 The same worker advance deducted twice by two concurrent payouts.
 - [x] 9 Account switch on the same browser keeps push bound to the previous account (3.31.87 marker).
-- [ ] 10 Service worker activate deletes other apps' caches on the same origin.
-- [ ] 11 Schema upgrade marked done when a table / column failed.
-- [ ] 12 Manual Sign Out after midnight refused for overnight shifts (also in the list above).
-- [ ] 13 Overtime after an overnight shift is placed on the wrong day.
+- [x] 10 Service worker activate deletes other apps' caches on the same origin.
+- [x] 11 Schema upgrade marked done when a table / column failed.
+- [x] 12 Manual Sign Out after midnight refused for overnight shifts (also in the list above).
+- [x] 13 Overtime after an overnight shift is placed on the wrong day.
 - [x] 14 Concurrent overtime requests pass the overlap check; minutes counted twice.
 - [x] 15 Correction payroll carry-over: a failed adjustment insert is reported as done.
 - [x] 16 Approving a day change races a payout; can change a paid day.

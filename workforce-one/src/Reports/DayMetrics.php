@@ -92,6 +92,9 @@ final class DayMetrics
      * - Actual: the part of a window before the shift start that the first Sign In covers, plus the
      *   part after the shift end that the last Sign Out covers (time inside the shift is not overtime).
      * - Unapproved extra: presence after the shift end not covered by an approved window.
+     * On a shift that ends after midnight (22:00–06:00), a window between its end and the next start is
+     * on the side it is nearer to: 06:00–08:00 is the next morning, after the shift (3.31.92: it was put
+     * before the shift on the same day and never counted); 20:00–22:00 stays before it.
      * @param array<int,array{start:string,end:string}> $windows 'H:i' or 'H:i:s'
      * @return array{approved:int,actual:int,extra:int,windows:array<int,array{approved:int,actual:int}>}
      */
@@ -103,10 +106,15 @@ final class DayMetrics
         $in = $firstIn ? strtotime($firstIn) : null;
         $out = $lastOut ? strtotime($lastOut) : null;
         $approved = 0; $actual = 0; $approvedPost = 0; $each = [];
+        $overnight = $end - $start < 86400 && date('Y-m-d', $end) !== $date;
         foreach ($windows as $w) {
             $rs = strtotime($date . ' ' . $w['start']);
             $re = strtotime($date . ' ' . $w['end']);
             if ($re <= $rs) continue;
+            if ($overnight) {
+                $morningEnd = $end - 86400;   // the shift's end, on the work date's clock
+                if ($re <= $morningEnd || ($rs >= $morningEnd && $re <= $start && $rs - $morningEnd <= $start - $re)) { $rs += 86400; $re += 86400; }
+            }
             $mins = intdiv($re - $rs, 60);
             $real = 0;
             if ($in !== null && $rs < $start) $real += max(0, intdiv(min($re, $start) - max($rs, $in), 60));

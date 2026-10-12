@@ -50,31 +50,42 @@ trait EWS_Frontend_Trait {
     public function face_rest_verify($request){
         $emp=$this->current_employee(); if(!$emp)return new WP_Error('no_employee',__('Employee account not found','workforce-one'),array('status'=>403));
         $p=$request->get_json_params(); $tpl=isset($p['template'])&&is_array($p['template'])?$p['template']:array();
+        // Each face check is kept when "refused attempts" is on, with the photo when that is on (3.31.92).
+        $photo=$this->face_photo_save($p['photo']??null);
+        $keep=function($result,$reason)use($emp,&$photo){
+            $this->evidence_keep($emp,['event_type'=>'face','result'=>$result,'reason'=>$reason,'source'=>'app','photo_key'=>$result==='face_ok'?null:($photo!==''?$photo:null)]);
+            if($result!=='face_ok' && $photo!=='' && !$this->attempts_enabled())$this->private_files_delete('workforce-one-face-photos',$photo);
+        };
         // A fresh code from /face/challenge (3.31.91): a recorded request cannot be replayed.
-        if(!$this->face_consume_challenge($p['challenge']??''))return new WP_Error('face_challenge',__('The face check expired. Please try again.','workforce-one'),array('status'=>400));
-        $stored=$this->face_template_for_employee($emp->id); if(!$stored)return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));
+        if(!$this->face_consume_challenge($p['challenge']??'')){$keep('face_failed','face_challenge');return new WP_Error('face_challenge',__('The face check expired. Please try again.','workforce-one'),array('status'=>400));}
+        $stored=$this->face_template_for_employee($emp->id); if(!$stored){$keep('face_failed','face_not_enrolled');return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));}
         // Only the decision is returned (no distance or threshold: that was a similarity oracle), and
         // failed attempts are limited per user (src/Attendance/FaceMatch.php: 5 in 10 minutes).
         $uid=get_current_user_id();$state=get_user_meta($uid,'ews_face_verify_failures',true);$state=is_array($state)?$state:null;
-        if(FaceMatch::lockedOut($state,time()))return $this->face_rate_limited(FaceMatch::retryAfter($state,time()));
+        if(FaceMatch::lockedOut($state,time())){$keep('face_failed','face_locked');return $this->face_rate_limited(FaceMatch::retryAfter($state,time()));}
         $ok=FaceMatch::matches($tpl,$stored,(float)$this->face_signin_setting('face_match_threshold',.60));
+        $reason='face_mismatch';
         // The same descriptor again (the enrolled one, or one accepted before) is not a live capture: refused
         // as a failed attempt, answered like a mismatch (no hint), written to the Audit Log (3.31.91).
         if($ok===true){
             $seen=array_merge([$stored],array_map(function($x){return $x['d'];},$this->face_recent($uid)));
             if(FaceMatch::isReplay($tpl,$seen)){
-                $ok=false;
+                $ok=false;$reason='face_replay';
                 $this->audit('face_replay','employee',(int)$emp->id,$emp->name.' / a face descriptor already used was sent again (refused)');
             }
         }
         if($ok!==true){
             $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,'ews_face_verify_failures',$state);
             if($state['failures']===FaceMatch::MAX_FAILURES)$this->audit('face_verify_locked','employee',(int)$emp->id,$emp->name.' / '.FaceMatch::MAX_FAILURES.' failed Face verifications in '.(FaceMatch::WINDOW_SECONDS/60).' minutes');
+            $keep('face_failed',$ok===null?'invalid_template':$reason);
             if($ok===null)return new WP_Error('invalid_template',__('Template size mismatch','workforce-one'),array('status'=>400));
             return array('ok'=>false);
         }
         delete_user_meta($uid,'ews_face_verify_failures');
         $this->face_remember($uid,$tpl);
+        $keep('face_ok','face_ok');
+        // The photo goes with the Sign In / Out this check allows (face_photo_take in record_time_event).
+        $this->face_photo_hold($photo);
         return array('ok'=>true,'face_token'=>$this->face_issue_token());
     }
 
@@ -556,7 +567,10 @@ trait EWS_Frontend_Trait {
             $branch_today=$emp?$this->branch_today((int)$emp->id):null;   // 3.31.72
             return $this->render_template('app/time',compact('emp','sch','ev','working','today','sign_in_open','hours','grace_period','face_signin_enabled','requires_location','break_data','branch_today',
                 'signin_bounds','hours_start_label','hours_end_label','sign_in_status_label','face_enrolled','face_settings','face_vendor_url','qr_enabled','presence_enabled','presence_url',
-                'clock_state','clock_progress','signed_in_at','picture','initials')+['corrections_html'=>$this->cx_time_panel($emp)]);
+                'clock_state','clock_progress','signed_in_at','picture','initials')+['corrections_html'=>$this->cx_time_panel($emp),
+                // A photo is kept with each face check (3.31.92): the camera screen says so.
+                'face_photo_days'=>$this->face_photo_enabled()?(int)$this->evidence_settings()['photo_days']:0,
+                'face_photo_viewers'=>$this->evidence_settings()['photo_viewers']]);
         }
     private function redirect($args=[]){
             $u=wp_get_referer()?:$this->app_home_url();

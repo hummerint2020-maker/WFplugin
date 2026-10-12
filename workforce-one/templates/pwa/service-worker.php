@@ -21,7 +21,8 @@ const ASSETS_PATH=<?php echo wp_json_encode($sw['assets_path']); ?>;
 const PUSH_URL=<?php echo wp_json_encode($push_url); ?>;
 const VAPID_KEY=<?php echo wp_json_encode($vapid_key); ?>;
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(STATIC_ASSETS)).then(()=>self.skipWaiting()));});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
+// Only this app's older caches are removed (3.31.92): other apps on the same site keep theirs.
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE&&k.indexOf('employee-hub-v')===0).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(!/^https?:$/.test(u.protocol))return;if(!u.pathname.startsWith(ASSETS_PATH))return;if(!/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot)$/i.test(u.pathname))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});
 self.addEventListener('push',e=>{let d={};try{d=e.data?e.data.json():{};}catch(x){d={body:e.data?e.data.text():'Workforce One notification'};}let title=d.title||'Workforce One';let opts={body:d.body||'You have a new notification.',icon:d.icon||ICON_URL,badge:d.badge||ICON_URL,data:{url:d.url||HOME_URL}};e.waitUntil(self.registration.showNotification(title,opts));});
 // The push service replaced the subscription while the app was closed (3.31.87): subscribe again and tell

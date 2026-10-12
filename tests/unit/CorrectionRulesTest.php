@@ -71,6 +71,10 @@ final class CorrectionRulesTest extends TestCase
         $this->assertSame('future_time', CorrectionRules::check($this->f(['date' => '2026-10-08', 'in' => '2026-10-08 08:47:00', 'time_out' => '20:30'])));
         $this->assertSame('', CorrectionRules::check($this->f(['date' => '2026-10-08', 'in' => '2026-10-08 08:47:00', 'time_out' => '17:30'])));
         $this->assertSame('date', CorrectionRules::check($this->f(['date' => '2026-02-30'])));
+        // Overnight (3.31.92): yesterday's shift ends this morning; its Sign Out cannot be later than now.
+        $night = ['date' => '2026-10-07', 'today' => '2026-10-08', 'now' => '05:00', 'in' => '2026-10-07 22:00:00', 'overnight' => true];
+        $this->assertSame('future_time', CorrectionRules::check($this->f($night + ['time_out' => '06:00'])));
+        $this->assertSame('', CorrectionRules::check($this->f($night + ['time_out' => '04:30'])));
     }
 
     public function testMonthlyLimitBothWays(): void
