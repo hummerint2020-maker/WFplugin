@@ -58,6 +58,43 @@ figcaption{color:var(--muted);font-size:13.5px;margin-top:10px}
 .clock{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:16px;text-align:center;display:grid;gap:4px}
 .clock .t{font-size:30px;font-weight:700;font-family:var(--mono)}
 .decide{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:6px}
+/* Settings: a wp-admin card with every text of the screen, next to a live preview of the chosen state. */
+.cfg{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:980px){.cfg{grid-template-columns:minmax(0,1fr)}}
+.cfg h2{font-size:20px;margin:0 0 4px}
+.wp{--wp-bg:#f0f0f1;--wp-ink:#1d2327;--wp-line:#c3c4c7;--wp-blue:#2271b1;--wp-paper:#fff;background:var(--wp-bg);color:var(--wp-ink);border:1px solid var(--line);border-radius:6px;overflow:hidden;font:13px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .wp{--wp-bg:#1f2228;--wp-ink:#e6e7ea;--wp-line:#3a3f4a;--wp-blue:#72aee6;--wp-paper:#191c22}}
+:root[data-theme="dark"] .wp{--wp-bg:#1f2228;--wp-ink:#e6e7ea;--wp-line:#3a3f4a;--wp-blue:#72aee6;--wp-paper:#191c22}
+.wp-top{background:#1d2327;color:#f0f0f1;padding:6px 12px;font-size:12px}
+.wp-body{padding:14px;display:grid;gap:12px;min-width:0}
+.wp h3{font-size:14px;margin:0}
+.wp-tabs{display:flex;gap:4px;border-bottom:1px solid var(--wp-line);flex-wrap:wrap}
+.wp-tabs a{padding:6px 10px;border:1px solid var(--wp-line);border-bottom:0;background:var(--wp-bg);color:var(--wp-ink);text-decoration:none;font-weight:600;margin-bottom:-1px}
+.wp-tabs a.on{background:var(--wp-paper)}
+.wcard{background:var(--wp-paper);border:1px solid var(--wp-line);padding:14px 16px;display:grid;gap:12px}
+.wrow{display:flex;gap:10px;align-items:flex-start}
+.wrow p{margin:2px 0 0;color:inherit;opacity:.8}
+.tg{flex:none;width:36px;height:20px;border-radius:20px;background:var(--wp-line);position:relative;margin-top:2px;border:0;cursor:pointer;padding:0}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s}
+.tg[aria-pressed="true"]{background:var(--wp-blue)}.tg[aria-pressed="true"]::after{left:19px}
+.new{background:var(--wp-blue);color:#fff;border-radius:3px;font-size:11px;padding:0 6px;margin-left:6px;font-weight:600}
+fieldset{border:1px solid var(--wp-line);border-radius:4px;padding:10px 12px 12px;margin:0;display:grid;gap:8px;min-width:0}
+legend{font-weight:600;padding:0 4px}
+.f{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 10px;align-items:start}
+@media (max-width:560px){.f{grid-template-columns:minmax(0,1fr)}}
+.f label{padding-top:4px}
+.f input,.f textarea{width:100%;box-sizing:border-box;border:1px solid var(--wp-line);border-radius:4px;padding:4px 7px;background:var(--wp-paper);color:var(--wp-ink);font:inherit}
+.f textarea{min-height:52px;resize:vertical}
+.f input.num{width:70px}
+.f .reset{grid-column:2;justify-self:start;font-size:12px;color:var(--wp-blue);background:none;border:0;padding:0;cursor:pointer}
+.hint{font-size:12px;opacity:.75;margin:0}
+.wbtn{display:inline-block;background:var(--wp-blue);color:#fff;border-radius:3px;padding:5px 12px;font-weight:600;justify-self:start}
+code{font-family:var(--mono);font-size:12px;background:var(--wp-bg);padding:0 4px;border-radius:3px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;justify-content:center}
+.seg button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.sticky{position:sticky;top:12px}
+[hidden]{display:none!important}
 .decide h2{margin:0;font-size:18px}
 .decide ol{margin:0;padding-inline-start:20px;display:grid;gap:6px}
 </style>
@@ -161,10 +198,150 @@ figcaption{color:var(--muted);font-size:13.5px;margin-top:10px}
   </section>
 
   <section class="decide">
+    <h2>اتفقنا على</h2>
+    <ol>
+      <li>جدول النهارده وباقي الأسبوع بيظهر (من آخر مرة الموظف فتحه والنت شغال).</li>
+      <li>الشاشة بتظهر في أي صفحة في التطبيق.</li>
+      <li>كل الشاشة بتتظبط من الإعدادات، حتى كل كلمة مكتوبة فيها: تحت.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 style="margin:0 0 4px;font-size:20px">الإعدادات: كل حاجة في الشاشة بتتغير من هنا</h2>
+    <p class="lead" style="margin:0 0 16px">جرّب: غيّر أي كلمة على الشمال وهتشوفها في الموبايل على اليمين على طول. الكلام الافتراضي هو اللي في الشاشات فوق، وجنب كل خانة "Reset to default". <code>{time}</code> بتتبدّل بوقت المحاولة و<code>{updated}</code> بوقت آخر تحديث للجدول.</p>
+    <div class="cfg" dir="ltr">
+      <div class="wp">
+        <div class="wp-top">Workforce One</div>
+        <div class="wp-body">
+          <h2 style="font-size:20px;font-weight:400;margin:0">Features</h2>
+          <div class="wp-tabs"><a href="#">Attendance</a><a href="#">Face Sign In</a><a class="on" href="#">App</a><a href="#">Requests</a></div>
+          <div class="wcard">
+            <div class="wrow"><button class="tg" type="button" aria-pressed="true" aria-label="Offline screen"></button><div><strong>Offline screen</strong><span class="new">New</span><p>When the phone has no internet, or the server does not answer, the installed app shows this screen instead of the browser's blank page. It is kept on the phone, so it works even when the server is down. Off by default.</p></div></div>
+
+            <fieldset><legend>When to show it</legend>
+              <div class="f"><label for="to">Server not answering</label><div><input id="to" class="num" type="number" value="20" min="5" max="60"> seconds, then show "not responding"</div></div>
+              <div class="wrow"><button class="tg" type="button" id="sch" aria-pressed="true" aria-label="Schedule card"></button><div><strong>Show the employee's schedule</strong><p>Today and the rest of the week, as last seen with the internet on. Nothing else is kept on the phone (no pay, no photos).</p></div></div>
+              <div class="wrow"><button class="tg" type="button" id="hint" aria-pressed="true" aria-label="Keep open note"></button><div><strong>Show the "keep the app open" note</strong></div></div>
+            </fieldset>
+
+            <fieldset data-for="off"><legend>No internet</legend>
+              <div class="f"><label for="t_off_badge">Badge</label><input id="t_off_badge" data-k="off_badge"></div>
+              <div class="f"><label for="t_off_title">Title</label><input id="t_off_title" data-k="off_title"></div>
+              <div class="f"><label for="t_off_msg">Message</label><textarea id="t_off_msg" data-k="off_msg"></textarea></div>
+              <div class="f"><label for="t_retry">Button</label><input id="t_retry" data-k="retry"></div>
+            </fieldset>
+
+            <fieldset data-for="down"><legend>Server not responding</legend>
+              <div class="f"><label for="t_down_badge">Badge</label><input id="t_down_badge" data-k="down_badge"></div>
+              <div class="f"><label for="t_down_title">Title</label><input id="t_down_title" data-k="down_title"></div>
+              <div class="f"><label for="t_down_msg">Message</label><textarea id="t_down_msg" data-k="down_msg"></textarea></div>
+            </fieldset>
+
+            <fieldset data-for="press"><legend>Sign In / Out pressed with no connection</legend>
+              <div class="f"><label for="t_ns_title">Title</label><input id="t_ns_title" data-k="ns_title"></div>
+              <div class="f"><label for="t_ns_msg">Message</label><textarea id="t_ns_msg" data-k="ns_msg"></textarea></div>
+              <div class="f"><label for="t_ns_down">Message (server down)</label><textarea id="t_ns_down" data-k="ns_down"></textarea></div>
+              <div class="f"><label for="t_keep">Note</label><input id="t_keep" data-k="keep"></div>
+            </fieldset>
+
+            <fieldset data-for="sched"><legend>Schedule card</legend>
+              <div class="f"><label for="t_today">Today</label><input id="t_today" data-k="today"></div>
+              <div class="f"><label for="t_week">Rest of the week</label><input id="t_week" data-k="week"></div>
+              <div class="f"><label for="t_upd">Last updated</label><input id="t_upd" data-k="upd"></div>
+            </fieldset>
+
+            <fieldset data-for="back"><legend>Back online</legend>
+              <div class="f"><label for="t_on_badge">Badge</label><input id="t_on_badge" data-k="on_badge"></div>
+              <div class="f"><label for="t_toast">Message (attempt sent)</label><textarea id="t_toast" data-k="toast"></textarea></div>
+              <div class="f"><label for="t_toast0">Message (nothing pending)</label><input id="t_toast0" data-k="toast0"></div>
+            </fieldset>
+
+            <p class="hint">Phones get the new texts the next time they open the app with the internet on. An empty box uses the default text.</p>
+            <span class="wbtn">Save</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky">
+        <div class="seg" role="group" aria-label="Preview">
+          <button type="button" data-st="off" aria-pressed="true">No internet</button>
+          <button type="button" data-st="press" aria-pressed="false">Sign In pressed</button>
+          <button type="button" data-st="down" aria-pressed="false">Server down</button>
+          <button type="button" data-st="back" aria-pressed="false">Back online</button>
+        </div>
+        <div class="phone"><div class="screen">
+          <div class="bar"><span>8:04</span><span class="net" id="p_net">no signal</span></div>
+          <div class="top"><b id="p_app">Workforce One</b><span class="badge off" id="p_badge"></span></div>
+          <div class="body">
+            <div class="toast" id="p_toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span id="p_toast_t"></span></div>
+            <div class="hero" id="p_hero">
+              <svg id="i_down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M8 7h.01M8 17h.01M14 9l4 4M18 9l-4 4"/></svg>
+              <svg id="i_off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5.5 12.3a10 10 0 0 1 13 0"/><path d="M9 15.8a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/></svg>
+              <h2 id="p_title"></h2><p id="p_msg"></p>
+            </div>
+            <div class="clock" id="p_clock"><span class="note">Time now</span><span class="t" id="p_clock_t">08:04</span></div>
+            <div class="saved" id="p_saved"><b id="p_ns_title"></b><span id="p_ns_msg"></span></div>
+            <div class="btn" id="p_retry"></div>
+            <div class="note" id="p_keep"></div>
+            <div class="card" id="p_today"><h3 id="p_today_h"></h3>
+              <div class="row"><span>Mon 12 Oct</span><span>Office · Nasr City</span></div>
+              <div class="row"><span>Hours</span><span class="mono">09:00 – 17:00</span></div>
+              <div class="note" id="p_upd"></div></div>
+            <div class="card" id="p_week"><h3 id="p_week_h"></h3>
+              <div class="row"><span>Tue</span><span>Work from home</span></div>
+              <div class="row"><span>Wed</span><span>Office</span></div>
+              <div class="row"><span>Thu</span><span>Leave</span></div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="decide">
     <h2>محتاج ردك</h2>
     <ol>
-      <li>نعرض جدول اليوم وباقي الأسبوع من آخر مرة اتفتح؟ (متحفظ على الموبايل، ومش حساس)</li>
-      <li>الشاشة تظهر في أي صفحة في التطبيق، ولا في صفحة الحضور بس؟ (اقتراحي: في أي صفحة)</li>
+      <li>مكان الإعدادات: تبويب جديد "App" في Features (هنحط فيه بعدين أي إعدادات تخص التطبيق المتثبّت). تمام؟</li>
+      <li>الكلام بيتكتب مرة واحدة بالإنجليزي وبيظهر لكل الموظفين كده، حتى لو لغة الموقع عربي. تمام، ولا عايز نسخة عربي كمان تظهر لو لغة الموظف عربي؟</li>
+      <li>لون الشاشة واسم التطبيق اللي فوق بيتاخدوا من إعدادات التطبيق الموجودة (نفس اللون والاسم اللي على أيقونة الموبايل)، مش خانات جديدة. تمام؟</li>
     </ol>
   </section>
 </div>
+
+<script>
+const D={off_badge:"Offline",off_title:"No internet connection",off_msg:"Turn on Wi-Fi or mobile data. This page opens by itself when you are back online.",retry:"Try again",
+down_badge:"Not responding",down_title:"Workforce One is not responding",down_msg:"Your internet works, but the company server did not answer. It is not your phone. Try again in a few minutes.",
+ns_title:"You are not signed in",ns_msg:"Your attempt at {time} is saved on this phone and goes to your manager as soon as you are back online. When the connection returns, press Sign In again to record your attendance.",
+ns_down:"Your Sign In attempt at {time} is saved on this phone and goes to your manager when the server is back.",keep:"Keep the app open if you can: it reloads by itself when the connection returns.",
+today:"Your schedule today",week:"Rest of the week",upd:"Last updated {updated}",on_badge:"Online",toast:"You are back online. Your Sign In attempt at {time} was sent to your manager. Sign In now.",toast0:"You are back online."};
+const $=id=>document.getElementById(id);
+let st="off";
+document.querySelectorAll("[data-k]").forEach(el=>{
+  el.value=D[el.dataset.k];
+  const b=document.createElement("button");b.type="button";b.className="reset";b.textContent="Reset to default";
+  b.onclick=()=>{el.value=D[el.dataset.k];draw();};el.closest(".f").appendChild(b);
+  el.addEventListener("input",draw);
+  el.addEventListener("focus",()=>{const f=el.closest("fieldset").dataset.for;const m={off:"off",down:"down",press:"press",back:"back"}[f];if(m&&m!==st)show(m);});
+});
+document.querySelectorAll(".tg").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");draw();});
+document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>show(b.dataset.st));
+function show(s){st=s;document.querySelectorAll("[data-st]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===s));draw();}
+function t(k){const el=document.querySelector('[data-k="'+k+'"]');const v=(el&&el.value.trim())||D[k];return v.replace(/\{time\}/g,"8:04").replace(/\{updated\}/g,"today at 7:58 AM");}
+function vis(id,on){$(id).hidden=!on;}
+function draw(){
+  const sch=$("sch").getAttribute("aria-pressed")==="true",hint=$("hint").getAttribute("aria-pressed")==="true";
+  const down=st==="down",press=st==="press",back=st==="back";
+  $("p_net").textContent=(down||back)?"4G":"no signal";
+  $("p_app").textContent=(press||back)?"Sign In / Out":"Workforce One";
+  $("p_badge").textContent=back?t("on_badge"):down?t("down_badge"):t("off_badge");
+  $("p_badge").className="badge "+(back?"on":"off");
+  vis("p_toast",back);$("p_toast_t").textContent=t("toast");
+  vis("p_hero",st==="off"||down);vis("i_down",down);vis("i_off",!down);$("p_title").textContent=down?t("down_title"):t("off_title");$("p_msg").textContent=down?t("down_msg"):t("off_msg");
+  vis("p_clock",press||back);$("p_clock_t").textContent=back?"08:06":"08:04";
+  vis("p_saved",press||down);$("p_ns_title").textContent=t("ns_title");$("p_ns_msg").textContent=down?t("ns_down"):t("ns_msg");
+  vis("p_retry",true);$("p_retry").textContent=back?"Sign In":t("retry");$("p_retry").className=press?"btn ghost":"btn";
+  vis("p_keep",press&&hint);$("p_keep").textContent=t("keep");
+  vis("p_today",sch&&!back&&!press);vis("p_week",sch&&!back&&!press);
+  $("p_today_h").textContent=t("today");$("p_week_h").textContent=t("week");$("p_upd").textContent=t("upd");
+}
+draw();
+</script>
