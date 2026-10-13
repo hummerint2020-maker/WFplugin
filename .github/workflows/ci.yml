@@ -44,6 +44,8 @@ jobs:
         run: vendor/bin/phpunit
       - name: Translations complete
         run: python3 tests/check_translations.py
+      - name: Module boundaries do not grow (docs/architecture/modules.md)
+        run: python3 tests/check_modules.py
 
   e2e:
     name: WordPress + MySQL e2e

@@ -1,0 +1,85 @@
+{
+  "_about": "Workforce One as a modular monolith: which module each includes/trait-*.php file belongs to, and which module owns each table. tests/check_modules.py reads this file, counts what crosses module lines (another module's table used directly, another module's function called) and fails when that grows past docs/architecture/module-baseline.json. See docs/architecture/modules.md.",
+  "modules": {
+    "platform": {
+      "label": "Platform: settings, schema, permissions, audit, files",
+      "traits": ["core", "schema", "permissions", "features", "settings-overview", "settings-pages", "private-files", "privacy"],
+      "tables": ["audit_log"]
+    },
+    "shell": {
+      "label": "App and wp-admin shell: layout, menus, home pages, appearance",
+      "traits": ["app-layout", "appearance", "admin", "admin-nav", "admin-dashboard", "dashboard-view", "frontend"],
+      "tables": []
+    },
+    "people": {
+      "label": "People: employees, departments, teams, profiles, accounts",
+      "traits": ["employees", "employee-admin", "employee-profile", "people-view", "my-profile", "profile-account", "departments", "teams"],
+      "tables": ["employees", "employee_relationships", "departments", "teams", "team_members"]
+    },
+    "schedule": {
+      "label": "Schedule: working time, schedule types, the planner, swaps, office minimum",
+      "traits": ["work-time", "schedule-config", "schedule-types", "schedule-view", "swap", "attendance-grid", "office-minimum"],
+      "tables": ["schedule", "schedule_swaps", "company_calendar"]
+    },
+    "locations": {
+      "label": "Locations: work locations, branches, kiosks and presence checks",
+      "traits": ["locations", "branches", "presence"],
+      "tables": ["locations", "employee_locations_v321", "employee_branches", "kiosks", "presence_verifications"]
+    },
+    "attendance": {
+      "label": "Attendance: Sign In / Out, breaks, face, corrections, evidence, auto attendance",
+      "traits": ["attendance", "auto-attendance", "breaks", "face", "face-reset", "signin-evidence", "time-report", "corrections", "attendance-insights"],
+      "tables": ["time_logs", "break_sessions", "face_profiles", "auto_attendance_rules", "attendance_corrections", "signin_attempts"]
+    },
+    "leave": {
+      "label": "Leave: requests, balances, types, cancellations",
+      "traits": ["leave", "leave-admin", "leave-view"],
+      "tables": ["leave_requests", "leave_balances", "leave_types", "leave_schedule_snapshots", "vacation_requests"]
+    },
+    "overtime": {
+      "label": "Overtime and Early Leave",
+      "traits": ["overtime"],
+      "tables": ["overtime_requests", "early_leave_requests"]
+    },
+    "approvals": {
+      "label": "Approvals: workflows and the Requests Hub",
+      "traits": ["approvals", "admin-requests"],
+      "tables": ["approval_workflows", "approval_workflow_steps", "approval_requests", "approval_steps"]
+    },
+    "notifications": {
+      "label": "Notifications: in-app, push devices, links",
+      "traits": ["notifications"],
+      "tables": ["notifications", "push_subscriptions"]
+    },
+    "tasks": {
+      "label": "Tasks",
+      "traits": ["tasks", "task-extras"],
+      "tables": ["tasks", "task_items", "task_comments", "task_activity"]
+    },
+    "payroll": {
+      "label": "Payroll and My Pay",
+      "traits": ["payroll"],
+      "tables": ["pay_rates", "pay_adjustments", "payroll_runs", "payslips"]
+    },
+    "daily_workers": {
+      "label": "Daily Workers",
+      "traits": ["daily-workers"],
+      "tables": ["dw_workers", "dw_sites", "dw_foremen", "dw_moves", "dw_days", "dw_sheets", "dw_advances", "dw_payouts", "dw_lines", "dw_changes"]
+    },
+    "engagement": {
+      "label": "Engagement: achievements, recognition, polls, nudges settings",
+      "traits": ["achievements", "achievements-admin", "recognition", "engagement-admin", "polls"],
+      "tables": ["achievements", "employee_achievements", "kudos", "polls", "poll_options", "poll_votes"]
+    },
+    "reports": {
+      "label": "Reports",
+      "traits": ["reports"],
+      "tables": []
+    },
+    "app": {
+      "label": "Installed app and API: PWA, offline screen, native sign-in",
+      "traits": ["pwa", "offline-screen", "api-auth"],
+      "tables": ["api_tokens", "api_devices", "api_rate_limits", "api_idempotency"]
+    }
+  }
+}
