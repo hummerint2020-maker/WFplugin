@@ -17,12 +17,12 @@ trait EWS_Admin_Requests_Trait {
         global $wpdb;
         $rows=[];
         $names=[];
-        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$names,$wpdb){
+        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$names){
             $key=$type.':'.(int)$id;
             if(isset($rows[$key]))return;
             $employee_id=(int)$employee_id;
             if(!array_key_exists($employee_id,$names)){
-                $name=$employee_id?$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",$employee_id)):null;
+                $name=$employee_id?$this->people_name($employee_id):null;
                 $names[$employee_id]=$name!==null?(string)$name:'Employee #'.$employee_id;
             }
             $step=$ar?$this->approval_current_step((int)$ar->id):null;
@@ -112,7 +112,7 @@ trait EWS_Admin_Requests_Trait {
         $table=$wpdb->prefix.'ews_vacation_requests';
         $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Pending' LIMIT 1",$id));
         if(!$r)return Hub::ERROR;
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",(int)$r->employee_id));
+        $emp=$this->people_employee((int)$r->employee_id);
         $approve=$decision==='approve';
         $now=current_time('mysql');$uid=get_current_user_id();
         if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;

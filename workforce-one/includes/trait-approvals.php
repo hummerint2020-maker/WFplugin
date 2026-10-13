@@ -132,7 +132,7 @@ trait EWS_Approvals_Trait {
     private function approval_requester_user_id($request){
         global $wpdb;
         if(!$request)return 0;
-        return (int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d",(int)$request->requester_employee_id));
+        return (int)$this->people_user_id((int)$request->requester_employee_id);
     }
 
     private function approval_workflow_key_by_id($workflow_id){
@@ -220,20 +220,20 @@ trait EWS_Approvals_Trait {
         }
         if($resolver_type==='SPECIFIC_EMPLOYEE'){
             $id=absint($resolver_value);
-            return $id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$id)):null;
+            return $id?$this->people_employee($id,true):null;
         }
         if($resolver_type==='SPECIFIC_USER'){
             $uid=absint($resolver_value);
             if(!$uid)return null;
             $user=get_user_by('id',$uid);
             if(!$user)return null;
-            $employee=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE wp_user_id=%d AND active=1 LIMIT 1",$uid));
+            $employee=$this->people_employee_by_user($uid);
             if($employee)return $employee;
             return (object)['id'=>null,'wp_user_id'=>$uid];
         }
         if($resolver_type==='TARGET_EMPLOYEE'){
             $id=absint(isset($entity_context['target_employee_id'])?$entity_context['target_employee_id']:0);
-            return $id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$id)):null;
+            return $id?$this->people_employee($id,true):null;
         }
         return null;
     }
@@ -374,7 +374,7 @@ trait EWS_Approvals_Trait {
         $approval_id=(int)$wpdb->insert_id;
 
         $self_allowed=$this->approval_self_allowed($workflow_key);
-        $requester_uid=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d",(int)$requester_employee_id));
+        $requester_uid=(int)$this->people_user_id((int)$requester_employee_id);
         $first_rerouted=false;
         foreach($steps as $step){
             $approver=$this->approval_resolve_approver($requester_employee_id,$step->resolver_type,$step->resolver_value,$entity_context);
@@ -503,7 +503,7 @@ trait EWS_Approvals_Trait {
     public function admin_approval_workflows(){
         if(!current_user_can('manage_options'))wp_die('Access denied');
         global $wpdb;$t=$this->approval_tables();$this->ensure_approval_schema();
-        $employees=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+        $employees=(array)$this->people_active_list();
         // Supervisor Relationships: 50 employees per page with a search (3.31.71).
         $sup_search=sanitize_text_field(wp_unslash($_GET['s']??''));$per=50;
         $listed=$employees;
@@ -559,7 +559,7 @@ trait EWS_Approvals_Trait {
         $this->ensure_approval_schema();global $wpdb;$t=$this->approval_tables();
         // Back to the same page and search of the Supervisor Relationships list.
         $back=['page'=>'ews31-approvals'];parse_str((string)wp_parse_url((string)wp_get_referer(),PHP_URL_QUERY),$q);foreach(['paged','s'] as $k)if(!empty($q[$k]))$back[$k]=$k==='paged'?absint($q[$k]):sanitize_text_field((string)$q[$k]);
-        $ok=$supervisor_id===0||($supervisor_id>0&&$supervisor_id!==$employee_id&&(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$supervisor_id)));
+        $ok=$supervisor_id===0||($supervisor_id>0&&$supervisor_id!==$employee_id&&(bool)$this->people_active_id($supervisor_id));
         if(!$ok){wp_safe_redirect(add_query_arg($back+['approval_error'=>1,'approval_error_message'=>rawurlencode('Pick the supervisor from the list.')],admin_url('admin.php')).'#ews-supervisors');exit;}
         if($employee_id){$wpdb->query($wpdb->prepare("UPDATE {$t['relationships']} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type='supervisor' AND active=1",current_time('mysql'),$employee_id));if($supervisor_id)$this->approval_set_relationship($employee_id,'supervisor',$supervisor_id,0);}
         $this->audit('approval_relationship_update','employee',$employee_id,'supervisor='.$supervisor_id);wp_safe_redirect(add_query_arg($back+['approval_saved'=>1],admin_url('admin.php')).'#ews-supervisors');exit;

@@ -19,8 +19,9 @@ another, and a module can later be moved, replaced or switched off on its own.
   - the tables of another module it uses directly;
   - the functions of another module it calls.
 
-  Calls into `platform` (settings, permissions, audit, templates) are the shared kernel and are
-  allowed. The counts are kept in [`module-baseline.json`](module-baseline.json) and may only go
+  Calls into `platform` (settings, permissions, audit, templates) are the shared kernel, and calls
+  to a module's public functions (its `api` in `modules.json`) are the way modules should talk:
+  both are allowed. The counts are kept in [`module-baseline.json`](module-baseline.json) and may only go
   down: the check fails when a pair of modules crosses more than before or a new pair appears.
 
 Starting point (October 2026, after 3.31.95): 295 uses of another module's table and 623 calls to another module's
@@ -53,9 +54,11 @@ Both will go through the other modules' functions rather than their tables.
 
 ## Next steps
 
-1. **People owns the employees table.** Today 13 modules query it directly (139 times). People gets
-   a small set of functions (an employee by id or user, the active employees of a department, …) and
-   the others use them.
+1. **People owns the employees table.** Started in 3.31.96: People's functions (an employee by id
+   or user, the name, the user, in a department, the active list, ids, users and counts) replaced 62
+   direct uses, 295 → 239 table crossings. What is left are joins that put an employee's name next to
+   rows in lists and reports (time report, corrections, the dashboard's Audit labels, tasks); they
+   need a shared read for names that keeps one query per page, the next part of this step.
 2. **Move modules out of the shared object, least tied first:** notifications, polls (engagement),
    daily workers, the installed app, then leave, overtime and attendance, last payroll and reports.
    Each becomes a class in `src/<Module>/` with its own hook registration and public functions; the

@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.96
+Modular monolith, step 2 (docs/architecture/modules.md): People owns the employees table. No change in
+behaviour or in the database.
+
+### Changed
+- People has functions for the other modules (`includes/trait-employees.php`): an employee by id or by
+  user, active or not, the name, the WordPress user, in a department, the active list, the active ids,
+  users and counts. 62 places in 30 other files used the table directly and now ask People; the rest
+  are joins that put the employee's name next to rows in lists and reports, for a later step.
+- `tests/check_modules.py` counts calls to a module's public functions (its `api` in
+  `docs/architecture/modules.json`) as allowed. Crossings: 295 → 239 uses of another module's table.
+
 ## 3.31.95
 Choose the page each kind of notification opens (owner's request, mockup docs/mockups/notification-links/).
 No database change.

@@ -193,7 +193,7 @@ trait EWS_Payroll_Trait {
             $vars['pdf_url']=$run&&$employee?wp_nonce_url(add_query_arg(['action'=>'ews_payroll_pdf','month'=>$month,'employee'=>$employee],admin_url('admin-post.php')),'ews_payroll_pdf'):'';
         }elseif($tab==='salaries'){
             global $wpdb;
-            $emps=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+            $emps=(array)$this->people_active_list();
             $history=[];
             foreach((array)$wpdb->get_results("SELECT * FROM {$this->payroll_table()} ORDER BY effective_from DESC,id DESC") as $r)$history[(int)$r->employee_id][]=$this->payroll_rate_row($r);
             $today=current_time('Y-m-d');
@@ -239,7 +239,7 @@ trait EWS_Payroll_Trait {
         global $wpdb;$this->ensure_payroll_schema();
         $month=$this->payroll_month_post();$eid=absint($_POST['employee_id']??0);
         $back=['month'=>$month,'employee'=>$eid];
-        $emp=$eid?$wpdb->get_row($wpdb->prepare("SELECT id,name FROM {$this->employees} WHERE id=%d",$eid)):null;
+        $emp=$eid?$this->people_employee($eid):null;
         if(!$month||!$emp)$this->payroll_redirect(['payroll_error'=>'employee']);
         if($this->payroll_run($month))$this->payroll_redirect($back+['payroll_error'=>'closed']);
         [$adj,$error]=PayRules::adjustment(['kind'=>(string)($_POST['kind']??''),'amount'=>(string)($_POST['amount']??''),'reason'=>sanitize_text_field(wp_unslash((string)($_POST['reason']??'')))]);
@@ -408,7 +408,7 @@ trait EWS_Payroll_Trait {
         check_admin_referer('ews_payroll_rate_save');
         global $wpdb;$this->ensure_payroll_schema();
         $eid=absint($_POST['employee_id']??0);
-        $emp=$eid?$wpdb->get_row($wpdb->prepare("SELECT id,name FROM {$this->employees} WHERE id=%d",$eid)):null;
+        $emp=$eid?$this->people_employee($eid):null;
         if(!$emp)$this->payroll_redirect(['tab'=>'salaries','payroll_error'=>'employee']);
         $post=wp_unslash($_POST);
         $post['note']=sanitize_text_field((string)($post['note']??''));

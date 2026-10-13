@@ -148,7 +148,7 @@ trait EWS_Overtime_Trait {
             $req=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d LIMIT 1",$id));
             if(!$req)$this->overtime_redirect(['overtime_error'=>'not_found']);
             if($req->status!=='Pending')$this->overtime_redirect(['overtime_done'=>1]);
-            $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",(int)$req->employee_id));
+            $emp=$this->people_employee((int)$req->employee_id,true);
             if(!$emp)$this->overtime_redirect(['overtime_error'=>'employee']);
 
             if(in_array($this->overtime_workflow_mode(),['LEVEL_1','LEVEL_2'],true)){
@@ -204,7 +204,7 @@ trait EWS_Overtime_Trait {
     /** In-app notification to the employee (+ push unless $push is false, as on the admin Requests page). */
     private function early_leave_notify_employee($r,$decision,$push=true){
             global $wpdb;
-            $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",(int)$r->employee_id));
+            $emp=$this->people_employee((int)$r->employee_id);
             if(!$emp||!$emp->wp_user_id)return;
             $title='Early Leave '.ucfirst($decision);
             $msg='Your Early Leave request for '.$r->work_date.' has been '.($decision==='approve'?'approved':'rejected').'.';
@@ -277,7 +277,7 @@ trait EWS_Overtime_Trait {
                 if($outcome!==Hub::ADVANCED)return $this->overtime_set_status($id,$outcome===Hub::APPROVED?'Approved':'Rejected')===true?$outcome:Hub::ERROR;
                 $next=$this->approval_current_step((int)$fresh->id);
                 if($next&&$next->approver_wp_user_id){
-                    $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",(int)$req->employee_id));
+                    $emp=$this->people_employee((int)$req->employee_id);
                     $this->notify((int)$next->approver_wp_user_id,'overtime','Overtime Approval Required',($emp?$emp->name:'An employee').' overtime request is waiting for your approval.',['entity_id'=>$id]);
                 }
                 return Hub::ADVANCED;

@@ -104,7 +104,7 @@ trait EWS_Tasks_Trait {
 
     private function tasks_employees(){
         global $wpdb;
-        return $wpdb->get_results("SELECT id,name,wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0 ORDER BY name");
+        return $this->people_active_users();
     }
 
     private function task_notify_user($user_id,$title,$message,$task_id){
@@ -141,7 +141,7 @@ trait EWS_Tasks_Trait {
         if($kind!=='person')$assigned=$kind===''?$assigned:0;
         if($assigned){
             global $wpdb;
-            $valid=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->employees} WHERE id=%d AND active=1 AND wp_user_id>0",$assigned));
+            $valid=(int)$this->people_user_id($assigned,true)>0?1:0;
             if(!$valid)$assigned=0;
         }
         global $wpdb;$table=$wpdb->prefix.'ews_tasks';$now=current_time('mysql');
@@ -205,7 +205,7 @@ trait EWS_Tasks_Trait {
         if(!$task)wp_die('Task not found.');
         $uid=get_current_user_id();
         $is_assignee=false;
-        if(!empty($task->assigned_to))$is_assignee=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",(int)$task->assigned_to))===$uid;
+        if(!empty($task->assigned_to))$is_assignee=(int)$this->people_user_id((int)$task->assigned_to)===$uid;
         if(!$this->task_can_manage_all() && !$is_assignee && (int)$task->created_by!==$uid)wp_die('Access denied');
         if(empty($task->assigned_to) && !empty($task->team_id) && ($task->team_mode??'')==='first')$this->tasks_redirect(['task_error'=>'take']);
         $status=sanitize_key($_POST['status']??'todo');

@@ -144,7 +144,7 @@ trait EWS_Teams_Trait {
         $id=absint($_POST['team_id']??0); $department_id=absint($_POST['department_id']??0); $name=sanitize_text_field(wp_unslash($_POST['name']??'')); $description=sanitize_textarea_field(wp_unslash($_POST['description']??'')); $manager=absint($_POST['manager_employee_id']??0);
         $members=isset($_POST['member_ids'])&&is_array($_POST['member_ids'])?array_map('absint',wp_unslash($_POST['member_ids'])):[];
         $members[]=$manager; $members=array_values(array_unique(array_filter($members)));
-        $in_department=function($eid)use($wpdb,$department_id){return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",$eid,$department_id));};
+        $in_department=function($eid)use($department_id){return (bool)$this->people_in_department($eid,$department_id);};
         $error=OrgRules::teamError([
             'name'=>$name,'department'=>$department_id,'manager'=>$manager,
             'department_active'=>(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_departments WHERE id=%d AND active=1 LIMIT 1",$department_id)),

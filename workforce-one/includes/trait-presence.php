@@ -98,7 +98,7 @@ trait EWS_Presence_Trait {
         if(!$this->can('ews_manage_attendance'))wp_die(__('Access denied','workforce-one')); check_admin_referer('ews_presence_request');
         $eid=absint($_POST['employee_id']??0);$location_id=absint($_POST['location_id']??0);if(!$eid||!$location_id)wp_die(__('Invalid employee or location.','workforce-one'));
         if(method_exists($this,'department_scope_allows_employee')&&!$this->department_scope_allows_employee($eid))wp_die(__('You cannot manage presence outside your Department.','workforce-one'));
-        global $wpdb;$emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$eid));$loc=$this->presence_location($location_id);if(!$emp||!$loc)wp_die(__('Employee or location not found.','workforce-one'));
+        global $wpdb;$emp=$this->people_employee($eid,true);$loc=$this->presence_location($location_id);if(!$emp||!$loc)wp_die(__('Employee or location not found.','workforce-one'));
         list(,$vt)=$this->presence_tables();$minutes=\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes'));$expires=gmdate('Y-m-d H:i:s',time()+$minutes*60);$ok=$wpdb->insert($vt,['employee_id'=>$eid,'location_id'=>$location_id,'requested_by'=>get_current_user_id(),'status'=>'pending','expires_at'=>$expires,'created_at'=>current_time('mysql')],['%d','%d','%d','%s','%s','%s']);if($ok===false)wp_die(__('Could not create presence verification request.','workforce-one'));$id=(int)$wpdb->insert_id;
         $this->audit('presence_verification_requested','presence_verification',$id,$emp->name.' / '.$loc->name.' / expires='.$expires);
         if(!empty($emp->wp_user_id)){

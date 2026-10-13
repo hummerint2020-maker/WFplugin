@@ -352,7 +352,7 @@ trait EWS_Corrections_Trait {
         global $wpdb;
         $c=$this->cx_get($id);
         if(!$c)return 'not_found';
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",(int)$c->employee_id));
+        $emp=$this->people_employee((int)$c->employee_id);
         if(!$emp)return 'employee';
         $now=current_time('mysql');
         if(!$approve){
@@ -790,7 +790,7 @@ trait EWS_Corrections_Trait {
             $data+=['s'=>$this->correction_settings(),'types'=>array_combine(CorrectionSettings::TYPES,array_map(function($x){return $this->cx_type_label($x);},CorrectionSettings::TYPES)),
                 'workflows_url'=>admin_url('admin.php?page=ews31-approvals')];
         }else{
-            $data+=['employees'=>(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC LIMIT 5000"),'types'=>array_combine(CorrectionSettings::TYPES,array_map(function($x){return $this->cx_type_label($x);},CorrectionSettings::TYPES)),
+            $data+=['employees'=>$this->people_active_list(5000),'types'=>array_combine(CorrectionSettings::TYPES,array_map(function($x){return $this->cx_type_label($x);},CorrectionSettings::TYPES)),
                 'old'=>isset($_GET['cx_error'])?(array)get_transient('ews_cx_direct_'.get_current_user_id()):[]];
         }
         echo $this->render_template('admin/corrections',$data); // phpcs:ignore WordPress.Security.EscapeOutput -- the template escapes
@@ -856,7 +856,7 @@ trait EWS_Corrections_Trait {
         $ref=sanitize_text_field(wp_unslash($_POST['employee_ref']??''));
         $eid=\WorkforceOne\Support\Picker::parse($ref);
         global $wpdb;
-        $emp=$eid>0?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",$eid)):null;
+        $emp=$eid>0?$this->people_employee($eid):null;
         set_transient('ews_cx_direct_'.get_current_user_id(),$in+['employee_ref'=>$ref],300);
         if(!$emp){wp_safe_redirect($this->cx_admin_url(['tab'=>'direct','cx_error'=>'employee']));exit;}
         $r=$this->cx_create($emp,$in,'hr');

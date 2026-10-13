@@ -305,7 +305,7 @@ trait EWS_Attendance_Trait {
                         continue;
                     }
 
-                    $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$eid));
+                    $exists=$this->people_active_id($eid);
                     if($exists && !$this->employee_attendance_enabled($eid)){$invalid++;continue;}
                     if($exists && !$this->department_scope_allows_employee($eid)){$invalid++;continue;}
                     if(!$exists){
@@ -368,7 +368,7 @@ trait EWS_Attendance_Trait {
                 foreach($grid as $eid=>$days){
                     $eid=absint($eid);
                     if(!$eid||!is_array($days))continue;
-                    $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$eid));
+                    $exists=$this->people_active_id($eid);
                     if(!$exists || !$this->employee_attendance_enabled($eid) || !$this->department_scope_allows_employee($eid)){$invalid++;continue;}
                     foreach($dates as $i=>$date){
                         $status=sanitize_text_field($days[$i]??'');
@@ -423,7 +423,7 @@ trait EWS_Attendance_Trait {
             foreach(['domain_name','work_date','status'] as $req)if($cols[$req]===false){fclose($fh);return ['error'=>'Missing required column "'.$req.'". Download the sample CSV for the expected format.'];}
             global $wpdb;
             $employees=[];
-            foreach((array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1") as $e)$employees[strtolower(trim($e->domain_name))]=$e;
+            foreach($this->people_active_list() as $e)$employees[strtolower(trim($e->domain_name))]=$e;
             $statuses=$this->statuses(); $status_lc=[]; foreach($statuses as $s)$status_lc[strtolower($s)]=$s;
             $rows=[]; $line=1; $seen=[];
             while(($r=fgetcsv($fh,0,$delim))!==false){

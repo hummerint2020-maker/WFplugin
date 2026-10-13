@@ -1,7 +1,86 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+/**
+ * People: the employees table. Its functions for the other modules are first (modular monolith,
+ * docs/architecture/modules.md): the other modules ask here instead of querying the table, so a rule
+ * about employees (who is active, who is in a department) lives in one place.
+ */
 trait EWS_Employees_Trait {
+
+    /* ------------------------------------------------------------------ People's functions for the other modules */
+
+    /** An employee's row (all columns), or null. $active_only: null for an archived one. */
+    private function people_employee($employee_id,$active_only=false){
+        global $wpdb;
+        $id=(int)$employee_id;
+        if($id<=0)return null;
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d".($active_only?' AND active=1':'')." LIMIT 1",$id));
+    }
+
+    /** The active employee linked to a WordPress user, or null. */
+    private function people_employee_by_user($user_id){
+        global $wpdb;
+        $uid=(int)$user_id;
+        if($uid<=0)return null;
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE wp_user_id=%d AND active=1 LIMIT 1",$uid));
+    }
+
+    /** The id if the employee exists and is active (as a string, like a query result), else null. */
+    private function people_active_id($employee_id){
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",(int)$employee_id));
+    }
+
+    /** An employee's name, or null. */
+    private function people_name($employee_id){
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",(int)$employee_id));
+    }
+
+    /** The WordPress user of an employee (as a string, like a query result), or null. $active_only: null for an archived one. */
+    private function people_user_id($employee_id,$active_only=false){
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d".($active_only?' AND active=1':'')." LIMIT 1",(int)$employee_id));
+    }
+
+    /** Is the employee active and in this department? */
+    private function people_in_department($employee_id,$department_id){
+        global $wpdb;
+        return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",(int)$employee_id,(int)$department_id));
+    }
+
+    /** The active employees (id, name, domain_name), by name; at most $limit when given. @return object[] */
+    private function people_active_list($limit=0){
+        global $wpdb;
+        return (array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC".($limit>0?' LIMIT '.(int)$limit:''));
+    }
+
+    /** The active employees with an app account (id, name, wp_user_id), by name. @return object[] */
+    private function people_active_users(){
+        global $wpdb;
+        return (array)$wpdb->get_results("SELECT id,name,wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0 ORDER BY name");
+    }
+
+    /** The ids of the active employees (only those whose attendance is tracked, with $attendance_only). @return string[] */
+    private function people_active_ids($attendance_only=false){
+        global $wpdb;
+        return (array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1".($attendance_only?' AND (attendance_enabled IS NULL OR attendance_enabled=1)':''));
+    }
+
+    /** The WordPress users of the active employees (of one department when given). @return string[] */
+    private function people_active_user_ids($department_id=0){
+        global $wpdb;
+        $sql="SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL AND wp_user_id>0";
+        return (array)($department_id?$wpdb->get_col($wpdb->prepare($sql.' AND department_id=%d',(int)$department_id)):$wpdb->get_col($sql));
+    }
+
+    /** How many active employees (of one department when given; only those with an app account, with $with_user). */
+    private function people_active_count($department_id=0,$with_user=false){
+        global $wpdb;
+        $sql="SELECT COUNT(*) FROM {$this->employees} WHERE active=1".($with_user?' AND wp_user_id>0':'');
+        return (int)($department_id?$wpdb->get_var($wpdb->prepare($sql.' AND department_id=%d',(int)$department_id)):$wpdb->get_var($sql));
+    }
 
     /** Employee app → Employees (managers): the active employees and Add employee (templates/app/employees.php). */
     private function employees_content(){

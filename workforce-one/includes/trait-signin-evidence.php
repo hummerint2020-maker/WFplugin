@@ -276,7 +276,7 @@ trait EWS_Signin_Evidence_Trait {
         $path=$this->private_files_path('workforce-one-face-photos',$key);
         if(!is_readable($path))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
         if(!empty($_GET['full'])){
-            $name=(string)$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",(int)$row->employee_id));
+            $name=(string)$this->people_name((int)$row->employee_id);
             $this->audit('face_photo_viewed','employee',(int)$row->employee_id,$name.' / '.$row->at.' / '.$kind.' #'.$id);
         }
         \WorkforceOne\Support\Download::image((string)file_get_contents($path),str_ends_with($key,'.webp')?'image/webp':'image/jpeg','face-'.$kind.'-'.$id.substr($key,-4)); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
@@ -351,7 +351,7 @@ trait EWS_Signin_Evidence_Trait {
     private function evidence_timeline($employee_id,$day){
         if(!$this->time_report_may_manage($employee_id) || !$this->valid_date($day))return null;
         global $wpdb;
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT id,name FROM {$this->employees} WHERE id=%d",(int)$employee_id));
+        $emp=$this->people_employee((int)$employee_id);
         if(!$emp)return null;
         $items=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",(int)$employee_id,$day)) as $l){

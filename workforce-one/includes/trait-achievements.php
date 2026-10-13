@@ -93,7 +93,7 @@ trait EWS_Achievements_Trait {
         if(!$this->achievements_enabled() && !$force)return false;
         global $wpdb;
         if(!$employee_id || !$achievement || (!$skip_awarded_check && $this->achievement_awarded($employee_id,(int)$achievement->id)))return false;
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT id,name,wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id));
+        $emp=$this->people_employee($employee_id);
         if(!$emp)return false;
         $table=$wpdb->prefix.'ews_employee_achievements';
         $ok=$wpdb->insert($table,[

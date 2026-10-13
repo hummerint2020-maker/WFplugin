@@ -1,85 +1,266 @@
 {
-  "_about": "Workforce One as a modular monolith: which module each includes/trait-*.php file belongs to, and which module owns each table. tests/check_modules.py reads this file, counts what crosses module lines (another module's table used directly, another module's function called) and fails when that grows past docs/architecture/module-baseline.json. See docs/architecture/modules.md.",
+  "_about": "Workforce One as a modular monolith: which module each includes/trait-*.php file belongs to, and which module owns each table. tests/check_modules.py reads this file, counts what crosses module lines (another module's table used directly, another module's function called) and fails when that grows past docs/architecture/module-baseline.json. A module's \"api\" lists the functions the other modules may call (its public interface): calls to them are not crossings. See docs/architecture/modules.md.",
   "modules": {
     "platform": {
       "label": "Platform: settings, schema, permissions, audit, files",
-      "traits": ["core", "schema", "permissions", "features", "settings-overview", "settings-pages", "private-files", "privacy"],
-      "tables": ["audit_log"]
+      "traits": [
+        "core",
+        "schema",
+        "permissions",
+        "features",
+        "settings-overview",
+        "settings-pages",
+        "private-files",
+        "privacy"
+      ],
+      "tables": [
+        "audit_log"
+      ],
+      "api": []
     },
     "shell": {
       "label": "App and wp-admin shell: layout, menus, home pages, appearance",
-      "traits": ["app-layout", "appearance", "admin", "admin-nav", "admin-dashboard", "dashboard-view", "frontend"],
-      "tables": []
+      "traits": [
+        "app-layout",
+        "appearance",
+        "admin",
+        "admin-nav",
+        "admin-dashboard",
+        "dashboard-view",
+        "frontend"
+      ],
+      "tables": [],
+      "api": []
     },
     "people": {
       "label": "People: employees, departments, teams, profiles, accounts",
-      "traits": ["employees", "employee-admin", "employee-profile", "people-view", "my-profile", "profile-account", "departments", "teams"],
-      "tables": ["employees", "employee_relationships", "departments", "teams", "team_members"]
+      "traits": [
+        "employees",
+        "employee-admin",
+        "employee-profile",
+        "people-view",
+        "my-profile",
+        "profile-account",
+        "departments",
+        "teams"
+      ],
+      "tables": [
+        "employees",
+        "employee_relationships",
+        "departments",
+        "teams",
+        "team_members"
+      ],
+      "api": [
+        "people_employee",
+        "people_employee_by_user",
+        "people_active_id",
+        "people_name",
+        "people_user_id",
+        "people_in_department",
+        "people_active_list",
+        "people_active_users",
+        "people_active_ids",
+        "people_active_user_ids",
+        "people_active_count"
+      ]
     },
     "schedule": {
       "label": "Schedule: working time, schedule types, the planner, swaps, office minimum",
-      "traits": ["work-time", "schedule-config", "schedule-types", "schedule-view", "swap", "attendance-grid", "office-minimum"],
-      "tables": ["schedule", "schedule_swaps", "company_calendar"]
+      "traits": [
+        "work-time",
+        "schedule-config",
+        "schedule-types",
+        "schedule-view",
+        "swap",
+        "attendance-grid",
+        "office-minimum"
+      ],
+      "tables": [
+        "schedule",
+        "schedule_swaps",
+        "company_calendar"
+      ],
+      "api": []
     },
     "locations": {
       "label": "Locations: work locations, branches, kiosks and presence checks",
-      "traits": ["locations", "branches", "presence"],
-      "tables": ["locations", "employee_locations_v321", "employee_branches", "kiosks", "presence_verifications"]
+      "traits": [
+        "locations",
+        "branches",
+        "presence"
+      ],
+      "tables": [
+        "locations",
+        "employee_locations_v321",
+        "employee_branches",
+        "kiosks",
+        "presence_verifications"
+      ],
+      "api": []
     },
     "attendance": {
       "label": "Attendance: Sign In / Out, breaks, face, corrections, evidence, auto attendance",
-      "traits": ["attendance", "auto-attendance", "breaks", "face", "face-reset", "signin-evidence", "time-report", "corrections", "attendance-insights"],
-      "tables": ["time_logs", "break_sessions", "face_profiles", "auto_attendance_rules", "attendance_corrections", "signin_attempts"]
+      "traits": [
+        "attendance",
+        "auto-attendance",
+        "breaks",
+        "face",
+        "face-reset",
+        "signin-evidence",
+        "time-report",
+        "corrections",
+        "attendance-insights"
+      ],
+      "tables": [
+        "time_logs",
+        "break_sessions",
+        "face_profiles",
+        "auto_attendance_rules",
+        "attendance_corrections",
+        "signin_attempts"
+      ],
+      "api": []
     },
     "leave": {
       "label": "Leave: requests, balances, types, cancellations",
-      "traits": ["leave", "leave-admin", "leave-view"],
-      "tables": ["leave_requests", "leave_balances", "leave_types", "leave_schedule_snapshots", "vacation_requests"]
+      "traits": [
+        "leave",
+        "leave-admin",
+        "leave-view"
+      ],
+      "tables": [
+        "leave_requests",
+        "leave_balances",
+        "leave_types",
+        "leave_schedule_snapshots",
+        "vacation_requests"
+      ],
+      "api": []
     },
     "overtime": {
       "label": "Overtime and Early Leave",
-      "traits": ["overtime"],
-      "tables": ["overtime_requests", "early_leave_requests"]
+      "traits": [
+        "overtime"
+      ],
+      "tables": [
+        "overtime_requests",
+        "early_leave_requests"
+      ],
+      "api": []
     },
     "approvals": {
       "label": "Approvals: workflows and the Requests Hub",
-      "traits": ["approvals", "admin-requests"],
-      "tables": ["approval_workflows", "approval_workflow_steps", "approval_requests", "approval_steps"]
+      "traits": [
+        "approvals",
+        "admin-requests"
+      ],
+      "tables": [
+        "approval_workflows",
+        "approval_workflow_steps",
+        "approval_requests",
+        "approval_steps"
+      ],
+      "api": []
     },
     "notifications": {
       "label": "Notifications: in-app, push devices, links",
-      "traits": ["notifications"],
-      "tables": ["notifications", "push_subscriptions"]
+      "traits": [
+        "notifications"
+      ],
+      "tables": [
+        "notifications",
+        "push_subscriptions"
+      ],
+      "api": []
     },
     "tasks": {
       "label": "Tasks",
-      "traits": ["tasks", "task-extras"],
-      "tables": ["tasks", "task_items", "task_comments", "task_activity"]
+      "traits": [
+        "tasks",
+        "task-extras"
+      ],
+      "tables": [
+        "tasks",
+        "task_items",
+        "task_comments",
+        "task_activity"
+      ],
+      "api": []
     },
     "payroll": {
       "label": "Payroll and My Pay",
-      "traits": ["payroll"],
-      "tables": ["pay_rates", "pay_adjustments", "payroll_runs", "payslips"]
+      "traits": [
+        "payroll"
+      ],
+      "tables": [
+        "pay_rates",
+        "pay_adjustments",
+        "payroll_runs",
+        "payslips"
+      ],
+      "api": []
     },
     "daily_workers": {
       "label": "Daily Workers",
-      "traits": ["daily-workers"],
-      "tables": ["dw_workers", "dw_sites", "dw_foremen", "dw_moves", "dw_days", "dw_sheets", "dw_advances", "dw_payouts", "dw_lines", "dw_changes"]
+      "traits": [
+        "daily-workers"
+      ],
+      "tables": [
+        "dw_workers",
+        "dw_sites",
+        "dw_foremen",
+        "dw_moves",
+        "dw_days",
+        "dw_sheets",
+        "dw_advances",
+        "dw_payouts",
+        "dw_lines",
+        "dw_changes"
+      ],
+      "api": []
     },
     "engagement": {
       "label": "Engagement: achievements, recognition, polls, nudges settings",
-      "traits": ["achievements", "achievements-admin", "recognition", "engagement-admin", "polls"],
-      "tables": ["achievements", "employee_achievements", "kudos", "polls", "poll_options", "poll_votes"]
+      "traits": [
+        "achievements",
+        "achievements-admin",
+        "recognition",
+        "engagement-admin",
+        "polls"
+      ],
+      "tables": [
+        "achievements",
+        "employee_achievements",
+        "kudos",
+        "polls",
+        "poll_options",
+        "poll_votes"
+      ],
+      "api": []
     },
     "reports": {
       "label": "Reports",
-      "traits": ["reports"],
-      "tables": []
+      "traits": [
+        "reports"
+      ],
+      "tables": [],
+      "api": []
     },
     "app": {
       "label": "Installed app and API: PWA, offline screen, native sign-in",
-      "traits": ["pwa", "offline-screen", "api-auth"],
-      "tables": ["api_tokens", "api_devices", "api_rate_limits", "api_idempotency"]
+      "traits": [
+        "pwa",
+        "offline-screen",
+        "api-auth"
+      ],
+      "tables": [
+        "api_tokens",
+        "api_devices",
+        "api_rate_limits",
+        "api_idempotency"
+      ],
+      "api": []
     }
   }
 }

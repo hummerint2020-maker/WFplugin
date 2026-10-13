@@ -175,7 +175,7 @@ trait EWS_Time_Report_Trait {
         // Both the record's employee and the chosen one must be in the manager's department (3.31.90).
         if(($existing && !$this->time_report_may_manage((int)$existing->employee_id)) || ($employee_id && !$this->time_report_may_manage($employee_id)))$this->time_report_redirect($back+['time_error'=>'scope']);
         // A new record needs an active employee; an existing record may belong to an archived one.
-        $emp=$employee_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d".($id?'':' AND active=1'),$employee_id)):null;
+        $emp=$employee_id?$this->people_employee($employee_id,!$id):null;
         $facts=['type'=>$type,'date_valid'=>$this->valid_date($work_date),'work_date'=>$work_date,'event_at'=>$event_at,'employee_found'=>(bool)$emp];
         // A shift that ends after midnight: its Sign Out may be on the next calendar day (3.31.92).
         if($emp){$h=$this->working_hours((int)$emp->id);$facts['overnight']=isset($h['start'],$h['end'])&&(string)$h['end']<=(string)$h['start'];}

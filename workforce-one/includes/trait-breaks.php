@@ -124,7 +124,7 @@ trait EWS_Breaks_Trait {
             if(!$s||$s->status!=='Open'||(int)$s->escalation_notified===1)return;
             if(!$this->employee_attendance_enabled((int)$s->employee_id))return;
             $wpdb->update($table,['escalation_notified'=>1],['id'=>(int)$s->id],['%d'],['%d']);
-            $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d LIMIT 1",(int)$s->employee_id));
+            $emp=$this->people_employee((int)$s->employee_id);
             if(!$emp)return;
             $elapsed=max(0,(int)floor((current_time('timestamp',true)-strtotime(get_gmt_from_date($s->start_at)))/60));
             $msg=$emp->name.' has been on break for '.$elapsed.' minutes and has not resumed work.';

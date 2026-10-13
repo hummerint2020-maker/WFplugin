@@ -88,7 +88,7 @@ trait EWS_Settings_Pages_Trait {
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         global $wpdb;
         $push_table=$this->push_table();
-        $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->employees} WHERE active=1 AND wp_user_id>0");
+        $total=$this->people_active_count(0,true);
         $configured=(bool)($this->option('ews_vapid_public_key') && $this->option('ews_vapid_private_key'));
         $ready=$configured?(int)$wpdb->get_var("SELECT COUNT(DISTINCT user_id) FROM {$push_table} WHERE user_id IN (SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0)"):0;
         $notices=['policy'=>'Notification policy updated successfully.','retention'=>'Notification retention saved.'];

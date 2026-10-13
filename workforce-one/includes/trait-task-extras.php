@@ -63,7 +63,7 @@ trait EWS_Task_Extras_Trait {
         global $wpdb;$out=[];
         if((int)$t->created_by)$out[]=(int)$t->created_by;
         if(!empty($t->assigned_to)){
-            $u=(int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d",(int)$t->assigned_to));
+            $u=(int)$this->people_user_id((int)$t->assigned_to);
             if($u)$out[]=$u;
         }elseif(!empty($t->team_id)){
             foreach($this->task_team_members((int)$t->team_id) as $m)$out[]=(int)$m->wp_user_id;

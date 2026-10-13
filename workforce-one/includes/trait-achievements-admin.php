@@ -80,7 +80,7 @@ trait EWS_Achievements_Admin_Trait {
             'description'=>sanitize_textarea_field(wp_unslash($_POST['achievement_description']??'')),
             'icon'=>(string)wp_unslash($_POST['achievement_icon']??''),
             'style'=>sanitize_key($_POST['badge_style']??''),
-            'employee_found'=>$employee_id&&(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$employee_id)),
+            'employee_found'=>$employee_id&&(bool)$this->people_active_id($employee_id),
             'enabled'=>$this->achievements_enabled(),
         ]);
         if($error)$this->achievements_admin_redirect(['achievement_error'=>$error]);
@@ -103,7 +103,7 @@ trait EWS_Achievements_Admin_Trait {
             $wpdb->update($defs,['active'=>0],['id'=>(int)$row->achievement_id],['%d'],['%d']);
             $this->invalidate_achievement_definitions_cache();
         }
-        $name=$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",$employee_id))?:'Employee #'.$employee_id;
+        $name=$this->people_name($employee_id)?:'Employee #'.$employee_id;
         $this->audit('achievement_award_deleted','employee_achievement',$award_id,sprintf('%s achievement award removed: %s (%s)',$name,$row->name,$row->slug));
         wp_safe_redirect(add_query_arg(['page'=>'ews31-employee-profile','employee_id'=>$employee_id,'achievement_deleted'=>1],admin_url('admin.php')));
         exit;

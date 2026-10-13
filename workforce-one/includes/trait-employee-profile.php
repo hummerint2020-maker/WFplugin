@@ -15,7 +15,7 @@ trait EWS_Employee_Profile_Trait {
         if(!$this->can('ews_manage_employees'))wp_die('Access denied');
         global $wpdb;
         $employee_id=absint($_GET['employee_id']??0);
-        $emp=$employee_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id)):null;
+        $emp=$employee_id?$this->people_employee($employee_id):null;
         if(!$emp)wp_die('Employee not found.');
 
         $this->ensure_teams_schema();

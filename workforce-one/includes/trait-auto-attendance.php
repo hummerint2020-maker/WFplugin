@@ -89,7 +89,7 @@ trait EWS_Auto_Attendance_Trait {
         $event_at=$event_date.' '.$target_time.':00';
         $now=current_time('mysql');
         $user_id=0;
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT name,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$employee_id));
+        $emp=$this->people_employee($employee_id,true);
         if(!$emp)return ['ok'=>false,'reason'=>'employee_missing'];
         if(!$this->employee_attendance_enabled($employee_id))return ['ok'=>false,'reason'=>'attendance_disabled'];
         if($emp->wp_user_id)$user_id=(int)$emp->wp_user_id;
@@ -169,7 +169,7 @@ trait EWS_Auto_Attendance_Trait {
             if(!$days) $days=$this->working_days();
             sort($days,SORT_NUMERIC);$weekdays=implode(',',$days);
         }
-        $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$employee_id));
+        $exists=$this->people_active_id($employee_id);
         if(!$exists)wp_die('Invalid active employee.');
         if(!$this->employee_attendance_enabled($employee_id))wp_die('Attendance tracking is disabled for this employee.');
         $data=['employee_id'=>$employee_id,'recurrence'=>$recurrence,'run_date'=>$run_date,'weekdays'=>$weekdays,'sign_in_time'=>$sign_in?:null,'sign_out_time'=>$sign_out?:null,'enabled'=>!empty($_POST['enabled'])?1:0,'updated_at'=>current_time('mysql')];
@@ -240,7 +240,7 @@ trait EWS_Auto_Attendance_Trait {
             ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
             if($ok===false){$failed++;continue;}
             $signed_out++;
-            $emp=$wpdb->get_row($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d LIMIT 1",(int)$sign_in->employee_id));
+            $emp=$this->people_employee((int)$sign_in->employee_id);
             $this->audit('auto_sign_out','time_log',(int)$wpdb->insert_id,($emp?$emp->name:('Employee #'.(int)$sign_in->employee_id)).' / '.$sign_in->scheduled_status.' / '.$now.' / source=Auto / bulk=1');
 
             // If an employee is still on an open break, close it at the bulk sign-out

@@ -33,7 +33,7 @@ trait EWS_Face_Reset_Trait {
 
     private function face_reset_employee($employee_id){
         global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d",absint($employee_id)));
+        return $this->people_employee(absint($employee_id));
     }
 
     private function face_reset_notify($user_id,$title,$message,$type,$employee_id,$link){
@@ -54,7 +54,7 @@ trait EWS_Face_Reset_Trait {
         $requests[$employee_id]=['status'=>'pending','requested_by'=>$user_id,'requested_at'=>current_time('mysql')];
         if(!update_option('ews_face_reset_requests',$requests,false))return false;
         global $wpdb;
-        $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$employee_id));
+        $emp=$this->people_employee($employee_id,true);
         if(!$emp)return true;
         $msg=$emp->name.' requested a Face Reset. Approval is required.';
         if($this->face_reset_workflow_active()){

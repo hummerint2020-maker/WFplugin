@@ -87,7 +87,7 @@ trait EWS_Leave_Trait {
 
     private function leave_active_employee($employee_id){
             global $wpdb;
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1",(int)$employee_id));
+            return $this->people_employee((int)$employee_id,true);
         }
 
     /** In-app + push notification. */

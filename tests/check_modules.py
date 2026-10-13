@@ -4,8 +4,8 @@ docs/architecture/modules.json says which module each includes/trait-*.php file 
 module owns each table. This counts, for each module:
   - tables of another module it reads or writes directly (instead of asking that module);
   - functions of another module it calls (all traits share one object, so nothing stops it).
-Calls into "platform" (settings, permissions, audit, templates: the shared kernel) are allowed and
-reported apart.
+Calls into "platform" (settings, permissions, audit, templates: the shared kernel) and calls to a
+module's public functions (its "api" in modules.json) are allowed and reported apart.
 
 The counts may only go down: the check fails when a pair of modules crosses more than the baseline
 (docs/architecture/module-baseline.json) or a new pair appears. After moving code behind a module's
@@ -40,17 +40,18 @@ def strip_comments(src):
 def load():
     with open(MAP) as f:
         m = json.load(f)['modules']
-    trait_mod, table_mod = {}, {}
+    trait_mod, table_mod, api = {}, {}, set()
     for mod, d in m.items():
+        api.update(d.get('api', []))
         for t in d['traits']:
             trait_mod[t] = mod
         for t in d['tables']:
             table_mod[t] = mod
-    return m, trait_mod, table_mod
+    return m, trait_mod, table_mod, api
 
 
 def analyse():
-    modules, trait_mod, table_mod = load()
+    modules, trait_mod, table_mod, api = load()
     files = {}
     for name in sorted(os.listdir(os.path.join(PLUGIN, 'includes'))):
         if name.startswith('trait-') and name.endswith('.php'):
@@ -66,7 +67,7 @@ def analyse():
     for fn in DEF.findall(strip_comments(open(os.path.join(PLUGIN, 'employee-schedule-manager.php')).read())):
         owner.setdefault(fn, KERNEL)
     known = set(table_mod)
-    tables, calls, kernel, size = {}, {}, {}, {}
+    tables, calls, kernel, api_calls, size = {}, {}, {}, {}, {}
     for t, src in files.items():
         mod = trait_mod.get(t)
         if not mod:
@@ -84,13 +85,13 @@ def analyse():
             to = owner.get(fn)
             if not to or to == mod:
                 continue
-            bucket = kernel if to == KERNEL else calls
+            bucket = kernel if to == KERNEL else (api_calls if fn in api else calls)
             key = f'{mod}->{to}'
             bucket.setdefault(key, {})
             bucket[key][fn] = bucket[key].get(fn, 0) + 1
     unowned = sorted({x for src in files.values() for x in LITERAL.findall(src)} - known - {''})
     return {'modules': {k: {'label': v['label'], 'lines': size.get(k, 0), 'traits': len(v['traits']), 'tables': v['tables']} for k, v in modules.items()},
-            'tables': tables, 'calls': calls, 'kernel_calls': kernel, 'problems': problems, 'not_tables': unowned}
+            'tables': tables, 'calls': calls, 'kernel_calls': kernel, 'api_calls': api_calls, 'problems': problems, 'not_tables': unowned}
 
 
 def totals(section):
@@ -110,8 +111,8 @@ def main():
         t = sum(n for k, n in current['tables'].items() if k.startswith(mod + '->'))
         c = sum(n for k, n in current['calls'].items() if k.startswith(mod + '->'))
         print(f'{mod:15} {d["lines"]:6} {t:18} {c:23}')
-    print('total crossings: %d table uses, %d function calls (plus %d calls into platform, allowed)'
-          % (sum(current['tables'].values()), sum(current['calls'].values()), sum(totals(r['kernel_calls']).values())))
+    print('total crossings: %d table uses, %d function calls (allowed: %d calls into platform, %d to modules\' public functions)'
+          % (sum(current['tables'].values()), sum(current['calls'].values()), sum(totals(r['kernel_calls']).values()), sum(totals(r['api_calls']).values())))
     if '--update' in sys.argv or not os.path.exists(BASELINE):
         with open(BASELINE, 'w') as f:
             json.dump(current, f, indent=1, sort_keys=True)

@@ -160,7 +160,7 @@ trait EWS_Reports_Trait {
         $mine=[];
         if($split){[$scoped]=$this->report_employee_scope('all',0,'active');foreach($scoped as $x)$mine[(int)$x->id]=true;}
         $where_loc=[];foreach((array)$wpdb->get_results("SELECT employee_id,location_id FROM {$map_table}") as $m)$where_loc[(int)$m->employee_id]=(int)$m->location_id;
-        $active=[];foreach((array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1 AND (attendance_enabled IS NULL OR attendance_enabled=1)") as $id)$active[(int)$id]=true;
+        $active=[];foreach($this->people_active_ids(true) as $id)$active[(int)$id]=true;
         $signed=[];
         // The branch they signed in at (3.31.72), else where they were planned.
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,MAX(location_id) location_id FROM {$this->time_logs} WHERE event_type IN ('sign_in','late_sign_in') AND work_date BETWEEN %s AND %s".$this->tl_live()." GROUP BY employee_id,work_date",$s,$e)) as $r)$signed[(int)$r->employee_id][$r->work_date]=(int)$r->location_id;

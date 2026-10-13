@@ -62,7 +62,7 @@ trait EWS_Departments_Trait {
         $dept=$this->current_department_id();
         if(!$dept) return false;
         global $wpdb;
-        return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",$employee_id,$dept));
+        return (bool)$this->people_in_department($employee_id,$dept);
     }
 
     private function department_scoped_employees($employees=null){
@@ -99,7 +99,7 @@ trait EWS_Departments_Trait {
         echo $this->render_template('admin/departments',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
             'edit'=>$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['departments']} WHERE id=%d LIMIT 1",$edit_id)):null,
             'departments'=>(array)$wpdb->get_results("SELECT d.*,e.name manager_name,(SELECT COUNT(*) FROM {$this->employees} x WHERE x.department_id=d.id AND x.active=1) employee_count FROM {$t['departments']} d LEFT JOIN {$this->employees} e ON e.id=d.manager_employee_id WHERE d.active=1 ORDER BY d.name ASC"),
-            'employees'=>(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC"),
+            'employees'=>(array)$this->people_active_list(),
             'notice'=>isset($_GET['department_saved'])?'Department saved successfully.':(isset($_GET['department_deleted'])?'Department archived successfully.':''),
             'error'=>OrgRules::message('department',sanitize_key(wp_unslash($_GET['department_error']??''))),
         ]);
@@ -111,7 +111,7 @@ trait EWS_Departments_Trait {
         $id=absint($_POST['department_id']??0); $name=sanitize_text_field(wp_unslash($_POST['name']??'')); $code=sanitize_key($_POST['code']??''); $description=sanitize_textarea_field(wp_unslash($_POST['description']??'')); $manager=absint($_POST['manager_employee_id']??0);
         $error=OrgRules::departmentError([
             'name'=>$name,'code'=>$code,'is_new'=>!$id,'manager'=>$manager,
-            'manager_in_department'=>$manager&&$id&&$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",$manager,$id)),
+            'manager_in_department'=>$manager&&$id&&$this->people_in_department($manager,$id),
             'duplicate'=>OrgRules::duplicate((array)$wpdb->get_col($wpdb->prepare("SELECT active FROM {$t['departments']} WHERE (name=%s OR code=%s) AND id<>%d",$name,$code,$id))),
         ]);
         if($error!=='')$this->department_redirect(['department_error'=>$error]);

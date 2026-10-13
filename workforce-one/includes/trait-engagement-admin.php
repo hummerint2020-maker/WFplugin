@@ -62,7 +62,7 @@ trait EWS_Engagement_Admin_Trait {
     public function admin_employee_moments(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         global $wpdb;
-        $employees=(array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+        $employees=(array)$this->people_active_list();
         $saved=$this->option('ews_employee_moments');
         $saved=is_array($saved)?$saved:[];
         $configured=0;
@@ -79,7 +79,7 @@ trait EWS_Engagement_Admin_Trait {
         $this->engagement_guard('ews31_employee_moments_save');
         global $wpdb;
         $stored=$this->option('ews_employee_moments');
-        $form_ids=array_map('intval',(array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1"));
+        $form_ids=array_map('intval',$this->people_active_ids());
         [$clean,$error]=Moments::merge(wp_unslash($_POST['moments']??[]),is_array($stored)?$stored:[],$form_ids,current_time('Y-m-d'));
         if($error)$this->engagement_redirect('ews31-moments',['moments_error'=>$error]);
         update_option('ews_employee_moments_enabled',!empty($_POST['enabled'])?1:0,false);

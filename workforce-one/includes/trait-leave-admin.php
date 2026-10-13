@@ -37,7 +37,7 @@ trait EWS_Leave_Admin_Trait {
         }
         echo $this->render_template('admin/leaves',[
             'types'=>(array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_leave_types ORDER BY id ASC"),
-            'employees'=>(array)$wpdb->get_results("SELECT id,name FROM {$this->employees} WHERE active=1 ORDER BY name ASC"),
+            'employees'=>$this->people_active_list(),
             'year'=>$year,'years'=>$years,'shown_year'=>$shown_year,'balances'=>$balance_rows,
             'saved'=>isset($_GET['leave_admin_saved']),'recorded'=>isset($_GET['leave_recorded']),
             'record_error'=>isset($_GET['leave_record_error'])?sanitize_text_field(wp_unslash($_GET['leave_record_error'])):'',

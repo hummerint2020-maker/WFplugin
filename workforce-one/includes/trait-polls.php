@@ -78,8 +78,8 @@ trait EWS_Polls_Trait {
     private function poll_audience_count($poll){
         global $wpdb;
         return $poll->audience_department_id
-            ?(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->employees} WHERE active=1 AND department_id=%d",(int)$poll->audience_department_id))
-            :(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->employees} WHERE active=1");
+            ?$this->people_active_count((int)$poll->audience_department_id)
+            :$this->people_active_count();
     }
 
     /** @return array{rows:array<int,object>,total:int} choices with votes and percentage (adding up to 100) */
@@ -194,8 +194,8 @@ trait EWS_Polls_Trait {
         global $wpdb; $t=$this->polls_table_names();
         if(!empty($poll->notified_at)||$this->poll_state($poll)!=='open')return 0;
         $users=$poll->audience_department_id
-            ?(array)$wpdb->get_col($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL AND wp_user_id>0 AND department_id=%d",(int)$poll->audience_department_id))
-            :(array)$wpdb->get_col("SELECT wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL AND wp_user_id>0");
+            ?$this->people_active_user_ids((int)$poll->audience_department_id)
+            :$this->people_active_user_ids();
         $url=add_query_arg('ews_view','polls',$this->app_home_url());
         foreach($users as $uid){
             $this->notify((int)$uid,'poll','New poll',(string)$poll->question,['entity_id'=>(int)$poll->id,'url'=>$url]);

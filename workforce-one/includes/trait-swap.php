@@ -23,7 +23,7 @@ trait EWS_Swap_Trait {
 
     private function swap_employee_user_id($employee_id){
             global $wpdb;
-            return (int)$wpdb->get_var($wpdb->prepare("SELECT wp_user_id FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",(int)$employee_id));
+            return (int)$this->people_user_id((int)$employee_id,true);
         }
 
     private function swap_redirect($args=[]){
@@ -100,7 +100,7 @@ trait EWS_Swap_Trait {
             $error=SwapRules::checkRequest((int)$requester->id,$target,$date)??SwapRules::checkNotPast($date,current_time('Y-m-d'));
             if($error)$this->swap_redirect(['swap_error'=>$error]);
             global $wpdb;$table=$this->ensure_swap_schema();
-            $target_emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$target));
+            $target_emp=$this->people_employee($target,true);
             if(!$target_emp || !$this->department_scope_allows_employee($target))$this->swap_redirect(['swap_error'=>'employee']);
             $a=$this->schedule_for_employee_date($requester->id,$date);
             $b=$this->schedule_for_employee_date($target,$date);
@@ -221,8 +221,8 @@ trait EWS_Swap_Trait {
             $step=$ar?$this->approval_current_step((int)$ar->id):null;
             if(!$step||!$step->approver_wp_user_id)return;
             global $wpdb;
-            $a=$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",(int)$r->requester_employee_id));
-            $b=$wpdb->get_var($wpdb->prepare("SELECT name FROM {$this->employees} WHERE id=%d",(int)$r->target_employee_id));
+            $a=$this->people_name((int)$r->requester_employee_id);
+            $b=$this->people_name((int)$r->target_employee_id);
             $this->notify((int)$step->approver_wp_user_id,'swap',__('Shift swap to approve','workforce-one'),
                 /* translators: 1: employee, 2: colleague, 3: day, 4: status, 5: status */
                 sprintf(__('%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s.','workforce-one'),(string)$a,(string)$b,date_i18n('l, d M',strtotime($r->work_date)),$r->requester_status,$r->target_status),

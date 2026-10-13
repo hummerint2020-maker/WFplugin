@@ -87,7 +87,7 @@ trait EWS_Recognition_Trait {
         if(!$sender||!$recipient_id||$recipient_id===(int)$sender->id)$this->recognition_redirect($recipient_id,['kudos_error'=>'invalid']);
         if(!isset($cats[$category]))$this->recognition_redirect($recipient_id,['kudos_error'=>'category']);
         if(mb_strlen($message)>500)$message=mb_substr($message,0,500);
-        $recipient=$wpdb->get_row($wpdb->prepare("SELECT id,name,active,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$recipient_id));
+        $recipient=$this->people_employee($recipient_id,true);
         if(!$recipient)$this->recognition_redirect($recipient_id,['kudos_error'=>'employee']);
         $today=current_time('Y-m-d H:i:s');
         $duplicate=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_kudos WHERE sender_employee_id=%d AND recipient_employee_id=%d AND category=%s AND message=%s AND status='active' AND created_at >= %s LIMIT 1",(int)$sender->id,$recipient_id,$category,$message,date('Y-m-d H:i:s',strtotime('-1 day',current_time('timestamp')))));

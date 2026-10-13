@@ -61,7 +61,7 @@ trait EWS_Employee_Admin_Trait {
             'supervisor_id'=>$in['supervisor_id'],
         ];
         if($in['supervisor_id']){
-            $facts['supervisor_ok']=(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1",$in['supervisor_id']));
+            $facts['supervisor_ok']=(bool)$this->people_active_id($in['supervisor_id']);
             $above=$this->approval_related_employee($in['supervisor_id'],'supervisor');
             $facts['supervisors_supervisor']=$above?(int)$above->id:0;
         }
