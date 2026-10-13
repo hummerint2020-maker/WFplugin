@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.93
+ * Version: 3.31.94
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.93');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.94');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -164,6 +164,9 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_roles_save',[$this,'admin_roles_save']);
             add_action('admin_post_ews_notification_read',[$this,'notification_read']);
             add_action('admin_post_ews_notification_open',[$this,'notification_open']);
+            // Opened from a notification on the phone: marked read (3.31.94).
+            add_action('template_redirect',[$this,'notification_mark_landed'],1);
+            add_action('admin_init',[$this,'notification_mark_landed'],1);
             add_action('admin_post_ews_notification_read_all',[$this,'notification_read_all']);
             add_action('admin_post_ews_push_subscribe',[$this,'push_subscribe']);
             add_action('admin_post_ews_push_unsubscribe',[$this,'push_unsubscribe']);

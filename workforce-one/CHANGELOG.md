@@ -1,5 +1,39 @@
 # Changelog
 
+## 3.31.94
+Where each notification takes its reader (owner-approved list), and the app is named Workforce One.
+Database: column `ews_notifications.link` (schema 3.31.94).
+
+### Changed
+- **The app is named Workforce One** (was Employee Hub): the name under the icon, the offline screen
+  and the app info in the API. The app's id is unchanged, so installed apps stay the same app (an iPhone
+  keeps the name it was installed with until the app is added again).
+- **A notification opens the same page from the phone and from the Notifications page**, saved with
+  the notification (`link`). Without a link of its own it opens the app page of its kind
+  (`src/Notifications/Links.php`):
+  - Schedule: schedule changes (they opened the Notifications page) and shift swaps, including swaps to
+    approve (they opened Home);
+  - Leave: leave, its cancellation and early leave, decisions and requests to approve (some opened Home);
+  - Corrections, My Pay, My Profile (achievements; Kudos when People is off), Polls, Presence, My sites,
+    the attendance planner (office minimum), and the task's details for a task.
+- **No more white WordPress pages.** A link into wp-admin (Face Reset Requests, Daily Workers' changes,
+  the Sign In / Out report for refused Sign Ins, the Requests Hub) is kept only for someone who may
+  open that page; anyone else gets the app's Notifications page with the notification shown. An app
+  page that needs a permission (the attendance planner) does the same.
+- **Opened from the phone, a notification is marked read.**
+- **Refused Sign In, new polls and presence checks reach the phone**: they were missing from the
+  Notifications settings, so they were never pushed. Now listed there, pushed by default.
+
+### Fixed
+- Opening a notification from the list without one (or one that is gone) ended on an error page.
+- Smart reminders sent by the cron job linked to `wp-cron.php?ews_view=…` (a white page); the test
+  push from Smart Nudges linked into wp-admin. Both now open the app.
+
+### Tests
+- New `tests/e2e_notification_links.py` (17, in CI): every kind of notification, followed as its
+  reader, from the phone and from the list; never a white page; marked read; the open handler.
+- New `tests/unit/NotificationLinksTest.php`; `e2e_pwa` and `ManifestTest` check the new name.
+
 ## 3.31.93
 The installed app's own offline screen instead of the browser's blank page (off until turned on in
 Features, owner-approved mockup docs/mockups/offline-page/). No database change.

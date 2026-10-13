@@ -113,7 +113,7 @@ trait EWS_Achievements_Trait {
         $message=sprintf('%s %s — %s',$achievement->icon,$achievement->name,$achievement->description);
         $uid=(int)$emp->wp_user_id;
         if($uid){
-            $this->notify($uid,'achievement',$title,$message,['entity_id'=>(int)$achievement->id,'url'=>$this->notification_app_view_url('profile')]);
+            $this->notify($uid,'achievement',$title,$message,['entity_id'=>(int)$achievement->id,'url'=>add_query_arg('ews_view','profile',$this->app_home_url())]);
         }
         $this->audit('achievement_earned','employee_achievement',(int)$wpdb->insert_id,sprintf('%s earned %s (%s)',$emp->name,$achievement->name,$achievement->slug));
         return true;

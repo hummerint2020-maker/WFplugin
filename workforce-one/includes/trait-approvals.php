@@ -146,7 +146,7 @@ trait EWS_Approvals_Trait {
         foreach(get_users(['capability'=>'manage_options','fields'=>'ID']) as $uid){
             $this->notify((int)$uid,'system',__('Approval needed','workforce-one'),
                 sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,(int)$step_order),
-                ['entity'=>'approval','entity_id'=>$request_id,'push'=>true]);
+                ['entity'=>'approval','entity_id'=>$request_id,'push'=>true,'url'=>admin_url('admin.php?page=ews31-requests')]);
         }
     }
 

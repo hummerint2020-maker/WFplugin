@@ -215,6 +215,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_private_files.py "$S"
       - name: Sign In evidence (refused attempts, sent later, face photo)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_signin_evidence.py "$S"
+      - name: Where each notification takes its reader (no white page, marked read)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_notification_links.py "$S"
       - name: Offline screen (settings, page, service worker, preview)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_offline_screen.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF

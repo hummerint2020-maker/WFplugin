@@ -393,7 +393,7 @@ trait EWS_Frontend_Trait {
                         // The identity includes the effective schedule inputs. If an admin changes the same day's schedule,
                         // the old dismissed/sent reminder must not suppress the reminder for the new schedule.
                         $schedule_fingerprint=substr(md5($today.'|'.(string)($sch->status??'').'|'.(string)($h['start']??'').'|'.(string)($h['normal_until']??'').'|'.(string)($h['sign_in_cutoff_minutes']??240)),0,12);
-                        $add('attendance-'.$today.'-'.$schedule_fingerprint,'attendance','⏰','Quick reminder','Your workday started at '.date_i18n('g:i A',strtotime($today.' '.$h['start'])).'. You are not signed in yet.',$this->app_view_url('time'),'Sign In');
+                        $add('attendance-'.$today.'-'.$schedule_fingerprint,'attendance','⏰','Quick reminder','Your workday started at '.date_i18n('g:i A',strtotime($today.' '.$h['start'])).'. You are not signed in yet.',add_query_arg('ews_view','time',$this->app_home_url()),'Sign In');
                     }
                 }
             }
@@ -407,7 +407,7 @@ trait EWS_Frontend_Trait {
                 $title='“'.wp_strip_all_tags((string)$r->title).'”';
                 /* translators: 1: task title, 2: due date */
                 $message=$overdue?sprintf(__('%1$s was due on %2$s.','workforce-one'),$title,date_i18n('D, d M',strtotime($r->due_date))):sprintf(/* translators: %s: task title */__('%s is due today.','workforce-one'),$title);
-                $add('task-'.$r->id.'-'.$r->due_date,'task','',$label,$message,add_query_arg('task',(int)$r->id,$this->app_view_url('tasks')),__('Open Task','workforce-one'));
+                $add('task-'.$r->id.'-'.$r->due_date,'task','',$label,$message,add_query_arg(['ews_view'=>'tasks','task'=>(int)$r->id],$this->app_home_url()),__('Open Task','workforce-one'));
             }
         }
 
@@ -415,7 +415,7 @@ trait EWS_Frontend_Trait {
             $leave_table=$this->leaves;$pending=$wpdb->get_results($wpdb->prepare("SELECT id,start_date,end_date,requested_days FROM $leave_table WHERE employee_id=%d AND status='Pending' ORDER BY requested_at DESC LIMIT 3",(int)$emp->id));
             foreach($pending as $r){
                 $range=$r->start_date===$r->end_date?date_i18n('D, d M',strtotime($r->start_date)):date_i18n('D, d M',strtotime($r->start_date)).' → '.date_i18n('D, d M',strtotime($r->end_date));
-                $add('leave-'.$r->id,'leave','🏖','Leave request waiting','Your leave request for '.$range.' is still pending.',$this->app_view_url('vacation'),'View Request');
+                $add('leave-'.$r->id,'leave','🏖','Leave request waiting','Your leave request for '.$range.' is still pending.',add_query_arg('ews_view','vacation',$this->app_home_url()),'View Request');
             }
         }
 
@@ -423,7 +423,7 @@ trait EWS_Frontend_Trait {
             $tomorrow=date('Y-m-d',strtotime($today.' +1 day'));$next=$wpdb->get_row($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",(int)$emp->id,$tomorrow));
             if($next){
                 $status=(string)$next->status;$label=$status==='WFH'?'🏠 WFH':($status==='Office'?'🏢 Office':$status);
-                $add('schedule-'.$tomorrow,'schedule','📅','Tomorrow’s schedule','You are scheduled for '.$label.' tomorrow.', $this->app_view_url('schedule'),'View Schedule');
+                $add('schedule-'.$tomorrow,'schedule','📅','Tomorrow’s schedule','You are scheduled for '.$label.' tomorrow.', add_query_arg('ews_view','schedule',$this->app_home_url()),'View Schedule');
             }
         }
         return array_slice($nudges,0,6);

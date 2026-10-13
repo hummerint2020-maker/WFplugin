@@ -37,6 +37,10 @@ trait EWS_Notifications_Trait {
             'correction'=>['label'=>'Attendance Corrections','description'=>'Correction requests, decisions and the end-of-day reminder to sign out.','push_default'=>1],
             'office_minimum'=>['label'=>'Office Minimum','description'=>'Weekly reminder of next week\'s days below the office minimum.','push_default'=>1],
             'daily_workers'=>['label'=>'Daily Workers','description'=>'Day sheet change requests and decisions.','push_default'=>1],
+            // Sent before 3.31.94 but missing here, so never pushed to phones.
+            'attendance'=>['label'=>'Refused Sign In','description'=>'An employee was refused Sign In several times in a day (to their managers).','push_default'=>1],
+            'poll'=>['label'=>'Polls','description'=>'A new poll to answer.','push_default'=>1],
+            'presence'=>['label'=>'Presence Verification','description'=>'A request to verify your presence, which expires in minutes.','push_default'=>1],
         ];
     }
 
@@ -97,6 +101,7 @@ trait EWS_Notifications_Trait {
                 is_read TINYINT(1) NOT NULL DEFAULT 0,
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 read_at DATETIME NULL,
+                link TEXT NULL,
                 PRIMARY KEY(id),
                 KEY user_unread(user_id,is_read),
                 KEY user_read_date(user_id,is_read,created_at),
@@ -108,7 +113,7 @@ trait EWS_Notifications_Trait {
     }
 
     /** Saves an in-app notification when the policy for $category allows it. */
-    private function notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id){
+    private function notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id,$link=''){
         global $wpdb;
         if(!$this->notification_in_app_allowed($category))return 0;
         $this->ensure_notifications_schema();
@@ -120,8 +125,9 @@ trait EWS_Notifications_Trait {
             'entity'=>$entity?sanitize_key($entity):null,
             'entity_id'=>$entity_id?absint($entity_id):null,
             'is_read'=>0,
-            'created_at'=>current_time('mysql')
-        ],['%d','%s','%s','%s','%s','%d','%d','%s']);
+            'created_at'=>current_time('mysql'),
+            'link'=>$link!==''?esc_url_raw($link):null,
+        ],['%d','%s','%s','%s','%s','%d','%d','%s','%s']);
         if($ok===false){
             if(method_exists($this,'audit')) $this->audit('notification_insert_failed','notification',0,'user_id='.$user_id.'; '.$wpdb->last_error);
             if(defined('WP_DEBUG') && WP_DEBUG && function_exists('error_log')) error_log('[Workforce One] notification_insert_failed: '.$wpdb->last_error);
@@ -148,14 +154,50 @@ trait EWS_Notifications_Trait {
         $entity=sanitize_key($opt['entity']??$category);
         $type=sanitize_key($opt['type']??$category);
         $entity_id=absint($opt['entity_id']??0);
-        $id=$this->notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id);
+        // Where it takes its reader, from the phone and from the Notifications page alike (3.31.94).
+        $link=!empty($opt['url'])?(string)$opt['url']:$this->notification_default_link($category,$entity,$entity_id);
+        $reachable=$this->notification_user_may_open($user_id,$link);
+        $id=$this->notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id,$reachable?$link:'');
+        if(!$reachable){
+            // A page this person may not open: the app's Notifications page, with this notification shown.
+            $link=$this->notification_focus_link($id);
+            if($id){global $wpdb;$wpdb->update($this->notifications,['link'=>esc_url_raw($link)],['id'=>$id],['%s'],['%d']);}
+        }
         if(($opt['push']??true) && $this->notification_push_allowed($category)){
-            // The link is worked out now: it can depend on the page the user is on (see notification_app_view_url()).
-            $url=!empty($opt['url'])?(string)$opt['url']:$this->notification_app_view_url($category);
+            // Opening it from the phone marks it read (ews_nid, see notification_mark_landed()).
+            $url=$id?add_query_arg('ews_nid',$id,$link):$link;
             if(!self::$ews_push_queue)add_action('shutdown',[$this,'push_flush'],1);
             self::$ews_push_queue[]=['user_id'=>$user_id,'title'=>(string)$title,'message'=>(string)$message,'category'=>$category,'entity_id'=>$entity_id,'url'=>$url];
         }
         return $id;
+    }
+
+    /** A notification's own app page (src/Notifications/Links.php); a task's notification opens its details. */
+    private function notification_default_link($category,$entity='',$entity_id=0){
+        $view=\WorkforceOne\Notifications\Links::view((string)$category,(string)$entity);
+        $url=add_query_arg('ews_view',$view,$this->app_home_url());
+        return ($view==='tasks' && $entity_id)?add_query_arg('task',(int)$entity_id,$url):$url;
+    }
+
+    /** The app's Notifications page with one notification shown. */
+    private function notification_focus_link($id){
+        $url=add_query_arg('ews_view','notifications',$this->app_home_url());
+        return $id?add_query_arg('nid',(int)$id,$url).'#ews-notification-'.(int)$id:$url;
+    }
+
+    /** May this person open the link: a wp-admin page or an app page that needs a permission? */
+    private function notification_user_may_open($user_id,$link){
+        $cap=\WorkforceOne\Notifications\Links::capability((string)$link,(string)wp_parse_url(admin_url('/'),PHP_URL_PATH));
+        return $cap==='' || user_can((int)$user_id,'manage_options') || user_can((int)$user_id,$cap);
+    }
+
+    /** Arriving from a notification on the phone (?ews_nid=): it is marked read. */
+    public function notification_mark_landed(){
+        $id=absint($_GET['ews_nid']??0); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- marks the reader's own notification read, nothing else
+        if(!$id||!is_user_logged_in())return;
+        global $wpdb;
+        $this->ensure_notifications_schema();
+        if($wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d AND is_read=0",current_time('mysql'),$id,get_current_user_id())))$this->invalidate_notification_unread_cache(get_current_user_id());
     }
 
     /** End of the request: the queued pushes go to WP-Cron as one event, started right away. */
@@ -221,7 +263,7 @@ trait EWS_Notifications_Trait {
             if(!$rows)return $none;
             $resolved_url=$url;
             if(!$resolved_url){
-                $resolved_url=$this->notification_app_view_url($category);
+                $resolved_url=$this->notification_default_link($category);
             }
             $payload=['title'=>$title,'body'=>wp_strip_all_tags($message),'url'=>$resolved_url,'notification_id'=>0,'type'=>sanitize_key($type),'entity_id'=>absint($entity_id)];
             $jobs=[];foreach($rows as $row)$jobs[(int)$row->id]=[$row,$payload];
@@ -249,52 +291,14 @@ trait EWS_Notifications_Trait {
         return self::$ews_notification_unread_cache[$user_id];
     }
 
-    private function notification_app_view_url($view){
-        // notification_open() runs through admin-post.php. app_view_url() builds
-        // URLs from the current request URL, which would otherwise preserve
-        // action=ews_notification_open and redirect back into the handler.
-        $ref=wp_get_referer();
-        if($ref){
-            $path=(string)wp_parse_url($ref,PHP_URL_PATH);
-            // Never derive an app notification URL from wp-admin. Achievement
-            // awards can be triggered from an Admin request, whose referer is
-            // the Admin Achievements page. Using that referer would send the
-            // employee's PWA notification back into wp-admin.
-            $is_admin_path = (strpos($path, '/wp-admin/') !== false || basename($path)==='admin-post.php');
-            if($path && !$is_admin_path){
-                $ref=remove_query_arg([
-                    'ews_view','action','notification_id','_wpnonce'
-                ],$ref);
-                return add_query_arg('ews_view',sanitize_key($view),$ref);
-            }
-        }
-        return add_query_arg('ews_view',sanitize_key($view),$this->app_home_url());
-    }
-
+    /**
+     * Where a notification in the list takes its reader: its saved link (3.31.94), else, for one saved
+     * before, the app page of its kind. A link this person may no longer open shows the notification.
+     */
     private function notification_url($notification){
-        $entity=sanitize_key($notification->entity??'');
-        $id=absint($notification->entity_id??0);
-        switch($entity){
-            case 'poll':
-                return $this->notification_app_view_url('polls');
-            case 'task':
-                $url=$this->notification_app_view_url('tasks');
-                return $id?add_query_arg('edit_task',$id,$url):$url;
-            case 'schedule':
-            case 'swap':
-                return $this->notification_app_view_url('schedule');
-            case 'leave':
-            case 'vacation':
-                return $this->notification_app_view_url('vacation');
-            case 'overtime':
-                return $this->notification_app_view_url('overtime');
-            case 'break':
-                return $this->notification_app_view_url('time');
-            case 'face_reset':
-                return $this->notification_app_view_url('employees');
-            default:
-                return $this->notification_app_view_url('notifications');
-        }
+        $link=(string)($notification->link??'');
+        if($link==='')$link=$this->notification_default_link((string)($notification->type??''),(string)($notification->entity??''),(int)($notification->entity_id??0));
+        return $this->notification_user_may_open((int)$notification->user_id,$link)?$link:$this->notification_focus_link((int)$notification->id);
     }
 
     private function notification_rows($user_id=null,$limit=30,$filter='all'){
@@ -325,13 +329,15 @@ trait EWS_Notifications_Trait {
 
     public function notification_open(){
         if(!is_user_logged_in())wp_die('You must be logged in.');
+        $list=add_query_arg('ews_view','notifications',$this->app_home_url());
         $id=absint($_GET['notification_id']??0);
-        if(!$id)wp_safe_redirect($this->app_view_url('notifications'));
+        // Built from the app's page, never from this admin-post request (it would come back here).
+        if(!$id){wp_safe_redirect($list);exit;}
         check_admin_referer('ews_notification_open_'.$id);
         global $wpdb;
         $this->ensure_notifications_schema();
         $note=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->notifications} WHERE id=%d AND user_id=%d LIMIT 1",$id,get_current_user_id()));
-        if(!$note)wp_safe_redirect($this->app_view_url('notifications'));
+        if(!$note){wp_safe_redirect($list);exit;}
         if(!(int)$note->is_read){
             $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d AND is_read=0",current_time('mysql'),$id,get_current_user_id()));
             $this->invalidate_notification_unread_cache(get_current_user_id());
@@ -387,6 +393,8 @@ trait EWS_Notifications_Trait {
         wp_enqueue_style('workforce-one-notifications-page');
         wp_enqueue_script('workforce-one-notifications');
         return $this->render_template('app/notifications',[
+            // A notification to show: opened from a link this person may not open (3.31.94).
+            'focus'=>absint($_GET['nid']??0), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which notification to show
             'filter'=>$filter,'groups'=>$groups,'unread'=>$this->notification_unread_count(),
             'all_url'=>$all_url,'unread_url'=>add_query_arg('notification_tab','unread',$all_url),
             'post_url'=>admin_url('admin-post.php'),'push_key'=>(string)$this->get_vapid_public_key(),'push_nonce'=>wp_create_nonce('ews_push_subscription'),

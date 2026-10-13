@@ -53,7 +53,7 @@ trait EWS_Engagement_Admin_Trait {
 
     public function smart_nudge_test_push(){
         $this->engagement_guard('ews_smart_nudge_test_push');
-        $sent=$this->push_custom_notification(get_current_user_id(),'Workforce One · Smart Nudge Test','This is a test push from Smart Nudges.','smart_nudge',0,$this->app_view_url('time'));
+        $sent=$this->push_custom_notification(get_current_user_id(),'Workforce One · Smart Nudge Test','This is a test push from Smart Nudges.','smart_nudge',0,add_query_arg('ews_view','time',$this->app_home_url()));
         $this->engagement_redirect('ews31-smart-nudges',['smart_nudge_test'=>$sent>0?'test_sent':'test_not_sent']);
     }
 

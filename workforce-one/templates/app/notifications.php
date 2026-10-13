@@ -7,6 +7,7 @@
  * @var string $filter                 all | unread
  * @var array<string,list<array{id:int,title:string,message:string,unread:bool,when:string,icon:string,tone:string,open_url:string}>> $groups  today | yesterday | earlier
  * @var int $unread
+ * @var int $focus                    a notification to show (opened from a link this person may not open, 3.31.94)
  * @var string $all_url
  * @var string $unread_url
  * @var string $post_url
@@ -58,7 +59,7 @@ $group_names = ['today' => __('Today', 'workforce-one'), 'yesterday' => __('Yest
             <h3><?php echo esc_html($label); ?></h3>
             <ul class="wfo-notif-list">
                 <?php foreach ($groups[$key] as $n): ?>
-                <li class="ews-notification wfo-notif-item <?php echo $n['unread'] ? 'unread is-unread' : 'read'; ?>">
+                <li id="ews-notification-<?php echo (int) $n['id']; ?>" class="ews-notification wfo-notif-item <?php echo $n['unread'] ? 'unread is-unread' : 'read'; ?><?php echo $focus === (int) $n['id'] ? ' is-focus' : ''; ?>"<?php echo $focus === (int) $n['id'] ? ' aria-current="true"' : ''; ?>>
                     <a class="wfo-notif-link" href="<?php echo esc_url($n['open_url']); ?>">
                         <span class="wfo-notif-icon is-<?php echo esc_attr($n['tone']); ?>"><?php echo Icons::svg($n['icon'], 18); ?></span>
                         <span class="wfo-notif-body">

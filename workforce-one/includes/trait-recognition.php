@@ -118,7 +118,9 @@ trait EWS_Recognition_Trait {
         $msg=$sender_name.' recognized you for '.$label.'.';
         if($message!=='')$msg.=' “'.wp_strip_all_tags($message).'”';
         if(!empty($recipient->wp_user_id)){
-            $url=add_query_arg(['ews_view'=>'employee','employee_id'=>$recipient_id],$this->app_view_url('people'));
+            // Their profile in People (where Kudos are shown); My Profile when People is off (3.31.94).
+            $people=!empty($this->employee_profile_settings()['enabled']);
+            $url=$people?add_query_arg(['ews_view'=>'employee','employee_id'=>$recipient_id],$this->app_home_url()):add_query_arg('ews_view','profile',$this->app_home_url());
             $this->notify((int)$recipient->wp_user_id,'recognition',$title,$msg,['entity'=>'kudos','entity_id'=>$id,'url'=>$url]);
         }
         $this->audit('kudos_created','kudos',$id,'sender_employee_id='.(int)$sender->id.'; recipient_employee_id='.$recipient_id.'; category='.$category);

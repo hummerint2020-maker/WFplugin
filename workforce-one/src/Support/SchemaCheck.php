@@ -25,6 +25,7 @@ final class SchemaCheck
         'ews_employees' => ['email', 'wp_user_id', 'default_shift_id', 'attendance_enabled', 'department_id', 'last_working_day'],
         'ews_time_logs' => ['source', 'corrects_id', 'correction_id', 'location_id', 'branch_flag', 'photo_key'],
         'ews_schedule' => ['location_id'],
+        'ews_notifications' => ['link'],
     ];
 
     /**
