@@ -9,7 +9,7 @@
  */
 if (!defined('ABSPATH')) exit;
 ?>
-<link rel="manifest" href="<?php echo esc_url($manifest); ?>"><meta name="theme-color" content="#101828"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Employee Hub"><style id="ews-pwa-mobile-shell">#wpadminbar{display:none!important}html{margin-top:0!important}body{margin-top:0!important}</style><?php if ($splash): ?><style id="ews-pwa-splash-style">
+<link rel="manifest" href="<?php echo esc_url($manifest); ?>"><meta name="theme-color" content="#101828"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="<?php echo esc_attr(\WorkforceOne\Pwa\Manifest::NAME); ?>"><style id="ews-pwa-mobile-shell">#wpadminbar{display:none!important}html{margin-top:0!important}body{margin-top:0!important}</style><?php if ($splash): ?><style id="ews-pwa-splash-style">
             #ews-pwa-splash{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:<?php echo esc_attr($splash['background']); ?>;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}
             #ews-pwa-splash.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
             #ews-pwa-splash .ews-splash-inner{text-align:center;transform:translateY(-2vh)}

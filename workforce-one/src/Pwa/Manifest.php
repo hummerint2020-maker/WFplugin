@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
  */
 final class Manifest
 {
-    public const NAME = 'Employee Hub';
+    public const NAME = 'Workforce One';
     public const THEME_COLOR = '#101828';
 
     /**

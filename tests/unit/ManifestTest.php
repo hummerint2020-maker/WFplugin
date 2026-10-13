@@ -8,7 +8,7 @@ final class ManifestTest extends TestCase
     {
         $m = M::data('https://hr.example.com/app/', '/', 'https://hr.example.com/wp-content/plugins/workforce-one/');
         $this->assertSame(['name', 'short_name', 'description', 'start_url', 'scope', 'display', 'orientation', 'background_color', 'theme_color', 'icons'], array_keys($m), 'key order is part of the output');
-        $this->assertSame(['Employee Hub', 'https://hr.example.com/app/?ews_view=time', '/', 'standalone'], [$m['name'], $m['start_url'], $m['scope'], $m['display']]);
+        $this->assertSame(['Workforce One', 'https://hr.example.com/app/?ews_view=time', '/', 'standalone'], [$m['name'], $m['start_url'], $m['scope'], $m['display']]);
         $this->assertSame('https://hr.example.com/?page_id=5&ews_view=time', M::data('https://hr.example.com/?page_id=5', '/', '/')['start_url']);
         $this->assertSame(['192x192', '512x512'], array_column($m['icons'], 'sizes'));
     }

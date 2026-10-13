@@ -19,7 +19,7 @@ emp = Session('emp1', 'emp1pass')
 st, body, h = emp.req('/?ews_pwa=manifest')
 m = json.loads(body) if st == 200 else {}
 check('the manifest is served as a web app manifest', st == 200 and h.get('Content-Type', '').startswith('application/manifest+json'), (st, h.get('Content-Type')))
-check('...installable: name, standalone display, scope and start URL', m.get('name') == 'Employee Hub' and m.get('short_name') == 'Employee Hub' and m.get('display') == 'standalone'
+check('...installable: name, standalone display, scope and start URL', m.get('name') == 'Workforce One' and m.get('short_name') == 'Workforce One' and m.get('display') == 'standalone'
       and m.get('scope') == '/' and m.get('start_url', '').endswith('?ews_view=time') and m.get('theme_color') == '#101828' and m.get('orientation') == 'portrait-primary', m)
 icons = {i['sizes']: i for i in m.get('icons', [])}
 check('...with 192 and 512 px PNG icons that load', set(icons) == {'192x192', '512x512'} and all(emp.req(i['src'].split('127.0.0.1:8080')[-1])[0] == 200 for i in icons.values()), icons)
@@ -54,7 +54,7 @@ check('...a notification opens its link, else the site', 'data:{url:d.url||HOME_
 st, page, _ = emp.req('/app/')
 check('the app page links the manifest and the iPhone icon', 'href="%s/?ews_pwa=manifest"' % B in page and re.search(r'<link rel="apple-touch-icon" href="[^"]*workforce-one-192\.png">', page) is not None)
 check('...with theme colour and home-screen app tags', all(t in page for t in ('<meta name="theme-color" content="#101828">', '<meta name="mobile-web-app-capable" content="yes">',
-      '<meta name="apple-mobile-web-app-capable" content="yes">', '<meta name="apple-mobile-web-app-title" content="Employee Hub">')))
+      '<meta name="apple-mobile-web-app-capable" content="yes">', '<meta name="apple-mobile-web-app-title" content="Workforce One">')))
 check('...hides the WordPress admin bar', '#wpadminbar{display:none!important}' in page)
 check('...registers the service worker for the whole site', "navigator.serviceWorker.register(%s,{updateViaCache:'none'})" % json.dumps(B + '/?ews_pwa=sw').replace('/', '\\/') in page, re.findall(r'serviceWorker\.register\([^)]*\)', page))
 check('...offers "Add to Home Screen" (with iPhone instructions)', 'id="ews-pwa-install"' in page and 'Add to Home Screen' in page)
