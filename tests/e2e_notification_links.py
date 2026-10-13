@@ -3,12 +3,15 @@
 Notifications page with the notification shown for anyone else (never WordPress's white "not allowed"
 page); opened from the phone it is marked read; the open handler never loops or dies; links built in a
 cron job point at the app, not at wp-cron.php; Refused Sign In, polls and presence checks can be pushed.
+3.31.95: an administrator chooses the page each kind opens (Notification Settings → Opens), and the
+Sign Out reminder has its own row.
 
 Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_notification_links.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
 import html, json, os, re, sys, urllib.parse
+from html.parser import HTMLParser
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -125,6 +128,89 @@ out = php("""$_SERVER['REQUEST_URI']='/wp-cron.php?doing_wp_cron=1'; $m=new EWS_
     $emp=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$p}ews_employees WHERE id=%%d",%d)); echo wp_json_encode(array_column((array)$r->invoke($m,$emp,%d),'url'));""" % (EID, UID['emp1']))
 urls = json.loads(out.splitlines()[-1])
 check('smart reminders sent from the cron job link to the app, not to wp-cron.php', all(u.startswith(APP) and 'wp-cron' not in u for u in urls), urls)
+
+# ---------------------------------------------------------------- Opens: the administrator's choice (3.31.95)
+class Form(HTMLParser):
+    """The Notification Policy form's fields as the browser would send them."""
+    def __init__(self):
+        super().__init__()
+        self.inside, self.data, self.select = False, [], None
+
+    def handle_starttag(self, tag, a):
+        a = dict(a)
+        if tag == 'form':
+            self.inside = True
+        if not self.inside:
+            return
+        if tag == 'input' and a.get('name'):
+            t = a.get('type', 'text')
+            if t in ('checkbox', 'radio') and 'checked' not in a:
+                return
+            self.data.append((a['name'], a.get('value', '')))
+        elif tag == 'select' and a.get('name'):
+            self.select = [a['name'], None, None]
+        elif tag == 'option' and self.select:
+            if self.select[2] is None:
+                self.select[2] = a.get('value', '')
+            if 'selected' in a:
+                self.select[1] = a.get('value', '')
+
+    def handle_endtag(self, tag):
+        if tag == 'select' and self.select:
+            self.data.append((self.select[0], self.select[1] if self.select[1] is not None else self.select[2]))
+            self.select = None
+        elif tag == 'form':
+            self.inside = False
+
+
+def policy_form():
+    st, page, _ = sess['admin'].req('/wp-admin/admin.php?page=ews31-notifications')
+    i = page.find('value="ews_notification_policy_save"')
+    start = page.rfind('<form', 0, i)
+    f = Form()
+    f.feed(page[start:page.find('</form>', i) + 7])
+    return f.data, page
+
+
+def save_policy(**over):
+    fields, _ = policy_form()
+    out = [(k, v) for k, v in fields if k not in over] + [(k, v) for k, v in over.items() if v is not None]
+    st, body, h = sess['admin'].req('/wp-admin/admin-post.php', urllib.parse.urlencode(out).encode())
+    return h.get('Location', '')
+
+
+php("$wpdb->query(\"DELETE FROM {$p}ews_audit_log WHERE action='notification_links_update'\"); delete_option('ews_notification_links');")
+fields, page = policy_form()
+names = dict(fields)
+check('Notification Settings has an Opens choice for each kind, on Recommended (with what it opens)',
+      names.get('opens[leave]') == 'recommended' and 'Recommended (Leave)' in page and 'opens[smart_nudge]' not in names and 'Set by each reminder' in page, [k for k in names if k.startswith('opens[')][:5])
+check('...the Sign Out reminder has its own row', 'opens[signout_reminder]' in names and 'Sign Out reminder' in page and 'Recommended (Sign Out form)' in page)
+loc = save_policy(**{'opens[leave]': 'dashboard', 'opens[payroll]': 'link', 'opens_link[payroll]': '/app/?ews_view=pay&from=push', 'opens[poll]': 'link', 'opens_link[poll]': 'https://evil.example/x'})
+saved = json.loads(php("echo wp_json_encode(get_option('ews_notification_links'));").splitlines()[-1] or 'null')
+check('saved: a page, and a link on this site', saved == {'leave': {'to': 'dashboard'}, 'payroll': {'to': 'link', 'link': B + '/app/?ews_view=pay&from=push'}}, saved)
+check('...a link to another site is refused and the page says so', 'links_refused=poll' in loc and 'A link must be on this site' in sess['admin'].req(loc.replace(B, ''))[1], loc)
+check('...written to the Audit Log', len(q("SELECT id FROM {p}ews_audit_log WHERE action='notification_links_update'")) == 1)
+r = send('emp1', 'leave')
+check('a leave notification now opens Home, from the phone and from the list', args(r['link']).get('ews_view') == 'dashboard' and args(r['push']).get('ews_view') == 'dashboard', r)
+r = send('emp1', 'payroll', url=APP + '?ews_view=pay')
+check('...a payslip opens the chosen link', r['link'] == B + '/app/?ews_view=pay&from=push' and r['push'].startswith(B + '/app/?ews_view=pay&from=push'), r)
+r = send('emp1', 'task', entity_id=9)
+check('...a kind left on Recommended is unchanged (the task itself)', args(r['link']).get('task') == '9', r)
+shown = dict(policy_form()[0])
+check('the form shows the saved choices', shown.get('opens[leave]') == 'dashboard' and shown.get('opens[payroll]') == 'link' and shown.get('opens_link[payroll]') == B + '/app/?ews_view=pay&from=push', shown.get('opens_link[payroll]'))
+save_policy(**{'opens[leave]': 'recommended', 'opens[payroll]': 'recommended'})
+check('back on Recommended: nothing stored', json.loads(php("echo wp_json_encode(get_option('ews_notification_links'));").splitlines()[-1]) == [])
+
+# The Sign Out reminder: its own kind, with the switches a site had set for corrections before.
+php("delete_option('ews_notification_policy'); update_option('ews_notification_policy',['correction'=>['in_app'=>1,'push'=>0,'mandatory'=>0]],false);")
+pol = json.loads(php("$m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,'notification_policy'); $r->setAccessible(true); echo wp_json_encode($r->invoke($m));").splitlines()[-1])
+check('the Sign Out reminder keeps the push switch a site had set for corrections', pol['signout_reminder'] == {'in_app': 1, 'push': 0, 'mandatory': 0}, pol.get('signout_reminder'))
+php("""update_option('ews_feature_corrections',1,false); $wpdb->query("DELETE FROM {$p}ews_time_logs");
+    $wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>%d,'work_date'=>current_time('Y-m-d'),'event_type'=>'sign_in','event_at'=>current_time('mysql'),'scheduled_status'=>'Office']);
+    $m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,'corrections_remind'); $r->setAccessible(true); $r->invoke($m,current_time('Y-m-d'));""" % (ids()['eid'], UID['emp1']))
+row = q("SELECT type,link FROM {p}ews_notifications WHERE title='You did not sign out today' ORDER BY id DESC LIMIT 1")
+check('the end-of-day reminder is sent as a Sign Out reminder, opening the Sign Out form', row and row[0]['type'] == 'signout_reminder' and args(row[0]['link']).get('cx') == 'out', row)
+php("""$wpdb->query("DELETE FROM {$p}ews_time_logs"); delete_option('ews_feature_corrections'); delete_option('ews_notification_links');""")
 
 php("""$wpdb->query("DELETE FROM {$p}ews_notifications"); delete_option('ews_notification_policy'); $wpdb->query($wpdb->prepare("DELETE FROM {$p}ews_schedule WHERE employee_id=%%d AND work_date>%%s",%d,current_time('Y-m-d')));
     require_once ABSPATH.'wp-admin/includes/user.php'; $u=get_user_by('login','nlmgr'); if($u) wp_delete_user($u->ID);""" % EID)

@@ -89,7 +89,12 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
   await offline(false);
   await page.waitForSelector('#ews-back-online', { timeout: 15000 }).catch(() => {});
   check('back online with nothing pending: the page opens by itself and says "You are back online."', (await text('#ews-back-online')) === 'You are back online.' && /ews_view=schedule/.test(page.url()), page.url());
-  await page.goto(B + '/app/?ews_view=time');
+  // The offline page may still be taking itself back to the app: open the Sign In page once that is done.
+  const signInForm = 'form input[name="action"][value="ews31_time_event"]';
+  for (let i = 0; i < 3; i++) {
+    await page.goto(B + '/app/?ews_view=time').catch(() => {});
+    if (await page.waitForSelector(signInForm, { state: 'attached', timeout: 8000 }).then(() => true).catch(() => false)) break;
+  }
   await offline(true);
   await page.evaluate(() => { const i = document.querySelector('form input[name="action"][value="ews31_time_event"]'); const f = i.form; window.ewsNoteAttempt(f); f.submit(); });
   await page.waitForSelector('#wfo-offline', { timeout: 10000 }).catch(() => {});
@@ -155,7 +160,7 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
   const frame = admin.frameLocator('#ews-offline-preview');
   await frame.locator('#o-title').waitFor({ timeout: 10000 }).catch(() => {});
   check('Features: the preview shows the real page while the screen is off', (await frame.locator('#o-title').innerText().catch(() => '')) === 'No internet connection');
-  await admin.fill('#ews-offline-off_title', 'Typed in Features');
+  await admin.fill('#ews-offline-off_title', 'Typed in Features').catch(async e => { console.log('Features page did not show the field:', admin.url(), (await admin.locator('body').innerText().catch(() => '')).slice(0, 400).replace(/\s+/g, ' ')); throw e; });
   await admin.waitForTimeout(300);
   check('...and follows what is typed', (await frame.locator('#o-title').innerText().catch(() => '')) === 'Typed in Features');
   await admin.click('[data-offline-state="down"]');

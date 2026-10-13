@@ -34,7 +34,8 @@ trait EWS_Notifications_Trait {
             'achievement'=>['label'=>'Achievements','description'=>'Employee achievement and recognition notifications.','push_default'=>1],
             'recognition'=>['label'=>'Recognition','description'=>'Kudos and employee recognition notifications.','push_default'=>1],
             'payroll'=>['label'=>'Payroll','description'=>'A payslip is ready in My Pay.','push_default'=>1],
-            'correction'=>['label'=>'Attendance Corrections','description'=>'Correction requests, decisions and the end-of-day reminder to sign out.','push_default'=>1],
+            'correction'=>['label'=>'Attendance Corrections','description'=>'Correction requests and decisions.','push_default'=>1],
+            'signout_reminder'=>['label'=>'Sign Out reminder','description'=>'End of the day: you signed in and did not sign out (with Attendance Corrections).','push_default'=>1],
             'office_minimum'=>['label'=>'Office Minimum','description'=>'Weekly reminder of next week\'s days below the office minimum.','push_default'=>1],
             'daily_workers'=>['label'=>'Daily Workers','description'=>'Day sheet change requests and decisions.','push_default'=>1],
             // Sent before 3.31.94 but missing here, so never pushed to phones.
@@ -56,6 +57,8 @@ trait EWS_Notifications_Trait {
         $defaults=$this->notification_policy_defaults();
         $saved=$this->option('ews_notification_policy');
         if(!is_array($saved))$saved=[];
+        // The Sign Out reminder had the corrections switches before 3.31.95: a site that set them keeps them.
+        if(!isset($saved['signout_reminder']) && isset($saved['correction']) && is_array($saved['correction']))$saved['signout_reminder']=$saved['correction'];
         foreach($defaults as $key=>$row){
             if(isset($saved[$key]) && is_array($saved[$key])){
                 $defaults[$key]['in_app']=!empty($saved[$key]['in_app'])?1:0;
@@ -156,6 +159,8 @@ trait EWS_Notifications_Trait {
         $entity_id=absint($opt['entity_id']??0);
         // Where it takes its reader, from the phone and from the Notifications page alike (3.31.94).
         $link=!empty($opt['url'])?(string)$opt['url']:$this->notification_default_link($category,$entity,$entity_id);
+        // Or the page the administrator chose for this kind (Notification Settings → Opens, 3.31.95).
+        $link=\WorkforceOne\Notifications\Links::apply($this->notification_destinations(),$category,$link,(string)$this->app_home_url(),home_url('/'));
         $reachable=$this->notification_user_may_open($user_id,$link);
         $id=$this->notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id,$reachable?$link:'');
         if(!$reachable){
@@ -170,6 +175,12 @@ trait EWS_Notifications_Trait {
             self::$ews_push_queue[]=['user_id'=>$user_id,'title'=>(string)$title,'message'=>(string)$message,'category'=>$category,'entity_id'=>$entity_id,'url'=>$url];
         }
         return $id;
+    }
+
+    /** The page chosen for each kind in Notification Settings (only kinds not on the recommended page). @return array<string,array{to:string,link?:string}> */
+    private function notification_destinations(){
+        $saved=$this->option('ews_notification_links');
+        return is_array($saved)?$saved:[];
     }
 
     /** A notification's own app page (src/Notifications/Links.php); a task's notification opens its details. */
@@ -360,7 +371,7 @@ trait EWS_Notifications_Trait {
     private function notification_look($n){
         $by_entity=['leave'=>['leave','leave'],'vacation'=>['leave','leave'],'early_leave'=>['leave','leave'],'overtime'=>['overtime','away'],
             'swap'=>['swap','away'],'schedule'=>['calendar','wfh'],'break'=>['clock','teal'],'presence'=>['attendance','teal'],'attendance'=>['attendance','teal'],
-            'poll'=>['polls','pri'],'kudos'=>['trophy','gold'],'recognition'=>['trophy','gold'],'achievement'=>['trophy','gold'],'task'=>['tasks','wfh'],'payroll'=>['pay','office']];
+            'poll'=>['polls','pri'],'kudos'=>['trophy','gold'],'recognition'=>['trophy','gold'],'achievement'=>['trophy','gold'],'task'=>['tasks','wfh'],'payroll'=>['pay','office'],'signout_reminder'=>['clock','away']];
         $e=sanitize_key((string)($n->entity??''));
         if(isset($by_entity[$e]))return $by_entity[$e];
         $by_type=['success'=>['check','office'],'warning'=>['alert','away'],'error'=>['alert','absent']];

@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.95
+Choose the page each kind of notification opens (owner's request, mockup docs/mockups/notification-links/).
+No database change.
+
+### Added
+- **Notification Settings → Opens** (wp-admin, Notification Policy): for each kind of notification, the
+  page it opens from the phone and from the app's Notifications page. "Recommended" (the default) is
+  the list agreed in 3.31.94 and shows what it opens; it opens the exact item when there is one (the
+  task, the presence check, the Sign Out form for that day). Another app page (Home, Schedule, Sign
+  In / Out, Leave, Overtime, Corrections, Tasks, My Pay, My Profile, Polls, Presence, Notifications)
+  opens that page only. "A link…" takes a link on this site only; one to another site is refused and
+  the page says so. Someone who may not open the chosen page still sees the notification on the
+  Notifications page. Smart Nudges keep their own place per reminder. Applies to notifications sent
+  from then on; changes are in the Audit Log (`notification_links_update`), the choices in Settings
+  Overview (`ews_notification_links`).
+- **Sign Out reminder** has its own row in Notification Settings (it shared Attendance Corrections'):
+  its own In-App / Push switches and Opens. A site that had set the corrections switches keeps them for
+  the reminder.
+
+### Tests
+- `tests/e2e_notification_links.py` (29): the Opens column, saving (a link elsewhere refused, the Audit
+  Log), a choice used from the phone and the list, Recommended unchanged, the Sign Out reminder.
+- `tests/unit/NotificationLinksTest.php`: the choices, links on this site only, applying a choice.
+
 ## 3.31.94
 Where each notification takes its reader (owner-approved list), and the app is named Workforce One.
 Database: column `ews_notifications.link` (schema 3.31.94).

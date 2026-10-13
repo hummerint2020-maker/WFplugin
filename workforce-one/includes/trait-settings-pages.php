@@ -97,6 +97,9 @@ trait EWS_Settings_Pages_Trait {
         echo $this->render_template('admin/notifications',[
             'health'=>['ready'=>$ready,'missing'=>$configured?max(0,$total-$ready):0,'not_configured'=>$configured?0:$total,'configured'=>$configured],
             'categories'=>$this->notification_policy_categories(),'policy'=>$this->notification_policy(),
+            'destinations'=>$this->notification_destinations(),'choices'=>\WorkforceOne\Notifications\Links::CHOICES,
+            'recommended'=>$this->notification_recommended_labels(),'not_chosen'=>\WorkforceOne\Notifications\Links::NOT_CHOSEN,
+            'refused'=>array_filter(array_map('sanitize_key',explode(',',(string)wp_unslash($_GET['links_refused']??'')))), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message after saving
             'retention'=>NotificationSettings::retention($this->option('ews_notification_retention_days')),
             'retention_choices'=>NotificationSettings::RETENTION_DAYS,
             'vapid_subject'=>(string)get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com')),
@@ -108,11 +111,33 @@ trait EWS_Settings_Pages_Trait {
     public function admin_notification_policy_save(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         check_admin_referer('ews_notification_policy_save');
-        update_option('ews_notification_policy',NotificationSettings::policy(wp_unslash($_POST['policy']??[]),array_keys($this->notification_policy_categories())),false);
+        $kinds=array_keys($this->notification_policy_categories());
+        update_option('ews_notification_policy',NotificationSettings::policy(wp_unslash($_POST['policy']??[]),$kinds),false);
+        // Where each kind opens (3.31.95). A form without the field (an older page) keeps the saved choices.
+        $refused=[];
+        if(isset($_POST['opens_present'])){
+            $before=$this->notification_destinations();
+            [$dest,$refused]=\WorkforceOne\Notifications\Links::destinations(wp_unslash($_POST['opens']??[]),wp_unslash($_POST['opens_link']??[]),$kinds,home_url('/'));
+            update_option('ews_notification_links',$dest,false);
+            if($dest!==$before)$this->audit('notification_links_update','settings',0,$dest?implode('; ',array_map(function($k,$d){return $k.'='.($d['to']==='link'?$d['link']:$d['to']);},array_keys($dest),$dest)):'all recommended');
+        }
         update_option('ews_notification_policy_updated_at',current_time('mysql'),false);
         update_option('ews_notification_policy_updated_by',get_current_user_id(),false);
         $this->audit('notification_policy_update','settings',0,'Notification policy updated');
-        $this->notifications_redirect(['notifications_notice'=>'policy']);
+        $this->notifications_redirect(['notifications_notice'=>'policy']+($refused?['links_refused'=>implode(',',$refused)]:[]));
+    }
+
+    /** What "Recommended" opens for each kind, as shown in Notification Settings. @return array<string,string> */
+    private function notification_recommended_labels(){
+        $views=\WorkforceOne\Notifications\Links::CHOICES+['sites'=>'My sites','attendance'=>'Attendance planner'];
+        // Short: the note under the table says that approvers' requests open their wp-admin page.
+        $special=['attendance'=>'Sign In / Out report','smart_nudge'=>'Set by each reminder','task'=>'The task','presence'=>'The presence check','signout_reminder'=>'Sign Out form'];
+        $out=[];
+        foreach(array_keys($this->notification_policy_categories()) as $k){
+            $v=\WorkforceOne\Notifications\Links::view($k);
+            $out[$k]=$special[$k]??($views[$v]??$v);
+        }
+        return $out;
     }
 
     public function admin_notification_settings_save(){

@@ -742,7 +742,7 @@ trait EWS_Corrections_Trait {
             $h=$this->working_hours((int)$r->id);
             if(!empty($h['overnight']) && $h['start']>$h['end'])continue;   // still at work
             $url=add_query_arg(['ews_view'=>'time','cx'=>'out','cx_date'=>$date],$this->app_home_url());
-            $this->notify((int)$r->wp_user_id,'correction',__('You did not sign out today','workforce-one'),
+            $this->notify((int)$r->wp_user_id,'signout_reminder',__('You did not sign out today','workforce-one'),
                 /* translators: %s: time */
                 sprintf(__('You signed in at %s. If you have left, request a correction with the time you left.','workforce-one'),substr((string)$r->signed_in,11,5)),['url'=>$url]);
             $n++;

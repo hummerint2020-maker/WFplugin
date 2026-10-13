@@ -128,6 +128,9 @@ trait EWS_Settings_Overview_Trait {
                     return [SmartNudges::config($raw)!=SmartNudges::config([]),''];
                 case 'ews_notification_policy':
                     return [$this->notification_policy()!=$this->notification_policy_defaults(),''];
+                case 'ews_notification_links':
+                    $n=is_array($raw)?count($raw):0;
+                    return [$n>0,$n?$n.' '.($n===1?'kind opens':'kinds open').' another page':''];
                 case 'ews_payroll_late_tiers':
                     $n=is_array($raw)?count($raw):0;
                     return [$n>0,$n?implode(', ',array_map(function($t){return '> '.(int)($t['after']??0).' min = '.(float)($t['days']??0).' day';},$raw)):''];
