@@ -227,6 +227,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_org_moves.py "$S"
       - name: Leave types (planned / unplanned, how late an unplanned leave may be asked, carry-over at year end)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_types.py "$S"
+      - name: Approval engine (up to four levels, new approvers, a condition per level, the requester rule, remind / move up after working hours)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_approval_engine.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }

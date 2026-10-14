@@ -6,7 +6,8 @@ if (!defined('ABSPATH')) exit;
 /**
  * The approval request's states. A request waits at one level at a time (its step is PENDING, the
  * later ones WAITING); an approval moves it to the next level or approves it; a rejection ends it.
- * Pure.
+ * Levels whose condition does not apply, and (rule "next") levels whose approver is the requester,
+ * are SKIPPED when the request starts (3.31.100). Pure.
  */
 final class StateMachine
 {
@@ -16,11 +17,39 @@ final class StateMachine
         return $family === 'PEER' ? 'WAITING_FOR_PEER' : 'WAITING_FOR_LEVEL_1';
     }
 
-    /** Status of a step when the request starts: the first one acts now; a step with no approver is skipped. */
-    public static function stepStatus(int $stepOrder, bool $hasApprover): string
+    /** A request waiting at one of its levels (WAITING_FOR_LEVEL_1 … _4). */
+    public static function isWaitingForLevel(string $status): bool
     {
-        if (!$hasApprover) return 'SKIPPED';
-        return $stepOrder === 1 ? 'PENDING' : 'WAITING';
+        return (bool) preg_match('/^WAITING_FOR_LEVEL_\d+$/', $status);
+    }
+
+    /**
+     * The steps and the request when it starts.
+     * Each step: skip 'condition' (its condition does not apply), 'self' (the approver is the requester
+     * and the rule sends it to the next level) or '' (it applies). A 'self' step with no level acting
+     * after it goes to the administrators instead (rerouted).
+     * @param array<int,array{skip:string}> $steps step order => facts, in order
+     * @return array{steps:array<int,array{status:string,rerouted:bool,skip:string}>,request:string,current_step:?int}
+     */
+    public static function start(array $steps, string $family = 'SEQUENTIAL'): array
+    {
+        ksort($steps);
+        $out = [];
+        $later = false;
+        foreach (array_reverse(array_keys($steps)) as $order) {
+            $skip = (string) ($steps[$order]['skip'] ?? '');
+            $rerouted = false;
+            if ($skip === 'self' && !$later) { $skip = ''; $rerouted = true; }
+            $out[$order] = ['status' => $skip !== '' ? 'SKIPPED' : 'WAITING', 'rerouted' => $rerouted, 'skip' => $skip];
+            if ($skip === '') $later = true;
+        }
+        ksort($out);
+        $first = null;
+        foreach ($out as $order => $s) {
+            if ($s['status'] === 'WAITING') { $out[$order]['status'] = 'PENDING'; $first = $order; break; }
+        }
+        if ($first === null) return ['steps' => $out, 'request' => 'APPROVED', 'current_step' => null];
+        return ['steps' => $out, 'request' => $family === 'PEER' ? 'WAITING_FOR_PEER' : 'WAITING_FOR_LEVEL_' . $first, 'current_step' => $first];
     }
 
     /**

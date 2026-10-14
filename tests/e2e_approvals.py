@@ -80,16 +80,16 @@ check('the page shows a card for each workflow in use (Vacation, Overtime, Face 
 check('...and no settings for Early Leave, which does not use approval workflows', not forms(card(page, 'early_leave'), 'ews_approval_workflow_save')
       and 'Early Leave' in page and 'not use approval workflows' in page and 'Manage Time decide them in the app' in page)
 # 3.31.89: Shift Swap has its card; a workflow never saved says what applies until it is saved.
-check('Shift Swap has a card: Colleague only, or Colleague then 1 or 2 levels', modes(page, 'shift_swap') == ['PEER', 'LEVEL_1', 'LEVEL_2'] and 'Colleague only' in card(page, 'shift_swap') and 'Colleague, then Level 1' in card(page, 'shift_swap'), modes(page, 'shift_swap'))
+check('Shift Swap has a card: Colleague only, or Colleague then 1 to 4 levels (3.31.100)', modes(page, 'shift_swap') == ['PEER', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4'] and 'Colleague only' in card(page, 'shift_swap') and 'Colleague, then Level 1' in card(page, 'shift_swap'), modes(page, 'shift_swap'))
 check('a workflow never saved says "Not set yet" and what happens until then (Overtime: managers decide; saved as No approval, automatic)',
       'Not set yet' in card(page, 'overtime') and 'Manage Time decide' in card(page, 'overtime') and 'approved automatically' in card(page, 'overtime'), card(page, 'overtime')[:600])
 check('...Attendance Correction: managers decide until saved', 'Not set yet' in card(page, 'attendance_correction') and 'Managers with Manage Time decide in the app' in card(page, 'attendance_correction'))
 check('...the Attendance Correction card says which requests go to HR whatever the mode, with a link to the settings',
       'these requests also go to HR' in card(page, 'attendance_correction') and 'Sign In moved earlier' in card(page, 'attendance_correction') and 'page=ews31-corrections&#038;tab=settings' in card(page, 'attendance_correction'), card(page, 'attendance_correction')[-900:])
-check('Vacation and Overtime offer only the modes they support (none, 1 level, 2 levels)', modes(page, 'vacation') == ['NONE', 'LEVEL_1', 'LEVEL_2'] and modes(page, 'overtime') == ['NONE', 'LEVEL_1', 'LEVEL_2'], (modes(page, 'vacation'), modes(page, 'overtime')))
+check('Vacation and Overtime offer only the modes they support (none, 1 to 4 levels)', modes(page, 'vacation') == ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4'] and modes(page, 'overtime') == ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4'], (modes(page, 'vacation'), modes(page, 'overtime')))
 check('"No approval" says what it does: managers decide a leave, overtime is approved automatically',
       'No approval chain: managers decide' in card(page, 'vacation') and 'approved automatically' in card(page, 'overtime'))
-check('Face Reset also offers Sequential', modes(page, 'face_reset') == ['NONE', 'LEVEL_1', 'LEVEL_2', 'SEQUENTIAL'], modes(page, 'face_reset'))
+check('Face Reset also offers Sequential', modes(page, 'face_reset') == ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4', 'SEQUENTIAL'], modes(page, 'face_reset'))
 check('the page script is a file, not inline', 'function syncCard' not in page and 'admin-approvals.js' in page)
 nonce = field(forms(page, 'ews_approval_workflow_save')[0], '_wpnonce') if forms(page, 'ews_approval_workflow_save') else ''
 

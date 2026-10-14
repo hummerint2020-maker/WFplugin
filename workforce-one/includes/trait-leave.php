@@ -13,7 +13,7 @@ use WorkforceOne\Requests\Hub;
  *
  * Two modes share the same operations:
  * - normal: any user with ews_manage_settings decides;
- * - approval workflow ('vacation' workflow active, LEVEL_1/LEVEL_2): the approval engine
+ * - approval workflow ('vacation' workflow active, LEVEL_1 … LEVEL_4): the approval engine
  *   decides who may act and when the request is final.
  * Validation rules live in src/Leave (pure, unit tested); this trait does the WordPress side.
  * Behaviour is pinned by tests/e2e_leave.py.
@@ -73,7 +73,7 @@ trait EWS_Leave_Trait {
     private function leave_approval_active(){
             $w=$this->approval_workflow('vacation');
             if(!$w || (int)$w->active!==1)return false;
-            return in_array(strtoupper((string)$w->approval_mode),['LEVEL_1','LEVEL_2'],true);
+            return \WorkforceOne\Approvals\Workflows::isLevels((string)$w->approval_mode);
         }
 
     /** Leave request joined with its type (deduct_balance, type_name). */
@@ -271,7 +271,7 @@ trait EWS_Leave_Trait {
                 $this->leave_transaction(function()use(&$id,&$approval,&$ar,$emp,$type,$start,$end,$days,$reason,$bal){
                     $id=$this->leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal);
                     if(!is_int($id))return $id;
-                    $approval=$this->approval_start('vacation','leave',$id,(int)$emp->id,[],false);
+                    $approval=$this->approval_start('vacation','leave',$id,(int)$emp->id,['amount'=>(float)$days],false);
                     if(is_wp_error($approval))return 'approval';
                     $ar=$this->approval_find_request('vacation','leave',$id);
                     if($ar&&$ar->status==='APPROVED'){
@@ -313,7 +313,7 @@ trait EWS_Leave_Trait {
             $ar=null;
             if($this->leave_approval_active()){
                 $ar=$this->approval_find_request('vacation','leave',$id);
-                if(!$ar||!in_array($ar->status,['WAITING_FOR_LEVEL_1','WAITING_FOR_LEVEL_2'],true))$this->leave_redirect(['leave_done'=>1]);
+                if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
                 if(!$this->approval_can_act((int)$ar->id))wp_die('Access denied');
             }elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 
@@ -386,7 +386,7 @@ trait EWS_Leave_Trait {
                     $approval=$this->approval_start('vacation','leave_cancellation',$id,(int)$emp->id,['leave_request_id'=>$id],false);
                     if(is_wp_error($approval))return 'approval';
                     $ar=$this->approval_find_request('vacation','leave_cancellation',$id);
-                    if(!$ar||!in_array($ar->status,['WAITING_FOR_LEVEL_1','WAITING_FOR_LEVEL_2'],true))return 'approval';
+                    if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))return 'approval';
                     return true;
                 });
                 $this->leave_notify_pending_approvers($approval,'Vacation Cancellation Request',$emp->name.' requested cancellation of '.$r->start_date.' to '.$r->end_date.'. Approval is required.',$id);
@@ -406,7 +406,7 @@ trait EWS_Leave_Trait {
             $ar=null;
             if($this->leave_approval_active()){
                 $ar=$this->approval_find_request('vacation','leave_cancellation',$id);
-                if(!$ar||!in_array($ar->status,['WAITING_FOR_LEVEL_1','WAITING_FOR_LEVEL_2'],true))$this->leave_redirect(['leave_done'=>1]);
+                if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
                 if(!$this->approval_can_act((int)$ar->id))wp_die('Access denied');
             }elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 

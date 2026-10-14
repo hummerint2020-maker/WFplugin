@@ -14,6 +14,12 @@ trait EWS_Departments_Trait {
         return ['departments'=>$wpdb->prefix.'ews_departments'];
     }
 
+    /** The active manager of an employee's department (null: no department, or no manager; 3.31.100, the Department manager approver). */
+    private function people_department_manager($employee_id){
+        global $wpdb;$this->ensure_departments_schema();$t=$this->department_tables();
+        return $wpdb->get_row($wpdb->prepare("SELECT m.* FROM {$this->employees} e JOIN {$t['departments']} d ON d.id=e.department_id AND d.active=1 JOIN {$this->employees} m ON m.id=d.manager_employee_id AND m.active=1 WHERE e.id=%d LIMIT 1",(int)$employee_id));
+    }
+
     private function ensure_departments_schema(){
         if($this->ews_schema_is_current())return;
         global $wpdb;

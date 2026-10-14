@@ -1,7 +1,7 @@
 # Task: one approval engine, new request types, leave rules
 
 **Status: mockup reviewed, decisions taken (owner, 2026-10-14).** Mockup: `docs/mockups/approvals/`
-(7 screens, AR/EN). Nothing is built yet.
+(7 screens, AR/EN). Built: stage 1 (leave types, 3.31.99) and stage 2 (the engine, 3.31.100).
 
 ## Owner decisions (2026-10-14)
 1. **One engine for every request type.** Up to 3 levels by default, a 4th at most.

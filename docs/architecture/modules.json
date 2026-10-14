@@ -75,7 +75,8 @@
         "org_app_allowed",
         "team_content",
         "employee_picture_url",
-        "people_manager_of"
+        "people_manager_of",
+        "people_department_manager"
       ]
     },
     "schedule": {
@@ -94,7 +95,9 @@
         "schedule_swaps",
         "company_calendar"
       ],
-      "api": []
+      "api": [
+        "working_days"
+      ]
     },
     "locations": {
       "label": "Locations: work locations, branches, kiosks and presence checks",
@@ -166,7 +169,8 @@
       "label": "Approvals: workflows and the Requests Hub",
       "traits": [
         "approvals",
-        "admin-requests"
+        "admin-requests",
+        "approval-deadlines"
       ],
       "tables": [
         "approval_workflows",

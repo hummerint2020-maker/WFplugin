@@ -129,8 +129,8 @@ trait EWS_Overtime_Trait {
             if($this->overtime_overlap((int)$emp->id,$date,$start,$end,$id))return $fail('overlap');
             $ar=null;
             // An active workflow in mode NONE auto-approves through the approval engine.
-            if(in_array($this->overtime_workflow_mode(),['NONE','LEVEL_1','LEVEL_2'],true)){
-                if(is_wp_error($this->approval_start('overtime','overtime_request',$id,(int)$emp->id,[],false)))return $fail('approval');
+            if($this->overtime_workflow_mode()==='NONE' || \WorkforceOne\Approvals\Workflows::isLevels($this->overtime_workflow_mode())){
+                if(is_wp_error($this->approval_start('overtime','overtime_request',$id,(int)$emp->id,['amount'=>round($minutes/60,2)],false)))return $fail('approval');
                 $ar=$this->approval_find_request('overtime','overtime_request',$id);
                 if(!$ar)return $fail('approval');
                 if($ar->status==='APPROVED'){$ok=$this->overtime_set_status($id,'Approved');if($ok!==true)return $fail($ok);}
@@ -151,7 +151,7 @@ trait EWS_Overtime_Trait {
             $emp=$this->people_employee((int)$req->employee_id,true);
             if(!$emp)$this->overtime_redirect(['overtime_error'=>'employee']);
 
-            if(in_array($this->overtime_workflow_mode(),['LEVEL_1','LEVEL_2'],true)){
+            if(\WorkforceOne\Approvals\Workflows::isLevels($this->overtime_workflow_mode())){
                 $ar=$this->approval_find_request('overtime','overtime_request',$id);
                 if(!$ar)$this->overtime_redirect(['overtime_error'=>'approval']);
                 if(!$this->approval_can_act((int)$ar->id))$this->overtime_redirect(['overtime_error'=>'access']);

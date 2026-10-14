@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.31.100
+The approval engine (owner decisions 2026-10-14, docs/tasks/approvals.md, stage 2). Nothing changes
+until a workflow is changed: the saved modes, approvers and the Own requests choice work as before,
+and nobody is reminded or moved up until hours are set. Database: `ews_approval_workflow_steps.min_amount`,
+`ews_approval_steps` (skip_reason, pending_since, reminded_at, escalations, escalated_from_wp_user_id).
+
+### Added
+- **Up to four levels in every request type** (Leave, Overtime, Attendance Correction, Shift Swap after
+  the colleague, Face Reset): Levels 1, 2 and 3, or Levels 1 to 4, besides the one or two before.
+- **New approvers:** the manager's manager, the department manager, HR and Finance (wp-admin → Approval
+  Workflows → HR, Finance and the working day). When one of these has nobody for an employee (the top of
+  the chart, a department without a manager, HR or Finance not set), administrators decide that level
+  instead of the request being refused; the older approvers still refuse it, as before.
+- **A condition per level** for Leave (days) and Overtime (hours): "only if above N"; otherwise the level
+  is skipped. A request that no level applies to is approved at once.
+- **If the approver is the requester:** they decide it (as before when allowed), it goes to the next level
+  (administrators when there is none), or it goes to administrators (as before when not allowed).
+- **If nobody decides:** remind the approver after N working hours, and move the request up after M:
+  to the approver's own manager, or to the administrators when they have none. Working hours are the
+  working day's hours (09:00–17:00 by default) on the working days. The first approver is told, the new
+  one too, and the Audit Log keeps every move. Hourly job `ews_approvals_tick`.
+- The Approval Workflows page: the request types with their approval and deadlines at the top, a
+  numbered card per level, and the path the request takes, updated as you choose.
+
+### Changed
+- The Supervisor Relationships rows wrap on a phone instead of running off the screen.
+
 ## 3.31.99
 Leave types, planned and unplanned (owner decisions 2026-10-14, docs/tasks/approvals.md, stage 1 of the
 approval engine). Nothing changes until a leave type is changed: every type stays planned with nothing

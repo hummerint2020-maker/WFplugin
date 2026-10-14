@@ -21,7 +21,7 @@ def seed():
         $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
         foreach(['ews_leave_requests','ews_leave_balances','ews_leave_schedule_snapshots','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps','ews_employee_relationships','ews_audit_log','ews_notifications'] as $t) $wpdb->query("DELETE FROM {$p}$t");
         $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
-        delete_option('ews_approval_allow_self');
+        delete_option('ews_approval_allow_self'); delete_option('ews_approval_self_rule');
         update_option('ews_working_days',[0,1,2,3,4,5,6],false);
         $uid=username_exists('boss')?:wp_create_user('boss','bosspass','boss@example.com');
         $wpdb->insert($p.'ews_employees',['name'=>'Boss Person','domain_name'=>'boss','email'=>'boss@example.com','wp_user_id'=>$uid,'active'=>1,'attendance_enabled'=>1]);
@@ -79,8 +79,8 @@ adm, boss, emp = Session('admin', 'admin'), Session('boss', 'bosspass'), Session
 
 # ---------------------------------------------------------------- default: allowed
 st, page, _ = adm.req(PAGE)
-check('the switch is shown on every workflow card, on by default',
-      all(re.search(r'name="allow_self" value="1" checked', card(page, k)) for k in ('vacation', 'overtime', 'face_reset')), [k for k in ('vacation', 'overtime', 'face_reset') if 'name="allow_self"' not in card(page, k)])
+check('the choice is shown on every workflow card, "They decide it" by default (3.31.100: three choices)',
+      all(re.search(r'name="self_rule" value="allow" checked', card(page, k)) and 'value="next"' in card(page, k) and 'value="admins"' in card(page, k) for k in ('vacation', 'overtime', 'face_reset')), [k for k in ('vacation', 'overtime', 'face_reset') if 'name="self_rule"' not in card(page, k)])
 check('the Self-decisions list is on the page, empty', 'id="ews-self-decisions"' in page and 'No self-decisions yet.' in page)
 loc = save(adm, 'vacation', True, level_1_employee_ref='Boss Person · #%d' % ids['boss'])
 check('Level 1 = the boss is saved (allowed)', 'approval_saved=1' in loc and php("echo (int)!empty(get_option('ews_approval_allow_self')['vacation']);").endswith('1'), loc)
@@ -107,7 +107,7 @@ loc = save(adm, 'vacation', False, level_1_employee_ref='Boss Person · #%d' % i
 check('switching it off is saved and in the Audit Log', 'approval_saved=1' in loc and php("echo (int)!empty(get_option('ews_approval_allow_self')['vacation']);").endswith('0')
       and q("SELECT details FROM {p}ews_audit_log WHERE action='approval_self_setting'")[-1]['details'] == 'vacation=not allowed')
 st, page, _ = adm.req(PAGE)
-check('...and shows unchecked', 'name="allow_self" value="1">' in card(page, 'vacation') and 'name="allow_self" value="1" checked' not in card(page, 'vacation'))
+check('...and shows "It goes to administrators"', 'name="self_rule" value="admins" checked' in card(page, 'vacation') and 'name="self_rule" value="allow" checked' not in card(page, 'vacation'))
 
 php("$wpdb->query(\"DELETE FROM {$p}ews_notifications\");")
 qs, lid = submit(boss, d(6))

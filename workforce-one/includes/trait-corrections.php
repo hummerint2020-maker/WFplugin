@@ -203,7 +203,7 @@ trait EWS_Corrections_Trait {
         if(!$c || !in_array($c->status,['pending','pending_hr'],true))return false;
         if((int)$c->employee_user_id && (int)$c->employee_user_id===get_current_user_id())return false;   // never one's own
         if($c->status==='pending_hr')return $this->cx_is_hr();
-        if(in_array($this->cx_workflow_mode(),['LEVEL_1','LEVEL_2'],true)){
+        if(\WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())){
             $ar=$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id);
             if($ar && Hub::isOpenApproval((string)$ar->status))return $this->approval_can_act((int)$ar->id);
         }
@@ -264,7 +264,7 @@ trait EWS_Corrections_Trait {
         $id=(int)$wpdb->insert_id;
         $this->audit('correction_request','employee',(int)$emp->id,$emp->name.' '.$facts['date'].': '.$this->cx_change_text($this->cx_get($id),'en'));
         $mode=$this->cx_workflow_mode();
-        if(in_array($mode,['NONE','LEVEL_1','LEVEL_2'],true)){
+        if($mode==='NONE' || \WorkforceOne\Approvals\Workflows::isLevels($mode)){
             $started=$this->approval_start('attendance_correction','attendance_correction',$id,(int)$emp->id);
             if(is_wp_error($started)){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);return ['error'=>'approval'];}
             $ar=$this->approval_find_request('attendance_correction','attendance_correction',$id);
@@ -321,7 +321,7 @@ trait EWS_Corrections_Trait {
         if((int)$c->employee_user_id && (int)$c->employee_user_id===get_current_user_id())return 'own';
         if($admin && !$this->cx_is_hr())return 'access';
         if(!$admin && !$this->cx_can_decide($c))return 'access';
-        if($c->status==='pending' && in_array($this->cx_workflow_mode(),['LEVEL_1','LEVEL_2'],true)){
+        if($c->status==='pending' && \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())){
             $ar=$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id);
             if($ar && Hub::isOpenApproval((string)$ar->status)){
                 if(is_wp_error($this->approval_act((int)$ar->id,$decision,$note,true,$admin)))return 'approval';
@@ -636,7 +636,7 @@ trait EWS_Corrections_Trait {
         $t=$this->cx_table();$me=get_current_user_id();
         $rows=[];
         $mode=$this->cx_workflow_mode();
-        if(in_array($mode,['LEVEL_1','LEVEL_2'],true)){
+        if(\WorkforceOne\Approvals\Workflows::isLevels($mode)){
             $at=$this->approval_tables();
             $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id,ars.step_order FROM {$t} c INNER JOIN {$this->employees} e ON e.id=c.employee_id
                 INNER JOIN {$at['requests']} ar ON ar.entity_type='attendance_correction' AND ar.entity_id=c.id INNER JOIN {$at['instances']} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING'

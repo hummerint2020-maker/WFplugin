@@ -6049,3 +6049,43 @@ msgstr "إجازة طارئة: تقدر تطلبها في نفس اليوم."
 
 msgid "Planned leave: ask for it before the day starts."
 msgstr "إجازة مخططة: اطلبها قبل بداية اليوم."
+
+#. 3.31.100: approval deadlines (includes/trait-approval-deadlines.php)
+msgid "%1$s from %2$s has waited %3$s working hours for your decision."
+msgstr "%1$s من %2$s ينتظر قرارك منذ %3$s ساعة عمل."
+
+msgid "%1$s from %2$s was not decided in time and now waits for %3$s."
+msgstr "لم يُتخذ قرار في %1$s من %2$s في الوقت المحدد، وهو الآن بانتظار %3$s."
+
+msgid "%1$s from %2$s was not decided in time by its approver and now waits for you."
+msgstr "لم يتخذ المعتمد قرارًا في %1$s من %2$s في الوقت المحدد، وهو الآن بانتظار قرارك."
+
+msgid "A face reset request"
+msgstr "طلب إعادة تسجيل الوجه"
+
+msgid "A leave cancellation"
+msgstr "طلب إلغاء إجازة"
+
+msgid "A leave request"
+msgstr "طلب إجازة"
+
+msgid "A request"
+msgstr "طلب"
+
+msgid "A request moved up"
+msgstr "انتقل طلب إلى المستوى الأعلى"
+
+msgid "A request waits for you"
+msgstr "طلب بانتظار قرارك"
+
+msgid "A shift swap"
+msgstr "طلب تبديل مناوبة"
+
+msgid "An attendance correction"
+msgstr "طلب تصحيح حضور"
+
+msgid "An overtime request"
+msgstr "طلب عمل إضافي"
+
+msgid "the administrators"
+msgstr "الإدارة"

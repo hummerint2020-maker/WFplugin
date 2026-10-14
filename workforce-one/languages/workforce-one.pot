@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.99\n"
+"Project-Id-Version: Workforce One 3.31.100\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T18:58:51+00:00\n"
+"POT-Creation-Date: 2026-10-14T21:41:37+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -439,22 +439,81 @@ msgstr ""
 msgid "You have been logged out successfully."
 msgstr ""
 
-#: includes/trait-approvals.php:147
+#: includes/trait-approval-deadlines.php:37
+#: includes/trait-approval-deadlines.php:68
+msgid "A request waits for you"
+msgstr ""
+
+#. translators: 1: request kind, 2: employee name, 3: working hours
+#: includes/trait-approval-deadlines.php:38
+#, php-format
+msgid "%1$s from %2$s has waited %3$s working hours for your decision."
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:62
+msgid "the administrators"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:64
+msgid "A request moved up"
+msgstr ""
+
+#. translators: 1: request kind, 2: employee name, 3: who decides it now
+#: includes/trait-approval-deadlines.php:65
+#, php-format
+msgid "%1$s from %2$s was not decided in time and now waits for %3$s."
+msgstr ""
+
+#. translators: 1: request kind, 2: employee name
+#: includes/trait-approval-deadlines.php:69
+#, php-format
+msgid "%1$s from %2$s was not decided in time by its approver and now waits for you."
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:79
+msgid "A leave request"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:79
+msgid "A leave cancellation"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:79
+msgid "An overtime request"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:80
+msgid "An attendance correction"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:80
+msgid "A shift swap"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:80
+msgid "A face reset request"
+msgstr ""
+
+#: includes/trait-approval-deadlines.php:81
+msgid "A request"
+msgstr ""
+
+#: includes/trait-approvals.php:183
 msgid "Approval needed"
 msgstr ""
 
 #. translators: 1: approval request number, 2: approval level
-#: includes/trait-approvals.php:148
+#: includes/trait-approvals.php:184
 #, php-format
 msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
 msgstr ""
 
-#: includes/trait-approvals.php:242
+#: includes/trait-approvals.php:278
 msgid "Requests now waiting for you"
 msgstr ""
 
 #. translators: %s: employee name
-#: includes/trait-approvals.php:243
+#: includes/trait-approvals.php:279
 #, php-format
 msgid "%s reports to you now: their requests waiting for approval now wait for you."
 msgstr ""

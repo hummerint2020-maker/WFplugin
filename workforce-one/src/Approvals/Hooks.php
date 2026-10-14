@@ -11,5 +11,6 @@ final class Hooks
     {
         add_action('admin_post_ews_approval_workflow_save', [$plugin, 'approval_workflow_save']);
         add_action('admin_post_ews_approval_relationship_save', [$plugin, 'approval_relationship_save']);
+        add_action('admin_post_ews_approval_settings_save', [$plugin, 'approval_settings_save']);
     }
 }

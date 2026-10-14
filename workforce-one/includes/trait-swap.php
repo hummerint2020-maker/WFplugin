@@ -48,12 +48,12 @@ trait EWS_Swap_Trait {
             return $wpdb->update($table,['status'=>$status,'responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>$id,'status'=>$from],['%s','%d','%s'],['%d','%s']);
         }
 
-    /** The Shift Swap workflow's levels after the colleague: LEVEL_1, LEVEL_2, or '' (the colleague alone decides). */
+    /** The Shift Swap workflow's levels after the colleague: LEVEL_1 … LEVEL_4, or '' (the colleague alone decides). */
     private function swap_manager_mode(){
             $w=$this->approval_workflow('shift_swap');
             if(!$w || (int)$w->active!==1)return '';
             $m=strtoupper((string)$w->approval_mode);
-            return in_array($m,['LEVEL_1','LEVEL_2'],true)?$m:'';
+            return \WorkforceOne\Approvals\Workflows::isLevels($m)?$m:'';
         }
 
     /**
