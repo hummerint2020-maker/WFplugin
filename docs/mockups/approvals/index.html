@@ -1,0 +1,423 @@
+<title>Workforce One Approvals</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: the product's own look (indigo hero, white rounded cards, Alexandria), as the approved org-chart mockup. One request engine: types → levels → the approver's inbox → the employee's timeline. */
+:root{
+  --bg:#f3f4fa; --card:#ffffff; --ink:#15153a; --sub:#5d6382; --faint:#8b90ab; --line:#e5e7f2; --soft:#f6f7fc;
+  --brand:#4836e0; --brand-soft:#eeecff; --hero-a:#16133f; --hero-b:#3a2bc4;
+  --ok:#0b7a4b; --ok-bg:#e8f7ef; --warn:#8a4f00; --warn-bg:#fff6e5; --warn-line:#f6d79b; --bad:#b4233c; --bad-bg:#fdecef;
+  --t-adv:#0b7d74; --t-exp:#d9480f; --t-let:#1f6fd1; --t-lv:#4836e0; --t-ot:#a3245b; --t-misc:#7a7f99;
+  --shadow:0 1px 2px rgba(21,21,58,.06),0 6px 18px rgba(21,21,58,.06);
+  --font:"Alexandria",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496;
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --warn-line:#5a4520; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496;
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --warn-line:#5a4520; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px;margin:0}
+button,input,select{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+h1,h2,h3,h4{text-wrap:balance}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:16px}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.head h1{margin:0;font-size:20px}
+.head p{margin:2px 0 0;color:var(--sub);font-size:13px;max-width:75ch}
+.lang{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.lang button{border:0;background:none;border-radius:9px;padding:5px 12px;cursor:pointer;color:var(--sub)}
+.lang button[aria-pressed="true"]{background:var(--brand);color:#fff}
+.screens{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.screens::-webkit-scrollbar{display:none}
+.screens button{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;cursor:pointer;color:var(--sub);font-size:13px}
+.screens button[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+.hero{border-radius:22px;padding:22px 24px;color:#fff;background:radial-gradient(120% 140% at 100% 0%,var(--hero-b) 0%,var(--hero-a) 60%);display:grid;gap:14px;box-shadow:var(--shadow)}
+.hero .crumb{font-size:12px;opacity:.75}
+.hero h2{margin:2px 0 0;font-size:24px;font-weight:600}
+.hero p{margin:4px 0 0;opacity:.8;max-width:70ch;font-size:13.5px}
+.kpis{display:flex;flex-wrap:wrap;gap:8px}
+.kpi{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 14px;display:grid;min-width:110px}
+.kpi b{font-size:20px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:11.5px;opacity:.8}
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.card>h3{margin:0;padding:16px 18px 4px;font-size:16px}
+.card>.intro{margin:0;padding:0 18px 12px;color:var(--sub);font-size:13px}
+.label{font-size:11.5px;font-weight:600;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
+[dir="rtl"] .label{letter-spacing:0;text-transform:none}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pill.new{background:var(--brand-soft);color:var(--brand)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.mute{background:var(--soft);color:var(--sub)}
+.dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto;background:var(--tc)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;min-height:38px;padding:0 14px;cursor:pointer;font-weight:500}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ghost{background:none}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+.inp{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 12px;min-width:0;width:100%}
+.hint{color:var(--sub);font-size:12px;margin:4px 0 0}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+
+/* Screen 1: request types */
+.types{display:grid}
+.trow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1.6fr) auto auto;gap:14px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.trow .name{display:flex;gap:10px;align-items:center;min-width:0}
+.trow .name b{display:block;font-weight:600}
+.trow .name small{display:block;color:var(--sub);font-size:12px}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px}
+.chain .lv{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:2px 8px;white-space:nowrap}
+.chain .ar{color:var(--faint)}
+.switch{width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;flex:0 0 auto;border:0;cursor:pointer}
+.switch::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:inset-inline-start .15s}
+.switch[aria-checked="true"]{background:var(--brand)}
+.switch[aria-checked="true"]::after{inset-inline-start:19px}
+.group-h{padding:12px 18px 6px;font-size:12px;font-weight:600;color:var(--sub);background:var(--soft);border-top:1px solid var(--line)}
+
+/* Screen 2: editor */
+.levels{display:grid;gap:10px;padding:0 18px 16px}
+.level{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:start;border:1px solid var(--line);border-radius:16px;padding:12px}
+.level .n{width:36px;height:36px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:700}
+.level .f{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.fld{display:grid;gap:4px}
+.fld>span{font-size:12px;font-weight:600;color:var(--sub)}
+.add{border:1px dashed var(--line);border-radius:16px;padding:10px;text-align:center;color:var(--brand);background:none;cursor:pointer;font-weight:600}
+.add[disabled]{color:var(--faint);cursor:not-allowed}
+.opt{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;padding:14px 18px;border-top:1px solid var(--line)}
+.opt>.k{font-weight:600}
+.opt>.k small{display:block;font-weight:400;color:var(--sub);font-size:12px;margin-top:2px}
+.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.inline .inp{width:90px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;background:var(--card)}
+.chip.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.preview{padding:16px 18px;display:grid;gap:10px}
+.flow{display:grid;gap:0}
+.fstep{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;position:relative;padding-bottom:14px}
+.fstep::before{content:"";position:absolute;inset-inline-start:13px;top:28px;bottom:0;border-inline-start:2px solid var(--line)}
+.fstep:last-child::before{display:none}
+.fstep .b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--soft);border:2px solid var(--line);color:var(--sub)}
+.fstep.done .b{background:var(--ok);border-color:var(--ok);color:#fff}
+.fstep.now .b{background:var(--brand);border-color:var(--brand);color:#fff}
+.fstep.cond .b{border-style:dashed}
+.fstep b{display:block;font-weight:600;font-size:13.5px}
+.fstep small{display:block;color:var(--sub);font-size:12px}
+
+/* Screen 3: inbox */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:12.5px;color:var(--sub)}
+.filters button[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+.items{display:grid;gap:10px}
+.item{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:grid;gap:10px;border-inline-start:4px solid var(--tc)}
+.item .top{display:flex;gap:10px;align-items:flex-start}
+.av{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;color:#fff;background:var(--ac,#4836e0)}
+.item .who{flex:1;min-width:0}
+.item .who b{display:block}
+.item .who small{color:var(--sub);font-size:12px}
+.amt{font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.item .acts{display:flex;gap:8px;flex-wrap:wrap}
+.item .acts .btn{flex:1 1 120px}
+.prog{display:flex;gap:4px;align-items:center}
+.prog i{flex:1;height:5px;border-radius:999px;background:var(--line)}
+.prog i.d{background:var(--ok)}
+.prog i.c{background:var(--brand)}
+.bulk{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--brand-soft);color:var(--brand);border-radius:14px;padding:8px 12px;font-size:13px}
+.done-msg{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:10px 12px;font-size:13px}
+
+/* phone frame */
+.phonewrap{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;align-items:flex-start}
+.phone{width:min(380px,100%);border:10px solid #101124;border-radius:40px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.ph-head{background:radial-gradient(120% 140% at 100% 0%,var(--hero-b),var(--hero-a) 65%);color:#fff;padding:18px 16px 16px}
+.ph-head small{opacity:.75;font-size:11px}
+.ph-head h5{margin:2px 0 0;font-size:19px;font-weight:600}
+.ph-body{padding:12px;display:grid;gap:12px;min-height:560px;align-content:start}
+.caption{max-width:300px;color:var(--sub);font-size:13px;display:grid;gap:8px;align-self:center}
+.caption b{color:var(--ink)}
+
+/* Screen 4: employee */
+.kind{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kind button{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px 6px;display:grid;justify-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--ink)}
+.kind button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.kind .ic{width:30px;height:30px;border-radius:10px;background:var(--tc);opacity:.9}
+.form{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:grid;gap:10px}
+.calc{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:12.5px;display:grid;gap:2px}
+.calc b{font-variant-numeric:tabular-nums}
+.req{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:grid;gap:10px}
+.req .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+
+/* Screen 5: substitutes */
+.subs{display:grid}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.srow small{display:block;color:var(--sub);font-size:12px}
+
+.decide{display:grid;gap:10px;padding:0 18px 16px}
+.q{border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;gap:8px}
+.q b{font-weight:600}
+.q .choices{display:flex;flex-wrap:wrap;gap:6px}
+.q .choices span{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px}
+.q .choices span.rec{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.why div{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+.why b{display:block;margin-bottom:2px}
+.why p{margin:0;color:var(--sub);font-size:13px}
+.note{border-radius:14px;padding:10px 12px;font-size:13px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}.trow{grid-template-columns:minmax(0,1fr) auto;}.trow .chain{grid-column:1/-1;order:3}.trow .cnt{display:none}.opt{grid-template-columns:minmax(0,1fr);gap:8px}.srow{grid-template-columns:minmax(0,1fr) auto}.srow .x{display:none}}
+@media (max-width:520px){.hero{padding:18px}.hero h2{font-size:21px}.kpi{min-width:0;flex:1 1 calc(50% - 8px)}.caption{max-width:none}}
+@media (prefers-reduced-motion:reduce){.switch::after{transition:none}}
+</style>
+
+<div class="wrap" id="app">
+  <div class="head">
+    <div><h1 data-t="title"></h1><p data-t="lead"></p></div>
+    <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="ar">عربي</button><button type="button" data-lang="en">English</button></div>
+  </div>
+  <nav class="screens" id="screens" aria-label="Screens"></nav>
+  <div id="screen"></div>
+  <div class="why" id="why"></div>
+</div>
+
+<script>
+(function(){
+var T={
+ title:{ar:'محرك الموافقات',en:'Approval engine'},
+ lead:{ar:'محرك واحد لكل الطلبات: كل نوع طلب ليه مستويات (٣ كحد افتراضي، ٤ كحد أقصى)، ومين يوافق في كل مستوى، وإيه يحصل لو محدش قرر، وبديل وقت الغياب. ماك أب للمراجعة قبل البناء.',en:'One engine for every request: each type has levels (3 by default, 4 at most), who approves at each level, what happens if nobody decides, and a substitute while someone is away. A mockup to review before building.'},
+ s1:{ar:'أنواع الطلبات',en:'Request types'},s2:{ar:'إعداد نوع: السلفة',en:'Set up: Salary advance'},s3:{ar:'موافقاتي (المدير)',en:'My approvals (manager)'},s4:{ar:'الموظف: طلب جديد',en:'Employee: new request'},s5:{ar:'البديل',en:'Substitutes'},s6:{ar:'قرارات محتاجها منك',en:'Decisions for you'},
+ // screen 1
+ crumb1:{ar:'Workforce One › الطلبات › مسارات الموافقة',en:'Workforce One › Requests › Approval workflows'},
+ h1:{ar:'أنواع الطلبات',en:'Request types'},h1p:{ar:'كل نوع طلب في مكان واحد. شغّل النوع اللي محتاجه، واختار مين يوافق عليه.',en:'Every kind of request in one place. Turn on the ones you need and choose who approves them.'},
+ k_types:{ar:'نوع شغال',en:'types on'},k_wait:{ar:'طلب مستني',en:'waiting'},k_late:{ar:'متأخر عن الوقت',en:'past their time'},k_subs:{ar:'بديل شغال',en:'substitutes active'},
+ g_now:{ar:'موجودة النهارده (هتتنقل للمحرك الجديد من غير ما تتغير)',en:'Today’s requests (moved to the new engine as they are)'},
+ g_new:{ar:'أنواع جديدة (المرحلة دي)',en:'New types (this stage)'},g_later:{ar:'بعدين',en:'Later'},
+ lv1:{ar:'المدير المباشر',en:'Direct manager'},lv2:{ar:'مدير المدير',en:'Manager’s manager'},lvHR:{ar:'الموارد البشرية',en:'HR'},lvFin:{ar:'الحسابات',en:'Finance'},lvDept:{ar:'مدير القسم',en:'Department manager'},lvTeam:{ar:'مدير الفريق',en:'Team manager'},lvPeer:{ar:'الزميل',en:'The colleague'},lvPerson:{ar:'شخص محدد',en:'A specific person'},
+ auto:{ar:'من غير موافقة',en:'No approval'},
+ t_leave:{ar:'إجازة',en:'Leave'},t_ot:{ar:'وقت إضافي',en:'Overtime'},t_el:{ar:'انصراف مبكر',en:'Early leave'},t_corr:{ar:'تصحيح حضور',en:'Attendance correction'},t_swap:{ar:'تبديل وردية',en:'Shift swap'},t_face:{ar:'إعادة الوجه',en:'Face reset'},
+ t_adv:{ar:'سلفة',en:'Salary advance'},t_exp:{ar:'مصروفات',en:'Expense claim'},t_let:{ar:'خطاب من الـ HR',en:'HR letter'},
+ t_data:{ar:'تعديل بيانات',en:'Data change'},t_trip:{ar:'مأمورية',en:'Business trip'},t_res:{ar:'استقالة',en:'Resignation'},
+ d_adv:{ar:'مبلغ يتخصم من المرتب على شهور',en:'An amount repaid from pay over months'},d_exp:{ar:'مبلغ دفعه الموظف، مع الإيصال',en:'Money the employee spent, with the receipt'},d_let:{ar:'شهادة مرتب، خطاب لمن يهمه الأمر…',en:'Salary certificate, to-whom-it-may-concern…'},
+ d_leave:{ar:'سنوية، عارضة، مرضي…',en:'Annual, casual, sick…'},d_ot:{ar:'قبل أو بعد الشغل',en:'Before or after work'},d_corr:{ar:'حضور أو انصراف ناقص',en:'A missing Sign In or Out'},d_swap:{ar:'يوم مع زميل',en:'A day with a colleague'},d_face:{ar:'تسجيل الوجه من جديد',en:'Register the face again'},d_el:{ar:'خروج قبل الميعاد',en:'Leaving before time'},
+ d_data:{ar:'عنوان، رقم حساب…',en:'Address, bank account…'},d_trip:{ar:'شغل برا المكتب',en:'Work away from the office'},d_res:{ar:'آخر يوم وتسليم العهدة',en:'Last day and handover'},
+ n_wait:{ar:'مستني',en:'waiting'},edit:{ar:'إعداد',en:'Set up'},soon:{ar:'قريب',en:'Soon'},
+ // screen 2
+ crumb2:{ar:'الطلبات › مسارات الموافقة › السلفة',en:'Requests › Approval workflows › Salary advance'},
+ e_levels:{ar:'مستويات الموافقة',en:'Approval levels'},e_levels_p:{ar:'بالترتيب. كل مستوى لازم يوافق قبل اللي بعده. ٣ مستويات كحد افتراضي، وتقدر تضيف رابع كحد أقصى.',en:'In order: each level approves before the next. Three levels by default; a fourth can be added at most.'},
+ e_who:{ar:'مين يوافق',en:'Who approves'},e_when:{ar:'إمتى المستوى ده يشتغل',en:'When this level applies'},e_always:{ar:'دايمًا',en:'Always'},e_over:{ar:'لو المبلغ أكبر من',en:'If the amount is above'},
+ e_add4:{ar:'+ مستوى رابع (الحد الأقصى)',en:'+ A fourth level (the most)'},e_max:{ar:'وصلت للحد الأقصى: ٤ مستويات',en:'The most is 4 levels'},
+ e_late:{ar:'لو محدش قرر',en:'If nobody decides'},e_late_s:{ar:'بساعات الشغل، مش الساعات كلها',en:'In working hours, not clock hours'},
+ e_l1:{ar:'تذكير بعد',en:'Remind after'},e_l2:{ar:'ويطلع للي فوقه بعد',en:'and move it up after'},hrs:{ar:'ساعة شغل',en:'working hours'},
+ e_l3:{ar:'المستوى الأول بيتبلّغ إن الطلب طلع، والطلب بيحتفظ بتاريخه كله.',en:'The first approver is told it moved up; the request keeps its whole history.'},
+ e_self:{ar:'لو اللي عليه الدور هو صاحب الطلب',en:'If the approver is the requester'},e_self_a:{ar:'يروح للمستوى اللي بعده',en:'It goes to the next level'},e_self_b:{ar:'يروح للإدارة',en:'It goes to administrators'},
+ e_fields:{ar:'بيانات الطلب',en:'What the employee fills in'},e_fields_s:{ar:'خاصة بالنوع ده',en:'For this type'},
+ f_amount:{ar:'المبلغ',en:'Amount'},f_months:{ar:'يتسدد على كام شهر',en:'Repaid over (months)'},f_reason:{ar:'السبب',en:'Reason'},f_file:{ar:'مرفق',en:'Attachment'},
+ e_rules:{ar:'حدود السلفة',en:'Advance limits'},e_rules_s:{ar:'بتتشيك قبل ما الطلب يتبعت',en:'Checked before the request is sent'},
+ e_r1:{ar:'أقصى مبلغ',en:'At most'},e_r1u:{ar:'% من المرتب الأساسي',en:'% of basic pay'},e_r2:{ar:'أقصى مدة',en:'Repaid over at most'},e_r2u:{ar:'شهور',en:'months'},e_r3:{ar:'سلفة واحدة مفتوحة في نفس الوقت',en:'One open advance at a time'},e_r4:{ar:'بعد ما يتوافق عليها بتنزل في المرتبات كخصم شهري',en:'Once approved, it goes to Payroll as a monthly deduction'},
+ e_prev:{ar:'شكل المسار',en:'The path'},e_prev_s:{ar:'سلفة ٨٬٠٠٠ ج.م لـ نور سعيد',en:'An 8,000 EGP advance for Nour Saeed'},
+ e_skip:{ar:'بيتخطّى: المبلغ أقل من ١٠٬٠٠٠',en:'Skipped: the amount is under 10,000'},
+ e_save:{ar:'حفظ',en:'Save'},
+ // screen 3
+ m_title:{ar:'موافقاتي',en:'My approvals'},m_all:{ar:'الكل',en:'All'},m_mine:{ar:'ليّا أنا',en:'For me'},m_sub:{ar:'بالنيابة عن حد',en:'As a substitute'},m_late:{ar:'متأخر',en:'Overdue'},
+ m_level:{ar:'المستوى {a} من {b}',en:'Level {a} of {b}'},m_waiting:{ar:'مستني من {h}',en:'Waiting {h}'},m_for:{ar:'بالنيابة عن {n}',en:'For {n} (away)'},
+ m_approve:{ar:'موافقة',en:'Approve'},m_reject:{ar:'رفض',en:'Reject'},m_more:{ar:'التفاصيل',en:'Details'},
+ m_bulk:{ar:'٣ طلبات إجازة عارضة، يوم واحد',en:'3 one-day casual leave requests'},m_bulk_b:{ar:'وافق عليهم كلهم',en:'Approve all three'},
+ m_done:{ar:'✓ اتوافق. راح لـ الموارد البشرية (المستوى ٢ من ٣).',en:'✓ Approved. Sent to HR (level 2 of 3).'},
+ m_cap1:{ar:'كل الطلبات في مكان واحد',en:'Every request in one place'},m_cap1p:{ar:'إجازة، وقت إضافي، تصحيح، سلفة، مصروفات… بدل ما كل نوع في صفحة.',en:'Leave, overtime, corrections, advances, expenses… instead of one page per type.'},
+ m_cap2:{ar:'إنت فين في المسار',en:'Where the request is'},m_cap2p:{ar:'الشريط بيوري المستويات اللي خلصت واللي جاية.',en:'The bar shows the levels done and still to come.'},
+ m_cap3:{ar:'المتأخر باين',en:'Overdue stands out'},m_cap3p:{ar:'لو عدّى الوقت المحدد بيتعلّم، وبعدها يطلع للي فوق.',en:'Past its time it is marked, then moves up.'},
+ hrsShort:{ar:'{n} ساعة',en:'{n} h'},daysShort:{ar:'{n} يوم',en:'{n} d'},
+ // screen 4
+ p_new:{ar:'طلب جديد',en:'New request'},p_mine:{ar:'طلباتي',en:'My requests'},
+ p_amount_h:{ar:'تقدر تطلب لحد ١٥٬٠٠٠ ج.م (٥٠٪ من الأساسي)',en:'You can ask for up to 15,000 EGP (50% of basic pay)'},
+ p_calc:{ar:'هيتخصم من مرتبك',en:'Deducted from your pay'},p_calc2:{ar:'{a} ج.م شهريًا × {m} شهور، من {d}',en:'{a} EGP a month × {m} months, from {d}'},
+ p_path:{ar:'هيعدّي على',en:'It goes to'},p_send:{ar:'إرسال',en:'Send'},
+ p_letter:{ar:'نوع الخطاب',en:'Letter'},p_to:{ar:'موجه إلى',en:'Addressed to'},p_lang:{ar:'اللغة',en:'Language'},
+ st_wait:{ar:'مستني موافقة',en:'Waiting'},st_ok:{ar:'اتوافق',en:'Approved'},st_rej:{ar:'اترفض',en:'Rejected'},
+ tl_sent:{ar:'اتبعت',en:'Sent'},tl_ok:{ar:'وافق',en:'approved'},tl_wait:{ar:'دوره دلوقتي',en:'deciding now'},tl_next:{ar:'بعده',en:'next'},
+ p_cap1:{ar:'الموظف بيشوف المسار قبل ما يبعت',en:'The path is shown before sending'},p_cap1p:{ar:'مين هيوافق وبالترتيب، والخصم من المرتب لو سلفة.',en:'Who approves and in what order, and the pay deduction for an advance.'},
+ p_cap2:{ar:'ويتابع طلبه',en:'And follows it'},p_cap2p:{ar:'كل مستوى: مين وافق وإمتى، ومستني مين دلوقتي.',en:'Each level: who approved and when, and who decides now.'},
+ // screen 5
+ crumb5:{ar:'الموظفون › البدلاء',en:'People › Substitutes'},
+ b_h:{ar:'البدلاء وقت الغياب',en:'Substitutes while away'},b_hp:{ar:'المدير بيحدد بديله وقت إجازته، أو الـ HR بتحدده لأي حد. البديل بيوافق بالنيابة، والطلب بيتسجل باسمه "بالنيابة عن".',en:'A manager sets their own substitute for their leave, or HR sets one for anyone. The substitute decides for them, and the request records “for” whom.'},
+ b_who:{ar:'الغايب',en:'Away'},b_sub:{ar:'البديل',en:'Substitute'},b_from:{ar:'من',en:'From'},b_to:{ar:'إلى',en:'To'},b_set:{ar:'حدده',en:'Set by'},
+ b_auto:{ar:'تلقائيًا من إجازته المعتمدة',en:'Automatically from their approved leave'},b_me:{ar:'هو بنفسه',en:'Themselves'},b_hr:{ar:'الـ HR',en:'HR'},
+ b_new:{ar:'+ بديل جديد',en:'+ New substitute'},b_now:{ar:'شغال دلوقتي',en:'Active now'},b_soon:{ar:'جاي',en:'Upcoming'},
+ b_app:{ar:'في التطبيق: «وأنا في إجازة»',en:'In the app: “While I’m away”'},
+ b_app_p:{ar:'لما المدير يطلب إجازة، التطبيق بيسأله: مين يوافق مكانك؟',en:'When a manager asks for leave, the app asks: who approves for you?'},
+ b_rules:{ar:'قواعد',en:'Rules'},b_r1:{ar:'البديل مايقدرش يوافق على طلب هو صاحبه، بيروح للمستوى اللي بعده.',en:'A substitute never approves their own request; it goes to the next level.'},b_r2:{ar:'المدير الأصلي بيشوف كل اللي اتعمل وهو غايب لما يرجع.',en:'The manager sees everything decided while away when they return.'},b_r3:{ar:'لو مفيش بديل والمدير في إجازة، الطلب بيطلع للي فوقه بعد الوقت المحدد.',en:'With no substitute and the manager on leave, the request moves up after its time.'},
+ // decisions
+ dq:{ar:'قبل ما أبني محتاج رأيك في دول',en:'Before building, I need your view on these'},
+ q1:{ar:'السلفة: مين يوافق؟',en:'Advance: who approves?'},q1a:{ar:'المدير ← الـ HR ← الحسابات (فوق ١٠٬٠٠٠)',en:'Manager → HR → Finance (above 10,000)'},q1b:{ar:'الـ HR ← الحسابات',en:'HR → Finance'},q1c:{ar:'المدير ← الحسابات',en:'Manager → Finance'},
+ q2:{ar:'حدود السلفة الافتراضية',en:'Default advance limits'},q2a:{ar:'٥٠٪ من الأساسي، ٦ شهور، واحدة مفتوحة',en:'50% of basic, 6 months, one open'},q2b:{ar:'مرتب شهر، ١٢ شهر',en:'One month’s pay, 12 months'},q2c:{ar:'من غير حدود (الإعداد بتاعكم)',en:'No limits (you set them)'},
+ q3:{ar:'لو محدش قرر',en:'If nobody decides'},q3a:{ar:'تذكير بعد ٨ ساعات شغل، ويطلع بعد ٢٤',en:'Remind after 8 working hours, move up after 24'},q3b:{ar:'تذكير بس، مايطلعش',en:'Remind only, never move up'},
+ q4:{ar:'أنواع الخطابات',en:'Letter types'},q4a:{ar:'شهادة مرتب، لمن يهمه الأمر، شهادة خبرة، للسفارة',en:'Salary certificate, to whom it may concern, experience, embassy'},q4b:{ar:'نفس الأربعة + تكتبوا أنواع تانية',en:'The same four + your own'},
+ q5:{ar:'الطلبات الموجودة (إجازة، وقت إضافي…)',en:'Today’s requests (leave, overtime…)'},q5a:{ar:'تتنقل للمحرك الجديد بنفس الإعداد بتاعها',en:'Move to the new engine with their current setup'},q5b:{ar:'تفضل زي ما هي والجديد للأنواع الجديدة بس',en:'Stay as they are; the engine is for new types only'},
+ rec:{ar:'اقتراحي',en:'My suggestion'},
+ // why
+ w1:{ar:'محرك واحد',en:'One engine'},w1p:{ar:'نفس المستويات والتأخير والبديل لكل الأنواع، بدل ما كل نوع ليه طريقته.',en:'The same levels, deadlines and substitutes for every type, instead of each type its own way.'},
+ w2:{ar:'مقفول لحد ما تشغّله',en:'Off until you turn it on'},w2p:{ar:'كل نوع جديد مقفول افتراضيًا. الأنواع الموجودة تفضل شغالة زي ما هي.',en:'Each new type is off by default. Today’s types keep working as they do.'},
+ w3:{ar:'مربوط بالهيكل',en:'Built on the org chart'},w3p:{ar:'«المدير المباشر» و«مدير المدير» من الهيكل التنظيمي، ولما حد يتنقل طلباته بتتنقل معاه.',en:'“Direct manager” and “Manager’s manager” come from the org chart, and requests follow a move.'},
+ w4:{ar:'كل قرار متسجل',en:'Every decision is kept'},w4p:{ar:'مين وافق، إمتى، بالنيابة عن مين، وأي ملاحظة، في سجل التغييرات.',en:'Who decided, when, for whom, and any note, in the Audit Log.'}
+};
+var lang='ar',screen='s1',kind='adv',filter='all',approved=false,fourth=false;
+try{var s0=localStorage.getItem('wfoApprLang');if(s0==='ar'||s0==='en')lang=s0;}catch(e){}
+function t(k){return (T[k]||{})[lang]||k;}
+function f(s,o){return s.replace(/\{(\w)\}/g,function(_,k){return o[k];});}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function num(n){return lang==='ar'?String(n).replace(/\d/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[d];}).replace(/,/g,'٬'):String(n);}
+function money(n){return num(n.toLocaleString('en-US'))+(lang==='ar'?' ج.م':' EGP');}
+var TC={adv:'var(--t-adv)',exp:'var(--t-exp)',let:'var(--t-let)',leave:'var(--t-lv)',ot:'var(--t-ot)',misc:'var(--t-misc)'};
+function chain(ks){return '<div class="chain">'+ks.map(function(k){return '<span class="lv">'+esc(t(k))+'</span>';}).join('<span class="ar">'+(lang==='ar'?'←':'→')+'</span>')+'</div>';}
+
+/* ---------- 1. request types ---------- */
+function s1(){
+  var row=function(k,d,c,lv,wait,on,isNew,later){return '<div class="trow"><div class="name"><span class="dot" style="--tc:'+c+'"></span><span><b>'+esc(t(k))+(isNew?' <span class="pill new">'+(lang==='ar'?'جديد':'New')+'</span>':'')+'</b><small>'+esc(t(d))+'</small></span></div>'
+    +(later?'<div class="chain"><span class="pill mute">'+t('soon')+'</span></div>':chain(lv))
+    +'<span class="cnt">'+(wait?'<span class="pill '+(wait>4?'warn':'mute')+'">'+num(wait)+' '+t('n_wait')+'</span>':'')+'</span>'
+    +(later?'<span></span>':'<span class="inline"><button type="button" class="switch" role="switch" aria-checked="'+on+'" aria-label="'+esc(t(k))+'"></button><button type="button" class="btn sm" data-screen="s2">'+t('edit')+'</button></span>')+'</div>';};
+  return '<section class="hero"><div><div class="crumb">'+t('crumb1')+'</div><h2>'+t('h1')+'</h2><p>'+t('h1p')+'</p></div>'
+   +'<div class="kpis"><div class="kpi"><b>'+num(7)+'</b><span>'+t('k_types')+'</span></div><div class="kpi"><b>'+num(23)+'</b><span>'+t('k_wait')+'</span></div><div class="kpi"><b>'+num(4)+'</b><span>'+t('k_late')+'</span></div><div class="kpi"><b>'+num(2)+'</b><span>'+t('k_subs')+'</span></div></div></section>'
+   +'<div class="card types"><div class="group-h">'+t('g_new')+'</div>'
+   +row('t_adv','d_adv',TC.adv,['lv1','lvHR','lvFin'],3,true,true)
+   +row('t_exp','d_exp',TC.exp,['lv1','lvFin'],5,true,true)
+   +row('t_let','d_let',TC.let,['lvHR'],2,false,true)
+   +'<div class="group-h">'+t('g_now')+'</div>'
+   +row('t_leave','d_leave',TC.leave,['lv1','lv2'],8,true)
+   +row('t_ot','d_ot',TC.ot,['lv1'],3,true)
+   +row('t_corr','d_corr',TC.misc,['lv1','lvHR'],2,true)
+   +row('t_swap','d_swap',TC.misc,['lvPeer','lv1'],0,true)
+   +row('t_face','d_face',TC.misc,['lvHR'],0,true)
+   +'<div class="group-h">'+t('g_later')+'</div>'
+   +row('t_data','d_data',TC.misc,[],0,false,false,true)+row('t_trip','d_trip',TC.misc,[],0,false,false,true)+row('t_res','d_res',TC.misc,[],0,false,false,true)
+   +'</div>';
+}
+
+/* ---------- 2. editor ---------- */
+function sel(opts,on){return '<select class="inp">'+opts.map(function(o){return '<option'+(o===on?' selected':'')+'>'+esc(t(o))+'</option>';}).join('')+'</select>';}
+var WHO=['lv1','lv2','lvDept','lvTeam','lvHR','lvFin','lvPerson'];
+function lvl(n,who,cond){return '<div class="level"><span class="n">'+num(n)+'</span><div class="f"><label class="fld"><span>'+t('e_who')+'</span>'+sel(WHO,who)+'</label>'
+  +'<label class="fld"><span>'+t('e_when')+'</span>'+(cond?'<span class="inline"><select class="inp" style="width:auto"><option>'+t('e_over')+'</option><option>'+t('e_always')+'</option></select><input class="inp" value="'+num('10,000')+'" aria-label="'+t('f_amount')+'"></span>':'<select class="inp"><option>'+t('e_always')+'</option><option>'+t('e_over')+'</option></select>')+'</label></div></div>';}
+function s2(){
+  var step=function(cls,b,title,sub){return '<div class="fstep '+cls+'"><span class="b">'+b+'</span><div><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></div></div>';};
+  return '<section class="hero"><div><div class="crumb">'+t('crumb2')+'</div><h2>'+t('t_adv')+'</h2><p>'+t('d_adv')+'</p></div></section>'
+   +'<div class="grid2"><div class="card"><h3>'+t('e_levels')+'</h3><p class="intro">'+t('e_levels_p')+'</p><div class="levels">'
+   +lvl(1,'lv1')+lvl(2,'lvHR')+lvl(3,'lvFin',true)+(fourth?lvl(4,'lv2'):'')
+   +'<button type="button" class="add" data-four'+(fourth?' disabled':'')+'>'+(fourth?t('e_max'):t('e_add4'))+'</button></div>'
+   +'<div class="opt"><div class="k">'+t('e_late')+'<small>'+t('e_late_s')+'</small></div><div><div class="inline"><span>'+t('e_l1')+'</span><input class="inp" value="'+num(8)+'" aria-label="'+t('e_l1')+'"><span>'+t('hrs')+'</span></div><div class="inline" style="margin-top:6px"><span>'+t('e_l2')+'</span><input class="inp" value="'+num(24)+'" aria-label="'+t('e_l2')+'"><span>'+t('hrs')+'</span></div><p class="hint">'+t('e_l3')+'</p></div></div>'
+   +'<div class="opt"><div class="k">'+t('e_self')+'</div><div class="chips"><span class="chip on">'+t('e_self_a')+'</span><span class="chip">'+t('e_self_b')+'</span></div></div>'
+   +'<div class="opt"><div class="k">'+t('e_fields')+'<small>'+t('e_fields_s')+'</small></div><div class="chips"><span class="chip on">'+t('f_amount')+'</span><span class="chip on">'+t('f_months')+'</span><span class="chip on">'+t('f_reason')+'</span><span class="chip">'+t('f_file')+'</span></div></div>'
+   +'<div class="opt"><div class="k">'+t('e_rules')+'<small>'+t('e_rules_s')+'</small></div><div style="display:grid;gap:8px"><div class="inline"><span>'+t('e_r1')+'</span><input class="inp" value="'+num(50)+'" aria-label="'+t('e_r1')+'"><span>'+t('e_r1u')+'</span></div><div class="inline"><span>'+t('e_r2')+'</span><input class="inp" value="'+num(6)+'" aria-label="'+t('e_r2')+'"><span>'+t('e_r2u')+'</span></div><div class="chips"><span class="chip on">'+t('e_r3')+'</span></div><p class="hint">'+t('e_r4')+'</p></div></div>'
+   +'<div class="opt"><div></div><div><button type="button" class="btn primary">'+t('e_save')+'</button></div></div></div>'
+   +'<div class="card"><h3>'+t('e_prev')+'</h3><p class="intro">'+t('e_prev_s')+'</p><div class="preview"><div class="flow">'
+   +step('done','✓',t('lv1')+' · '+(lang==='ar'?'كريم فتحي':'Karim Fathy'),lang==='ar'?'وافق · الأحد ١٠:١٥':'approved · Sun 10:15')
+   +step('now',num(2),t('lvHR')+' · '+(lang==='ar'?'سارة نبيل':'Sara Nabil'),lang==='ar'?'دورها دلوقتي · تذكير بعد ٨ ساعات':'deciding now · reminder after 8 h')
+   +step('cond',num(3),t('lvFin'),t('e_skip'))
+   +(fourth?step('',num(4),t('lv2'),''):'')
+   +'</div></div></div></div>';
+}
+
+/* ---------- 3. inbox ---------- */
+var ITEMS=[
+ {k:'adv',n:{ar:'نور سعيد',en:'Nour Saeed'},s:{ar:'قائدة فريق · المبيعات',en:'Team Lead · Sales'},a:8000,lv:[1,3],h:5,m:{ar:'٦ شهور · مصاريف مدرسة',en:'6 months · school fees'},c:'#0b7d74'},
+ {k:'exp',n:{ar:'يوسف جمال',en:'Youssef Gamal'},s:{ar:'قائد فريق · إسكندرية',en:'Team Lead · Alexandria'},a:1250,lv:[1,2],h:30,late:true,m:{ar:'مواصلات عميل · إيصال مرفق',en:'Client transport · receipt attached'},c:'#d9480f'},
+ {k:'leave',n:{ar:'هنا لطفي',en:'Hana Lotfy'},s:{ar:'مندوبة مبيعات',en:'Sales Representative'},lv:[1,2],h:2,m:{ar:'إجازة سنوية · ٣ أيام · ٢٠–٢٢ أكتوبر',en:'Annual leave · 3 days · 20–22 Oct'},c:'#4836e0'},
+ {k:'ot',n:{ar:'طارق فتحي',en:'Tarek Fathy'},s:{ar:'مندوب مبيعات',en:'Sales Representative'},lv:[1,1],h:20,sub:{ar:'منى عادل',en:'Mona Adel'},m:{ar:'وقت إضافي · ساعتين · الخميس',en:'Overtime · 2 h · Thursday'},c:'#a3245b'},
+ {k:'let',n:{ar:'دينا نبيل',en:'Dina Nabil'},s:{ar:'مندوبة مبيعات',en:'Sales Representative'},lv:[1,1],h:1,m:{ar:'شهادة مرتب · للبنك · عربي',en:'Salary certificate · to a bank · Arabic'},c:'#1f6fd1'}
+];
+function ini(s){return s.split(' ').map(function(w){return w[0];}).join('').slice(0,2);}
+function item(it,i){
+  var tk={adv:'t_adv',exp:'t_exp',leave:'t_leave',ot:'t_ot',let:'t_let'}[it.k];
+  var h=it.h>=24?f(t('daysShort'),{n:num(Math.floor(it.h/8))}):f(t('hrsShort'),{n:num(it.h)});
+  var prog='<div class="prog">'+Array.apply(null,{length:it.lv[1]}).map(function(_,j){return '<i class="'+(j<it.lv[0]-1?'d':j===it.lv[0]-1?'c':'')+'"></i>';}).join('')+'</div>';
+  if(approved&&i===0)return '<div class="item" style="--tc:'+TC[it.k]+'"><div class="done-msg">'+t('m_done')+'</div></div>';
+  return '<div class="item" style="--tc:'+(TC[it.k]||TC.misc)+'"><div class="top"><span class="av" style="--ac:'+it.c+'">'+esc(ini(it.n.en))+'</span><div class="who"><b>'+esc(it.n[lang])+'</b><small>'+esc(t(tk))+' · '+esc(it.s[lang])+'</small></div>'+(it.a?'<span class="amt">'+money(it.a)+'</span>':'')+'</div>'
+   +'<div style="color:var(--sub);font-size:13px">'+esc(it.m[lang])+'</div>'+prog
+   +'<div class="meta"><span class="pill mute">'+f(t('m_level'),{a:num(it.lv[0]),b:num(it.lv[1])})+'</span><span class="pill '+(it.late?'bad':'mute')+'">'+(it.late?t('m_late')+' · ':'')+f(t('m_waiting'),{h:h})+'</span>'+(it.sub?'<span class="pill warn">'+f(t('m_for'),{n:it.sub[lang]})+'</span>':'')+'</div>'
+   +'<div class="acts"><button type="button" class="btn ok" data-approve="'+i+'">'+t('m_approve')+'</button><button type="button" class="btn">'+t('m_reject')+'</button></div></div>';
+}
+function s3(){
+  var list=ITEMS.filter(function(it){return filter==='all'||(filter==='sub'&&it.sub)||(filter==='late'&&it.late)||(filter==='mine'&&!it.sub);});
+  var fb=function(k,l){return '<button type="button" data-filter="'+k+'" aria-pressed="'+(filter===k)+'">'+t(l)+'</button>';};
+  return '<div class="phonewrap"><div class="phone"><div class="ph-head"><small>Workforce One</small><h5>'+t('m_title')+' · '+num(list.length)+'</h5></div><div class="ph-body">'
+   +'<div class="filters">'+fb('all','m_all')+fb('mine','m_mine')+fb('sub','m_sub')+fb('late','m_late')+'</div>'
+   +(filter==='all'?'<div class="bulk"><span>'+t('m_bulk')+'</span><button type="button" class="btn sm primary">'+t('m_bulk_b')+'</button></div>':'')
+   +'<div class="items">'+list.map(function(it){return item(it,ITEMS.indexOf(it));}).join('')+'</div></div></div>'
+   +'<div class="caption"><div><b>'+t('m_cap1')+'</b><br>'+t('m_cap1p')+'</div><div><b>'+t('m_cap2')+'</b><br>'+t('m_cap2p')+'</div><div><b>'+t('m_cap3')+'</b><br>'+t('m_cap3p')+'</div></div></div>';
+}
+
+/* ---------- 4. employee ---------- */
+function s4(){
+  var kb=function(k,l){return '<button type="button" data-kind="'+k+'" aria-pressed="'+(kind===k)+'" style="--tc:'+TC[k]+'"><span class="ic"></span>'+t(l)+'</button>';};
+  var form;
+  if(kind==='adv')form='<label class="fld"><span>'+t('f_amount')+'</span><input class="inp" value="'+num('8,000')+'"></label><p class="hint">'+t('p_amount_h')+'</p>'
+    +'<label class="fld"><span>'+t('f_months')+'</span><select class="inp"><option>'+num(3)+'</option><option>'+num(4)+'</option><option selected>'+num(6)+'</option></select></label>'
+    +'<label class="fld"><span>'+t('f_reason')+'</span><input class="inp" value="'+(lang==='ar'?'مصاريف مدرسة':'School fees')+'"></label>'
+    +'<div class="calc"><span>'+t('p_calc')+'</span><b>'+f(t('p_calc2'),{a:num('1,334'),m:num(6),d:(lang==='ar'?'مرتب نوفمبر':'November pay')})+'</b></div>'
+    +'<div><div class="label">'+t('p_path')+'</div>'+chain(['lv1','lvHR'])+'</div>';
+  else if(kind==='exp')form='<label class="fld"><span>'+t('f_amount')+'</span><input class="inp" value="'+num('1,250')+'"></label><label class="fld"><span>'+t('f_reason')+'</span><input class="inp" value="'+(lang==='ar'?'مواصلات لعميل في المعادي':'Transport to a client in Maadi')+'"></label><label class="fld"><span>'+t('f_file')+'</span><input class="inp" value="receipt.jpg" readonly></label><div><div class="label">'+t('p_path')+'</div>'+chain(['lv1','lvFin'])+'</div>';
+  else form='<label class="fld"><span>'+t('p_letter')+'</span><select class="inp"><option>'+(lang==='ar'?'شهادة مرتب':'Salary certificate')+'</option><option>'+(lang==='ar'?'لمن يهمه الأمر':'To whom it may concern')+'</option><option>'+(lang==='ar'?'شهادة خبرة':'Experience certificate')+'</option></select></label><label class="fld"><span>'+t('p_to')+'</span><input class="inp" value="'+(lang==='ar'?'البنك الأهلي المصري':'National Bank of Egypt')+'"></label><label class="fld"><span>'+t('p_lang')+'</span><select class="inp"><option>عربي</option><option>English</option></select></label><div><div class="label">'+t('p_path')+'</div>'+chain(['lvHR'])+'</div>';
+  var tl=function(cls,b,title,sub){return '<div class="fstep '+cls+'"><span class="b">'+b+'</span><div><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></div></div>';};
+  return '<div class="phonewrap"><div class="phone"><div class="ph-head"><small>Workforce One</small><h5>'+t('p_new')+'</h5></div><div class="ph-body">'
+   +'<div class="kind">'+kb('adv','t_adv')+kb('exp','t_exp')+kb('let','t_let')+'</div><div class="form">'+form+'<button type="button" class="btn primary">'+t('p_send')+'</button></div></div></div>'
+   +'<div class="phone"><div class="ph-head"><small>Workforce One</small><h5>'+t('p_mine')+'</h5></div><div class="ph-body">'
+   +'<div class="req"><div class="top"><div><b>'+t('t_adv')+' · '+money(8000)+'</b><div class="hint">'+(lang==='ar'?'اتبعت الأحد ٩:٠٢':'Sent Sun 9:02')+'</div></div><span class="pill warn">'+t('st_wait')+'</span></div><div class="flow">'
+   +tl('done','✓',t('lv1')+' · '+(lang==='ar'?'كريم فتحي':'Karim Fathy'),(lang==='ar'?'وافق · الأحد ١٠:١٥':'approved · Sun 10:15'))
+   +tl('now',num(2),t('lvHR')+' · '+(lang==='ar'?'سارة نبيل':'Sara Nabil'),t('tl_wait'))
+   +'</div></div>'
+   +'<div class="req"><div class="top"><div><b>'+t('t_let')+'</b><div class="hint">'+(lang==='ar'?'شهادة مرتب · ٢ أكتوبر':'Salary certificate · 2 Oct')+'</div></div><span class="pill ok">'+t('st_ok')+'</span></div></div>'
+   +'<div class="req"><div class="top"><div><b>'+t('t_exp')+' · '+money(430)+'</b><div class="hint">'+(lang==='ar'?'"الإيصال مش واضح، ابعته تاني" · أحمد سمير':'"The receipt is not readable, send it again" · Ahmed Samir')+'</div></div><span class="pill bad">'+t('st_rej')+'</span></div></div>'
+   +'</div></div><div class="caption"><div><b>'+t('p_cap1')+'</b><br>'+t('p_cap1p')+'</div><div><b>'+t('p_cap2')+'</b><br>'+t('p_cap2p')+'</div></div></div>';
+}
+
+/* ---------- 5. substitutes ---------- */
+function s5(){
+  var r=function(a,b,fr,to,by,now){return '<div class="srow"><div><b>'+esc(a)+'</b><small>'+t('b_who')+'</small></div><div><b>'+esc(b)+'</b><small>'+t('b_sub')+'</small></div><div class="x"><span>'+esc(fr)+' – '+esc(to)+'</span><small>'+t('b_set')+': '+esc(t(by))+'</small></div><span class="pill '+(now?'ok':'mute')+'">'+t(now?'b_now':'b_soon')+'</span></div>';};
+  var A=lang==='ar';
+  return '<section class="hero"><div><div class="crumb">'+t('crumb5')+'</div><h2>'+t('b_h')+'</h2><p>'+t('b_hp')+'</p></div></section>'
+   +'<div class="grid2"><div class="card subs"><h3>'+t('b_h')+'</h3><p class="intro"><button type="button" class="btn sm primary">'+t('b_new')+'</button></p>'
+   +r(A?'منى عادل':'Mona Adel',A?'نور سعيد':'Nour Saeed',A?'١٢ أكتوبر':'12 Oct',A?'١٩ أكتوبر':'19 Oct','b_auto',true)
+   +r(A?'كريم فتحي':'Karim Fathy',A?'حسن حمدي':'Hassan Hamdy',A?'١٤ أكتوبر':'14 Oct',A?'١٤ أكتوبر':'14 Oct','b_me',true)
+   +r(A?'سارة نبيل':'Sara Nabil',A?'محمود سمير':'Mahmoud Samir',A?'١ نوفمبر':'1 Nov',A?'٥ نوفمبر':'5 Nov','b_hr',false)
+   +'</div><div style="display:grid;gap:16px"><div class="phone" style="margin-inline:auto"><div class="ph-head"><small>Workforce One</small><h5>'+t('b_app')+'</h5></div><div class="ph-body" style="min-height:0">'
+   +'<p class="hint" style="margin:0">'+t('b_app_p')+'</p><div class="form"><label class="fld"><span>'+t('b_sub')+'</span><input class="inp" value="'+(A?'نور سعيد — قائدة فريق':'Nour Saeed — Team Lead')+'"></label><div class="inline"><label class="fld" style="flex:1"><span>'+t('b_from')+'</span><input class="inp" value="'+(A?'١٢/١٠':'12/10')+'"></label><label class="fld" style="flex:1"><span>'+t('b_to')+'</span><input class="inp" value="'+(A?'١٩/١٠':'19/10')+'"></label></div><button type="button" class="btn primary">'+t('e_save')+'</button></div></div></div>'
+   +'<div class="card"><h3>'+t('b_rules')+'</h3><ul style="margin:0;padding:6px 18px 16px 34px;display:grid;gap:6px;color:var(--sub)"><li>'+t('b_r1')+'</li><li>'+t('b_r2')+'</li><li>'+t('b_r3')+'</li></ul></div></div></div>';
+}
+
+/* ---------- 6. decisions ---------- */
+function s6(){
+  var q=function(k,opts,r){return '<div class="q"><b>'+t(k)+'</b><div class="choices">'+opts.map(function(o,i){return '<span'+(i===r?' class="rec" title="'+t('rec')+'"':'')+'>'+(i===r?'★ ':'')+t(o)+'</span>';}).join('')+'</div></div>';};
+  return '<div class="card"><h3>'+t('dq')+'</h3><p class="intro">★ = '+t('rec')+'</p><div class="decide">'
+   +q('q1',['q1a','q1b','q1c'],0)+q('q2',['q2a','q2b','q2c'],0)+q('q3',['q3a','q3b'],0)+q('q4',['q4a','q4b'],1)+q('q5',['q5a','q5b'],0)
+   +'</div></div>';
+}
+
+function render(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  document.querySelectorAll('[data-t]').forEach(function(el){el.textContent=t(el.dataset.t);});
+  document.querySelectorAll('[data-lang]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.lang===lang);});
+  document.getElementById('screens').innerHTML=['s1','s2','s3','s4','s5','s6'].map(function(s){return '<button type="button" data-screen="'+s+'" aria-pressed="'+(screen===s)+'">'+t(s)+'</button>';}).join('');
+  document.getElementById('screen').innerHTML={s1:s1,s2:s2,s3:s3,s4:s4,s5:s5,s6:s6}[screen]();
+  document.getElementById('why').innerHTML=[['w1','w1p'],['w2','w2p'],['w3','w3p'],['w4','w4p']].map(function(w){return '<div><b>'+t(w[0])+'</b><p>'+t(w[1])+'</p></div>';}).join('');
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-lang],[data-screen],[data-kind],[data-filter],[data-approve],[data-four],.switch');if(!b)return;
+  if(b.classList.contains('switch')){b.setAttribute('aria-checked',b.getAttribute('aria-checked')!=='true');return;}
+  if(b.dataset.lang){lang=b.dataset.lang;try{localStorage.setItem('wfoApprLang',lang);}catch(x){}}
+  else if(b.dataset.screen){screen=b.dataset.screen;approved=false;window.scrollTo(0,0);}
+  else if(b.dataset.kind){kind=b.dataset.kind;}
+  else if(b.dataset.filter){filter=b.dataset.filter;}
+  else if(b.hasAttribute('data-approve')){approved=true;}
+  else if(b.hasAttribute('data-four')){fourth=true;}
+  render();
+});
+render();
+})();
+</script>
