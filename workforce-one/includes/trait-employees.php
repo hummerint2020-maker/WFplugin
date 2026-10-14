@@ -75,6 +75,13 @@ trait EWS_Employees_Trait {
         return (array)($department_id?$wpdb->get_col($wpdb->prepare($sql.' AND department_id=%d',(int)$department_id)):$wpdb->get_col($sql));
     }
 
+    /** The employee's photo (People, 3.31.97: moved from the app layout) or chosen avatar ('' = show initials). @param object|null $emp */
+    private function employee_picture_url($emp){
+        if($emp && ($emp->profile_image_type??'')==='photo' && !empty($emp->profile_image_url))return (string)$emp->profile_image_url;
+        if($emp && ($emp->profile_image_type??'')==='avatar' && !empty($emp->avatar_key))return (string)$this->profile_avatar_url($emp->avatar_key);
+        return '';
+    }
+
     /** How many active employees (of one department when given; only those with an app account, with $with_user). */
     private function people_active_count($department_id=0,$with_user=false){
         global $wpdb;

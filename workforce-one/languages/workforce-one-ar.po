@@ -5653,3 +5653,135 @@ msgstr "رُفض تسجيل الحضور عدة مرات"
 
 msgid "The Workforce One database update did not finish."
 msgstr "لم يكتمل تحديث قاعدة بيانات Workforce One."
+
+msgid "Org chart"
+msgstr "الهيكل التنظيمي"
+
+msgid "direct"
+msgstr "مباشر"
+
+msgid "in total"
+msgstr "الكل"
+
+msgid "Direct manager"
+msgstr "المدير المباشر"
+
+msgid "Direct reports"
+msgstr "يتبعه مباشرة"
+
+msgid "Everyone under"
+msgstr "كل اللي تحته"
+
+msgid "Reporting line"
+msgstr "خط التبعية"
+
+msgid "Open profile"
+msgstr "فتح الملف"
+
+msgid "Change manager"
+msgstr "تغيير المدير"
+
+msgid "More than %d direct reports"
+msgstr "أكتر من %d موظف تابع مباشرة"
+
+msgid "Teammates (same manager)"
+msgstr "زمايله تحت نفس المدير"
+
+msgid "Fit"
+msgstr "ملاءمة"
+
+msgid "Zoom in"
+msgstr "تكبير"
+
+msgid "Zoom out"
+msgstr "تصغير"
+
+msgid "Nobody matches this search."
+msgstr "مفيش حد مطابق للبحث ده."
+
+msgid "Nobody reports to anyone yet. Set each employee's direct supervisor on the Employees page and the chart appears here."
+msgstr "لسه محدش تابع لحد. حدد المدير المباشر لكل موظف في صفحة الموظفين والهيكل هيظهر هنا."
+
+msgid "One person at a time: their managers above, the people who report to them below."
+msgstr "شخص واحد في المرة: مديرينه فوق، واللي تابعين له تحت."
+
+msgid "Organization chart"
+msgstr "الهيكل التنظيمي"
+
+msgid "The organization chart is switched off."
+msgstr "الهيكل التنظيمي مقفول."
+
+msgid "Turn it on in Feature Configuration"
+msgstr "شغّله من إعدادات المميزات"
+
+msgid "Built on each employee's direct supervisor (Employees page). Select anyone to see their details."
+msgstr "مبني على المدير المباشر لكل موظف (صفحة الموظفين). دوس على أي شخص تشوف بياناته."
+
+msgid "in the chart"
+msgstr "في الهيكل"
+
+msgid "managers"
+msgstr "مدير"
+
+msgid "levels"
+msgstr "مستويات"
+
+msgid "without a manager"
+msgstr "من غير مدير"
+
+msgid "Search a name or a job title"
+msgstr "ابحث باسم أو مسمى وظيفي"
+
+msgid "Not in the chart; their requests go to administrators."
+msgstr "مش ظاهرين في الهيكل، وطلباتهم بتروح للإدارة."
+
+msgid "Set manager"
+msgstr "حدد المدير"
+
+msgid "A team lead in between may help."
+msgstr "ممكن قائد فريق في النص يساعد."
+
+msgid "The chart needs JavaScript."
+msgstr "الهيكل محتاج JavaScript."
+
+msgid "You are not in the organization chart yet"
+msgstr "إنت لسه مش في الهيكل التنظيمي"
+
+msgid "Your manager is set by HR on the Employees page."
+msgstr "المدير بتاعك بيحدده الـ HR من صفحة الموظفين."
+
+msgid "Back to me"
+msgstr "رجوع ليّا"
+
+msgid "Reports directly"
+msgstr "يتبعه مباشرة"
+
+msgid "No manager or team is set for this person yet."
+msgstr "لسه مفيش مدير أو فريق متحدد للشخص ده."
+
+msgid "%d employee without a manager"
+msgid_plural "%d employees without a manager"
+msgstr[0] "%d موظف من غير مدير"
+msgstr[1] "%d موظف من غير مدير"
+msgstr[2] "%d موظف من غير مدير"
+msgstr[3] "%d موظف من غير مدير"
+msgstr[4] "%d موظف من غير مدير"
+msgstr[5] "%d موظف من غير مدير"
+
+msgid "%1$d manager with more than %2$d direct reports"
+msgid_plural "%1$d managers with more than %2$d direct reports"
+msgstr[0] "%1$d مدير تحته أكتر من %2$d موظف مباشر"
+msgstr[1] "%1$d مدير تحته أكتر من %2$d موظف مباشر"
+msgstr[2] "%1$d مدير تحته أكتر من %2$d موظف مباشر"
+msgstr[3] "%1$d مدير تحته أكتر من %2$d موظف مباشر"
+msgstr[4] "%1$d مدير تحته أكتر من %2$d موظف مباشر"
+msgstr[5] "%1$d مدير تحته أكتر من %2$d موظف مباشر"
+
+msgid "%d direct report"
+msgid_plural "%d direct reports"
+msgstr[0] "%d تابع مباشر"
+msgstr[1] "%d تابع مباشر"
+msgstr[2] "%d تابع مباشر"
+msgstr[3] "%d تابع مباشر"
+msgstr[4] "%d تابع مباشر"
+msgstr[5] "%d تابع مباشر"

@@ -22,6 +22,9 @@
  * @var string $post_url
  * @var string $profile_url
  * @var string $today          site date, the last working day suggested when archiving
+ * @var bool $org              the organization chart is on (3.31.97): job titles are shown and edited
+ * @var bool $title_required   a job title is required when adding an employee
+ * @var string[] $titles       the job titles in use, suggested while typing
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Support\Picker;
@@ -50,6 +53,7 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
 ?>
 <div class="wrap"><h1>Employees</h1>
 <datalist id="ews-pick-users"><?php foreach ($users as $uid => $label): ?><option value="<?php echo esc_attr(Picker::label($label, (int) $uid)); ?>"></option><?php endforeach; ?></datalist>
+<?php if ($org): ?><datalist id="ews-pick-titles"><?php foreach ($titles as $t): ?><option value="<?php echo esc_attr($t); ?>"></option><?php endforeach; ?></datalist><?php endif; ?>
 <datalist id="ews-pick-employees"><?php foreach ($people as $p): if (!(int) $p->active) continue; ?><option value="<?php echo esc_attr($person((int) $p->id)); ?>"></option><?php endforeach; ?></datalist>
 <?php if ($notice): ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html($notice); ?></p></div><?php endif; ?>
 <?php if ($error): ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
@@ -58,6 +62,7 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
     <input type="hidden" name="action" value="ews31_employee_save"><?php wp_nonce_field('ews31_employee_save'); ?>
     <h2 style="margin-top:0">Add Employee</h2>
     <p><input name="name" required placeholder="Employee Name" style="width:100%"></p>
+    <?php if ($org): ?><p><input name="job_title" list="ews-pick-titles" autocomplete="off" maxlength="120" placeholder="<?php echo esc_attr($title_required ? 'Job Title' : 'Job Title (optional)'); ?>" aria-label="Job Title" style="width:100%"<?php echo $title_required ? ' required' : ''; ?>></p><?php endif; ?>
     <p><input name="domain_name" required placeholder="Domain Name" style="width:100%"></p>
     <p><input type="email" name="email" required placeholder="Employee Email" style="width:100%"></p>
     <p><input name="wp_user_ref" list="ews-pick-users" autocomplete="off" placeholder="Link WordPress User (type to search)" style="width:100%"></p>
@@ -75,10 +80,11 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
     <button class="button">Search</button><?php if ($search !== ''): ?> <a class="button-link" href="<?php echo esc_url($page_url); ?>">Clear</a><?php endif; ?>
     <span style="margin-inline-start:auto"><?php $pager(); ?></span>
 </form>
-<table class="widefat striped"><thead><tr><th>Name</th><th>Domain Name</th><th>Email</th><th>WordPress User</th><th>Department</th><th>Supervisor</th><th>Teams</th><th>Default Shift</th><th>Attendance Tracking</th><th>Status</th><th>Action</th></tr></thead><tbody>
+<table class="widefat striped"><thead><tr><th>Name</th><?php if ($org): ?><th>Job Title</th><?php endif; ?><th>Domain Name</th><th>Email</th><th>WordPress User</th><th>Department</th><th>Supervisor</th><th>Teams</th><th>Default Shift</th><th>Attendance Tracking</th><th>Status</th><th>Action</th></tr></thead><tbody>
 <?php foreach ($employees as $e): $r = $e['row']; $id = (int) $r->id; $f = 'ews-employee-' . $id; ?>
     <tr<?php echo !(int) $r->active ? ' style="opacity:.72"' : ''; ?>>
         <td><input form="<?php echo $f; ?>" name="name" value="<?php echo esc_attr($r->name); ?>" required></td>
+        <?php if ($org): ?><td><input form="<?php echo $f; ?>" name="job_title" list="ews-pick-titles" autocomplete="off" maxlength="120" value="<?php echo esc_attr((string) ($r->job_title ?? '')); ?>" placeholder="No job title" aria-label="<?php echo esc_attr('Job title of ' . $r->name); ?>"></td><?php endif; ?>
         <td><input form="<?php echo $f; ?>" name="domain_name" value="<?php echo esc_attr($r->domain_name); ?>" required></td>
         <td><input form="<?php echo $f; ?>" type="email" name="email" value="<?php echo esc_attr($r->email); ?>" required></td>
         <td><input form="<?php echo $f; ?>" name="wp_user_ref" list="ews-pick-users" autocomplete="off" value="<?php echo esc_attr($user_label((int) $r->wp_user_id)); ?>" placeholder="Not linked" aria-label="<?php echo esc_attr('WordPress user of ' . $r->name); ?>"></td>
@@ -100,7 +106,7 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
         </td>
     </tr>
 <?php endforeach; ?>
-<?php if (!$employees): ?><tr><td colspan="11"><?php echo $search !== '' ? 'No employee matches this search.' : 'No employees yet.'; ?></td></tr><?php endif; ?>
+<?php if (!$employees): ?><tr><td colspan="<?php echo $org ? 12 : 11; ?>"><?php echo $search !== '' ? 'No employee matches this search.' : 'No employees yet.'; ?></td></tr><?php endif; ?>
 </tbody></table>
 <div class="tablenav bottom" style="height:auto"><?php $pager(); ?></div>
 </div>

@@ -22,7 +22,7 @@ final class SchemaCheck
 
     /** Columns added to a table after it was first created. */
     public const COLUMNS = [
-        'ews_employees' => ['email', 'wp_user_id', 'default_shift_id', 'attendance_enabled', 'department_id', 'last_working_day'],
+        'ews_employees' => ['email', 'wp_user_id', 'default_shift_id', 'attendance_enabled', 'department_id', 'last_working_day', 'job_title'],
         'ews_time_logs' => ['source', 'corrects_id', 'correction_id', 'location_id', 'branch_flag', 'photo_key'],
         'ews_schedule' => ['location_id'],
         'ews_notifications' => ['link'],

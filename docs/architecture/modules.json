@@ -42,7 +42,8 @@
         "my-profile",
         "profile-account",
         "departments",
-        "teams"
+        "teams",
+        "org-chart"
       ],
       "tables": [
         "employees",
@@ -62,7 +63,15 @@
         "people_active_users",
         "people_active_ids",
         "people_active_user_ids",
-        "people_active_count"
+        "people_active_count",
+        "people_manager_ids",
+        "org_tree",
+        "people_org_rows",
+        "org_enabled",
+        "org_settings",
+        "org_app_allowed",
+        "team_content",
+        "employee_picture_url"
       ]
     },
     "schedule": {

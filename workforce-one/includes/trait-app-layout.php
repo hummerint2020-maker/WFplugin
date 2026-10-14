@@ -37,6 +37,7 @@ trait EWS_App_Layout_Trait {
             case 'reports': case 'attendance-insights': return $this->can('ews_view_reports');
             case 'people': case 'employee': return $this->can('ews_view_people') && !empty($profiles['enabled']);
             case 'polls': return $this->polls_available();
+            case 'team': return $this->org_app_allowed();
             case 'pay': return $this->payroll_view_available();
             case 'corrections': return $this->corrections_enabled();
             case 'sites': case 'payout': return $this->dw_view_allowed($view);
@@ -66,9 +67,10 @@ trait EWS_App_Layout_Trait {
             case 'presence': $content=$this->presence_content(); break;
             case 'polls': $content=$this->polls_content(); break;
             case 'pay': $content=$this->pay_content(); break;
+            case 'team': $content=$this->team_content(); break;
             default: $content=$this->dashboard_content();
         }
-        $titles=['pay'=>__('My Pay','workforce-one'),'dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'corrections'=>__('Corrections','workforce-one'),'sites'=>__('My sites','workforce-one'),'payout'=>__('Payout','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>__('Polls','workforce-one')];
+        $titles=['pay'=>__('My Pay','workforce-one'),'dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'corrections'=>__('Corrections','workforce-one'),'sites'=>__('My sites','workforce-one'),'payout'=>__('Payout','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>__('Polls','workforce-one'),'team'=>__('My team','workforce-one')];
         // A colleague's profile belongs to People in the menu.
         return $this->layout($titles[$view]??ucwords(str_replace('-',' ',$view)),$content,$view==='employee'?'people':$view);
     }
@@ -78,7 +80,7 @@ trait EWS_App_Layout_Trait {
         $cfg=$this->option('ews_frontend_navigation');
         if(!is_array($cfg))$cfg=[];
         // Labels still equal to the built-in English defaults are translated; custom labels are shown as entered.
-        $i18n=['Dashboard'=>__('Dashboard','workforce-one'),'Schedule'=>__('Schedule','workforce-one'),'Sign In / Out'=>__('Sign In / Out','workforce-one'),'Leave'=>__('Leave','workforce-one'),'Overtime'=>__('Overtime','workforce-one'),'Corrections'=>__('Corrections','workforce-one'),'My sites'=>__('My sites','workforce-one'),'Payout'=>__('Payout','workforce-one'),'Tasks'=>__('Tasks','workforce-one'),'Attendance'=>__('Attendance','workforce-one'),'Reports'=>__('Reports','workforce-one'),'Attendance Insights'=>__('Attendance Insights','workforce-one'),'People'=>__('People','workforce-one'),'Polls'=>__('Polls','workforce-one'),'My Pay'=>__('My Pay','workforce-one')];
+        $i18n=['Dashboard'=>__('Dashboard','workforce-one'),'Schedule'=>__('Schedule','workforce-one'),'Sign In / Out'=>__('Sign In / Out','workforce-one'),'Leave'=>__('Leave','workforce-one'),'Overtime'=>__('Overtime','workforce-one'),'Corrections'=>__('Corrections','workforce-one'),'My sites'=>__('My sites','workforce-one'),'Payout'=>__('Payout','workforce-one'),'Tasks'=>__('Tasks','workforce-one'),'Attendance'=>__('Attendance','workforce-one'),'Reports'=>__('Reports','workforce-one'),'Attendance Insights'=>__('Attendance Insights','workforce-one'),'People'=>__('People','workforce-one'),'Polls'=>__('Polls','workforce-one'),'My Pay'=>__('My Pay','workforce-one'),'My team'=>__('My team','workforce-one')];
         $items=[];
         foreach(\WorkforceOne\Settings\Navigation::DEFAULTS as $key=>$def){
             if(!$this->app_view_allowed($key))continue;
@@ -98,13 +100,6 @@ trait EWS_App_Layout_Trait {
         usort($desktop,function($a,$b){return $a['desktop_order']<=>$b['desktop_order'];});
         usort($mobile,function($a,$b){return $a['mobile_order']<=>$b['mobile_order'];});
         return [$desktop,$mobile];
-    }
-
-    /** The employee's photo or chosen avatar ('' = show initials). @param object|null $emp */
-    private function employee_picture_url($emp){
-        if($emp && ($emp->profile_image_type??'')==='photo' && !empty($emp->profile_image_url))return (string)$emp->profile_image_url;
-        if($emp && ($emp->profile_image_type??'')==='avatar' && !empty($emp->avatar_key))return (string)$this->profile_avatar_url($emp->avatar_key);
-        return '';
     }
 
     /** Log out back to this page, which then confirms it ("You have been logged out"). */

@@ -23,7 +23,7 @@ final class AdminNav
     {
         return [
             'home'       => [['ews31', '']],
-            'people'     => [['ews31-employees', ''], ['ews31-departments', ''], ['ews31-teams', ''], ['ews31-employee-branches', '']],
+            'people'     => [['ews31-employees', ''], ['ews31-departments', ''], ['ews31-teams', ''], ['ews31-org-chart', 'org'], ['ews31-employee-branches', '']],
             'attendance' => [['ews31-time-report', ''], ['ews31-attendance-insights', ''], ['ews31-corrections', ''], ['ews31-auto-attendance', ''], ['ews31-face-reset-requests', 'face']],
             'requests'   => [['ews31-requests', ''], ['ews31-leaves', ''], ['ews31-approvals', '']],
             'schedule'   => [['ews31-schedule-config', ''], ['ews31-multi-locations', ''], ['ews31-presence-kiosks', '']],

@@ -28,6 +28,9 @@ final class EmployeeRulesTest extends TestCase
         $this->assertSame('self_supervisor', R::check($this->f(['supervisor_id' => 7])));
         $this->assertSame('supervisor', R::check($this->f(['supervisor_ok' => false])));
         $this->assertSame('supervisor_loop', R::check($this->f(['supervisors_supervisor' => 7])));
+        $this->assertSame('supervisor_loop', R::check($this->f(['supervisor_reports_to_employee' => true])), 'the new supervisor reports to them further down (3.31.97)');
+        $this->assertSame('title', R::check($this->f(['title_missing' => true, 'domain_taken' => true])), 'a required job title comes before the domain');
+        $this->assertSame('department', R::check($this->f(['title_missing' => true, 'department_ok' => false])));
         $this->assertSame('team_department', R::check($this->f(['teams_in_department' => false])));
         $this->assertSame('manages_team', R::check($this->f(['manages_team_elsewhere' => true])));
     }

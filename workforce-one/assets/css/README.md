@@ -33,4 +33,6 @@ npx rtlcss@4 assets/css/app-presence.css assets/css/app-presence-rtl.css
 npx rtlcss@4 assets/css/app-employees.css assets/css/app-employees-rtl.css
 npx rtlcss@4 assets/css/app-pay.css assets/css/app-pay-rtl.css
 npx rtlcss@4 assets/css/app-insights.css assets/css/app-insights-rtl.css
+npx rtlcss@4 assets/css/app-team.css assets/css/app-team-rtl.css
+npx rtlcss@4 assets/css/admin-org-chart.css assets/css/admin-org-chart-rtl.css
 ```

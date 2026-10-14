@@ -14,6 +14,8 @@
  * @var array<string,array> $offline_texts   OfflineScreen::TEXTS
  * @var array<string,string[]> $offline_sections  OfflineScreen::SECTIONS
  * @var string $offline_preview             the offline page in preview mode (add &preview=off|press|down)
+ * @var array{enabled:int,audience:string,employee_view:string,wide_span:int,title_required:int} $org  Settings\OrgChartSettings::config() (3.31.97)
+ * @var string $org_url                     wp-admin → People → Org chart
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
@@ -49,6 +51,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="office_minimum_present" value="1">
 <input type="hidden" name="evidence_present" value="1">
 <input type="hidden" name="offline_present" value="1">
+<input type="hidden" name="org_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -213,6 +216,25 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 })();
 </script>
 <style>@media (max-width:1100px){#ews-offline-screen .wfo-offline-grid{grid-template-columns:minmax(0,1fr)!important}}</style>
+</div>
+
+<div class="wfo-feature-section" id="ews-org-chart"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title">Organization Chart</div><div class="wfo-feature-desc">A chart of who reports to whom, built on each employee's Direct Supervisor (Employees page): nothing is entered twice. Administrators see it in wp-admin → People → <a href="<?php echo esc_url($org_url); ?>">Org chart</a>; employees and managers can see it in the app as "My team" when chosen below. While it is on, the Employees page also has a Job Title for each employee. A supervisor cannot be set under someone who reports to the employee, at any level.</div></div>
+    <?php $switch('org_enabled', (bool) $org['enabled']); ?>
+</div>
+<div class="wfo-feature-fields">
+    <label><span class="wfo-field-label">Who sees the chart</span><select name="org_audience" style="width:100%;min-height:40px">
+        <option value="admins" <?php selected($org['audience'], 'admins'); ?>>Administrators only (wp-admin)</option>
+        <option value="managers" <?php selected($org['audience'], 'managers'); ?>>Administrators and managers (managers see their part in the app)</option>
+        <option value="everyone" <?php selected($org['audience'], 'everyone'); ?>>Everyone (in the app)</option>
+    </select></label>
+    <label><span class="wfo-field-label">An employee sees</span><select name="org_employee_view" style="width:100%;min-height:40px">
+        <option value="line" <?php selected($org['employee_view'], 'line'); ?>>Their reporting line, teammates and the people under them</option>
+        <option value="company" <?php selected($org['employee_view'], 'company'); ?>>The whole company</option>
+    </select><span style="display:block;color:#646970;font-size:12px;margin-top:4px">Used when everyone sees the chart. Managers always see the people under them.</span></label>
+    <label><span class="wfo-field-label">Flag a manager with more than</span><input type="number" name="org_wide_span" min="0" max="100" value="<?php echo (int) $org['wide_span']; ?>" style="width:90px"> direct reports<span style="display:block;color:#646970;font-size:12px;margin-top:4px">0 = never.</span></label>
+    <label><span class="wfo-field-label">Job title</span><input type="checkbox" name="org_title_required" value="1" <?php checked((bool) $org['title_required']); ?>> Required when adding an employee</label>
+</div>
 </div>
 
 <div class="wfo-feature-section">

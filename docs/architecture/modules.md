@@ -34,7 +34,7 @@ table / function.
 |---|---|---|
 | platform | audit_log | core, schema, permissions, features, settings-overview, settings-pages, private-files, privacy |
 | shell | (none) | app-layout, appearance, admin, admin-nav, admin-dashboard, dashboard-view, frontend |
-| people | employees, departments, teams, team_members, employee_relationships | employees, employee-admin, employee-profile, people-view, my-profile, profile-account, departments, teams |
+| people | employees, departments, teams, team_members, employee_relationships | employees, employee-admin, employee-profile, people-view, my-profile, profile-account, departments, teams, org-chart |
 | schedule | schedule, schedule_swaps, company_calendar | work-time, schedule-config, schedule-types, schedule-view, swap, attendance-grid, office-minimum |
 | locations | locations, employee_locations_v321, employee_branches, kiosks, presence_verifications | locations, branches, presence |
 | attendance | time_logs, break_sessions, face_profiles, auto_attendance_rules, attendance_corrections, signin_attempts | attendance, auto-attendance, breaks, face, face-reset, signin-evidence, time-report, corrections, attendance-insights |

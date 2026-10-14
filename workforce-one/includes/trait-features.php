@@ -44,6 +44,7 @@ trait EWS_Features_Trait {
             'splash'=>$this->pwa_splash_settings(),
             'offline'=>$this->offline_settings(),'offline_texts'=>\WorkforceOne\Settings\OfflineScreen::TEXTS,'offline_sections'=>\WorkforceOne\Settings\OfflineScreen::SECTIONS,
             'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
+            'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
             'recognition'=>FeatureSettings::recognition($this->option('ews_recognition_weekly_limit_mode'),$this->option('ews_recognition_weekly_limit')),
             'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
@@ -104,6 +105,12 @@ trait EWS_Features_Trait {
             $off=\WorkforceOne\Settings\OfflineScreen::fromPost($post);
             update_option('ews_offline_screen',$off,false);
             if(\WorkforceOne\Settings\OfflineScreen::summary($off)!==$off_before)$this->audit('offline_screen_update','settings',0,\WorkforceOne\Settings\OfflineScreen::summary($off));
+        }
+        // Organization chart (3.31.97).
+        if(isset($post['org_present'])){
+            $org_before=$this->org_settings();$org=\WorkforceOne\Settings\OrgChartSettings::fromPost($post);
+            update_option('ews_org_chart',$org,false);
+            if($org!==$org_before)$this->audit('org_chart_update','settings',0,'enabled='.($org['enabled']?'on':'off').' audience='.$org['audience'].' employee_view='.$org['employee_view'].' wide_span='.$org['wide_span'].' title_required='.($org['title_required']?'yes':'no'));
         }
         if(isset($post['daily_workers_present'])){
             update_option('ews_feature_daily_workers',$flag('daily_workers_enabled')?1:0,false);

@@ -29,7 +29,8 @@ trait EWS_Schema_Trait {
             $defs=[
                 'profile_image_type'=>"VARCHAR(20) NOT NULL DEFAULT 'initials'",
                 'profile_image_url'=>"TEXT NULL",
-                'avatar_key'=>"VARCHAR(80) NULL"
+                'avatar_key'=>"VARCHAR(80) NULL",
+                'job_title'=>"VARCHAR(120) NULL" // 3.31.97, organization chart
             ];
             foreach($defs as $col=>$def){
                 if(!in_array($col,$cols,true))$wpdb->query("ALTER TABLE {$employees} ADD COLUMN `{$col}` {$def}");
@@ -321,7 +322,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.94'; }
+        private function ews_schema_target(){ return '3.31.97'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

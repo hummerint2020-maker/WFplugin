@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.31.97
+Organization chart, stage 2 (owner-approved mockup docs/mockups/org-chart/, docs/tasks/org-chart.md).
+**Off by default** (Feature Configuration → Organization Chart). Database: `ews_employees.job_title`.
+
+### Added
+- **wp-admin → People → Org chart**: the chart built on each employee's Direct Supervisor (nothing
+  entered twice). Counts (in the chart, managers, levels, without a manager), the people without a
+  manager with a link to set one, managers with more direct reports than the chosen limit, a search
+  that opens the branches down to each match, a person panel (department, manager, direct reports,
+  everyone under them, the reporting line, open profile, change manager), zoom. Each branch is drawn
+  when it is opened, so a large company stays fast. Arabic reads from the right; a phone browses one
+  person at a time.
+- **The app → My team** (menu item, desktop): the reporting line above, the direct reports, the
+  teammates; tap anyone to go to them. Who may open it: administrators and managers, or everyone
+  (setting); what an employee sees: their line, teammates and the people under them, or the whole
+  company (setting).
+- **Job title** on the Employees page while the chart is on (titles in use suggested); can be made
+  required when adding an employee.
+- Feature Configuration → Organization Chart: on/off, who sees it, what an employee sees, flag a
+  manager with more than N direct reports (default 8), job title required. Changes go to the Audit Log.
+
+### Changed
+- A supervisor is refused when they report to the employee at any level (before: only two people
+  supervising each other). A loop already in old data is shown as people without a manager.
+- `employee_picture_url()` moved to People (modular monolith); boundary baseline lowered.
+
 ## 3.31.96
 Modular monolith, step 2 (docs/architecture/modules.md): People owns the employees table. No change in
 behaviour or in the database.

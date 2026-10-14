@@ -15,9 +15,9 @@ final class AdminNavTest extends TestCase
     public function testVisibleKeepsOrderAndDropsWhatThePersonCannotOpen(): void
     {
         $open = array_fill_keys(AdminNav::slugs(), true);
-        $all = AdminNav::visible($open, ['face' => true, 'recognition' => true, 'tasks' => true]);
+        $all = AdminNav::visible($open, ['face' => true, 'recognition' => true, 'tasks' => true, 'org' => true]);
         $this->assertSame(['home', 'people', 'attendance', 'requests', 'schedule', 'pay', 'engage', 'settings'], array_keys($all));
-        $this->assertSame(['ews31-employees', 'ews31-departments', 'ews31-teams', 'ews31-employee-branches'], $all['people']);
+        $this->assertSame(['ews31-employees', 'ews31-departments', 'ews31-teams', 'ews31-org-chart', 'ews31-employee-branches'], $all['people']);
 
         // A manager with two pages: only those, and only their sections.
         $mgr = AdminNav::visible(['ews31' => true, 'ews31-time-report' => true, 'ews31-attendance-insights' => true], []);

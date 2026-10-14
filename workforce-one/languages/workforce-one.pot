@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.95\n"
+"Project-Id-Version: Workforce One 3.31.97\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-13T14:52:11+00:00\n"
+"POT-Creation-Date: 2026-10-14T00:00:09+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -34,15 +34,15 @@ msgid "Home"
 msgstr ""
 
 #: includes/trait-admin-nav.php:25
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
-#: templates/admin/features.php:88
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
+#: templates/admin/features.php:91
 msgid "People"
 msgstr ""
 
 #: includes/trait-admin-nav.php:26
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: includes/trait-daily-workers.php:1614
 #: templates/admin/daily-workers.php:210
 #: templates/app/attendance-insights.php:61
@@ -93,7 +93,7 @@ msgid "Today"
 msgstr ""
 
 #: includes/trait-admin-nav.php:39
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:73
 #: templates/app/attendance-insights.php:82
 #: templates/app/attendance.php:103
 #: templates/app/employees.php:19
@@ -112,150 +112,155 @@ msgid "Teams"
 msgstr ""
 
 #: includes/trait-admin-nav.php:42
-msgid "Branches"
+#: includes/trait-admin.php:104
+msgid "Org chart"
 msgstr ""
 
 #: includes/trait-admin-nav.php:43
-#: includes/trait-app-layout.php:81
+msgid "Branches"
+msgstr ""
+
+#: includes/trait-admin-nav.php:44
+#: includes/trait-app-layout.php:83
 #: templates/app/dashboard.php:92
 msgid "Sign In / Out"
 msgstr ""
 
-#: includes/trait-admin-nav.php:44
+#: includes/trait-admin-nav.php:45
 msgid "Insights"
 msgstr ""
 
-#: includes/trait-admin-nav.php:45
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-admin-nav.php:46
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 msgid "Corrections"
 msgstr ""
 
-#: includes/trait-admin-nav.php:46
+#: includes/trait-admin-nav.php:47
 msgid "Auto attendance"
 msgstr ""
 
-#: includes/trait-admin-nav.php:47
+#: includes/trait-admin-nav.php:48
 msgid "Face resets"
 msgstr ""
 
-#: includes/trait-admin-nav.php:48
+#: includes/trait-admin-nav.php:49
 msgid "Requests Hub"
 msgstr ""
 
-#: includes/trait-admin-nav.php:49
+#: includes/trait-admin-nav.php:50
 msgid "Leaves"
 msgstr ""
 
-#: includes/trait-admin-nav.php:50
+#: includes/trait-admin-nav.php:51
 msgid "Approval workflows"
 msgstr ""
 
-#: includes/trait-admin-nav.php:51
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-admin-nav.php:52
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: templates/app/corrections.php:97
 msgid "Schedule"
 msgstr ""
 
-#: includes/trait-admin-nav.php:52
+#: includes/trait-admin-nav.php:53
 msgid "Work locations"
 msgstr ""
 
-#: includes/trait-admin-nav.php:53
+#: includes/trait-admin-nav.php:54
 msgid "Kiosks"
 msgstr ""
 
-#: includes/trait-admin-nav.php:54
+#: includes/trait-admin-nav.php:55
 msgid "Payroll"
 msgstr ""
 
-#: includes/trait-admin-nav.php:55
+#: includes/trait-admin-nav.php:56
 #: templates/app/dw-worker.php:29
 msgid "Daily workers"
 msgstr ""
 
-#: includes/trait-admin-nav.php:56
+#: includes/trait-admin-nav.php:57
 msgid "Moments"
 msgstr ""
 
-#: includes/trait-admin-nav.php:57
+#: includes/trait-admin-nav.php:58
 msgid "Nudges"
 msgstr ""
 
-#: includes/trait-admin-nav.php:58
+#: includes/trait-admin-nav.php:59
 #: templates/app/employee.php:59
 #: templates/app/my-profile.php:107
 msgid "Achievements"
 msgstr ""
 
-#: includes/trait-admin-nav.php:59
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-admin-nav.php:60
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 msgid "Polls"
 msgstr ""
 
-#: includes/trait-admin-nav.php:60
+#: includes/trait-admin-nav.php:61
 #: templates/app/employee.php:75
 msgid "Recognition"
 msgstr ""
 
-#: includes/trait-admin-nav.php:61
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-admin-nav.php:62
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: includes/trait-tasks.php:250
 #: templates/admin/tasks.php:26
 #: templates/app/tasks.php:200
 msgid "Tasks"
 msgstr ""
 
-#: includes/trait-admin-nav.php:62
+#: includes/trait-admin-nav.php:63
 msgid "Features"
 msgstr ""
 
-#: includes/trait-admin-nav.php:63
-#: includes/trait-app-layout.php:71
+#: includes/trait-admin-nav.php:64
+#: includes/trait-app-layout.php:73
 #: includes/trait-dashboard-view.php:27
 #: includes/trait-notifications.php:886
 #: includes/trait-notifications.php:889
 msgid "Notifications"
 msgstr ""
 
-#: includes/trait-admin-nav.php:64
+#: includes/trait-admin-nav.php:65
 #: templates/app/my-profile.php:92
 msgid "Email"
 msgstr ""
 
-#: includes/trait-admin-nav.php:65
+#: includes/trait-admin-nav.php:66
 msgid "Roles & permissions"
 msgstr ""
 
-#: includes/trait-admin-nav.php:66
+#: includes/trait-admin-nav.php:67
 msgid "Appearance"
 msgstr ""
 
-#: includes/trait-admin-nav.php:67
+#: includes/trait-admin-nav.php:68
 msgid "App menu"
 msgstr ""
 
-#: includes/trait-admin-nav.php:68
+#: includes/trait-admin-nav.php:69
 msgid "Profile page"
 msgstr ""
 
-#: includes/trait-admin-nav.php:69
+#: includes/trait-admin-nav.php:70
 msgid "Overview"
 msgstr ""
 
-#: includes/trait-admin-nav.php:70
+#: includes/trait-admin-nav.php:71
 msgid "Audit log"
 msgstr ""
 
-#: includes/trait-admin.php:93
+#: includes/trait-admin.php:98
 #: templates/admin/corrections.php:52
 msgid "Attendance Corrections"
 msgstr ""
 
-#: includes/trait-admin.php:94
+#: includes/trait-admin.php:99
 #: templates/admin/daily-workers.php:65
 msgid "Daily Workers"
 msgstr ""
@@ -322,34 +327,34 @@ msgstr ""
 msgid "Something went wrong. Please try again."
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 msgid "My Pay"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 msgid "Dashboard"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:73
 msgid "Time"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: templates/admin/daily-workers.php:60
 #: templates/app/reports.php:30
 msgid "Reports"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 msgid "Attendance Insights"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
 #: templates/app/attendance.php:71
@@ -357,73 +362,79 @@ msgstr ""
 msgid "Leave"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: templates/app/pay.php:61
 msgid "Overtime"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 #: templates/app/dw-day.php:50
 msgid "My sites"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
-#: includes/trait-app-layout.php:81
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
 msgid "Payout"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:73
 #: templates/app/layout.php:72
 #: templates/app/layout.php:101
 #: templates/app/my-profile.php:64
 msgid "My Profile"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:73
 #: templates/app/employee.php:34
 msgid "Employee Profile"
 msgstr ""
 
-#: includes/trait-app-layout.php:71
+#: includes/trait-app-layout.php:73
 #: templates/app/time.php:168
 msgid "Presence Verification"
 msgstr ""
 
-#: includes/trait-app-layout.php:126
+#: includes/trait-app-layout.php:73
+#: includes/trait-app-layout.php:83
+#: templates/app/schedule.php:101
+msgid "My team"
+msgstr ""
+
+#: includes/trait-app-layout.php:121
 msgid "One Platform. One Team. One Goal."
 msgstr ""
 
-#: includes/trait-app-layout.php:165
+#: includes/trait-app-layout.php:160
 msgid "Forgot password?"
 msgstr ""
 
-#: includes/trait-app-layout.php:169
-#: includes/trait-app-layout.php:176
+#: includes/trait-app-layout.php:164
+#: includes/trait-app-layout.php:171
 msgid "Username or Email"
 msgstr ""
 
-#: includes/trait-app-layout.php:169
-#: includes/trait-app-layout.php:177
+#: includes/trait-app-layout.php:164
+#: includes/trait-app-layout.php:172
 msgid "Password"
 msgstr ""
 
-#: includes/trait-app-layout.php:169
+#: includes/trait-app-layout.php:164
 msgid "Remember me"
 msgstr ""
 
-#: includes/trait-app-layout.php:169
+#: includes/trait-app-layout.php:164
 #: templates/app/dw-worker.php:41
 msgctxt "log in to the app"
 msgid "Sign In"
 msgstr ""
 
-#: includes/trait-app-layout.php:181
+#: includes/trait-app-layout.php:176
 msgid "The username or password is incorrect. Please try again."
 msgstr ""
 
-#: includes/trait-app-layout.php:182
+#: includes/trait-app-layout.php:177
 msgid "You have been logged out successfully."
 msgstr ""
 
@@ -449,6 +460,7 @@ msgstr ""
 #: includes/trait-daily-workers.php:1517
 #: includes/trait-daily-workers.php:1583
 #: includes/trait-offline-screen.php:60
+#: includes/trait-org-chart.php:97
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
@@ -646,7 +658,7 @@ msgstr ""
 #: includes/trait-corrections.php:557
 #: includes/trait-corrections.php:559
 #: includes/trait-corrections.php:560
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -657,7 +669,7 @@ msgstr ""
 #. translators: %d: number of requests
 #: includes/trait-corrections.php:461
 #: includes/trait-corrections.php:558
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -1950,32 +1962,32 @@ msgstr ""
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:406
+#: includes/trait-frontend.php:409
 msgid "Task overdue"
 msgstr ""
 
-#: includes/trait-frontend.php:406
+#: includes/trait-frontend.php:409
 msgid "Due today"
 msgstr ""
 
 #. translators: 1: task title, 2: due date
-#: includes/trait-frontend.php:409
+#: includes/trait-frontend.php:412
 #, php-format
 msgid "%1$s was due on %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:409
+#: includes/trait-frontend.php:412
 #, php-format
 msgid "%s is due today."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:410
+#: includes/trait-frontend.php:413
 msgid "Open Task"
 msgstr ""
 
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:118
 #: templates/app/leave.php:132
@@ -1984,47 +1996,47 @@ msgstr ""
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/app/presence.php:20
 #: templates/app/schedule.php:51
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/app/schedule.php:51
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: includes/trait-tasks.php:246
 #: templates/app/tasks.php:41
 #: templates/app/tasks.php:104
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/app/presence.php:20
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:528
+#: includes/trait-frontend.php:531
 #: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:534
+#: includes/trait-frontend.php:537
 msgid "On Time"
 msgstr ""
 
-#: includes/trait-frontend.php:534
+#: includes/trait-frontend.php:537
 msgid "Late Arrival"
 msgstr ""
 
-#: includes/trait-frontend.php:541
+#: includes/trait-frontend.php:544
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:541
+#: includes/trait-frontend.php:544
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -2404,11 +2416,11 @@ msgstr ""
 msgid "No employees to show."
 msgstr ""
 
-#: includes/trait-schema.php:410
+#: includes/trait-schema.php:411
 msgid "The Workforce One database update did not finish."
 msgstr ""
 
-#: includes/trait-schema.php:411
+#: includes/trait-schema.php:412
 msgid "It is tried again every 10 minutes. If this stays, send this to your host or developer:"
 msgstr ""
 
@@ -2771,6 +2783,7 @@ msgstr ""
 #. translators: %d: number of requests
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
+#: templates/admin/org-chart.php:29
 msgid "Department"
 msgstr ""
 
@@ -2787,6 +2800,7 @@ msgid "By department"
 msgstr ""
 
 #: templates/admin/corrections.php:127
+#: templates/admin/org-chart.php:32
 msgid "No department"
 msgstr ""
 
@@ -3459,59 +3473,59 @@ msgstr ""
 msgid "Roles & Permissions"
 msgstr ""
 
-#: templates/admin/features.php:73
+#: templates/admin/features.php:76
 msgid "Office Minimum"
 msgstr ""
 
-#: templates/admin/features.php:73
+#: templates/admin/features.php:76
 msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
 msgstr ""
 
-#: templates/admin/features.php:74
+#: templates/admin/features.php:77
 msgid "Enabled"
 msgstr ""
 
-#: templates/admin/features.php:77
+#: templates/admin/features.php:80
 msgid "Minimum each day"
 msgstr ""
 
-#: templates/admin/features.php:77
+#: templates/admin/features.php:80
 msgid "people in the office"
 msgstr ""
 
-#: templates/admin/features.php:78
+#: templates/admin/features.php:81
 msgid "Working days only; company holidays and days off are not checked."
 msgstr ""
 
-#: templates/admin/features.php:79
+#: templates/admin/features.php:82
 msgid "A different day (optional)"
 msgstr ""
 
-#: templates/admin/features.php:81
+#: templates/admin/features.php:84
 msgid "Empty = the minimum above. 0 = no minimum that day."
 msgstr ""
 
-#: templates/admin/features.php:82
+#: templates/admin/features.php:85
 msgid "Who counts as in the office"
 msgstr ""
 
-#: templates/admin/features.php:84
+#: templates/admin/features.php:87
 msgid "Leave, trips and training count only if ticked here."
 msgstr ""
 
-#: templates/admin/features.php:85
+#: templates/admin/features.php:88
 msgid "Each team's share"
 msgstr ""
 
-#: templates/admin/features.php:86
+#: templates/admin/features.php:89
 msgid "Automatic, by team size. You can fix a number for a team."
 msgstr ""
 
-#: templates/admin/features.php:87
+#: templates/admin/features.php:90
 msgid "No teams yet: the minimum is checked for the whole company."
 msgstr ""
 
-#: templates/admin/features.php:88
+#: templates/admin/features.php:91
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:119
 #: templates/app/employees.php:22
@@ -3522,33 +3536,180 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/admin/features.php:88
+#: templates/admin/features.php:91
 msgid "Automatic share"
 msgstr ""
 
-#: templates/admin/features.php:88
+#: templates/admin/features.php:91
 msgid "Fixed number"
 msgstr ""
 
-#: templates/admin/features.php:90
+#: templates/admin/features.php:93
 msgid "Auto"
 msgstr ""
 
-#: templates/admin/features.php:92
+#: templates/admin/features.php:95
 msgid "People in no team share one line (\"No team\")."
 msgstr ""
 
-#: templates/admin/features.php:93
+#: templates/admin/features.php:96
 #: templates/app/tasks.php:188
 msgid "Reminder"
 msgstr ""
 
-#: templates/admin/features.php:93
+#: templates/admin/features.php:96
 msgid "Every week, send schedule managers the days below the minimum next week"
 msgstr ""
 
-#: templates/admin/features.php:94
+#: templates/admin/features.php:97
 msgid "Reminder day"
+msgstr ""
+
+#: templates/admin/org-chart.php:28
+msgid "direct"
+msgstr ""
+
+#: templates/admin/org-chart.php:28
+msgid "in total"
+msgstr ""
+
+#: templates/admin/org-chart.php:29
+msgid "Direct manager"
+msgstr ""
+
+#: templates/admin/org-chart.php:30
+msgid "Direct reports"
+msgstr ""
+
+#: templates/admin/org-chart.php:30
+msgid "Everyone under"
+msgstr ""
+
+#: templates/admin/org-chart.php:31
+#: templates/app/team.php:33
+msgid "Reporting line"
+msgstr ""
+
+#: templates/admin/org-chart.php:31
+msgid "Open profile"
+msgstr ""
+
+#: templates/admin/org-chart.php:32
+msgid "Change manager"
+msgstr ""
+
+#. translators: %d: the limit of direct reports
+#: templates/admin/org-chart.php:34
+#, php-format
+msgid "More than %d direct reports"
+msgstr ""
+
+#: templates/admin/org-chart.php:35
+#: templates/app/team.php:59
+msgid "Teammates (same manager)"
+msgstr ""
+
+#: templates/admin/org-chart.php:35
+msgid "Fit"
+msgstr ""
+
+#: templates/admin/org-chart.php:36
+msgid "Zoom in"
+msgstr ""
+
+#: templates/admin/org-chart.php:36
+msgid "Zoom out"
+msgstr ""
+
+#: templates/admin/org-chart.php:37
+msgid "Nobody matches this search."
+msgstr ""
+
+#: templates/admin/org-chart.php:38
+msgid "Nobody reports to anyone yet. Set each employee's direct supervisor on the Employees page and the chart appears here."
+msgstr ""
+
+#: templates/admin/org-chart.php:39
+msgid "One person at a time: their managers above, the people who report to them below."
+msgstr ""
+
+#: templates/admin/org-chart.php:44
+#: templates/admin/org-chart.php:48
+msgid "Organization chart"
+msgstr ""
+
+#: templates/admin/org-chart.php:45
+msgid "The organization chart is switched off."
+msgstr ""
+
+#: templates/admin/org-chart.php:45
+msgid "Turn it on in Feature Configuration"
+msgstr ""
+
+#: templates/admin/org-chart.php:49
+msgid "Built on each employee's direct supervisor (Employees page). Select anyone to see their details."
+msgstr ""
+
+#: templates/admin/org-chart.php:52
+msgid "in the chart"
+msgstr ""
+
+#: templates/admin/org-chart.php:53
+msgid "managers"
+msgstr ""
+
+#: templates/admin/org-chart.php:54
+msgid "levels"
+msgstr ""
+
+#: templates/admin/org-chart.php:55
+msgid "without a manager"
+msgstr ""
+
+#: templates/admin/org-chart.php:57
+msgid "Search a name or a job title"
+msgstr ""
+
+#. translators: %d: number of employees
+#: templates/admin/org-chart.php:62
+#, php-format
+msgid "%d employee without a manager"
+msgid_plural "%d employees without a manager"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of employees
+#: templates/admin/org-chart.php:63
+msgid "Not in the chart; their requests go to administrators."
+msgstr ""
+
+#: templates/admin/org-chart.php:66
+msgid "Set manager"
+msgstr ""
+
+#. translators: %d: number of other employees
+#. translators: %d: more people
+#: templates/admin/org-chart.php:68
+#: templates/app/office-minimum.php:42
+#, php-format
+msgid "and %d more"
+msgstr ""
+
+#. translators: 1: number of managers, 2: the limit of direct reports
+#: templates/admin/org-chart.php:74
+#, php-format
+msgid "%1$d manager with more than %2$d direct reports"
+msgid_plural "%1$d managers with more than %2$d direct reports"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: number of managers, 2: the limit of direct reports
+#: templates/admin/org-chart.php:75
+msgid "A team lead in between may help."
+msgstr ""
+
+#: templates/admin/org-chart.php:90
+msgid "The chart needs JavaScript."
 msgstr ""
 
 #: templates/admin/tasks.php:15
@@ -5855,12 +6016,6 @@ msgstr[1] ""
 msgid "Could come in (working from home):"
 msgstr ""
 
-#. translators: %d: more people
-#: templates/app/office-minimum.php:42
-#, php-format
-msgid "and %d more"
-msgstr ""
-
 #. translators: %d: people above the share
 #: templates/app/office-minimum.php:45
 #, php-format
@@ -6374,7 +6529,6 @@ msgid "Your location could not be determined. Turn on Location Services/GPS and 
 msgstr ""
 
 #: templates/app/presence.php:56
-#: assets/js/time.js:64
 msgid "Location access requires HTTPS. Please open Workforce One using a secure connection."
 msgstr ""
 
@@ -6549,10 +6703,6 @@ msgstr ""
 
 #: templates/app/schedule.php:100
 msgid "Whose schedule"
-msgstr ""
-
-#: templates/app/schedule.php:101
-msgid "My team"
 msgstr ""
 
 #: templates/app/schedule.php:102
@@ -7165,6 +7315,35 @@ msgstr ""
 msgid "System"
 msgstr ""
 
+#: templates/app/team.php:30
+msgid "You are not in the organization chart yet"
+msgstr ""
+
+#: templates/app/team.php:30
+msgid "Your manager is set by HR on the Employees page."
+msgstr ""
+
+#. translators: %d: number of people
+#: templates/app/team.php:45
+#, php-format
+msgid "%d direct report"
+msgid_plural "%d direct reports"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of people
+#: templates/app/team.php:45
+msgid "Back to me"
+msgstr ""
+
+#: templates/app/team.php:50
+msgid "Reports directly"
+msgstr ""
+
+#: templates/app/team.php:67
+msgid "No manager or team is set for this person yet."
+msgstr ""
+
 #: templates/app/time.php:52
 msgid "Location permission required"
 msgstr ""
@@ -7174,7 +7353,6 @@ msgid "Location Services Required"
 msgstr ""
 
 #: templates/app/time.php:56
-#: assets/js/time.js:63
 msgid "Please allow location access when your browser asks. Your location is required to record Sign In / Sign Out."
 msgstr ""
 
@@ -7403,7 +7581,6 @@ msgid "Point your camera at the QR displayed at your workplace."
 msgstr ""
 
 #: templates/app/time.php:164
-#: assets/js/time.js:145
 msgid "Starting camera…"
 msgstr ""
 
@@ -7432,18 +7609,15 @@ msgid "Face processing runs in this browser."
 msgstr ""
 
 #: templates/app/time.php:176
-#: assets/js/workforce-one.js:188
 msgid "Not enrolled"
 msgstr ""
 
 #: templates/app/time.php:178
 #: templates/app/time.php:194
-#: assets/js/workforce-one.js:190
 msgid "Verify Face"
 msgstr ""
 
 #: templates/app/time.php:178
-#: assets/js/workforce-one.js:190
 msgid "Set Up / Verify Face"
 msgstr ""
 
@@ -7468,7 +7642,6 @@ msgid "A photo is kept with this Sign In. Only HR and your manager can see it, a
 msgstr ""
 
 #: templates/app/time.php:191
-#: assets/js/workforce-one.js:311
 msgid "Loading face model…"
 msgstr ""
 
@@ -7508,180 +7681,4 @@ msgstr ""
 
 #: templates/kiosk.php:43
 msgid "Connection unavailable. Please check this kiosk connection."
-msgstr ""
-
-#: assets/js/time.js:65
-msgid "Location Services are not supported by this browser. Please use a modern browser."
-msgstr ""
-
-#: assets/js/time.js:67
-msgid "Location permission was denied. Please allow Location Services for this site, then try again."
-msgstr ""
-
-#: assets/js/time.js:68
-msgid "Your location could not be determined. Turn on Location Services/GPS and try again."
-msgstr ""
-
-#: assets/js/time.js:69
-msgid "Location request timed out. Turn on Location Services/GPS and try again."
-msgstr ""
-
-#: assets/js/time.js:70
-msgid "We need your location to continue. Please allow Location Services for this site."
-msgstr ""
-
-#: assets/js/time.js:92
-msgid "QR detected. Waiting for your location…"
-msgstr ""
-
-#: assets/js/time.js:93
-msgid "QR detected. Review and tap Sign In with QR."
-msgstr ""
-
-#: assets/js/time.js:96
-msgid "Location Services are required for QR Sign In."
-msgstr ""
-
-#: assets/js/time.js:107
-msgid "Location permission is required for QR Sign In. Please allow Location Services and try again."
-msgstr ""
-
-#: assets/js/time.js:140
-msgid "Camera QR scanning is unavailable on this browser/device."
-msgstr ""
-
-#: assets/js/time.js:153
-msgid "Point the camera at the workplace QR."
-msgstr ""
-
-#: assets/js/time.js:156
-msgid "Camera permission was denied or unavailable."
-msgstr ""
-
-#. translators: %d: number of samples
-#: assets/js/workforce-one.js:188
-#, js-format
-msgid "Enrolled (%d samples)"
-msgstr ""
-
-#: assets/js/workforce-one.js:201
-msgid "Could not load face-api.js."
-msgstr ""
-
-#: assets/js/workforce-one.js:206
-msgid "Camera is not supported by this browser."
-msgstr ""
-
-#: assets/js/workforce-one.js:216
-msgid "No face detected. Center your face and try again."
-msgstr ""
-
-#: assets/js/workforce-one.js:217
-msgid "More than one face detected. Only one person may be in the camera."
-msgstr ""
-
-#: assets/js/workforce-one.js:232
-msgid "Liveness calibration: keep your eyes open and look at the camera…"
-msgstr ""
-
-#: assets/js/workforce-one.js:241
-msgid "Liveness: blink once slowly…"
-msgstr ""
-
-#. translators: 1: blink state, 2: movement state, 3: eye change percentage
-#: assets/js/workforce-one.js:255
-#, js-format
-msgid "Liveness: %1$s · %2$s · eye change %3$s%%"
-msgstr ""
-
-#: assets/js/workforce-one.js:255
-msgid "✓ blink"
-msgstr ""
-
-#: assets/js/workforce-one.js:255
-msgid "blink once"
-msgstr ""
-
-#: assets/js/workforce-one.js:255
-msgid "✓ movement"
-msgstr ""
-
-#: assets/js/workforce-one.js:255
-msgid "gently move head"
-msgstr ""
-
-#: assets/js/workforce-one.js:256
-msgid "✓ Liveness passed."
-msgstr ""
-
-#: assets/js/workforce-one.js:259
-msgid "Blink was not detected. Make one clear slow blink while looking at the camera."
-msgstr ""
-
-#: assets/js/workforce-one.js:260
-msgid "Blink detected. Gently move your head left or right and try again."
-msgstr ""
-
-#: assets/js/workforce-one.js:264
-msgid "A face is already enrolled. Verify it or clear the existing enrollment first."
-msgstr ""
-
-#. translators: %d: total samples
-#: assets/js/workforce-one.js:265
-#, js-format
-msgid "Enrollment: sample 1 of %d"
-msgstr ""
-
-#. translators: %d: sample number
-#: assets/js/workforce-one.js:269
-#, js-format
-msgid "Enrollment: sample %d captured. Slightly change your angle…"
-msgstr ""
-
-#: assets/js/workforce-one.js:272
-msgid "✓ Face enrollment saved to Workforce One."
-msgstr ""
-
-#: assets/js/workforce-one.js:278
-msgid "No face is enrolled. Press Enroll Face first."
-msgstr ""
-
-#: assets/js/workforce-one.js:292
-msgid "✓ Face verified."
-msgstr ""
-
-#: assets/js/workforce-one.js:305
-msgid "✕ Face did not match. Please try again."
-msgstr ""
-
-#: assets/js/workforce-one.js:318
-msgid "No face enrollment to reset."
-msgstr ""
-
-#: assets/js/workforce-one.js:319
-msgid "Request a face reset? Your current enrollment will remain active until an administrator approves the reset."
-msgstr ""
-
-#: assets/js/workforce-one.js:320
-msgid "Submitting face reset request…"
-msgstr ""
-
-#: assets/js/workforce-one.js:324
-msgid "✓ Reset request submitted. Your current face enrollment is still active."
-msgstr ""
-
-#: assets/js/workforce-one.js:380
-msgid "Preparing CSV…"
-msgstr ""
-
-#: assets/js/workforce-one.js:383
-msgid "Could not generate the CSV report."
-msgstr ""
-
-#: assets/js/workforce-one.js:439
-msgid "Preparing Excel…"
-msgstr ""
-
-#: assets/js/workforce-one.js:442
-msgid "Could not generate the Excel report."
 msgstr ""

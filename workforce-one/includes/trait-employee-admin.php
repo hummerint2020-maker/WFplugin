@@ -49,6 +49,8 @@ trait EWS_Employee_Admin_Trait {
             'attendance_enabled'=>isset($_POST['attendance_enabled'])?1:0,
             'team_ids'=>isset($_POST['team_ids'])&&is_array($_POST['team_ids'])?array_values(array_unique(array_filter(array_map('absint',$_POST['team_ids'])))):[],
             'active'=>isset($_POST['active'])&&in_array((string)$_POST['active'],['0','1'],true)?(int)$_POST['active']:1,
+            // Job title (3.31.97, organization chart); a form without the field keeps the saved one (null).
+            'job_title'=>isset($_POST['job_title'])?\WorkforceOne\Settings\OrgChartSettings::title(wp_unslash($_POST['job_title'])):null,
         ];
         $this->ensure_departments_schema();$this->ensure_teams_schema();$this->ensure_approval_schema();
         $teams=$this->team_tables()['teams'];
@@ -59,11 +61,14 @@ trait EWS_Employee_Admin_Trait {
             'user_ok'=>$in['wp_user_id']===0||($in['wp_user_id']>0&&get_userdata($in['wp_user_id'])!==false),
             'user_taken'=>$in['wp_user_id']>0&&(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE wp_user_id=%d AND id<>%d LIMIT 1",$in['wp_user_id'],$id)),
             'supervisor_id'=>$in['supervisor_id'],
+            'title_missing'=>!$id && $in['job_title']===''? $this->org_title_required():false,
         ];
         if($in['supervisor_id']){
             $facts['supervisor_ok']=(bool)$this->people_active_id($in['supervisor_id']);
             $above=$this->approval_related_employee($in['supervisor_id'],'supervisor');
             $facts['supervisors_supervisor']=$above?(int)$above->id:0;
+            // At any level (3.31.97): the new supervisor must not report to this employee.
+            if($id)$facts['supervisor_reports_to_employee']=$this->org_tree()->wouldLoop((int)$id,(int)$in['supervisor_id']);
         }
         if($in['team_ids']){
             $ph=implode(',',array_fill(0,count($in['team_ids']),'%d'));
@@ -88,7 +93,7 @@ trait EWS_Employee_Admin_Trait {
         global $wpdb;
         [$in,$error]=$this->employee_admin_input(0);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
-        $ok=$wpdb->insert($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id']]);
+        $ok=$wpdb->insert($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id']]+($in['job_title']!==null&&$in['job_title']!==''?['job_title'=>$in['job_title']]:[]));
         if($ok===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $id=(int)$wpdb->insert_id;
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
@@ -108,7 +113,7 @@ trait EWS_Employee_Admin_Trait {
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
         // Inactive: paid up to the last working day (kept from before when not sent); active again: none.
         $last_day=$in['active']?null:$this->employee_last_working_day_input((string)($old->last_working_day??''));
-        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')],['id'=>$id]);
+        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')]+($in['job_title']!==null?['job_title'=>$in['job_title']!==''?$in['job_title']:null]:[]),['id'=>$id]);
         if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
         // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).
@@ -173,6 +178,9 @@ trait EWS_Employee_Admin_Trait {
             'notice'=>EmployeeRules::noticeMessage(sanitize_key($_GET['employee_notice']??'')),
             'error'=>$error!==''?EmployeeRules::errorMessage($error):null,
             'post_url'=>admin_url('admin-post.php'),
+            // Job titles (3.31.97) while the organization chart is on: the field, whether it is required, the titles in use.
+            'org'=>$this->org_enabled(),'title_required'=>$this->org_title_required(),
+            'titles'=>$this->org_enabled()?array_map('strval',(array)$wpdb->get_col("SELECT DISTINCT job_title FROM {$this->employees} WHERE active=1 AND job_title IS NOT NULL AND job_title<>'' ORDER BY job_title ASC LIMIT 300")):[],
             'profile_url'=>admin_url('admin.php?page=ews31-employee-profile'),'today'=>current_time('Y-m-d'),
         ]);
     }

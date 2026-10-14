@@ -68,6 +68,11 @@ trait EWS_Admin_Trait {
             wp_style_add_data('workforce-one-admin-appearance', 'rtl', 'replace');
             wp_enqueue_script('workforce-one-admin-appearance', $this->plugin_url('assets/js/admin-appearance.js'), [], EWS_VERSION, true);
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-org-chart'))==='ews31-org-chart'){
+            wp_enqueue_style('workforce-one-admin-org-chart', $this->plugin_url('assets/css/admin-org-chart.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-org-chart', 'rtl', 'replace');
+            wp_enqueue_script('workforce-one-admin-org-chart', $this->plugin_url('assets/js/admin-org-chart.js'), [], EWS_VERSION, true);
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-attendance-insights'))==='ews31-attendance-insights'){
             wp_enqueue_style('workforce-one-admin-attendance-insights', $this->plugin_url('assets/css/admin-attendance-insights.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-attendance-insights', 'rtl', 'replace');
@@ -96,6 +101,7 @@ trait EWS_Admin_Trait {
 
             add_submenu_page('ews31','Departments','Departments','manage_options','ews31-departments',[$this,'admin_departments']);
             add_submenu_page('ews31','Teams','Teams','manage_options','ews31-teams',[$this,'admin_teams']);
+            add_submenu_page('ews31',__('Org chart','workforce-one'),__('Org chart','workforce-one'),'ews_manage_employees','ews31-org-chart',[$this,'admin_org_chart']);
             add_submenu_page('ews31','Work Locations','Work Locations','ews_manage_locations','ews31-multi-locations',[$this,'admin_multi_locations_v321']);
             add_submenu_page('ews31','Presence Kiosks','Presence Kiosks','ews_manage_locations','ews31-presence-kiosks',[$this,'admin_presence_kiosks']);
             add_submenu_page('ews31','Employee Branches','Employee Branches','ews_manage_employee_branches','ews31-employee-branches',[$this,'admin_employee_branches']);

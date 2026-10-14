@@ -1,7 +1,17 @@
 # Task: organization chart
 
-**Status: important, to build soon** (owner, 2026-10-10). Decisions taken; the mockups (version 3,
-redesigned) are in `docs/mockups/org-chart/`. Before building: the owner's final look at the mockups.
+**Status: in progress.** Mockups approved by the owner (2026-10-13); built in stages:
+1. People's functions for the other modules (3.31.96).
+2. **The chart (3.31.97):** job title, wp-admin → People → Org chart, the app's My team, the settings
+   (who sees it, what an employee sees, the wide-span flag, job title required), a supervisor that
+   would make a loop refused at any level. Code: `includes/trait-org-chart.php`,
+   `src/Organization/OrgTree.php`, `src/Settings/OrgChartSettings.php`; tests:
+   `tests/e2e_org_chart.py`, `tests/org_chart_browser.js`, `tests/unit/OrgTreeTest.php`.
+3. Next: Move (from date, reason, the people under move too, waiting requests move), Excel export /
+   import of managers, "Needs attention" with archived managers.
+4. Then: approvals on the new engine (manager's manager, escalation).
+5. Then: what a manager sees (direct reports or everyone under them) in Attendance, Reports, Requests
+   and the Team Schedule.
 
 Owner request (Oct 2026): an organization hierarchy for employees. Off by default (Feature
 Configuration → Organization chart). Mockups: `docs/mockups/org-chart/` (5 screens, AR/EN).
