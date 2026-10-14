@@ -16,9 +16,18 @@
  */
 if (!defined('ABSPATH')) exit;
 $num = static function ($n) { return rtrim(rtrim(number_format((float) $n, 1, '.', ''), '0'), '.'); };
+// Planned / unplanned and the year-end carry-over of one type (3.31.99, src/Leave/TypeRules.php).
+$rules_fields = static function ($t) use ($num): string {
+    $c = \WorkforceOne\Leave\TypeRules::config($t);
+    $o = static function (string $v, string $cur, string $label): string { return '<option value="' . esc_attr($v) . '"' . selected($cur, $v, false) . '>' . esc_html($label) . '</option>'; };
+    return '<label>Kind<br><select name="kind" data-leave-kind>' . $o('planned', $c['kind'], 'Planned: asked before the day') . $o('unplanned', $c['kind'], 'Unplanned: on the day or after') . '</select></label>'
+        . '<label data-leave-after' . ($c['kind'] === 'unplanned' ? '' : ' hidden') . '>Up to … days after the day<br><input type="number" min="0" max="' . \WorkforceOne\Leave\TypeRules::MAX_AFTER_DAYS . '" step="1" name="after_days" value="' . (int) $c['after_days'] . '" style="width:90px" title="0 = only on the day itself"></label>'
+        . '<label>Left at year end<br><select name="carry_mode" data-leave-carry>' . $o('none', $c['carry'], 'Not carried over') . $o('all', $c['carry'], 'All carried over') . $o('max', $c['carry'], 'Carried over up to…') . '</select></label>'
+        . '<label data-leave-carry-max' . ($c['carry'] === 'max' ? '' : ' hidden') . '>Days at most<br><input type="number" min="0" step="0.5" name="carry_max" value="' . esc_attr($num($c['carry_max'])) . '" style="width:90px"></label>';
+};
 ?>
 <div class="wrap"><h1>Leave Management</h1>
-<p>Configure Leave Types and annual employee balances. Unused balances expire at year end; there is no carry-forward.</p>
+<p>Configure Leave Types and annual employee balances. Balances renew every 1 January. <strong>Planned</strong> leave is asked before its day; <strong>unplanned</strong> leave (sick, emergency) can be asked on the day or up to the days you set after it, and uses its own balance. What is left at year end is not carried over unless you choose so for a type.</p>
 <?php if ($saved): ?><div class="notice notice-success is-dismissible"><p>Leave configuration saved.</p></div><?php endif; ?>
 
 <div style="background:#fff;border:1px solid #dcdcde;padding:20px;margin-top:16px;max-width:1000px"><h2>Leave Types</h2>
@@ -30,6 +39,7 @@ $num = static function ($n) { return rtrim(rtrim(number_format((float) $n, 1, '.
             <label>Annual entitlement<br><input type="number" min="0" step="0.5" name="annual_entitlement" value="<?php echo esc_attr($t->annual_entitlement); ?>" style="width:110px"></label>
             <label><input type="checkbox" name="deduct_balance" value="1" <?php checked((int) $t->deduct_balance, 1); ?>> Deduct balance</label>
             <label title="Share of a day's pay kept on this leave (Payroll). 100 = fully paid, 0 = unpaid.">Paid %<br><input type="number" min="0" max="100" step="1" name="paid_percent" value="<?php echo (int) ($t->paid_percent ?? 100); ?>" style="width:80px"></label>
+            <?php echo $rules_fields($t); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?>
             <label><input type="checkbox" name="active" value="1" <?php checked((int) $t->active, 1); ?>> Active</label>
             <button class="button button-primary">Save</button>
         </div>
@@ -39,8 +49,19 @@ $num = static function ($n) { return rtrim(rtrim(number_format((float) $n, 1, '.
         <?php wp_nonce_field('ews_leave_type_save'); ?><input type="hidden" name="action" value="ews_leave_type_save"><input type="hidden" name="id" value="0">
         <strong>Add Leave Type</strong> <input name="name" placeholder="e.g. Sick Leave" required> <input type="number" min="0" step="0.5" name="annual_entitlement" value="0" style="width:110px">
         <label><input type="checkbox" name="deduct_balance" value="1" checked> Deduct balance</label>
-        <label title="Share of a day's pay kept on this leave (Payroll). 100 = fully paid, 0 = unpaid.">Paid % <input type="number" min="0" max="100" step="1" name="paid_percent" value="100" style="width:70px"></label> <button class="button">Add</button>
+        <label title="Share of a day's pay kept on this leave (Payroll). 100 = fully paid, 0 = unpaid.">Paid % <input type="number" min="0" max="100" step="1" name="paid_percent" value="100" style="width:70px"></label>
+        <span style="display:inline-flex;gap:12px;flex-wrap:wrap;align-items:end;vertical-align:bottom"><?php echo $rules_fields(null); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?></span> <button class="button">Add</button>
     </form>
+    <script>
+    document.querySelectorAll('[data-leave-kind],[data-leave-carry]').forEach(function (sel) {
+        function show() {
+            var f = sel.form;
+            if (sel.hasAttribute('data-leave-kind')) { var a = f.querySelector('[data-leave-after]'); if (a) a.hidden = sel.value !== 'unplanned'; }
+            else { var m = f.querySelector('[data-leave-carry-max]'); if (m) m.hidden = sel.value !== 'max'; }
+        }
+        sel.addEventListener('change', show);
+    });
+    </script>
 </div>
 
 <div style="background:#fff;border:1px solid #dcdcde;padding:20px;margin-top:18px;max-width:1000px">

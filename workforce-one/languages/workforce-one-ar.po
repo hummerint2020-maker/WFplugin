@@ -6031,3 +6031,21 @@ msgstr[2] "%d موظف مديره اتأرشف"
 msgstr[3] "%d موظف مديره اتأرشف"
 msgstr[4] "%d موظف مديره اتأرشف"
 msgstr[5] "%d موظف مديره اتأرشف"
+
+msgid "This leave can no longer be asked for those days: it is too long after them."
+msgstr "مينفعش تطلب الإجازة دي للأيام دي: عدّى وقت طويل عليها."
+
+msgid "Unplanned leave: you can ask for it on the day or up to %d day after it."
+msgid_plural "Unplanned leave: you can ask for it on the day or up to %d days after it."
+msgstr[0] "إجازة طارئة: تقدر تطلبها في نفس اليوم أو بعده لحد %d يوم."
+msgstr[1] "إجازة طارئة: تقدر تطلبها في نفس اليوم أو بعده لحد %d يوم."
+msgstr[2] "إجازة طارئة: تقدر تطلبها في نفس اليوم أو بعده لحد %d يوم."
+msgstr[3] "إجازة طارئة: تقدر تطلبها في نفس اليوم أو بعده لحد %d يوم."
+msgstr[4] "إجازة طارئة: تقدر تطلبها في نفس اليوم أو بعده لحد %d يوم."
+msgstr[5] "إجازة طارئة: تقدر تطلبها في نفس اليوم أو بعده لحد %d يوم."
+
+msgid "Unplanned leave: you can ask for it on the day itself."
+msgstr "إجازة طارئة: تقدر تطلبها في نفس اليوم."
+
+msgid "Planned leave: ask for it before the day starts."
+msgstr "إجازة مخططة: اطلبها قبل بداية اليوم."

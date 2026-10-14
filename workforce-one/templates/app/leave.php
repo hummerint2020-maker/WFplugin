@@ -6,7 +6,7 @@
  *
  * @var object|null $emp
  * @var string $today
- * @var array<int,array{id:int,name:string,deducts:bool,available:string}> $types
+ * @var array<int,array{id:int,name:string,deducts:bool,available:string,unplanned:bool,after:int,earliest:string}> $types  (3.31.99: planned / unplanned)
  * @var object[] $mine                  my requests (+ can_cancel, started, status_text)
  * @var bool $has_more
  * @var bool $show_all
@@ -65,12 +65,13 @@ $early_messages = [
             <div class="ews-vac-field"><label for="ews-vac-type"><?php esc_html_e('Leave Type', 'workforce-one'); ?></label><select id="ews-vac-type" name="leave_type_id" required>
                 <?php foreach ($types as $t): ?>
                     <?php /* translators: %s: available days */ ?>
-                    <option value="<?php echo (int) $t['id']; ?>"><?php echo esc_html($t['name'] . ' — ' . ($t['deducts'] ? sprintf(__('Available: %s', 'workforce-one'), $t['available']) : __('No balance deduction', 'workforce-one'))); ?></option>
+                    <option value="<?php echo (int) $t['id']; ?>" data-earliest="<?php echo esc_attr($t['earliest']); ?>" data-hint="<?php echo esc_attr($t['unplanned'] ? ($t['after'] ? sprintf(/* translators: %d: number of days */ _n('Unplanned leave: you can ask for it on the day or up to %d day after it.', 'Unplanned leave: you can ask for it on the day or up to %d days after it.', $t['after'], 'workforce-one'), $t['after']) : __('Unplanned leave: you can ask for it on the day itself.', 'workforce-one')) : __('Planned leave: ask for it before the day starts.', 'workforce-one')); ?>"><?php echo esc_html($t['name'] . ' — ' . ($t['deducts'] ? sprintf(__('Available: %s', 'workforce-one'), $t['available']) : __('No balance deduction', 'workforce-one'))); ?></option>
                 <?php endforeach; ?>
             </select></div>
+            <p class="wfo-help" id="ews-vac-kind" aria-live="polite"></p>
             <div class="ews-vac-fields">
-                <div class="ews-vac-field"><label for="ews-vac-start"><?php esc_html_e('From', 'workforce-one'); ?></label><input id="ews-vac-start" type="date" name="start_date" min="<?php echo esc_attr($today); ?>" required></div>
-                <div class="ews-vac-field"><label for="ews-vac-end"><?php esc_html_e('To', 'workforce-one'); ?></label><input id="ews-vac-end" type="date" name="end_date" min="<?php echo esc_attr($today); ?>" required></div>
+                <div class="ews-vac-field"><label for="ews-vac-start"><?php esc_html_e('From', 'workforce-one'); ?></label><input id="ews-vac-start" type="date" name="start_date" min="<?php echo esc_attr($types[0]['earliest'] ?? $today); ?>" required></div>
+                <div class="ews-vac-field"><label for="ews-vac-end"><?php esc_html_e('To', 'workforce-one'); ?></label><input id="ews-vac-end" type="date" name="end_date" min="<?php echo esc_attr($types[0]['earliest'] ?? $today); ?>" required></div>
             </div>
             <?php /* translators: %d: number of working days */ ?>
             <div id="ews-vac-days" class="ews-vac-count" role="status" data-working-days="<?php echo esc_attr(wp_json_encode($working_days)); ?>" data-invalid="<?php esc_attr_e('Select a valid date range.', 'workforce-one'); ?>" data-count="<?php esc_attr_e('%d working day(s) requested.', 'workforce-one'); ?>"><?php esc_html_e('Select dates to calculate working days.', 'workforce-one'); ?></div>

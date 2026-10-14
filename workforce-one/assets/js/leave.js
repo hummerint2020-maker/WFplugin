@@ -28,6 +28,26 @@
         end.addEventListener('change', update);
     }
 
+    /* The first day each Leave Type allows (3.31.99): planned from tomorrow, unplanned on the day or some days after. */
+    function leaveKind() {
+        var type = document.getElementById('ews-vac-type');
+        var start = document.getElementById('ews-vac-start');
+        var end = document.getElementById('ews-vac-end');
+        var hint = document.getElementById('ews-vac-kind');
+        if (!type || !start || !end) return;
+        function update() {
+            var opt = type.options[type.selectedIndex];
+            if (!opt) return;
+            var min = opt.getAttribute('data-earliest') || start.min;
+            start.min = min;
+            end.min = start.value && start.value > min ? start.value : min;
+            if (hint) hint.textContent = opt.getAttribute('data-hint') || '';
+        }
+        type.addEventListener('change', update);
+        start.addEventListener('change', update);
+        update();
+    }
+
     function showModal(t, message) {
         var old = document.getElementById('ews-early-leave-modal');
         if (old) old.remove();
@@ -86,7 +106,7 @@
         });
     }
 
-    function init() { workingDayCounter(); earlyLeaveChecks(); }
+    function init() { workingDayCounter(); leaveKind(); earlyLeaveChecks(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();

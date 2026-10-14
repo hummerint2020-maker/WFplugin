@@ -136,6 +136,12 @@ trait EWS_Schema_Trait {
                 reviewed_at DATETIME NULL, PRIMARY KEY(id), KEY employee_date(employee_id,work_date), KEY employee_status(employee_id,status)) {$c};");
             // Payroll (3.31.41): share of a day's pay kept on each leave type; existing types stay fully paid.
             if(!in_array('paid_percent',(array)$wpdb->get_col("SHOW COLUMNS FROM {$types}",0),true))$wpdb->query("ALTER TABLE {$types} ADD COLUMN `paid_percent` TINYINT UNSIGNED NOT NULL DEFAULT 100");
+            // 3.31.99: planned / unplanned, how late an unplanned leave may be asked, what is carried to the next year.
+            $type_cols=(array)$wpdb->get_col("SHOW COLUMNS FROM {$types}",0);
+            foreach(['kind'=>"VARCHAR(20) NOT NULL DEFAULT 'planned'",'after_days'=>"SMALLINT UNSIGNED NOT NULL DEFAULT 0",'carry_mode'=>"VARCHAR(10) NOT NULL DEFAULT 'none'",'carry_max'=>"DECIMAL(8,2) NOT NULL DEFAULT 0"] as $col=>$def){
+                if(!in_array($col,$type_cols,true))$wpdb->query("ALTER TABLE {$types} ADD COLUMN `{$col}` {$def}");
+            }
+            if(!in_array('carried',(array)$wpdb->get_col("SHOW COLUMNS FROM {$bal}",0),true))$wpdb->query("ALTER TABLE {$bal} ADD COLUMN `carried` DECIMAL(8,2) NOT NULL DEFAULT 0");
             // Upgrade-safe migration for installations that already had the legacy Vacation table.
             $req_cols=$wpdb->get_col("SHOW COLUMNS FROM {$req}",0);
             $req_defs=[
@@ -322,7 +328,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.98'; }
+        private function ews_schema_target(){ return '3.31.99'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

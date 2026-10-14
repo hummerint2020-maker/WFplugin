@@ -52,7 +52,9 @@ trait EWS_Leave_View_Trait {
         foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_leave_types WHERE active=1 ORDER BY id ASC") as $lt){
             $available=null;
             if($emp){$b=$this->ensure_leave_balance($emp->id,$lt->id);$available=max(0,(float)$b->entitlement-(float)$b->used-(float)$b->pending);}
-            $types[]=['id'=>(int)$lt->id,'name'=>(string)$lt->name,'deducts'=>(bool)$lt->deduct_balance,'available'=>$available===null?'':Format::number($available)];
+            $tc=\WorkforceOne\Leave\TypeRules::config($lt);
+            $types[]=['id'=>(int)$lt->id,'name'=>(string)$lt->name,'deducts'=>(bool)$lt->deduct_balance,'available'=>$available===null?'':Format::number($available),
+                'unplanned'=>$tc['kind']==='unplanned','after'=>$tc['after_days'],'earliest'=>\WorkforceOne\Leave\TypeRules::earliestStart($tc,$today)];
         }
 
         $mine=[];$has_more=false;$show_all=sanitize_key($_GET['leave_history']??'')==='all';

@@ -110,15 +110,17 @@ trait EWS_Leave_Admin_Trait {
         $ent=max(0,(float)($_POST['annual_entitlement']??0));$ded=!empty($_POST['deduct_balance'])?1:0;$active=!empty($_POST['active'])?1:0;
         // Share of a day's pay kept on this leave (Payroll); a form without the field keeps the saved value.
         $paid=isset($_POST['paid_percent'])?max(0,min(100,(int)$_POST['paid_percent'])):null;
+        // Planned / unplanned and the year-end carry-over (3.31.99); a form without them keeps the saved values.
+        $rules=isset($_POST['kind'])?\WorkforceOne\Leave\TypeRules::fromPost(wp_unslash($_POST)):null;
         if($name==='')wp_die('Leave Type name is required.');
         if($id){
             if(!$wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE id=%d",$id)))wp_die('Leave Type not found.');
-            $wpdb->update($table,['name'=>$name,'annual_entitlement'=>$ent,'deduct_balance'=>$ded,'active'=>$active]+($paid===null?[]:['paid_percent'=>$paid]),['id'=>$id],array_merge(['%s','%f','%d','%d'],$paid===null?[]:['%d']),['%d']);
+            $wpdb->update($table,['name'=>$name,'annual_entitlement'=>$ent,'deduct_balance'=>$ded,'active'=>$active]+($paid===null?[]:['paid_percent'=>$paid])+($rules??[]),['id'=>$id]);
         }else{
-            $wpdb->insert($table,['name'=>$name,'annual_entitlement'=>$ent,'deduct_balance'=>$ded,'active'=>1,'paid_percent'=>$paid??100],['%s','%f','%d','%d','%d']);
+            $wpdb->insert($table,['name'=>$name,'annual_entitlement'=>$ent,'deduct_balance'=>$ded,'active'=>1,'paid_percent'=>$paid??100]+($rules??[]));
             $id=(int)$wpdb->insert_id;
         }
-        $this->audit('leave_type_update','leave_type',$id,$name);
+        $this->audit('leave_type_update','leave_type',$id,$name.($rules?' · '.$rules['kind'].($rules['kind']==='unplanned'?' up to '.$rules['after_days'].' day(s) after':'').' · carry '.$rules['carry_mode'].($rules['carry_mode']==='max'?' '.$rules['carry_max']:''):''));
         $this->leave_admin_redirect(['leave_admin_saved'=>1]);
     }
 

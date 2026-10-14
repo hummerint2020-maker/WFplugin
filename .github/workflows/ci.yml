@@ -225,6 +225,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_org_chart.py "$S"
       - name: Organization chart moves (now and scheduled, waiting approvals moved, history, Employees page) and the managers file in Excel
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_org_moves.py "$S"
+      - name: Leave types (planned / unplanned, how late an unplanned leave may be asked, carry-over at year end)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_types.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }

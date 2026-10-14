@@ -14,6 +14,8 @@ final class RequestRules
     public const NO_WORKING_DAYS = 'no_working_days';
     public const OVERLAP = 'overlap';
     public const BALANCE = 'balance';
+    /** An unplanned leave asked later than its type allows after the day (3.31.99). */
+    public const TOO_LATE = 'too_late';
 
     /** Leave year a request is charged to: the calendar year of its dates. */
     public static function year(string $date): int
@@ -29,14 +31,20 @@ final class RequestRules
     /**
      * @param array{
      *   type_active: bool, start: string, end: string, today: string, working_days: int,
-     *   overlaps: bool, deducts: bool, has_balance: bool, remaining: float
+     *   overlaps: bool, deducts: bool, has_balance: bool, remaining: float, earliest?: string, unplanned?: bool
      * } $f
+     * `earliest` (3.31.99, TypeRules::earliestStart): the first day the type allows; without it a leave
+     * must start after today, as before.
      */
     public static function check(array $f): ?string
     {
-        if (empty($f['type_active']) || !self::isFutureDate($f['start'], $f['today'])
-            || !self::isFutureDate($f['end'], $f['today']) || $f['end'] < $f['start']) {
-            return self::DATE;
+        $valid = static function ($d): bool { return is_string($d) && (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $d); };
+        if (empty($f['type_active']) || !$valid($f['start']) || !$valid($f['end']) || $f['end'] < $f['start']) return self::DATE;
+        $earliest = isset($f['earliest']) && $valid($f['earliest']) ? $f['earliest'] : null;
+        if ($earliest === null) {
+            if (!self::isFutureDate($f['start'], $f['today'])) return self::DATE;
+        } elseif ($f['start'] < $earliest) {
+            return !empty($f['unplanned']) ? self::TOO_LATE : self::DATE;
         }
         // Each request is charged to the balance of the year it falls in, so it must not span two years.
         if (self::year($f['start']) !== self::year($f['end'])) return self::CROSS_YEAR;

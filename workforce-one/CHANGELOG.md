@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.99
+Leave types, planned and unplanned (owner decisions 2026-10-14, docs/tasks/approvals.md, stage 1 of the
+approval engine). Nothing changes until a leave type is changed: every type stays planned with nothing
+carried over, as before. Database: `ews_leave_types` (kind, after_days, carry_mode, carry_max),
+`ews_leave_balances.carried`.
+
+### Added
+- **Planned / unplanned per leave type** (wp-admin → Leaves). Planned leave is asked before its day
+  starts (from tomorrow), as every leave was. Unplanned leave (sick, emergency) can be asked on its
+  own, on the day or up to the days the type allows after it (0 = on the day only, at most 60); it uses
+  its own balance. A request later than that is refused with its own message.
+- **Left at year end per leave type:** not carried over (the default), all carried over, or carried
+  over up to a number of days. The balance renews every 1 January; the carried days are kept apart, so
+  a year's own days are never added up year after year.
+- The app's Request Leave form: the dates start at the first day the chosen type allows, and a line
+  says whether it is planned or unplanned and how late it can be asked.
+- Leave type changes are in the Audit Log with the new rules.
+
 ## 3.31.98
 Organization chart, stage 3 (owner decisions 2026-10-14, docs/tasks/org-chart.md): moving people, the
 managers file in Excel, Needs attention. Everything is part of the Org chart (off by default).

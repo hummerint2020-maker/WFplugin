@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Leave\Balance;
+use WorkforceOne\Leave\TypeRules;
 use WorkforceOne\Leave\CancellationRules;
 use WorkforceOne\Leave\RequestRules;
 use WorkforceOne\Leave\WorkingDays;
@@ -29,18 +30,28 @@ trait EWS_Leave_Trait {
             return $r?Balance::available((float)$r->entitlement,(float)$r->used,(float)$r->pending):0;
         }
 
-    /** The balance row for this year, created on first use (entitlement carried from the previous year). */
+    /**
+     * The balance row for this year, created on first use: the year's own days (the previous year's,
+     * without what had been carried into it, or the type's annual entitlement), plus what the type
+     * carries over from what was left last year (3.31.99; by default nothing, as before).
+     */
     private function ensure_leave_balance($employee_id,$type_id,$year=null,$entitlement=null){
             global $wpdb; $this->ensure_leave_schema(); $year=$year?:$this->leave_year();
             $bt=$wpdb->prefix.'ews_leave_balances'; $tt=$wpdb->prefix.'ews_leave_types';
             $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d LIMIT 1",$employee_id,$type_id,$year));
             if($r)return $r;
+            $carried=0.0;
             if($entitlement===null){
-                $entitlement=(float)$wpdb->get_var($wpdb->prepare("SELECT annual_entitlement FROM {$tt} WHERE id=%d",(int)$type_id));
-                $prev=$wpdb->get_var($wpdb->prepare("SELECT entitlement FROM {$bt} WHERE employee_id=%d AND leave_type_id=%d AND leave_year<%d ORDER BY leave_year DESC LIMIT 1",$employee_id,$type_id,$year));
-                if($prev!==null)$entitlement=(float)$prev;
+                $type=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$tt} WHERE id=%d",(int)$type_id));
+                $entitlement=(float)($type->annual_entitlement??0);
+                $prev=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE employee_id=%d AND leave_type_id=%d AND leave_year<%d ORDER BY leave_year DESC LIMIT 1",$employee_id,$type_id,$year));
+                if($prev){
+                    $entitlement=max(0.0,(float)$prev->entitlement-(float)($prev->carried??0));
+                    // Only what was left of the year just before is carried.
+                    if((int)$prev->leave_year===(int)$year-1)$carried=TypeRules::carried(TypeRules::config($type),(float)$prev->entitlement,(float)$prev->used,(float)$prev->pending);
+                }
             }
-            $wpdb->insert($bt,['employee_id'=>$employee_id,'leave_type_id'=>$type_id,'leave_year'=>$year,'entitlement'=>$entitlement,'used'=>0,'pending'=>0],['%d','%d','%d','%f','%f','%f']);
+            $wpdb->insert($bt,['employee_id'=>$employee_id,'leave_type_id'=>$type_id,'leave_year'=>$year,'entitlement'=>$entitlement+$carried,'used'=>0,'pending'=>0,'carried'=>$carried],['%d','%d','%d','%f','%f','%f','%f']);
             return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE id=%d",(int)$wpdb->insert_id));
         }
 
@@ -228,6 +239,8 @@ trait EWS_Leave_Trait {
 
             // Same order as before: dates, working days, overlap, then balance.
             $facts=['type_active'=>(bool)$type,'start'=>$start,'end'=>$end,'today'=>current_time('Y-m-d'),'working_days'=>$days,'overlaps'=>false,'deducts'=>false,'has_balance'=>true,'remaining'=>0.0];
+            // Planned: from tomorrow; unplanned: on the day or up to the type's days after it (3.31.99).
+            if($type){$tc=TypeRules::config($type);$facts['earliest']=TypeRules::earliestStart($tc,$facts['today']);$facts['unplanned']=$tc['kind']==='unplanned';}
             $error=RequestRules::check($facts);
             if(!$error){
                 $facts['overlaps']=$this->leave_overlap((int)$emp->id,$start,$end);
