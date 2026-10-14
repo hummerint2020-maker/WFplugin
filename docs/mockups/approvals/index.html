@@ -285,6 +285,8 @@ var T={
  d3:{ar:'الطلبات الموجودة (إجازة، وقت إضافي، تصحيح، تبديل، الوجه) تتنقل للمحرك الجديد بنفس إعدادها الحالي.',en:'Today’s requests (leave, overtime, corrections, swaps, face) move to the new engine with their current setup.'},
  d4:{ar:'الإجازة المخططة لازم تتطلب قبل بداية اليوم؛ الطارئة ينفع تتطلب لوحدها. لكل نوع.',en:'Planned leave must be asked before the day starts; unplanned can be asked on its own. Per type.'},
  d5:{ar:'كل إجازة ليها رصيد بيتجدد كل سنة، والباقي ما بيتنقلش للسنة الجديدة، والاتنين إعداد لكل نوع.',en:'Each leave has a balance renewed every year, and what is left does not carry over; both are settings per type.'},
+ d6:{ar:'الطارئة: آخر ميعاد لطلبها بعد اليوم إعداد لكل نوع.',en:'Unplanned: the latest it can be asked after the day is a setting per type.'},
+ d7:{ar:'الطارئة بتخصم من رصيدها هي، مش من السنوية.',en:'Unplanned leave uses its own balance, not the annual one.'},
  dq2:{ar:'لسه محتاج رأيك',en:'Still open'},
  q6:{ar:'الطارئة: آخر ميعاد لطلبها بعد اليوم',en:'Unplanned: latest it can be asked after the day'},q6a:{ar:'لحد ٣ أيام بعده',en:'Up to 3 days after'},q6b:{ar:'في نفس اليوم بس',en:'The same day only'},q6c:{ar:'إعداد لكل نوع',en:'A setting per type'},
  q7:{ar:'الطارئة بتخصم من رصيدها هي ولا من السنوية؟',en:'Unplanned: from its own balance or from annual?'},q7a:{ar:'رصيدها هي (زي العارضة ٦ أيام)',en:'Its own balance (like casual, 6 days)'},q7b:{ar:'من رصيد السنوية',en:'From the annual balance'},
@@ -421,8 +423,7 @@ function s5(){
 /* ---------- 6. decisions ---------- */
 function s6(){
   var q=function(k,opts,r){return '<div class="q"><b>'+t(k)+'</b><div class="choices">'+opts.map(function(o,i){return '<span'+(i===r?' class="rec" title="'+t('rec')+'"':'')+'>'+(i===r?'★ ':'')+t(o)+'</span>';}).join('')+'</div></div>';};
-  return '<div class="card"><h3>'+t('dt')+'</h3><div class="decide">'+['d1','d2','d3','d4','d5'].map(function(k){return '<div class="q"><span>✓ '+t(k)+'</span></div>';}).join('')+'</div></div>'
-   +'<div class="card"><h3>'+t('dq2')+'</h3><p class="intro">★ = '+t('rec')+'</p><div class="decide">'+q('q6',['q6a','q6b','q6c'],2)+q('q7',['q7a','q7b'],0)+'</div></div>';
+  return '<div class="card"><h3>'+t('dt')+'</h3><div class="decide">'+['d1','d2','d3','d4','d5','d6','d7'].map(function(k){return '<div class="q"><span>✓ '+t(k)+'</span></div>';}).join('')+'</div></div>';
 }
 
 /* ---------- 7. leave types ---------- */
