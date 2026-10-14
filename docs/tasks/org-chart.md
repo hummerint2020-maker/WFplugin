@@ -7,8 +7,11 @@
    would make a loop refused at any level. Code: `includes/trait-org-chart.php`,
    `src/Organization/OrgTree.php`, `src/Settings/OrgChartSettings.php`; tests:
    `tests/e2e_org_chart.py`, `tests/org_chart_browser.js`, `tests/unit/OrgTreeTest.php`.
-3. Next: Move (from date, reason, the people under move too, waiting requests move), Excel export /
-   import of managers, "Needs attention" with archived managers.
+3. **Moves, Excel, Needs attention (3.31.98):** Move from a date with a reason (waiting approvals go to
+   the new manager; a later date is scheduled, owner 2026-10-14), the history (`ews_org_moves`), the
+   managers file in Excel with a preview, Needs attention. Code: `includes/trait-org-moves.php`,
+   `includes/trait-org-import.php`, `src/Organization/MoveRules.php`, `src/Organization/ImportPlan.php`,
+   `src/Support/Xlsx.php`; tests: `tests/e2e_org_moves.py`.
 4. Then: approvals on the new engine (manager's manager, escalation).
 5. Then: what a manager sees (direct reports or everyone under them) in Attendance, Reports, Requests
    and the Team Schedule.

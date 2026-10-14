@@ -43,14 +43,17 @@
         "profile-account",
         "departments",
         "teams",
-        "org-chart"
+        "org-chart",
+        "org-moves",
+        "org-import"
       ],
       "tables": [
         "employees",
         "employee_relationships",
         "departments",
         "teams",
-        "team_members"
+        "team_members",
+        "org_moves"
       ],
       "api": [
         "people_employee",
@@ -71,7 +74,8 @@
         "org_settings",
         "org_app_allowed",
         "team_content",
-        "employee_picture_url"
+        "employee_picture_url",
+        "people_manager_of"
       ]
     },
     "schedule": {
@@ -170,7 +174,10 @@
         "approval_requests",
         "approval_steps"
       ],
-      "api": []
+      "api": [
+        "approval_waiting_on_supervisors",
+        "approval_reassign_supervisor"
+      ]
     },
     "notifications": {
       "label": "Notifications: in-app, push devices, links",
@@ -181,7 +188,9 @@
         "notifications",
         "push_subscriptions"
       ],
-      "api": []
+      "api": [
+        "notify"
+      ]
     },
     "tasks": {
       "label": "Tasks",

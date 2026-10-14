@@ -108,6 +108,58 @@ img.wfo-org-av{background:var(--o-soft)}
 .wfo-org-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .wfo-org-btns .button{text-align:center;white-space:normal;line-height:1.3;padding-block:6px}
 
+/* 3.31.98: tools in the hero, the import, the preview, Needs attention, scheduled moves, history, the Move dialog */
+.wfo-org-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wfo-org-tools .wfo-org-search{flex:1 1 260px}
+.wfo-org-hbtn{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:0 14px;min-height:42px;white-space:nowrap;text-decoration:none;font-weight:500}
+.wfo-org-hbtn:hover,.wfo-org-hbtn:focus{color:#fff;background:rgba(255,255,255,.16)}
+.wfo-org-hbtn.is-solid{background:#fff;color:var(--o-hero-a);border-color:#fff;font-weight:600}
+.wfo-org-hbtn.is-solid:hover,.wfo-org-hbtn.is-solid:focus{color:var(--o-hero-a);background:#eef}
+.wfo-org-card{background:var(--o-card);border-radius:18px;box-shadow:var(--o-shadow);padding:16px 18px}
+.wfo-org-card h3{margin:0 0 6px;font-size:15px}
+.wfo-org-card h4{margin:14px 0 6px;font-size:13px}
+.wfo-org-card h4.is-bad{color:#b32d2e}
+.wfo-org-sub{margin:0 0 4px;color:var(--o-sub)}
+.wfo-org-import summary{cursor:pointer;font-weight:600}
+.wfo-org-steps{margin:10px 0 12px;padding-inline-start:20px;color:var(--o-sub)}
+.wfo-org-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.wfo-org-form label{display:grid;gap:4px;font-size:12.5px;color:var(--o-sub)}
+.wfo-org-form input[type=text]{min-width:240px}
+.wfo-org-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px}
+.wfo-org-preview .widefat{max-width:900px}
+.wfo-org-attn[data-attn=needs]{display:grid;gap:10px;align-items:start}
+.wfo-org-attn-head span{color:var(--o-warn)}
+.wfo-org-group{display:grid;gap:6px}
+.wfo-org-group>p{margin:0;font-weight:600;font-size:12.5px}
+.wfo-org-group .wfo-org-chips{margin-inline-start:0}
+.wfo-org-chip small{color:var(--o-sub);font-size:11.5px}
+.wfo-org-mlist{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.wfo-org-mlist li{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--o-card);border:1px solid var(--o-line);border-radius:12px;padding:8px 10px;color:var(--o-ink)}
+.wfo-org-mlist li>span{flex:1 1 260px}
+.wfo-org-mlist form{margin:0}
+.wfo-org-hist{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.wfo-org-hist li{border-inline-start:3px solid var(--o-line);padding-inline-start:8px;font-size:12.5px}
+.wfo-org-hist li.is-next{border-color:var(--o-brand)}
+.wfo-org-hist b{display:block;font-size:11.5px;color:var(--o-faint);font-weight:600}
+.wfo-org-hist small{display:block;color:var(--o-sub)}
+.wfo-org-dlg{position:fixed;inset:0;background:rgba(10,10,30,.5);display:grid;place-items:center;padding:16px;z-index:100000}
+.wfo-org-dlg[hidden]{display:none}
+.wfo-org-dlg-box{background:var(--o-card);color:var(--o-ink);border-radius:22px;max-width:460px;width:100%;box-sizing:border-box;padding:20px;display:grid;gap:12px;box-shadow:0 30px 70px rgba(0,0,0,.35);max-height:calc(100vh - 32px);overflow:auto}
+.wfo-org-dlg-box h3{margin:0;font-size:17px}
+.wfo-org-dlg-now{margin:0;color:var(--o-sub)}
+.wfo-org-fld{display:grid;gap:6px}
+.wfo-org-fld span{font-size:12.5px;font-weight:600;color:var(--o-sub)}
+.wfo-org-fld input{width:100%;min-height:38px}
+.wfo-org-check{font-size:13px}
+.wfo-org-notes{display:grid;gap:6px}
+.wfo-org-notes p{margin:0;border-radius:12px;padding:8px 10px;font-size:13px}
+.wfo-org-notes .is-info{background:var(--o-brand-soft);color:var(--o-brand)}
+.wfo-org-notes .is-warn{background:var(--o-warn-bg);color:var(--o-warn)}
+.wfo-org-dlg .wfo-org-actions{margin-top:0}
+#wpbody-content #wfo-org .wfo-org-dlg [data-dlg-save]{background:var(--o-brand);border-color:var(--o-brand);color:#fff;transition:none}
+#wpbody-content #wfo-org .wfo-org-dlg [data-dlg-save]:hover,#wpbody-content #wfo-org .wfo-org-dlg [data-dlg-save]:focus{background:#3a29c4;border-color:#3a29c4;color:#fff}
+#wpbody-content #wfo-org .wfo-org-dlg [data-dlg-save]:disabled{background:var(--o-line);border-color:var(--o-line);color:var(--o-faint);cursor:not-allowed}
+
 /* narrow screens: one person at a time */
 .wfo-org.is-narrow .wfo-org-board{grid-template-columns:minmax(0,1fr)}
 .wfo-org.is-narrow .wfo-org-canvas{max-height:none;overflow:visible;background:none;box-shadow:none;min-height:0}

@@ -91,4 +91,13 @@ final class OrgTreeTest extends TestCase
         $this->assertSame(999, $t->underCount(1));
         $this->assertTrue($t->wouldLoop(1, 1000));
     }
+
+    public function testLoopsInAndLooped(): void
+    {
+        $this->assertSame([], OrgTree::loopsIn([1 => 0, 2 => 1]));
+        $this->assertEqualsCanonicalizing([2, 3], OrgTree::loopsIn([1 => 0, 2 => 3, 3 => 2, 4 => 2]));
+        $this->assertSame([], OrgTree::loopsIn([2 => 99]), 'a manager outside the map ends the line');
+        $this->assertEqualsCanonicalizing([10, 11], $this->tree()->looped());
+        $this->assertSame([], (new OrgTree([1 => 0, 2 => 1]))->looped());
+    }
 }

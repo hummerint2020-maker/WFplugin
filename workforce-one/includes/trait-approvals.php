@@ -206,6 +206,46 @@ trait EWS_Approvals_Trait {
         return $out;
     }
 
+    /**
+     * The steps waiting for an employee's direct manager (resolver SUPERVISOR, now or at a later level)
+     * on requests still open, per requester and approver, for the Org chart's Move (3.31.98).
+     * @return array<int,array<int,int>> requester employee id => [approver employee id => steps]
+     */
+    private function approval_waiting_on_supervisors(){
+        global $wpdb;
+        $t=$this->approval_tables();
+        $out=[];
+        foreach((array)$wpdb->get_results("SELECT r.requester_employee_id req,i.approver_employee_id appr,COUNT(*) n FROM {$t['instances']} i JOIN {$t['requests']} r ON r.id=i.approval_request_id
+            WHERE i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id IS NOT NULL AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')
+            GROUP BY r.requester_employee_id,i.approver_employee_id") as $x)$out[(int)$x->req][(int)$x->appr]=(int)$x->n;
+        return $out;
+    }
+
+    /**
+     * An employee was moved under another manager (3.31.98): the steps of their open requests waiting
+     * for the old manager now wait for the new one, who is told. Steps already decided keep who
+     * decided them. @return int steps moved
+     */
+    private function approval_reassign_supervisor($employee_id,$from_employee_id,$to_employee_id){
+        global $wpdb;
+        $t=$this->approval_tables();
+        $from=(int)$from_employee_id;$to=$to_employee_id?$this->people_employee((int)$to_employee_id,true):null;
+        if(!$from || !$to || (int)$to->id===$from)return 0;
+        $ids=array_map('intval',(array)$wpdb->get_col($wpdb->prepare("SELECT i.id FROM {$t['instances']} i JOIN {$t['requests']} r ON r.id=i.approval_request_id
+            WHERE r.requester_employee_id=%d AND i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id=%d AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')",(int)$employee_id,$from)));
+        if(!$ids)return 0;
+        $ph=implode(',',array_fill(0,count($ids),'%d'));
+        $wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph)",array_merge([(int)$to->id,(int)$to->wp_user_id],$ids)));
+        $now=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE id IN ($ph) AND status='PENDING'",$ids));
+        if($now && (int)$to->wp_user_id){
+            $who=$this->people_name((int)$employee_id);
+            $this->notify((int)$to->wp_user_id,'system',__('Requests now waiting for you','workforce-one'),
+                sprintf(/* translators: %s: employee name */__('%s reports to you now: their requests waiting for approval now wait for you.','workforce-one'),$who),
+                ['entity'=>'approval','push'=>true]);
+        }
+        return count($ids);
+    }
+
     /** Resolve the actual approver from the configured resolver. */
     private function approval_resolve_approver($requester_employee_id,$resolver_type,$resolver_value=null,$entity_context=[]){
         global $wpdb;

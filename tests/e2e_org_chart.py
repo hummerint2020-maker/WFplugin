@@ -141,8 +141,10 @@ check('two people supervising each other in old data are both shown without a ma
 kpi = dict(re.findall(r'data-kpi="(\w+)">(\d+)<', page))
 check('counts: 8 in the chart, 4 managers, 4 levels, 4 without a manager', kpi == {'people': '8', 'managers': '4', 'levels': '4', 'without': '4'}, kpi)
 without = sorted(int(x) for x in re.findall(r'data-without="(\d+)"', page))
-check('without a manager: Khaled, Sara, Ziad, Yara (not Ahmed, the head), each with a link to set one',
-      without == sorted([E['khaled'], E['sara'], E['ziad'], E['yara']]) and 'page=ews31-employees&#038;s=Khaled%20Hamdy' in page, without)
+check('Needs attention: without a manager, Khaled (not Ahmed, the head), with a link to set one',
+      without == [E['khaled']] and 'page=ews31-employees&#038;s=Khaled%20Hamdy' in page, without)
+check('...whose manager was archived: Sara, with the archived manager named', re.findall(r'data-archived="(\d+)"', page) == [str(E['sara'])] and 'was under Omar Hamdy' in page)
+check('...in a loop in old data: Ziad and Yara', sorted(int(x) for x in re.findall(r'data-looped="(\d+)"', page)) == sorted([E['ziad'], E['yara']]))
 check('too many direct reports (more than 2): Nour', re.findall(r'data-wide="(\d+)"', page) == [str(E['nour'])] and d['wide'] == [E['nour']])
 check('the profile link of each person', d['profile'].endswith('page=ews31-employee-profile&employee_id='))
 check('the chart script and styles are on the page', 'admin-org-chart.js' in page and 'admin-org-chart.css' in page)

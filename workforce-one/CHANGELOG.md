@@ -1,5 +1,35 @@
 # Changelog
 
+## 3.31.98
+Organization chart, stage 3 (owner decisions 2026-10-14, docs/tasks/org-chart.md): moving people, the
+managers file in Excel, Needs attention. Everything is part of the Org chart (off by default).
+Database: new table `ews_org_moves` (the history of moves).
+
+### Added
+- **Move** (Org chart → a person → Move, or "Set manager" under Needs attention): a new manager or none,
+  from a date, and a reason kept in the Audit Log. The dialog says, before saving, that the people under
+  them move with them and how many approvals waiting for the current manager go to the new one; it
+  refuses a manager who reports to them, or the manager they already have.
+  - Approvals waiting for the old manager (their open requests, at any level) now wait for the new
+    manager, who is told. Approvals already decided keep who decided them.
+  - A date after today is a **scheduled move**, done on that day (the daily job, and at the latest
+    within an hour of the first visit). Scheduled moves are listed and can be cancelled. One that can
+    no longer be done on its day (the employee or new manager archived, or it would make a loop) is
+    not done and shows under Needs attention.
+  - Every move is kept: each person's last moves (date, from → to, reason, where it was made) are in
+    their panel.
+  - While the chart is on, a supervisor changed on the Employees page is a move too (from today, no
+    reason), with the waiting approvals moved.
+- **Excel**: Export (every active employee: ID, name, domain name, job title, department, manager ID,
+  name and domain name, with a "How to import" sheet). Import the changed file (.xlsx, or .csv with
+  commas or semicolons): a preview of every new manager and job title, and every row that cannot be used
+  and why (unknown or archived employee or manager, twice in the file, their own manager, or a loop,
+  checked with every other change in the file), before anything is saved; then saved as moves from the
+  chosen date with the chosen reason. A file can reorder people in any row order.
+- **Needs attention**: people without a manager, people whose manager was archived (with who it was),
+  managers going round in a circle in old data, and scheduled moves that could not be done, each with
+  the way to fix it.
+
 ## 3.31.97
 Organization chart, stage 2 (owner-approved mockup docs/mockups/org-chart/, docs/tasks/org-chart.md).
 **Off by default** (Feature Configuration → Organization Chart). Database: `ews_employees.job_title`.

@@ -60,7 +60,7 @@ trait EWS_Org_Chart_Trait {
         global $wpdb;
         $d=$wpdb->prefix.'ews_departments';
         $has_dept=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$d))===$d;
-        $rows=(array)$wpdb->get_results("SELECT e.id,e.name,e.job_title,e.department_id,e.wp_user_id,e.profile_image_type,e.profile_image_url,e.avatar_key".($has_dept?",d.name department_name FROM {$this->employees} e LEFT JOIN {$d} d ON d.id=e.department_id":" FROM {$this->employees} e")." WHERE e.active=1 ORDER BY e.name ASC");
+        $rows=(array)$wpdb->get_results("SELECT e.id,e.name,e.domain_name,e.job_title,e.department_id,e.wp_user_id,e.profile_image_type,e.profile_image_url,e.avatar_key".($has_dept?",d.name department_name FROM {$this->employees} e LEFT JOIN {$d} d ON d.id=e.department_id":" FROM {$this->employees} e")." WHERE e.active=1 ORDER BY e.name ASC");
         $out=[];
         foreach($rows as $r)$out[(int)$r->id]=$r;
         return $out;
@@ -68,10 +68,11 @@ trait EWS_Org_Chart_Trait {
 
     /* ------------------------------------------------------------------ wp-admin → People → Org chart */
 
-    /** The chart's data for the page: people, colours by department, counts and what needs attention. */
+    /** The chart's data for the page: people, colours by department, counts, moves and what needs attention. */
     private function org_chart_data(){
         $rows=$this->people_org_rows();
-        $tree=$this->org_tree();
+        $raw=$this->people_manager_ids();
+        $tree=new OrgTree($raw);
         $s=$this->org_settings();
         $depts=[];
         // A department that no longer exists counts as none.
@@ -79,16 +80,30 @@ trait EWS_Org_Chart_Trait {
         // A department keeps its colour (by id order), whoever is added or removed.
         ksort($depts);$i=0;
         foreach($depts as $k=>$d)$depts[$k]['n']=$i++%8;
+        $waiting=$this->approval_waiting_on_supervisors();
         $people=[];
         foreach($rows as $id=>$r){
-            $people[]=['id'=>$id,'n'=>(string)$r->name,'t'=>(string)($r->job_title??''),'d'=>(int)$r->department_id,'m'=>$tree->managerOf($id),
-                'r'=>count($tree->reportsOf($id)),'u'=>$tree->underCount($id),'p'=>$this->employee_picture_url($r)];
+            $m=$tree->managerOf($id);
+            $people[]=['id'=>$id,'n'=>(string)$r->name,'t'=>(string)($r->job_title??''),'d'=>(int)$r->department_id,'m'=>$m,
+                'r'=>count($tree->reportsOf($id)),'u'=>$tree->underCount($id),'p'=>$this->employee_picture_url($r),'w'=>$m?(int)($waiting[$id][$m]??0):0];
         }
+        // Needs attention (3.31.98): a manager who was archived, a loop in old data, nobody set.
+        $archived=[];
+        foreach($raw as $id=>$m)if($m && !isset($rows[$m]))$archived[]=['id'=>(int)$id,'manager'=>(string)$this->people_name($m)];
+        $looped=$tree->looped();
+        $special=array_merge(array_column($archived,'id'),$looped);
+        $without=array_values(array_diff($tree->withoutManager(),$special));
+        $moves=$this->org_moves_for_chart();
+        $names=[];
+        $all=$moves['scheduled'];
+        foreach($moves['history'] as $h)foreach($h as $mv)$all[]=$mv;
+        foreach(array_merge($all,$moves['failed']) as $mv)foreach(['e','f','t'] as $k)if($mv[$k] && !isset($rows[$mv[$k]]))$names[$mv[$k]]=(string)$this->people_name($mv[$k]);
         $wide=$tree->wideSpans((int)$s['wide_span']);
         return [
             'people'=>$people,'departments'=>$depts,
             'counts'=>['people'=>count($rows),'managers'=>count($tree->managers()),'levels'=>$tree->levels(),'without'=>count($tree->withoutManager())],
-            'without'=>$tree->withoutManager(),'wide'=>$wide,'wide_span'=>(int)$s['wide_span'],
+            'without'=>$without,'archived'=>$archived,'looped'=>$looped,'wide'=>$wide,'wide_span'=>(int)$s['wide_span'],
+            'moves'=>$moves,'other_names'=>$names,'today'=>current_time('Y-m-d'),
             'profile'=>admin_url('admin.php?page=ews31-employee-profile&employee_id='),
             'set_manager'=>admin_url('admin.php?page=ews31-employees&s='),
         ];
@@ -96,10 +111,33 @@ trait EWS_Org_Chart_Trait {
 
     public function admin_org_chart(){
         if(!$this->can('ews_manage_employees'))wp_die(esc_html__('Access denied','workforce-one'));
+        if($this->org_enabled())$this->org_moves_apply_due();
         echo $this->render_template('admin/org-chart',[ // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in the template
             'enabled'=>$this->org_enabled(),'data'=>$this->org_chart_data(),
             'features_url'=>admin_url('admin.php?page=ews31-features#ews-org-chart'),
+            'post_url'=>admin_url('admin-post.php'),
+            'export_url'=>wp_nonce_url(admin_url('admin-post.php?action=ews_org_export'),'ews_org_export'),
+            'import'=>isset($_GET['import'])?$this->org_import_preview_data():null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which view
+            'notice'=>$this->org_page_notice(),
+            'error'=>($e=sanitize_key($_GET['org_error']??''))!==''?($this->org_error_messages()[$e]??$this->org_error_messages()['apply']):'', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message
+            'focus'=>absint($_GET['focus']??0), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- who to show
         ]);
+    }
+
+    /** The message after a move, a cancel or an import. */
+    private function org_page_notice(){
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- messages only
+        $n=sanitize_key($_GET['org_notice']??'');
+        $num=function($k){return absint($_GET[$k]??0);};
+        // phpcs:enable
+        if($n==='moved'){
+            $q=$num('requests');
+            return $q?sprintf(/* translators: %d: number of approval steps */_n('Moved. %d waiting approval went to the new manager.','Moved. %d waiting approvals went to the new manager.',$q,'workforce-one'),$q):__('Moved. The change is in the Audit Log.','workforce-one');
+        }
+        if($n==='scheduled')return __('Move scheduled: it is done on its day. You can cancel it until then.','workforce-one');
+        if($n==='cancelled')return __('Scheduled move cancelled.','workforce-one');
+        if($n==='imported')return sprintf(/* translators: 1: people moved, 2: moves scheduled, 3: job titles changed, 4: rows skipped */__('Import done: %1$d moved, %2$d scheduled, %3$d job titles changed, %4$d skipped (they changed since the preview).','workforce-one'),$num('moved'),$num('planned'),$num('titles'),$num('skipped'));
+        return '';
     }
 
     /* ------------------------------------------------------------------ the app → My team */

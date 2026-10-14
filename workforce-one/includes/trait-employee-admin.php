@@ -118,7 +118,10 @@ trait EWS_Employee_Admin_Trait {
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
         // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).
         if(!empty($old->wp_user_id) && (((int)$old->active===1 && !$in['active']) || (int)$old->wp_user_id!==(int)$in['wp_user_id']))$this->api_revoke_user_sessions((int)$old->wp_user_id,$in['active']?'employee_unlinked':'employee_archived');
+        $old_supervisor=$this->people_manager_of($id);
         if(!$this->employee_admin_set_supervisor($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
+        // Kept as a move in the organization chart's history while the chart is on (3.31.98).
+        $this->org_record_employees_page_change($id,$old_supervisor,(int)$in['supervisor_id']);
         if(is_wp_error($this->sync_employee_teams($id,$in['team_ids'])))$this->employee_admin_redirect(['employee_error'=>'teams']);
         $this->audit('employee_update','employee',$id,$in['name'].' / '.$in['domain_name'].' / '.$in['email'].' / teams='.count($in['team_ids']));
         if((int)$old->active!==$in['active'])$this->audit('employee_status_change','employee',$id,'Status: '.((int)$old->active?'Active':'Inactive').' -> '.($in['active']?'Active':'Inactive').($last_day?' / last working day '.$last_day:''));

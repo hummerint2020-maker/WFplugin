@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.97\n"
+"Project-Id-Version: Workforce One 3.31.98\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T00:00:09+00:00\n"
+"POT-Creation-Date: 2026-10-14T02:04:32+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -113,6 +113,7 @@ msgstr ""
 
 #: includes/trait-admin-nav.php:42
 #: includes/trait-admin.php:104
+#: templates/admin/org-chart.php:73
 msgid "Org chart"
 msgstr ""
 
@@ -448,6 +449,16 @@ msgstr ""
 msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
 msgstr ""
 
+#: includes/trait-approvals.php:242
+msgid "Requests now waiting for you"
+msgstr ""
+
+#. translators: %s: employee name
+#: includes/trait-approvals.php:243
+#, php-format
+msgid "%s reports to you now: their requests waiting for approval now wait for you."
+msgstr ""
+
 #: includes/trait-attendance-insights.php:150
 #: includes/trait-corrections.php:166
 #: includes/trait-daily-workers.php:457
@@ -460,7 +471,12 @@ msgstr ""
 #: includes/trait-daily-workers.php:1517
 #: includes/trait-daily-workers.php:1583
 #: includes/trait-offline-screen.php:60
-#: includes/trait-org-chart.php:97
+#: includes/trait-org-chart.php:113
+#: includes/trait-org-import.php:35
+#: includes/trait-org-import.php:69
+#: includes/trait-org-import.php:93
+#: includes/trait-org-moves.php:189
+#: includes/trait-org-moves.php:211
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
@@ -1558,6 +1574,9 @@ msgid "Confirm"
 msgstr ""
 
 #: includes/trait-frontend.php:165
+#: templates/admin/org-chart.php:145
+#: templates/admin/org-chart.php:216
+#: templates/admin/org-chart.php:245
 #: templates/app/attendance.php:249
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:182
@@ -2121,6 +2140,128 @@ msgid_plural "%d days next week are below the office minimum"
 msgstr[0] ""
 msgstr[1] ""
 
+#. translators: %d: number of approval steps
+#: includes/trait-org-chart.php:135
+#, php-format
+msgid "Moved. %d waiting approval went to the new manager."
+msgid_plural "Moved. %d waiting approvals went to the new manager."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of approval steps
+#: includes/trait-org-chart.php:135
+msgid "Moved. The change is in the Audit Log."
+msgstr ""
+
+#: includes/trait-org-chart.php:137
+msgid "Move scheduled: it is done on its day. You can cancel it until then."
+msgstr ""
+
+#: includes/trait-org-chart.php:138
+msgid "Scheduled move cancelled."
+msgstr ""
+
+#. translators: 1: people moved, 2: moves scheduled, 3: job titles changed, 4: rows skipped
+#: includes/trait-org-chart.php:139
+#, php-format
+msgid "Import done: %1$d moved, %2$d scheduled, %3$d job titles changed, %4$d skipped (they changed since the preview)."
+msgstr ""
+
+#: includes/trait-org-import.php:138
+msgid "No employee with this ID or domain name"
+msgstr ""
+
+#: includes/trait-org-import.php:139
+msgid "The employee is archived"
+msgstr ""
+
+#: includes/trait-org-import.php:140
+msgid "The employee is in the file twice; the first row is used"
+msgstr ""
+
+#: includes/trait-org-import.php:141
+msgid "No employee with this manager ID or domain name"
+msgstr ""
+
+#: includes/trait-org-import.php:142
+msgid "The manager is archived"
+msgstr ""
+
+#: includes/trait-org-import.php:143
+msgid "Nobody can be their own manager"
+msgstr ""
+
+#: includes/trait-org-import.php:144
+msgid "Would put them under someone who reports to them"
+msgstr ""
+
+#: includes/trait-org-moves.php:60
+msgid "Pick an active employee to move."
+msgstr ""
+
+#: includes/trait-org-moves.php:61
+msgid "The new manager is not an active employee. Pick them from the list."
+msgstr ""
+
+#: includes/trait-org-moves.php:62
+msgid "Nobody can be their own manager."
+msgstr ""
+
+#: includes/trait-org-moves.php:63
+#: templates/admin/org-chart.php:67
+msgid "They already report to this manager."
+msgstr ""
+
+#: includes/trait-org-moves.php:64
+#: templates/admin/org-chart.php:65
+msgid "Nobody can be moved under someone who reports to them."
+msgstr ""
+
+#: includes/trait-org-moves.php:65
+msgid "Pick a date within a year from today."
+msgstr ""
+
+#: includes/trait-org-moves.php:66
+msgid "Write the reason for the move; it is kept in the Audit Log."
+msgstr ""
+
+#: includes/trait-org-moves.php:67
+msgid "A move is already scheduled for this employee. Cancel it first."
+msgstr ""
+
+#: includes/trait-org-moves.php:68
+msgid "The move could not be saved. Please try again."
+msgstr ""
+
+#: includes/trait-org-moves.php:69
+msgid "The file could not be read. Upload the Excel file exported from this page (.xlsx) or a .csv file."
+msgstr ""
+
+#: includes/trait-org-moves.php:70
+msgid "The file needs an \"Employee ID\" or \"Domain name\" column, and a \"Manager ID\", \"Manager domain name\" or \"Job title\" column."
+msgstr ""
+
+#: includes/trait-org-moves.php:71
+msgid "The file has more than 5,000 rows."
+msgstr ""
+
+#: includes/trait-org-moves.php:72
+msgid "The file is empty."
+msgstr ""
+
+#: includes/trait-org-moves.php:73
+msgid "The preview has expired. Upload the file again."
+msgstr ""
+
+#: includes/trait-org-moves.php:74
+msgid "Excel files need the PHP ZipArchive extension on the server. Ask your host to turn it on, or upload a .csv file."
+msgstr ""
+
+#: includes/trait-org-moves.php:75
+#: templates/admin/org-chart.php:77
+msgid "The organization chart is switched off."
+msgstr ""
+
 #. translators: %s: when the poll closes
 #: includes/trait-polls.php:112
 msgid "Thanks! The results are shared with the admins only."
@@ -2405,6 +2546,8 @@ msgstr ""
 #: templates/admin/corrections.php:80
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:163
+#: templates/admin/org-chart.php:132
+#: templates/admin/org-chart.php:138
 #: templates/app/attendance.php:166
 #: templates/app/attendance.php:228
 #: templates/app/reports.php:53
@@ -2641,6 +2784,7 @@ msgstr ""
 #: templates/admin/corrections.php:169
 #: templates/admin/daily-workers.php:223
 #: templates/admin/daily-workers.php:230
+#: templates/admin/org-chart.php:243
 #: templates/app/correction-sheet.php:53
 #: templates/app/dw-day.php:183
 #: templates/app/leave.php:77
@@ -2783,7 +2927,7 @@ msgstr ""
 #. translators: %d: number of requests
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
-#: templates/admin/org-chart.php:29
+#: templates/admin/org-chart.php:44
 msgid "Department"
 msgstr ""
 
@@ -2800,7 +2944,7 @@ msgid "By department"
 msgstr ""
 
 #: templates/admin/corrections.php:127
-#: templates/admin/org-chart.php:32
+#: templates/admin/org-chart.php:47
 msgid "No department"
 msgstr ""
 
@@ -3565,138 +3709,359 @@ msgstr ""
 msgid "Reminder day"
 msgstr ""
 
-#: templates/admin/org-chart.php:28
+#: templates/admin/org-chart.php:39
+#: templates/admin/org-chart.php:55
+#: templates/admin/org-chart.php:133
+#: templates/admin/org-chart.php:241
+msgid "No manager"
+msgstr ""
+
+#: templates/admin/org-chart.php:43
 msgid "direct"
 msgstr ""
 
-#: templates/admin/org-chart.php:28
+#: templates/admin/org-chart.php:43
 msgid "in total"
 msgstr ""
 
-#: templates/admin/org-chart.php:29
+#: templates/admin/org-chart.php:44
 msgid "Direct manager"
 msgstr ""
 
-#: templates/admin/org-chart.php:30
+#: templates/admin/org-chart.php:45
 msgid "Direct reports"
 msgstr ""
 
-#: templates/admin/org-chart.php:30
+#: templates/admin/org-chart.php:45
 msgid "Everyone under"
 msgstr ""
 
-#: templates/admin/org-chart.php:31
+#: templates/admin/org-chart.php:46
 #: templates/app/team.php:33
 msgid "Reporting line"
 msgstr ""
 
-#: templates/admin/org-chart.php:31
+#: templates/admin/org-chart.php:46
 msgid "Open profile"
 msgstr ""
 
-#: templates/admin/org-chart.php:32
-msgid "Change manager"
+#: templates/admin/org-chart.php:47
+#: templates/admin/org-chart.php:192
+#: templates/admin/org-chart.php:245
+#: templates/app/dw-day.php:166
+msgid "Move"
 msgstr ""
 
 #. translators: %d: the limit of direct reports
-#: templates/admin/org-chart.php:34
+#: templates/admin/org-chart.php:49
 #, php-format
 msgid "More than %d direct reports"
 msgstr ""
 
-#: templates/admin/org-chart.php:35
+#: templates/admin/org-chart.php:50
 #: templates/app/team.php:59
 msgid "Teammates (same manager)"
 msgstr ""
 
-#: templates/admin/org-chart.php:35
+#: templates/admin/org-chart.php:50
 msgid "Fit"
 msgstr ""
 
-#: templates/admin/org-chart.php:36
+#: templates/admin/org-chart.php:51
 msgid "Zoom in"
 msgstr ""
 
-#: templates/admin/org-chart.php:36
+#: templates/admin/org-chart.php:51
 msgid "Zoom out"
 msgstr ""
 
-#: templates/admin/org-chart.php:37
+#: templates/admin/org-chart.php:52
 msgid "Nobody matches this search."
 msgstr ""
 
-#: templates/admin/org-chart.php:38
+#: templates/admin/org-chart.php:53
 msgid "Nobody reports to anyone yet. Set each employee's direct supervisor on the Employees page and the chart appears here."
 msgstr ""
 
-#: templates/admin/org-chart.php:39
+#: templates/admin/org-chart.php:54
 msgid "One person at a time: their managers above, the people who report to them below."
 msgstr ""
 
-#: templates/admin/org-chart.php:44
-#: templates/admin/org-chart.php:48
+#: templates/admin/org-chart.php:55
+msgid "History"
+msgstr ""
+
+#. translators: %s: a date
+#: templates/admin/org-chart.php:57
+#, php-format
+msgid "Scheduled for %s"
+msgstr ""
+
+#. translators: %s: name of the person moved
+#: templates/admin/org-chart.php:59
+#, php-format
+msgid "Move %s"
+msgstr ""
+
+#. translators: %d: number of people
+#: templates/admin/org-chart.php:61
+#, php-format
+msgid "The %d people under them move with them."
+msgstr ""
+
+#. translators: 1: number of requests, 2: name of the current manager
+#: templates/admin/org-chart.php:63
+#, php-format
+msgid "%1$d approvals waiting for %2$s go to the new manager."
+msgstr ""
+
+#: templates/admin/org-chart.php:64
+msgid "With no manager, requests waiting for the current manager stay with them."
+msgstr ""
+
+#: templates/admin/org-chart.php:66
+msgid "A date after today: the move is kept and done on that day."
+msgstr ""
+
+#: templates/admin/org-chart.php:72
+msgid "it would put them under someone who reports to them"
+msgstr ""
+
+#: templates/admin/org-chart.php:72
+msgid "the employee was archived"
+msgstr ""
+
+#: templates/admin/org-chart.php:72
+msgid "the new manager was archived"
+msgstr ""
+
+#: templates/admin/org-chart.php:73
+msgid "Employees page"
+msgstr ""
+
+#: templates/admin/org-chart.php:73
+msgid "Excel import"
+msgstr ""
+
+#: templates/admin/org-chart.php:76
+#: templates/admin/org-chart.php:82
 msgid "Organization chart"
 msgstr ""
 
-#: templates/admin/org-chart.php:45
-msgid "The organization chart is switched off."
-msgstr ""
-
-#: templates/admin/org-chart.php:45
+#: templates/admin/org-chart.php:77
 msgid "Turn it on in Feature Configuration"
 msgstr ""
 
-#: templates/admin/org-chart.php:49
-msgid "Built on each employee's direct supervisor (Employees page). Select anyone to see their details."
+#: templates/admin/org-chart.php:83
+msgid "Built on each employee's direct supervisor (Employees page). Select anyone to see their details, or move them under another manager."
 msgstr ""
 
-#: templates/admin/org-chart.php:52
+#: templates/admin/org-chart.php:86
 msgid "in the chart"
 msgstr ""
 
-#: templates/admin/org-chart.php:53
+#: templates/admin/org-chart.php:87
 msgid "managers"
 msgstr ""
 
-#: templates/admin/org-chart.php:54
+#: templates/admin/org-chart.php:88
 msgid "levels"
 msgstr ""
 
-#: templates/admin/org-chart.php:55
+#: templates/admin/org-chart.php:89
 msgid "without a manager"
 msgstr ""
 
-#: templates/admin/org-chart.php:57
+#: templates/admin/org-chart.php:92
 msgid "Search a name or a job title"
 msgstr ""
 
+#: templates/admin/org-chart.php:94
+msgid "Export"
+msgstr ""
+
+#: templates/admin/org-chart.php:95
+msgid "Import managers"
+msgstr ""
+
+#: templates/admin/org-chart.php:102
+msgid "Import managers from Excel"
+msgstr ""
+
+#: templates/admin/org-chart.php:104
+msgid "Export the file above: every employee with their job title, department and manager."
+msgstr ""
+
+#: templates/admin/org-chart.php:105
+msgid "Change the managers (Manager ID or Manager domain name) and the job titles. Rows can be removed; only the rows in the file are looked at."
+msgstr ""
+
+#: templates/admin/org-chart.php:106
+msgid "Upload it here. You see every change, and every row that cannot be used, before anything is saved."
+msgstr ""
+
+#: templates/admin/org-chart.php:110
+msgid "File (.xlsx or .csv)"
+msgstr ""
+
+#: templates/admin/org-chart.php:111
+#: templates/admin/org-chart.php:242
+#: templates/app/dw-day.php:161
+#: templates/app/leave.php:72
+#: templates/app/overtime.php:123
+msgid "From"
+msgstr ""
+
+#: templates/admin/org-chart.php:112
+msgid "Reason (kept in the Audit Log)"
+msgstr ""
+
+#: templates/admin/org-chart.php:112
+msgid "Imported from Excel"
+msgstr ""
+
+#: templates/admin/org-chart.php:113
+msgid "Check the file"
+msgstr ""
+
+#. translators: %s: file name
+#: templates/admin/org-chart.php:120
+#, php-format
+msgid "Check before saving: %s"
+msgstr ""
+
+#. translators: 1: rows read, 2: managers changed, 3: job titles changed, 4: rows not used, 5: rows unchanged
+#: templates/admin/org-chart.php:121
+#, php-format
+msgid "%1$d rows read: %2$d new managers, %3$d job titles, %4$d rows cannot be used, %5$d unchanged."
+msgstr ""
+
+#. translators: %s: date
+#: templates/admin/org-chart.php:122
+#, php-format
+msgid "The moves are scheduled for %s."
+msgstr ""
+
+#. translators: %s: date
+#: templates/admin/org-chart.php:122
+#, php-format
+msgid "The moves are done now, from %s."
+msgstr ""
+
+#. translators: %s: reason
+#: templates/admin/org-chart.php:123
+#, php-format
+msgid "Reason: %s"
+msgstr ""
+
+#: templates/admin/org-chart.php:125
+msgid "Rows that cannot be used"
+msgstr ""
+
+#: templates/admin/org-chart.php:126
+#: templates/admin/org-chart.php:132
+#: templates/admin/org-chart.php:138
+msgid "Row"
+msgstr ""
+
+#: templates/admin/org-chart.php:126
+msgid "Value"
+msgstr ""
+
+#: templates/admin/org-chart.php:126
+msgid "Why"
+msgstr ""
+
+#: templates/admin/org-chart.php:131
+msgid "New managers"
+msgstr ""
+
+#: templates/admin/org-chart.php:132
+msgid "Manager now"
+msgstr ""
+
+#: templates/admin/org-chart.php:132
+#: templates/admin/org-chart.php:240
+msgid "New manager"
+msgstr ""
+
+#: templates/admin/org-chart.php:137
+msgid "Job titles"
+msgstr ""
+
+#: templates/admin/org-chart.php:138
+#: templates/app/time.php:81
+msgid "Now"
+msgstr ""
+
+#: templates/admin/org-chart.php:138
+msgid "New"
+msgstr ""
+
+#: templates/admin/org-chart.php:144
+msgid "Save these changes"
+msgstr ""
+
+#: templates/admin/org-chart.php:152
+msgid "Needs attention"
+msgstr ""
+
+#: templates/admin/org-chart.php:153
+msgid "People without a manager are not in the chart; their requests go to administrators."
+msgstr ""
+
 #. translators: %d: number of employees
-#: templates/admin/org-chart.php:62
+#: templates/admin/org-chart.php:156
 #, php-format
 msgid "%d employee without a manager"
 msgid_plural "%d employees without a manager"
 msgstr[0] ""
 msgstr[1] ""
 
-#. translators: %d: number of employees
-#: templates/admin/org-chart.php:63
-msgid "Not in the chart; their requests go to administrators."
-msgstr ""
-
-#: templates/admin/org-chart.php:66
+#. translators: %s: name of the archived manager
+#: templates/admin/org-chart.php:159
+#: templates/admin/org-chart.php:170
+#: templates/admin/org-chart.php:180
 msgid "Set manager"
 msgstr ""
 
 #. translators: %d: number of other employees
 #. translators: %d: more people
-#: templates/admin/org-chart.php:68
+#: templates/admin/org-chart.php:161
 #: templates/app/office-minimum.php:42
 #, php-format
 msgid "and %d more"
 msgstr ""
 
+#. translators: %d: number of employees
+#: templates/admin/org-chart.php:167
+#, php-format
+msgid "%d employee whose manager was archived"
+msgid_plural "%d employees whose manager was archived"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: name of the archived manager
+#: templates/admin/org-chart.php:170
+#, php-format
+msgid "was under %s"
+msgstr ""
+
+#: templates/admin/org-chart.php:177
+msgid "Managers that go round in a circle (old data): each of these is under someone who reports to them. Set the right manager for one of them."
+msgstr ""
+
+#: templates/admin/org-chart.php:187
+msgid "Scheduled moves that could not be done on their day"
+msgstr ""
+
+#: templates/admin/org-chart.php:191
+#: templates/app/dashboard.php:101
+msgid "Dismiss"
+msgstr ""
+
 #. translators: 1: number of managers, 2: the limit of direct reports
-#: templates/admin/org-chart.php:74
+#: templates/admin/org-chart.php:201
 #, php-format
 msgid "%1$d manager with more than %2$d direct reports"
 msgid_plural "%1$d managers with more than %2$d direct reports"
@@ -3704,12 +4069,28 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: number of managers, 2: the limit of direct reports
-#: templates/admin/org-chart.php:75
+#: templates/admin/org-chart.php:202
 msgid "A team lead in between may help."
 msgstr ""
 
-#: templates/admin/org-chart.php:90
+#: templates/admin/org-chart.php:212
+msgid "Scheduled moves"
+msgstr ""
+
+#: templates/admin/org-chart.php:228
 msgid "The chart needs JavaScript."
+msgstr ""
+
+#: templates/admin/org-chart.php:240
+msgid "Type a name and pick from the list"
+msgstr ""
+
+#: templates/admin/org-chart.php:243
+msgid "kept in the Audit Log"
+msgstr ""
+
+#: templates/admin/org-chart.php:243
+msgid "e.g. new team in Alexandria"
 msgstr ""
 
 #: templates/admin/tasks.php:15
@@ -4674,10 +5055,6 @@ msgstr ""
 msgid "Things that need your attention"
 msgstr ""
 
-#: templates/app/dashboard.php:101
-msgid "Dismiss"
-msgstr ""
-
 #: templates/app/dashboard.php:110
 msgid "My tasks today"
 msgstr ""
@@ -4963,12 +5340,6 @@ msgstr ""
 msgid "Move to another site"
 msgstr ""
 
-#: templates/app/dw-day.php:161
-#: templates/app/leave.php:72
-#: templates/app/overtime.php:123
-msgid "From"
-msgstr ""
-
 #: templates/app/dw-day.php:162
 #: templates/app/leave.php:73
 #: templates/app/overtime.php:124
@@ -4982,10 +5353,6 @@ msgstr ""
 #: templates/app/dw-day.php:165
 #: templates/app/overtime.php:118
 msgid "Tomorrow"
-msgstr ""
-
-#: templates/app/dw-day.php:166
-msgid "Move"
 msgstr ""
 
 #: templates/app/dw-day.php:167
@@ -7372,10 +7739,6 @@ msgstr ""
 #: templates/app/time.php:64
 #, php-format
 msgid "Your schedule today is %s. Sign In / Sign Out is only available on working days."
-msgstr ""
-
-#: templates/app/time.php:81
-msgid "Now"
 msgstr ""
 
 #: templates/app/time.php:91

@@ -76,8 +76,8 @@ const SHOTS = process.env.ORG_SHOTS || '';
   await page.click(card(E.sara));
   let panel = await page.textContent('#wfo-org-panel');
   check('selecting Sara shows her in the panel: department, manager, 2 direct reports', panel.includes('Sara Nabil') && panel.includes('Finance') && panel.includes('Ahmed Samir') && /Direct reports\s*2/.test(panel), panel.slice(0, 200));
-  check('...with links to her profile and to change her manager', (await page.getAttribute('#wfo-org-panel a.button', 'href')).endsWith('employee_id=' + E.sara)
-    && (await page.getAttribute('#wfo-org-panel a.button-primary', 'href')).includes('page=ews31-employees&s=Sara%20Nabil'));
+  check('...with a link to her profile and a Move button', (await page.getAttribute('#wfo-org-panel a.button', 'href')).endsWith('employee_id=' + E.sara)
+    && (await page.$('#wfo-org-panel button[data-move="' + E.sara + '"]')) !== null);
   // Too many direct reports (more than 3): Nour has 3, Ahmed 4.
   check('a manager with more than 3 direct reports is flagged (Ahmed), with a chip above the chart', await page.isVisible(card(E.ahmed) + ' .wfo-org-flag') && (await page.$('[data-wide="' + E.ahmed + '"]')) !== null);
   check('people without a manager are listed above the chart, not in it', (await page.$('[data-without="' + E.khaled + '"]')) !== null && (await page.$(card(E.khaled))) === null);
@@ -110,7 +110,44 @@ const SHOTS = process.env.ORG_SHOTS || '';
   await page.focus(card(E.omar));
   await page.keyboard.press('Enter');
   check('a card can be selected with the keyboard', (await page.textContent('#wfo-org-panel')).includes('Omar Hamdy'));
+  // ---------------------------------------------------------------- Move (3.31.98)
+  await page.goto(B + '/wp-admin/admin.php?page=ews31-org-chart');
+  await page.waitForSelector('.wfo-org-pc');
+  await page.click(card(E.mona) + ' .wfo-org-more');
+  await page.click(card(E.nour));
+  await page.click('#wfo-org-panel [data-move="' + E.nour + '"]');
+  check('Move opens the dialog for the person, with their manager now', await page.isVisible('#wfo-org-dlg') && (await page.textContent('#wfo-org-dlg-t')).includes('Nour Saeed')
+    && (await page.textContent('.wfo-org-dlg-now')).includes('Mona Adel'));
+  check('...it says the 3 people under her move with her, and Move waits for a manager', (await page.textContent('.wfo-org-notes')).includes('The 3 people under them move with them.')
+    && await page.isDisabled('[data-dlg-save]'));
+  await page.fill('#wfo-org-dlg input[name=manager_ref]', 'Hana Lotfy · #' + E.hana);
+  check('...picking someone under her is refused before saving', (await page.textContent('.wfo-org-notes')).includes('Nobody can be moved under someone who reports to them.') && await page.isDisabled('[data-dlg-save]'));
+  await page.fill('#wfo-org-dlg input[name=manager_ref]', 'Mona Adel · #' + E.mona);
+  check('...picking her own manager says so', (await page.textContent('.wfo-org-notes')).includes('They already report to this manager.'));
+  await page.fill('#wfo-org-dlg input[name=manager_ref]', 'Youssef Gamal — Team Lead, Alexandria · #' + E.youssef);
+  await page.fill('#wfo-org-dlg input[name=effective_date]', '2099-01-01');
+  check('...a later date says it is kept and done on that day', (await page.textContent('.wfo-org-notes')).includes('done on that day'));
+  await page.keyboard.press('Escape');
+  check('...Escape closes it', !(await page.isVisible('#wfo-org-dlg')));
+  await page.click('#wfo-org-panel [data-move="' + E.nour + '"]');
+  check('...opened again it starts empty', (await page.inputValue('#wfo-org-dlg input[name=manager_ref]')) === '' && (await page.inputValue('#wfo-org-dlg input[name=reason]')) === '');
+  await page.fill('#wfo-org-dlg input[name=manager_ref]', 'Youssef Gamal — Team Lead, Alexandria · #' + E.youssef);
+  await page.fill('#wfo-org-dlg input[name=reason]', 'Merging the two Sales teams');
+  check('...with a manager and a reason, Move can be pressed', !(await page.isDisabled('[data-dlg-save]')) && (await page.$eval('[data-dlg-save]', el => getComputedStyle(el).backgroundColor)) !== 'rgb(226, 226, 226)');
+  await shot(page, 'admin-move-dialog');
+  await Promise.all([page.waitForNavigation(), page.click('[data-dlg-save]')]);
+  check('saved: the page says so and opens on her, now under Youssef', (await page.textContent('[data-org-notice]')).includes('Moved')
+    && (await page.textContent('#wfo-org-panel')).includes('Nour Saeed') && (await page.textContent('#wfo-org-panel')).includes('Youssef Gamal'));
+  check('...her history shows the move with the reason', (await page.textContent('.wfo-org-hist')).includes('Merging the two Sales teams'));
+  await page.click('[data-without="' + E.khaled + '"]');
+  check('"Set manager" under Needs attention opens the same dialog', await page.isVisible('#wfo-org-dlg') && (await page.textContent('#wfo-org-dlg-t')).includes('Khaled Hamdy'));
+  await page.click('[data-dlg-close]');
+  await page.click('[data-org-import-open]');
+  check('Import managers opens the upload form', await page.$eval('#wfo-org-import', el => el.open));
   check('no JavaScript errors (desktop)', errors.length === 0, errors);
+  // Nour back under Mona for the rest of the test.
+  php(`global $wpdb; $p=$wpdb->prefix; $wpdb->query($wpdb->prepare("UPDATE {$p}ews_employee_relationships SET active=0 WHERE employee_id=%d",${E.nour}));
+    $wpdb->insert("{$p}ews_employee_relationships",['employee_id'=>${E.nour},'related_employee_id'=>${E.mona},'relationship_type'=>'supervisor','active'=>1,'created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);`);
 
   // ---------------------------------------------------------------- Arabic
   // Right to left even where WordPress's own Arabic files are not installed yet (CI installs them later).
@@ -166,7 +203,7 @@ const SHOTS = process.env.ORG_SHOTS || '';
   await browser.close();
 
   php(`global $wpdb; $p=$wpdb->prefix; $wpdb->query("DELETE FROM {$p}ews_employee_relationships"); $wpdb->query("DELETE FROM {$p}ews_departments");
-    $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'org.%'"); delete_option('ews_org_chart');
+    $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'org.%'"); delete_option('ews_org_chart'); $wpdb->query("DELETE FROM {$p}ews_org_moves");
     $wpdb->update("{$p}ews_employees",['job_title'=>null,'department_id'=>0],['wp_user_id'=>get_user_by('login','emp1')->ID]);`);
   console.log(ok + ' / ' + (ok + fail));
   process.exit(fail ? 1 : 0);

@@ -20,6 +20,8 @@ final class OrgTree
     private $level = [];
     /** @var array<int,int> id => everyone under, at every level */
     private $under = [];
+    /** @var list<int> people whose managers went round in a loop (old data), shown without a manager */
+    private $looped = [];
 
     /** @param array<int,int> $managers employee id => manager id */
     public function __construct(array $managers)
@@ -34,6 +36,7 @@ final class OrgTree
         }
         foreach ($this->loops() as $id) {
             $this->manager[$id] = 0;
+            $this->looped[] = $id;
         }
         foreach ($this->manager as $id => $m) {
             $this->reports[$id] = $this->reports[$id] ?? [];
@@ -49,15 +52,26 @@ final class OrgTree
     /** The people in a loop of managers (A → B → A), in any old data. @return list<int> */
     private function loops(): array
     {
+        return self::loopsIn($this->manager);
+    }
+
+    /**
+     * The people in a loop of managers in a map of employee id => manager id (0 = none); a manager
+     * who is not in the map ends the line. Used to check a set of changes (an import) before saving.
+     * @param array<int,int> $managers
+     * @return list<int>
+     */
+    public static function loopsIn(array $managers): array
+    {
         $out = [];
         $state = [];
-        foreach (array_keys($this->manager) as $start) {
+        foreach (array_keys($managers) as $start) {
             $path = [];
-            $id = $start;
-            while ($id && !isset($state[$id])) {
+            $id = (int) $start;
+            while ($id && isset($managers[$id]) && !isset($state[$id])) {
                 $state[$id] = 1;
                 $path[] = $id;
-                $id = $this->manager[$id];
+                $id = (int) $managers[$id];
             }
             if ($id && ($state[$id] ?? 0) === 1 && in_array($id, $path, true)) {
                 $out = array_merge($out, array_slice($path, (int) array_search($id, $path, true)));
@@ -157,6 +171,12 @@ final class OrgTree
     public function withoutManager(): array
     {
         return array_values(array_filter($this->tops(), function ($id) { return $this->reportsOf($id) === []; }));
+    }
+
+    /** People whose managers went round in a loop in old data (now shown without a manager). @return list<int> */
+    public function looped(): array
+    {
+        return $this->looped;
     }
 
     /** Managers with more direct reports than $limit (0 = no limit). @return list<int> */

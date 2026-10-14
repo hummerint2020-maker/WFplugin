@@ -5785,3 +5785,249 @@ msgstr[2] "%d تابع مباشر"
 msgstr[3] "%d تابع مباشر"
 msgstr[4] "%d تابع مباشر"
 msgstr[5] "%d تابع مباشر"
+
+msgid "Requests now waiting for you"
+msgstr "طلبات مستنية موافقتك"
+
+msgid "%s reports to you now: their requests waiting for approval now wait for you."
+msgstr "%s بقى تابع لك: طلباته اللي مستنية موافقة بقت مستنياك إنت."
+
+msgid "Moved. The change is in the Audit Log."
+msgstr "اتنقل. التغيير متسجل في سجل التغييرات."
+
+msgid "Move scheduled: it is done on its day. You can cancel it until then."
+msgstr "النقل اتجدول: هيتنفذ في يومه، وتقدر تلغيه لحد ساعتها."
+
+msgid "Scheduled move cancelled."
+msgstr "النقل المجدول اتلغى."
+
+msgid "Import done: %1$d moved, %2$d scheduled, %3$d job titles changed, %4$d skipped (they changed since the preview)."
+msgstr "الاستيراد خلص: %1$d اتنقلوا، %2$d اتجدولوا، %3$d مسمى وظيفي اتغير، %4$d اتسابوا (اتغيروا من وقت المعاينة)."
+
+msgid "No employee with this ID or domain name"
+msgstr "مفيش موظف بالرقم أو اسم الدومين ده"
+
+msgid "The employee is archived"
+msgstr "الموظف ده في الأرشيف"
+
+msgid "The employee is in the file twice; the first row is used"
+msgstr "الموظف موجود مرتين في الملف؛ أول سطر بس هو اللي اتاخد"
+
+msgid "No employee with this manager ID or domain name"
+msgstr "مفيش موظف برقم أو اسم دومين المدير ده"
+
+msgid "The manager is archived"
+msgstr "المدير ده في الأرشيف"
+
+msgid "Nobody can be their own manager"
+msgstr "مينفعش حد يبقى مدير نفسه"
+
+msgid "Would put them under someone who reports to them"
+msgstr "كده هيبقى تحت حد تابع له"
+
+msgid "Pick an active employee to move."
+msgstr "اختار موظف حالي عشان تنقله."
+
+msgid "The new manager is not an active employee. Pick them from the list."
+msgstr "المدير الجديد مش موظف حالي. اختاره من القايمة."
+
+msgid "Nobody can be their own manager."
+msgstr "مينفعش حد يبقى مدير نفسه."
+
+msgid "They already report to this manager."
+msgstr "هو أصلًا تابع للمدير ده."
+
+msgid "Nobody can be moved under someone who reports to them."
+msgstr "مينفعش تنقل حد تحت حد تابع له."
+
+msgid "Pick a date within a year from today."
+msgstr "اختار تاريخ في حدود سنة من النهارده."
+
+msgid "Write the reason for the move; it is kept in the Audit Log."
+msgstr "اكتب سبب النقل؛ بيتسجل في سجل التغييرات."
+
+msgid "A move is already scheduled for this employee. Cancel it first."
+msgstr "في نقل مجدول للموظف ده. ألغيه الأول."
+
+msgid "The move could not be saved. Please try again."
+msgstr "النقل ما اتحفظش. جرب تاني."
+
+msgid "The file could not be read. Upload the Excel file exported from this page (.xlsx) or a .csv file."
+msgstr "الملف ما اتقريش. ارفع ملف الإكسل اللي اتصدّر من الصفحة دي (.xlsx) أو ملف .csv."
+
+msgid "The file needs an \"Employee ID\" or \"Domain name\" column, and a \"Manager ID\", \"Manager domain name\" or \"Job title\" column."
+msgstr "الملف محتاج عمود \"Employee ID\" أو \"Domain name\"، وعمود \"Manager ID\" أو \"Manager domain name\" أو \"Job title\"."
+
+msgid "The file has more than 5,000 rows."
+msgstr "الملف فيه أكتر من 5,000 سطر."
+
+msgid "The file is empty."
+msgstr "الملف فاضي."
+
+msgid "The preview has expired. Upload the file again."
+msgstr "المعاينة انتهت. ارفع الملف تاني."
+
+msgid "Excel files need the PHP ZipArchive extension on the server. Ask your host to turn it on, or upload a .csv file."
+msgstr "ملفات الإكسل محتاجة إضافة ZipArchive في PHP على السيرفر. اطلب من الاستضافة تشغلها، أو ارفع ملف .csv."
+
+msgid "No manager"
+msgstr "من غير مدير"
+
+msgid "History"
+msgstr "السجل"
+
+msgid "Scheduled for %s"
+msgstr "مجدول يوم %s"
+
+msgid "Move %s"
+msgstr "نقل %s"
+
+msgid "The %d people under them move with them."
+msgstr "الـ %d اللي تحته بيتنقلوا معاه."
+
+msgid "%1$d approvals waiting for %2$s go to the new manager."
+msgstr "%1$d موافقة مستنية %2$s هتتحول للمدير الجديد."
+
+msgid "With no manager, requests waiting for the current manager stay with them."
+msgstr "من غير مدير، الطلبات اللي مستنية المدير الحالي بتفضل عنده."
+
+msgid "A date after today: the move is kept and done on that day."
+msgstr "تاريخ بعد النهارده: النقل بيتحفظ ويتنفذ في اليوم ده."
+
+msgid "it would put them under someone who reports to them"
+msgstr "كان هيحطه تحت حد تابع له"
+
+msgid "the employee was archived"
+msgstr "الموظف اتأرشف"
+
+msgid "the new manager was archived"
+msgstr "المدير الجديد اتأرشف"
+
+msgid "Employees page"
+msgstr "صفحة الموظفين"
+
+msgid "Excel import"
+msgstr "استيراد إكسل"
+
+msgid "Built on each employee's direct supervisor (Employees page). Select anyone to see their details, or move them under another manager."
+msgstr "مبني على المدير المباشر لكل موظف (صفحة الموظفين). دوس على أي شخص تشوف بياناته، أو انقله تحت مدير تاني."
+
+msgid "Export"
+msgstr "تصدير"
+
+msgid "Import managers"
+msgstr "استيراد المديرين"
+
+msgid "Import managers from Excel"
+msgstr "استيراد المديرين من إكسل"
+
+msgid "Export the file above: every employee with their job title, department and manager."
+msgstr "صدّر الملف من فوق: كل موظف بمسماه الوظيفي وقسمه ومديره."
+
+msgid "Change the managers (Manager ID or Manager domain name) and the job titles. Rows can be removed; only the rows in the file are looked at."
+msgstr "غيّر المديرين (Manager ID أو Manager domain name) والمسميات الوظيفية. تقدر تمسح سطور؛ اللي في الملف بس هو اللي بيتبص عليه."
+
+msgid "Upload it here. You see every change, and every row that cannot be used, before anything is saved."
+msgstr "ارفعه هنا. هتشوف كل تغيير، وكل سطر مينفعش يتاخد، قبل ما أي حاجة تتحفظ."
+
+msgid "File (.xlsx or .csv)"
+msgstr "الملف (.xlsx أو .csv)"
+
+msgid "Reason (kept in the Audit Log)"
+msgstr "السبب (بيتسجل في سجل التغييرات)"
+
+msgid "Imported from Excel"
+msgstr "مستورد من إكسل"
+
+msgid "Check the file"
+msgstr "راجع الملف"
+
+msgid "Check before saving: %s"
+msgstr "راجع قبل الحفظ: %s"
+
+msgid "%1$d rows read: %2$d new managers, %3$d job titles, %4$d rows cannot be used, %5$d unchanged."
+msgstr "اتقرا %1$d سطر: %2$d مدير جديد، %3$d مسمى وظيفي، %4$d سطر مينفعش يتاخد، %5$d من غير تغيير."
+
+msgid "The moves are scheduled for %s."
+msgstr "النقل مجدول يوم %s."
+
+msgid "The moves are done now, from %s."
+msgstr "النقل بيتنفذ دلوقتي، ابتداءً من %s."
+
+msgid "Reason: %s"
+msgstr "السبب: %s"
+
+msgid "Rows that cannot be used"
+msgstr "سطور مينفعش تتاخد"
+
+msgid "Row"
+msgstr "السطر"
+
+msgid "Value"
+msgstr "القيمة"
+
+msgid "Why"
+msgstr "السبب"
+
+msgid "New managers"
+msgstr "مديرين جداد"
+
+msgid "Manager now"
+msgstr "المدير دلوقتي"
+
+msgid "New manager"
+msgstr "المدير الجديد"
+
+msgid "Job titles"
+msgstr "المسميات الوظيفية"
+
+msgid "New"
+msgstr "الجديد"
+
+msgid "Save these changes"
+msgstr "احفظ التغييرات دي"
+
+msgid "Needs attention"
+msgstr "محتاج انتباه"
+
+msgid "People without a manager are not in the chart; their requests go to administrators."
+msgstr "اللي من غير مدير مش ظاهرين في الهيكل، وطلباتهم بتروح للإدارة."
+
+msgid "was under %s"
+msgstr "كان تحت %s"
+
+msgid "Managers that go round in a circle (old data): each of these is under someone who reports to them. Set the right manager for one of them."
+msgstr "مديرين بيلفّوا في دايرة (بيانات قديمة): كل واحد فيهم تحت حد تابع له. حدد المدير الصح لواحد منهم."
+
+msgid "Scheduled moves that could not be done on their day"
+msgstr "نقل مجدول ما اتنفذش في يومه"
+
+msgid "Scheduled moves"
+msgstr "نقل مجدول"
+
+msgid "Type a name and pick from the list"
+msgstr "اكتب اسم واختار من القايمة"
+
+msgid "kept in the Audit Log"
+msgstr "بيتسجل في سجل التغييرات"
+
+msgid "e.g. new team in Alexandria"
+msgstr "مثلًا: فريق جديد في إسكندرية"
+
+msgid "Moved. %d waiting approval went to the new manager."
+msgid_plural "Moved. %d waiting approvals went to the new manager."
+msgstr[0] "اتنقل. %d موافقة مستنية اتحولت للمدير الجديد."
+msgstr[1] "اتنقل. %d موافقة مستنية اتحولت للمدير الجديد."
+msgstr[2] "اتنقل. %d موافقة مستنية اتحولت للمدير الجديد."
+msgstr[3] "اتنقل. %d موافقة مستنية اتحولت للمدير الجديد."
+msgstr[4] "اتنقل. %d موافقة مستنية اتحولت للمدير الجديد."
+msgstr[5] "اتنقل. %d موافقة مستنية اتحولت للمدير الجديد."
+
+msgid "%d employee whose manager was archived"
+msgid_plural "%d employees whose manager was archived"
+msgstr[0] "%d موظف مديره اتأرشف"
+msgstr[1] "%d موظف مديره اتأرشف"
+msgstr[2] "%d موظف مديره اتأرشف"
+msgstr[3] "%d موظف مديره اتأرشف"
+msgstr[4] "%d موظف مديره اتأرشف"
+msgstr[5] "%d موظف مديره اتأرشف"
