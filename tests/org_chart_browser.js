@@ -114,7 +114,7 @@ const SHOTS = process.env.ORG_SHOTS || '';
 
   // ---------------------------------------------------------------- Arabic
   // Right to left even where WordPress's own Arabic files are not installed yet (CI installs them later).
-  php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents($d.'/ews-e2e-rtl.php', '<?php add_action(\"init\", function(){ if(get_user_locale()===\"ar\") $GLOBALS[\"wp_locale\"]->text_direction=\"rtl\"; });'); update_user_meta(1,'locale','ar');");
+  php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents($d.'/ews-e2e-rtl.php', '<?php add_action(\"init\", function(){ if(get_user_locale()===\"ar\"){ $GLOBALS[\"wp_locale\"]->text_direction=\"rtl\"; wp_styles()->text_direction=\"rtl\"; } });'); update_user_meta(1,'locale','ar');");
   await page.goto(B + '/wp-admin/admin.php?page=ews31-org-chart');
   await page.waitForSelector('.wfo-org-pc');
   const pos = await page.$$eval('#wfo-org-tree > .wfo-org-chart > ul > li > ul > li > .wfo-org-pc', els => els.map(e => [e.getAttribute('data-sel'), Math.round(e.getBoundingClientRect().left)]));
