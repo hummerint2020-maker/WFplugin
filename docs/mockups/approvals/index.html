@@ -192,7 +192,7 @@ h1,h2,h3,h4{text-wrap:balance}
 var T={
  title:{ar:'محرك الموافقات',en:'Approval engine'},
  lead:{ar:'محرك واحد لكل الطلبات: كل نوع طلب ليه مستويات (٣ كحد افتراضي، ٤ كحد أقصى)، ومين يوافق في كل مستوى، وإيه يحصل لو محدش قرر، وبديل وقت الغياب. ماك أب للمراجعة قبل البناء.',en:'One engine for every request: each type has levels (3 by default, 4 at most), who approves at each level, what happens if nobody decides, and a substitute while someone is away. A mockup to review before building.'},
- s1:{ar:'أنواع الطلبات',en:'Request types'},s2:{ar:'إعداد نوع: السلفة',en:'Set up: Salary advance'},s3:{ar:'موافقاتي (المدير)',en:'My approvals (manager)'},s4:{ar:'الموظف: طلب جديد',en:'Employee: new request'},s5:{ar:'البديل',en:'Substitutes'},s6:{ar:'قرارات محتاجها منك',en:'Decisions for you'},
+ s1:{ar:'أنواع الطلبات',en:'Request types'},s2:{ar:'إعداد نوع: السلفة',en:'Set up: Salary advance'},s3:{ar:'موافقاتي (المدير)',en:'My approvals (manager)'},s4:{ar:'الموظف: طلب جديد',en:'Employee: new request'},s5:{ar:'البديل',en:'Substitutes'},s6:{ar:'القرارات',en:'Decisions'},
  // screen 1
  crumb1:{ar:'Workforce One › الطلبات › مسارات الموافقة',en:'Workforce One › Requests › Approval workflows'},
  h1:{ar:'أنواع الطلبات',en:'Request types'},h1p:{ar:'كل نوع طلب في مكان واحد. شغّل النوع اللي محتاجه، واختار مين يوافق عليه.',en:'Every kind of request in one place. Turn on the ones you need and choose who approves them.'},
@@ -261,6 +261,33 @@ var T={
  q4:{ar:'أنواع الخطابات',en:'Letter types'},q4a:{ar:'شهادة مرتب، لمن يهمه الأمر، شهادة خبرة، للسفارة',en:'Salary certificate, to whom it may concern, experience, embassy'},q4b:{ar:'نفس الأربعة + تكتبوا أنواع تانية',en:'The same four + your own'},
  q5:{ar:'الطلبات الموجودة (إجازة، وقت إضافي…)',en:'Today’s requests (leave, overtime…)'},q5a:{ar:'تتنقل للمحرك الجديد بنفس الإعداد بتاعها',en:'Move to the new engine with their current setup'},q5b:{ar:'تفضل زي ما هي والجديد للأنواع الجديدة بس',en:'Stay as they are; the engine is for new types only'},
  rec:{ar:'اقتراحي',en:'My suggestion'},
+ // leave types
+ s7:{ar:'أنواع الإجازات',en:'Leave types'},
+ crumb7:{ar:'الطلبات › الإجازات › أنواع الإجازات',en:'Requests › Leaves › Leave types'},
+ lt_h:{ar:'أنواع الإجازات',en:'Leave types'},lt_hp:{ar:'كل نوع: مخططة ولا طارئة، رصيده في السنة، بيتجدد إمتى، وهل الباقي بيتنقل للسنة الجديدة. كلها إعدادات.',en:'Each type: planned or unplanned, its yearly balance, when it renews, and whether what is left carries over. All settings.'},
+ lt_name:{ar:'النوع',en:'Type'},lt_kind:{ar:'مخططة / طارئة',en:'Planned / unplanned'},lt_bal:{ar:'الرصيد في السنة',en:'Yearly balance'},lt_carry:{ar:'الباقي آخر السنة',en:'Left at year end'},lt_when:{ar:'ينفع يتطلب إمتى',en:'Can be asked'},
+ k_pl:{ar:'مخططة',en:'Planned'},k_un:{ar:'طارئة',en:'Unplanned'},
+ c_no:{ar:'مش بيتنقل',en:'Not carried over'},c_some:{ar:'يتنقل لحد {n} أيام',en:'Up to {n} days carried over'},
+ w_before:{ar:'قبل بداية يوم الإجازة',en:'Before the day starts'},w_same:{ar:'في نفس اليوم أو بعده بـ {n} أيام',en:'On the day or up to {n} days after'},
+ days:{ar:'{n} يوم',en:'{n} days'},nolimit:{ar:'من غير رصيد',en:'No balance'},
+ lt_annual:{ar:'سنوية',en:'Annual'},lt_casual:{ar:'عارضة',en:'Casual'},lt_sick:{ar:'مرضي',en:'Sick'},lt_unpaid:{ar:'من غير مرتب',en:'Unpaid'},
+ lt_edit:{ar:'إعداد نوع: عارضة',en:'Set up: Casual'},
+ lt_f_kind:{ar:'نوعها',en:'Kind'},lt_f_kind_pl:{ar:'مخططة: لازم تتطلب قبل بداية يوم الإجازة',en:'Planned: must be asked before the day starts'},lt_f_kind_un:{ar:'طارئة: ينفع تتطلب لوحدها في نفس اليوم أو بعده',en:'Unplanned: can be asked on its own, on the day or after'},
+ lt_f_after:{ar:'آخر ميعاد بعد اليوم',en:'At most after the day'},
+ lt_f_bal:{ar:'الرصيد',en:'Balance'},lt_f_bal_u:{ar:'يوم في السنة',en:'days a year'},
+ lt_f_renew:{ar:'بيتجدد',en:'Renews'},lt_f_renew_a:{ar:'أول يناير كل سنة',en:'Every 1 January'},lt_f_renew_b:{ar:'في ذكرى تعيين الموظف',en:'On the employee’s hiring anniversary'},
+ lt_f_carry:{ar:'الباقي آخر السنة',en:'Left at year end'},lt_f_carry_a:{ar:'مش بيتنقل (بيضيع)',en:'Not carried over (lost)'},lt_f_carry_b:{ar:'يتنقل كله',en:'All carried over'},lt_f_carry_c:{ar:'يتنقل لحد',en:'Carried over up to'},
+ lt_f_path:{ar:'مسار الموافقة',en:'Approval path'},lt_f_path_p:{ar:'من «أنواع الطلبات»',en:'From “Request types”'},
+ lt_note:{ar:'النهارده: كل الإجازات لازم تتطلب قبل يومها، والرصيد الجديد بيبدأ بنفس رقم السنة اللي فاتت ومن غير نقل. ده بيبقى الإعداد الافتراضي، فمفيش حاجة هتتغير غير لما تغيّرها.',en:'Today: every leave must be asked before its day, and each new year starts with the same balance, nothing carried over. That stays the default, so nothing changes until you change it.'},
+ dt:{ar:'اللي اتفقنا عليه',en:'What we agreed'},
+ d1:{ar:'مين يوافق على كل نوع، والحدود، والتأخير: إعدادات لكل نوع، مش أرقام ثابتة.',en:'Who approves each type, the limits and the deadlines: settings per type, not fixed numbers.'},
+ d2:{ar:'الخطابات: ٤ أنواع جاهزة، وتقدروا تضيفوا أنواع تانية.',en:'Letters: four ready types, and you can add your own.'},
+ d3:{ar:'الطلبات الموجودة (إجازة، وقت إضافي، تصحيح، تبديل، الوجه) تتنقل للمحرك الجديد بنفس إعدادها الحالي.',en:'Today’s requests (leave, overtime, corrections, swaps, face) move to the new engine with their current setup.'},
+ d4:{ar:'الإجازة المخططة لازم تتطلب قبل بداية اليوم؛ الطارئة ينفع تتطلب لوحدها. لكل نوع.',en:'Planned leave must be asked before the day starts; unplanned can be asked on its own. Per type.'},
+ d5:{ar:'كل إجازة ليها رصيد بيتجدد كل سنة، والباقي ما بيتنقلش للسنة الجديدة، والاتنين إعداد لكل نوع.',en:'Each leave has a balance renewed every year, and what is left does not carry over; both are settings per type.'},
+ dq2:{ar:'لسه محتاج رأيك',en:'Still open'},
+ q6:{ar:'الطارئة: آخر ميعاد لطلبها بعد اليوم',en:'Unplanned: latest it can be asked after the day'},q6a:{ar:'لحد ٣ أيام بعده',en:'Up to 3 days after'},q6b:{ar:'في نفس اليوم بس',en:'The same day only'},q6c:{ar:'إعداد لكل نوع',en:'A setting per type'},
+ q7:{ar:'الطارئة بتخصم من رصيدها هي ولا من السنوية؟',en:'Unplanned: from its own balance or from annual?'},q7a:{ar:'رصيدها هي (زي العارضة ٦ أيام)',en:'Its own balance (like casual, 6 days)'},q7b:{ar:'من رصيد السنوية',en:'From the annual balance'},
  // why
  w1:{ar:'محرك واحد',en:'One engine'},w1p:{ar:'نفس المستويات والتأخير والبديل لكل الأنواع، بدل ما كل نوع ليه طريقته.',en:'The same levels, deadlines and substitutes for every type, instead of each type its own way.'},
  w2:{ar:'مقفول لحد ما تشغّله',en:'Off until you turn it on'},w2p:{ar:'كل نوع جديد مقفول افتراضيًا. الأنواع الموجودة تفضل شغالة زي ما هي.',en:'Each new type is off by default. Today’s types keep working as they do.'},
@@ -394,17 +421,38 @@ function s5(){
 /* ---------- 6. decisions ---------- */
 function s6(){
   var q=function(k,opts,r){return '<div class="q"><b>'+t(k)+'</b><div class="choices">'+opts.map(function(o,i){return '<span'+(i===r?' class="rec" title="'+t('rec')+'"':'')+'>'+(i===r?'★ ':'')+t(o)+'</span>';}).join('')+'</div></div>';};
-  return '<div class="card"><h3>'+t('dq')+'</h3><p class="intro">★ = '+t('rec')+'</p><div class="decide">'
-   +q('q1',['q1a','q1b','q1c'],0)+q('q2',['q2a','q2b','q2c'],0)+q('q3',['q3a','q3b'],0)+q('q4',['q4a','q4b'],1)+q('q5',['q5a','q5b'],0)
-   +'</div></div>';
+  return '<div class="card"><h3>'+t('dt')+'</h3><div class="decide">'+['d1','d2','d3','d4','d5'].map(function(k){return '<div class="q"><span>✓ '+t(k)+'</span></div>';}).join('')+'</div></div>'
+   +'<div class="card"><h3>'+t('dq2')+'</h3><p class="intro">★ = '+t('rec')+'</p><div class="decide">'+q('q6',['q6a','q6b','q6c'],2)+q('q7',['q7a','q7b'],0)+'</div></div>';
+}
+
+/* ---------- 7. leave types ---------- */
+function s7(){
+  var row=function(n,kind,bal,carry,when){return '<div class="trow"><div class="name"><span class="dot" style="--tc:var(--t-lv)"></span><span><b>'+esc(t(n))+'</b><small>'+esc(t(kind==='pl'?'k_pl':'k_un'))+'</small></span></div>'
+    +'<div class="chain"><span class="lv">'+esc(bal)+'</span><span class="lv">'+esc(carry)+'</span><span class="lv">'+esc(when)+'</span></div><span class="cnt"><span class="pill '+(kind==='pl'?'new':'warn')+'">'+t(kind==='pl'?'k_pl':'k_un')+'</span></span><span><button type="button" class="btn sm">'+t('edit')+'</button></span></div>';};
+  var d=function(n){return f(t('days'),{n:num(n)});};
+  return '<section class="hero"><div><div class="crumb">'+t('crumb7')+'</div><h2>'+t('lt_h')+'</h2><p>'+t('lt_hp')+'</p></div></section>'
+   +'<div class="note">'+t('lt_note')+'</div>'
+   +'<div class="card types"><div class="group-h">'+t('lt_name')+' · '+t('lt_bal')+' · '+t('lt_carry')+' · '+t('lt_when')+'</div>'
+   +row('lt_annual','pl',d(21),f(t('c_some'),{n:num(5)}),t('w_before'))
+   +row('lt_casual','un',d(6),t('c_no'),f(t('w_same'),{n:num(3)}))
+   +row('lt_sick','un',d(15),t('c_no'),f(t('w_same'),{n:num(3)}))
+   +row('lt_unpaid','pl',t('nolimit'),'—',t('w_before'))
+   +'</div>'
+   +'<div class="card"><h3>'+t('lt_edit')+'</h3><p class="intro"></p>'
+   +'<div class="opt"><div class="k">'+t('lt_f_kind')+'</div><div class="chips" style="display:grid;gap:6px"><span class="chip">'+t('lt_f_kind_pl')+'</span><span class="chip on">'+t('lt_f_kind_un')+'</span><span class="inline"><span>'+t('lt_f_after')+'</span><input class="inp" value="'+num(3)+'" aria-label="'+t('lt_f_after')+'"><span>'+(lang==='ar'?'أيام':'days')+'</span></span></div></div>'
+   +'<div class="opt"><div class="k">'+t('lt_f_bal')+'</div><div class="inline"><input class="inp" value="'+num(6)+'" aria-label="'+t('lt_f_bal')+'"><span>'+t('lt_f_bal_u')+'</span></div></div>'
+   +'<div class="opt"><div class="k">'+t('lt_f_renew')+'</div><div class="chips"><span class="chip on">'+t('lt_f_renew_a')+'</span><span class="chip">'+t('lt_f_renew_b')+'</span></div></div>'
+   +'<div class="opt"><div class="k">'+t('lt_f_carry')+'</div><div class="chips"><span class="chip on">'+t('lt_f_carry_a')+'</span><span class="chip">'+t('lt_f_carry_b')+'</span><span class="chip">'+t('lt_f_carry_c')+' … '+(lang==='ar'?'يوم':'days')+'</span></div></div>'
+   +'<div class="opt"><div class="k">'+t('lt_f_path')+'<small>'+t('lt_f_path_p')+'</small></div><div>'+chain(['lv1'])+'</div></div>'
+   +'<div class="opt"><div></div><div><button type="button" class="btn primary">'+t('e_save')+'</button></div></div></div>';
 }
 
 function render(){
   document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
   document.querySelectorAll('[data-t]').forEach(function(el){el.textContent=t(el.dataset.t);});
   document.querySelectorAll('[data-lang]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.lang===lang);});
-  document.getElementById('screens').innerHTML=['s1','s2','s3','s4','s5','s6'].map(function(s){return '<button type="button" data-screen="'+s+'" aria-pressed="'+(screen===s)+'">'+t(s)+'</button>';}).join('');
-  document.getElementById('screen').innerHTML={s1:s1,s2:s2,s3:s3,s4:s4,s5:s5,s6:s6}[screen]();
+  document.getElementById('screens').innerHTML=['s1','s2','s3','s4','s5','s7','s6'].map(function(s){return '<button type="button" data-screen="'+s+'" aria-pressed="'+(screen===s)+'">'+t(s)+'</button>';}).join('');
+  document.getElementById('screen').innerHTML={s1:s1,s2:s2,s3:s3,s4:s4,s5:s5,s6:s6,s7:s7}[screen]();
   document.getElementById('why').innerHTML=[['w1','w1p'],['w2','w2p'],['w3','w3p'],['w4','w4p']].map(function(w){return '<div><b>'+t(w[0])+'</b><p>'+t(w[1])+'</p></div>';}).join('');
 }
 document.addEventListener('click',function(e){
