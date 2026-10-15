@@ -1,4 +1,4 @@
-"""The approval engine (3.31.100, owner decisions 2026-10-14, docs/tasks/approvals.md): up to four
+"""The approval engine (3.31.100; 3.31.101: a level with nobody to decide it never refuses the request, owner decisions 2026-10-14, docs/tasks/approvals.md): up to four
 levels in every request type, the new approvers (manager's manager, department manager, HR, Finance),
 a condition per level ("only if above N days / hours", skipped otherwise), the rule for a requester
 who is their own approver (they decide / the next level / administrators), and reminders and moving a
@@ -147,35 +147,61 @@ ar, st_ = steps(lid)
 check('...the manager\'s manager, then HR: approved', ar['status'] == 'APPROVED' and leave_status(lid) == 'Approved' and [x['status'] for x in st_] == ['APPROVED'] * 3, (ar, st_))
 
 # ---------------------------------------------------------------- four levels, department manager, missing people
+# 3.31.101: a level with nobody to decide it never refuses the request: the next level decides, or
+# administrators when it was the last one.
 clear()
 save('vacation', 'LEVEL_4', level_1_type='DEPARTMENT_MANAGER', level_2_type='TEAM_MANAGER', level_3_type='FINANCE', level_4_type='SUPERVISOR')
-qs, lid = leave(emp, d(3))
-check('a level whose older approver is missing (no team manager) still refuses the request, as before', qs.get('leave_error') == 'approval' and not lid, qs)
-save('vacation', 'LEVEL_4', level_1_type='DEPARTMENT_MANAGER', level_2_type='SUPERVISOR', level_3_type='FINANCE', level_4_type='MANAGERS_MANAGER')
 st, page, _ = adm.req(PAGE)
-check('the page warns that Finance is not set yet', 'data-apv-missing' in card(page, 'vacation'))
+check('the page warns that Finance is not set yet', 'data-apv-missing' in card(page, 'vacation') and 'the next level decides instead' in card(page, 'vacation'))
 qs, lid = leave(emp, d(3))
 ar, st_ = steps(lid)
-check('four levels: the department manager first; Finance not set → administrators decide that level',
-      ar and [x['approver_wp_user_id'] for x in st_] == [str(ids['dina_uid']), str(ids['mona_uid']), None, str(ids['big_uid'])] and [x['rerouted'] for x in st_] == ['0', '0', '1', '0'], (qs, ar, st_))
+check('four levels: the department manager first; no team manager and Finance not set → both skipped, the direct manager is level 4',
+      qs.get('leave_sent') == '1' and ar and [x['status'] for x in st_] == ['PENDING', 'SKIPPED', 'SKIPPED', 'WAITING'] and [x['skip_reason'] for x in st_] == [None, 'missing', 'missing', None]
+      and st_[0]['approver_wp_user_id'] == str(ids['dina_uid']) and st_[3]['approver_wp_user_id'] == str(ids['mona_uid']), (qs, ar, st_))
 decide(S['dina'], lid)
+ar, st_ = steps(lid)
+check('...the department manager approves: straight to level 4', ar['status'] == 'WAITING_FOR_LEVEL_4' and st_[3]['status'] == 'PENDING', (ar, st_))
+decide(S['mona'], lid)
+check('...who approves it: approved', steps(lid)[0]['status'] == 'APPROVED' and leave_status(lid) == 'Approved')
+
+clear()
+save('vacation', 'LEVEL_2', level_1_type='SUPERVISOR', level_2_type='FINANCE')
+qs, lid = leave(emp, d(3))
+ar, st_ = steps(lid)
+check('the last level has nobody (Finance not set): administrators decide it', ar and [x['rerouted'] for x in st_] == ['0', '1'] and st_[1]['approver_wp_user_id'] is None and st_[1]['skip_reason'] is None, st_)
 decide(S['mona'], lid)
 ar, st_ = steps(lid)
 admin_note = q("SELECT title FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid'])
-check('...at level 3 the administrators are told, and an administrator decides it', ar['status'] == 'WAITING_FOR_LEVEL_3' and admin_note, (ar, admin_note))
+check('...at level 2 the administrators are told', ar['status'] == 'WAITING_FOR_LEVEL_2' and admin_note, (ar, admin_note))
 n = adm.admin_request_nonce('leave', lid)
 adm.req('/wp-admin/admin-post.php', {'action': 'ews31_requests_decision', '_wpnonce': n or 'x', 'request_type': 'leave', 'request_id': lid, 'decision': 'approve'})
-ar, st_ = steps(lid)
-check('...then level 4, the manager\'s manager', ar['status'] == 'WAITING_FOR_LEVEL_4' and st_[3]['status'] == 'PENDING', (ar, st_))
-decide(S['big'], lid)
-check('...who approves it: approved after four levels', steps(lid)[0]['status'] == 'APPROVED' and leave_status(lid) == 'Approved')
+check('...and an administrator approves it on the Requests Hub', steps(lid)[0]['status'] == 'APPROVED' and leave_status(lid) == 'Approved', steps(lid))
 
 clear()
+save('vacation', 'LEVEL_1', self_rule='admins', level_1_type='SUPERVISOR')
+php("$wpdb->insert($p.'ews_leave_balances',['employee_id'=>%d,'leave_type_id'=>%d,'leave_year'=>(int)current_time('Y'),'entitlement'=>21,'used'=>0,'pending'=>0]);" % (ids['big'], ids['type']))
+qs, lid = leave(S['big'], d(3))
+ar, st_ = steps(lid)
+check('someone with no manager (the owner\'s case, one level = direct manager) can ask: administrators decide, they are told',
+      qs.get('leave_sent') == '1' and ar and ar['status'] == 'WAITING_FOR_LEVEL_1' and st_[0]['rerouted'] == '1' and st_[0]['approver_wp_user_id'] is None
+      and q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid']), (qs, ar, st_))
+
+clear()
+save('vacation', 'LEVEL_2', level_1_type='DEPARTMENT_MANAGER', level_2_type='SUPERVISOR')
 php("$wpdb->update($p.'ews_employees',['department_id'=>null],['id'=>%d]);" % ids['emp'])
 qs, lid = leave(emp, d(3))
 ar, st_ = steps(lid)
-check('no department manager for this employee: administrators decide level 1', ar and st_[0]['rerouted'] == '1' and st_[0]['approver_wp_user_id'] is None and st_[0]['status'] == 'PENDING', (qs, st_))
+check('no department for this employee: level 1 skipped, the direct manager decides', ar and ar['status'] == 'WAITING_FOR_LEVEL_2' and st_[0]['skip_reason'] == 'missing' and st_[1]['approver_wp_user_id'] == str(ids['mona_uid']), (qs, st_))
 php("$wpdb->query(\"UPDATE {$p}ews_employees SET department_id=(SELECT id FROM {$p}ews_departments WHERE code='eng-e2e') WHERE id=%d\");" % ids['emp'])
+
+# attendance corrections go through the same engine
+php("update_option('ews_feature_corrections',1,false);")
+save('attendance_correction', 'LEVEL_1', level_1_type='SUPERVISOR')
+cid = php("""wp_set_current_user(%d);$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'approval_start');$m->setAccessible(true);
+$r=$m->invoke($o,'attendance_correction','attendance_correction',987654,%d);echo is_wp_error($r)?'ERR '.$r->get_error_code():$r;""" % (ids['big_uid'], ids['big'])).splitlines()[-1]
+ar, st_ = steps(987654, 'attendance_correction')
+check('an attendance correction from someone with no manager is accepted too: administrators decide it', not cid.startswith('ERR') and ar and st_[0]['rerouted'] == '1', (cid, st_))
+php("update_option('ews_feature_corrections',0,false); $wpdb->query(\"UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0 WHERE workflow_key='attendance_correction'\");")
 
 # ---------------------------------------------------------------- nothing applies
 clear()

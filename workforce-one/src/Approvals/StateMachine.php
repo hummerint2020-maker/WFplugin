@@ -26,8 +26,9 @@ final class StateMachine
     /**
      * The steps and the request when it starts.
      * Each step: skip 'condition' (its condition does not apply), 'self' (the approver is the requester
-     * and the rule sends it to the next level) or '' (it applies). A 'self' step with no level acting
-     * after it goes to the administrators instead (rerouted).
+     * and the rule sends it to the next level), 'missing' (nobody to decide it, 3.31.101) or '' (it
+     * applies). A 'self' or 'missing' step with no level acting after it goes to the administrators
+     * instead (rerouted).
      * @param array<int,array{skip:string}> $steps step order => facts, in order
      * @return array{steps:array<int,array{status:string,rerouted:bool,skip:string}>,request:string,current_step:?int}
      */
@@ -39,7 +40,7 @@ final class StateMachine
         foreach (array_reverse(array_keys($steps)) as $order) {
             $skip = (string) ($steps[$order]['skip'] ?? '');
             $rerouted = false;
-            if ($skip === 'self' && !$later) { $skip = ''; $rerouted = true; }
+            if (($skip === 'self' || $skip === 'missing') && !$later) { $skip = ''; $rerouted = true; }
             $out[$order] = ['status' => $skip !== '' ? 'SKIPPED' : 'WAITING', 'rerouted' => $rerouted, 'skip' => $skip];
             if ($skip === '') $later = true;
         }

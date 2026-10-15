@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.31.101
+### Fixed
+- **A request is never refused because a level has nobody to decide it.** Before, someone without a
+  manager (the owner, the general manager, a new employee) could not ask for leave, an attendance
+  correction or overtime when a level was "Direct manager": they saw "The approval could not be recorded.
+  Please try again". Now a level with nobody to decide it (no manager, no department or team manager, HR
+  or Finance not set, an approver without a WordPress user) is skipped and the next level decides; when it
+  was the last level, administrators decide it and are told (wp-admin → Requests Hub). The Org chart
+  already said so for people without a manager. A shift swap still needs its colleague.
+
 ## 3.31.100
 The approval engine (owner decisions 2026-10-14, docs/tasks/approvals.md, stage 2). Nothing changes
 until a workflow is changed: the saved modes, approvers and the Own requests choice work as before,
@@ -12,7 +22,7 @@ and nobody is reminded or moved up until hours are set. Database: `ews_approval_
 - **New approvers:** the manager's manager, the department manager, HR and Finance (wp-admin → Approval
   Workflows → HR, Finance and the working day). When one of these has nobody for an employee (the top of
   the chart, a department without a manager, HR or Finance not set), administrators decide that level
-  instead of the request being refused; the older approvers still refuse it, as before.
+  instead of the request being refused; the older approvers still refuse it, as before (changed in 3.31.101).
 - **A condition per level** for Leave (days) and Overtime (hours): "only if above N"; otherwise the level
   is skipped. A request that no level applies to is approved at once.
 - **If the approver is the requester:** they decide it (as before when allowed), it goes to the next level

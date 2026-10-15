@@ -453,7 +453,10 @@ trait EWS_Approvals_Trait {
         }
 
         // Who decides each level, fixed when the request starts. A level whose condition does not apply
-        // is skipped; when its approver is the requester, the workflow's rule decides (3.31.100).
+        // is skipped; when its approver is the requester, the workflow's rule decides (3.31.100). A level
+        // with nobody to decide it (no manager, HR not set, an approver without a WordPress user) goes to
+        // the next level, or to administrators when there is none: the request is never refused for it
+        // (3.31.101; before, a requester without a manager could not ask at all).
         $W=\WorkforceOne\Approvals\Workflows::class;
         $amount=isset($entity_context['amount']) && is_numeric($entity_context['amount'])?(float)$entity_context['amount']:null;
         $self_rule=$this->approval_self_rule($workflow_key);
@@ -467,17 +470,16 @@ trait EWS_Approvals_Trait {
                 $skip='condition';
             }else{
                 $approver=$this->approval_resolve_approver($requester_employee_id,$step->resolver_type,$step->resolver_value,$entity_context);
-                $soft=in_array(strtoupper((string)$step->resolver_type),$W::SOFT_RESOLVERS,true);
-                if($approver && $soft && !(int)$approver->wp_user_id)$approver=null;
-                if($approver && $family!=='PEER' && $self_rule!=='allow'
+                if($approver && !(int)$approver->wp_user_id)$approver=null;
+                if($family==='PEER'){
+                    if(!$approver)return new WP_Error('approval_approver_missing','The colleague of this request could not be found.');
+                }elseif($approver && $self_rule!=='allow'
                     && (((int)($approver->id??0) && (int)$approver->id===(int)$requester_employee_id) || ($requester_uid && (int)$approver->wp_user_id===$requester_uid))){
                     $approver=null;   // decided by the next level, or by an administrator (approval_can_act)
                     if($self_rule==='next')$skip='self';else $rerouted=true;
-                }elseif(!$approver && $soft){
-                    $rerouted=true;   // no such person for this employee: administrators decide the level
+                }elseif(!$approver){
+                    $skip='missing';  // nobody to decide it: the next level, or administrators
                 }
-                if(!$approver && !$rerouted && $skip==='' && (int)$step->required)return new WP_Error('approval_approver_missing','Approval step '.$order.' could not resolve an approver.');
-                if($approver && !(int)$approver->wp_user_id)return new WP_Error('approval_approver_unlinked','The configured approver is not linked to a WordPress user.');
             }
             $plan[$order]=['step'=>$step,'approver'=>$approver,'rerouted'=>$rerouted];
             $facts[$order]=['skip'=>$skip];

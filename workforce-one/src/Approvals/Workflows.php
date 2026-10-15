@@ -81,13 +81,6 @@ final class Workflows
         'SPECIFIC_EMPLOYEE' => 'A specific employee', 'SPECIFIC_USER' => 'A specific WordPress user',
     ];
 
-    /**
-     * Approvers that may be missing for some employees (the top of the chart has no manager's manager,
-     * a department may have no manager, HR or Finance may not be set yet): their level goes to the
-     * administrators instead of refusing the request. The older ones still refuse it, as before.
-     */
-    public const SOFT_RESOLVERS = ['MANAGERS_MANAGER', 'DEPARTMENT_MANAGER', 'HR', 'FINANCE'];
-
     /** What a level's condition counts, per workflow ("only if above N …"); the others have no amount. */
     public const AMOUNT_UNITS = ['vacation' => 'days', 'overtime' => 'hours'];
 

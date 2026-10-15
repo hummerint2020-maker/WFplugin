@@ -147,7 +147,7 @@ $fin_missing = !$settings['finance_user'];
             </div>
             <p class="ews-specific-employee"><label>Specific Employee <input name="level_<?php echo (int) $i; ?>_employee_ref" list="ews-pick-employees" autocomplete="off" placeholder="Type to search" style="min-width:320px" value="<?php echo esc_attr($lv['resolver_type'] === 'SPECIFIC_EMPLOYEE' ? ($emp_label[(int) $lv['resolver_value']] ?? '') : ''); ?>"></label></p>
             <p class="ews-specific-user"><label>Specific User <input name="level_<?php echo (int) $i; ?>_user_ref" list="ews-pick-users" autocomplete="off" placeholder="Type to search" style="min-width:320px" value="<?php echo esc_attr($lv['resolver_type'] === 'SPECIFIC_USER' ? ($user_label[(int) $lv['resolver_value']] ?? '') : ''); ?>"></label></p>
-            <?php if ($lv['resolver_type'] === 'HR' && $hr_missing || $lv['resolver_type'] === 'FINANCE' && $fin_missing): ?><p class="description" data-apv-missing style="color:#b32d2e">Not set yet in HR, Finance and the working day above: until it is, an administrator decides this level.</p><?php endif; ?>
+            <?php if ($lv['resolver_type'] === 'HR' && $hr_missing || $lv['resolver_type'] === 'FINANCE' && $fin_missing): ?><p class="description" data-apv-missing style="color:#b32d2e">Not set yet in HR, Finance and the working day above: until it is, the next level decides instead (an administrator when there is none).</p><?php endif; ?>
             </div>
         </div>
         <?php endfor; ?>

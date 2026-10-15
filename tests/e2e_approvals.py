@@ -164,10 +164,11 @@ check('a rejection at level 1 ends it (level 2 is never asked)', state(lid) == (
 
 php("$wpdb->query(\"UPDATE {$p}ews_employee_relationships SET active=0\");")
 qs, lid = submit(d(9), d(9))
-check('without a supervisor the leave is not submitted (no approver for level 1)', qs.get('leave_error') == 'approval' and not q("SELECT id FROM {p}ews_leave_requests WHERE start_date='%s'" % d(9)), (qs, lid))
+# 3.31.101: a level with nobody to decide it no longer refuses the request: the next level decides.
+check('without a supervisor the leave is still sent: level 1 is skipped, level 2 decides', qs.get('leave_sent') == '1' and state(lid) == ('WAITING_FOR_LEVEL_2', ['SKIPPED', 'PENDING'], 'Pending'), (qs, state(lid)))
 php("$wpdb->insert($p.'ews_employee_relationships',['employee_id'=>%d,'relationship_type'=>'supervisor','related_employee_id'=>%d,'active'=>1]);" % (ids['emp'], ids['nouser']))
-qs, lid = submit(d(9), d(9))
-check('a supervisor without a WordPress user cannot approve: not submitted', qs.get('leave_error') == 'approval', qs)
+qs, lid = submit(d(11), d(11))
+check('a supervisor without a WordPress user cannot decide: skipped the same way', qs.get('leave_sent') == '1' and state(lid) == ('WAITING_FOR_LEVEL_2', ['SKIPPED', 'PENDING'], 'Pending'), (qs, state(lid)))
 
 # ---------------------------------------------------------------- refused settings
 st, loc, _ = save(adm, nonce, 'overtime', 'LEVEL_1', level_1_type='SPECIFIC_EMPLOYEE')
