@@ -186,6 +186,21 @@ trait EWS_Approvals_Trait {
         }
     }
 
+    /**
+     * Tell administrators once the request is saved (3.31.102). A caller that owns the transaction
+     * ($manage_transaction false) may still roll it back: the message is sent at the end of the page
+     * load, and only when that level still waits for administrators.
+     */
+    private function approval_notify_administrators_after($approval_request_id,$step_order){
+        $request_id=(int)$approval_request_id;$order=(int)$step_order;
+        add_action('shutdown',function()use($request_id,$order){
+            global $wpdb;$t=$this->approval_tables();
+            $still=$wpdb->get_var($wpdb->prepare("SELECT i.id FROM {$t['instances']} i JOIN {$t['requests']} r ON r.id=i.approval_request_id
+                WHERE i.approval_request_id=%d AND i.step_order=%d AND i.status='PENDING' AND i.rerouted=1 AND i.approver_wp_user_id IS NULL",$request_id,$order));
+            if($still)$this->approval_notify_administrators($request_id,$order);
+        },5);
+    }
+
     private function approval_seed_workflows(){
         global $wpdb;
         $t=$this->approval_tables();
@@ -507,7 +522,7 @@ trait EWS_Approvals_Trait {
             if($ok===false){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
         }
         if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval request.');}
-        if($admins_now)$this->approval_notify_administrators($approval_id,$admins_now);
+        if($admins_now){if($manage_transaction)$this->approval_notify_administrators($approval_id,$admins_now);else $this->approval_notify_administrators_after($approval_id,$admins_now);}
         return $approval_id;
     }
 
@@ -586,7 +601,9 @@ trait EWS_Approvals_Trait {
         if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval decision.');}
         if($is_self)$this->audit('approval_self_decision','approval_request',$approval_request_id,
             $this->approval_workflow_key_by_id((int)$request->workflow_id).' · level '.(int)$step->step_order.' · '.$decision);
-        if($next && !empty($next->rerouted) && !(int)$next->approver_wp_user_id)$this->approval_notify_administrators($approval_request_id,(int)$next->step_order);
+        if($next && !empty($next->rerouted) && !(int)$next->approver_wp_user_id){
+            if($manage_transaction)$this->approval_notify_administrators($approval_request_id,(int)$next->step_order);else $this->approval_notify_administrators_after($approval_request_id,(int)$next->step_order);
+        }
         return true;
     }
     /**

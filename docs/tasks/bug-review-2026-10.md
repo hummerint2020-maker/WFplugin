@@ -76,11 +76,11 @@ notifications, employee screens.
   clean base with a per-view allowlist.
 - [ ] Tasks "Show all" (`task_done`) is dropped on reload by the one-time-result rule
   (`assets/js/workforce-one.js` ~line 128 and `app_view_url`): exclude real filters.
-- [ ] Leave notification to user 0 when a step was rerouted to administrators
+- [x] Leave notification to user 0 when a step was rerouted to administrators
   (`trait-leave.php` ~line 202).
-- [ ] Administrators notified of an approval that is then rolled back (`trait-approvals.php` ~line 409):
+- [x] Administrators notified of an approval that is then rolled back (`trait-approvals.php` ~line 409):
   notify after commit.
-- [ ] Leave decision from the Requests Hub: the final apply runs outside a transaction
+- [x] Leave decision from the Requests Hub: the final apply runs outside a transaction
   (`trait-leave.php` ~line 455; same in `overtime_admin_decide`).
 - [x] Worker photo cached for a day after it is replaced (`src/Support/Download.php` ~line 45): add the
   file key to the URL or a shorter cache.

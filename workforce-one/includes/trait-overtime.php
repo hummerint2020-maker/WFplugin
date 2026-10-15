@@ -270,11 +270,15 @@ trait EWS_Overtime_Trait {
             if(!$req)return Hub::ERROR;
             $ar=$this->approval_find_request('overtime','overtime_request',$id);
             if($ar && Hub::isOpenApproval((string)$ar->status)){
-                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true,true)))return Hub::ERROR;
+                // The decision and, when it is the last one, the request's status in one transaction (3.31.102).
+                if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
+                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',false,true))){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $fresh=$this->approval_find_request('overtime','overtime_request',$id);
-                if(!$fresh)return Hub::ERROR;
+                if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $outcome=Hub::workflowOutcome((string)$fresh->status);
-                if($outcome!==Hub::ADVANCED)return $this->overtime_set_status($id,$outcome===Hub::APPROVED?'Approved':'Rejected')===true?$outcome:Hub::ERROR;
+                if($outcome!==Hub::ADVANCED && $this->overtime_set_status($id,$outcome===Hub::APPROVED?'Approved':'Rejected')!==true){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                if($outcome!==Hub::ADVANCED)return $outcome;
                 $next=$this->approval_current_step((int)$fresh->id);
                 if($next&&$next->approver_wp_user_id){
                     $emp=$this->people_employee((int)$req->employee_id);

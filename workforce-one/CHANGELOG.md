@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.31.102
+### Fixed
+- **Requests Hub, leave and overtime: a decision is all or nothing.** The approval and the request itself
+  (the leave's status and balance, the overtime's status) are saved together. Before, a failure in
+  between could keep the approval while the leave stayed Pending with its balance unchanged, or the other
+  way round.
+- Administrators are told that a request waits for them only once it is saved: a request rolled back by
+  its module no longer sends them a message.
+- A leave level waiting for administrators no longer tries to message "no approver" (user 0).
+
 ## 3.31.101
 ### Fixed
 - **A request is never refused because a level has nobody to decide it.** Before, someone without a

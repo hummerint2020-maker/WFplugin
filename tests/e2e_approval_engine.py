@@ -12,7 +12,7 @@ Wipes Workforce One test data; never run against a real site.
 import html, json, os, re, sys, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, d, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, d, php, q, results, wp, HERE  # noqa: E402
 
 PAGE = '/wp-admin/admin.php?page=ews31-approvals'
 
@@ -259,6 +259,49 @@ check('...a day later Big Boss has no manager: it moves up to the administrators
 ar, st_ = steps(lid)
 check('...who are told; and then it waits there (no more moves)', st_[0]['rerouted'] == '1' and st_[0]['approver_wp_user_id'] is None and st_[0]['escalations'] == '2'
       and q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid']) and tick('2026-10-20 14:00:00') == '{"reminded":0,"moved":0}', st_)
+save('vacation', 'LEVEL_1', level_1_type='SUPERVISOR')
+
+# ---------------------------------------------------------------- 3.31.102: all or nothing, and no message for nothing
+clear()
+save('vacation', 'LEVEL_1', level_1_type='SUPERVISOR')
+qs, lid = leave(emp, d(3))
+bal0 = q("SELECT used,pending FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d" % (ids['emp'], ids['type']))[0]
+n = adm.admin_request_nonce('leave', lid)
+break_writes('ews_leave_balances')
+adm.req('/wp-admin/admin-post.php', {'action': 'ews31_requests_decision', '_wpnonce': n or 'x', 'request_type': 'leave', 'request_id': lid, 'decision': 'approve'})
+break_writes('')
+ar, st_ = steps(lid)
+bal1 = q("SELECT used,pending FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d" % (ids['emp'], ids['type']))[0]
+check('Requests Hub: when saving the leave fails, the approval is not kept either (all or nothing)',
+      ar['status'] == 'WAITING_FOR_LEVEL_1' and st_[0]['status'] == 'PENDING' and leave_status(lid) == 'Pending' and bal0 == bal1, (ar, st_, leave_status(lid), bal0, bal1))
+n = adm.admin_request_nonce('leave', lid)
+adm.req('/wp-admin/admin-post.php', {'action': 'ews31_requests_decision', '_wpnonce': n or 'x', 'request_type': 'leave', 'request_id': lid, 'decision': 'approve'})
+check('...and approving again works', steps(lid)[0]['status'] == 'APPROVED' and leave_status(lid) == 'Approved' and float(q("SELECT used FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d" % (ids['emp'], ids['type']))[0]['used']) == 1)
+
+php("update_option('ews_feature_overtime',1,false);")
+save('overtime', 'LEVEL_1', level_1_type='SUPERVISOR')
+n = emp.nonce('ews_overtime_request_create', 'overtime')
+emp.post('ews_overtime_request_create', _wpnonce=n, overtime_date=d(2), start_time='18:00', end_time='19:00', reason='x')
+oid = int(q("SELECT id FROM {p}ews_overtime_requests ORDER BY id DESC LIMIT 1")[0]['id'])
+n = adm.admin_request_nonce('overtime', oid)
+break_writes('ews_overtime_requests')
+adm.req('/wp-admin/admin-post.php', {'action': 'ews31_requests_decision', '_wpnonce': n or 'x', 'request_type': 'overtime', 'request_id': oid, 'decision': 'approve'})
+break_writes('')
+ar, st_ = steps(oid, 'overtime_request')
+check('...the same for overtime', ar and ar['status'] == 'WAITING_FOR_LEVEL_1' and st_[0]['status'] == 'PENDING' and q("SELECT status FROM {p}ews_overtime_requests WHERE id=%d" % oid)[0]['status'] == 'Pending', (ar, st_))
+save('overtime', 'NONE')
+
+clear()
+save('vacation', 'LEVEL_1', level_1_type='SPECIFIC_USER', level_1_user_ref='Hana · #%d' % ids['hana_uid'])
+php("$wpdb->query(\"DELETE FROM {$p}ews_notifications\");")
+out = php("""wp_set_current_user(%d);$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'approval_start');$m->setAccessible(true);
+$wpdb->query("UPDATE {$p}ews_approval_workflow_steps SET resolver_value='999999' WHERE resolver_type='SPECIFIC_USER'");
+$wpdb->query('START TRANSACTION');$r=$m->invoke($o,'vacation','leave',424242,%d,[],false);$wpdb->query('ROLLBACK');echo is_wp_error($r)?'ERR':'ok';""" % (ids['emp_uid'], ids['emp'])).splitlines()[-1]
+check('a request rolled back by its module does not tell administrators about it', out == 'ok' and not steps(424242)[0] and not q("SELECT id FROM {p}ews_notifications WHERE title='Approval needed'"), (out, q("SELECT user_id,title FROM {p}ews_notifications")))
+out = php("""wp_set_current_user(%d);$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'approval_start');$m->setAccessible(true);
+$wpdb->query('START TRANSACTION');$r=$m->invoke($o,'vacation','leave',424243,%d,[],false);$wpdb->query('COMMIT');echo is_wp_error($r)?'ERR':'ok';""" % (ids['emp_uid'], ids['emp'])).splitlines()[-1]
+check('...one that is saved does, once', out == 'ok' and len(q("SELECT id FROM {p}ews_notifications WHERE title='Approval needed' AND user_id=%d" % ids['admin_uid'])) == 1, q("SELECT user_id,title FROM {p}ews_notifications"))
+check('...and nobody gets a message meant for "no approver" (user 0)', not q("SELECT id FROM {p}ews_notifications WHERE user_id=0"))
 save('vacation', 'LEVEL_1', level_1_type='SUPERVISOR')
 
 # ---------------------------------------------------------------- overtime: levels and hours

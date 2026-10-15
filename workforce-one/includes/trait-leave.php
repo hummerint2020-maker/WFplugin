@@ -217,7 +217,8 @@ trait EWS_Leave_Trait {
             global $wpdb;
             $steps=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->approval_tables()['instances']} WHERE approval_request_id=%d AND status='PENDING'",(int)$approval_request_id));
             foreach($steps as $step){
-                if((int)$step->approver_wp_user_id===(int)get_current_user_id())continue;
+                // A level waiting for administrators has no approver: they are told by the approval engine.
+                if(!(int)$step->approver_wp_user_id || (int)$step->approver_wp_user_id===(int)get_current_user_id())continue;
                 $this->leave_notify($step->approver_wp_user_id,$title,$msg,'vacation',$entity_id);
             }
         }
@@ -471,19 +472,17 @@ trait EWS_Leave_Trait {
             $entity=$cancel?'leave_cancellation':'leave';
             $ar=$this->approval_find_request('vacation',$entity,$id);
             if($ar && Hub::isOpenApproval((string)$ar->status)){
-                // The approval engine manages its own transaction for the admin override.
-                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true,true)))return Hub::ERROR;
+                // The decision and, when it is the last one, the leave itself in one transaction (3.31.102):
+                // before, the balance could change while the leave stayed Pending, or the other way round.
+                if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
+                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',false,true))){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $fresh=$this->approval_find_request('vacation',$entity,$id);
-                if(!$fresh)return Hub::ERROR;
+                if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $outcome=Hub::workflowOutcome((string)$fresh->status);
+                if($outcome!==Hub::ADVANCED && $apply($outcome===Hub::APPROVED?'APPROVED':'REJECTED')!==true){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 if($outcome!==Hub::ADVANCED){
-                    $final=$outcome===Hub::APPROVED?'APPROVED':'REJECTED';
-                    if($cancel){
-                        if(!$commit($final))return Hub::ERROR;
-                    }else{
-                        if($apply($final)!==true)return Hub::ERROR;
-                        $this->notify((int)$emp->wp_user_id,'leave','Leave '.ucfirst($outcome),'Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been '.$outcome.'.',['entity_id'=>$id]);
-                    }
+                    if(!$cancel)$this->notify((int)$emp->wp_user_id,'leave','Leave '.ucfirst($outcome),'Your '.$r->type_name.' request from '.$r->start_date.' to '.$r->end_date.' has been '.$outcome.'.',['entity_id'=>$id]);
                     return $outcome;
                 }
                 $next=$this->approval_current_step((int)$fresh->id);

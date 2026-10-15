@@ -1,0 +1,264 @@
+<title>My Approvals Inbox</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: the product's own look (indigo hero, white rounded cards, Alexandria), as the approved approvals and org-chart mockups. Phone screens sit in a phone-width column with notes beside them; the desktop screen is a list + detail split. */
+:root{
+  --bg:#f3f4fa; --card:#ffffff; --ink:#15153a; --sub:#5d6382; --faint:#8b90ab; --line:#e5e7f2; --soft:#f6f7fc;
+  --brand:#4836e0; --brand-soft:#eeecff; --hero-a:#16133f; --hero-b:#3a2bc4; --on-brand:#ffffff;
+  --ok:#0b7a4b; --ok-bg:#e8f7ef; --warn:#8a4f00; --warn-bg:#fff6e5; --bad:#b4233c; --bad-bg:#fdecef;
+  --t-lv:#4836e0; --t-ot:#a3245b; --t-cx:#0b7d74; --t-sw:#d9480f; --t-fr:#1f6fd1;
+  --shadow:0 1px 2px rgba(21,21,58,.06),0 6px 18px rgba(21,21,58,.06);
+  --font:"Alexandria",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496; --on-brand:#0f1020;
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --t-lv:#8d80ff; --t-ot:#f07aa8; --t-cx:#4fd1c5; --t-sw:#ff9a5c; --t-fr:#6aa8ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496; --on-brand:#0f1020;
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --t-lv:#8d80ff; --t-ot:#f07aa8; --t-cx:#4fd1c5; --t-sw:#ff9a5c; --t-fr:#6aa8ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px;margin:0}
+button,input,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+h1,h2,h3{text-wrap:balance}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:16px}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.head h1{margin:0;font-size:20px}
+.head p{margin:2px 0 0;color:var(--sub);font-size:13px;max-width:75ch}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:5px 12px;cursor:pointer;color:var(--sub)}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.screens{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.screens::-webkit-scrollbar{display:none}
+.screens button{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;cursor:pointer;color:var(--sub);font-size:13px}
+.screens button[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+
+/* phone column + notes */
+.stage{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:20px;align-items:start}
+.phone{background:var(--bg);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;display:grid}
+.bar{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+.bar b{font-size:16px}
+.bar .count{margin-inline-start:auto}
+.pbody{padding:12px;display:grid;gap:10px;align-content:start;min-height:560px}
+.notes{display:grid;gap:12px}
+.note{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px 16px}
+.note h3{margin:0 0 6px;font-size:15px}
+.note p,.note li{margin:0;color:var(--sub);font-size:13px}
+.note ul{margin:0;padding-inline-start:18px;display:grid;gap:4px}
+
+/* bits */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pill.brand{background:var(--brand-soft);color:var(--brand)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.mute{background:var(--soft);color:var(--sub)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;min-height:40px;padding:0 14px;cursor:pointer;font-weight:500}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:var(--on-brand)}
+.btn.bad{color:var(--bad)}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{background:var(--card);border-radius:14px;padding:8px 10px;display:grid;box-shadow:var(--shadow)}
+.kpi b{font-size:20px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:11.5px;color:var(--sub)}
+.kpi.warn b{color:var(--warn)}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.filters button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:12.5px;color:var(--sub)}
+.filters button[aria-pressed="true"]{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+.item{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:12px 14px;display:grid;gap:8px;border-inline-start:4px solid var(--tc)}
+.item.sel{outline:2px solid var(--brand)}
+.who{display:flex;gap:10px;align-items:center;min-width:0}
+.av{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--on-brand);background:var(--tc);flex:0 0 auto}
+.who b{display:block;font-size:14px}
+.who small{display:block;color:var(--sub);font-size:12px}
+.who .chk{margin-inline-start:auto;width:22px;height:22px;accent-color:var(--brand)}
+.what{font-size:13.5px}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.acts{display:flex;gap:8px}
+.acts .btn{flex:1}
+.bulk{position:sticky;bottom:0;display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--card);border-top:1px solid var(--line)}
+.bulk span{color:var(--sub);font-size:13px}
+.bulk .btn{margin-inline-start:auto}
+.toast{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:10px 12px;font-weight:600;font-size:13px}
+
+/* path */
+.flow{display:grid}
+.fstep{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;position:relative;padding-bottom:14px}
+.fstep::before{content:"";position:absolute;inset-inline-start:13px;top:28px;bottom:0;border-inline-start:2px solid var(--line)}
+.fstep:last-child::before{display:none}
+.fstep .b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--soft);border:2px solid var(--line);color:var(--sub)}
+.fstep.done .b{background:var(--ok);border-color:var(--ok);color:var(--on-brand)}
+.fstep.now .b{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.fstep.skip .b{border-style:dashed}
+.fstep.no .b{background:var(--bad);border-color:var(--bad);color:var(--on-brand)}
+.fstep b{display:block;font-weight:600;font-size:13.5px}
+.fstep small{display:block;color:var(--sub);font-size:12px}
+.fstep.skip b{color:var(--faint);font-weight:500}
+.sheet{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px;display:grid;gap:12px}
+.sheet h3{margin:0;font-size:15px}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13px}
+.facts dt{color:var(--sub)}
+.facts dd{margin:0;font-variant-numeric:tabular-nums}
+textarea{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;width:100%;min-height:64px;resize:vertical}
+.err{color:var(--bad);font-size:12.5px}
+
+/* desktop */
+.desk{background:var(--card);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.dlist{border-inline-end:1px solid var(--line);display:grid;align-content:start}
+.drow{display:grid;grid-template-columns:24px 36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);cursor:pointer;background:none;border-inline:0;border-bottom:0;text-align:start;width:100%}
+.drow[aria-current="true"]{background:var(--brand-soft)}
+.drow .what{font-size:12.5px;color:var(--sub)}
+.dtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px}
+.ddetail{padding:16px 18px;display:grid;gap:12px;align-content:start}
+.dec{display:grid;gap:10px}
+.dec .row{display:flex;gap:8px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:14px}
+.dec .row b{min-width:24px;color:var(--brand)}
+.dec .row p{margin:0}
+.dec .row small{display:block;color:var(--sub)}
+@media (max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}.desk{grid-template-columns:minmax(0,1fr)}.dlist{border-inline-end:0}}
+@media (prefers-reduced-motion:no-preference){.item,.drow{transition:outline-color .15s,background .15s}}
+</style>
+
+<div class="wrap" id="app">
+  <div class="head">
+    <div><h1 id="h-title"></h1><p id="h-lead"></p></div>
+    <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="ar">العربية</button><button type="button" data-lang="en">English</button></div>
+  </div>
+  <nav class="screens" id="screens" aria-label="Screens"></nav>
+  <div id="screen"></div>
+</div>
+
+<script>
+var T={
+ title:{ar:'موافقاتي وطلباتي (المرحلة ٣)',en:'My approvals and My requests (stage 3)'},
+ lead:{ar:'ماك أب للمراجعة قبل البناء. صندوق واحد في الأبلكيشن لكل الطلبات اللي مستنية قرارك، وصفحة للموظف يتابع فيها طلبه مستوى بمستوى. الأمثلة كلها بيانات تجريبية.',en:'A mockup to review before building. One inbox in the app for every request waiting for you, and a page where the employee follows each request level by level. All names and numbers are examples.'},
+ s1:{ar:'موافقاتي',en:'My approvals'},s2:{ar:'تفاصيل وقرار',en:'Details and decision'},s3:{ar:'طلباتي',en:'My requests'},s4:{ar:'على الكمبيوتر',en:'On a computer'},s5:{ar:'قرارات مطلوبة منك',en:'Decisions for you'},
+ inbox:{ar:'موافقاتي',en:'My approvals'},waiting:{ar:'مستني قرارك',en:'Waiting for you'},late:{ar:'متأخر',en:'Overdue'},week:{ar:'قررت الأسبوع ده',en:'Decided this week'},
+ f_all:{ar:'الكل',en:'All'},f_lv:{ar:'إجازات',en:'Leave'},f_ot:{ar:'أوفرتايم',en:'Overtime'},f_cx:{ar:'تصحيح حضور',en:'Corrections'},f_sw:{ar:'تبديل',en:'Swaps'},f_late:{ar:'المتأخر بس',en:'Overdue only'},
+ approve:{ar:'موافقة',en:'Approve'},reject:{ar:'رفض',en:'Reject'},details:{ar:'التفاصيل',en:'Details'},select:{ar:'اختيار',en:'Select'},cancel_sel:{ar:'إلغاء الاختيار',en:'Done'},
+ lvl:{ar:'المستوى {a} من {b}',en:'Level {a} of {b}'},wait:{ar:'مستني من {h} ساعة شغل',en:'Waiting {h} working h'},overdue:{ar:'متأخر',en:'Overdue'},
+ moved:{ar:'طلع ليك من {n}',en:'Moved up from {n}'},admins:{ar:'للإدارة: ملوش مدير',en:'For administrators: no manager'},
+ selected:{ar:'{n} مختارين',en:'{n} selected'},approve_n:{ar:'وافق على {n}',en:'Approve {n}'},done_n:{ar:'✓ اتوافق على {n} طلبات. كل واحد راح للمستوى اللي بعده أو خلص.',en:'✓ {n} approved. Each went on to its next level or was finished.'},
+ empty:{ar:'مفيش طلبات مستنياك. 🎉',en:'Nothing is waiting for you.'},
+ n1:{ar:'إيه اللي في الصندوق',en:'What is in the inbox'},
+ n1a:{ar:'كل طلب مستني قرارك أنت، من أي نوع: إجازة، إلغاء إجازة، أوفرتايم، تصحيح حضور، تبديل بعد ما الزميل يوافق، إعادة تسجيل الوجه.',en:'Every request waiting for your decision, of any type: leave, a leave cancellation, overtime, an attendance correction, a swap once the colleague accepted, a face reset.'},
+ n1b:{ar:'على كل طلب: هو في مستوى كام من كام، ومستني بقاله قد إيه بساعات الشغل، ولو طلع ليك من مدير تاني.',en:'Each one shows its level, how long it has waited in working hours, and whether it moved up to you from someone else.'},
+ n1c:{ar:'المتأخر (عدّى وقت التذكير) بيتعلّم بالأحمر ويطلع فوق.',en:'Overdue ones (past the reminder time) are marked red and listed first.'},
+ n1d:{ar:'للإدارة بس: الطلبات اللي ملهاش معتمد (زي صاحب الشركة) بتبان هنا كمان.',en:'Administrators only: requests with nobody to decide them (the owner, for example) show here too.'},
+ n2:{ar:'موافقة على كذا طلب مرة واحدة',en:'Approving several at once'},
+ n2a:{ar:'"اختيار" ← تعلّم على الطلبات ← "وافق على ٣". الرفض دايمًا واحد واحد ومعاه سبب.',en:'"Select", tick the requests, then "Approve 3". A rejection is always one at a time, with a reason.'},
+ // sheet
+ s_title:{ar:'إجازة سنوية · هنا لطفي',en:'Annual leave · Hana Lotfy'},
+ f_days:{ar:'الأيام',en:'Days'},f_dates:{ar:'التاريخ',en:'Dates'},f_bal:{ar:'الرصيد بعدها',en:'Balance after'},f_reason:{ar:'السبب',en:'Reason'},f_team:{ar:'غايبين من الفريق',en:'Team away'},
+ v_days:{ar:'٣ أيام',en:'3 days'},v_dates:{ar:'٢٠–٢٢ أكتوبر',en:'20–22 Oct'},v_bal:{ar:'١٥ من ٢١',en:'15 of 21'},v_reason:{ar:'سفر عائلي',en:'Family trip'},v_team:{ar:'واحد (يوسف، ٢١ أكتوبر)',en:'One (Youssef, 21 Oct)'},
+ path:{ar:'المسار',en:'The path'},
+ p1:{ar:'المستوى ١ · المدير المباشر · منى عادل',en:'Level 1 · Direct manager · Mona Adel'},p1s:{ar:'دورك دلوقتي · تذكير بعد ٨ ساعات شغل',en:'Your turn now · reminder after 8 working h'},
+ p2:{ar:'المستوى ٢ · الـ HR · سارة نبيل',en:'Level 2 · HR · Sara Nabil'},p2s:{ar:'بعدك',en:'After you'},
+ p3:{ar:'المستوى ٣ · المالية',en:'Level 3 · Finance'},p3s:{ar:'هيتخطّى: الإجازة مش أكتر من ٥ أيام',en:'Skipped: the leave is not above 5 days'},
+ note:{ar:'ملاحظة (لازمة مع الرفض)',en:'Note (needed to reject)'},note_ph:{ar:'مثلًا: الأسبوع ده فيه تسليم، ممكن الأسبوع اللي بعده؟',en:'For example: we deliver that week, could it be the week after?'},
+ need_note:{ar:'اكتب سبب الرفض الأول.',en:'Write why you reject it first.'},
+ ok_next:{ar:'✓ وافقت. الطلب راح لـ سارة نبيل (المستوى ٢ من ٣).',en:'✓ Approved. It went to Sara Nabil (level 2 of 3).'},
+ rej_done:{ar:'اترفض، وهنا اتبلّغت بالسبب.',en:'Rejected. Hana was told why.'},
+ n3:{ar:'قبل ما تقرر',en:'Before you decide'},
+ n3a:{ar:'كل اللي محتاجه في مكان واحد: الأيام والرصيد بعدها ومين غايب من الفريق في نفس الأيام.',en:'All you need in one place: the days, the balance after, and who in the team is away on the same days.'},
+ n3b:{ar:'المسار بيقولك مين وافق قبلك، وهيروح لمين بعدك، وأي مستوى هيتخطّى وليه.',en:'The path tells you who approved before you, who decides after you, and which level is skipped and why.'},
+ // my requests
+ mine:{ar:'طلباتي',en:'My requests'},
+ r1:{ar:'إجازة سنوية · ٢٠–٢٢ أكتوبر',en:'Annual leave · 20–22 Oct'},r1s:{ar:'مستني · المستوى ١ من ٢',en:'Waiting · level 1 of 2'},
+ r2:{ar:'أوفرتايم · ٩ أكتوبر · ٣ ساعات',en:'Overtime · 9 Oct · 3 h'},r2s:{ar:'اتوافق',en:'Approved'},
+ r3:{ar:'تصحيح حضور · ٢ أكتوبر',en:'Attendance correction · 2 Oct'},r3s:{ar:'اترفض',en:'Rejected'},
+ t_sent:{ar:'اتبعت · الثلاثاء ١٠:١٢',en:'Sent · Tue 10:12'},
+ t1:{ar:'المدير المباشر · منى عادل',en:'Direct manager · Mona Adel'},t1s:{ar:'بتقرر دلوقتي · من ٢ ساعة شغل',en:'Deciding now · for 2 working h'},
+ t2:{ar:'الـ HR · سارة نبيل',en:'HR · Sara Nabil'},t2s:{ar:'بعدها',en:'Next'},
+ t3:{ar:'المالية',en:'Finance'},t3s:{ar:'مش هتحتاجها: الإجازة مش أكتر من ٥ أيام',en:'Not needed: the leave is not above 5 days'},
+ c_note:{ar:'منى عادل: "الوقت ده فيه جرد، ابعته تاني بتاريخ تاني"',en:'Mona Adel: "We count stock that day, please send it again for another day"'},
+ cancel_req:{ar:'إلغاء الطلب',en:'Cancel request'},cancel_ok:{ar:'متأكد؟ الأيام هترجع لرصيدك.',en:'Sure? The days go back to your balance.'},yes:{ar:'أيوه، الغيه',en:'Yes, cancel it'},no:{ar:'لأ',en:'No'},cancelled:{ar:'اتلغى، والأيام رجعت لرصيدك.',en:'Cancelled. The days are back in your balance.'},
+ n4:{ar:'الموظف يعرف طلبه فين',en:'The employee sees where it is'},
+ n4a:{ar:'كل الطلبات في مكان واحد، وكل طلب بيوري مين وافق وإمتى، ومستني مين دلوقتي، وأي مستوى مش هيحتاجه.',en:'Every request in one place, each showing who approved it and when, who decides now, and which level it will not need.'},
+ n4b:{ar:'اللي لسه مستني يتلغى من هنا. الإجازة اللي اتوافق عليها بتتلغى بطلب إلغاء زي النهارده.',en:'A waiting request can be cancelled here. An approved leave still needs a cancellation request, as today.'},
+ // desktop
+ d_hint:{ar:'نفس الصندوق على الشاشة الكبيرة: القايمة على جنب والتفاصيل على الجنب التاني.',en:'The same inbox on a large screen: the list on one side, the details on the other.'},
+ // decisions
+ dq:{ar:'محتاج قرارك في دول قبل البناء',en:'Decide these before I build'},
+ q1:{ar:'الصندوق ده يشتغل إزاي؟',en:'How is the inbox turned on?'},q1a:{ar:'اقتراحي: مقفول افتراضيًا، ويتفتح من الإعدادات زي أي ميزة جديدة. لما يتفتح يظهر "موافقاتي" في القايمة وكارت على الرئيسية فيه العدد.',en:'Proposal: off by default and turned on in settings like every new feature. Once on, "My approvals" appears in the menu and a home card shows the count.'},
+ q2:{ar:'الموافقات القديمة جوه كل صفحة (الإجازات، الأوفرتايم…)؟',en:'The approval lists inside each page (Leave, Overtime…)?'},q2a:{ar:'اقتراحي: تفضل زي ما هي، ويتضاف فوقها رابط "كل موافقاتك في مكان واحد". نشيلها بعدين لو الصندوق عجبك.',en:'Proposal: keep them as they are, with a link "All your approvals in one place" above them. Remove them later if you like the inbox.'},
+ q3:{ar:'الموافقة على كذا طلب مرة واحدة: على أي أنواع؟',en:'Approving several at once: which types?'},q3a:{ar:'اقتراحي: كل الأنواع، لحد ٢٠ طلب في المرة. الرفض واحد واحد ومعاه سبب.',en:'Proposal: every type, up to 20 at a time. Rejecting stays one at a time, with a reason.'},
+ q4:{ar:'سبب الرفض',en:'A reason to reject'},q4a:{ar:'اقتراحي: لازم في كل الأنواع (النهارده لازم في التصحيحات بس)، والموظف بيشوفه.',en:'Proposal: required for every type (today only corrections need one), and the employee sees it.'},
+ q5:{ar:'طلباتي: يتلغى منها إيه؟',en:'My requests: what can be cancelled there?'},q5a:{ar:'اقتراحي: أي طلب لسه مستني (إجازة، أوفرتايم، تصحيح). الإجازة اللي اتوافق عليها بطلب إلغاء زي النهارده.',en:'Proposal: any request still waiting (leave, overtime, correction). An approved leave through a cancellation request, as today.'},
+ q6:{ar:'"متأخر" معناه إيه؟',en:'What does "overdue" mean?'},q6a:{ar:'اقتراحي: عدّى وقت التذكير اللي انت محدده للنوع ده. لو مفيش تذكير متحدد، بعد ٢٤ ساعة شغل.',en:'Proposal: past the reminder time you set for that type; with no reminder set, after 24 working hours.'}
+};
+var ITEMS=[
+ {id:1,k:'ot',c:'--t-ot',n:{ar:'يوسف جمال',en:'Youssef Gamal'},s:{ar:'قائد فريق · إسكندرية',en:'Team Lead · Alexandria'},w:{ar:'أوفرتايم · ١٦ أكتوبر · ١٨:٠٠–٢١:٠٠ (٣ ساعات)',en:'Overtime · 16 Oct · 18:00–21:00 (3 h)'},lv:[2,3],h:30,late:true,moved:{ar:'كريم فتحي',en:'Karim Fathy'}},
+ {id:2,k:'lv',c:'--t-lv',n:{ar:'هنا لطفي',en:'Hana Lotfy'},s:{ar:'مندوبة مبيعات',en:'Sales Representative'},w:{ar:'إجازة سنوية · ٣ أيام · ٢٠–٢٢ أكتوبر',en:'Annual leave · 3 days · 20–22 Oct'},lv:[1,3],h:2},
+ {id:3,k:'cx',c:'--t-cx',n:{ar:'عمر عادل',en:'Omar Adel'},s:{ar:'محاسب',en:'Accountant'},w:{ar:'تصحيح حضور · ١٣ أكتوبر · دخول ٨:٥٥ بدل ٩:٤٠ (البصمة ما اشتغلتش)',en:'Correction · 13 Oct · Sign In 08:55, not 09:40 (the scanner failed)'},lv:[1,1],h:5},
+ {id:4,k:'sw',c:'--t-sw',n:{ar:'سلمى نبيل',en:'Salma Nabil'},s:{ar:'خدمة عملاء',en:'Customer Service'},w:{ar:'تبديل · ١٨ أكتوبر مع علي حسن (علي وافق)',en:'Swap · 18 Oct with Ali Hassan (Ali accepted)'},lv:[1,1],h:1},
+ {id:5,k:'lv',c:'--t-lv',n:{ar:'أحمد سمير',en:'Ahmed Samir'},s:{ar:'مندوب مبيعات',en:'Sales Representative'},w:{ar:'إجازة عارضة · يوم · النهارده (طارئة)',en:'Casual leave · 1 day · today (unplanned)'},lv:[1,2],h:1},
+ {id:6,k:'lv',c:'--t-fr',n:{ar:'م. خالد رضا',en:'Eng. Khaled Reda'},s:{ar:'المدير العام',en:'General Manager'},w:{ar:'إجازة سنوية · يومين · ٢٧–٢٨ أكتوبر',en:'Annual leave · 2 days · 27–28 Oct'},lv:[1,1],h:3,admins:true}
+];
+var lang='ar',screen='s1',filter='all',selecting=false,sel={},done={},sheetState='',mineState='',cur=2;
+function t(k,v){var s=(T[k]||{})[lang]||k;if(v)for(var x in v)s=s.split('{'+x+'}').join(v[x]);return s;}
+function num(n){return lang==='ar'?String(n).replace(/\d/g,function(d){return '٠١٢٣٤٥٦٧٨٩'[d];}):String(n);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function ini(n){return n.split(' ').filter(Boolean).slice(-2).map(function(w){return w[0];}).join('');}
+function list(){return ITEMS.filter(function(it){return !done[it.id]&&(filter==='all'||(filter==='late'?it.late:it.k===filter));}).sort(function(a,b){return (b.late?1:0)-(a.late?1:0);});}
+function meta(it){return '<div class="meta"><span class="pill mute">'+t('lvl',{a:num(it.lv[0]),b:num(it.lv[1])})+'</span><span class="pill '+(it.late?'bad':'mute')+'">'+(it.late?t('overdue')+' · ':'')+t('wait',{h:num(it.h)})+'</span>'+(it.moved?'<span class="pill warn">'+t('moved',{n:it.moved[lang]})+'</span>':'')+(it.admins?'<span class="pill brand">'+t('admins')+'</span>':'')+'</div>';}
+function card(it){var on=!!sel[it.id];return '<article class="item'+(on?' sel':'')+'" style="--tc:var('+it.c+')"><div class="who"><span class="av">'+esc(ini(it.n[lang]))+'</span><div><b>'+esc(it.n[lang])+'</b><small>'+esc(it.s[lang])+'</small></div>'+(selecting?'<input type="checkbox" class="chk" id="chk'+it.id+'" data-sel="'+it.id+'"'+(on?' checked':'')+' aria-label="'+esc(it.n[lang])+'">':'')+'</div><div class="what">'+esc(it.w[lang])+'</div>'+meta(it)+(selecting?'':'<div class="acts"><button type="button" class="btn ok sm" data-ok="'+it.id+'">'+t('approve')+'</button><button type="button" class="btn sm" data-open="'+it.id+'">'+t('details')+'</button></div>')+'</article>';}
+function kpis(){var w=ITEMS.filter(function(i){return !done[i.id];}),l=w.filter(function(i){return i.late;}).length;return '<div class="kpis"><div class="kpi"><b>'+num(w.length)+'</b><span>'+t('waiting')+'</span></div><div class="kpi'+(l?' warn':'')+'"><b>'+num(l)+'</b><span>'+t('late')+'</span></div><div class="kpi"><b>'+num(12+Object.keys(done).length)+'</b><span>'+t('week')+'</span></div></div>';}
+function filters(){return '<div class="filters" role="group">'+['all','lv','ot','cx','sw','late'].map(function(f){return '<button type="button" data-filter="'+f+'" aria-pressed="'+(filter===f)+'">'+t('f_'+f)+'</button>';}).join('')+'</div>';}
+function s1(){var L=list(),n=Object.keys(sel).length,msg=sheetState&&sheetState.indexOf('bulk:')===0?'<div class="toast" role="status">'+t('done_n',{n:num(sheetState.slice(5))})+'</div>':'';
+ return '<div class="stage"><div class="phone"><div class="bar"><b>'+t('inbox')+'</b><button type="button" class="btn sm count" data-selecting>'+(selecting?t('cancel_sel'):t('select'))+'</button></div><div class="pbody">'+msg+kpis()+filters()+(L.length?L.map(card).join(''):'<p class="note">'+t('empty')+'</p>')+'</div>'+(selecting?'<div class="bulk"><span>'+t('selected',{n:num(n)})+'</span><button type="button" class="btn ok" data-bulk'+(n?'':' disabled')+'>'+t('approve_n',{n:num(n)})+'</button></div>':'')+'</div>'
+ +'<div class="notes"><div class="note"><h3>'+t('n1')+'</h3><ul><li>'+t('n1a')+'</li><li>'+t('n1b')+'</li><li>'+t('n1c')+'</li><li>'+t('n1d')+'</li></ul></div><div class="note"><h3>'+t('n2')+'</h3><p>'+t('n2a')+'</p></div></div></div>';}
+function step(cls,b,title,sub){return '<div class="fstep '+cls+'"><span class="b">'+b+'</span><div><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></div></div>';}
+function detail(){var st=sheetState;
+ var top=st==='ok'?'<div class="toast" role="status">'+t('ok_next')+'</div>':st==='rej'?'<div class="toast" role="status" style="background:var(--bad-bg);color:var(--bad)">'+t('rej_done')+'</div>':'';
+ return top+'<div class="sheet"><h3>'+t('s_title')+'</h3><dl class="facts"><dt>'+t('f_days')+'</dt><dd>'+t('v_days')+'</dd><dt>'+t('f_dates')+'</dt><dd>'+t('v_dates')+'</dd><dt>'+t('f_bal')+'</dt><dd>'+t('v_bal')+'</dd><dt>'+t('f_team')+'</dt><dd>'+t('v_team')+'</dd><dt>'+t('f_reason')+'</dt><dd>'+t('v_reason')+'</dd></dl>'
+ +'<h3>'+t('path')+'</h3><div class="flow">'+step(st==='ok'?'done':'now',st==='ok'?'✓':num(1),t('p1'),st==='ok'?(lang==='ar'?'وافقت دلوقتي':'You approved just now'):t('p1s'))+step(st==='ok'?'now':'',num(2),t('p2'),st==='ok'?(lang==='ar'?'دورها دلوقتي':'Her turn now'):t('p2s'))+step('skip',num(3),t('p3'),t('p3s'))+'</div>'
+ +(st&&st!=='need'?'':'<label for="note" class="what">'+t('note')+'</label><textarea id="note" placeholder="'+esc(t('note_ph'))+'"></textarea>'+(st==='need'?'<p class="err" role="alert">'+t('need_note')+'</p>':'')+'<div class="acts"><button type="button" class="btn ok" data-decide="ok">'+t('approve')+'</button><button type="button" class="btn bad" data-decide="rej">'+t('reject')+'</button></div>')+'</div>';}
+function s2(){return '<div class="stage"><div class="phone"><div class="bar"><b>'+t('details')+'</b></div><div class="pbody">'+detail()+'</div></div><div class="notes"><div class="note"><h3>'+t('n3')+'</h3><ul><li>'+t('n3a')+'</li><li>'+t('n3b')+'</li></ul></div></div></div>';}
+function s3(){var c=mineState;
+ var r1=c==='done'?'':'<article class="item" style="--tc:var(--t-lv)"><div class="who"><div><b>'+t('r1')+'</b><small>'+t('t_sent')+'</small></div><span class="pill warn" style="margin-inline-start:auto">'+t('r1s')+'</span></div><div class="flow">'
+ +step('done','✓',lang==='ar'?'اتبعت':'Sent',t('t_sent'))+step('now',num(1),t('t1'),t('t1s'))+step('',num(2),t('t2'),t('t2s'))+step('skip','–',t('t3'),t('t3s'))+'</div>'
+ +(c==='ask'?'<p class="what">'+t('cancel_ok')+'</p><div class="acts"><button type="button" class="btn bad" data-mine="done">'+t('yes')+'</button><button type="button" class="btn" data-mine="">'+t('no')+'</button></div>':'<div class="acts"><button type="button" class="btn bad sm" data-mine="ask">'+t('cancel_req')+'</button></div>')+'</article>';
+ return '<div class="stage"><div class="phone"><div class="bar"><b>'+t('mine')+'</b></div><div class="pbody">'+(c==='done'?'<div class="toast" role="status">'+t('cancelled')+'</div>':'')+r1
+ +'<article class="item" style="--tc:var(--t-ot)"><div class="who"><div><b>'+t('r2')+'</b><small>'+(lang==='ar'?'منى عادل وافقت · الأربعاء ٩:٠٢':'Mona Adel approved · Wed 09:02')+'</small></div><span class="pill ok" style="margin-inline-start:auto">'+t('r2s')+'</span></div></article>'
+ +'<article class="item" style="--tc:var(--t-cx)"><div class="who"><div><b>'+t('r3')+'</b><small>'+t('c_note')+'</small></div><span class="pill bad" style="margin-inline-start:auto">'+t('r3s')+'</span></div></article>'
+ +'</div></div><div class="notes"><div class="note"><h3>'+t('n4')+'</h3><ul><li>'+t('n4a')+'</li><li>'+t('n4b')+'</li></ul></div></div></div>';}
+function s4(){var L=ITEMS.filter(function(i){return !done[i.id];});
+ return '<p class="what" style="color:var(--sub);margin:0">'+t('d_hint')+'</p><div class="desk"><div class="dlist"><div class="dtop"><b>'+t('inbox')+'</b>'+filters()+'</div>'
+ +L.map(function(it){return '<button type="button" class="drow" data-cur="'+it.id+'" aria-current="'+(cur===it.id)+'" style="--tc:var('+it.c+')"><input type="checkbox" tabindex="-1" aria-hidden="true"><span class="av">'+esc(ini(it.n[lang]))+'</span><span><b>'+esc(it.n[lang])+'</b><span class="what" style="display:block">'+esc(it.w[lang])+'</span></span><span class="pill '+(it.late?'bad':'mute')+'">'+num(it.h)+(lang==='ar'?' س':' h')+'</span></button>';}).join('')
+ +'</div><div class="ddetail">'+detail()+'</div></div>';}
+function s5(){return '<div class="note" style="padding:18px"><h3>'+t('dq')+'</h3><div class="dec">'+[1,2,3,4,5,6].map(function(i){return '<div class="row"><b>'+num(i)+'</b><p>'+t('q'+i)+'<small>'+t('q'+i+'a')+'</small></p></div>';}).join('')+'</div></div>';}
+function render(){
+ document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+ document.getElementById('h-title').textContent=t('title');document.getElementById('h-lead').textContent=t('lead');
+ document.querySelectorAll('[data-lang]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.lang===lang));});
+ document.getElementById('screens').innerHTML=['s1','s2','s3','s4','s5'].map(function(s){return '<button type="button" data-screen="'+s+'" aria-pressed="'+(screen===s)+'">'+t(s)+'</button>';}).join('');
+ document.getElementById('screen').innerHTML={s1:s1,s2:s2,s3:s3,s4:s4,s5:s5}[screen]();
+}
+document.addEventListener('click',function(e){var b=e.target.closest('button,input');if(!b)return;var d=b.dataset;
+ if(d.lang){lang=d.lang;}
+ else if(d.screen){screen=d.screen;sheetState='';mineState='';}
+ else if(d.filter){filter=d.filter;}
+ else if(b.hasAttribute('data-selecting')){selecting=!selecting;sel={};sheetState='';}
+ else if(d.sel){if(sel[d.sel])delete sel[d.sel];else sel[d.sel]=1;}
+ else if(b.hasAttribute('data-bulk')){var n=Object.keys(sel).length;Object.keys(sel).forEach(function(id){done[id]=1;});sel={};selecting=false;sheetState='bulk:'+n;}
+ else if(d.ok){done[d.ok]=1;sheetState='';}
+ else if(d.open){screen='s2';sheetState='';}
+ else if(d.cur){cur=+d.cur;sheetState='';}
+ else if(d.decide){var note=(document.getElementById('note')||{}).value||'';sheetState=d.decide==='rej'&&!note.trim()?'need':d.decide;}
+ else if(d.mine!==undefined&&b.hasAttribute('data-mine')){mineState=d.mine;}
+ else return;
+ render();
+});
+render();
+</script>
