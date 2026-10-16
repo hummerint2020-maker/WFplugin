@@ -11,20 +11,21 @@
     var max = parseInt(root.getAttribute('data-bulk-max'), 10) || 20;
     var errSel = /[?&](leave_error|overtime_error|cx_error|swap_error)=/;
 
-    root.querySelectorAll('[data-apv-form]').forEach(function (form) {
-        form.addEventListener('submit', function (e) {
-            var btn = e.submitter;
-            if (!btn || btn.value !== 'reject' || !form.hasAttribute('data-note-required')) return;
-            var note = form.querySelector('textarea[name="note"]');
-            if (note && note.value.trim() !== '') return;
-            e.preventDefault();
-            var more = form.querySelector('details');
-            if (more) more.open = true;
-            var err = form.querySelector('[data-apv-note-err]');
-            if (err) err.hidden = false;
-            if (note) note.focus();
-        });
-    });
+    // Caught on the way down (capture), before the app's own "Are you sure?" dialog on the form
+    // (workforce-one.js) opens for a reject that cannot be sent without a reason.
+    root.addEventListener('submit', function (e) {
+        var form = e.target, btn = e.submitter;
+        if (!form.matches('[data-apv-form][data-note-required]') || !btn || btn.value !== 'reject') return;
+        var note = form.querySelector('textarea[name="note"]');
+        if (note && note.value.trim() !== '') return;
+        e.preventDefault();
+        e.stopPropagation();
+        var more = form.querySelector('details');
+        if (more) more.open = true;
+        var err = form.querySelector('[data-apv-note-err]');
+        if (err) err.hidden = false;
+        if (note) note.focus();
+    }, true);
 
     var pickable = root.querySelectorAll('[data-apv-form]:not([data-apv-nobulk])');
     var selectBtn = root.querySelector('[data-apv-select]');

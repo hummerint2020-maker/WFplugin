@@ -59,7 +59,7 @@ const SHOTS = process.env.APV_SHOTS || '';
   const otCard = page.locator('[data-apv-item]').filter({ hasText: 'Overtime' });
   await otCard.locator('[data-apv-reject]').click();
   await page.waitForTimeout(300);
-  check('rejecting overtime without a reason opens the details and asks for one', await otCard.locator('details').evaluate(d => d.open) && await otCard.locator('[data-apv-note-err]').isVisible());
+  check('rejecting overtime without a reason opens the details and asks for one (no "Are you sure?" dialog)', await otCard.locator('details').evaluate(d => d.open) && await otCard.locator('[data-apv-note-err]').isVisible() && !(await page.locator('#ews-action-confirm-modal').count()));
   check('...nothing was sent', php(`global $wpdb; echo $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d",${ids.ot}));`) === 'Pending');
 
   // Select the three leave requests and approve them together.
@@ -80,7 +80,10 @@ const SHOTS = process.env.APV_SHOTS || '';
   const left = page.locator('[data-apv-item]').first();
   await left.locator('summary').click();
   await left.locator('textarea[name="note"]').fill('Not this month');
-  await Promise.all([page.waitForURL(/ews_view=approvals/), left.locator('[data-apv-reject]').click()]);
+  await left.locator('[data-apv-reject]').click();
+  // The app asks "Are you sure?" before rejecting overtime (as on the Overtime page).
+  check('...with a reason, the app asks to confirm the rejection', await page.locator('#ews-action-confirm-modal').isVisible());
+  await Promise.all([page.waitForURL(/ews_view=approvals/), page.click('#ews-action-confirm-modal .ews-ux-confirm')]);
   check('...with a reason the overtime is rejected and the inbox is empty', php(`global $wpdb; echo $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d",${ids.ot}));`) === 'Rejected' && await page.locator('.wfo-apv-empty').isVisible());
 
   // A phone in Arabic.
