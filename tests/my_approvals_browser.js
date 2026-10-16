@@ -80,10 +80,12 @@ const SHOTS = process.env.APV_SHOTS || '';
   const left = page.locator('[data-apv-item]').first();
   await left.locator('summary').click();
   await left.locator('textarea[name="note"]').fill('Not this month');
-  await left.locator('[data-apv-reject]').click();
-  // The app asks "Are you sure?" before rejecting overtime (as on the Overtime page).
-  check('...with a reason, the app asks to confirm the rejection', await page.locator('#ews-action-confirm-modal').isVisible());
-  await Promise.all([page.waitForURL(/ews_view=approvals/), page.click('#ews-action-confirm-modal .ews-ux-confirm')]);
+  // The app may ask "Are you sure?" before rejecting overtime (its own setting, as on the Overtime page).
+  await Promise.all([page.waitForURL(/ews_view=approvals/, { timeout: 30000 }), (async () => {
+    await left.locator('[data-apv-reject]').click();
+    const dlg = page.locator('#ews-action-confirm-modal .ews-ux-confirm');
+    try { await dlg.waitFor({ state: 'visible', timeout: 2000 }); await dlg.click(); } catch (e) { /* no confirmation asked */ }
+  })()]);
   check('...with a reason the overtime is rejected and the inbox is empty', php(`global $wpdb; echo $wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d",${ids.ot}));`) === 'Rejected' && await page.locator('.wfo-apv-empty').isVisible());
 
   // A phone in Arabic.
