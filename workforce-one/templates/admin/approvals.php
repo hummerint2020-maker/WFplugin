@@ -4,7 +4,7 @@
  * and each employee's supervisor (the "Employee Supervisor" approver).
  * Script: assets/js/admin-approvals.js (shows the fields of the chosen mode and approver source).
  *
- * @var array<string,array{label:string,modes:string[],none_means:string,mode:string,levels:array<int,array{resolver_type:string,resolver_value:string,min_amount:?float}>,unsupported:string,allow_self:bool,self_rule:string,deadlines:array{remind:int,escalate:int},unit:string,active:bool,not_set:string,mode_labels:array<string,string>,mode_help:array<string,string>,hr_cases:?array{on:bool,cases:list<string>,url:string}}> $cards
+ * @var array<string,array{label:string,modes:string[],none_means:string,mode:string,levels:array<int,array{resolver_type:string,resolver_value:string,min_amount:?float}>,unsupported:string,allow_self:bool,self_rule:string,deadlines:array{remind:int,escalate:int},overdue:int,overdue_setting:int,reject_note:bool,unit:string,active:bool,not_set:string,mode_labels:array<string,string>,mode_help:array<string,string>,hr_cases:?array{on:bool,cases:list<string>,url:string}}> $cards
  * @var array<string,string> $not_in_use        workflow key => label
  * @var array<string,string> $mode_labels       mode => label
  * @var object[] $employees                     active employees (id, name, domain_name)
@@ -131,6 +131,11 @@ $fin_missing = !$settings['finance_user'];
             <span class="ews-apv-inline">Remind after <input type="number" min="0" max="720" name="remind_hours" value="<?php echo (int) $c['deadlines']['remind']; ?>" aria-label="Remind after (working hours)"> working hours,</span>
             <span class="ews-apv-inline">and move it up after <input type="number" min="0" max="720" name="escalate_hours" value="<?php echo (int) $c['deadlines']['escalate']; ?>" aria-label="Move up after (working hours)"> working hours</span>
             <p class="description" style="max-width:720px">0 = never. Moving up: the request goes to the approver's own manager (to the administrators when they have none); the first approver is told, and the request keeps its whole history.</p>
+            <p class="ews-apv-inline" style="margin-top:8px">Mark it overdue in My approvals after <input type="number" min="0" max="720" name="overdue_hours" value="<?php echo (int) $c['overdue_setting']; ?>" aria-label="Overdue after (working hours)"> working hours <span class="description">(0 = the reminder time, or 24; now <?php echo (int) $c['overdue']; ?>)</span></p>
+        </td></tr>
+        <tr data-visible-modes="<?php echo esc_attr($level_modes(1)); ?>" class="ews-apv-mode-row"><th>Rejecting</th><td>
+            <label><input type="checkbox" name="reject_note" value="1"<?php checked($c['reject_note']); ?>> A reason is needed to reject</label>
+            <p class="description" style="max-width:720px">The approver writes why, and the employee sees it. An administrator deciding on the Requests Hub is not asked for one.</p>
         </td></tr></table>
         <?php for ($i = 1; $i <= $max_levels; $i++): $lv = $c['levels'][$i]; ?>
         <div class="ews-approval-level" data-level="<?php echo (int) $i; ?>" data-visible-modes="<?php echo esc_attr($level_modes($i)); ?>">

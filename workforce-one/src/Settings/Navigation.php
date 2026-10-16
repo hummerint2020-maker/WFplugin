@@ -22,6 +22,9 @@ final class Navigation
         'polls' => ['label' => 'Polls', 'mobile_label' => 'Polls', 'icon' => '🗳️', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 65, 'mobile_order' => 65],
         'attendance' => ['label' => 'Attendance', 'mobile_label' => 'Attendance', 'icon' => '📝', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 70, 'mobile_order' => 50],
         'people' => ['label' => 'People', 'mobile_label' => 'People', 'icon' => '👥', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 75, 'mobile_order' => 55],
+        // 3.31.103: shown only while My approvals is on (wp-admin → Features).
+        'approvals' => ['label' => 'My approvals', 'mobile_label' => 'Approvals', 'icon' => '📥', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 45, 'mobile_order' => 45],
+        'requests' => ['label' => 'My requests', 'mobile_label' => 'Requests', 'icon' => '🗂️', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 46, 'mobile_order' => 46],
         'team' => ['label' => 'My team', 'mobile_label' => 'My team', 'icon' => '🧭', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 77, 'mobile_order' => 57],
         'reports' => ['label' => 'Reports', 'mobile_label' => 'Reports', 'icon' => '📊', 'desktop_visible' => 1, 'mobile_visible' => 1, 'desktop_order' => 80, 'mobile_order' => 60],
         'pay' => ['label' => 'My Pay', 'mobile_label' => 'My Pay', 'icon' => '💰', 'desktop_visible' => 1, 'mobile_visible' => 0, 'desktop_order' => 85, 'mobile_order' => 75],

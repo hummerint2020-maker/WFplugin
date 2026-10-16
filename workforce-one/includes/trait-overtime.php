@@ -40,7 +40,7 @@ trait EWS_Overtime_Trait {
     private function overtime_redirect($args=[]){
             $url=wp_get_referer();if(!$url||strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
             $url=remove_query_arg(['overtime_sent','overtime_error','leave_sent','leave_error','early_error','break_success','break_error','time_success','time_error','saved','imported','grid_saved','time_reset','time_saved'],$url);
-            $url=add_query_arg('ews_view','overtime',$url);if($args)$url=add_query_arg($args,$url);
+            $url=add_query_arg('ews_view',$this->approvals_return_view('overtime'),$url);if($args)$url=add_query_arg($args,$url);
             wp_safe_redirect($url);exit;
         }
 
@@ -157,7 +157,8 @@ trait EWS_Overtime_Trait {
                 if(!$this->approval_can_act((int)$ar->id))$this->overtime_redirect(['overtime_error'=>'access']);
                 $fail=function($code)use($wpdb){$wpdb->query('ROLLBACK');$this->overtime_redirect(['overtime_error'=>$code]);};
                 if($wpdb->query('START TRANSACTION')===false)$this->overtime_redirect(['overtime_error'=>'save']);
-                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',false)))$fail('approval');
+                $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false);
+                if(is_wp_error($acted))$fail($acted->get_error_code()==='approval_note_required'?'note':'approval');
                 $fresh=$this->approval_find_request('overtime','overtime_request',$id);
                 if(!$fresh)$fail('approval');
                 if($fresh->status==='APPROVED'||$fresh->status==='REJECTED'){
@@ -298,5 +299,46 @@ trait EWS_Overtime_Trait {
             if($this->early_leave_set_status($id,$decision==='approve'?'Approved':'Rejected')!==1)return Hub::ERROR;
             $this->early_leave_notify_employee($r,$decision,false);
             return Hub::outcome($decision);
+        }
+
+    /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
+
+    /** An overtime request waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
+    private function overtime_approval_card($id){
+            global $wpdb;
+            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d AND status='Pending' LIMIT 1",(int)$id));
+            if(!$r)return null;
+            // Kept left to right inside Arabic text (18:00–21:00, not 21:00–18:00).
+            $span="\u{2066}".substr((string)$r->start_time,0,5).'–'.substr((string)$r->end_time,0,5)."\u{2069}";
+            $facts=[[__('Day','workforce-one'),date_i18n('D j M',strtotime((string)$r->overtime_date))],[__('Time','workforce-one'),$span],[__('Length','workforce-one'),$this->duration_label((int)$r->requested_minutes)]];
+            if(trim((string)$r->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$r->reason];
+            return ['employee_id'=>(int)$r->employee_id,'tone'=>'overtime','kind'=>__('Overtime','workforce-one'),
+                'what'=>date_i18n('j M',strtotime((string)$r->overtime_date)).' · '.$span.' · '.$this->duration_label((int)$r->requested_minutes),'facts'=>$facts,'since'=>(string)$r->requested_at,
+                'action'=>'ews_overtime_request_respond','nonce'=>'ews_overtime_respond','fields'=>['request_id'=>(int)$id]];
+        }
+
+    /** An employee's overtime requests for My requests, newest first. @return list<array<string,mixed>> */
+    private function overtime_my_requests($employee_id,$limit=20){
+            if(!$this->overtime_enabled())return [];
+            global $wpdb;$this->ensure_overtime_schema();
+            $out=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE employee_id=%d ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
+                $out[]=['key'=>'overtime-'.(int)$r->id,'tone'=>'overtime','title'=>__('Overtime','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->overtime_date)).' · '.$this->duration_label((int)$r->requested_minutes),
+                    'sub'=>"\u{2066}".substr((string)$r->start_time,0,5).'–'.substr((string)$r->end_time,0,5)."\u{2069}",'state'=>['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected'][$r->status]??'cancelled','when'=>(string)$r->requested_at,
+                    'approval'=>['overtime','overtime_request',(int)$r->id],'withdraw'=>$r->status==='Pending'?'overtime':'','id'=>(int)$r->id];
+            }
+            return $out;
+        }
+
+    /** The employee withdraws an overtime request still waiting (My requests). @return true|string */
+    private function overtime_withdraw($id,$employee_id){
+            global $wpdb;
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
+            $ok=$wpdb->update($wpdb->prefix.'ews_overtime_requests',['status'=>'Cancelled','reviewed_by'=>get_current_user_id(),'reviewed_at'=>current_time('mysql')],['id'=>(int)$id,'employee_id'=>(int)$employee_id,'status'=>'Pending'],['%s','%d','%s'],['%d','%d','%s']);
+            if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
+            if(!$this->approval_close('overtime','overtime_request',(int)$id)){$wpdb->query('ROLLBACK');return 'save';}
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+            $this->audit('overtime_withdrawn','overtime_request',(int)$id,'Withdrawn by the employee');
+            return true;
         }
 }

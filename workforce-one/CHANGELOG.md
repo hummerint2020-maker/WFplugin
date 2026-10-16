@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.103
+My approvals and My requests (owner decisions 2026-10-16, docs/tasks/approvals.md, stage 3 of the
+approval engine; mockup docs/mockups/my-approvals/). **Off by default** (wp-admin → Features → My
+approvals and My requests); nothing changes until it is turned on.
+
+### Added
+- **My approvals** (app): every request waiting for the person's decision, of every type (leave, leave
+  cancellation, overtime, attendance correction, shift swap after the colleague, face reset).
+  - Each card shows who asked and what, "Level 2 of 3", how long it has waited in working hours, and
+    "moved up from" when it came from another approver. Overdue requests are marked and listed first.
+  - Details show the facts the approver needs (the days, the balance after, others in the department
+    away, the reason) and the path, level by level.
+  - A decision goes through the request's own handler (the same rules, notifications and Audit Log as
+    its page) and comes back here. Face reset is decided on its wp-admin page, linked from the card.
+  - Administrators also see the levels waiting for them (nobody else to decide them).
+  - **Select** approves several at once, up to 20; rejecting stays one at a time.
+  - The menu item shows how many wait, the home page has a card, and the Leave, Overtime, Corrections
+    and Schedule pages link to it above their own lists, which stay.
+- **My requests** (app): the employee's leave, overtime, corrections and swaps, newest first, each with
+  who decides it and where it is, and the reason of a rejection. A leave, overtime or correction still
+  waiting can be **withdrawn**: the leave's days are no longer reserved, and its approval is closed.
+- **Approval Workflows, per type:** "A reason is needed to reject" (by default only Attendance
+  Correction, as before) and "Mark it overdue after N working hours" (0 = the reminder time, or 24).
+  An administrator deciding on the Requests Hub is not asked for a reason.
+
 ## 3.31.102
 ### Fixed
 - **Requests Hub, leave and overtime: a decision is all or nothing.** The approval and the request itself

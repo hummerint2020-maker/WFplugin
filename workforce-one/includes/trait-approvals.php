@@ -145,6 +145,24 @@ trait EWS_Approvals_Trait {
         return (!is_array($all) || !array_key_exists($key,$all) || !empty($all[$key]))?'allow':'admins';
     }
 
+    /** Whether rejecting needs a reason in this workflow (3.31.103; by default only Attendance Correction, as before). */
+    private function approval_reject_note_required($workflow_key){
+        $key=sanitize_key((string)$workflow_key);$all=get_option('ews_approval_reject_note',[]);
+        if(is_array($all) && array_key_exists($key,$all))return !empty($all[$key]);
+        return $key==='attendance_correction';
+    }
+
+    /** After how many working hours a waiting request is overdue (3.31.103): the setting, else the reminder time, else 24. */
+    private function approval_overdue_hours($workflow_key){
+        $key=sanitize_key((string)$workflow_key);$all=get_option('ews_approval_overdue',[]);
+        return \WorkforceOne\Approvals\Workflows::overdueHours(is_array($all)?($all[$key]??0):0,$this->approval_deadlines($key)['remind']);
+    }
+
+    /** The reason typed with a decision (the form's "note"). */
+    private function approval_posted_note(){
+        return sanitize_textarea_field(wp_unslash($_POST['note']??'')); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the caller checked its nonce
+    }
+
     /** Reminder and move-up times of a workflow, in working hours (0 = never; 3.31.100). @return array{remind:int,escalate:int} */
     private function approval_deadlines($workflow_key){
         $all=get_option('ews_approval_deadlines',[]);
@@ -573,6 +591,9 @@ trait EWS_Approvals_Trait {
         if(!$allow_admin_override && !is_user_logged_in())return new WP_Error('approval_not_authorized','You are not the assigned approver.');
         $may=$this->approval_may_decide($step,$uid,(bool)$allow_admin_override);
         if(is_wp_error($may))return $may;
+        // A reason to reject, when the workflow asks for one (3.31.103); an administrator's override on the Requests Hub is not held to it.
+        if($decision==='reject' && trim($comment)==='' && !$allow_admin_override && $this->approval_reject_note_required($this->approval_workflow_key_by_id((int)$request->workflow_id)))
+            return new WP_Error('approval_note_required','Write why you reject it.');
         $is_self=$uid && $uid===$this->approval_requester_user_id($request);
 
         $now=current_time('mysql');
@@ -617,6 +638,74 @@ trait EWS_Approvals_Trait {
         return ['on'=>$this->corrections_enabled(),'cases'=>$cases,'url'=>admin_url('admin.php?page=ews31-corrections&tab=settings')];
     }
 
+    /** Who approves a level, for people (3.31.103). */
+    private function approval_resolver_label($resolver_type){
+        $l=['SUPERVISOR'=>__('Direct manager','workforce-one'),'MANAGERS_MANAGER'=>__("Manager's manager",'workforce-one'),'DEPARTMENT_MANAGER'=>__('Department manager','workforce-one'),
+            'TEAM_MANAGER'=>__('Team manager','workforce-one'),'HR'=>__('HR','workforce-one'),'FINANCE'=>__('Finance','workforce-one'),
+            'SPECIFIC_EMPLOYEE'=>__('Approver','workforce-one'),'SPECIFIC_USER'=>__('Approver','workforce-one'),'TARGET_EMPLOYEE'=>__('Colleague','workforce-one')];
+        return $l[strtoupper((string)$resolver_type)]??__('Approver','workforce-one');
+    }
+
+    private function approval_user_name($uid){
+        $uid=(int)$uid;if(!$uid)return '';
+        $e=$this->people_employee_by_user($uid);if($e)return (string)$e->name;
+        $u=get_userdata($uid);return $u?(string)$u->display_name:'';
+    }
+
+    /**
+     * Where a request is, level by level, for My approvals and My requests (3.31.103): each level's
+     * approver and state (done / now / next / skipped and why / rejected / cancelled), which level it
+     * waits at, for how many working hours, from whom it moved up, and the reason of a rejection.
+     * @return array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null
+     */
+    private function approval_path($workflow_key,$entity_type,$entity_id){
+        $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
+        if(!$ar)return null;
+        global $wpdb;$t=$this->approval_tables();
+        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d ORDER BY step_order ASC",(int)$ar->id));
+        $s=$this->approval_settings();$days=$this->working_days();$now=current_time('mysql');
+        $levels=count(array_filter($rows,function($r){return $r->status!=='SKIPPED';}));
+        $pos=0;$level=0;$hours=0.0;$moved='';$note='';$steps=[];
+        foreach($rows as $r){
+            $who=(int)$r->approver_wp_user_id?$this->approval_user_name((int)$r->approver_wp_user_id):(!empty($r->rerouted)?__('Administrators','workforce-one'):'');
+            $by=$this->approval_user_name((int)($r->acted_by_wp_user_id??0));
+            $when=$r->acted_at?date_i18n('D j M, H:i',strtotime((string)$r->acted_at)):'';
+            switch($r->status){
+                case 'APPROVED': $state='done';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s approved · %2$s','workforce-one'),$by?:$who,$when);break;
+                case 'REJECTED': $state='rejected';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s rejected · %2$s','workforce-one'),$by?:$who,$when);if((string)$r->comment!=='')$note=(string)$r->comment;break;
+                case 'PENDING':
+                    $state='now';$hours=$r->pending_since?\WorkforceOne\Approvals\WorkingHours::between((string)$r->pending_since,$now,$days,$s['day_start'],$s['day_end']):0.0;
+                    $sub=sprintf(/* translators: %s: working hours */__('Deciding now · waiting %s working hours','workforce-one'),number_format_i18n($hours,$hours<10&&floor($hours)!=$hours?1:0));
+                    if((int)($r->escalations??0) && (int)($r->escalated_from_wp_user_id??0))$moved=$this->approval_user_name((int)$r->escalated_from_wp_user_id);
+                    break;
+                case 'WAITING': $state='next';$sub=__('Next','workforce-one');break;
+                case 'CANCELLED': $state='cancelled';$sub=__('Withdrawn by the employee','workforce-one');break;
+                default:
+                    $state='skipped';
+                    $sub=($r->skip_reason??'')==='condition'?__('Not needed for this request','workforce-one'):(($r->skip_reason??'')==='self'?__('Skipped: the approver made the request','workforce-one'):__('Skipped: nobody to decide it','workforce-one'));
+            }
+            if($r->status!=='SKIPPED'){$pos++;if($r->status==='PENDING')$level=$pos;}
+            $steps[]=['order'=>(int)$r->step_order,'state'=>$state,'label'=>$this->approval_resolver_label((string)$r->resolver_type),'who'=>$who,'sub'=>$sub];
+        }
+        $key=(string)($ar->workflow_key??$workflow_key);
+        return ['id'=>(int)$ar->id,'workflow'=>$key,'status'=>(string)$ar->status,'level'=>$level,'levels'=>$levels,'hours'=>$hours,
+            'overdue'=>$level>0 && $hours>=$this->approval_overdue_hours($key),'moved_from'=>$moved,'note'=>$note,'steps'=>$steps];
+    }
+
+    /**
+     * The employee withdrew a request still waiting (3.31.103, My requests): its approval request is
+     * closed and the levels still to decide are marked withdrawn. The caller owns the transaction.
+     * @return bool
+     */
+    private function approval_close($workflow_key,$entity_type,$entity_id){
+        $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
+        if(!$ar)return true;
+        if(in_array($ar->status,['APPROVED','REJECTED','CANCELLED'],true))return false;
+        global $wpdb;$t=$this->approval_tables();$now=current_time('mysql');
+        if($wpdb->update($t['requests'],['status'=>'CANCELLED','current_step'=>null,'completed_at'=>$now],['id'=>(int)$ar->id,'status'=>(string)$ar->status])!==1)return false;
+        return $wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED' WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))!==false;
+    }
+
     /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */
     public function admin_approval_workflows(){
         if(!current_user_can('manage_options'))wp_die('Access denied');
@@ -640,6 +729,7 @@ trait EWS_Approvals_Trait {
             $cards[$key]=['label'=>$label,'modes'=>$supported,'none_means'=>$W::NONE_MEANS[$key],'mode'=>in_array($mode,$supported,true)?$mode:$supported[0],'levels'=>$levels,
                 'unsupported'=>$active&&!in_array($mode,$supported,true)?$mode:'','allow_self'=>$this->approval_self_allowed($key),
                 'self_rule'=>$this->approval_self_rule($key),'deadlines'=>$this->approval_deadlines($key),'unit'=>$W::AMOUNT_UNITS[$key]??'',
+                'overdue'=>$this->approval_overdue_hours($key),'overdue_setting'=>(int)(((array)get_option('ews_approval_overdue',[]))[$key]??0),'reject_note'=>$this->approval_reject_note_required($key),
                 // Never saved: the module's own fallback applies, shown instead of a mode that is not in force (3.31.89).
                 'active'=>$active,'not_set'=>$W::NOT_SET_MEANS[$key]??'',
                 'mode_labels'=>($W::MODE_LABELS[$key]??[])+$W::MODES,'mode_help'=>$W::MODE_HELP[$key]??[],
@@ -677,6 +767,15 @@ trait EWS_Approvals_Trait {
             $d=$W::deadlines(absint($_POST['remind_hours']??0),absint($_POST['escalate_hours']??0));
             if($this->approval_deadlines($workflow_key)!==$d)$this->audit('approval_deadlines','approval_workflow',0,$workflow_key.' · remind '.$d['remind'].' h · move up '.$d['escalate'].' h');
             $dl=get_option('ews_approval_deadlines',[]);if(!is_array($dl))$dl=[];$dl[$workflow_key]=$d;update_option('ews_approval_deadlines',$dl,false);
+            // My approvals (3.31.103): when a request is overdue, and whether rejecting needs a reason. A form without them keeps the saved values.
+            if(isset($_POST['overdue_hours'])){
+                $ov=get_option('ews_approval_overdue',[]);if(!is_array($ov))$ov=[];$h=max(0,min($W::MAX_DEADLINE_HOURS,absint($_POST['overdue_hours'])));
+                if((int)($ov[$workflow_key]??0)!==$h)$this->audit('approval_overdue','approval_workflow',0,$workflow_key.' · overdue after '.($h?:'the reminder time / 24').' h');
+                $ov[$workflow_key]=$h;update_option('ews_approval_overdue',$ov,false);
+                $note=!empty($_POST['reject_note']);
+                if($this->approval_reject_note_required($workflow_key)!==$note)$this->audit('approval_reject_note','approval_workflow',0,$workflow_key.'='.($note?'reason needed':'no reason needed'));
+                $rn=get_option('ews_approval_reject_note',[]);if(!is_array($rn))$rn=[];$rn[$workflow_key]=$note?1:0;update_option('ews_approval_reject_note',$rn,false);
+            }
         }
         if(is_wp_error($ok))wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_code'=>rawurlencode($ok->get_error_code()),'approval_error_message'=>rawurlencode($ok->get_error_message())],admin_url('admin.php?page=ews31-approvals')));else{$this->audit('approval_workflow_update','approval_workflow',0,$workflow_key.'='.$mode);wp_safe_redirect(add_query_arg('approval_saved',1,admin_url('admin.php?page=ews31-approvals')));}exit;
     }

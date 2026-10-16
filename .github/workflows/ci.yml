@@ -229,6 +229,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_types.py "$S"
       - name: Approval engine (up to four levels, new approvers, a condition per level, the requester rule, remind / move up after working hours)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_approval_engine.py "$S"
+      - name: My approvals and My requests (off by default, the inbox, deciding there, a reason to reject, overdue, administrators, withdrawing)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_my_approvals.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }
@@ -256,6 +258,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" node tests/offline_browser.js
       - name: Organization chart in Chromium (branches drawn when opened, panel, search, zoom, Arabic, phone width, My team)
         run: WP_CLI="wp --path=$WP" node tests/org_chart_browser.js
+      - name: My approvals in a browser (approve several at once, a reason to reject, Arabic on a phone, My requests)
+        run: WP_CLI="wp --path=$WP" node tests/my_approvals_browser.js
       - name: Arabic (RTL) pass
         run: |
           wp language core install ar --path="$WP"

@@ -133,6 +133,14 @@ final class Workflows
         return ['remind' => $r, 'escalate' => $e];
     }
 
+    /** When a waiting request is overdue (3.31.103): the setting, else the reminder time, else 24 working hours. @param mixed $setting */
+    public static function overdueHours($setting, int $remind): int
+    {
+        $h = max(0, min(self::MAX_DEADLINE_HOURS, (int) $setting));
+        if ($h > 0) return $h;
+        return $remind > 0 ? $remind : 24;
+    }
+
     public static function selfRule(string $rule): string
     {
         return isset(self::SELF_RULES[$rule]) ? $rule : 'allow';

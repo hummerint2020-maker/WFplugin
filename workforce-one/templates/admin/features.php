@@ -52,6 +52,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="evidence_present" value="1">
 <input type="hidden" name="offline_present" value="1">
 <input type="hidden" name="org_present" value="1">
+<input type="hidden" name="my_approvals_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -61,6 +62,11 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-corrections"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Attendance Corrections</div><div class="wfo-feature-desc">Employees ask to correct a forgotten Sign In / Sign Out or a wrong time; the manager decides with the day's evidence; HR can correct directly. Recorded events are never changed. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-corrections&tab=settings')); ?>">Settings</a></div></div>
     <?php $switch('corrections_enabled', $on['corrections']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-my-approvals"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title">My approvals and My requests</div><div class="wfo-feature-desc">One inbox in the app for every request waiting for a person's decision (leave, overtime, corrections, swaps, face reset), with its level, how long it has waited and the path, and approving several at once. Each employee also gets My requests, to follow their requests level by level and withdraw one still waiting. The approval lists inside each page stay. Who decides, the reason to reject and when a request is overdue: <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-approvals')); ?>">Approval Workflows</a>.</div></div>
+    <?php $switch('my_approvals_enabled', $on['my_approvals']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-signin-attempts"><div class="wfo-feature-head">

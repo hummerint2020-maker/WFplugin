@@ -45,6 +45,12 @@ trait EWS_Employees_Trait {
     }
 
     /** Is the employee active and in this department? */
+    /** The active employees of a department (3.31.103). @return list<int> */
+    private function people_department_member_ids($department_id){
+        global $wpdb;
+        return array_map('intval',(array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$this->employees} WHERE department_id=%d AND active=1",(int)$department_id)));
+    }
+
     private function people_in_department($employee_id,$department_id){
         global $wpdb;
         return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE id=%d AND active=1 AND department_id=%d LIMIT 1",(int)$employee_id,(int)$department_id));

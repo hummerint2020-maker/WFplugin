@@ -30,7 +30,7 @@ trait EWS_Swap_Trait {
             $url=wp_get_referer();
             if(!$url || strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
             $url=remove_query_arg(['action','swap_error','swap_sent','swap_done','leave_error','leave_sent','leave_done','leave_cancel_sent','early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','vacation_sent','vacation_error','vacation_done','vacation_rejected','saved','imported','grid_saved','time_reset','time_saved'],$url);
-            $url=add_query_arg('ews_view','schedule',$url);
+            $url=add_query_arg('ews_view',$this->approvals_return_view('schedule'),$url);
             if($args)$url=add_query_arg($args,$url);
             wp_safe_redirect($url);
             exit;
@@ -251,7 +251,8 @@ trait EWS_Swap_Trait {
             $ar=$this->approval_find_request('shift_swap','schedule_swap',$id);
             if(!$ar||!$this->approval_can_act((int)$ar->id))$this->swap_redirect(['swap_error'=>'access']);
             if($decision==='approve'){$past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));if($past)$this->swap_redirect(['swap_error'=>$past]);}
-            if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true)))$this->swap_redirect(['swap_error'=>'approval']);
+            $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),true);
+            if(is_wp_error($acted))$this->swap_redirect(['swap_error'=>$acted->get_error_code()==='approval_note_required'?'note':'approval']);
             $fresh=$this->approval_find_request('shift_swap','schedule_swap',$id);
             if($fresh&&$fresh->status==='APPROVED'){
                 $out=$this->swap_finish_approved($r);
@@ -295,5 +296,36 @@ trait EWS_Swap_Trait {
                   ORDER BY s.work_date DESC,s.id DESC
                   LIMIT 50";
             return $wpdb->get_results($wpdb->prepare($sql,...$args));
+        }
+
+    /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
+
+    /** A swap waiting for an approver (after the colleague accepted), for the My approvals inbox. @return array<string,mixed>|null */
+    private function swap_approval_card($id){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Awaiting' LIMIT 1",(int)$id));
+            if(!$r)return null;
+            $r->requester_name=$this->people_name((int)$r->requester_employee_id);$r->target_name=$this->people_name((int)$r->target_employee_id);
+            $day=date_i18n('D j M',strtotime((string)$r->work_date));
+            return ['employee_id'=>(int)$r->requester_employee_id,'tone'=>'swap','kind'=>__('Shift swap','workforce-one'),
+                /* translators: 1: day, 2: colleague's name */
+                'what'=>sprintf(__('%1$s with %2$s (they accepted)','workforce-one'),$day,(string)$r->target_name),
+                'facts'=>[[__('Day','workforce-one'),$day],[(string)$r->requester_name,$r->requester_status.' → '.$r->target_status],[(string)$r->target_name,$r->target_status.' → '.$r->requester_status]],'since'=>(string)$r->created_at,
+                'action'=>'ews_swap_decide','nonce'=>'ews_swap_decide_'.(int)$id,'fields'=>['swap_id'=>(int)$id]];
+        }
+
+    /** The swaps an employee asked for, for My requests (withdrawn on the Schedule page, as today). @return list<array<string,mixed>> */
+    private function swap_my_requests($employee_id,$limit=10){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            $out=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE requester_employee_id=%d ORDER BY created_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
+                $r->target_name=$this->people_name((int)$r->target_employee_id);
+                $state=['Pending'=>'waiting','Awaiting'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Declined'=>'rejected'][$r->status]??'cancelled';
+                $out[]=['key'=>'swap-'.(int)$r->id,'tone'=>'swap','title'=>__('Shift swap','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->work_date)),
+                    /* translators: %s: colleague's name */
+                    'sub'=>$r->status==='Pending'?sprintf(__('Waiting for %s to accept','workforce-one'),(string)$r->target_name):sprintf(__('With %s','workforce-one'),(string)$r->target_name),
+                    'state'=>$state,'when'=>(string)$r->created_at,'approval'=>['shift_swap','schedule_swap',(int)$r->id],'withdraw'=>'','id'=>(int)$r->id,'link'=>add_query_arg('ews_view','schedule',$this->app_home_url())];
+            }
+            return $out;
         }
 }

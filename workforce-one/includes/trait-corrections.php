@@ -458,7 +458,7 @@ trait EWS_Corrections_Trait {
     }
 
     private function cx_status_label($status){
-        $l=['pending'=>__('Waiting','workforce-one'),'pending_hr'=>__('Waiting for HR','workforce-one'),'approved'=>__('Approved','workforce-one'),'rejected'=>__('Rejected','workforce-one')];
+        $l=['pending'=>__('Waiting','workforce-one'),'pending_hr'=>__('Waiting for HR','workforce-one'),'approved'=>__('Approved','workforce-one'),'rejected'=>__('Rejected','workforce-one'),'cancelled'=>__('Withdrawn','workforce-one')];
         return $l[$status]??$status;
     }
 
@@ -937,5 +937,45 @@ trait EWS_Corrections_Trait {
         if($r==='not_found')return $this->api_fail(\WorkforceOne\Api\ErrorMap::NOT_FOUND);
         if(in_array($r,['access','own'],true))return $this->api_fail(\WorkforceOne\Api\ErrorMap::FORBIDDEN,['reason'=>$r]);
         return $this->api_fail(\WorkforceOne\Api\ErrorMap::VALIDATION_FAILED,['reason'=>$r,'message'=>$this->cx_error_message($r)]);
+    }
+
+    /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
+
+    /** A correction waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
+    private function cx_approval_card($id){
+        $c=$this->cx_get((int)$id);
+        if(!$c || $c->status!=='pending')return null;
+        $facts=[[__('Day','workforce-one'),$this->cx_day_label((string)$c->work_date)],[__('Correction','workforce-one'),$this->cx_type_label((string)$c->type)],[__('Change','workforce-one'),$this->cx_change_text($c)]];
+        if(trim((string)$c->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$c->reason];
+        return ['employee_id'=>(int)$c->employee_id,'tone'=>'correction','kind'=>__('Attendance correction','workforce-one'),
+            'what'=>$this->cx_day_label((string)$c->work_date).' · '.$this->cx_change_text($c),'facts'=>$facts,'since'=>(string)$c->requested_at,
+            'action'=>'ews_correction_decide','nonce'=>'ews_correction_decide_'.(int)$id,'fields'=>['correction_id'=>(int)$id],'link'=>add_query_arg('ews_view','corrections',$this->app_home_url())];
+    }
+
+    /** An employee's corrections for My requests, newest first. @return list<array<string,mixed>> */
+    private function cx_my_requests($employee_id,$limit=20){
+        if(!$this->corrections_enabled())return [];
+        global $wpdb;$this->ensure_corrections_schema_once();
+        $out=[];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND source='employee' ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $c){
+            $state=['pending'=>'waiting','pending_hr'=>'waiting','approved'=>'approved','rejected'=>'rejected'][$c->status]??'cancelled';
+            $out[]=['key'=>'correction-'.(int)$c->id,'tone'=>'correction','title'=>__('Attendance correction','workforce-one').' · '.$this->cx_day_label((string)$c->work_date),
+                'sub'=>$this->cx_change_text($c).($c->status==='pending_hr'?' · '.__('Waiting for HR','workforce-one'):''),'state'=>$state,'when'=>(string)$c->requested_at,
+                'approval'=>['attendance_correction','attendance_correction',(int)$c->id],'withdraw'=>in_array($c->status,['pending','pending_hr'],true)?'correction':'','id'=>(int)$c->id,
+                'note'=>$c->status==='rejected'?(string)$c->decision_note:''];
+        }
+        return $out;
+    }
+
+    /** The employee withdraws a correction still waiting (My requests). @return true|string */
+    private function cx_withdraw($id,$employee_id){
+        global $wpdb;
+        if($wpdb->query('START TRANSACTION')===false)return 'save';
+        $ok=$wpdb->query($wpdb->prepare("UPDATE {$this->cx_table()} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",get_current_user_id(),current_time('mysql'),(int)$id,(int)$employee_id));
+        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
+        if(!$this->approval_close('attendance_correction','attendance_correction',(int)$id)){$wpdb->query('ROLLBACK');return 'save';}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+        $this->audit('correction_withdrawn','employee',(int)$employee_id,'Correction #'.(int)$id.' withdrawn by the employee');
+        return true;
     }
 }

@@ -23,6 +23,7 @@ trait EWS_Features_Trait {
             'on'=>[
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
+                'my_approvals'=>$this->my_approvals_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
@@ -92,6 +93,8 @@ trait EWS_Features_Trait {
         update_option('ews_feature_tasks',$flag('tasks_enabled'),false);
         // A form without the field (an older page) keeps the saved state.
         if(isset($post['corrections_present']))update_option('ews_feature_corrections',$flag('corrections_enabled')?1:0,false);
+        // My approvals and My requests (3.31.103).
+        if(isset($post['my_approvals_present']))update_option('ews_feature_my_approvals',$flag('my_approvals_enabled')?1:0,false);
         // Sign In evidence (3.31.92): refused attempts and the photo with Face Sign In.
         if(isset($post['evidence_present'])){
             $ev_before=$this->evidence_settings();$ev=\WorkforceOne\Settings\SignInEvidence::fromPost($post);

@@ -6089,3 +6089,259 @@ msgstr "طلب عمل إضافي"
 
 msgid "the administrators"
 msgstr "الإدارة"
+
+#. 3.31.103: My approvals and My requests
+msgid "My approvals"
+msgstr "موافقاتي"
+
+msgid "My requests"
+msgstr "طلباتي"
+
+msgid "Manager's manager"
+msgstr "مدير المدير"
+
+msgid "Department manager"
+msgstr "مدير القسم"
+
+msgid "Team manager"
+msgstr "مدير الفريق"
+
+msgid "Finance"
+msgstr "المالية"
+
+msgid "Approver"
+msgstr "المعتمِد"
+
+msgid "Colleague"
+msgstr "الزميل"
+
+msgid "Administrators"
+msgstr "الإدارة"
+
+msgid "%1$s approved · %2$s"
+msgstr "وافق %1$s · %2$s"
+
+msgid "%1$s rejected · %2$s"
+msgstr "رفض %1$s · %2$s"
+
+msgid "Deciding now · waiting %s working hours"
+msgstr "يقرّر الآن · في الانتظار منذ %s ساعة عمل"
+
+msgid "Withdrawn by the employee"
+msgstr "سحبه الموظف"
+
+msgid "Not needed for this request"
+msgstr "غير مطلوب لهذا الطلب"
+
+msgid "Skipped: the approver made the request"
+msgstr "تم تخطيه: المعتمِد هو صاحب الطلب"
+
+msgid "Skipped: nobody to decide it"
+msgstr "تم تخطيه: لا يوجد من يقرّره"
+
+msgid "Withdrawn"
+msgstr "مسحوب"
+
+msgid "Correction"
+msgstr "التصحيح"
+
+msgid "Attendance correction"
+msgstr "تصحيح حضور"
+
+msgid "Face reset"
+msgstr "إعادة تسجيل الوجه"
+
+msgid "Register the face again"
+msgstr "تسجيل الوجه من جديد"
+
+msgid "Write why you reject it, then reject it again."
+msgstr "اكتب سبب الرفض، ثم ارفض الطلب مرة أخرى."
+
+msgid "Balance after cancelling"
+msgstr "الرصيد بعد الإلغاء"
+
+msgid "Balance after"
+msgstr "الرصيد بعدها"
+
+msgid "Others in the department away"
+msgstr "غائبون آخرون من القسم"
+
+msgid "Leave cancellation"
+msgstr "إلغاء إجازة"
+
+msgid "Cancellation asked"
+msgstr "تم طلب الإلغاء"
+
+msgid "All your approvals in one place"
+msgstr "كل موافقاتك في مكان واحد"
+
+msgid "Swaps"
+msgstr "التبديلات"
+
+msgid "The leave request was rejected, and the employee was told."
+msgstr "تم رفض طلب الإجازة وإبلاغ الموظف."
+
+msgid "The shift swap was updated."
+msgstr "تم تحديث تبديل المناوبة."
+
+msgid "The shift swap could not be decided. Open it on the Schedule page."
+msgstr "تعذّر البت في تبديل المناوبة. افتحه من صفحة الجدول."
+
+msgid "Withdrawn. Nobody needs to decide it any more."
+msgstr "تم السحب. لم يعد أحد بحاجة إلى البت فيه."
+
+msgid "It was already decided, so it can no longer be withdrawn."
+msgstr "تم البت فيه بالفعل، فلم يعد بالإمكان سحبه."
+
+msgid "It could not be withdrawn. Try again."
+msgstr "تعذّر السحب. حاول مرة أخرى."
+
+msgid "Length"
+msgstr "المدة"
+
+msgid "Shift swap"
+msgstr "تبديل مناوبة"
+
+msgid "%1$s with %2$s (they accepted)"
+msgstr "%1$s مع %2$s (وافق)"
+
+msgid "Waiting for %s to accept"
+msgstr "في انتظار موافقة %s"
+
+msgid "With %s"
+msgstr "مع %s"
+
+msgid "Decided in 7 days"
+msgstr "قرارات آخر ٧ أيام"
+
+msgid "Overdue only"
+msgstr "المتأخر فقط"
+
+msgid "Select"
+msgstr "اختيار"
+
+msgid "Nothing of this kind is waiting."
+msgstr "لا يوجد طلب من هذا النوع في الانتظار."
+
+msgid "Nothing is waiting for you."
+msgstr "لا يوجد ما ينتظر قرارك."
+
+msgid "Requests that need your decision show here, from every page."
+msgstr "تظهر هنا الطلبات التي تحتاج قرارك من كل الصفحات."
+
+msgid "Select the request of %s"
+msgstr "اختيار طلب %s"
+
+msgid "Level %1$s of %2$s"
+msgstr "المستوى %1$s من %2$s"
+
+msgid "Waiting %s working h"
+msgstr "في الانتظار منذ %s ساعة عمل"
+
+msgid "Moved up from %s"
+msgstr "انتقل إليك من %s"
+
+msgid "For administrators"
+msgstr "للإدارة"
+
+msgid "Details"
+msgstr "التفاصيل"
+
+msgid "The path"
+msgstr "المسار"
+
+msgid "Note (needed to reject)"
+msgstr "ملاحظة (مطلوبة عند الرفض)"
+
+msgid "Write why you reject it first."
+msgstr "اكتب سبب الرفض أولًا."
+
+msgid "Open its page"
+msgstr "فتح صفحته"
+
+msgid "Decide it on its page"
+msgstr "البت فيه من صفحته"
+
+msgid "Approve the selected"
+msgstr "الموافقة على المحدد"
+
+msgid "%d selected"
+msgstr "تم تحديد %d"
+
+msgid "At most %d at a time."
+msgstr "%d كحد أقصى في المرة الواحدة."
+
+msgid "Approving…"
+msgstr "جارٍ الموافقة…"
+
+msgid "You have no requests yet."
+msgstr "ليس لديك طلبات بعد."
+
+msgid "Leave, overtime, corrections and swaps you ask for show here, with who decides them."
+msgstr "تظهر هنا الإجازات والعمل الإضافي والتصحيحات والتبديلات التي تطلبها، ومن يقرّرها."
+
+msgid "level %1$s of %2$s"
+msgstr "المستوى %1$s من %2$s"
+
+msgid "Who decides it"
+msgstr "من يقرّره"
+
+msgid "Withdraw"
+msgstr "سحب"
+
+msgid "Withdraw it? The days go back to your balance."
+msgstr "سحب الطلب؟ ستعود الأيام إلى رصيدك."
+
+msgid "Withdraw it? Nobody will need to decide it."
+msgstr "سحب الطلب؟ لن يحتاج أحد إلى البت فيه."
+
+msgid "Yes, withdraw it"
+msgstr "نعم، اسحبه"
+
+msgid "Open it on the Schedule page"
+msgstr "افتحه من صفحة الجدول"
+
+msgid "%s day"
+msgid_plural "%s days"
+msgstr[0] "%s يوم"
+msgstr[1] "%s يوم"
+msgstr[2] "%s يوم"
+msgstr[3] "%s أيام"
+msgstr[4] "%s يومًا"
+msgstr[5] "%s يوم"
+
+msgid "All your approvals in one place · %d waiting"
+msgid_plural "All your approvals in one place · %d waiting"
+msgstr[0] "كل موافقاتك في مكان واحد · %d في الانتظار"
+msgstr[1] "كل موافقاتك في مكان واحد · %d في الانتظار"
+msgstr[2] "كل موافقاتك في مكان واحد · %d في الانتظار"
+msgstr[3] "كل موافقاتك في مكان واحد · %d في الانتظار"
+msgstr[4] "كل موافقاتك في مكان واحد · %d في الانتظار"
+msgstr[5] "كل موافقاتك في مكان واحد · %d في الانتظار"
+
+msgid "%d request approved."
+msgid_plural "%d requests approved."
+msgstr[0] "تمت الموافقة على %d طلب."
+msgstr[1] "تمت الموافقة على %d طلب."
+msgstr[2] "تمت الموافقة على %d طلب."
+msgstr[3] "تمت الموافقة على %d طلبات."
+msgstr[4] "تمت الموافقة على %d طلبًا."
+msgstr[5] "تمت الموافقة على %d طلب."
+
+msgid "%d could not be approved: open it to see why."
+msgid_plural "%d could not be approved: open them to see why."
+msgstr[0] "تعذّرت الموافقة على %d: افتحها لمعرفة السبب."
+msgstr[1] "تعذّرت الموافقة على %d طلب: افتحه لمعرفة السبب."
+msgstr[2] "تعذّرت الموافقة على %d طلب: افتحها لمعرفة السبب."
+msgstr[3] "تعذّرت الموافقة على %d طلبات: افتحها لمعرفة السبب."
+msgstr[4] "تعذّرت الموافقة على %d طلبًا: افتحها لمعرفة السبب."
+msgstr[5] "تعذّرت الموافقة على %d طلب: افتحها لمعرفة السبب."
+
+msgid "%d request waits for your decision"
+msgid_plural "%d requests wait for your decision"
+msgstr[0] "%d طلب ينتظر قرارك"
+msgstr[1] "%d طلب ينتظر قرارك"
+msgstr[2] "%d طلب ينتظر قرارك"
+msgstr[3] "%d طلبات تنتظر قرارك"
+msgstr[4] "%d طلبًا ينتظر قرارك"
+msgstr[5] "%d طلب ينتظر قرارك"

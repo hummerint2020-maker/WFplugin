@@ -84,6 +84,9 @@ final class Options
         // Features
         'ews_feature_overtime' => ['group' => 'features', 'label' => 'Overtime requests', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_tasks' => ['group' => 'features', 'label' => 'Tasks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_feature_my_approvals' => ['group' => 'features', 'label' => 'My approvals and My requests (the approvals inbox in the app)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_approval_reject_note' => ['group' => 'features', 'label' => 'Approval workflows: a reason is needed to reject (per workflow)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'Attendance Correction only', 'page' => 'ews31-approvals'],
+        'ews_approval_overdue' => ['group' => 'features', 'label' => 'Approval workflows: a request is overdue after (working hours, per workflow)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'the reminder time, or 24 working hours', 'page' => 'ews31-approvals'],
         'ews_feature_corrections' => ['group' => 'features', 'label' => 'Attendance corrections', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_correction_settings' => ['group' => 'features', 'label' => 'Attendance corrections: kinds, deadline, limit, reminder', 'kind' => 'grouped', 'default' => [], 'builtin' => 'all kinds; 7 days; 3 a month, then HR; earlier Sign In to HR; reminder 19:00', 'page' => 'ews31-corrections'],
         'ews_approval_allow_self' => ['group' => 'features', 'label' => 'Approval workflows: may the requester approve their own request (per workflow; before 3.31.100)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'allowed in every workflow', 'page' => 'ews31-approvals'],

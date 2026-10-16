@@ -194,4 +194,13 @@ trait EWS_Face_Reset_Trait {
         wp_safe_redirect(add_query_arg('face_reset_notice',$outcome,$this->face_reset_admin_link()));
         exit;
     }
+
+    /** A face reset waiting for a decision, for the My approvals inbox: decided on wp-admin → Face Reset Requests (3.31.103). @return array<string,mixed>|null */
+    private function face_reset_approval_card($employee_id){
+        $req=$this->face_reset_requests()[(int)$employee_id]??null;
+        if(!$req || ($req['status']??'')!=='pending')return null;
+        return ['employee_id'=>(int)$employee_id,'tone'=>'face','kind'=>__('Face reset','workforce-one'),'what'=>__('Register the face again','workforce-one'),
+            'facts'=>[],'since'=>(string)($req['requested_at']??''),'action'=>'','nonce'=>'','fields'=>[],
+            'link'=>$this->can('ews_manage_employees')?$this->face_reset_admin_link():''];
+    }
 }

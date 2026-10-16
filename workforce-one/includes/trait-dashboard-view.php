@@ -30,6 +30,7 @@ trait EWS_Dashboard_View_Trait {
             'holiday'=>$holidays[$today]??'',
             'urls'=>['schedule'=>$this->app_view_url('schedule'),'attendance'=>$this->app_view_url('attendance'),'notifications'=>$this->app_view_url('notifications'),'time'=>$this->app_view_url('time')],
             'empty'=>function($title,$text='',$url='',$label=''){return $this->ews_empty_state($title,$text,$url,$label);},
+            'approvals'=>$this->my_approvals_home(),
             'home_tasks'=>$this->task_home_list(),'tasks_url'=>$this->app_view_url('tasks'),'post_url'=>admin_url('admin-post.php'),
         ];
 
