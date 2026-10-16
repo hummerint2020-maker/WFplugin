@@ -305,6 +305,7 @@ trait EWS_Frontend_Trait {
             wp_register_style('workforce-one-approvals-page', $root.'assets/css/app-approvals.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-approvals-page', 'rtl', 'replace');
             wp_register_script('workforce-one-approvals', $root.'assets/js/approvals.js', [], $ver, true);
+            wp_register_script('workforce-one-my-requests', $root.'assets/js/my-requests.js', ['workforce-one-sheet'], $ver, true);
             wp_style_add_data('workforce-one-team-page', 'rtl', 'replace');
             wp_register_style('workforce-one-attendance-page', $root.'assets/css/app-attendance.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-attendance-page', 'rtl', 'replace');

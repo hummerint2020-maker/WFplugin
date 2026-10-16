@@ -9,6 +9,8 @@
  * @var array{type:string,text:string}|null $notice
  * @var string $filter
  * @var string $base_url
+ * @var array<string,mixed> $new     the New request sheet (3.31.105, templates/app/new-request.php)
+ * @var bool $open_new                ?new=1 opens it (the home page's shortcut)
  */
 if (!defined('ABSPATH')) exit;
 $num = static function ($n): string { return number_format_i18n((float) $n); };
@@ -18,6 +20,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
 ?>
 <div class="wfo-apv is-mine">
     <?php if ($notice): ?><div class="wfo-apv-toast is-<?php echo esc_attr($notice['type']); ?>" role="status"><?php echo esc_html($notice['text']); ?></div><?php endif; ?>
+    <?php if (!empty($new['kinds'])): ?><div class="wfo-apv-bar"><span class="wfo-apv-bar-gap"></span><button type="button" class="wfo-apv-btn is-new" data-wfo-sheet="wfo-new-sheet">+ <?php esc_html_e('New request', 'workforce-one'); ?></button></div><?php endif; ?>
     <?php if ($items): ?>
     <nav class="wfo-apv-filters" aria-label="<?php esc_attr_e('Show', 'workforce-one'); ?>">
         <a href="<?php echo esc_url($base_url); ?>"<?php echo $filter === '' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('All', 'workforce-one'); ?></a>
@@ -60,3 +63,4 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
     <?php endforeach; ?>
     </div>
 </div>
+<?php include __DIR__ . '/new-request.php'; ?>

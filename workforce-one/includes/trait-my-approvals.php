@@ -27,7 +27,9 @@ trait EWS_My_Approvals_Trait {
     /** The view a module's decision returns to: My approvals when the decision was taken there. */
     private function approvals_return_view($view){
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the module checked its own nonce
-        return $this->my_approvals_enabled() && sanitize_key($_POST['ews_return']??'')==='approvals'?'approvals':$view;
+        // My requests' New request sheet sends ews_return=requests (3.31.105).
+        $back=sanitize_key($_POST['ews_return']??'');
+        return $this->my_approvals_enabled() && in_array($back,['approvals','requests'],true)?$back:$view;
     }
 
     /** Whether the signed-in person sees My approvals: anyone with something to decide, managers, approvers and administrators. */
@@ -102,7 +104,9 @@ trait EWS_My_Approvals_Trait {
     /** The home card: how many wait, how many are overdue. @return array{waiting:int,overdue:int,url:string} */
     private function my_approvals_home(){
         $items=$this->my_approvals_enabled() && is_user_logged_in()?$this->my_approvals_items():[];
-        return ['waiting'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'url'=>$this->app_view_url('approvals')];
+        return ['waiting'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'url'=>$this->app_view_url('approvals'),
+            // The New request shortcut (3.31.105): My requests with its sheet open.
+            'new_url'=>$this->my_requests_allowed()?add_query_arg('new','1',$this->my_approvals_clean_url('requests')):''];
     }
 
     /** The link above a page's own approval list: all of them in one place. '' while My approvals is off. */
@@ -171,10 +175,44 @@ trait EWS_My_Approvals_Trait {
         unset($it);
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display only
         $notice=null;
-        if(isset($_GET['req_done']))$notice=['type'=>'success','text'=>__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
-        elseif(isset($_GET['req_error']))$notice=['type'=>'error','text'=>sanitize_key($_GET['req_error'])==='done'?__('It was already decided, so it can no longer be withdrawn.','workforce-one'):__('It could not be withdrawn. Try again.','workforce-one')];
+        if(isset($_GET['req_done']))$notice=['type'=>'success','text'=>sanitize_key($_GET['req_done'])==='face'?__('Face reset asked. Your current face is used until it is approved.','workforce-one'):__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
+        elseif(isset($_GET['req_error']))$notice=['type'=>'error','text'=>sanitize_key($_GET['req_error'])==='face'?__('The face reset could not be asked. Register your face first on the Sign In page.','workforce-one'):(sanitize_key($_GET['req_error'])==='done'?__('It was already decided, so it can no longer be withdrawn.','workforce-one'):__('It could not be withdrawn. Try again.','workforce-one'))];
         // phpcs:enable
-        return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$this->my_approvals_clean_url('requests')]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$this->my_approvals_clean_url('requests'),
+            'new'=>$this->my_requests_new($emp),'open_new'=>!empty($_GET['new'])]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    }
+
+    /**
+     * The New request sheet (3.31.105, owner decisions 2026-10-16, mockup docs/mockups/new-request/):
+     * the request types this person can ask for, each with a useful line, and what each form needs.
+     * Each form posts to its own handler (the same rules and messages as its page) and comes back here.
+     * @return array<string,mixed>
+     */
+    private function my_requests_new($emp){
+        if(!$emp)return ['kinds'=>[]];
+        wp_enqueue_style('workforce-one-requests');wp_enqueue_script('workforce-one-sheet');wp_enqueue_script('workforce-one-leave');wp_enqueue_script('workforce-one-my-requests');
+        $kinds=[];$data=['working_days'=>array_values($this->working_days()),'today'=>current_time('Y-m-d'),'tomorrow'=>gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +1 day'))];
+        $types=$this->leave_form_types($emp);
+        if($types){
+            $line=implode(' · ',array_filter(array_map(function($t){return $t['deducts']&&$t['available']!==''?sprintf(/* translators: 1: days left, 2: leave type */__('%1$s %2$s left','workforce-one'),$t['available'],$t['name']):'';},array_slice($types,0,2))));
+            $kinds['leave']=['group'=>'time','label'=>__('Leave','workforce-one'),'line'=>$line,'sheet'=>'wfo-new-leave'];$data['types']=$types;
+        }
+        $early=$this->leave_early_form($emp);
+        if($early && $early['max']>0){
+            $kinds['early']=['group'=>'time','label'=>__('Early leave','workforce-one'),'line'=>sprintf(/* translators: %s: hours */__('%s h left this month','workforce-one'),\WorkforceOne\Support\Format::hours($early['remaining'])),'sheet'=>'wfo-new-early'];$data['early']=$early;
+        }
+        if($this->overtime_enabled()){$kinds['overtime']=['group'=>'time','label'=>__('Overtime','workforce-one'),'line'=>__('Before or after work','workforce-one'),'sheet'=>'wfo-ot-sheet'];wp_enqueue_script('workforce-one-overtime');}
+        $cx=$this->cx_new_request_sheet($emp);
+        if($cx['html']!==''){
+            $kinds['correction']=['group'=>'attendance','label'=>__('Attendance correction','workforce-one'),'line'=>$cx['limit']>0?sprintf(/* translators: %d: requests left */_n('%d left this month','%d left this month',max(0,$cx['limit']-$cx['used']),'workforce-one'),max(0,$cx['limit']-$cx['used'])):__('A missing or wrong Sign In or Out','workforce-one'),'sheet'=>'wfo-cx-sheet'];
+            $data['cx_html']=$cx['html'];
+        }
+        $swap=$this->swap_new_choices($emp);
+        $kinds['swap']=['group'=>'attendance','label'=>__('Swap with a colleague','workforce-one'),'line'=>$swap['reason']===''?__('An office day for a home day','workforce-one'):($swap['reason']==='department'?__('You are not in a department yet','workforce-one'):($swap['reason']==='days'?__('No office or home days in the next two weeks','workforce-one'):__('Nobody else in your department','workforce-one'))),'sheet'=>'wfo-new-swap','off'=>$swap['reason']!==''];
+        $data['swap']=$swap;
+        if($this->face_reset_can_ask((int)$emp->id))$kinds['face']=['group'=>'attendance','label'=>__('Face reset','workforce-one'),'line'=>__('If your face is not recognised','workforce-one'),'sheet'=>'wfo-new-face'];
+        elseif($this->face_reset_requested((int)$emp->id))$kinds['face']=['group'=>'attendance','label'=>__('Face reset','workforce-one'),'line'=>__('Already asked, waiting','workforce-one'),'sheet'=>'','off'=>true];
+        return ['kinds'=>$kinds]+$data;
     }
 
     /** My requests → Withdraw (admin-post ews_request_withdraw): a waiting leave, overtime or correction. */

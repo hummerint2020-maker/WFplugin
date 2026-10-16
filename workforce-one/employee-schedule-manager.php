@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.104
+ * Version: 3.31.105
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.104');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.105');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -217,6 +217,7 @@ class EWS_Manager_V31_1 {
             add_action('ews_approvals_tick',[$this,'approval_deadlines_tick']);
             // My approvals and My requests (3.31.103, includes/trait-my-approvals.php): withdrawing a waiting request.
             add_action('admin_post_ews_request_withdraw',[$this,'request_withdraw']);
+            add_action('admin_post_ews_face_reset_ask',[$this,'face_reset_ask']); // My requests → New request → Face reset (3.31.105)
             add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
             // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
             foreach(['dw_sheet_save'=>'dw_sheet','dw_worker_add'=>'dw_worker_add','dw_move_save'=>'dw_move','dw_change_save'=>'dw_change','dw_change_decide'=>'dw_change_decide','dw_advance_save'=>'dw_advance',

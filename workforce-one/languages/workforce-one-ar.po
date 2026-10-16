@@ -6345,3 +6345,99 @@ msgstr[2] "%d طلب ينتظر قرارك"
 msgstr[3] "%d طلبات تنتظر قرارك"
 msgstr[4] "%d طلبًا ينتظر قرارك"
 msgstr[5] "%d طلب ينتظر قرارك"
+
+msgid "Face reset asked. Your current face is used until it is approved."
+msgstr "تم طلب إعادة تسجيل الوجه. يُستخدم وجهك الحالي حتى تتم الموافقة."
+
+msgid "The face reset could not be asked. Register your face first on the Sign In page."
+msgstr "تعذّر طلب إعادة تسجيل الوجه. سجّل وجهك أولًا من صفحة تسجيل الحضور."
+
+msgid "%1$s %2$s left"
+msgstr "المتبقي من %2$s: %1$s"
+
+msgid "Early leave"
+msgstr "انصراف مبكر"
+
+msgid "%s h left this month"
+msgstr "المتبقي هذا الشهر: %s ساعة"
+
+msgid "Before or after work"
+msgstr "قبل العمل أو بعده"
+
+msgid "%d left this month"
+msgid_plural "%d left this month"
+msgstr[0] "المتبقي هذا الشهر: %d"
+msgstr[1] "المتبقي هذا الشهر: %d"
+msgstr[2] "المتبقي هذا الشهر: %d"
+msgstr[3] "المتبقي هذا الشهر: %d"
+msgstr[4] "المتبقي هذا الشهر: %d"
+msgstr[5] "المتبقي هذا الشهر: %d"
+
+msgid "A missing or wrong Sign In or Out"
+msgstr "تسجيل حضور أو انصراف ناقص أو خاطئ"
+
+msgid "Swap with a colleague"
+msgstr "تبديل مع زميل"
+
+msgid "An office day for a home day"
+msgstr "يوم في المكتب مقابل يوم من المنزل"
+
+msgid "You are not in a department yet"
+msgstr "لم تُضَف إلى إدارة بعد"
+
+msgid "No office or home days in the next two weeks"
+msgstr "لا توجد أيام عمل في المكتب أو من المنزل خلال الأسبوعين القادمين"
+
+msgid "Nobody else in your department"
+msgstr "لا يوجد أحد آخر في إدارتك"
+
+msgid "If your face is not recognised"
+msgstr "إذا لم يتم التعرّف على وجهك"
+
+msgid "Already asked, waiting"
+msgstr "تم الطلب، في الانتظار"
+
+msgid "New request"
+msgstr "طلب جديد"
+
+msgid "Time off and hours"
+msgstr "الإجازات والساعات"
+
+msgid "Attendance and schedule"
+msgstr "الحضور والجدول"
+
+msgid "Back"
+msgstr "رجوع"
+
+msgid "Unplanned leave: you can ask for it on the day."
+msgstr "إجازة طارئة: يمكنك طلبها في اليوم نفسه."
+
+msgid "%s left"
+msgstr "المتبقي: %s"
+
+msgid "No schedule"
+msgstr "لا يوجد جدول"
+
+msgid "Same as your day"
+msgstr "مثل يومك"
+
+msgid "A swap with them is already waiting that day"
+msgstr "يوجد طلب تبديل معه قيد الانتظار في هذا اليوم"
+
+msgid "Nobody can swap with you that day."
+msgstr "لا يوجد من يمكنه التبديل معك في هذا اليوم."
+
+msgid "Your team"
+msgstr "فريقك"
+
+msgid "That day: %s"
+msgstr "في هذا اليوم: %s"
+
+msgid "Colleagues in your department. You can swap only with someone whose day is different from yours."
+msgstr "زملاء إدارتك. يمكنك التبديل فقط مع من يختلف يومه عن يومك."
+
+msgid "Ask to register your face again. Your current face stays in use until the reset is approved; then you register it again on the Sign In page."
+msgstr "اطلب تسجيل وجهك من جديد. يظل وجهك الحالي مستخدمًا حتى تتم الموافقة على إعادة التسجيل، ثم تسجّله مرة أخرى من صفحة تسجيل الحضور."
+
+msgid "Ask for a face reset"
+msgstr "طلب إعادة تسجيل الوجه"

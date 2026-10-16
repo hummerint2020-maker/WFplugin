@@ -16,6 +16,13 @@ import html, json, os, re, sys, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, d, php, q, results, today, wp, HERE  # noqa: E402
 
+
+def session_nonce(s, uid, action):
+    """The nonce this logged-in session would get for an action (its form only shows with a registered face)."""
+    jar = [h for h in s.op.handlers if hasattr(h, 'cookiejar')][0].cookiejar
+    c = [x for x in jar if x.name.startswith('wordpress_logged_in_')][0]
+    return php("$_COOKIE[LOGGED_IN_COOKIE]=%s; wp_set_current_user(%d); echo wp_create_nonce('%s');" % (json.dumps(urllib.parse.unquote(c.value)), uid, action)).strip().splitlines()[-1]
+
 PAGE = '/wp-admin/admin.php?page=ews31-approvals'
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 ids = json.loads(php("""
@@ -226,6 +233,46 @@ apg = inbox(S['mona'], '&apv_kind=leave')
 allhref = re.search(r'<nav class="wfo-apv-filters".*?<a href="([^"]+)"', apg, re.S)
 check('...the same in My approvals', allhref is None or 'apv_kind' not in html.unescape(allhref.group(1)))
 check('...shown as Withdrawn', 'Withdrawn' in re.search(r'data-req="overtime-%d".*?</article>' % wo, emp.req('/app/?ews_view=requests')[1], re.S).group(0))
+
+# ---------------------------------------------------------------- 3.31.105: "+ New request" on My requests
+mine = emp.req('/app/?ews_view=requests')[1]
+kinds = re.findall(r'data-new-kind="([a-z]+)"', mine)
+check('My requests has "+ New request" and its sheet with the types this person can ask for', 'data-wfo-sheet="wfo-new-sheet"' in mine and 'id="wfo-new-sheet"' in mine and {'leave', 'early', 'overtime', 'correction', 'swap'} <= set(kinds), kinds)
+check('...with a useful line: what is left of the leave', re.search(r'data-new-kind="leave".*?<small>[^<]*Annual Leave left</small>', mine, re.S) is not None)
+check('...face reset is not offered without a registered face', 'face' not in kinds)
+check('...no department: the swap is shown but cannot be picked, and says why', re.search(r'disabled aria-disabled="true" data-new-kind="swap".*?You are not in a department yet', mine, re.S) is not None)
+check('the home page has the "New request" shortcut that opens the sheet', 'data-home-new-request' in emp.req('/app/')[1] and 'data-wfo-sheet-start' in emp.req('/app/?ews_view=requests&new=1')[1])
+
+n = re.search(r'id="wfo-new-leave".*?name="_wpnonce" value="([^"]+)"', mine, re.S).group(1)
+st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_vacation_request_create', '_wpnonce': n, 'ews_return': 'requests', 'leave_type_id': ids['type'], 'start_date': d(40), 'end_date': d(40), 'reason': 'from the sheet'})
+check('a leave asked from the sheet: the Leave handler saves it and comes back to My requests', 'ews_view=requests' in h.get('Location', '') and 'leave_sent=1' in h.get('Location', '') and q("SELECT id FROM {p}ews_leave_requests WHERE reason='from the sheet'"), h.get('Location'))
+st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_vacation_request_create', '_wpnonce': n, 'ews_return': 'requests', 'leave_type_id': ids['type'], 'start_date': d(-5), 'end_date': d(-5), 'reason': 'x'})
+check('...a refused one comes back to My requests with the Leave message', 'ews_view=requests' in h.get('Location', '') and 'leave_error=' in h.get('Location', ''), h.get('Location'))
+n = re.search(r'id="wfo-ot-sheet".*?name="_wpnonce" value="([^"]+)"', mine, re.S).group(1)
+st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_overtime_request_create', '_wpnonce': n, 'ews_return': 'requests', 'overtime_date': d(6), 'start_time': '18:00', 'end_time': '19:30', 'reason': 'sheet overtime'})
+check('...overtime too', 'ews_view=requests' in h.get('Location', '') and q("SELECT id FROM {p}ews_overtime_requests WHERE reason='sheet overtime'"), h.get('Location'))
+st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_face_reset_ask', '_wpnonce': session_nonce(emp, ids['emp_uid'], 'ews_face_reset_ask')})
+check('a face reset without a registered face is refused, back on My requests', 'req_error=face' in h.get('Location', '') and 'ews_view=requests' in h.get('Location', ''), h.get('Location'))
+
+# Swap: the same department only (owner decision 2026-10-16); the team first.
+php("""$wpdb->query("DELETE FROM {$p}ews_departments WHERE code IN ('nr-a','nr-b')");
+$wpdb->insert($p.'ews_departments',['name'=>'NR A','code'=>'nr-a','active'=>1]);$a=(int)$wpdb->insert_id;
+$wpdb->insert($p.'ews_departments',['name'=>'NR B','code'=>'nr-b','active'=>1]);$b=(int)$wpdb->insert_id;
+foreach([%d=>$a,%d=>$a,%d=>$b] as $e=>$dep)$wpdb->update($p.'ews_employees',['department_id'=>$dep],['id'=>$e]);
+$wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id IN (%d,%d,%d) AND work_date>='%s'");
+foreach([[%d,'Office'],[%d,'WFH'],[%d,'WFH']] as [$e,$st])$wpdb->insert($p.'ews_schedule',['employee_id'=>$e,'work_date'=>'%s','status'=>$st]);""" % (ids['emp'], ids['sami'], ids['mona'], ids['emp'], ids['sami'], ids['mona'], d(0), ids['emp'], ids['sami'], ids['mona'], d(3)))
+mine = emp.req('/app/?ews_view=requests')[1]
+m = re.search(r'data-new-swap="([^"]+)"', mine)
+cfg = json.loads(html.unescape(m.group(1))) if m else {}
+people = {p_['id']: p_ for p_ in cfg.get('people', [])}
+check('the swap form lists colleagues of the same department only (Sami), not another department (Mona)', ids['sami'] in people and ids['mona'] not in people and ids['emp'] not in people, list(people))
+check('...with Sami\'s day and that he can swap (Office ↔ WFH)', people.get(ids['sami'], {}).get('days', {}).get(d(3)) == {'status': 'WFH', 'ok': True, 'busy': False}, people.get(ids['sami']))
+n = re.search(r'id="wfo-new-swap".*?name="_wpnonce" value="([^"]+)"', mine, re.S).group(1)
+st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_swap_create', '_wpnonce': n, 'ews_return': 'requests', 'work_date': d(3), 'target_employee_id': ids['sami']})
+check('...asking the swap from the sheet: saved, back on My requests', 'ews_view=requests' in h.get('Location', '') and q("SELECT id FROM {p}ews_schedule_swaps WHERE requester_employee_id=%d AND target_employee_id=%d AND work_date='%s' AND status='Pending'" % (ids['emp'], ids['sami'], d(3))), h.get('Location'))
+cfg = json.loads(html.unescape(re.search(r'data-new-swap="([^"]+)"', emp.req('/app/?ews_view=requests')[1]).group(1)))
+check('...then Sami shows as "already waiting" that day', {p_['id']: p_ for p_ in cfg['people']}[ids['sami']]['days'][d(3)]['busy'] is True)
+php("$wpdb->query(\"UPDATE {$p}ews_employees SET department_id=NULL WHERE id IN (%d,%d,%d)\"); $wpdb->query(\"DELETE FROM {$p}ews_departments WHERE code IN ('nr-a','nr-b')\");" % (ids['emp'], ids['sami'], ids['mona']))
 
 php("""foreach(['ews_feature_my_approvals','ews_approval_reject_note','ews_approval_overdue'] as $o) delete_option($o); update_option('ews_feature_overtime',0,false); update_option('ews_feature_corrections',0,false);
 $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");

@@ -978,4 +978,13 @@ trait EWS_Corrections_Trait {
         $this->audit('correction_withdrawn','employee',(int)$employee_id,'Correction #'.(int)$id.' withdrawn by the employee');
         return true;
     }
+
+    /** The correction sheet for the New request sheet of My requests (3.31.105): what is left this month, and the sheet itself. @return array{html:string,used:int,limit:int} */
+    private function cx_new_request_sheet($emp){
+        if(!$this->corrections_enabled() || !$emp)return ['html'=>'','used'=>0,'limit'=>0];
+        $this->ensure_corrections_schema_once();
+        wp_enqueue_style('workforce-one-corrections');wp_enqueue_script('workforce-one-corrections');
+        $days=$this->cx_recent_days($emp);
+        return ['html'=>$this->render_template('app/correction-sheet',$this->cx_sheet_data($emp,$days)),'used'=>$this->cx_month_count((int)$emp->id,current_time('Y-m-d')),'limit'=>(int)$this->correction_settings()['monthly_limit']];
+    }
 }

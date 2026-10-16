@@ -87,3 +87,26 @@
 .wfo-app .wfo-tab .wfo-nav-count{position:absolute;top:2px;right:calc(50% + 6px);margin:0}
 .wfo-app .wfo-more-item{position:relative}
 .wfo-app .wfo-more-item .wfo-nav-count{position:absolute;top:6px;left:10px;margin:0}
+/* My requests → "+ New request" (3.31.105, templates/app/new-request.php). */
+.wfo-app .wfo-apv-bar-gap{flex:1}
+.wfo-app .wfo-apv-btn.is-new{background:var(--wfo-pri);border-color:var(--wfo-pri);color:#fff}
+.wfo-app .wfo-new-group{margin:6px 0 0;font-size:12px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-new-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wfo-app .wfo-new-type{--tc:var(--wfo-pri);display:grid;gap:4px;align-content:start;justify-items:start;min-height:92px;padding:12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-card);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;text-align:start;cursor:pointer}
+.wfo-app .wfo-new-type:hover,.wfo-app .wfo-new-type:focus-visible{border-color:var(--tc)}
+.wfo-app .wfo-new-type[disabled]{opacity:.55;cursor:not-allowed}
+.wfo-app .wfo-new-type b{font-size:13.5px}
+.wfo-app .wfo-new-type small{font-size:11.5px;color:var(--wfo-muted);line-height:1.4}
+.wfo-app .wfo-new-ic{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--tc);color:#fff}
+.wfo-app .wfo-new-type.tone-early{--tc:#7A4FD6}.wfo-app .wfo-new-type.tone-overtime{--tc:#A3245B}.wfo-app .wfo-new-type.tone-correction{--tc:#0B7D74}.wfo-app .wfo-new-type.tone-swap{--tc:#D9480F}.wfo-app .wfo-new-type.tone-face{--tc:#1F6FD1}
+.wfo-app .wfo-new-mates{display:grid;gap:6px}
+.wfo-app .wfo-new-mate{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);cursor:pointer}
+.wfo-app .wfo-new-mate:has(input:checked){border-color:var(--wfo-pri);background:var(--wfo-pri-soft)}
+.wfo-app .wfo-new-mate.is-off{opacity:.55;cursor:not-allowed}
+.wfo-app .wfo-new-mate input{accent-color:var(--wfo-pri);width:18px;height:18px;flex:0 0 auto}
+.wfo-app .wfo-new-mate span{flex:1;min-width:0}
+.wfo-app .wfo-new-mate b{display:block;font-size:13.5px}
+.wfo-app .wfo-new-mate small{display:block;font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-new-mate i{font-style:normal;font-size:11px;font-weight:600;color:var(--wfo-pri);background:var(--wfo-pri-soft);border-radius:999px;padding:2px 8px}
+.wfo-app .wfo-sheet-x[data-new-back] .wfo-icon{transform:scaleX(-1)}
+[dir=rtl] .wfo-app .wfo-sheet-x[data-new-back] .wfo-icon{transform:none}

@@ -15,7 +15,7 @@
  * @var callable $empty                  ews_empty_state(title, text, url, label)
  * @var array<int,array<string,mixed>> $tiles  menu items the user may open (not the Dashboard), in menu order
  * @var string $notifications_label
- * @var array{waiting:int,overdue:int,url:string} $approvals  My approvals (3.31.103): requests waiting for this person
+ * @var array{waiting:int,overdue:int,url:string,new_url:string} $approvals  My approvals (3.31.103): requests waiting for this person
  * @var object[] $home_tasks              My tasks today (3.31.70): overdue, due today, in progress (+ is_overdue, url)
  * @var string $tasks_url
  * @var string $post_url
@@ -63,6 +63,7 @@ $nudge_icons = ['attendance' => 'clock', 'tasks' => 'tasks', 'leave' => 'leave',
 ?>
 <?php if ($manager || $emp): ?>
 <div class="wfo-home<?php echo $manager ? ' is-manager' : ' is-employee'; ?>">
+    <?php if (!empty($approvals['new_url'])): ?><a class="wfo-apv-cta" href="<?php echo esc_url($approvals['new_url']); ?>" data-home-new-request><span>+ <?php esc_html_e('New request', 'workforce-one'); ?></span><span aria-hidden="true">›</span></a><?php endif; ?>
     <?php if (!empty($approvals['waiting'])): ?>
     <a class="wfo-apv-cta" href="<?php echo esc_url($approvals['url']); ?>" data-home-approvals><span><?php echo esc_html(sprintf(/* translators: %d: number of requests */ _n('%d request waits for your decision', '%d requests wait for your decision', $approvals['waiting'], 'workforce-one'), $approvals['waiting']) . ($approvals['overdue'] ? ' · ' . sprintf(/* translators: %d: number of requests */ _n('%d overdue', '%d overdue', $approvals['overdue'], 'workforce-one'), $approvals['overdue']) : '')); ?></span><span aria-hidden="true">›</span></a>
     <?php endif; ?>

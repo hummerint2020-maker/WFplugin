@@ -122,6 +122,25 @@ const SHOTS = process.env.APV_SHOTS || '';
   await ep.goto(B + '/app/?ews_view=requests');
   check('My requests on a phone: the requests listed, no sideways scroll', await ep.locator('[data-req]').count() >= 5 && await ep.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await shot(ep, 'req-phone');
+  // "+ New request" (3.31.105): the list of types, a form in the sheet, back to the list, sent and back on My requests.
+  await ep.click('[data-wfo-sheet="wfo-new-sheet"]');
+  await ep.waitForTimeout(300);
+  check('"+ New request" opens the list of request types', await ep.$eval('#wfo-new-sheet', dl => dl.open) && await ep.locator('[data-new-kind]').count() >= 4);
+  await shot(ep, 'new-request-list');
+  await ep.click('[data-new-kind="leave"]');
+  await ep.waitForTimeout(300);
+  check('...picking Leave closes the list and opens its form', await ep.$eval('#wfo-new-leave', dl => dl.open) && !(await ep.$eval('#wfo-new-sheet', dl => dl.open)));
+  await ep.click('#wfo-new-leave [data-new-back]');
+  await ep.waitForTimeout(300);
+  check('...Back returns to the list', await ep.$eval('#wfo-new-sheet', dl => dl.open) && !(await ep.$eval('#wfo-new-leave', dl => dl.open)));
+  await ep.click('[data-new-kind="leave"]');
+  const day = php("echo gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +45 days'));");
+  await ep.fill('#ews-vac-start', day); await ep.fill('#ews-vac-end', day);
+  await ep.dispatchEvent('#ews-vac-end', 'change');
+  check('...the leave form counts the working days (the Leave page\'s own script)', /1 working day/.test(await ep.textContent('#ews-vac-days')));
+  await shot(ep, 'new-request-leave');
+  await Promise.all([ep.waitForURL(/ews_view=requests/), ep.click('#wfo-new-leave [type="submit"]')]);
+  check('...sent: back on My requests with the new leave in the list', await ep.locator('[data-req^="leave-"]').count() >= 1 && php(`global $wpdb; echo (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ews_leave_requests WHERE start_date='${day}'");`) === '1');
   check('no JavaScript errors', errors.length === 0, errors);
 
   await browser.close();

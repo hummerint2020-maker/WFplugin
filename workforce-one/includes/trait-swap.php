@@ -328,4 +328,39 @@ trait EWS_Swap_Trait {
             }
             return $out;
         }
+
+    /**
+     * The New request sheet's swap (3.31.105, owner decision 2026-10-16): the next two weeks' days this
+     * employee is at the Office or at home, and the colleagues of the same department (their team
+     * first; never another department, as the swap itself requires), each with their status that day
+     * and whether a swap between the two is already waiting.
+     * @return array{reason:string,days:array<string,string>,people:list<array{id:int,name:string,team:bool,days:array<string,array{status:string,ok:bool,busy:bool}>}>}
+     */
+    private function swap_new_choices($emp){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            $out=['reason'=>'','days'=>[],'people'=>[]];
+            $dept=$emp?(int)($emp->department_id??0):0;
+            if(!$emp || !$dept){$out['reason']='department';return $out;}
+            $today=current_time('Y-m-d');$to=gmdate('Y-m-d',strtotime($today.' +13 days'));
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY work_date",(int)$emp->id,$today,$to)) as $r)
+                if(in_array((string)$r->status,SwapRules::SWAPPABLE,true))$out['days'][(string)$r->work_date]=(string)$r->status;
+            if(!$out['days']){$out['reason']='days';return $out;}
+            $ids=array_values(array_diff($this->people_department_member_ids($dept),[(int)$emp->id]));
+            if(!$ids){$out['reason']='people';return $out;}
+            $mates=[];
+            foreach($this->team_ids_for_employee((int)$emp->id) as $tid)foreach($this->team_member_ids((int)$tid) as $m)$mates[(int)$m]=true;
+            $ph=implode(',',array_fill(0,count($ids),'%d'));$dates=array_keys($out['days']);$dph=implode(',',array_fill(0,count($dates),'%s'));
+            $st=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE employee_id IN ($ph) AND work_date IN ($dph)",array_merge($ids,$dates))) as $r)$st[(int)$r->employee_id][(string)$r->work_date]=(string)$r->status;
+            $busy=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT requester_employee_id a,target_employee_id b,work_date FROM {$table} WHERE status IN ('Pending','Awaiting') AND work_date IN ($dph) AND (requester_employee_id=%d OR target_employee_id=%d)",array_merge($dates,[(int)$emp->id,(int)$emp->id]))) as $r)
+                $busy[((int)$r->a===(int)$emp->id?(int)$r->b:(int)$r->a)][(string)$r->work_date]=true;
+            foreach($ids as $id){
+                $days=[];
+                foreach($out['days'] as $d=>$mine){$s=$st[$id][$d]??'';$days[$d]=['status'=>$s,'ok'=>SwapRules::checkSwappable($mine,$s?:null)===null,'busy'=>!empty($busy[$id][$d])];}
+                $out['people'][]=['id'=>$id,'name'=>$this->people_name($id),'team'=>!empty($mates[$id]),'days'=>$days];
+            }
+            usort($out['people'],function($a,$b){return [$b['team'],$a['name']]<=>[$a['team'],$b['name']];});
+            return $out;
+        }
 }

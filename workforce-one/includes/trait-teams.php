@@ -69,6 +69,13 @@ trait EWS_Teams_Trait {
         return $wpdb->get_row($wpdb->prepare("SELECT e.*,tm.id AS team_id,tm.name AS team_name FROM {$t['teams']} tm JOIN {$t['members']} m ON m.team_id=tm.id AND m.active=1 JOIN {$this->employees} e ON e.id=tm.manager_employee_id AND e.active=1 WHERE m.employee_id=%d AND tm.active=1 ORDER BY tm.id ASC LIMIT 1",absint($employee_id)));
     }
 
+    /** The active members of a team (3.31.105). @return list<int> */
+    private function team_member_ids($team_id){
+        global $wpdb; $t=$this->team_tables();
+        $this->ensure_teams_schema();
+        return array_map('intval',$wpdb->get_col($wpdb->prepare("SELECT employee_id FROM {$t['members']} WHERE team_id=%d AND active=1",absint($team_id))));
+    }
+
     private function team_ids_for_employee($employee_id){
         global $wpdb; $t=$this->team_tables();
         $this->ensure_teams_schema();

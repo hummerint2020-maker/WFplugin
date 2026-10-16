@@ -81,7 +81,9 @@
         "people_manager_of",
         "people_department_manager",
         "people_has_reports",
-        "people_department_member_ids"
+        "people_department_member_ids",
+        "team_member_ids",
+        "team_ids_for_employee"
       ]
     },
     "schedule": {
@@ -103,7 +105,8 @@
       "api": [
         "working_days",
         "swap_approval_card",
-        "swap_my_requests"
+        "swap_my_requests",
+        "swap_new_choices"
       ]
     },
     "locations": {
@@ -148,7 +151,10 @@
         "cx_my_requests",
         "cx_withdraw",
         "corrections_enabled",
-        "face_reset_approval_card"
+        "face_reset_approval_card",
+        "face_reset_can_ask",
+        "face_reset_requested",
+        "cx_new_request_sheet"
       ]
     },
     "leave": {
@@ -169,7 +175,9 @@
         "leave_approval_card",
         "leave_my_requests",
         "leave_withdraw",
-        "duration_label"
+        "duration_label",
+        "leave_form_types",
+        "leave_early_form"
       ]
     },
     "overtime": {
@@ -216,7 +224,8 @@
         "requests_content",
         "my_approvals_count",
         "my_approvals_link",
-        "my_approvals_home"
+        "my_approvals_home",
+        "my_approvals_clean_url"
       ]
     },
     "notifications": {

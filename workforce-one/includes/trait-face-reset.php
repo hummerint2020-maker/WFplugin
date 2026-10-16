@@ -203,4 +203,20 @@ trait EWS_Face_Reset_Trait {
             'facts'=>[],'since'=>(string)($req['requested_at']??''),'action'=>'','nonce'=>'','fields'=>[],
             'link'=>$this->can('ews_manage_employees')?$this->face_reset_admin_link():''];
     }
+
+    /** Whether this employee can ask for a face reset now (a face is registered, none is waiting; 3.31.105). */
+    private function face_reset_can_ask($employee_id){
+        return (bool)$this->face_template_for_employee((int)$employee_id) && !$this->face_reset_requested((int)$employee_id);
+    }
+
+    /** My requests → New request → Face reset (admin-post ews_face_reset_ask): the same request as on the Sign In page. */
+    public function face_reset_ask(){
+        if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
+        check_admin_referer('ews_face_reset_ask');
+        $emp=$this->current_employee();
+        $back=wp_get_referer();if(!$back || strpos($back,'admin-post.php')!==false)$back=$this->app_home_url();
+        $back=add_query_arg('ews_view','requests',remove_query_arg(['req_done','req_error','req_state'],$back));
+        $ok=$emp && $this->face_template_for_employee((int)$emp->id) && $this->face_request_reset((int)$emp->id,get_current_user_id());
+        wp_safe_redirect(add_query_arg($ok?['req_done'=>'face']:['req_error'=>'face'],$back));exit;
+    }
 }

@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.105
+"+ New request" on My requests (owner decisions 2026-10-16, mockup docs/mockups/new-request/). It uses the
+same switch as My approvals and My requests (off by default).
+
+### Added
+- **"+ New request"** on My requests opens a sheet with every request the person can make: leave, early
+  leave, overtime, attendance correction, shift swap and face reset. Picking one opens its form in the
+  same sheet, with Back to the list; after sending, the app comes back to My requests with the new request
+  in the list.
+  - The forms are the ones on each page (same checks, balance, working days, limits); the forms on the
+    Leave, Overtime, Schedule and Attendance pages stay.
+  - A type the person can't use now shows why (no department for a swap, no working day in the next two
+    weeks, a face reset already asked for).
+  - Shift swap: pick the day, then a colleague from the same team or department (teammates first; never
+    another department). Colleagues who can't swap that day, or already have a swap waiting with you, are
+    shown but can't be picked.
+  - Face reset is offered only when a face is registered.
+- **Home shortcut** "New request" when the feature is on.
+
 ## 3.31.104
 ### Fixed (owner report on 3.31.103)
 - **My requests → Withdraw** opened a blank page: it now comes back to My requests in the app.

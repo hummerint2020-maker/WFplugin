@@ -48,14 +48,7 @@ trait EWS_Leave_View_Trait {
         $this->ensure_leave_schema();
         global $wpdb;
         $emp=$this->current_employee();$today=current_time('Y-m-d');
-        $types=[];
-        foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_leave_types WHERE active=1 ORDER BY id ASC") as $lt){
-            $available=null;
-            if($emp){$b=$this->ensure_leave_balance($emp->id,$lt->id);$available=max(0,(float)$b->entitlement-(float)$b->used-(float)$b->pending);}
-            $tc=\WorkforceOne\Leave\TypeRules::config($lt);
-            $types[]=['id'=>(int)$lt->id,'name'=>(string)$lt->name,'deducts'=>(bool)$lt->deduct_balance,'available'=>$available===null?'':Format::number($available),
-                'unplanned'=>$tc['kind']==='unplanned','after'=>$tc['after_days'],'earliest'=>\WorkforceOne\Leave\TypeRules::earliestStart($tc,$today)];
-        }
+        $types=$this->leave_form_types($emp);
 
         $mine=[];$has_more=false;$show_all=sanitize_key($_GET['leave_history']??'')==='all';
         if($emp){
@@ -71,14 +64,7 @@ trait EWS_Leave_View_Trait {
             }
         }
 
-        $early=null;
-        if($emp){
-            $monthly=(int)$this->option('ews_early_leave_monthly_minutes');$max=(int)$this->option('ews_early_leave_max_minutes');
-            $remaining=max(0,$monthly-$this->early_leave_month_usage($emp->id,substr($today,0,7)));
-            $early=['max'=>$max,'remaining'=>$remaining,
-                /* translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours */
-                'summary'=>sprintf(__('Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours.','workforce-one'),Format::hours($max),Format::hours($monthly),Format::hours($remaining))];
-        }
+        $early=$this->leave_early_form($emp);
         $pending_early=null;
         if($this->can('ews_manage_time')){
             $pending_early=(array)$wpdb->get_results("SELECT r.*,e.name employee_name FROM {$wpdb->prefix}ews_early_leave_requests r JOIN {$this->employees} e ON e.id=r.employee_id WHERE r.status='Pending' ORDER BY r.requested_at ASC");
@@ -98,6 +84,35 @@ trait EWS_Leave_View_Trait {
             'working_days'=>array_values($this->working_days()),
             'post_url'=>admin_url('admin-post.php'),'empty'=>$this->leave_view_empty_state(),
         ]);
+    }
+
+    /**
+     * The leave types of the request form, with what is left of each and the first day each allows
+     * (the Leave page and the New request sheet of My requests, 3.31.105).
+     * @return list<array{id:int,name:string,deducts:bool,available:string,unplanned:bool,after:int,earliest:string}>
+     */
+    private function leave_form_types($emp){
+        global $wpdb;$this->ensure_leave_schema();$today=current_time('Y-m-d');
+        $types=[];
+        foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_leave_types WHERE active=1 ORDER BY id ASC") as $lt){
+            $available=null;
+            if($emp){$b=$this->ensure_leave_balance($emp->id,$lt->id);$available=max(0,(float)$b->entitlement-(float)$b->used-(float)$b->pending);}
+            $tc=\WorkforceOne\Leave\TypeRules::config($lt);
+            $types[]=['id'=>(int)$lt->id,'name'=>(string)$lt->name,'deducts'=>(bool)$lt->deduct_balance,'available'=>$available===null?'':Format::number($available),
+                'unplanned'=>$tc['kind']==='unplanned','after'=>$tc['after_days'],'earliest'=>\WorkforceOne\Leave\TypeRules::earliestStart($tc,$today)];
+        }
+        return $types;
+    }
+
+    /** The early leave form's limits for this employee (null without an employee). @return array{max:int,remaining:int,summary:string}|null */
+    private function leave_early_form($emp){
+        if(!$emp)return null;
+        $today=current_time('Y-m-d');
+        $monthly=(int)$this->option('ews_early_leave_monthly_minutes');$max=(int)$this->option('ews_early_leave_max_minutes');
+        $remaining=max(0,$monthly-$this->early_leave_month_usage($emp->id,substr($today,0,7)));
+        return ['max'=>$max,'remaining'=>$remaining,
+            /* translators: 1: max hours per request, 2: monthly allowance in hours, 3: remaining hours */
+            'summary'=>sprintf(__('Available only on Office workdays · Maximum per request: %1$s hours · Monthly allowance: %2$s hours · Remaining this month: %3$s hours.','workforce-one'),Format::hours($max),Format::hours($monthly),Format::hours($remaining))];
     }
 
     /** ews_empty_state() for the templates (which cannot call $this). */
