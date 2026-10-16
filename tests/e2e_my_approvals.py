@@ -159,7 +159,7 @@ st, body, h = S['mona'].req('/wp-admin/admin-post.php', f)
 check('the swap is rejected from the inbox and comes back to it', q("SELECT status FROM {p}ews_schedule_swaps WHERE id=%d" % sid)[0]['status'] == 'Rejected' and 'ews_view=approvals' in h.get('Location', ''), h.get('Location'))
 
 # ---------------------------------------------------------------- overdue, moved up, administrators
-php("$wpdb->query(\"UPDATE {$p}ews_approval_steps SET pending_since=DATETIME('now','-3 days'),escalations=1,escalated_from_wp_user_id=%d WHERE approval_request_id=%d AND status='PENDING'\");" % (ids['mona_uid'], la))
+php("$wpdb->query($wpdb->prepare(\"UPDATE {$p}ews_approval_steps SET pending_since=%%s,escalations=1,escalated_from_wp_user_id=%d WHERE approval_request_id=%d AND status='PENDING'\",gmdate('Y-m-d H:i:s',current_time('timestamp')-3*DAY_IN_SECONDS)));" % (ids['mona_uid'], la))
 php("update_option('ews_approval_overdue',['vacation'=>4],false);")
 bpg = inbox(S['big'])
 lv = dict(items(bpg)).get(str(la), '')
