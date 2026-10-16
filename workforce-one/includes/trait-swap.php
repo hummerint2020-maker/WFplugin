@@ -320,7 +320,7 @@ trait EWS_Swap_Trait {
             $out=[];
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE requester_employee_id=%d ORDER BY created_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
                 $r->target_name=$this->people_name((int)$r->target_employee_id);
-                $state=['Pending'=>'waiting','Awaiting'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Declined'=>'rejected'][$r->status]??'cancelled';
+                $state=['Pending'=>'waiting','Awaiting'=>'waiting','Approved'=>'approved','Accepted'=>'approved','Rejected'=>'rejected','Declined'=>'rejected','Expired'=>'expired','Cancelled'=>'withdrawn'][$r->status]??'cancelled';
                 $out[]=['key'=>'swap-'.(int)$r->id,'tone'=>'swap','title'=>__('Shift swap','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->work_date)),
                     /* translators: %s: colleague's name */
                     'sub'=>$r->status==='Pending'?sprintf(__('Waiting for %s to accept','workforce-one'),(string)$r->target_name):sprintf(__('With %s','workforce-one'),(string)$r->target_name),

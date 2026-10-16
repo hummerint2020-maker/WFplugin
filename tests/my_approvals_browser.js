@@ -55,6 +55,15 @@ const SHOTS = process.env.APV_SHOTS || '';
   check('the inbox shows the four requests', await page.locator('[data-apv-item]').count() === 4);
   await shot(page, 'apv-desktop');
 
+  // Pressing Approve: only that button shows it is working (the send itself is held back here).
+  // window is the last stop of the submit event, after the app's own guard has marked the buttons.
+  await page.evaluate(() => window.addEventListener('submit', e => e.preventDefault(), { once: true }));
+  await page.locator('[data-apv-item]').first().locator('button[value="approve"]').click();
+  await page.waitForTimeout(300);
+  const busy = await page.locator('[data-apv-item]').first().evaluate(el => [...el.querySelectorAll('button[type=submit]')].map(b => b.value + ':' + b.classList.contains('ews-submit-loading')));
+  check('pressing Approve shows only Approve as working, not Reject', busy.join(',') === 'approve:true,reject:false', busy);
+  await page.goto(B + '/app/?ews_view=approvals');
+
   // A reason is needed to reject overtime: nothing is sent without one.
   const otCard = page.locator('[data-apv-item]').filter({ hasText: 'Overtime' });
   await otCard.locator('[data-apv-reject]').click();

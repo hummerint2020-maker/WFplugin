@@ -324,7 +324,7 @@ trait EWS_Overtime_Trait {
             $out=[];
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE employee_id=%d ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
                 $out[]=['key'=>'overtime-'.(int)$r->id,'tone'=>'overtime','title'=>__('Overtime','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->overtime_date)).' · '.$this->duration_label((int)$r->requested_minutes),
-                    'sub'=>"\u{2066}".substr((string)$r->start_time,0,5).'–'.substr((string)$r->end_time,0,5)."\u{2069}",'state'=>['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected'][$r->status]??'cancelled','when'=>(string)$r->requested_at,
+                    'sub'=>"\u{2066}".substr((string)$r->start_time,0,5).'–'.substr((string)$r->end_time,0,5)."\u{2069}",'state'=>['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Cancelled'=>'withdrawn'][$r->status]??'cancelled','when'=>(string)$r->requested_at,
                     'approval'=>['overtime','overtime_request',(int)$r->id],'withdraw'=>$r->status==='Pending'?'overtime':'','id'=>(int)$r->id];
             }
             return $out;

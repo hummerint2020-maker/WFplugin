@@ -544,7 +544,8 @@ trait EWS_Leave_Trait {
             $out=[];
             foreach($rows as $r){
                 $cancel=$r->status==='Approved' && $r->cancellation_status==='Pending';
-                $state=$cancel?'waiting':(['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Cancelled'=>'cancelled'][$r->status]??'cancelled');
+                // Cancelled before it was decided = withdrawn by the employee (3.31.103); after approval = cancelled.
+                $state=$cancel?'waiting':(['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected'][$r->status]??($r->status==='Cancelled' && $r->cancellation_status!=='Approved'?'withdrawn':'cancelled'));
                 $out[]=['key'=>'leave-'.(int)$r->id,'tone'=>'leave','title'=>$r->type_name.' · '.$this->leave_day_range($r->start_date,$r->end_date),
                     'sub'=>$cancel?__('Cancellation asked','workforce-one'):'','state'=>$state,'when'=>(string)$r->requested_at,
                     'approval'=>['vacation',$cancel?'leave_cancellation':'leave',(int)$r->id],'withdraw'=>$r->status==='Pending'?'leave':'','id'=>(int)$r->id];

@@ -958,7 +958,7 @@ trait EWS_Corrections_Trait {
         global $wpdb;$this->ensure_corrections_schema_once();
         $out=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND source='employee' ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $c){
-            $state=['pending'=>'waiting','pending_hr'=>'waiting','approved'=>'approved','rejected'=>'rejected'][$c->status]??'cancelled';
+            $state=['pending'=>'waiting','pending_hr'=>'waiting','approved'=>'approved','rejected'=>'rejected','cancelled'=>'withdrawn'][$c->status]??'cancelled';
             $out[]=['key'=>'correction-'.(int)$c->id,'tone'=>'correction','title'=>__('Attendance correction','workforce-one').' · '.$this->cx_day_label((string)$c->work_date),
                 'sub'=>$this->cx_change_text($c).($c->status==='pending_hr'?' · '.__('Waiting for HR','workforce-one'):''),'state'=>$state,'when'=>(string)$c->requested_at,
                 'approval'=>['attendance_correction','attendance_correction',(int)$c->id],'withdraw'=>in_array($c->status,['pending','pending_hr'],true)?'correction':'','id'=>(int)$c->id,

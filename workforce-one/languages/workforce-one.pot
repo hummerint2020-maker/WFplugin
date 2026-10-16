@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.102\n"
+"Project-Id-Version: Workforce One 3.31.104\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-16T07:14:31+00:00\n"
+"POT-Creation-Date: 2026-10-16T09:04:24+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -1950,13 +1950,6 @@ msgid "Break Updated"
 msgstr ""
 
 #: includes/trait-frontend.php:202
-#: includes/trait-frontend.php:214
-#: includes/trait-frontend.php:223
-#: includes/trait-my-approvals.php:150
-msgid "Write why you reject it, then reject it again."
-msgstr ""
-
-#: includes/trait-frontend.php:202
 #: includes/trait-leave-view.php:109
 msgid "Overtime Requests are currently disabled."
 msgstr ""
@@ -2006,6 +1999,13 @@ msgstr ""
 #: includes/trait-frontend.php:202
 #: includes/trait-frontend.php:223
 msgid "Another request of yours is being saved. Try again in a moment."
+msgstr ""
+
+#: includes/trait-frontend.php:202
+#: includes/trait-frontend.php:214
+#: includes/trait-frontend.php:223
+#: includes/trait-my-approvals.php:150
+msgid "Write why you reject it, then reject it again."
 msgstr ""
 
 #: includes/trait-frontend.php:203
@@ -2254,6 +2254,7 @@ msgstr ""
 
 #: includes/trait-frontend.php:535
 #: templates/app/presence.php:20
+#: templates/app/requests.php:15
 #: templates/app/schedule.php:51
 msgid "Cancelled"
 msgstr ""
@@ -2272,6 +2273,7 @@ msgstr ""
 
 #: includes/trait-frontend.php:535
 #: templates/app/presence.php:20
+#: templates/app/requests.php:15
 msgid "Expired"
 msgstr ""
 
@@ -2345,7 +2347,7 @@ msgstr ""
 msgid "Leave cancellation"
 msgstr ""
 
-#: includes/trait-leave.php:549
+#: includes/trait-leave.php:550
 msgid "Cancellation asked"
 msgstr ""
 
@@ -2410,19 +2412,19 @@ msgstr ""
 msgid "The shift swap could not be decided. Open it on the Schedule page."
 msgstr ""
 
-#: includes/trait-my-approvals.php:169
+#: includes/trait-my-approvals.php:174
 msgid "Withdrawn. Nobody needs to decide it any more."
 msgstr ""
 
-#: includes/trait-my-approvals.php:170
+#: includes/trait-my-approvals.php:175
 msgid "It was already decided, so it can no longer be withdrawn."
 msgstr ""
 
-#: includes/trait-my-approvals.php:170
+#: includes/trait-my-approvals.php:175
 msgid "It could not be withdrawn. Try again."
 msgstr ""
 
-#: includes/trait-my-approvals.php:177
+#: includes/trait-my-approvals.php:182
 #: includes/trait-task-extras.php:92
 #: includes/trait-tasks.php:117
 msgid "You must be logged in."

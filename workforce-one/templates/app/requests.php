@@ -12,7 +12,7 @@
  */
 if (!defined('ABSPATH')) exit;
 $num = static function ($n): string { return number_format_i18n((float) $n); };
-$labels = ['waiting' => __('Waiting', 'workforce-one'), 'approved' => __('Approved', 'workforce-one'), 'rejected' => __('Rejected', 'workforce-one'), 'cancelled' => __('Withdrawn', 'workforce-one')];
+$labels = ['waiting' => __('Waiting', 'workforce-one'), 'approved' => __('Approved', 'workforce-one'), 'rejected' => __('Rejected', 'workforce-one'), 'withdrawn' => __('Withdrawn', 'workforce-one'), 'cancelled' => __('Cancelled', 'workforce-one'), 'expired' => __('Expired', 'workforce-one')];
 $counts = array_count_values(array_map(static function ($it) { return $it['state']; }, $items));
 $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($items, static function ($it) use ($filter) { return $it['state'] === $filter; })) : $items;
 ?>

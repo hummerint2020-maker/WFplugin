@@ -202,7 +202,10 @@ blk = re.search(r'data-req="overtime-%d".*?</article>' % oid, mine, re.S).group(
 check('...the rejected overtime shows why, and cannot be withdrawn', 'Rejected' in blk and 'Not this month' in blk and 'ews_request_withdraw' not in blk)
 pend = float(q("SELECT pending FROM {p}ews_leave_balances WHERE employee_id=%d" % ids['emp'])[0]['pending'])
 m = re.search(r'data-req="leave-%d".*?name="_wpnonce" value="([^"]+)"' % wl, mine, re.S)
-st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='leave', id=wl)
+st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_request_withdraw', '_wpnonce': m.group(1), 'kind': 'leave', 'id': wl})
+wloc = h.get('Location', '')
+qs = {k: v[0] for k, v in urllib.parse.parse_qs(urllib.parse.urlparse(wloc).query).items()}
+check('withdrawing returns to My requests in the app, not to a blank admin-post page', 'admin-post.php' not in wloc and '/app/' in wloc and 'ews_view=requests' in wloc, wloc)
 check('withdrawing the waiting leave: cancelled, its 2 days no longer reserved, its approval closed', qs.get('req_done') == 'leave' and q("SELECT status FROM {p}ews_leave_requests WHERE id=%d" % wl)[0]['status'] == 'Cancelled'
       and float(q("SELECT pending FROM {p}ews_leave_balances WHERE employee_id=%d" % ids['emp'])[0]['pending']) == pend - 2 and ar_id('leave', wl)[1] == 'CANCELLED', (qs, pend))
 check('...and gone from Mona\'s inbox', ar_id('leave', wl)[0] not in [int(i) for i, _ in items(inbox(S['mona']))])
@@ -215,6 +218,13 @@ st, qs, _ = S['mona'].post('ews_request_withdraw', _wpnonce=m.group(1), kind='ov
 check('someone else cannot withdraw it', q("SELECT status FROM {p}ews_overtime_requests WHERE id=%d" % wo)[0]['status'] == 'Pending')
 st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='overtime', id=wo)
 check('withdrawing the waiting overtime', qs.get('req_done') == 'overtime' and q("SELECT status FROM {p}ews_overtime_requests WHERE id=%d" % wo)[0]['status'] == 'Cancelled' and ar_id('overtime_request', wo)[1] == 'CANCELLED')
+mine = emp.req('/app/?ews_view=requests&req_state=withdrawn')[1]
+allhref = re.search(r'<nav class="wfo-apv-filters".*?<a href="([^"]+)"', mine, re.S).group(1)
+check('a filter is on: "All" leads to every request (it does not keep the filter)', 'req_state' not in html.unescape(allhref) and 'ews_view=requests' in html.unescape(allhref), allhref)
+check('...the withdrawn filter shows only withdrawn ones', 'data-req="overtime-%d"' % wo in mine and 'data-req="overtime-%d"' % oid not in mine)
+apg = inbox(S['mona'], '&apv_kind=leave')
+allhref = re.search(r'<nav class="wfo-apv-filters".*?<a href="([^"]+)"', apg, re.S)
+check('...the same in My approvals', allhref is None or 'apv_kind' not in html.unescape(allhref.group(1)))
 check('...shown as Withdrawn', 'Withdrawn' in re.search(r'data-req="overtime-%d".*?</article>' % wo, emp.req('/app/?ews_view=requests')[1], re.S).group(0))
 
 php("""foreach(['ews_feature_my_approvals','ews_approval_reject_note','ews_approval_overdue'] as $o) delete_option($o); update_option('ews_feature_overtime',0,false); update_option('ews_feature_corrections',0,false);

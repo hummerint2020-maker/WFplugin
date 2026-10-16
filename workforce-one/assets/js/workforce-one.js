@@ -27,6 +27,8 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
         submitters.forEach(function(btn){
             if(btn.dataset.ewsOriginalHtml===undefined) btn.dataset.ewsOriginalHtml=btn.innerHTML||btn.value||"";
             btn.disabled=true;
+            // Only the pressed button shows it is working (a form with Approve and Reject showed both).
+            if(sub&&btn!==sub)return;
             btn.classList.add("ews-submit-loading");
             if(btn.tagName==="BUTTON"){
                 var spinner=btn.querySelector(".ews-btn-spinner");

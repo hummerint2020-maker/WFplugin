@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.31.104
+### Fixed (owner report on 3.31.103)
+- **My requests → Withdraw** opened a blank page: it now comes back to My requests in the app.
+- **"All"** on My requests (and on My approvals) kept the filter that was on, so it showed the same list.
+- **Pressing Approve showed both Approve and Reject as working.** Only the pressed button shows it now;
+  the others are still disabled until the page answers (every form of the app).
+- My requests called a leave cancelled after approval, and an expired swap, "Withdrawn". Now: Withdrawn
+  (by the employee before a decision), Cancelled, Expired.
+
 ## 3.31.103
 My approvals and My requests (owner decisions 2026-10-16, docs/tasks/approvals.md, stage 3 of the
 approval engine; mockup docs/mockups/my-approvals/). **Off by default** (wp-admin → Features → My

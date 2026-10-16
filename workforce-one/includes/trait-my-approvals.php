@@ -130,7 +130,7 @@ trait EWS_My_Approvals_Trait {
         wp_enqueue_script('workforce-one-approvals');
         return $this->render_template('app/approvals',[
             'items'=>$shown,'all'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'week'=>$week,
-            'kind'=>$kind,'kinds'=>array_intersect_key($kinds,$present),'base_url'=>$this->app_view_url('approvals'),'post_url'=>admin_url('admin-post.php'),
+            'kind'=>$kind,'kinds'=>array_intersect_key($kinds,$present),'base_url'=>$this->my_approvals_clean_url('approvals'),'post_url'=>admin_url('admin-post.php'),
             'notice'=>$this->my_approvals_notice(),'bulk_max'=>20,
         ]);
     }
@@ -152,6 +152,11 @@ trait EWS_My_Approvals_Trait {
         return null;
     }
 
+    /** A view's address without this page's own filters and results, for "All" and the filter chips. */
+    private function my_approvals_clean_url($view){
+        return remove_query_arg(['apv_kind','apv_bulk','apv_asked','req_state','req_done','req_error','leave_rejected','swap_done','swap_error'],$this->app_view_url($view));
+    }
+
     /** App → My requests. */
     private function requests_content(){
         $emp=$this->current_employee();
@@ -169,7 +174,7 @@ trait EWS_My_Approvals_Trait {
         if(isset($_GET['req_done']))$notice=['type'=>'success','text'=>__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
         elseif(isset($_GET['req_error']))$notice=['type'=>'error','text'=>sanitize_key($_GET['req_error'])==='done'?__('It was already decided, so it can no longer be withdrawn.','workforce-one'):__('It could not be withdrawn. Try again.','workforce-one')];
         // phpcs:enable
-        return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$this->app_view_url('requests')]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$this->my_approvals_clean_url('requests')]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
     /** My requests → Withdraw (admin-post ews_request_withdraw): a waiting leave, overtime or correction. */
@@ -177,7 +182,10 @@ trait EWS_My_Approvals_Trait {
         if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
         $kind=sanitize_key($_POST['kind']??'');$id=absint($_POST['id']??0);
         check_admin_referer('ews_request_withdraw_'.$kind.'_'.$id);
-        $back=$this->app_view_url('requests');
+        // Back to the page the person came from (app_view_url() would build on admin-post.php here).
+        $back=wp_get_referer();
+        if(!$back || strpos($back,'admin-post.php')!==false)$back=$this->app_home_url();
+        $back=add_query_arg('ews_view','requests',remove_query_arg(['req_done','req_error','req_state'],$back));
         $emp=$this->current_employee();
         if(!$this->my_requests_allowed() || !$emp){wp_safe_redirect(add_query_arg('req_error','access',$back));exit;}
         switch($kind){
