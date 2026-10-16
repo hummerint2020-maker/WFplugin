@@ -119,6 +119,7 @@ final class Options
         // Employee App
         'ews_pwa_splash_settings' => ['group' => 'app', 'label' => 'Splash screen', 'kind' => 'grouped', 'default' => [], 'builtin' => 'on, "Workforce One", 650 ms', 'page' => 'ews31-features'],
         'ews_frontend_navigation' => ['group' => 'app', 'label' => 'App menu (labels, order, hidden items)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'all items, built-in labels and order', 'page' => 'ews31-navigation'],
+        'ews_nav_mobile_requests_106' => ['group' => 'app', 'label' => 'My approvals and My requests turned on in the phone menu once (3.31.106)', 'kind' => 'bool', 'default' => false, 'internal' => true],
         'ews_appearance' => ['group' => 'app', 'label' => 'Appearance (brand, theme colours, font, corners)', 'kind' => 'grouped', 'default' => [], 'builtin' => 'Indigo Night theme, Alexandria font, round corners', 'page' => 'ews31-appearance'],
         'ews_employee_profile_settings' => ['group' => 'app', 'label' => 'Employee profile fields', 'kind' => 'grouped', 'default' => [], 'builtin' => 'photo, name, team and achievements shown', 'page' => 'ews31-employee-profile-settings'],
 

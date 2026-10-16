@@ -85,6 +85,13 @@ trait EWS_App_Layout_Trait {
     private function app_navigation(){
         $cfg=$this->option('ews_frontend_navigation');
         if(!is_array($cfg))$cfg=[];
+        // 3.31.106: My approvals and My requests were desktop-only by default, so a phone had no way to them.
+        // Saved navigation keeps that 0 from the old default; turn them on once (the admin can hide them again).
+        if(!get_option('ews_nav_mobile_requests_106')){
+            foreach(['approvals','requests'] as $k)if(isset($cfg[$k])&&is_array($cfg[$k]))$cfg[$k]['mobile_visible']=1;
+            if($cfg)update_option('ews_frontend_navigation',$cfg,false);
+            update_option('ews_nav_mobile_requests_106',1,false);
+        }
         // Labels still equal to the built-in English defaults are translated; custom labels are shown as entered.
         $i18n=['Dashboard'=>__('Dashboard','workforce-one'),'Schedule'=>__('Schedule','workforce-one'),'Sign In / Out'=>__('Sign In / Out','workforce-one'),'Leave'=>__('Leave','workforce-one'),'Overtime'=>__('Overtime','workforce-one'),'Corrections'=>__('Corrections','workforce-one'),'My sites'=>__('My sites','workforce-one'),'Payout'=>__('Payout','workforce-one'),'Tasks'=>__('Tasks','workforce-one'),'Attendance'=>__('Attendance','workforce-one'),'Reports'=>__('Reports','workforce-one'),'Attendance Insights'=>__('Attendance Insights','workforce-one'),'People'=>__('People','workforce-one'),'Polls'=>__('Polls','workforce-one'),'My Pay'=>__('My Pay','workforce-one'),'My team'=>__('My team','workforce-one'),'My approvals'=>__('My approvals','workforce-one'),'Approvals'=>__('Approvals','workforce-one'),'My requests'=>__('My requests','workforce-one'),'Requests'=>__('Requests','workforce-one')];
         $items=[];

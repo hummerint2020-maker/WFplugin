@@ -243,6 +243,15 @@ check('...face reset is not offered without a registered face', 'face' not in ki
 check('...no department: the swap is shown but cannot be picked, and says why', re.search(r'disabled aria-disabled="true" data-new-kind="swap".*?You are not in a department yet', mine, re.S) is not None)
 check('the home page has the "New request" shortcut that opens the sheet', 'data-home-new-request' in emp.req('/app/')[1] and 'data-wfo-sheet-start' in emp.req('/app/?ews_view=requests&new=1')[1])
 
+# 3.31.106 (owner report): on the phone My requests was in no menu (desktop only by default).
+more = lambda h: (re.search(r'class="wfo-more-grid">(.*?)</div>', h, re.S) or re.search('()', '')).group(1)
+check('on the phone, My requests is under More', 'ews_view=requests' in more(emp.req('/app/')[1]))
+php("""update_option('ews_frontend_navigation',\\WorkforceOne\\Settings\\Navigation::config(['requests'=>['mobile_visible'=>0],'approvals'=>['mobile_visible'=>0]]),false); delete_option('ews_nav_mobile_requests_106');""")
+check('...also on a site that saved the navigation with the old default (turned on once)', 'ews_view=requests' in more(emp.req('/app/')[1]) and php("$c=get_option('ews_frontend_navigation'); echo (int)$c['requests']['mobile_visible'];") == '1')
+php("""$c=get_option('ews_frontend_navigation'); $c['requests']['mobile_visible']=0; update_option('ews_frontend_navigation',$c,false);""")
+check('...and an admin who hides it again afterwards is respected', 'ews_view=requests' not in more(emp.req('/app/')[1]))
+php("delete_option('ews_frontend_navigation');")
+
 n = re.search(r'id="wfo-new-leave".*?name="_wpnonce" value="([^"]+)"', mine, re.S).group(1)
 st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_vacation_request_create', '_wpnonce': n, 'ews_return': 'requests', 'leave_type_id': ids['type'], 'start_date': d(40), 'end_date': d(40), 'reason': 'from the sheet'})
 check('a leave asked from the sheet: the Leave handler saves it and comes back to My requests', 'ews_view=requests' in h.get('Location', '') and 'leave_sent=1' in h.get('Location', '') and q("SELECT id FROM {p}ews_leave_requests WHERE reason='from the sheet'"), h.get('Location'))

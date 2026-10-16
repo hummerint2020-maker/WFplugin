@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.31.106
+### Fixed (owner report on 3.31.105)
+- **My requests and My approvals were missing on the phone.** They were desktop-only by default, so the
+  phone menu had no way to them. They now show under **More** on the phone. A site that already saved
+  View Navigation gets them turned on once; an administrator can still hide them there.
+
 ## 3.31.105
 "+ New request" on My requests (owner decisions 2026-10-16, mockup docs/mockups/new-request/). It uses the
 same switch as My approvals and My requests (off by default).
