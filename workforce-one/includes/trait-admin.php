@@ -124,6 +124,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','View Navigation','View Navigation','ews_manage_settings','ews31-navigation',[$this,'admin_navigation']);
             add_submenu_page('ews31','Appearance','Appearance','ews_manage_settings','ews31-appearance',[$this,'admin_appearance']);
             add_submenu_page('ews31','Approval Workflows','Approval Workflows','manage_options','ews31-approvals',[$this,'admin_approval_workflows']);
+            add_submenu_page('ews31','Substitutes','Substitutes','read','ews31-substitutes',[$this,'admin_substitutes']);
             add_submenu_page('ews31','Settings Overview','Settings Overview','manage_options','ews31-settings-overview',[$this,'admin_settings_overview']);
             // The menu in sections: one item per section, the other pages kept (WordPress refuses a page
             // that is not in the menu) but hidden, Employee Profile included (opened from Employees).

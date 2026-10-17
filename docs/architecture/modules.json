@@ -177,7 +177,9 @@
         "leave_withdraw",
         "duration_label",
         "leave_form_types",
-        "leave_early_form"
+        "leave_early_form",
+        "leave_away_between",
+        "leave_status_of"
       ]
     },
     "overtime": {
@@ -202,13 +204,15 @@
         "approvals",
         "admin-requests",
         "approval-deadlines",
-        "my-approvals"
+        "my-approvals",
+        "substitutes"
       ],
       "tables": [
         "approval_workflows",
         "approval_workflow_steps",
         "approval_requests",
-        "approval_steps"
+        "approval_steps",
+        "approval_substitutes"
       ],
       "api": [
         "approval_waiting_on_supervisors",
@@ -225,7 +229,18 @@
         "my_approvals_count",
         "my_approvals_link",
         "my_approvals_home",
-        "my_approvals_clean_url"
+        "my_approvals_clean_url",
+        "substitutes_enabled",
+        "substitute_leave_question",
+        "substitute_leave_check",
+        "substitute_leave_saved",
+        "substitutes_sync_at_shutdown",
+        "substitute_route",
+        "substitute_manager_may_decide",
+        "substitute_after_decision",
+        "substitute_settings",
+        "substitute_app_data",
+        "substitute_notice"
       ]
     },
     "notifications": {

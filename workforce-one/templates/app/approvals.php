@@ -15,6 +15,7 @@
  * @var string $post_url
  * @var array{type:string,text:string}|null $notice
  * @var int $bulk_max
+ * @var array<string,mixed> $subs   substitutes (3.31.107, templates/app/substitutes-bar.php)
  */
 if (!defined('ABSPATH')) exit;
 $ini = static function (string $name): string {
@@ -27,6 +28,7 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
 ?>
 <div class="wfo-apv" data-apv data-bulk-max="<?php echo (int) $bulk_max; ?>" data-done-url="<?php echo esc_url(add_query_arg('apv_bulk', '__N__', $base_url)); ?>">
     <?php if ($notice): ?><div class="wfo-apv-toast is-<?php echo esc_attr($notice['type']); ?>" role="status"><?php echo esc_html($notice['text']); ?></div><?php endif; ?>
+    <?php include __DIR__ . '/substitutes-bar.php'; ?>
 
     <div class="wfo-apv-kpis">
         <div class="wfo-apv-kpi"><b><?php echo esc_html($num($all)); ?></b><span><?php esc_html_e('Waiting for you', 'workforce-one'); ?></span></div>
@@ -69,6 +71,8 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php if ($p['levels'] > 0): ?><span class="wfo-apv-pill"><?php echo esc_html(sprintf(/* translators: 1: level, 2: number of levels */ __('Level %1$s of %2$s', 'workforce-one'), $num($p['level']), $num($p['levels']))); ?></span><?php endif; ?>
                 <span class="wfo-apv-pill<?php echo $p['overdue'] ? ' is-late' : ''; ?>"><?php echo esc_html(($p['overdue'] ? __('Overdue', 'workforce-one') . ' · ' : '') . sprintf(/* translators: %s: working hours */ __('Waiting %s working h', 'workforce-one'), $num(round($p['hours'], 1)))); ?></span>
                 <?php if ($p['moved_from'] !== ''): ?><span class="wfo-apv-pill is-warn"><?php echo esc_html(sprintf(/* translators: %s: person */ __('Moved up from %s', 'workforce-one'), $p['moved_from'])); ?></span><?php endif; ?>
+                <?php if (!empty($it['for'])): ?><span class="wfo-apv-pill is-brand" data-apv-for><?php echo esc_html(sprintf(/* translators: %s: the manager away */ __('For %s', 'workforce-one'), $it['for'])); ?></span><?php endif; ?>
+                <?php if (!empty($it['with'])): ?><span class="wfo-apv-pill" data-apv-with><?php echo esc_html(sprintf(/* translators: %s: the substitute */ __('With %s while you are away', 'workforce-one'), $it['with'])); ?></span><?php endif; ?>
                 <?php if ($it['admins']): ?><span class="wfo-apv-pill is-brand"><?php esc_html_e('For administrators', 'workforce-one'); ?></span><?php endif; ?>
             </div>
             <details class="wfo-apv-more">

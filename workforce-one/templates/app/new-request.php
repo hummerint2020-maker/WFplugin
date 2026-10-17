@@ -56,6 +56,7 @@ $head = static function (string $id, string $title) use ($x): string {
             <div class="wfo-rq-field"><label for="ews-vac-end"><?php esc_html_e('To', 'workforce-one'); ?></label><input id="ews-vac-end" type="date" name="end_date" min="<?php echo esc_attr($types[0]['earliest'] ?? $new['today']); ?>" required></div>
         </div>
         <p id="ews-vac-days" class="wfo-rq-total" role="status" data-working-days="<?php echo esc_attr(wp_json_encode($new['working_days'])); ?>" data-invalid="<?php esc_attr_e('Select a valid date range.', 'workforce-one'); ?>" data-count="<?php /* translators: %d: number of working days */ esc_attr_e('%d working day(s) requested.', 'workforce-one'); ?>"><?php esc_html_e('Select a valid date range.', 'workforce-one'); ?></p>
+        <?php $sub_q = $new['substitute'] ?? null; $sub_id = 'wfo-new-leave-substitute'; $sub_class = 'wfo-rq-field'; include __DIR__ . '/substitute-field.php'; ?>
         <div class="wfo-rq-field"><label for="wfo-new-leave-reason"><?php esc_html_e('Reason', 'workforce-one'); ?> <span class="wfo-optional"><?php esc_html_e('(optional)', 'workforce-one'); ?></span></label><textarea id="wfo-new-leave-reason" name="reason" rows="2"></textarea></div>
         <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Send request', 'workforce-one'); ?></button>
     </form>

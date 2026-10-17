@@ -51,10 +51,12 @@ trait EWS_Approval_Deadlines_Trait {
     private function approval_escalate($step,$workflow_key,$now){
         global $wpdb;$t=$this->approval_tables();
         $from_uid=(int)$step->approver_wp_user_id;
-        $up=(int)$step->approver_employee_id?$this->approval_related_employee((int)$step->approver_employee_id,'supervisor'):null;
+        // A level with a substitute moves up from the manager it waits for (3.31.107), not from the substitute.
+        $base=(int)($step->for_employee_id??0)?:(int)$step->approver_employee_id;
+        $up=$base?$this->approval_related_employee($base,'supervisor'):null;
         $requester_uid=(int)$this->people_user_id((int)$step->requester_employee_id);
         if($up && ((int)$up->id===(int)$step->requester_employee_id || !(int)$up->wp_user_id || (int)$up->wp_user_id===$requester_uid || (int)$up->wp_user_id===$from_uid))$up=null;
-        $set=$up?$wpdb->prepare('approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0',(int)$up->id,(int)$up->wp_user_id):'approver_employee_id=NULL,approver_wp_user_id=NULL,rerouted=1';
+        $set=($up?$wpdb->prepare('approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0',(int)$up->id,(int)$up->wp_user_id):'approver_employee_id=NULL,approver_wp_user_id=NULL,rerouted=1').',for_employee_id=NULL,substitute_id=NULL';
         $ok=$wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET {$set},pending_since=%s,reminded_at=NULL,escalations=escalations+1,escalated_from_wp_user_id=%d WHERE id=%d AND status='PENDING' AND approver_wp_user_id=%d",
             $now,$from_uid,(int)$step->id,$from_uid));
         if($ok!==1)return false;

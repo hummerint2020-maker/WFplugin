@@ -60,6 +60,17 @@ trait EWS_Leave_Trait {
             return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_leave_requests WHERE employee_id=%d AND status IN ('Pending','Approved') AND start_date<=%s AND end_date>=%s AND id<>%d LIMIT 1",$employee_id,$end,$start,(int)$except_id));
         }
 
+    /** Whether an employee is on leave (asked or approved) on any day from $from to $to (substitutes, 3.31.107). */
+    private function leave_away_between($employee_id,$from,$to){
+            return $this->leave_overlap((int)$employee_id,(string)$from,(string)$to);
+        }
+
+    /** A leave request's status ('' when there is none), for substitutes linked to a leave (3.31.107). */
+    private function leave_status_of($leave_id){
+            global $wpdb;
+            return (string)$wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}ews_leave_requests WHERE id=%d",(int)$leave_id));
+        }
+
     private function vacation_working_days_count($start,$end){
             return WorkingDays::count((string)$start,(string)$end,$this->working_days());
         }
@@ -140,6 +151,7 @@ trait EWS_Leave_Trait {
 
     /** Approve: Pending -> Approved, pending -> used, schedule snapshot + Vacation on each working day. */
     private function leave_apply_final_approval($r,$emp,$bal,$reviewer_id,$now){
+            $this->substitutes_sync_at_shutdown();   // a manager's substitute follows the leave (3.31.107)
             global $wpdb;
             $t=$wpdb->prefix.'ews_leave_requests';
             if((string)$r->status==='Pending'){
@@ -169,6 +181,7 @@ trait EWS_Leave_Trait {
 
     /** Reject: Pending -> Rejected and release the reserved days. */
     private function leave_reject_approval($r,$bal,$reviewer_id,$now){
+            $this->substitutes_sync_at_shutdown();   // a manager's substitute follows the leave (3.31.107)
             global $wpdb;
             $ok=$wpdb->update($wpdb->prefix.'ews_leave_requests',['status'=>'Rejected','reviewed_by'=>(int)$reviewer_id,'reviewed_at'=>$now],['id'=>(int)$r->id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);
             if($ok!==1)return new WP_Error('leave_state','Leave request was already handled.');
@@ -181,6 +194,7 @@ trait EWS_Leave_Trait {
 
     /** Cancellation approved: return used days, restore the snapshotted schedule, mark Cancelled. @return true|string leave_error */
     private function leave_apply_cancellation($r,$emp,$bal,$now){
+            $this->substitutes_sync_at_shutdown();   // a manager's substitute follows the leave (3.31.107)
             global $wpdb;
             if((int)$r->deduct_balance){
                 $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$r->requested_days,$now,$bal->id));
@@ -256,6 +270,8 @@ trait EWS_Leave_Trait {
                 $facts['remaining']=$bal?Balance::remaining((float)$bal->entitlement,(float)$bal->used,(float)$bal->pending):0.0;
                 $error=RequestRules::check($facts);
             }
+            // A manager's substitute while away (3.31.107), picked in the same form.
+            if(!$error)$error=$this->substitute_leave_check($emp,$start,$end);
             if($error)$this->leave_redirect(['leave_error'=>$error]);
             // One request at a time per employee (3.31.91): two requests sent together could both pass the
             // overlap and balance checks. leave_insert_request() checks both again inside the transaction.
@@ -283,6 +299,7 @@ trait EWS_Leave_Trait {
                     return true;
                 });
                 $this->audit('leave_request','leave_request',$id,$emp->name.' requested '.$days.' day(s) of '.$type->name);
+                $this->substitute_leave_saved($emp,$id,$start,$end);
                 if($ar&&$ar->status==='APPROVED'){
                     if($emp->wp_user_id)$this->leave_notify($emp->wp_user_id,'Vacation Approved','Your '.$type->name.' request from '.$start.' to '.$end.' has been approved.','vacation',$id);
                 }else{
@@ -297,6 +314,7 @@ trait EWS_Leave_Trait {
                 return is_int($id)?true:$id;
             });
             $this->audit('leave_request','leave_request',$id,$emp->name.' requested '.$days.' day(s) of '.$type->name);
+            $this->substitute_leave_saved($emp,$id,$start,$end);
             foreach(get_users(['capability'=>'ews_manage_settings','fields'=>['ID']]) as $m){
                 if((int)$m->ID===(int)get_current_user_id())continue;
                 $this->notify((int)$m->ID,'leave','Leave Request',$request_msg,['entity_id'=>$id]);

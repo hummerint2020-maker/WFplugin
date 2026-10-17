@@ -62,10 +62,10 @@ trait EWS_Employees_Trait {
         return (array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC".($limit>0?' LIMIT '.(int)$limit:''));
     }
 
-    /** The active employees with an app account (id, name, wp_user_id), by name. @return object[] */
+    /** The active employees with an app account (id, name, wp_user_id, department_id, active), by name. @return object[] */
     private function people_active_users(){
         global $wpdb;
-        return (array)$wpdb->get_results("SELECT id,name,wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0 ORDER BY name");
+        return (array)$wpdb->get_results("SELECT id,name,wp_user_id,department_id,active FROM {$this->employees} WHERE active=1 AND wp_user_id>0 ORDER BY name");
     }
 
     /** The ids of the active employees (only those whose attendance is tracked, with $attendance_only). @return string[] */

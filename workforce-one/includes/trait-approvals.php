@@ -123,6 +123,10 @@ trait EWS_Approvals_Trait {
             if(!$wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$t['instances']} LIKE %s",$col)))$wpdb->query("ALTER TABLE {$t['instances']} ADD COLUMN {$col} {$def}");
         }
 
+        // 3.31.107: a level decided by a substitute while its approver is away: for whom (the manager), and which substitute row.
+        foreach(['for_employee_id'=>"BIGINT UNSIGNED NULL AFTER escalated_from_wp_user_id",'substitute_id'=>"BIGINT UNSIGNED NULL AFTER for_employee_id"] as $col=>$def){
+            if(!$wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$t['instances']} LIKE %s",$col)))$wpdb->query("ALTER TABLE {$t['instances']} ADD COLUMN {$col} {$def}");
+        }
         $this->approval_seed_workflows();
         return true;
     }
@@ -533,6 +537,9 @@ trait EWS_Approvals_Trait {
             $st=$start['steps'][$order];$approver=$p['approver'];$rerouted=$p['rerouted']||$st['rerouted'];
             $row=['approval_request_id'=>$approval_id,'step_order'=>$order,'resolver_type'=>$p['step']->resolver_type,'resolver_value'=>$p['step']->resolver_value,'status'=>$st['status'],'rerouted'=>$rerouted?1:0];
             $fmt=['%d','%d','%s','%s','%s','%d'];
+            // A manager away with a substitute (3.31.107): the level waits for the substitute, "for" the manager.
+            $route=$approver && $st['status']==='PENDING' && (int)($approver->id??0)?$this->substitute_route((int)$approver->id,(int)$requester_employee_id):null;
+            if($route){$row['for_employee_id']=(int)$approver->id;$row['substitute_id']=(int)$route['row']->id;$fmt[]='%d';$fmt[]='%d';$approver=$route['employee'];}
             if($approver){$row['approver_employee_id']=$approver->id?(int)$approver->id:null;$row['approver_wp_user_id']=(int)$approver->wp_user_id;$fmt[]='%d';$fmt[]='%d';}
             if($st['skip']!==''){$row['skip_reason']=$st['skip'];$fmt[]='%s';}
             if($st['status']==='PENDING'){$row['pending_since']=$now;$fmt[]='%s';if($rerouted && !$approver)$admins_now=$order;}
@@ -571,6 +578,7 @@ trait EWS_Approvals_Trait {
             return new WP_Error('approval_self_not_allowed','This workflow does not allow approving your own request.');
         if($admin_override)return true;
         if($uid && (int)$step->approver_wp_user_id===$uid)return true;
+        if($this->substitute_manager_may_decide($step,$uid))return true;   // the manager away, deciding anyway (3.31.107)
         if(!empty($step->rerouted) && !(int)$step->approver_wp_user_id && $uid && user_can($uid,'manage_options'))return true;
         return new WP_Error('approval_not_authorized','You are not the assigned approver.');
     }
@@ -610,7 +618,10 @@ trait EWS_Approvals_Trait {
         ],['id'=>(int)$step->id,'status'=>'PENDING'],['%s','%s','%s','%s','%d','%d'],['%d','%s']);
         if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_stale','Approval step was already handled.');}
         if($next){
-            $ok=$wpdb->update($t['instances'],['status'=>'PENDING','pending_since'=>$now],['id'=>(int)$next->id,'status'=>'WAITING'],['%s','%s'],['%d','%s']);
+            $set=['status'=>'PENDING','pending_since'=>$now];
+            $route=(int)$next->approver_employee_id?$this->substitute_route((int)$next->approver_employee_id,(int)$request->requester_employee_id):null;
+            if($route){$set+=['approver_employee_id'=>(int)$route['employee']->id,'approver_wp_user_id'=>(int)$route['employee']->wp_user_id,'for_employee_id'=>(int)$next->approver_employee_id,'substitute_id'=>(int)$route['row']->id];}
+            $ok=$wpdb->update($t['instances'],$set,['id'=>(int)$next->id,'status'=>'WAITING'],null,['%d','%s']);
             if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
             $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'current_step'=>$to['current_step']],['id'=>$approval_request_id],['%s','%d'],['%d']);
         }elseif($decision==='reject'){
@@ -620,6 +631,7 @@ trait EWS_Approvals_Trait {
         }
         if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
         if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval decision.');}
+        $this->substitute_after_decision($step,$uid);
         if($is_self)$this->audit('approval_self_decision','approval_request',$approval_request_id,
             $this->approval_workflow_key_by_id((int)$request->workflow_id).' · level '.(int)$step->step_order.' · '.$decision);
         if($next && !empty($next->rerouted) && !(int)$next->approver_wp_user_id){
@@ -669,6 +681,12 @@ trait EWS_Approvals_Trait {
         foreach($rows as $r){
             $who=(int)$r->approver_wp_user_id?$this->approval_user_name((int)$r->approver_wp_user_id):(!empty($r->rerouted)?__('Administrators','workforce-one'):'');
             $by=$this->approval_user_name((int)($r->acted_by_wp_user_id??0));
+            // Decided by a substitute while the approver is away (3.31.107): "Sami Ali for Mona Adel".
+            $for=(int)($r->for_employee_id??0)?$this->people_name((int)$r->for_employee_id):'';
+            if($for!==''){
+                if($who!=='')$who=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$who,$for);
+                if($by!=='' && (int)$r->acted_by_wp_user_id!==(int)$this->people_user_id((int)$r->for_employee_id))$by=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$by,$for);
+            }
             $when=$r->acted_at?date_i18n('D j M, H:i',strtotime((string)$r->acted_at)):'';
             switch($r->status){
                 case 'APPROVED': $state='done';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s approved · %2$s','workforce-one'),$by?:$who,$when);break;
@@ -699,6 +717,7 @@ trait EWS_Approvals_Trait {
      */
     private function approval_close($workflow_key,$entity_type,$entity_id){
         $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
+        $this->substitutes_sync_at_shutdown();   // a withdrawn leave cancels its substitute (3.31.107)
         if(!$ar)return true;
         if(in_array($ar->status,['APPROVED','REJECTED','CANCELLED'],true))return false;
         global $wpdb;$t=$this->approval_tables();$now=current_time('mysql');

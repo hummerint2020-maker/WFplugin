@@ -49,6 +49,7 @@ trait EWS_Admin_Nav_Trait {
             'ews31-requests'=>__('Requests Hub','workforce-one'),
             'ews31-leaves'=>__('Leaves','workforce-one'),
             'ews31-approvals'=>__('Approval workflows','workforce-one'),
+            'ews31-substitutes'=>__('Substitutes','workforce-one'),
             'ews31-schedule-config'=>__('Schedule','workforce-one'),
             'ews31-multi-locations'=>__('Work locations','workforce-one'),
             'ews31-presence-kiosks'=>__('Kiosks','workforce-one'),
@@ -74,7 +75,7 @@ trait EWS_Admin_Nav_Trait {
 
     /** Features that hide a tab while off (AdminNav::sections()). @return array<string,bool> */
     private function admin_nav_features(){
-        return ['face'=>$this->face_signin_enabled(),'recognition'=>$this->recognition_enabled(),'tasks'=>$this->tasks_enabled(),'org'=>$this->org_enabled()];
+        return ['face'=>$this->face_signin_enabled(),'recognition'=>$this->recognition_enabled(),'tasks'=>$this->tasks_enabled(),'org'=>$this->org_enabled(),'substitutes'=>$this->substitutes_enabled()];
     }
 
     /** End of admin_menu: one menu item per section, the other pages kept but hidden. */

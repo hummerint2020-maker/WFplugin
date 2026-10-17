@@ -110,3 +110,14 @@
 .wfo-app .wfo-new-mate i{font-style:normal;font-size:11px;font-weight:600;color:var(--wfo-pri);background:var(--wfo-pri-soft);border-radius:999px;padding:2px 8px}
 .wfo-app .wfo-sheet-x[data-new-back] .wfo-icon{transform:scaleX(-1)}
 [dir=rtl] .wfo-app .wfo-sheet-x[data-new-back] .wfo-icon{transform:none}
+/* Substitutes while a manager is away (3.31.107, templates/app/substitutes-bar.php) */
+.wfo-app .wfo-apv-away{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-pri-soft);color:var(--wfo-ink);font-size:13px}
+.wfo-app .wfo-apv-away b{color:var(--wfo-pri)}
+.wfo-app .wfo-apv-away-ic{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--wfo-surface);color:var(--wfo-pri);flex:0 0 auto}
+.wfo-app .wfo-apv-own{display:grid;gap:8px;padding:10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-app .wfo-apv-own>.wfo-apv-btn{justify-self:start}
+.wfo-app .wfo-apv-own-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.wfo-app .wfo-apv-own-row>span{display:grid;min-width:0}
+.wfo-app .wfo-apv-own-row b{font-size:13.5px;color:var(--wfo-ink)}
+.wfo-app .wfo-apv-own-row small,.wfo-app .wfo-apv-own-note{font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-sub-field small{display:block;margin-top:4px}

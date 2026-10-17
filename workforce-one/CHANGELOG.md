@@ -1,5 +1,43 @@
 # Changelog
 
+## 3.31.107
+A substitute while a manager is away (approvals stage 4; owner decisions 2026-10-17, docs/tasks/approvals.md,
+mockup docs/mockups/substitutes/). **Off by default** (wp-admin → Features → A substitute while a manager
+is away); nothing changes until it is turned on.
+
+### Added
+- **While a manager is away, the requests that would wait for them wait for their substitute**, marked
+  "for" the manager. This covers every request type (leave, cancellation, overtime, correction, swap,
+  face reset):
+  - new requests;
+  - the next level of a request;
+  - the ones already waiting when the absence starts.
+- **Three ways to set one:**
+  - **With a leave request.** A manager is asked "Who decides for you while you are away?". Their own
+    manager and the managers in their department are suggested first. It starts when the leave is
+    approved and stops if the leave is rejected, withdrawn or cancelled.
+  - **"I'll be away" in My approvals**, with a start and an end date and time (a business trip, a
+    course). The manager can end it or cancel it there.
+  - **wp-admin → Substitutes (HR)**, for any manager. The page also lists every substitute with its
+    status and how many requests it decided, and can end or cancel one.
+- **On the substitute's side.** My approvals shows "Deciding for Mona Adel until …", and each card
+  shows "For Mona Adel". A notification arrives when it is set and when it starts.
+- **On the manager's side.**
+  - They still see those requests, marked "With Sami while you are away", and can decide them (a
+    setting).
+  - When it ends, what still waits goes back to them (or stays with the substitute, a setting), and
+    they are told what was decided.
+- **The path in My requests and My approvals** shows "Sami Ali for Mona Adel".
+- **Refusals:**
+  - a manager as their own substitute;
+  - a substitute who is away then (on leave, or with a substitute of their own);
+  - a second substitute for the same time;
+  - a person the "who can be a substitute" setting does not allow (any active employee / managers
+    only / the same department).
+- **A substitute's own request stays with the manager.** A request that moves up after its deadline
+  moves up from the manager, not from the substitute.
+- **Every change is in the Audit Log** (set, started, ended, cancelled).
+
 ## 3.31.106
 ### Fixed (owner report on 3.31.105)
 - **My requests and My approvals were missing on the phone.** They were desktop-only by default, so the

@@ -24,6 +24,7 @@ trait EWS_Features_Trait {
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
                 'my_approvals'=>$this->my_approvals_enabled(),
+                'substitutes'=>$this->substitutes_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
@@ -46,6 +47,7 @@ trait EWS_Features_Trait {
             'offline'=>$this->offline_settings(),'offline_texts'=>\WorkforceOne\Settings\OfflineScreen::TEXTS,'offline_sections'=>\WorkforceOne\Settings\OfflineScreen::SECTIONS,
             'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
+            'substitute'=>$this->substitute_settings(),'substitutes_url'=>admin_url('admin.php?page=ews31-substitutes'),
             'recognition'=>FeatureSettings::recognition($this->option('ews_recognition_weekly_limit_mode'),$this->option('ews_recognition_weekly_limit')),
             'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
@@ -95,6 +97,12 @@ trait EWS_Features_Trait {
         if(isset($post['corrections_present']))update_option('ews_feature_corrections',$flag('corrections_enabled')?1:0,false);
         // My approvals and My requests (3.31.103).
         if(isset($post['my_approvals_present']))update_option('ews_feature_my_approvals',$flag('my_approvals_enabled')?1:0,false);
+        // A substitute while a manager is away (3.31.107).
+        if(isset($post['substitutes_present'])){
+            update_option('ews_feature_substitutes',$flag('substitutes_enabled')?1:0,false);
+            update_option('ews_substitute_settings',\WorkforceOne\Approvals\Substitutes::settings(['manager_decides'=>$flag('substitute_manager_decides')?1:0,
+                'on_return'=>sanitize_key($post['substitute_on_return']??''),'who'=>sanitize_key($post['substitute_who']??''),'ask_on_leave'=>sanitize_key($post['substitute_ask']??'')]),false);
+        }
         // Sign In evidence (3.31.92): refused attempts and the photo with Face Sign In.
         if(isset($post['evidence_present'])){
             $ev_before=$this->evidence_settings();$ev=\WorkforceOne\Settings\SignInEvidence::fromPost($post);

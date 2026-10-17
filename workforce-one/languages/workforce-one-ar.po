@@ -6441,3 +6441,267 @@ msgstr "اطلب تسجيل وجهك من جديد. يظل وجهك الحالي
 
 msgid "Ask for a face reset"
 msgstr "طلب إعادة تسجيل الوجه"
+
+msgid "Substitutes"
+msgstr "البدلاء"
+
+msgid "%1$s for %2$s"
+msgstr "%1$s بالنيابة عن %2$s"
+
+msgid "Pick who decides for you while you are away."
+msgstr "اختر من يقرر بدلًا منك أثناء غيابك."
+
+msgid "That person cannot decide for you on these days (away themselves, or not allowed). Pick someone else."
+msgstr "لا يمكن لهذا الشخص أن يقرر بدلًا منك في هذه الأيام (غائب هو أيضًا أو غير مسموح). اختر شخصًا آخر."
+
+msgid "You decide for %s"
+msgstr "أنت تقرر بالنيابة عن %s"
+
+msgid "Until %2$s, requests that would wait for %1$s wait for you. %3$d is waiting now."
+msgid_plural "Until %2$s, requests that would wait for %1$s wait for you. %3$d are waiting now."
+msgstr[0] "حتى %2$s، الطلبات التي كانت ستنتظر %1$s تنتظرك أنت. عدد الطلبات المنتظرة الآن: %3$d."
+msgstr[1] "حتى %2$s، الطلبات التي كانت ستنتظر %1$s تنتظرك أنت. عدد الطلبات المنتظرة الآن: %3$d."
+msgstr[2] "حتى %2$s، الطلبات التي كانت ستنتظر %1$s تنتظرك أنت. عدد الطلبات المنتظرة الآن: %3$d."
+msgstr[3] "حتى %2$s، الطلبات التي كانت ستنتظر %1$s تنتظرك أنت. عدد الطلبات المنتظرة الآن: %3$d."
+msgstr[4] "حتى %2$s، الطلبات التي كانت ستنتظر %1$s تنتظرك أنت. عدد الطلبات المنتظرة الآن: %3$d."
+msgstr[5] "حتى %2$s، الطلبات التي كانت ستنتظر %1$s تنتظرك أنت. عدد الطلبات المنتظرة الآن: %3$d."
+
+msgid "%1$s decided %2$d request for you while you were away."
+msgid_plural "%1$s decided %2$d requests for you while you were away."
+msgstr[0] "قرر %1$s بالنيابة عنك أثناء غيابك في عدد من الطلبات: %2$d."
+msgstr[1] "قرر %1$s بالنيابة عنك أثناء غيابك في عدد من الطلبات: %2$d."
+msgstr[2] "قرر %1$s بالنيابة عنك أثناء غيابك في عدد من الطلبات: %2$d."
+msgstr[3] "قرر %1$s بالنيابة عنك أثناء غيابك في عدد من الطلبات: %2$d."
+msgstr[4] "قرر %1$s بالنيابة عنك أثناء غيابك في عدد من الطلبات: %2$d."
+msgstr[5] "قرر %1$s بالنيابة عنك أثناء غيابك في عدد من الطلبات: %2$d."
+
+msgid "%d still waits for you."
+msgid_plural "%d still wait for you."
+msgstr[0] "ما زال ينتظرك: %d."
+msgstr[1] "ما زال ينتظرك: %d."
+msgstr[2] "ما زال ينتظرك: %d."
+msgstr[3] "ما زال ينتظرك: %d."
+msgstr[4] "ما زال ينتظرك: %d."
+msgstr[5] "ما زال ينتظرك: %d."
+
+msgid "%1$d still waits for %2$s."
+msgid_plural "%1$d still wait for %2$s."
+msgstr[0] "ما زال ينتظر %2$s: %1$d."
+msgstr[1] "ما زال ينتظر %2$s: %1$d."
+msgstr[2] "ما زال ينتظر %2$s: %1$d."
+msgstr[3] "ما زال ينتظر %2$s: %1$d."
+msgstr[4] "ما زال ينتظر %2$s: %1$d."
+msgstr[5] "ما زال ينتظر %2$s: %1$d."
+
+msgid "Your substitute has ended"
+msgstr "انتهت فترة البديل"
+
+msgid "You will decide for a manager"
+msgstr "ستقرر بالنيابة عن مدير"
+
+msgid "From %2$s to %3$s, requests that would wait for %1$s will wait for you."
+msgstr "من %2$s إلى %3$s، الطلبات التي كانت ستنتظر %1$s ستنتظرك أنت."
+
+msgid "A manager cannot be their own substitute."
+msgstr "لا يمكن أن يكون المدير بديلًا عن نفسه."
+
+msgid "The end must be after the start."
+msgstr "يجب أن تكون النهاية بعد البداية."
+
+msgid "These days are already over."
+msgstr "هذه الأيام انتهت بالفعل."
+
+msgid "That person cannot be a substitute (see the substitute settings)."
+msgstr "لا يمكن لهذا الشخص أن يكون بديلًا (راجع إعدادات البدلاء)."
+
+msgid "That person is away themselves on some of these days. Pick someone else or change the days."
+msgstr "هذا الشخص غائب هو أيضًا في بعض هذه الأيام. اختر شخصًا آخر أو غيّر الأيام."
+
+msgid "There is already a substitute for some of these days."
+msgstr "يوجد بديل بالفعل لبعض هذه الأيام."
+
+msgid "Pick the manager."
+msgstr "اختر المدير."
+
+msgid "Pick the substitute."
+msgstr "اختر البديل."
+
+msgid "You cannot do that."
+msgstr "لا يمكنك القيام بذلك."
+
+msgid "Your manager"
+msgstr "مديرك"
+
+msgid "A manager in your department"
+msgstr "مدير في إدارتك"
+
+msgid "Substitute saved."
+msgstr "تم حفظ البديل."
+
+msgid "Substitute ended. What still waits goes back to the manager."
+msgstr "انتهى البديل. ما زال ينتظر من طلبات يعود إلى المدير."
+
+msgid "Substitute cancelled."
+msgstr "تم إلغاء البديل."
+
+msgid "A substitute while a manager is away"
+msgstr "البديل أثناء غياب المدير"
+
+msgid "While a manager is away, the requests that would wait for them wait for their substitute, marked \"for\" them, in every request type. A manager picks one when they ask for leave, or with \"I'll be away\" in My approvals (any start and end time); HR can set one for anyone."
+msgstr "أثناء غياب المدير، الطلبات التي كانت ستنتظره تنتظر بديله، مع علامة \"بالنيابة عن\" المدير، في كل أنواع الطلبات. يختار المدير البديل عند طلب الإجازة، أو من \"سأكون غائبًا\" في موافقاتي (بأي وقت بداية ونهاية)؛ ويمكن للموارد البشرية تحديد بديل لأي شخص."
+
+msgid "The manager can still decide while away"
+msgstr "يمكن للمدير أن يقرر أيضًا أثناء غيابه"
+
+msgid "When the manager is back, what still waits"
+msgstr "عند عودة المدير، الطلبات التي ما زالت تنتظر"
+
+msgid "Goes back to the manager"
+msgstr "تعود إلى المدير"
+
+msgid "Stays with the substitute until decided"
+msgstr "تبقى مع البديل حتى يُبت فيها"
+
+msgid "Who can be a substitute"
+msgstr "من يمكن أن يكون بديلًا"
+
+msgid "Any active employee"
+msgstr "أي موظف نشط"
+
+msgid "Managers only (someone reports to them)"
+msgstr "المديرون فقط (من لديهم مرؤوسون)"
+
+msgid "Someone in the same department"
+msgstr "شخص في نفس الإدارة"
+
+msgid "Ask managers for one when they request leave"
+msgstr "اسأل المديرين عن بديل عند طلب الإجازة"
+
+msgid "Do not ask (HR sets them)"
+msgstr "لا تسأل (تحددهم الموارد البشرية)"
+
+msgid "Waits for the leave approval"
+msgstr "بانتظار الموافقة على الإجازة"
+
+msgid "Scheduled"
+msgstr "مجدول"
+
+msgid "Active now"
+msgstr "نشط الآن"
+
+msgid "Ended"
+msgstr "انتهى"
+
+msgid "The manager, with a leave request"
+msgstr "المدير، مع طلب الإجازة"
+
+msgid "The manager (\"I'll be away\")"
+msgstr "المدير (\"سأكون غائبًا\")"
+
+msgid "While a manager is away, the requests that would wait for them wait for their substitute, marked \"for\" them. One set with a leave request follows that leave: it starts when the leave is approved and stops if it is cancelled."
+msgstr "أثناء غياب المدير، الطلبات التي كانت ستنتظره تنتظر بديله، مع علامة \"بالنيابة عن\" المدير. البديل المحدد مع طلب إجازة يتبع تلك الإجازة: يبدأ عند الموافقة عليها ويتوقف إذا أُلغيت."
+
+msgid "Substitutes are off."
+msgstr "البدلاء غير مفعّلين."
+
+msgid "Turn them on in Features"
+msgstr "فعّلهم من صفحة الميزات"
+
+msgid "Substitute"
+msgstr "البديل"
+
+msgid "Until"
+msgstr "حتى"
+
+msgid "Set by"
+msgstr "حدده"
+
+msgid "No substitutes yet."
+msgstr "لا يوجد بدلاء بعد."
+
+msgid "Decided %d"
+msgid_plural "Decided %d"
+msgstr[0] "قرر: %d"
+msgstr[1] "قرر: %d"
+msgstr[2] "قرر: %d"
+msgstr[3] "قرر: %d"
+msgstr[4] "قرر: %d"
+msgstr[5] "قرر: %d"
+
+msgid "End now"
+msgstr "إنهاء الآن"
+
+msgid "Add a substitute"
+msgstr "إضافة بديل"
+
+msgid "Reason (optional)"
+msgstr "السبب (اختياري)"
+
+msgid "Save"
+msgstr "حفظ"
+
+msgid "Who can be a substitute: %1$s. When the manager is back: %2$s."
+msgstr "من يمكن أن يكون بديلًا: %1$s. عند عودة المدير: %2$s."
+
+msgid "any active employee"
+msgstr "أي موظف نشط"
+
+msgid "managers only"
+msgstr "المديرون فقط"
+
+msgid "someone in the same department"
+msgstr "شخص في نفس الإدارة"
+
+msgid "what still waits goes back to them"
+msgstr "ما زال ينتظر يعود إليه"
+
+msgid "it stays with the substitute"
+msgstr "يبقى مع البديل"
+
+msgid "With %s while you are away"
+msgstr "مع %s أثناء غيابك"
+
+msgid "Who decides for you while you are away?"
+msgstr "من يقرر بدلًا منك أثناء غيابك؟"
+
+msgid "Pick someone"
+msgstr "اختر شخصًا"
+
+msgid "No substitute: requests wait for me"
+msgstr "بدون بديل: الطلبات تنتظرني"
+
+msgid "Suggested"
+msgstr "مقترح"
+
+msgid "Everyone else"
+msgstr "الباقون"
+
+msgid "Requests from your team on these days go to them, marked \"for\" you. It starts when the leave is approved."
+msgstr "طلبات فريقك في هذه الأيام تذهب إليه، مع علامة \"بالنيابة عنك\". يبدأ عند الموافقة على الإجازة."
+
+msgid "Deciding for %s"
+msgstr "تقرر بالنيابة عن %s"
+
+msgid "until %1$s · %2$s request"
+msgid_plural "until %1$s · %2$s requests"
+msgstr[0] "حتى %1$s · عدد الطلبات: %2$s"
+msgstr[1] "حتى %1$s · عدد الطلبات: %2$s"
+msgstr[2] "حتى %1$s · عدد الطلبات: %2$s"
+msgstr[3] "حتى %1$s · عدد الطلبات: %2$s"
+msgstr[4] "حتى %1$s · عدد الطلبات: %2$s"
+msgstr[5] "حتى %1$s · عدد الطلبات: %2$s"
+
+msgid "%s decides for you"
+msgstr "%s يقرر بالنيابة عنك"
+
+msgid "Follows your leave"
+msgstr "يتبع إجازتك"
+
+msgid "I'll be away"
+msgstr "سأكون غائبًا"
+
+msgid "For a business trip, a course or anything else. Requests that would wait for you wait for the person you pick, marked \"for\" you. For a leave, pick them in the leave request instead."
+msgstr "لمأمورية أو دورة تدريبية أو أي سبب آخر. الطلبات التي كانت ستنتظرك تنتظر الشخص الذي تختاره، مع علامة \"بالنيابة عنك\". للإجازة، اختره من طلب الإجازة."
+
+msgid "Who decides for you"
+msgstr "من يقرر بالنيابة عنك"

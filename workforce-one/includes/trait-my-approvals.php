@@ -72,10 +72,13 @@ trait EWS_My_Approvals_Trait {
         $this->ensure_approval_schema();
         global $wpdb;$t=$this->approval_tables();$uid=(int)get_current_user_id();
         $admin=user_can($uid,'manage_options');
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT i.id step_id,i.approval_request_id,i.pending_since,r.entity_type,r.entity_id,r.requester_employee_id,w.workflow_key FROM {$t['instances']} i
+        // A manager away still sees what waits for their substitute, when they may decide it (3.31.107).
+        $me=$this->current_employee();
+        $away=$me && $this->substitutes_enabled() && $this->substitute_settings()['manager_decides']?(int)$me->id:0;
+        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT i.id step_id,i.approval_request_id,i.pending_since,i.approver_wp_user_id,i.for_employee_id,r.entity_type,r.entity_id,r.requester_employee_id,w.workflow_key FROM {$t['instances']} i
             JOIN {$t['requests']} r ON r.id=i.approval_request_id JOIN {$t['workflows']} w ON w.id=r.workflow_id
-            WHERE i.status='PENDING' AND r.status LIKE 'WAITING%%' AND (i.approver_wp_user_id=%d OR (%d=1 AND i.rerouted=1 AND i.approver_wp_user_id IS NULL))
-            ORDER BY i.pending_since ASC,i.id ASC LIMIT 200",$uid,$admin?1:0));
+            WHERE i.status='PENDING' AND r.status LIKE 'WAITING%%' AND (i.approver_wp_user_id=%d OR (%d=1 AND i.rerouted=1 AND i.approver_wp_user_id IS NULL) OR (%d>0 AND i.for_employee_id=%d))
+            ORDER BY i.pending_since ASC,i.id ASC LIMIT 200",$uid,$admin?1:0,$away,$away));
         $out=[];
         foreach($rows as $row){
             $card=$this->my_approvals_card((string)$row->entity_type,(int)$row->entity_id);
@@ -87,7 +90,10 @@ trait EWS_My_Approvals_Trait {
             foreach($path['steps'] as $st)if($st['state']==='now' && $st['who']===__('Administrators','workforce-one'))$mine=true;
             $out[]=$card+['id'=>(int)$row->approval_request_id,'workflow'=>(string)$row->workflow_key,'entity_type'=>(string)$row->entity_type,'entity_id'=>(int)$row->entity_id,
                 'name'=>$emp?(string)$emp->name:__('Employee','workforce-one'),'title'=>$emp?trim((string)($emp->job_title??'')):'','employee_id'=>(int)$card['employee_id'],
-                'picture'=>$emp?$this->employee_picture_url($emp):'','path'=>$path,'admins'=>$mine,'note_required'=>$this->approval_reject_note_required((string)$row->workflow_key)];
+                'picture'=>$emp?$this->employee_picture_url($emp):'','path'=>$path,'admins'=>$mine,'note_required'=>$this->approval_reject_note_required((string)$row->workflow_key),
+                // "For Mona" on the substitute's card; "With Sami" on the manager's (3.31.107).
+                'for'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id===$uid?$this->people_name((int)$row->for_employee_id):'',
+                'with'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id!==$uid?$this->approval_user_name((int)$row->approver_wp_user_id):''];
         }
         usort($out,function($a,$b){
             if($a['path']['overdue']!==$b['path']['overdue'])return $a['path']['overdue']?-1:1;
@@ -132,7 +138,9 @@ trait EWS_My_Approvals_Trait {
         global $wpdb;$t=$this->approval_tables();
         $week=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE acted_by_wp_user_id=%d AND acted_at>=%s",(int)get_current_user_id(),gmdate('Y-m-d H:i:s',current_time('timestamp')-7*DAY_IN_SECONDS)));
         wp_enqueue_script('workforce-one-approvals');
-        return $this->render_template('app/approvals',[
+        $subs=$this->substitute_app_data($this->current_employee());
+        if(!empty($subs['can_set'])){wp_enqueue_style('workforce-one-requests');wp_enqueue_script('workforce-one-sheet');}
+        return $this->render_template('app/approvals',['subs'=>$subs,
             'items'=>$shown,'all'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'week'=>$week,
             'kind'=>$kind,'kinds'=>array_intersect_key($kinds,$present),'base_url'=>$this->my_approvals_clean_url('approvals'),'post_url'=>admin_url('admin-post.php'),
             'notice'=>$this->my_approvals_notice(),'bulk_max'=>20,
@@ -141,6 +149,8 @@ trait EWS_My_Approvals_Trait {
 
     /** The message after a decision taken here (the ones the app does not already show everywhere). */
     private function my_approvals_notice(){
+        $sub=$this->substitute_notice();
+        if($sub)return ['type'=>$sub['type']==='ok'?'success':'error','text'=>$sub['text']];
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display only
         if(isset($_GET['apv_bulk'])){
             $n=absint($_GET['apv_bulk']);$asked=absint($_GET['apv_asked']??$n);
@@ -195,7 +205,7 @@ trait EWS_My_Approvals_Trait {
         $types=$this->leave_form_types($emp);
         if($types){
             $line=implode(' · ',array_filter(array_map(function($t){return $t['deducts']&&$t['available']!==''?sprintf(/* translators: 1: days left, 2: leave type */__('%1$s %2$s left','workforce-one'),$t['available'],$t['name']):'';},array_slice($types,0,2))));
-            $kinds['leave']=['group'=>'time','label'=>__('Leave','workforce-one'),'line'=>$line,'sheet'=>'wfo-new-leave'];$data['types']=$types;
+            $kinds['leave']=['group'=>'time','label'=>__('Leave','workforce-one'),'line'=>$line,'sheet'=>'wfo-new-leave'];$data['types']=$types;$data['substitute']=$this->substitute_leave_question($emp);
         }
         $early=$this->leave_early_form($emp);
         if($early && $early['max']>0){

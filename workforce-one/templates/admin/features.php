@@ -16,6 +16,8 @@
  * @var string $offline_preview             the offline page in preview mode (add &preview=off|press|down)
  * @var array{enabled:int,audience:string,employee_view:string,wide_span:int,title_required:int} $org  Settings\OrgChartSettings::config() (3.31.97)
  * @var string $org_url                     wp-admin → People → Org chart
+ * @var array{manager_decides:int,on_return:string,who:string,ask_on_leave:string} $substitute  Approvals\Substitutes::settings() (3.31.107)
+ * @var string $substitutes_url             wp-admin → Substitutes
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
@@ -53,6 +55,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="offline_present" value="1">
 <input type="hidden" name="org_present" value="1">
 <input type="hidden" name="my_approvals_present" value="1">
+<input type="hidden" name="substitutes_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -67,6 +70,17 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-my-approvals"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">My approvals and My requests</div><div class="wfo-feature-desc">One inbox in the app for every request waiting for a person's decision (leave, overtime, corrections, swaps, face reset), with its level, how long it has waited and the path, and approving several at once. Each employee also gets My requests, to follow their requests level by level and withdraw one still waiting. The approval lists inside each page stay. Who decides, the reason to reject and when a request is overdue: <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-approvals')); ?>">Approval Workflows</a>.</div></div>
     <?php $switch('my_approvals_enabled', $on['my_approvals']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-substitutes"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('A substitute while a manager is away', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('While a manager is away, the requests that would wait for them wait for their substitute, marked "for" them, in every request type. A manager picks one when they ask for leave, or with "I\'ll be away" in My approvals (any start and end time); HR can set one for anyone.', 'workforce-one'); ?> <a href="<?php echo esc_url($substitutes_url); ?>"><?php esc_html_e('Substitutes', 'workforce-one'); ?></a></div></div>
+    <?php $switch('substitutes_enabled', $on['substitutes']); ?>
+</div>
+<div class="wfo-feature-fields">
+    <label><input type="checkbox" name="substitute_manager_decides" value="1" <?php checked(!empty($substitute['manager_decides'])); ?>> <?php esc_html_e('The manager can still decide while away', 'workforce-one'); ?></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('When the manager is back, what still waits', 'workforce-one'); ?></span><select name="substitute_on_return"><option value="back" <?php selected($substitute['on_return'], 'back'); ?>><?php esc_html_e('Goes back to the manager', 'workforce-one'); ?></option><option value="stay" <?php selected($substitute['on_return'], 'stay'); ?>><?php esc_html_e('Stays with the substitute until decided', 'workforce-one'); ?></option></select></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Who can be a substitute', 'workforce-one'); ?></span><select name="substitute_who"><option value="any" <?php selected($substitute['who'], 'any'); ?>><?php esc_html_e('Any active employee', 'workforce-one'); ?></option><option value="managers" <?php selected($substitute['who'], 'managers'); ?>><?php esc_html_e('Managers only (someone reports to them)', 'workforce-one'); ?></option><option value="department" <?php selected($substitute['who'], 'department'); ?>><?php esc_html_e('Someone in the same department', 'workforce-one'); ?></option></select></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Ask managers for one when they request leave', 'workforce-one'); ?></span><select name="substitute_ask"><option value="optional" <?php selected($substitute['ask_on_leave'], 'optional'); ?>><?php esc_html_e('Optional', 'workforce-one'); ?></option><option value="required" <?php selected($substitute['ask_on_leave'], 'required'); ?>><?php esc_html_e('Required', 'workforce-one'); ?></option><option value="no" <?php selected($substitute['ask_on_leave'], 'no'); ?>><?php esc_html_e('Do not ask (HR sets them)', 'workforce-one'); ?></option></select></label>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-signin-attempts"><div class="wfo-feature-head">

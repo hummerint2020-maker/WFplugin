@@ -74,7 +74,7 @@ trait EWS_Leave_View_Trait {
         wp_enqueue_script('workforce-one-leave');
         wp_enqueue_style('workforce-one-leave-page');
         return $this->render_template('app/leave',[
-            'emp'=>$emp,'today'=>$today,'types'=>$types,'mine'=>$mine,'has_more'=>$has_more,'show_all'=>$show_all,
+            'emp'=>$emp,'today'=>$today,'types'=>$types,'mine'=>$mine,'has_more'=>$has_more,'show_all'=>$show_all,'sub_q'=>$emp?$this->substitute_leave_question($emp):null,
             'all_url'=>add_query_arg('leave_history','all',remove_query_arg('leave_history',$this->app_view_url('vacation'))),
             'recent_url'=>remove_query_arg('leave_history',$this->app_view_url('vacation')),
             'request_url'=>$this->app_view_url('vacation'),

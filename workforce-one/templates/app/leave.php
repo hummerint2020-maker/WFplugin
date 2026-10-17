@@ -8,6 +8,7 @@
  * @var string $today
  * @var array<int,array{id:int,name:string,deducts:bool,available:string,unplanned:bool,after:int,earliest:string}> $types  (3.31.99: planned / unplanned)
  * @var object[] $mine                  my requests (+ can_cancel, started, status_text)
+ * @var array<string,mixed>|null $sub_q   a manager's substitute question (3.31.107, templates/app/substitute-field.php)
  * @var bool $has_more
  * @var bool $show_all
  * @var string $all_url
@@ -75,6 +76,7 @@ $early_messages = [
             </div>
             <?php /* translators: %d: number of working days */ ?>
             <div id="ews-vac-days" class="ews-vac-count" role="status" data-working-days="<?php echo esc_attr(wp_json_encode($working_days)); ?>" data-invalid="<?php esc_attr_e('Select a valid date range.', 'workforce-one'); ?>" data-count="<?php esc_attr_e('%d working day(s) requested.', 'workforce-one'); ?>"><?php esc_html_e('Select dates to calculate working days.', 'workforce-one'); ?></div>
+            <?php $sub_id = 'ews-vac-substitute'; $sub_class = 'ews-vac-field'; include __DIR__ . '/substitute-field.php'; ?>
             <div class="ews-vac-field"><label for="ews-vac-reason"><?php esc_html_e('Reason', 'workforce-one'); ?> <span class="wfo-optional"><?php esc_html_e('(optional)', 'workforce-one'); ?></span></label><textarea id="ews-vac-reason" name="reason" rows="3"></textarea></div>
             <button class="ews-btn ews-vac-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2); ?><span><?php esc_html_e('Submit Leave Request', 'workforce-one'); ?></span></button>
         </form>

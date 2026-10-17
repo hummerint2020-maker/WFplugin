@@ -1,7 +1,7 @@
 # Task: one approval engine, new request types, leave rules
 
 **Status: mockup reviewed, decisions taken (owner, 2026-10-14).** Mockup: `docs/mockups/approvals/`
-(7 screens, AR/EN). Built: stage 1 (leave types, 3.31.99), stage 2 (the engine, 3.31.100) and stage 3 (My approvals and My requests, 3.31.103).
+(7 screens, AR/EN). Built: stage 1 (leave types, 3.31.99), stage 2 (the engine, 3.31.100), stage 3 (My approvals and My requests, 3.31.103) and stage 4 (substitutes, 3.31.107).
 
 ## Owner decisions (2026-10-14)
 1. **One engine for every request type.** Up to 3 levels by default, a 4th at most.
@@ -33,6 +33,17 @@
    an approved leave still goes through a cancellation request.
 6. **"Overdue": a setting** (working hours); by default the type's reminder time, or 24 working hours
    when no reminder is set.
+
+## Stage 4 decisions (owner, 2026-10-17; mockup `docs/mockups/substitutes/`)
+1. **The manager can still decide while away**, whoever decides first. A setting.
+2. **Requests already waiting** when the absence starts move to the substitute.
+3. **When the manager is back**, what still waits goes back to them, with a summary of what was
+   decided. A setting (or it stays with the substitute).
+4. **Who can be a substitute: a setting.** Any active employee (the default), managers only, or the
+   same department. The manager's manager and the department's managers are suggested first.
+5. **The question in the leave request is optional.** A setting: optional, required, or not asked.
+6. **"I'll be away" without a leave**, with a start and an end date and time. HR can always set one on
+   wp-admin → Substitutes.
 
 ## Plan (one release each, every new thing off until turned on)
 1. **Leave types:** planned / unplanned, the window after the day, renewal and carry-over per type.
