@@ -45,6 +45,21 @@
 6. **"I'll be away" without a leave**, with a start and an end date and time. HR can always set one on
    wp-admin → Substitutes.
 
+## Stage 5 decisions (owner, 2026-10-17; mockup `docs/mockups/new-types/`)
+1. **Advance limit:** one month's salary, up to 12 instalments, one open advance at a time. All of it
+   is settings.
+2. **Paying an advance:** Finance records it as paid, with the date. Instalments start the month after.
+3. **Leaving with an advance still open:** a warning when HR deactivates the employee; the rest comes
+   off the last pay.
+4. **Expenses** are refunded with the pay by default. A setting: or Finance pays them apart and records
+   "paid".
+5. **Receipt: a setting.** Always required by default, or only above an amount.
+6. **The salary on a salary certificate:** the letter type decides (gross, basic, or none). The
+   employee does not choose.
+7. **A QR code on each letter.** It opens a page that shows only that the letter is genuine, its
+   reference, date and the employee's name. No salary.
+8. **One release per type:** the advance, then expenses, then letters.
+
 ## Plan (one release each, every new thing off until turned on)
 1. **Leave types:** planned / unplanned, the window after the day, renewal and carry-over per type.
 2. **The engine:** types, up to 4 levels, approvers (direct manager, manager's manager, department
