@@ -57,6 +57,7 @@ trait EWS_My_Approvals_Trait {
             case 'attendance_correction': return $this->corrections_enabled()?$this->cx_approval_card((int)$entity_id):null;
             case 'schedule_swap': return $this->swap_approval_card((int)$entity_id);
             case 'face_reset_request': return $this->face_reset_approval_card((int)$entity_id);
+            case 'salary_advance': return $this->advance_approval_card((int)$entity_id);
         }
         return null;
     }
@@ -124,7 +125,7 @@ trait EWS_My_Approvals_Trait {
 
     /** The kinds the inbox can be narrowed to. */
     private function my_approvals_kinds(){
-        return ['leave'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'correction'=>__('Corrections','workforce-one'),'swap'=>__('Swaps','workforce-one'),'face'=>__('Face reset','workforce-one')];
+        return ['leave'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'correction'=>__('Corrections','workforce-one'),'swap'=>__('Swaps','workforce-one'),'face'=>__('Face reset','workforce-one'),'advance'=>__('Advances','workforce-one')];
     }
 
     /** App → My approvals. */
@@ -159,6 +160,8 @@ trait EWS_My_Approvals_Trait {
             if($asked>$n)$msg.=' '.sprintf(/* translators: %d: number of requests */_n('%d could not be approved: open it to see why.','%d could not be approved: open them to see why.',$asked-$n,'workforce-one'),$asked-$n);
             return ['type'=>$asked>$n?'warning':'success','text'=>$msg];
         }
+        if(isset($_GET['adv_done']))return ['type'=>'success','text'=>__('The advance was decided.','workforce-one')];
+        if(isset($_GET['adv_error']))return ['type'=>'error','text'=>$this->advance_error_text(sanitize_key($_GET['adv_error']))];
         if(isset($_GET['leave_rejected']))return ['type'=>'success','text'=>__('The leave request was rejected, and the employee was told.','workforce-one')];
         if(isset($_GET['swap_done']))return ['type'=>'success','text'=>__('The shift swap was updated.','workforce-one')];
         if(isset($_GET['swap_error']))return ['type'=>'error','text'=>sanitize_key($_GET['swap_error'])==='note'?__('Write why you reject it, then reject it again.','workforce-one'):__('The shift swap could not be decided. Open it on the Schedule page.','workforce-one')];
@@ -174,7 +177,7 @@ trait EWS_My_Approvals_Trait {
     /** App → My requests. */
     private function requests_content(){
         $emp=$this->current_employee();
-        $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id)):[];
+        $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id),$this->advance_my_requests((int)$emp->id)):[];
         usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when']);});
         $items=array_slice($items,0,40);
         foreach($items as &$it){
@@ -185,7 +188,9 @@ trait EWS_My_Approvals_Trait {
         unset($it);
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display only
         $notice=null;
-        if(isset($_GET['req_done']))$notice=['type'=>'success','text'=>sanitize_key($_GET['req_done'])==='face'?__('Face reset asked. Your current face is used until it is approved.','workforce-one'):__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
+        if(isset($_GET['adv_sent']))$notice=['type'=>'success','text'=>__('Advance asked. You will be told when it is decided.','workforce-one')];
+        elseif(isset($_GET['adv_error']))$notice=['type'=>'error','text'=>$this->advance_error_text(sanitize_key($_GET['adv_error']))];
+        elseif(isset($_GET['req_done']))$notice=['type'=>'success','text'=>sanitize_key($_GET['req_done'])==='face'?__('Face reset asked. Your current face is used until it is approved.','workforce-one'):__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
         elseif(isset($_GET['req_error']))$notice=['type'=>'error','text'=>sanitize_key($_GET['req_error'])==='face'?__('The face reset could not be asked. Register your face first on the Sign In page.','workforce-one'):(sanitize_key($_GET['req_error'])==='done'?__('It was already decided, so it can no longer be withdrawn.','workforce-one'):__('It could not be withdrawn. Try again.','workforce-one'))];
         // phpcs:enable
         return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$this->my_approvals_clean_url('requests'),
@@ -220,6 +225,9 @@ trait EWS_My_Approvals_Trait {
         $swap=$this->swap_new_choices($emp);
         $kinds['swap']=['group'=>'attendance','label'=>__('Swap with a colleague','workforce-one'),'line'=>$swap['reason']===''?__('An office day for a home day','workforce-one'):($swap['reason']==='department'?__('You are not in a department yet','workforce-one'):($swap['reason']==='days'?__('No office or home days in the next two weeks','workforce-one'):__('Nobody else in your department','workforce-one'))),'sheet'=>'wfo-new-swap','off'=>$swap['reason']!==''];
         $data['swap']=$swap;
+        // A salary advance (3.31.109): the limit on the card, or why it cannot be asked now.
+        $adv=$this->advance_form($emp);
+        if($adv){$kinds['advance']=['group'=>'money','label'=>__('Salary advance','workforce-one'),'line'=>$adv['why']!==''?$adv['why_text']:sprintf(/* translators: 1: limit, 2: most instalments */__('Up to %1$s · back over up to %2$d months','workforce-one'),$adv['limit_text'],$adv['max']),'sheet'=>'wfo-new-advance','off'=>$adv['why']!==''];$data['advance']=$adv;}
         if($this->face_reset_can_ask((int)$emp->id))$kinds['face']=['group'=>'attendance','label'=>__('Face reset','workforce-one'),'line'=>__('If your face is not recognised','workforce-one'),'sheet'=>'wfo-new-face'];
         elseif($this->face_reset_requested((int)$emp->id))$kinds['face']=['group'=>'attendance','label'=>__('Face reset','workforce-one'),'line'=>__('Already asked, waiting','workforce-one'),'sheet'=>'','off'=>true];
         return ['kinds'=>$kinds]+$data;
@@ -240,6 +248,7 @@ trait EWS_My_Approvals_Trait {
             case 'leave': $r=$this->leave_withdraw($id,(int)$emp->id);break;
             case 'overtime': $r=$this->overtime_withdraw($id,(int)$emp->id);break;
             case 'correction': $r=$this->corrections_enabled()?$this->cx_withdraw($id,(int)$emp->id):'access';break;
+            case 'advance': $r=$this->advances_enabled()?$this->advance_withdraw($id,(int)$emp->id):'access';break;
             default: $r='access';
         }
         wp_safe_redirect(add_query_arg($r===true?['req_done'=>$kind]:['req_error'=>$r],$back));exit;

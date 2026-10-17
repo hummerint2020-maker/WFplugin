@@ -6750,3 +6750,261 @@ msgstr "اليوم السابق يعيد حساب تلك الأيام (التأ�
 
 msgid "From %1$s: %2$s"
 msgstr "من %1$s: %2$s"
+
+msgid "Advances"
+msgstr "السلف"
+
+msgid "Salary advances"
+msgstr "سلف الراتب"
+
+msgid "No limit"
+msgstr "بلا حد"
+
+msgid "Enter the amount."
+msgstr "أدخل المبلغ."
+
+msgid "Pay it back over 1 to %d months."
+msgstr "يُسدَّد على فترة من شهر واحد إلى %d شهرًا."
+
+msgid "Your salary is not on file yet, so the limit is not known. Ask HR."
+msgstr "راتبك غير مسجل بعد، لذلك الحد غير معروف. تواصل مع الموارد البشرية."
+
+msgid "That is more than you can ask for."
+msgstr "هذا أكثر من الحد المسموح لك."
+
+msgid "You already have an advance open. One at a time."
+msgstr "لديك سلفة مفتوحة بالفعل. سلفة واحدة في كل مرة."
+
+msgid "You can ask after %d month with the company."
+msgid_plural "You can ask after %d months with the company."
+msgstr[0] "يمكنك الطلب بعد إتمام %d شهر في الشركة."
+msgstr[1] "يمكنك الطلب بعد إتمام %d شهر في الشركة."
+msgstr[2] "يمكنك الطلب بعد إتمام %d شهر في الشركة."
+msgstr[3] "يمكنك الطلب بعد إتمام %d شهر في الشركة."
+msgstr[4] "يمكنك الطلب بعد إتمام %d شهر في الشركة."
+msgstr[5] "يمكنك الطلب بعد إتمام %d شهر في الشركة."
+
+msgid "It could not be saved. Try again."
+msgstr "تعذر الحفظ. حاول مرة أخرى."
+
+msgid "It could not be decided. Try again."
+msgstr "تعذر اتخاذ القرار. حاول مرة أخرى."
+
+msgid "A salary advance waits for you"
+msgstr "سلفة راتب في انتظارك"
+
+msgid "%s asked for a salary advance."
+msgstr "طلب %s سلفة راتب."
+
+msgid "The salary advance of %s was approved and waits to be paid (wp-admin → Advances)."
+msgstr "تمت الموافقة على سلفة راتب %s وهي في انتظار الصرف (wp-admin ← السلف)."
+
+msgid "An advance waits to be paid"
+msgstr "سلفة في انتظار الصرف"
+
+msgid "Your salary advance was approved"
+msgstr "تمت الموافقة على سلفة راتبك"
+
+msgid "It waits to be paid. Instalments start the month after it is paid."
+msgstr "هي في انتظار الصرف. تبدأ الأقساط في الشهر التالي للصرف."
+
+msgid "Your salary advance was rejected"
+msgstr "تم رفض سلفة راتبك"
+
+msgid "Salary"
+msgstr "الراتب"
+
+msgid "Of the limit"
+msgstr "من الحد"
+
+msgid "Open advances"
+msgstr "السلف المفتوحة"
+
+msgid "Last advance"
+msgstr "آخر سلفة"
+
+msgid "paid back"
+msgstr "تم سدادها"
+
+msgid "With the company"
+msgstr "المدة في الشركة"
+
+msgid "Salary advance"
+msgstr "سلفة راتب"
+
+msgid "%1$s over %2$d month (%3$s a month)"
+msgid_plural "%1$s over %2$d months (%3$s a month)"
+msgstr[0] "%1$s على %2$d شهر (%3$s شهريًا)"
+msgstr[1] "%1$s على %2$d شهر (%3$s شهريًا)"
+msgstr[2] "%1$s على %2$d شهر (%3$s شهريًا)"
+msgstr[3] "%1$s على %2$d شهر (%3$s شهريًا)"
+msgstr[4] "%1$s على %2$d شهر (%3$s شهريًا)"
+msgstr[5] "%1$s على %2$d شهر (%3$s شهريًا)"
+
+msgid "Approved · waits to be paid"
+msgstr "تمت الموافقة · في انتظار الصرف"
+
+msgid "Paid on %1$s · %2$s left · %3$d of %4$d instalments"
+msgstr "صُرفت في %1$s · المتبقي %2$s · %3$d من %4$d أقساط"
+
+msgid "Paid back"
+msgstr "تم السداد"
+
+msgid "Over %d month"
+msgid_plural "Over %d months"
+msgstr[0] "على %d شهر"
+msgstr[1] "على %d شهر"
+msgstr[2] "على %d شهر"
+msgstr[3] "على %d شهر"
+msgstr[4] "على %d شهر"
+msgstr[5] "على %d شهر"
+
+msgid "Advance instalment (%1$d of %2$d)"
+msgstr "قسط سلفة (%1$d من %2$d)"
+
+msgid "Advance: the rest (last month)"
+msgstr "السلفة: المتبقي (الشهر الأخير)"
+
+msgid "Recorded as paid. The instalments start next month."
+msgstr "تم تسجيل الصرف. تبدأ الأقساط الشهر القادم."
+
+msgid "The instalment moved to after the last one."
+msgstr "تم نقل القسط إلى ما بعد القسط الأخير."
+
+msgid "Saved."
+msgstr "تم الحفظ."
+
+msgid "Pick the day it was paid."
+msgstr "اختر يوم الصرف."
+
+msgid "That month is closed in Payroll."
+msgstr "هذا الشهر مغلق في الرواتب."
+
+msgid "Your salary advance was paid"
+msgstr "تم صرف سلفة راتبك"
+
+msgid "The instalment comes off your pay from %1$s, for %2$d month."
+msgid_plural "The instalments come off your pay from %1$s, for %2$d months."
+msgstr[0] "تُخصم الأقساط من راتبك بدءًا من %1$s، لمدة %2$d شهر."
+msgstr[1] "تُخصم الأقساط من راتبك بدءًا من %1$s، لمدة %2$d شهر."
+msgstr[2] "تُخصم الأقساط من راتبك بدءًا من %1$s، لمدة %2$d شهر."
+msgstr[3] "تُخصم الأقساط من راتبك بدءًا من %1$s، لمدة %2$d شهر."
+msgstr[4] "تُخصم الأقساط من راتبك بدءًا من %1$s، لمدة %2$d شهر."
+msgstr[5] "تُخصم الأقساط من راتبك بدءًا من %1$s، لمدة %2$d شهر."
+
+msgid "A salary advance"
+msgstr "سلفة راتب"
+
+msgid "This employee still owes %s of a salary advance. The rest is taken off their last pay."
+msgstr "ما زال على هذا الموظف %s من سلفة راتب. يُخصم المتبقي من آخر راتب له."
+
+msgid "The advance was decided."
+msgstr "تم البت في السلفة."
+
+msgid "Advance asked. You will be told when it is decided."
+msgstr "تم طلب السلفة. سيتم إبلاغك عند البت فيها."
+
+msgid "Up to %1$s · back over up to %2$d months"
+msgstr "حتى %1$s · تُسدَّد على %2$d شهرًا كحد أقصى"
+
+msgid "Salary advances are off."
+msgstr "سلف الراتب غير مفعلة."
+
+msgid "Approved, waiting to be paid"
+msgstr "تمت الموافقة، في انتظار الصرف"
+
+msgid "Instalments"
+msgstr "الأقساط"
+
+msgid "Record as paid"
+msgstr "تسجيل الصرف"
+
+msgid "Nothing waits to be paid."
+msgstr "لا يوجد ما ينتظر الصرف."
+
+msgid "Paid on"
+msgstr "تاريخ الصرف"
+
+msgid "How"
+msgstr "طريقة الصرف"
+
+msgid "Cash"
+msgstr "نقدًا"
+
+msgid "Bank transfer"
+msgstr "تحويل بنكي"
+
+msgid "Being paid back"
+msgstr "قيد السداد"
+
+msgid "Left"
+msgstr "المتبقي"
+
+msgid "No advance is being paid back."
+msgstr "لا توجد سلفة قيد السداد."
+
+msgid "%1$d of %2$d taken"
+msgstr "خُصم %1$d من %2$d"
+
+msgid "moved"
+msgstr "منقول"
+
+msgid "Move to the end"
+msgstr "نقل إلى النهاية"
+
+msgid "Asked"
+msgstr "تاريخ الطلب"
+
+msgid "None."
+msgstr "لا يوجد."
+
+msgid "They are decided in My approvals, like every request (who decides: Approval Workflows → Salary Advance). An instalment is taken once its month is closed in Payroll."
+msgstr "يُبت فيها من موافقاتي مثل كل الطلبات (من يقرر: مسارات الموافقة ← سلفة الراتب). يُعد القسط مخصومًا بعد إغلاق شهره في الرواتب."
+
+msgid "Limits"
+msgstr "الحدود"
+
+msgid "Employees ask for an advance from My requests → New request and choose how many months to pay it back over. It is decided on the approval engine (by default the direct manager, then Finance); Finance records it as paid, and the instalments come off the pay from the month after."
+msgstr "يطلب الموظفون السلفة من طلباتي ← طلب جديد ويختارون عدد أشهر السداد. يُبت فيها عبر محرك الموافقات (افتراضيًا المدير المباشر ثم المالية)؛ تسجل المالية الصرف، وتُخصم الأقساط من الراتب بدءًا من الشهر التالي."
+
+msgid "The most per advance, in months of salary (0 = no limit by salary)"
+msgstr "الحد الأقصى للسلفة بعدد أشهر الراتب (0 = بلا حد بالراتب)"
+
+msgid "And at most this amount (0 = none)"
+msgstr "وبحد أقصى هذا المبلغ (0 = بلا حد)"
+
+msgid "The most instalments (months)"
+msgstr "أقصى عدد للأقساط (أشهر)"
+
+msgid "After how many months with the company"
+msgstr "بعد كم شهر في الشركة"
+
+msgid "One open advance at a time"
+msgstr "سلفة مفتوحة واحدة في كل مرة"
+
+msgid "Money and documents"
+msgstr "المال والمستندات"
+
+msgid "%1$s a month for %2$s months"
+msgstr "%1$s شهريًا لمدة %2$s أشهر"
+
+msgid "Amount (%s)"
+msgstr "المبلغ (%s)"
+
+msgid "one open advance at a time"
+msgstr "سلفة مفتوحة واحدة في كل مرة"
+
+msgid "Paid back over"
+msgstr "مدة السداد"
+
+msgid "%d month"
+msgid_plural "%d months"
+msgstr[0] "%d شهر"
+msgstr[1] "%d شهر"
+msgstr[2] "%d شهر"
+msgstr[3] "%d شهر"
+msgstr[4] "%d شهر"
+msgstr[5] "%d شهر"
+
+msgid "Once approved, Finance pays it, and the instalments come off your pay from the month after."
+msgstr "بعد الموافقة تصرفها المالية، وتُخصم الأقساط من راتبك بدءًا من الشهر التالي."

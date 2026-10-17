@@ -141,7 +141,7 @@ final class PayCalculator
         foreach ($adjustments as $a) {
             $key = $a['kind'] === 'bonus' ? 'bonuses' : 'manual';
             $amount = round(max(0, (float) $a['amount']), 2);
-            $out[$key]['items'][] = ['id' => (int) ($a['id'] ?? 0), 'reason' => (string) $a['reason'], 'amount' => $amount];
+            $out[$key]['items'][] = ['id' => (int) ($a['id'] ?? 0), 'reason' => (string) $a['reason'], 'amount' => $amount] + (isset($a['instalment_id']) ? ['instalment_id' => (int) $a['instalment_id']] : []);
             $out[$key]['amount'] = round($out[$key]['amount'] + $amount, 2);
         }
         $out['total_deductions'] = round($out['deductions'] + $out['manual']['amount'], 2);

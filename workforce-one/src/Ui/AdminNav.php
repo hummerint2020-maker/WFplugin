@@ -27,7 +27,7 @@ final class AdminNav
             'attendance' => [['ews31-time-report', ''], ['ews31-attendance-insights', ''], ['ews31-corrections', ''], ['ews31-auto-attendance', ''], ['ews31-face-reset-requests', 'face']],
             'requests'   => [['ews31-requests', ''], ['ews31-leaves', ''], ['ews31-approvals', ''], ['ews31-substitutes', 'substitutes']],
             'schedule'   => [['ews31-schedule-config', ''], ['ews31-multi-locations', ''], ['ews31-presence-kiosks', '']],
-            'pay'        => [['ews31-payroll', ''], ['ews31-daily-workers', '']],
+            'pay'        => [['ews31-payroll', ''], ['ews31-advances', 'advances'], ['ews31-daily-workers', '']],
             'engage'     => [['ews31-moments', ''], ['ews31-smart-nudges', ''], ['ews31-achievements', ''], ['ews31-polls', ''], ['ews31-recognition', 'recognition'], ['ews31-tasks', 'tasks']],
             'settings'   => [['ews31-features', ''], ['ews31-notifications', ''], ['ews31-email', ''], ['ews31-roles', ''], ['ews31-appearance', ''],
                              ['ews31-navigation', ''], ['ews31-employee-profile-settings', ''], ['ews31-settings-overview', ''], ['ews31-audit', '']],

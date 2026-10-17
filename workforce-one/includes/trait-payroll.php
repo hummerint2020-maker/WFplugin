@@ -138,6 +138,8 @@ trait EWS_Payroll_Trait {
         }
         $adjust=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,employee_id,kind,amount,reason FROM {$this->payroll_tables()['adjustments']} WHERE month=%s ORDER BY id ASC",$month)) as $r)$adjust[(int)$r->employee_id][]=['id'=>(int)$r->id,'kind'=>(string)$r->kind,'amount'=>(float)$r->amount,'reason'=>(string)$r->reason];
+        // Salary advance instalments of this month (3.31.109): deductions from the requests, not added by hand.
+        foreach($this->advance_payroll_lines($month,$emps) as $eid=>$lines)$adjust[$eid]=array_merge($adjust[$eid]??[],$lines);
         $rules=$this->payroll_rules();
         $out=[];
         foreach($emps as $e){

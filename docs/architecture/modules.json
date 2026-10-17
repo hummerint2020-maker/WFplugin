@@ -171,7 +171,8 @@
         "face_reset_approval_card",
         "face_reset_can_ask",
         "face_reset_requested",
-        "cx_new_request_sheet"
+        "cx_new_request_sheet",
+        "ews_with_lock"
       ]
     },
     "leave": {
@@ -257,7 +258,15 @@
         "substitute_after_decision",
         "substitute_settings",
         "substitute_app_data",
-        "substitute_notice"
+        "substitute_notice",
+        "approval_start",
+        "approval_act",
+        "approval_can_act",
+        "approval_configure_workflow",
+        "approval_current_step",
+        "approval_find_request",
+        "approval_settings",
+        "approval_workflow"
       ]
     },
     "notifications": {
@@ -290,15 +299,30 @@
     "payroll": {
       "label": "Payroll and My Pay",
       "traits": [
-        "payroll"
+        "payroll",
+        "advances"
       ],
       "tables": [
         "pay_rates",
         "pay_adjustments",
         "payroll_runs",
-        "payslips"
+        "payslips",
+        "salary_advances",
+        "advance_instalments"
       ],
-      "api": []
+      "api": [
+        "advances_enabled",
+        "advance_settings",
+        "advance_form",
+        "advance_approval_card",
+        "advance_my_requests",
+        "advance_withdraw",
+        "advance_error_text",
+        "advance_payroll_lines",
+        "advance_left_for",
+        "advance_money",
+        "advances_can_pay"
+      ]
     },
     "daily_workers": {
       "label": "Daily Workers",

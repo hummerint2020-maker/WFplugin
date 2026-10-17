@@ -128,7 +128,9 @@ trait EWS_Employee_Admin_Trait {
         if(is_wp_error($this->sync_employee_teams($id,$in['team_ids'])))$this->employee_admin_redirect(['employee_error'=>'teams']);
         $this->audit('employee_update','employee',$id,$in['name'].' / '.$in['domain_name'].' / '.$in['email'].' / teams='.count($in['team_ids']));
         if((int)$old->active!==$in['active'])$this->audit('employee_status_change','employee',$id,'Status: '.((int)$old->active?'Active':'Inactive').' -> '.($in['active']?'Active':'Inactive').($last_day?' / last working day '.$last_day:''));
-        $this->employee_admin_redirect(['employee_notice'=>'updated']);
+        // Made inactive with an advance still open (3.31.109): the rest comes off the last month's pay.
+        $left=(int)$old->active===1 && !$in['active'] && $this->advances_enabled()?$this->advance_left_for($id):0.0;
+        $this->employee_admin_redirect($left>0?['employee_notice'=>'updated','advance_left'=>$left]:['employee_notice'=>'updated']);
     }
 
     public function employee_archive(){
@@ -183,6 +185,8 @@ trait EWS_Employee_Admin_Trait {
             'departments'=>(array)$wpdb->get_results("SELECT id,name FROM {$wpdb->prefix}ews_departments WHERE active=1 ORDER BY name ASC"),
             'notice'=>EmployeeRules::noticeMessage(sanitize_key($_GET['employee_notice']??'')),
             'error'=>$error!==''?EmployeeRules::errorMessage($error):null,
+            // Made inactive with a salary advance still open (3.31.109, owner decision 3): the rest comes off the last pay.
+            'advance_left'=>isset($_GET['advance_left'])&&(float)$_GET['advance_left']>0?sprintf(/* translators: %s: amount */__('This employee still owes %s of a salary advance. The rest is taken off their last pay.','workforce-one'),$this->advance_money((float)$_GET['advance_left'])):'',
             'post_url'=>admin_url('admin-post.php'),
             // Job titles (3.31.97) while the organization chart is on: the field, whether it is required, the titles in use.
             'org'=>$this->org_enabled(),'title_required'=>$this->org_title_required(),

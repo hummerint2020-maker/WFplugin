@@ -34,6 +34,11 @@ $cur = (string) $rules['currency'];
 $month_label = date('F Y', strtotime($month . '-01'));
 $tabs = ['month' => 'Monthly Payroll', 'salaries' => 'Salaries', 'rules' => 'Rules'];
 $num = static function ($v) { return rtrim(rtrim(number_format((float) $v, 4, '.', ''), '0'), '.'); };
+// A salary advance instalment (3.31.109): from the request, not removed here; it can move to after the last one.
+$instalment_move = static function ($id) {
+    return ' <form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="ews-pay-inline" data-ews-confirm="Move this instalment to after the last one?"><input type="hidden" name="action" value="ews_advance_move"><input type="hidden" name="instalment_id" value="' . (int) $id . '">'
+        . wp_nonce_field('ews_advance_move_' . (int) $id, '_wpnonce', true, false) . '<button class="button-link">Move to the end</button></form>';
+};
 $adjust_remove = static function ($id) {
     return ' <form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="ews-pay-inline" data-ews-confirm="Remove this adjustment?"><input type="hidden" name="action" value="ews_payroll_adjust_delete"><input type="hidden" name="adjustment_id" value="' . (int) $id . '">'
         . wp_nonce_field('ews_payroll_adjust_delete', '_wpnonce', true, false) . '<button class="button-link-delete">Remove</button></form>';
@@ -96,7 +101,7 @@ $adjust_remove = static function ($id) {
             <tr><td><?php echo esc_html($type); ?> <span class="ews-pay-sub"><?php echo (int) $t['days']; ?> day(s), <?php echo (int) $t['paid']; ?>% paid</span></td><td class="num minus"><?php echo esc_html($minus($t['amount'])); ?></td></tr>
             <tr class="ews-pay-day"><td colspan="2"><?php echo esc_html(implode(', ', array_map($day, $t['dates']))); ?></td></tr>
         <?php endforeach; ?>
-        <?php foreach ($p['manual']['items'] as $a): ?><tr><td>Deduction <span class="ews-pay-sub"><?php echo esc_html($a['reason']); ?></span><?php echo $run ? '' : $adjust_remove($a['id']); ?></td><td class="num minus"><?php echo esc_html($minus($a['amount'])); ?></td></tr><?php endforeach; ?>
+        <?php foreach ($p['manual']['items'] as $a): ?><tr><td>Deduction <span class="ews-pay-sub"><?php echo esc_html($a['reason']); ?></span><?php echo $run ? '' : ((int) $a['id'] ? $adjust_remove($a['id']) : (!empty($a['instalment_id']) ? $instalment_move((int) $a['instalment_id']) : '')); ?></td><td class="num minus"><?php echo esc_html($minus($a['amount'])); ?></td></tr><?php endforeach; ?>
         <?php if ($p['cap'] !== null): ?><tr><td>Limited to <?php echo esc_html($num($rules['max_deduction_days'])); ?> day(s)' pay <span class="ews-pay-sub">deductions before the limit: <?php echo esc_html($money($p['deductions_before_cap'])); ?></span></td><td class="num minus"><?php echo esc_html($minus($p['cap'])); ?></td></tr><?php endif; ?>
     </tbody></table>
     </div>

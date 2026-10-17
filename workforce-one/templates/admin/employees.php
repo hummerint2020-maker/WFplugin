@@ -18,6 +18,7 @@
  * @var int $total
  * @var string $page_url
  * @var string|null $notice
+ * @var string $advance_left
  * @var string|null $error
  * @var string $post_url
  * @var string $profile_url
@@ -56,6 +57,7 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
 <?php if ($org): ?><datalist id="ews-pick-titles"><?php foreach ($titles as $t): ?><option value="<?php echo esc_attr($t); ?>"></option><?php endforeach; ?></datalist><?php endif; ?>
 <datalist id="ews-pick-employees"><?php foreach ($people as $p): if (!(int) $p->active) continue; ?><option value="<?php echo esc_attr($person((int) $p->id)); ?>"></option><?php endforeach; ?></datalist>
 <?php if ($notice): ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html($notice); ?></p></div><?php endif; ?>
+<?php if (!empty($advance_left)): ?><div class="notice notice-warning is-dismissible" data-advance-left><p><?php echo esc_html($advance_left); ?></p></div><?php endif; ?>
 <?php if ($error): ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
 
 <form method="post" action="<?php echo esc_url($post_url); ?>" style="background:#fff;padding:18px;max-width:650px">

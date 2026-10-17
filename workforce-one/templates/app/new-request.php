@@ -7,7 +7,7 @@
  * corrections.js (the correction sheet, rendered by the Corrections module), assets/js/my-requests.js
  * (the swap colleagues, opening a form from the list). Styles: app-requests.css, app-approvals.css.
  *
- * @var array{kinds:array<string,array{group:string,label:string,line:string,sheet:string,off?:bool}>,working_days?:list<int>,today?:string,tomorrow?:string,types?:list<array<string,mixed>>,early?:array{max:int,remaining:int,summary:string},cx_html?:string,swap?:array<string,mixed>} $new
+ * @var array{kinds:array<string,array{group:string,label:string,line:string,sheet:string,off?:bool}>,advance?:array<string,mixed>,working_days?:list<int>,today?:string,tomorrow?:string,types?:list<array<string,mixed>>,early?:array{max:int,remaining:int,summary:string},cx_html?:string,swap?:array<string,mixed>} $new
  * @var string $post_url
  * @var bool $open_new
  */
@@ -16,8 +16,8 @@ use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; $cx_html comes from the Corrections module's own template
 $kinds = $new['kinds'] ?? [];
 if (!$kinds) return;
-$groups = ['time' => __('Time off and hours', 'workforce-one'), 'attendance' => __('Attendance and schedule', 'workforce-one')];
-$icons = ['leave' => 'leave', 'early' => 'logout', 'overtime' => 'overtime', 'correction' => 'history', 'swap' => 'calendar', 'face' => 'user'];
+$groups = ['time' => __('Time off and hours', 'workforce-one'), 'attendance' => __('Attendance and schedule', 'workforce-one'), 'money' => __('Money and documents', 'workforce-one')];
+$icons = ['leave' => 'leave', 'early' => 'logout', 'overtime' => 'overtime', 'correction' => 'history', 'swap' => 'calendar', 'face' => 'user', 'advance' => 'cash'];
 $back = '<input type="hidden" name="ews_return" value="requests">';
 $x = '<button type="button" class="wfo-sheet-x" data-wfo-sheet-close aria-label="' . esc_attr__('Close', 'workforce-one') . '">' . Icons::svg('close', 20, 2) . '</button>';
 $head = static function (string $id, string $title) use ($x): string {
@@ -125,6 +125,21 @@ $head = static function (string $id, string $title) use ($x): string {
         <?php echo $head('wfo-new-face-title', __('Face reset', 'workforce-one')); ?>
         <p class="wfo-sheet-note"><?php esc_html_e('Ask to register your face again. Your current face stays in use until the reset is approved; then you register it again on the Sign In page.', 'workforce-one'); ?></p>
         <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Ask for a face reset', 'workforce-one'); ?></button>
+    </form>
+</dialog>
+<?php endif; ?>
+
+<?php if (isset($kinds['advance']) && empty($kinds['advance']['off'])): $adv = $new['advance']; ?>
+<dialog class="wfo-sheet" id="wfo-new-advance" aria-labelledby="wfo-new-advance-title">
+    <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-sheet-body" data-new-advance data-currency="<?php echo esc_attr($adv['currency']); ?>" data-each="<?php /* translators: 1: amount a month, 2: months */ esc_attr_e('%1$s a month for %2$s months', 'workforce-one'); ?>"><?php wp_nonce_field('ews_advance_request_create'); ?><input type="hidden" name="action" value="ews_advance_request_create">
+        <?php echo $head('wfo-new-advance-title', __('Salary advance', 'workforce-one')); ?>
+        <div class="wfo-rq-field"><label for="wfo-new-advance-amount"><?php echo esc_html(sprintf(/* translators: %s: currency */ __('Amount (%s)', 'workforce-one'), $adv['currency'])); ?></label><input type="number" id="wfo-new-advance-amount" name="amount" min="1" step="0.01"<?php echo is_finite((float) $adv['limit']) ? ' max="' . esc_attr((string) $adv['limit']) . '"' : ''; ?> required></div>
+        <p class="wfo-sheet-note"><?php echo esc_html(sprintf(/* translators: 1: limit, 2: most instalments */ __('Up to %1$s · back over up to %2$d months', 'workforce-one'), $adv['limit_text'], $adv['max']) . ($adv['one_open'] ? ' · ' . __('one open advance at a time', 'workforce-one') : '')); ?></p>
+        <div class="wfo-rq-field"><label for="wfo-new-advance-months"><?php esc_html_e('Paid back over', 'workforce-one'); ?></label><select id="wfo-new-advance-months" name="instalments"><?php for ($m = 1; $m <= (int) $adv['max']; $m++): ?><option value="<?php echo (int) $m; ?>"<?php selected($m, min(6, (int) $adv['max'])); ?>><?php echo esc_html(sprintf(/* translators: %d: months */ _n('%d month', '%d months', $m, 'workforce-one'), $m)); ?></option><?php endfor; ?></select></div>
+        <div class="wfo-rq-field"><label for="wfo-new-advance-reason"><?php esc_html_e('Reason', 'workforce-one'); ?> <span class="wfo-optional"><?php esc_html_e('(optional)', 'workforce-one'); ?></span></label><textarea id="wfo-new-advance-reason" name="reason" rows="2"></textarea></div>
+        <p class="wfo-rq-total" data-new-advance-each role="status"></p>
+        <p class="wfo-sheet-note"><?php esc_html_e('Once approved, Finance pays it, and the instalments come off your pay from the month after.', 'workforce-one'); ?></p>
+        <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Send request', 'workforce-one'); ?></button>
     </form>
 </dialog>
 <?php endif; ?>

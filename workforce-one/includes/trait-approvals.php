@@ -233,6 +233,7 @@ trait EWS_Approvals_Trait {
             'face_reset'=>['Face Reset','NONE'],
             'shift_swap'=>['Shift Swap','PEER'],
             'attendance_correction'=>['Attendance Correction','NONE'],
+            'salary_advance'=>['Salary Advance','NONE'],
         ];
         foreach($defaults as $key=>$def){
             $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",$key));

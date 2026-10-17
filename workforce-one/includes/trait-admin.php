@@ -82,7 +82,11 @@ trait EWS_Admin_Trait {
 
     public function admin_menu(){
             add_action('admin_footer',[$this,'ews_admin_confirmation_guard']);
-            if(!$this->has_ews_admin_access()) return;
+            if(!$this->has_ews_admin_access()){
+                // The Finance user of Approval Workflows records advances as paid (3.31.109), with no other access.
+                if($this->advances_enabled() && $this->advances_can_pay())add_menu_page(__('Salary advances','workforce-one'),__('Advances','workforce-one'),'read','ews31-advances',[$this,'admin_advances'],'dashicons-money-alt',26);
+                return;
+            }
             // The parent menu is visible to EWS users with at least one management capability.
             // Each submenu keeps its own capability, so permissions remain independent.
             add_menu_page('Workforce One','Workforce One','read','ews31',[$this,'admin_home_router'],'dashicons-groups',26);
@@ -95,6 +99,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Requests Hub','Requests Hub','manage_options','ews31-requests',[$this,'admin_requests']);
             add_submenu_page('ews31','Leaves','Leaves','ews_manage_settings','ews31-leaves',[$this,'admin_leaves']);
             add_submenu_page('ews31','Payroll','Payroll','ews_manage_payroll','ews31-payroll',[$this,'admin_payroll']);
+            add_submenu_page('ews31','Advances','Advances','read','ews31-advances',[$this,'admin_advances']);
             if($this->corrections_enabled())add_submenu_page('ews31',__('Attendance Corrections','workforce-one'),__('Attendance Corrections','workforce-one'),'ews_manage_corrections','ews31-corrections',[$this,'admin_corrections']);
             if($this->dw_enabled())add_submenu_page('ews31',__('Daily Workers','workforce-one'),__('Daily Workers','workforce-one'),'ews_manage_daily_workers','ews31-daily-workers',[$this,'admin_daily_workers']);
             add_submenu_page('ews31','Face Reset Requests','Face Reset Requests','ews_manage_employees','ews31-face-reset-requests',[$this,'admin_face_reset_requests']);

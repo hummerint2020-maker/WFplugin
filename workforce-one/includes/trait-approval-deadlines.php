@@ -79,7 +79,7 @@ trait EWS_Approval_Deadlines_Trait {
     /** What a request is, for messages. */
     private function approval_kind_label($entity_type){
         $labels=['leave'=>__('A leave request','workforce-one'),'leave_cancellation'=>__('A leave cancellation','workforce-one'),'overtime_request'=>__('An overtime request','workforce-one'),
-            'attendance_correction'=>__('An attendance correction','workforce-one'),'schedule_swap'=>__('A shift swap','workforce-one'),'face_reset_request'=>__('A face reset request','workforce-one')];
+            'attendance_correction'=>__('An attendance correction','workforce-one'),'schedule_swap'=>__('A shift swap','workforce-one'),'face_reset_request'=>__('A face reset request','workforce-one'),'salary_advance'=>__('A salary advance','workforce-one')];
         return $labels[$entity_type]??__('A request','workforce-one');
     }
 }

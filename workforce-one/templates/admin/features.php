@@ -18,6 +18,8 @@
  * @var string $org_url                     wp-admin → People → Org chart
  * @var array{manager_decides:int,on_return:string,who:string,ask_on_leave:string} $substitute  Approvals\Substitutes::settings() (3.31.107)
  * @var string $substitutes_url             wp-admin → Substitutes
+ * @var array<string,mixed> $advance       Payroll\Advances::settings() (3.31.109)
+ * @var string $advances_url
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
@@ -56,6 +58,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="org_present" value="1">
 <input type="hidden" name="my_approvals_present" value="1">
 <input type="hidden" name="substitutes_present" value="1">
+<input type="hidden" name="advances_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -70,6 +73,18 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-my-approvals"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">My approvals and My requests</div><div class="wfo-feature-desc">One inbox in the app for every request waiting for a person's decision (leave, overtime, corrections, swaps, face reset), with its level, how long it has waited and the path, and approving several at once. Each employee also gets My requests, to follow their requests level by level and withdraw one still waiting. The approval lists inside each page stay. Who decides, the reason to reject and when a request is overdue: <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-approvals')); ?>">Approval Workflows</a>.</div></div>
     <?php $switch('my_approvals_enabled', $on['my_approvals']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-advances"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Salary advances', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Employees ask for an advance from My requests → New request and choose how many months to pay it back over. It is decided on the approval engine (by default the direct manager, then Finance); Finance records it as paid, and the instalments come off the pay from the month after.', 'workforce-one'); ?> <a href="<?php echo esc_url($advances_url); ?>"><?php esc_html_e('Advances', 'workforce-one'); ?></a></div></div>
+    <?php $switch('advances_enabled', $on['advances']); ?>
+</div>
+<div class="wfo-feature-fields">
+    <label><span class="wfo-field-label"><?php esc_html_e('The most per advance, in months of salary (0 = no limit by salary)', 'workforce-one'); ?></span><input type="number" name="advance_months_salary" min="0" max="24" step="0.5" value="<?php echo esc_attr((string) $advance['months_salary']); ?>"></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('And at most this amount (0 = none)', 'workforce-one'); ?></span><input type="number" name="advance_max_amount" min="0" step="1" value="<?php echo esc_attr((string) $advance['max_amount']); ?>"></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('The most instalments (months)', 'workforce-one'); ?></span><input type="number" name="advance_max_instalments" min="1" max="60" value="<?php echo (int) $advance['max_instalments']; ?>"></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('After how many months with the company', 'workforce-one'); ?></span><input type="number" name="advance_min_service" min="0" max="120" value="<?php echo (int) $advance['min_service_months']; ?>"></label>
+    <label><input type="checkbox" name="advance_one_open" value="1" <?php checked(!empty($advance['one_open'])); ?>> <?php esc_html_e('One open advance at a time', 'workforce-one'); ?></label>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-substitutes"><div class="wfo-feature-head">

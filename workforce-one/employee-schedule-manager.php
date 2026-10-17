@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.108
+ * Version: 3.31.109
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.108');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.109');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -46,6 +46,7 @@ require_once __DIR__ . '/includes/trait-org-moves.php';
 require_once __DIR__ . '/includes/trait-approval-deadlines.php';
 require_once __DIR__ . '/includes/trait-substitutes.php';
 require_once __DIR__ . '/includes/trait-shift-history.php';
+require_once __DIR__ . '/includes/trait-advances.php';
 require_once __DIR__ . '/includes/trait-my-approvals.php';
 require_once __DIR__ . '/includes/trait-org-import.php';
 require_once __DIR__ . '/includes/trait-time-report.php';
@@ -93,7 +94,7 @@ require_once __DIR__ . '/includes/trait-settings-overview.php';
 require_once __DIR__ . '/includes/trait-payroll.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Private_Files_Trait, EWS_Signin_Evidence_Trait, EWS_Offline_Screen_Trait, EWS_Office_Minimum_Trait, EWS_Admin_Nav_Trait, EWS_Org_Chart_Trait, EWS_Org_Moves_Trait, EWS_Org_Import_Trait, EWS_Approval_Deadlines_Trait, EWS_My_Approvals_Trait, EWS_Substitutes_Trait, EWS_Shift_History_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Private_Files_Trait, EWS_Signin_Evidence_Trait, EWS_Offline_Screen_Trait, EWS_Office_Minimum_Trait, EWS_Admin_Nav_Trait, EWS_Org_Chart_Trait, EWS_Org_Moves_Trait, EWS_Org_Import_Trait, EWS_Approval_Deadlines_Trait, EWS_My_Approvals_Trait, EWS_Substitutes_Trait, EWS_Shift_History_Trait, EWS_Advances_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -228,6 +229,11 @@ class EWS_Manager_V31_1 {
             // Shift history (3.31.108, includes/trait-shift-history.php): a change from a day, and the day it starts.
             add_action('admin_post_ews_shift_period_save',[$this,'shift_period_save']);
             add_action('init',[$this,'shift_history_daily'],31);
+            // Salary advances (3.31.109, includes/trait-advances.php).
+            add_action('admin_post_ews_advance_request_create',[$this,'advance_request_create']);
+            add_action('admin_post_ews_advance_respond',[$this,'advance_respond']);
+            add_action('admin_post_ews_advance_paid',[$this,'advance_paid']);
+            add_action('admin_post_ews_advance_move',[$this,'advance_move']);
             add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
             // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
             foreach(['dw_sheet_save'=>'dw_sheet','dw_worker_add'=>'dw_worker_add','dw_move_save'=>'dw_move','dw_change_save'=>'dw_change','dw_change_decide'=>'dw_change_decide','dw_advance_save'=>'dw_advance',

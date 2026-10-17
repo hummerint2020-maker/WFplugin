@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.31.109
+### New: salary advances (approvals stage 5, off by default)
+Owner decisions 2026-10-17 (docs/tasks/approvals.md), mockup docs/mockups/new-types/. Turned on in
+wp-admin → Features → Salary advances.
+
+- **Asking.** My requests → New request → **Salary advance**: the amount and the months to pay it
+  back over, with what comes off each month as the person types. The limits are settings:
+  - the most per advance, in months of salary (1 by default; basic + allowances on file today);
+  - a fixed most (none by default);
+  - up to 12 instalments;
+  - one open advance at a time (on by default);
+  - months with the company (none by default).
+  Without a salary on file the type says so and has no form.
+- **Deciding.** On the approval engine (Approval Workflows → Salary Advance). Never saved: the
+  direct manager, then Finance. The card in My approvals shows the salary, the share of the limit,
+  any advance still open, the last one and the time with the company. A waiting advance can be
+  withdrawn from My requests.
+- **Paying.** wp-admin → **Advances** (also for the Finance user of Approval Workflows with no other
+  access): approved advances waiting to be paid, recorded with the day and how (cash or transfer).
+  The instalments are planned from the month after, equal, the last one taking the rounding.
+- **Paying back.** Each instalment is a deduction line in Payroll and on the payslip ("Advance
+  instalment (1 of 4)"), taken once its month is closed. One month's instalment can move to after
+  the last one (Advances page or the Payroll month), not once its month is closed.
+- **Leaving.** Made inactive with an advance open: the Employees page says what is left; the rest
+  comes off the pay of the last month, in one line.
+- Amounts are not in the Audit Log. Tests: tests/e2e_advances.py, tests/unit/AdvancesTest.php.
+
 ## 3.31.108
 ### Fixed (owner report): changing an employee's shift changed old reports
 Every report counted every past day with the shift the employee was on **now**: lateness, overtime,

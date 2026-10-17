@@ -121,3 +121,4 @@
 .wfo-app .wfo-apv-own-row b{font-size:13.5px;color:var(--wfo-ink)}
 .wfo-app .wfo-apv-own-row small,.wfo-app .wfo-apv-own-note{font-size:12px;color:var(--wfo-muted)}
 .wfo-app .wfo-sub-field small{display:block;margin-top:4px}
+.wfo-app .wfo-apv-item.tone-advance{--tc:#0B7A4B}.wfo-app .wfo-new-type.tone-advance{--tc:#0B7A4B}

@@ -328,7 +328,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.108'; }
+        private function ews_schema_target(){ return '3.31.109'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -369,7 +369,7 @@ private function ensure_break_schema(){
                 'ensure_auto_attendance_schema','ensure_achievements_schema','ensure_polls_schema','ensure_swap_schema','ensure_leave_schema',
                 'ensure_push_schema','ensure_recognition_schema','ensure_payroll_schema','ensure_api_idempotency_schema','ensure_api_auth_schema',
                 'ews_v321_ensure_locations_table','ews_v321_ensure_employee_map','ensure_branches_schema','ensure_corrections_schema','ensure_dw_schema',
-                'ensure_evidence_schema','ensure_org_moves_schema','ensure_substitutes_schema','ensure_shift_history_schema'] as $m){
+                'ensure_evidence_schema','ensure_org_moves_schema','ensure_substitutes_schema','ensure_shift_history_schema','ensure_advances_schema'] as $m){
                 $step($m,$m==='ensure_notifications_schema'?function(){$this->ensure_notifications_schema(true);}:function()use($m){$this->$m();});
             }
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);

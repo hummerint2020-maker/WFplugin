@@ -4,7 +4,22 @@
    them waiting that day). The forms themselves are sent as on their own pages. */
 (function () {
     'use strict';
+    // Salary advance (3.31.109): what comes off each month, as the person types.
+    function advance() {
+        var form = document.querySelector('[data-new-advance]');
+        if (!form) return;
+        var amount = form.querySelector('[name="amount"]'), months = form.querySelector('[name="instalments"]'), out = form.querySelector('[data-new-advance-each]');
+        function show() {
+            var a = parseFloat(amount.value), n = parseInt(months.value, 10);
+            if (!(a > 0) || !(n > 0)) { out.textContent = ''; return; }
+            var each = Math.floor(a / n * 100) / 100;
+            out.textContent = form.getAttribute('data-each').replace('%1$s', each.toLocaleString(document.documentElement.lang || undefined) + ' ' + form.getAttribute('data-currency')).replace('%2$s', n.toLocaleString(document.documentElement.lang || undefined));
+        }
+        amount.addEventListener('input', show); months.addEventListener('change', show); show();
+    }
+
     function init() {
+        advance();
         var chooser = document.getElementById('wfo-new-sheet');
         if (!chooser || !window.wfoSheet) return;
         document.addEventListener('click', function (e) {
