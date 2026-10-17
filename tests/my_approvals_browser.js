@@ -140,6 +140,7 @@ const SHOTS = process.env.APV_SHOTS || '';
   check('...the leave form counts the working days (the Leave page\'s own script)', /1 working day/.test(await ep.textContent('#ews-vac-days')));
   await shot(ep, 'new-request-leave');
   await Promise.all([ep.waitForURL(/ews_view=requests/), ep.click('#wfo-new-leave [type="submit"]')]);
+  await ep.waitForLoadState('load'); await ep.waitForSelector('[data-req^="leave-"]', { timeout: 5000 }).catch(() => {});
   check('...sent: back on My requests with the new leave in the list', await ep.locator('[data-req^="leave-"]').count() >= 1 && php(`global $wpdb; echo (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ews_leave_requests WHERE start_date='${day}'");`) === '1');
   check('no JavaScript errors', errors.length === 0, errors);
 
