@@ -220,6 +220,7 @@ out = json.loads(php("""
     $o=new EWS_Manager_V31_1(); $c=new ReflectionProperty('EWS_Manager_V31_1','ews_shift_for_employee_cache'); $c->setAccessible(true);
     $one=new ReflectionMethod('EWS_Manager_V31_1','shift_for_employee'); $one->setAccessible(true);
     $prime=new ReflectionMethod('EWS_Manager_V31_1','prime_shift_cache'); $prime->setAccessible(true);
+    $sh=new ReflectionMethod('EWS_Manager_V31_1','shifts'); $sh->setAccessible(true); $sh->invoke($o);   // the shift list (and its dated times, 3.31.108) is loaded once per page
     $c->setValue(null,[]); $before=$wpdb->num_queries; $single=[];foreach($ids as $id){$s=$one->invoke($o,$id);$single[]=$s?$s['id']:null;} $single_q=$wpdb->num_queries-$before;
     $c->setValue(null,[]); $before=$wpdb->num_queries; $prime->invoke($o,$ids); $batched=[];foreach($ids as $id){$s=$one->invoke($o,$id);$batched[]=$s?$s['id']:null;} $batched_q=$wpdb->num_queries-$before;
     $rows=$wpdb->get_results("SELECT * FROM {$p}ews_employees WHERE id IN (".implode(',',$ids).") ORDER BY id"); $c->setValue(null,[]); $before=$wpdb->num_queries; $prime->invoke($o,$rows); $from_rows=[];foreach($ids as $id){$s=$one->invoke($o,$id);$from_rows[]=$s?$s['id']:null;} $rows_q=$wpdb->num_queries-$before;

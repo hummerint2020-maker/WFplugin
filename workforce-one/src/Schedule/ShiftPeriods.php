@@ -86,6 +86,13 @@ final class ShiftPeriods
         return null;
     }
 
+    /** Whether $item (a period or a version) is the last one by its start. @param list<array<string,mixed>> $items @param array<string,mixed> $item */
+    public static function isLatest(array $items, array $item): bool
+    {
+        foreach ($items as $x) if ((string) $x['from'] > (string) $item['from']) return false;
+        return true;
+    }
+
     public static function dayBefore(string $date): string
     {
         $d = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);

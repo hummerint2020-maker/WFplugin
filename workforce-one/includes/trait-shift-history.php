@@ -14,8 +14,12 @@ use WorkforceOne\Schedule\ShiftPeriods;
  *   shift's times asks from when (today by default); the days before keep the old times.
  * - working_hours($employee_id, $date) counts every day with the shift and the times of that day:
  *   Sign In, lateness, overtime, early leave, payroll, the reports.
- * On update every employee gets one period from 2000-01-01 with their shift then, and every shift its
- * times then: changes made before 3.31.108 were not kept. Rules: src/Schedule/ShiftPeriods.php.
+ * Today's shift is the employee's shift as saved (employees.default_shift_id, kept in step when a new
+ * period starts), and the latest period and the latest times follow what is saved now: a change made
+ * without these pages (an import, a script) still counts as before; only the days before a recorded
+ * change keep the older shift and times. On update every employee gets one period from 2000-01-01 with
+ * their shift then, and every shift its times then: changes made before 3.31.108 were not kept.
+ * Rules: src/Schedule/ShiftPeriods.php.
  * Behaviour: tests/e2e_shift_history.py.
  */
 trait EWS_Shift_History_Trait {
@@ -104,10 +108,31 @@ trait EWS_Shift_History_Trait {
         return self::$ews_shift_versions_cache=$out;
     }
 
-    /** A shift's times on a day (shift 0 = company hours), or null when it has no history. */
+    /**
+     * A shift's times on a day (shift 0 = company hours), or null when it has no history. The latest
+     * version is the shift as saved now (the option), so a change made without the Schedule
+     * Configuration page (an import, a script) still counts; only the days before a recorded change
+     * keep older times.
+     */
     private function shift_times_on($shift_id,$date){
         $all=$this->shift_versions_all();
-        return isset($all[(int)$shift_id])?ShiftPeriods::version($all[(int)$shift_id],(string)$date):null;
+        if(!isset($all[(int)$shift_id]))return null;
+        $v=ShiftPeriods::version($all[(int)$shift_id],(string)$date);
+        if(!$v)return null;
+        if(!ShiftPeriods::isLatest($all[(int)$shift_id],$v))return $v;
+        $now=(int)$shift_id===0?$this->company_hours_now():$this->shift_saved((int)$shift_id);
+        return $now?['from'=>$v['from']]+$now:$v;
+    }
+
+    /** A shift as saved now (the option), without its history. @return array<string,mixed>|null */
+    private function shift_saved($shift_id){
+        $raw=get_option('ews_shifts');
+        foreach(is_array($raw)?$raw:[] as $s){
+            if(absint($s['id']??0)!==(int)$shift_id)continue;
+            if(!preg_match('/^\d{2}:\d{2}$/',(string)($s['start']??'')) || !preg_match('/^\d{2}:\d{2}$/',(string)($s['end']??'')))return null;
+            return ['start'=>(string)$s['start'],'end'=>(string)$s['end'],'grace'=>max(0,min(180,(int)($s['grace']??10))),'sign_in_cutoff_minutes'=>max(0,min(1440,(int)($s['sign_in_cutoff_minutes']??240))),'overnight'=>!empty($s['overnight'])?1:0];
+        }
+        return null;
     }
 
     /** An employee's shift periods, oldest first. @return list<array{id:int,from:string,to:string|null,shift_id:int,reason:string,created_by:int,created_at:string}> */
@@ -134,8 +159,11 @@ trait EWS_Shift_History_Trait {
 
     /** The shift id an employee was on on a day (0 = company hours); the employee's shift when there is no history. */
     private function shift_id_on($employee_id,$date){
-        $p=ShiftPeriods::on($this->shift_periods_of((int)$employee_id),(string)$date);
-        if($p)return (int)$p['shift_id'];
+        if((string)$date===current_time('Y-m-d'))return $this->people_shift_id((int)$employee_id);
+        $periods=$this->shift_periods_of((int)$employee_id);
+        $p=ShiftPeriods::on($periods,(string)$date);
+        // The period running now is the employee's shift as saved (a change made elsewhere still counts).
+        if($p && !(ShiftPeriods::isLatest($periods,$p) && $p['from']<=current_time('Y-m-d')))return (int)$p['shift_id'];
         return $this->people_shift_id((int)$employee_id);
     }
 
@@ -173,7 +201,8 @@ trait EWS_Shift_History_Trait {
 
     /** employees.default_shift_id = the shift of today (a change on a future day reaches it when the day comes). */
     private function shift_sync_current($employee_id){
-        $this->people_set_shift_id((int)$employee_id,$this->shift_id_on((int)$employee_id,current_time('Y-m-d')));
+        $p=ShiftPeriods::on($this->shift_periods_of((int)$employee_id),current_time('Y-m-d'));
+        if($p)$this->people_set_shift_id((int)$employee_id,(int)$p['shift_id']);
         unset(self::$ews_shift_for_employee_cache[(int)$employee_id]);self::$ews_working_hours_cache=[];
     }
 

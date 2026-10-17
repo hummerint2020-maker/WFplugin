@@ -63,6 +63,13 @@ final class ShiftPeriodsTest extends TestCase
         $this->assertSame('shift', P::check('2026-11-01', '2026-10-17', true, false));
     }
 
+    public function testIsLatest(): void
+    {
+        $p = $this->periods();
+        $this->assertTrue(P::isLatest($p, $p[2]));
+        $this->assertFalse(P::isLatest($p, $p[1]), 'a later period exists: this one is history');
+    }
+
     public function testTimesChanged(): void
     {
         $a = ['start' => '09:00', 'end' => '17:00', 'grace' => 10, 'sign_in_cutoff_minutes' => 240, 'overnight' => 0, 'name' => 'Morning'];

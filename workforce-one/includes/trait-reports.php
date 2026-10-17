@@ -301,6 +301,7 @@ trait EWS_Reports_Trait {
         $allowance=$this->break_enabled()?$this->break_duration_minutes():0;
         $rows=[];
         $this->prime_shift_cache($emps);
+        $this->shift_prime_periods(array_map(function($x){return (int)$x->id;},$emps));   // past days use the shift history (3.31.108)
         foreach($emps as $emp){
             $eid=(int)$emp->id;
             foreach($dates as $d){
