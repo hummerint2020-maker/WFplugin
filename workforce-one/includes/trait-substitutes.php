@@ -113,6 +113,9 @@ trait EWS_Substitutes_Trait {
         add_action('shutdown',function(){$this->substitutes_sync();});
     }
 
+    /** The hourly job (ews_approvals_tick). */
+    public function substitutes_tick(){ $this->substitutes_sync(); }
+
     /** At most once a minute on page loads (the hourly job is too coarse for a start at 14:30). */
     public function substitutes_maybe_sync(){
         if(!$this->substitutes_enabled())return;

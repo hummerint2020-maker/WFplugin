@@ -222,7 +222,7 @@ class EWS_Manager_V31_1 {
             // A substitute while a manager is away (3.31.107, includes/trait-substitutes.php).
             add_action('admin_post_ews_substitute_save',[$this,'substitute_save']);
             add_action('admin_post_ews_substitute_end',[$this,'substitute_end']);
-            add_action('ews_approvals_tick',[$this,'substitutes_sync']);
+            add_action('ews_approvals_tick',[$this,'substitutes_tick']);
             add_action('init',[$this,'substitutes_maybe_sync'],30);
             add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
             // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
