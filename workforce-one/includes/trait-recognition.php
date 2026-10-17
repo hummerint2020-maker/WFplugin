@@ -2,12 +2,12 @@
 if (!defined('ABSPATH')) exit;
 
 trait EWS_Recognition_Trait {
-    private function recognition_enabled(){ return (bool)get_option('ews_feature_recognition',true); }
-    private function recognition_allow_kudos(){ return (bool)get_option('ews_recognition_allow_kudos',true); }
+    private function recognition_enabled(){ return (bool)$this->option('ews_feature_recognition'); }
+    private function recognition_allow_kudos(){ return (bool)$this->option('ews_recognition_allow_kudos'); }
     private function recognition_weekly_limit(){
-        $mode=get_option('ews_recognition_weekly_limit_mode','limited');
+        $mode=$this->option('ews_recognition_weekly_limit_mode');
         if($mode==='unlimited')return 0;
-        return max(1,min(1000,(int)get_option('ews_recognition_weekly_limit',5)));
+        return max(1,min(1000,(int)$this->option('ews_recognition_weekly_limit')));
     }
 
     private static $ews_recognition_schema_ready = false;
@@ -56,13 +56,14 @@ trait EWS_Recognition_Trait {
     }
 
     private function recognition_redirect($employee_id,$args=[]){
-        $fallback=add_query_arg('ews_view','people',home_url('/'));
+        $fallback=add_query_arg('ews_view','people',$this->app_home_url());
         $referer=wp_get_referer();
         $base=$referer?wp_validate_redirect($referer,$fallback):$fallback;
         $base=remove_query_arg(['kudos_error','kudos_sent'],$base);
         if(isset($args['kudos_error'])){
             $notice_key='wfo_kudos_notice_'.get_current_user_id().'_'.absint($employee_id);
-            set_transient($notice_key,'error',60);
+            // Keep the reason (limit, duplicate, …) so the profile can explain it.
+            set_transient($notice_key,'error:'.sanitize_key($args['kudos_error']),60);
             unset($args['kudos_error']);
         }
         $url=add_query_arg(array_merge(['ews_view'=>'employee','employee_id'=>absint($employee_id)],$args),$base);
@@ -72,7 +73,9 @@ trait EWS_Recognition_Trait {
     public function recognition_submit(){
         if(!is_user_logged_in())wp_die('You must be logged in.');
         if(!$this->can('ews_view_people'))wp_die('Access denied.');
-        if(!$this->recognition_enabled() || !$this->recognition_allow_kudos())wp_die('Recognition is currently disabled.');
+        $profiles=$this->employee_profile_settings();
+        // Kudos are given from a colleague's profile, so only while profiles show Recognition.
+        if(!$this->recognition_enabled() || !$this->recognition_allow_kudos() || empty($profiles['enabled']) || empty($profiles['show_recognition']))wp_die('Recognition is currently disabled.');
         check_admin_referer('ews_kudos_submit','ews_kudos_nonce');
         global $wpdb;
         $this->ensure_recognition_schema();
@@ -84,7 +87,7 @@ trait EWS_Recognition_Trait {
         if(!$sender||!$recipient_id||$recipient_id===(int)$sender->id)$this->recognition_redirect($recipient_id,['kudos_error'=>'invalid']);
         if(!isset($cats[$category]))$this->recognition_redirect($recipient_id,['kudos_error'=>'category']);
         if(mb_strlen($message)>500)$message=mb_substr($message,0,500);
-        $recipient=$wpdb->get_row($wpdb->prepare("SELECT id,name,active,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1 LIMIT 1",$recipient_id));
+        $recipient=$this->people_employee($recipient_id,true);
         if(!$recipient)$this->recognition_redirect($recipient_id,['kudos_error'=>'employee']);
         $today=current_time('Y-m-d H:i:s');
         $duplicate=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_kudos WHERE sender_employee_id=%d AND recipient_employee_id=%d AND category=%s AND message=%s AND status='active' AND created_at >= %s LIMIT 1",(int)$sender->id,$recipient_id,$category,$message,date('Y-m-d H:i:s',strtotime('-1 day',current_time('timestamp')))));
@@ -115,11 +118,10 @@ trait EWS_Recognition_Trait {
         $msg=$sender_name.' recognized you for '.$label.'.';
         if($message!=='')$msg.=' “'.wp_strip_all_tags($message).'”';
         if(!empty($recipient->wp_user_id)){
-            $this->notify_user((int)$recipient->wp_user_id,$title,$msg,'recognition','kudos',$id);
-            if(method_exists($this,'push_custom_notification')){
-                $url=add_query_arg(['ews_view'=>'employee','employee_id'=>$recipient_id],$this->app_view_url('people'));
-                $this->push_custom_notification((int)$recipient->wp_user_id,$title,$msg,'recognition',$id,$url);
-            }
+            // Their profile in People (where Kudos are shown); My Profile when People is off (3.31.94).
+            $people=!empty($this->employee_profile_settings()['enabled']);
+            $url=$people?add_query_arg(['ews_view'=>'employee','employee_id'=>$recipient_id],$this->app_home_url()):add_query_arg('ews_view','profile',$this->app_home_url());
+            $this->notify((int)$recipient->wp_user_id,'recognition',$title,$msg,['entity'=>'kudos','entity_id'=>$id,'url'=>$url]);
         }
         $this->audit('kudos_created','kudos',$id,'sender_employee_id='.(int)$sender->id.'; recipient_employee_id='.$recipient_id.'; category='.$category);
         // Keep the success notice one-time and out of the persistent URL query string.

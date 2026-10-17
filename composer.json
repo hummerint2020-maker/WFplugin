@@ -5,6 +5,7 @@
     "license": "proprietary",
     "require-dev": {
         "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5",
         "php-stubs/wordpress-stubs": "^6.6",
         "szepeviktor/phpstan-wordpress": "^2.0",
         "phpcompatibility/php-compatibility": "^9.3",
@@ -17,7 +18,11 @@
             "phpstan/extension-installer": false
         }
     },
+    "autoload-dev": {
+        "psr-4": { "WorkforceOne\\": "workforce-one/src/" }
+    },
     "scripts": {
+        "test": "phpunit",
         "lint": "find workforce-one -name '*.php' -not -path '*/assets/vendor/*' -print0 | xargs -0 -n1 php -l",
         "phpstan": "phpstan analyse --memory-limit=2G --no-progress",
         "phpcompat": "phpcs --standard=phpcs.xml.dist"

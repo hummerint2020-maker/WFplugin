@@ -1,0 +1,234 @@
+<title>New Request Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: the product's own look (indigo header, white rounded cards, Alexandria), as the approved My approvals mockup. A phone column shows the real flow (list → sheet → form → back to the list); notes sit beside it. */
+:root{
+  --bg:#f3f4fa; --card:#ffffff; --ink:#15153a; --sub:#5d6382; --faint:#8b90ab; --line:#e5e7f2; --soft:#f6f7fc;
+  --brand:#4836e0; --brand-soft:#eeecff; --hero-a:#16133f; --hero-b:#3a2bc4; --on-brand:#ffffff; --scrim:rgba(15,16,40,.45);
+  --ok:#0b7a4b; --ok-bg:#e8f7ef; --warn:#8a4f00; --warn-bg:#fff6e5; --bad:#b4233c; --bad-bg:#fdecef;
+  --t-lv:#4836e0; --t-ot:#a3245b; --t-cx:#0b7d74; --t-sw:#d9480f; --t-el:#7a4fd6; --t-fr:#1f6fd1;
+  --shadow:0 1px 2px rgba(21,21,58,.06),0 6px 18px rgba(21,21,58,.06);
+  --font:"Alexandria",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496; --on-brand:#0f1020; --scrim:rgba(0,0,0,.6);
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --t-lv:#8d80ff; --t-ot:#f07aa8; --t-cx:#4fd1c5; --t-sw:#ff9a5c; --t-el:#b69bff; --t-fr:#6aa8ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496; --on-brand:#0f1020; --scrim:rgba(0,0,0,.6);
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --t-lv:#8d80ff; --t-ot:#f07aa8; --t-cx:#4fd1c5; --t-sw:#ff9a5c; --t-el:#b69bff; --t-fr:#6aa8ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+h1,h2,h3{text-wrap:balance}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:16px}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.head h1{margin:0;font-size:20px}
+.head p{margin:2px 0 0;color:var(--sub);font-size:13px;max-width:75ch}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:5px 12px;cursor:pointer;color:var(--sub)}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.stage{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:20px;align-items:start}
+.phone{position:relative;background:var(--bg);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;min-height:720px;display:flex;flex-direction:column}
+.bar{padding:16px 16px 18px;color:#fff;background:radial-gradient(120% 140% at 100% 0%,var(--hero-b) 0%,var(--hero-a) 70%)}
+.bar small{display:block;opacity:.75;font-size:11.5px}
+.bar b{font-size:19px}
+.pbody{padding:12px;display:grid;gap:10px;align-content:start;flex:1}
+.top{display:flex;align-items:center;gap:8px}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.filters span{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--sub)}
+.filters span.on{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+.new{border:0;background:var(--brand);color:var(--on-brand);border-radius:12px;min-height:38px;padding:0 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.item{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:11px 13px;display:flex;gap:10px;align-items:center;border-inline-start:4px solid var(--tc)}
+.item div{flex:1;min-width:0}
+.item b{display:block;font-size:14px}
+.item small{display:block;color:var(--sub);font-size:12px}
+.item.fresh{outline:2px solid var(--brand)}
+.pill{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pill.wait{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.toast{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:10px 12px;font-weight:600;font-size:13px}
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end}
+.sheet{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:10px 14px 18px;max-height:92%;overflow:auto;display:grid;gap:12px}
+.grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:0 auto}
+.shead{display:flex;align-items:center;gap:8px}
+.shead h2{margin:0;font-size:16px;flex:1}
+.x,.back{border:0;background:var(--soft);border-radius:10px;width:34px;height:34px;cursor:pointer;color:var(--sub);font-size:16px}
+.types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.type{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px;text-align:start;cursor:pointer;display:grid;gap:4px;min-height:96px;align-content:start}
+.type:hover{border-color:var(--tc)}
+.type i{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--on-brand);background:var(--tc);font-size:13px}
+.type b{font-size:13.5px}
+.type small{color:var(--sub);font-size:11.5px;line-height:1.4}
+.type.off{opacity:.55;cursor:not-allowed}
+.group{font-size:11.5px;font-weight:600;color:var(--faint);margin-top:2px}
+.fld{display:grid;gap:4px}
+.fld>span{font-size:12px;font-weight:600;color:var(--sub)}
+.inp{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;width:100%;min-width:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint{color:var(--sub);font-size:12px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.info{background:var(--soft);border-radius:12px;padding:9px 11px;font-size:12.5px;color:var(--sub)}
+.info b{color:var(--ink)}
+.send{border:0;background:var(--brand);color:var(--on-brand);border-radius:12px;min-height:44px;font-weight:600;cursor:pointer;width:100%}
+.mate{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:9px 11px;cursor:pointer;background:var(--card);text-align:start;width:100%}
+.mate[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.mate .av{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:12px;color:var(--on-brand);background:var(--t-sw);flex:0 0 auto}
+.mate div{flex:1;min-width:0}
+.mate b{display:block;font-size:13.5px}
+.mate small{display:block;color:var(--sub);font-size:12px}
+.mate.no{opacity:.5;cursor:not-allowed}
+.swapline{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.swapline .pill{background:var(--soft);color:var(--ink)}
+.notes{display:grid;gap:12px}
+.note{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px 16px}
+.note h3{margin:0 0 6px;font-size:15px}
+.note p,.note li{margin:0;color:var(--sub);font-size:13px}
+.note ul,.note ol{margin:0;padding-inline-start:18px;display:grid;gap:5px}
+.dec{display:grid;gap:8px}
+.dec div{display:flex;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:12px}
+.dec b{color:var(--brand);min-width:18px}
+.dec p{margin:0}
+.dec small{display:block;color:var(--sub)}
+@media (max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div><h1 id="h1"></h1><p id="lead"></p></div>
+    <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="ar">العربية</button><button type="button" data-lang="en">English</button></div>
+  </div>
+  <div class="stage">
+    <div class="phone" id="phone"></div>
+    <div class="notes" id="notes"></div>
+  </div>
+</div>
+
+<script>
+var T={
+ h1:{ar:'طلب جديد من "طلباتي"',en:'New request from My requests'},
+ lead:{ar:'ماك أب للمراجعة قبل البناء. اضغط "+ طلب جديد" وجرّب الأنواع. كل الأسماء والأرقام أمثلة.',en:'A mockup to review before building. Press "+ New request" and try the types. All names and numbers are examples.'},
+ brand:{ar:'WE Data · Workforce One',en:'WE Data · Workforce One'},mine:{ar:'طلباتي',en:'My requests'},
+ all:{ar:'الكل',en:'All'},wait:{ar:'مستني · ١',en:'Waiting · 1'},appr:{ar:'اتوافق · ٣',en:'Approved · 3'},
+ newbtn:{ar:'+ طلب جديد',en:'+ New request'},
+ r1:{ar:'أوفرتايم · ٩ أكتوبر · ٣ س',en:'Overtime · 9 Oct · 3 h'},r1s:{ar:'منى عادل وافقت',en:'Mona Adel approved'},
+ r2:{ar:'إجازة سنوية · ٥ نوفمبر',en:'Annual leave · 5 Nov'},r2s:{ar:'مستني · المستوى ١ من ٢',en:'Waiting · level 1 of 2'},
+ st_ok:{ar:'اتوافق',en:'Approved'},st_wait:{ar:'مستني',en:'Waiting'},
+ pick:{ar:'عايز تطلب إيه؟',en:'What do you need?'},
+ g_time:{ar:'وقت وإجازات',en:'Time off and hours'},g_att:{ar:'الحضور والجدول',en:'Attendance and schedule'},g_soon:{ar:'قريبًا (المرحلة ٥)',en:'Soon (stage 5)'},
+ lv:{ar:'إجازة',en:'Leave'},lvs:{ar:'باقي ١٥ يوم سنوي · ٤ عارضة',en:'15 annual days left · 4 casual'},
+ el:{ar:'انصراف بدري',en:'Early leave'},els:{ar:'لحد ساعتين في اليوم',en:'Up to 2 hours a day'},
+ ot:{ar:'أوفرتايم',en:'Overtime'},ots:{ar:'قبل أو بعد الشغل',en:'Before or after work'},
+ cx:{ar:'تصحيح حضور',en:'Attendance correction'},cxs:{ar:'فاضل لك ٢ الشهر ده',en:'2 left this month'},
+ sw:{ar:'تبديل مع زميل',en:'Swap with a colleague'},sws:{ar:'يوم مكتب بيوم من البيت',en:'An office day for a home day'},
+ fr:{ar:'إعادة تسجيل الوجه',en:'Face reset'},frs:{ar:'لو الوجه مش بيتعرف',en:'If your face is not recognised'},
+ adv:{ar:'سلفة',en:'Salary advance'},exp:{ar:'مصروفات',en:'Expense claim'},let:{ar:'خطاب HR',en:'HR letter'},soon:{ar:'قريبًا',en:'Soon'},
+ // forms
+ f_type:{ar:'نوع الإجازة',en:'Leave type'},f_from:{ar:'من',en:'From'},f_to:{ar:'لحد',en:'To'},f_reason:{ar:'السبب',en:'Reason'},
+ annual:{ar:'سنوية (مخططة) · باقي ١٥',en:'Annual (planned) · 15 left'},casual:{ar:'عارضة (طارئة) · باقي ٤',en:'Casual (unplanned) · 4 left'},
+ lv_hint:{ar:'المخططة لازم تتطلب قبل اليوم. الطارئة ينفع النهارده أو لحد ٣ أيام بعده.',en:'Planned leave is asked before the day. Unplanned can be today or up to 3 days after.'},
+ lv_info:{ar:'<b>٣ أيام شغل</b> · الرصيد بعدها ١٢ · هيقرر: منى عادل ثم سارة نبيل (HR)',en:'<b>3 working days</b> · balance after 12 · decided by: Mona Adel, then Sara Nabil (HR)'},
+ f_day:{ar:'اليوم',en:'Day'},f_start:{ar:'من الساعة',en:'From'},f_end:{ar:'لحد الساعة',en:'Until'},
+ ot_info:{ar:'<b>٣ ساعات</b> · هيقرر: منى عادل',en:'<b>3 hours</b> · decided by: Mona Adel'},
+ f_what:{ar:'إيه اللي حصل؟',en:'What happened?'},c_out:{ar:'نسيت الانصراف',en:'Forgot Sign Out'},c_in:{ar:'نسيت الحضور',en:'Forgot Sign In'},c_time:{ar:'وقت غلط',en:'Wrong time'},c_day:{ar:'اليوم كله ناقص',en:'Whole day missing'},
+ f_out:{ar:'الانصراف الصحيح',en:'Correct Sign Out'},f_photo:{ar:'صورة (اختياري)',en:'Photo (optional)'},
+ cx_info:{ar:'المسجّل: حضور ٨:٥٢ · مفيش انصراف',en:'Recorded: Sign In 08:52 · no Sign Out'},
+ sw_day:{ar:'أنهي يوم؟',en:'Which day?'},sw_mine:{ar:'إنت يومها:',en:'You that day:'},office:{ar:'مكتب',en:'Office'},wfh:{ar:'من البيت',en:'Home'},
+ sw_who:{ar:'مع مين؟',en:'With whom?'},sw_hint:{ar:'بيظهر زمايلك في نفس القسم. ينفع تبدّل بس مع اللي يومه مختلف عنك.',en:'Your colleagues in the same department. You can only swap with someone whose day is different from yours.'},
+ m1:{ar:'كريم ناجي',en:'Karim Nagi'},m2:{ar:'مارتينا رومانى',en:'Martena Romany'},m3:{ar:'هنا لطفي',en:'Hana Lotfy'},m4:{ar:'يوسف جمال',en:'Youssef Gamal'},
+ same:{ar:'نفس يومك',en:'Same as yours'},busy:{ar:'عنده طلب تبديل لنفس اليوم',en:'Already has a swap that day'},
+ sw_info:{ar:'لو <b>كريم</b> وافق: إنت <b>من البيت</b> وهو <b>مكتب</b> يوم الخميس ٢٢. بعدها منى عادل تقرر.',en:'If <b>Karim</b> accepts: you <b>Home</b>, he <b>Office</b> on Thu 22. Then Mona Adel decides.'},
+ fr_info:{ar:'تسجيلك الحالي يفضل شغال لحد ما الطلب يتوافق عليه.',en:'Your current face stays in use until the reset is approved.'},
+ el_info:{ar:'<b>ساعة ونص</b> · باقي لك ٣ ساعات الشهر ده',en:'<b>1 h 30</b> · 3 h left this month'},f_min:{ar:'هتمشي قبل الميعاد بـ',en:'Leave early by'},
+ send:{ar:'ابعت الطلب',en:'Send request'},sent:{ar:'✓ الطلب اتبعت. هيقرره: منى عادل.',en:'✓ Sent. Mona Adel decides it.'},
+ // notes
+ n1:{ar:'زي ما اتفقنا',en:'As agreed'},
+ n1a:{ar:'زرار "+ طلب جديد" فوق في طلباتي، وعلى الموبايل بيبقى ثابت تحت.',en:'"+ New request" at the top of My requests; on a phone it stays at the bottom.'},
+ n1b:{ar:'النافذة بتعرض الأنواع المتاحة للموظف ده بس (المفعّلة والمسموحة له)، وعلى كل نوع سطر مفيد: الرصيد، المتبقي، الحد.',en:'The sheet shows only the types open to this person (turned on and allowed), each with a useful line: balance, what is left, the limit.'},
+ n1c:{ar:'الفورم بيفتح جوه نفس النافذة، بنفس القواعد والرسائل اللي في صفحة النوع. قبل ما يبعت بيشوف هيقرره مين.',en:'The form opens in the same sheet, with the same rules and messages as the type\'s own page. Before sending, the person sees who will decide it.'},
+ n1d:{ar:'بعد الإرسال بيرجع لطلباتي والطلب الجديد فوق.',en:'After sending, back to My requests with the new request on top.'},
+ n2:{ar:'التبديل (ب)',en:'Swap (b)'},
+ n2a:{ar:'يختار اليوم، يشوف هو يومها إيه، وبعدين زمايله اللي ينفع يبدّل معاهم. اللي يومه زيه أو عنده تبديل لنفس اليوم بيبان بس مش متاح.',en:'Pick the day, see your own status, then the colleagues you can swap with. Those with the same status, or a swap that day already, show but cannot be picked.'},
+ dq:{ar:'قرارات قبل البناء',en:'Decisions before building'},
+ q1:{ar:'الزرار فين؟',en:'Where is the button?'},q1a:{ar:'اقتراحي: في طلباتي، وكمان في الرئيسية كاختصار "طلب جديد".',en:'Proposal: in My requests, and also on the home page as a "New request" shortcut.'},
+ q2:{ar:'زمايل التبديل مين؟',en:'Who are the swap colleagues?'},q2a:{ar:'اقتراحي: نفس القسم. لو الموظف في فريق، الفريق الأول.',en:'Proposal: the same department; when the person is in a team, the team first.'},
+ q3:{ar:'الفورمز القديمة في كل صفحة؟',en:'The forms on each page?'},q3a:{ar:'اقتراحي: تفضل زي ما هي. ده مدخل زيادة مش بديل.',en:'Proposal: they stay. This is one more way in, not a replacement.'},
+ q4:{ar:'يشتغل إمتى؟',en:'When is it on?'},q4a:{ar:'اقتراحي: مع "موافقاتي وطلباتي" (نفس المفتاح في Features).',en:'Proposal: with My approvals and My requests (the same switch in Features).'}
+};
+var lang='ar',view='list',kind='',ck='out',mate='m1',fresh=false;
+function t(k){return (T[k]||{})[lang]||k;}
+function nameOf(n){return t(n);}
+function list(){
+  return '<div class="bar"><small>'+t('brand')+'</small><b>'+t('mine')+'</b></div><div class="pbody">'
+   +(fresh?'<div class="toast" role="status">'+t('sent')+'</div>':'')
+   +'<div class="top"><div class="filters"><span class="on">'+t('all')+'</span><span>'+t('wait')+'</span><span>'+t('appr')+'</span></div><button type="button" class="new" data-open>'+t('newbtn')+'</button></div>'
+   +(fresh?'<div class="item fresh" style="--tc:var(--t-'+(kind==='sw'?'sw':kind==='ot'?'ot':kind==='cx'?'cx':kind==='el'?'el':kind==='fr'?'fr':'lv')+')"><div><b>'+t(kind||'lv')+'</b><small>'+(lang==='ar'?'دلوقتي':'Just now')+'</small></div><span class="pill wait">'+t('st_wait')+'</span></div>':'')
+   +'<div class="item" style="--tc:var(--t-lv)"><div><b>'+t('r2')+'</b><small>'+t('r2s')+'</small></div><span class="pill wait">'+t('st_wait')+'</span></div>'
+   +'<div class="item" style="--tc:var(--t-ot)"><div><b>'+t('r1')+'</b><small>'+t('r1s')+'</small></div><span class="pill ok">'+t('st_ok')+'</span></div>'
+   +'</div>';
+}
+function type(k,c,ic,off){return '<button type="button" class="type'+(off?' off':'')+'" style="--tc:var(--t-'+c+')" '+(off?'disabled aria-disabled="true"':'data-kind="'+k+'"')+'><i aria-hidden="true">'+ic+'</i><b>'+t(k)+'</b><small>'+(off?t('soon'):t(k+'s'))+'</small></button>';}
+function chooser(){
+  return '<div class="shead"><h2>'+t('pick')+'</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>'
+   +'<div class="group">'+t('g_time')+'</div><div class="types">'+type('lv','lv','🌴')+type('el','el','↩')+type('ot','ot','+')+'</div>'
+   +'<div class="group">'+t('g_att')+'</div><div class="types">'+type('cx','cx','✎')+type('sw','sw','⇄')+type('fr','fr','☺')+'</div>'
+   +'<div class="group">'+t('g_soon')+'</div><div class="types">'+type('adv','lv','$',1)+type('exp','ot','#',1)+type('let','cx','✉',1)+'</div>';
+}
+function f(label,inner){return '<label class="fld"><span>'+label+'</span>'+inner+'</label>';}
+function form(){
+  var b='';
+  if(kind==='lv')b=f(t('f_type'),'<select class="inp"><option>'+t('annual')+'</option><option>'+t('casual')+'</option></select>')+'<p class="hint">'+t('lv_hint')+'</p><div class="row2">'+f(t('f_from'),'<input class="inp" type="date" value="2026-11-05">')+f(t('f_to'),'<input class="inp" type="date" value="2026-11-07">')+'</div>'+f(t('f_reason'),'<textarea class="inp" rows="2"></textarea>')+'<div class="info">'+t('lv_info')+'</div>';
+  if(kind==='el')b=f(t('f_day'),'<input class="inp" type="date" value="2026-10-20">')+f(t('f_min'),'<select class="inp"><option>30</option><option>60</option><option selected>90</option><option>120</option></select>')+f(t('f_reason'),'<textarea class="inp" rows="2"></textarea>')+'<div class="info">'+t('el_info')+'</div>';
+  if(kind==='ot')b=f(t('f_day'),'<input class="inp" type="date" value="2026-10-18">')+'<div class="row2">'+f(t('f_start'),'<input class="inp" type="time" value="18:00">')+f(t('f_end'),'<input class="inp" type="time" value="21:00">')+'</div>'+f(t('f_reason'),'<textarea class="inp" rows="2"></textarea>')+'<div class="info">'+t('ot_info')+'</div>';
+  if(kind==='cx')b=f(t('f_day'),'<input class="inp" type="date" value="2026-10-15">')+'<div class="info">'+t('cx_info')+'</div><div class="fld"><span>'+t('f_what')+'</span><div class="chips">'+['out','in','time','day'].map(function(k){return '<button type="button" class="chip" data-ck="'+k+'" aria-pressed="'+(ck===k)+'">'+t('c_'+k)+'</button>';}).join('')+'</div></div>'+f(t('f_out'),'<input class="inp" type="time" value="17:30">')+f(t('f_reason'),'<textarea class="inp" rows="2"></textarea>')+f(t('f_photo'),'<input class="inp" type="file">');
+  if(kind==='sw'){
+    var M=[['m1','office',''],['m2','office',''],['m3','wfh','same'],['m4','office','busy']];
+    b=f(t('sw_day'),'<input class="inp" type="date" value="2026-10-22">')+'<div class="swapline">'+t('sw_mine')+' <span class="pill">'+t('office')+'</span>→<span class="pill">'+t('wfh')+'</span></div>'
+     +'<div class="fld"><span>'+t('sw_who')+'</span><p class="hint">'+t('sw_hint')+'</p></div>'
+     +M.map(function(m){var no=m[2]!=='';return '<button type="button" class="mate'+(no?' no':'')+'" '+(no?'disabled':'data-mate="'+m[0]+'" aria-pressed="'+(mate===m[0])+'"')+'><span class="av" aria-hidden="true">'+nameOf(m[0]).split(' ').map(function(w){return w[0];}).join('').slice(0,2)+'</span><div><b>'+nameOf(m[0])+'</b><small>'+(no?t(m[2]):(lang==='ar'?'يومه: ':'That day: ')+t(m[1]==='office'?'office':'wfh'))+'</small></div></button>';}).join('')
+     +'<div class="info">'+t('sw_info').replace(lang==='ar'?'كريم':'Karim',nameOf(mate).split(' ')[0])+'</div>';
+  }
+  if(kind==='fr')b='<div class="info">'+t('fr_info')+'</div>'+f(t('f_reason'),'<textarea class="inp" rows="2"></textarea>');
+  return '<div class="shead"><button type="button" class="back" data-back aria-label="Back">'+(lang==='ar'?'→':'←')+'</button><h2>'+t(kind)+'</h2><button type="button" class="x" data-close aria-label="Close">✕</button></div>'+b+'<button type="button" class="send" data-send>'+t('send')+'</button>';
+}
+function render(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  document.getElementById('h1').textContent=t('h1');document.getElementById('lead').textContent=t('lead');
+  document.querySelectorAll('[data-lang]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.lang===lang));});
+  var p=list();
+  if(view!=='list')p+='<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="'+t('pick')+'"><div class="grab" aria-hidden="true"></div>'+(view==='pick'?chooser():form())+'</div></div>';
+  document.getElementById('phone').innerHTML=p;
+  document.getElementById('notes').innerHTML='<div class="note"><h3>'+t('n1')+'</h3><ul><li>'+t('n1a')+'</li><li>'+t('n1b')+'</li><li>'+t('n1c')+'</li><li>'+t('n1d')+'</li></ul></div>'
+   +'<div class="note"><h3>'+t('n2')+'</h3><p>'+t('n2a')+'</p></div>'
+   +'<div class="note"><h3>'+t('dq')+'</h3><div class="dec">'+[1,2,3,4].map(function(i){return '<div><b>'+(lang==='ar'?'٠١٢٣٤٥٦٧٨٩'[i]:i)+'</b><p>'+t('q'+i)+'<small>'+t('q'+i+'a')+'</small></p></div>';}).join('')+'</div></div>';
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('button,[data-scrim]');if(!b)return;var d=b.dataset;
+  if(b.hasAttribute('data-scrim')&&e.target!==b)return;
+  if(d.lang)lang=d.lang;
+  else if(b.hasAttribute('data-open')){view='pick';fresh=false;}
+  else if(b.hasAttribute('data-close')||b.hasAttribute('data-scrim'))view='list';
+  else if(b.hasAttribute('data-back'))view='pick';
+  else if(d.kind){kind=d.kind;view='form';}
+  else if(d.ck)ck=d.ck;
+  else if(d.mate)mate=d.mate;
+  else if(b.hasAttribute('data-send')){view='list';fresh=true;}
+  else return;
+  render();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&view!=='list'){view='list';render();}});
+render();
+</script>

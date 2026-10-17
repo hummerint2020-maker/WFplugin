@@ -1,0 +1,95 @@
+/* Employee app → Leave (templates/app/leave.php): balances, the request form, my requests with
+   status chips, managers' decisions and Early Leave. Uses the theme variables of app-shell.css;
+   scoped to .wfo-leave to win over the older .ews-vac-* rules in workforce-one.css.
+   assets/css/app-leave-rtl.css is generated with rtlcss (assets/css/README.md). */
+
+.wfo-app .wfo-leave{max-width:1100px;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.wfo-app .wfo-leave h3,.wfo-app .wfo-leave p{margin:0}
+.wfo-leave-lead{color:var(--wfo-muted);font-size:13px;line-height:1.6;max-width:760px}
+
+/* balances */
+.wfo-balances{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.wfo-app .wfo-leave .wfo-balance{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);text-align:start}
+.wfo-balance-icon{width:38px;height:38px;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+.wfo-balance.tone-0 .wfo-balance-icon{background:#F1EAFF;color:#6A3FD0}
+.wfo-balance.tone-1 .wfo-balance-icon{background:#E7EEFF;color:#2B5BD7}
+.wfo-balance.tone-2 .wfo-balance-icon{background:#E6F7EF;color:#0F8A55}
+.wfo-balance.tone-3 .wfo-balance-icon{background:#FFF2DE;color:#B86A00}
+.wfo-app .wfo-leave .wfo-balance strong{font-size:28px;font-weight:700;line-height:1.1;color:var(--wfo-ink)}
+.wfo-app .wfo-leave .wfo-balance span{font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-leave .wfo-balance small{font-size:11px;color:var(--wfo-muted)}
+
+/* cards */
+.wfo-app .wfo-leave .wfo-leave-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
+.wfo-app .wfo-leave .wfo-leave-card{min-width:0;box-sizing:border-box;margin:0;padding:18px 20px;border:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);display:flex;flex-direction:column;gap:12px}
+.wfo-card-title{display:flex;align-items:center;gap:10px}
+.wfo-app .wfo-leave .wfo-card-title h3{flex:1 1 auto;font-size:16px;font-weight:600;color:var(--wfo-ink)}
+.wfo-card-icon{width:38px;height:38px;flex:0 0 auto;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center;background:var(--wfo-pri-soft);color:var(--wfo-pri)}
+.wfo-card-icon.is-slate{background:#EEF0F5;color:#3B4466}
+.wfo-card-icon.is-amber{background:#FFF2DE;color:#B86A00}
+.wfo-card-icon.is-rose{background:#FFE8EC;color:#C2264B}
+.wfo-card-icon.is-teal{background:#E3F6F8;color:#0B7A8A}
+.wfo-help{font-size:13px;color:var(--wfo-muted);line-height:1.55}
+
+/* form */
+.wfo-app .wfo-leave form{display:flex;flex-direction:column;gap:12px;margin:0}
+.wfo-app .wfo-leave .ews-vac-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:0}
+.wfo-app .wfo-leave .ews-vac-field{display:flex;flex-direction:column;gap:6px;margin:0;min-width:0}
+.wfo-app .wfo-leave .ews-vac-field label{font-size:13px;font-weight:600;color:var(--wfo-ink)}
+.wfo-optional{font-weight:400;color:var(--wfo-muted)}
+.wfo-app .wfo-leave .ews-vac-field input,.wfo-app .wfo-leave .ews-vac-field select,.wfo-app .wfo-leave .ews-vac-field textarea{width:100%;box-sizing:border-box;min-height:46px;padding:10px 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;font-size:15px;margin:0;min-width:0}
+.wfo-app .wfo-leave .ews-vac-field textarea{min-height:80px;resize:vertical}
+.wfo-app .wfo-leave .ews-vac-field input:focus,.wfo-app .wfo-leave .ews-vac-field select:focus,.wfo-app .wfo-leave .ews-vac-field textarea:focus{outline:none;border-color:var(--wfo-pri);box-shadow:0 0 0 3px var(--wfo-pri-soft)}
+.wfo-app .wfo-leave .ews-vac-count{margin:0;padding:10px 12px;border-radius:var(--wfo-r-sm);background:var(--wfo-pri-soft);color:var(--wfo-pri);font-size:13px;font-weight:600}
+.wfo-app .wfo-leave .ews-vac-submit{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin:0!important;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-hero-start);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.wfo-app .wfo-leave .ews-vac-submit:hover{filter:brightness(1.12)}
+.wfo-app .wfo-leave .ews-vac-submit:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+[dir=rtl] .wfo-leave .ews-vac-submit .wfo-icon,[dir=rtl] .wfo-leave .ews-vac-view-all-button .wfo-icon{transform:scaleX(-1)}
+
+/* request rows */
+.wfo-app .wfo-leave .ews-vac-section-head{margin:0}
+.wfo-app .wfo-leave .ews-vac-view-all{font-size:13px;font-weight:600;color:var(--wfo-pri);text-decoration:none}
+.wfo-req-list{display:flex;flex-direction:column}
+.wfo-app .wfo-leave .ews-vac-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 0;border:0;border-bottom:1px solid var(--wfo-line);background:none;border-radius:0;margin:0}
+.wfo-app .wfo-leave .ews-vac-row:last-child{border-bottom:0}
+.wfo-req-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+.wfo-app .wfo-leave .ews-vac-date{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:14px;color:var(--wfo-ink);font-weight:400}
+.wfo-app .wfo-leave .ews-vac-date strong{font-weight:600}
+.wfo-app .wfo-leave .ews-vac-date span{color:var(--wfo-muted);font-size:13px}
+.wfo-app .wfo-leave .ews-vac-meta{font-size:12px;color:var(--wfo-muted);line-height:1.5;overflow-wrap:anywhere}
+.wfo-note{display:inline-flex;align-items:center;gap:6px}
+.wfo-note.is-amber{color:#8A4F00}
+.wfo-app .wfo-leave .ews-vac-status{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap;border:0}
+.wfo-app .wfo-leave .ews-vac-approved{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-leave .ews-vac-pending{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-leave .ews-vac-cancelled{background:#EEF0F5;color:#3B4466}
+.wfo-app .wfo-leave .ews-vac-rejected{background:#FFE8EC;color:#A51D3E}
+
+/* actions inside rows */
+.wfo-app .wfo-leave .ews-vac-actions{margin-top:6px}
+.wfo-app .wfo-leave .ews-vac-actions form{flex-direction:row;flex-wrap:wrap;gap:8px}
+.wfo-app .wfo-leave .ews-vac-actions .button{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 14px;border-radius:var(--wfo-r-sm);font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--wfo-line);background:var(--wfo-surface);color:var(--wfo-ink);box-shadow:none;text-shadow:none}
+.wfo-app .wfo-leave .ews-vac-actions .wfo-btn-approve{background:var(--wfo-hero-start);border-color:transparent;color:#fff}
+.wfo-app .wfo-leave .ews-vac-actions .wfo-btn-reject{color:#A51D3E}
+.wfo-app .wfo-leave .ews-vac-actions .button:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .wfo-leave .ews-vac-view-all-wrap{margin:0}
+.wfo-app .wfo-leave .ews-vac-view-all-button{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--wfo-pri);text-decoration:none}
+
+/* empty state (shared helper) */
+.wfo-app .wfo-leave .ews-empty-state{display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 12px;text-align:center;border:1px dashed var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
+.wfo-app .wfo-leave .ews-empty-icon{width:44px;height:44px;border-radius:999px;background:var(--wfo-pri-soft);color:var(--wfo-pri);display:flex;align-items:center;justify-content:center;font-size:18px}
+.wfo-app .wfo-leave .ews-empty-title{font-weight:600;color:var(--wfo-ink);font-size:14px}
+.wfo-app .wfo-leave .ews-empty-text{font-size:13px;color:var(--wfo-muted)}
+.wfo-app .wfo-leave .ews-empty-action{margin-top:4px;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:var(--wfo-r-sm);background:var(--wfo-hero-start);color:#fff;text-decoration:none;font-weight:600;font-size:13px}
+
+@media (max-width:820px){
+    .wfo-balances{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .wfo-app .wfo-leave .wfo-leave-card{padding:16px}
+    .wfo-app .wfo-leave .ews-vac-fields{gap:8px}
+}
+
+/* Office minimum (3.31.77): what approving does to the day */
+.wfo-om-note{display:flex;align-items:flex-start;gap:10px;margin:10px 0;padding:10px 12px;border-radius:14px;background:#FFF8E8;color:#7A5A1F;font-size:12.5px;line-height:1.55}
+.wfo-om-note strong{display:block;color:#5C3A00;font-size:13px}
+.wfo-om-note .wfo-icon{flex:0 0 auto;color:#B07400;margin-top:1px}
+

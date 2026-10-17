@@ -8,7 +8,7 @@ import http.cookiejar, re, sys, urllib.request, urllib.parse
 B = 'http://127.0.0.1:8080'
 ADMIN_PAGES = ['ews31', 'ews31-achievements', 'ews31-approvals', 'ews31-attendance-insights', 'ews31-audit',
                'ews31-auto-attendance', 'ews31-departments', 'ews31-email', 'ews31-employee-profile-settings',
-               'ews31-employees', 'ews31-features', 'ews31-leaves', 'ews31-moments', 'ews31-multi-locations',
+               'ews31-employees', 'ews31-face-reset-requests', 'ews31-features', 'ews31-leaves', 'ews31-moments', 'ews31-multi-locations',
                'ews31-navigation', 'ews31-notifications', 'ews31-polls', 'ews31-presence-kiosks', 'ews31-recognition',
                'ews31-requests', 'ews31-roles', 'ews31-schedule-config', 'ews31-smart-nudges', 'ews31-teams',
                'ews31-time-report']

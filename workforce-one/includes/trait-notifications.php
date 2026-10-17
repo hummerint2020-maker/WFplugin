@@ -1,12 +1,16 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Notifications\PushEndpoint;
+
 trait EWS_Notifications_Trait {
 
     private $notifications;
     private static $notifications_schema_ready = false;
     private static $ews_notification_unread_cache = [];
     private static $ews_vapid_public_key_cache = null;
+    /** Pushes waiting for the end of this request (notify()); see push_flush(). */
+    private static $ews_push_queue = [];
 
     private function invalidate_notification_unread_cache($user_id=0){
         $user_id=absint($user_id);
@@ -29,6 +33,15 @@ trait EWS_Notifications_Trait {
             'smart_nudge'=>['label'=>'Smart Nudges','description'=>'Actionable employee reminders and attention prompts.','push_default'=>1],
             'achievement'=>['label'=>'Achievements','description'=>'Employee achievement and recognition notifications.','push_default'=>1],
             'recognition'=>['label'=>'Recognition','description'=>'Kudos and employee recognition notifications.','push_default'=>1],
+            'payroll'=>['label'=>'Payroll','description'=>'A payslip is ready in My Pay.','push_default'=>1],
+            'correction'=>['label'=>'Attendance Corrections','description'=>'Correction requests and decisions.','push_default'=>1],
+            'signout_reminder'=>['label'=>'Sign Out reminder','description'=>'End of the day: you signed in and did not sign out (with Attendance Corrections).','push_default'=>1],
+            'office_minimum'=>['label'=>'Office Minimum','description'=>'Weekly reminder of next week\'s days below the office minimum.','push_default'=>1],
+            'daily_workers'=>['label'=>'Daily Workers','description'=>'Day sheet change requests and decisions.','push_default'=>1],
+            // Sent before 3.31.94 but missing here, so never pushed to phones.
+            'attendance'=>['label'=>'Refused Sign In','description'=>'An employee was refused Sign In several times in a day (to their managers).','push_default'=>1],
+            'poll'=>['label'=>'Polls','description'=>'A new poll to answer.','push_default'=>1],
+            'presence'=>['label'=>'Presence Verification','description'=>'A request to verify your presence, which expires in minutes.','push_default'=>1],
         ];
     }
 
@@ -42,8 +55,10 @@ trait EWS_Notifications_Trait {
 
     private function notification_policy(){
         $defaults=$this->notification_policy_defaults();
-        $saved=get_option('ews_notification_policy',[]);
+        $saved=$this->option('ews_notification_policy');
         if(!is_array($saved))$saved=[];
+        // The Sign Out reminder had the corrections switches before 3.31.95: a site that set them keeps them.
+        if(!isset($saved['signout_reminder']) && isset($saved['correction']) && is_array($saved['correction']))$saved['signout_reminder']=$saved['correction'];
         foreach($defaults as $key=>$row){
             if(isset($saved[$key]) && is_array($saved[$key])){
                 $defaults[$key]['in_app']=!empty($saved[$key]['in_app'])?1:0;
@@ -89,6 +104,7 @@ trait EWS_Notifications_Trait {
                 is_read TINYINT(1) NOT NULL DEFAULT 0,
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 read_at DATETIME NULL,
+                link TEXT NULL,
                 PRIMARY KEY(id),
                 KEY user_unread(user_id,is_read),
                 KEY user_read_date(user_id,is_read,created_at),
@@ -99,11 +115,9 @@ trait EWS_Notifications_Trait {
         self::$notifications_schema_ready=true;
     }
 
-    private function notify_user($user_id,$title,$message,$type='info',$entity=null,$entity_id=null){
+    /** Saves an in-app notification when the policy for $category allows it. */
+    private function notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id,$link=''){
         global $wpdb;
-        $user_id=absint($user_id);
-        if(!$user_id)return 0;
-        $category=$entity?sanitize_key($entity):sanitize_key($type);
         if(!$this->notification_in_app_allowed($category))return 0;
         $this->ensure_notifications_schema();
         $ok=$wpdb->insert($this->notifications,[
@@ -114,8 +128,9 @@ trait EWS_Notifications_Trait {
             'entity'=>$entity?sanitize_key($entity):null,
             'entity_id'=>$entity_id?absint($entity_id):null,
             'is_read'=>0,
-            'created_at'=>current_time('mysql')
-        ],['%d','%s','%s','%s','%s','%d','%d','%s']);
+            'created_at'=>current_time('mysql'),
+            'link'=>$link!==''?esc_url_raw($link):null,
+        ],['%d','%s','%s','%s','%s','%d','%d','%s','%s']);
         if($ok===false){
             if(method_exists($this,'audit')) $this->audit('notification_insert_failed','notification',0,'user_id='.$user_id.'; '.$wpdb->last_error);
             if(defined('WP_DEBUG') && WP_DEBUG && function_exists('error_log')) error_log('[Workforce One] notification_insert_failed: '.$wpdb->last_error);
@@ -125,50 +140,157 @@ trait EWS_Notifications_Trait {
         return (int)$wpdb->insert_id;
     }
 
+    /**
+     * The one way to tell a user about something: saves the in-app notification and queues the push,
+     * each as the Notifications policy for $category allows. The push is sent after the response
+     * (push_flush() hands it to WP-Cron), so a slow or dead push service never holds up the action
+     * that caused it, and a push failure can never undo or break it.
+     * Options: url (push link; default the app view named after the category), entity and type
+     * (stored with the notification; default the category), entity_id, push (false: in-app only).
+     * @param array{url?:string,entity?:string,type?:string,entity_id?:int,push?:bool} $opt
+     * @return int the notification id, or 0 when none was saved
+     */
+    private function notify($user_id,$category,$title,$message,array $opt=[]){
+        $user_id=absint($user_id);
+        if(!$user_id)return 0;
+        $category=sanitize_key($category);
+        $entity=sanitize_key($opt['entity']??$category);
+        $type=sanitize_key($opt['type']??$category);
+        $entity_id=absint($opt['entity_id']??0);
+        // Where it takes its reader, from the phone and from the Notifications page alike (3.31.94).
+        $link=!empty($opt['url'])?(string)$opt['url']:$this->notification_default_link($category,$entity,$entity_id);
+        // Or the page the administrator chose for this kind (Notification Settings → Opens, 3.31.95).
+        $link=\WorkforceOne\Notifications\Links::apply($this->notification_destinations(),$category,$link,(string)$this->app_home_url(),home_url('/'));
+        $reachable=$this->notification_user_may_open($user_id,$link);
+        $id=$this->notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id,$reachable?$link:'');
+        if(!$reachable){
+            // A page this person may not open: the app's Notifications page, with this notification shown.
+            $link=$this->notification_focus_link($id);
+            if($id){global $wpdb;$wpdb->update($this->notifications,['link'=>esc_url_raw($link)],['id'=>$id],['%s'],['%d']);}
+        }
+        if(($opt['push']??true) && $this->notification_push_allowed($category)){
+            // Opening it from the phone marks it read (ews_nid, see notification_mark_landed()).
+            $url=$id?add_query_arg('ews_nid',$id,$link):$link;
+            if(!self::$ews_push_queue)add_action('shutdown',[$this,'push_flush'],1);
+            self::$ews_push_queue[]=['user_id'=>$user_id,'title'=>(string)$title,'message'=>(string)$message,'category'=>$category,'entity_id'=>$entity_id,'url'=>$url];
+        }
+        return $id;
+    }
+
+    /** The page chosen for each kind in Notification Settings (only kinds not on the recommended page). @return array<string,array{to:string,link?:string}> */
+    private function notification_destinations(){
+        $saved=$this->option('ews_notification_links');
+        return is_array($saved)?$saved:[];
+    }
+
+    /** A notification's own app page (src/Notifications/Links.php); a task's notification opens its details. */
+    private function notification_default_link($category,$entity='',$entity_id=0){
+        $view=\WorkforceOne\Notifications\Links::view((string)$category,(string)$entity);
+        $url=add_query_arg('ews_view',$view,$this->app_home_url());
+        return ($view==='tasks' && $entity_id)?add_query_arg('task',(int)$entity_id,$url):$url;
+    }
+
+    /** The app's Notifications page with one notification shown. */
+    private function notification_focus_link($id){
+        $url=add_query_arg('ews_view','notifications',$this->app_home_url());
+        return $id?add_query_arg('nid',(int)$id,$url).'#ews-notification-'.(int)$id:$url;
+    }
+
+    /** May this person open the link: a wp-admin page or an app page that needs a permission? */
+    private function notification_user_may_open($user_id,$link){
+        $cap=\WorkforceOne\Notifications\Links::capability((string)$link,(string)wp_parse_url(admin_url('/'),PHP_URL_PATH));
+        return $cap==='' || user_can((int)$user_id,'manage_options') || user_can((int)$user_id,$cap);
+    }
+
+    /** Arriving from a notification on the phone (?ews_nid=): it is marked read. */
+    public function notification_mark_landed(){
+        $id=absint($_GET['ews_nid']??0); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- marks the reader's own notification read, nothing else
+        if(!$id||!is_user_logged_in())return;
+        global $wpdb;
+        $this->ensure_notifications_schema();
+        if($wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d AND is_read=0",current_time('mysql'),$id,get_current_user_id())))$this->invalidate_notification_unread_cache(get_current_user_id());
+    }
+
+    /** End of the request: the queued pushes go to WP-Cron as one event, started right away. */
+    public function push_flush(){
+        $batch=self::$ews_push_queue;
+        self::$ews_push_queue=[];
+        if(!$batch)return;
+        // Already in a WP-Cron job (break reminders): nobody is waiting, so send now.
+        if(wp_doing_cron()){$this->push_deliver($batch);return;}
+        // The key keeps two identical batches from being merged into one event by WordPress.
+        wp_schedule_single_event(time(),'ews_push_deliver',[$batch,wp_generate_uuid4()]);
+        if(!(defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) && function_exists('spawn_cron'))spawn_cron();
+    }
+
+    /** WP-Cron: sends a batch of queued pushes and records the outcome (ews_push_last_delivery). */
+    public function push_deliver($batch,$key=''){
+        // Every device of every person in the batch goes out together (push_send_many, 3.31.71).
+        $jobs=[];
+        foreach(is_array($batch)?$batch:[] as $i=>$p){
+            if(!is_array($p)||empty($p['user_id']))continue;
+            foreach($this->push_jobs_for_user((int)$p['user_id'],(string)($p['title']??''),(string)($p['message']??''),(string)($p['category']??''),(int)($p['entity_id']??0),(string)($p['url']??'')) as $device_id=>$job)$jobs[$i.':'.$device_id]=$job;
+        }
+        $results=[];
+        foreach($this->push_send_many($jobs) as $k=>$r)$results[(int)substr((string)$k,strpos((string)$k,':')+1)][]=$r;
+        $sent=0;$failed=0;$errors=[];
+        foreach($results as $device_id=>$list)foreach($list as $r){
+            $t=$this->push_tally([$device_id=>$r]);$sent+=$t['sent'];$failed+=$t['failed'];foreach($t['errors'] as $e)$errors[]=$e;
+        }
+        $last=['at'=>current_time('mysql'),'sent'=>$sent,'failed'=>$failed,'errors'=>array_slice(array_values(array_unique($errors)),0,5)];
+        update_option('ews_push_last_delivery',$last,false);
+        if($failed)$this->push_debug('Push delivery failures',$last);
+        return $last;
+    }
+
+    /**
+     * Sends one push to every device of a user, now (the policy for $type permitting).
+     * notify() queues pushes; this is for the cron jobs and the admin tests that send directly.
+     */
     public function push_custom_notification($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+            return $this->push_to_user($user_id,$title,$message,$type,$entity_id,$url)['sent'];
+        }
+
+    /** @return array{sent:int,failed:int,errors:array<int,string>} */
+    private function push_to_user($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+            $none=['sent'=>0,'failed'=>0,'errors'=>[]];
+            if(!function_exists('curl_init')){
+                global $wpdb;$this->ensure_push_schema();
+                $n=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->push_table()} WHERE user_id=%d",$user_id));
+                return $n&&$this->notification_push_allowed(sanitize_key($type))?['sent'=>0,'failed'=>$n,'errors'=>['PHP cURL extension is not available.']]:$none;
+            }
+            $jobs=$this->push_jobs_for_user($user_id,$title,$message,$type,$entity_id,$url);
+            return $jobs?$this->push_tally($this->push_send_many($jobs)):$none;
+        }
+
+    /** One push per device of a user (the policy for $type permitting). @return array<int,array{0:object,1:array<string,mixed>}> by device id */
+    private function push_jobs_for_user($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+            $none=[];
             $category=sanitize_key($type);
-            if(!$this->notification_push_allowed($category))return 0;
-            if(!function_exists('curl_init'))return 0;
+            if(!$this->notification_push_allowed($category))return $none;
             $this->ensure_push_schema();
             global $wpdb;
             $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
+            if(!$rows)return $none;
             $resolved_url=$url;
             if(!$resolved_url){
-                $resolved_url=$this->notification_app_view_url($category);
+                $resolved_url=$this->notification_default_link($category);
             }
             $payload=['title'=>$title,'body'=>wp_strip_all_tags($message),'url'=>$resolved_url,'notification_id'=>0,'type'=>sanitize_key($type),'entity_id'=>absint($entity_id)];
-            $sent=0;
-            foreach($rows as $row){
-                $result=$this->send_push_payload($row,$payload);
-                if(!empty($result['ok']))$sent++;
-                if(!empty($result['expired']))$wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);
-            }
-            return $sent;
+            $jobs=[];foreach($rows as $row)$jobs[(int)$row->id]=[$row,$payload];
+            return $jobs;
         }
 
-    public function push_schedule_update($user_id){
-        if(!$this->notification_push_allowed('schedule'))return;
-        if(!function_exists('curl_init'))return;
-        $this->ensure_notifications_schema();
-        $this->ensure_push_schema();
-        global $wpdb;
-        $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
-        $note=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->notifications} WHERE user_id=%d AND entity='schedule' ORDER BY id DESC LIMIT 1",$user_id));
-        $payload=[
-            'title'=>$note?$note->title:'Schedule Updated',
-            'body'=>$note?wp_strip_all_tags($note->message):'Your schedule has been updated.',
-            'url'=>add_query_arg('ews_view','notifications',home_url('/')),
-            'notification_id'=>$note?(int)$note->id:0,
-            'type'=>'schedule'
-        ];
-        foreach($rows as $row){
-            $result=$this->send_push_payload($row,$payload);
-            $this->push_debug('Schedule push result',['user_id'=>(int)$user_id,'device_id'=>(int)$row->id,'result'=>$result]);
-            if(!empty($result['expired'])){
-                $wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);
+    /** Counts results and removes expired devices. @param array<int,array<string,mixed>> $results by device id @return array{sent:int,failed:int,errors:array<int,string>} */
+    private function push_tally(array $results){
+            global $wpdb;$out=['sent'=>0,'failed'=>0,'errors'=>[]];
+            foreach($results as $device_id=>$result){
+                if(!empty($result['ok'])){$out['sent']++;continue;}
+                if(!empty($result['expired'])){$wpdb->delete($this->push_table(),['id'=>(int)$device_id],['%d']);continue;}
+                $out['failed']++;$out['errors'][]=(string)($result['error']??'unknown');
             }
+            return $out;
         }
-    }
 
     private function notification_unread_count($user_id=null){
         global $wpdb;
@@ -180,50 +302,14 @@ trait EWS_Notifications_Trait {
         return self::$ews_notification_unread_cache[$user_id];
     }
 
-    private function notification_app_view_url($view){
-        // notification_open() runs through admin-post.php. app_view_url() builds
-        // URLs from the current request URL, which would otherwise preserve
-        // action=ews_notification_open and redirect back into the handler.
-        $ref=wp_get_referer();
-        if($ref){
-            $path=(string)wp_parse_url($ref,PHP_URL_PATH);
-            // Never derive an app notification URL from wp-admin. Achievement
-            // awards can be triggered from an Admin request, whose referer is
-            // the Admin Achievements page. Using that referer would send the
-            // employee's PWA notification back into wp-admin.
-            $is_admin_path = (strpos($path, '/wp-admin/') !== false || basename($path)==='admin-post.php');
-            if($path && !$is_admin_path){
-                $ref=remove_query_arg([
-                    'ews_view','action','notification_id','_wpnonce'
-                ],$ref);
-                return add_query_arg('ews_view',sanitize_key($view),$ref);
-            }
-        }
-        return add_query_arg('ews_view',sanitize_key($view),home_url('/'));
-    }
-
+    /**
+     * Where a notification in the list takes its reader: its saved link (3.31.94), else, for one saved
+     * before, the app page of its kind. A link this person may no longer open shows the notification.
+     */
     private function notification_url($notification){
-        $entity=sanitize_key($notification->entity??'');
-        $id=absint($notification->entity_id??0);
-        switch($entity){
-            case 'task':
-                $url=$this->notification_app_view_url('tasks');
-                return $id?add_query_arg('edit_task',$id,$url):$url;
-            case 'schedule':
-            case 'swap':
-                return $this->notification_app_view_url('schedule');
-            case 'leave':
-            case 'vacation':
-                return $this->notification_app_view_url('vacation');
-            case 'overtime':
-                return $this->notification_app_view_url('overtime');
-            case 'break':
-                return $this->notification_app_view_url('time');
-            case 'face_reset':
-                return $this->notification_app_view_url('employees');
-            default:
-                return $this->notification_app_view_url('notifications');
-        }
+        $link=(string)($notification->link??'');
+        if($link==='')$link=$this->notification_default_link((string)($notification->type??''),(string)($notification->entity??''),(int)($notification->entity_id??0));
+        return $this->notification_user_may_open((int)$notification->user_id,$link)?$link:$this->notification_focus_link((int)$notification->id);
     }
 
     private function notification_rows($user_id=null,$limit=30,$filter='all'){
@@ -254,13 +340,15 @@ trait EWS_Notifications_Trait {
 
     public function notification_open(){
         if(!is_user_logged_in())wp_die('You must be logged in.');
+        $list=add_query_arg('ews_view','notifications',$this->app_home_url());
         $id=absint($_GET['notification_id']??0);
-        if(!$id)wp_safe_redirect($this->app_view_url('notifications'));
+        // Built from the app's page, never from this admin-post request (it would come back here).
+        if(!$id){wp_safe_redirect($list);exit;}
         check_admin_referer('ews_notification_open_'.$id);
         global $wpdb;
         $this->ensure_notifications_schema();
         $note=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->notifications} WHERE id=%d AND user_id=%d LIMIT 1",$id,get_current_user_id()));
-        if(!$note)wp_safe_redirect($this->app_view_url('notifications'));
+        if(!$note){wp_safe_redirect($list);exit;}
         if(!(int)$note->is_read){
             $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d AND is_read=0",current_time('mysql'),$id,get_current_user_id()));
             $this->invalidate_notification_unread_cache(get_current_user_id());
@@ -275,99 +363,61 @@ trait EWS_Notifications_Trait {
         $this->ensure_notifications_schema();
         $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE user_id=%d AND is_read=0",current_time('mysql'),get_current_user_id()));
         $this->invalidate_notification_unread_cache(get_current_user_id());
-        $redirect=wp_get_referer()?:home_url('/');
+        $redirect=wp_get_referer()?:$this->app_home_url();
         wp_safe_redirect($redirect);exit;
+    }
+
+    /** Icon and colour of a notification, from what it is about (its entity) and else its type. @return array{0:string,1:string} [icon, tone] */
+    private function notification_look($n){
+        $by_entity=['leave'=>['leave','leave'],'vacation'=>['leave','leave'],'early_leave'=>['leave','leave'],'overtime'=>['overtime','away'],
+            'swap'=>['swap','away'],'schedule'=>['calendar','wfh'],'break'=>['clock','teal'],'presence'=>['attendance','teal'],'attendance'=>['attendance','teal'],
+            'poll'=>['polls','pri'],'kudos'=>['trophy','gold'],'recognition'=>['trophy','gold'],'achievement'=>['trophy','gold'],'task'=>['tasks','wfh'],'payroll'=>['pay','office'],'signout_reminder'=>['clock','away']];
+        $e=sanitize_key((string)($n->entity??''));
+        if(isset($by_entity[$e]))return $by_entity[$e];
+        $by_type=['success'=>['check','office'],'warning'=>['alert','away'],'error'=>['alert','absent']];
+        return $by_type[sanitize_key((string)$n->type)]??['bell','off'];
     }
 
     public function notifications_content(){
         if(!is_user_logged_in())return $this->login_page();
-        $push_public_key=$this->get_vapid_public_key();
-        $push_url=admin_url('admin-post.php');
-        $push_nonce=wp_create_nonce('ews_push_subscription');
         $filter=sanitize_key($_GET['notification_tab']??'all');
         if(!in_array($filter,['all','unread'],true))$filter='all';
         $rows=$this->notification_rows(null,50,$filter);
-        $unread=$this->notification_unread_count();
+        // Newest first, grouped by day (the query puts unread first for the bell).
+        usort($rows,function($a,$b){return strcmp((string)$b->created_at,(string)$a->created_at)?:((int)$b->id<=>(int)$a->id);});
+        $today=current_time('Y-m-d');
+        $yesterday=date('Y-m-d',strtotime($today.' -1 day'));
+        $now=current_time('timestamp');
+        $groups=[];
+        foreach($rows as $n){
+            $ts=strtotime((string)$n->created_at);
+            $day=date('Y-m-d',$ts);
+            $key=$day===$today?'today':($day===$yesterday?'yesterday':'earlier');
+            if($key==='today')$when=$now-$ts<60?__('Just now','workforce-one'):sprintf(/* translators: %s: time span like "5 mins" */__('%s ago','workforce-one'),human_time_diff($ts,$now));
+            elseif($key==='yesterday')$when=sprintf(/* translators: %s: time */__('Yesterday · %s','workforce-one'),date_i18n(get_option('time_format')?:'H:i',$ts));
+            else $when=date_i18n('D j M · '.(get_option('time_format')?:'H:i'),$ts);
+            [$icon,$tone]=$this->notification_look($n);
+            $groups[$key][]=['id'=>(int)$n->id,'title'=>(string)$n->title,'message'=>(string)$n->message,'unread'=>!(int)$n->is_read,'when'=>$when,'icon'=>$icon,'tone'=>$tone,
+                'open_url'=>wp_nonce_url(add_query_arg(['action'=>'ews_notification_open','notification_id'=>(int)$n->id],admin_url('admin-post.php')),'ews_notification_open_'.(int)$n->id)];
+        }
         $all_url=$this->app_view_url('notifications');
-        $unread_url=add_query_arg('notification_tab','unread',$all_url);
-        ob_start(); ?>
-        <div class="ews-notifications-page">
-            <div class="ews-notif-intro">
-                <div class="ews-notif-intro-icon">🔔</div>
-                <div><h2>Notifications</h2><p>Stay updated with your latest alerts and activities.</p></div>
-            </div>
-
-            <div id="ews-notification-push-settings" class="ews-push-card">
-                <div class="ews-push-main">
-                    <div class="ews-push-icon">🔔</div>
-                    <div class="ews-push-copy"><strong>Push Notifications</strong><span>Receive notifications on this device.</span></div>
-                    <span id="ews-notification-push-status" class="ews-push-status">Enabled</span>
-                    <button id="ews-notification-push-enable" type="button" style="display:none;">Enable</button>
-                    <button id="ews-notification-push-disable" type="button" style="display:none;">Disable</button>
-                </div>
-                <div class="ews-push-device">▯ &nbsp; <strong>This device</strong></div>
-            </div>
-
-            <div class="ews-card ews-notifications-card">
-                <div class="ews-notifications-head">
-                    <div class="ews-notifications-title-wrap"><div><h2 style="margin:0;display:inline-block;">Your Notifications</h2><span class="ews-unread-count"><?php echo absint($unread); ?> Unread</span></div><div class="ews-notification-tabs" role="tablist" aria-label="Notification filter"><a class="<?php echo $filter==='all'?'active':''; ?>" href="<?php echo esc_url($all_url); ?>" role="tab" aria-selected="<?php echo $filter==='all'?'true':'false'; ?>">All</a><a class="<?php echo $filter==='unread'?'active':''; ?>" href="<?php echo esc_url($unread_url); ?>" role="tab" aria-selected="<?php echo $filter==='unread'?'true':'false'; ?>">Unread<?php echo $unread?' ('.absint($unread).')':''; ?></a></div></div>
-                    <?php if($unread): ?>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('ews_notification_read_all'); ?>
-                        <input type="hidden" name="action" value="ews_notification_read_all">
-                        <button class="ews-notification-read" type="submit">Mark all as read</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-                <?php if(!$rows): ?>
-                    <div class="ews-empty-notifications"><?php if($filter==='unread'): ?><div class="ews-empty-notifications-icon">✓</div><strong>You're all caught up.</strong><span>No unread notifications.</span><?php else: ?><div class="ews-empty-notifications-icon">🔔</div><strong>No notifications yet.</strong><span>You're all caught up.</span><?php endif; ?></div>
-                <?php else: foreach($rows as $n):
-                    $icon=$n->type==='success'?'✓':($n->type==='warning'?'!':($n->type==='error'?'×':($n->entity==='schedule'?'▣':'i')));
-                    $open_url=wp_nonce_url(add_query_arg(['action'=>'ews_notification_open','notification_id'=>(int)$n->id],admin_url('admin-post.php')),'ews_notification_open_'.(int)$n->id);
-                ?>
-                <div class="ews-notification <?php echo $n->is_read?'read':'unread'; ?>" data-notification-open="<?php echo esc_url($open_url); ?>" tabindex="0" role="link" aria-label="Open notification: <?php echo esc_attr($n->title); ?>">
-                    <div><?php if(!$n->is_read): ?><span style="display:block;width:7px;height:7px;border-radius:50%;background:#5b21b6;"></span><?php endif; ?></div>
-                    <div class="ews-notification-icon <?php echo esc_attr($n->type); ?>"><?php echo esc_html($icon); ?></div>
-                    <div class="ews-notification-body">
-                        <div class="ews-notification-title"><?php echo esc_html($n->title); ?></div>
-                        <div class="ews-notification-message"><?php echo wp_kses_post($n->message); ?></div>
-                        <div class="ews-notification-time"><?php echo esc_html(human_time_diff(strtotime($n->created_at),current_time('timestamp')).' ago'); ?></div>
-
-                    </div>
-                    <?php if(!$n->is_read): ?>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                        <?php wp_nonce_field('ews_notification_read_'.(int)$n->id); ?>
-                        <input type="hidden" name="action" value="ews_notification_read">
-                        <input type="hidden" name="notification_id" value="<?php echo (int)$n->id; ?>">
-                        <button class="ews-notification-read" type="submit">Mark read</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; endif; ?>
-            </div>
-        </div>
-        <script>
-        (function(){
-          var status=document.getElementById('ews-notification-push-status'),en=document.getElementById('ews-notification-push-enable'),dis=document.getElementById('ews-notification-push-disable');
-          var publicKey=<?php echo wp_json_encode($push_public_key); ?>,postUrl=<?php echo wp_json_encode($push_url); ?>,nonce=<?php echo wp_json_encode($push_nonce); ?>;
-          function b64(s){var p='='.repeat((4-s.length%4)%4),x=(s+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(x),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
-          function state(){if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){status.style.display='none';en.style.display='none';dis.style.display='none';return;}if(!publicKey){status.style.display='none';return;}navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){if(sub){status.classList.add('enabled');status.style.display='inline-flex';en.style.display='none';dis.style.display='inline-block';}else{status.classList.remove('enabled');status.style.display='none';en.style.display='inline-block';dis.style.display='none';}}).catch(function(){});}
-          en.addEventListener('click',function(){en.disabled=true;navigator.serviceWorker.ready.then(function(reg){return Notification.requestPermission().then(function(p){if(p!=='granted')throw new Error('Notification permission was not granted.');return reg.pushManager.getSubscription().then(function(s){return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(publicKey)});});});}).then(function(sub){var body=new URLSearchParams();body.set('action','ews_push_subscribe');body.set('_wpnonce',nonce);body.set('subscription',JSON.stringify(sub.toJSON()));return fetch(postUrl,{method:'POST',credentials:'same-origin',body:body});}).then(function(r){if(!r.ok)throw new Error('Unable to save device subscription.');return r.text();}).then(function(){en.disabled=false;state();}).catch(function(){en.disabled=false;state();});});
-          dis.addEventListener('click',function(){dis.disabled=true;navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){if(!sub)return null;var body=new URLSearchParams();body.set('action','ews_push_unsubscribe');body.set('_wpnonce',nonce);body.set('endpoint',sub.endpoint);return fetch(postUrl,{method:'POST',credentials:'same-origin',body:body}).then(function(){return sub.unsubscribe();});}).then(function(){dis.disabled=false;state();}).catch(function(){dis.disabled=false;state();});});
-          if('serviceWorker'in navigator){navigator.serviceWorker.ready.then(state).catch(state);}else state();
-          document.querySelectorAll('.ews-notification[data-notification-open]').forEach(function(card){
-            card.addEventListener('click',function(e){if(e.target.closest('a,button,form'))return;window.location.href=card.getAttribute('data-notification-open');});
-            card.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){if(e.target!==card)return;e.preventDefault();window.location.href=card.getAttribute('data-notification-open');}});
-          });
-        })();
-        </script>
-        <?php return ob_get_clean();
+        wp_enqueue_style('workforce-one-notifications-page');
+        wp_enqueue_script('workforce-one-notifications');
+        return $this->render_template('app/notifications',[
+            // A notification to show: opened from a link this person may not open (3.31.94).
+            'focus'=>absint($_GET['nid']??0), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which notification to show
+            'filter'=>$filter,'groups'=>$groups,'unread'=>$this->notification_unread_count(),
+            'all_url'=>$all_url,'unread_url'=>add_query_arg('notification_tab','unread',$all_url),
+            'post_url'=>admin_url('admin-post.php'),'push_key'=>(string)$this->get_vapid_public_key(),'push_nonce'=>wp_create_nonce('ews_push_subscription'),
+        ]);
     }
 
     public function cleanup_notifications(){
         global $wpdb;
+        if(method_exists($this,'attendance_idempotency_cleanup'))$this->attendance_idempotency_cleanup();
+        if(method_exists($this,'api_auth_cleanup'))$this->api_auth_cleanup();
         $this->ensure_notifications_schema();
-        $days=(int)get_option('ews_notification_retention_days',90);
+        $days=(int)$this->option('ews_notification_retention_days');
         if($days<=0)return;
         $cutoff=gmdate('Y-m-d H:i:s',time()-($days*DAY_IN_SECONDS));
         $wpdb->query($wpdb->prepare("DELETE FROM {$this->notifications} WHERE created_at < %s",$cutoff));
@@ -412,12 +462,12 @@ trait EWS_Notifications_Trait {
     private function get_vapid_public_key(){
         if(self::$ews_vapid_public_key_cache!==null)return self::$ews_vapid_public_key_cache;
         $this->ensure_vapid_keys();
-        self::$ews_vapid_public_key_cache=(string)get_option('ews_vapid_public_key','');
+        self::$ews_vapid_public_key_cache=(string)$this->option('ews_vapid_public_key');
         return self::$ews_vapid_public_key_cache;
     }
 
     private function ensure_vapid_keys(){
-        if(get_option('ews_vapid_public_key','') && get_option('ews_vapid_private_key','')) return true;
+        if($this->option('ews_vapid_public_key') && $this->option('ews_vapid_private_key')) return true;
         if(!function_exists('openssl_pkey_new')) return false;
         $key=openssl_pkey_new([
             'private_key_type'=>OPENSSL_KEYTYPE_EC,
@@ -434,30 +484,79 @@ trait EWS_Notifications_Trait {
         return true;
     }
 
-    public function push_subscribe(){
-        if(!is_user_logged_in())wp_die('You must be logged in.');
-        check_admin_referer('ews_push_subscription');
-        $raw=wp_unslash($_POST['subscription']??'');
-        $data=json_decode($raw,true);
-        if(!is_array($data)||empty($data['endpoint'])||empty($data['keys']['p256dh'])||empty($data['keys']['auth']))wp_die('Invalid push subscription.');
+    /**
+     * A browser's subscription (PushSubscription.toJSON()) as a row, or the reason it is refused.
+     * Only public HTTPS push services (src/Notifications/PushEndpoint.php). A host name that does not
+     * resolve now is accepted; delivery checks again and connects only to public addresses.
+     * @return array{0:array<string,string>|null,1:string}
+     */
+    private function push_parse_subscription($raw){
+        $data=json_decode((string)$raw,true);
+        if(!is_array($data)||empty($data['endpoint'])||empty($data['keys']['p256dh'])||empty($data['keys']['auth']))return [null,'Invalid push subscription.'];
         $endpoint=esc_url_raw($data['endpoint']);
-        if(!$endpoint)wp_die('Invalid push endpoint.');
-        $this->ensure_push_schema();
-        global $wpdb;$table=$this->push_table();$hash=hash('sha256',$endpoint);
-        $row=$wpdb->get_row($wpdb->prepare("SELECT id FROM {$table} WHERE endpoint_hash=%s",$hash));
-        $payload=[
-            'user_id'=>get_current_user_id(),
+        if(!$endpoint)return [null,'Invalid push endpoint.'];
+        [$bad,$host]=PushEndpoint::check($endpoint);
+        if(!$bad){$ips=$this->push_endpoint_ips($host);if($ips)$bad=PushEndpoint::checkResolved($ips);}
+        if($bad){$this->push_debug('Subscription refused',['reason'=>$bad,'user_id'=>get_current_user_id()]);return [null,PushEndpoint::message($bad)];}
+        return [[
             'endpoint'=>$endpoint,
-            'endpoint_hash'=>$hash,
+            'endpoint_hash'=>hash('sha256',$endpoint),
             'p256dh'=>sanitize_text_field($data['keys']['p256dh']),
             'auth'=>sanitize_text_field($data['keys']['auth']),
             'content_encoding'=>sanitize_text_field($data['contentEncoding']??'aesgcm'),
-            'user_agent'=>sanitize_text_field($_SERVER['HTTP_USER_AGENT']??''),
-            'updated_at'=>current_time('mysql')
-        ];
-        if($row)$wpdb->update($table,$payload,['id'=>(int)$row->id]);
-        else{$payload['created_at']=current_time('mysql');$wpdb->insert($table,$payload);}
+            'user_agent'=>sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT']??'')),
+            'updated_at'=>current_time('mysql'),
+        ],''];
+    }
+
+    /**
+     * Saves this browser's subscription for the signed-in user. Called when push is turned on, and
+     * again by the app itself (3.31.87, footer): at most once a day, or at once when the server has no
+     * device for the user (an expired one was removed), so a subscription the browser renewed is never
+     * left unknown to the server.
+     */
+    public function push_subscribe(){
+        if(!is_user_logged_in())wp_die('You must be logged in.');
+        check_admin_referer('ews_push_subscription');
+        [$row,$err]=$this->push_parse_subscription(wp_unslash($_POST['subscription']??''));
+        if(!$row)wp_die(esc_html($err),'',['response'=>400]);
+        $this->ensure_push_schema();
+        global $wpdb;$table=$this->push_table();
+        $id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE endpoint_hash=%s",$row['endpoint_hash']));
+        $row['user_id']=get_current_user_id();
+        if($id)$wpdb->update($table,$row,['id'=>$id]);
+        else{$row['created_at']=current_time('mysql');$wpdb->insert($table,$row);}
         wp_send_json_success(['subscribed'=>true]);
+    }
+
+    /**
+     * The service worker's pushsubscriptionchange (3.31.87): the push service replaced a subscription
+     * while the app was closed. There is no WordPress nonce in a service worker, so the old endpoint is
+     * the proof (a secret URL only that browser and this server know): the device keeps its user, with
+     * the new endpoint and keys. An unknown old endpoint changes nothing; the app re-saves its
+     * subscription the next time it is opened.
+     */
+    public function push_resubscribe(){
+        $old=esc_url_raw(wp_unslash((string)($_POST['old_endpoint']??'')));
+        if(!$old)wp_send_json_error(['reason'=>'old_endpoint'],400);
+        [$row,$err]=$this->push_parse_subscription(wp_unslash($_POST['subscription']??''));
+        if(!$row)wp_send_json_error(['reason'=>$err],400);
+        $this->ensure_push_schema();
+        global $wpdb;$table=$this->push_table();
+        $dev=$wpdb->get_row($wpdb->prepare("SELECT id,user_id FROM {$table} WHERE endpoint_hash=%s",hash('sha256',$old)));
+        if(!$dev)wp_send_json_error(['reason'=>'unknown'],404);
+        // The new endpoint may already be saved (the app re-saved it first): keep one row.
+        $wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE endpoint_hash=%s AND id<>%d",$row['endpoint_hash'],(int)$dev->id));
+        $wpdb->update($table,$row,['id'=>(int)$dev->id]);
+        wp_send_json_success(['subscribed'=>true]);
+    }
+
+    /** How many devices the signed-in user has for push (the app re-saves its subscription when 0). */
+    private function push_device_count($user_id){
+        if(!$user_id)return 0;
+        $this->ensure_push_schema();
+        global $wpdb;
+        return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->push_table()} WHERE user_id=%d",(int)$user_id));
     }
 
     public function push_unsubscribe(){
@@ -476,8 +575,17 @@ trait EWS_Notifications_Trait {
     }
 
     private function vapid_jwt($audience){
-        $private=get_option('ews_vapid_private_key','');
-        $public=get_option('ews_vapid_public_key','');
+        // One token per push service per request (valid 12 h): a batch to 1,000 devices signs a handful, not 1,000.
+        static $made=[];
+        if(isset($made[$audience]))return $made[$audience];
+        $jwt=$this->vapid_jwt_make($audience);
+        if($jwt!==false)$made[$audience]=$jwt;
+        return $jwt;
+    }
+
+    private function vapid_jwt_make($audience){
+        $private=$this->option('ews_vapid_private_key');
+        $public=$this->option('ews_vapid_public_key');
         $subject=get_option('ews_vapid_subject','mailto:'.get_option('admin_email','admin@example.com'));
         if(!$private||!$public)return false;
         $now=time();
@@ -588,6 +696,34 @@ trait EWS_Notifications_Trait {
         return ['ok'=>true,'body'=>$body];
     }
 
+    /** The addresses a push endpoint host resolves to (IPv4 and IPv6); an IP address is itself. */
+    private function push_endpoint_ips($host){
+        if(filter_var($host,FILTER_VALIDATE_IP))return [$host];
+        $ips=@gethostbynamel($host.'.');
+        $ips=is_array($ips)?$ips:[];
+        if(function_exists('dns_get_record')){
+            $aaaa=@dns_get_record($host.'.',DNS_AAAA);
+            foreach(is_array($aaaa)?$aaaa:[] as $r){ if(!empty($r['ipv6']))$ips[]=$r['ipv6']; }
+        }
+        return array_values(array_unique($ips));
+    }
+
+    /**
+     * Checks a stored endpoint just before delivery and picks the address to connect to.
+     * @return array{ok:bool,error?:string,permanent?:bool,host?:string,resolve?:string}
+     */
+    private function push_delivery_target($endpoint){
+        [$bad,$host]=PushEndpoint::check((string)$endpoint);
+        if($bad)return ['ok'=>false,'error'=>$bad,'permanent'=>true];
+        $ips=$this->push_endpoint_ips($host);
+        $bad=PushEndpoint::checkResolved($ips);
+        if($bad)return ['ok'=>false,'error'=>$bad,'permanent'=>false];
+        // Connect to an address that was just checked, so DNS cannot answer differently for the request.
+        $v4=array_values(array_filter($ips,function($ip){return filter_var($ip,FILTER_VALIDATE_IP,FILTER_FLAG_IPV4);}));
+        $ip=$v4?$v4[0]:'['.$ips[0].']';
+        return ['ok'=>true,'host'=>$host,'resolve'=>$host.':443:'.$ip];
+    }
+
     private function push_debug($message,$context=[]){
         if(defined('WP_DEBUG') && WP_DEBUG){
             error_log('[Workforce One Push] '.$message.' '.wp_json_encode($context));
@@ -595,31 +731,95 @@ trait EWS_Notifications_Trait {
     }
 
     private function send_push_payload($row,$payload){
-        if(!function_exists('curl_init'))return ['ok'=>false,'error'=>'PHP cURL extension is not available.'];
+        $job=$this->push_prepare($row,$payload);
+        if(isset($job['result']))return $job['result'];
+        curl_exec($job['handle']);
+        $out=$this->push_finish($job['handle'],curl_errno($job['handle']));
+        curl_close($job['handle']);
+        return $out;
+    }
+
+    /**
+     * Sends many pushes at once, 20 at a time (curl_multi, 3.31.71): a poll to 1,000 devices
+     * took over a minute one by one. @param array<int|string,array{0:object,1:array<string,mixed>}> $jobs
+     * device row and payload, by key. @return array<int|string,array<string,mixed>> results by the same key
+     */
+    private function push_send_many(array $jobs){
+        $out=[];$queue=[];
+        foreach($jobs as $k=>[$row,$payload]){
+            $job=$this->push_prepare($row,$payload);
+            if(isset($job['result']))$out[$k]=$job['result'];else $queue[$k]=$job['handle'];
+        }
+        if(!$queue)return $out;
+        if(count($queue)===1||!function_exists('curl_multi_init')){
+            foreach($queue as $k=>$ch){curl_exec($ch);$out[$k]=$this->push_finish($ch,curl_errno($ch));curl_close($ch);}
+            return $out;
+        }
+        foreach(array_chunk($queue,20,true) as $chunk){
+            $mh=curl_multi_init();
+            foreach($chunk as $ch)curl_multi_add_handle($mh,$ch);
+            $errno=[];
+            do{
+                $status=curl_multi_exec($mh,$running);
+                while($info=curl_multi_info_read($mh))foreach($chunk as $k=>$ch)if($ch===$info['handle'])$errno[$k]=(int)$info['result'];
+                if($running&&curl_multi_select($mh,1.0)===-1)usleep(10000);
+            }while($running&&$status===CURLM_OK);
+            foreach($chunk as $k=>$ch){$out[$k]=$this->push_finish($ch,$errno[$k]??curl_errno($ch));curl_multi_remove_handle($mh,$ch);curl_close($ch);}
+            curl_multi_close($mh);
+        }
+        return $out;
+    }
+
+    /** Checks, signs and encrypts one push. @return array{handle?:mixed,result?:array<string,mixed>} a ready cURL handle, or the result when it cannot be sent */
+    private function push_prepare($row,$payload){
+        if(!function_exists('curl_init'))return ['result'=>['ok'=>false,'error'=>'PHP cURL extension is not available.']];
+        $target=$this->push_delivery_target($row->endpoint);
+        if(!$target['ok']){
+            // A stored endpoint that can never be valid (saved before 3.31.45) is removed; one whose host
+            // now resolves to a private address is skipped this time.
+            if(!empty($target['permanent'])){
+                global $wpdb; $wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);
+                $this->audit('push_endpoint_removed','push_subscription',(int)$row->id,'user_id='.(int)$row->user_id.'; '.$target['error']);
+            }
+            $this->push_debug('Endpoint refused',['device_id'=>(int)$row->id,'reason'=>$target['error']]);
+            return ['result'=>['ok'=>false,'blocked'=>true,'error'=>PushEndpoint::message($target['error'])]];
+        }
         $aud=$this->push_endpoint_audience($row->endpoint);
         $jwt=$aud?$this->vapid_jwt($aud):false;
-        if(!$jwt)return ['ok'=>false,'error'=>'Unable to create VAPID token. Check OpenSSL and VAPID settings.'];
+        if(!$jwt)return ['result'=>['ok'=>false,'error'=>'Unable to create VAPID token. Check OpenSSL and VAPID settings.']];
         $enc=$this->encrypt_webpush_payload($row,$payload);
-        if(!$enc['ok']){ $this->push_debug('Encryption failed',['error'=>$enc['error']??'unknown']); return $enc; }
+        if(!$enc['ok']){ $this->push_debug('Encryption failed',['error'=>$enc['error']??'unknown']); return ['result'=>$enc]; }
         $ch=curl_init($row->endpoint);
         curl_setopt_array($ch,[
             CURLOPT_POST=>true,
             CURLOPT_POSTFIELDS=>$enc['body'],
             CURLOPT_RETURNTRANSFER=>true,
             CURLOPT_HEADER=>false,
-            CURLOPT_TIMEOUT=>15,
+            // HTTPS only, no redirects, to the address checked above; a dead push service costs at most 5 seconds.
+            CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS=>CURLPROTO_HTTPS,
+            CURLOPT_FOLLOWLOCATION=>false,
+            CURLOPT_MAXREDIRS=>0,
+            CURLOPT_RESOLVE=>[$target['resolve']],
+            CURLOPT_CONNECTTIMEOUT=>3,
+            CURLOPT_TIMEOUT=>5,
             CURLOPT_HTTPHEADER=>[
-                'TTL: 300',
-                'Urgency: normal',
+                // Kept by the push service for a day: a phone that is asleep, in battery saving or offline
+                // still gets it when it wakes (with 300 s most never arrived). High: shown when it arrives.
+                'TTL: 86400',
+                'Urgency: high',
                 'Content-Type: application/octet-stream',
                 'Content-Encoding: aes128gcm',
-                'Authorization: vapid t='.$jwt.', k='.get_option('ews_vapid_public_key',''),
+                'Authorization: vapid t='.$jwt.', k='.$this->option('ews_vapid_public_key'),
                 'Content-Length: '.strlen($enc['body'])
             ]
         ]);
-        curl_exec($ch);
-        $errno=curl_errno($ch);$error=curl_error($ch);$code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        return ['handle'=>$ch];
+    }
+
+    /** The outcome of a finished push request. @return array<string,mixed> */
+    private function push_finish($ch,$errno){
+        $error=$errno?(curl_error($ch)?:curl_strerror($errno)):'';$code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);
         if($errno){ $this->push_debug('cURL failed',['error'=>$error]); return ['ok'=>false,'error'=>'cURL error: '.$error]; }
         if($code>=200&&$code<300){ $this->push_debug('Push accepted',['code'=>$code]); return ['ok'=>true,'code'=>$code]; }
         if($code===404||$code===410)return ['ok'=>false,'expired'=>true,'code'=>$code,'error'=>'Push subscription is expired or no longer valid.'];
@@ -630,7 +830,7 @@ trait EWS_Notifications_Trait {
         return $this->send_push_payload($row,[
             'title'=>'Workforce One',
             'body'=>'You have a new notification.',
-            'url'=>home_url('/')
+            'url'=>$this->app_home_url()
         ]);
     }
 
@@ -646,12 +846,13 @@ trait EWS_Notifications_Trait {
     public function push_send_test(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
         check_admin_referer('ews_push_send_test');
+        $this->notifications_save_vapid_subject();
         $this->ensure_push_schema();
         global $wpdb;
         $rows=$wpdb->get_results("SELECT * FROM {$this->push_table()} ORDER BY updated_at DESC");
         $sent=0;$expired=0;$errors=[];
         foreach($rows as $row){
-            $result=$this->send_push_payload($row,['title'=>'Workforce One','body'=>'This is a test notification.','url'=>add_query_arg('ews_view','notifications',home_url('/'))]);
+            $result=$this->send_push_payload($row,['title'=>'Workforce One','body'=>'This is a test notification.','url'=>add_query_arg('ews_view','notifications',$this->app_home_url())]);
             if($result['ok']){$sent++;continue;}
             if(!empty($result['expired'])){$expired++;$wpdb->delete($this->push_table(),['id'=>(int)$row->id],['%d']);continue;}
             $errors[]=$result['error'];
@@ -673,7 +874,7 @@ trait EWS_Notifications_Trait {
                 $message=wp_trim_words(wp_strip_all_tags((string)$note->message),13,'…');
                 $time=sprintf(/* translators: %s: human-readable time difference */__('%s ago','workforce-one'),human_time_diff(strtotime($note->created_at),current_time('timestamp')));
                 $items.='<a class="ews-bell-item'.(!(int)$note->is_read?' unread':''). '" href="'.esc_url($open_url).'">'
-                    .'<span class="ews-bell-item-icon" aria-hidden="true">🔔</span>'
+                    .'<span class="ews-bell-item-icon" aria-hidden="true">'.\WorkforceOne\Ui\Icons::svg('bell',18).'</span>'
                     .'<span class="ews-bell-item-body"><strong>'.esc_html($title).'</strong><span>'.esc_html($message).'</span><small>'.esc_html($time).'</small></span>'
                     .(!(int)$note->is_read?'<i class="ews-bell-item-dot" aria-hidden="true"></i>':'')
                     .'</a>';
@@ -683,7 +884,7 @@ trait EWS_Notifications_Trait {
         }
         return '<div class="ews-notification-bell-wrap">'
             .'<button type="button" class="ews-notification-bell" aria-label="'.esc_attr__('Notifications','workforce-one').'" title="'.esc_attr__('Notifications','workforce-one').'" aria-expanded="false" aria-controls="ews-notification-dropdown">'
-            .'<span class="ews-bell-icon" aria-hidden="true">🔔</span>'.($count?'<span class="ews-bell-count">'.$count.'</span>':'').'</button>'
+            .'<span class="ews-bell-icon" aria-hidden="true">'.\WorkforceOne\Ui\Icons::svg('bell',20).'</span>'.($count?'<span class="ews-bell-count">'.$count.'</span>':'').'</button>'
             .'<div id="ews-notification-dropdown" class="ews-notification-dropdown" hidden>'
             .'<div class="ews-bell-head"><strong>'.esc_html__('Notifications','workforce-one').'</strong>'.($count?'<span>'.esc_html(sprintf(/* translators: %d: unread count */_n('%d unread','%d unread',$count,'workforce-one'),$count)).'</span>':'<span>'.esc_html__('All caught up','workforce-one').'</span>').'</div>'
             .'<div class="ews-bell-list">'.$items.'</div>'

@@ -1,0 +1,58 @@
+/* Office minimum (mockup of Step 2's styles in app-attendance.css / app-leave.css / admin-features.css).
+   RTL: office-minimum-rtl.css (npx rtlcss@4). */
+
+/* the counter under each day: in the office / minimum */
+.wfo-om-day{display:inline-flex;align-items:center;justify-content:center;gap:4px;margin:6px auto 2px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:#E6F7EF;color:#0F6B43;white-space:nowrap}
+.wfo-om-day b{font-size:13px}
+.wfo-om-day span{font-weight:600;opacity:.8}
+.wfo-om-day.is-short{background:#FFE8EC;color:#A51D3E}
+.wfo-om-day.is-off{background:#EEF0F5;color:#6A7090;font-weight:600}
+.ews-day-quick .wfo-om-day{display:flex;width:max-content;margin:6px 0 0}
+.ews-att-table th .wfo-om-day{display:flex;width:max-content}
+.ews-att-table th:has(.wfo-om-day.is-short){background:#FFF5F7;box-shadow:inset 0 -3px 0 #E5486B}
+.ews-att-table td.ews-att-day:nth-child(4),.ews-att-table td.ews-att-day:nth-child(6){background:#FFFAFB}
+
+/* the warning above the grid */
+.wfo-om-banner{margin:0 0 14px;padding:16px 18px;border-radius:var(--wfo-r-card,20px);background:#FFF8E8;border:1px solid #F5D9A0}
+.wfo-om-banner-head{display:flex;align-items:flex-start;gap:12px}
+.wfo-om-banner h3{margin:0;font-size:15.5px;font-weight:700;color:#5C3A00}
+.wfo-om-banner p{margin:2px 0 0;font-size:12.5px;color:#7A5A1F}
+.wfo-om-ico{width:38px;height:38px;flex:0 0 auto;border-radius:12px;background:#FFC83D;color:#13235B;display:flex;align-items:center;justify-content:center}
+.wfo-om-banner ul{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.wfo-om-banner li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px;border-radius:14px;background:#fff;font-size:13px;color:#3B4466}
+.wfo-om-banner li strong{color:#A51D3E}
+.wfo-om-pill{padding:3px 10px;border-radius:999px;background:#13235B;color:#fff;font-size:12px;font-weight:700}
+.wfo-om-link{display:inline-flex;align-items:center;gap:6px;margin-inline-start:auto;min-height:32px;padding:0 12px;border:0;border-radius:10px;background:var(--wfo-pri-soft,#EBE8FA);color:var(--wfo-pri,#5B3FD9);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+
+/* the teams of a day (sheet) */
+.wfo-om-sheet-sum{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#FFF5F7}
+.wfo-om-sheet-sum .wfo-om-day{margin:0}
+.wfo-om-sheet-sum strong{display:block;font-size:14px;color:#13235B}
+.wfo-om-sheet-sum span{font-size:12.5px;color:#A51D3E;font-weight:600}
+.wfo-om-teams{width:100%;border-collapse:collapse;font-size:13px}
+.wfo-om-teams th,.wfo-om-teams td{padding:10px 8px;border-bottom:1px solid #ECEEF4;text-align:center;vertical-align:top}
+.wfo-om-teams thead th{font-size:11.5px;color:#6A7090;font-weight:600}
+.wfo-om-teams tbody th,.wfo-om-teams tfoot th{text-align:start;font-weight:700;color:#13235B}
+.wfo-om-teams small{display:block;font-weight:500;color:#6A7090;font-size:11.5px}
+.wfo-om-teams tr.is-short{background:#FFFAFB}
+.wfo-om-teams tfoot th,.wfo-om-teams tfoot td{border-bottom:0;background:#F7F8FC}
+.wfo-om-gap{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;background:#E6F7EF;color:#0F6B43}
+.wfo-om-gap.is-short{background:#FFE8EC;color:#A51D3E}
+.wfo-om-gap.is-over{background:#E7EEFF;color:#1F4FB8}
+.wfo-om-can{display:block;margin-top:6px;font-size:11.5px;font-weight:500;color:#3B4466;line-height:1.5}
+.wfo-om-can span{font-weight:700}
+.wfo-om-can .wfo-icon{display:inline-block;vertical-align:-2px;margin-inline-end:4px;color:#1F4FB8}
+.wfo-om-how{margin:2px 0 0;font-size:11.5px;color:#6A7090;line-height:1.6}
+
+/* approving leave */
+.wfo-om-note{display:flex;align-items:flex-start;gap:10px;margin:10px 0;padding:10px 12px;border-radius:14px;background:#FFF8E8;color:#7A5A1F;font-size:12.5px;line-height:1.55}
+.wfo-om-note strong{display:block;color:#5C3A00;font-size:13px}
+.wfo-om-note .wfo-icon{flex:0 0 auto;color:#B07400;margin-top:1px}
+
+/* wp-admin */
+.wfo-om-admin{margin-top:14px;border-top:1px solid #dcdcde}
+.wfo-om-wds{display:flex;flex-wrap:wrap;gap:10px}
+.wfo-om-wd{display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.wfo-om-share{max-width:640px}
+.wfo-om-share td,.wfo-om-share th{vertical-align:middle}
+@media (max-width:700px){.wfo-om-link{margin-inline-start:0}}
