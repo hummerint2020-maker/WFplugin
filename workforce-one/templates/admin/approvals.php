@@ -40,7 +40,7 @@ $help = [
     'SEQUENTIAL' => 'The configured levels decide in order.',
 ];
 $sources = $resolver_labels;
-$units = ['days' => 'days', 'hours' => 'hours', 'of the currency' => (string) get_option('ews_payroll_currency', '') ?: 'EGP'];
+$units = ['days' => 'days', 'hours' => 'hours', 'of the currency' => (string) get_option('ews_payroll_currency', 'EGP') ?: 'EGP'];
 /** The modes in which level $i is used. */
 $level_modes = static function (int $i) use ($max_levels): string {
     $m = ['SEQUENTIAL'];
