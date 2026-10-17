@@ -155,6 +155,7 @@ final class ConfigRules
             'hours_same' => 'Work Start and Work End cannot be the same.',
             'hours_overnight' => 'Work End is before Work Start. Turn on "Allow Overnight Shift" if the workday crosses midnight.',
             'days_empty' => 'Select at least one working day.',
+            'times_from' => 'Pick a valid day for the new times. Only HR can pick a past day.',
             'shift_invalid' => 'Each shift needs a valid start and end time (HH:MM) that are not the same.',
             'shift_overnight' => 'A shift that ends before it starts crosses midnight: tick Overnight for it.',
             'shift_duplicate' => 'Two shifts cannot have the same name.',

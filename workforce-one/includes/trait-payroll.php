@@ -99,8 +99,8 @@ trait EWS_Payroll_Trait {
     }
 
     /** Minutes of an employee's working day: shift length less the allowed break (as the reports count it). */
-    private function payroll_day_minutes($employee_id){
-        $h=$this->working_hours($employee_id);
+    private function payroll_day_minutes($employee_id,$date=''){
+        $h=$this->working_hours($employee_id,$date);   // the shift of that month (3.31.108), not of today
         $s=strtotime('1970-01-01 '.$h['start'].':00');$e=strtotime('1970-01-01 '.$h['end'].':00');
         if($s===false||$e===false)return 480;
         if($e<=$s)$e+=86400;
@@ -151,7 +151,7 @@ trait EWS_Payroll_Trait {
             }
             $rate=$rates[$eid];
             if(!(int)$e->active && !empty($e->last_working_day))$rate['last_working_day']=(string)$e->last_working_day;
-            $out[]=['employee'=>$e,'pay'=>PayCalculator::month($rate,$rules,$rows,$this->payroll_day_minutes($eid),$month,$adjust[$eid]??[])];
+            $out[]=['employee'=>$e,'pay'=>PayCalculator::month($rate,$rules,$rows,$this->payroll_day_minutes($eid,min(gmdate('Y-m-t',strtotime($month.'-01')),current_time('Y-m-d'))),$month,$adjust[$eid]??[])];
         }
         return $out;
     }

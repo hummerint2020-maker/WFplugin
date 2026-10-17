@@ -83,7 +83,10 @@
         "people_has_reports",
         "people_department_member_ids",
         "team_member_ids",
-        "team_ids_for_employee"
+        "team_ids_for_employee",
+        "people_shift_id",
+        "people_set_shift_id",
+        "people_all_shift_ids"
       ]
     },
     "schedule": {
@@ -95,18 +98,32 @@
         "schedule-view",
         "swap",
         "attendance-grid",
-        "office-minimum"
+        "office-minimum",
+        "shift-history"
       ],
       "tables": [
         "schedule",
         "schedule_swaps",
-        "company_calendar"
+        "company_calendar",
+        "employee_shift_periods",
+        "shift_versions"
       ],
       "api": [
         "working_days",
         "swap_approval_card",
         "swap_my_requests",
-        "swap_new_choices"
+        "swap_new_choices",
+        "shift_period_add",
+        "shift_prime_periods",
+        "shift_upcoming",
+        "shift_history_view",
+        "shift_times_from",
+        "shift_versions_record",
+        "shift_times_on",
+        "shift_version_insert",
+        "company_hours_now",
+        "shift_versions_all",
+        "shift_for_employee_on"
       ]
     },
     "locations": {

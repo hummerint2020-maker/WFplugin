@@ -178,7 +178,7 @@ trait EWS_Time_Report_Trait {
         $emp=$employee_id?$this->people_employee($employee_id,!$id):null;
         $facts=['type'=>$type,'date_valid'=>$this->valid_date($work_date),'work_date'=>$work_date,'event_at'=>$event_at,'employee_found'=>(bool)$emp];
         // A shift that ends after midnight: its Sign Out may be on the next calendar day (3.31.92).
-        if($emp){$h=$this->working_hours((int)$emp->id);$facts['overnight']=isset($h['start'],$h['end'])&&(string)$h['end']<=(string)$h['start'];}
+        if($emp){$h=$this->working_hours((int)$emp->id,$facts['date_valid']?(string)$work_date:'');$facts['overnight']=isset($h['start'],$h['end'])&&(string)$h['end']<=(string)$h['start'];}
         if(!ManualRecordRules::check($facts)){
             $others=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND id<>%d AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()."",$employee_id,$work_date,$id));
             $facts['others']=array_map(function($o){return ['type'=>$o->event_type,'at'=>$o->event_at];},(array)$others);

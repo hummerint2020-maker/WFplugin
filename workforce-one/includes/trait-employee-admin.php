@@ -97,6 +97,7 @@ trait EWS_Employee_Admin_Trait {
         if($ok===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $id=(int)$wpdb->insert_id;
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
+        $this->shift_period_add($id,(int)$in['default_shift_id'],\WorkforceOne\Schedule\ShiftPeriods::BEGINNING,'',false);   // shift history (3.31.108)
         if(!$this->employee_admin_set_supervisor($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->audit('employee_create','employee',$id,$in['name'].' / '.$in['domain_name']);
         $this->employee_admin_redirect(['employee_notice'=>'added']);
@@ -107,12 +108,14 @@ trait EWS_Employee_Admin_Trait {
         check_admin_referer('ews31_employee_update');
         global $wpdb;
         $id=absint($_POST['id']??0);
-        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id,wp_user_id,last_working_day FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
+        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id,wp_user_id,last_working_day,default_shift_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
         if(!$old)$this->employee_admin_redirect(['employee_error'=>'not_found']);
         [$in,$error]=$this->employee_admin_input($id,(int)$old->department_id);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
         // Inactive: paid up to the last working day (kept from before when not sent); active again: none.
         $last_day=$in['active']?null:$this->employee_last_working_day_input((string)($old->last_working_day??''));
+        // A new shift here counts from today; the days before keep the old one (3.31.108, shift history).
+        if((int)$old->default_shift_id!==(int)$in['default_shift_id'])$this->shift_period_add($id,(int)$in['default_shift_id'],current_time('Y-m-d'),'',false);
         $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')]+($in['job_title']!==null?['job_title'=>$in['job_title']!==''?$in['job_title']:null]:[]),['id'=>$id]);
         if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);

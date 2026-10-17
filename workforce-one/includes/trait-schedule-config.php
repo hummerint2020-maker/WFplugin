@@ -34,7 +34,7 @@ trait EWS_Schedule_Config_Trait {
             'grace_period'=>ConfigRules::graceMinutes($this->option('ews_grace_period')),
             'absent_after'=>ConfigRules::absentAfterMinutes($this->option('ews_absent_after_minutes')),
             'overnight_enabled'=>(bool)(int)$this->option('ews_allow_overnight_shift'),
-            'shifts'=>$this->shifts(),
+            'shifts'=>$this->shifts(),'versions'=>$this->shift_versions_all(),'today'=>current_time('Y-m-d'),'can_past'=>$this->can('ews_manage_settings'),
             'working_days'=>$this->working_days(),
             'day_names'=>$this->working_day_names(),
             'notice'=>ConfigRules::noticeMessage(sanitize_key($_GET['schedule_notice']??'')),
@@ -53,8 +53,17 @@ trait EWS_Schedule_Config_Trait {
         update_option('ews_allow_overnight_shift',$overnight?1:0,false);
         update_option('ews_grace_period',ConfigRules::graceMinutes($_POST['grace_period']??10),false);
         if(isset($_POST['absent_after']))update_option('ews_absent_after_minutes',ConfigRules::absentAfterMinutes($_POST['absent_after']),false);
+        // The new times count from a day (today by default); the days before keep the old ones (3.31.108).
+        $from=$this->shift_times_from();
+        if($from===null)$this->schedule_config_redirect(['schedule_error'=>'times_from']);
+        $before=$this->shift_times_on(0,$from)?:$this->company_hours_now();
         $result=$this->working_hours_save($start,$end,$end);
         if(is_wp_error($result))$this->schedule_config_redirect(['schedule_error'=>'hours_invalid']);
+        $after=['start'=>$start,'end'=>$end,'grace'=>ConfigRules::graceMinutes($_POST['grace_period']??10),'sign_in_cutoff_minutes'=>240,'overnight'=>$overnight?1:0];
+        if(\WorkforceOne\Schedule\ShiftPeriods::timesChanged($before,$after)){
+            if(!$this->shift_times_on(0,\WorkforceOne\Schedule\ShiftPeriods::BEGINNING))$this->shift_version_insert(0,\WorkforceOne\Schedule\ShiftPeriods::BEGINNING,$before);
+            $this->shift_version_insert(0,$from,$after);
+        }
         $this->invalidate_working_hours_runtime_cache();
         $this->audit('working_hours_update','settings',0,$start.' - '.$end);
         $this->schedule_config_redirect(['schedule_notice'=>'hours_saved']);
@@ -71,16 +80,21 @@ trait EWS_Schedule_Config_Trait {
 
     public function shifts_save_handler(){
         $this->schedule_config_guard('ews_shifts_save');
-        $stored=array_map(function($s){return (int)$s['id'];},$this->shifts());
+        $from=$this->shift_times_from();
+        if($from===null)$this->schedule_config_redirect(['schedule_error'=>'times_from']);
+        $before=$this->shifts();
+        $stored=array_map(function($s){return (int)$s['id'];},$before);
         $highest=max(array_merge([(int)$this->option('ews_shifts_highest_id')],$stored));
         [$clean,$error]=ConfigRules::shifts(wp_unslash($_POST['shifts']??[]),wp_unslash($_POST['new_shift']??[]),$highest);
         if($error)$this->schedule_config_redirect(['schedule_error'=>$error]);
         foreach($clean as &$shift)$shift['name']=sanitize_text_field($shift['name']);
         unset($shift);
         update_option('ews_shifts',$clean,false);
+        // Shifts whose times changed get them from $from; the days before keep the old ones (3.31.108).
+        $changed=$this->shift_versions_record($before,$clean,$from);
         update_option('ews_shifts_highest_id',max(array_merge([$highest],array_column($clean,'id'))),false);
         $this->invalidate_schedule_runtime_cache();
-        $this->audit('shifts_update','settings',0,'Shifts updated');
+        $this->audit('shifts_update','settings',0,'Shifts updated'.($changed?' · new times for '.$changed.' shift(s) from '.$from:''));
         $this->schedule_config_redirect(['schedule_notice'=>'shifts_saved']);
     }
 

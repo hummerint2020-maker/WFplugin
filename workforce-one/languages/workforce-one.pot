@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.106\n"
+"Project-Id-Version: Workforce One 3.31.107\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-17T10:20:31+00:00\n"
+"POT-Creation-Date: 2026-10-17T14:38:21+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -201,7 +201,7 @@ msgstr ""
 
 #: includes/trait-admin-nav.php:60
 #: templates/app/employee.php:59
-#: templates/app/my-profile.php:107
+#: templates/app/my-profile.php:108
 msgid "Achievements"
 msgstr ""
 
@@ -238,7 +238,7 @@ msgid "Notifications"
 msgstr ""
 
 #: includes/trait-admin-nav.php:66
-#: templates/app/my-profile.php:92
+#: templates/app/my-profile.php:93
 msgid "Email"
 msgstr ""
 
@@ -404,7 +404,7 @@ msgstr ""
 #: includes/trait-app-layout.php:79
 #: templates/app/layout.php:77
 #: templates/app/layout.php:106
-#: templates/app/my-profile.php:64
+#: templates/app/my-profile.php:65
 msgid "My Profile"
 msgstr ""
 
@@ -1166,7 +1166,7 @@ msgstr ""
 #: templates/app/dw-day.php:60
 #: templates/app/dw-day.php:96
 #: templates/app/dw-day.php:180
-#: templates/app/my-profile.php:37
+#: templates/app/my-profile.php:38
 #: templates/app/pay.php:60
 #: templates/app/schedule.php:37
 msgid "Absent"
@@ -1552,7 +1552,7 @@ msgstr ""
 #: templates/app/dw-day.php:136
 #: templates/app/employees.php:22
 #: templates/app/employees.php:41
-#: templates/app/my-profile.php:90
+#: templates/app/my-profile.php:91
 msgid "Name"
 msgstr ""
 
@@ -1706,7 +1706,7 @@ msgstr ""
 #: includes/trait-daily-workers.php:1614
 #: templates/app/attendance.php:228
 #: templates/app/leave.php:147
-#: templates/app/my-profile.php:153
+#: templates/app/my-profile.php:154
 #: templates/app/new-request.php:72
 #: templates/app/new-request.php:85
 #: templates/app/overtime.php:115
@@ -1783,8 +1783,8 @@ msgstr ""
 
 #: includes/trait-face-reset.php:214
 #: includes/trait-my-approvals.php:230
-#: includes/trait-substitutes.php:340
-#: includes/trait-substitutes.php:361
+#: includes/trait-substitutes.php:343
+#: includes/trait-substitutes.php:364
 #: includes/trait-task-extras.php:92
 #: includes/trait-tasks.php:117
 msgid "You must be logged in."
@@ -1848,7 +1848,7 @@ msgstr ""
 #: templates/admin/substitutes.php:40
 #: templates/app/attendance.php:249
 #: templates/app/employee.php:84
-#: templates/app/my-profile.php:182
+#: templates/app/my-profile.php:183
 #: templates/app/schedule.php:241
 #: templates/app/substitutes-bar.php:29
 msgid "Cancel"
@@ -1872,8 +1872,8 @@ msgstr ""
 #: templates/app/dw-payout.php:83
 #: templates/app/layout.php:109
 #: templates/app/leave.php:45
-#: templates/app/my-profile.php:157
-#: templates/app/my-profile.php:176
+#: templates/app/my-profile.php:158
+#: templates/app/my-profile.php:177
 #: templates/app/new-request.php:22
 #: templates/app/office-minimum.php:33
 #: templates/app/overtime.php:114
@@ -2998,7 +2998,7 @@ msgstr ""
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance.php:60
 #: templates/app/dashboard.php:47
-#: templates/app/my-profile.php:37
+#: templates/app/my-profile.php:38
 #: templates/app/schedule.php:37
 #: templates/app/time.php:64
 msgid "Not Set"
@@ -3007,7 +3007,7 @@ msgstr ""
 #: includes/trait-schedule-view.php:79
 #: templates/app/dashboard.php:48
 #: templates/app/dashboard.php:72
-#: templates/app/my-profile.php:37
+#: templates/app/my-profile.php:38
 #: templates/app/schedule.php:37
 msgid "General Leave"
 msgstr ""
@@ -3030,6 +3030,37 @@ msgstr ""
 msgid "It is tried again every 10 minutes. If this stays, send this to your host or developer:"
 msgstr ""
 
+#: includes/trait-shift-history.php:244
+#: includes/trait-shift-history.php:265
+msgid "Company working hours"
+msgstr ""
+
+#. translators: %d: minutes
+#: includes/trait-shift-history.php:250
+#, php-format
+msgid "grace %d min"
+msgstr ""
+
+#: includes/trait-shift-history.php:255
+msgid "Pick a valid day."
+msgstr ""
+
+#: includes/trait-shift-history.php:255
+msgid "Pick a shift."
+msgstr ""
+
+#: includes/trait-shift-history.php:255
+msgid "Only HR can change the shift from a past day."
+msgstr ""
+
+#: includes/trait-shift-history.php:257
+msgid "The upcoming change was removed."
+msgstr ""
+
+#: includes/trait-shift-history.php:257
+msgid "Shift saved."
+msgstr ""
+
 #. translators: 1: employee, 2: number of refused attempts
 #: includes/trait-signin-evidence.php:172
 msgid "Sign In refused several times"
@@ -3042,13 +3073,13 @@ msgid "%1$s was refused %2$d times today. See what happened."
 msgstr ""
 
 #. translators: %s: manager name
-#: includes/trait-substitutes.php:170
+#: includes/trait-substitutes.php:173
 #, php-format
 msgid "You decide for %s"
 msgstr ""
 
 #. translators: 1: manager name, 2: date and time, 3: number of requests
-#: includes/trait-substitutes.php:171
+#: includes/trait-substitutes.php:174
 #, php-format
 msgid "Until %2$s, requests that would wait for %1$s wait for you. %3$d is waiting now."
 msgid_plural "Until %2$s, requests that would wait for %1$s wait for you. %3$d are waiting now."
@@ -3056,7 +3087,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: substitute name, 2: number of requests
-#: includes/trait-substitutes.php:193
+#: includes/trait-substitutes.php:196
 #, php-format
 msgid "%1$s decided %2$d request for you while you were away."
 msgid_plural "%1$s decided %2$d requests for you while you were away."
@@ -3064,7 +3095,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of requests
-#: includes/trait-substitutes.php:194
+#: includes/trait-substitutes.php:197
 #, php-format
 msgid "%d still waits for you."
 msgid_plural "%d still wait for you."
@@ -3072,7 +3103,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: number of requests, 2: substitute name
-#: includes/trait-substitutes.php:195
+#: includes/trait-substitutes.php:198
 #, php-format
 msgid "%1$d still waits for %2$s."
 msgid_plural "%1$d still wait for %2$s."
@@ -3080,73 +3111,73 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: number of requests, 2: substitute name
-#: includes/trait-substitutes.php:196
+#: includes/trait-substitutes.php:199
 msgid "Your substitute has ended"
 msgstr ""
 
-#: includes/trait-substitutes.php:202
+#: includes/trait-substitutes.php:205
 msgid "You will decide for a manager"
 msgstr ""
 
 #. translators: 1: manager name, 2: start, 3: end
-#: includes/trait-substitutes.php:203
+#: includes/trait-substitutes.php:206
 #, php-format
 msgid "From %2$s to %3$s, requests that would wait for %1$s will wait for you."
 msgstr ""
 
-#: includes/trait-substitutes.php:237
+#: includes/trait-substitutes.php:240
 msgid "A manager cannot be their own substitute."
 msgstr ""
 
-#: includes/trait-substitutes.php:237
+#: includes/trait-substitutes.php:240
 msgid "The end must be after the start."
 msgstr ""
 
-#: includes/trait-substitutes.php:238
+#: includes/trait-substitutes.php:241
 msgid "These days are already over."
 msgstr ""
 
-#: includes/trait-substitutes.php:238
+#: includes/trait-substitutes.php:241
 msgid "That person cannot be a substitute (see the substitute settings)."
 msgstr ""
 
-#: includes/trait-substitutes.php:239
+#: includes/trait-substitutes.php:242
 msgid "That person is away themselves on some of these days. Pick someone else or change the days."
 msgstr ""
 
-#: includes/trait-substitutes.php:240
+#: includes/trait-substitutes.php:243
 msgid "There is already a substitute for some of these days."
 msgstr ""
 
-#: includes/trait-substitutes.php:240
+#: includes/trait-substitutes.php:243
 msgid "Pick the manager."
 msgstr ""
 
-#: includes/trait-substitutes.php:241
+#: includes/trait-substitutes.php:244
 msgid "Pick the substitute."
 msgstr ""
 
-#: includes/trait-substitutes.php:241
+#: includes/trait-substitutes.php:244
 msgid "You cannot do that."
 msgstr ""
 
-#: includes/trait-substitutes.php:273
+#: includes/trait-substitutes.php:276
 msgid "Your manager"
 msgstr ""
 
-#: includes/trait-substitutes.php:273
+#: includes/trait-substitutes.php:276
 msgid "A manager in your department"
 msgstr ""
 
-#: includes/trait-substitutes.php:377
+#: includes/trait-substitutes.php:380
 msgid "Substitute saved."
 msgstr ""
 
-#: includes/trait-substitutes.php:377
+#: includes/trait-substitutes.php:380
 msgid "Substitute ended. What still waits goes back to the manager."
 msgstr ""
 
-#: includes/trait-substitutes.php:377
+#: includes/trait-substitutes.php:380
 msgid "Substitute cancelled."
 msgstr ""
 
@@ -3329,7 +3360,7 @@ msgstr ""
 
 #: templates/admin/corrections.php:64
 #: templates/app/approvals.php:42
-#: templates/app/my-profile.php:59
+#: templates/app/my-profile.php:60
 #: templates/app/notifications.php:37
 #: templates/app/requests.php:26
 msgid "All"
@@ -3364,7 +3395,7 @@ msgstr ""
 #: templates/admin/daily-workers.php:230
 #: templates/admin/substitutes.php:29
 #: templates/app/attendance.php:228
-#: templates/app/my-profile.php:153
+#: templates/app/my-profile.php:154
 msgid "Status"
 msgstr ""
 
@@ -3396,7 +3427,7 @@ msgstr ""
 #: templates/admin/corrections.php:140
 #: templates/admin/daily-workers.php:150
 #: templates/app/corrections.php:100
-#: templates/app/my-profile.php:171
+#: templates/app/my-profile.php:172
 msgid "Photo"
 msgstr ""
 
@@ -3657,7 +3688,7 @@ msgstr ""
 #: templates/app/correction-sheet.php:36
 #: templates/app/correction-sheet.php:47
 #: templates/app/dashboard.php:93
-#: templates/app/my-profile.php:153
+#: templates/app/my-profile.php:154
 #: templates/app/time.php:85
 #: templates/app/time.php:93
 #: templates/app/time.php:105
@@ -3671,7 +3702,7 @@ msgstr ""
 #: templates/app/correction-sheet.php:36
 #: templates/app/correction-sheet.php:47
 #: templates/app/dashboard.php:94
-#: templates/app/my-profile.php:153
+#: templates/app/my-profile.php:154
 #: templates/app/time.php:83
 #: templates/app/time.php:106
 #: templates/app/time.php:152
@@ -3757,7 +3788,7 @@ msgstr ""
 #: templates/admin/daily-workers.php:90
 #: templates/admin/daily-workers.php:112
 #: templates/admin/daily-workers.php:148
-#: templates/app/my-profile.php:73
+#: templates/app/my-profile.php:74
 msgid "Active"
 msgstr ""
 
@@ -4175,6 +4206,85 @@ msgstr ""
 msgid "Roles & Permissions"
 msgstr ""
 
+#: templates/admin/employee-profile.php:93
+msgid "Shift history"
+msgstr ""
+
+#: templates/admin/employee-profile.php:95
+#: templates/admin/employee-profile.php:107
+#: templates/admin/org-chart.php:111
+#: templates/admin/org-chart.php:242
+#: templates/admin/substitutes.php:29
+#: templates/admin/substitutes.php:50
+#: templates/app/dw-day.php:161
+#: templates/app/leave.php:74
+#: templates/app/new-request.php:55
+#: templates/app/new-request.php:93
+#: templates/app/overtime.php:123
+#: templates/app/substitutes-bar.php:43
+msgid "From"
+msgstr ""
+
+#: templates/admin/employee-profile.php:95
+#: templates/admin/substitutes.php:29
+#: templates/admin/substitutes.php:51
+#: templates/app/substitutes-bar.php:44
+msgid "Until"
+msgstr ""
+
+#: templates/admin/employee-profile.php:95
+#: templates/app/corrections.php:98
+#: templates/app/my-profile.php:96
+msgid "Shift"
+msgstr ""
+
+#: templates/admin/employee-profile.php:95
+msgid "Times"
+msgstr ""
+
+#: templates/admin/employee-profile.php:95
+msgid "Changed by"
+msgstr ""
+
+#: templates/admin/employee-profile.php:96
+msgid "Upcoming"
+msgstr ""
+
+#: templates/admin/employee-profile.php:96
+#: templates/admin/org-chart.php:138
+#: templates/app/time.php:81
+msgid "Now"
+msgstr ""
+
+#. translators: %s: view name
+#: templates/admin/employee-profile.php:101
+#: templates/app/reports.php:40
+msgid "Remove"
+msgstr ""
+
+#: templates/admin/employee-profile.php:106
+msgid "New shift"
+msgstr ""
+
+#: templates/admin/employee-profile.php:108
+#: templates/admin/substitutes.php:52
+msgid "Reason (optional)"
+msgstr ""
+
+#: templates/admin/employee-profile.php:109
+#: templates/admin/substitutes.php:53
+#: templates/app/substitutes-bar.php:55
+msgid "Save"
+msgstr ""
+
+#: templates/admin/employee-profile.php:111
+msgid "The shift before ends the day before on its own. A later day: the change waits until then."
+msgstr ""
+
+#: templates/admin/employee-profile.php:111
+msgid "A past day counts those days again (lateness, overtime, hours); closed payroll months do not change."
+msgstr ""
+
 #: templates/admin/features.php:76
 msgid "A substitute while a manager is away"
 msgstr ""
@@ -4279,7 +4389,7 @@ msgstr ""
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:119
 #: templates/app/employees.php:22
-#: templates/app/my-profile.php:93
+#: templates/app/my-profile.php:94
 #: templates/app/office-minimum.php:37
 #: templates/app/reports.php:52
 #: templates/app/tasks.php:168
@@ -4506,19 +4616,6 @@ msgstr ""
 msgid "File (.xlsx or .csv)"
 msgstr ""
 
-#: templates/admin/org-chart.php:111
-#: templates/admin/org-chart.php:242
-#: templates/admin/substitutes.php:29
-#: templates/admin/substitutes.php:50
-#: templates/app/dw-day.php:161
-#: templates/app/leave.php:74
-#: templates/app/new-request.php:55
-#: templates/app/new-request.php:93
-#: templates/app/overtime.php:123
-#: templates/app/substitutes-bar.php:43
-msgid "From"
-msgstr ""
-
 #: templates/admin/org-chart.php:112
 msgid "Reason (kept in the Audit Log)"
 msgstr ""
@@ -4594,11 +4691,6 @@ msgstr ""
 
 #: templates/admin/org-chart.php:137
 msgid "Job titles"
-msgstr ""
-
-#: templates/admin/org-chart.php:138
-#: templates/app/time.php:81
-msgid "Now"
 msgstr ""
 
 #: templates/admin/org-chart.php:138
@@ -4754,12 +4846,6 @@ msgid "Substitute"
 msgstr ""
 
 #: templates/admin/substitutes.php:29
-#: templates/admin/substitutes.php:51
-#: templates/app/substitutes-bar.php:44
-msgid "Until"
-msgstr ""
-
-#: templates/admin/substitutes.php:29
 msgid "Set by"
 msgstr ""
 
@@ -4783,15 +4869,6 @@ msgstr ""
 
 #: templates/admin/substitutes.php:46
 msgid "Add a substitute"
-msgstr ""
-
-#: templates/admin/substitutes.php:52
-msgid "Reason (optional)"
-msgstr ""
-
-#: templates/admin/substitutes.php:53
-#: templates/app/substitutes-bar.php:55
-msgid "Save"
 msgstr ""
 
 #. translators: 1: who can be a substitute, 2: what happens on return
@@ -5816,11 +5893,6 @@ msgstr ""
 msgid "Not set"
 msgstr ""
 
-#: templates/app/corrections.php:98
-#: templates/app/my-profile.php:95
-msgid "Shift"
-msgstr ""
-
 #: templates/app/corrections.php:99
 msgid "Corrections this month"
 msgstr ""
@@ -6010,7 +6082,7 @@ msgstr ""
 
 #: templates/app/dashboard.php:157
 #: templates/app/dashboard.php:177
-#: templates/app/my-profile.php:121
+#: templates/app/my-profile.php:122
 msgid "View Schedule"
 msgstr ""
 
@@ -6039,7 +6111,7 @@ msgid "Sign Out:"
 msgstr ""
 
 #: templates/app/dashboard.php:174
-#: templates/app/my-profile.php:121
+#: templates/app/my-profile.php:122
 msgid "My Week"
 msgstr ""
 
@@ -6464,7 +6536,7 @@ msgid "Not provided"
 msgstr ""
 
 #: templates/app/employee.php:52
-#: templates/app/my-profile.php:94
+#: templates/app/my-profile.php:95
 msgid "Supervisor"
 msgstr ""
 
@@ -6478,7 +6550,7 @@ msgstr ""
 
 #. translators: %d: number of achievements
 #: templates/app/employee.php:59
-#: templates/app/my-profile.php:107
+#: templates/app/my-profile.php:108
 #, php-format
 msgid "%d earned"
 msgid_plural "%d earned"
@@ -6491,7 +6563,7 @@ msgstr ""
 
 #. translators: %s: date
 #: templates/app/employee.php:64
-#: templates/app/my-profile.php:112
+#: templates/app/my-profile.php:113
 #, php-format
 msgid "Earned %s"
 msgstr ""
@@ -6884,277 +6956,283 @@ msgstr ""
 msgid "Daily worker? Sign in with your mobile"
 msgstr ""
 
-#: templates/app/my-profile.php:49
+#: templates/app/my-profile.php:50
 msgid "Profile picture reset to initials."
 msgstr ""
 
-#: templates/app/my-profile.php:49
+#: templates/app/my-profile.php:50
 msgid "Avatar selected successfully."
 msgstr ""
 
-#: templates/app/my-profile.php:49
+#: templates/app/my-profile.php:50
 msgid "Profile picture updated successfully."
 msgstr ""
 
-#: templates/app/my-profile.php:50
+#: templates/app/my-profile.php:51
 msgid "Image must be 2 MB or smaller."
 msgstr ""
 
-#: templates/app/my-profile.php:50
+#: templates/app/my-profile.php:51
 msgid "Please upload a JPG, PNG, or WebP image."
 msgstr ""
 
-#: templates/app/my-profile.php:50
+#: templates/app/my-profile.php:51
 msgid "Could not upload the profile picture. Please try again."
 msgstr ""
 
-#: templates/app/my-profile.php:51
+#: templates/app/my-profile.php:52
 msgid "Password updated successfully."
 msgstr ""
 
-#: templates/app/my-profile.php:54
+#: templates/app/my-profile.php:55
 msgid "Current password is incorrect."
 msgstr ""
 
-#: templates/app/my-profile.php:54
+#: templates/app/my-profile.php:55
 msgid "New passwords do not match."
 msgstr ""
 
-#: templates/app/my-profile.php:55
+#: templates/app/my-profile.php:56
 msgid "New password must be at least 8 characters and include uppercase, lowercase, number and special character."
 msgstr ""
 
-#: templates/app/my-profile.php:56
+#: templates/app/my-profile.php:57
 msgid "New password must be different from the current password."
 msgstr ""
 
-#: templates/app/my-profile.php:56
+#: templates/app/my-profile.php:57
 msgid "Could not update your password. Please try again."
 msgstr ""
 
-#: templates/app/my-profile.php:58
+#: templates/app/my-profile.php:59
 msgid "Company Default"
 msgstr ""
 
-#: templates/app/my-profile.php:59
+#: templates/app/my-profile.php:60
 msgid "Men"
 msgstr ""
 
-#: templates/app/my-profile.php:59
+#: templates/app/my-profile.php:60
 msgid "Women"
 msgstr ""
 
-#: templates/app/my-profile.php:59
+#: templates/app/my-profile.php:60
 msgid "Professional"
 msgstr ""
 
-#: templates/app/my-profile.php:59
+#: templates/app/my-profile.php:60
 msgid "Casual"
 msgstr ""
 
-#: templates/app/my-profile.php:59
+#: templates/app/my-profile.php:60
 msgid "Fun"
 msgstr ""
 
-#: templates/app/my-profile.php:67
+#: templates/app/my-profile.php:68
 msgid "Edit profile picture"
 msgstr ""
 
-#: templates/app/my-profile.php:80
+#: templates/app/my-profile.php:81
 msgid "Today · Planned"
 msgstr ""
 
-#: templates/app/my-profile.php:80
+#: templates/app/my-profile.php:81
 msgid "Schedule status"
 msgstr ""
 
-#: templates/app/my-profile.php:81
+#: templates/app/my-profile.php:82
 msgid "Today · Attendance"
 msgstr ""
 
 #. translators: %s: sign-in time
-#: templates/app/my-profile.php:81
+#: templates/app/my-profile.php:82
 #, php-format
 msgid "In %s"
 msgstr ""
 
 #. translators: %s: sign-in time
-#: templates/app/my-profile.php:81
+#: templates/app/my-profile.php:82
 msgid "Not signed in"
 msgstr ""
 
 #. translators: %s: sign-in time
-#: templates/app/my-profile.php:82
+#: templates/app/my-profile.php:83
 msgid "Working Hours"
 msgstr ""
 
-#: templates/app/my-profile.php:88
+#: templates/app/my-profile.php:89
 msgid "My Information"
 msgstr ""
 
-#: templates/app/my-profile.php:88
+#: templates/app/my-profile.php:89
 msgid "Your personal and work information"
 msgstr ""
 
-#: templates/app/my-profile.php:91
+#: templates/app/my-profile.php:92
 msgid "Domain"
 msgstr ""
 
-#: templates/app/my-profile.php:101
-msgid "Security"
-msgstr ""
-
-#: templates/app/my-profile.php:101
-msgid "Keep your Workforce One account secure."
+#. translators: 1: date, 2: shift name
+#: templates/app/my-profile.php:96
+#, php-format
+msgid "From %1$s: %2$s"
 msgstr ""
 
 #: templates/app/my-profile.php:102
-#: templates/app/my-profile.php:176
+msgid "Security"
+msgstr ""
+
+#: templates/app/my-profile.php:102
+msgid "Keep your Workforce One account secure."
+msgstr ""
+
+#: templates/app/my-profile.php:103
+#: templates/app/my-profile.php:177
 msgid "Reset Password"
 msgstr ""
 
-#: templates/app/my-profile.php:107
+#: templates/app/my-profile.php:108
 msgid "Your earned milestones"
 msgstr ""
 
-#: templates/app/my-profile.php:109
+#: templates/app/my-profile.php:110
 msgid "Your achievements will appear here as you reach milestones."
 msgstr ""
 
-#: templates/app/my-profile.php:121
+#: templates/app/my-profile.php:122
 msgid "Your schedule for this week"
 msgstr ""
 
-#: templates/app/my-profile.php:136
+#: templates/app/my-profile.php:137
 msgid "Leave Balance"
 msgstr ""
 
-#: templates/app/my-profile.php:136
+#: templates/app/my-profile.php:137
 msgid "Your leave entitlement and usage"
 msgstr ""
 
-#: templates/app/my-profile.php:136
+#: templates/app/my-profile.php:137
 msgid "View Leave"
 msgstr ""
 
-#: templates/app/my-profile.php:140
+#: templates/app/my-profile.php:141
 msgid "available"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/app/my-profile.php:141
+#: templates/app/my-profile.php:142
 #, php-format
 msgid "%d%% used"
 msgstr ""
 
 #. translators: 1: days used, 2: days pending, 3: percent used
-#: templates/app/my-profile.php:142
+#: templates/app/my-profile.php:143
 #, php-format
 msgid "Used %1$s · Pending %2$s · %3$d%% used"
 msgstr ""
 
-#: templates/app/my-profile.php:152
+#: templates/app/my-profile.php:153
 msgid "Recent Attendance"
 msgstr ""
 
-#: templates/app/my-profile.php:152
+#: templates/app/my-profile.php:153
 msgid "Your latest attendance records"
 msgstr ""
 
-#: templates/app/my-profile.php:152
+#: templates/app/my-profile.php:153
 msgid "View All"
 msgstr ""
 
-#: templates/app/my-profile.php:153
+#: templates/app/my-profile.php:154
 msgid "Total Hours"
 msgstr ""
 
-#: templates/app/my-profile.php:153
+#: templates/app/my-profile.php:154
 msgid "No attendance records in the selected period."
 msgstr ""
 
-#: templates/app/my-profile.php:157
+#: templates/app/my-profile.php:158
 msgid "Profile Picture"
 msgstr ""
 
-#: templates/app/my-profile.php:159
+#: templates/app/my-profile.php:160
 msgid "Choose how you appear across Workforce One."
 msgstr ""
 
-#: templates/app/my-profile.php:159
+#: templates/app/my-profile.php:160
 msgid "Your profile picture belongs to your Workforce One employee profile, not the WordPress user profile."
 msgstr ""
 
-#: templates/app/my-profile.php:161
+#: templates/app/my-profile.php:162
 msgid "Choose Avatar"
 msgstr ""
 
-#: templates/app/my-profile.php:162
-#: templates/app/my-profile.php:171
+#: templates/app/my-profile.php:163
+#: templates/app/my-profile.php:172
 msgid "Upload Photo"
 msgstr ""
 
-#: templates/app/my-profile.php:163
+#: templates/app/my-profile.php:164
 msgid "Use Initials"
 msgstr ""
 
-#: templates/app/my-profile.php:166
+#: templates/app/my-profile.php:167
 msgid "Choose your avatar"
 msgstr ""
 
-#: templates/app/my-profile.php:166
+#: templates/app/my-profile.php:167
 msgid "Pick an avatar to use across Workforce One."
 msgstr ""
 
-#: templates/app/my-profile.php:167
+#: templates/app/my-profile.php:168
 msgid "Filter avatars"
 msgstr ""
 
-#: templates/app/my-profile.php:169
+#: templates/app/my-profile.php:170
 msgid "Save Avatar"
 msgstr ""
 
-#: templates/app/my-profile.php:171
+#: templates/app/my-profile.php:172
 msgid "JPG, PNG or WebP · maximum 2 MB"
 msgstr ""
 
-#: templates/app/my-profile.php:178
+#: templates/app/my-profile.php:179
 msgid "Current Password"
 msgstr ""
 
-#: templates/app/my-profile.php:179
+#: templates/app/my-profile.php:180
 msgid "New Password"
 msgstr ""
 
-#: templates/app/my-profile.php:180
+#: templates/app/my-profile.php:181
 msgid "Confirm New Password"
 msgstr ""
 
-#: templates/app/my-profile.php:181
+#: templates/app/my-profile.php:182
 msgid "Password requirements"
 msgstr ""
 
-#: templates/app/my-profile.php:181
+#: templates/app/my-profile.php:182
 msgid "At least 8 characters"
 msgstr ""
 
-#: templates/app/my-profile.php:181
+#: templates/app/my-profile.php:182
 msgid "One uppercase letter"
 msgstr ""
 
-#: templates/app/my-profile.php:181
+#: templates/app/my-profile.php:182
 msgid "One lowercase letter"
 msgstr ""
 
-#: templates/app/my-profile.php:181
+#: templates/app/my-profile.php:182
 msgid "One number"
 msgstr ""
 
-#: templates/app/my-profile.php:181
+#: templates/app/my-profile.php:182
 msgid "One special character"
 msgstr ""
 
-#: templates/app/my-profile.php:182
+#: templates/app/my-profile.php:183
 msgid "Update Password"
 msgstr ""
 
@@ -7941,11 +8019,6 @@ msgstr ""
 #: templates/app/reports.php:40
 #, php-format
 msgid "Remove saved view %s"
-msgstr ""
-
-#. translators: %s: view name
-#: templates/app/reports.php:40
-msgid "Remove"
 msgstr ""
 
 #: templates/app/reports.php:47

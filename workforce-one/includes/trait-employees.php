@@ -57,6 +57,26 @@ trait EWS_Employees_Trait {
     }
 
     /** The active employees (id, name, domain_name), by name; at most $limit when given. @return object[] */
+    /** The shift an employee is on now (employees.default_shift_id; 0 = company hours). */
+    private function people_shift_id($employee_id){
+        global $wpdb;
+        return (int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d",(int)$employee_id));
+    }
+
+    /** Set the shift an employee is on now (the shift history keeps it in step, 3.31.108). */
+    private function people_set_shift_id($employee_id,$shift_id){
+        global $wpdb;
+        if($shift_id)$wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=%d WHERE id=%d AND COALESCE(default_shift_id,0)<>%d",(int)$shift_id,(int)$employee_id,(int)$shift_id));
+        else $wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=NULL WHERE id=%d AND default_shift_id IS NOT NULL",(int)$employee_id));
+    }
+
+    /** Every employee (archived too) with the shift they are on now. @return array<int,int> id => shift id */
+    private function people_all_shift_ids(){
+        global $wpdb;$out=[];
+        foreach((array)$wpdb->get_results("SELECT id,default_shift_id FROM {$this->employees}") as $r)$out[(int)$r->id]=(int)$r->default_shift_id;
+        return $out;
+    }
+
     private function people_active_list($limit=0){
         global $wpdb;
         return (array)$wpdb->get_results("SELECT id,name,domain_name FROM {$this->employees} WHERE active=1 ORDER BY name ASC".($limit>0?' LIMIT '.(int)$limit:''));

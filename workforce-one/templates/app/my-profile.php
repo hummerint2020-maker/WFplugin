@@ -10,6 +10,7 @@
  * @var string $sign_in                raw event time ('' = none)
  * @var string $hours_label
  * @var array{name:string}|null $shift
+ * @var array{from:string,name:string}|null $shift_next   an upcoming shift change (3.31.108)
  * @var object|null $supervisor
  * @var string $team_label
  * @var string $today
@@ -92,7 +93,7 @@ $filters = ['all' => __('All', 'workforce-one'), 'Men' => __('Men', 'workforce-o
                     <div><dt><?php esc_html_e('Email', 'workforce-one'); ?></dt><dd dir="ltr"><?php echo esc_html($emp->email ?: '—'); ?></dd></div>
                     <div><dt><?php esc_html_e('Team', 'workforce-one'); ?></dt><dd><?php echo esc_html($team_label); ?></dd></div>
                     <div><dt><?php esc_html_e('Supervisor', 'workforce-one'); ?></dt><dd><?php echo $supervisor ? esc_html($supervisor->name) : '—'; ?></dd></div>
-                    <div><dt><?php esc_html_e('Shift', 'workforce-one'); ?></dt><dd><?php echo esc_html($shift_name); ?></dd></div>
+                    <div><dt><?php esc_html_e('Shift', 'workforce-one'); ?></dt><dd><?php echo esc_html($shift_name); ?><?php if (!empty($shift_next)): ?><br><small data-shift-next><?php echo esc_html(sprintf(/* translators: 1: date, 2: shift name */ __('From %1$s: %2$s', 'workforce-one'), date_i18n('j M Y', strtotime($shift_next['from'])), $shift_next['name'])); ?></small><?php endif; ?></dd></div>
                 </dl>
             </section>
 

@@ -94,6 +94,7 @@ trait EWS_Employee_Profile_Trait {
             'year'=>$year,'balances'=>$balances,'presence'=>$presence,'achievements'=>$achievements,
             'achievement_deleted'=>isset($_GET['achievement_deleted']),
             'employees_url'=>admin_url('admin.php?page=ews31-employees'),'post_url'=>admin_url('admin-post.php'),
+            'shift_history'=>$this->shift_history_view($employee_id),'can_change_shift'=>$this->can('ews_manage_employees'),
         ]);
     }
 }

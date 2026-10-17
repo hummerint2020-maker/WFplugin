@@ -24,6 +24,8 @@
  * @var bool $achievement_deleted
  * @var string $employees_url
  * @var string $post_url
+ * @var array<string,mixed> $shift_history  EWS_Shift_History_Trait::shift_history_view() (3.31.108)
+ * @var bool $can_change_shift
  */
 if (!defined('ABSPATH')) exit;
 $status = $active ? 'Active' : 'Inactive';
@@ -88,6 +90,27 @@ $money = static function ($n) { return number_format((float) $n, 2); };
             <div class="ews-profile-field"><div class="k"><?php echo esc_html($k); ?></div><div class="v"><?php echo esc_html($v); ?></div></div>
         <?php endforeach; ?>
     </div></div></section>
+    <section class="ews-profile-panel" id="ews-shift-history"><h2><?php esc_html_e('Shift history', 'workforce-one'); ?></h2><div class="ews-profile-body">
+        <?php if ($shift_history['notice']): ?><div class="notice notice-<?php echo esc_attr($shift_history['notice']['type']); ?> inline"><p><?php echo esc_html($shift_history['notice']['text']); ?></p></div><?php endif; ?>
+        <table class="ews-profile-table" data-shift-periods><thead><tr><th><?php esc_html_e('From', 'workforce-one'); ?></th><th><?php esc_html_e('Until', 'workforce-one'); ?></th><th><?php esc_html_e('Shift', 'workforce-one'); ?></th><th><?php esc_html_e('Times', 'workforce-one'); ?></th><th><?php esc_html_e('Changed by', 'workforce-one'); ?></th><th></th></tr></thead><tbody>
+        <?php $state = ['later' => __('Upcoming', 'workforce-one'), 'now' => __('Now', 'workforce-one'), 'past' => '']; foreach ($shift_history['rows'] as $p): ?>
+            <tr data-shift-period="<?php echo (int) $p['id']; ?>"><td><?php echo $p['from'] !== '' ? esc_html(date_i18n(get_option('date_format'), strtotime($p['from']))) : '—'; ?></td><td><?php echo $p['to'] !== '' ? esc_html(date_i18n(get_option('date_format'), strtotime($p['to']))) : '—'; ?></td>
+                <td><strong><?php echo esc_html($p['shift']); ?></strong><?php if ($p['reason'] !== ''): ?><br><span style="color:#667085"><?php echo esc_html($p['reason']); ?></span><?php endif; ?></td><td><?php echo esc_html($p['times']); ?></td>
+                <td><?php echo esc_html(trim($p['by'] . ($p['when'] !== '' ? ' · ' . $p['when'] : ''), ' ·')); ?></td>
+                <td><?php if ($state[$p['state']] !== ''): ?><strong style="color:<?php echo $p['state'] === 'now' ? '#008a20' : '#8a4f00'; ?>"><?php echo esc_html($state[$p['state']]); ?></strong><?php endif; ?>
+                <?php if ($p['removable'] && $can_change_shift): ?><form method="post" action="<?php echo esc_url($post_url); ?>" style="display:inline"><?php wp_nonce_field('ews_shift_period_' . (int) $employee_id); ?><input type="hidden" name="action" value="ews_shift_period_save"><input type="hidden" name="employee_id" value="<?php echo (int) $employee_id; ?>"><button class="button-link" type="submit" name="remove" value="<?php echo (int) $p['id']; ?>"><?php esc_html_e('Remove', 'workforce-one'); ?></button></form><?php endif; ?></td></tr>
+        <?php endforeach; ?>
+        </tbody></table>
+        <?php if ($can_change_shift): ?>
+        <form method="post" action="<?php echo esc_url($post_url); ?>" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:12px" data-shift-change><?php wp_nonce_field('ews_shift_period_' . (int) $employee_id); ?><input type="hidden" name="action" value="ews_shift_period_save"><input type="hidden" name="employee_id" value="<?php echo (int) $employee_id; ?>">
+            <label><?php esc_html_e('New shift', 'workforce-one'); ?><br><select name="shift_id"><?php foreach ($shift_history['shifts'] as $sid => $sname): ?><option value="<?php echo (int) $sid; ?>"><?php echo esc_html($sname); ?></option><?php endforeach; ?></select></label>
+            <label><?php esc_html_e('From', 'workforce-one'); ?><br><input type="date" name="from_date" value="<?php echo esc_attr($shift_history['today']); ?>"<?php echo $shift_history['can_past'] ? '' : ' min="' . esc_attr($shift_history['today']) . '"'; ?> required></label>
+            <label><?php esc_html_e('Reason (optional)', 'workforce-one'); ?><br><input type="text" name="reason" maxlength="190"></label>
+            <button class="button button-primary" type="submit"><?php esc_html_e('Save', 'workforce-one'); ?></button>
+        </form>
+        <p style="color:#667085;margin:8px 0 0"><?php esc_html_e('The shift before ends the day before on its own. A later day: the change waits until then.', 'workforce-one'); ?><?php if ($shift_history['can_past']): ?> <?php esc_html_e('A past day counts those days again (lateness, overtime, hours); closed payroll months do not change.', 'workforce-one'); ?><?php endif; ?></p>
+        <?php endif; ?>
+    </div></section>
     <section class="ews-profile-panel"><h2>Recent Attendance</h2><div class="ews-profile-body" style="padding:0"><table class="ews-profile-table"><thead><tr><th>Date</th><th>Planned</th><th>Sign In</th><th>Sign Out</th><th>Result</th></tr></thead><tbody>
         <?php if (!$recent): ?><tr><td colspan="5" class="ews-profile-empty">No attendance records in the selected period.</td></tr><?php endif; ?>
         <?php foreach ($recent as $r): ?><tr><td><?php echo esc_html($r['date']); ?></td><td><?php echo esc_html($r['planned']); ?></td><td><?php echo esc_html($r['sign_in']); ?></td><td><?php echo esc_html($r['sign_out']); ?></td><td><span class="ews-profile-badge <?php echo esc_attr($r['class']); ?>"><?php echo esc_html($r['result']); ?></span></td></tr><?php endforeach; ?>

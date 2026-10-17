@@ -6705,3 +6705,48 @@ msgstr "لمأمورية أو دورة تدريبية أو أي سبب آخر. �
 
 msgid "Who decides for you"
 msgstr "من يقرر بالنيابة عنك"
+
+msgid "Company working hours"
+msgstr "مواعيد عمل الشركة"
+
+msgid "grace %d min"
+msgstr "سماح %d دقيقة"
+
+msgid "Pick a valid day."
+msgstr "اختر يومًا صحيحًا."
+
+msgid "Pick a shift."
+msgstr "اختر وردية."
+
+msgid "Only HR can change the shift from a past day."
+msgstr "تغيير الوردية من يوم سابق متاح للموارد البشرية فقط."
+
+msgid "The upcoming change was removed."
+msgstr "تم حذف التغيير القادم."
+
+msgid "Shift saved."
+msgstr "تم حفظ الوردية."
+
+msgid "Shift history"
+msgstr "سجل الورديات"
+
+msgid "Times"
+msgstr "المواعيد"
+
+msgid "Changed by"
+msgstr "غيّره"
+
+msgid "Upcoming"
+msgstr "قادم"
+
+msgid "New shift"
+msgstr "الوردية الجديدة"
+
+msgid "The shift before ends the day before on its own. A later day: the change waits until then."
+msgstr "الوردية السابقة تنتهي تلقائيًا في اليوم السابق. إذا اخترت يومًا لاحقًا، ينتظر التغيير حتى موعده."
+
+msgid "A past day counts those days again (lateness, overtime, hours); closed payroll months do not change."
+msgstr "اليوم السابق يعيد حساب تلك الأيام (التأخير والعمل الإضافي والساعات)، والأشهر المقفلة في الرواتب لا تتغير."
+
+msgid "From %1$s: %2$s"
+msgstr "من %1$s: %2$s"

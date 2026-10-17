@@ -85,6 +85,7 @@ final class Options
         'ews_feature_overtime' => ['group' => 'features', 'label' => 'Overtime requests', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_tasks' => ['group' => 'features', 'label' => 'Tasks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_my_approvals' => ['group' => 'features', 'label' => 'My approvals and My requests (the approvals inbox in the app)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_shift_history_synced' => ['group' => 'schedule', 'label' => 'Shift history: the last day its new periods were applied', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_feature_substitutes' => ['group' => 'features', 'label' => 'A substitute while a manager is away (approvals)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_substitute_settings' => ['group' => 'features', 'label' => 'Substitutes: the manager can still decide, on return, who can be one, asked with leave', 'kind' => 'grouped', 'default' => [], 'builtin' => 'the manager decides too; what waits goes back; anyone; asked, optional', 'page' => 'ews31-features'],
         'ews_substitutes_next_sync' => ['group' => 'features', 'label' => 'Substitutes: next check of their start and end', 'kind' => 'int', 'default' => 0, 'internal' => true],

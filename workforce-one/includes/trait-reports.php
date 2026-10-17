@@ -302,8 +302,9 @@ trait EWS_Reports_Trait {
         $rows=[];
         $this->prime_shift_cache($emps);
         foreach($emps as $emp){
-            $eid=(int)$emp->id;$h=$this->working_hours($eid);
+            $eid=(int)$emp->id;
             foreach($dates as $d){
+                $h=$this->working_hours($eid,$d);   // the shift and times of that day (3.31.108)
                 if(!isset($working[$d])){
                     if(!isset($first[$eid][$d])&&empty($windows[$eid][$d]))continue;
                     $rows[]=$this->report_off_day($emp,$d,$h,$first[$eid][$d]??null,$last[$eid][$d]??null,(int)($breaks[$eid][$d]??0),$windows[$eid][$d]??[],$today,$now,$ot_on);

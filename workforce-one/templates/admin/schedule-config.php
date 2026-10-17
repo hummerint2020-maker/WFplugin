@@ -10,6 +10,9 @@
  * @var int $absent_after   minutes after a shift's start when a no-show counts as Absent today
  * @var bool $overnight_enabled
  * @var array<int,array<string,mixed>> $shifts
+ * @var array<int,list<array<string,mixed>>> $versions  dated times per shift (0 = company hours), 3.31.108
+ * @var string $today
+ * @var bool $can_past                     HR may set new times from a past day
  * @var int[] $working_days
  * @var array<int,string> $day_names                 WordPress weekday => name
  * @var string|null $notice
@@ -43,6 +46,7 @@ $rules = ['attendance' => 'Attendance', 'leave' => 'Leave', 'business_trip' => '
                 <div class="ews-sc-field"><label>Work End</label><input type="time" name="work_end" value="<?php echo esc_attr($hours['end']); ?>" required><div class="ews-sc-help">End of the scheduled workday.</div></div>
             </div>
             <div style="margin-top:18px;padding:14px 16px;border:1px solid #e4e7ec;border-radius:11px;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><strong style="display:block;color:#344054;font-size:13px">Allow Overnight Shift</strong><span style="display:block;margin-top:3px;color:#667085;font-size:12px;line-height:1.45">Allow working hours to cross midnight into the next day, e.g. 22:00 → 06:00.</span></div><label style="display:flex;align-items:center;gap:8px;white-space:nowrap;font-weight:600;color:#344054"><input type="checkbox" name="allow_overnight_shift" value="1" <?php checked($overnight_enabled); ?>> Enabled</label></div>
+            <div class="ews-sc-field" style="margin-top:14px;max-width:420px"><label>New times count from</label><input type="date" name="times_from" value="<?php echo esc_attr($today); ?>"<?php echo $can_past ? '' : ' min="' . esc_attr($today) . '"'; ?>><div class="ews-sc-help">The days before keep the old times in every report and in Payroll. A later day: the change waits until then.<?php echo $can_past ? ' A past day counts those days again (closed payroll months do not change).' : ''; ?></div></div>
             <div class="ews-sc-actions"><button class="button button-primary">Save Working Hours</button></div>
         </form>
         <div class="ews-sc-help">Example: 08:00 start → 10 minute grace period → arrivals after 08:10 are Late Arrival. Actual Sign In time is always preserved. Overnight mode is OFF by default.</div>
@@ -62,8 +66,11 @@ $rules = ['attendance' => 'Attendance', 'leave' => 'Leave', 'business_trip' => '
             <?php endforeach; ?>
                 <tr class="ews-sc-new"><td><input name="new_shift[name]" placeholder="New shift"></td><td><input type="time" name="new_shift[start]" value="08:00"></td><td><input type="time" name="new_shift[end]" value="17:00"></td><td><input type="number" name="new_shift[grace]" value="10" min="0" max="180"></td><td><input type="number" name="new_shift[sign_in_cutoff_minutes]" value="240" min="0" max="1440"></td><td class="center"><input type="checkbox" name="new_shift[overnight]" value="1"></td><td class="center"><input type="checkbox" name="new_shift[active]" value="1" checked></td></tr>
             </tbody></table></div>
+            <div class="ews-sc-field" style="margin-top:14px;max-width:420px"><label>New times count from</label><input type="date" name="times_from" value="<?php echo esc_attr($today); ?>"<?php echo $can_past ? '' : ' min="' . esc_attr($today) . '"'; ?>><div class="ews-sc-help">The days before keep the old times in every report and in Payroll. A later day: the change waits until then.<?php echo $can_past ? ' A past day counts those days again (closed payroll months do not change).' : ''; ?></div></div>
             <div class="ews-sc-actions"><button class="button button-primary">Save Shifts</button></div>
         </form>
+        <?php $named = [0 => 'Company Working Hours']; foreach ($shifts as $s) $named[(int) $s['id']] = $s['name']; $dated = array_filter($versions, static function ($v) { return count($v) > 1; }); ?>
+        <?php if ($dated): ?><div class="ews-sc-help" data-shift-versions><strong>Times with dates</strong><?php foreach ($dated as $sid => $list): ?><br><?php echo esc_html(($named[$sid] ?? '#' . $sid) . ': ' . implode(' · ', array_map(static function ($v) use ($today) { return ($v['from'] === \WorkforceOne\Schedule\ShiftPeriods::BEGINNING ? 'before' : 'from ' . $v['from'] . ($v['from'] > $today ? ' (upcoming)' : '')) . ' ' . $v['start'] . '–' . $v['end'] . ', grace ' . (int) $v['grace']; }, $list))); ?><?php endforeach; ?></div><?php endif; ?>
         <div class="ews-sc-help">Sign In Cutoff is measured from Shift Start. Default is 240 minutes (4 hours). Grace only controls On Time vs Late. The effective cutoff never extends past Shift End. Employees without a Default Shift use the company Working Hours with the 4-hour default cutoff. Clear a shift's name to remove it.</div>
     </div></div>
 

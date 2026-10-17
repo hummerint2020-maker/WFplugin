@@ -92,7 +92,7 @@ trait EWS_My_Profile_Trait {
         return $this->render_template('app/my-profile',[
             'emp'=>$emp,'today'=>$today,'planned'=>$planned,'today_result'=>$today_result,'sign_in'=>$first_in?$first_in->event_at:'',
             'hours_label'=>$this->format_time_label($hours['start']).' – '.$this->format_time_label($hours['end']),
-            'shift'=>$this->shift_for_employee($eid),'supervisor'=>$this->approval_related_employee($eid,'supervisor'),
+            'shift'=>$this->shift_for_employee($eid),'shift_next'=>$this->shift_upcoming($eid),'supervisor'=>$this->approval_related_employee($eid,'supervisor'),
             'team_label'=>$teams?implode(', ',array_map(function($x){return $x->name;},$teams)):'—',
             'week'=>$week,'recent'=>$this->my_profile_recent($eid,$today),'year'=>$year,'leave_balances'=>$leave_balances,
             'achievements'=>$this->achievements_enabled()?$this->employee_achievements($eid):null,

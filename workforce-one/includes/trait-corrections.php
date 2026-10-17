@@ -114,7 +114,7 @@ trait EWS_Corrections_Trait {
         $date=(string)($in['date']??'');
         $valid=CorrectionRules::isDate($date);
         $day=$valid?$this->cx_day((int)$emp->id,$date):['in'=>null,'out'=>null];
-        $h=$this->working_hours((int)$emp->id);
+        $h=$this->working_hours((int)$emp->id,$valid?$date:'');
         return [
             'type'=>(string)($in['type']??''),'target'=>(string)($in['target']??''),'date'=>$date,'today'=>current_time('Y-m-d'),'now'=>current_time('H:i'),
             'time_in'=>(string)($in['time_in']??''),'time_out'=>(string)($in['time_out']??''),
@@ -679,7 +679,7 @@ trait EWS_Corrections_Trait {
             }
         }
         $sch=$this->schedule_for_employee_date($eid,$date);
-        $h=$this->working_hours($eid);
+        $h=$this->working_hours($eid,(string)$date);
         $s=$this->correction_settings();
         $live=array_filter($events,function($e){return !$e['superseded'];});
         $types=array_column($live,'type');

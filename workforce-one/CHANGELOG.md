@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.108
+### Fixed (owner report): changing an employee's shift changed old reports
+Every report counted every past day with the shift the employee was on **now**: lateness, overtime,
+early leave, payroll hours, the daily log, the Excel files. Owner decisions 2026-10-17, mockup
+docs/mockups/shift-history/.
+
+- **Shift periods per employee**, from a day to a day, the last one open.
+  - A new period ends the one before on its own, so periods never overlap and leave no gap.
+  - Changing the shift on the Employees page counts from today.
+  - wp-admin → Employee Profile → **Shift history** lists the periods and changes the shift from any
+    day:
+    - a later day waits until then, and can be removed before it starts;
+    - a past day is for HR only (to fix a mistake), and counts those days again. Closed payroll months
+      do not change.
+- **A shift's times have dates too.** Schedule Configuration asks from which day new times count
+  (today by default), for the shifts and for the company working hours. The days before keep the old
+  times; the page lists the dated times.
+- **Every day is counted with the shift and the times of that day:** Sign In lateness, the reports
+  and their Excel files, overtime, corrections, the Sign In / Out report, payroll.
+- **The employee sees an upcoming change** on My Profile ("From 1 Nov: Evening").
+- **On update:** every employee gets one period with their shift of now, from the beginning. Changes
+  made before this version were not recorded, so they cannot be brought back. HR can add them by hand
+  with a past day.
+
 ## 3.31.107
 A substitute while a manager is away (approvals stage 4; owner decisions 2026-10-17, docs/tasks/approvals.md,
 mockup docs/mockups/substitutes/). **Off by default** (wp-admin → Features → A substitute while a manager

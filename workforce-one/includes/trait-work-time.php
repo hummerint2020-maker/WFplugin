@@ -25,7 +25,7 @@ trait EWS_Work_Time_Trait {
                 if(($ev->event_type==='sign_in'||$ev->event_type==='late_sign_in') && !$sign_in)$sign_in=$ev->event_at;
                 if($ev->event_type==='sign_out')$sign_out=$ev->event_at; // the last one
             }
-            $cfg=$this->working_hours((int)$eid);
+            $cfg=$this->working_hours((int)$eid,(string)$date);
             $o=\WorkforceOne\Reports\DayMetrics::overtime($date,$cfg['start'],$cfg['end'],$sign_in,$sign_out,array_map(function($r){return ['start'=>$r->start_time,'end'=>$r->end_time];},$requests));
             $details=[];
             foreach(array_values(array_filter($requests,function($r)use($date){return strtotime($date.' '.$r->end_time)>strtotime($date.' '.$r->start_time);})) as $i=>$r)$details[]=['id'=>(int)$r->id,'date'=>$date,'start'=>$r->start_time,'end'=>$r->end_time,'approved_minutes'=>$o['windows'][$i]['approved'],'actual_minutes'=>$o['windows'][$i]['actual']];
@@ -86,22 +86,43 @@ trait EWS_Work_Time_Trait {
                 if(!$id||$name===''||!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$start)||!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$end))continue;
                 $out[]=['id'=>$id,'name'=>$name,'start'=>$start,'end'=>$end,'grace'=>max(0,min(180,(int)($shift['grace']??10))),'sign_in_cutoff_minutes'=>max(0,min(1440,(int)($shift['sign_in_cutoff_minutes']??240))),'overnight'=>!empty($shift['overnight'])?1:0,'active'=>array_key_exists('active',$shift)?(!empty($shift['active'])?1:0):1];
             }
-            self::$ews_shifts_cache=$out?:$this->default_shifts();
+            $out=$out?:$this->default_shifts();
+            // A shift's times today come from its history when it has one (3.31.108: dated times).
+            $today=current_time('Y-m-d');
+            foreach($out as &$shift){$v=$this->shift_times_on((int)$shift['id'],$today);if($v)$shift=array_merge($shift,array_intersect_key($v,array_flip(['start','end','grace','sign_in_cutoff_minutes','overnight'])));}
+            unset($shift);
+            self::$ews_shifts_cache=$out;
             return self::$ews_shifts_cache;
         }
 
     private function shift_for_employee($employee_id=0){
-            global $wpdb;
             $employee_id=absint($employee_id);
             if(!$employee_id){$emp=$this->current_employee();$employee_id=$emp?(int)$emp->id:0;}
             if(!$employee_id)return null;
             if(array_key_exists($employee_id,self::$ews_shift_for_employee_cache))return self::$ews_shift_for_employee_cache[$employee_id];
-            $shift_id=(int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id));
-            if(!$shift_id)return self::$ews_shift_for_employee_cache[$employee_id]=null;
-            foreach($this->shifts() as $shift){
-                if((int)$shift['id']===$shift_id && !empty($shift['active']))return self::$ews_shift_for_employee_cache[$employee_id]=$shift;
+            return self::$ews_shift_for_employee_cache[$employee_id]=$this->shift_for_employee_on($employee_id,current_time('Y-m-d'));
+        }
+
+    /**
+     * The shift an employee was on on a day, with that day's times (3.31.108, shift history), or null
+     * for the company working hours. A shift turned off counts from today on; the days it was used keep it.
+     */
+    private function shift_for_employee_on($employee_id,$date){
+            $shift_id=$this->shift_id_on((int)$employee_id,(string)$date);
+            if(!$shift_id)return null;
+            $def=null;
+            foreach($this->shifts() as $shift)if((int)$shift['id']===$shift_id)$def=$shift;
+            if(!$def){
+                // Removed from the list since: its name and times from the history.
+                $v=$this->shift_times_on($shift_id,(string)$date);
+                if(!$v)return null;
+                $def=['id'=>$shift_id,'name'=>'#'.$shift_id,'active'=>0]+$v;
             }
-            return self::$ews_shift_for_employee_cache[$employee_id]=null;
+            $today=current_time('Y-m-d');
+            if(empty($def['active']) && (string)$date>=$today)return null;
+            $v=$this->shift_times_on($shift_id,(string)$date);
+            if($v)$def=array_merge($def,array_intersect_key($v,array_flip(['start','end','grace','sign_in_cutoff_minutes','overnight'])));
+            return $def;
         }
 
     /**
@@ -113,34 +134,29 @@ trait EWS_Work_Time_Trait {
      * @param array<int,object|int> $employees
      */
     private function prime_shift_cache(array $employees){
-            global $wpdb;
-            $shift_ids=[];$missing=[];
-            foreach($employees as $e){
-                $id=is_object($e)?absint($e->id??0):absint($e);
-                if(!$id||array_key_exists($id,self::$ews_shift_for_employee_cache))continue;
-                if(is_object($e)&&property_exists($e,'default_shift_id'))$shift_ids[$id]=(int)$e->default_shift_id;
-                else $missing[$id]=$id;
-            }
-            foreach(array_chunk(array_values($missing),500) as $chunk){
-                $ph=implode(',',array_fill(0,count($chunk),'%d'));
-                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,default_shift_id FROM {$this->employees} WHERE id IN ($ph)",$chunk)) as $r)$shift_ids[(int)$r->id]=(int)$r->default_shift_id;
-                foreach($chunk as $id){ if(!isset($shift_ids[$id]))$shift_ids[$id]=0; }
-            }
-            if(!$shift_ids)return;
-            $active=[];
-            foreach($this->shifts() as $shift){ if(!empty($shift['active']) && !isset($active[(int)$shift['id']]))$active[(int)$shift['id']]=$shift; }
-            foreach($shift_ids as $id=>$shift_id)self::$ews_shift_for_employee_cache[$id]=$shift_id&&isset($active[$shift_id])?$active[$shift_id]:null;
+            $ids=[];
+            foreach($employees as $e){$id=is_object($e)?absint($e->id??0):absint($e);if($id)$ids[]=$id;}
+            $this->shift_prime_periods($ids);
+            $today=current_time('Y-m-d');
+            foreach($ids as $id)if(!array_key_exists($id,self::$ews_shift_for_employee_cache))self::$ews_shift_for_employee_cache[$id]=$this->shift_for_employee_on($id,$today);
         }
 
     private function default_working_hours(){
             return ['start'=>'08:00','normal_until'=>'10:00','end'=>'17:00'];
         }
 
-    private function working_hours($employee_id=0){
+    /**
+     * An employee's working hours on a day (today when no date): the shift they were on that day, with
+     * that day's times, or the company working hours of that day (3.31.108, shift history).
+     */
+    private function working_hours($employee_id=0,$date=''){
             $employee_id=absint($employee_id);
             if(!$employee_id){$emp=$this->current_employee();$employee_id=$emp?(int)$emp->id:0;}
-            if(array_key_exists($employee_id,self::$ews_working_hours_cache))return self::$ews_working_hours_cache[$employee_id];
-            $shift=$this->shift_for_employee($employee_id);
+            $today=current_time('Y-m-d');
+            $date=is_string($date)&&preg_match('/^\d{4}-\d{2}-\d{2}$/',$date)?$date:$today;
+            $key=$employee_id.'|'.$date;
+            if(array_key_exists($key,self::$ews_working_hours_cache))return self::$ews_working_hours_cache[$key];
+            $shift=$employee_id?($date===$today?$this->shift_for_employee($employee_id):$this->shift_for_employee_on($employee_id,$date)):null;
             if($shift){
                 // A no-show counts as Absent today this long after the shift starts (Schedule
                 // Configuration; 2 hours by default). Past days are Absent whatever this is.
@@ -149,19 +165,23 @@ trait EWS_Work_Time_Trait {
                 $end_ts=strtotime('1970-01-01 '.$shift['end'].':00');
                 if($cutoff_ts!==false && $end_ts!==false && empty($shift['overnight']) && $cutoff_ts>$end_ts)$cutoff_ts=$end_ts;
                 $normal_until=$cutoff_ts!==false?date('H:i',$cutoff_ts):$shift['end'];
-                return self::$ews_working_hours_cache[$employee_id]=['start'=>$shift['start'],'normal_until'=>$normal_until,'end'=>$shift['end'],'grace'=>$shift['grace'],'sign_in_cutoff_minutes'=>$shift['sign_in_cutoff_minutes'],'overnight'=>$shift['overnight'],'shift_id'=>$shift['id'],'shift_name'=>$shift['name']];
+                return self::$ews_working_hours_cache[$key]=['start'=>$shift['start'],'normal_until'=>$normal_until,'end'=>$shift['end'],'grace'=>$shift['grace'],'sign_in_cutoff_minutes'=>$shift['sign_in_cutoff_minutes'],'overnight'=>$shift['overnight'],'shift_id'=>$shift['id'],'shift_name'=>$shift['name']];
             }
             $cfg=$this->option('ews_working_hours'); $defaults=$this->default_working_hours(); if(!is_array($cfg))$cfg=[];
             $start=preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$cfg['start']??'')?$cfg['start']:$defaults['start'];
             $end=preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$cfg['end']??'')?$cfg['end']:$defaults['end'];
             $normal_until=preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/',$cfg['normal_until']??'')?$cfg['normal_until']:$end;
-            return self::$ews_working_hours_cache[$employee_id]=['start'=>$start,'normal_until'=>$normal_until,'end'=>$end,'grace'=>$this->global_grace_period(),'sign_in_cutoff_minutes'=>240,'overnight'=>(int)$this->option('ews_allow_overnight_shift'),'shift_id'=>0,'shift_name'=>'Company Default'];
+            $grace=$this->global_grace_period();$overnight=(int)$this->option('ews_allow_overnight_shift');
+            // The company hours of that day (their history: shift 0).
+            $v=$this->shift_times_on(0,$date);
+            if($v){$start=$v['start'];$end=$v['end'];$normal_until=$v['end'];$grace=(int)$v['grace'];$overnight=(int)$v['overnight'];}
+            return self::$ews_working_hours_cache[$key]=['start'=>$start,'normal_until'=>$normal_until,'end'=>$end,'grace'=>$grace,'sign_in_cutoff_minutes'=>240,'overnight'=>$overnight,'shift_id'=>0,'shift_name'=>'Company Default'];
         }
 
     private function global_grace_period(){ return max(0,min(180,(int)$this->option('ews_grace_period'))); }
 
-    private function attendance_grace_period($employee_id=0){
-            $h=$this->working_hours($employee_id); return isset($h['grace'])?(int)$h['grace']:$this->global_grace_period();
+    private function attendance_grace_period($employee_id=0,$date=''){
+            $h=$this->working_hours($employee_id,$date); return isset($h['grace'])?(int)$h['grace']:$this->global_grace_period();
         }
 
     private function sign_in_window_bounds($employee_id=0){
@@ -190,8 +210,9 @@ trait EWS_Work_Time_Trait {
 
     private function sign_in_classification($event_at=null,$employee_id=0){
             // The one "late" rule (src/Attendance/Lateness.php), shared with the reports and payroll.
-            $ts=$event_at?(int)strtotime($event_at):(int)current_time('timestamp'); $cfg=$this->working_hours($employee_id);
-            return \WorkforceOne\Attendance\Lateness::classify($ts,(string)$cfg['start'],(string)$cfg['end'],!empty($cfg['overnight']),(int)$this->attendance_grace_period($employee_id));
+            // The shift and times of that day (3.31.108), not of today.
+            $ts=$event_at?(int)strtotime($event_at):(int)current_time('timestamp'); $day=$event_at?substr((string)$event_at,0,10):''; $cfg=$this->working_hours($employee_id,$day);
+            return \WorkforceOne\Attendance\Lateness::classify($ts,(string)$cfg['start'],(string)$cfg['end'],!empty($cfg['overnight']),(int)$this->attendance_grace_period($employee_id,$day));
         }
 
     private function working_hours_save($start,$normal_until,$end){
