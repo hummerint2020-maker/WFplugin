@@ -3,6 +3,8 @@ global $wpdb; $p=$wpdb->prefix;
 update_option('timezone_string','UTC'); update_option('gmt_offset',0); // tests/e2e_timezone.py switches to Cairo
 $uid=username_exists('emp1')?:wp_create_user('emp1','emp1pass','emp1@example.com');
 $wpdb->query("DELETE FROM {$p}ews_employees"); $wpdb->query("DELETE FROM {$p}ews_schedule"); $wpdb->query("DELETE FROM {$p}ews_time_logs"); $wpdb->query("DELETE FROM {$p}ews_locations"); $wpdb->query("DELETE FROM {$p}ews_kiosks"); $wpdb->query("DELETE FROM {$p}ews_employee_locations_v321"); $wpdb->query("DELETE FROM {$p}ews_face_profiles"); delete_option('ews_face_reset_requests');
+// Shift history (3.31.108): no periods and no dated times left from another test (a test that sets shifts directly then gets them on every day).
+foreach (['ews_employee_shift_periods', 'ews_shift_versions'] as $t) if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $p . $t)) === $p . $t) $wpdb->query("DELETE FROM {$p}{$t}");
 $wpdb->insert("{$p}ews_employees",['name'=>'Emp One','domain_name'=>'emp1','email'=>'emp1@example.com','wp_user_id'=>$uid,'active'=>1,'attendance_enabled'=>1]);
 $eid=$wpdb->insert_id;
 $wpdb->insert("{$p}ews_schedule",['employee_id'=>$eid,'work_date'=>current_time('Y-m-d'),'status'=>'Office']);
