@@ -98,7 +98,7 @@ def tick(now):
 # ---------------------------------------------------------------- the page
 st, page, _ = adm.req(PAGE)
 check('the page lists every request type with "Set up"', 'data-apv-types' in page and all('data-apv-type="%s"' % k in page for k in ('vacation', 'overtime', 'face_reset', 'attendance_correction', 'shift_swap', 'salary_advance')) and page.count('>Set up</a>') == 6)
-check('...nobody decides: "Waits" everywhere by default (a salary advance: the manager, then Finance, on its first request)', page.count('<td>Waits</td>') == 5)
+check('...nobody decides: "Waits" everywhere by default', page.count('<td>Waits</td>') == 6)
 c = card(page, 'vacation')
 check('a type has four levels and offers Levels 1 to 4', all('data-level="%d"' % i in c for i in (1, 2, 3, 4)) and '<option value="LEVEL_4"' in c and 'data-level="5"' not in c)
 check('...with every approver: direct manager, manager\'s manager, department manager, team manager, HR, Finance, a person',
