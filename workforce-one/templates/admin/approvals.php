@@ -40,7 +40,7 @@ $help = [
     'SEQUENTIAL' => 'The configured levels decide in order.',
 ];
 $sources = $resolver_labels;
-$units = ['days' => 'days', 'hours' => 'hours'];
+$units = ['days' => 'days', 'hours' => 'hours', 'of the currency' => (string) get_option('ews_payroll_currency', '') ?: 'EGP'];
 /** The modes in which level $i is used. */
 $level_modes = static function (int $i) use ($max_levels): string {
     $m = ['SEQUENTIAL'];
@@ -160,7 +160,7 @@ $fin_missing = !$settings['finance_user'];
             <h3 style="margin-bottom:0">The path</h3>
             <ol class="ews-apv-path" data-apv-path>
             <?php for ($i = 1; $i <= $max_levels; $i++): $lv = $c['levels'][$i]; ?>
-                <li data-path-level="<?php echo (int) $i; ?>" data-visible-modes="<?php echo esc_attr($level_modes($i)); ?>"><b><?php echo (int) $i; ?></b><span data-path-who><?php echo esc_html($sources[$lv['resolver_type']] ?? $lv['resolver_type']); ?></span><small data-path-when><?php echo esc_html($c['unit'] !== '' && $lv['min_amount'] !== null ? 'only if above ' . rtrim(rtrim(number_format($lv['min_amount'], 2, '.', ''), '0'), '.') . ' ' . $c['unit'] . '; skipped otherwise' : ''); ?></small></li>
+                <li data-path-level="<?php echo (int) $i; ?>" data-visible-modes="<?php echo esc_attr($level_modes($i)); ?>"><b><?php echo (int) $i; ?></b><span data-path-who><?php echo esc_html($sources[$lv['resolver_type']] ?? $lv['resolver_type']); ?></span><small data-path-when><?php echo esc_html($c['unit'] !== '' && $lv['min_amount'] !== null ? 'only if above ' . rtrim(rtrim(number_format($lv['min_amount'], 2, '.', ''), '0'), '.') . ' ' . $units[$c['unit']] . '; skipped otherwise' : ''); ?></small></li>
             <?php endfor; ?>
             </ol>
         </div>

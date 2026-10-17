@@ -143,7 +143,7 @@ $adjust_remove = static function ($id) {
         <tbody>
         <?php foreach ($people as $x): $e = $x['employee']; $p = $x['pay']; $link = add_query_arg(['month' => $month, 'employee' => (int) $e->id], $page_url); ?>
             <tr data-employee="<?php echo (int) $e->id; ?>">
-                <td><a href="<?php echo esc_url($link); ?>"><strong><?php echo esc_html($e->name); ?></strong></a><?php if (!(int) $e->active): ?> <span class="ews-pay-sub" data-archived>Archived<?php echo !empty($e->last_working_day) ? ' · last working day ' . esc_html($day((string) $e->last_working_day)) : ''; ?></span><?php endif; ?></td>
+                <td><a href="<?php echo esc_url($link); ?>"><strong><?php echo esc_html($e->name); ?></strong></a><?php if (isset($e->active) && !(int) $e->active): ?> <span class="ews-pay-sub" data-archived>Archived<?php echo !empty($e->last_working_day) ? ' · last working day ' . esc_html($day((string) $e->last_working_day)) : ''; ?></span><?php endif; ?></td>
                 <?php if (!$p): ?>
                     <td colspan="4" class="ews-pay-none">No salary set · <a href="<?php echo esc_url(add_query_arg(['tab' => 'salaries', 'employee' => (int) $e->id], $page_url)); ?>">Set salary</a></td><td></td>
                 <?php else: $total += $p['net']; $paid++; ?>
