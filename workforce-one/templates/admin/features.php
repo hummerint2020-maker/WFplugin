@@ -2,7 +2,7 @@
 /**
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
- * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, confirm_global)
+ * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
  * @var array<string,int|float> $face           face tuning values
@@ -186,6 +186,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
             <label>Max per request (minutes)<br><input type="number" min="1" max="480" name="early_leave_max" value="<?php echo (int) $early_leave['max']; ?>" style="width:120px"></label>
             <label>Monthly allowance (minutes)<br><input type="number" min="1" max="7440" name="early_leave_monthly" value="<?php echo (int) $early_leave['monthly']; ?>" style="width:140px"></label>
             <label><input type="checkbox" name="early_leave_office_only" value="1" <?php checked($on['early_leave_office_only']); ?>> Office workdays only</label>
+            <label><input type="hidden" name="early_leave_self_shown" value="1"><input type="checkbox" name="early_leave_self" value="1" <?php checked($on['early_leave_self']); ?>> A manager may decide their own request</label>
         </div>
     </div>
 </div>

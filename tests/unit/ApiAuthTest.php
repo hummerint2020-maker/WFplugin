@@ -1,6 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use WorkforceOne\Api\Auth\Bearer;
+use WorkforceOne\Api\Auth\ClientIp;
 use WorkforceOne\Api\Auth\LoginInput;
 use WorkforceOne\Api\Auth\LoginThrottle as LT;
 use WorkforceOne\Api\Auth\Tokens as T;
@@ -133,5 +134,28 @@ final class ApiAuthTest extends TestCase
         ], $native, 'exactly the Phase 0B endpoints and the attendance correction ones, all token-authenticated');
         $web = array_values(array_filter(Routes::table(), function ($r) { return $r['kind'] === 'web'; }));
         $this->assertSame(['logged_in'], array_values(array_unique(array_column($web, 'access'))), 'the Web Face routes keep WordPress login');
+    }
+
+    public function testClientIpBehindTrustedProxies(): void
+    {
+        $trusted = ['10.0.0.0/8', '203.0.113.7', '2001:db8::/32'];
+        $this->assertSame('198.51.100.9', ClientIp::resolve('198.51.100.9', '1.2.3.4', $trusted), 'an untrusted connection: the header is ignored');
+        $this->assertSame('1.2.3.4', ClientIp::resolve('10.1.2.3', '1.2.3.4', $trusted), 'a trusted proxy: the client in the header');
+        $this->assertSame('1.2.3.4', ClientIp::resolve('10.1.2.3', '9.9.9.9, 1.2.3.4, 10.9.9.9', $trusted), 'from the right, skipping trusted hops; a spoofed left part is not used');
+        $this->assertSame('1.2.3.4', ClientIp::resolve('203.0.113.7', '1.2.3.4', $trusted), 'a single address');
+        $this->assertSame('2001:db8::1', ClientIp::resolve('2001:db8:1::1', '2001:db8::1', ['2001:db8:1::/48']), 'IPv6 ranges');
+        $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', 'not an ip', $trusted), 'junk: the connecting address');
+        $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', null, $trusted));
+        $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', '10.2.2.2', $trusted), 'only trusted hops: the connecting address');
+        $this->assertSame('1.2.3.4', ClientIp::resolve('10.1.2.3', '1.2.3.4', ['10.1.2.3']), 'a single trusted address');
+        $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', '1.2.3.4', []), 'nothing trusted: off');
+        $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', '1.2.3.4', ['10.0.0.0/99', 'nonsense']), 'a bad entry trusts nothing');
+    }
+
+    public function testTheAccountBucketIsKeyedOnTheAccount(): void
+    {
+        $this->assertSame('uid:7', LT::identity(7, 'Anna'));
+        $this->assertSame('uid:7', LT::identity(7, 'anna@example.com'), 'user name and e-mail of one person are one bucket');
+        $this->assertSame('ghost', LT::identity(0, 'ghost'), 'an unknown name is counted as typed');
     }
 }

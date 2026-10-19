@@ -25,7 +25,7 @@ final class Hooks
             Routes::register($plugin);
         });
         add_filter('rest_request_after_callbacks', [$plugin, 'api_after_callbacks'], 10, 2);
-        add_action('wp_set_password', [$plugin, 'api_on_password_set'], 10, 2);
+        add_action('wp_set_password', [$plugin, 'api_on_password_set'], 10, 3);
         add_action('after_password_reset', [$plugin, 'api_on_password_reset'], 10, 1);
         add_action('profile_update', [$plugin, 'api_on_profile_update'], 10, 2);
         add_action('deleted_user', [$plugin, 'api_on_user_deleted'], 10, 1);

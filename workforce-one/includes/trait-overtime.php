@@ -176,6 +176,7 @@ trait EWS_Overtime_Trait {
             }
 
             if(!$this->can('ews_manage_time'))$this->overtime_redirect(['overtime_error'=>'access']);
+            if(!$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('overtime')==='allow','overtime'))$this->overtime_redirect(['overtime_error'=>'self']);
             $approved=$decision==='approve';
             $ok=$this->overtime_set_status($id,$approved?'Approved':'Rejected');
             if($ok!==true)$this->overtime_redirect(['overtime_error'=>$ok]);
@@ -253,6 +254,8 @@ trait EWS_Overtime_Trait {
             if(!$r)wp_die('Early Leave request not found.');
             // Validate the schedule before changing state, so a conflict never leaves it Approved.
             // The schedule itself stays Office: Early Leave is an attendance exception, not a schedule type.
+            $requester=$this->people_employee((int)$r->employee_id,true);
+            if(!$this->approval_self_gate((int)($requester->wp_user_id??0),(bool)(int)$this->option('ews_early_leave_self'),'early_leave'))wp_die(esc_html__('You cannot decide your own request. Another approver must.','workforce-one'),'',['response'=>403]);
             if($decision==='approve'&&!$this->early_leave_can_approve($r))$this->leave_redirect(['early_error'=>'approval_conflict']);
             $wpdb->query('START TRANSACTION');
             $updated=$this->early_leave_set_status($id,$decision==='approve'?'Approved':'Rejected');
@@ -287,6 +290,8 @@ trait EWS_Overtime_Trait {
                 }
                 return Hub::ADVANCED;
             }
+            $requester=$this->people_employee((int)$req->employee_id,true);
+            $this->approval_self_gate((int)($requester->wp_user_id??0),true,'overtime');   // administrators may; the Audit Log marks it
             return $this->overtime_set_status($id,$decision==='approve'?'Approved':'Rejected')===true?Hub::outcome($decision):Hub::ERROR;
         }
 
@@ -296,6 +301,8 @@ trait EWS_Overtime_Trait {
             $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE id=%d AND status='Pending' LIMIT 1",$id));
             if(!$r)return Hub::ERROR;
             if($decision==='approve'&&!$this->early_leave_can_approve($r))return Hub::ERROR;
+            $requester=$this->people_employee((int)$r->employee_id,true);
+            $this->approval_self_gate((int)($requester->wp_user_id??0),true,'early_leave');
             if($this->early_leave_set_status($id,$decision==='approve'?'Approved':'Rejected')!==1)return Hub::ERROR;
             $this->early_leave_notify_employee($r,$decision,false);
             return Hub::outcome($decision);

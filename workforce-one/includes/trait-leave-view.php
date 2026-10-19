@@ -136,7 +136,7 @@ trait EWS_Leave_View_Trait {
             $sum=$wpdb->get_row($wpdb->prepare("SELECT COALESCE(SUM(CASE WHEN status='Approved' AND overtime_date BETWEEN %s AND %s THEN requested_minutes ELSE 0 END),0) approved,
                 COALESCE(SUM(CASE WHEN status='Pending' THEN 1 ELSE 0 END),0) waiting,COALESCE(SUM(CASE WHEN status='Pending' THEN requested_minutes ELSE 0 END),0) waiting_minutes,
                 COALESCE(SUM(CASE WHEN overtime_date BETWEEN %s AND %s THEN 1 ELSE 0 END),0) month_count
-                FROM {$table} WHERE employee_id=%d",$month.'-01',$month.'-31',$month.'-01',$month.'-31',(int)$emp->id));
+                FROM {$table} WHERE employee_id=%d",$month.'-01',date('Y-m-t',strtotime($month.'-01')),$month.'-01',date('Y-m-t',strtotime($month.'-01')),(int)$emp->id));
             $summary=['month'=>date_i18n('F',strtotime($month.'-01')),'approved'=>$this->duration_label((int)($sum->approved??0)),'approved_minutes'=>(int)($sum->approved??0),
                 'waiting'=>(int)($sum->waiting??0),'waiting_time'=>$this->duration_label((int)($sum->waiting_minutes??0)),'month_count'=>(int)($sum->month_count??0)];
         }

@@ -205,12 +205,13 @@ $notices = ['day_saved' => __('Day saved. Each change is in the Changes tab with
         <?php if ($paid): ?><span class="ews-dw-badge is-ok"><?php esc_html_e('Paid · locked', 'workforce-one'); ?></span>
         <?php elseif ($sheet): ?><span class="ews-dw-badge"><?php /* translators: 1: name, 2: time */ echo esc_html(sprintf($sheet->integrity_status === 'admin' ? __('Set by %1$s in wp-admin, %2$s', 'workforce-one') : __('Recorded by %1$s at %2$s', 'workforce-one'), $sheet_by, mysql2date('H:i', $sheet->saved_at))); ?></span>
         <?php else: ?><span class="ews-dw-badge is-wait"><?php esc_html_e('No day sheet saved', 'workforce-one'); ?></span><?php endif; ?></p>
+    <?php $today_open = $day === $today && !$sheet; ?>
     <form method="post" action="<?php echo esc_url($post_url); ?>">
         <?php wp_nonce_field('ews_dw_admin_day'); ?><input type="hidden" name="action" value="ews_dw_admin_day"><input type="hidden" name="site" value="<?php echo (int) $site; ?>"><input type="hidden" name="day" value="<?php echo esc_attr($day); ?>">
         <table class="widefat striped"><thead><tr><th><?php esc_html_e('Worker', 'workforce-one'); ?></th><th><?php esc_html_e('Recorded', 'workforce-one'); ?></th><th><?php esc_html_e('Attendance', 'workforce-one'); ?></th><th><?php esc_html_e('Extra hours', 'workforce-one'); ?></th></tr></thead><tbody>
         <?php if (!$day_rows): ?><tr><td colspan="4"><?php esc_html_e('No workers at this site on this day.', 'workforce-one'); ?></td></tr><?php endif; ?>
         <?php foreach ($day_rows as $r): $w_ = $r['w']; $d_ = $r['day']; $id_ = (int) $w_->id;
-            $off = $paid || $r['elsewhere'] || $r['pending'] || ($d_ && $d_->payout_id); ?>
+            $off = $paid || $today_open || $r['elsewhere'] || $r['pending'] || ($d_ && $d_->payout_id); ?>
             <tr><td><strong><?php echo esc_html($w_->name); ?></strong><span class="ews-dw-sub"><?php echo esc_html(implode(' · ', array_filter([$trade_label($w_->trade), $money($d_ ? $d_->daily_rate : $w_->daily_rate)]))); ?></span></td>
                 <td><?php if ($r['elsewhere']): /* translators: %s: site */ echo esc_html(sprintf(__('At %s that day', 'workforce-one'), $r['elsewhere']->name));
                     elseif ($d_): echo esc_html($mark_label($d_->mark) . ((float) $d_->extra_hours > 0 ? ' +' . (float) $d_->extra_hours . 'h' : '') . ' · ' . $money($d_->amount)); ?><?php if ($r['pending']): ?> <span class="ews-dw-badge is-wait"><?php esc_html_e('Change waiting', 'workforce-one'); ?></span><?php endif; ?>
@@ -219,7 +220,8 @@ $notices = ['day_saved' => __('Day saved. Each change is in the Changes tab with
                     <?php foreach (['in', 'half', 'out'] as $m_): ?><option value="<?php echo esc_attr($m_); ?>"<?php selected($d_ ? (string) $d_->mark : '', $m_); ?>><?php echo esc_html($mark_label($m_)); ?></option><?php endforeach; ?></select></td>
                 <td><input type="number" class="small-text" name="extra[<?php echo $id_; ?>]" min="0" max="12" step="0.5" value="<?php echo esc_attr((string) ($d_ ? (float) $d_->extra_hours : 0)); ?>"<?php disabled($off); ?>></td></tr>
         <?php endforeach; ?></tbody></table>
-        <?php if ($day_rows && !$paid): ?>
+        <?php if ($today_open): ?><p class="description"><?php esc_html_e('Today is recorded by the site (the foreman or the workers). You can set it here after it is saved.', 'workforce-one'); ?></p><?php endif; ?>
+        <?php if ($day_rows && !$paid && !$today_open): ?>
         <p><label for="ews-dw-day-reason"><strong><?php esc_html_e('Reason', 'workforce-one'); ?></strong></label><br><textarea id="ews-dw-day-reason" name="reason" rows="2" class="large-text" required placeholder="<?php esc_attr_e('e.g. The foreman\'s phone was broken; attendance from the paper list.', 'workforce-one'); ?>"></textarea></p>
         <?php submit_button(__('Save the day', 'workforce-one'), 'primary', 'submit', false); ?>
         <?php endif; ?>
@@ -250,6 +252,7 @@ $notices = ['day_saved' => __('Day saved. Each change is in the Changes tab with
             &nbsp; <label><?php esc_html_e('Week starts on', 'workforce-one'); ?> <select name="dw_week_start"><?php global $wp_locale; for ($i = 0; $i < 7; $i++): ?><option value="<?php echo (int) $i; ?>"<?php selected((int) $settings['week_start'], $i); ?>><?php echo esc_html($wp_locale->get_weekday($i)); ?></option><?php endfor; ?></select></label><br>
             <label><?php esc_html_e('Default hourly rate', 'workforce-one'); ?> <input type="number" class="small-text" min="0" step="0.01" name="dw_hourly_rate" value="<?php echo esc_attr((string) $settings['hourly_rate']); ?>"></label></td></tr>
         <tr><th scope="row"><?php esc_html_e('When recording', 'workforce-one'); ?></th><td><label><input type="checkbox" checked disabled> <?php esc_html_e('The foreman must be inside the site (same rules as Sign In)', 'workforce-one'); ?></label><br><label><input type="checkbox" name="dw_photo" value="1"<?php checked((int) $settings['photo'], 1); ?>> <?php esc_html_e('A group photo with the camera (not the gallery)', 'workforce-one'); ?></label></td></tr>
+        <tr><th scope="row"><?php esc_html_e('Changes to a recorded day', 'workforce-one'); ?></th><td><label><input type="checkbox" name="dw_self_decide" value="1"<?php checked((int) $settings['self_decide'], 1); ?>> <?php esc_html_e('A manager may decide their own change request', 'workforce-one'); ?></label><p class="description"><?php esc_html_e('Off: another manager decides it. Administrators always may, and it is marked in the Audit Log.', 'workforce-one'); ?></p></td></tr>
         <tr><th scope="row"><?php esc_html_e('Sites', 'workforce-one'); ?></th><td>
             <?php if (!$locations): ?><p><?php esc_html_e('Add work locations first (Work Locations).', 'workforce-one'); ?></p><?php else: ?>
             <div class="ews-dw-scroll"><table class="widefat striped ews-dw-sites"><thead><tr><th><?php esc_html_e('Project site', 'workforce-one'); ?></th><th><?php esc_html_e('Project', 'workforce-one'); ?></th><th><?php esc_html_e('Dates', 'workforce-one'); ?></th><th><?php esc_html_e('Foremen / cashiers', 'workforce-one'); ?></th><th><?php esc_html_e('Recording', 'workforce-one'); ?></th><th><?php esc_html_e('Pay period', 'workforce-one'); ?></th></tr></thead><tbody>

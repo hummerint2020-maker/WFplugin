@@ -98,7 +98,7 @@ trait EWS_Corrections_Trait {
     private function cx_month_count($employee_id,$date){
         global $wpdb;
         $month=substr((string)$date,0,7);
-        return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->cx_table()} WHERE employee_id=%d AND source='employee' AND status IN ('pending','pending_hr','approved') AND work_date BETWEEN %s AND %s",(int)$employee_id,$month.'-01',$month.'-31'));
+        return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->cx_table()} WHERE employee_id=%d AND source='employee' AND status IN ('pending','pending_hr','approved') AND work_date BETWEEN %s AND %s",(int)$employee_id,$month.'-01',date('Y-m-t',strtotime($month.'-01'))));
     }
 
     private function cx_pending_for_day($employee_id,$date){
@@ -241,6 +241,7 @@ trait EWS_Corrections_Trait {
         if($source==='employee' && ($this->correction_settings()['photo'][$facts['type']]??'off')==='off')$photo=null;
         [$key,$name,$perr]=$this->cx_save_photo($photo);
         if($perr!=='')return ['error'=>$perr];
+        $drop=function()use($key){if($key)$this->private_files_delete('workforce-one-corrections',(string)$key);};   // a request that does not go through leaves no photo behind
         $plan=CorrectionRules::plan($facts);
         $times=CorrectionRules::times($facts);
         $old=$facts['type']==='time'?($facts['target']==='sign_in'?$facts['in']:$facts['out']):null;
@@ -253,20 +254,20 @@ trait EWS_Corrections_Trait {
             'requested_by'=>get_current_user_id(),'requested_at'=>$now];
         if($source==='hr'){
             $row['status']='pending';   // claimed by cx_finalize below
-            if($wpdb->insert($this->cx_table(),$row)===false)return ['error'=>'save'];
+            if($wpdb->insert($this->cx_table(),$row)===false){$drop();return ['error'=>'save'];}
             $id=(int)$wpdb->insert_id;
             $res=$this->cx_finalize($id,true,(string)$facts['reason'],true);
-            if($res!=='approved'){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);return ['error'=>$res];}
+            if($res!=='approved'){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);$drop();return ['error'=>$res];}
             $this->audit('correction_direct','employee',(int)$emp->id,$emp->name.' '.$facts['date'].': '.$this->cx_change_text($this->cx_get($id),'en').' — '.$facts['reason']);
             return ['id'=>$id,'status'=>'approved'];
         }
-        if($wpdb->insert($this->cx_table(),$row)===false)return ['error'=>'save'];
+        if($wpdb->insert($this->cx_table(),$row)===false){$drop();return ['error'=>'save'];}
         $id=(int)$wpdb->insert_id;
         $this->audit('correction_request','employee',(int)$emp->id,$emp->name.' '.$facts['date'].': '.$this->cx_change_text($this->cx_get($id),'en'));
         $mode=$this->cx_workflow_mode();
         if($mode==='NONE' || \WorkforceOne\Approvals\Workflows::isLevels($mode)){
             $started=$this->approval_start('attendance_correction','attendance_correction',$id,(int)$emp->id);
-            if(is_wp_error($started)){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);return ['error'=>'approval'];}
+            if(is_wp_error($started)){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);$drop();return ['error'=>'approval'];}
             $ar=$this->approval_find_request('attendance_correction','attendance_correction',$id);
             if($ar && $ar->status==='APPROVED'){$r=$this->cx_after_manager($id);return ['id'=>$id,'status'=>$r];}
             $step=$ar?$this->approval_current_step((int)$ar->id):null;
@@ -770,7 +771,7 @@ trait EWS_Corrections_Trait {
         $data+=['month'=>$month,'department'=>$dept];
         if($tab==='list'){
             $status=sanitize_key($_GET['status']??'');$type=sanitize_key($_GET['type']??'');$q=sanitize_text_field(wp_unslash($_GET['s']??''));
-            $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',$month.'-31');
+            $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',date('Y-m-t',strtotime($month.'-01')));
             if(in_array($type,CorrectionSettings::TYPES,true))$where.=$wpdb->prepare(' AND c.type=%s',$type);
             if($dept)$where.=$wpdb->prepare(' AND e.department_id=%d',$dept);
             if($q!=='')$where.=$wpdb->prepare(' AND (e.name LIKE %s OR e.domain_name LIKE %s)','%'.$wpdb->esc_like($q).'%','%'.$wpdb->esc_like($q).'%');
@@ -799,7 +800,7 @@ trait EWS_Corrections_Trait {
     /** Corrections per employee and department in a month, by type and outcome. */
     private function cx_report($month,$dept=0){
         global $wpdb;$t=$this->cx_table();
-        $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',$month.'-31').($dept?$wpdb->prepare(' AND e.department_id=%d',$dept):'');
+        $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',date('Y-m-t',strtotime($month.'-01'))).($dept?$wpdb->prepare(' AND e.department_id=%d',$dept):'');
         $people=[];$depts=[];$tot=['all'=>0,'approved'=>0,'rejected'=>0,'open'=>0];
         foreach((array)$wpdb->get_results("SELECT c.employee_id,c.type,c.status,e.name,COALESCE(d.name,'') dept FROM {$t} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id{$where}") as $r){
             $k=(int)$r->employee_id;
@@ -825,7 +826,7 @@ trait EWS_Corrections_Trait {
         $month=sanitize_text_field(wp_unslash($_GET['month']??''));
         if(!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/',$month))$month=current_time('Y-m');
         global $wpdb;$t=$this->cx_table();$dept=absint($_GET['department']??0);
-        $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',$month.'-31').($dept?$wpdb->prepare(' AND e.department_id=%d',$dept):'');
+        $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',date('Y-m-t',strtotime($month.'-01'))).($dept?$wpdb->prepare(' AND e.department_id=%d',$dept):'');
         $rows=[['Employee','Department','Day','Type','Change','Reason','Status','Source','Requested','Decided by','Decided at','Note','Payroll']];
         foreach((array)$wpdb->get_results("SELECT c.*,e.name employee_name,COALESCE(d.name,'') dept,u.display_name decided_name FROM {$t} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id LEFT JOIN {$wpdb->users} u ON u.ID=c.decided_by{$where} ORDER BY c.work_date ASC,e.name ASC") as $c){
             $rows[]=[(string)$c->employee_name,(string)$c->dept,(string)$c->work_date,$this->cx_type_label($c->type),$this->cx_change_text($c),(string)$c->reason,$this->cx_status_label($c->status),(string)$c->source,(string)$c->requested_at,(string)$c->decided_name,(string)$c->decided_at,(string)$c->decision_note,(string)$c->payroll_note];

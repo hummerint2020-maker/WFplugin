@@ -10,10 +10,11 @@ if (!defined('ABSPATH')) exit;
  * - Day value = (basic + allowances, or basic only) ÷ the day divisor (30 by default).
  *   Minute value = day value ÷ the minutes of the employee's working day (shift − break allowance).
  * - $rate['effective_from'] is when the employee's first salary started: if that is after the 1st,
- *   the month is paid for the days from it (day value × days, at most the full month) and days
- *   before it are not counted. The plugin passes the salary in effect on the month's last day.
+ *   the month is paid for the days from it (monthly pay ÷ the month's real days × days, at most the
+ *   full month) and days before it are not counted. The plugin passes the salary in effect on the month's last day.
  * - $rate['last_working_day'] (an archived employee, 3.31.90): the month is paid up to that day, the
- *   same way (day value × days, at most the full month), and days after it are not counted.
+ *   same way (monthly pay ÷ the month's real days × days, at most the full month), and days after it are
+ *   not counted.
  * - Absent (a planned working day with no Sign In): absence days × day value.
  * - Late: the report's late minutes (counted from the shift start, only once past the grace), each
  *   minute at the minute value; or, by tiers, the share of a day of the highest tier passed
@@ -23,7 +24,8 @@ if (!defined('ABSPATH')) exit;
  *   request (planned by a manager) is paid.
  * - Overtime: the approved overtime actually worked (inside approved windows) × the minute value ×
  *   the work-day rate, or the days-off rate on a day off or company holiday.
- * - Deductions for attendance can be capped at a number of days' value (0 = no cap).
+ * - Deductions for attendance (absence, late, early leave) can be capped at a number of days' value
+ *   (0 = no cap); unpaid leave is always deducted in full.
  * - Bonuses and deductions added by hand (with a reason) are added or taken off as they are; the
  *   cap does not apply to them.
  * - A day without a Sign Out counts as worked and is listed for review.
@@ -62,8 +64,10 @@ final class PayCalculator
             $prorated = ['from' => $from, 'to' => $to, 'left' => true, 'days' => 0, 'amount' => 0.0];
         } elseif ($from > $first || $to < $last) {
             $paidDays = (int) ((strtotime($to) - strtotime($from)) / 86400) + 1;
-            $earned = min($monthly, round($monthly / $divisor * $paidDays, 2));
-            $prorated = ['from' => $from, 'to' => $to, 'left' => $to < $last, 'days' => $paidDays, 'amount' => $earned];
+            $daysInMonth = (int) date('t', (int) strtotime($first));
+            $rateDay = round($monthly / $daysInMonth, 2);
+            $earned = min($monthly, round($rateDay * $paidDays, 2));
+            $prorated = ['from' => $from, 'to' => $to, 'left' => $to < $last, 'days' => $paidDays, 'rate' => $rateDay, 'amount' => $earned];
         }
 
         $out = [
@@ -131,11 +135,11 @@ final class PayCalculator
         }
         foreach (['absence', 'late', 'early', 'leave', 'overtime'] as $k) $out[$k]['amount'] = round($out[$k]['amount'], 2);
 
-        $deductions = round($out['absence']['amount'] + $out['late']['amount'] + $out['early']['amount'] + $out['leave']['amount'], 2);
+        $attendance = round($out['absence']['amount'] + $out['late']['amount'] + $out['early']['amount'], 2);
         $cap = (float) $rules['max_deduction_days'] > 0 ? round($dayValue * (float) $rules['max_deduction_days'], 2) : null;
-        $out['deductions_before_cap'] = $deductions;
-        $out['cap'] = $cap !== null && $deductions > $cap ? $cap : null;
-        $out['deductions'] = $out['cap'] ?? $deductions;
+        $out['deductions_before_cap'] = $attendance;
+        $out['cap'] = $cap !== null && $attendance > $cap ? $cap : null;
+        $out['deductions'] = round(($out['cap'] ?? $attendance) + $out['leave']['amount'], 2);
         $out['bonuses'] = ['items' => [], 'amount' => 0.0];
         $out['manual'] = ['items' => [], 'amount' => 0.0];
         foreach ($adjustments as $a) {

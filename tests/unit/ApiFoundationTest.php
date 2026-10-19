@@ -109,4 +109,14 @@ final class ApiFoundationTest extends TestCase
         $this->assertSame(['since' => 1600, 'failures' => 1], FaceMatch::afterFailure($s, 1600), 'a new window starts');
         $this->assertSame(0, FaceMatch::retryAfter(null, 5));
     }
+
+    public function testAWordPressErrorWithoutOurCodeKeepsItsStatusClass(): void
+    {
+        $this->assertSame(E::VALIDATION_FAILED, E::fromWpStatus(400), 'a malformed body is not a permission error');
+        $this->assertSame(E::TOKEN_MISSING, E::fromWpStatus(401));
+        $this->assertSame(E::NOT_FOUND, E::fromWpStatus(404));
+        $this->assertSame(E::FORBIDDEN, E::fromWpStatus(403));
+        $this->assertSame(E::FORBIDDEN, E::fromWpStatus(0));
+        $this->assertSame(E::FORBIDDEN, E::fromWpStatus(500));
+    }
 }

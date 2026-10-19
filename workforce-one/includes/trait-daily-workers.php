@@ -502,6 +502,7 @@ trait EWS_Daily_Workers_Trait {
             'trade'=>__('Choose a trade from the list.','workforce-one'),
             'date'=>__('Choose today or a later day.','workforce-one'),
             'date_past'=>__('Choose today or an earlier day.','workforce-one'),
+            'date_today'=>__('Today is recorded by the site (the foreman or the workers). Set it here after it is saved, or choose an earlier day.','workforce-one'),
             'same'=>__('The worker is already at that site.','workforce-one'),
             'amount'=>__('Enter an amount above zero.','workforce-one'),
             'nothing'=>__('There is nothing to pay in this period.','workforce-one'),
@@ -826,7 +827,7 @@ trait EWS_Daily_Workers_Trait {
         $c=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->dw_t('changes')} WHERE id=%d",(int)$id));
         if(!$c)return 'worker';
         if($c->status!=='pending')return 'done';
-        if((int)$c->requested_by===get_current_user_id() && !current_user_can('manage_options'))return 'access';
+        if(!$this->approval_self_gate((int)$c->requested_by,(bool)(int)$this->dw_settings()['self_decide'],'daily_workers'))return 'access';
         $note=trim((string)$note);
         if($decision==='reject' && $note==='')return 'note';
         $now=current_time('mysql');
@@ -1018,7 +1019,9 @@ trait EWS_Daily_Workers_Trait {
         check_admin_referer('ews_dw_payout_pdf');
         $loc=absint($_GET['site']??0);
         if(!$this->dw_enabled() || !$this->dw_site($loc) || !$this->dw_can_pay($loc))wp_die(esc_html__('Access denied','workforce-one'),'',['response'=>403]);
-        $p=$this->dw_payout($loc,sanitize_text_field(wp_unslash((string)($_GET['start']??current_time('Y-m-d')))));
+        $start=sanitize_text_field(wp_unslash((string)($_GET['start']??current_time('Y-m-d'))));
+        if(!$this->dw_is_date($start))wp_die(esc_html__('The date is not valid.','workforce-one'),'',['response'=>400]);
+        $p=$this->dw_payout($loc,$start);
         $num=function($v){return number_format_i18n((float)$v,abs((float)$v-round((float)$v))>0.001?2:0);};
         $rows=[];$i=0;
         foreach($p['lines'] as $l){
@@ -1435,6 +1438,7 @@ trait EWS_Daily_Workers_Trait {
         if(!$site)return ['error'=>'access'];
         if(!$this->dw_is_date($date) || $date>current_time('Y-m-d'))return ['error'=>'date_past'];
         if($this->dw_paid_for($location_id,$date))return ['error'=>'paid'];
+        if($date===current_time('Y-m-d') && !$this->dw_sheet($location_id,$date))return ['error'=>'date_today'];   // a sheet made here would lock the foreman (and the workers' own Sign In) out
         $reason=trim((string)$reason);
         if($reason==='')return ['error'=>'reason'];
         $workers=$this->dw_site_workers($location_id,$date);
@@ -1518,7 +1522,7 @@ trait EWS_Daily_Workers_Trait {
         check_admin_referer('ews_dw_settings');
         $this->ensure_dw_schema_once();
         $post=[];
-        foreach(['dw_mode','dw_period','dw_hourly_rate','dw_week_start','dw_photo'] as $k)$post[$k]=sanitize_text_field(wp_unslash((string)($_POST[$k]??'')));
+        foreach(['dw_mode','dw_period','dw_hourly_rate','dw_week_start','dw_photo','dw_self_decide'] as $k)$post[$k]=sanitize_text_field(wp_unslash((string)($_POST[$k]??'')));
         foreach(['dw_trades','dw_subcontractors'] as $k)$post[$k]=sanitize_textarea_field(wp_unslash((string)($_POST[$k]??'')));
         [$s,$err]=DailyWorkerSettings::fromPost($post);
         if($err!==''){wp_safe_redirect($this->dw_admin_url(['tab'=>'settings','dw_error'=>$err==='rate'?'hourly':($err==='trades'?'trade':'save')]));exit;}

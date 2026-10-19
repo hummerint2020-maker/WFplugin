@@ -71,7 +71,7 @@ $days_list = static function (array $rows) {
             /* translators: 1: first paid date, 2: last working day */
             ? sprintf(__('Paid from %1$s to %2$s', 'workforce-one'), $day($p['prorated']['from']), $day($p['prorated']['to']))
             /* translators: %s: date */
-            : sprintf(__('Paid from %s', 'workforce-one'), $day($p['prorated']['from']))), $days_n((int) $p['prorated']['days']), $money($p['earned'])); endif; ?>
+            : sprintf(__('Paid from %s', 'workforce-one'), $day($p['prorated']['from']))), sprintf(/* translators: 1: "3 days", 2: amount per day */ __('%1$s × %2$s', 'workforce-one'), $days_n((int) $p['prorated']['days']), $money($p['prorated']['rate'] ?? round((float) $p['monthly'] / max(1, (int) $rules['day_divisor']), 2))), $money($p['earned'])); endif; ?>
         <?php if ($p['overtime']['days']): ?>
             <details><summary><?php echo $line(esc_html__('Overtime (approved)', 'workforce-one') . ' ' . $chev, sprintf(/* translators: %s: hours:minutes */ __('%s worked', 'workforce-one'), PayCalculator::hm((int) $p['overtime']['minutes'])), '+ ' . $money($p['overtime']['amount']), 'plus'); ?></summary>
             <?php echo $days_list(array_map(static function ($d) use ($day) { return [$day($d['date']) . ' · ' . PayCalculator::hm((int) $d['minutes']) . ($d['off'] ? ' (' . __('day off', 'workforce-one') . ')' : ''), '× ' . rtrim(rtrim(number_format((float) $d['rate'], 2, '.', ''), '0'), '.') . ' · +' . PayRules::money((float) $d['amount'])]; }, $p['overtime']['days'])); ?></details>
@@ -101,7 +101,7 @@ $days_list = static function (array $rows) {
             <?php echo $days_list(array_map(static function ($d) use ($day) { return [$day($d), '']; }, $t['dates'])); ?></details>
         <?php endforeach; ?>
         <?php foreach ($p['manual']['items'] ?? [] as $a): echo $line(esc_html__('Deduction', 'workforce-one'), $a['reason'], '− ' . $money($a['amount']), 'minus'); endforeach; ?>
-        <?php if ($p['cap'] !== null): echo $line(esc_html(sprintf(/* translators: %s: number of days */ __('Limited to %s day(s)\' pay', 'workforce-one'), (string) $rules['max_deduction_days'])), sprintf(/* translators: %s: amount */ __('attendance deductions before the limit: %s', 'workforce-one'), $money($p['deductions_before_cap'])), '− ' . $money($p['cap']), 'minus'); endif; ?>
+        <?php if ($p['cap'] !== null): echo $line(esc_html(sprintf(/* translators: %s: number of days */ __('Limited to %s day(s)\' pay', 'workforce-one'), (string) $rules['max_deduction_days'])), sprintf(/* translators: %s: amount */ __('attendance deductions before the limit: %s', 'workforce-one'), $money($p['deductions_before_cap'])), '+ ' . $money(round($p['deductions_before_cap'] - $p['cap'], 2)), 'plus'); endif; ?>
     </div>
 
     <div class="ews-pay-card ews-pay-net"><div class="ews-pay-ln total"><div><?php esc_html_e('Net pay', 'workforce-one'); ?></div><div class="ews-pay-amt"><?php echo esc_html($currency . ' ' . $money($p['net'])); ?></div></div></div>

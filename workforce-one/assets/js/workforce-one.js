@@ -128,7 +128,7 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
 
 (function(){
 // One-time results of a form (dw_added, cx_error, overtime_done…): same rule as app_view_url() in trait-frontend.php.
-function ewsOnceKeys(u){var out=[];u.searchParams.forEach(function(v,k){if(/^(?:[a-z0-9]+_)*(?:error|sent|done|saved|added|moved|paid|adv|change|retry|success|rejected|updated|reset|conflict|imported)$/.test(k)&&out.indexOf(k)===-1)out.push(k)});return out;}
+function ewsOnceKeys(u){var out=[];u.searchParams.forEach(function(v,k){if(k!=="task_done"&&/^(?:[a-z0-9]+_)*(?:error|sent|done|saved|added|moved|paid|adv|change|retry|success|rejected|updated|reset|conflict|imported)$/.test(k)&&out.indexOf(k)===-1)out.push(k)});return out;}
 function ewsCloseGlobalModal(m){if(!m)return;m.remove();try{var u=new URL(window.location.href);ewsOnceKeys(u).forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString())}catch(e){}}
 document.addEventListener("click",function(e){var b=e.target.closest(".ews-ux-ok,.ews-ux-close,.ews-ux-cancel");if(b){var m=b.closest(".ews-ux-modal");if(m)ewsCloseGlobalModal(m)}if(e.target.classList&&e.target.classList.contains("ews-ux-modal"))ewsCloseGlobalModal(e.target)});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){var m=document.querySelector(".ews-ux-modal");if(m)ewsCloseGlobalModal(m)}});

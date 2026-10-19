@@ -69,7 +69,7 @@ final class PayrollTest extends TestCase
         $rate = ['basic' => 6000.0, 'allowances' => [], 'effective_from' => '2026-09-16'];
         $days = [self::day('2026-09-02', ['result' => 'Absent']), self::day('2026-09-17', ['result' => 'Late', 'late_minutes' => 15])];
         $p = C::month($rate, self::RULES, $days, 480, '2026-09');
-        $this->assertSame(['from' => '2026-09-16', 'to' => '2026-09-30', 'left' => false, 'days' => 15, 'amount' => 3000.0], $p['prorated']);
+        $this->assertSame(['from' => '2026-09-16', 'to' => '2026-09-30', 'left' => false, 'days' => 15, 'rate' => 200.0, 'amount' => 3000.0], $p['prorated']);
         $this->assertSame([], $p['absence']['days'], 'days before the salary started are not counted');
         $this->assertSame(1, count($p['late']['days']));
         $this->assertSame(6000.0, C::month(['effective_from' => '2026-09-01'] + $rate, self::RULES, [], 480, '2026-09')['earned']);
@@ -82,14 +82,42 @@ final class PayrollTest extends TestCase
         $rate = ['basic' => 6000.0, 'allowances' => [], 'effective_from' => '2026-01-01', 'last_working_day' => '2026-09-20'];
         $days = [self::day('2026-09-10', ['late_minutes' => 30]), self::day('2026-09-22', ['result' => 'Absent'])];
         $p = C::month($rate, self::RULES, $days, 480, '2026-09');
-        $this->assertSame(['from' => '2026-09-01', 'to' => '2026-09-20', 'left' => true, 'days' => 20, 'amount' => 4000.0], $p['prorated']);
+        $this->assertSame(['from' => '2026-09-01', 'to' => '2026-09-20', 'left' => true, 'days' => 20, 'rate' => 200.0, 'amount' => 4000.0], $p['prorated']);
         $this->assertSame(1, count($p['late']['days']), 'days up to the last working day count');
         $this->assertSame([], $p['absence']['days'], 'days after it are not counted (not absent)');
         $this->assertSame(6000.0, C::month(['last_working_day' => '2026-10-02'] + $rate, self::RULES, [], 480, '2026-09')['earned'], 'leaving after the month: a full month');
         $this->assertNull(C::month(['last_working_day' => '2026-10-02'] + $rate, self::RULES, [], 480, '2026-09')['prorated']);
         $both = C::month(['effective_from' => '2026-09-11'] + $rate, self::RULES, [], 480, '2026-09');
-        $this->assertSame(['from' => '2026-09-11', 'to' => '2026-09-20', 'left' => true, 'days' => 10, 'amount' => 2000.0], $both['prorated'], 'joined and left in the same month');
+        $this->assertSame(['from' => '2026-09-11', 'to' => '2026-09-20', 'left' => true, 'days' => 10, 'rate' => 200.0, 'amount' => 2000.0], $both['prorated'], 'joined and left in the same month');
         $this->assertSame(0.0, C::month(['effective_from' => '2026-09-25'] + $rate, self::RULES, [], 480, '2026-09')['earned'], 'left before the salary started: nothing');
+    }
+
+    public function testTheCapCoversAttendanceOnlyUnpaidLeaveIsDeductedInFull(): void
+    {
+        $days = [self::day('2026-09-02', ['result' => 'Absent', 'bucket' => 'Absent']), self::day('2026-09-03', ['result' => 'Absent', 'bucket' => 'Absent']),
+            self::day('2026-09-09', ['result' => 'Leave', 'bucket' => 'Leave', 'expected' => false, 'leave_paid' => 0, 'leave_type' => 'Unpaid']), self::day('2026-09-10', ['result' => 'Leave', 'bucket' => 'Leave', 'expected' => false, 'leave_paid' => 0, 'leave_type' => 'Unpaid']),
+            self::day('2026-09-11', ['result' => 'Leave', 'bucket' => 'Leave', 'expected' => false, 'leave_paid' => 0, 'leave_type' => 'Unpaid'])];
+        $p = C::month(self::RATE, ['max_deduction_days' => 1.0] + self::RULES, $days, 480, '2026-09');
+        $this->assertSame(700.0, $p['deductions_before_cap'], 'attendance only');
+        $this->assertSame(350.0, $p['cap']);
+        $this->assertSame(1050.0, $p['leave']['amount']);
+        $this->assertSame(1400.0, $p['deductions'], 'the capped attendance plus the whole unpaid leave');
+        $none = C::month(self::RATE, self::RULES, $days, 480, '2026-09');
+        $this->assertSame(1750.0, $none['deductions']);
+        $this->assertNull($none['cap']);
+    }
+
+    public function testJoiningMidMonthUsesTheMonthsRealDays(): void
+    {
+        $rate = ['basic' => 6200.0, 'allowances' => [], 'effective_from' => '2026-10-02'];
+        $oct = C::month($rate, self::RULES, [], 480, '2026-10');
+        $this->assertSame(200.0, $oct['prorated']['rate']);
+        $this->assertSame(6000.0, $oct['earned'], '30 of 31 days');
+        $feb = C::month(['basic' => 2800.0, 'effective_from' => '2027-02-02', 'allowances' => []], self::RULES, [], 480, '2027-02');
+        $this->assertSame(100.0, $feb['prorated']['rate']);
+        $this->assertSame(2700.0, $feb['earned'], '27 of 28 days');
+        $mar = C::month(['basic' => 3100.0, 'effective_from' => '2027-03-02', 'allowances' => []], self::RULES, [], 480, '2027-03');
+        $this->assertSame(3000.0, $mar['earned'], 'the same share of the month in a 31-day month');
     }
 
     public function testBonusesAndManualDeductionsAreOutsideTheCap(): void

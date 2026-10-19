@@ -66,8 +66,14 @@ trait EWS_Api_Auth_Trait {
     private function api_server_time(){ return (new DateTimeImmutable('now',wp_timezone()))->format(DATE_ATOM); }
 
     private function api_client_ip(){
-        // REMOTE_ADDR only: forwarded-for headers are set by the client unless a trusted proxy rewrites them.
-        return isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'';
+        // REMOTE_ADDR, unless it is a proxy the site owner trusts (WORKFORCE_ONE_TRUSTED_PROXIES in wp-config.php, off by
+        // default): then the nearest address in X-Forwarded-For that is not a trusted proxy. Forwarded-for headers are set by
+        // the client unless a trusted proxy rewrites them.
+        $remote=isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'';
+        $trusted=defined('WORKFORCE_ONE_TRUSTED_PROXIES')?(string)constant('WORKFORCE_ONE_TRUSTED_PROXIES'):'';
+        if($trusted==='')return $remote;
+        $xff=isset($_SERVER['HTTP_X_FORWARDED_FOR'])?sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR'])):null;
+        return \WorkforceOne\Api\Auth\ClientIp::resolve($remote,$xff,array_filter(array_map('trim',explode(',',$trusted))));
     }
 
     /** Display text for an API code (the app branches on the code; this is for people). */
@@ -134,7 +140,7 @@ trait EWS_Api_Auth_Trait {
     public function api_after_callbacks($response,$handler){
         if(($handler['wfo_kind']??'')==='native' && is_wp_error($response)){
             $data=(array)$response->get_error_data();
-            $code=isset($data['wfo_code'])?(string)$data['wfo_code']:ErrorMap::FORBIDDEN;
+            $code=isset($data['wfo_code'])?(string)$data['wfo_code']:ErrorMap::fromWpStatus((int)($data['status']??0));
             $response=$this->api_rest_response($this->api_fail($code,[],(int)($data['retry_after']??0)));
         }
         $this->api_restore_user();
@@ -264,7 +270,10 @@ trait EWS_Api_Auth_Trait {
         [$in,$errors]=LoginInput::parse($request->get_json_params());
         if($in===null)return $this->api_fail(ErrorMap::VALIDATION_FAILED,['fields'=>$errors]);
         $now=time();$ip=$this->api_client_ip();
-        $keys=[LoginThrottle::USER=>LoginThrottle::key(LoginThrottle::USER,$in['username'],$this->api_secret()),LoginThrottle::IP=>LoginThrottle::key(LoginThrottle::IP,$ip,$this->api_secret())];
+        $found=get_user_by('login',$in['username']);
+        if(!$found && is_email($in['username']))$found=get_user_by('email',$in['username']);
+        $identity=LoginThrottle::identity($found?(int)$found->ID:0,$in['username']);
+        $keys=[LoginThrottle::USER=>LoginThrottle::key(LoginThrottle::USER,$identity,$this->api_secret()),LoginThrottle::IP=>LoginThrottle::key(LoginThrottle::IP,$ip,$this->api_secret())];
         foreach($keys as $bucket=>$key){
             $row=$this->api_limit_row($bucket,$key);
             // Refused before the password is checked: right or wrong, existing user or not, the answer is the same.
@@ -326,7 +335,7 @@ trait EWS_Api_Auth_Trait {
         if(!$row)return $this->api_fail(ErrorMap::REFRESH_INVALID);
         $status=Tokens::refreshStatus(['expires_at'=>$this->api_unix($row['expires_at']),'used_at'=>$row['used_at'],'revoked_at'=>$row['revoked_at'],'device_revoked_at'=>$row['device_revoked_at'],'session_expires_at'=>$this->api_unix($row['session_expires_at'])],$now);
         if($status===Tokens::DEVICE_REVOKED)return $this->api_fail(ErrorMap::DEVICE_REVOKED);
-        if($status===Tokens::USED)return $this->api_refresh_reused($row);
+        if($status===Tokens::USED)return $this->api_refresh_grace($row,$now);
         if($status!==Tokens::OK)return $this->api_fail(ErrorMap::REFRESH_INVALID);
         $user=get_userdata((int)$row['user_id']);
         if(!$user){$this->api_revoke_device((int)$row['device_id'],'user_deleted');return $this->api_fail(ErrorMap::REFRESH_INVALID);}
@@ -334,8 +343,14 @@ trait EWS_Api_Auth_Trait {
         if($gate!=='ok'){$this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID);return $this->api_fail($gate);}
         // Rotation: exactly one request can use a refresh token; a second one (even concurrent) is a reuse.
         $used=$wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET used_at=%s WHERE id=%d AND used_at IS NULL AND revoked_at IS NULL",$this->api_utc($now),(int)$row['id']));
-        if($used!==1)return $this->api_refresh_reused($row);
+        if($used!==1)return $this->api_refresh_grace($row,$now);
         $wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND kind='access' AND revoked_at IS NULL",$this->api_utc($now),(int)$row['device_id']));
+        return $this->api_refresh_issue($row,$user,$now);
+    }
+
+    /** The new pair after a refresh (and the daily Audit Log row). */
+    private function api_refresh_issue(array $row,$user,$now){
+        global $wpdb;$t=$this->api_tables();
         $device=$this->api_device((int)$row['device_id']);
         $pair=$this->api_issue_pair($device,$now);
         $wpdb->update($t['devices'],['last_seen_at'=>$this->api_utc($now)],['id'=>(int)$device['id']],['%s'],['%d']);
@@ -345,6 +360,25 @@ trait EWS_Api_Auth_Trait {
             $this->api_audit($user->ID,'api_refresh',$device['id'],$user->user_login.' / '.$device['platform'].' '.$device['model'].' / ip='.$this->api_client_ip());
         }
         return $this->api_ok($this->api_session_payload($pair,$device));
+    }
+
+    /**
+     * A refresh token that was already used (3.31.111). Within a short grace after its use, once, it is a retry or two
+     * requests at the same moment, not theft: the device gets a fresh pair and the first caller's pair stays valid.
+     * Later, or a second time, it may have been stolen and the device session ends.
+     */
+    private function api_refresh_grace(array $row,$now){
+        global $wpdb;$t=$this->api_tables();
+        $used_at=$wpdb->get_var($wpdb->prepare("SELECT used_at FROM {$t['tokens']} WHERE id=%d",(int)$row['id']));
+        if($used_at && $now-$this->api_unix($used_at)<=Tokens::REFRESH_GRACE
+            && $wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE id=%d AND revoked_at IS NULL",$this->api_utc($now),(int)$row['id']))===1){
+            $user=get_userdata((int)$row['user_id']);
+            if($user){
+                [$gate]=$this->api_account_gate($user);
+                if($gate==='ok')return $this->api_refresh_issue($row,$user,$now);
+            }
+        }
+        return $this->api_refresh_reused($row);
     }
 
     /** A refresh token used twice: it may have been stolen. The whole device session ends. */
@@ -483,7 +517,17 @@ trait EWS_Api_Auth_Trait {
     // ------------------------------------------------------------------ revocation hooks (src/Api/Hooks.php)
 
     /** wp_set_password (WordPress 6.2+): any password change or reset, including wp_update_user(). */
-    public function api_on_password_set($password,$user_id){ $this->api_revoke_user_sessions((int)$user_id,'password_changed'); }
+    /**
+     * wp_set_password. WordPress 6.8+ also fires it when it rehashes a password at a normal login; then the old hash
+     * (third argument) still matches the same password, and the phones stay signed in (3.31.111).
+     * @param string $password
+     * @param int $user_id
+     * @param mixed $old_user_data the user before the change (WordPress 6.8+)
+     */
+    public function api_on_password_set($password,$user_id,$old_user_data=null){
+        if($old_user_data instanceof WP_User && $old_user_data->user_pass!=='' && wp_check_password((string)$password,$old_user_data->user_pass,(int)$user_id))return;
+        $this->api_revoke_user_sessions((int)$user_id,'password_changed');
+    }
 
     /** after_password_reset (WordPress 4.4+): the "lost password" reset, for WordPress 6.0 / 6.1. */
     public function api_on_password_reset($user){ if($user instanceof WP_User)$this->api_revoke_user_sessions((int)$user->ID,'password_changed'); }

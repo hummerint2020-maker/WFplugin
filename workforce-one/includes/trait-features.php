@@ -37,6 +37,7 @@ trait EWS_Features_Trait {
                 'kudos'=>(bool)(int)$this->option('ews_recognition_allow_kudos'),
                 'overtime'=>$this->overtime_enabled(),
                 'early_leave_office_only'=>(bool)(int)$this->option('ews_early_leave_office_only'),
+                'early_leave_self'=>(bool)(int)$this->option('ews_early_leave_self'),
                 'confirm_global'=>(bool)(int)$this->option('ews_confirm_global'),
             ],
             'breaks'=>['per_day'=>$this->break_per_day(),'duration'=>$this->break_duration_minutes(),'escalation'=>$this->break_escalation_minutes()],
@@ -162,6 +163,7 @@ trait EWS_Features_Trait {
         update_option('ews_early_leave_max_minutes',$early['max'],false);
         update_option('ews_early_leave_monthly_minutes',$early['monthly'],false);
         update_option('ews_early_leave_office_only',$flag('early_leave_office_only')?1:0,false);
+        if(isset($post['early_leave_self_shown']))update_option('ews_early_leave_self',$flag('early_leave_self')?1:0,false);   // an older form without the field keeps the saved value
         update_option('ews_confirm_global',$flag('confirm_global')?1:0,false);
         // A form without the field (an older page) keeps the saved branch settings.
         if(isset($post['branch_mode'])){

@@ -75,6 +75,7 @@ final class Options
         // Early Leave & Breaks
         'ews_early_leave_max_minutes' => ['group' => 'requests', 'label' => 'Early leave: max per request', 'kind' => 'int', 'default' => 120, 'unit' => 'min', 'page' => 'ews31-features'],
         'ews_early_leave_monthly_minutes' => ['group' => 'requests', 'label' => 'Early leave: monthly allowance', 'kind' => 'int', 'default' => 240, 'unit' => 'min', 'page' => 'ews31-features'],
+        'ews_early_leave_self' => ['group' => 'requests', 'label' => 'Early leave: a manager may decide their own request', 'kind' => 'bool', 'default' => 1, 'page' => 'ews31-features'],
         'ews_early_leave_office_only' => ['group' => 'requests', 'label' => 'Early leave only on Office days', 'kind' => 'bool', 'default' => 1, 'page' => 'ews31-features'],
         'ews_feature_breaks' => ['group' => 'requests', 'label' => 'Breaks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_breaks_per_day' => ['group' => 'requests', 'label' => 'Breaks per day', 'kind' => 'int', 'default' => 3, 'page' => 'ews31-features'],

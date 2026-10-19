@@ -21,11 +21,12 @@ final class DailyWorkerSettings
         'week_start' => 6,          // Saturday
         'hourly_rate' => 0.0,       // default for extra hours when a worker has none
         'photo' => 1,               // the day sheet needs a group photo
+        'self_decide' => 0,         // a manager may decide their own change request (administrators always may)
         'trades' => self::TRADES,
         'subcontractors' => [],
     ];
 
-    /** @param mixed $saved @return array{mode:string,period:string,week_start:int,hourly_rate:float,photo:int,trades:list<string>,subcontractors:list<string>} */
+    /** @param mixed $saved @return array{mode:string,period:string,week_start:int,hourly_rate:float,photo:int,self_decide:int,trades:list<string>,subcontractors:list<string>} */
     public static function config($saved): array
     {
         $s = is_array($saved) ? $saved : [];
@@ -35,6 +36,7 @@ final class DailyWorkerSettings
         if (isset($s['week_start']) && is_numeric($s['week_start']) && (int) $s['week_start'] >= 0 && (int) $s['week_start'] <= 6) $c['week_start'] = (int) $s['week_start'];
         if (isset($s['hourly_rate']) && is_numeric($s['hourly_rate']) && (float) $s['hourly_rate'] >= 0) $c['hourly_rate'] = round((float) $s['hourly_rate'], 2);
         if (isset($s['photo'])) $c['photo'] = (int) (bool) $s['photo'];
+        if (isset($s['self_decide'])) $c['self_decide'] = (int) (bool) $s['self_decide'];
         if (isset($s['trades']) && is_array($s['trades'])) $c['trades'] = self::names($s['trades']);
         if (isset($s['subcontractors']) && is_array($s['subcontractors'])) $c['subcontractors'] = self::names($s['subcontractors']);
         return $c;
@@ -59,7 +61,7 @@ final class DailyWorkerSettings
         $week = (int) ($post['dw_week_start'] ?? 6);
         return [[
             'mode' => $mode, 'period' => $period, 'week_start' => ($week >= 0 && $week <= 6) ? $week : 6,
-            'hourly_rate' => round((float) $rate, 2), 'photo' => empty($post['dw_photo']) ? 0 : 1,
+            'hourly_rate' => round((float) $rate, 2), 'photo' => empty($post['dw_photo']) ? 0 : 1, 'self_decide' => empty($post['dw_self_decide']) ? 0 : 1,
             'trades' => $trades, 'subcontractors' => self::names(self::lines((string) ($post['dw_subcontractors'] ?? ''))),
         ], ''];
     }

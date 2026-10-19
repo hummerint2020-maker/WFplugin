@@ -101,7 +101,7 @@ final class PayslipPdf
         $this->heading('Earnings', $s);
         $this->row('Basic salary', '', $money($p['basic']), self::INK, $s);
         foreach ($p['allowances'] as $a) $this->row((string) $a['name'], 'allowance', $money($a['amount']), self::INK, $s);
-        if (!empty($p['prorated'])) $this->row('Paid from ' . $day($p['prorated']['from']) . (!empty($p['prorated']['left']) ? ' to ' . $day($p['prorated']['to']) : ''), $p['prorated']['days'] . ' days × ' . $money($p['day_value']), $money($p['earned']), self::INK, $s);
+        if (!empty($p['prorated'])) $this->row('Paid from ' . $day($p['prorated']['from']) . (!empty($p['prorated']['left']) ? ' to ' . $day($p['prorated']['to']) : ''), $p['prorated']['days'] . ' days × ' . $money($p['prorated']['rate'] ?? round((float) $p['monthly'] / max(1, (int) ($s['rules']['day_divisor'] ?? 30)), 2)), $money($p['earned']), self::INK, $s);
         if ($p['overtime']['days']) {
             $this->row('Overtime (approved and worked)', PayCalculator::hm((int) $p['overtime']['minutes']), '+' . $money($p['overtime']['amount']), self::GREEN, $s);
             foreach ($p['overtime']['days'] as $o) $this->detail($day($o['date']) . ' · ' . PayCalculator::hm((int) $o['minutes']) . ' × ' . rtrim(rtrim(number_format((float) $o['rate'], 2, '.', ''), '0'), '.') . ($o['off'] ? ' (day off)' : ''), '+' . $money($o['amount']), $s);
@@ -133,7 +133,7 @@ final class PayslipPdf
             $this->detail(implode(', ', array_map($day, $t['dates'])), '', $s);
         }
         foreach ($p['manual']['items'] ?? [] as $a) { $any = true; $this->row('Deduction', (string) $a['reason'], '−' . $money($a['amount']), self::RED, $s); }
-        if ($p['cap'] !== null) $this->row('Limited to ' . $s['rules']['max_deduction_days'] . " day(s)' pay", 'attendance deductions before the limit: ' . $money($p['deductions_before_cap']), '−' . $money($p['cap']), self::RED, $s);
+        if ($p['cap'] !== null) $this->row('Limited to ' . $s['rules']['max_deduction_days'] . " day(s)' pay", 'attendance deductions before the limit: ' . $money($p['deductions_before_cap']), '+' . $money(round($p['deductions_before_cap'] - $p['cap'], 2)), self::GREEN, $s);
         if (!$any) $this->row('None this month', '', '—', self::MUTED, $s);
         $this->y += 12;
 

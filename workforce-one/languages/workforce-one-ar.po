@@ -7458,3 +7458,27 @@ msgstr "الحد هو الذي عمل به ذلك الطلب (غالبًا ما 
 
 msgid "Waits for work"
 msgstr "في انتظار عمل"
+
+msgid "Today is recorded by the site (the foreman or the workers). Set it here after it is saved, or choose an earlier day."
+msgstr "اليوم الحالي يسجّله الموقع (المشرف أو العمال). عدّله من هنا بعد حفظه، أو اختر يومًا سابقًا."
+
+msgid "The date is not valid."
+msgstr "التاريخ غير صالح."
+
+msgid "You cannot decide your own request. Another approver must."
+msgstr "لا يمكنك البتّ في طلبك بنفسك. يجب أن يقرّره معتمد آخر."
+
+msgid "Today is recorded by the site (the foreman or the workers). You can set it here after it is saved."
+msgstr "اليوم الحالي يسجّله الموقع (المشرف أو العمال). يمكنك تعديله من هنا بعد حفظه."
+
+msgid "Changes to a recorded day"
+msgstr "تعديلات يوم مسجّل"
+
+msgid "A manager may decide their own change request"
+msgstr "يجوز للمدير أن يبتّ في طلب التعديل الخاص به"
+
+msgid "Off: another manager decides it. Administrators always may, and it is marked in the Audit Log."
+msgstr "مغلق: يبتّ فيه مدير آخر. المسؤولون يجوز لهم دائمًا، ويُسجَّل ذلك في سجل التدقيق."
+
+msgid "%1$s × %2$s"
+msgstr "%1$s × %2$s"

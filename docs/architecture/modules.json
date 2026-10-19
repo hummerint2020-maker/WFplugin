@@ -234,6 +234,7 @@
         "approval_substitutes"
       ],
       "api": [
+        "approval_self_gate",
         "approval_waiting_on_supervisors",
         "approval_reassign_supervisor",
         "approvals_return_view",

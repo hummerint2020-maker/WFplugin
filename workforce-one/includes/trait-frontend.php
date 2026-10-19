@@ -144,9 +144,16 @@ trait EWS_Frontend_Trait {
             ]);
             // Any one-time result of a form (dw_added, overtime_done, cx_error…) is shown once, then dropped
             // from the menu links; otherwise its popup comes back on every page.
-            $once=array_filter(array_map('strval',array_keys($_GET)),function($k){return (bool)preg_match('/^(?:[a-z0-9]+_)*(?:error|sent|done|saved|added|moved|paid|adv|change|retry|success|rejected|updated|reset|conflict|imported)$/',$k);}); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- key names only
+            $once=array_filter(array_map('strval',array_keys($_GET)),function($k){return \WorkforceOne\Ui\OnceKeys::isOnce($k);}); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- key names only
             if($once)$url=remove_query_arg(array_values($once),$url);
             $view=sanitize_key($view);
+            // A link to another view starts clean (3.31.111): what one view put in the address (site, start, dw_day…) means
+            // nothing to another, and Reports opened on a payout's date. Only WordPress's own routing and the app mode stay.
+            $current=isset($_GET['ews_view'])?sanitize_key(wp_unslash($_GET['ews_view'])):''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+            if($current!=='' && $current!==$view){
+                $drop=array_diff(array_map('strval',array_keys($_GET)),\WorkforceOne\Ui\OnceKeys::ROUTING,['ews_view']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- key names only
+                if($drop)$url=remove_query_arg(array_values($drop),$url);
+            }
             // Module-specific state must not leak into another module.
             // In particular, edit_task is an instruction to render a task editor;
             // keeping it while navigating to Leave/Attendance causes Tasks to
@@ -199,12 +206,12 @@ trait EWS_Frontend_Trait {
             if(isset($_GET['break_error']))return $this->ux_modal(__('Break Action Not Completed','workforce-one'),rawurldecode(sanitize_text_field(wp_unslash($_GET['break_error']))),'error');
             if(isset($_GET['break_success']))return $this->ux_modal(__('Break Updated','workforce-one'),rawurldecode(sanitize_text_field(wp_unslash($_GET['break_success']))),'success');
             if(isset($_GET['overtime_error'])){
-                $m=['disabled'=>__('Overtime Requests are currently disabled.','workforce-one'),'access'=>__('You do not have permission to perform this action.','workforce-one'),'invalid'=>__('Please review the overtime request and try again.','workforce-one'),'not_found'=>__('The overtime request could not be found.','workforce-one'),'save'=>__('The overtime request could not be updated. Please try again.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'date'=>__('Please select a valid future date.','workforce-one'),'time'=>__('Please enter a valid overtime time range.','workforce-one'),'reason'=>__('Please enter a reason for the overtime request.','workforce-one'),'overlap'=>__('The requested overtime overlaps another overtime request.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one'),'note'=>__('Write why you reject it, then reject it again.','workforce-one')];
+                $m=['self'=>__('You cannot decide your own request. Another approver must.','workforce-one'),'disabled'=>__('Overtime Requests are currently disabled.','workforce-one'),'access'=>__('You do not have permission to perform this action.','workforce-one'),'invalid'=>__('Please review the overtime request and try again.','workforce-one'),'not_found'=>__('The overtime request could not be found.','workforce-one'),'save'=>__('The overtime request could not be updated. Please try again.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'date'=>__('Please select a valid future date.','workforce-one'),'time'=>__('Please enter a valid overtime time range.','workforce-one'),'reason'=>__('Please enter a reason for the overtime request.','workforce-one'),'overlap'=>__('The requested overtime overlaps another overtime request.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one'),'note'=>__('Write why you reject it, then reject it again.','workforce-one')];
                 return $this->ux_modal(__('Overtime Action Not Completed','workforce-one'),$m[sanitize_key($_GET['overtime_error'])]??__('Please review the overtime request and try again.','workforce-one'),'error');
             }
             if(isset($_GET['overtime_sent']))return $this->ux_modal(__('Overtime Request Submitted','workforce-one'),__('Your overtime request has been submitted.','workforce-one'),'success');
             if(isset($_GET['vacation_error'])){
-                $m=['date'=>__('Please select a valid future date range.','workforce-one'),'no_working_days'=>__('The selected range contains no working days.','workforce-one'),'overlap'=>__('You already have a pending or approved vacation overlapping this period.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'save'=>__('We could not save the vacation request. Please try again.','workforce-one')];
+                $m=['self'=>__('You cannot decide your own request. Another approver must.','workforce-one'),'date'=>__('Please select a valid future date range.','workforce-one'),'no_working_days'=>__('The selected range contains no working days.','workforce-one'),'overlap'=>__('You already have a pending or approved vacation overlapping this period.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'save'=>__('We could not save the vacation request. Please try again.','workforce-one')];
                 return $this->ux_modal(__('Vacation Request Not Submitted','workforce-one'),$m[sanitize_key($_GET['vacation_error'])]??__('Please review the vacation details and try again.','workforce-one'),'error');
             }
             if(isset($_GET['vacation_sent']))return $this->ux_modal(__('Vacation Request Submitted','workforce-one'),__('Your vacation request has been submitted.','workforce-one'),'success');

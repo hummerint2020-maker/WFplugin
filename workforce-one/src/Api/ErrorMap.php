@@ -97,6 +97,18 @@ final class ErrorMap
         self::ACCOUNT_DISABLED => 403, self::HTTPS_REQUIRED => 403,
     ];
 
+    /**
+     * The API code for a WordPress REST error that carries none of ours (3.31.111): a malformed body is a 400, not a 403.
+     * Anything unlisted stays FORBIDDEN, as before.
+     */
+    public static function fromWpStatus(int $status): string
+    {
+        if ($status === 400) return self::VALIDATION_FAILED;
+        if ($status === 401) return self::TOKEN_MISSING;
+        if ($status === 404) return self::NOT_FOUND;
+        return self::FORBIDDEN;
+    }
+
     /** The API code for a domain code; unknown codes are INTERNAL_ERROR (never the raw internal code). */
     public static function code(string $domainCode): string
     {

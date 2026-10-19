@@ -22,6 +22,8 @@ final class Tokens
     public const ACCESS_TTL = 900;
     public const REFRESH_TTL = 60 * 86400;
     public const SESSION_MAX = 180 * 86400;
+    /** Seconds after a refresh token was used in which the same token may be used once more (a retry or two requests at the same moment). */
+    public const REFRESH_GRACE = 30;
 
     public const OK = 'ok';
     public const EXPIRED = 'expired';

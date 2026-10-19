@@ -137,6 +137,20 @@ trait EWS_Approvals_Trait {
     }
 
     /**
+     * A decision outside a workflow (3.31.111): whoever decides their own request needs the feature's own setting to allow it
+     * ($setting_allows); administrators always may. A self-decision that goes through is marked in the Audit Log.
+     * @param int $requester_user_id the requester's WordPress user (0 when they have none)
+     * @return bool false when the decision must be refused
+     */
+    private function approval_self_gate($requester_user_id,$setting_allows,$what){
+        $uid=get_current_user_id();
+        if(!$uid || (int)$requester_user_id!==$uid)return true;
+        if(!$setting_allows && !current_user_can('manage_options'))return false;
+        $this->audit('approval_self_decision','approval_workflow',0,$what.' · no workflow');
+        return true;
+    }
+
+    /**
      * When a level's approver is the requester (3.31.100): 'allow' (they decide it), 'next' (the next
      * level decides; administrators when there is none) or 'admins'. Before 3.31.100 a workflow was
      * allowed or not (ews_approval_allow_self); "not allowed" sent the level to administrators.

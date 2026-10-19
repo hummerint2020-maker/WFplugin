@@ -40,6 +40,15 @@ final class LoginThrottle
         return $row ? max(1, (int) $row['window_start'] + self::WINDOW - $now) : 1;
     }
 
+    /**
+     * What the per-account bucket counts (3.31.111): the account itself, so the user name and the e-mail of one person share
+     * a bucket; a name that matches no account is counted as typed (and gets the same answers).
+     */
+    public static function identity(int $userId, string $username): string
+    {
+        return $userId > 0 ? 'uid:' . $userId : $username;
+    }
+
     /** The key a bucket is stored under: never the raw user name or address. */
     public static function key(string $bucket, string $value, string $secret): string
     {
