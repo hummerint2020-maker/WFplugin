@@ -261,6 +261,33 @@ out = php("""$r=new WP_REST_Request('GET','/workforce-one/v1/me'); $r->set_heade
 $r2=new WP_REST_Request('GET','/wp/v2/users/me'); $res2=rest_do_request($r2); echo wp_json_encode([$res->get_status(),$after,$res2->get_status()]);""" % ADM[0])
 check('...and after a native request the WordPress user is put back (a later request in the same PHP process is anonymous)', json.loads(out.splitlines()[-1]) == [200, 0, 401], out)
 
+# ---------------------------------------------------------------- 3.31.111: rehash, account limit, errors, client address
+php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
+r = login('emp1', 'emp1pass')
+AT9, RT9, DEV9 = tokens(r)
+uid1 = int(php("echo get_user_by('login','emp1')->ID;").splitlines()[-1])
+php("$u=get_userdata(%d); do_action('wp_set_password','emp1pass',%d,$u);" % (uid1, uid1))
+check('a rehash at a normal login (WordPress 6.8+: the same password) does not sign the phones out', code(call('GET', '/me', token=AT9)) == (200, 'ok') and device_row(DEV9)['revoked_at'] is None, device_row(DEV9))
+php("$u=get_userdata(%d); do_action('wp_set_password','another-password',%d,$u);" % (uid1, uid1))
+check('...a different password still does', code(call('GET', '/me', token=AT9))[0] == 401 and device_row(DEV9)['revoked_at'] is not None, device_row(DEV9))
+php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
+for _ in range(3):
+    login('emp1', 'wrong')
+for _ in range(2):
+    login('emp1@example.com', 'wrong')
+check('the user name and the e-mail of one person share the account limit: 3 + 2 failures lock it', code(login('emp1', 'emp1pass')) == (429, 'RATE_LIMITED'))
+php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
+req = urllib.request.Request(API + '/auth/login', data=b'{not json', headers={'Content-Type': 'application/json'}, method='POST')
+try:
+    resp = opener.open(req); st, raw = resp.status, resp.read().decode()
+except urllib.error.HTTPError as e:
+    st, raw = e.code, e.read().decode()
+check('a malformed JSON body is 400 VALIDATION_FAILED, not 403 FORBIDDEN', st == 400 and 'VALIDATION_FAILED' in raw, (st, raw[:200]))
+for i in range(20):
+    login('nobody%d' % i, 'wrong', headers={'X-Forwarded-For': '203.0.113.%d' % i})
+check('without a trusted proxy setting the forwarded address is ignored: 20 failures with different forwarded addresses lock the connecting one', code(login('emp1', 'emp1pass', headers={'X-Forwarded-For': '203.0.113.99'})) == (429, 'RATE_LIMITED'))
+php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
+
 # ---------------------------------------------------------------- the Web still works
 st, page, _ = browser.req('/app/?ews_view=time')
 check('the browser session (WordPress cookies) is unaffected by all of this', st == 200 and 'ews31_time_event' in page)
