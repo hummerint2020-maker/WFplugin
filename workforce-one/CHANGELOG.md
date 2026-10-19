@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.31.110
+### New: System health (off by default)
+Owner decisions 2026-10-19 (docs/tasks/system-health.md), mockup docs/mockups/system-health/. Turned on in
+wp-admin → Features → System health. The data stays in this site's database; nothing is sent anywhere.
+
+- **What it measures** for Workforce One's wp-admin pages, app views, actions, API routes and scheduled jobs: how
+  long each takes (typical, slow 1 in 20, worst), database queries per load, peak memory, failed requests,
+  PHP warnings and errors from the plugin's own code, and for each scheduled job its last run and whether it is
+  late. Names carry no personal data: a page, a view, an action or a route, never a URL, a user or a value.
+- **Queries:** from a share of requests (10% by default; always payroll close, exports and scheduled jobs) only the
+  *shape* of a query is kept, with its literals removed, with the function it came from. A query repeated many
+  times in one load (a loop doing one query per row) and a slow query are found this way.
+- **Wp-admin → Settings → System health:** "Look at this first" (ranked: fatal errors, late or failed jobs, failed
+  requests, slow pages, pages slower since a release, repeated queries, many queries, memory, new warnings), a
+  table of pages and actions with a 14-day line (a dotted line marks a new version), one page in detail, scheduled
+  jobs, queries, PHP errors, thresholds and "Delete collected data".
+- **Alerts:** a notice on Workforce One pages and the Dashboard (hide for 7 days); an optional email (off by
+  default, names and numbers only, new alerts only, at most 5 a day).
+- **Cost:** one UPDATE per request at shutdown; about +1 query and a few milliseconds, measured in
+  tests/e2e_system_health.py. Off, it adds nothing: no hook, no table, no cron.
+- **Data kept:** hourly rows 7 days, daily rows 90 days (30, 90 or 180), query and error detail 30 days; a hard
+  cap of 300,000 rows. Who sees it: site administrators (permission "View System Health"); on a network, super
+  admins only.
+- Not measured, on purpose: network and phone rendering time, and whether the site as a whole is reachable.
+
 ## 3.31.109
 ### New: salary advances (approvals stage 5, off by default)
 Owner decisions 2026-10-17 (docs/tasks/approvals.md), mockup docs/mockups/new-types/. Turned on in

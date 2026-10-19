@@ -99,6 +99,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Requests Hub','Requests Hub','manage_options','ews31-requests',[$this,'admin_requests']);
             add_submenu_page('ews31','Leaves','Leaves','ews_manage_settings','ews31-leaves',[$this,'admin_leaves']);
             add_submenu_page('ews31','Payroll','Payroll','ews_manage_payroll','ews31-payroll',[$this,'admin_payroll']);
+            if($this->health_can_view())add_submenu_page('ews31',__('System health','workforce-one'),__('System health','workforce-one'),'read','ews31-system-health',[$this,'admin_system_health']);   // 3.31.110
             if($this->advances_can_pay())add_submenu_page('ews31','Advances','Advances','read','ews31-advances',[$this,'admin_advances']);   // 3.31.109: only who may pay them
             if($this->corrections_enabled())add_submenu_page('ews31',__('Attendance Corrections','workforce-one'),__('Attendance Corrections','workforce-one'),'ews_manage_corrections','ews31-corrections',[$this,'admin_corrections']);
             if($this->dw_enabled())add_submenu_page('ews31',__('Daily Workers','workforce-one'),__('Daily Workers','workforce-one'),'ews_manage_daily_workers','ews31-daily-workers',[$this,'admin_daily_workers']);

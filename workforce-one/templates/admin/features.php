@@ -20,6 +20,9 @@
  * @var string $substitutes_url             wp-admin → Substitutes
  * @var array<string,mixed> $advance       Payroll\Advances::settings() (3.31.109)
  * @var string $advances_url
+ * @var int $health_rate       System health: percent of requests with query detail (3.31.110)
+ * @var int $health_retention  System health: days of daily history
+ * @var string $health_url
  * @var array{mode:string,limit:int} $recognition
  * @var array<string,string> $confirm_labels
  * @var array<string,int> $confirm
@@ -59,6 +62,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="my_approvals_present" value="1">
 <input type="hidden" name="substitutes_present" value="1">
 <input type="hidden" name="advances_present" value="1">
+<input type="hidden" name="health_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -86,6 +90,15 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <label><span class="wfo-field-label"><?php esc_html_e('After how many months with the company', 'workforce-one'); ?></span><input type="number" name="advance_min_service" min="0" max="120" value="<?php echo (int) $advance['min_service_months']; ?>"></label>
     <label><span class="wfo-field-label"><?php esc_html_e('Times Finance may move an instalment to the end, per advance (0 = no limit)', 'workforce-one'); ?></span><input type="number" name="advance_max_moves" min="0" max="12" value="<?php echo (int) $advance['max_moves']; ?>"></label>
     <label><input type="checkbox" name="advance_one_open" value="1" <?php checked(!empty($advance['one_open'])); ?>> <?php esc_html_e('One open advance at a time', 'workforce-one'); ?></label>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-system-health"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('System health', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors, and lists what to look at first. The data stays in this site’s database; nothing is sent anywhere. Adds about 1 ms to a Workforce One request.', 'workforce-one'); ?> <a href="<?php echo esc_url($health_url); ?>"><?php esc_html_e('System health', 'workforce-one'); ?></a></div></div>
+    <?php $switch('health_enabled', $on['health']); ?>
+</div>
+<div class="wfo-feature-fields">
+    <label><span class="wfo-field-label"><?php esc_html_e('Detailed query data from this share of requests', 'workforce-one'); ?></span><select name="health_sample_rate"><?php foreach (\WorkforceOne\Health\Settings::RATES as $r): ?><option value="<?php echo (int) $r; ?>" <?php selected($health_rate, $r); ?>><?php echo esc_html(sprintf(/* translators: %d: percent */ __('%d%% of requests', 'workforce-one'), $r)); ?></option><?php endforeach; ?></select></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Keep the daily history for', 'workforce-one'); ?></span><select name="health_retention_days"><?php foreach (\WorkforceOne\Health\Settings::RETENTION as $d): ?><option value="<?php echo (int) $d; ?>" <?php selected($health_retention, $d); ?>><?php echo esc_html(sprintf(/* translators: %d: days */ __('%d days', 'workforce-one'), $d)); ?></option><?php endforeach; ?></select></label>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-substitutes"><div class="wfo-feature-head">

@@ -30,7 +30,7 @@ final class AdminNav
             'pay'        => [['ews31-payroll', ''], ['ews31-advances', 'advances'], ['ews31-daily-workers', '']],
             'engage'     => [['ews31-moments', ''], ['ews31-smart-nudges', ''], ['ews31-achievements', ''], ['ews31-polls', ''], ['ews31-recognition', 'recognition'], ['ews31-tasks', 'tasks']],
             'settings'   => [['ews31-features', ''], ['ews31-notifications', ''], ['ews31-email', ''], ['ews31-roles', ''], ['ews31-appearance', ''],
-                             ['ews31-navigation', ''], ['ews31-employee-profile-settings', ''], ['ews31-settings-overview', ''], ['ews31-audit', '']],
+                             ['ews31-navigation', ''], ['ews31-employee-profile-settings', ''], ['ews31-settings-overview', ''], ['ews31-audit', ''], ['ews31-system-health', 'health']],
         ];
     }
 

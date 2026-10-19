@@ -237,6 +237,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_shift_history.py "$S"
       - name: Salary advances (off by default, limits, the approval engine, paid by Finance, instalments in Payroll, leaving)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_advances.py "$S"
+      - name: System health (off and inert, the collector, privacy scan, findings, notice, email, retention, switching off)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_system_health.py "$S"
       - name: Payroll close, adjustments, My Pay and payslip PDF
         run: |
           command -v pdftotext >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null; }

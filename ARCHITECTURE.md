@@ -51,6 +51,8 @@ workforce-one/
     Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
     Payroll/PayCalculator.php, PayRules.php, Hooks.php  a month's pay from attendance and adjustments; salary, rules and adjustment forms
     Payroll/PayslipPdf.php            a closed month's payslip as a PDF
+    Payroll/Advances.php              salary advance limits, checks, instalments (whole cents), months
+    Health/Settings.php, Routes.php, QueryShape.php, Messages.php, Stats.php, Findings.php, Alerts.php  System health (3.31.110, off by default): thresholds, request names without personal data, query shapes with literals removed, histograms, "Look at this first" rules, alerts. Collector and screen: includes/trait-system-health.php; design docs/tasks/system-health.md
     Pdf/Document.php, TrueTypeFont.php, ArabicText.php  small PDF writer: embedded font subset, Arabic joining and right-to-left order
     Requests/Hub.php, Hooks.php        presentation rules of the admin request pages
     Approvals/Workflows.php, StateMachine.php, Hooks.php  approval modes per workflow, request/step states

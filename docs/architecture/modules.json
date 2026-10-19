@@ -32,7 +32,8 @@
       "tables": [],
       "api": [
         "app_view_url",
-        "app_home_url"
+        "app_home_url",
+        "admin_nav_tab_labels"
       ]
     },
     "people": {
@@ -384,6 +385,25 @@
         "api_idempotency"
       ],
       "api": []
+    },
+    "health": {
+      "label": "System health: performance collector and screen",
+      "traits": [
+        "system-health"
+      ],
+      "tables": [
+        "health_hourly",
+        "health_daily",
+        "health_queries",
+        "health_errors"
+      ],
+      "api": [
+        "health_enabled",
+        "health_settings",
+        "health_can_view",
+        "health_switch_changed",
+        "health_boot"
+      ]
     }
   }
 }

@@ -13,7 +13,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) exit;
 function ews_uninstall_site() {
     global $wpdb;
 
-    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_tasks_tick', 'ews_corrections_tick', 'ews_office_minimum_tick', 'ews_approvals_tick'] as $hook) {
+    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_tasks_tick', 'ews_corrections_tick', 'ews_office_minimum_tick', 'ews_approvals_tick', 'ews_health_rollup'] as $hook) {
         wp_unschedule_hook($hook);
     }
 
@@ -47,7 +47,7 @@ function ews_uninstall_site() {
     }
 
     $tables = [
-        'ews_achievements', 'ews_approval_requests', 'ews_approval_steps', 'ews_approval_substitutes', 'ews_employee_shift_periods', 'ews_shift_versions', 'ews_salary_advances', 'ews_advance_instalments', 'ews_approval_workflow_steps',
+        'ews_achievements', 'ews_approval_requests', 'ews_approval_steps', 'ews_approval_substitutes', 'ews_employee_shift_periods', 'ews_shift_versions', 'ews_salary_advances', 'ews_advance_instalments', 'ews_health_hourly', 'ews_health_daily', 'ews_health_queries', 'ews_health_errors', 'ews_approval_workflow_steps',
         'ews_api_devices', 'ews_api_idempotency', 'ews_api_rate_limits', 'ews_api_tokens', 'ews_approval_workflows', 'ews_audit_log', 'ews_auto_attendance_rules', 'ews_break_sessions',
         'ews_company_calendar', 'ews_departments', 'ews_early_leave_requests', 'ews_employee_achievements', 'ews_employee_branches',
         'ews_employee_locations_v321', 'ews_employee_relationships', 'ews_employees', 'ews_face_profiles',

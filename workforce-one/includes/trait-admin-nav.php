@@ -71,12 +71,13 @@ trait EWS_Admin_Nav_Trait {
             'ews31-employee-profile-settings'=>__('Profile page','workforce-one'),
             'ews31-settings-overview'=>__('Overview','workforce-one'),
             'ews31-audit'=>__('Audit log','workforce-one'),
+            'ews31-system-health'=>__('System health','workforce-one'),
         ];
     }
 
     /** Features that hide a tab while off (AdminNav::sections()). @return array<string,bool> */
     private function admin_nav_features(){
-        return ['face'=>$this->face_signin_enabled(),'recognition'=>$this->recognition_enabled(),'tasks'=>$this->tasks_enabled(),'org'=>$this->org_enabled(),'substitutes'=>$this->substitutes_enabled(),'advances'=>$this->advances_enabled()];
+        return ['face'=>$this->face_signin_enabled(),'recognition'=>$this->recognition_enabled(),'tasks'=>$this->tasks_enabled(),'org'=>$this->org_enabled(),'substitutes'=>$this->substitutes_enabled(),'advances'=>$this->advances_enabled(),'health'=>$this->health_enabled()&&$this->health_can_view()];
     }
 
     /** End of admin_menu: one menu item per section, the other pages kept but hidden. */

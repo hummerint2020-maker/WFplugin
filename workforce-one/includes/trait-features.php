@@ -26,6 +26,7 @@ trait EWS_Features_Trait {
                 'my_approvals'=>$this->my_approvals_enabled(),
                 'substitutes'=>$this->substitutes_enabled(),
                 'advances'=>$this->advances_enabled(),
+                'health'=>$this->health_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
@@ -49,6 +50,7 @@ trait EWS_Features_Trait {
             'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
+            'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
             'substitute'=>$this->substitute_settings(),'substitutes_url'=>admin_url('admin.php?page=ews31-substitutes'),
             'recognition'=>FeatureSettings::recognition($this->option('ews_recognition_weekly_limit_mode'),$this->option('ews_recognition_weekly_limit')),
             'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
@@ -104,6 +106,14 @@ trait EWS_Features_Trait {
             update_option('ews_feature_advances',$flag('advances_enabled')?1:0,false);
             update_option('ews_advance_settings',\WorkforceOne\Payroll\Advances::settings(['months_salary'=>$post['advance_months_salary']??null,'max_amount'=>$post['advance_max_amount']??null,
                 'max_instalments'=>$post['advance_max_instalments']??null,'one_open'=>$flag('advance_one_open')?1:0,'min_service_months'=>$post['advance_min_service']??null,'max_moves'=>$post['advance_max_moves']??null]),false);
+        }
+        // System health (3.31.110): the switch, how many requests give query detail, how long the daily history is kept.
+        if(isset($post['health_present'])){
+            $was=$this->health_enabled();$now=$flag('health_enabled')?1:0;
+            update_option('ews_health_sample_rate',\WorkforceOne\Health\Settings::rate($post['health_sample_rate']??null),false);
+            update_option('ews_health_retention_days',\WorkforceOne\Health\Settings::retention($post['health_retention_days']??null),false);
+            update_option('ews_feature_health',$now,false);
+            if((bool)$was!==(bool)$now)$this->health_switch_changed((bool)$now);
         }
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){

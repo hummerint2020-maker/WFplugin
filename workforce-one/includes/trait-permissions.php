@@ -30,13 +30,14 @@ trait EWS_Permissions_Trait {
                 'ews_dw_foreman'=>'Foreman (daily workers)',
                 'ews_dw_cashier'=>'Pay daily workers',
                 'ews_view_national_ids'=>'View national IDs',
+                'ews_view_system_health'=>'View System Health',   // 3.31.110: code paths, query shapes and slow endpoints
             ];
         }
 
     private function role_defs(){
             return [
                 // Salaries: only WordPress administrators until a role is given "Manage Payroll" on the Roles page.
-                'ews_administrator'=>['name'=>'EWS Administrator','caps'=>array_values(array_diff(array_keys($this->permission_defs()),['ews_manage_payroll','ews_view_national_ids']))],
+                'ews_administrator'=>['name'=>'EWS Administrator','caps'=>array_values(array_diff(array_keys($this->permission_defs()),['ews_manage_payroll','ews_view_national_ids','ews_view_system_health']))],
                 'ews_manager'=>['name'=>'EWS Manager','caps'=>['ews_view_dashboard','ews_view_people','ews_manage_employees','ews_manage_schedule','ews_manage_attendance','ews_view_reports','ews_manage_time','ews_manage_auto_attendance','ews_view_audit_log','ews_manage_locations','ews_manage_settings','ews_manage_tasks']],
                 'ews_supervisor'=>['name'=>'EWS Supervisor','caps'=>['ews_view_dashboard','ews_view_people','ews_manage_schedule','ews_manage_attendance','ews_view_reports','ews_manage_time']],
                 'ews_employee'=>['name'=>'EWS Employee','caps'=>['ews_view_people']],
