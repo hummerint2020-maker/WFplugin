@@ -152,7 +152,7 @@ check('the Rules tab shows the rules with their defaults', st == 200 and 'value=
 st, _, h = adm.req('/wp-admin/admin-post.php', dict(base_rules, day_divisor=0))
 check('an impossible rule is refused', php("echo get_option('ews_payroll_day_divisor','unset');").strip() == 'unset' and 'payroll_error' in h.get('Location', ''), h.get('Location'))
 adm.req('/wp-admin/admin-post.php', dict(base_rules, max_deduction_days=1))
-check('a saved rule applies at once: deductions capped at one day', '10,588.59' in row('Paula Pay', adm.req(PAGE + '&month=' + MONTH)[1]), row('Paula Pay', adm.req(PAGE + '&month=' + MONTH)[1]))
+check('a saved rule applies at once: attendance deductions capped at one day, unpaid leave in full', '9,713.59' in row('Paula Pay', adm.req(PAGE + '&month=' + MONTH)[1]), row('Paula Pay', adm.req(PAGE + '&month=' + MONTH)[1]))
 adm.req('/wp-admin/admin-post.php', base_rules)
 
 st, page, _ = adm.req(PAGE + '&tab=rules')
