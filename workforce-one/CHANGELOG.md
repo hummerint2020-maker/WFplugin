@@ -41,6 +41,14 @@ wp-admin → Features → System health. The data stays in this site's database;
     under; the row limit also stops query rows.
   - Saving Features while it is off writes no option; on a network only a super admin switches it; deactivating the
     plugin clears the rollup; the settings form unslashes its input.
+- **After a second review** (fixed before delivery):
+  - Jobs: the arguments of a scheduled job are kept apart (a hook run three times is three runs); queue jobs
+    that wait for work show "Waits for work", not "never ran".
+  - The speed histogram has 20 buckets, so a slow request is no longer hidden in the last bucket.
+  - A release in the middle of a day gives one daily row per release, so "slower since the update" compares like with like.
+  - Other plugins' routes get no slow, failure, regression or memory finding.
+  - Memory is judged by the highest percentage of the limit seen in one request, not by an average.
+  - The overhead of the collector is now measured in the tests (requests off, at 10% and at 100%).
 
 ## 3.31.109
 ### New: salary advances (approvals stage 5, off by default)
