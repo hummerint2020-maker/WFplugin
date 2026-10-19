@@ -1,6 +1,6 @@
 # System health (design, awaiting the owner's answers)
 
-Status: designed, not built. Next: the owner answers section 10, then an HTML mockup in `docs/mockups/system-health/`, then the build.
+Status: designed; the owner accepted every recommended default in section 10 (2026-10-19). Next: the HTML mockup in `docs/mockups/system-health/`, owner review, then the build.
 
 ## 1. Goal and non-goals
 
@@ -120,7 +120,7 @@ On, budget (asserted in tests): a request that is not the plugin's and not sampl
 - Email leaves the server (labels and numbers only): question 1.
 - Health tables are outside `SchemaCheck` and the global version: a failure shows only on the health screen; the rollup re-checks `ews_health_schema`.
 
-## 10. Open questions for the owner (recommended default first)
+## 10. Owner decisions (2026-10-19: all recommended defaults accepted)
 
 1. Optional email alerts (page names and numbers only, through the site's mail)? Recommended: yes, off by default.
 2. A new permission "View System Health", held by default only by WordPress administrators, grantable on Roles & Permissions? Recommended: yes.
