@@ -685,22 +685,98 @@ trait EWS_Approvals_Trait {
      * waits at, for how many working hours, from whom it moved up, and the reason of a rejection.
      * @return array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null
      */
+    /** The key a request is found under in the batch helpers. */
+    private function approval_request_key($workflow_key,$entity_type,$entity_id){
+        return sanitize_key((string)$workflow_key).'|'.sanitize_key((string)$entity_type).'|'.(int)$entity_id;
+    }
+
+    /**
+     * approval_find_request() for many requests with one query (3.31.112): [[workflow_key, entity_type, entity_id], ...]
+     * to a map "workflow|entity|id" => the row (a request with none is missing from the map). The newest request of an entity
+     * wins, as with LIMIT 1. Only for showing lists: the decision handlers keep re-reading one request, inside their transaction.
+     * @param array<int,array{0:string,1:string,2:int}> $keys
+     * @return array<string,object>
+     */
+    private function approval_find_requests(array $keys){
+        global $wpdb;
+        $groups=[];
+        foreach($keys as $k){
+            if(!is_array($k)||count($k)<3)continue;
+            $groups[sanitize_key((string)$k[0])."\0".sanitize_key((string)$k[1])][(int)$k[2]]=true;
+        }
+        if(!$groups)return [];
+        $t=$this->approval_tables();$out=[];
+        $where=[];
+        foreach($groups as $g=>$ids){
+            [$wk,$et]=explode("\0",$g);
+            foreach(array_chunk(array_keys($ids),500) as $chunk)$where[]=$wpdb->prepare('(w.workflow_key=%s AND ar.entity_type=%s AND ar.entity_id IN ('.implode(',',array_fill(0,count($chunk),'%d')).'))',array_merge([$wk,$et],$chunk));
+        }
+        $rows=(array)$wpdb->get_results("SELECT ar.*,w.workflow_key,w.approval_mode FROM {$t['requests']} ar JOIN {$t['workflows']} w ON w.id=ar.workflow_id WHERE ".implode(' OR ',$where).' ORDER BY ar.id DESC');
+        foreach($rows as $r){
+            $key=$this->approval_request_key($r->workflow_key,$r->entity_type,$r->entity_id);
+            if(!isset($out[$key]))$out[$key]=$r;
+        }
+        return $out;
+    }
+
+    /** The path of one request (My requests card, Advances), or null. Same code as approval_paths(). */
     private function approval_path($workflow_key,$entity_type,$entity_id){
-        $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
-        if(!$ar)return null;
+        $paths=$this->approval_paths([[$workflow_key,$entity_type,$entity_id]]);
+        return $paths[$this->approval_request_key($workflow_key,$entity_type,$entity_id)]??null;
+    }
+
+    /**
+     * The paths of many requests with a handful of queries (3.31.112) instead of several per request: the requests, their
+     * levels, and the names of everyone on them. Same result as approval_path() for each; a request with no approval is null.
+     * @param array<int,array{0:string,1:string,2:int}> $keys
+     * @param string|null $now the time the waiting hours are counted to (default: now)
+     * @return array<string,array<string,mixed>|null> by approval_request_key()
+     */
+    private function approval_paths(array $keys,$now=null){
         global $wpdb;$t=$this->approval_tables();
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d ORDER BY step_order ASC",(int)$ar->id));
-        $s=$this->approval_settings();$days=$this->working_days();$now=current_time('mysql');
+        $found=$this->approval_find_requests($keys);
+        $out=[];
+        foreach($keys as $k)$out[$this->approval_request_key($k[0],$k[1],$k[2])]=null;
+        if(!$found)return $out;
+        $by_request=[];
+        $ids=array_map(function($r){return (int)$r->id;},array_values($found));
+        foreach(array_chunk($ids,500) as $chunk){
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id IN (".implode(',',array_fill(0,count($chunk),'%d')).') ORDER BY approval_request_id ASC,step_order ASC',$chunk)) as $r)$by_request[(int)$r->approval_request_id][]=$r;
+        }
+        // Everyone's name: the active employee linked to the user (lowest id first), else the WordPress display name.
+        $uids=[];$for_ids=[];
+        foreach($by_request as $rows)foreach($rows as $r){
+            foreach(['approver_wp_user_id','acted_by_wp_user_id','escalated_from_wp_user_id'] as $f)if((int)($r->$f??0))$uids[(int)$r->$f]=true;
+            if((int)($r->for_employee_id??0))$for_ids[(int)$r->for_employee_id]=true;
+        }
+        $emp_by_user=$this->people_names_by_user(array_keys($uids));
+        $missing=array_values(array_diff(array_keys($uids),array_keys($emp_by_user)));
+        if($missing)cache_users($missing);
+        $for_by_id=$this->people_brief_by_ids(array_keys($for_ids));
+        $name=function($uid)use($emp_by_user){
+            $uid=(int)$uid;if(!$uid)return '';
+            if(isset($emp_by_user[$uid]))return $emp_by_user[$uid];
+            $u=get_userdata($uid);return $u?(string)$u->display_name:'';
+        };
+        $empname=function($id)use($for_by_id){return isset($for_by_id[(int)$id])?(string)$for_by_id[(int)$id]->name:'';};
+        $empuser=function($id)use($for_by_id){return isset($for_by_id[(int)$id])?(int)$for_by_id[(int)$id]->wp_user_id:0;};
+        $s=$this->approval_settings();$days=$this->working_days();$now=$now?:current_time('mysql');
+        foreach($keys as $k){
+            $key=$this->approval_request_key($k[0],$k[1],$k[2]);
+            if(!isset($found[$key]))continue;
+            $ar=$found[$key];
+            $rows=$by_request[(int)$ar->id]??[];
+            $workflow_key=(string)$k[0];
         $levels=count(array_filter($rows,function($r){return $r->status!=='SKIPPED';}));
         $pos=0;$level=0;$hours=0.0;$moved='';$note='';$steps=[];
         foreach($rows as $r){
-            $who=(int)$r->approver_wp_user_id?$this->approval_user_name((int)$r->approver_wp_user_id):(!empty($r->rerouted)?__('Administrators','workforce-one'):'');
-            $by=$this->approval_user_name((int)($r->acted_by_wp_user_id??0));
+            $who=(int)$r->approver_wp_user_id?$name((int)$r->approver_wp_user_id):(!empty($r->rerouted)?__('Administrators','workforce-one'):'');
+            $by=$name((int)($r->acted_by_wp_user_id??0));
             // Decided by a substitute while the approver is away (3.31.107): "Sami Ali for Mona Adel".
-            $for=(int)($r->for_employee_id??0)?$this->people_name((int)$r->for_employee_id):'';
+            $for=(int)($r->for_employee_id??0)?$empname((int)$r->for_employee_id):'';
             if($for!==''){
                 if($who!=='')$who=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$who,$for);
-                if($by!=='' && (int)$r->acted_by_wp_user_id!==(int)$this->people_user_id((int)$r->for_employee_id))$by=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$by,$for);
+                if($by!=='' && (int)$r->acted_by_wp_user_id!==(int)$empuser((int)$r->for_employee_id))$by=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$by,$for);
             }
             $when=$r->acted_at?date_i18n('D j M, H:i',strtotime((string)$r->acted_at)):'';
             switch($r->status){
@@ -709,7 +785,7 @@ trait EWS_Approvals_Trait {
                 case 'PENDING':
                     $state='now';$hours=$r->pending_since?\WorkforceOne\Approvals\WorkingHours::between((string)$r->pending_since,$now,$days,$s['day_start'],$s['day_end']):0.0;
                     $sub=sprintf(/* translators: %s: working hours */__('Deciding now · waiting %s working hours','workforce-one'),number_format_i18n($hours,$hours<10&&floor($hours)!=$hours?1:0));
-                    if((int)($r->escalations??0) && (int)($r->escalated_from_wp_user_id??0))$moved=$this->approval_user_name((int)$r->escalated_from_wp_user_id);
+                    if((int)($r->escalations??0) && (int)($r->escalated_from_wp_user_id??0))$moved=$name((int)$r->escalated_from_wp_user_id);
                     break;
                 case 'WAITING': $state='next';$sub=__('Next','workforce-one');break;
                 case 'CANCELLED': $state='cancelled';$sub=__('Withdrawn by the employee','workforce-one');break;
@@ -720,9 +796,11 @@ trait EWS_Approvals_Trait {
             if($r->status!=='SKIPPED'){$pos++;if($r->status==='PENDING')$level=$pos;}
             $steps[]=['order'=>(int)$r->step_order,'state'=>$state,'label'=>$this->approval_resolver_label((string)$r->resolver_type),'who'=>$who,'sub'=>$sub];
         }
-        $key=(string)($ar->workflow_key??$workflow_key);
-        return ['id'=>(int)$ar->id,'workflow'=>$key,'status'=>(string)$ar->status,'level'=>$level,'levels'=>$levels,'hours'=>$hours,
-            'overdue'=>$level>0 && $hours>=$this->approval_overdue_hours($key),'moved_from'=>$moved,'note'=>$note,'steps'=>$steps];
+            $wkey=(string)($ar->workflow_key??$workflow_key);
+            $out[$key]=['id'=>(int)$ar->id,'workflow'=>$wkey,'status'=>(string)$ar->status,'level'=>$level,'levels'=>$levels,'hours'=>$hours,
+                'overdue'=>$level>0 && $hours>=$this->approval_overdue_hours($wkey),'moved_from'=>$moved,'note'=>$note,'steps'=>$steps];
+        }
+        return $out;
     }
 
     /**

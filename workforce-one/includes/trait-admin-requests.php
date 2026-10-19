@@ -17,34 +17,26 @@ trait EWS_Admin_Requests_Trait {
         global $wpdb;
         $rows=[];
         $names=[];
-        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$names){
+        $deferred=[];
+        // $ar is the request's key [workflow, entity, id]: the approval requests are found together after the last row (3.31.112).
+        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$names,&$deferred){
             $key=$type.':'.(int)$id;
             if(isset($rows[$key]))return;
-            $employee_id=(int)$employee_id;
-            if(!array_key_exists($employee_id,$names)){
-                $name=$employee_id?$this->people_name($employee_id):null;
-                $names[$employee_id]=$name!==null?(string)$name:'Employee #'.$employee_id;
-            }
-            $step=$ar?$this->approval_current_step((int)$ar->id):null;
-            $rows[$key]=[
-                'type'=>$type,'id'=>(int)$id,'title'=>$title,'employee'=>$names[$employee_id],'detail'=>$detail,
-                'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted)),
-                'requested_at'=>(string)$requested_at,
-                'nonce'=>wp_create_nonce('ews_admin_request_decision_'.$type.'_'.(int)$id),
-            ];
+            $rows[$key]=true;
+            $deferred[$key]=[$type,$id,$employee_id,$title,$requested_at,$detail,$ar];
         };
 
         $lt=$wpdb->prefix.'ews_leave_requests';$types=$wpdb->prefix.'ews_leave_types';
         foreach((array)$wpdb->get_results("SELECT r.*,lt.name type_name FROM {$lt} r LEFT JOIN {$types} lt ON lt.id=r.leave_type_id WHERE r.status='Pending' ORDER BY r.requested_at ASC") as $r){
-            $add('leave',$r->id,$r->employee_id,'Vacation / '.$r->type_name,$r->requested_at,Hub::details($r->start_date.' → '.$r->end_date,(float)$r->requested_days.' day(s)',(string)$r->reason),$this->approval_find_request('vacation','leave',(int)$r->id));
+            $add('leave',$r->id,$r->employee_id,'Vacation / '.$r->type_name,$r->requested_at,Hub::details($r->start_date.' → '.$r->end_date,(float)$r->requested_days.' day(s)',(string)$r->reason),['vacation','leave',(int)$r->id]);
         }
         foreach((array)$wpdb->get_results("SELECT r.*,lt.name type_name FROM {$lt} r LEFT JOIN {$types} lt ON lt.id=r.leave_type_id WHERE r.status='Approved' AND r.cancellation_status='Pending' ORDER BY r.requested_at ASC") as $r){
-            $add('leave_cancellation',$r->id,$r->employee_id,'Vacation Cancellation / '.$r->type_name,$r->requested_at,$r->start_date.' → '.$r->end_date,$this->approval_find_request('vacation','leave_cancellation',(int)$r->id));
+            $add('leave_cancellation',$r->id,$r->employee_id,'Vacation Cancellation / '.$r->type_name,$r->requested_at,$r->start_date.' → '.$r->end_date,['vacation','leave_cancellation',(int)$r->id]);
         }
         $ot=$wpdb->prefix.'ews_overtime_requests';
         if($this->admin_requests_table_exists($ot)){
             foreach((array)$wpdb->get_results("SELECT * FROM {$ot} WHERE status='Pending' ORDER BY requested_at ASC") as $r){
-                $add('overtime',$r->id,$r->employee_id,'Overtime',$r->requested_at,Hub::details($r->overtime_date,substr($r->start_time,0,5).' → '.substr($r->end_time,0,5),Hub::duration((int)$r->requested_minutes),(string)$r->reason),$this->approval_find_request('overtime','overtime_request',(int)$r->id));
+                $add('overtime',$r->id,$r->employee_id,'Overtime',$r->requested_at,Hub::details($r->overtime_date,substr($r->start_time,0,5).' → '.substr($r->end_time,0,5),Hub::duration((int)$r->requested_minutes),(string)$r->reason),['overtime','overtime_request',(int)$r->id]);
             }
         }
         foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE status='Pending' ORDER BY requested_at ASC") as $r){
@@ -60,11 +52,28 @@ trait EWS_Admin_Requests_Trait {
             }
         }
         foreach($this->cx_hub_rows() as $r){
-            $add('correction',$r->id,$r->employee_id,'Attendance Correction',$r->requested_at,Hub::details($r->work_date,$this->cx_type_label((string)$r->type),$this->cx_change_text($r,'en'),(string)$r->reason,$r->status==='pending_hr'?'Second level (HR)':''),$this->approval_find_request('attendance_correction','attendance_correction',(int)$r->id));
+            $add('correction',$r->id,$r->employee_id,'Attendance Correction',$r->requested_at,Hub::details($r->work_date,$this->cx_type_label((string)$r->type),$this->cx_change_text($r,'en'),(string)$r->reason,$r->status==='pending_hr'?'Second level (HR)':''),['attendance_correction','attendance_correction',(int)$r->id]);
         }
         foreach($this->face_reset_requests() as $employee_id=>$r){
             if(!is_array($r)||($r['status']??'')!=='pending')continue;
-            $add('face_reset',$employee_id,$employee_id,'Face Reset',$r['requested_at']??'',$r['current_note']??'Reset requested',$this->approval_find_request('face_reset','face_reset_request',(int)$employee_id));
+            $add('face_reset',$employee_id,$employee_id,'Face Reset',$r['requested_at']??'',$r['current_note']??'Reset requested',['face_reset','face_reset_request',(int)$employee_id]);
+        }
+        $found=$this->approval_find_requests(array_values(array_filter(array_column($deferred,6))));
+        $rows=[];
+        foreach($deferred as $key=>[$type,$id,$employee_id,$title,$requested_at,$detail,$ref]){
+            $employee_id=(int)$employee_id;
+            if(!array_key_exists($employee_id,$names)){
+                $name=$employee_id?$this->people_name($employee_id):null;
+                $names[$employee_id]=$name!==null?(string)$name:'Employee #'.$employee_id;
+            }
+            $ar=$ref?($found[$this->approval_request_key($ref[0],$ref[1],$ref[2])]??null):null;
+            $step=$ar?$this->approval_current_step((int)$ar->id):null;
+            $rows[$key]=[
+                'type'=>$type,'id'=>(int)$id,'title'=>$title,'employee'=>$names[$employee_id],'detail'=>$detail,
+                'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted)),
+                'requested_at'=>(string)$requested_at,
+                'nonce'=>wp_create_nonce('ews_admin_request_decision_'.$type.'_'.(int)$id),
+            ];
         }
         return Hub::sortOldestFirst(array_values($rows));
     }

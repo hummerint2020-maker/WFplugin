@@ -28,4 +28,8 @@ A stale cache in the decision handlers (avoided); duplicate-key or packet limit 
 output drift (one shared builder, parity test); permissions unchanged (the batch gets the keys the pages already compute).
 
 ## Owner's answers
-(recorded below)
+- My approvals per-row card queries: not in this release.
+- The wp-admin Requests hub: moves to the new batch helper too.
+- The old warning on the System health screen: left to age out (7 days).
+- One release for both fixes (recommended default).
+

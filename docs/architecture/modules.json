@@ -62,6 +62,8 @@
       "api": [
         "people_employee",
         "people_employee_by_user",
+        "people_names_by_user",
+        "people_brief_by_ids",
         "people_active_id",
         "people_name",
         "people_user_id",
