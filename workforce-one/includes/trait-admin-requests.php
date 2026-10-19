@@ -19,7 +19,7 @@ trait EWS_Admin_Requests_Trait {
         $names=[];
         $deferred=[];
         // $ar is the request's key [workflow, entity, id]: the approval requests are found together after the last row (3.31.112).
-        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$names,&$deferred){
+        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$deferred){
             $key=$type.':'.(int)$id;
             if(isset($rows[$key]))return;
             $rows[$key]=true;
