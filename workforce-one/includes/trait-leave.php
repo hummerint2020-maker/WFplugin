@@ -340,7 +340,7 @@ trait EWS_Leave_Trait {
             if(!$r||$r->status!=='Pending')$this->leave_redirect(['leave_done'=>1]);
             $emp=$this->leave_active_employee($r->employee_id);
             if(!$emp)$this->leave_redirect(['leave_error'=>'employee']);
-            if(!$ar && !$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('vacation')==='allow','vacation'))$this->leave_redirect(['leave_error'=>'self']);
+            if(!$ar && !$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('vacation')==='allow','vacation #'.(int)$id))$this->leave_redirect(['leave_error'=>'self']);
             $bal=$this->leave_request_balance($r);
             if(!$bal)$this->leave_redirect(['leave_error'=>'balance']);
             $now=current_time('mysql');
@@ -436,6 +436,7 @@ trait EWS_Leave_Trait {
             if(!$r||!in_array($decision,['approve','reject'],true))wp_die('Invalid cancellation.');
             $emp=$this->leave_active_employee($r->employee_id);
             if(!$emp)wp_die('Employee not found.');
+            if(!$ar && !$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('vacation')==='allow','vacation cancellation #'.(int)$id))wp_die(esc_html__('You cannot decide your own request. Another approver must.','workforce-one'),'',['response'=>403]);
             $bal=$this->leave_request_balance($r);
             if(!$bal)wp_die('Leave balance unavailable.');
             $now=current_time('mysql');
@@ -514,7 +515,7 @@ trait EWS_Leave_Trait {
                 }
                 return Hub::ADVANCED;
             }
-            if(!$cancel)$this->approval_self_gate((int)($emp->wp_user_id??0),true,'vacation');   // administrators may; the Audit Log marks it
+            if(!$cancel)$this->approval_self_gate((int)($emp->wp_user_id??0),true,'vacation #'.(int)$id);   // administrators may; the Audit Log marks it
             return $commit($decision==='approve'?'APPROVED':'REJECTED')?Hub::outcome($decision):Hub::ERROR;
         }
 

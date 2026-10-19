@@ -26,7 +26,7 @@ workforce-one/
     Api/Hooks.php, Routes.php          REST transport: one route table under workforce-one/v1 (today the Face routes)
     Api/Response.php, ErrorMap.php     response envelope and request ids; domain codes → stable API codes + HTTP status
     Api/Meta.php                       GET /meta: the public bootstrap document (only the keys listed there)
-    Api/Auth/Tokens.php, LoginThrottle.php, Bearer.php, LoginInput.php  token format and states, login limits, the token headers, the login body
+    Api/Auth/Tokens.php, LoginThrottle.php, Bearer.php, LoginInput.php, ClientIp.php  token format and states, login limits, the token headers, the login body, the client address behind a trusted proxy
     Attendance/AutoRules.php, AutoHooks.php  Auto Attendance rules: days, overnight, what is due
     Audit/AuditFilters.php             Audit Log date range and paging
     Support/Csv.php                    CSV export cells (formula-injection safe)
@@ -46,7 +46,7 @@ workforce-one/
     Notifications/PushEndpoint.php    which Web Push endpoints may be contacted (public HTTPS only; SSRF guard)
     Settings/Navigation.php, Moments.php, SmartNudges.php, EngagementHooks.php   engagement settings
     Settings/Appearance.php           the app's look (wp-admin → Appearance): themes, colours with contrast checks, fonts, corners → CSS variables
-    Ui/Icons.php, Ui/MobileBar.php    the app's SVG line icons; the phone's bottom bar (Sign In / Out in the middle, the rest under More)
+    Ui/Icons.php, Ui/MobileBar.php, Ui/OnceKeys.php    the app's SVG line icons; the phone's bottom bar (Sign In / Out in the middle, the rest under More); the one-time result keys dropped from links
     Settings/FeatureSettings.php      Feature Configuration values (defaults, ranges, confirmations)
     Settings/Options.php, OverviewHooks.php  every stored setting (label, page, default); Settings Overview + export
     Payroll/PayCalculator.php, PayRules.php, Hooks.php  a month's pay from attendance and adjustments; salary, rules and adjustment forms

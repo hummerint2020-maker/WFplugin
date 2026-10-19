@@ -146,7 +146,7 @@ trait EWS_Approvals_Trait {
         $uid=get_current_user_id();
         if(!$uid || (int)$requester_user_id!==$uid)return true;
         if(!$setting_allows && !current_user_can('manage_options'))return false;
-        $this->audit('approval_self_decision','approval_workflow',0,$what.' · no workflow');
+        $this->audit('approval_self_decision','approval_workflow',0,$what.' · no workflow');   // $what names the request (type #id) so the row can be found
         return true;
     }
 

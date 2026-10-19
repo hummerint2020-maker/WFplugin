@@ -20,5 +20,5 @@ final class OnceKeys
     }
 
     /** Query keys a link to another view keeps: WordPress's own routing and the app's mode. */
-    public const ROUTING = ['page_id', 'p', 'lang', 'ews_pwa', 'preview'];
+    public const ROUTING = ['page_id', 'p', 'lang', 'ews_pwa', 'preview', 'preview_id', 'preview_nonce'];
 }

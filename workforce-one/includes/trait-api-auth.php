@@ -70,7 +70,8 @@ trait EWS_Api_Auth_Trait {
         // default): then the nearest address in X-Forwarded-For that is not a trusted proxy. Forwarded-for headers are set by
         // the client unless a trusted proxy rewrites them.
         $remote=isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'';
-        $trusted=defined('WORKFORCE_ONE_TRUSTED_PROXIES')?(string)constant('WORKFORCE_ONE_TRUSTED_PROXIES'):'';
+        $trusted=defined('WORKFORCE_ONE_TRUSTED_PROXIES')?constant('WORKFORCE_ONE_TRUSTED_PROXIES'):'';
+        $trusted=is_array($trusted)?implode(',',array_map('strval',$trusted)):(is_string($trusted)?$trusted:'');   // a list or a comma-separated text
         if($trusted==='')return $remote;
         $xff=isset($_SERVER['HTTP_X_FORWARDED_FOR'])?sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR'])):null;
         return \WorkforceOne\Api\Auth\ClientIp::resolve($remote,$xff,array_filter(array_map('trim',explode(',',$trusted))));
@@ -270,9 +271,11 @@ trait EWS_Api_Auth_Trait {
         [$in,$errors]=LoginInput::parse($request->get_json_params());
         if($in===null)return $this->api_fail(ErrorMap::VALIDATION_FAILED,['fields'=>$errors]);
         $now=time();$ip=$this->api_client_ip();
-        $found=get_user_by('login',$in['username']);
-        if(!$found && is_email($in['username']))$found=get_user_by('email',$in['username']);
-        $identity=LoginThrottle::identity($found?(int)$found->ID:0,$in['username']);
+        // The same cleaning wp_authenticate() does, so every spelling that signs in to an account counts against that account.
+        $typed=sanitize_user((string)$in['username']);
+        $found=get_user_by('login',$typed);
+        if(!$found && is_email($typed))$found=get_user_by('email',$typed);
+        $identity=LoginThrottle::identity($found?(int)$found->ID:0,$typed);
         $keys=[LoginThrottle::USER=>LoginThrottle::key(LoginThrottle::USER,$identity,$this->api_secret()),LoginThrottle::IP=>LoginThrottle::key(LoginThrottle::IP,$ip,$this->api_secret())];
         foreach($keys as $bucket=>$key){
             $row=$this->api_limit_row($bucket,$key);
@@ -376,6 +379,8 @@ trait EWS_Api_Auth_Trait {
             if($user){
                 [$gate]=$this->api_account_gate($user);
                 if($gate==='ok')return $this->api_refresh_issue($row,$user,$now);
+                $this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID);
+                return $this->api_fail($gate);
             }
         }
         return $this->api_refresh_reused($row);

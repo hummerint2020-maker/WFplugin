@@ -17,13 +17,24 @@ final class ClientIp
      */
     public static function resolve(string $remote, ?string $forwardedFor, array $trusted): string
     {
+        $remote = self::clean($remote);
         if ($forwardedFor === null || $forwardedFor === '' || !self::isTrusted($remote, $trusted)) return $remote;
-        $hops = array_reverse(array_map('trim', explode(',', $forwardedFor)));
+        $hops = array_reverse(array_map([self::class, 'clean'], explode(',', $forwardedFor)));
         foreach ($hops as $hop) {
             if (filter_var($hop, FILTER_VALIDATE_IP) === false) return $remote;   // junk: do not guess
             if (!self::isTrusted($hop, $trusted)) return $hop;
         }
         return $remote;
+    }
+
+    /** An address as a proxy may write it: "1.2.3.4:5678", "[2001:db8::1]:443", "::ffff:1.2.3.4" become plain addresses. */
+    public static function clean(string $ip): string
+    {
+        $ip = trim($ip);
+        if (preg_match('/^\[([0-9a-f:.]+)\](?::\d+)?$/i', $ip, $m)) $ip = $m[1];
+        elseif (preg_match('/^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/', $ip, $m)) $ip = $m[1];
+        if (preg_match('/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i', $ip, $m)) $ip = $m[1];
+        return $ip;
     }
 
     /** @param list<string> $trusted */

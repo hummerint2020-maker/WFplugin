@@ -224,7 +224,7 @@ trait EWS_Payroll_Trait {
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,data FROM {$t['payslips']} WHERE run_id=%d{$where}",$run_id)) as $r){
             $d=json_decode((string)$r->data,true);
             if(!is_array($d)||!isset($d['pay']))continue;
-            $out[]=['employee'=>(object)['id'=>(int)$r->employee_id,'name'=>(string)($d['employee']['name']??'')],'pay'=>$d['pay']];
+            $out[]=['employee'=>(object)['id'=>(int)$r->employee_id,'name'=>(string)($d['employee']['name']??'')],'pay'=>$d['pay'],'rules'=>is_array($d['rules']??null)?$d['rules']:null];
         }
         usort($out,function($a,$b){return strcasecmp($a['employee']->name,$b['employee']->name);});
         return $out;

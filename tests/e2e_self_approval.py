@@ -153,7 +153,7 @@ check('...but he still decides other people\'s', leave_status(lid_e) == 'Approve
 php("update_option('ews_approval_self_rule',['vacation'=>'allow'],false); $wpdb->query(\"DELETE FROM {$p}ews_audit_log WHERE action='approval_self_decision'\");")
 decide(boss, lid, 'approve')
 audit = q("SELECT details FROM {p}ews_audit_log WHERE action='approval_self_decision'")
-check('rule "they decide it": he approves his own, and the Audit Log marks it', leave_status(lid) == 'Approved' and len(audit) == 1 and audit[0]['details'] == 'vacation · no workflow', (leave_status(lid), audit))
+check('rule "they decide it": he approves his own, and the Audit Log marks it', leave_status(lid) == 'Approved' and len(audit) == 1 and audit[0]['details'] == 'vacation #%d · no workflow' % lid, (leave_status(lid), audit))
 php("update_option('ews_approval_self_rule',['vacation'=>'admins'],false); $wpdb->update($p.'ews_employees',['wp_user_id'=>%d],['domain_name'=>'boss']);" % ids['admin_uid'])
 qs, lid_a = submit(adm, d(13))
 decide(adm, lid_a, 'approve')

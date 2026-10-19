@@ -827,7 +827,7 @@ trait EWS_Daily_Workers_Trait {
         $c=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->dw_t('changes')} WHERE id=%d",(int)$id));
         if(!$c)return 'worker';
         if($c->status!=='pending')return 'done';
-        if(!$this->approval_self_gate((int)$c->requested_by,(bool)(int)$this->dw_settings()['self_decide'],'daily_workers'))return 'access';
+        if(!$this->approval_self_gate((int)$c->requested_by,(bool)(int)$this->dw_settings()['self_decide'],'daily_workers change #'.(int)$id))return 'access';
         $note=trim((string)$note);
         if($decision==='reject' && $note==='')return 'note';
         $now=current_time('mysql');
@@ -1522,7 +1522,8 @@ trait EWS_Daily_Workers_Trait {
         check_admin_referer('ews_dw_settings');
         $this->ensure_dw_schema_once();
         $post=[];
-        foreach(['dw_mode','dw_period','dw_hourly_rate','dw_week_start','dw_photo','dw_self_decide'] as $k)$post[$k]=sanitize_text_field(wp_unslash((string)($_POST[$k]??'')));
+        foreach(['dw_mode','dw_period','dw_hourly_rate','dw_week_start','dw_photo','dw_self_decide','dw_self_decide_shown'] as $k)$post[$k]=sanitize_text_field(wp_unslash((string)($_POST[$k]??'')));
+        $post['dw_self_decide_kept']=(int)$this->dw_settings()['self_decide'];   // a form without the field keeps the saved value
         foreach(['dw_trades','dw_subcontractors'] as $k)$post[$k]=sanitize_textarea_field(wp_unslash((string)($_POST[$k]??'')));
         [$s,$err]=DailyWorkerSettings::fromPost($post);
         if($err!==''){wp_safe_redirect($this->dw_admin_url(['tab'=>'settings','dw_error'=>$err==='rate'?'hourly':($err==='trades'?'trade':'save')]));exit;}
@@ -1721,7 +1722,7 @@ trait EWS_Daily_Workers_Trait {
         $id=absint($request['id']);
         if(!$this->dw_site($id) || !$this->dw_can_pay($id))return $this->dw_api_error('access');
         $start=sanitize_text_field((string)($request->get_param('start')?:current_time('Y-m-d')));
-        if(!preg_match('/^\d{4}-\d{2}-\d{2}$/',$start))$start=current_time('Y-m-d');
+        if(!$this->dw_is_date($start))$start=current_time('Y-m-d');
         $p=$this->dw_payout($id,$start);
         return $this->api_ok(['start'=>$p['start'],'end'=>$p['end'],'paid'=>(bool)$p['paid'],'amount'=>$p['amount'],'advance'=>$p['advance'],'net'=>$p['net'],
             'lines'=>array_values(array_map(function($l){return ['worker_id'=>(int)$l['worker_id'],'name'=>$l['name'],'days'=>$l['days'],'extra_hours'=>$l['extra_hours'],'amount'=>$l['amount'],'advance'=>$l['advance'],'net'=>$l['net']];},$p['lines']))]);

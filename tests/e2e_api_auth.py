@@ -276,6 +276,7 @@ for _ in range(3):
 for _ in range(2):
     login('emp1@example.com', 'wrong')
 check('the user name and the e-mail of one person share the account limit: 3 + 2 failures lock it', code(login('emp1', 'emp1pass')) == (429, 'RATE_LIMITED'))
+check('...whatever the spelling (spaces, capitals): the same account, still locked', code(login(' EMP1@example.com ', 'emp1pass')) == (429, 'RATE_LIMITED') and code(login('Emp1', 'emp1pass')) == (429, 'RATE_LIMITED'))
 php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
 req = urllib.request.Request(API + '/auth/login', data=b'{not json', headers={'Content-Type': 'application/json'}, method='POST')
 try:

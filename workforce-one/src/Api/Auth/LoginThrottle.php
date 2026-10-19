@@ -46,7 +46,7 @@ final class LoginThrottle
      */
     public static function identity(int $userId, string $username): string
     {
-        return $userId > 0 ? 'uid:' . $userId : $username;
+        return $userId > 0 ? 'uid:' . $userId : 'name:' . strtolower(trim($username));
     }
 
     /** The key a bucket is stored under: never the raw user name or address. */

@@ -150,12 +150,16 @@ final class ApiAuthTest extends TestCase
         $this->assertSame('1.2.3.4', ClientIp::resolve('10.1.2.3', '1.2.3.4', ['10.1.2.3']), 'a single trusted address');
         $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', '1.2.3.4', []), 'nothing trusted: off');
         $this->assertSame('10.1.2.3', ClientIp::resolve('10.1.2.3', '1.2.3.4', ['10.0.0.0/99', 'nonsense']), 'a bad entry trusts nothing');
+        $this->assertSame('1.2.3.4', ClientIp::resolve('10.1.2.3', '1.2.3.4:5678', $trusted), 'a proxy that writes the port');
+        $this->assertSame('2001:db9::5', ClientIp::resolve('10.1.2.3', '[2001:db9::5]:443', $trusted), 'a bracketed IPv6 address with a port');
+        $this->assertSame('1.2.3.4', ClientIp::resolve('::ffff:10.1.2.3', '1.2.3.4', $trusted), 'an IPv4-mapped connecting address');
     }
 
     public function testTheAccountBucketIsKeyedOnTheAccount(): void
     {
         $this->assertSame('uid:7', LT::identity(7, 'Anna'));
         $this->assertSame('uid:7', LT::identity(7, 'anna@example.com'), 'user name and e-mail of one person are one bucket');
-        $this->assertSame('ghost', LT::identity(0, 'ghost'), 'an unknown name is counted as typed');
+        $this->assertSame('name:ghost', LT::identity(0, 'ghost'), 'an unknown name is counted by its cleaned, lower-case spelling');
+        $this->assertSame('name:ghost', LT::identity(0, ' GHOST '));
     }
 }

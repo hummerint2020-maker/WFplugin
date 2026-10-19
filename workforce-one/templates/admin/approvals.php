@@ -123,9 +123,9 @@ $fin_missing = !$settings['finance_user'];
             ?><a href="<?php echo esc_url($c['hr_cases']['url']); ?>">Change in Attendance Corrections → Settings</a></p>
             <?php endif; ?>
         </td></tr>
-        <tr data-visible-modes="<?php echo esc_attr($level_modes(1)); ?>" class="ews-apv-mode-row"><th>If the approver is the requester</th><td>
+        <tr class="ews-apv-mode-row"><th>If the approver is the requester</th><td>
             <?php foreach ($self_rules as $rv => $rl): ?><label class="ews-apv-self"><input type="radio" name="self_rule" value="<?php echo esc_attr($rv); ?>"<?php checked($c['self_rule'], $rv); ?>> <?php echo esc_html($rl); ?></label><?php endforeach; ?>
-            <p class="description" style="max-width:720px">They decide it: the person who made the request decides that level (for example the owner or the head of HR); it is listed under Self-decisions below and in the Audit Log. The next level: that level is skipped (with no level after it, an administrator decides it). Administrators: that level waits for an administrator on the Requests Hub.</p>
+            <p class="description" style="max-width:720px">Also without a workflow: a manager who decides on their own request is refused unless this says "They decide it" (administrators always may; it is marked in the Audit Log). They decide it: the person who made the request decides that level (for example the owner or the head of HR); it is listed under Self-decisions below and in the Audit Log. The next level: that level is skipped (with no level after it, an administrator decides it). Administrators: that level waits for an administrator on the Requests Hub.</p>
         </td></tr>
         <tr data-visible-modes="<?php echo esc_attr($level_modes(1)); ?>" class="ews-apv-mode-row"><th>If nobody decides</th><td>
             <span class="ews-apv-inline">Remind after <input type="number" min="0" max="720" name="remind_hours" value="<?php echo (int) $c['deadlines']['remind']; ?>" aria-label="Remind after (working hours)"> working hours,</span>

@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.111
+### Bug round (the list in docs/tasks/bug-review-2026-10.md)
+- **Payroll** (owner's decisions): the deduction limit now covers attendance only (absence, late, early leave); unpaid
+  leave is always deducted in full. A first or last month is paid by the month's real days (monthly pay ÷ days in the
+  month × days worked), so 2 February and 2 March are treated alike. The payslip shows the rate actually used, and the
+  limit as a credit line, so the lines add up to the net pay.
+  **Upgrade note:** months that are not closed yet, and months that are reopened, are worked out again with these rules;
+  closed months keep their saved payslips.
+- **Approving your own request without a workflow:** a manager is refused unless the feature's setting allows it
+  (overtime and leave use the workflow's rule "If the approver is the requester", now also shown when there is no
+  workflow; Early Leave and Daily Workers have their own switch). Administrators still may; every self-decision is in the
+  Audit Log. Defaults keep today's behaviour. The approval of a leave cancellation follows the same rule.
+- **Daily Workers:** HR can no longer set today in wp-admin → Days before the site has saved it (it locked the foreman and
+  the workers' own Sign In out); an invalid date for the payout PDF is refused.
+- **Attendance corrections:** the monthly limit and the lists end the month on its real last day (no 31 February); a
+  request that does not go through no longer leaves its photo on disk.
+- **App login:** a normal WordPress 6.8 login no longer signs the user out of every phone; a refresh token used twice
+  within 30 seconds is a retry, not theft; the per-account login limit counts the user name and the e-mail of one person
+  together (whatever the spelling); the limit can see the real client address behind a proxy or CDN when
+  `WORKFORCE_ONE_TRUSTED_PROXIES` is set in wp-config.php (off by default); a malformed request is 400, not 403.
+- **App links:** menu links no longer carry another page's filters (site, start, dw_day…); the Tasks "Show all" choice
+  survives a reload.
+- Closed months' detail page uses the day divisor the month was closed with.
+
 ## 3.31.110
 ### New: System health (off by default)
 Owner decisions 2026-10-19 (docs/tasks/system-health.md), mockup docs/mockups/system-health/. Turned on in

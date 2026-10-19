@@ -61,7 +61,7 @@ final class DailyWorkerSettings
         $week = (int) ($post['dw_week_start'] ?? 6);
         return [[
             'mode' => $mode, 'period' => $period, 'week_start' => ($week >= 0 && $week <= 6) ? $week : 6,
-            'hourly_rate' => round((float) $rate, 2), 'photo' => empty($post['dw_photo']) ? 0 : 1, 'self_decide' => empty($post['dw_self_decide']) ? 0 : 1,
+            'hourly_rate' => round((float) $rate, 2), 'photo' => empty($post['dw_photo']) ? 0 : 1, 'self_decide' => isset($post['dw_self_decide_shown']) ? (empty($post['dw_self_decide']) ? 0 : 1) : (int) ($post['dw_self_decide_kept'] ?? 0),
             'trades' => $trades, 'subcontractors' => self::names(self::lines((string) ($post['dw_subcontractors'] ?? ''))),
         ], ''];
     }
