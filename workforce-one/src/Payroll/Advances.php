@@ -16,9 +16,10 @@ final class Advances
         'max_instalments' => 12,
         'one_open' => 1,          // one open advance at a time (owner decision 1)
         'min_service_months' => 0,
+        'max_moves' => 1,         // how many times Finance may move an instalment to the end, per advance (0 = no limit)
     ];
 
-    /** @param mixed $saved @return array{months_salary:float,max_amount:float,max_instalments:int,one_open:int,min_service_months:int} */
+    /** @param mixed $saved @return array{months_salary:float,max_amount:float,max_instalments:int,one_open:int,min_service_months:int,max_moves:int} */
     public static function settings($saved): array
     {
         $s = is_array($saved) ? $saved : [];
@@ -29,6 +30,7 @@ final class Advances
             'max_instalments' => (int) $num($s['max_instalments'] ?? null, self::DEFAULTS['max_instalments'], 1, 60),
             'one_open' => array_key_exists('one_open', $s) ? (empty($s['one_open']) ? 0 : 1) : self::DEFAULTS['one_open'],
             'min_service_months' => (int) $num($s['min_service_months'] ?? null, self::DEFAULTS['min_service_months'], 0, 120),
+            'max_moves' => (int) $num($s['max_moves'] ?? null, self::DEFAULTS['max_moves'], 0, 12),
         ];
     }
 
@@ -50,8 +52,9 @@ final class Advances
      */
     public static function check(array $f, array $settings): ?string
     {
-        if (!($f['amount'] > 0)) return 'amount';
+        if (!($f['amount'] > 0) || $f['amount'] > self::MOST) return 'amount';
         if ($f['instalments'] < 1 || $f['instalments'] > $settings['max_instalments']) return 'instalments';
+        if ((int) round($f['amount'] * 100) < $f['instalments']) return 'amount';   // an instalment is at least one cent
         if ($f['limit'] === null) return 'no_salary';
         if ($f['amount'] > $f['limit'] + 0.004) return 'limit';
         if ($settings['one_open'] && $f['open']) return 'open';
@@ -59,13 +62,17 @@ final class Advances
         return null;
     }
 
-    /** Equal instalments; the last one takes the rounding so they add up to the amount. @return list<float> */
+    /** The most one advance can be (the column holds 12 digits with 2 decimals). */
+    public const MOST = 9999999.99;
+
+    /** Equal instalments in whole cents; the last one takes the rounding so they add up to the amount. @return list<float> */
     public static function split(float $amount, int $instalments): array
     {
         $instalments = max(1, $instalments);
-        $each = floor($amount / $instalments * 100) / 100;
-        $out = array_fill(0, $instalments, $each);
-        $out[$instalments - 1] = round($amount - $each * ($instalments - 1), 2);
+        $cents = (int) round($amount * 100);
+        $each = intdiv($cents, $instalments);
+        $out = array_fill(0, $instalments, (float) ($each / 100));
+        $out[$instalments - 1] = (float) (($cents - $each * ($instalments - 1)) / 100);
         return $out;
     }
 

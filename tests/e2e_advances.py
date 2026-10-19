@@ -16,14 +16,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, php, q, results, wp, HERE  # noqa: E402
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
+php("""$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'ensure_advances_schema');$m->setAccessible(true);$m->invoke($o);""")
 ids = json.loads(php("""
     $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
     foreach(['ews_salary_advances','ews_advance_instalments','ews_pay_rates','ews_pay_adjustments','ews_payroll_runs','ews_payslips','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps','ews_employee_relationships','ews_notifications','ews_audit_log'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
     foreach(['ews_feature_advances','ews_advance_settings','ews_approval_settings','ews_approval_self_rule','ews_approval_reject_note','ews_payroll_currency'] as $o) delete_option($o);
     update_option('ews_feature_my_approvals',1,false);
-    $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('mona','fina')");
-    $out=['emp'=>$eid,'emp_uid'=>(int)get_user_by('login','emp1')->ID];
+    $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('mona','fina','gone')");
+    $out=['emp'=>$eid,'emp_uid'=>(int)get_user_by('login','emp1')->ID,'admin_uid'=>(int)get_user_by('login','admin')->ID];
     foreach(['mona'=>'Mona Adel','fina'=>'Fina Money'] as $login=>$name){
         $uid=username_exists($login)?:wp_create_user($login,$login.'pass',$login.'@example.com');
         $wpdb->insert($p.'ews_employees',['name'=>$name,'domain_name'=>$login,'email'=>$login.'@example.com','wp_user_id'=>$uid,'active'=>1,'attendance_enabled'=>1]);
@@ -93,6 +94,30 @@ def admin_form(action, key, value):
         if 'value="%s"' % action in f and 'name="%s" value="%s"' % (key, value) in f:
             return re.search(r'name="_wpnonce" value="([^"]+)"', f).group(1)
     return 'x'
+
+
+def close_month(month):
+    page = adm.req('/wp-admin/admin.php?page=ews31-payroll&month=' + month)[1]
+    m = re.search(r'name="action" value="ews_payroll_close".*?name="_wpnonce" value="([^"]+)"', page, re.S) or re.search(r'name="_wpnonce" value="([^"]+)"[^>]*>(?:(?!</form>).)*?name="action" value="ews_payroll_close"', page, re.S)
+    st, body, h = adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_close', '_wpnonce': m.group(1) if m else 'x', 'month': month})
+    return html.unescape(h.get('Location', ''))
+
+
+def reopen_month(month):
+    page = adm.req('/wp-admin/admin.php?page=ews31-payroll&month=' + month)[1]
+    m = re.search(r'name="action" value="ews_payroll_reopen".*?name="_wpnonce" value="([^"]+)"', page, re.S) or re.search(r'name="_wpnonce" value="([^"]+)"[^>]*>(?:(?!</form>).)*?name="action" value="ews_payroll_reopen"', page, re.S)
+    st, body, h = adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_reopen', '_wpnonce': m.group(1) if m else 'x', 'month': month})
+    return html.unescape(h.get('Location', ''))
+
+
+def taken(eid):
+    return [int(r['taken_run_id']) for r in q("SELECT taken_run_id FROM {p}ews_advance_instalments WHERE employee_id=%d ORDER BY month,seq" % eid)]
+
+
+def make_advance(eid, status, months, amount=300, taken_run=0):
+    """An advance straight in the tables: one instalment per month in `months`."""
+    return int(php("""$wpdb->insert($p.'ews_salary_advances',['employee_id'=>%d,'amount'=>%s,'instalments'=>%d,'status'=>'%s','requested_at'=>current_time('mysql'),'paid_on'=>%s]); $a=$wpdb->insert_id;
+        if('%s'==='Paid') foreach(%s as $i=>$m) $wpdb->insert($p.'ews_advance_instalments',['advance_id'=>$a,'employee_id'=>%d,'month'=>$m,'seq'=>$i+1,'amount'=>%s/%d,'taken_run_id'=>%d]); echo $a;""" % (eid, amount, len(months), status, "'%s-01'" % months[0] if status == 'Paid' else 'null', status, json.dumps(months), eid, amount, len(months), taken_run)).splitlines()[-1])
 
 
 def lines(month, eid):
@@ -177,10 +202,17 @@ st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-payroll&month=%s&employee=
 check('...the month page shows it with "Move to the end"', 'Advance instalment (1 of 4)' in page and 'value="ews_advance_move"' in page)
 page = fina.req(ADMIN)[1]
 check('the Advances page: being paid back, 0 of 4 taken, 3,000 left', 'data-advance="%d"' % AID in page.split('data-advances-paying')[1] and '0 of 4 taken' in page and '3,000 EGP' in page)
-php("$wpdb->insert($p.'ews_payroll_runs',['month'=>'%s','closed_by'=>1]);" % ids['last'])
+loc = close_month(ids['last'])
+run = q("SELECT id FROM {p}ews_payroll_runs WHERE month='%s'" % ids['last'])
+check('a real close of the month: closed, and the instalment is marked taken by that run', run and 'payroll_saved=closed' in loc and taken(ids['emp'])[0] == int(run[0]['id']) and taken(ids['emp'])[1:] == [0, 0, 0], (loc, taken(ids['emp'])))
+slip = q("SELECT data FROM {p}ews_payslips ORDER BY id DESC LIMIT 1")
+check('...the payslip kept the advance line', slip and 'Advance instalment (1 of 4)' in slip[0]['data'], slip[:1])
 page = fina.req(ADMIN)[1]
 check('once the month is closed, the instalment is taken: 1 of 4, 2,250 left', '1 of 4 taken' in page and '2,250 EGP' in page)
 check('...My requests says so', '2,250 EGP left' in requests_page() and '1 of 4' in requests_page())
+loc = reopen_month(ids['last'])
+check('reopening the month gives the instalment back (due again, 3,000 left)', taken(ids['emp']) == [0, 0, 0, 0] and 'payroll_saved=reopened' in loc and '3,000 EGP' in fina.req(ADMIN)[1], taken(ids['emp']))
+close_month(ids['last'])
 first = int(ins[0]['id'])
 st, qs, _ = fina.post('ews_advance_move', _wpnonce=session_nonce(fina, ids['fina_uid'], 'ews_advance_move_%d' % first), instalment_id=first)
 check('a taken instalment (closed month) cannot move', int(q("SELECT moved FROM {p}ews_advance_instalments WHERE id=%d" % first)[0]['moved']) == 0)
@@ -189,6 +221,9 @@ st, qs, _ = fina.post('ews_advance_move', _wpnonce=admin_form('ews_advance_move'
 moved = q("SELECT month,moved FROM {p}ews_advance_instalments WHERE id=%d" % nxt)[0]
 after = php("echo date('Y-m',strtotime('%s-01 +1 month'));" % ins[3]['month']).strip().splitlines()[-1]
 check('moving the next instalment: to the month after the last one, marked moved', qs.get('adv_done') == 'moved' and int(moved['moved']) == 1 and moved['month'] == after, (qs, moved, after))
+third = int(ins[2]['id'])
+st, qs, _ = fina.post('ews_advance_move', _wpnonce=session_nonce(fina, ids['fina_uid'], 'ews_advance_move_%d' % third), instalment_id=third)
+check('...only once per advance (the setting): a second move is refused', qs.get('adv_error') == 'moves' and int(q("SELECT moved FROM {p}ews_advance_instalments WHERE id=%d" % third)[0]['moved']) == 0, qs)
 check('...an employee cannot move one', emp.post('ews_advance_move', _wpnonce='x', instalment_id=nxt)[1].get('adv_done') != 'moved')
 
 # ---------------------------------------------------------------- leaving
@@ -200,8 +235,50 @@ st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-employees&employee_notice=
 check('...shown on the Employees page', 'data-advance-left' in page and '2,250 EGP' in page and 'last pay' in page)
 php("$wpdb->update($p.'ews_employees',['active'=>1,'last_working_day'=>null],['id'=>%d]);" % ids['emp'])
 
+# ---------------------------------------------------------------- leaving: the close takes the rest, a rehire is not charged twice
+reopen_month(ids['last'])
+php("$wpdb->update($p.'ews_employees',['active'=>0,'last_working_day'=>'%s-15'],['id'=>%d]);" % (ids['last'], ids['emp']))
+loc = close_month(ids['last'])
+slip = q("SELECT data FROM {p}ews_payslips ORDER BY id DESC LIMIT 1")
+check('leaving in a closed-again month: the close takes every instalment, the rest on the last payslip', 'payroll_saved=closed' in loc and all(t > 0 for t in taken(ids['emp'])) and slip and 'Advance: the rest' in slip[0]['data'], (loc, taken(ids['emp'])))
+php("$wpdb->update($p.'ews_employees',['active'=>1,'last_working_day'=>null],['id'=>%d]);" % ids['emp'])
+check('...made active again: no instalment is charged a second time in the next months', lines(ids['this'], ids['emp']) == [] and call('advance_left_for', ids['emp']) == 0.0, lines(ids['this'], ids['emp']))
+
+# ---------------------------------------------------------------- an instalment in a closed month is not lost
+php("$wpdb->query(\"DELETE FROM {$p}ews_salary_advances\"); $wpdb->query(\"DELETE FROM {$p}ews_advance_instalments\");")
+nxt_month = php("echo date('Y-m',strtotime('first day of next month',current_time('timestamp')));").strip().splitlines()[-1]
+late = make_advance(ids['emp'], 'Paid', [ids['last'], ids['this'], nxt_month], 900)
+got = lines(ids['this'], ids['emp'])
+check('paid late (its first month already closed): that instalment comes off the next month computed, marked as due earlier', [v for _, v in got] == [300.0, 300.0] and any('due ' + ids['last'] in r for r, _ in got), got)
+php("update_option('ews_feature_advances',0,false);")
+check('the feature switched off in the middle: nothing is taken', lines(ids['this'], ids['emp']) == [])
+php("update_option('ews_feature_advances',1,false);")
+check('...switched on again: the same instalments are still due', [v for _, v in lines(ids['this'], ids['emp'])] == [300.0, 300.0])
+
+# ---------------------------------------------------------------- the Archive button warns, and the Advances page marks who left
+qs = adm.post('ews31_employee_archive', _wpnonce=session_nonce(adm, ids['admin_uid'], 'ews31_employee_archive'), id=ids['emp'], last_working_day=ids['this'] + '-20')[1]
+check('the Archive button warns about the advance still owed', qs.get('employee_notice') == 'archived' and float(qs.get('advance_left', 0)) == 900.0, qs)
+page = adm.req(ADMIN)[1]
+check('...and the Advances page marks the employee as having left', 'data-left-company' in page)
+php("$wpdb->update($p.'ews_employees',['active'=>1,'last_working_day'=>null],['id'=>%d]);" % ids['emp'])
+
+# ---------------------------------------------------------------- nobody pays or moves their own advance; nobody is paid who left
+own = make_advance(ids['fina'], 'Approved', [ids['this']], 600)
+st, qs, _ = fina.post('ews_advance_paid', _wpnonce=session_nonce(fina, ids['fina_uid'], 'ews_advance_paid_%d' % own), advance_id=own, paid_on=ids['before'], paid_method='cash')
+check('Finance cannot record their own advance as paid', qs.get('adv_error') == 'self' and q("SELECT status FROM {p}ews_salary_advances WHERE id=%d" % own)[0]['status'] == 'Approved', qs)
+own2 = make_advance(ids['fina'], 'Paid', [ids['this'], nxt_month], 600)
+iid = int(q("SELECT id FROM {p}ews_advance_instalments WHERE advance_id=%d ORDER BY seq LIMIT 1" % own2)[0]['id'])
+st, qs, _ = fina.post('ews_advance_move', _wpnonce=session_nonce(fina, ids['fina_uid'], 'ews_advance_move_%d' % iid), instalment_id=iid)
+check('...nor move their own instalments', qs.get('adv_error') == 'self' and int(q("SELECT moved FROM {p}ews_advance_instalments WHERE id=%d" % iid)[0]['moved']) == 0, qs)
+gone = int(php("$wpdb->insert($p.'ews_employees',['name'=>'Gone Away','domain_name'=>'gone','email'=>'gone@example.com','active'=>0,'attendance_enabled'=>1]); echo $wpdb->insert_id;").splitlines()[-1])
+ga = make_advance(gone, 'Approved', [ids['this']], 600)
+st, qs, _ = fina.post('ews_advance_paid', _wpnonce=session_nonce(fina, ids['fina_uid'], 'ews_advance_paid_%d' % ga), advance_id=ga, paid_on=ids['before'], paid_method='cash')
+check('an advance for an employee who has left is not paid (no payslip would take it)', qs.get('adv_error') == 'inactive' and q("SELECT status FROM {p}ews_salary_advances WHERE id=%d" % ga)[0]['status'] == 'Approved', qs)
+
 # ---------------------------------------------------------------- withdraw, reject
 php("$wpdb->query(\"DELETE FROM {$p}ews_salary_advances\"); $wpdb->query(\"DELETE FROM {$p}ews_advance_instalments\");")
+check('an amount under a cent per instalment is refused', ask(0.03, 4).get('adv_error') == 'amount' and not advances())
+check('...and one beyond what the table holds', ask(10000000, 12).get('adv_error') == 'amount' and not advances())
 qs = ask(1200, 2, 'school')
 a = advances()[-1]
 page = requests_page()
@@ -215,7 +292,8 @@ qs = decide(mona, 'reject', 'Not now')
 check('the manager rejects: rejected, with the note to the employee', advances()[-1]['status'] == 'Rejected' and q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND title='Your salary advance was rejected'" % ids['emp_uid']), (qs, advances()[-1]))
 check('...and a new one can be asked again', ask(400, 1).get('adv_sent') == '1')
 
-php("""foreach(['ews_salary_advances','ews_advance_instalments','ews_pay_rates','ews_payroll_runs','ews_approval_requests','ews_approval_steps','ews_employee_relationships'] as $t) $wpdb->query("DELETE FROM {$p}$t");
+php("""foreach(['ews_salary_advances','ews_advance_instalments','ews_pay_rates','ews_payroll_runs','ews_payslips','ews_approval_requests','ews_approval_steps','ews_employee_relationships'] as $t) $wpdb->query("DELETE FROM {$p}$t");
+    $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name='gone'");
     $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0"); $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('mona','fina')");
     foreach(['ews_feature_advances','ews_advance_settings','ews_approval_settings','ews_feature_my_approvals'] as $o) delete_option($o);""")
 print('%d / %d' % (sum(results), len(results)))

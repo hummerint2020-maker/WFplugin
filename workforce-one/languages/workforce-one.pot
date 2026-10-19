@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-17T19:57:17+00:00\n"
+"POT-Creation-Date: 2026-10-19T01:36:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -36,7 +36,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:25
 #: includes/trait-app-layout.php:79
 #: includes/trait-app-layout.php:96
-#: templates/admin/features.php:126
+#: templates/admin/features.php:127
 msgid "People"
 msgstr ""
 
@@ -162,7 +162,7 @@ msgid "Approval workflows"
 msgstr ""
 
 #: includes/trait-admin-nav.php:52
-#: templates/admin/features.php:91
+#: templates/admin/features.php:92
 #: templates/admin/substitutes.php:21
 msgid "Substitutes"
 msgstr ""
@@ -289,35 +289,35 @@ msgstr ""
 msgid "Daily Workers"
 msgstr ""
 
-#: includes/trait-advances.php:121
+#: includes/trait-advances.php:123
 msgid "No limit"
 msgstr ""
 
-#: includes/trait-advances.php:127
+#: includes/trait-advances.php:129
 msgid "Enter the amount."
 msgstr ""
 
 #. translators: %d: most instalments
-#: includes/trait-advances.php:127
+#: includes/trait-advances.php:129
 #, php-format
 msgid "Pay it back over 1 to %d months."
 msgstr ""
 
 #. translators: %d: most instalments
-#: includes/trait-advances.php:128
+#: includes/trait-advances.php:130
 msgid "Your salary is not on file yet, so the limit is not known. Ask HR."
 msgstr ""
 
-#: includes/trait-advances.php:129
+#: includes/trait-advances.php:131
 msgid "That is more than you can ask for."
 msgstr ""
 
-#: includes/trait-advances.php:129
+#: includes/trait-advances.php:131
 msgid "You already have an advance open. One at a time."
 msgstr ""
 
 #. translators: %d: months
-#: includes/trait-advances.php:130
+#: includes/trait-advances.php:132
 #, php-format
 msgid "You can ask after %d month with the company."
 msgid_plural "You can ask after %d months with the company."
@@ -325,22 +325,22 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: months
-#: includes/trait-advances.php:131
+#: includes/trait-advances.php:133
 #: includes/trait-substitutes.php:244
 msgid "You cannot do that."
 msgstr ""
 
 #. translators: %d: months
-#: includes/trait-advances.php:131
+#: includes/trait-advances.php:133
 msgid "It could not be saved. Try again."
 msgstr ""
 
 #. translators: %d: months
-#: includes/trait-advances.php:131
+#: includes/trait-advances.php:133
 msgid "It could not be decided. Try again."
 msgstr ""
 
-#: includes/trait-advances.php:132
+#: includes/trait-advances.php:134
 #: includes/trait-frontend.php:202
 #: includes/trait-frontend.php:214
 #: includes/trait-frontend.php:223
@@ -348,14 +348,14 @@ msgstr ""
 msgid "Write why you reject it, then reject it again."
 msgstr ""
 
-#: includes/trait-advances.php:132
+#: includes/trait-advances.php:134
 #: includes/trait-frontend.php:202
 #: includes/trait-frontend.php:223
 msgid "Another request of yours is being saved. Try again in a moment."
 msgstr ""
 
-#: includes/trait-advances.php:150
-#: includes/trait-advances.php:198
+#: includes/trait-advances.php:152
+#: includes/trait-advances.php:200
 #: includes/trait-face-reset.php:214
 #: includes/trait-my-approvals.php:238
 #: includes/trait-substitutes.php:343
@@ -365,55 +365,55 @@ msgstr ""
 msgid "You must be logged in."
 msgstr ""
 
-#: includes/trait-advances.php:184
+#: includes/trait-advances.php:186
 msgid "A salary advance waits for you"
 msgstr ""
 
 #. translators: %s: employee name
-#: includes/trait-advances.php:185
+#: includes/trait-advances.php:187
 #, php-format
 msgid "%s asked for a salary advance."
 msgstr ""
 
 #. translators: %s: employee name
-#: includes/trait-advances.php:191
+#: includes/trait-advances.php:193
 #, php-format
 msgid "The salary advance of %s was approved and waits to be paid (wp-admin → Advances)."
 msgstr ""
 
 #. translators: %s: employee name
-#: includes/trait-advances.php:192
-#: includes/trait-advances.php:193
+#: includes/trait-advances.php:194
+#: includes/trait-advances.php:195
 msgid "An advance waits to be paid"
 msgstr ""
 
-#: includes/trait-advances.php:221
+#: includes/trait-advances.php:223
 msgid "Your salary advance was approved"
 msgstr ""
 
-#: includes/trait-advances.php:221
+#: includes/trait-advances.php:223
 msgid "It waits to be paid. Instalments start the month after it is paid."
 msgstr ""
 
-#: includes/trait-advances.php:223
+#: includes/trait-advances.php:225
 msgid "Your salary advance was rejected"
 msgstr ""
 
-#: includes/trait-advances.php:251
+#: includes/trait-advances.php:255
 msgid "Salary"
 msgstr ""
 
-#: includes/trait-advances.php:252
+#: includes/trait-advances.php:256
 msgid "Of the limit"
 msgstr ""
 
-#: includes/trait-advances.php:253
+#: includes/trait-advances.php:257
 msgid "Open advances"
 msgstr ""
 
 #. translators: %s: amount
 #. translators: %s: days left
-#: includes/trait-advances.php:253
+#: includes/trait-advances.php:257
 #: templates/app/new-request.php:51
 #, php-format
 msgid "%s left"
@@ -421,28 +421,28 @@ msgstr ""
 
 #. translators: %s: amount
 #. translators: 1: count, 2: limit
-#: includes/trait-advances.php:253
+#: includes/trait-advances.php:257
 #: templates/admin/daily-workers.php:75
 #: templates/app/corrections.php:100
 msgid "None"
 msgstr ""
 
 #. translators: %s: amount
-#: includes/trait-advances.php:254
+#: includes/trait-advances.php:258
 msgid "Last advance"
 msgstr ""
 
 #. translators: %s: amount
-#: includes/trait-advances.php:254
+#: includes/trait-advances.php:258
 msgid "paid back"
 msgstr ""
 
-#: includes/trait-advances.php:255
+#: includes/trait-advances.php:259
 msgid "With the company"
 msgstr ""
 
 #. translators: %d: months
-#: includes/trait-advances.php:256
+#: includes/trait-advances.php:260
 #: includes/trait-corrections.php:949
 #: includes/trait-leave.php:550
 #: includes/trait-overtime.php:314
@@ -467,80 +467,98 @@ msgstr ""
 
 #. translators: %d: months
 #. translators: 1: amount a month, 2: months
-#: includes/trait-advances.php:257
-#: includes/trait-advances.php:269
+#: includes/trait-advances.php:261
+#: includes/trait-advances.php:273
 #: includes/trait-my-approvals.php:230
 #: templates/app/new-request.php:135
 msgid "Salary advance"
 msgstr ""
 
 #. translators: 1: amount, 2: months, 3: each instalment
-#: includes/trait-advances.php:258
+#: includes/trait-advances.php:262
 #, php-format
 msgid "%1$s over %2$d month (%3$s a month)"
 msgid_plural "%1$s over %2$d months (%3$s a month)"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-advances.php:267
+#: includes/trait-advances.php:271
 msgid "Approved · waits to be paid"
 msgstr ""
 
 #. translators: 1: date, 2: amount left, 3: instalments taken, 4: instalments
-#: includes/trait-advances.php:267
+#: includes/trait-advances.php:271
 #, php-format
 msgid "Paid on %1$s · %2$s left · %3$d of %4$d instalments"
 msgstr ""
 
 #. translators: 1: date, 2: amount left, 3: instalments taken, 4: instalments
-#: includes/trait-advances.php:268
+#: includes/trait-advances.php:272
 msgid "Paid back"
 msgstr ""
 
 #. translators: %d: months
-#: includes/trait-advances.php:268
+#: includes/trait-advances.php:272
 #, php-format
 msgid "Over %d month"
 msgid_plural "Over %d months"
 msgstr[0] ""
 msgstr[1] ""
 
+#. translators: 1: instalment, 2: instalments, 3: the month it was due
+#: includes/trait-advances.php:302
+#, php-format
+msgid "Advance instalment (%1$d of %2$d), due %3$s"
+msgstr ""
+
 #. translators: 1: instalment, 2: instalments
-#: includes/trait-advances.php:293
+#: includes/trait-advances.php:303
 #, php-format
 msgid "Advance instalment (%1$d of %2$d)"
 msgstr ""
 
-#: includes/trait-advances.php:296
+#: includes/trait-advances.php:308
 msgid "Advance: the rest (last month)"
 msgstr ""
 
-#: includes/trait-advances.php:325
+#: includes/trait-advances.php:363
 msgid "Recorded as paid. The instalments start next month."
 msgstr ""
 
-#: includes/trait-advances.php:325
+#: includes/trait-advances.php:363
 msgid "The instalment moved to after the last one."
 msgstr ""
 
-#: includes/trait-advances.php:325
+#: includes/trait-advances.php:363
 msgid "Saved."
 msgstr ""
 
-#: includes/trait-advances.php:326
+#: includes/trait-advances.php:364
 msgid "Pick the day it was paid."
 msgstr ""
 
-#: includes/trait-advances.php:326
-msgid "That month is closed in Payroll."
+#: includes/trait-advances.php:364
+msgid "That instalment was already taken in a closed month."
 msgstr ""
 
-#: includes/trait-advances.php:351
+#: includes/trait-advances.php:365
+msgid "You cannot pay or move your own advance. Someone else must."
+msgstr ""
+
+#: includes/trait-advances.php:365
+msgid "This employee has left, so the advance cannot be paid."
+msgstr ""
+
+#: includes/trait-advances.php:366
+msgid "This advance was already moved the most times allowed."
+msgstr ""
+
+#: includes/trait-advances.php:396
 msgid "Your salary advance was paid"
 msgstr ""
 
 #. translators: 1: month, 2: instalments
-#: includes/trait-advances.php:352
+#: includes/trait-advances.php:397
 #, php-format
 msgid "The instalment comes off your pay from %1$s, for %2$d month."
 msgid_plural "The instalments come off your pay from %1$s, for %2$d months."
@@ -2030,7 +2048,7 @@ msgid "Planned for today"
 msgstr ""
 
 #. translators: %s: amount
-#: includes/trait-employee-admin.php:189
+#: includes/trait-employee-admin.php:191
 #, php-format
 msgid "This employee still owes %s of a salary advance. The rest is taken off their last pay."
 msgstr ""
@@ -3650,6 +3668,10 @@ msgstr ""
 msgid "No advance is being paid back."
 msgstr ""
 
+#: templates/admin/advances.php:48
+msgid "Left the company"
+msgstr ""
+
 #. translators: 1: taken, 2: instalments
 #: templates/admin/advances.php:51
 #, php-format
@@ -3938,14 +3960,14 @@ msgid "Off"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:98
+#: templates/admin/features.php:99
 #: templates/app/time.php:118
 #: templates/app/time.php:168
 msgid "Optional"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:98
+#: templates/admin/features.php:99
 msgid "Required"
 msgstr ""
 
@@ -4660,110 +4682,114 @@ msgid "After how many months with the company"
 msgstr ""
 
 #: templates/admin/features.php:87
+msgid "Times Finance may move an instalment to the end, per advance (0 = no limit)"
+msgstr ""
+
+#: templates/admin/features.php:88
 msgid "One open advance at a time"
 msgstr ""
 
-#: templates/admin/features.php:91
+#: templates/admin/features.php:92
 msgid "A substitute while a manager is away"
 msgstr ""
 
-#: templates/admin/features.php:91
+#: templates/admin/features.php:92
 msgid "While a manager is away, the requests that would wait for them wait for their substitute, marked \"for\" them, in every request type. A manager picks one when they ask for leave, or with \"I'll be away\" in My approvals (any start and end time); HR can set one for anyone."
 msgstr ""
 
-#: templates/admin/features.php:95
+#: templates/admin/features.php:96
 msgid "The manager can still decide while away"
 msgstr ""
 
-#: templates/admin/features.php:96
+#: templates/admin/features.php:97
 msgid "When the manager is back, what still waits"
 msgstr ""
 
-#: templates/admin/features.php:96
+#: templates/admin/features.php:97
 msgid "Goes back to the manager"
 msgstr ""
 
-#: templates/admin/features.php:96
+#: templates/admin/features.php:97
 msgid "Stays with the substitute until decided"
 msgstr ""
 
-#: templates/admin/features.php:97
+#: templates/admin/features.php:98
 msgid "Who can be a substitute"
 msgstr ""
 
-#: templates/admin/features.php:97
+#: templates/admin/features.php:98
 msgid "Any active employee"
 msgstr ""
 
-#: templates/admin/features.php:97
+#: templates/admin/features.php:98
 msgid "Managers only (someone reports to them)"
 msgstr ""
 
-#: templates/admin/features.php:97
+#: templates/admin/features.php:98
 msgid "Someone in the same department"
 msgstr ""
 
-#: templates/admin/features.php:98
+#: templates/admin/features.php:99
 msgid "Ask managers for one when they request leave"
 msgstr ""
 
-#: templates/admin/features.php:98
+#: templates/admin/features.php:99
 msgid "Do not ask (HR sets them)"
 msgstr ""
 
-#: templates/admin/features.php:111
+#: templates/admin/features.php:112
 msgid "Office Minimum"
 msgstr ""
 
-#: templates/admin/features.php:111
+#: templates/admin/features.php:112
 msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
 msgstr ""
 
-#: templates/admin/features.php:112
+#: templates/admin/features.php:113
 msgid "Enabled"
 msgstr ""
 
-#: templates/admin/features.php:115
+#: templates/admin/features.php:116
 msgid "Minimum each day"
 msgstr ""
 
-#: templates/admin/features.php:115
+#: templates/admin/features.php:116
 msgid "people in the office"
 msgstr ""
 
-#: templates/admin/features.php:116
+#: templates/admin/features.php:117
 msgid "Working days only; company holidays and days off are not checked."
 msgstr ""
 
-#: templates/admin/features.php:117
+#: templates/admin/features.php:118
 msgid "A different day (optional)"
 msgstr ""
 
-#: templates/admin/features.php:119
+#: templates/admin/features.php:120
 msgid "Empty = the minimum above. 0 = no minimum that day."
 msgstr ""
 
-#: templates/admin/features.php:120
+#: templates/admin/features.php:121
 msgid "Who counts as in the office"
 msgstr ""
 
-#: templates/admin/features.php:122
+#: templates/admin/features.php:123
 msgid "Leave, trips and training count only if ticked here."
 msgstr ""
 
-#: templates/admin/features.php:123
+#: templates/admin/features.php:124
 msgid "Each team's share"
 msgstr ""
 
-#: templates/admin/features.php:124
+#: templates/admin/features.php:125
 msgid "Automatic, by team size. You can fix a number for a team."
 msgstr ""
 
-#: templates/admin/features.php:125
+#: templates/admin/features.php:126
 msgid "No teams yet: the minimum is checked for the whole company."
 msgstr ""
 
-#: templates/admin/features.php:126
+#: templates/admin/features.php:127
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:119
 #: templates/app/employees.php:22
@@ -4774,32 +4800,32 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/admin/features.php:126
+#: templates/admin/features.php:127
 msgid "Automatic share"
 msgstr ""
 
-#: templates/admin/features.php:126
+#: templates/admin/features.php:127
 msgid "Fixed number"
 msgstr ""
 
-#: templates/admin/features.php:128
+#: templates/admin/features.php:129
 msgid "Auto"
 msgstr ""
 
-#: templates/admin/features.php:130
+#: templates/admin/features.php:131
 msgid "People in no team share one line (\"No team\")."
 msgstr ""
 
-#: templates/admin/features.php:131
+#: templates/admin/features.php:132
 #: templates/app/tasks.php:188
 msgid "Reminder"
 msgstr ""
 
-#: templates/admin/features.php:131
+#: templates/admin/features.php:132
 msgid "Every week, send schedule managers the days below the minimum next week"
 msgstr ""
 
-#: templates/admin/features.php:132
+#: templates/admin/features.php:133
 msgid "Reminder day"
 msgstr ""
 

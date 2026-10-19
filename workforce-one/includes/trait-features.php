@@ -103,7 +103,7 @@ trait EWS_Features_Trait {
         if(isset($post['advances_present'])){
             update_option('ews_feature_advances',$flag('advances_enabled')?1:0,false);
             update_option('ews_advance_settings',\WorkforceOne\Payroll\Advances::settings(['months_salary'=>$post['advance_months_salary']??null,'max_amount'=>$post['advance_max_amount']??null,
-                'max_instalments'=>$post['advance_max_instalments']??null,'one_open'=>$flag('advance_one_open')?1:0,'min_service_months'=>$post['advance_min_service']??null]),false);
+                'max_instalments'=>$post['advance_max_instalments']??null,'one_open'=>$flag('advance_one_open')?1:0,'min_service_months'=>$post['advance_min_service']??null,'max_moves'=>$post['advance_max_moves']??null]),false);
         }
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){

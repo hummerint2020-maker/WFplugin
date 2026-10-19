@@ -84,6 +84,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <label><span class="wfo-field-label"><?php esc_html_e('And at most this amount (0 = none)', 'workforce-one'); ?></span><input type="number" name="advance_max_amount" min="0" step="1" value="<?php echo esc_attr((string) $advance['max_amount']); ?>"></label>
     <label><span class="wfo-field-label"><?php esc_html_e('The most instalments (months)', 'workforce-one'); ?></span><input type="number" name="advance_max_instalments" min="1" max="60" value="<?php echo (int) $advance['max_instalments']; ?>"></label>
     <label><span class="wfo-field-label"><?php esc_html_e('After how many months with the company', 'workforce-one'); ?></span><input type="number" name="advance_min_service" min="0" max="120" value="<?php echo (int) $advance['min_service_months']; ?>"></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Times Finance may move an instalment to the end, per advance (0 = no limit)', 'workforce-one'); ?></span><input type="number" name="advance_max_moves" min="0" max="12" value="<?php echo (int) $advance['max_moves']; ?>"></label>
     <label><input type="checkbox" name="advance_one_open" value="1" <?php checked(!empty($advance['one_open'])); ?>> <?php esc_html_e('One open advance at a time', 'workforce-one'); ?></label>
 </div></div>
 

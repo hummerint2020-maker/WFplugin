@@ -290,6 +290,8 @@ trait EWS_Payroll_Trait {
             if(!$ok){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
         }
         if((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['payslips']} WHERE run_id=%d",$run_id))!==count($people)){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
+        // Salary advance instalments on these payslips are taken now (3.31.109), in the same transaction.
+        if($this->advances_enabled() && !$this->advance_mark_taken($run_id,$people)){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
         if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
         $this->audit('payroll_closed','payroll',$run_id,$month.': '.count($people).' payslips');
         if($rules['employee_view']){
@@ -308,6 +310,7 @@ trait EWS_Payroll_Trait {
         $month=$this->payroll_month_post();
         $run=$month?$this->payroll_run($month):null;
         if(!$run)$this->payroll_redirect(['month'=>$month,'payroll_error'=>'not_closed']);
+        $this->advance_release_run((int)$run->id);   // its advance instalments are due again (3.31.109)
         $wpdb->delete($t['payslips'],['run_id'=>(int)$run->id],['%d']);
         $wpdb->delete($t['runs'],['id'=>(int)$run->id],['%d']);
         $this->audit('payroll_reopened','payroll',(int)$run->id,$month);

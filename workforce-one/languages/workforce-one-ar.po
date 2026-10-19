@@ -7008,3 +7008,24 @@ msgstr[5] "%d شهر"
 
 msgid "Once approved, Finance pays it, and the instalments come off your pay from the month after."
 msgstr "بعد الموافقة تصرفها المالية، وتُخصم الأقساط من راتبك بدءًا من الشهر التالي."
+
+msgid "Advance instalment (%1$d of %2$d), due %3$s"
+msgstr "قسط سلفة (%1$d من %2$d)، مستحق في %3$s"
+
+msgid "That instalment was already taken in a closed month."
+msgstr "تم خصم هذا القسط بالفعل في شهر مغلق."
+
+msgid "You cannot pay or move your own advance. Someone else must."
+msgstr "لا يمكنك صرف سلفتك أو نقل أقساطها بنفسك. يجب أن يقوم بذلك شخص آخر."
+
+msgid "This employee has left, so the advance cannot be paid."
+msgstr "هذا الموظف غادر الشركة، لذلك لا يمكن صرف السلفة."
+
+msgid "This advance was already moved the most times allowed."
+msgstr "تم نقل أقساط هذه السلفة بالفعل أقصى عدد مرات مسموح."
+
+msgid "Left the company"
+msgstr "غادر الشركة"
+
+msgid "Times Finance may move an instalment to the end, per advance (0 = no limit)"
+msgstr "عدد مرات نقل قسط إلى النهاية بواسطة المالية لكل سلفة (0 = بلا حد)"

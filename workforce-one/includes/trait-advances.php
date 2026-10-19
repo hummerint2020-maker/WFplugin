@@ -61,9 +61,11 @@ trait EWS_Advances_Trait {
             seq TINYINT UNSIGNED NOT NULL DEFAULT 1,
             amount DECIMAL(12,2) NOT NULL DEFAULT 0,
             moved TINYINT UNSIGNED NOT NULL DEFAULT 0,
+            taken_run_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
             PRIMARY KEY  (id),
             KEY employee_month (employee_id,month),
-            KEY advance (advance_id)
+            KEY advance (advance_id),
+            KEY taken_run (taken_run_id)
         ) {$c};");
     }
 
@@ -99,7 +101,7 @@ trait EWS_Advances_Trait {
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['advances']} WHERE employee_id=%d ORDER BY id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $a){
             $ins=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instalments']} WHERE advance_id=%d ORDER BY month,seq",(int)$a->id));
             $taken=0;$left=0.0;$due=[];
-            foreach($ins as $i){if($this->payroll_run((string)$i->month)){$taken++;}else{$left+=(float)$i->amount;$due[]=$i;}}
+            foreach($ins as $i){if((int)$i->taken_run_id>0){$taken++;}else{$left+=(float)$i->amount;$due[]=$i;}}
             $state=['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Cancelled'=>'withdrawn'][$a->status]??($a->status==='Paid'?($due?'paying':'done'):'withdrawn');
             $out[]=['id'=>(int)$a->id,'amount'=>(float)$a->amount,'instalments'=>(int)$a->instalments,'reason'=>(string)$a->reason,'status'=>(string)$a->status,'requested_at'=>(string)$a->requested_at,
                 'paid_on'=>(string)$a->paid_on,'state'=>$state,'left'=>round($left,2),'taken'=>$taken,'count'=>count($ins),'schedule'=>$ins,'due'=>$due];
@@ -270,7 +272,7 @@ trait EWS_Advances_Trait {
                 :($r['state']==='done'?__('Paid back','workforce-one'):sprintf(/* translators: %d: months */_n('Over %d month','Over %d months',$r['instalments'],'workforce-one'),$r['instalments'])));
             $out[]=['key'=>'advance-'.$r['id'],'tone'=>'advance','title'=>__('Salary advance','workforce-one').' · '.$this->advance_money($r['amount']),'sub'=>$sub,'state'=>$state,'when'=>$r['requested_at'],
                 'approval'=>['salary_advance','salary_advance',$r['id']],'withdraw'=>$r['state']==='waiting'?'advance':'','id'=>$r['id'],
-                'schedule'=>in_array($r['state'],['paying','done'],true)?array_map(function($i){return ['month'=>(string)$i->month,'taken'=>(bool)$this->payroll_run((string)$i->month)];},$r['schedule']):[]];
+                'schedule'=>in_array($r['state'],['paying','done'],true)?array_map(function($i){return ['month'=>(string)$i->month,'taken'=>(int)$i->taken_run_id>0];},$r['schedule']):[]];
         }
         return $out;
     }
@@ -278,8 +280,10 @@ trait EWS_Advances_Trait {
     /* ------------------------------------------------------------------ Payroll */
 
     /**
-     * The instalments that come off a month's pay, per employee, as Payroll adjustments (deductions).
-     * An employee who left with their last working day in this month: the rest too.
+     * The instalments that come off a month's pay, per employee, as Payroll deductions: every instalment
+     * of this month or before that no closed month has taken yet (one that fell in a month already
+     * closed, or whose employee had no payslip then, comes off the next month computed, never lost).
+     * An employee who left with their last working day in this month: the rest too, in one line.
      * @param object[] $emps @return array<int,list<array<string,mixed>>>
      */
     private function advance_payroll_lines($month,array $emps){
@@ -287,16 +291,45 @@ trait EWS_Advances_Trait {
         global $wpdb;$t=$this->advances_tables();
         $ids=array_map(function($e){return (int)$e->id;},$emps);$ph=implode(',',array_fill(0,count($ids),'%d'));
         $leaving=[];foreach($emps as $e)if(!(int)$e->active && !empty($e->last_working_day) && substr((string)$e->last_working_day,0,7)===$month)$leaving[(int)$e->id]=true;
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT i.*,a.instalments total FROM {$t['instalments']} i JOIN {$t['advances']} a ON a.id=i.advance_id WHERE a.status='Paid' AND i.employee_id IN ($ph) AND (i.month=%s OR (i.month>%s)) ORDER BY i.month,i.seq",array_merge($ids,[$month,$month])));
-        $out=[];$rest=[];
+        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT i.*,a.instalments total FROM {$t['instalments']} i JOIN {$t['advances']} a ON a.id=i.advance_id WHERE a.status='Paid' AND i.taken_run_id=0 AND i.employee_id IN ($ph) AND (i.month<=%s OR i.month>%s) ORDER BY i.month,i.seq",array_merge($ids,[$month,$month])));
+        $out=[];$rest=[];$rest_ids=[];
         foreach($rows as $r){
             $eid=(int)$r->employee_id;
-            if((string)$r->month===$month)$out[$eid][]=['id'=>0,'kind'=>'deduction','amount'=>(float)$r->amount,'instalment_id'=>(int)$r->id,
-                'reason'=>sprintf(/* translators: 1: instalment, 2: instalments */__('Advance instalment (%1$d of %2$d)','workforce-one'),(int)$r->seq,(int)$r->total)];
-            elseif(isset($leaving[$eid]))$rest[$eid]=($rest[$eid]??0)+(float)$r->amount;
+            if((string)$r->month<=$month){
+                $late=(string)$r->month<$month;
+                $out[$eid][]=['id'=>0,'kind'=>'deduction','amount'=>(float)$r->amount,'instalment_id'=>(int)$r->id,
+                    'reason'=>$late
+                        ?sprintf(/* translators: 1: instalment, 2: instalments, 3: the month it was due */__('Advance instalment (%1$d of %2$d), due %3$s','workforce-one'),(int)$r->seq,(int)$r->total,(string)$r->month)
+                        :sprintf(/* translators: 1: instalment, 2: instalments */__('Advance instalment (%1$d of %2$d)','workforce-one'),(int)$r->seq,(int)$r->total)];
+            }elseif(isset($leaving[$eid])){
+                $rest[$eid]=($rest[$eid]??0)+(float)$r->amount;$rest_ids[$eid][]=(int)$r->id;
+            }
         }
-        foreach($rest as $eid=>$sum)$out[$eid][]=['id'=>0,'kind'=>'deduction','amount'=>round($sum,2),'reason'=>__('Advance: the rest (last month)','workforce-one')];
+        foreach($rest as $eid=>$sum)$out[$eid][]=['id'=>0,'kind'=>'deduction','amount'=>round($sum,2),'instalment_ids'=>$rest_ids[$eid],'reason'=>__('Advance: the rest (last month)','workforce-one')];
         return $out;
+    }
+
+    /**
+     * A closed month takes the instalments that are on its payslips (the ids the lines carry). Inside the
+     * close transaction. @param array<int,array{employee:object,pay:array<string,mixed>}> $people
+     */
+    private function advance_mark_taken($run_id,array $people){
+        global $wpdb;$t=$this->advances_tables();
+        $take=[];
+        foreach($people as $x)foreach((array)($x['pay']['manual']['items']??[]) as $line){
+            if(!empty($line['instalment_id']))$take[]=(int)$line['instalment_id'];
+            foreach((array)($line['instalment_ids']??[]) as $iid)$take[]=(int)$iid;
+        }
+        $take=array_values(array_unique(array_filter($take)));
+        if(!$take)return true;
+        $ph=implode(',',array_fill(0,count($take),'%d'));
+        return $wpdb->query($wpdb->prepare("UPDATE {$t['instalments']} SET taken_run_id=%d WHERE taken_run_id=0 AND id IN ($ph)",array_merge([(int)$run_id],$take)))!==false;
+    }
+
+    /** Reopening a month gives its instalments back. */
+    private function advance_release_run($run_id){
+        global $wpdb;$t=$this->advances_tables();
+        $wpdb->query($wpdb->prepare("UPDATE {$t['instalments']} SET taken_run_id=0 WHERE taken_run_id=%d",(int)$run_id));
     }
 
     /** What an employee still owes, for the warning when they are made inactive. */
@@ -315,17 +348,22 @@ trait EWS_Advances_Trait {
         if(!$this->advances_can_pay())wp_die('Access denied');
         global $wpdb;$t=$this->advances_tables();
         $rows=$this->advances_enabled()?(array)$wpdb->get_results("SELECT * FROM {$t['advances']} WHERE status IN ('Approved','Paid','Pending') ORDER BY CASE status WHEN 'Approved' THEN 0 WHEN 'Paid' THEN 1 ELSE 2 END,id DESC LIMIT 300"):[];
-        $list=[];
+        $list=[];$by_emp=[];
         foreach($rows as $a){
-            $st=null;foreach($this->advance_rows((int)$a->employee_id,50) as $r)if($r['id']===(int)$a->id)$st=$r;
+            $eid=(int)$a->employee_id;
+            if(!isset($by_emp[$eid]))$by_emp[$eid]=$this->advance_rows($eid,200);
+            $st=null;foreach($by_emp[$eid] as $r)if($r['id']===(int)$a->id)$st=$r;
             if(!$st)continue;
-            $st['name']=$this->people_name((int)$a->employee_id);$st['method']=(string)$a->paid_method;$st['note']=(string)$a->paid_note;
+            $st['name']=$this->people_name((int)$a->employee_id);
+            $who=$this->people_employee((int)$a->employee_id);$st['gone']=!$who || !(int)$who->active;$st['method']=(string)$a->paid_method;$st['note']=(string)$a->paid_note;
             $list[]=$st;
         }
         $notice=null;
         $done=sanitize_key($_GET['adv_done']??'');$err=sanitize_key($_GET['adv_error']??'');
         if($done!=='')$notice=['type'=>'success','text'=>['paid'=>__('Recorded as paid. The instalments start next month.','workforce-one'),'moved'=>__('The instalment moved to after the last one.','workforce-one')][$done]??__('Saved.','workforce-one')];
-        elseif($err!=='')$notice=['type'=>'error','text'=>['date'=>__('Pick the day it was paid.','workforce-one'),'closed'=>__('That month is closed in Payroll.','workforce-one')][$err]??$this->advance_error_text($err)];
+        elseif($err!=='')$notice=['type'=>'error','text'=>['date'=>__('Pick the day it was paid.','workforce-one'),'closed'=>__('That instalment was already taken in a closed month.','workforce-one'),
+            'self'=>__('You cannot pay or move your own advance. Someone else must.','workforce-one'),'inactive'=>__('This employee has left, so the advance cannot be paid.','workforce-one'),
+            'moves'=>__('This advance was already moved the most times allowed.','workforce-one')][$err]??$this->advance_error_text($err)];
         echo $this->render_template('admin/advances',['on'=>$this->advances_enabled(),'rows'=>$list,'notice'=>$notice,'post_url'=>admin_url('admin-post.php'),'today'=>current_time('Y-m-d'),
             'money'=>function($v){return $this->advance_money($v);},'features_url'=>admin_url('admin.php?page=ews31-features#ews-advances'),'settings'=>$this->advance_settings()]);
     }
@@ -342,6 +380,11 @@ trait EWS_Advances_Trait {
         global $wpdb;$t=$this->advances_tables();
         $a=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['advances']} WHERE id=%d AND status='Approved'",$id));
         if(!$a){wp_safe_redirect(add_query_arg('adv_error','access',$back));exit;}
+        // Not for oneself, and not for someone who has left: no payslip would take the instalments.
+        $me=$this->current_employee();
+        if($me && (int)$me->id===(int)$a->employee_id){wp_safe_redirect(add_query_arg('adv_error','self',$back));exit;}
+        $borrower=$this->people_employee((int)$a->employee_id);
+        if(!$borrower || !(int)$borrower->active){wp_safe_redirect(add_query_arg('adv_error','inactive',$back));exit;}
         $method=in_array($_POST['paid_method']??'',['cash','transfer'],true)?(string)$_POST['paid_method']:'cash';
         if($wpdb->query('START TRANSACTION')===false){wp_safe_redirect(add_query_arg('adv_error','save',$back));exit;}
         $ok=$wpdb->update($t['advances'],['status'=>'Paid','paid_on'=>$on,'paid_method'=>$method,'paid_note'=>mb_substr(sanitize_text_field(wp_unslash($_POST['paid_note']??'')),0,190),'paid_by'=>(int)get_current_user_id()],['id'=>$id,'status'=>'Approved'])===1;
@@ -360,11 +403,15 @@ trait EWS_Advances_Trait {
         $iid=absint($_POST['instalment_id']??0);
         check_admin_referer('ews_advance_move_'.$iid);
         $back=wp_get_referer()?:admin_url('admin.php?page=ews31-advances');
-        if(!$this->advances_can_pay()){wp_safe_redirect(add_query_arg('adv_error','access',$back));exit;}
+        if(!$this->advances_enabled() || !$this->advances_can_pay()){wp_safe_redirect(add_query_arg('adv_error','access',$back));exit;}
         global $wpdb;$t=$this->advances_tables();
         $i=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instalments']} WHERE id=%d",$iid));
         if(!$i){wp_safe_redirect(add_query_arg('adv_error','access',$back));exit;}
-        if($this->payroll_run((string)$i->month)){wp_safe_redirect(add_query_arg('adv_error','closed',$back));exit;}
+        $me=$this->current_employee();
+        if($me && (int)$me->id===(int)$i->employee_id){wp_safe_redirect(add_query_arg('adv_error','self',$back));exit;}
+        if((int)$i->taken_run_id>0){wp_safe_redirect(add_query_arg('adv_error','closed',$back));exit;}
+        $max=$this->advance_settings()['max_moves'];
+        if($max>0 && (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instalments']} WHERE advance_id=%d AND moved=1",(int)$i->advance_id))>=$max){wp_safe_redirect(add_query_arg('adv_error','moves',$back));exit;}
         $months=array_map('strval',(array)$wpdb->get_col($wpdb->prepare("SELECT month FROM {$t['instalments']} WHERE advance_id=%d",(int)$i->advance_id)));
         $to=Advances::after($months);
         $wpdb->update($t['instalments'],['month'=>$to,'moved'=>1],['id'=>$iid]);

@@ -45,7 +45,7 @@ $box = 'margin-top:10px;background:#fff;border:1px solid #dcdcde;max-width:1100p
         <tbody>
         <?php if (!$paying): ?><tr><td colspan="5"><?php esc_html_e('No advance is being paid back.', 'workforce-one'); ?></td></tr><?php endif; ?>
         <?php foreach ($paying as $r): ?>
-            <tr data-advance="<?php echo (int) $r['id']; ?>"><td><strong><?php echo esc_html($r['name']); ?></strong></td><td><?php echo esc_html($money($r['amount'])); ?></td>
+            <tr data-advance="<?php echo (int) $r['id']; ?>"><td><strong><?php echo esc_html($r['name']); ?></strong><?php if (!empty($r['gone'])): ?> <span data-left-company style="color:#b32d2e"><?php esc_html_e('Left the company', 'workforce-one'); ?></span><?php endif; ?></td><td><?php echo esc_html($money($r['amount'])); ?></td>
                 <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($r['paid_on'])) . ' · ' . ($r['method'] === 'transfer' ? __('Bank transfer', 'workforce-one') : __('Cash', 'workforce-one'))); ?></td>
                 <td><?php echo esc_html($money($r['left'])); ?></td>
                 <td><?php echo esc_html(sprintf(/* translators: 1: taken, 2: instalments */ __('%1$d of %2$d taken', 'workforce-one'), $r['taken'], $r['count'])); ?><br>

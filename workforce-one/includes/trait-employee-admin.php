@@ -147,7 +147,9 @@ trait EWS_Employee_Admin_Trait {
         // An archived employee is signed out of the app on every device (3.31.47).
         if(!empty($row->wp_user_id))$this->api_revoke_user_sessions((int)$row->wp_user_id,'employee_archived');
         if((int)$old!==0)$this->audit('employee_status_change','employee',$id,'Status: Active -> Inactive / last working day '.$last_day);
-        $this->employee_admin_redirect(['employee_notice'=>'archived']);
+        // Still owing a salary advance (3.31.109, owner decision 3): the rest comes off the last pay.
+        $left=(int)$old!==0 && $this->advances_enabled()?$this->advance_left_for($id):0.0;
+        $this->employee_admin_redirect($left>0?['employee_notice'=>'archived','advance_left'=>$left]:['employee_notice'=>'archived']);
     }
 
     public function admin_employees(){

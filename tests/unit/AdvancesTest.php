@@ -7,7 +7,8 @@ final class AdvancesTest extends TestCase
 {
     public function testSettingsDefaults(): void
     {
-        $this->assertSame(['months_salary' => 1.0, 'max_amount' => 0.0, 'max_instalments' => 12, 'one_open' => 1, 'min_service_months' => 0], A::settings(null));
+        $this->assertSame(['months_salary' => 1.0, 'max_amount' => 0.0, 'max_instalments' => 12, 'one_open' => 1, 'min_service_months' => 0, 'max_moves' => 1], A::settings(null));
+        $this->assertSame(0, A::settings(['max_moves' => 0])['max_moves'], '0 = no limit');
         $this->assertSame(60, A::settings(['max_instalments' => 500])['max_instalments']);
         $this->assertSame(0, A::settings(['one_open' => 0])['one_open']);
     }
@@ -30,6 +31,9 @@ final class AdvancesTest extends TestCase
         $this->assertNull(A::check($f, $s));
         $this->assertSame('amount', A::check(['amount' => 0.0] + $f, $s));
         $this->assertSame('instalments', A::check(['instalments' => 13] + $f, $s));
+        $this->assertSame('amount', A::check(['amount' => 0.03, 'instalments' => 4] + $f, $s), 'an instalment is at least one cent');
+        $this->assertNull(A::check(['amount' => 0.04, 'instalments' => 4] + $f, $s));
+        $this->assertSame('amount', A::check(['amount' => 10000000.0, 'limit' => INF] + $f, $s), 'more than the column holds');
         $this->assertSame('no_salary', A::check(['limit' => null] + $f, $s));
         $this->assertSame('limit', A::check(['amount' => 12000.01] + $f, $s));
         $this->assertNull(A::check(['amount' => 12000.0] + $f, $s), 'exactly the limit');
@@ -44,6 +48,9 @@ final class AdvancesTest extends TestCase
         $p = A::split(1000, 3);
         $this->assertSame([333.33, 333.33, 333.34], $p);
         $this->assertSame(1000.0, round(array_sum($p), 2));
+        $this->assertSame([5.1, 5.1], A::split(10.2, 2), 'whole cents, no float drift');
+        $this->assertSame([0.0, 0.0, 0.0, 0.03], A::split(0.03, 4), 'the last one takes the rounding');
+        $this->assertSame(1234.57, round(array_sum(A::split(1234.57, 7)), 2));
     }
 
     public function testMonthsStartTheMonthAfterPayment(): void

@@ -26,6 +26,21 @@ wp-admin → Features → Salary advances.
 - **Leaving.** Made inactive with an advance open: the Employees page says what is left; the rest
   comes off the pay of the last month, in one line.
 - Amounts are not in the Audit Log. Tests: tests/e2e_advances.py, tests/unit/AdvancesTest.php.
+- **After an independent review of this release** (all fixed before delivery):
+  - An instalment now counts as taken only when the closed month's payslip carries it (`taken_run_id`,
+    set inside the close transaction, released when the month is reopened). Before, it counted as taken
+    as soon as its month was closed, so an instalment that missed the payslip (paid late, no salary that
+    month, the feature switched off for a while) was written off silently. Such an instalment now comes
+    off the next month computed, marked "due" with its month.
+  - A rest taken from the last pay settles the instalments it covers, so an employee made active
+    again is not charged twice.
+  - Finance cannot record or move their own advance; an advance for someone who has left is not paid;
+    moving an instalment to the end is limited per advance (a setting, once by default; 0 = no limit).
+  - The Archive button warns about an advance still owed, like the Employees form; the Advances page
+    marks employees who left.
+  - Instalments are split in whole cents; an instalment is at least one cent and an advance at most
+    9,999,999.99.
+  - The Advances menu shows only to who may pay; the Advances page runs fewer queries.
 
 ## 3.31.108
 ### Fixed (owner report): changing an employee's shift changed old reports
