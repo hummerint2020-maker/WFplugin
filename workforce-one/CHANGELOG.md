@@ -24,6 +24,23 @@ wp-admin → Features → System health. The data stays in this site's database;
   cap of 300,000 rows. Who sees it: site administrators (permission "View System Health"); on a network, super
   admins only.
 - Not measured, on purpose: network and phone rendering time, and whether the site as a whole is reachable.
+- **After an independent review of this release** (fixed before delivery):
+  - A query shape could keep a long or odd value: a quoted value over about 10 KB, or a "#" or "--" inside a value, left
+    the text in the stored shape. Strings and comments are now found in one pass, an open quote is a value, and a text
+    that cannot be parsed is stored as a fixed mark, never as typed.
+  - A fatal error was not recorded in wp-admin or on most pages, because WordPress ends the request inside its own
+    shutdown function. It is now written from WordPress's fatal-error filter.
+  - A PHP error message could keep an unquoted value or a server path (PHP 7 "Undefined index: …", exception traces).
+  - A scheduled job is marked failed only by a PHP error or warning, not by a notice or a deprecation.
+  - Other plugins' REST calls and actions are recorded only when sampled; sampling is forced for a heavy operation only
+    for a signed-in person; a cron request writes only when one of the plugin's jobs ran, with that job's queries.
+  - A "new PHP warning" is new once, not every day; the email names no function or file; a job is "late" only when it
+    was late at two summaries in a row; the memory limit is the larger of the ordinary and the admin one.
+  - The rollup is registered whenever the feature is on (and repairs the schema); a missing table or old schema version
+    stops collecting and breaks nothing; days missed while cron was off are built; a day keeps the release it was built
+    under; the row limit also stops query rows.
+  - Saving Features while it is off writes no option; on a network only a super admin switches it; deactivating the
+    plugin clears the rollup; the settings form unslashes its input.
 
 ## 3.31.109
 ### New: salary advances (approvals stage 5, off by default)

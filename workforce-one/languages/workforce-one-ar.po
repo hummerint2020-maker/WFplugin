@@ -7440,3 +7440,12 @@ msgstr "في الشبكة يرى هذه الشاشة المشرفون العام
 
 msgid "Who sees this screen: site administrators; the permission “View System Health” can be given to others on Roles & permissions."
 msgstr "من يرى هذه الشاشة: مديرو الموقع؛ ويمكن منح صلاحية “عرض صحة النظام” لآخرين من الأدوار والصلاحيات."
+
+msgid "One query took %s"
+msgstr "استغرق استعلام واحد %s"
+
+msgid "New PHP warning in Workforce One code"
+msgstr "تحذير PHP جديد في كود Workforce One"
+
+msgid "On a network only a super admin can change this."
+msgstr "في الشبكة لا يغيّر هذا الإعداد إلا المشرف العام."

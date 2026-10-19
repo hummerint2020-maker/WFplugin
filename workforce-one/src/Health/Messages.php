@@ -10,13 +10,22 @@ final class Messages
 
     public static function normalize(string $msg): string
     {
-        $s = preg_replace('/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/', '?', $msg) ?? $msg;   // an address outside quotes
-        $s = preg_replace('/\b[A-Fa-f0-9]{24,}\b/', '?', $s) ?? $s;                                   // a token or hash
-        $s = preg_replace("/'[^']*'/", "'?'", $s) ?? $s;
-        $s = preg_replace('/"[^"]*"/', '"?"', $s) ?? $s;
-        $s = preg_replace('/(?<![\w])\d+(?:\.\d+)?(?![\w])/', 'N', $s) ?? $s;
-        $s = trim(preg_replace('/\s+/', ' ', $s) ?? $s);
-        return substr($s, 0, self::MAX);
+        $s = (string) strstr($msg . "\nStack trace:", "\nStack trace:", true);                 // the trace carries paths and values
+        $steps = [
+            ['/(Undefined (?:index|offset)):\s*.*$/s', '$1: ?'],                                  // PHP 7: the key is not quoted
+            ['/(Undefined property: [A-Za-z0-9_\\\\]+::\$)[A-Za-z0-9_]+/', '$1?'],
+            ['/(?:[A-Za-z]:)?[\\\\\/][^\s\'":]+\.php(?::\d+)?/', '?'],                          // an absolute path
+            ['/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/', '?'],                         // an address outside quotes
+            ['/\b[A-Fa-f0-9]{24,}\b/', '?'],                                                      // a token or hash
+            ["/'[^']*'/", "'?'"],
+            ['/"[^"]*"/', '"?"'],
+            ['/(?<![\w])\d+(?:\.\d+)?(?![\w])/', 'N'],
+        ];
+        foreach ($steps as [$re, $to]) {
+            $s = preg_replace($re, $to, $s);
+            if (!is_string($s)) return '[unparsed]';
+        }
+        return substr(trim(preg_replace('/\s+/', ' ', $s) ?? ''), 0, self::MAX);
     }
 
     /** The path relative to the plugin directory, or '' when the file is not the plugin's. */

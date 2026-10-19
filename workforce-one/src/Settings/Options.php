@@ -96,6 +96,7 @@ final class Options
         'ews_health_findings' => ['group' => 'system', 'label' => 'System health: the latest "Look at this first" list', 'kind' => 'grouped', 'default' => [], 'builtin' => 'empty', 'internal' => true],
         'ews_health_mail' => ['group' => 'system', 'label' => 'System health: emails sent today', 'kind' => 'grouped', 'default' => [], 'builtin' => 'empty', 'internal' => true],
         'ews_health_full' => ['group' => 'system', 'label' => 'System health: row limit reached', 'kind' => 'bool', 'default' => false, 'internal' => true],
+        'ews_health_late' => ['group' => 'system', 'label' => 'System health: scheduled jobs that were late at the last summary', 'kind' => 'grouped', 'default' => [], 'builtin' => 'empty', 'internal' => true],
         'ews_health_purged' => ['group' => 'system', 'label' => 'System health: day of the last clean-up', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_health_rollup_at' => ['group' => 'system', 'label' => 'System health: time of the last summary', 'kind' => 'int', 'default' => 0, 'internal' => true],
         'ews_feature_advances' => ['group' => 'features', 'label' => 'Salary advances (approvals)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],

@@ -134,18 +134,32 @@ trait EWS_System_Health_Trait {
 
     /** Constructor: does nothing at all while the feature is off. */
     private function health_boot(){
-        if(!$this->health_enabled() || (string)get_option('ews_health_schema','')!==HealthSettings::SCHEMA)return;   // tables come with the switch (or the next rollup)
+        if(!$this->health_enabled())return;
+        // The rollup, the notice and the handlers are there whenever the feature is on (the rollup also repairs the schema);
+        // only the collector waits for the tables.
+        add_action('ews_health_rollup',[$this,'health_rollup']);
+        add_action('admin_notices',[$this,'health_notice']);
+        add_action('admin_post_ews_health_settings_save',[$this,'health_settings_save']);
+        add_action('admin_post_ews_health_purge',[$this,'health_purge_now']);
+        add_action('admin_post_ews_health_dismiss',[$this,'health_dismiss']);
+        if(wp_next_scheduled('ews_health_rollup')===false)wp_schedule_event(time()+300,'hourly','ews_health_rollup');
+        if((string)get_option('ews_health_schema','')!==HealthSettings::SCHEMA)return;
         $rate=HealthSettings::rate($this->option('ews_health_sample_rate'));
-        $this->health=['t0'=>isset($_SERVER['REQUEST_TIME_FLOAT'])?(float)$_SERVER['REQUEST_TIME_FLOAT']:microtime(true),'sampled'=>false,'own_sq'=>false,'errors'=>[],'agg'=>[],'folded'=>0,'rest'=>null,'cron'=>[],'cron_done'=>[],'prev'=>null,'tables'=>$this->health_tables()];
-        // Sample: the share chosen, and always the heavy operations and every scheduled-job request.
-        $action=isset($_REQUEST['action'])?sanitize_key(wp_unslash($_REQUEST['action'])):'';   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only names the request
-        $always=wp_doing_cron() || ($action!=='' && Routes::alwaysSampled('post:'.$action));
+        $this->health=['t0'=>isset($_SERVER['REQUEST_TIME_FLOAT'])?(float)$_SERVER['REQUEST_TIME_FLOAT']:microtime(true),'sampled'=>false,'own_sq'=>false,'errors'=>[],'agg'=>[],'folded'=>0,'rest'=>null,'cron'=>[],'cron_done'=>[],'cron_agg'=>[],'prev'=>null,'done'=>false,'broken'=>false];
+        // Sample: the share chosen; always a heavy operation asked by a signed-in person, and every cron request (queries are written
+        // only for a plugin job that ran). Never because of what an anonymous request asks for.
+        $script=isset($_SERVER['SCRIPT_NAME'])?basename((string)$_SERVER['SCRIPT_NAME']):'';
+        $action=$script==='admin-post.php' && isset($_REQUEST['action'])?sanitize_key(wp_unslash($_REQUEST['action'])):'';   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only names the request
+        $signed_in=defined('LOGGED_IN_COOKIE') && isset($_COOKIE[LOGGED_IN_COOKIE]);
+        $always=wp_doing_cron() || ($signed_in && $action!=='' && Routes::alwaysSampled('post:'.$action));
         if($always || mt_rand(1,10000)<=$rate*100){
             if(!defined('SAVEQUERIES')){define('SAVEQUERIES',true);$this->health['sampled']=true;$this->health['own_sq']=true;}
             elseif(SAVEQUERIES)$this->health['sampled']=true;   // the site already records them: only read
         }
         if($this->health['sampled'])add_filter('query',[$this,'health_query_tick'],10,1);
         add_action('shutdown',[$this,'health_shutdown'],PHP_INT_MAX);
+        // WordPress's own handler ends the request inside its shutdown function, so a fatal error is written from its filter.
+        add_filter('wp_should_handle_php_error',[$this,'health_on_fatal'],10,2);
         $this->health['prev']=set_error_handler([$this,'health_on_php_error']);
         add_filter('rest_dispatch_request',[$this,'health_rest_route'],10,3);
         if(wp_doing_cron()){
@@ -154,12 +168,6 @@ trait EWS_System_Health_Trait {
                 add_action($hook,function()use($hook){$this->health_cron_end($hook);},PHP_INT_MAX);
             }
         }
-        add_action('ews_health_rollup',[$this,'health_rollup']);
-        add_action('admin_notices',[$this,'health_notice']);
-        add_action('admin_post_ews_health_settings_save',[$this,'health_settings_save']);
-        add_action('admin_post_ews_health_purge',[$this,'health_purge_now']);
-        add_action('admin_post_ews_health_dismiss',[$this,'health_dismiss']);
-        if(wp_next_scheduled('ews_health_rollup')===false)wp_schedule_event(time()+300,'hourly','ews_health_rollup');
     }
 
     /** Filter 'query' (sampled requests only): keeps the query log from growing without bound. */
@@ -196,7 +204,7 @@ trait EWS_System_Health_Trait {
                 $fp=Messages::fingerprint($level,$rel,(int)$errline);
                 if(isset($this->health['errors'][$fp]))$this->health['errors'][$fp]['n']++;
                 else $this->health['errors'][$fp]=['level'=>$level,'file'=>$rel,'line'=>(int)$errline,'message'=>Messages::normalize((string)$errstr),'n'=>1];
-                foreach($this->health['cron'] as $h=>$c)$this->health['cron'][$h]['errors']++;
+                if($errno & (E_ERROR|E_WARNING|E_USER_ERROR|E_USER_WARNING|E_RECOVERABLE_ERROR)){foreach($this->health['cron'] as $h=>$c)$this->health['cron'][$h]['errors']++;}
             }
         }
         $prev=$this->health['prev'];
@@ -210,6 +218,8 @@ trait EWS_System_Health_Trait {
     }
 
     private function health_cron_start($hook){
+        if($this->health['sampled'])$this->health_fold();
+        $this->health['agg']=[];
         $this->health['cron'][$hook]=['t0'=>microtime(true),'errors'=>0];
     }
 
@@ -217,6 +227,8 @@ trait EWS_System_Health_Trait {
         $c=$this->health['cron'][$hook]??null;
         if(!$c)return;
         unset($this->health['cron'][$hook]);
+        if($this->health['sampled'])$this->health_fold();
+        $this->health['cron_agg'][$hook]=$this->health['agg'];$this->health['agg']=[];
         $this->health['cron_done'][$hook]=['ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>$c['errors']===0];
     }
 
@@ -243,14 +255,37 @@ trait EWS_System_Health_Trait {
         return Routes::classify($f);
     }
 
-    /** shutdown, last: one UPDATE for the request (and a few rows more for a sampled one). */
+    /** shutdown, last: the request's figures. */
     public function health_shutdown(){
+        $this->health_finish(error_get_last());
+    }
+
+    /** wp_should_handle_php_error: WordPress is about to end a request that died on a fatal error; this is the last place to write it. */
+    public function health_on_fatal($should,$error){
+        if(is_array($error))$this->health_finish($error);
+        return $should;
+    }
+
+    /** One UPDATE for the request (and a few rows more for a sampled one); never lets a problem here reach the request. @param array<string,mixed>|null $err */
+    private function health_finish($err){
         global $wpdb;
-        $t0=$this->health['t0'];
-        $ms=(int)round((microtime(true)-$t0)*1000);
-        $err=error_get_last();
-        $fatal=$err && in_array($err['type'],[E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR],true) && Messages::relative((string)$err['file'],dirname(__DIR__))!=='';
-        $dead=$err && in_array($err['type'],[E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR],true);
+        if($this->health['done']||$this->health['broken'])return;
+        $this->health['done']=true;
+        $quiet=$wpdb->suppress_errors(true);   // a missing table must not print or log an error on every request
+        try{
+            $this->health_finish_inner($err);
+        }catch(\Throwable $e){   // the collector never breaks a page
+            $this->health['broken']=true;
+        }
+        $wpdb->suppress_errors($quiet);
+    }
+
+    /** @param array<string,mixed>|null $err */
+    private function health_finish_inner($err){
+        global $wpdb;
+        $ms=(int)round((microtime(true)-$this->health['t0'])*1000);
+        $dead=is_array($err) && in_array($err['type'],[E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR,E_USER_ERROR,E_RECOVERABLE_ERROR],true);
+        $fatal=$dead && Messages::relative((string)$err['file'],dirname(__DIR__))!=='';
         $status=function_exists('http_response_code')?(int)http_response_code():0;
         $failed=$dead || $status>=500;
         $nq=(int)$wpdb->num_queries;   // read before this collector's own queries
@@ -264,18 +299,23 @@ trait EWS_System_Health_Trait {
         }
         if(wp_doing_cron()){
             foreach($this->health['cron'] as $hook=>$c)$this->health['cron_done'][$hook]=['ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>false];   // started, never finished
+            if(!$this->health['cron_done'])return;   // not one of the plugin's jobs: nothing to say, nothing written
             $last=get_option('ews_health_cron_last',[]);$last=is_array($last)?$last:[];
             foreach($this->health['cron_done'] as $hook=>$d){
-                $this->health_record('cron:'.$hook,$d['ms'],0,$mem,!$d['ok'],false,false,0,0,0);
+                $agg=$this->health['cron_agg'][$hook]??[];$pq=0;$pq_us=0;
+                foreach($agg as $a)if($a['caller']!==''){$pq+=$a['n'];$pq_us+=$a['us'];}
+                $this->health_record('cron:'.$hook,$d['ms'],0,$mem,!$d['ok'],false,$sampled,$pq,$pq_us,0);
+                if($sampled)$this->health_write_queries('cron:'.$hook,$agg);
                 $last[$hook]=['at'=>time(),'ms'=>$d['ms'],'ok'=>$d['ok']];
             }
-            if($this->health['cron_done'])update_option('ews_health_cron_last',$last,false);
-            $route='cron:other';
-        }else{
-            $route=$this->health_route();
-            if(strpos($route,'other:')===0 && !$sampled){
-                if(!$this->health['errors'])return;   // not the plugin's page and not sampled: nothing to say
-            }
+            update_option('ews_health_cron_last',$last,false);
+            $this->health_write_errors('cron:other',$at);
+            return;
+        }
+        $route=$this->health_route();
+        // Not the plugin's (another plugin's page, REST route or action) and not sampled: nothing to say unless it raised an error of ours.
+        if(in_array($route,['rest:other','post:other'],true) || strpos($route,'other:')===0){
+            if(!$sampled && !$this->health['errors'])return;
         }
         $pq=0;$pq_us=0;$agg=[];
         if($sampled){
@@ -283,7 +323,8 @@ trait EWS_System_Health_Trait {
             $agg=$this->health['agg'];
             foreach($agg as $a)if($a['caller']!==''){$pq+=$a['n'];$pq_us+=$a['us'];}
         }
-        if(!wp_doing_cron() && (strpos($route,'other:')!==0 || $sampled))$this->health_record($route,$ms,$nq,$mem,$failed,$fatal,$sampled,$pq,$pq_us,count($this->health['errors']));
+        $own=!in_array($route,['rest:other','post:other'],true) && strpos($route,'other:')!==0;
+        if($own || $sampled)$this->health_record($route,$ms,$nq,$mem,$failed,$fatal,$sampled,$pq,$pq_us,count($this->health['errors']));
         $this->health_write_queries($route,$agg);
         $this->health_write_errors($route,$at);
     }
@@ -303,6 +344,7 @@ trait EWS_System_Health_Trait {
      */
     private function health_upsert($table,array $keys,array $inc,array $max,array $set,array $init=[]){
         global $wpdb;
+        if($this->health['broken'])return;
         $sets=[];$args=[];
         foreach($inc as $c=>$v){$sets[]="`{$c}`=`{$c}`+%d";$args[]=(int)$v;}
         foreach($max as $c=>$v){$sets[]="`{$c}`=CASE WHEN `{$c}`<%d THEN %d ELSE `{$c}` END";$args[]=(int)$v;$args[]=(int)$v;}
@@ -316,12 +358,15 @@ trait EWS_System_Health_Trait {
         $wpdb->suppress_errors(true);
         $ok=$wpdb->insert($table,$row);
         $wpdb->suppress_errors(false);
-        if(!$ok)$wpdb->query($wpdb->prepare($sql,$args));
+        if(!$ok){
+            $wpdb->query($wpdb->prepare($sql,$args));
+            if($wpdb->last_error!=='')$this->health['broken']=true;   // the table is missing: stop trying on this request
+        }
     }
 
     /** The sampled request's slow and repeated query shapes: the top ones by time, and any repeated enough. */
     private function health_write_queries($route,array $agg){
-        if(!$agg)return;
+        if(!$agg || $this->option('ews_health_full'))return;
         $s=$this->health_settings();
         uasort($agg,function($a,$b){return $b['us']<=>$a['us'];});
         $day=gmdate('Y-m-d');$kept=0;
@@ -355,8 +400,10 @@ trait EWS_System_Health_Trait {
     public function health_rollup(){
         if(!$this->health_enabled())return;
         if((string)get_option('ews_health_schema','')!==HealthSettings::SCHEMA)$this->ensure_health_schema();
-        $this->health_build_daily(gmdate('Y-m-d'));
-        $this->health_build_daily(gmdate('Y-m-d',time()-86400));
+        global $wpdb;
+        $lastday=(string)$wpdb->get_var("SELECT MAX(day) FROM {$this->health_tables()['daily']}");
+        $from=$lastday!==''?max(gmdate('Y-m-d',time()-6*86400),gmdate('Y-m-d',strtotime($lastday.' UTC')-86400)):gmdate('Y-m-d',time()-6*86400);
+        for($t=strtotime($from.' UTC');$t<=time();$t+=86400)$this->health_build_daily(gmdate('Y-m-d',$t));   // days missed while cron was off included
         if((string)get_option('ews_health_purged','')!==gmdate('Y-m-d')){
             $this->health_purge();
             update_option('ews_health_purged',gmdate('Y-m-d'),false);
@@ -381,8 +428,9 @@ trait EWS_System_Health_Trait {
             $route=(string)$r['route'];unset($r['route']);
             $inc=array_map('intval',$r);
             $set=$inc;
+            $was=(string)$wpdb->get_var($wpdb->prepare("SELECT version FROM {$t['daily']} WHERE day=%s AND route=%s LIMIT 1",$day,$route));   // a day keeps the release it was first built under
             $wpdb->delete($t['daily'],['day'=>$day,'route'=>$route]);
-            $wpdb->insert($t['daily'],['day'=>$day,'route'=>$route,'version'=>$version,'last_at'=>gmdate('Y-m-d H:i:s')]+$set);
+            $wpdb->insert($t['daily'],['day'=>$day,'route'=>$route,'version'=>$was!==''?$was:$version,'last_at'=>gmdate('Y-m-d H:i:s')]+$set);
         }
     }
 
@@ -447,13 +495,21 @@ trait EWS_System_Health_Trait {
             $queries[]=['route'=>(string)$q['route'],'caller'=>(string)$q['caller'],'ms_max'=>$ms];
         }
         $errors=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT file,line,message,SUM(n) n FROM {$t['errors']} WHERE first_at>=%s GROUP BY file,line,message ORDER BY SUM(n) DESC LIMIT 20",gmdate('Y-m-d H:i:s',time()-86400)),ARRAY_A) as $e)$errors[]=['file'=>(string)$e['file'],'line'=>(int)$e['line'],'message'=>(string)$e['message'],'n'=>(int)$e['n']];
+        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT file,line,message,SUM(n) n FROM {$t['errors']} GROUP BY fp,file,line,message HAVING MIN(first_at)>=%s ORDER BY SUM(n) DESC LIMIT 20",gmdate('Y-m-d H:i:s',time()-86400)),ARRAY_A) as $e)$errors[]=['file'=>(string)$e['file'],'line'=>(int)$e['line'],'message'=>(string)$e['message'],'n'=>(int)$e['n']];
         $last=get_option('ews_health_cron_last',[]);$last=is_array($last)?$last:[];$cron=[];
+        // A job late at two summaries in a row is late; one late only now is usually waiting for the cron run this summary is part of.
+        $seen=get_option('ews_health_late',[]);$seen=is_array($seen)?$seen:[];$now_late=[];
         foreach(Routes::CRON_HOOKS as $hook){
             $next=wp_next_scheduled($hook);
-            $cron[$hook]=['overdue_min'=>$next && $next<time()?(int)floor((time()-$next)/60):0,'failed'=>isset($last[$hook]) && empty($last[$hook]['ok'])];
+            $late=$next && $next<time()?(int)floor((time()-$next)/60):0;
+            if($late>(int)$this->health_settings()['cron_late_min'])$now_late[$hook]=true;
+            $cron[$hook]=['overdue_min'=>!empty($seen[$hook])?$late:0,'failed'=>isset($last[$hook]) && empty($last[$hook]['ok'])];
         }
-        $limit=ini_get('memory_limit');$kb=$limit!==false && $limit!=='' && (int)$limit!==-1?(int)(wp_convert_hr_to_bytes((string)$limit)/1024):0;
+        update_option('ews_health_late',$now_late,false);
+        $kb=0;
+        foreach([ini_get('memory_limit'),defined('WP_MAX_MEMORY_LIMIT')?WP_MAX_MEMORY_LIMIT:''] as $limit){   // wp-admin runs under the larger one
+            if($limit!==false && $limit!=='' && (int)$limit!==-1)$kb=max($kb,(int)(wp_convert_hr_to_bytes((string)$limit)/1024));
+        }
         return ['routes'=>$routes,'queries'=>$queries,'errors'=>$errors,'cron'=>$cron,'memory_limit_kb'=>$kb];
     }
 
@@ -477,7 +533,7 @@ trait EWS_System_Health_Trait {
     }
 
     /** One finding in words: [title, sentence, numbers]. @param array<string,mixed> $f @return array{0:string,1:string,2:list<string>} */
-    private function health_finding_text($f){
+    private function health_finding_text($f,$for_mail=false){
         $a=(array)($f['args']??[]);$r=$this->health_route_label((string)$f['route']);
         switch($f['rule']){
             case 'fatal': return [sprintf(/* translators: 1: page, 2: times */_n('%1$s stopped with a PHP fatal error %2$d time','%1$s stopped with a PHP fatal error %2$d times',(int)$a['n'],'workforce-one'),$r,(int)$a['n']),__('Look at the PHP errors list for the file and line.','workforce-one'),[]];
@@ -488,9 +544,10 @@ trait EWS_System_Health_Trait {
             case 'regression': return [sprintf(/* translators: %s: page */__('%s is slower than before','workforce-one'),$r),$a['version']!==''?sprintf(/* translators: %s: version */__('It started with version %s.','workforce-one'),$a['version']):__('Typical load time went up over the last days.','workforce-one'),[sprintf(/* translators: 1: before, 2: after */__('Typical %1$s → %2$s','workforce-one'),$this->health_seconds((int)$a['before']),$this->health_seconds((int)$a['after']))]];
             case 'repeat': return [sprintf(/* translators: 1: page, 2: times */__('%1$s runs the same query %2$d times in one load','workforce-one'),$r,(int)$a['times']),$a['caller']!==''?sprintf(/* translators: %s: function */__('It comes from %s, most likely inside a loop. One query for all rows would do.','workforce-one'),$a['caller'].'()'):__('Most likely inside a loop. One query for all rows would do.','workforce-one'),[]];
             case 'many_queries': return [sprintf(/* translators: 1: page, 2: queries */__('%1$s makes %2$d database queries per load','workforce-one'),$r,(int)$a['avg']),'',[]];
-            case 'slow_query': return [sprintf(/* translators: 1: time, 2: function */__('One query took %1$s (from %2$s)','workforce-one'),$this->health_seconds((int)$a['ms']),(string)$a['caller'].'()'),sprintf(/* translators: %s: page */__('Seen on %s.','workforce-one'),$r),[]];
+            case 'slow_query': return [$for_mail?sprintf(/* translators: %s: time */__('One query took %s','workforce-one'),$this->health_seconds((int)$a['ms'])):sprintf(/* translators: 1: time, 2: function */__('One query took %1$s (from %2$s)','workforce-one'),$this->health_seconds((int)$a['ms']),(string)$a['caller'].'()'),sprintf(/* translators: %s: page */__('Seen on %s.','workforce-one'),$r),[]];
             case 'memory': return [sprintf(/* translators: 1: page, 2: used, 3: limit */__('%1$s used %2$s of %3$s memory','workforce-one'),$r,size_format((int)$a['used_kb']*1024),size_format((int)$a['limit_kb']*1024)),'',[]];
-            case 'new_error': return [sprintf(/* translators: 1: file, 2: line */__('New PHP warning in %1$s:%2$d','workforce-one'),(string)$a['file'],(int)$a['line']),(string)$a['message'],[sprintf(/* translators: %d: times */_n('%d time','%d times',(int)$a['n'],'workforce-one'),(int)$a['n'])]];
+            case 'new_error': if($for_mail)return [__('New PHP warning in Workforce One code','workforce-one'),'',[]];
+                return [sprintf(/* translators: 1: file, 2: line */__('New PHP warning in %1$s:%2$d','workforce-one'),(string)$a['file'],(int)$a['line']),(string)$a['message'],[sprintf(/* translators: %d: times */_n('%d time','%d times',(int)$a['n'],'workforce-one'),(int)$a['n'])]];
             case 'other_cost': return [__('Workforce One adds database queries to other pages of the site','workforce-one'),sprintf(/* translators: %d: queries */__('About %d queries on each page that is not its own.','workforce-one'),(int)$a['avg']),[]];
         }
         return [(string)$f['rule'],'',[]];
@@ -546,7 +603,7 @@ trait EWS_System_Health_Trait {
         if(!$keys)return;
         $lines=[];
         foreach($keys as $k){
-            [$title]=$this->health_finding_text(['rule'=>$open[$k]['rule'],'route'=>$open[$k]['route'],'args'=>$open[$k]['args']]);
+            [$title]=$this->health_finding_text(['rule'=>$open[$k]['rule'],'route'=>$open[$k]['route'],'args'=>$open[$k]['args']],true);
             $lines[]='- '.wp_strip_all_tags($title);
         }
         $to=$s['email_to']!==''?$s['email_to']:get_option('admin_email');
@@ -561,7 +618,7 @@ trait EWS_System_Health_Trait {
     public function health_settings_save(){
         if(!$this->health_can_change())wp_die('Access denied');
         check_admin_referer('ews_health_settings_save');
-        update_option('ews_health_settings',HealthSettings::fromPost($_POST),false);   // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- every value is clamped in Settings::fromPost
+        update_option('ews_health_settings',HealthSettings::fromPost(wp_unslash($_POST)),false);   // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- every value is clamped in Settings::fromPost
         $this->audit('health_settings','system_health',0,'System health thresholds saved');
         wp_safe_redirect(add_query_arg(['page'=>'ews31-system-health','tab'=>'settings','health_done'=>'saved'],admin_url('admin.php')));exit;
     }
@@ -642,6 +699,7 @@ trait EWS_System_Health_Trait {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display filters only
         $tab=sanitize_key($_GET['tab']??'overview');
         if(!in_array($tab,['overview','route','jobs','queries','errors','settings'],true))$tab='overview';
+        if($tab==='route' && !isset($_GET['route']))$tab='overview';   // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $days=in_array((int)($_GET['days']??7),[1,7,30,90],true)?(int)($_GET['days']??7):7;
         $areas=['','wp-admin','App','Actions','API','Jobs','Other'];
         $area=isset($_GET['area']) && in_array((string)wp_unslash($_GET['area']),$areas,true)?(string)wp_unslash($_GET['area']):'';

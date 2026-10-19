@@ -331,7 +331,7 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_corrections_tick'); wp_clear_scheduled_hook('ews_office_minimum_tick'); wp_clear_scheduled_hook('ews_approvals_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_unschedule_hook('ews_push_deliver'); }
+    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_corrections_tick'); wp_clear_scheduled_hook('ews_office_minimum_tick'); wp_clear_scheduled_hook('ews_approvals_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_clear_scheduled_hook('ews_health_rollup'); wp_unschedule_hook('ews_push_deliver'); }
 
 }
 

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-19T02:37:16+00:00\n"
+"POT-Creation-Date: 2026-10-19T02:55:20+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -30,14 +30,14 @@ msgid "Internal"
 msgstr ""
 
 #: includes/trait-admin-nav.php:24
-#: includes/trait-system-health.php:468
+#: includes/trait-system-health.php:523
 msgid "Home"
 msgstr ""
 
 #: includes/trait-admin-nav.php:25
 #: includes/trait-app-layout.php:79
 #: includes/trait-app-layout.php:96
-#: templates/admin/features.php:140
+#: templates/admin/features.php:141
 msgid "People"
 msgstr ""
 
@@ -164,7 +164,7 @@ msgid "Approval workflows"
 msgstr ""
 
 #: includes/trait-admin-nav.php:52
-#: templates/admin/features.php:105
+#: templates/admin/features.php:106
 #: templates/admin/substitutes.php:21
 msgid "Substitutes"
 msgstr ""
@@ -280,7 +280,7 @@ msgstr ""
 #. translators: %s: site name
 #: includes/trait-admin-nav.php:74
 #: includes/trait-admin.php:102
-#: includes/trait-system-health.php:555
+#: includes/trait-system-health.php:611
 #: templates/admin/features.php:96
 #: templates/admin/system-health.php:42
 msgid "System health"
@@ -2643,7 +2643,7 @@ msgstr ""
 
 #. translators: %d: hours
 #: includes/trait-leave-view.php:21
-#: includes/trait-system-health.php:501
+#: includes/trait-system-health.php:557
 #: templates/app/new-request.php:81
 #: templates/app/overtime.php:49
 #, php-format
@@ -3224,7 +3224,7 @@ msgstr ""
 #. translators: %d: number of days
 #. translators: %d: days
 #: includes/trait-privacy.php:69
-#: templates/admin/features.php:101
+#: templates/admin/features.php:102
 #, php-format
 msgid "%d days"
 msgstr ""
@@ -3527,24 +3527,24 @@ msgid "With %s"
 msgstr ""
 
 #. translators: %s: a page of the employee app
-#: includes/trait-system-health.php:470
+#: includes/trait-system-health.php:525
 #, php-format
 msgid "App: %s"
 msgstr ""
 
 #. translators: %s: a page of the employee app
-#: includes/trait-system-health.php:470
+#: includes/trait-system-health.php:525
 msgid "App: other page"
 msgstr ""
 
 #. translators: %s: a scheduled job
-#: includes/trait-system-health.php:471
+#: includes/trait-system-health.php:526
 #, php-format
 msgid "Job: %s"
 msgstr ""
 
 #. translators: 1: page, 2: times
-#: includes/trait-system-health.php:484
+#: includes/trait-system-health.php:539
 #, php-format
 msgid "%1$s stopped with a PHP fatal error %2$d time"
 msgid_plural "%1$s stopped with a PHP fatal error %2$d times"
@@ -3552,133 +3552,144 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: page, 2: times
-#: includes/trait-system-health.php:484
+#: includes/trait-system-health.php:539
 msgid "Look at the PHP errors list for the file and line."
 msgstr ""
 
 #. translators: 1: job, 2: duration
-#: includes/trait-system-health.php:485
+#: includes/trait-system-health.php:540
 #, php-format
 msgid "%1$s has not run for %2$s"
 msgstr ""
 
 #. translators: 1: job, 2: duration
-#: includes/trait-system-health.php:485
+#: includes/trait-system-health.php:540
 msgid "WP-Cron may not be running on this site (for example DISABLE_WP_CRON is set and no server cron calls it)."
 msgstr ""
 
 #. translators: %s: job
-#: includes/trait-system-health.php:486
+#: includes/trait-system-health.php:541
 #, php-format
 msgid "%s failed on its last run"
 msgstr ""
 
 #. translators: %s: job
-#: includes/trait-system-health.php:486
+#: includes/trait-system-health.php:541
 msgid "It stopped with a PHP error or did not finish."
 msgstr ""
 
 #. translators: 1: page, 2: failed, 3: runs
-#: includes/trait-system-health.php:487
+#: includes/trait-system-health.php:542
 #, php-format
 msgid "%1$s ended with a server error %2$d times in %3$d"
 msgstr ""
 
 #. translators: 1: page, 2: failed, 3: runs
-#: includes/trait-system-health.php:487
+#: includes/trait-system-health.php:542
 msgid "A server error is a PHP fatal error or an HTTP 500."
 msgstr ""
 
 #. translators: 1: page, 2: time
-#: includes/trait-system-health.php:488
+#: includes/trait-system-health.php:543
 #, php-format
 msgid "1 in 20 loads of %1$s takes longer than %2$s"
 msgstr ""
 
 #. translators: %s: limit
-#: includes/trait-system-health.php:488
+#: includes/trait-system-health.php:543
 #, php-format
 msgid "The limit for this page is %s."
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-system-health.php:488
+#: includes/trait-system-health.php:543
 #, php-format
 msgid "Worst %s"
 msgstr ""
 
 #. translators: %s: page
-#: includes/trait-system-health.php:489
+#: includes/trait-system-health.php:544
 #, php-format
 msgid "%s is slower than before"
 msgstr ""
 
 #. translators: %s: version
-#: includes/trait-system-health.php:489
+#: includes/trait-system-health.php:544
 #, php-format
 msgid "It started with version %s."
 msgstr ""
 
 #. translators: %s: version
-#: includes/trait-system-health.php:489
+#: includes/trait-system-health.php:544
 msgid "Typical load time went up over the last days."
 msgstr ""
 
 #. translators: 1: before, 2: after
-#: includes/trait-system-health.php:489
+#: includes/trait-system-health.php:544
 #, php-format
 msgid "Typical %1$s → %2$s"
 msgstr ""
 
 #. translators: 1: page, 2: times
-#: includes/trait-system-health.php:490
+#: includes/trait-system-health.php:545
 #, php-format
 msgid "%1$s runs the same query %2$d times in one load"
 msgstr ""
 
 #. translators: %s: function
-#: includes/trait-system-health.php:490
+#: includes/trait-system-health.php:545
 #, php-format
 msgid "It comes from %s, most likely inside a loop. One query for all rows would do."
 msgstr ""
 
 #. translators: %s: function
-#: includes/trait-system-health.php:490
+#: includes/trait-system-health.php:545
 msgid "Most likely inside a loop. One query for all rows would do."
 msgstr ""
 
 #. translators: 1: page, 2: queries
-#: includes/trait-system-health.php:491
+#: includes/trait-system-health.php:546
 #, php-format
 msgid "%1$s makes %2$d database queries per load"
 msgstr ""
 
+#. translators: %s: time
+#: includes/trait-system-health.php:547
+#, php-format
+msgid "One query took %s"
+msgstr ""
+
 #. translators: 1: time, 2: function
-#: includes/trait-system-health.php:492
+#: includes/trait-system-health.php:547
 #, php-format
 msgid "One query took %1$s (from %2$s)"
 msgstr ""
 
 #. translators: %s: page
-#: includes/trait-system-health.php:492
+#: includes/trait-system-health.php:547
 #, php-format
 msgid "Seen on %s."
 msgstr ""
 
 #. translators: 1: page, 2: used, 3: limit
-#: includes/trait-system-health.php:493
+#: includes/trait-system-health.php:548
 #, php-format
 msgid "%1$s used %2$s of %3$s memory"
 msgstr ""
 
+#. translators: 1: page, 2: used, 3: limit
+#: includes/trait-system-health.php:549
+msgid "New PHP warning in Workforce One code"
+msgstr ""
+
 #. translators: 1: file, 2: line
-#: includes/trait-system-health.php:494
+#: includes/trait-system-health.php:550
 #, php-format
 msgid "New PHP warning in %1$s:%2$d"
 msgstr ""
 
 #. translators: %d: times
-#: includes/trait-system-health.php:494
+#: includes/trait-system-health.php:550
 #, php-format
 msgid "%d time"
 msgid_plural "%d times"
@@ -3686,12 +3697,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: times
-#: includes/trait-system-health.php:495
+#: includes/trait-system-health.php:551
 msgid "Workforce One adds database queries to other pages of the site"
 msgstr ""
 
 #. translators: %d: queries
-#: includes/trait-system-health.php:495
+#: includes/trait-system-health.php:551
 #, php-format
 msgid "About %d queries on each page that is not its own."
 msgstr ""
@@ -3699,7 +3710,7 @@ msgstr ""
 #. translators: %d: minutes
 #. translators: %s: minutes
 #. translators: %d: break number
-#: includes/trait-system-health.php:501
+#: includes/trait-system-health.php:557
 #: templates/app/pay.php:93
 #: templates/app/pay.php:96
 #: templates/app/pay.php:97
@@ -3712,7 +3723,7 @@ msgid "%d min"
 msgstr ""
 
 #. translators: %d: count
-#: includes/trait-system-health.php:522
+#: includes/trait-system-health.php:578
 #, php-format
 msgid "%d critical"
 msgid_plural "%d critical"
@@ -3720,7 +3731,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: count
-#: includes/trait-system-health.php:523
+#: includes/trait-system-health.php:579
 #, php-format
 msgid "%d warning"
 msgid_plural "%d warnings"
@@ -3728,40 +3739,40 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: count
-#: includes/trait-system-health.php:524
+#: includes/trait-system-health.php:580
 #, php-format
 msgid "%d note"
 msgid_plural "%d notes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-system-health.php:526
+#: includes/trait-system-health.php:582
 msgid "System health:"
 msgstr ""
 
-#: includes/trait-system-health.php:526
+#: includes/trait-system-health.php:582
 msgid "Look at this first →"
 msgstr ""
 
-#: includes/trait-system-health.php:529
+#: includes/trait-system-health.php:585
 msgid "Hide for 7 days"
 msgstr ""
 
 #. translators: %s: site name
-#: includes/trait-system-health.php:554
+#: includes/trait-system-health.php:610
 #, php-format
 msgid "System health found these on %s:"
 msgstr ""
 
-#: includes/trait-system-health.php:609
+#: includes/trait-system-health.php:665
 msgid "Typical time over the last days"
 msgstr ""
 
-#: includes/trait-system-health.php:619
+#: includes/trait-system-health.php:675
 msgid "Not enough days yet."
 msgstr ""
 
-#: includes/trait-system-health.php:687
+#: includes/trait-system-health.php:744
 msgid "queries per load"
 msgstr ""
 
@@ -4224,14 +4235,14 @@ msgid "Off"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:112
+#: templates/admin/features.php:113
 #: templates/app/time.php:118
 #: templates/app/time.php:168
 msgid "Optional"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:112
+#: templates/admin/features.php:113
 msgid "Required"
 msgstr ""
 
@@ -4960,122 +4971,126 @@ msgstr ""
 msgid "Measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors, and lists what to look at first. The data stays in this site’s database; nothing is sent anywhere. Adds about 1 ms to a Workforce One request."
 msgstr ""
 
-#: templates/admin/features.php:100
+#: templates/admin/features.php:99
+msgid "On a network only a super admin can change this."
+msgstr ""
+
+#: templates/admin/features.php:101
 msgid "Detailed query data from this share of requests"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/admin/features.php:100
+#: templates/admin/features.php:101
 #, php-format
 msgid "%d%% of requests"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/admin/features.php:101
+#: templates/admin/features.php:102
 msgid "Keep the daily history for"
 msgstr ""
 
-#: templates/admin/features.php:105
+#: templates/admin/features.php:106
 msgid "A substitute while a manager is away"
 msgstr ""
 
-#: templates/admin/features.php:105
+#: templates/admin/features.php:106
 msgid "While a manager is away, the requests that would wait for them wait for their substitute, marked \"for\" them, in every request type. A manager picks one when they ask for leave, or with \"I'll be away\" in My approvals (any start and end time); HR can set one for anyone."
 msgstr ""
 
-#: templates/admin/features.php:109
+#: templates/admin/features.php:110
 msgid "The manager can still decide while away"
 msgstr ""
 
-#: templates/admin/features.php:110
+#: templates/admin/features.php:111
 msgid "When the manager is back, what still waits"
 msgstr ""
 
-#: templates/admin/features.php:110
+#: templates/admin/features.php:111
 msgid "Goes back to the manager"
 msgstr ""
 
-#: templates/admin/features.php:110
+#: templates/admin/features.php:111
 msgid "Stays with the substitute until decided"
 msgstr ""
 
-#: templates/admin/features.php:111
+#: templates/admin/features.php:112
 msgid "Who can be a substitute"
 msgstr ""
 
-#: templates/admin/features.php:111
+#: templates/admin/features.php:112
 msgid "Any active employee"
 msgstr ""
 
-#: templates/admin/features.php:111
+#: templates/admin/features.php:112
 msgid "Managers only (someone reports to them)"
 msgstr ""
 
-#: templates/admin/features.php:111
+#: templates/admin/features.php:112
 msgid "Someone in the same department"
 msgstr ""
 
-#: templates/admin/features.php:112
+#: templates/admin/features.php:113
 msgid "Ask managers for one when they request leave"
 msgstr ""
 
-#: templates/admin/features.php:112
+#: templates/admin/features.php:113
 msgid "Do not ask (HR sets them)"
 msgstr ""
 
-#: templates/admin/features.php:125
+#: templates/admin/features.php:126
 msgid "Office Minimum"
 msgstr ""
 
-#: templates/admin/features.php:125
+#: templates/admin/features.php:126
 msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
 msgstr ""
 
-#: templates/admin/features.php:126
+#: templates/admin/features.php:127
 msgid "Enabled"
 msgstr ""
 
-#: templates/admin/features.php:129
+#: templates/admin/features.php:130
 msgid "Minimum each day"
 msgstr ""
 
-#: templates/admin/features.php:129
+#: templates/admin/features.php:130
 msgid "people in the office"
 msgstr ""
 
-#: templates/admin/features.php:130
+#: templates/admin/features.php:131
 msgid "Working days only; company holidays and days off are not checked."
 msgstr ""
 
-#: templates/admin/features.php:131
+#: templates/admin/features.php:132
 msgid "A different day (optional)"
 msgstr ""
 
-#: templates/admin/features.php:133
+#: templates/admin/features.php:134
 msgid "Empty = the minimum above. 0 = no minimum that day."
 msgstr ""
 
-#: templates/admin/features.php:134
+#: templates/admin/features.php:135
 msgid "Who counts as in the office"
 msgstr ""
 
-#: templates/admin/features.php:136
+#: templates/admin/features.php:137
 msgid "Leave, trips and training count only if ticked here."
 msgstr ""
 
-#: templates/admin/features.php:137
+#: templates/admin/features.php:138
 msgid "Each team's share"
 msgstr ""
 
-#: templates/admin/features.php:138
+#: templates/admin/features.php:139
 msgid "Automatic, by team size. You can fix a number for a team."
 msgstr ""
 
-#: templates/admin/features.php:139
+#: templates/admin/features.php:140
 msgid "No teams yet: the minimum is checked for the whole company."
 msgstr ""
 
-#: templates/admin/features.php:140
+#: templates/admin/features.php:141
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:119
 #: templates/app/employees.php:22
@@ -5086,32 +5101,32 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/admin/features.php:140
+#: templates/admin/features.php:141
 msgid "Automatic share"
 msgstr ""
 
-#: templates/admin/features.php:140
+#: templates/admin/features.php:141
 msgid "Fixed number"
 msgstr ""
 
-#: templates/admin/features.php:142
+#: templates/admin/features.php:143
 msgid "Auto"
 msgstr ""
 
-#: templates/admin/features.php:144
+#: templates/admin/features.php:145
 msgid "People in no team share one line (\"No team\")."
 msgstr ""
 
-#: templates/admin/features.php:145
+#: templates/admin/features.php:146
 #: templates/app/tasks.php:188
 msgid "Reminder"
 msgstr ""
 
-#: templates/admin/features.php:145
+#: templates/admin/features.php:146
 msgid "Every week, send schedule managers the days below the minimum next week"
 msgstr ""
 
-#: templates/admin/features.php:146
+#: templates/admin/features.php:147
 msgid "Reminder day"
 msgstr ""
 

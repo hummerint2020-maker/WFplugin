@@ -90,6 +90,8 @@ page = adm.req(FEATURES)[1]
 check('off by default: the Features section is there, switched off, with its two settings', 'id="ews-system-health"' in page and 'name="health_enabled"' in page and 'name="health_sample_rate"' in page and 'name="health_retention_days"' in page and not re.search(r'name="health_enabled"[^>]*checked', page))
 for p in ['/wp-admin/admin.php?page=ews31-payroll', '/app/?ews_view=schedule']:
     (adm if 'wp-admin' in p else emp).req(p)
+features(adm, False)
+check('saving Features while it is off writes nothing of its own', opt('ews_feature_health') in (None, False) and opt('ews_health_sample_rate') in (None, False) and opt('ews_health_retention_days') in (None, False))
 check('...no table, no option, no scheduled rollup while it is off', not any(exists(t) for t in TABLES) and not opt('ews_health_schema') and php("echo wp_next_scheduled('ews_health_rollup')?1:0;").strip().splitlines()[-1] == '0')
 check('...its screen says it is off, with the link to the switch', 'System health is off' in adm.req(SCREEN)[1] and 'ews-system-health' in adm.req(SCREEN)[1])
 base_q = []
@@ -111,6 +113,8 @@ check('...the sample rate is saved', int(opt('ews_health_sample_rate')) == 100)
 for i in range(3):
     adm.req('/wp-admin/admin.php?page=ews31-payroll')
 adm.req('/wp-admin/admin.php?page=ews31-employees&s=%s' % MARK)
+adm.req('/wp-admin/admin.php?page=ews31-employees&s=' + urllib.parse.quote('%s -- #%sB' % (MARK, MARK)))
+adm.req('/wp-admin/admin.php?page=ews31-employees&s=' + MARK + 'LONG' + 'z' * 12000)
 emp.req('/app/?ews_view=schedule')
 emp.req('/app/?ews_view=zzz')
 emp.req('/app/')
@@ -129,7 +133,7 @@ check('...literals are removed from every shape', not any(re.search(r"'[^?']|\b\
 
 # ---------------------------------------------------------------- privacy: nothing about a person or a request is stored
 emp_row = q("SELECT name,domain_name,email FROM {p}ews_employees WHERE id=(SELECT MIN(id) FROM {p}ews_employees WHERE wp_user_id>0)")[0]
-needles = [MARK, emp_row['name'], emp_row['email'], 'emp1pass']
+needles = [MARK, MARK + 'B', emp_row['name'], emp_row['email'], 'emp1pass']
 blob = json.dumps({t: rows(t) for t in TABLES}) + json.dumps({o: opt(o) for o in ['ews_health_settings', 'ews_health_alerts', 'ews_health_findings', 'ews_health_cron_last', 'ews_health_mail']})
 check('privacy scan: the marker, an employee\'s name and email and a password appear nowhere in the tables or options', not any(n and n.lower() in blob.lower() for n in needles), [n for n in needles if n and n.lower() in blob.lower()])
 
@@ -139,6 +143,20 @@ php("$o=new EWS_Manager_V31_1(); $o->health_on_php_error(E_WARNING,'Undefined ar
 er = rows('errors')
 check('a PHP warning from the plugin is kept, with its value removed and counted once per place; one from another plugin is ignored',
       len(er) == 1 and er[0]['file'] == 'employee-schedule-manager.php' and int(er[0]['line']) == 10 and int(er[0]['n']) >= 2 and 'Ahmed' not in er[0]['message'] and 'ahmed@' not in er[0]['message'] and '"?"' in er[0]['message'], er)
+
+# ---------------------------------------------------------------- a fatal error is written before WordPress ends the request
+adm.req('/wp-admin/admin.php?page=ews31&e2e_fatal=1')
+rf = [x for x in rows('hourly', "WHERE route='admin:ews31'") if int(x['failed']) > 0]
+check('a request that dies on a fatal error is recorded as failed (WordPress ends it inside its own shutdown function)', bool(rf), [x['route'] + ':' + x['failed'] for x in rows('hourly')][:6])
+php("$o=new EWS_Manager_V31_1(); $o->health_on_fatal(true,['type'=>E_ERROR,'message'=>'Uncaught Error: boom for ahmed@example.com in /home/acme/x.php:7','file'=>%s,'line'=>7]);" % json.dumps(file))
+fe = [x for x in rows('errors') if x['level'] == 'error']
+check('...a fatal error from the plugin\'s own file is kept, normalised, and counted as a fatal', fe and 'acme' not in fe[0]['message'] and 'ahmed@' not in fe[0]['message'] and sum(int(x['fatal']) for x in rows('hourly')) >= 1, fe[:1])
+
+# ---------------------------------------------------------------- another plugin's requests are not the plugin's
+adm.req('/wp-json/wp/v2/types')
+adm.post('some_other_plugin_action', x=1)
+other = [x for x in rows('hourly') if x['route'] in ('rest:other', 'post:other')]
+check('a REST route or action of another plugin is recorded only when it was sampled for query detail', all(int(x['n']) == int(x['sampled']) for x in other), other)
 
 # ---------------------------------------------------------------- scheduled jobs
 php("wp_clear_scheduled_hook('ews_tasks_tick'); wp_schedule_single_event(time()-30,'ews_tasks_tick');")
@@ -153,6 +171,7 @@ php("update_option('ews_health_settings',['repeat'=>2,'slow_ms'=>200,'min_runs'=
 for i in range(4):
     emp.req('/app/?ews_view=schedule')
     adm.req('/wp-admin/admin.php?page=ews31-employees')
+rollup()
 rollup()
 d = rows('daily')
 check('the rollup builds the daily rows from the hourly ones (with the version)', d and any(x['route'] == 'admin:ews31-payroll' and int(x['n']) == 3 for x in d) and all(x['version'] for x in d), d[:1])
@@ -196,6 +215,19 @@ st, body, _ = emp.req(SCREEN)
 loc = emp.post('ews_health_settings_save', _wpnonce=sn, health_slow_ms=99999)[1]
 pn0 = nonce_of(adm, SCREEN + '&tab=settings', 'ews_health_purge')
 check('an employee cannot change the settings or delete the data', opt('ews_health_settings')['slow_ms'] == 200 and emp.post('ews_health_purge', _wpnonce=pn0)[0] != 302 and rows('hourly'))
+
+# ---------------------------------------------------------------- a schema mismatch is repaired by the rollup; a missing table breaks nothing
+php("update_option('ews_health_schema','0',false);")
+page = adm.req('/wp-admin/admin.php?page=ews31')
+check('with the schema version behind, nothing is collected and the page still opens', page[0] == 200 and 'WordPress database error' not in page[1])
+rollup()
+check('...and the rollup repairs it', opt('ews_health_schema') == '1' and all(exists(t) for t in TABLES))
+php("$wpdb->query(\"DROP TABLE {$p}ews_health_hourly\");")
+st, body, _ = adm.req('/wp-admin/admin.php?page=ews31')
+check('a missing table does not break a request or print a database error', st == 200 and 'WordPress database error' not in body)
+php("delete_option('ews_health_schema');")
+rollup()
+check('...and the rollup creates it again', exists('hourly'))
 
 # ---------------------------------------------------------------- retention and deleting
 php("""$wpdb->insert($p.'ews_health_hourly',['route'=>'old:x','hour'=>gmdate('Y-m-d H:00:00',time()-9*86400),'slot'=>0,'n'=>1,'last_at'=>gmdate('Y-m-d H:i:s')]);

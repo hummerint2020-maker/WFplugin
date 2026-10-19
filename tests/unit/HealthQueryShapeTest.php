@@ -30,6 +30,35 @@ final class HealthQueryShapeTest extends TestCase
         $this->assertSame("SELECT a FROM t WHERE a = ?\n", Q::normalize("SELECT a\nFROM t\n\tWHERE a = 'x'") . "\n", 'whitespace collapsed');
     }
 
+    public function testNoValueSurvivesAHostileQuery(): void
+    {
+        $big = str_repeat('A', 10000);
+        $cases = [
+            "INSERT INTO wp_x (n,e,d) VALUES ('Ahmed Monier','ahmed@x.com','$big')",
+            "INSERT INTO wp_x VALUES ('Apt #4 Ahmed','secret@x.com')",
+            "UPDATE t SET note='a -- b'\nWHERE name='Ahmed Monier'",
+            "SELECT 'unterminated Ahmed",
+            "SELECT * FROM t WHERE a = '" . str_repeat('B', 1000000) . "' AND b='Ahmed Monier'",
+            "SELECT /* it's Ahmed */ a FROM t WHERE b = 'x'\n-- Ahmed's note\nAND c = 'Monier'",
+        ];
+        foreach ($cases as $sql) {
+            $s = Q::normalize($sql, 'wp_');
+            $this->assertDoesNotMatchRegularExpression('/Ahmed|Monier|secret|AAAA|BBBB|Apt/', $s, substr($sql, 0, 60));
+            $this->assertLessThanOrEqual(Q::MAX, strlen($s));
+        }
+        $this->assertSame('UPDATE t SET note=? WHERE name=?', Q::normalize("UPDATE t SET note='a -- b'\nWHERE name='Ahmed Monier'"));
+        $this->assertSame('INSERT INTO t VALUES (?)', Q::normalize("INSERT INTO t VALUES ('Apt #4 Ahmed','secret@x.com')"));
+    }
+
+    public function testMessagesLeakNothingUnquoted(): void
+    {
+        $this->assertSame('Undefined index: ?', M::normalize('Undefined index: Ahmed Monier'));
+        $this->assertSame('Undefined property: stdClass::$?', M::normalize('Undefined property: stdClass::$ahmed'));
+        $m = M::normalize("Uncaught Exception: boom in /home/acme/public_html/wp-content/x.php:12\nStack trace:\n#0 /home/acme/y.php(3): f('secret')");
+        $this->assertSame('Uncaught Exception: boom in ?', $m);
+        $this->assertStringNotContainsString('acme', M::normalize('include(/home/acme/x.php): failed to open stream'));
+    }
+
     public function testShapeIsBounded(): void
     {
         $this->assertLessThanOrEqual(Q::MAX, strlen(Q::normalize('SELECT ' . str_repeat('a_long_column, ', 200) . 'z FROM t')));

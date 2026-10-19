@@ -9,6 +9,9 @@ add_filter('pre_wp_mail', function ($null, $atts) {
     file_put_contents(__DIR__ . '/ews-e2e-health-mail.txt', wp_json_encode(['to' => $atts['to'], 'subject' => $atts['subject'], 'message' => $atts['message']]) . "\n", FILE_APPEND | LOCK_EX);
     return true;
 }, 10, 2);
+add_action('admin_init', function () {   // a fatal error on demand, from this file (not the plugin's)
+    if (isset($_GET['e2e_fatal'])) e2e_health_undefined_function();
+});
 add_action('shutdown', function () {
     register_shutdown_function(function () {
         if (!isset($_GET['e2e_tag'])) return;

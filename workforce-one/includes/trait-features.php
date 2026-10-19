@@ -110,10 +110,17 @@ trait EWS_Features_Trait {
         // System health (3.31.110): the switch, how many requests give query detail, how long the daily history is kept.
         if(isset($post['health_present'])){
             $was=$this->health_enabled();$now=$flag('health_enabled')?1:0;
-            update_option('ews_health_sample_rate',\WorkforceOne\Health\Settings::rate($post['health_sample_rate']??null),false);
-            update_option('ews_health_retention_days',\WorkforceOne\Health\Settings::retention($post['health_retention_days']??null),false);
-            update_option('ews_feature_health',$now,false);
-            if((bool)$was!==(bool)$now)$this->health_switch_changed((bool)$now);
+            // Nothing is written for a site that keeps it off; on a network only a super admin switches it.
+            if(!is_multisite() || is_super_admin()){
+                if($now||$was){
+                    update_option('ews_health_sample_rate',\WorkforceOne\Health\Settings::rate($post['health_sample_rate']??null),false);
+                    update_option('ews_health_retention_days',\WorkforceOne\Health\Settings::retention($post['health_retention_days']??null),false);
+                }
+                if((bool)$was!==(bool)$now){
+                    update_option('ews_feature_health',$now,false);
+                    $this->health_switch_changed((bool)$now);
+                }
+            }
         }
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){
