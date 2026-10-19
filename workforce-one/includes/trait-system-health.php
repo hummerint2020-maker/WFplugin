@@ -435,12 +435,11 @@ trait EWS_System_Health_Trait {
             else{$x['bh']=Stats::merge($x['bh'],$hist($r));$x['bn']+=(int)$r['n'];$x['bv']=(string)$r['version'];}
             unset($x);
         }
-        foreach($routes as $route=>&$x){
-            $x['recent_n']=$x['rn'];$x['before_n']=$x['bn'];
-            $x['recent_p50']=Stats::percentile($x['rh'],0.5,$x['ms_max']);$x['before_p50']=Stats::percentile($x['bh'],0.5,$x['ms_max']);
-            $x['version']=$x['rv']!==$x['bv']?$x['rv']:'';
+        foreach($routes as $route=>$x){
+            $routes[$route]['recent_n']=$x['rn'];$routes[$route]['before_n']=$x['bn'];
+            $routes[$route]['recent_p50']=Stats::percentile($x['rh'],0.5,$x['ms_max']);$routes[$route]['before_p50']=Stats::percentile($x['bh'],0.5,$x['ms_max']);
+            $routes[$route]['version']=$x['rv']!==$x['bv']?$x['rv']:'';
         }
-        unset($x);
         $queries=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT route,caller,MAX(us_max) us_max,MAX(max_repeat) max_repeat FROM {$t['queries']} WHERE day>=%s AND caller<>'' GROUP BY route,caller",$day(6)),ARRAY_A) as $q){
             $ms=(int)round((int)$q['us_max']/1000);

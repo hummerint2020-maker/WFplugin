@@ -7029,3 +7029,414 @@ msgstr "غادر الشركة"
 
 msgid "Times Finance may move an instalment to the end, per advance (0 = no limit)"
 msgstr "عدد مرات نقل قسط إلى النهاية بواسطة المالية لكل سلفة (0 = بلا حد)"
+
+msgid "System health"
+msgstr "صحة النظام"
+
+msgid "App: %s"
+msgstr "التطبيق: %s"
+
+msgid "App: other page"
+msgstr "التطبيق: صفحة أخرى"
+
+msgid "Job: %s"
+msgstr "مهمة: %s"
+
+msgid "%1$s stopped with a PHP fatal error %2$d time"
+msgid_plural "%1$s stopped with a PHP fatal error %2$d times"
+msgstr[0] "توقفت %1$s بسبب خطأ PHP قاتل (%2$d مرة)"
+msgstr[1] "توقفت %1$s بسبب خطأ PHP قاتل (%2$d مرة)"
+msgstr[2] "توقفت %1$s بسبب خطأ PHP قاتل (%2$d مرة)"
+msgstr[3] "توقفت %1$s بسبب خطأ PHP قاتل (%2$d مرة)"
+msgstr[4] "توقفت %1$s بسبب خطأ PHP قاتل (%2$d مرة)"
+msgstr[5] "توقفت %1$s بسبب خطأ PHP قاتل (%2$d مرة)"
+
+msgid "Look at the PHP errors list for the file and line."
+msgstr "راجع قائمة أخطاء PHP لمعرفة الملف والسطر."
+
+msgid "%1$s has not run for %2$s"
+msgstr "لم تعمل %1$s منذ %2$s"
+
+msgid "WP-Cron may not be running on this site (for example DISABLE_WP_CRON is set and no server cron calls it)."
+msgstr "قد لا يعمل WP-Cron على هذا الموقع (مثلًا تم ضبط DISABLE_WP_CRON ولا يوجد cron على الخادم يستدعيه)."
+
+msgid "%s failed on its last run"
+msgstr "فشلت %s في آخر تشغيل"
+
+msgid "It stopped with a PHP error or did not finish."
+msgstr "توقفت بسبب خطأ PHP أو لم تكتمل."
+
+msgid "%1$s ended with a server error %2$d times in %3$d"
+msgstr "انتهت %1$s بخطأ في الخادم %2$d مرة من أصل %3$d"
+
+msgid "A server error is a PHP fatal error or an HTTP 500."
+msgstr "خطأ الخادم هو خطأ PHP قاتل أو استجابة HTTP 500."
+
+msgid "1 in 20 loads of %1$s takes longer than %2$s"
+msgstr "تحميل واحد من كل 20 لصفحة %1$s يستغرق أكثر من %2$s"
+
+msgid "The limit for this page is %s."
+msgstr "الحد لهذه الصفحة هو %s."
+
+msgid "Worst %s"
+msgstr "الأسوأ %s"
+
+msgid "%s is slower than before"
+msgstr "%s أبطأ من السابق"
+
+msgid "It started with version %s."
+msgstr "بدأ ذلك مع الإصدار %s."
+
+msgid "Typical load time went up over the last days."
+msgstr "ارتفع زمن التحميل المعتاد خلال الأيام الأخيرة."
+
+msgid "Typical %1$s → %2$s"
+msgstr "المعتاد %1$s ← %2$s"
+
+msgid "%1$s runs the same query %2$d times in one load"
+msgstr "تنفذ %1$s الاستعلام نفسه %2$d مرة في تحميل واحد"
+
+msgid "It comes from %s, most likely inside a loop. One query for all rows would do."
+msgstr "مصدره %s، غالبًا داخل حلقة تكرار. استعلام واحد لكل الصفوف يكفي."
+
+msgid "Most likely inside a loop. One query for all rows would do."
+msgstr "غالبًا داخل حلقة تكرار. استعلام واحد لكل الصفوف يكفي."
+
+msgid "%1$s makes %2$d database queries per load"
+msgstr "تُجري %1$s %2$d استعلامًا على قاعدة البيانات في كل تحميل"
+
+msgid "One query took %1$s (from %2$s)"
+msgstr "استغرق استعلام واحد %1$s (من %2$s)"
+
+msgid "Seen on %s."
+msgstr "ظهر في %s."
+
+msgid "%1$s used %2$s of %3$s memory"
+msgstr "استخدمت %1$s %2$s من أصل %3$s من الذاكرة"
+
+msgid "New PHP warning in %1$s:%2$d"
+msgstr "تحذير PHP جديد في %1$s:%2$d"
+
+msgid "%d time"
+msgid_plural "%d times"
+msgstr[0] "%d مرة"
+msgstr[1] "%d مرة"
+msgstr[2] "%d مرة"
+msgstr[3] "%d مرة"
+msgstr[4] "%d مرة"
+msgstr[5] "%d مرة"
+
+msgid "Workforce One adds database queries to other pages of the site"
+msgstr "يضيف Workforce One استعلامات إلى قاعدة البيانات في صفحات أخرى من الموقع"
+
+msgid "About %d queries on each page that is not its own."
+msgstr "حوالي %d استعلامًا في كل صفحة ليست من صفحاته."
+
+msgid "%d critical"
+msgid_plural "%d critical"
+msgstr[0] "%d حرجة"
+msgstr[1] "%d حرجة"
+msgstr[2] "%d حرجة"
+msgstr[3] "%d حرجة"
+msgstr[4] "%d حرجة"
+msgstr[5] "%d حرجة"
+
+msgid "%d warning"
+msgid_plural "%d warnings"
+msgstr[0] "%d تحذيرات"
+msgstr[1] "%d تحذيرات"
+msgstr[2] "%d تحذيرات"
+msgstr[3] "%d تحذيرات"
+msgstr[4] "%d تحذيرات"
+msgstr[5] "%d تحذيرات"
+
+msgid "%d note"
+msgid_plural "%d notes"
+msgstr[0] "%d ملاحظات"
+msgstr[1] "%d ملاحظات"
+msgstr[2] "%d ملاحظات"
+msgstr[3] "%d ملاحظات"
+msgstr[4] "%d ملاحظات"
+msgstr[5] "%d ملاحظات"
+
+msgid "System health:"
+msgstr "صحة النظام:"
+
+msgid "Look at this first →"
+msgstr "ما ينبغي مراجعته أولًا ←"
+
+msgid "Hide for 7 days"
+msgstr "إخفاء لمدة 7 أيام"
+
+msgid "System health found these on %s:"
+msgstr "وجدت صحة النظام ما يلي على %s:"
+
+msgid "Typical time over the last days"
+msgstr "الزمن المعتاد خلال الأيام الأخيرة"
+
+msgid "Not enough days yet."
+msgstr "لا توجد أيام كافية بعد."
+
+msgid "queries per load"
+msgstr "استعلامات لكل تحميل"
+
+msgid "Measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors, and lists what to look at first. The data stays in this site’s database; nothing is sent anywhere. Adds about 1 ms to a Workforce One request."
+msgstr "تقيس زمن صفحات Workforce One وإجراءاته ومهامه المجدولة، واستعلامات قاعدة البيانات والذاكرة وأخطاء PHP، وتعرض ما ينبغي مراجعته أولًا. تبقى البيانات في قاعدة بيانات هذا الموقع ولا يُرسل شيء إلى أي جهة. تضيف نحو 1 ملّي ثانية لطلب Workforce One."
+
+msgid "Detailed query data from this share of requests"
+msgstr "بيانات الاستعلامات التفصيلية من هذه النسبة من الطلبات"
+
+msgid "%d%% of requests"
+msgstr "%d%% من الطلبات"
+
+msgid "Keep the daily history for"
+msgstr "الاحتفاظ بالسجل اليومي لمدة"
+
+msgid "Scheduled jobs"
+msgstr "المهام المجدولة"
+
+msgid "Queries"
+msgstr "الاستعلامات"
+
+msgid "PHP errors"
+msgstr "أخطاء PHP"
+
+msgid "Critical"
+msgstr "حرج"
+
+msgid "Warning"
+msgstr "تحذير"
+
+msgid "The collected data was deleted."
+msgstr "تم حذف البيانات المجمّعة."
+
+msgid "System health is off. It measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors. The data stays in this site’s database."
+msgstr "صحة النظام متوقفة. وهي تقيس زمن صفحات Workforce One وإجراءاته ومهامه المجدولة، واستعلامات قاعدة البيانات والذاكرة وأخطاء PHP. تبقى البيانات في قاعدة بيانات هذا الموقع."
+
+msgid "Turn it on in Features"
+msgstr "فعّلها من الميزات"
+
+msgid "Collecting since %1$s · %2$s rows stored · detailed query data from 1 in %3$d requests"
+msgstr "يجري الجمع منذ %1$s · %2$s صفًا مخزنًا · بيانات الاستعلامات التفصيلية من طلب واحد من كل %3$d طلبًا"
+
+msgid "last summary %s"
+msgstr "آخر ملخص %s"
+
+msgid "not yet (within the hour)"
+msgstr "لم يتم بعد (خلال ساعة)"
+
+msgid "Query detail is off: SAVEQUERIES is set to false on this site."
+msgstr "تفاصيل الاستعلامات متوقفة: تم ضبط SAVEQUERIES على false في هذا الموقع."
+
+msgid "The row limit was reached: new query and error rows are paused. Lower the retention or delete data."
+msgstr "تم بلوغ حد الصفوف: توقف تسجيل صفوف الاستعلامات والأخطاء الجديدة. قلّل مدة الاحتفاظ أو احذف البيانات."
+
+msgid "24 hours"
+msgstr "24 ساعة"
+
+msgid "7 days"
+msgstr "7 أيام"
+
+msgid "Look at this first"
+msgstr "ما ينبغي مراجعته أولًا"
+
+msgid "Nothing needs attention."
+msgstr "لا شيء يحتاج إلى انتباه."
+
+msgid "The first summary is made within the hour."
+msgstr "يُعدّ أول ملخص خلال ساعة."
+
+msgid "Pages and actions"
+msgstr "الصفحات والإجراءات"
+
+msgid "Page or action"
+msgstr "الصفحة أو الإجراء"
+
+msgid "Runs"
+msgstr "مرات التشغيل"
+
+msgid "Typical"
+msgstr "المعتاد"
+
+msgid "Slow (1 in 20)"
+msgstr "البطيء (1 من كل 20)"
+
+msgid "Worst"
+msgstr "الأسوأ"
+
+msgid "Memory"
+msgstr "الذاكرة"
+
+msgid "Errors"
+msgstr "الأخطاء"
+
+msgid "Failed"
+msgstr "الفاشلة"
+
+msgid "14 days"
+msgstr "14 يومًا"
+
+msgid "Nothing measured in this period yet."
+msgstr "لم يُقَس شيء في هذه الفترة بعد."
+
+msgid "Sorted by total time (runs × time) unless you pick a heading. The small line is the typical time per day; a dotted line marks a new version. Not measured on purpose: network and phone rendering time, and whether the site as a whole is reachable. This screen sees only what runs on this server."
+msgstr "الترتيب حسب إجمالي الوقت (عدد التشغيل × الزمن) ما لم تختر عنوانًا آخر. الخط الصغير هو الزمن المعتاد يوميًا، والخط المنقط يشير إلى إصدار جديد. ما لا يُقاس عمدًا: زمن الشبكة وعرض الصفحة على الهاتف، وهل الموقع كله متاح. ترى هذه الشاشة ما يعمل على هذا الخادم فقط."
+
+msgid "All pages"
+msgstr "كل الصفحات"
+
+msgid "%1$s runs · typical %2$s · slow %3$s · worst %4$s · %5$d queries per load"
+msgstr "%1$s تشغيلًا · المعتاد %2$s · البطيء %3$s · الأسوأ %4$s · %5$d استعلامًا لكل تحميل"
+
+msgid "Load time per day"
+msgstr "زمن التحميل يوميًا"
+
+msgid "Database queries per load"
+msgstr "استعلامات قاعدة البيانات لكل تحميل"
+
+msgid "Queries on this page"
+msgstr "الاستعلامات في هذه الصفحة"
+
+msgid "Query (values removed)"
+msgstr "الاستعلام (بعد حذف القيم)"
+
+msgid "Called from"
+msgstr "مستدعى من"
+
+msgid "Per load"
+msgstr "لكل تحميل"
+
+msgid "Average"
+msgstr "المتوسط"
+
+msgid "Slowest"
+msgstr "الأبطأ"
+
+msgid "No query detail yet (it is taken from a share of requests)."
+msgstr "لا توجد تفاصيل استعلامات بعد (تؤخذ من نسبة من الطلبات)."
+
+msgid "repeated"
+msgstr "متكرر"
+
+msgid "PHP errors on this page"
+msgstr "أخطاء PHP في هذه الصفحة"
+
+msgid "DISABLE_WP_CRON is set. Scheduled jobs run only if the server calls wp-cron.php itself."
+msgstr "تم ضبط DISABLE_WP_CRON. لا تعمل المهام المجدولة إلا إذا استدعى الخادم wp-cron.php بنفسه."
+
+msgid "Job"
+msgstr "المهمة"
+
+msgid "Every"
+msgstr "كل"
+
+msgid "Last run"
+msgstr "آخر تشغيل"
+
+msgid "Took"
+msgstr "استغرقت"
+
+msgid "Runs (24 h)"
+msgstr "التشغيل (24 ساعة)"
+
+msgid "Failed (7 days)"
+msgstr "الفاشلة (7 أيام)"
+
+msgid "%s late"
+msgstr "متأخرة %s"
+
+msgid "Page"
+msgstr "الصفحة"
+
+msgid "Most in one load"
+msgstr "الأكثر في تحميل واحد"
+
+msgid "Only the shape of a query is kept: names, numbers and dates are replaced by “?”, so nothing about a person can be read back."
+msgstr "يُحفظ شكل الاستعلام فقط: تُستبدل الأسماء والأرقام والتواريخ بعلامة “؟”، فلا يمكن استرجاع شيء عن أي شخص."
+
+msgid "File"
+msgstr "الملف"
+
+msgid "First seen"
+msgstr "أول ظهور"
+
+msgid "Last seen"
+msgstr "آخر ظهور"
+
+msgid "No PHP errors from Workforce One code."
+msgstr "لا توجد أخطاء PHP من كود Workforce One."
+
+msgid "The switch, how many requests give detailed query data, and how long the daily history is kept are on"
+msgstr "مفتاح التشغيل ونسبة الطلبات ذات بيانات الاستعلامات التفصيلية ومدة حفظ السجل اليومي موجودة في"
+
+msgid "now %1$d%% of requests, %2$d days"
+msgstr "حاليًا %1$d%% من الطلبات، %2$d يومًا"
+
+msgid "You can see these settings. Changing them needs the Manage Settings permission."
+msgstr "يمكنك رؤية هذه الإعدادات. تغييرها يحتاج إلى صلاحية إدارة الإعدادات."
+
+msgid "When to flag something"
+msgstr "متى يتم التنبيه إلى شيء"
+
+msgid "A page is slow when 1 in 20 loads is longer than (ms)"
+msgstr "تُعد الصفحة بطيئة عندما يتجاوز تحميل من كل 20 هذا الزمن (ملّي ثانية)"
+
+msgid "The same for heavy operations and scheduled jobs (ms)"
+msgstr "الحد نفسه للعمليات الثقيلة والمهام المجدولة (ملّي ثانية)"
+
+msgid "Many queries: more than this per load"
+msgstr "استعلامات كثيرة: أكثر من هذا العدد لكل تحميل"
+
+msgid "The same query repeated this many times in one load"
+msgstr "الاستعلام نفسه مكرر بهذا العدد في تحميل واحد"
+
+msgid "A single query slower than (ms)"
+msgstr "استعلام واحد أبطأ من (ملّي ثانية)"
+
+msgid "Peak memory above (% of the limit)"
+msgstr "الذاكرة القصوى أعلى من (% من الحد)"
+
+msgid "Slower than before: at least (%)"
+msgstr "أبطأ من قبل: على الأقل (%)"
+
+msgid "…and at least (ms)"
+msgstr "…وعلى الأقل (ملّي ثانية)"
+
+msgid "Failed requests above (%)"
+msgstr "الطلبات الفاشلة أعلى من (%)"
+
+msgid "A scheduled job is late after (minutes)"
+msgstr "تُعد المهمة المجدولة متأخرة بعد (دقيقة)"
+
+msgid "Judge a page only after this many runs"
+msgstr "الحكم على الصفحة بعد هذا العدد من مرات التشغيل فقط"
+
+msgid "Alerts"
+msgstr "التنبيهات"
+
+msgid "Show a notice on Workforce One pages and the WordPress Dashboard (can be hidden for 7 days)"
+msgstr "إظهار إشعار في صفحات Workforce One ولوحة تحكم ووردبريس (يمكن إخفاؤه لمدة 7 أيام)"
+
+msgid "Also send an email (page names and numbers only, never queries or file paths). Off by default; sent through this site’s own mail."
+msgstr "إرسال بريد إلكتروني أيضًا (أسماء الصفحات والأرقام فقط، دون استعلامات أو مسارات ملفات). متوقف افتراضيًا، ويُرسل عبر بريد هذا الموقع."
+
+msgid "Send to"
+msgstr "إرسال إلى"
+
+msgid "Delete all collected System health data?"
+msgstr "حذف كل بيانات صحة النظام المجمّعة؟"
+
+msgid "Data"
+msgstr "البيانات"
+
+msgid "%s rows stored. Hourly detail is kept 7 days, query and error detail 30 days, the daily history as chosen in Features."
+msgstr "%s صفًا مخزنًا. تُحفظ التفاصيل الساعية 7 أيام، وتفاصيل الاستعلامات والأخطاء 30 يومًا، والسجل اليومي حسب اختيارك في الميزات."
+
+msgid "Delete collected data"
+msgstr "حذف البيانات المجمّعة"
+
+msgid "On a network only super admins see this screen."
+msgstr "في الشبكة يرى هذه الشاشة المشرفون العامون فقط."
+
+msgid "Who sees this screen: site administrators; the permission “View System Health” can be given to others on Roles & permissions."
+msgstr "من يرى هذه الشاشة: مديرو الموقع؛ ويمكن منح صلاحية “عرض صحة النظام” لآخرين من الأدوار والصلاحيات."
