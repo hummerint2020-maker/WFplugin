@@ -336,6 +336,8 @@ ppg = app(cash, 'payout', site=A)
 pdf_url = link(ppg, 'ews_dw_payout_pdf')
 pst, pbody, ph = cash.req(pdf_url)
 check('payout sheet: a PDF', pst == 200 and ph.get('Content-Type', '').startswith('application/pdf') and pbody.startswith('%PDF'), (pst, ph.get('Content-Type')))
+bad_pdf = cash.req(pdf_url.replace('start=', 'start=notadate&was='))
+check('payout sheet: an invalid start date is refused (400)', bad_pdf[0] == 400, bad_pdf[0])
 # The Paid form is shown only once the period can be paid (3.31.83), so the nonce may not be on the page.
 npd = form_nonce(ppg, 'ews_dw_paid') or nonce_for(cash, 'ews_dw_paid')
 # Paying locks the period, so a week that is still running cannot be paid yet (3.31.83).
@@ -414,6 +416,10 @@ base_day = {'action': 'ews_dw_admin_day', '_wpnonce': nd, 'site': A, 'day': EARL
 check('Days: a reason is required', post(hr, dict(base_day, reason='')).get('dw_error') == 'reason')
 check('Days: a future day is refused', post(hr, dict(base_day, day=(today + datetime.timedelta(days=1)).isoformat(), reason='x')).get('dw_error') == 'date_past')
 check('Days: a foreman cannot', post(fm, dict(base_day, _wpnonce=nonce_for(fm, 'ews_dw_admin_day'), reason='x')).get('done') != 'day_saved')
+today_s = today.isoformat()
+if not q("SELECT id FROM {p}ews_dw_sheets WHERE location_id=%d AND work_date='%s'" % (A, today_s)):
+    check('Days: today with no sheet yet is refused (a sheet made here would lock the foreman out)', post(hr, dict(base_day, day=today_s, reason='x')).get('dw_error') == 'date_today'
+          and not q("SELECT id FROM {p}ews_dw_sheets WHERE location_id=%d AND work_date='%s'" % (A, today_s)))
 qs = post(hr, dict(base_day, reason='Paper list, the foreman\'s phone was broken'))
 ed = q("SELECT * FROM {p}ews_dw_days WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))
 ch = q("SELECT * FROM {p}ews_dw_changes WHERE worker_id=%d AND work_date='%s'" % (W1, EARLY))

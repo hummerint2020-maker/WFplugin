@@ -259,6 +259,11 @@ st, _, h = adm.req('/wp-admin/admin-post.php', {'action': 'ews31_requests_decisi
 check('...and decides it', 'request_notice=approved' in h.get('Location', '') and cx(C6)['status'] == 'approved', h.get('Location'))
 
 # ---------------------------------------------------------------- monthly limit
+# 3.31.111: a month ends on its own last day (February has no 31st): a request on 28 Feb counts towards February's limit
+php("""$e=(int)$wpdb->get_var("SELECT id FROM {$p}ews_employees WHERE wp_user_id=".(int)get_user_by('login','emp1')->ID); $wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>$e,'work_date'=>'2027-02-28','type'=>'time','target'=>'sign_out','status'=>'pending','source'=>'employee','reason'=>'x','requested_by'=>1,'requested_at'=>'2027-02-28 10:00:00']);""")
+cnt = php("""$e=(int)$wpdb->get_var("SELECT id FROM {$p}ews_employees WHERE wp_user_id=".(int)get_user_by('login','emp1')->ID); $o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'cx_month_count'); $m->setAccessible(true); echo $m->invoke($o,$e,'2027-02-10');""").splitlines()[-1]
+check('the monthly limit counts a request on the last day of February', cnt == '1', cnt)
+php("""$wpdb->delete($p.'ews_attendance_corrections',['work_date'=>'2027-02-28']);""")
 month = D1[:7]
 php("for($i=0;$i<3;$i++)$wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>%d,'work_date'=>'%s','type'=>'out','status'=>'approved','source'=>'employee','requested_by'=>0,'requested_at'=>current_time('mysql'),'reason'=>'filler']);" % (E, month + '-01'))
 php("$wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>0,'work_date'=>'%s','event_type'=>'sign_in','event_at'=>'%s 08:00:00','scheduled_status'=>'Office','source'=>'app']);" % (E, day(6), day(6)))
