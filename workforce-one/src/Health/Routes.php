@@ -23,6 +23,9 @@ final class Routes
         'post:ews_org_import_apply', 'post:ews_dw_export', 'post:ews_dw_payout_pdf',
     ];
 
+    /** Jobs scheduled one by one with arguments (a break's reminder, a push batch): no event waiting is normal. */
+    public const QUEUE_HOOKS = ['ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_push_deliver'];
+
     private const AREAS = ['admin' => 'wp-admin', 'app' => 'App', 'post' => 'Actions', 'rest' => 'API', 'cron' => 'Jobs', 'other' => 'Other'];
 
     /**
@@ -75,6 +78,12 @@ final class Routes
     {
         $k = strstr($route, ':', true);
         return self::AREAS[$k === false ? 'other' : $k] ?? 'Other';
+    }
+
+    /** A request that is not the plugin's own (other pages, other plugins' REST routes and actions, an unknown job). */
+    public static function foreign(string $route): bool
+    {
+        return strpos($route, 'other:') === 0 || in_array($route, ['rest:other', 'post:other', 'cron:other'], true);
     }
 
     public static function alwaysSampled(string $route): bool

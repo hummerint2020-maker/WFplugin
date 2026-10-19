@@ -14,7 +14,7 @@ final class HealthFindingsTest extends TestCase
     private function route(int $bucket, array $o = []): array
     {
         $h = Stats::empty(); $h[$bucket] = 100;
-        return $o + ['n' => 100, 'failed' => 0, 'fatal' => 0, 'hist' => $h, 'ms_max' => 0, 'pq_sum' => 0, 'pq_n' => 0, 'mem_max' => 0, 'max_repeat' => 0];
+        return $o + ['n' => 100, 'failed' => 0, 'fatal' => 0, 'hist' => $h, 'ms_max' => 0, 'pq_sum' => 0, 'pq_n' => 0, 'mem_pct' => 0, 'max_repeat' => 0];
     }
 
     private function rules(array $in, array $s = null): array
@@ -54,9 +54,20 @@ final class HealthFindingsTest extends TestCase
         $this->assertSame(['many_queries:a' => 'many_queries'], $this->rules(['routes' => ['a' => $this->route(0, ['pq_sum' => 3000, 'pq_n' => 20])]]), '150 each');
         $this->assertSame([], $this->rules(['routes' => ['a' => $this->route(0, ['pq_sum' => 2900, 'pq_n' => 20])]]));
         $this->assertSame(['other_cost:other:front' => 'other_cost'], $this->rules(['routes' => ['other:front' => $this->route(0, ['pq_sum' => 500, 'pq_n' => 20])]]));
-        $this->assertSame(['memory:a' => 'memory'], $this->rules(['memory_limit_kb' => 262144, 'routes' => ['a' => $this->route(0, ['mem_max' => 214748])]]), '82%');
-        $this->assertSame([], $this->rules(['memory_limit_kb' => 262144, 'routes' => ['a' => $this->route(0, ['mem_max' => 200000])]]));
+        $this->assertSame(['memory:a' => 'memory'], $this->rules(['routes' => ['a' => $this->route(0, ['mem_pct' => 86])]]), '86% of the limit the request ran under (110 MB of 128 MB)');
+        $this->assertSame([], $this->rules(['routes' => ['a' => $this->route(0, ['mem_pct' => 79])]]));
         $this->assertSame(['slow_query:a:people_name' => 'slow_query'], $this->rules(['queries' => [['route' => 'a', 'caller' => 'people_name', 'ms_max' => 1000], ['route' => 'a', 'caller' => 'x', 'ms_max' => 999]]]));
+    }
+
+    public function testAnotherPluginsPageIsNotTheirs(): void
+    {
+        $bad = $this->route(0, ['failed' => 50, 'recent_n' => 40, 'before_n' => 40, 'before_p50' => 100, 'recent_p50' => 5000, 'mem_pct' => 95, 'hist' => array_replace(Stats::empty(), [0 => 0, 14 => 100])]);
+        foreach (['other:front', 'rest:other', 'post:other', 'other:admin'] as $route) {
+            $this->assertSame([], $this->rules(['routes' => [$route => $bad]]), $route . ': slow, failing, slower or heavy on memory is not the plugin\'s doing');
+        }
+        $this->assertSame(['fatal:other:front' => 'fatal'], $this->rules(['routes' => ['other:front' => ['fatal' => 1] + $bad]]), 'a fatal error from its own code still counts');
+        $this->assertSame(['other_cost:rest:other' => 'other_cost'], $this->rules(['routes' => ['rest:other' => $this->route(0, ['pq_sum' => 600, 'pq_n' => 20])]]), 'the cost of its queries on another route');
+        $this->assertSame(['slow:a' => 'slow'], $this->rules(['routes' => ['a' => $this->route(14)]]), '99 runs at 20 s are slow, and the same on its own route');
     }
 
     public function testCronAndErrors(): void

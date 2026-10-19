@@ -14,8 +14,12 @@ final class HealthStatsTest extends TestCase
         $this->assertSame(6, S::bucket(1000));
         $this->assertSame(10, S::bucket(5000));
         $this->assertSame(11, S::bucket(5001));
-        $this->assertSame(11, S::bucket(900000));
-        $this->assertCount(12, S::empty());
+        $this->assertSame(11, S::bucket(7500));
+        $this->assertSame(18, S::bucket(300000));
+        $this->assertSame(19, S::bucket(300001));
+        $this->assertSame(19, S::bucket(900000));
+        $this->assertCount(20, S::empty());
+        $this->assertSame(count(S::EDGES) + 1, S::BUCKETS);
     }
 
     public function testPercentiles(): void
@@ -31,9 +35,16 @@ final class HealthStatsTest extends TestCase
         $this->assertSame(50, S::percentile($h, 0.9));
         $this->assertSame(1000, S::percentile($h, 0.95));
         $h = S::empty();
-        $h[11] = 5;
-        $this->assertSame(8900, S::percentile($h, 0.95, 8900), 'the open bucket uses the worst seen');
-        $this->assertSame(5000, S::percentile($h, 0.95, 0));
+        $h[19] = 5;
+        $this->assertSame(900000, S::percentile($h, 0.95, 900000), 'above 5 minutes the worst seen');
+        $this->assertSame(300000, S::percentile($h, 0.95, 0));
+        // 99 runs of 6 s and one of 120 s: the typical and the 1-in-20 are 6 s (its bucket's upper edge), not the worst
+        $h = S::empty();
+        $h[S::bucket(6000)] = 99;
+        $h[S::bucket(120000)] = 1;
+        $this->assertSame(7500, S::percentile($h, 0.5, 120000));
+        $this->assertSame(7500, S::percentile($h, 0.95, 120000));
+        $this->assertSame(120000, S::percentile($h, 1.0, 120000));
     }
 
     public function testMergeAndSlower(): void

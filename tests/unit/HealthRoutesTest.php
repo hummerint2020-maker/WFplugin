@@ -57,6 +57,13 @@ final class HealthRoutesTest extends TestCase
         $this->assertSame('Other', R::area('other:front'));
     }
 
+    public function testForeign(): void
+    {
+        foreach (['other:front', 'other:admin', 'rest:other', 'post:other', 'cron:other'] as $r) $this->assertTrue(R::foreign($r), $r);
+        foreach (['admin:ews31-payroll', 'app:schedule', 'rest:GET /meta', 'post:ews_payroll_close', 'cron:ews_tasks_tick'] as $r) $this->assertFalse(R::foreign($r), $r);
+        $this->assertContains('ews_push_deliver', R::QUEUE_HOOKS);
+    }
+
     public function testSamplingAndHeavy(): void
     {
         $this->assertTrue(R::alwaysSampled('post:ews_payroll_close'));

@@ -7449,3 +7449,12 @@ msgstr "تحذير PHP جديد في كود Workforce One"
 
 msgid "On a network only a super admin can change this."
 msgstr "في الشبكة لا يغيّر هذا الإعداد إلا المشرف العام."
+
+msgid "%1$s used %2$d%% of its memory limit"
+msgstr "استخدمت %1$s %2$d%% من حد الذاكرة الخاص بها"
+
+msgid "The limit is the one that request ran under (wp-admin and scheduled jobs often have a larger one)."
+msgstr "الحد هو الذي عمل به ذلك الطلب (غالبًا ما يكون حد wp-admin والمهام المجدولة أكبر)."
+
+msgid "Waits for work"
+msgstr "في انتظار عمل"

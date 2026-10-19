@@ -3,12 +3,12 @@ namespace WorkforceOne\Health;
 
 if (!defined('ABSPATH')) exit;
 
-/** System health: duration histograms. Twelve buckets, so a percentile needs no stored samples. Pure. */
+/** System health: duration histograms. Twenty buckets (to 5 minutes, then everything above), so a percentile needs no stored samples. Pure. */
 final class Stats
 {
-    /** Upper edges in ms; the twelfth bucket is everything above the last. */
-    public const EDGES = [50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 5000];
-    public const BUCKETS = 12;
+    /** Upper edges in ms; the last bucket is everything above the last edge. A percentile is the upper edge of its bucket. */
+    public const EDGES = [50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 60000, 120000, 300000];
+    public const BUCKETS = 20;
 
     public static function bucket(int $ms): int
     {
@@ -30,7 +30,7 @@ final class Stats
         return $out;
     }
 
-    /** The ms at or below which $p (0..1) of the runs fall: the upper edge of that bucket; the last bucket uses $max. @param array<int,int|string> $hist */
+    /** The ms at or below which $p (0..1) of the runs fall: the upper edge of that bucket; above 5 minutes the worst seen. @param array<int,int|string> $hist */
     public static function percentile(array $hist, float $p, int $max = 0): int
     {
         $n = 0;

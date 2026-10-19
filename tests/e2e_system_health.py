@@ -125,7 +125,8 @@ r = routes()
 check('each request is classified: a wp-admin page, an app view, an unknown view, the app home, an API route, an action', {'admin:ews31-payroll', 'admin:ews31-employees', 'app:schedule', 'app:other', 'app:default', 'rest:GET /meta', 'post:ews_health_dismiss'} <= r, sorted(r))
 pay = [x for x in rows('hourly', "WHERE route='admin:ews31-payroll'")]
 check('...a page visited 3 times has 3 runs, with its time, queries and memory', sum(int(x['n']) for x in pay) == 3 and sum(int(x['q_sum']) for x in pay) > 0 and sum(int(x['ms_sum']) for x in pay) > 0 and max(int(x['mem_max']) for x in pay) > 0, pay[:2])
-check('...a run lands in a duration bucket', sum(sum(int(x['b%d' % i]) for i in range(12)) for x in pay) == 3)
+check('...a run lands in a duration bucket', sum(sum(int(x['b%d' % i]) for i in range(20)) for x in pay) == 3)
+check('...and its memory as a share of that request\'s own limit (0 when the limit is unlimited)', all('mem_pct_max' in x and int(x['mem_pct_max']) >= 0 for x in pay))
 check('...no route carries a value from the request', all(re.match(r'^[a-z]+:[A-Za-z0-9_\-/{} :]+$', x) for x in r) and not any(MARK.lower() in x.lower() for x in r))
 qs = rows('queries')
 check('sampled requests keep the shape of their queries with the caller', qs and any(x['caller'] and x['shape'] for x in qs), qs[:2])
@@ -166,6 +167,23 @@ cron = [x for x in rows('hourly') if x['route'] == 'cron:ews_tasks_tick']
 check('a scheduled job is timed on its own by name', cron and sum(int(x['n']) for x in cron) >= 1, sorted(routes()))
 check('...and its last run is kept', 'ews_tasks_tick' in (opt('ews_health_cron_last') or {}))
 
+# ---------------------------------------------------------------- jobs scheduled with arguments, and one hook run several times in a request
+for i in (11, 12, 13):
+    php("wp_schedule_single_event(time()-20,'ews_break_duration_reminder',[%d]);" % i)
+adm.req('/wp-cron.php')
+time.sleep(1)
+rem = [x for x in rows('hourly') if x['route'] == 'cron:ews_break_duration_reminder']
+check('a hook run three times in one cron request counts three runs (a queue of events with arguments)', sum(int(x['n']) for x in rem) == 3, rem)
+php("wp_clear_scheduled_hook('ews_push_deliver'); wp_schedule_single_event(time()-3*3600,'ews_push_deliver',[1,'uuid-late']); wp_schedule_single_event(time()+3600,'ews_push_deliver',[2,'uuid-later']);")   # after the cron run, which would have run the late one
+
+# ---------------------------------------------------------------- one day split by a release
+php("""$h=gmdate('Y-m-d H:00:00'); foreach([['3.31.109',5,100],['3.31.110',5,900]] as [$v,$n,$ms]) $wpdb->insert($p.'ews_health_hourly',['route'=>'app:schedule','hour'=>$h,'slot'=>3,'version'=>$v,'n'=>$n,'ms_sum'=>$n*$ms,'b4'=>$n,'last_at'=>gmdate('Y-m-d H:i:s')]);""")
+rollup()
+rollup()
+dv = [x for x in rows('daily') if x['route'] == 'app:schedule' and x['day'] == time.strftime('%Y-%m-%d', time.gmtime())]
+check('the rollup keeps one row per release in a day (the earlier release is not renamed), and twice gives the same', {'3.31.109', '3.31.110'} <= {x['version'] for x in dv}, dv)
+php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE slot=3 AND route='app:schedule' AND n=5");""")
+
 # ---------------------------------------------------------------- the rollup: daily rows, "Look at this first", alerts
 php("update_option('ews_health_settings',['repeat'=>2,'slow_ms'=>200,'min_runs'=>5,'cron_late_min'=>5,'queries'=>10,'email'=>0],false); wp_clear_scheduled_hook('ews_corrections_tick'); wp_schedule_single_event(time()-4*3600,'ews_corrections_tick');")
 for i in range(4):
@@ -185,7 +203,10 @@ check('the screen lists them, with the pages table', 'data-finding="repeat"' in 
 check('...the page names a route as a person reads it (the menu title), with the technical name beside it', 'Payroll' in page and 'admin:ews31-payroll' in page)
 det = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-employees'))[1]
 check('a page in detail: its charts (once there are two days) and its queries', ('<svg' in det or 'Not enough days yet' in det) and 'Queries on this page' in det)
-check('the jobs tab says which job is late', 'data-job="ews_corrections_tick"' in adm.req(SCREEN + '&tab=jobs')[1] and 'Overdue' in adm.req(SCREEN + '&tab=jobs')[1])
+jobs_page = adm.req(SCREEN + '&tab=jobs')[1]
+check('the jobs tab says which job is late', 'data-job="ews_corrections_tick"' in jobs_page and 'Overdue' in jobs_page)
+check('...also a job that is scheduled with arguments (a push batch), without showing them', re.search(r'data-job="ews_push_deliver".*?Overdue', jobs_page, re.S) and 'uuid-late' not in jobs_page and 'uuid-later' not in jobs_page)
+check('...and a queue with nothing waiting is not "not scheduled"', 'Waits for work' in jobs_page and any(x['rule'] == 'cron_overdue' and x['route'] == 'cron:ews_push_deliver' for x in opt('ews_health_findings')))
 check('the queries and errors tabs open', 'data-health-queries' in adm.req(SCREEN + '&tab=queries')[1] and 'data-health-errors' in adm.req(SCREEN + '&tab=errors')[1])
 
 # ---------------------------------------------------------------- the admin notice
@@ -241,23 +262,34 @@ pn = nonce_of(adm, SCREEN + '&tab=settings', 'ews_health_purge')
 adm.post('ews_health_purge', _wpnonce=pn)
 check('"Delete collected data" empties the four tables (but for the request that deleted them and the wp-cli calls of this test) and is audited', all(x['route'] in ('post:ews_health_purge', 'other:front') for t in TABLES for x in rows(t)) and q("SELECT id FROM {p}ews_audit_log WHERE action='health_data_deleted'"))
 
-# ---------------------------------------------------------------- overhead: queries added to a request
+# ---------------------------------------------------------------- overhead: what the collector adds to a request (design: docs/tasks/system-health.md §7)
+def measure(tag, n=20):
+    for i in range(n):
+        adm.req('/wp-admin/admin.php?page=ews31&e2e_tag=%s' % tag)
+        emp.req('/app/?ews_view=schedule&e2e_tag=%s' % tag)
+        adm.req('/wp-login.php?e2e_tag=%s_foreign' % tag)
+    t = take('')
+    pick = lambda name: [x for x in t if x[0] == name]
+    return pick(tag), pick(tag + '_foreign')
+
+
 features(adm, True, 1, 90)
-on = []
-for i in range(10):
-    adm.req('/wp-admin/admin.php?page=ews31&e2e_tag=on1')
-    emp.req('/app/?ews_view=schedule&e2e_tag=on1')
-    adm.req('/wp-login.php?e2e_tag=foreign')
-tags = take('')
-on1 = [x[1] for x in tags if x[0] == 'on1']
-foreign_on = [x[1] for x in tags if x[0] == 'foreign']
+on1, foreign_on1 = measure('on1')
+features(adm, True, 100, 90)
+on100, foreign_on100 = measure('on100')
 off_q = [x[1] for x in off if x[0] == 'off']
 foreign_off = [x[1] for x in off if x[0] == 'foreign_off']
-check('queries added to a Workforce One request at 1%% sampling: at most one on average (off median %d, on median %d)' % (median(off_q), median(on1)), median(on1) - median(off_q) <= 1, (off_q, on1))
-check('...a request that is not the plugin\'s adds none (sign-in page: %d queries off, %d on)' % (median(foreign_off), median(foreign_on)), median(foreign_on) <= median(foreign_off), (foreign_off, foreign_on))
+q1, q100 = [x[1] for x in on1], [x[1] for x in on100]
+check('queries added to a Workforce One request at 1%% sampling: at most one (off median %d, on median %d)' % (median(off_q), median(q1)), median(q1) - median(off_q) <= 1, (off_q, q1))
+check('...at 100%% sampling the added queries are the one UPDATE plus a bounded number of detail rows (median %d)' % median(q100), median(q100) - median(off_q) <= 30, q100)
+check('...a request that is not the plugin\'s adds none (sign-in page: %d queries off, %d on)' % (median(foreign_off), median([x[1] for x in foreign_on1])), median([x[1] for x in foreign_on1]) <= median(foreign_off), (foreign_off, [x[1] for x in foreign_on1]))
 off_ms = [x[2] for x in off if x[0] == 'off']
-on_ms = [x[2] for x in tags if x[0] == 'on1']
-print('INFO time per request: off median %.1f ms, on (1%%) median %.1f ms' % (median(off_ms), median(on_ms)))
+off_mem = [x[3] for x in off if x[0] == 'off']
+ms1, ms100 = median([x[2] for x in on1]), median([x[2] for x in on100])
+print('INFO time per request: off %.1f ms, on 1%% %.1f ms, on 100%% %.1f ms; peak memory: off %d KB, on 1%% %d KB, on 100%% %d KB' % (median(off_ms), ms1, ms100, median(off_mem), median([x[3] for x in on1]), median([x[3] for x in on100])))
+check('time: the median request at 1%% is at most 1.5x the off median plus 25 ms (%.1f vs %.1f)' % (ms1, median(off_ms)), ms1 <= median(off_ms) * 1.5 + 25)
+check('...at 100%% (query detail on every request) at most 2.5x plus 40 ms (%.1f)' % ms100, ms100 <= median(off_ms) * 2.5 + 40)
+check('peak memory: at most 8 MB more at 100%% than off', median([x[3] for x in on100]) - median(off_mem) <= 8192, (median(off_mem), median([x[3] for x in on100])))
 
 # ---------------------------------------------------------------- switching off
 features(adm, False, 1, 90)
