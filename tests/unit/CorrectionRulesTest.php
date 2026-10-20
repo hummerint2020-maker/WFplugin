@@ -164,4 +164,13 @@ final class CorrectionRulesTest extends TestCase
         $this->assertContains('no_work', CorrectionRules::ERRORS);
         $this->assertSame(['Leave', 'Holiday', 'Off Day'], CorrectionRules::NO_WORK_RESULTS);
     }
+
+    /** A day before the employee was added (3.31.115, owner decision): refused, except for HR; unknown start = no limit. */
+    public function testNoRequestBeforeTheStartDate(): void
+    {
+        $this->assertSame('before_start', CorrectionRules::check($this->f(['started' => '2026-10-08'])));
+        $this->assertSame('', CorrectionRules::check($this->f(['started' => '2026-10-07'])), 'the first day itself can be corrected');
+        $this->assertSame('', CorrectionRules::check($this->f(['started' => ''])));
+        $this->assertSame('', CorrectionRules::check($this->f(['started' => '2026-10-08', 'source' => 'hr'])));
+    }
 }

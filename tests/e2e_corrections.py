@@ -376,6 +376,27 @@ hr_ok = mk(D7, 'hr')
 check('HR may still correct such a day', 'id' in hr_ok and 'error' not in hr_ok, hr_ok)
 php("""update_option('ews_working_days',[0,1,2,3,4,5,6],false); $wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date IN ('%(a)s','%(b)s')"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date IN ('%(a)s','%(b)s')"); $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(a)s'");""" % {'a': D7, 'b': D5, 'e': E})
 
+# Owner decisions 2026-10-20: approved overtime on a day off keeps it correctable; no request before the start date; a request whose
+# day became a leave is closed when it is decided.
+php("update_option('ews_working_days',%s,false);" % json.dumps([d for d in range(7) if d != wd]))
+php("""$wpdb->query("DELETE FROM {$p}ews_overtime_requests WHERE employee_id=%(e)d AND overtime_date='%(d)s'");
+    $wpdb->insert($p.'ews_overtime_requests',['employee_id'=>%(e)d,'overtime_date'=>'%(d)s','start_time'=>'09:00:00','end_time'=>'13:00:00','requested_minutes'=>240,'reason'=>'stock count','status'=>'Approved','requested_at'=>current_time('mysql')]);""" % {'e': E, 'd': D5})
+r_ot = mk(D5, 'employee')
+check('a day off with approved overtime and nothing recorded: the employee may ask (they were expected to work)', 'id' in r_ot, r_ot)
+php("""update_option('ews_working_days',[0,1,2,3,4,5,6],false); $wpdb->query("DELETE FROM {$p}ews_overtime_requests WHERE employee_id=%(e)d AND overtime_date='%(d)s'"); $wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date='%(d)s'");""" % {'e': E, 'd': D5})
+created = q("SELECT created_at FROM {p}ews_employees WHERE id=%d" % E)[0]['created_at']
+php("$wpdb->update($p.'ews_employees',['created_at'=>'%s 00:00:00'],['id'=>%d]);" % (D4, E))
+check('a day before the employee was added: refused (before_start)', mk(D5, 'employee').get('error') == 'before_start')
+tp = emp.req('/app/?ews_view=time')[1]
+check('...and "My recent days" offers no Correct for it', 'data-date="%s"' % D5 not in tp)
+php("$wpdb->update($p.'ews_employees',['created_at'=>'%s'],['id'=>%d]);" % (created, E))
+r_pend = mk(D5, 'employee')
+check('a request on a working day goes in...', 'id' in r_pend, r_pend)
+php("$wpdb->query(\"DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(d)s'\"); $wpdb->insert($p.'ews_schedule',['employee_id'=>%(e)d,'work_date'=>'%(d)s','status'=>'Vacation']);" % {'e': E, 'd': D5})
+res = decide(hr, int(r_pend['id']), 'approve', in_admin=True)
+check('...a leave is approved for that day before it is decided: the correction is closed, not applied', cx(int(r_pend['id']))['status'] == 'rejected' and 'Closed automatically' in (cx(int(r_pend['id']))['decision_note'] or '') and not events(E, D5), (res, cx(int(r_pend['id']))['status']))
+php("""$wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date='%(d)s'"); $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(d)s'");""" % {'e': E, 'd': D5})
+
 # ---------------------------------------------------------------- API routes
 routes = json.loads(emp.req('/wp-json/workforce-one/v1')[1] or '{}').get('routes', {})
 check('the API has the correction routes', all(r in routes for r in ['/workforce-one/v1/corrections', '/workforce-one/v1/corrections/days', '/workforce-one/v1/corrections/pending', '/workforce-one/v1/corrections/(?P<id>\\d+)/decision']), list(routes)[:5])

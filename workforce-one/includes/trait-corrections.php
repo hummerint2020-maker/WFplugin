@@ -122,8 +122,15 @@ trait EWS_Corrections_Trait {
             'overnight'=>!empty($h['overnight']) && $h['start']>$h['end'],'source'=>$source,'settings'=>$this->correction_settings(),
             'pending'=>$valid && (bool)$this->cx_pending_for_day((int)$emp->id,$date),'month_count'=>$valid?$this->cx_month_count((int)$emp->id,$date):0,
             'no_work'=>$valid && $this->cx_no_work_day($emp,$date),
+            'started'=>$this->cx_started($emp),
             'reason'=>(string)($in['reason']??''),'has_photo'=>(bool)$has_photo,
         ];
+    }
+
+    /** The first day the employee is in Workforce One (the day they were added; 3.31.115): no correction before it. '' when unknown. */
+    private function cx_started($emp){
+        $c=(string)($emp->created_at??'');
+        return CorrectionRules::isDate(substr($c,0,10))?substr($c,0,10):'';
     }
 
     /** The employee's days as the reports see them (status, leave, holiday, events): the one way corrections read a day's result. */
@@ -133,6 +140,8 @@ trait EWS_Corrections_Trait {
 
     /** A leave, a holiday or a day off for this employee (the day's report result, as "My recent days" shows it; 3.31.115). */
     private function cx_no_work_day($emp,$date){
+        // Approved overtime that day: the employee was expected to work, so the day can be corrected (owner decision 2026-10-20).
+        if($this->overtime_approved_dates((int)$emp->id,$date,$date))return false;
         // A weekly day off has no report row when nothing was recorded (report_days skips it), so it is asked first.
         if(!$this->is_working_day($date))return true;
         $days=$this->cx_report_days($emp,$date,$date);
@@ -384,6 +393,11 @@ trait EWS_Corrections_Trait {
             'time_in'=>$c->sign_in_at?substr((string)$c->sign_in_at,11,5):'','time_out'=>$c->sign_out_at?substr((string)$c->sign_out_at,11,5):''];
         $facts=$this->cx_facts($emp,$in,'hr',true);
         $facts['now']='23:59';   // a request made earlier today stays valid
+        // The employee's request for a day that has since become a leave, a holiday or a day off is closed, not applied, so the day
+        // never holds both attendance and a leave (owner decision 2026-10-20). HR's own corrections are not affected.
+        if((string)($c->source??'employee')!=='hr' && !empty($facts['no_work']) && empty($facts['in']) && empty($facts['out'])){
+            return $this->cx_finalize((int)$id,false,__('Closed automatically: the day is now a leave, a holiday or a day off.','workforce-one'));
+        }
         $error=CorrectionRules::check($facts);
         if($error!=='')return 'stale';
         $plan=CorrectionRules::plan($facts);
@@ -511,6 +525,7 @@ trait EWS_Corrections_Trait {
             'no_in'=>__('There is no Sign In on this day: choose "Forgot Sign In" or "Whole day missing".','workforce-one'),
             'has_out'=>__('A Sign Out is already recorded for this day: choose "Wrong time" to change it.','workforce-one'),
             'has_events'=>__('This day already has a Sign In or Sign Out: choose another kind of correction.','workforce-one'),
+            'before_start'=>__('That day is before you joined: there is nothing to correct.','workforce-one'),
             'no_work'=>__('This is a day off, a holiday or a leave day with nothing recorded: there is nothing to correct. Ask HR if you worked that day.','workforce-one'),
             'no_event'=>__('That time is not recorded on this day.','workforce-one'),
             'order'=>__('Sign Out must be after Sign In.','workforce-one'),
@@ -592,6 +607,8 @@ trait EWS_Corrections_Trait {
         global $wpdb;
         $reqs=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY id ASC",(int)$emp->id,$from,$today)) as $r)$reqs[$r->work_date]=$r;
+        $overtime=$this->overtime_approved_dates((int)$emp->id,$from,$today);
+        $started=$this->cx_started($emp);
         $out=[];
         foreach(array_reverse($this->cx_report_days($emp,$from,$today)) as $d){
             $date=(string)$d['date'];
@@ -601,7 +618,7 @@ trait EWS_Corrections_Trait {
             elseif($d['sign_in']!=='' && $d['sign_out']==='')$problem='no_out';
             elseif($d['sign_in']==='' && ($d['result']??'')==='Absent')$problem='absent';
             $open=$req && in_array($req->status,['pending','pending_hr'],true);
-            $no_work=in_array((string)($d['result']??''),CorrectionRules::NO_WORK_RESULTS,true);
+            $no_work=(in_array((string)($d['result']??''),CorrectionRules::NO_WORK_RESULTS,true) && !isset($overtime[$date])) || ($started!=='' && $date<$started);
             $kinds=CorrectionRules::kinds((string)$d['sign_in']!=='',(string)$d['sign_out']!=='',$s['types'],$no_work);   // only what fits the day
             $out[]=['date'=>$date,'in'=>(string)$d['sign_in'],'out'=>(string)$d['sign_out'],'kinds'=>$kinds,'result'=>(string)($d['result']??''),'planned'=>(string)($d['planned']??''),
                 'late'=>(int)($d['late_minutes']??0),'holiday'=>(string)($d['holiday']??''),'problem'=>$problem,'request'=>$req,'can'=>!$open,'today'=>$date===$today];

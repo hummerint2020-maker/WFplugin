@@ -16,12 +16,13 @@ if (!defined('ABSPATH')) exit;
  *   settings    Settings\CorrectionSettings::config()
  *   pending     another request for the day is waiting          month_count   requests this month
  *   reason, has_photo
- *   no_work     the day is a leave, a holiday or a day off (NO_WORK_RESULTS), from the day's report result
+ *   no_work     the day is a leave, a holiday or a day off (NO_WORK_RESULTS) with no approved overtime
+ *   started     the first day the employee is in the system (Y-m-d; '' = unknown)
  */
 final class CorrectionRules
 {
     public const ERRORS = ['type', 'date', 'future', 'deadline', 'pending', 'reason', 'photo', 'time', 'future_time', 'has_in', 'no_in',
-        'has_out', 'has_events', 'no_event', 'order', 'same', 'limit', 'no_work'];
+        'has_out', 'has_events', 'no_event', 'order', 'same', 'limit', 'no_work', 'before_start'];
 
     /**
      * Days nobody is expected to sign in (the day's report result): an employee asks for no correction on one unless something was
@@ -41,6 +42,7 @@ final class CorrectionRules
         if ($date > (string) $f['today']) return 'future';
         if (!$hr && self::daysBetween($date, (string) $f['today']) > (int) $s['deadline_days']) return 'deadline';
         if (!$hr && !empty($f['pending'])) return 'pending';
+        if (!$hr && (string) ($f['started'] ?? '') !== '' && $date < (string) $f['started']) return 'before_start';   // not yet an employee that day
         if (!$hr && !empty($f['no_work']) && empty($f['in']) && empty($f['out'])) return 'no_work';   // before the reason and the photo: nothing to correct
         if (trim((string) ($f['reason'] ?? '')) === '') return 'reason';
         if (!$hr && ($s['photo'][$type] ?? 'off') === 'required' && empty($f['has_photo'])) return 'photo';
