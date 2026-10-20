@@ -52,6 +52,21 @@ def contract(name, path, method, r):
     check('%s: the response matches docs/api/openapi.yaml' % name, not problems, problems[:3])
 
 
+def backup_tables():
+    """The shared CI database keeps what earlier suites left; this suite empties these tables, so it puts the rows back at the end."""
+    php("""$o=[]; foreach(['ews_schedule','ews_time_logs','ews_company_calendar'] as $t) $o[$t]=$wpdb->get_results("SELECT * FROM {$p}$t",ARRAY_A);
+        file_put_contents(getenv('S').'/api_app_backup.json',wp_json_encode($o));""")
+
+
+def restore_tables():
+    php("""$f=getenv('S').'/api_app_backup.json'; $o=json_decode((string)@file_get_contents($f),true)?:[];
+        foreach(['ews_schedule','ews_time_logs','ews_company_calendar'] as $t){ $wpdb->query("DELETE FROM {$p}$t"); foreach($o[$t]??[] as $r)$wpdb->insert($p.$t,$r); }
+        @unlink($f);""")
+
+
+backup_tables()
+
+
 def reset():
     wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
     return json.loads(php("""
@@ -254,5 +269,6 @@ else:
 php("""update_option('timezone_string','UTC'); update_option('gmt_offset',0); delete_option('ews_feature_app_api'); delete_option('ews_shifts'); delete_option('ews_feature_breaks');
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('emp2') OR domain_name LIKE 'bulk%'"); $wpdb->query("DELETE FROM {$p}ews_schedule"); $wpdb->query("DELETE FROM {$p}ews_time_logs");
     $wpdb->query("DELETE FROM {$p}ews_break_sessions"); $wpdb->update($p.'ews_employees',['default_shift_id'=>0],['domain_name'=>'emp1']);""")
+restore_tables()
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
