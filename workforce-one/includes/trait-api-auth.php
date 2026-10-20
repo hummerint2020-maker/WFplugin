@@ -251,6 +251,9 @@ trait EWS_Api_Auth_Trait {
     /** The Mobile app API switch (3.31.113): off by default. */
     private function app_api_enabled(){ return (bool)$this->option('ews_feature_app_api'); }
 
+    /** "Safer app sign-in refresh" (3.31.114, docs/tasks/refresh-race.md): off by default; off, refresh works exactly as in 3.31.111. */
+    private function api_refresh_safe_enabled(){ return (bool)(int)$this->option('ews_feature_api_refresh_safe'); }
+
     /**
      * What every read endpoint of the mobile app API checks first (3.31.113). The employee is always the one of the session, so a
      * parameter that names another is refused, not ignored. @return array<string,mixed>|null an error response, or null to go on
@@ -349,6 +352,7 @@ trait EWS_Api_Auth_Trait {
     // ------------------------------------------------------------------ POST /auth/refresh
 
     public function api_auth_refresh($request){
+        if($this->api_refresh_safe_enabled())return $this->api_auth_refresh_safe($request);
         $body=$request->get_json_params();
         $token=is_array($body)&&is_string($body['refresh_token']??null)?$body['refresh_token']:'';
         if(Tokens::kindOf($token,$this->api_site_id(),Tokens::REFRESH)===null)return $this->api_fail(ErrorMap::REFRESH_INVALID);
@@ -371,13 +375,19 @@ trait EWS_Api_Auth_Trait {
     }
 
     /** The new pair after a refresh (and the daily Audit Log row). */
-    private function api_refresh_issue(array $row,$user,$now){
+    private function api_refresh_issue(array $row,$user,$now,$safe=false){
         global $wpdb;$t=$this->api_tables();
         $device=$this->api_device((int)$row['device_id']);
-        $pair=$this->api_issue_pair($device,$now);
+        if($safe && !$device)return $this->api_internal_error();
+        $pair=$this->api_issue_pair($device,$now,$safe);
+        if($pair===null)return $this->api_internal_error();
         $wpdb->update($t['devices'],['last_seen_at'=>$this->api_utc($now)],['id'=>(int)$device['id']],['%s'],['%d']);
         // Refreshes happen every 15 minutes: one Audit Log row per device per day is enough.
-        if($now-$this->api_unix($device['refresh_audited_at'])>=DAY_IN_SECONDS){
+        if($safe){
+            // With the switch on, the day's row is claimed by one conditional UPDATE, so two refreshes at once write it once.
+            $claimed=$wpdb->query($wpdb->prepare("UPDATE {$t['devices']} SET refresh_audited_at=%s WHERE id=%d AND (refresh_audited_at IS NULL OR refresh_audited_at<=%s)",$this->api_utc($now),(int)$device['id'],$this->api_utc($now-DAY_IN_SECONDS)));
+            if($claimed===1)$this->api_audit($user->ID,'api_refresh',$device['id'],$user->user_login.' / '.$device['platform'].' '.$device['model'].' / ip='.$this->api_client_ip());
+        }elseif($now-$this->api_unix($device['refresh_audited_at'])>=DAY_IN_SECONDS){
             $wpdb->update($t['devices'],['refresh_audited_at'=>$this->api_utc($now)],['id'=>(int)$device['id']],['%s'],['%d']);
             $this->api_audit($user->ID,'api_refresh',$device['id'],$user->user_login.' / '.$device['platform'].' '.$device['model'].' / ip='.$this->api_client_ip());
         }
@@ -403,6 +413,59 @@ trait EWS_Api_Auth_Trait {
             }
         }
         return $this->api_refresh_reused($row);
+    }
+
+    /**
+     * POST /auth/refresh with "Safer app sign-in refresh" on (3.31.114). Every decision is the WHERE of one conditional UPDATE, so
+     * concurrent requests cannot both win: the first use rotates (used_at), and within Tokens::REFRESH_GRACE seconds of it up to
+     * Tokens::REFRESH_GRACE_USES more uses each take one grace use (grace_uses) and get their own pair. A database error is 500 and
+     * never ends the session; a use after the device session ended (logout, password change) is DEVICE_REVOKED, not a reuse.
+     */
+    private function api_auth_refresh_safe($request){
+        $body=$request->get_json_params();
+        $token=is_array($body)&&is_string($body['refresh_token']??null)?$body['refresh_token']:'';
+        if(Tokens::kindOf($token,$this->api_site_id(),Tokens::REFRESH)===null)return $this->api_fail(ErrorMap::REFRESH_INVALID);
+        global $wpdb;$t=$this->api_tables();$now=time();
+        $row=$wpdb->get_row($wpdb->prepare("SELECT k.id,k.device_id,k.user_id,k.expires_at,k.used_at,k.revoked_at,d.revoked_at device_revoked_at,d.expires_at session_expires_at FROM {$t['tokens']} k JOIN {$t['devices']} d ON d.id=k.device_id WHERE k.token_hash=%s AND k.kind='refresh' LIMIT 1",Tokens::hash($token,$this->api_secret())),ARRAY_A);
+        if($row===null && $wpdb->last_error!=='')return $this->api_internal_error();
+        if(!$row)return $this->api_fail(ErrorMap::REFRESH_INVALID);
+        // The SELECT only routes the request; the UPDATEs below decide.
+        $status=Tokens::refreshStatus(['expires_at'=>$this->api_unix($row['expires_at']),'used_at'=>$row['used_at'],'revoked_at'=>$row['revoked_at'],'device_revoked_at'=>$row['device_revoked_at'],'session_expires_at'=>$this->api_unix($row['session_expires_at'])],$now);
+        if($status===Tokens::DEVICE_REVOKED)return $this->api_fail(ErrorMap::DEVICE_REVOKED);
+        if($status!==Tokens::OK && $status!==Tokens::USED)return $this->api_fail(ErrorMap::REFRESH_INVALID);
+        // The account is checked for a used token too: a disabled account ends as ACCOUNT_DISABLED, not as a reuse.
+        $user=get_userdata((int)$row['user_id']);
+        if(!$user){$this->api_revoke_device((int)$row['device_id'],'user_deleted');return $this->api_fail(ErrorMap::REFRESH_INVALID);}
+        [$gate]=$this->api_account_gate($user);
+        if($gate!=='ok'){$this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID);return $this->api_fail($gate);}
+        if($status===Tokens::OK){
+            $used=$wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET used_at=%s WHERE id=%d AND used_at IS NULL AND revoked_at IS NULL",$this->api_utc($now),(int)$row['id']));
+            if($used===false)return $this->api_internal_error();
+            if($used===1){
+                // Only the access tokens issued before this refresh token: a pair another request issued from it a moment ago stays valid.
+                $wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND kind='access' AND revoked_at IS NULL AND id<%d",$this->api_utc($now),(int)$row['device_id'],(int)$row['id']));
+                return $this->api_refresh_issue($row,$user,$now,true);
+            }
+        }
+        return $this->api_refresh_grace_take($row,$user,$now);
+    }
+
+    /** A use of an already used refresh token, with the switch on (3.31.114): one grace use, or the end of the device session. */
+    private function api_refresh_grace_take(array $row,$user,$now){
+        global $wpdb;$t=$this->api_tables();
+        $took=$wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET grace_uses=grace_uses+1 WHERE id=%d AND kind='refresh' AND used_at IS NOT NULL AND used_at>=%s AND grace_uses<%d AND revoked_at IS NULL",
+            (int)$row['id'],$this->api_utc(Tokens::graceCutoff($now)),Tokens::REFRESH_GRACE_USES));
+        if($took===false)return $this->api_internal_error();
+        if($took===1)return $this->api_refresh_issue($row,$user,$now,true);
+        // Refused: was the device session ended meanwhile (logout, password change, an administrator)? Then it is not a theft.
+        $state=$wpdb->get_row($wpdb->prepare("SELECT d.revoked_at device_revoked_at FROM {$t['tokens']} k JOIN {$t['devices']} d ON d.id=k.device_id WHERE k.id=%d",(int)$row['id']),ARRAY_A);
+        if(!$state)return $this->api_internal_error();
+        if(!empty($state['device_revoked_at']))return $this->api_fail(ErrorMap::DEVICE_REVOKED);
+        return $this->api_refresh_reused($row);
+    }
+
+    private function api_internal_error(){
+        return Response::internalError($this->api_request_id(),$this->api_server_time(),$this->api_message(ErrorMap::INTERNAL_ERROR));
     }
 
     /** A refresh token used twice: it may have been stolen. The whole device session ends. */
@@ -497,14 +560,15 @@ trait EWS_Api_Auth_Trait {
         return $row?:null;
     }
 
-    /** @param array<string,mixed> $device @return array{access:string,access_expires:int,refresh:string,refresh_expires:int,issued_at:int} */
-    private function api_issue_pair(array $device,$now){
+    /** @param array<string,mixed> $device @return array{access:string,access_expires:int,refresh:string,refresh_expires:int,issued_at:int}|null null only when $checked and a token could not be saved */
+    private function api_issue_pair(array $device,$now,$checked=false){
         global $wpdb;$t=$this->api_tables();$site=$this->api_site_id();$session_end=$this->api_unix($device['expires_at']);
         $pair=['access'=>Tokens::make(Tokens::ACCESS,$site,random_bytes(32)),'access_expires'=>Tokens::accessExpiry($now,$session_end),
             'refresh'=>Tokens::make(Tokens::REFRESH,$site,random_bytes(32)),'refresh_expires'=>Tokens::refreshExpiry($now,$session_end),'issued_at'=>(int)$now];
         foreach([[Tokens::ACCESS,$pair['access'],$pair['access_expires']],[Tokens::REFRESH,$pair['refresh'],$pair['refresh_expires']]] as [$kind,$token,$exp]){
-            $wpdb->insert($t['tokens'],['device_id'=>(int)$device['id'],'user_id'=>(int)$device['user_id'],'kind'=>$kind,'token_hash'=>Tokens::hash($token,$this->api_secret()),
+            $ok=$wpdb->insert($t['tokens'],['device_id'=>(int)$device['id'],'user_id'=>(int)$device['user_id'],'kind'=>$kind,'token_hash'=>Tokens::hash($token,$this->api_secret()),
                 'expires_at'=>$this->api_utc($exp),'created_at'=>$this->api_utc($now)],['%d','%d','%s','%s','%s','%s']);
+            if($checked && $ok===false)return null;   // with the refresh switch on, tokens that were not saved are never handed out (3.31.114)
         }
         return $pair;
     }

@@ -51,6 +51,16 @@ final class ApiAuthTest extends TestCase
         $this->assertSame($now + 900, T::accessExpiry($now, $now + 86400));
     }
 
+    /** The refresh grace with "Safer app sign-in refresh" on (3.31.114): 4 more uses within 30 s, the boundary second included. */
+    public function testRefreshGrace(): void
+    {
+        $now = 1_800_000_000;
+        $this->assertSame(30, T::REFRESH_GRACE);
+        $this->assertSame(4, T::REFRESH_GRACE_USES);
+        $this->assertSame($now - 30, T::graceCutoff($now), 'a token used 30 s ago is still inside the grace (used_at >= cutoff)');
+        $this->assertSame(T::USED, T::refreshStatus(['used_at' => 'x', 'revoked_at' => 'y', 'expires_at' => $now + 10, 'session_expires_at' => $now + 10], $now), 'a used token stays USED before REVOKED');
+    }
+
     public function testLoginThrottle(): void
     {
         $now = 1_800_000_000;

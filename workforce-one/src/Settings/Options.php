@@ -88,6 +88,7 @@ final class Options
         'ews_feature_my_approvals' => ['group' => 'features', 'label' => 'My approvals and My requests (the approvals inbox in the app)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_shift_history_synced' => ['group' => 'schedule', 'label' => 'Shift history: the last day its new periods were applied', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_feature_app_api' => ['group' => 'features', 'label' => 'Mobile app API (my profile and screens, my schedule, today\'s attendance, for the Android and iPhone apps)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_feature_api_refresh_safe' => ['group' => 'features', 'label' => 'Safer app sign-in refresh (several refreshes at once or a retry keep the phone signed in; a database error does not sign it out)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_health' => ['group' => 'system', 'label' => 'System health (page times, queries, memory, PHP errors, scheduled jobs)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_health_sample_rate' => ['group' => 'system', 'label' => 'System health: share of requests with query detail', 'kind' => 'int', 'default' => 10, 'unit' => '%', 'page' => 'ews31-features'],
         'ews_health_retention_days' => ['group' => 'system', 'label' => 'System health: days of daily history kept', 'kind' => 'int', 'default' => 90, 'unit' => 'days', 'page' => 'ews31-features'],
