@@ -133,6 +133,8 @@ trait EWS_Corrections_Trait {
 
     /** A leave, a holiday or a day off for this employee (the day's report result, as "My recent days" shows it; 3.31.115). */
     private function cx_no_work_day($emp,$date){
+        // A weekly day off has no report row when nothing was recorded (report_days skips it), so it is asked first.
+        if(!$this->is_working_day($date))return true;
         $days=$this->cx_report_days($emp,$date,$date);
         return $days && in_array((string)($days[0]['result']??''),CorrectionRules::NO_WORK_RESULTS,true);
     }

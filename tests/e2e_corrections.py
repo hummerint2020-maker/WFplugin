@@ -360,6 +360,22 @@ check('...and the request is refused: there is nothing to correct', request(emp,
 check('a holiday on which the employee came in: the day can still be corrected', 'data-date="%s"' % D6 in tp)
 php("""$wpdb->query("DELETE FROM {$p}ews_company_calendar WHERE title='National Day'"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date='%s'");""" % D6)
 
+# An approved leave (the schedule says Vacation) and a weekly day off, through the code path the app and the API share (cx_create).
+D7 = day(7)
+php("""$wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date IN ('%(a)s','%(b)s')"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date IN ('%(a)s','%(b)s')");
+    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(a)s'"); $wpdb->insert($p.'ews_schedule',['employee_id'=>%(e)d,'work_date'=>'%(a)s','status'=>'Vacation']);""" % {'a': D7, 'b': D5, 'e': E})
+tp = emp.req('/app/?ews_view=time')[1]
+check('an approved leave day ("On leave", nothing recorded): no Correct button', 'data-date="%s"' % D7 not in tp and 'On leave' in tp)
+mk = lambda d, src: json.loads(php("""$m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,'cx_create'); $r->setAccessible(true); $e=$wpdb->get_row("SELECT * FROM {$p}ews_employees WHERE id=%d");
+    wp_set_current_user(%d); echo wp_json_encode($r->invoke($m,$e,['date'=>'%s','type'=>'day','target'=>'','time_in'=>'09:00','time_out'=>'17:00','reason'=>'I was there'],'%s'));""" % (E, int(php("echo username_exists('%s');" % ('emp1' if src == 'employee' else 'admin'))), d, src)).strip().splitlines()[-1])
+check('...the request is refused for the employee (the app and the API both use cx_create): no_work', mk(D7, 'employee').get('error') == 'no_work')
+wd = (datetime.date.fromisoformat(D5).isoweekday()) % 7
+php("update_option('ews_working_days',%s,false);" % json.dumps([d for d in range(7) if d != wd]))
+check('a weekly day off with nothing recorded is refused too', mk(D5, 'employee').get('error') == 'no_work')
+hr_ok = mk(D7, 'hr')
+check('HR may still correct such a day', 'id' in hr_ok and 'error' not in hr_ok, hr_ok)
+php("""update_option('ews_working_days',[0,1,2,3,4,5,6],false); $wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date IN ('%(a)s','%(b)s')"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date IN ('%(a)s','%(b)s')"); $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(a)s'");""" % {'a': D7, 'b': D5, 'e': E})
+
 # ---------------------------------------------------------------- API routes
 routes = json.loads(emp.req('/wp-json/workforce-one/v1')[1] or '{}').get('routes', {})
 check('the API has the correction routes', all(r in routes for r in ['/workforce-one/v1/corrections', '/workforce-one/v1/corrections/days', '/workforce-one/v1/corrections/pending', '/workforce-one/v1/corrections/(?P<id>\\d+)/decision']), list(routes)[:5])
