@@ -366,8 +366,10 @@ php("""$wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date 
     $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(a)s'"); $wpdb->insert($p.'ews_schedule',['employee_id'=>%(e)d,'work_date'=>'%(a)s','status'=>'Vacation']);""" % {'a': D7, 'b': D5, 'e': E})
 tp = emp.req('/app/?ews_view=time')[1]
 check('an approved leave day ("On leave", nothing recorded): no Correct button', 'data-date="%s"' % D7 not in tp and 'On leave' in tp)
-mk = lambda d, src: json.loads(php("""$m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,'cx_create'); $r->setAccessible(true); $e=$wpdb->get_row("SELECT * FROM {$p}ews_employees WHERE id=%d");
-    wp_set_current_user(%d); echo wp_json_encode($r->invoke($m,$e,['date'=>'%s','type'=>'day','target'=>'','time_in'=>'09:00','time_out'=>'17:00','reason'=>'I was there'],'%s'));""" % (E, int(php("echo username_exists('%s');" % ('emp1' if src == 'employee' else 'admin'))), d, src)).strip().splitlines()[-1])
+def mk(d, src, typ='day', eid=None, login='emp1'):
+    return json.loads(php("""$m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,'cx_create'); $r->setAccessible(true); $e=$wpdb->get_row("SELECT * FROM {$p}ews_employees WHERE id=%d");
+    wp_set_current_user(%d); echo wp_json_encode($r->invoke($m,$e,['date'=>'%s','type'=>'%s','target'=>'','time_in'=>'09:00','time_out'=>'%s','reason'=>'I was there'],'%s'));""" % (
+        eid or E, int(php("echo username_exists('%s');" % (login if src == 'employee' else 'admin'))), d, typ, '' if typ == 'in' else '17:00', src)).strip().splitlines()[-1])
 check('...the request is refused for the employee (the app and the API both use cx_create): no_work', mk(D7, 'employee').get('error') == 'no_work')
 wd = (datetime.date.fromisoformat(D5).isoweekday()) % 7
 php("update_option('ews_working_days',%s,false);" % json.dumps([d for d in range(7) if d != wd]))
@@ -381,16 +383,19 @@ php("""update_option('ews_working_days',[0,1,2,3,4,5,6],false); $wpdb->query("DE
 php("update_option('ews_working_days',%s,false);" % json.dumps([d for d in range(7) if d != wd]))
 php("""$wpdb->query("DELETE FROM {$p}ews_overtime_requests WHERE employee_id=%(e)d AND overtime_date='%(d)s'");
     $wpdb->insert($p.'ews_overtime_requests',['employee_id'=>%(e)d,'overtime_date'=>'%(d)s','start_time'=>'09:00:00','end_time'=>'13:00:00','requested_minutes'=>240,'reason'=>'stock count','status'=>'Approved','requested_at'=>current_time('mysql')]);""" % {'e': E, 'd': D5})
-r_ot = mk(D5, 'employee')
+r_ot = mk(D5, 'employee', 'in')
 check('a day off with approved overtime and nothing recorded: the employee may ask (they were expected to work)', 'id' in r_ot, r_ot)
 php("""update_option('ews_working_days',[0,1,2,3,4,5,6],false); $wpdb->query("DELETE FROM {$p}ews_overtime_requests WHERE employee_id=%(e)d AND overtime_date='%(d)s'"); $wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date='%(d)s'");""" % {'e': E, 'd': D5})
-created = q("SELECT created_at FROM {p}ews_employees WHERE id=%d" % E)[0]['created_at']
-php("$wpdb->update($p.'ews_employees',['created_at'=>'%s 00:00:00'],['id'=>%d]);" % (D4, E))
-check('a day before the employee was added: refused (before_start)', mk(D5, 'employee').get('error') == 'before_start')
-tp = emp.req('/app/?ews_view=time')[1]
-check('...and "My recent days" offers no Correct for it', 'data-date="%s"' % D5 not in tp)
-php("$wpdb->update($p.'ews_employees',['created_at'=>'%s'],['id'=>%d]);" % (created, E))
-r_pend = mk(D5, 'employee')
+# The second employee has no attendance before: added 4 days ago, the 5th day back is before they joined.
+created = q("SELECT created_at FROM {p}ews_employees WHERE id=%d" % E2)[0]['created_at']
+php("$wpdb->update($p.'ews_employees',['created_at'=>'%s 00:00:00'],['id'=>%d]); $wpdb->query(\"DELETE FROM {$p}ews_time_logs WHERE employee_id=%d AND work_date<'%s'\");" % (D4, E2, E2, D4))
+check('a day before the employee was added (and no attendance before it): refused (before_start)', mk(D5, 'employee', 'in', E2, 'cxemp2').get('error') == 'before_start')
+check('...but an employee imported later whose attendance starts earlier is not limited by the day they were added', mk(D5, 'employee', 'in').get('error') != 'before_start')
+php("$wpdb->query(\"DELETE FROM {$p}ews_attendance_corrections WHERE work_date='%s'\");" % D5)
+tp2 = emp2.req('/app/?ews_view=time')[1]
+check('...and "My recent days" offers no Correct for that day', 'data-date="%s"' % D5 not in tp2 and 'data-date="%s"' % D4 in tp2, re.findall(r'data-date="[^"]+"', tp2)[:8])
+php("$wpdb->update($p.'ews_employees',['created_at'=>'%s'],['id'=>%d]);" % (created, E2))
+r_pend = mk(D5, 'employee', 'in')
 check('a request on a working day goes in...', 'id' in r_pend, r_pend)
 php("$wpdb->query(\"DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(d)s'\"); $wpdb->insert($p.'ews_schedule',['employee_id'=>%(e)d,'work_date'=>'%(d)s','status'=>'Vacation']);" % {'e': E, 'd': D5})
 res = decide(hr, int(r_pend['id']), 'approve', in_admin=True)

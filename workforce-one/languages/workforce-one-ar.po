@@ -7485,3 +7485,9 @@ msgstr "%1$s × %2$s"
 
 msgid "This is a day off, a holiday or a leave day with nothing recorded: there is nothing to correct. Ask HR if you worked that day."
 msgstr "هذا يوم راحة أو عطلة أو يوم إجازة لم يُسجَّل فيه شيء: لا يوجد ما يُصحَّح. اطلب من الموارد البشرية إذا كنت قد عملت في هذا اليوم."
+
+msgid "Closed automatically: the day is now a leave, a holiday or a day off."
+msgstr "أُغلق تلقائيًا: أصبح اليوم إجازة أو عطلة أو يوم راحة."
+
+msgid "That day is before you joined: there is nothing to correct."
+msgstr "هذا اليوم قبل انضمامك: لا يوجد ما يُصحَّح."

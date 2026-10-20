@@ -7,6 +7,10 @@
   Approving one could have put attendance and a leave on the same day.
 - A day like that **with** a Sign In or Sign Out (someone who came in on a holiday) can still be corrected as before.
 - HR in wp-admin can still correct any day.
+- **Owner decisions on the review's questions:** a day off or holiday with approved overtime can be corrected (the employee was
+  expected to work); a day with no schedule at all stays correctable; a day before the employee joined (the day they were added, or
+  their first recorded attendance if earlier) is refused; a request whose day has since become a leave, a holiday or a day off is
+  closed when it is decided ("Closed automatically"), so a day never holds both attendance and a leave.
 
 ## 3.31.112
 ### Faster: the two repeated queries the System health screen flagged

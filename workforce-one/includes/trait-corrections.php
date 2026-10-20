@@ -127,10 +127,16 @@ trait EWS_Corrections_Trait {
         ];
     }
 
-    /** The first day the employee is in Workforce One (the day they were added; 3.31.115): no correction before it. '' when unknown. */
+    /**
+     * The first day the employee is in Workforce One (3.31.115): the day they were added, or their first recorded attendance if that is
+     * earlier (employees imported after they started). No correction before it; '' when unknown.
+     */
     private function cx_started($emp){
-        $c=(string)($emp->created_at??'');
-        return CorrectionRules::isDate(substr($c,0,10))?substr($c,0,10):'';
+        global $wpdb;
+        $c=substr((string)($emp->created_at??''),0,10);
+        $first=(string)$wpdb->get_var($wpdb->prepare("SELECT MIN(work_date) FROM {$wpdb->prefix}ews_time_logs WHERE employee_id=%d",(int)$emp->id));
+        $days=array_filter([$c,$first],function($d){return CorrectionRules::isDate($d);});
+        return $days?min($days):'';
     }
 
     /** The employee's days as the reports see them (status, leave, holiday, events): the one way corrections read a day's result. */
