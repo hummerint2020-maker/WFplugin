@@ -189,7 +189,7 @@ before = count_queries(login('emp1', 'emp1pass', 4), '/attendance/today')[0]
 php("""for($i=0;$i<300;$i++){ $wpdb->insert($p.'ews_employees',['name'=>'Bulk '.$i,'domain_name'=>'bulk'.$i,'email'=>'bulk'.$i.'@example.com','active'=>1,'attendance_enabled'=>1]); }""")
 after = count_queries(login('emp1', 'emp1pass', 5), '/attendance/today')[0]
 check('queries: 300 more employees change nothing (%d vs %d)' % (before, after), before == after, (before, after))
-php("$wpdb->query(\"DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'bulk%\"); ")
+php("""$wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'bulk%'");""")
 
 # ---------------------------------------------------------------- today
 php("$wpdb->query(\"DELETE FROM {$p}ews_schedule\"); $wpdb->query(\"DELETE FROM {$p}ews_time_logs\");")
@@ -251,6 +251,8 @@ if local_h <= 21:
 else:
     print('SKIP overnight carry-over (needs the local hour <= 21)')
 
-php("update_option('timezone_string','UTC'); update_option('gmt_offset',0); delete_option('ews_feature_app_api'); delete_option('ews_shifts');")
+php("""update_option('timezone_string','UTC'); update_option('gmt_offset',0); delete_option('ews_feature_app_api'); delete_option('ews_shifts'); delete_option('ews_feature_breaks');
+    $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('emp2') OR domain_name LIKE 'bulk%'"); $wpdb->query("DELETE FROM {$p}ews_schedule"); $wpdb->query("DELETE FROM {$p}ews_time_logs");
+    $wpdb->query("DELETE FROM {$p}ews_break_sessions"); $wpdb->update($p.'ews_employees',['default_shift_id'=>0],['domain_name'=>'emp1']);""")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
