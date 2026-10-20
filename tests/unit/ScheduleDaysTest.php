@@ -9,7 +9,7 @@ final class ScheduleDaysTest extends TestCase
 
     private function build(array $dates, array $status, array $leave = [], array $hours = [], array $branch = []): array
     {
-        return D::build($dates, $status, $leave, ['Office' => true, 'WFH' => true, 'Leave' => false], $hours, $branch, [0, 1, 2, 3, 4], new DateTimeZone('Africa/Cairo'),
+        return D::build($dates, $status, $leave, ['Office' => true, 'WFH' => true, 'Leave' => false], $hours, $branch, [0, 1, 2, 3, 4], new DateTimeZone('Asia/Riyadh'),
             ['Not Set' => 'غير محدد', 'General Leave' => 'إجازة عامة']);
     }
 

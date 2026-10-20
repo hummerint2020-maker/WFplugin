@@ -34,7 +34,7 @@ final class ScheduleDays
         $out = [];
         foreach ($dates as $date) {
             $general = isset($companyLeave[$date]);
-            $status = $general ? self::GENERAL_LEAVE : ($statusByDate[$date] ?? self::NOT_SET);
+            $status = $general ? self::GENERAL_LEAVE : (($statusByDate[$date] ?? '') !== '' ? $statusByDate[$date] : self::NOT_SET);
             $requires = !$general && $status !== self::NOT_SET && !empty($requiresSignIn[$status]);
             $weekday = (int) gmdate('w', (int) strtotime($date . ' 12:00:00 UTC'));
             $h = $requires ? ($hoursByDate[$date] ?? null) : null;
@@ -42,7 +42,7 @@ final class ScheduleDays
             if (is_array($h) && !empty($h['start']) && !empty($h['end'])) {
                 $overnight = !empty($h['overnight']) && (string) $h['start'] > (string) $h['end'];
                 $shift = [
-                    'id' => (int) ($h['shift_id'] ?? 0), 'name' => (string) ($h['shift_name'] ?? ''), 'start' => (string) $h['start'], 'end' => (string) $h['end'],
+                    'id' => (int) ($h['shift_id'] ?? 0), 'name' => (string) ($labels[(string) ($h['shift_name'] ?? '')] ?? ($h['shift_name'] ?? '')), 'start' => (string) $h['start'], 'end' => (string) $h['end'],
                     'overnight' => $overnight, 'grace_minutes' => (int) ($h['grace'] ?? 0),
                 ] + LocalTime::shiftSpan($date, (string) $h['start'], (string) $h['end'], $overnight, $tz);
             }

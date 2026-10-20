@@ -388,6 +388,8 @@ final class AttendanceServiceTest extends TestCase
             'no schedule' => ['status' => null],
             'a status that does not need Sign In' => ['status' => 'Leave'],
             'attendance switched off for the employee' => ['enabled' => false],
+            'attendance and breaks both off' => ['enabled' => false, 'breaksOn' => false],
+            'a holiday with no schedule row' => ['leave' => true, 'status' => null],
             'breaks switched off' => ['breaksOn' => false],
             'face verification needed' => ['face' => true],
             'signed in' => ['logs' => [$in]],

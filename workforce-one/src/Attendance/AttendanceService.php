@@ -273,7 +273,10 @@ final class AttendanceService
         $bounds = null;
         $actions = ['sign_in' => null, 'sign_out' => null, 'break_start' => null, 'break_end' => null];
         if (!$enabled) {
-            foreach ($actions as $k => $_) $actions[$k] = AttendanceResult::ATTENDANCE_DISABLED;
+            // record() refuses a Sign In / Out first for this; the break rules look at "breaks off" before "attendance off".
+            $actions['sign_in'] = $actions['sign_out'] = AttendanceResult::ATTENDANCE_DISABLED;
+            $actions['break_start'] = $breakOn ? BreakRules::ATTENDANCE_DISABLED : BreakRules::BREAKS_DISABLED;
+            $actions['break_end'] = $breakOn ? BreakRules::ATTENDANCE_DISABLED : BreakRules::BREAKS_DISABLED;
         } else {
             $actions['sign_in'] = SignInRules::check(AttendanceCommand::SIGN_IN, $this->signFacts(AttendanceCommand::SIGN_IN, $emp, $sch, $ev, true, $bounds));
             $actions['sign_out'] = SignInRules::check(AttendanceCommand::SIGN_OUT, $this->signFacts(AttendanceCommand::SIGN_OUT, $emp, $sch, $ev, true, $unused));
@@ -285,7 +288,7 @@ final class AttendanceService
             'employee' => true, 'employee_id' => $eid, 'attendance_enabled' => $enabled, 'day' => $day, 'status' => $status,
             'requires_sign_in' => $sch ? $c->requiresSignIn((string) $sch->status) : false,
             'requires_location' => $sch ? $c->requiresLocation((string) $sch->status) : false,
-            'general_leave' => $c->generalLeave($day),
+            'general_leave' => $sch !== null && $c->generalLeave($day),   // as signFacts(): a holiday only matters on a scheduled day
             'face_required' => $c->faceRequired(),
             'clock' => \WorkforceOne\Ui\ClockFace::state($ev, (bool) $open),
             'sign_in_at' => $first ? (string) $first->event_at : null,

@@ -17,6 +17,7 @@ trait EWS_Attendance_Api_Trait {
         if(!$emp)return $this->api_fail(ErrorMap::ACCOUNT_NOT_LINKED);
         $eid=(int)$emp->id;
         $state=$this->attendance_service()->today();
+        if(!$state->hasEmployee()||(int)$state->get('employee_id')!==$eid)return $this->api_fail(ErrorMap::ACCOUNT_NOT_LINKED);   // the service reads the employee of the session; both must agree
         $day=(string)$state->get('day');
         $shift=null;
         if($state->get('requires_sign_in') && !$state->get('general_leave')){

@@ -42,13 +42,14 @@ def errors(spec, schema, value, path='$'):
     schema = resolve(spec, schema)
     out = []
     if 'oneOf' in schema:
-        ok = [s for s in schema['oneOf'] if not errors(spec, s, value, path)]
+        tried = [errors(spec, s, value, path) for s in schema['oneOf']]
+        ok = [t for t in tried if not t]
         if len(ok) != 1:
-            out.append('%s: matches %d of oneOf (want exactly 1)' % (path, len(ok)))
+            out.append('%s: matches %d of oneOf (want exactly 1): %s' % (path, len(ok), '; '.join(t[0] for t in tried if t)[:200]))
         return out
-    if 'const' in schema and value != schema['const']:
+    if 'const' in schema and (value != schema['const'] or type(value) is not type(schema['const'])):
         out.append('%s: must be %r' % (path, schema['const']))
-    if 'enum' in schema and value not in schema['enum']:
+    if 'enum' in schema and not any(value == e and type(value) is type(e) for e in schema['enum']):
         out.append('%s: %r not in enum' % (path, value))
     t = schema.get('type')
     if t is not None:
@@ -75,8 +76,12 @@ def errors(spec, schema, value, path='$'):
                 datetime.date.fromisoformat(value)
             except ValueError:
                 out.append('%s: %r is not a date' % (path, value))
-        elif fmt == 'date-time' and not _DT.match(value):
-            out.append('%s: %r is not an ISO 8601 date-time with an offset' % (path, value))
+        elif fmt == 'date-time':
+            try:
+                if not _DT.match(value): raise ValueError
+                datetime.datetime.fromisoformat(value.replace('Z', '+00:00'))
+            except ValueError:
+                out.append('%s: %r is not an ISO 8601 date-time with an offset' % (path, value))
     if isinstance(value, dict):
         props = schema.get('properties', {})
         for r in schema.get('required', []):

@@ -127,7 +127,8 @@ trait EWS_Branches_Trait {
         $main=$this->branch_main_id($employee_id);
         $planned=$this->branch_planned_bulk([(int)$employee_id],$days)[(int)$employee_id]??[];
         foreach($days as $d){
-            $p=(int)($planned[$d]??0);$id=$p?:$main;
+            $p=(int)($planned[$d]??0);if(!isset($locs[$p]))$p=0;   // a planned branch that no longer exists: the main branch, as branch_today()
+            $id=$p?:$main;
             if(isset($locs[$id]))$out[$d]=['id'=>(int)$id,'name'=>(string)$locs[$id]->name,'planned'=>$p>0];
         }
         return $out;

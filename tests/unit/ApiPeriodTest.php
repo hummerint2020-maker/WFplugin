@@ -44,7 +44,7 @@ final class ApiPeriodTest extends TestCase
         $this->assertSame([], $e, '42 days are allowed');
         $this->assertCount(42, $p['dates']);
         [$p, $e] = Period::parse(['from' => '2026-10-01', 'to' => '2026-11-12'], '2026-10-17');
-        $this->assertSame(['range' => 'too_long', 'max_days' => 42], $e, '43 days are not');
+        $this->assertSame(['to' => 'too_long', 'max_days' => 42], $e, '43 days are not');
         [$p] = Period::parse(['from' => '2026-10-29', 'to' => '2026-10-29'], '2026-10-17');
         $this->assertSame(['2026-10-29'], $p['dates'], 'one day, on the day the clocks change');
         [$p] = Period::parse(['from' => '2026-10-27', 'to' => '2026-11-02'], '2026-10-17');

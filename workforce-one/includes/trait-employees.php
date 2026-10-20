@@ -60,12 +60,15 @@ trait EWS_Employees_Trait {
     /** The shift an employee is on now (employees.default_shift_id; 0 = company hours). */
     private function people_shift_id($employee_id){
         global $wpdb;
-        return (int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d",(int)$employee_id));
+        $id=(int)$employee_id;
+        if(isset(self::$ews_people_shift_memo[$id]))return self::$ews_people_shift_memo[$id];
+        return self::$ews_people_shift_memo[$id]=(int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d",$id));
     }
 
     /** Set the shift an employee is on now (the shift history keeps it in step, 3.31.108). */
     private function people_set_shift_id($employee_id,$shift_id){
         global $wpdb;
+        unset(self::$ews_people_shift_memo[(int)$employee_id]);
         if($shift_id)$wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=%d WHERE id=%d AND COALESCE(default_shift_id,0)<>%d",(int)$shift_id,(int)$employee_id,(int)$shift_id));
         else $wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=NULL WHERE id=%d AND default_shift_id IS NOT NULL",(int)$employee_id));
     }

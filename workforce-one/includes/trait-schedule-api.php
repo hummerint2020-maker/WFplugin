@@ -13,7 +13,7 @@ trait EWS_Schedule_Api_Trait {
 
     /** Built-in status names, translated; anything an administrator typed is shown as entered. @return array<string,string> */
     private function api_status_labels(){
-        return [ScheduleDays::NOT_SET=>__('Not Set','workforce-one'),ScheduleDays::GENERAL_LEAVE=>__('General Leave','workforce-one'),'Absent'=>__('Absent','workforce-one')];
+        return [ScheduleDays::NOT_SET=>__('Not Set','workforce-one'),ScheduleDays::GENERAL_LEAVE=>__('General Leave','workforce-one'),'Absent'=>__('Absent','workforce-one'),'Company Default'=>__('Company Default','workforce-one')];
     }
 
     public function api_me_schedule($request){
@@ -23,7 +23,11 @@ trait EWS_Schedule_Api_Trait {
         $eid=(int)$emp->id;
         [,$anchor]=$this->week_dates_configured();
         [$period,$errors]=Period::parse((array)$request->get_query_params(),$anchor?gmdate('Y-m-d',(int)$anchor+12*HOUR_IN_SECONDS):current_time('Y-m-d'));
-        if(!$period)return $this->api_fail(ErrorMap::VALIDATION_FAILED,['fields'=>$errors]);
+        if(!$period){
+            $details=['fields'=>array_filter($errors,'is_string')];
+            if(isset($errors['max_days']))$details['max_days']=(int)$errors['max_days'];
+            return $this->api_fail(ErrorMap::VALIDATION_FAILED,$details);
+        }
         global $wpdb;
         $dates=$period['dates'];
         $rows=[];

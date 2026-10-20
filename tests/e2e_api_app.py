@@ -55,7 +55,6 @@ def contract(name, path, method, r):
 def reset():
     wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
     return json.loads(php("""
-        $eid=(int)json_decode(file_get_contents(getenv('S'))?'':'' )?0:0;
         $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
         foreach(['ews_api_devices','ews_api_tokens','ews_api_rate_limits'] as $t) $wpdb->query("DELETE FROM {$p}$t");
         update_option('timezone_string','Africa/Cairo'); update_option('gmt_offset','');
@@ -153,6 +152,8 @@ for param in ['employee_id=%d' % e2, 'user_id=1', 'employee=%d' % e2, 'user=1', 
         r = call(path + '?' + param, token=EMP)
         name = param.split('=')[0]
         check('%s?%s is refused (400, fields.%s not_allowed)' % (path, param, name), code(r) == (400, 'VALIDATION_FAILED') and r[1]['error']['details']['fields'] == {name: 'not_allowed'}, r[1])
+        if param.startswith('employee_id'):
+            contract('identity parameter ' + path, path, 'get', r)
 leak = json.dumps(call('/me/schedule?from=%s&to=%s' % (today, today), token=EMP)[1])
 check('...and no colleague data in the answer', 'WFH' not in leak and 'Emp Two' not in leak)
 php("$wpdb->query(\"DELETE FROM {$p}ews_schedule\");")
@@ -161,7 +162,7 @@ check('an employee with no schedule: 200, seven days, all "Not Set", no shift, n
 check('...the week is the Web\'s week (a calendar week that contains today)', r[1]['data']['from'] <= today <= r[1]['data']['to'])
 contract('schedule without parameters', '/me/schedule', 'get', r)
 check('from alone: seven days from it', len(call('/me/schedule?from=2026-10-19', token=EMP)[1]['data']['days']) == 7)
-for qs, field in [('?to=2026-10-19', 'from'), ('?from=2026-02-30&to=2026-03-02', 'from'), ('?from=19-10-2026', 'from'), ('?from=2026-10-20&to=2026-10-19', 'to'), ('?from=2026-10-01&to=2026-11-12', 'range')]:
+for qs, field in [('?to=2026-10-19', 'from'), ('?from=2026-02-30&to=2026-03-02', 'from'), ('?from=19-10-2026', 'from'), ('?from=2026-10-20&to=2026-10-19', 'to'), ('?from=2026-10-01&to=2026-11-12', 'to')]:
     r = call('/me/schedule' + qs, token=EMP)
     check('/me/schedule%s: 400 on "%s"' % (qs, field), code(r) == (400, 'VALIDATION_FAILED') and field in r[1]['error']['details']['fields'], r[1])
     contract('schedule error ' + qs, '/me/schedule', 'get', r)
@@ -182,7 +183,7 @@ n42, s42 = count_queries(EMP, '/me/schedule', {'from': today, 'to': php("echo da
 nb, sb = count_queries(EMP, '/me/bootstrap')
 nt, st_ = count_queries(EMP, '/attendance/today')
 check('queries: all three answer 200 in-process', (s7, s42, sb, st_) == (200, 200, 200, 200), (s7, s42, sb, st_))
-check('queries: a week costs %d, six weeks %d (about one more per Office day, from the existing shift lookup; no per-employee growth)' % (n7, n42), n7 <= 40 and n42 - n7 <= 40, (n7, n42))
+check('queries: a week costs %d and six weeks %d: the same, whatever the number of days' % (n7, n42), n7 <= 40 and n42 == n7, (n7, n42))
 check('queries: bootstrap %d and today %d stay small' % (nb, nt), nb <= 30 and nt <= 30, (nb, nt))
 before = count_queries(login('emp1', 'emp1pass', 4), '/attendance/today')[0]
 php("""for($i=0;$i<300;$i++){ $wpdb->insert($p.'ews_employees',['name'=>'Bulk '.$i,'domain_name'=>'bulk'.$i,'email'=>'bulk'.$i.'@example.com','active'=>1,'attendance_enabled'=>1]); }""")
@@ -220,7 +221,11 @@ t = call('/attendance/today', token=EMP)[1]['data']
 check('signed out: clock "done", Sign Out refused (already signed out), sign_out has a time', t['clock'] == 'done' and t['actions']['sign_out']['reason'] == 'ALREADY_SIGNED_OUT' and t['sign_out'] and t['sign_in'], t)
 php("update_option('ews_feature_breaks',0,false); $wpdb->query(\"DELETE FROM {$p}ews_time_logs\"); $wpdb->update($p.'ews_employees',['attendance_enabled'=>0],['id'=>%d]);" % eid)
 t = call('/attendance/today', token=EMP)[1]['data']
-check('attendance switched off for the employee: 200, day_type attendance_disabled, every action ATTENDANCE_DISABLED', t['day_type'] == 'attendance_disabled' and all(a['reason'] == 'ATTENDANCE_DISABLED' for a in t['actions'].values()), t['actions'])
+check('attendance switched off for the employee (breaks off too): 200, day_type attendance_disabled, Sign In / Out ATTENDANCE_DISABLED, the break rules say BREAKS_DISABLED first, as the Web', t['day_type'] == 'attendance_disabled' and t['actions']['sign_in']['reason'] == 'ATTENDANCE_DISABLED' and t['actions']['sign_out']['reason'] == 'ATTENDANCE_DISABLED' and t['actions']['break_start']['reason'] == 'BREAKS_DISABLED' and t['actions']['break_end']['reason'] == 'BREAKS_DISABLED', t['actions'])
+php("update_option('ews_feature_breaks',1,false);")
+t = call('/attendance/today', token=EMP)[1]['data']
+check('...with breaks on, the break actions say ATTENDANCE_DISABLED', t['actions']['break_start']['reason'] == 'ATTENDANCE_DISABLED' and t['actions']['break_end']['reason'] == 'ATTENDANCE_DISABLED', t['actions'])
+php("update_option('ews_feature_breaks',0,false);")
 php("$wpdb->update($p.'ews_employees',['attendance_enabled'=>1],['id'=>%d]);" % eid)
 
 # ---------------------------------------------------------------- the same answer as the Web: overnight carry-over

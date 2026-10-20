@@ -50,7 +50,7 @@ final class Period
         if (!self::validDate($to)) return [null, ['to' => 'invalid']];
         if ($to < $from) return [null, ['to' => 'before_from']];
         $days = self::diffDays($from, $to) + 1;
-        if ($days > $maxDays) return [null, ['range' => 'too_long', 'max_days' => $maxDays]];
+        if ($days > $maxDays) return [null, ['to' => 'too_long', 'max_days' => $maxDays]];
         $dates = [];
         for ($i = 0; $i < $days; $i++) $dates[] = self::addDays($from, $i);
         return [['from' => $from, 'to' => $to, 'dates' => $dates], []];

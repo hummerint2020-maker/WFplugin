@@ -9,7 +9,7 @@ final class ApiDocumentsTest extends TestCase
 {
     private function tz(): DateTimeZone
     {
-        return new DateTimeZone('Africa/Cairo');
+        return new DateTimeZone('Asia/Riyadh');
     }
 
     public function testBootstrapPublishesOnlyWhatItListsAndKeepsMeUnchanged(): void
@@ -17,7 +17,7 @@ final class ApiDocumentsTest extends TestCase
         $me = ['user' => ['name' => 'Mona', 'email' => 'm@x.com', 'locale' => 'ar'], 'employee' => ['name' => 'Mona', 'email' => 'm@x.com', 'department' => 'Ops', 'attendance_enabled' => true],
             'roles' => ['employee'], 'permissions' => ['view_people'], 'device' => ['id' => 'abc', 'current' => true], 'secret' => 'never', 'password_hash' => 'never'];
         $doc = Bootstrap::document($me, ['breaks' => true, 'tasks' => 1, 'invented' => true], [['key' => 'schedule', 'label' => 'Schedule', 'order' => 20, 'url' => 'https://x/y', 'count' => 9]],
-            ['timezone' => 'Africa/Cairo', 'locale' => 'ar', 'today' => '2026-10-20', 'working_days' => [0, 1, 2, 3, 4], 'ignored' => 'x']);
+            ['timezone' => 'Asia/Riyadh', 'locale' => 'ar', 'today' => '2026-10-20', 'working_days' => [0, 1, 2, 3, 4], 'ignored' => 'x']);
         $this->assertSame(['user', 'employee', 'roles', 'permissions', 'device', 'features', 'screens', 'site', 'limits'], array_keys($doc));
         foreach (['user', 'employee', 'roles', 'permissions', 'device'] as $k) $this->assertSame($me[$k], $doc[$k], $k);
         $this->assertSame(Meta::FEATURES, array_keys($doc['features']), 'the same flags /meta publishes');
@@ -26,7 +26,7 @@ final class ApiDocumentsTest extends TestCase
         $this->assertFalse($doc['features']['overtime']);
         $this->assertArrayNotHasKey('invented', $doc['features']);
         $this->assertSame([['key' => 'schedule', 'label' => 'Schedule', 'order' => 20]], $doc['screens'], 'no url, no badge count');
-        $this->assertSame(['timezone' => 'Africa/Cairo', 'locale' => 'ar', 'today' => '2026-10-20', 'working_days' => [0, 1, 2, 3, 4]], $doc['site']);
+        $this->assertSame(['timezone' => 'Asia/Riyadh', 'locale' => 'ar', 'today' => '2026-10-20', 'working_days' => [0, 1, 2, 3, 4]], $doc['site']);
         $this->assertSame(['schedule_max_days' => 42], $doc['limits']);
         $none = Bootstrap::document(['user' => ['name' => 'Admin'], 'roles' => ['site_administrator'], 'permissions' => []], [], [], ['timezone' => 'UTC', 'locale' => 'en_US', 'today' => '2026-10-20', 'working_days' => []]);
         $this->assertNull($none['employee'], 'an administrator with no employee record');
@@ -68,7 +68,7 @@ final class ApiDocumentsTest extends TestCase
         $this->assertNull($d['breaks']['open']);
         $this->assertSame('2026-10-20T00:10:00+03:00', $d['breaks']['sessions'][0]['started_at']);
         $this->assertSame(25, $d['breaks']['sessions'][0]['minutes']);
-        $this->assertSame('Africa/Cairo', $d['timezone']);
+        $this->assertSame('Asia/Riyadh', $d['timezone']);
     }
 
     public function testDayTypesAndAnOpenBreak(): void
