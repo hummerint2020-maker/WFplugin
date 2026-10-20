@@ -224,7 +224,8 @@
         "overtime_approval_card",
         "overtime_my_requests",
         "overtime_withdraw",
-        "overtime_enabled"
+        "overtime_enabled",
+        "overtime_approved_dates"
       ]
     },
     "approvals": {
