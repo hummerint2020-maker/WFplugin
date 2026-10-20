@@ -19,7 +19,16 @@ from e2e_support import Session, check, ids, php, q, results, wp, HERE  # noqa: 
 CAIRO = {'latitude': '30.0445', 'longitude': '31.2358', 'accuracy': '20'}
 
 
+def wait_past_midnight():
+    """The Sign In window below ends at 23:59 Cairo time: a run in the last minutes of the day waits for the next one (at most 6 minutes)."""
+    left = int(php("$d=new DateTime('now',new DateTimeZone('Africa/Cairo')); echo 86400-((int)$d->format('G')*3600+(int)$d->format('i')*60+(int)$d->format('s'));").strip().splitlines()[-1])
+    if left <= 360:
+        print('INFO waiting %d s for midnight in Cairo (the Sign In window ends at 23:59)' % (left + 5))
+        time.sleep(left + 5)
+
+
 def setup(shift=None):
+    wait_past_midnight()
     wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
     php("""
         update_option('timezone_string','Africa/Cairo'); update_option('gmt_offset','');
