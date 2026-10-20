@@ -7483,6 +7483,22 @@ msgstr "مغلق: يبتّ فيه مدير آخر. المسؤولون يجوز �
 msgid "%1$s × %2$s"
 msgstr "%1$s × %2$s"
 
+msgid "This is a day off, a holiday or a leave day with nothing recorded: there is nothing to correct. Ask HR if you worked that day."
+msgstr "هذا يوم راحة أو عطلة أو يوم إجازة لم يُسجَّل فيه شيء: لا يوجد ما يُصحَّح. اطلب من الموارد البشرية إذا كنت قد عملت في هذا اليوم."
+
+msgid "Closed automatically: the day is now a leave, a holiday or a day off."
+msgstr "أُغلق تلقائيًا: أصبح اليوم إجازة أو عطلة أو يوم راحة."
+
+msgid "That day is before you joined: there is nothing to correct."
+msgstr "هذا اليوم قبل انضمامك: لا يوجد ما يُصحَّح."
+
+msgid "Closed automatically"
+msgstr "أُغلق تلقائيًا"
+
+msgid "The day is now a leave, a holiday or a day off, so nothing was applied. The employee was told. HR can still correct the day directly."
+msgstr "أصبح اليوم إجازة أو عطلة أو يوم راحة، فلم يُطبَّق شيء. تم إبلاغ الموظف. ويمكن للموارد البشرية تصحيح اليوم مباشرةً."
+
+
 msgid "Mobile app API"
 msgstr "واجهة تطبيق الموبايل"
 

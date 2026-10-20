@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.31.115
+### Attendance corrections: no request on a day nobody works (owner decision 2026-10-20)
+- "My recent days" no longer offers **Correct** on a leave day, a public holiday or a day off when nothing was recorded that day,
+  and such a request is refused ("there is nothing to correct; ask HR if you worked that day"), from the app, the Web and the API.
+  Approving one could have put attendance and a leave on the same day.
+- A day like that **with** a Sign In or Sign Out (someone who came in on a holiday) can still be corrected as before.
+- HR in wp-admin can still correct any day.
+- **Owner decisions on the review's questions:** a day off or holiday with approved overtime can be corrected (the employee was
+  expected to work); a day with no schedule at all stays correctable; a day before the employee joined (the day they were added, or
+  their first recorded attendance if earlier) is refused; a request whose day has since become a leave, a holiday or a day off is
+  closed when it is decided ("Closed automatically", its approval request cancelled, the employee told, the approver shown why),
+  so a day never holds both attendance and a leave. Approved overtime counts only while the Overtime feature is on (as in the
+  reports); the day an employee was added counts with one day of margin (the database clock may be UTC).
 ## 3.31.113
 ### New: Mobile app API 1 (off by default)
 First step of preparing Workforce One for the Android and iPhone apps: WordPress stays the backend and the admin, the apps use the REST API.
