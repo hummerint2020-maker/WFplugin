@@ -8,6 +8,8 @@ trait EWS_Core_Trait {
     private static $ews_current_employee_cache = [];
     private static $ews_shifts_cache = null;
     private static $ews_shift_for_employee_cache = [];
+    /** @var array<int,int> employees.default_shift_id by employee, for one request (3.31.113); cleared whenever it is written. */
+    private static $ews_people_shift_memo = [];
     private static $ews_working_hours_cache = [];
     // Shift history (3.31.108): each employee's shift periods, and every shift's dated times.
     private static $ews_shift_periods_cache = [];
@@ -19,7 +21,7 @@ trait EWS_Core_Trait {
 
     private function invalidate_employee_runtime_cache($employee_id=0,$wp_user_id=0){
             $employee_id=absint($employee_id); $wp_user_id=absint($wp_user_id);
-            if($employee_id){unset(self::$ews_shift_for_employee_cache[$employee_id],self::$ews_shift_periods_cache[$employee_id]);self::$ews_working_hours_cache=[];}
+            if($employee_id){unset(self::$ews_shift_for_employee_cache[$employee_id],self::$ews_shift_periods_cache[$employee_id],self::$ews_people_shift_memo[$employee_id]);self::$ews_working_hours_cache=[];}
             if($wp_user_id)unset(self::$ews_current_employee_cache[$wp_user_id]);
             self::$ews_emps_cache=null;
         }

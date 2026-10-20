@@ -126,3 +126,14 @@ account's reused token. Server clock skew. The multi-worker CI server is new (se
 6. Gate order: **check account and user before the grace too**.
 7. Sibling chains: **leave them** (they end at logout, revocation or session end).
 8. Version: **3.31.114** (schema target 3.31.114).
+
+## Owner's answers (2026-10-20)
+1. Extra uses within the window: 4 (as recommended).
+2. Window: not asked, 30 s kept.
+3. **A switch, off by default** (not the recommendation). Off = the 3.31.111 refresh path exactly as today; on = this design (the grace
+   counter, 500 on a database error, DEVICE_REVOKED during a logout, the gate before the grace, the access-token revoke by id, the checked
+   inserts, the race-safe daily audit). The `grace_uses` column is added either way (unused while off). Name: "Safer app sign-in refresh",
+   in wp-admin → Features next to "Mobile app API" (a single checkbox in the existing section, no new layout).
+4. Audit grace uses: no row; the count stays on the token.
+5. Order: the mobile PR (3.31.113) first; this release is built on `claude/mobile-api-1` and updates `docs/api/openapi.yaml` in the same PR.
+6-8. Not asked, defaults kept: the gate before the grace too, sibling chains left, version 3.31.114.

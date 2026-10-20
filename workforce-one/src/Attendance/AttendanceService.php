@@ -130,24 +130,8 @@ final class AttendanceService
         $requiresLocation = $sch ? $c->requiresLocation((string) $sch->status) : false;
 
         // 1. May this event be recorded at all?
-        $facts = [
-            'employee' => (bool) $emp,
-            'face_required' => $c->faceRequired(),
-            'face_ok' => $cmd->faceOk,
-            'general_leave' => $sch && $emp && $c->generalLeave($c->attendanceDay($eid)),
-            'working_day' => $sch && $c->requiresSignIn((string) $sch->status),
-            'signed_in' => isset($ev['sign_in']) || isset($ev['late_sign_in']),
-            'signed_out' => isset($ev['sign_out']),
-        ];
         $bounds = null;
-        if ($emp && $type === AttendanceCommand::SIGN_IN) {
-            $facts['window'] = SignInRules::WINDOW_OPEN;
-            if (!$c->windowOpen($eid)) {
-                $bounds = $c->windowBounds($eid);
-                $facts['window'] = (!empty($bounds['start']) && $c->localTime() < $bounds['start']) ? SignInRules::WINDOW_NOT_YET : SignInRules::WINDOW_CLOSED;
-            }
-        }
-        if ($emp && $type === AttendanceCommand::SIGN_OUT) $facts['on_break'] = $c->breakEnabled() && $c->openBreak($eid);
+        $facts = $this->signFacts($type, $emp, $sch, $ev, $cmd->faceOk, $bounds);
         $rule = SignInRules::check($type, $facts);
         if ($rule) return AttendanceResult::failure($rule, ['bounds' => $bounds, 'employee_id' => $eid]);
 
@@ -214,12 +198,46 @@ final class AttendanceService
             + ($branches ? ['branch_id' => $assigned ? (int) $assigned->id : 0, 'branch_flag' => $branchFlag] : []));
     }
 
-    private function startBreakUnlocked(?object $emp): AttendanceResult
+    /**
+     * The facts SignInRules::check() decides on, for a Sign In or Sign Out now. The one place they are put together, used by
+     * recording (recordUnlocked) and by the read-only view of today (today()), so both always ask the rules the same question.
+     * @param array<string,object> $ev today's events by type
+     * @param array<string,mixed>|null $bounds set to the Sign In window bounds when the window is not open
+     * @return array<string,mixed>
+     */
+    private function signFacts(string $type, ?object $emp, ?object $sch, array $ev, bool $faceOk, ?array &$bounds): array
     {
         $c = $this->ctx;
-        $eid = (int) $emp->id;
-        $sch = $c->schedule($eid);
-        $ev = $c->events($eid);
+        $eid = $emp ? (int) $emp->id : 0;
+        $facts = [
+            'employee' => (bool) $emp,
+            'face_required' => $c->faceRequired(),
+            'face_ok' => $faceOk,
+            'general_leave' => $sch && $emp && $c->generalLeave($c->attendanceDay($eid)),
+            'working_day' => $sch && $c->requiresSignIn((string) $sch->status),
+            'signed_in' => isset($ev['sign_in']) || isset($ev['late_sign_in']),
+            'signed_out' => isset($ev['sign_out']),
+        ];
+        $bounds = null;
+        if ($emp && $type === AttendanceCommand::SIGN_IN) {
+            $facts['window'] = SignInRules::WINDOW_OPEN;
+            if (!$c->windowOpen($eid)) {
+                $bounds = $c->windowBounds($eid);
+                $facts['window'] = (!empty($bounds['start']) && $c->localTime() < $bounds['start']) ? SignInRules::WINDOW_NOT_YET : SignInRules::WINDOW_CLOSED;
+            }
+        }
+        if ($emp && $type === AttendanceCommand::SIGN_OUT) $facts['on_break'] = $c->breakEnabled() && $c->openBreak($eid);
+        return $facts;
+    }
+
+    /**
+     * The facts BreakRules::checkStart() decides on for a break now (shared by startBreakUnlocked() and today()).
+     * @param array<string,object> $ev
+     * @return array<string,mixed>
+     */
+    private function breakStartFacts(int $eid, ?object $sch, array $ev): array
+    {
+        $c = $this->ctx;
         $working = $sch && $c->requiresSignIn((string) $sch->status);
         $facts = ['enabled' => true, 'employee' => true, 'attendance_enabled' => true, 'working_day' => $working];
         if ($working) {
@@ -230,6 +248,66 @@ final class AttendanceService
                 if (!$facts['on_break']) $facts['remaining'] = $c->breakRemaining($eid);
             }
         }
+        return $facts;
+    }
+
+    /**
+     * Where the employee is in today's work day and what they could do now (3.31.113, GET /attendance/today). Read-only: it
+     * records nothing and takes no lock. Each action carries the rule code record() / startBreak() / resumeBreak() would
+     * refuse with right now (null = allowed), worked out with face verification assumed done and the position assumed inside the
+     * site: those two are reported as requirements, and the write endpoints re-check everything.
+     */
+    public function today(): TodayState
+    {
+        $c = $this->ctx;
+        $emp = $c->employee();
+        if (!$emp) return new TodayState(['employee' => false]);
+        $eid = (int) $emp->id;
+        $enabled = $c->attendanceEnabled($eid);
+        $sch = $c->schedule($eid);
+        $ev = $c->events($eid);
+        $day = $c->attendanceDay($eid);
+        $breakOn = $c->breakEnabled();
+        $open = $breakOn ? $c->openBreak($eid) : null;
+        $first = $ev['sign_in'] ?? ($ev['late_sign_in'] ?? null);
+        $bounds = null;
+        $actions = ['sign_in' => null, 'sign_out' => null, 'break_start' => null, 'break_end' => null];
+        if (!$enabled) {
+            // record() refuses a Sign In / Out first for this; the break rules look at "breaks off" before "attendance off".
+            $actions['sign_in'] = $actions['sign_out'] = AttendanceResult::ATTENDANCE_DISABLED;
+            $actions['break_start'] = $breakOn ? BreakRules::ATTENDANCE_DISABLED : BreakRules::BREAKS_DISABLED;
+            $actions['break_end'] = $breakOn ? BreakRules::ATTENDANCE_DISABLED : BreakRules::BREAKS_DISABLED;
+        } else {
+            $actions['sign_in'] = SignInRules::check(AttendanceCommand::SIGN_IN, $this->signFacts(AttendanceCommand::SIGN_IN, $emp, $sch, $ev, true, $bounds));
+            $actions['sign_out'] = SignInRules::check(AttendanceCommand::SIGN_OUT, $this->signFacts(AttendanceCommand::SIGN_OUT, $emp, $sch, $ev, true, $unused));
+            $actions['break_start'] = $breakOn ? BreakRules::checkStart($this->breakStartFacts($eid, $sch, $ev)) : BreakRules::BREAKS_DISABLED;
+            $actions['break_end'] = BreakRules::checkResume(['enabled' => $breakOn, 'employee' => true, 'attendance_enabled' => true, 'open_break' => (bool) $open]);
+        }
+        $status = $sch ? (string) $sch->status : null;
+        return new TodayState([
+            'employee' => true, 'employee_id' => $eid, 'attendance_enabled' => $enabled, 'day' => $day, 'status' => $status,
+            'requires_sign_in' => $sch ? $c->requiresSignIn((string) $sch->status) : false,
+            'requires_location' => $sch ? $c->requiresLocation((string) $sch->status) : false,
+            'general_leave' => $sch !== null && $c->generalLeave($day),   // as signFacts(): a holiday only matters on a scheduled day
+            'face_required' => $c->faceRequired(),
+            'clock' => \WorkforceOne\Ui\ClockFace::state($ev, (bool) $open),
+            'sign_in_at' => $first ? (string) $first->event_at : null,
+            'sign_in_class' => $first ? $c->classify((string) $first->event_at, $eid) : null,
+            'sign_out_at' => isset($ev['sign_out']) ? (string) $ev['sign_out']->event_at : null,
+            'window_open' => $c->windowOpen($eid),
+            'bounds' => $c->windowBounds($eid),
+            'break_enabled' => $breakOn,
+            'actions' => $actions,
+        ]);
+    }
+
+    private function startBreakUnlocked(?object $emp): AttendanceResult
+    {
+        $c = $this->ctx;
+        $eid = (int) $emp->id;
+        $sch = $c->schedule($eid);
+        $ev = $c->events($eid);
+        $facts = $this->breakStartFacts($eid, $sch, $ev);
         $rule = BreakRules::checkStart($facts);
         if ($rule) return AttendanceResult::failure($rule);
         $now = $c->localMysql();

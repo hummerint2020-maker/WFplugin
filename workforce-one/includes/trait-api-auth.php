@@ -248,6 +248,30 @@ trait EWS_Api_Auth_Trait {
         $wpdb->insert($this->audit,['user_id'=>(int)$user_id,'action'=>$action,'entity'=>'api_device','entity_id'=>(int)$device_id,'details'=>$details,'created_at'=>current_time('mysql')]);
     }
 
+    /** The Mobile app API switch (3.31.113): off by default. */
+    private function app_api_enabled(){ return (bool)$this->option('ews_feature_app_api'); }
+
+    /**
+     * What every read endpoint of the mobile app API checks first (3.31.113). The employee is always the one of the session, so a
+     * parameter that names another is refused, not ignored. @return array<string,mixed>|null an error response, or null to go on
+     */
+    private function api_app_guard($request){
+        if(!$this->app_api_enabled())return $this->api_fail(ErrorMap::FORBIDDEN,['reason'=>'disabled']);
+        $bad=\WorkforceOne\Api\Period::identityErrors((array)$request->get_params());
+        if($bad)return $this->api_fail(ErrorMap::VALIDATION_FAILED,['fields'=>$bad]);
+        return null;
+    }
+
+    /** The flags the apps may use to show or hide screens (GET /meta and GET /me/bootstrap); the server still enforces each one. @return array<string,bool> */
+    private function api_feature_flags(){
+        return [
+            'breaks'=>$this->break_enabled(),'face_sign_in'=>$this->face_signin_enabled(),'qr_sign_in'=>(bool)$this->option('ews_presence_qr_signin'),
+            'presence_verification'=>(bool)$this->option('ews_presence_verification'),'overtime'=>(bool)$this->option('ews_feature_overtime'),
+            'tasks'=>(bool)$this->option('ews_feature_tasks'),'achievements'=>(bool)$this->option('ews_feature_achievements'),
+            'recognition'=>(bool)$this->option('ews_feature_recognition'),'my_pay'=>(bool)$this->option('ews_payroll_employee_view'),
+        ];
+    }
+
     // ------------------------------------------------------------------ GET /meta
 
     public function api_meta($request){
@@ -255,12 +279,7 @@ trait EWS_Api_Auth_Trait {
         return $this->api_ok(Meta::document([
             'site_id'=>$this->api_site_id(),'site_name'=>wp_specialchars_decode((string)get_bloginfo('name'),ENT_QUOTES),'site_url'=>home_url('/'),
             'timezone'=>wp_timezone_string(),'locale'=>get_locale(),'server_version'=>defined('EWS_VERSION')?EWS_VERSION:'',
-            'features'=>[
-                'breaks'=>$this->break_enabled(),'face_sign_in'=>$this->face_signin_enabled(),'qr_sign_in'=>(bool)$this->option('ews_presence_qr_signin'),
-                'presence_verification'=>(bool)$this->option('ews_presence_verification'),'overtime'=>(bool)$this->option('ews_feature_overtime'),
-                'tasks'=>(bool)$this->option('ews_feature_tasks'),'achievements'=>(bool)$this->option('ews_feature_achievements'),
-                'recognition'=>(bool)$this->option('ews_feature_recognition'),'my_pay'=>(bool)$this->option('ews_payroll_employee_view'),
-            ],
+            'features'=>$this->api_feature_flags(),
             'app_name'=>\WorkforceOne\Pwa\Manifest::NAME,'theme_color'=>\WorkforceOne\Pwa\Manifest::THEME_COLOR,'icon'=>$icon,
         ]));
     }
@@ -402,7 +421,8 @@ trait EWS_Api_Auth_Trait {
         return $this->api_ok(['signed_out'=>true]);
     }
 
-    public function api_me($request){
+    /** The /me document: the same for GET /me and GET /me/bootstrap. @return array<string,mixed> */
+    private function api_me_document(){
         $s=self::$api_session;$user=$s['user'];$emp=$s['employee'];
         $employee=null;
         if($emp){
@@ -417,13 +437,17 @@ trait EWS_Api_Auth_Trait {
         $roles=[];
         foreach(array_keys($this->role_defs()) as $role){ if(in_array($role,(array)$user->roles,true))$roles[]=substr($role,4); }
         if(user_can($user,'manage_options'))$roles[]='site_administrator';
-        return $this->api_ok([
+        return [
             'user'=>['name'=>(string)$user->display_name,'email'=>(string)$user->user_email,'locale'=>get_user_locale($user)],
             'employee'=>$employee,
             'roles'=>$roles,
             'permissions'=>$permissions,
             'device'=>$this->api_device_view($s,true),
-        ]);
+        ];
+    }
+
+    public function api_me($request){
+        return $this->api_ok($this->api_me_document());
     }
 
     public function api_me_devices($request){
