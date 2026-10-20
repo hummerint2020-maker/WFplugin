@@ -7491,3 +7491,9 @@ msgstr "أُغلق تلقائيًا: أصبح اليوم إجازة أو عطل�
 
 msgid "That day is before you joined: there is nothing to correct."
 msgstr "هذا اليوم قبل انضمامك: لا يوجد ما يُصحَّح."
+
+msgid "Closed automatically"
+msgstr "أُغلق تلقائيًا"
+
+msgid "The day is now a leave, a holiday or a day off, so nothing was applied. The employee was told. HR can still correct the day directly."
+msgstr "أصبح اليوم إجازة أو عطلة أو يوم راحة، فلم يُطبَّق شيء. تم إبلاغ الموظف. ويمكن للموارد البشرية تصحيح اليوم مباشرةً."

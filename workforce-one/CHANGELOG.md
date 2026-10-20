@@ -10,7 +10,9 @@
 - **Owner decisions on the review's questions:** a day off or holiday with approved overtime can be corrected (the employee was
   expected to work); a day with no schedule at all stays correctable; a day before the employee joined (the day they were added, or
   their first recorded attendance if earlier) is refused; a request whose day has since become a leave, a holiday or a day off is
-  closed when it is decided ("Closed automatically"), so a day never holds both attendance and a leave.
+  closed when it is decided ("Closed automatically", its approval request cancelled, the employee told, the approver shown why),
+  so a day never holds both attendance and a leave. Approved overtime counts only while the Overtime feature is on (as in the
+  reports); the day an employee was added counts with one day of margin (the database clock may be UTC).
 
 ## 3.31.112
 ### Faster: the two repeated queries the System health screen flagged

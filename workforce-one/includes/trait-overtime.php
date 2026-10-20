@@ -326,6 +326,7 @@ trait EWS_Overtime_Trait {
 
     /** The days an employee has approved overtime between two dates (3.31.115, attendance corrections). @return array<string,true> date => true */
     private function overtime_approved_dates($employee_id,$from,$to){
+            if(!$this->overtime_enabled())return [];   // as the reports: with Overtime off, approved rows do not count
             global $wpdb;$this->ensure_overtime_schema();
             $out=[];
             foreach((array)$wpdb->get_col($wpdb->prepare("SELECT overtime_date FROM {$wpdb->prefix}ews_overtime_requests WHERE employee_id=%d AND status='Approved' AND overtime_date BETWEEN %s AND %s",(int)$employee_id,$from,$to)) as $d)$out[(string)$d]=true;
