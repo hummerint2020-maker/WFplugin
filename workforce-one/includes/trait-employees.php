@@ -23,7 +23,38 @@ trait EWS_Employees_Trait {
         global $wpdb;
         $uid=(int)$user_id;
         if($uid<=0)return null;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE wp_user_id=%d AND active=1 LIMIT 1",$uid));
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE wp_user_id=%d AND active=1 ORDER BY id ASC LIMIT 1",$uid));
+    }
+
+    /**
+     * The names of the active employees linked to WordPress users, for many users at once (3.31.112): user id => name. A user
+     * linked to two active employees gets the lowest id, as people_employee_by_user().
+     * @param array<int,int> $user_ids
+     * @return array<int,string>
+     */
+    private function people_names_by_user(array $user_ids){
+        global $wpdb;$out=[];
+        $ids=array_values(array_unique(array_filter(array_map('intval',$user_ids))));
+        foreach(array_chunk($ids,500) as $chunk){
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT wp_user_id,name FROM {$this->employees} WHERE active=1 AND wp_user_id IN (".implode(',',array_fill(0,count($chunk),'%d')).') ORDER BY id ASC',$chunk)) as $e){
+                if(!isset($out[(int)$e->wp_user_id]))$out[(int)$e->wp_user_id]=(string)$e->name;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * id, name and WordPress user of many employees at once (3.31.112), active or not.
+     * @param array<int,int> $employee_ids
+     * @return array<int,object>
+     */
+    private function people_brief_by_ids(array $employee_ids){
+        global $wpdb;$out=[];
+        $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));
+        foreach(array_chunk($ids,500) as $chunk){
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,name,wp_user_id FROM {$this->employees} WHERE id IN (".implode(',',array_fill(0,count($chunk),'%d')).')',$chunk)) as $e)$out[(int)$e->id]=$e;
+        }
+        return $out;
     }
 
     /** The id if the employee exists and is active (as a string, like a query result), else null. */

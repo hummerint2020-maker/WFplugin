@@ -18,6 +18,16 @@ Nothing changes in any business process, permission or existing endpoint. Design
 - The employee's shift is read once per request (memoized, cleared when it is written), so 42 days cost the same queries as 7.
 - Not in this release (on purpose): the app UI, recording Sign In/Out, requests and approvals, and the refresh-token concurrency fix (a separate security release).
 
+## 3.31.112
+### Faster: the two repeated queries the System health screen flagged
+No change to what any screen shows, no new setting, no database change.
+- **System health daily rollup:** the day's rows are written in a few multi-row inserts (100 a time) instead of one insert
+  per route; a chunk that fails falls back to one row at a time, and a route seen twice in a release is written once.
+- **My requests, My approvals and wp-admin → Requests:** the approval path of every request on the page (levels, names,
+  waiting hours) is read with a handful of queries for the whole list instead of several per request. One request at a
+  time (Advances, a single card) uses the same code, so the path shown is the same.
+- The old warning about these queries on the System health screen goes away by itself within 7 days.
+
 ## 3.31.111
 ### Bug round (the list in docs/tasks/bug-review-2026-10.md)
 - **Payroll** (owner's decisions): the deduction limit now covers attendance only (absence, late, early leave); unpaid

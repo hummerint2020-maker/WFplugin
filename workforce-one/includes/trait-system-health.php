@@ -431,9 +431,30 @@ trait EWS_System_Health_Trait {
         if(!$rows)return;
         usort($rows,function($a,$b){return [$a['route'],0]<=>[$b['route'],0] ?: version_compare((string)$a['version'],(string)$b['version']);});   // older release first
         $wpdb->delete($t['daily'],['day'=>$day]);
+        // One row per route and release. A '' version is the running release; the table's unique key would refuse a second
+        // row for the same pair, so the first (older release first) is kept, as when each row was inserted on its own.
+        $out=[];
         foreach($rows as $r){
             $route=(string)$r['route'];$version=(string)$r['version'];unset($r['route'],$r['version']);
-            $wpdb->insert($t['daily'],['day'=>$day,'route'=>$route,'version'=>$version!==''?$version:substr((string)EWS_VERSION,0,20),'last_at'=>gmdate('Y-m-d H:i:s')]+array_map('intval',$r));
+            $version=$version!==''?$version:substr((string)EWS_VERSION,0,20);
+            if(isset($out[$route."\0".$version]))continue;
+            $out[$route."\0".$version]=['day'=>$day,'route'=>$route,'version'=>$version,'last_at'=>gmdate('Y-m-d H:i:s')]+array_map('intval',$r);
+        }
+        // Chunks of 100 rows in one INSERT (about 6 queries a rollup instead of about 47); a chunk the database refuses is
+        // inserted row by row, so no row is lost on either MySQL or SQLite.
+        foreach(array_chunk(array_values($out),100) as $chunk){
+            $cols=array_keys($chunk[0]);
+            $values=[];
+            foreach($chunk as $row){
+                $parts=[];
+                foreach($cols as $c)$parts[]=$wpdb->prepare(in_array($c,['day','route','version','last_at'],true)?'%s':'%d',$row[$c]);
+                $values[]='('.implode(',',$parts).')';
+            }
+            $sql="INSERT INTO {$t['daily']} (`".implode('`,`',$cols).'`) VALUES '.implode(',',$values);
+            $quiet=$wpdb->suppress_errors(true);
+            $ok=$wpdb->query($sql);
+            $wpdb->suppress_errors($quiet);
+            if($ok===false)foreach($chunk as $row)$wpdb->insert($t['daily'],$row);
         }
     }
 

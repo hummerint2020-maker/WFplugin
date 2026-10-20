@@ -81,10 +81,16 @@ trait EWS_My_Approvals_Trait {
             WHERE i.status='PENDING' AND r.status LIKE 'WAITING%%' AND (i.approver_wp_user_id=%d OR (%d=1 AND i.rerouted=1 AND i.approver_wp_user_id IS NULL) OR (%d>0 AND i.for_employee_id=%d))
             ORDER BY i.pending_since ASC,i.id ASC LIMIT 200",$uid,$admin?1:0,$away,$away));
         $out=[];
-        foreach($rows as $row){
+        $cards=[];
+        foreach($rows as $i=>$row){
             $card=$this->my_approvals_card((string)$row->entity_type,(int)$row->entity_id);
-            if(!$card)continue;
-            $path=$this->approval_path((string)$row->workflow_key,(string)$row->entity_type,(int)$row->entity_id);
+            if($card)$cards[$i]=$card;
+        }
+        $paths=$this->approval_paths(array_map(function($i)use($rows){return [(string)$rows[$i]->workflow_key,(string)$rows[$i]->entity_type,(int)$rows[$i]->entity_id];},array_keys($cards)));
+        foreach($rows as $i=>$row){
+            if(!isset($cards[$i]))continue;
+            $card=$cards[$i];
+            $path=$paths[$this->approval_request_key((string)$row->workflow_key,(string)$row->entity_type,(int)$row->entity_id)]??null;
             if(!$path)continue;
             $emp=$this->people_employee((int)$card['employee_id']);
             $mine=false;
@@ -180,9 +186,10 @@ trait EWS_My_Approvals_Trait {
         $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id),$this->advance_my_requests((int)$emp->id)):[];
         usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when']);});
         $items=array_slice($items,0,40);
+        $paths=$this->approval_paths(array_map(function($it){return $it['approval'];},$items));   // one batch, not several queries per request
         foreach($items as &$it){
             [$wk,$et,$eid]=$it['approval'];
-            $it['path']=$this->approval_path($wk,$et,$eid);
+            $it['path']=$paths[$this->approval_request_key($wk,$et,$eid)]??null;
             if(($it['note']??'')==='' && $it['path'] && $it['path']['note']!=='')$it['note']=$it['path']['note'];
         }
         unset($it);
