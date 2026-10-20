@@ -458,6 +458,23 @@ trait EWS_Approvals_Trait {
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='PENDING' ORDER BY step_order ASC LIMIT 1",(int)$approval_request_id));
     }
 
+    /**
+     * approval_current_step() for many requests with one query (3.31.112, the wp-admin Requests hub): request id => the first
+     * PENDING level (a request with none is missing from the map). Only for showing lists.
+     * @param array<int,int> $approval_request_ids
+     * @return array<int,object>
+     */
+    private function approval_current_steps(array $approval_request_ids){
+        global $wpdb;$t=$this->approval_tables();$out=[];
+        $ids=array_values(array_unique(array_filter(array_map('intval',$approval_request_ids))));
+        foreach(array_chunk($ids,500) as $chunk){
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE status='PENDING' AND approval_request_id IN (".implode(',',array_fill(0,count($chunk),'%d')).') ORDER BY approval_request_id ASC,step_order ASC',$chunk)) as $r){
+                if(!isset($out[(int)$r->approval_request_id]))$out[(int)$r->approval_request_id]=$r;
+            }
+        }
+        return $out;
+    }
+
     /** Start an approval instance and snapshot all resolved approvers. */
     private function approval_start($workflow_key,$entity_type,$entity_id,$requester_employee_id,$entity_context=[],$manage_transaction=true){
         global $wpdb;
@@ -679,12 +696,6 @@ trait EWS_Approvals_Trait {
         $u=get_userdata($uid);return $u?(string)$u->display_name:'';
     }
 
-    /**
-     * Where a request is, level by level, for My approvals and My requests (3.31.103): each level's
-     * approver and state (done / now / next / skipped and why / rejected / cancelled), which level it
-     * waits at, for how many working hours, from whom it moved up, and the reason of a rejection.
-     * @return array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null
-     */
     /** The key a request is found under in the batch helpers. */
     private function approval_request_key($workflow_key,$entity_type,$entity_id){
         return sanitize_key((string)$workflow_key).'|'.sanitize_key((string)$entity_type).'|'.(int)$entity_id;
@@ -719,7 +730,13 @@ trait EWS_Approvals_Trait {
         return $out;
     }
 
-    /** The path of one request (My requests card, Advances), or null. Same code as approval_paths(). */
+    /**
+     * Where a request is, level by level, for My approvals and My requests (3.31.103): each level's
+     * approver and state (done / now / next / skipped and why / rejected / cancelled), which level it
+     * waits at, for how many working hours, from whom it moved up, and the reason of a rejection.
+     * One request (My requests card, Advances), or null; the same code as approval_paths() (3.31.112).
+     * @return array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null
+     */
     private function approval_path($workflow_key,$entity_type,$entity_id){
         $paths=$this->approval_paths([[$workflow_key,$entity_type,$entity_id]]);
         return $paths[$this->approval_request_key($workflow_key,$entity_type,$entity_id)]??null;
@@ -730,7 +747,7 @@ trait EWS_Approvals_Trait {
      * levels, and the names of everyone on them. Same result as approval_path() for each; a request with no approval is null.
      * @param array<int,array{0:string,1:string,2:int}> $keys
      * @param string|null $now the time the waiting hours are counted to (default: now)
-     * @return array<string,array<string,mixed>|null> by approval_request_key()
+     * @return array<string,array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null> by approval_request_key()
      */
     private function approval_paths(array $keys,$now=null){
         global $wpdb;$t=$this->approval_tables();
@@ -767,35 +784,35 @@ trait EWS_Approvals_Trait {
             $ar=$found[$key];
             $rows=$by_request[(int)$ar->id]??[];
             $workflow_key=(string)$k[0];
-        $levels=count(array_filter($rows,function($r){return $r->status!=='SKIPPED';}));
-        $pos=0;$level=0;$hours=0.0;$moved='';$note='';$steps=[];
-        foreach($rows as $r){
-            $who=(int)$r->approver_wp_user_id?$name((int)$r->approver_wp_user_id):(!empty($r->rerouted)?__('Administrators','workforce-one'):'');
-            $by=$name((int)($r->acted_by_wp_user_id??0));
-            // Decided by a substitute while the approver is away (3.31.107): "Sami Ali for Mona Adel".
-            $for=(int)($r->for_employee_id??0)?$empname((int)$r->for_employee_id):'';
-            if($for!==''){
-                if($who!=='')$who=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$who,$for);
-                if($by!=='' && (int)$r->acted_by_wp_user_id!==(int)$empuser((int)$r->for_employee_id))$by=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$by,$for);
+            $levels=count(array_filter($rows,function($r){return $r->status!=='SKIPPED';}));
+            $pos=0;$level=0;$hours=0.0;$moved='';$note='';$steps=[];
+            foreach($rows as $r){
+                $who=(int)$r->approver_wp_user_id?$name((int)$r->approver_wp_user_id):(!empty($r->rerouted)?__('Administrators','workforce-one'):'');
+                $by=$name((int)($r->acted_by_wp_user_id??0));
+                // Decided by a substitute while the approver is away (3.31.107): "Sami Ali for Mona Adel".
+                $for=(int)($r->for_employee_id??0)?$empname((int)$r->for_employee_id):'';
+                if($for!==''){
+                    if($who!=='')$who=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$who,$for);
+                    if($by!=='' && (int)$r->acted_by_wp_user_id!==(int)$empuser((int)$r->for_employee_id))$by=sprintf(/* translators: 1: substitute, 2: the manager away */__('%1$s for %2$s','workforce-one'),$by,$for);
+                }
+                $when=$r->acted_at?date_i18n('D j M, H:i',strtotime((string)$r->acted_at)):'';
+                switch($r->status){
+                    case 'APPROVED': $state='done';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s approved · %2$s','workforce-one'),$by?:$who,$when);break;
+                    case 'REJECTED': $state='rejected';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s rejected · %2$s','workforce-one'),$by?:$who,$when);if((string)$r->comment!=='')$note=(string)$r->comment;break;
+                    case 'PENDING':
+                        $state='now';$hours=$r->pending_since?\WorkforceOne\Approvals\WorkingHours::between((string)$r->pending_since,$now,$days,$s['day_start'],$s['day_end']):0.0;
+                        $sub=sprintf(/* translators: %s: working hours */__('Deciding now · waiting %s working hours','workforce-one'),number_format_i18n($hours,$hours<10&&floor($hours)!=$hours?1:0));
+                        if((int)($r->escalations??0) && (int)($r->escalated_from_wp_user_id??0))$moved=$name((int)$r->escalated_from_wp_user_id);
+                        break;
+                    case 'WAITING': $state='next';$sub=__('Next','workforce-one');break;
+                    case 'CANCELLED': $state='cancelled';$sub=__('Withdrawn by the employee','workforce-one');break;
+                    default:
+                        $state='skipped';
+                        $sub=($r->skip_reason??'')==='condition'?__('Not needed for this request','workforce-one'):(($r->skip_reason??'')==='self'?__('Skipped: the approver made the request','workforce-one'):__('Skipped: nobody to decide it','workforce-one'));
+                }
+                if($r->status!=='SKIPPED'){$pos++;if($r->status==='PENDING')$level=$pos;}
+                $steps[]=['order'=>(int)$r->step_order,'state'=>$state,'label'=>$this->approval_resolver_label((string)$r->resolver_type),'who'=>$who,'sub'=>$sub];
             }
-            $when=$r->acted_at?date_i18n('D j M, H:i',strtotime((string)$r->acted_at)):'';
-            switch($r->status){
-                case 'APPROVED': $state='done';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s approved · %2$s','workforce-one'),$by?:$who,$when);break;
-                case 'REJECTED': $state='rejected';$sub=sprintf(/* translators: 1: person, 2: date and time */__('%1$s rejected · %2$s','workforce-one'),$by?:$who,$when);if((string)$r->comment!=='')$note=(string)$r->comment;break;
-                case 'PENDING':
-                    $state='now';$hours=$r->pending_since?\WorkforceOne\Approvals\WorkingHours::between((string)$r->pending_since,$now,$days,$s['day_start'],$s['day_end']):0.0;
-                    $sub=sprintf(/* translators: %s: working hours */__('Deciding now · waiting %s working hours','workforce-one'),number_format_i18n($hours,$hours<10&&floor($hours)!=$hours?1:0));
-                    if((int)($r->escalations??0) && (int)($r->escalated_from_wp_user_id??0))$moved=$name((int)$r->escalated_from_wp_user_id);
-                    break;
-                case 'WAITING': $state='next';$sub=__('Next','workforce-one');break;
-                case 'CANCELLED': $state='cancelled';$sub=__('Withdrawn by the employee','workforce-one');break;
-                default:
-                    $state='skipped';
-                    $sub=($r->skip_reason??'')==='condition'?__('Not needed for this request','workforce-one'):(($r->skip_reason??'')==='self'?__('Skipped: the approver made the request','workforce-one'):__('Skipped: nobody to decide it','workforce-one'));
-            }
-            if($r->status!=='SKIPPED'){$pos++;if($r->status==='PENDING')$level=$pos;}
-            $steps[]=['order'=>(int)$r->step_order,'state'=>$state,'label'=>$this->approval_resolver_label((string)$r->resolver_type),'who'=>$who,'sub'=>$sub];
-        }
             $wkey=(string)($ar->workflow_key??$workflow_key);
             $out[$key]=['id'=>(int)$ar->id,'workflow'=>$wkey,'status'=>(string)$ar->status,'level'=>$level,'levels'=>$levels,'hours'=>$hours,
                 'overdue'=>$level>0 && $hours>=$this->approval_overdue_hours($wkey),'moved_from'=>$moved,'note'=>$note,'steps'=>$steps];

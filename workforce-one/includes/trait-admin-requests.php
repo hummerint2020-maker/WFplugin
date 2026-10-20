@@ -58,16 +58,19 @@ trait EWS_Admin_Requests_Trait {
             if(!is_array($r)||($r['status']??'')!=='pending')continue;
             $add('face_reset',$employee_id,$employee_id,'Face Reset',$r['requested_at']??'',$r['current_note']??'Reset requested',['face_reset','face_reset_request',(int)$employee_id]);
         }
+        // The requests, their current levels and the names for the whole list at once (3.31.112).
         $found=$this->approval_find_requests(array_values(array_filter(array_column($deferred,6))));
+        $current=$this->approval_current_steps(array_map(function($ar){return (int)$ar->id;},array_values($found)));
+        $briefs=$this->people_brief_by_ids(array_column($deferred,2));
         $rows=[];
         foreach($deferred as $key=>[$type,$id,$employee_id,$title,$requested_at,$detail,$ref]){
             $employee_id=(int)$employee_id;
             if(!array_key_exists($employee_id,$names)){
-                $name=$employee_id?$this->people_name($employee_id):null;
+                $name=$employee_id&&isset($briefs[$employee_id])?$briefs[$employee_id]->name:null;
                 $names[$employee_id]=$name!==null?(string)$name:'Employee #'.$employee_id;
             }
             $ar=$ref?($found[$this->approval_request_key($ref[0],$ref[1],$ref[2])]??null):null;
-            $step=$ar?$this->approval_current_step((int)$ar->id):null;
+            $step=$ar?($current[(int)$ar->id]??null):null;
             $rows[$key]=[
                 'type'=>$type,'id'=>(int)$id,'title'=>$title,'employee'=>$names[$employee_id],'detail'=>$detail,
                 'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted)),

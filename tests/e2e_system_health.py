@@ -299,9 +299,17 @@ for($i=0;$i<40;$i++) $wpdb->insert($p.'ews_health_hourly',$row('batch:r'.$i,'3.3
 $wpdb->insert($p.'ews_health_hourly',$row('batch:dup','',1)); $wpdb->insert($p.'ews_health_hourly',$row('batch:dup',EWS_VERSION,3));""")
 ins = php("""$GLOBALS['ins']=0; add_filter('query',function($q)use($p){ if(preg_match('/^\\s*INSERT INTO `?'.$p.'ews_health_daily/i',$q))$GLOBALS['ins']++; return $q;}); delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup(); echo 'INS='.$GLOBALS['ins'];""")
 n_ins = int(re.search(r'INS=(\d+)', ins).group(1))
-dd = [x for x in rows('daily') if x['route'].startswith('batch:') and x['day'] == time.strftime('%Y-%m-%d', time.gmtime())]
+day = php("echo gmdate('Y-m-d');").strip().splitlines()[-1]
+dd = [x for x in rows('daily') if x['route'].startswith('batch:') and x['day'] == day]
 check('the rollup writes its daily rows in a few INSERTs (about 2 for 42 routes, not one per route)', 0 < n_ins <= 3, ins)
 check('...every route is there once, and the "" release duplicate keeps the first row as before', len([x for x in dd if x['route'] != 'batch:dup']) == 40 and [int(x['n']) for x in dd if x['route'] == 'batch:dup'] == [1], dd[-2:])
+r5 = [x for x in dd if x['route'] == 'batch:r5']
+check('...with the sums of the hour rows (n, ms_sum, b2)', r5 and (int(r5[0]['n']), int(r5[0]['ms_sum']), int(r5[0]['b2'])) == (2, 200, 2), r5)
+# A chunk the database refuses is written row by row: every row still arrives, once.
+fb = php("""$GLOBALS['broke']=0; add_filter('query',function($q)use($p){ if(!$GLOBALS['broke'] && preg_match('/^\\s*INSERT INTO `?'.$p.'ews_health_daily`? \\(/i',$q) && substr_count($q,'),(')>0){$GLOBALS['broke']=1; return preg_replace('/INSERT INTO `?'.$p.'ews_health_daily`?/','INSERT INTO '.$p.'ews_no_such_table',$q,1);} return $q;});
+    delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup(); echo 'BROKE='.$GLOBALS['broke'];""")
+dd2 = [x for x in rows('daily') if x['route'].startswith('batch:') and x['day'] == day]
+check('a refused chunk falls back to one row at a time: all 41 rows, none twice', 'BROKE=1' in fb and len(dd2) == 41 and len({x['route'] for x in dd2}) == 41, (fb[-40:], len(dd2)))
 php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE route LIKE 'batch:%'"); $wpdb->query("DELETE FROM {$p}ews_health_daily WHERE route LIKE 'batch:%'");""")
 
 # ---------------------------------------------------------------- switching off

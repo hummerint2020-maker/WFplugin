@@ -33,3 +33,16 @@ output drift (one shared builder, parity test); permissions unchanged (the batch
 - The old warning on the System health screen: left to age out (7 days).
 - One release for both fixes (recommended default).
 
+
+## Where the code differs, and the review (2026-10-20)
+- No separate `approval_path_build`: `approval_paths()` holds the builder and `approval_path()` is a one-key wrapper.
+- The Requests hub also reads its current levels (`approval_current_steps`) and the employees' names (`people_brief_by_ids`) for the
+  whole list, not only the requests (review finding 3).
+- Proof: the parity test compares the batch with the 3.31.111 `approval_path()` kept in `tests/fixtures/` (substitute, a level not
+  needed or skipped by self, sent to administrators, moved up, rejection note, a user with two employees, a user with none, odd-case keys,
+  hours with a fixed time), and counts queries on the pages (Requests hub and My requests, 5 against 30 leave requests). The rollup test
+  checks the sums and forces one refused chunk to prove the fallback.
+- `people_employee_by_user()` now orders by id, so "the lowest id" is guaranteed in both places (finding 5).
+- Accepted change (finding 4): when a substitute's manager has no employee row left (deleted) or no name, the label shows the substitute
+  alone ("Sami Ali"); 3.31.111 showed "Sami Ali for " with nothing after it.
+- Still per row, by the owner's decision: My approvals' own card lines (not in this release).

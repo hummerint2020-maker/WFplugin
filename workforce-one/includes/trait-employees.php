@@ -23,7 +23,7 @@ trait EWS_Employees_Trait {
         global $wpdb;
         $uid=(int)$user_id;
         if($uid<=0)return null;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE wp_user_id=%d AND active=1 LIMIT 1",$uid));
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE wp_user_id=%d AND active=1 ORDER BY id ASC LIMIT 1",$uid));
     }
 
     /**
