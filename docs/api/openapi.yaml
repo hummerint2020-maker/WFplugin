@@ -1,0 +1,2554 @@
+openapi: 3.1.0
+info:
+  title: Workforce One API
+  version: '1.0'
+  description: 'The API of the Workforce One apps (Android, iPhone). WordPress stays the backend and the admin; the apps use these routes, all
+    under /wp-json/workforce-one/v1. Every response uses one envelope: {"success","data","meta"} or {"success":false,"error":{"code","message","details"},"meta"};
+    every response is Cache-Control: no-store and carries X-WFO-Request-Id. HTTPS is required (except GET /meta). Send the access token as "Authorization:
+    Bearer ..." (or X-WFO-Authorization). Times are ISO 8601 with the site''s UTC offset; dates are the site''s calendar days. Within v1 routes
+    are only added; a breaking change gets /v2. The Web Sign In page''s Face routes (cookie + nonce) are not part of the app contract and are
+    not listed. Endpoints marked x-wfo-schema: pending exist and follow the envelope; their schemas arrive with the pull request that adds them
+    to the app contract.'
+servers:
+- url: '{site}/wp-json/workforce-one/v1'
+  variables:
+    site:
+      default: https://example.com
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: A Workforce One access token (wfo_at_...), valid 15 minutes. Also accepted in the X-WFO-Authorization header.
+  schemas:
+    Meta:
+      type: object
+      properties:
+        request_id:
+          type: string
+        server_time:
+          type: string
+          format: date-time
+        api_version:
+          type: string
+      additionalProperties: true
+      required:
+      - request_id
+      - server_time
+      - api_version
+      description: 'Present on every response. server_time is the site time with its UTC offset: count down from it, never from the phone clock.'
+    ErrorCode:
+      type: string
+      enum:
+      - ACCOUNT_NOT_LINKED
+      - ATTENDANCE_DISABLED
+      - FACE_REQUIRED
+      - GENERAL_LEAVE
+      - NOT_SCHEDULED
+      - SIGN_IN_TOO_EARLY
+      - SIGN_IN_CLOSED
+      - ALREADY_SIGNED_IN
+      - ALREADY_SIGNED_OUT
+      - NOT_SIGNED_IN
+      - ON_BREAK
+      - LOCATION_REQUIRED
+      - OUTSIDE_LOCATION
+      - LOCATION_NOT_CONFIGURED
+      - BREAKS_DISABLED
+      - BREAK_ALREADY_OPEN
+      - NO_BREAKS_LEFT
+      - NO_OPEN_BREAK
+      - IDEMPOTENCY_CONFLICT
+      - REQUEST_IN_PROGRESS
+      - RATE_LIMITED
+      - VALIDATION_FAILED
+      - NOT_FOUND
+      - FORBIDDEN
+      - INTERNAL_ERROR
+      - INVALID_CREDENTIALS
+      - ACCOUNT_DISABLED
+      - TOKEN_MISSING
+      - TOKEN_INVALID
+      - TOKEN_EXPIRED
+      - REFRESH_INVALID
+      - REFRESH_REUSED
+      - DEVICE_REVOKED
+      - HTTPS_REQUIRED
+      x-status:
+        ACCOUNT_NOT_LINKED: 403
+        ATTENDANCE_DISABLED: 403
+        FACE_REQUIRED: 409
+        GENERAL_LEAVE: 409
+        NOT_SCHEDULED: 409
+        SIGN_IN_TOO_EARLY: 409
+        SIGN_IN_CLOSED: 409
+        ALREADY_SIGNED_IN: 409
+        ALREADY_SIGNED_OUT: 409
+        NOT_SIGNED_IN: 409
+        ON_BREAK: 409
+        LOCATION_REQUIRED: 422
+        OUTSIDE_LOCATION: 422
+        LOCATION_NOT_CONFIGURED: 409
+        BREAKS_DISABLED: 403
+        BREAK_ALREADY_OPEN: 409
+        NO_BREAKS_LEFT: 409
+        NO_OPEN_BREAK: 409
+        IDEMPOTENCY_CONFLICT: 409
+        REQUEST_IN_PROGRESS: 409
+        RATE_LIMITED: 429
+        VALIDATION_FAILED: 400
+        NOT_FOUND: 404
+        FORBIDDEN: 403
+        INTERNAL_ERROR: 500
+        INVALID_CREDENTIALS: 401
+        ACCOUNT_DISABLED: 403
+        TOKEN_MISSING: 401
+        TOKEN_INVALID: 401
+        TOKEN_EXPIRED: 401
+        REFRESH_INVALID: 401
+        REFRESH_REUSED: 401
+        DEVICE_REVOKED: 401
+        HTTPS_REQUIRED: 403
+      description: Stable machine code. A code keeps its meaning within v1; new codes may be added, so treat an unknown one as a generic failure
+        and show the message.
+    Error:
+      type: object
+      required:
+      - code
+      - message
+      additionalProperties: false
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          description: Translated text for people, never for logic.
+        details:
+          type: object
+          additionalProperties: true
+    ErrorEnvelope:
+      type: object
+      required:
+      - success
+      - error
+      - meta
+      additionalProperties: false
+      properties:
+        success:
+          const: false
+        error:
+          $ref: '#/components/schemas/Error'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+        platform:
+          type: string
+          enum:
+          - android
+          - ios
+        model:
+          type: string
+        app_version:
+          type: string
+        signed_in_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        current:
+          type: boolean
+      additionalProperties: false
+      required:
+      - id
+      - platform
+      - model
+      - app_version
+      - signed_in_at
+      - last_seen_at
+      - current
+    Session:
+      type: object
+      properties:
+        token_type:
+          const: Bearer
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+        refresh_expires_in:
+          type: integer
+        device:
+          $ref: '#/components/schemas/Device'
+      additionalProperties: false
+      required:
+      - token_type
+      - access_token
+      - expires_in
+      - refresh_token
+      - refresh_expires_in
+      - device
+    MetaDocument:
+      type: object
+      properties:
+        product:
+          type: object
+          properties:
+            name:
+              type: string
+          additionalProperties: false
+          required:
+          - name
+        site:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            url:
+              type: string
+            timezone:
+              type: string
+            locale:
+              type: string
+          additionalProperties: false
+          required:
+          - id
+          - name
+          - url
+          - timezone
+          - locale
+        api:
+          type: object
+          properties:
+            version:
+              type: string
+            versions:
+              type: array
+              items:
+                type: string
+          additionalProperties: false
+          required:
+          - version
+          - versions
+        server:
+          type: object
+          properties:
+            version:
+              type: string
+          additionalProperties: false
+          required:
+          - version
+        app:
+          type: object
+          properties:
+            min_version:
+              type: string
+            recommended_version:
+              type: string
+          additionalProperties: false
+          required:
+          - min_version
+          - recommended_version
+        auth:
+          type: object
+          properties:
+            type:
+              type: string
+            https_required:
+              type: boolean
+            access_token_ttl:
+              type: integer
+          additionalProperties: false
+          required:
+          - type
+          - https_required
+          - access_token_ttl
+        features:
+          $ref: '#/components/schemas/Features'
+        branding:
+          type: object
+          properties:
+            app_name:
+              type: string
+            theme_color:
+              type: string
+            icon:
+              type:
+              - string
+              - 'null'
+          additionalProperties: false
+          required:
+          - app_name
+          - theme_color
+          - icon
+      additionalProperties: false
+      required:
+      - product
+      - site
+      - api
+      - server
+      - app
+      - auth
+      - features
+      - branding
+    Features:
+      type: object
+      properties:
+        breaks:
+          type: boolean
+        face_sign_in:
+          type: boolean
+        qr_sign_in:
+          type: boolean
+        presence_verification:
+          type: boolean
+        overtime:
+          type: boolean
+        tasks:
+          type: boolean
+        achievements:
+          type: boolean
+        recognition:
+          type: boolean
+        my_pay:
+          type: boolean
+      additionalProperties: false
+      required:
+      - breaks
+      - face_sign_in
+      - qr_sign_in
+      - presence_verification
+      - overtime
+      - tasks
+      - achievements
+      - recognition
+      - my_pay
+      description: Flags for showing or hiding screens. The server still enforces each one.
+    UserSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        locale:
+          type: string
+      additionalProperties: false
+      required:
+      - name
+      - email
+      - locale
+    EmployeeSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type:
+          - string
+          - 'null'
+        attendance_enabled:
+          type: boolean
+      additionalProperties: false
+      required:
+      - name
+      - email
+      - department
+      - attendance_enabled
+    Me:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        employee:
+          oneOf:
+          - $ref: '#/components/schemas/EmployeeSummary'
+          - type: 'null'
+        roles:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        device:
+          $ref: '#/components/schemas/Device'
+      additionalProperties: false
+      required:
+      - user
+      - employee
+      - roles
+      - permissions
+      - device
+    Screen:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        order:
+          type: integer
+      additionalProperties: false
+      required:
+      - key
+      - label
+      - order
+    Bootstrap:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        employee:
+          oneOf:
+          - $ref: '#/components/schemas/EmployeeSummary'
+          - type: 'null'
+        roles:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        device:
+          $ref: '#/components/schemas/Device'
+        features:
+          $ref: '#/components/schemas/Features'
+        screens:
+          type: array
+          items:
+            $ref: '#/components/schemas/Screen'
+        site:
+          type: object
+          properties:
+            timezone:
+              type: string
+            locale:
+              type: string
+            today:
+              type: string
+              format: date
+            working_days:
+              type: array
+              items:
+                type: integer
+          additionalProperties: false
+          required:
+          - timezone
+          - locale
+          - today
+          - working_days
+        limits:
+          type: object
+          properties:
+            schedule_max_days:
+              type: integer
+          additionalProperties: false
+          required:
+          - schedule_max_days
+      additionalProperties: false
+      required:
+      - user
+      - employee
+      - roles
+      - permissions
+      - device
+      - features
+      - screens
+      - site
+      - limits
+    Shift:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        start:
+          type: string
+        end:
+          type: string
+        overnight:
+          type: boolean
+        grace_minutes:
+          type: integer
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+      additionalProperties: false
+      required:
+      - id
+      - name
+      - start
+      - end
+      - overnight
+      - grace_minutes
+      - starts_at
+      - ends_at
+      description: 'id 0 and the name "Company Default" mean the company working hours apply. ends_at is on the next day for an overnight shift.
+        No durations are sent: a night when the clocks change is not 8 hours long.'
+    Branch:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        planned:
+          type: boolean
+      additionalProperties: false
+      required:
+      - id
+      - name
+      - planned
+    ScheduleDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        weekday:
+          type: integer
+        working_weekday:
+          type: boolean
+        status:
+          type: string
+        label:
+          type: string
+        requires_sign_in:
+          type: boolean
+        general_leave:
+          type: boolean
+        shift:
+          oneOf:
+          - $ref: '#/components/schemas/Shift'
+          - type: 'null'
+        branch:
+          oneOf:
+          - $ref: '#/components/schemas/Branch'
+          - type: 'null'
+      additionalProperties: false
+      required:
+      - date
+      - weekday
+      - working_weekday
+      - status
+      - label
+      - requires_sign_in
+      - general_leave
+      - shift
+      - branch
+    Schedule:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        timezone:
+          type: string
+        today:
+          type: string
+          format: date
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleDay'
+      additionalProperties: false
+      required:
+      - from
+      - to
+      - timezone
+      - today
+      - days
+    Action:
+      type: object
+      properties:
+        allowed:
+          type: boolean
+        reason:
+          oneOf:
+          - $ref: '#/components/schemas/ErrorCode'
+          - type: 'null'
+      additionalProperties: false
+      required:
+      - allowed
+      - reason
+    AttendanceToday:
+      type: object
+      properties:
+        today:
+          type: string
+          format: date
+        work_date:
+          type: string
+          format: date
+        carried_over:
+          type: boolean
+        timezone:
+          type: string
+        attendance_enabled:
+          type: boolean
+        day_type:
+          type: string
+          enum:
+          - working
+          - general_leave
+          - not_working
+          - attendance_disabled
+        clock:
+          type: string
+          enum:
+          - out
+          - in
+          - break
+          - done
+        schedule:
+          oneOf:
+          - type: object
+            properties:
+              status:
+                type: string
+              label:
+                type: string
+              requires_sign_in:
+                type: boolean
+              requires_location:
+                type: boolean
+            additionalProperties: false
+            required:
+            - status
+            - label
+            - requires_sign_in
+            - requires_location
+          - type: 'null'
+        shift:
+          oneOf:
+          - $ref: '#/components/schemas/Shift'
+          - type: 'null'
+        sign_in_window:
+          oneOf:
+          - type: object
+            properties:
+              opens_at:
+                type: string
+                format: date-time
+              closes_at:
+                type: string
+                format: date-time
+              open:
+                type: boolean
+            additionalProperties: false
+            required:
+            - opens_at
+            - closes_at
+            - open
+          - type: 'null'
+        branch:
+          oneOf:
+          - $ref: '#/components/schemas/Branch'
+          - type: 'null'
+        sign_in:
+          oneOf:
+          - type: object
+            properties:
+              at:
+                type: string
+                format: date-time
+              result:
+                type: string
+                enum:
+                - on_time
+                - late
+              label:
+                type: string
+            additionalProperties: false
+            required:
+            - at
+            - result
+            - label
+          - type: 'null'
+        sign_out:
+          oneOf:
+          - type: object
+            properties:
+              at:
+                type: string
+                format: date-time
+            additionalProperties: false
+            required:
+            - at
+          - type: 'null'
+        breaks:
+          type: object
+          required:
+          - enabled
+          additionalProperties: false
+          properties:
+            enabled:
+              type: boolean
+            per_day:
+              type: integer
+            duration_minutes:
+              type: integer
+            used:
+              type: integer
+            remaining:
+              type: integer
+            open:
+              oneOf:
+              - type: object
+                properties:
+                  started_at:
+                    type: string
+                    format: date-time
+                additionalProperties: false
+                required:
+                - started_at
+              - type: 'null'
+            sessions:
+              type: array
+              items:
+                type: object
+                properties:
+                  started_at:
+                    type: string
+                    format: date-time
+                  ended_at:
+                    oneOf:
+                    - type: string
+                      format: date-time
+                    - type: 'null'
+                  minutes:
+                    type:
+                    - integer
+                    - 'null'
+                additionalProperties: false
+                required:
+                - started_at
+                - ended_at
+                - minutes
+        requirements:
+          type: object
+          properties:
+            face:
+              type: boolean
+            location:
+              type: boolean
+          additionalProperties: false
+          required:
+          - face
+          - location
+        actions:
+          type: object
+          properties:
+            sign_in:
+              $ref: '#/components/schemas/Action'
+            sign_out:
+              $ref: '#/components/schemas/Action'
+            break_start:
+              $ref: '#/components/schemas/Action'
+            break_end:
+              $ref: '#/components/schemas/Action'
+          additionalProperties: false
+          required:
+          - sign_in
+          - sign_out
+          - break_start
+          - break_end
+          description: 'Hints for the buttons. The write endpoints re-check everything. reason is the error code the action would be refused with
+            right now (null = allowed); face verification is assumed done and the position inside the site: both are reported in requirements.'
+      additionalProperties: false
+      required:
+      - today
+      - work_date
+      - carried_over
+      - timezone
+      - attendance_enabled
+      - day_type
+      - clock
+      - schedule
+      - shift
+      - sign_in_window
+      - branch
+      - sign_in
+      - sign_out
+      - breaks
+      - requirements
+      - actions
+    Pending:
+      type: object
+      additionalProperties: true
+      x-wfo-schema: pending
+      description: The schema of this endpoint is documented in the pull request that makes it part of the app contract.
+paths:
+  /meta:
+    get:
+      summary: The public bootstrap document
+      description: What an app needs before anyone signs in. No authentication. Never carries counts or secrets.
+      tags:
+      - Connect
+      operationId: getmeta
+      security: []
+      responses:
+        '200':
+          description: The document.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/MetaDocument'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  product:
+                    name: Workforce One
+                  site:
+                    id: d30a576c
+                    name: Acme
+                    url: https://acme.example/
+                    timezone: Africa/Cairo
+                    locale: ar
+                  api:
+                    version: '1'
+                    versions:
+                    - '1'
+                  server:
+                    version: 3.31.111
+                  app:
+                    min_version: 1.0.0
+                    recommended_version: 1.0.0
+                  auth:
+                    type: bearer
+                    https_required: true
+                    access_token_ttl: 900
+                  features:
+                    breaks: true
+                    face_sign_in: false
+                    qr_sign_in: false
+                    presence_verification: false
+                    overtime: true
+                    tasks: false
+                    achievements: true
+                    recognition: true
+                    my_pay: false
+                  branding:
+                    app_name: Workforce One
+                    theme_color: '#0b5fff'
+                    icon: null
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /auth/login:
+    post:
+      summary: Sign in
+      description: HTTPS only. Right or wrong, existing user or not, a blocked account gets the same answer. Signing in again on the same installation
+        replaces its session.
+      tags:
+      - Auth
+      operationId: postauth_login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                device:
+                  type: object
+                  properties:
+                    installation_id:
+                      type: string
+                      pattern: ^[A-Za-z0-9._:-]{8,100}$
+                    platform:
+                      type: string
+                      enum:
+                      - android
+                      - ios
+                    model:
+                      type: string
+                    app_version:
+                      type: string
+                  additionalProperties: false
+                  required:
+                  - installation_id
+                  - platform
+                  - model
+                  - app_version
+              additionalProperties: false
+              required:
+              - username
+              - password
+              - device
+            example:
+              username: mona
+              password: ••••••••
+              device:
+                installation_id: a1b2c3d4-e5f6
+                platform: android
+                model: Pixel 8
+                app_version: 1.0.0
+      security: []
+      responses:
+        '200':
+          description: A token pair for this device.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Session'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  token_type: Bearer
+                  access_token: wfo_at_d30a576c_qHLUNKrUXi-tt9npUQrS8mlkGtMZ4IHc9OLFlmr_i7E
+                  expires_in: 900
+                  refresh_token: wfo_rt_d30a576c_Kx3vP0mYh7sQz1WnA9tR4uJb2cEoLdFgTiVyN5HqXaM
+                  refresh_expires_in: 5184000
+                  device:
+                    id: 69ba732399508836523fe8d6018f8838
+                    platform: android
+                    model: Pixel 8
+                    app_version: 1.0.0
+                    signed_in_at: '2026-10-20T08:01:00+03:00'
+                    last_seen_at: '2026-10-20T09:15:00+03:00'
+                    current: true
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: The user name or password is incorrect.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: The user name or password is incorrect.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '429':
+          description: Too many sign-in attempts. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: RATE_LIMITED
+                  message: Too many sign-in attempts. Please try again later.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '400':
+          description: Some fields are missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: VALIDATION_FAILED
+                  message: Some fields are missing or invalid.
+                  details:
+                    fields:
+                      to: before_from
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: Your account is not linked to an employee in Workforce One.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: ACCOUNT_NOT_LINKED
+                  message: Your account is not linked to an employee in Workforce One.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /auth/refresh:
+    post:
+      summary: Refresh the session
+      description: 'Exchanges a refresh token for a new pair; each refresh token is used once. Client rules: (1) only one refresh in flight per
+        device, also across app extensions and background tasks: use a shared lock or queue; (2) requests that get TOKEN_EXPIRED wait for that
+        refresh and retry once; (3) save the new refresh token before using the new access token; (4) after a network failure, retry the SAME
+        refresh token within 30 seconds; (5) on REFRESH_REUSED, REFRESH_INVALID, DEVICE_REVOKED or ACCOUNT_DISABLED wipe the tokens and show the
+        login screen; (6) refresh ahead of time, at about expires_in - 60 seconds. The server accepts a token used a second time within 30 seconds
+        as a retry; a third simultaneous use ends the whole device session (a fix that allows a few more is planned as a separate security release).'
+      tags:
+      - Auth
+      operationId: postauth_refresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              additionalProperties: false
+              required:
+              - refresh_token
+            example:
+              refresh_token: wfo_rt_d30a576c_Kx3vP0mYh7sQz1WnA9tR4uJb2cEoLdFgTiVyN5HqXaM
+      security: []
+      responses:
+        '200':
+          description: A new token pair.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Session'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  token_type: Bearer
+                  access_token: wfo_at_d30a576c_qHLUNKrUXi-tt9npUQrS8mlkGtMZ4IHc9OLFlmr_i7E
+                  expires_in: 900
+                  refresh_token: wfo_rt_d30a576c_Kx3vP0mYh7sQz1WnA9tR4uJb2cEoLdFgTiVyN5HqXaM
+                  refresh_expires_in: 5184000
+                  device:
+                    id: 69ba732399508836523fe8d6018f8838
+                    platform: android
+                    model: Pixel 8
+                    app_version: 1.0.0
+                    signed_in_at: '2026-10-20T08:01:00+03:00'
+                    last_seen_at: '2026-10-20T09:15:00+03:00'
+                    current: true
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: REFRESH_REUSED
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /auth/logout:
+    post:
+      summary: Sign out this device
+      description: Ends this device session and every token of it.
+      tags:
+      - Auth
+      operationId: postauth_logout
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Signed out.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    type: object
+                    properties:
+                      signed_out:
+                        type: boolean
+                    additionalProperties: false
+                    required:
+                    - signed_out
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  signed_out: true
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /me:
+    get:
+      summary: The signed-in user
+      description: User, employee, roles, permissions and this device. Unchanged since v1.0.
+      tags:
+      - Me
+      operationId: getme
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: The document.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Me'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  user:
+                    name: Mona Adel
+                    email: mona@example.com
+                    locale: ar
+                  employee:
+                    name: Mona Adel
+                    email: mona@example.com
+                    department: Operations
+                    attendance_enabled: true
+                  roles:
+                  - employee
+                  permissions:
+                  - view_people
+                  device:
+                    id: 69ba732399508836523fe8d6018f8838
+                    platform: android
+                    model: Pixel 8
+                    app_version: 1.0.0
+                    signed_in_at: '2026-10-20T08:01:00+03:00'
+                    last_seen_at: '2026-10-20T09:15:00+03:00'
+                    current: true
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: Your account is not linked to an employee in Workforce One.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: ACCOUNT_NOT_LINKED
+                  message: Your account is not linked to an employee in Workforce One.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /me/devices:
+    get:
+      summary: The user's signed-in devices
+      description: Only the caller's own.
+      tags:
+      - Me
+      operationId: getme_devices
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Devices, newest use first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                - id: 69ba732399508836523fe8d6018f8838
+                  platform: android
+                  model: Pixel 8
+                  app_version: 1.0.0
+                  signed_in_at: '2026-10-20T08:01:00+03:00'
+                  last_seen_at: '2026-10-20T09:15:00+03:00'
+                  current: true
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /me/devices/{id}:
+    delete:
+      summary: Sign out one of the user's devices
+      description: Only the caller's own; anyone else's is NOT_FOUND.
+      tags:
+      - Me
+      operationId: deleteme_devices_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{32}$
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Revoked.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    type: object
+                    properties:
+                      revoked:
+                        type: boolean
+                      current:
+                        type: boolean
+                    additionalProperties: false
+                    required:
+                    - revoked
+                    - current
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  revoked: true
+                  current: false
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '404':
+          description: Not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: NOT_FOUND
+                  message: Not found.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /me/bootstrap:
+    get:
+      summary: Everything the app needs after sign-in
+      description: The /me document plus the features, the screens of this user's phone menu (the same items, order and labels as the Web) and
+        facts about the site. Needs the Mobile app API switch (Feature Configuration); off, FORBIDDEN with details.reason "disabled". Labels are
+        in the site language. Parameters that name another person (employee_id, employee, user_id, user, eid) are refused with VALIDATION_FAILED.
+      tags:
+      - Mobile app
+      operationId: getme_bootstrap
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: The document.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Bootstrap'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  user:
+                    name: Mona Adel
+                    email: mona@example.com
+                    locale: ar
+                  employee:
+                    name: Mona Adel
+                    email: mona@example.com
+                    department: Operations
+                    attendance_enabled: true
+                  roles:
+                  - employee
+                  permissions:
+                  - view_people
+                  device:
+                    id: 69ba732399508836523fe8d6018f8838
+                    platform: android
+                    model: Pixel 8
+                    app_version: 1.0.0
+                    signed_in_at: '2026-10-20T08:01:00+03:00'
+                    last_seen_at: '2026-10-20T09:15:00+03:00'
+                    current: true
+                  features:
+                    breaks: true
+                    face_sign_in: false
+                    qr_sign_in: false
+                    presence_verification: false
+                    overtime: true
+                    tasks: false
+                    achievements: true
+                    recognition: true
+                    my_pay: false
+                  screens:
+                  - key: dashboard
+                    label: Dashboard
+                    order: 10
+                  - key: schedule
+                    label: Schedule
+                    order: 20
+                  - key: time
+                    label: Sign In / Out
+                    order: 30
+                  site:
+                    timezone: Africa/Cairo
+                    locale: ar
+                    today: '2026-10-20'
+                    working_days:
+                    - 0
+                    - 1
+                    - 2
+                    - 3
+                    - 4
+                  limits:
+                    schedule_max_days: 42
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: Your account is not linked to an employee in Workforce One.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: ACCOUNT_NOT_LINKED
+                  message: Your account is not linked to an employee in Workforce One.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /me/schedule:
+    get:
+      summary: My schedule over a period
+      description: 'The signed-in employee''s own days, every calendar day of the period in order: status, shift and times (ISO 8601 with the
+        site offset; an overnight shift ends the next day) and branch (only where the Web shows one). Without parameters: the Web''s current week;
+        from alone: 7 days; to alone is refused; at most 42 days, 2000-2099. An employee with no schedule gets every day "Not Set". Needs the
+        Mobile app API switch.'
+      tags:
+      - Mobile app
+      operationId: getme_schedule
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        example: '2026-10-19'
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        example: '2026-10-25'
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: The days.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Schedule'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  from: '2026-10-19'
+                  to: '2026-10-21'
+                  timezone: Africa/Cairo
+                  today: '2026-10-20'
+                  days:
+                  - date: '2026-10-19'
+                    weekday: 1
+                    working_weekday: true
+                    status: Office
+                    label: Office
+                    requires_sign_in: true
+                    general_leave: false
+                    shift:
+                      id: 88
+                      name: Night
+                      start: '22:00'
+                      end: 06:00
+                      overnight: true
+                      grace_minutes: 10
+                      starts_at: '2026-10-19T22:00:00+03:00'
+                      ends_at: '2026-10-20T06:00:00+03:00'
+                    branch:
+                      id: 3
+                      name: Nasr City
+                      planned: true
+                  - date: '2026-10-20'
+                    weekday: 2
+                    working_weekday: true
+                    status: General Leave
+                    label: General Leave
+                    requires_sign_in: false
+                    general_leave: true
+                    shift: null
+                    branch: null
+                  - date: '2026-10-21'
+                    weekday: 3
+                    working_weekday: true
+                    status: Not Set
+                    label: Not Set
+                    requires_sign_in: false
+                    general_leave: false
+                    shift: null
+                    branch: null
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '400':
+          description: Some fields are missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: VALIDATION_FAILED
+                  message: Some fields are missing or invalid.
+                  details:
+                    fields:
+                      to: before_from
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: Your account is not linked to an employee in Workforce One.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: ACCOUNT_NOT_LINKED
+                  message: Your account is not linked to an employee in Workforce One.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /attendance/today:
+    get:
+      summary: Today's attendance
+      description: 'The current work day (an overnight shift stays on the day it started until it ends), the Sign In / Out / break state and what
+        could be done now, from the same rules the Web uses. Read only: it records nothing. Poll at most once a minute; call it on resume and
+        after an action. Count down from meta.server_time. Needs the Mobile app API switch.'
+      tags:
+      - Mobile app
+      operationId: getattendance_today
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Today.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/AttendanceToday'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data:
+                  today: '2026-10-20'
+                  work_date: '2026-10-19'
+                  carried_over: true
+                  timezone: Africa/Cairo
+                  attendance_enabled: true
+                  day_type: working
+                  clock: in
+                  schedule:
+                    status: Office
+                    label: Office
+                    requires_sign_in: true
+                    requires_location: true
+                  shift:
+                    id: 88
+                    name: Night
+                    start: '22:00'
+                    end: 06:00
+                    overnight: true
+                    grace_minutes: 10
+                    starts_at: '2026-10-19T22:00:00+03:00'
+                    ends_at: '2026-10-20T06:00:00+03:00'
+                  sign_in_window:
+                    opens_at: '2026-10-19T22:00:00+03:00'
+                    closes_at: '2026-10-20T02:00:00+03:00'
+                    open: false
+                  branch:
+                    id: 3
+                    name: Nasr City
+                    planned: true
+                  sign_in:
+                    at: '2026-10-19T22:04:00+03:00'
+                    result: on_time
+                    label: On Time
+                  sign_out: null
+                  breaks:
+                    enabled: true
+                    per_day: 3
+                    duration_minutes: 30
+                    used: 1
+                    remaining: 2
+                    open: null
+                    sessions:
+                    - started_at: '2026-10-20T00:10:00+03:00'
+                      ended_at: '2026-10-20T00:35:00+03:00'
+                      minutes: 25
+                  requirements:
+                    face: false
+                    location: true
+                  actions:
+                    sign_in:
+                      allowed: false
+                      reason: SIGN_IN_CLOSED
+                    sign_out:
+                      allowed: true
+                      reason: null
+                    break_start:
+                      allowed: true
+                      reason: null
+                    break_end:
+                      allowed: false
+                      reason: NO_OPEN_BREAK
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: Your account is not linked to an employee in Workforce One.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: ACCOUNT_NOT_LINKED
+                  message: Your account is not linked to an employee in Workforce One.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /corrections/days:
+    get:
+      summary: Days that can be corrected
+      description: Attendance corrections (3.31.74). Full schema in its own PR.
+      tags:
+      - Corrections
+      operationId: getcorrections_days
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /corrections:
+    get:
+      summary: My correction requests
+      description: Full schema in its own PR.
+      tags:
+      - Corrections
+      operationId: getcorrections
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+    post:
+      summary: Ask for a correction
+      description: Full schema in its own PR.
+      tags:
+      - Corrections
+      operationId: postcorrections
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /corrections/pending:
+    get:
+      summary: Corrections waiting for my decision
+      description: Full schema in its own PR.
+      tags:
+      - Corrections
+      operationId: getcorrections_pending
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /corrections/{id}/decision:
+    post:
+      summary: Decide a correction
+      description: Full schema in its own PR.
+      tags:
+      - Corrections
+      operationId: postcorrections_id_decision
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /daily-workers/sites:
+    get:
+      summary: My sites
+      description: Daily workers (3.31.76). Full schema in its own PR.
+      tags:
+      - Daily workers
+      operationId: getdaily_workers_sites
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /daily-workers/sites/{id}/day:
+    get:
+      summary: 'Daily workers: day (read)'
+      description: Full schema in its own PR.
+      tags:
+      - Daily workers
+      operationId: getdaily_workers_sites_id_day
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+    post:
+      summary: 'Daily workers: day (write)'
+      description: Full schema in its own PR.
+      tags:
+      - Daily workers
+      operationId: postdaily_workers_sites_id_day
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /daily-workers/sites/{id}/workers:
+    post:
+      summary: 'Daily workers: workers (write)'
+      description: Full schema in its own PR.
+      tags:
+      - Daily workers
+      operationId: postdaily_workers_sites_id_workers
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+  /daily-workers/sites/{id}/payout:
+    get:
+      summary: 'Daily workers: payout (read)'
+      description: Full schema in its own PR.
+      tags:
+      - Daily workers
+      operationId: getdaily_workers_sites_id_payout
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+    post:
+      summary: 'Daily workers: payout (write)'
+      description: Full schema in its own PR.
+      tags:
+      - Daily workers
+      operationId: postdaily_workers_sites_id_payout
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      security:
+      - bearer: []
+      responses:
+        '200':
+          description: Pending schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - success
+                - data
+                - meta
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  data:
+                    $ref: '#/components/schemas/Pending'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+              example:
+                success: true
+                data: {}
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '401':
+          description: Your session is not valid. Please sign in again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: TOKEN_INVALID
+                  message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '403':
+          description: You do not have access to this.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: You do not have access to this.
+                  details:
+                    reason: disabled
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'

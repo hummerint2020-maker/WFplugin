@@ -36,6 +36,10 @@ final class Routes
             ['path' => '/me', 'methods' => 'GET', 'handler' => 'api_me', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/me/devices', 'methods' => 'GET', 'handler' => 'api_me_devices', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/me/devices/(?P<id>[a-f0-9]{32})', 'methods' => 'DELETE', 'handler' => 'api_me_device_delete', 'access' => 'token', 'kind' => 'native'],
+            // Mobile app API 1 (3.31.113): read only, off until the Mobile app API switch is on.
+            ['path' => '/me/bootstrap', 'methods' => 'GET', 'handler' => 'api_me_bootstrap', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/me/schedule', 'methods' => 'GET', 'handler' => 'api_me_schedule', 'access' => 'token', 'kind' => 'native'],
+            ['path' => '/attendance/today', 'methods' => 'GET', 'handler' => 'api_attendance_today', 'access' => 'token', 'kind' => 'native'],
             // Attendance corrections (3.31.74): the same rules as the Web (EWS_Corrections_Trait).
             ['path' => '/corrections/days', 'methods' => 'GET', 'handler' => 'api_corrections_days', 'access' => 'token', 'kind' => 'native'],
             ['path' => '/corrections', 'methods' => 'GET', 'handler' => 'api_corrections_mine', 'access' => 'token', 'kind' => 'native'],

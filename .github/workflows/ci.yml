@@ -46,6 +46,10 @@ jobs:
         run: python3 tests/check_translations.py
       - name: Module boundaries do not grow (docs/architecture/modules.md)
         run: python3 tests/check_modules.py
+      - name: API contract (OpenAPI matches the routes, error codes and examples)
+        run: |
+          python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
+          python3 tests/check_openapi.py
 
   e2e:
     name: WordPress + MySQL e2e

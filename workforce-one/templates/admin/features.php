@@ -2,7 +2,7 @@
 /**
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
- * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global)
+ * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global, app_api)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
  * @var array<string,int|float> $face           face tuning values
@@ -60,6 +60,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="offline_present" value="1">
 <input type="hidden" name="org_present" value="1">
 <input type="hidden" name="my_approvals_present" value="1">
+<input type="hidden" name="app_api_present" value="1">
 <input type="hidden" name="substitutes_present" value="1">
 <input type="hidden" name="advances_present" value="1">
 <input type="hidden" name="health_present" value="1">
@@ -90,6 +91,11 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <label><span class="wfo-field-label"><?php esc_html_e('After how many months with the company', 'workforce-one'); ?></span><input type="number" name="advance_min_service" min="0" max="120" value="<?php echo (int) $advance['min_service_months']; ?>"></label>
     <label><span class="wfo-field-label"><?php esc_html_e('Times Finance may move an instalment to the end, per advance (0 = no limit)', 'workforce-one'); ?></span><input type="number" name="advance_max_moves" min="0" max="12" value="<?php echo (int) $advance['max_moves']; ?>"></label>
     <label><input type="checkbox" name="advance_one_open" value="1" <?php checked(!empty($advance['one_open'])); ?>> <?php esc_html_e('One open advance at a time', 'workforce-one'); ?></label>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-app-api"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Mobile app API', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Lets the Android and iPhone apps read the signed-in employee’s profile and menu, their own schedule and today’s attendance. Read only: it changes no rule, permission or request, and an employee can only ever read their own data. Off, the apps get “disabled” and nothing else changes.', 'workforce-one'); ?></div></div>
+    <?php $switch('app_api_enabled', $on['app_api']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-system-health"><div class="wfo-feature-head">

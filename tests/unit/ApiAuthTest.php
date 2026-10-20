@@ -125,6 +125,8 @@ final class ApiAuthTest extends TestCase
         $this->assertSame([
             'GET /meta' => 'public', 'POST /auth/login' => 'credentials', 'POST /auth/refresh' => 'credentials', 'POST /auth/logout' => 'token',
             'GET /me' => 'token', 'GET /me/devices' => 'token', 'DELETE /me/devices/(?P<id>[a-f0-9]{32})' => 'token',
+            // 3.31.113: mobile app API 1 (docs/tasks/mobile-api-1.md), read only, token only.
+            'GET /me/bootstrap' => 'token', 'GET /me/schedule' => 'token', 'GET /attendance/today' => 'token',
             // 3.31.74: attendance corrections (docs/tasks/attendance-corrections.md), token only.
             'GET /corrections/days' => 'token', 'GET /corrections' => 'token', 'POST /corrections' => 'token', 'GET /corrections/pending' => 'token',
             'POST /corrections/(?P<id>\\d+)/decision' => 'token',
