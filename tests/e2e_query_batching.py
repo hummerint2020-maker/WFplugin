@@ -18,9 +18,10 @@ out = php("""
     $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
     foreach(['ews_approval_allow_self','ews_approval_self_rule'] as $o) delete_option($o);
     update_option('ews_working_days',[0,1,2,3,4,5,6],false);
-    $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='LEVEL_1',active=1 WHERE workflow_key IN ('vacation','overtime')");
     wp_set_current_user((int)get_user_by('login','admin')->ID);
     $o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'approval_start');$m->setAccessible(true);
+    $cw=new ReflectionMethod($o,'approval_configure_workflow');$cw->setAccessible(true);
+    foreach(['vacation','overtime'] as $wk){ $r=$cw->invoke($o,$wk,'LEVEL_1',[1=>['resolver_type'=>'SUPERVISOR','resolver_value'=>null]]); if(is_wp_error($r)){echo $r->get_error_message();exit;} }
     $n=0;
     for($i=0;$i<30;$i++){ $r=$m->invoke($o,$i%2?'vacation':'overtime',$i%2?'leave':'overtime_request',5000+$i,$eid); if(!is_wp_error($r))$n++; }
     echo $n;
