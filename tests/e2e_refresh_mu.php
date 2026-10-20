@@ -16,5 +16,5 @@ if (!empty($_SERVER['HTTP_X_E2E_FAIL_REFRESH'])) {
         return isset($match[$ews_e2e_fail]) && preg_match($match[$ews_e2e_fail], $q) ? 'SELECT broken FROM no_such_table_e2e' : $q;
     });
 }
-// X-E2E-Slow: the request waits 400 ms first, so the test can tell requests that ran at the same moment from one after another.
-if (!empty($_SERVER['HTTP_X_E2E_SLOW'])) usleep(400000);
+// X-E2E-Slow: the request waits 1 s first, so the test can tell requests that ran at the same moment from one after another.
+if (!empty($_SERVER['HTTP_X_E2E_SLOW'])) usleep(1000000);

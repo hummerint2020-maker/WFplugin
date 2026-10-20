@@ -205,13 +205,13 @@ try:
         codes = sorted(code(o)[1] for o in out)
         check('8 at the same moment: five pairs, the device ends, and the theft is in the Audit Log once (not once per refused request)',
               codes.count('ok') == 5 and device(dev)['revoked_reason'] == 'refresh_reuse' and reuses() == 1, (codes, reuses()))
-        # Each request waits 400 ms on the server: 5 one after another would take at least 2 s, together well under it.
+        # Each request waits 1 s on the server: 5 one after another would take at least 5 s; together about 1 s plus WordPress itself.
         clear()
         at, rt, dev = login()
         t0 = time.time()
         out = burst(rt, 5, headers={'X-E2E-Slow': '1'})
         took = time.time() - t0
-        check('...and the burst really runs at the same moment (5 requests of 0.4 s each in %.2f s)' % took, took < 1.6 and all(code(o) == (200, 'ok') for o in out), (took, [code(o) for o in out]))
+        check('...and the burst really runs at the same moment (5 requests of 1 s each in %.2f s; one after another would take 5 s or more)' % took, took < 3.0 and all(code(o) == (200, 'ok') for o in out), (took, [code(o) for o in out]))
         php("$wpdb->query(\"DELETE FROM {$p}ews_audit_log WHERE action='api_refresh'\");")
         clear()
         at, rt, dev = login()
