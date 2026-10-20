@@ -200,7 +200,8 @@ check('"Look at this first": a repeated query, many queries, a late job (all wit
 check('...a new PHP warning is a note', any(x['rule'] == 'new_error' and x['severity'] == 'note' for x in f))
 check('...critical before warning before note', [x['severity'] for x in f] == sorted([x['severity'] for x in f], key=lambda s: ['critical', 'warning', 'note'].index(s)))
 page = adm.req(SCREEN)[1]
-check('the screen lists them, with the pages table', 'data-finding="repeat"' in page and 'data-health-pages' in page and 'data-route="admin:ews31-payroll"' in page, ('data-finding="repeat"' in page, 'data-health-pages' in page, 'data-route="admin:ews31-payroll"' in page, sorted(rules)))
+check('the screen lists the most urgent (at most 7), with the pages table', page.count('data-finding="') == min(7, len(f)) and 'data-health-pages' in page and 'data-route="admin:ews31-payroll"' in page, (page.count('data-finding="'), len(f), 'data-health-pages' in page, 'data-route="admin:ews31-payroll"' in page))
+check('...a repeated query is on the screen when it is among the urgent ones', 'repeat' not in [x['rule'] for x in f[:7]] or 'data-finding="repeat"' in page)
 check('...the page names a route as a person reads it (the menu title), with the technical name beside it', 'Payroll' in page and 'admin:ews31-payroll' in page)
 det = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-employees'))[1]
 check('a page in detail: its charts (once there are two days) and its queries', ('<svg' in det or 'Not enough days yet' in det) and 'Queries on this page' in det)
