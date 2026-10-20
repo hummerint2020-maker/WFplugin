@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.31.114
+### Security: the app's sign-in refresh (switch, off by default)
+Design and owner decisions: `docs/tasks/refresh-race.md`. Turned on in wp-admin → Features → Mobile app API → "Safer app sign-in refresh".
+Off, the refresh works exactly as in 3.31.111.
+- **The problem it fixes:** when a phone refreshed its sign-in three or more times at the same moment (an app and its extensions, or
+  several requests waking up together), the third was taken for a stolen token and the phone was signed out; a database error
+  (a lock timeout) also signed it out.
+- **On:** within 30 seconds of its first use a refresh token is accepted up to 4 more times, each with its own new pair; a later or a
+  6th use still ends the device session and is in the Audit Log as before. Every decision is one conditional database update, so
+  requests at the same moment cannot both win. A database error answers 500 and never signs the phone out. A refresh during a logout or a
+  password change answers DEVICE_REVOKED (not a theft in the Audit Log); a disabled account answers ACCOUNT_DISABLED. New tokens that
+  could not be saved are never handed out, and the daily "api_refresh" Audit Log row is written once even for refreshes at the same moment.
+- **Database:** a new column `ews_api_tokens.grace_uses` (added on upgrade; unused while the switch is off).
+- **Contract:** `docs/api/openapi.yaml` (`/auth/refresh`): the rule above, a 500 response, and a 7th client rule (on a 500 or a network
+  failure retry the same refresh token, at most 3 times within 30 seconds; never an older one).
+- **Tests:** `tests/e2e_api_refresh_race.py`, with a second 6-worker server in CI so the refreshes really happen at the same moment.
+
 ## 3.31.113
 ### New: Mobile app API 1 (off by default)
 First step of preparing Workforce One for the Android and iPhone apps: WordPress stays the backend and the admin, the apps use the REST API.

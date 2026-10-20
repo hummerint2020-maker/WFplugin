@@ -402,7 +402,8 @@
         "api_fail",
         "api_me_document",
         "api_feature_flags",
-        "app_api_enabled"
+        "app_api_enabled",
+        "api_refresh_safe_enabled"
       ]
     },
     "health": {

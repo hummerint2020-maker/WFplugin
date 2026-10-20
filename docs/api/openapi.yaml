@@ -1033,8 +1033,12 @@ paths:
         device, also across app extensions and background tasks: use a shared lock or queue; (2) requests that get TOKEN_EXPIRED wait for that
         refresh and retry once; (3) save the new refresh token before using the new access token; (4) after a network failure, retry the SAME
         refresh token within 30 seconds; (5) on REFRESH_REUSED, REFRESH_INVALID, DEVICE_REVOKED or ACCOUNT_DISABLED wipe the tokens and show the
-        login screen; (6) refresh ahead of time, at about expires_in - 60 seconds. The server accepts a token used a second time within 30 seconds
-        as a retry; a third simultaneous use ends the whole device session (a fix that allows a few more is planned as a separate security release).'
+        login screen; (6) refresh ahead of time, at about expires_in - 60 seconds. (7) on 500 INTERNAL_ERROR or a network failure, retry the SAME
+        refresh token with a short backoff, at most 3 times within 30 seconds; never fall back to an older refresh token. The server accepts a
+        token used a second time within 30 seconds as a retry. With the site''s "Safer app sign-in refresh" switch on (3.31.114), it is accepted
+        up to 4 more times within 30 seconds of its first use (retries or simultaneous requests), a database error is 500 and never ends the session,
+        and a use after the device session ended is DEVICE_REVOKED; a later or a further use ends the whole device session (REFRESH_REUSED). With
+        the switch off, a third use within 30 seconds ends the device session.'
       tags:
       - Auth
       operationId: postauth_refresh
@@ -1103,6 +1107,21 @@ paths:
                 error:
                   code: REFRESH_REUSED
                   message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '500':
+          description: Something went wrong. Please try again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: INTERNAL_ERROR
+                  message: Something went wrong. Please try again.
                 meta:
                   request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
                   server_time: '2026-10-20T09:15:02+03:00'
