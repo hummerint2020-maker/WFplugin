@@ -52,15 +52,21 @@ def contract(name, path, method, r):
     check('%s: the response matches docs/api/openapi.yaml' % name, not problems, problems[:3])
 
 
+OPTION_NAMES_PHP = "['timezone_string','gmt_offset','ews_shifts','ews_working_days','ews_working_hours','ews_frontend_navigation','ews_branch_settings','ews_feature_app_api','ews_feature_tasks','ews_feature_overtime','ews_feature_corrections','ews_feature_breaks','ews_feature_branches','ews_feature_face_signin','ews_presence_qr_signin']"
+
+
 def backup_tables():
-    """The shared CI database keeps what earlier suites left; this suite empties these tables, so it puts the rows back at the end."""
+    """The shared CI database keeps what earlier suites left. This suite recreates emp1 (a new id) and empties these tables, so it puts the rows and options back at the end, moved to the new emp1."""
     php("""$o=[]; foreach(['ews_schedule','ews_time_logs','ews_company_calendar'] as $t) $o[$t]=$wpdb->get_results("SELECT * FROM {$p}$t",ARRAY_A);
-        file_put_contents(getenv('S').'/api_app_backup.json',wp_json_encode($o));""")
+        $o['eid']=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
+        $o['options']=[]; foreach(OPTION_NAMES as $n)$o['options'][$n]=get_option($n,'__absent__');
+        file_put_contents(getenv('S').'/api_app_backup.json',wp_json_encode($o));""".replace('OPTION_NAMES', OPTION_NAMES_PHP))
 
 
 def restore_tables():
-    php("""$f=getenv('S').'/api_app_backup.json'; $o=json_decode((string)@file_get_contents($f),true)?:[];
-        foreach(['ews_schedule','ews_time_logs','ews_company_calendar'] as $t){ $wpdb->query("DELETE FROM {$p}$t"); foreach($o[$t]??[] as $r)$wpdb->insert($p.$t,$r); }
+    php("""$f=getenv('S').'/api_app_backup.json'; $o=json_decode((string)@file_get_contents($f),true)?:[]; $new=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
+        foreach(['ews_schedule','ews_time_logs','ews_company_calendar'] as $t){ $wpdb->query("DELETE FROM {$p}$t"); foreach($o[$t]??[] as $r){ if(isset($r['employee_id'])&&(int)$r['employee_id']===(int)($o['eid']??0))$r['employee_id']=$new; $wpdb->insert($p.$t,$r); } }
+        foreach(($o['options']??[]) as $n=>$v){ if($v==='__absent__')delete_option($n); else update_option($n,$v,false); }
         @unlink($f);""")
 
 
