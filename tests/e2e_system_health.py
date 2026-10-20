@@ -184,16 +184,6 @@ dv = [x for x in rows('daily') if x['route'] == 'app:schedule' and x['day'] == t
 check('the rollup keeps one row per release in a day (the earlier release is not renamed), and twice gives the same', {'3.31.109', '3.31.110'} <= {x['version'] for x in dv}, dv)
 php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE slot=3 AND route='app:schedule' AND n=5");""")
 
-# 3.31.112: the daily rows are written in a few statements, not one INSERT per route
-php("""$h=gmdate('Y-m-d H:00:00'); $row=function($r,$v,$n)use($h){return ['route'=>$r,'hour'=>$h,'slot'=>4,'version'=>$v,'n'=>$n,'ms_sum'=>$n*100,'b2'=>$n,'last_at'=>gmdate('Y-m-d H:i:s')];};
-for($i=0;$i<40;$i++) $wpdb->insert($p.'ews_health_hourly',$row('batch:r'.$i,'3.31.111',2));
-$wpdb->insert($p.'ews_health_hourly',$row('batch:dup','',1)); $wpdb->insert($p.'ews_health_hourly',$row('batch:dup',EWS_VERSION,3));""")
-ins = php("""$GLOBALS['ins']=0; add_filter('query',function($q)use($p){ if(preg_match('/^\\s*INSERT INTO `?'.$p.'ews_health_daily/i',$q))$GLOBALS['ins']++; return $q;}); delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup(); echo 'INS='.$GLOBALS['ins'];""")
-n_ins = int(re.search(r'INS=(\d+)', ins).group(1))
-dd = [x for x in rows('daily') if x['route'].startswith('batch:') and x['day'] == time.strftime('%Y-%m-%d', time.gmtime())]
-check('the rollup writes its daily rows in a few INSERTs (about 2 for 42 routes, not one per route)', 0 < n_ins <= 3, ins)
-check('...every route is there once, and the "" release duplicate keeps the first row as before', len([x for x in dd if x['route'] != 'batch:dup']) == 40 and [int(x['n']) for x in dd if x['route'] == 'batch:dup'] == [1], dd[-2:])
-php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE route LIKE 'batch:%'"); $wpdb->query("DELETE FROM {$p}ews_health_daily WHERE route LIKE 'batch:%'");""")
 
 # ---------------------------------------------------------------- the rollup: daily rows, "Look at this first", alerts
 php("update_option('ews_health_settings',['repeat'=>2,'slow_ms'=>200,'min_runs'=>5,'cron_late_min'=>5,'queries'=>10,'email'=>0],false); wp_clear_scheduled_hook('ews_corrections_tick'); wp_schedule_single_event(time()-4*3600,'ews_corrections_tick');")
@@ -210,7 +200,7 @@ check('"Look at this first": a repeated query, many queries, a late job (all wit
 check('...a new PHP warning is a note', any(x['rule'] == 'new_error' and x['severity'] == 'note' for x in f))
 check('...critical before warning before note', [x['severity'] for x in f] == sorted([x['severity'] for x in f], key=lambda s: ['critical', 'warning', 'note'].index(s)))
 page = adm.req(SCREEN)[1]
-check('the screen lists them, with the pages table', 'data-finding="repeat"' in page and 'data-health-pages' in page and 'data-route="admin:ews31-payroll"' in page, ('data-finding="repeat"' in page, 'data-health-pages' in page, 'data-route="admin:ews31-payroll"' in page, [(x['severity'], x['rule'], x['route']) for x in f]))
+check('the screen lists them, with the pages table', 'data-finding="repeat"' in page and 'data-health-pages' in page and 'data-route="admin:ews31-payroll"' in page, ('data-finding="repeat"' in page, 'data-health-pages' in page, 'data-route="admin:ews31-payroll"' in page, sorted(rules)))
 check('...the page names a route as a person reads it (the menu title), with the technical name beside it', 'Payroll' in page and 'admin:ews31-payroll' in page)
 det = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-employees'))[1]
 check('a page in detail: its charts (once there are two days) and its queries', ('<svg' in det or 'Not enough days yet' in det) and 'Queries on this page' in det)
@@ -301,6 +291,17 @@ print('INFO time per request: off %.1f ms, on 1%% %.1f ms, on 100%% %.1f ms; pea
 check('time: the median request at 1%% is at most 1.5x the off median plus 25 ms (%.1f vs %.1f)' % (ms1, median(off_ms)), ms1 <= median(off_ms) * 1.5 + 25)
 check('...at 100%% (query detail on every request) at most 2.5x plus 40 ms (%.1f)' % ms100, ms100 <= median(off_ms) * 2.5 + 40)
 check('peak memory: at most 8 MB more at 100%% than off', median([x[3] for x in on100]) - median(off_mem) <= 8192, (median(off_mem), median([x[3] for x in on100])))
+
+# 3.31.112: the daily rows are written in a few statements, not one INSERT per route
+php("""$h=gmdate('Y-m-d H:00:00'); $row=function($r,$v,$n)use($h){return ['route'=>$r,'hour'=>$h,'slot'=>4,'version'=>$v,'n'=>$n,'ms_sum'=>$n*100,'b2'=>$n,'last_at'=>gmdate('Y-m-d H:i:s')];};
+for($i=0;$i<40;$i++) $wpdb->insert($p.'ews_health_hourly',$row('batch:r'.$i,'3.31.111',2));
+$wpdb->insert($p.'ews_health_hourly',$row('batch:dup','',1)); $wpdb->insert($p.'ews_health_hourly',$row('batch:dup',EWS_VERSION,3));""")
+ins = php("""$GLOBALS['ins']=0; add_filter('query',function($q)use($p){ if(preg_match('/^\\s*INSERT INTO `?'.$p.'ews_health_daily/i',$q))$GLOBALS['ins']++; return $q;}); delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup(); echo 'INS='.$GLOBALS['ins'];""")
+n_ins = int(re.search(r'INS=(\d+)', ins).group(1))
+dd = [x for x in rows('daily') if x['route'].startswith('batch:') and x['day'] == time.strftime('%Y-%m-%d', time.gmtime())]
+check('the rollup writes its daily rows in a few INSERTs (about 2 for 42 routes, not one per route)', 0 < n_ins <= 3, ins)
+check('...every route is there once, and the "" release duplicate keeps the first row as before', len([x for x in dd if x['route'] != 'batch:dup']) == 40 and [int(x['n']) for x in dd if x['route'] == 'batch:dup'] == [1], dd[-2:])
+php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE route LIKE 'batch:%'"); $wpdb->query("DELETE FROM {$p}ews_health_daily WHERE route LIKE 'batch:%'");""")
 
 # ---------------------------------------------------------------- switching off
 features(adm, False, 1, 90)
