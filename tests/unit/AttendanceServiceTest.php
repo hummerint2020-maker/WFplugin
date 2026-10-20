@@ -370,4 +370,67 @@ final class AttendanceServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         new AttendanceContext(['employee' => function () { return null; }]);
     }
+
+    /**
+     * 3.31.113: today() asks the same rules the recording methods ask, with the same facts. For every situation, each action it
+     * calls allowed must succeed when really done, and each it refuses must fail with the same rule code.
+     */
+    public function testTodayAnswersAsTheRecordingMethodsWould(): void
+    {
+        $in = ['id' => 1, 'event_type' => 'sign_in', 'event_at' => '2026-10-05 08:00:00', 'scheduled_status' => 'Office'];
+        $out = ['id' => 2, 'event_type' => 'sign_out', 'event_at' => '2026-10-05 16:00:00', 'scheduled_status' => 'Office'];
+        $open = ['id' => 3, 'status' => 'Open', 'start_at' => '2026-10-05 12:00:00', 'work_date' => '2026-10-05'];
+        $situations = [
+            'plain morning' => [],
+            'before the window' => ['window' => false, 'bounds' => ['start' => 2000, 'cutoff' => 3000]],
+            'window closed' => ['window' => false, 'bounds' => ['start' => 100, 'cutoff' => 500]],
+            'company holiday' => ['leave' => true],
+            'no schedule' => ['status' => null],
+            'a status that does not need Sign In' => ['status' => 'Leave'],
+            'attendance switched off for the employee' => ['enabled' => false],
+            'breaks switched off' => ['breaksOn' => false],
+            'face verification needed' => ['face' => true],
+            'signed in' => ['logs' => [$in]],
+            'signed in, on a break' => ['logs' => [$in], 'breaks' => [$open]],
+            'signed in, no breaks left' => ['logs' => [$in], 'remaining' => 0],
+            'signed out' => ['logs' => [$in, $out]],
+        ];
+        $base = $this->w;
+        foreach ($situations as $name => $change) {
+            $this->w = array_merge($base, $change);
+            $start = $this->w;
+            $actions = $this->service()->today()->get('actions');
+            $this->assertCount(4, $actions, $name);
+            $do = [
+                'sign_in' => function () { $c = $this->cmd('sign_in'); $c->faceOk = true; return $this->service()->record($c); },
+                'sign_out' => function () { return $this->service()->record($this->cmd('sign_out')); },
+                'break_start' => function () { return $this->service()->startBreak(); },
+                'break_end' => function () { return $this->service()->resumeBreak(); },
+            ];
+            foreach ($do as $action => $run) {
+                $this->w = $start;
+                $real = $run();
+                if ($actions[$action] === null) $this->assertTrue($real->ok, "$name: $action is offered, so it must succeed (" . $real->code . ')');
+                else $this->assertSame($actions[$action], $real->code, "$name: $action");
+            }
+        }
+    }
+
+    public function testTodayReadsTheDayWithoutChangingIt(): void
+    {
+        $this->w['logs'] = [['id' => 1, 'event_type' => 'late_sign_in', 'event_at' => '2026-10-05 09:30:00', 'scheduled_status' => 'Office']];
+        $before = $this->w;
+        $t = $this->service()->today();
+        $this->assertSame($before['logs'], $this->w['logs']);
+        $this->assertSame([], $this->w['locks'], 'no lock: it only reads');
+        $this->assertSame([], $this->w['audit']);
+        $this->assertTrue($t->hasEmployee());
+        $this->assertSame('in', $t->get('clock'));
+        $this->assertSame('2026-10-05', $t->get('day'));
+        $this->assertSame('2026-10-05 09:30:00', $t->get('sign_in_at'));
+        $this->assertNull($t->get('sign_out_at'));
+        $this->assertTrue($t->get('requires_location'));
+        $w = $this->w; $w['employee'] = null; $this->w = $w;
+        $this->assertFalse($this->service()->today()->hasEmployee(), 'no employee: nothing to show');
+    }
 }
