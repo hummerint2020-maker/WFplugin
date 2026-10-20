@@ -349,6 +349,17 @@ check('...the department manager cannot decide it', decide(mgr, C8, 'approve').g
 check('...the approver can', decide(hr, C8, 'approve').get('cx_done') == 'approved' and cx(C8)['status'] == 'approved')
 php("""$wf=(int)$wpdb->get_var("SELECT id FROM {$p}ews_approval_workflows WHERE workflow_key='attendance_correction'"); $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>'NONE','active'=>0],['id'=>$wf]); $wpdb->query("DELETE FROM {$p}ews_approval_workflow_steps WHERE workflow_id=".$wf);""")
 
+# ---------------------------------------------------------------- a day nobody works (3.31.115, owner decision)
+D5, D6 = day(5), day(6)
+php("""$wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date IN ('%(a)s','%(b)s')"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date IN ('%(a)s','%(b)s')");
+    foreach(['%(a)s','%(b)s'] as $d)$wpdb->insert($p.'ews_company_calendar',['event_date'=>$d,'title'=>'National Day','event_type'=>'general_leave','active'=>1]);
+    $wpdb->insert($p.'ews_time_logs',['employee_id'=>%(e)d,'user_id'=>1,'work_date'=>'%(b)s','event_type'=>'sign_in','event_at'=>'%(b)s 09:05:00','scheduled_status'=>'Office']);""" % {'a': D5, 'b': D6, 'e': E})
+tp = emp.req('/app/?ews_view=time')[1]
+check('a holiday with nothing recorded: no Correct button in "My recent days"', 'data-date="%s"' % D5 not in tp and 'National Day' in tp, re.findall(r'data-date="[^"]+"', tp)[:8])
+check('...and the request is refused: there is nothing to correct', request(emp, D5, 'day', time_in='09:00', time_out='17:00', photo=PNG).get('cx_error') == 'no_work' and request(emp, D5, 'in', time_in='09:00').get('cx_error') == 'no_work')
+check('a holiday on which the employee came in: the day can still be corrected', 'data-date="%s"' % D6 in tp)
+php("""$wpdb->query("DELETE FROM {$p}ews_company_calendar WHERE title='National Day'"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date='%s'");""" % D6)
+
 # ---------------------------------------------------------------- API routes
 routes = json.loads(emp.req('/wp-json/workforce-one/v1')[1] or '{}').get('routes', {})
 check('the API has the correction routes', all(r in routes for r in ['/workforce-one/v1/corrections', '/workforce-one/v1/corrections/days', '/workforce-one/v1/corrections/pending', '/workforce-one/v1/corrections/(?P<id>\\d+)/decision']), list(routes)[:5])

@@ -16,11 +16,18 @@ if (!defined('ABSPATH')) exit;
  *   settings    Settings\CorrectionSettings::config()
  *   pending     another request for the day is waiting          month_count   requests this month
  *   reason, has_photo
+ *   no_work     the day is a leave, a holiday or a day off (NO_WORK_RESULTS), from the day's report result
  */
 final class CorrectionRules
 {
     public const ERRORS = ['type', 'date', 'future', 'deadline', 'pending', 'reason', 'photo', 'time', 'future_time', 'has_in', 'no_in',
-        'has_out', 'has_events', 'no_event', 'order', 'same', 'limit'];
+        'has_out', 'has_events', 'no_event', 'order', 'same', 'limit', 'no_work'];
+
+    /**
+     * Days nobody is expected to sign in (the day's report result): an employee asks for no correction on one unless something was
+     * recorded that day (3.31.115, owner decision 2026-10-20: someone who came in on a holiday may still fix that day). HR may.
+     */
+    public const NO_WORK_RESULTS = ['Leave', 'Holiday', 'Off Day'];
 
     /** @param array<string,mixed> $f @return string '' or an error code from ERRORS */
     public static function check(array $f): string
@@ -34,6 +41,7 @@ final class CorrectionRules
         if ($date > (string) $f['today']) return 'future';
         if (!$hr && self::daysBetween($date, (string) $f['today']) > (int) $s['deadline_days']) return 'deadline';
         if (!$hr && !empty($f['pending'])) return 'pending';
+        if (!$hr && !empty($f['no_work']) && empty($f['in']) && empty($f['out'])) return 'no_work';   // before the reason and the photo: nothing to correct
         if (trim((string) ($f['reason'] ?? '')) === '') return 'reason';
         if (!$hr && ($s['photo'][$type] ?? 'off') === 'required' && empty($f['has_photo'])) return 'photo';
         $in = $f['in'] ?? null;
@@ -125,8 +133,9 @@ final class CorrectionRules
      * @param array<string,int|bool> $enabled  CorrectionSettings::config()['types']
      * @return string[] in CorrectionSettings::TYPES order
      */
-    public static function kinds(bool $has_in, bool $has_out, array $enabled): array
+    public static function kinds(bool $has_in, bool $has_out, array $enabled, bool $no_work = false): array
     {
+        if ($no_work && !$has_in && !$has_out) return [];   // a leave, holiday or day off with nothing recorded (3.31.115)
         $fits = ['out' => $has_in && !$has_out, 'in' => !$has_in, 'time' => $has_in || $has_out, 'day' => !$has_in && !$has_out];
         $out = [];
         foreach (['out', 'in', 'time', 'day'] as $t) if (!empty($enabled[$t]) && $fits[$t]) $out[] = $t;

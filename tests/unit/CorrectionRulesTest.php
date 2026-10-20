@@ -147,4 +147,21 @@ final class CorrectionRulesTest extends TestCase
         $this->assertSame(['out'], CorrectionRules::kinds(true, false, $forgot));
         $this->assertSame(['in'], CorrectionRules::kinds(false, false, $forgot));
     }
+
+    /** A leave, a holiday or a day off with nothing recorded (3.31.115, owner decision): no request, unless HR makes it. */
+    public function testNoRequestOnADayNobodyWorks(): void
+    {
+        $all = ['out' => 1, 'in' => 1, 'time' => 1, 'day' => 1];
+        $this->assertSame([], CorrectionRules::kinds(false, false, $all, true), 'no button on a leave day with nothing recorded');
+        $this->assertSame(['out', 'time'], CorrectionRules::kinds(true, false, $all, true), 'came in on a holiday and forgot to sign out: still offered');
+        $this->assertSame(['in', 'time'], CorrectionRules::kinds(false, true, $all, true));
+        $day = $this->f(['type' => 'day', 'in' => null, 'out' => null, 'time_in' => '09:00', 'time_out' => '17:00', 'no_work' => true]);
+        $this->assertSame('no_work', CorrectionRules::check($day), 'the server refuses it too');
+        $this->assertSame('no_work', CorrectionRules::check(['type' => 'in', 'time_in' => '09:00'] + $day));
+        $this->assertSame('', CorrectionRules::check(['source' => 'hr'] + $day), 'HR may correct any day');
+        $this->assertSame('', CorrectionRules::check($this->f(['no_work' => true])), 'a holiday with a Sign In: forgot Sign Out is allowed');
+        $this->assertSame('', CorrectionRules::check(['no_work' => false, 'has_photo' => true] + $day), 'a working day with nothing recorded: allowed as before');
+        $this->assertContains('no_work', CorrectionRules::ERRORS);
+        $this->assertSame(['Leave', 'Holiday', 'Off Day'], CorrectionRules::NO_WORK_RESULTS);
+    }
 }

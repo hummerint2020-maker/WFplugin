@@ -7482,3 +7482,6 @@ msgstr "مغلق: يبتّ فيه مدير آخر. المسؤولون يجوز �
 
 msgid "%1$s × %2$s"
 msgstr "%1$s × %2$s"
+
+msgid "This is a day off, a holiday or a leave day with nothing recorded: there is nothing to correct. Ask HR if you worked that day."
+msgstr "هذا يوم راحة أو عطلة أو يوم إجازة لم يُسجَّل فيه شيء: لا يوجد ما يُصحَّح. اطلب من الموارد البشرية إذا كنت قد عملت في هذا اليوم."

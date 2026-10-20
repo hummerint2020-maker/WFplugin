@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.115
+### Attendance corrections: no request on a day nobody works (owner decision 2026-10-20)
+- "My recent days" no longer offers **Correct** on a leave day, a public holiday or a day off when nothing was recorded that day,
+  and such a request is refused ("there is nothing to correct; ask HR if you worked that day"), from the app, the Web and the API.
+  Approving one could have put attendance and a leave on the same day.
+- A day like that **with** a Sign In or Sign Out (someone who came in on a holiday) can still be corrected as before.
+- HR in wp-admin can still correct any day.
+
 ## 3.31.112
 ### Faster: the two repeated queries the System health screen flagged
 No change to what any screen shows, no new setting, no database change.

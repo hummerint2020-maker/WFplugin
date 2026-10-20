@@ -121,8 +121,20 @@ trait EWS_Corrections_Trait {
             'in'=>$day['in']?(string)$day['in']->event_at:null,'out'=>$day['out']?(string)$day['out']->event_at:null,
             'overnight'=>!empty($h['overnight']) && $h['start']>$h['end'],'source'=>$source,'settings'=>$this->correction_settings(),
             'pending'=>$valid && (bool)$this->cx_pending_for_day((int)$emp->id,$date),'month_count'=>$valid?$this->cx_month_count((int)$emp->id,$date):0,
+            'no_work'=>$valid && $this->cx_no_work_day($emp,$date),
             'reason'=>(string)($in['reason']??''),'has_photo'=>(bool)$has_photo,
         ];
+    }
+
+    /** The employee's days as the reports see them (status, leave, holiday, events): the one way corrections read a day's result. */
+    private function cx_report_days($emp,$from,$to){
+        return $this->report_days([$emp],$from,$to,true);
+    }
+
+    /** A leave, a holiday or a day off for this employee (the day's report result, as "My recent days" shows it; 3.31.115). */
+    private function cx_no_work_day($emp,$date){
+        $days=$this->cx_report_days($emp,$date,$date);
+        return $days && in_array((string)($days[0]['result']??''),CorrectionRules::NO_WORK_RESULTS,true);
     }
 
     /** The request fields from a form or the API. @param array<string,mixed> $src */
@@ -497,6 +509,7 @@ trait EWS_Corrections_Trait {
             'no_in'=>__('There is no Sign In on this day: choose "Forgot Sign In" or "Whole day missing".','workforce-one'),
             'has_out'=>__('A Sign Out is already recorded for this day: choose "Wrong time" to change it.','workforce-one'),
             'has_events'=>__('This day already has a Sign In or Sign Out: choose another kind of correction.','workforce-one'),
+            'no_work'=>__('This is a day off, a holiday or a leave day with nothing recorded: there is nothing to correct. Ask HR if you worked that day.','workforce-one'),
             'no_event'=>__('That time is not recorded on this day.','workforce-one'),
             'order'=>__('Sign Out must be after Sign In.','workforce-one'),
             'same'=>__('That is the time already recorded.','workforce-one'),
@@ -578,7 +591,7 @@ trait EWS_Corrections_Trait {
         $reqs=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY id ASC",(int)$emp->id,$from,$today)) as $r)$reqs[$r->work_date]=$r;
         $out=[];
-        foreach(array_reverse($this->report_days([$emp],$from,$today,true)) as $d){
+        foreach(array_reverse($this->cx_report_days($emp,$from,$today)) as $d){
             $date=(string)$d['date'];
             $req=$reqs[$date]??null;
             $problem='';
@@ -586,7 +599,8 @@ trait EWS_Corrections_Trait {
             elseif($d['sign_in']!=='' && $d['sign_out']==='')$problem='no_out';
             elseif($d['sign_in']==='' && ($d['result']??'')==='Absent')$problem='absent';
             $open=$req && in_array($req->status,['pending','pending_hr'],true);
-            $kinds=CorrectionRules::kinds((string)$d['sign_in']!=='',(string)$d['sign_out']!=='',$s['types']);   // only what fits the day
+            $no_work=in_array((string)($d['result']??''),CorrectionRules::NO_WORK_RESULTS,true);
+            $kinds=CorrectionRules::kinds((string)$d['sign_in']!=='',(string)$d['sign_out']!=='',$s['types'],$no_work);   // only what fits the day
             $out[]=['date'=>$date,'in'=>(string)$d['sign_in'],'out'=>(string)$d['sign_out'],'kinds'=>$kinds,'result'=>(string)($d['result']??''),'planned'=>(string)($d['planned']??''),
                 'late'=>(int)($d['late_minutes']??0),'holiday'=>(string)($d['holiday']??''),'problem'=>$problem,'request'=>$req,'can'=>!$open,'today'=>$date===$today];
         }
