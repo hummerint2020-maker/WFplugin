@@ -15,7 +15,7 @@ Nothing changes in any business process, permission or existing endpoint. Design
 - **The employee is always the one of the token:** a parameter that names another person (`employee_id`, `employee`, `user_id`, `user`, `eid`) is refused with 400.
 - **Contract:** `docs/api/openapi.yaml` (OpenAPI 3.1: every native v1 route, full schemas and examples for the new ones, the error codes, and the client rules for
   refreshing tokens); `tests/check_openapi.py` keeps it in step with the routes and the error codes, and validates every example.
-- Known limitation: a schedule over many Office days costs about one query per day (the existing shift lookup); a follow-up can memoize it.
+- The employee's shift is read once per request (memoized, cleared when it is written), so 42 days cost the same queries as 7.
 - Not in this release (on purpose): the app UI, recording Sign In/Out, requests and approvals, and the refresh-token concurrency fix (a separate security release).
 
 ## 3.31.111
