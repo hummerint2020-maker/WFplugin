@@ -7482,3 +7482,9 @@ msgstr "مغلق: يبتّ فيه مدير آخر. المسؤولون يجوز �
 
 msgid "%1$s × %2$s"
 msgstr "%1$s × %2$s"
+
+msgid "Mobile app API"
+msgstr "واجهة تطبيق الموبايل"
+
+msgid "Lets the Android and iPhone apps read the signed-in employee’s profile and menu, their own schedule and today’s attendance. Read only: it changes no rule, permission or request, and an employee can only ever read their own data. Off, the apps get “disabled” and nothing else changes."
+msgstr "تتيح لتطبيقي أندرويد وآيفون قراءة ملف الموظف المسجّل دخوله وقائمته وجدوله الخاص وحضور اليوم. للقراءة فقط: لا تغيّر أي قاعدة أو صلاحية أو طلب، ولا يقرأ الموظف إلا بياناته هو. عند الإيقاف تردّ التطبيقات بـ «معطّلة» ولا يتغيّر شيء آخر."

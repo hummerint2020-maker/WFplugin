@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.113
+### New: Mobile app API 1 (off by default)
+First step of preparing Workforce One for the Android and iPhone apps: WordPress stays the backend and the admin, the apps use the REST API.
+Nothing changes in any business process, permission or existing endpoint. Design and owner decisions: `docs/tasks/mobile-api-1.md`.
+- **Switch:** Feature Configuration → Mobile app API (off by default). Off, the three new routes answer 403 `FORBIDDEN` with `details.reason: "disabled"`;
+  `/meta`, `/me`, sign-in and the Web are unchanged.
+- **`GET /me/bootstrap`:** the `/me` document (unchanged) plus the features (the same flags as `/meta`), the screens of the user's phone menu (the same
+  items, order and labels as the Web's View Navigation, without links or badge counts) and facts about the site (time zone, today, working days).
+- **`GET /me/schedule?from=&to=`:** the signed-in employee's own days: status, shift and times (ISO 8601 with the site's offset; an overnight shift ends the
+  next day; shift history applies on every date) and branch (only where the Web shows one). Default: the Web's current week; at most 42 days.
+- **`GET /attendance/today`:** the current work day (an overnight shift stays on the day it started), the Sign In / Out / break state and what could be done now.
+  Built by `AttendanceService::today()`, which asks the same rules with the same facts as recording (shared fact builders), so the two cannot drift apart.
+- **The employee is always the one of the token:** a parameter that names another person (`employee_id`, `employee`, `user_id`, `user`, `eid`) is refused with 400.
+- **Contract:** `docs/api/openapi.yaml` (OpenAPI 3.1: every native v1 route, full schemas and examples for the new ones, the error codes, and the client rules for
+  refreshing tokens); `tests/check_openapi.py` keeps it in step with the routes and the error codes, and validates every example.
+- Known limitation: a schedule over many Office days costs about one query per day (the existing shift lookup); a follow-up can memoize it.
+- Not in this release (on purpose): the app UI, recording Sign In/Out, requests and approvals, and the refresh-token concurrency fix (a separate security release).
+
 ## 3.31.111
 ### Bug round (the list in docs/tasks/bug-review-2026-10.md)
 - **Payroll** (owner's decisions): the deduction limit now covers attendance only (absence, late, early leave); unpaid
