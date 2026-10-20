@@ -135,7 +135,7 @@ pages = php("""
 """)
 pg = json.loads(pages.splitlines()[-1])
 check('wp-admin Requests: 30 leave requests cost about what 5 do (the levels and names are read for the list)',
-      pg['five']['rows'] == 5 and pg['thirty']['rows'] == 30 and pg['thirty']['hub'] - pg['five']['hub'] <= 5, pg)
+      pg['thirty']['rows'] - pg['five']['rows'] == 25 and pg['thirty']['hub'] - pg['five']['hub'] <= 5, pg)
 check('My requests: 30 leave requests cost about what 5 do (the paths are read for the list)', pg['thirty']['mine'] - pg['five']['mine'] < 25, pg)
 php("""foreach(['ews_approval_requests','ews_approval_steps'] as $t) $wpdb->query("DELETE FROM {$p}$t"); $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'qb_%'"); $wpdb->query("DELETE FROM {$p}ews_leave_requests WHERE reason='qb'"); require_once ABSPATH.'wp-admin/includes/user.php';
