@@ -433,11 +433,19 @@ trait EWS_Api_Auth_Trait {
         $status=Tokens::refreshStatus(['expires_at'=>$this->api_unix($row['expires_at']),'used_at'=>$row['used_at'],'revoked_at'=>$row['revoked_at'],'device_revoked_at'=>$row['device_revoked_at'],'session_expires_at'=>$this->api_unix($row['session_expires_at'])],$now);
         if($status===Tokens::DEVICE_REVOKED)return $this->api_fail(ErrorMap::DEVICE_REVOKED);
         if($status!==Tokens::OK && $status!==Tokens::USED)return $this->api_fail(ErrorMap::REFRESH_INVALID);
-        // The account is checked for a used token too: a disabled account ends as ACCOUNT_DISABLED, not as a reuse.
+        // The account is checked for a used token too: a disabled account ends as ACCOUNT_DISABLED, not as a reuse. A refusal that came
+        // from a database error (the user or employee could not be read) is 500 and ends nothing.
+        $wpdb->last_error='';
         $user=get_userdata((int)$row['user_id']);
-        if(!$user){$this->api_revoke_device((int)$row['device_id'],'user_deleted');return $this->api_fail(ErrorMap::REFRESH_INVALID);}
+        if(!$user){
+            if($wpdb->last_error!=='')return $this->api_internal_error();
+            $this->api_revoke_device((int)$row['device_id'],'user_deleted');return $this->api_fail(ErrorMap::REFRESH_INVALID);
+        }
         [$gate]=$this->api_account_gate($user);
-        if($gate!=='ok'){$this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID);return $this->api_fail($gate);}
+        if($gate!=='ok'){
+            if($wpdb->last_error!=='')return $this->api_internal_error();
+            $this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID);return $this->api_fail($gate);
+        }
         if($status===Tokens::OK){
             $used=$wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET used_at=%s WHERE id=%d AND used_at IS NULL AND revoked_at IS NULL",$this->api_utc($now),(int)$row['id']));
             if($used===false)return $this->api_internal_error();
@@ -461,7 +469,7 @@ trait EWS_Api_Auth_Trait {
         $state=$wpdb->get_row($wpdb->prepare("SELECT d.revoked_at device_revoked_at FROM {$t['tokens']} k JOIN {$t['devices']} d ON d.id=k.device_id WHERE k.id=%d",(int)$row['id']),ARRAY_A);
         if(!$state)return $this->api_internal_error();
         if(!empty($state['device_revoked_at']))return $this->api_fail(ErrorMap::DEVICE_REVOKED);
-        return $this->api_refresh_reused($row);
+        return $this->api_refresh_reused($row,true);
     }
 
     private function api_internal_error(){
@@ -469,9 +477,10 @@ trait EWS_Api_Auth_Trait {
     }
 
     /** A refresh token used twice: it may have been stolen. The whole device session ends. */
-    private function api_refresh_reused(array $row){
-        $this->api_revoke_device((int)$row['device_id'],'refresh_reuse');
-        $this->api_audit((int)$row['user_id'],'api_refresh_reuse',(int)$row['device_id'],'A refresh token was used again: the device session was ended / ip='.$this->api_client_ip());
+    private function api_refresh_reused(array $row,$safe=false){
+        $ended=$this->api_revoke_device((int)$row['device_id'],'refresh_reuse');
+        // With the refresh switch on, only the request that really ended the session writes the Audit Log row (a burst writes one).
+        if(!$safe || $ended)$this->api_audit((int)$row['user_id'],'api_refresh_reuse',(int)$row['device_id'],'A refresh token was used again: the device session was ended / ip='.$this->api_client_ip());
         return $this->api_fail(ErrorMap::REFRESH_REUSED);
     }
 

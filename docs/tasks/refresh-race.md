@@ -137,3 +137,16 @@ account's reused token. Server clock skew. The multi-worker CI server is new (se
 4. Audit grace uses: no row; the count stays on the token.
 5. Order: the mobile PR (3.31.113) first; this release is built on `claude/mobile-api-1` and updates `docs/api/openapi.yaml` in the same PR.
 6-8. Not asked, defaults kept: the gate before the grace too, sibling chains left, version 3.31.114.
+
+## Where the code differs from this design, and the review (2026-10-20)
+- Behind the owner's switch: `api_auth_refresh()` hands over to `api_auth_refresh_safe()` when "Safer app sign-in refresh" is on; the
+  3.31.111 code below that line is untouched, so off is the old behaviour (`e2e_api_auth.py` unchanged and green).
+- With the switch on, `api_refresh_issue()` also answers 500 when the device row is missing.
+- Review fixes: a database error while reading the user or the employee is 500 and ends nothing (it used to read as "not linked" and
+  revoke the device); a burst of 7 or more writes the theft to the Audit Log once (only the request that really ended the session);
+  the 20 s retry check is written in one step (the 29 s check could miss the window by a second); the test cleans up in `finally`; the
+  burst is proven to overlap (each request waits 0.4 s on the server: 5 together finish in about 1 s, one after another would take 2 s).
+- Accepted (review finding 4): when the new pair cannot be saved and the app retries after more than 30 s, the device ends as a reuse;
+  client rule (7) asks for the retry within 30 s.
+- The schema target moves to 3.31.114 even while the switch is off (the column is harmless); a site whose database user cannot ALTER
+  tables shows the existing "database update did not finish" notice, as at every schema bump.
