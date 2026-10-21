@@ -99,6 +99,33 @@ trait EWS_Shift_History_Trait {
         self::$ews_shift_versions_cache=null;self::$ews_working_hours_cache=[];self::$ews_shift_for_employee_cache=[];self::$ews_shifts_cache=null;
     }
 
+    /**
+     * Before new times are saved from $from (3.31.116): record the times the shift counts with now ($live, the option) where the history
+     * would otherwise lose them, so the days before $from keep exactly what they are counted with today (ShiftPeriods::settle).
+     * @param array<string,mixed> $live @return string the settle action (beginning | rewrite | none | later)
+     */
+    private function shift_version_settle($shift_id,$from,array $live){
+        $all=$this->shift_versions_all();
+        $do=ShiftPeriods::settle($all[(int)$shift_id]??[],(string)$from,$live);
+        if($do['action']==='beginning')$this->shift_version_insert($shift_id,ShiftPeriods::BEGINNING,$live);
+        elseif($do['action']==='rewrite'){
+            global $wpdb;$t=$this->shift_history_tables();
+            // Only the times: the row keeps its id, its day and who made it.
+            $wpdb->update($t['versions'],['start_time'=>(string)$live['start'],'end_time'=>(string)$live['end'],'grace'=>max(0,min(180,(int)($live['grace']??10))),
+                'sign_in_cutoff_minutes'=>max(0,min(1440,(int)($live['sign_in_cutoff_minutes']??240))),'overnight'=>!empty($live['overnight'])?1:0],
+                ['shift_id'=>(int)$shift_id,'from_date'=>(string)$do['from']]);
+            self::$ews_shift_versions_cache=null;self::$ews_working_hours_cache=[];self::$ews_shift_for_employee_cache=[];self::$ews_shifts_cache=null;
+        }
+        return $do['action'];
+    }
+
+    /** A later dated change already saved for this shift (3.31.116: saving times from an earlier day is refused). @return string|null its day */
+    private function shift_version_later($shift_id,$from){
+        $all=$this->shift_versions_all();
+        $do=ShiftPeriods::settle($all[(int)$shift_id]??[],(string)$from,[]);
+        return $do['action']==='later'?(string)$do['from']:null;
+    }
+
     /** Every shift's dated times. @return array<int,list<array<string,mixed>>> shift id => versions */
     private function shift_versions_all(){
         if(self::$ews_shift_versions_cache!==null)return self::$ews_shift_versions_cache;
@@ -253,7 +280,7 @@ trait EWS_Shift_History_Trait {
             $id=(int)$s['id'];
             if(!isset($old[$id])){$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$s);continue;}   // a new shift: its times from the start
             if(!ShiftPeriods::timesChanged($old[$id],$s))continue;
-            if(!$this->shift_times_on($id,ShiftPeriods::BEGINNING))$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$old[$id]);
+            $this->shift_version_settle($id,$from,$old[$id]);   // the days before $from keep what they count with now (3.31.116)
             $this->shift_version_insert($id,$from,$s);$n++;
         }
         return $n;

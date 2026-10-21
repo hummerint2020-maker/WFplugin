@@ -312,6 +312,7 @@ trait EWS_Advances_Trait {
     /**
      * A closed month takes the instalments that are on its payslips (the ids the lines carry). Inside the
      * close transaction. @param array<int,array{employee:object,pay:array<string,mixed>}> $people
+     * @return true|string|false true when every one was taken by this run, 'changed' when another month took one meanwhile, false on a database error
      */
     private function advance_mark_taken($run_id,array $people){
         global $wpdb;$t=$this->advances_tables();
@@ -323,13 +324,16 @@ trait EWS_Advances_Trait {
         $take=array_values(array_unique(array_filter($take)));
         if(!$take)return true;
         $ph=implode(',',array_fill(0,count($take),'%d'));
-        return $wpdb->query($wpdb->prepare("UPDATE {$t['instalments']} SET taken_run_id=%d WHERE taken_run_id=0 AND id IN ($ph)",array_merge([(int)$run_id],$take)))!==false;
+        $n=$wpdb->query($wpdb->prepare("UPDATE {$t['instalments']} SET taken_run_id=%d WHERE taken_run_id=0 AND id IN ($ph)",array_merge([(int)$run_id],$take)));
+        if($n===false)return false;
+        // Every instalment on the payslips must be taken by this run; fewer means another month took one meanwhile (3.31.116).
+        return (int)$n===count($take)?true:'changed';
     }
 
-    /** Reopening a month gives its instalments back. */
+    /** Reopening a month gives its instalments back. @return int|false rows changed (any number), false on a database error */
     private function advance_release_run($run_id){
         global $wpdb;$t=$this->advances_tables();
-        $wpdb->query($wpdb->prepare("UPDATE {$t['instalments']} SET taken_run_id=0 WHERE taken_run_id=%d",(int)$run_id));
+        return $wpdb->query($wpdb->prepare("UPDATE {$t['instalments']} SET taken_run_id=0 WHERE taken_run_id=%d",(int)$run_id));
     }
 
     /** What an employee still owes, for the warning when they are made inactive. */

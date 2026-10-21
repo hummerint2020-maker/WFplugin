@@ -91,3 +91,8 @@ value for the newest row.
 - Q1: past grace/overnight changes made since 3.31.108 — **no automatic repair**; CHANGELOG explains the two-save fix.
 - Q2: saving times from a day before a change already saved for later — **refuse** ("New times are already saved from <date>").
 - Q3: wait before `busy` — **20 seconds**.
+
+## Owner's answers (2026-10-21)
+- Q1: no automatic repair; the CHANGELOG explains the two dated saves for HR who know the day.
+- Q2: refuse (`times_later`), for the company hours and for a shift (explained with an example first).
+- Q3: 20 seconds.

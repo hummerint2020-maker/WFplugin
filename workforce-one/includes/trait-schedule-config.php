@@ -48,24 +48,32 @@ trait EWS_Schedule_Config_Trait {
         $start=sanitize_text_field(wp_unslash($_POST['work_start']??''));
         $end=sanitize_text_field(wp_unslash($_POST['work_end']??''));
         $overnight=!empty($_POST['allow_overnight_shift']);
-        // Validate first so a refused change saves nothing.
+        $grace=ConfigRules::graceMinutes($_POST['grace_period']??10);
+        $absent=isset($_POST['absent_after'])?ConfigRules::absentAfterMinutes($_POST['absent_after']):null;
+        // Every check first, so a refused change saves nothing (3.31.116: grace and overnight were saved before the day was checked).
         if($error=ConfigRules::hoursError($start,$end,$overnight))$this->schedule_config_redirect(['schedule_error'=>$error]);
-        update_option('ews_allow_overnight_shift',$overnight?1:0,false);
-        update_option('ews_grace_period',ConfigRules::graceMinutes($_POST['grace_period']??10),false);
-        if(isset($_POST['absent_after']))update_option('ews_absent_after_minutes',ConfigRules::absentAfterMinutes($_POST['absent_after']),false);
         // The new times count from a day (today by default); the days before keep the old ones (3.31.108).
         $from=$this->shift_times_from();
         if($from===null)$this->schedule_config_redirect(['schedule_error'=>'times_from']);
-        $before=$this->shift_times_on(0,$from)?:$this->company_hours_now();
-        $result=$this->working_hours_save($start,$end,$end);
-        if(is_wp_error($result))$this->schedule_config_redirect(['schedule_error'=>'hours_invalid']);
-        $after=['start'=>$start,'end'=>$end,'grace'=>ConfigRules::graceMinutes($_POST['grace_period']??10),'sign_in_cutoff_minutes'=>240,'overnight'=>$overnight?1:0];
-        if(\WorkforceOne\Schedule\ShiftPeriods::timesChanged($before,$after)){
-            if(!$this->shift_times_on(0,\WorkforceOne\Schedule\ShiftPeriods::BEGINNING))$this->shift_version_insert(0,\WorkforceOne\Schedule\ShiftPeriods::BEGINNING,$before);
+        // Read before any write: what the days before $from count with now.
+        $live=$this->company_hours_now();
+        $before=$this->shift_times_on(0,$from)?:$live;
+        $after=['start'=>$start,'end'=>$end,'grace'=>$grace,'sign_in_cutoff_minutes'=>240,'overnight'=>$overnight?1:0];
+        $changed=\WorkforceOne\Schedule\ShiftPeriods::timesChanged($before,$after);
+        // New times from a day before a change already saved for later would overwrite it (owner decision 2026-10-21: refused).
+        if($changed && $this->shift_version_later(0,$from)!==null)$this->schedule_config_redirect(['schedule_error'=>'times_later']);
+        // The dated versions first, then the options: if an option write fails, nothing counts differently.
+        if($changed){
+            $this->shift_version_settle(0,$from,$live);
             $this->shift_version_insert(0,$from,$after);
         }
+        $result=$this->working_hours_save($start,$end,$end);
+        if(is_wp_error($result))$this->schedule_config_redirect(['schedule_error'=>'hours_invalid']);
+        update_option('ews_allow_overnight_shift',$overnight?1:0,false);
+        update_option('ews_grace_period',$grace,false);
+        if($absent!==null)update_option('ews_absent_after_minutes',$absent,false);
         $this->invalidate_working_hours_runtime_cache();
-        $this->audit('working_hours_update','settings',0,$start.' - '.$end);
+        $this->audit('working_hours_update','settings',0,$start.' - '.$end.' · grace '.$grace.' · overnight '.($overnight?'on':'off').($changed?' · from '.$from:''));
         $this->schedule_config_redirect(['schedule_notice'=>'hours_saved']);
     }
 
@@ -89,6 +97,12 @@ trait EWS_Schedule_Config_Trait {
         if($error)$this->schedule_config_redirect(['schedule_error'=>$error]);
         foreach($clean as &$shift)$shift['name']=sanitize_text_field($shift['name']);
         unset($shift);
+        // New times from a day before a change already saved for later would overwrite it (owner decision 2026-10-21: refused).
+        $old=[];foreach($before as $b)$old[(int)$b['id']]=$b;
+        foreach($clean as $c){
+            $id=(int)$c['id'];
+            if(isset($old[$id]) && \WorkforceOne\Schedule\ShiftPeriods::timesChanged($old[$id],$c) && $this->shift_version_later($id,$from)!==null)$this->schedule_config_redirect(['schedule_error'=>'times_later']);
+        }
         update_option('ews_shifts',$clean,false);
         // Shifts whose times changed get them from $from; the days before keep the old ones (3.31.108).
         $changed=$this->shift_versions_record($before,$clean,$from);
