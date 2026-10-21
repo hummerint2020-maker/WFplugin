@@ -7507,3 +7507,6 @@ msgstr "تتيح لتطبيقي أندرويد وآيفون قراءة ملف ا
 
 msgid "Safer app sign-in refresh: a phone that refreshes its sign-in several times at once, or retries, stays signed in (up to 4 more times within 30 seconds); a database error no longer signs it out. Off: as before."
 msgstr "تجديد أكثر أمانًا لدخول التطبيق: الهاتف الذي يجدّد دخوله أكثر من مرة في اللحظة نفسها، أو يعيد المحاولة، يبقى مسجّلًا (حتى 4 مرات إضافية خلال 30 ثانية)، وخطأ قاعدة البيانات لم يعد يُخرجه. عند الإيقاف: كما كان."
+
+msgid "It could not be saved; nothing was changed. Please try again."
+msgstr "تعذّر الحفظ، ولم يتغيّر شيء. حاول مرة أخرى."

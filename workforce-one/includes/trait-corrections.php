@@ -146,14 +146,15 @@ trait EWS_Corrections_Trait {
         return $this->report_days([$emp],$from,$to,true);
     }
 
-    /** A leave, a holiday or a day off for this employee (the day's report result, as "My recent days" shows it; 3.31.115). */
+    /** A leave, a holiday or a day off for this employee (3.31.115); a leave whatever overtime that day (3.31.117, CorrectionRules::noWork). */
     private function cx_no_work_day($emp,$date){
-        // Approved overtime that day: the employee was expected to work, so the day can be corrected (owner decision 2026-10-20).
-        if($this->overtime_approved_dates((int)$emp->id,$date,$date))return false;
-        // A weekly day off has no report row when nothing was recorded (report_days skips it), so it is asked first.
-        if(!$this->is_working_day($date))return true;
-        $days=$this->cx_report_days($emp,$date,$date);
-        return $days && in_array((string)($days[0]['result']??''),CorrectionRules::NO_WORK_RESULTS,true);
+        $leave=isset($this->schedule_leave_dates((int)$emp->id,$date,$date)[$date]);
+        $overtime=(bool)$this->overtime_approved_dates((int)$emp->id,$date,$date);
+        $working=$this->is_working_day($date);
+        // The report is read only when it decides (a working day with no leave and no overtime).
+        $result='';
+        if(!$leave && !$overtime && $working){$days=$this->cx_report_days($emp,$date,$date);$result=(string)($days[0]['result']??'');}
+        return CorrectionRules::noWork($leave,$overtime,$working,$result);
     }
 
     /** The request fields from a form or the API. @param array<string,mixed> $src */
@@ -389,13 +390,39 @@ trait EWS_Corrections_Trait {
         return !$day['in'] && !$day['out'] && $this->cx_no_work_day($emp,(string)$c->work_date);
     }
 
-    /** Closes such a request: its approval request is cancelled, the employee is told why (as a rejection). @return string closed or an error */
+    /**
+     * Closes such a request: rejected with the reason, its approval request cancelled if still open, the employee told. One transaction,
+     * the request first (3.31.117): a decision made at the same moment wins and leaves the approval request as it is.
+     * @return string closed | done | approval | save
+     */
     private function cx_close($c){
-        $this->approval_close('attendance_correction','attendance_correction',(int)$c->id);
-        $r=$this->cx_finalize((int)$c->id,false,__('Closed automatically: the day is now a leave, a holiday or a day off.','workforce-one'));
-        if($r!=='rejected')return $r;
+        global $wpdb;
+        $note=__('Closed automatically: the day is now a leave, a holiday or a day off.','workforce-one');
+        if($wpdb->query('START TRANSACTION')===false)return 'save';
+        $ok=$this->cx_mark_rejected($c,$note);
+        if($ok===false){$wpdb->query('ROLLBACK');return 'save';}
+        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
+        $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$c->id,true);
+        if($engine==='moved'){$wpdb->query('ROLLBACK');return 'approval';}   // decided by an approver meanwhile: nothing changed, try again
+        if($engine===false){$wpdb->query('ROLLBACK');return 'save';}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+        $this->cx_after_rejected($c,$note);
         $this->audit('correction_closed','employee',(int)$c->employee_id,$c->employee_name.' '.$c->work_date.': the day is now a leave, a holiday or a day off');
         return 'closed';
+    }
+
+    /** The request rejected, if it is still as read. @return int|false the rows changed */
+    private function cx_mark_rejected($c,$note){
+        global $wpdb;
+        return $wpdb->update($this->cx_table(),['status'=>'rejected','decided_by'=>get_current_user_id(),'decided_at'=>current_time('mysql'),'decision_note'=>mb_substr((string)$note,0,1000)],['id'=>(int)$c->id,'status'=>$c->status],['%s','%d','%s','%s'],['%d','%s']);
+    }
+
+    /** After a rejection: the Audit Log and the employee. */
+    private function cx_after_rejected($c,$note){
+        $this->audit('correction_rejected','employee',(int)$c->employee_id,$c->employee_name.' '.$c->work_date.': '.$this->cx_change_text($c,'en').' — '.$note);
+        if((int)$c->employee_user_id)$this->notify((int)$c->employee_user_id,'correction',__('Correction rejected','workforce-one'),
+            /* translators: 1: day, 2: the manager's note */
+            sprintf(__('Your correction for %1$s was rejected: %2$s','workforce-one'),$this->cx_day_label((string)$c->work_date),$note),['entity_id'=>(int)$c->id,'url'=>add_query_arg('ews_view','corrections',$this->app_home_url())]);
     }
 
     /**
@@ -411,12 +438,8 @@ trait EWS_Corrections_Trait {
         if(!$emp)return 'employee';
         $now=current_time('mysql');
         if(!$approve){
-            $ok=$wpdb->update($this->cx_table(),['status'=>'rejected','decided_by'=>get_current_user_id(),'decided_at'=>$now,'decision_note'=>mb_substr($note,0,1000)],['id'=>(int)$id,'status'=>$c->status],['%s','%d','%s','%s'],['%d','%s']);
-            if($ok!==1)return 'done';
-            $this->audit('correction_rejected','employee',(int)$c->employee_id,$c->employee_name.' '.$c->work_date.': '.$this->cx_change_text($c,'en').' — '.$note);
-            if((int)$c->employee_user_id)$this->notify((int)$c->employee_user_id,'correction',__('Correction rejected','workforce-one'),
-                /* translators: 1: day, 2: the manager's note */
-                sprintf(__('Your correction for %1$s was rejected: %2$s','workforce-one'),$this->cx_day_label((string)$c->work_date),$note),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','corrections',$this->app_home_url())]);
+            if($this->cx_mark_rejected($c,$note)!==1)return 'done';
+            $this->cx_after_rejected($c,$note);
             return 'rejected';
         }
         // The day as it is now must still accept the correction.
@@ -565,6 +588,7 @@ trait EWS_Corrections_Trait {
             'done'=>__('This request was already decided.','workforce-one'),
             'stale'=>__('The day changed since this request was made, so it cannot be applied. Reject it, or ask HR to correct the day.','workforce-one'),
             'approval'=>__('The approval could not be recorded. Please try again.','workforce-one'),
+            'save'=>__('It could not be saved; nothing was changed. Please try again.','workforce-one'),
         ];
         return $m[$code]??__('Something went wrong. Please try again.','workforce-one');
     }
@@ -637,6 +661,7 @@ trait EWS_Corrections_Trait {
         $reqs=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY id ASC",(int)$emp->id,$from,$today)) as $r)$reqs[$r->work_date]=$r;
         $overtime=$this->overtime_approved_dates((int)$emp->id,$from,$today);
+        $leave=$this->schedule_leave_dates((int)$emp->id,$from,$today);
         $started=$this->cx_started($emp);
         $out=[];
         foreach(array_reverse($this->cx_report_days($emp,$from,$today)) as $d){
@@ -647,7 +672,8 @@ trait EWS_Corrections_Trait {
             elseif($d['sign_in']!=='' && $d['sign_out']==='')$problem='no_out';
             elseif($d['sign_in']==='' && ($d['result']??'')==='Absent')$problem='absent';
             $open=$req && in_array($req->status,['pending','pending_hr'],true);
-            $no_work=(in_array((string)($d['result']??''),CorrectionRules::NO_WORK_RESULTS,true) && !isset($overtime[$date])) || ($started!=='' && $date<$started);
+            // The same rule as a request (cx_no_work_day): the leave wins over overtime (3.31.117).
+            $no_work=CorrectionRules::noWork(isset($leave[$date]),isset($overtime[$date]),$this->is_working_day($date),(string)($d['result']??'')) || ($started!=='' && $date<$started);
             $kinds=CorrectionRules::kinds((string)$d['sign_in']!=='',(string)$d['sign_out']!=='',$s['types'],$no_work);   // only what fits the day
             $out[]=['date'=>$date,'in'=>(string)$d['sign_in'],'out'=>(string)$d['sign_out'],'kinds'=>$kinds,'result'=>(string)($d['result']??''),'planned'=>(string)($d['planned']??''),
                 'late'=>(int)($d['late_minutes']??0),'holiday'=>(string)($d['holiday']??''),'problem'=>$problem,'request'=>$req,'can'=>!$open,'today'=>$date===$today];
@@ -1036,7 +1062,9 @@ trait EWS_Corrections_Trait {
         if($wpdb->query('START TRANSACTION')===false)return 'save';
         $ok=$wpdb->query($wpdb->prepare("UPDATE {$this->cx_table()} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",get_current_user_id(),current_time('mysql'),(int)$id,(int)$employee_id));
         if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
-        if(!$this->approval_close('attendance_correction','attendance_correction',(int)$id)){$wpdb->query('ROLLBACK');return 'save';}
+        // Waiting for HR, its approval request is already APPROVED by the manager levels: it stays so (3.31.117; it failed before).
+        $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$id);
+        if($engine!==true){$wpdb->query('ROLLBACK');return $engine==='moved'?'done':'save';}
         if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
         $this->audit('correction_withdrawn','employee',(int)$employee_id,'Correction #'.(int)$id.' withdrawn by the employee');
         return true;

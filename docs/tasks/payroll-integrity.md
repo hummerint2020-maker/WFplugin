@@ -122,3 +122,7 @@ Independent review (read-only), findings and what was done:
 5. PLAUSIBLE (the company form showed the admin's own shift): **fixed** by 1.
 6. PLAUSIBLE (reopen fails when the advances table is missing): **not changed**; the table is created on every install and upgrade, and
    refusing the reopen in that broken state changes nothing.
+
+## Owner's answer after the review (2026-10-21)
+- Review finding 3 (`times_later` also refuses a day before a version whose day has passed): **keep it refused**. HR cannot insert
+  times between two past versions; the CHANGELOG limit stays as written.

@@ -805,7 +805,7 @@ trait EWS_Approvals_Trait {
                         if((int)($r->escalations??0) && (int)($r->escalated_from_wp_user_id??0))$moved=$name((int)$r->escalated_from_wp_user_id);
                         break;
                     case 'WAITING': $state='next';$sub=__('Next','workforce-one');break;
-                    case 'CANCELLED': $state='cancelled';$sub=__('Withdrawn by the employee','workforce-one');break;
+                    case 'CANCELLED': $state='cancelled';$sub=($r->skip_reason??'')==='closed'?__('Closed automatically','workforce-one'):__('Withdrawn by the employee','workforce-one');break;
                     default:
                         $state='skipped';
                         $sub=($r->skip_reason??'')==='condition'?__('Not needed for this request','workforce-one'):(($r->skip_reason??'')==='self'?__('Skipped: the approver made the request','workforce-one'):__('Skipped: nobody to decide it','workforce-one'));
@@ -833,6 +833,29 @@ trait EWS_Approvals_Trait {
         global $wpdb;$t=$this->approval_tables();$now=current_time('mysql');
         if($wpdb->update($t['requests'],['status'=>'CANCELLED','current_step'=>null,'completed_at'=>$now],['id'=>(int)$ar->id,'status'=>(string)$ar->status])!==1)return false;
         return $wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED' WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))!==false;
+    }
+
+    /**
+     * Cancels an entity's approval request if it is still open (3.31.117, attendance corrections). Unlike approval_close(), a request
+     * already decided when read (APPROVED by the manager levels of a request now waiting for HR, REJECTED, CANCELLED) is left as it
+     * is and counts as done. The caller owns the transaction.
+     * $closed: closed by the system, not withdrawn; the levels still to decide say "Closed automatically" (skip_reason 'closed').
+     * @return true|string|false true: cancelled or nothing open; 'moved': it was decided while being closed; false: a database error
+     */
+    private function approval_close_open($workflow_key,$entity_type,$entity_id,$closed=false){
+        global $wpdb;
+        $wpdb->last_error='';
+        $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
+        if(!$ar && $wpdb->last_error!=='')return false;   // not read: not "nothing open"
+        $this->substitutes_sync_at_shutdown();
+        if(!$ar || in_array($ar->status,['APPROVED','REJECTED','CANCELLED'],true))return true;
+        $t=$this->approval_tables();
+        // The levels first, then the request: the order approval_act() locks them in, so a decision at the same moment waits instead of
+        // deadlocking. Both roll back with the caller's transaction when the request was decided meanwhile.
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED'".($closed?",skip_reason='closed'":'')." WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))===false)return false;
+        $n=$wpdb->update($t['requests'],['status'=>'CANCELLED','current_step'=>null,'completed_at'=>current_time('mysql')],['id'=>(int)$ar->id,'status'=>(string)$ar->status]);
+        if($n===false)return false;
+        return $n===1?true:'moved';
     }
 
     /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */

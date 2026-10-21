@@ -69,11 +69,18 @@ trait EWS_Swap_Trait {
             if($error)return $error;
             $now=current_time('mysql');$uid=get_current_user_id();
             if($wpdb->query('START TRANSACTION')===false)return 'save';
-            $ok1=$wpdb->update($this->schedule,['status'=>$r->target_status,'updated_by'=>$uid,'updated_at'=>$now],['id'=>$a->id],['%s','%d','%s'],['%d']);
-            $ok2=$wpdb->update($this->schedule,['status'=>$r->requester_status,'updated_by'=>$uid,'updated_at'=>$now],['id'=>$b->id],['%s','%d','%s'],['%d']);
-            if($ok1===false||$ok2===false){$wpdb->query('ROLLBACK');return 'save';}
+            // Claimed first, then each day written only if it is still as read (3.31.117): a schedule saved at the same moment (a leave
+            // approved, the grid, another swap) is never overwritten, and of two accepts at once the second is "expired".
             $updated=$this->swap_close((int)$r->id,'Accepted',(string)$r->status);
             if($updated!==1){$wpdb->query('ROLLBACK');return $updated===false?'save':'expired';}
+            $writes=[[$a,(int)$r->requester_employee_id,(string)$r->target_status],[$b,(int)$r->target_employee_id,(string)$r->requester_status]];
+            usort($writes,function($x,$y){return (int)$x[0]->id<=>(int)$y[0]->id;});   // the same order in every swap: no deadlock
+            foreach($writes as [$row,$employee_id,$status]){
+                $n=$wpdb->update($this->schedule,['status'=>$status,'updated_by'=>$uid,'updated_at'=>$now],
+                    ['id'=>(int)$row->id,'employee_id'=>$employee_id,'work_date'=>(string)$r->work_date,'status'=>(string)$row->status],['%s','%d','%s'],['%d','%d','%s','%s']);
+                if($n===false){$wpdb->query('ROLLBACK');return 'save';}
+                if($n!==1){$wpdb->query('ROLLBACK');return 'changed';}
+            }
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
             return true;
         }

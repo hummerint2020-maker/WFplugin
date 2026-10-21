@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.117
+### Attendance corrections and shift swaps (external review F06, F07, F05; design `docs/tasks/corrections-swap-integrity.md`)
+Fixes to existing behaviour; no new setting, no database change.
+- **The leave wins over overtime (owner decision 2026-10-21):** a leave day with nothing recorded can no longer be corrected by the
+  employee, even with approved overtime that day (approving it put attendance and a leave on the same day). A day off or a public
+  holiday with approved overtime can still be corrected, as in 3.31.115. A leave is read from the schedule, so a leave across a public
+  holiday or written on a weekly day off counts as a leave too. A request already waiting on such a day is closed when it is approved (a rejection stays a rejection).
+- **Requests approved before this release** on a leave day with approved overtime are not repaired automatically (owner decision): HR
+  can find them in the Audit Log ("correction_approved" on a leave day) and correct the day by hand.
+- **Closing a correction automatically** (its day became a leave, a holiday or a day off) is now all or nothing: the correction and its
+  approval request change together, a database error changes nothing ("It could not be saved"), and a decision made at the same
+  moment wins ("try again"). Its approval path says "Closed automatically" instead of "Withdrawn by the employee".
+- **A correction waiting for HR can be withdrawn** from My requests (it failed with "Something went wrong" when an approval workflow was on).
+- **Shift swaps:** the two days are written only if they are still as read, after the swap is claimed. A schedule saved at the same moment
+  (a leave approved, the schedule grid, another swap) is no longer overwritten: the swap is refused ("The schedule changed …") and stays
+  waiting, as when the schedule changed earlier (owner decision). Of two accepts at the same moment, the second is told it was decided.
 ## 3.31.116
 ### Payroll integrity (external review F11, F02, F01; design `docs/tasks/payroll-integrity.md`)
 Fixes to existing behaviour; no new setting, no database change.

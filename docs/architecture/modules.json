@@ -115,6 +115,7 @@
       ],
       "api": [
         "working_days",
+        "schedule_leave_dates",
         "swap_approval_card",
         "swap_my_requests",
         "swap_new_choices",

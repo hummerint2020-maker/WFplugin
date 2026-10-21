@@ -173,4 +173,27 @@ final class CorrectionRulesTest extends TestCase
         $this->assertSame('', CorrectionRules::check($this->f(['started' => ''])));
         $this->assertSame('', CorrectionRules::check($this->f(['started' => '2026-10-08', 'source' => 'hr'])));
     }
+
+    /** 3.31.117, owner decision 2026-10-21: the leave wins over overtime; a day off or a holiday with approved overtime is a work day. */
+    public function testLeaveWinsOverOvertime(): void
+    {
+        $cases = [
+            // leave, overtime, working day, result => no work
+            [true, true, true, 'Leave', true],
+            [true, false, true, 'Leave', true],
+            [true, true, true, 'Holiday', true],    // a leave across a public holiday reads "Holiday"
+            [true, true, false, 'Off Day', true],   // a leave written on a weekly day off
+            [false, true, true, 'Holiday', false],
+            [false, true, false, 'Off Day', false],
+            [false, false, true, 'Holiday', true],
+            [false, false, false, '', true],
+            [false, false, true, 'Leave', true],
+            [false, false, true, 'Present', false],
+            [false, false, true, 'Business Trip', false],
+            [false, false, true, 'Absent', false],
+        ];
+        foreach ($cases as [$leave, $ot, $working, $result, $want]) {
+            $this->assertSame($want, CorrectionRules::noWork($leave, $ot, $working, $result), json_encode([$leave, $ot, $working, $result]));
+        }
+    }
 }
