@@ -180,6 +180,9 @@ trait EWS_Signin_Evidence_Trait {
         if(!is_user_logged_in())wp_send_json_error(['reason'=>'login'],401);
         check_ajax_referer('ews_signin_offline','_wpnonce');
         if(!$this->attempts_enabled())wp_send_json_success(['kept'=>false,'reason'=>'off']);
+        // Only the account that pressed the button (3.31.118): a note left by another account on a shared phone, or saved before
+        // 3.31.118 with no account, is dropped. A 200, so the phone clears it.
+        if(!SignInEvidence::noteBelongs($_POST['user']??null,get_current_user_id()))wp_send_json_success(['kept'=>false,'reason'=>'account']);
         $emp=$this->current_employee();
         if(!$emp)wp_send_json_success(['kept'=>false,'reason'=>'employee']);
         $type=sanitize_key($_POST['event_type']??'');
@@ -211,7 +214,7 @@ trait EWS_Signin_Evidence_Trait {
     /** What the app page needs to note an attempt and send it later (empty when off). @return array<string,mixed> */
     private function evidence_app_config(){
         if(!$this->attempts_enabled() || !is_user_logged_in())return [];
-        return ['url'=>admin_url('admin-post.php'),'nonce'=>wp_create_nonce('ews_signin_offline'),'serverMs'=>(int)round(microtime(true)*1000)];
+        return ['url'=>admin_url('admin-post.php'),'nonce'=>wp_create_nonce('ews_signin_offline'),'serverMs'=>(int)round(microtime(true)*1000),'user'=>get_current_user_id()];
     }
 
     /* ------------------------------------------------------------------ face photo */

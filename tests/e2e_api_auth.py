@@ -10,10 +10,10 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_api_auth.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import json, os, re, sys, time, urllib.parse, urllib.request
+import atexit, json, os, re, sys, time, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, ids, php, q, results, wp, HERE  # noqa: E402
 
 API = B + '/wp-json/workforce-one/v1'
 opener = urllib.request.build_opener(type('NoRedirect', (urllib.request.HTTPRedirectHandler,), {'redirect_request': lambda *a, **k: None}))
@@ -288,6 +288,53 @@ for i in range(20):
     login('nobody%d' % i, 'wrong', headers={'X-Forwarded-For': '203.0.113.%d' % i})
 check('without a trusted proxy setting the forwarded address is ignored: 20 failures with different forwarded addresses lock the connecting one', code(login('emp1', 'emp1pass', headers={'X-Forwarded-For': '203.0.113.99'})) == (429, 'RATE_LIMITED'))
 php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
+
+# ---------------------------------------------------------------- 3.31.118: a database error never reports a session as ended
+clear_limits()
+n_devices = lambda: int(q("SELECT COUNT(*) n FROM {p}ews_api_devices")[0]['n'])
+atexit.register(lambda: (break_writes(''), php("delete_user_option(%d,'ews_api_sessions_before');" % uid1)))   # also when a check crashes
+AT1, RT1, DEV1 = tokens(login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe1')))
+n_out = len(audits('api_logout'))
+break_writes('ews_api_devices')
+r = call('POST', '/auth/logout', token=AT1)
+break_writes('')
+check('3.31.118: a database error on logout is 500, not "signed out": the session still works, no logout in the Audit Log',
+      code(r)[0] == 500 and code(call('GET', '/me', token=AT1))[0] == 200 and device_row(DEV1)['revoked_at'] is None and len(audits('api_logout')) == n_out, (code(r), device_row(DEV1)))
+break_writes('ews_api_tokens')
+r = call('POST', '/auth/logout', token=AT1)
+break_writes('')
+check('...the device row ended but its tokens could not be marked: signed out (the device row is what every token check reads), and audited',
+      code(r) == (200, 'ok') and code(call('GET', '/me', token=AT1)) == (401, 'DEVICE_REVOKED') and len(audits('api_logout')) == n_out + 1, code(r))
+AT2, RT2, DEV2 = tokens(login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe2')))
+before_dev, before_login = n_devices(), len(audits('api_login'))
+break_writes('ews_api_tokens')
+r = login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe2'))
+break_writes('')
+check('a sign-in whose tokens cannot be saved is 500: no new session, nothing audited, the earlier session of that installation still works',
+      code(r)[0] == 500 and n_devices() == before_dev and len(audits('api_login')) == before_login and code(call('GET', '/me', token=AT2))[0] == 200 and device_row(DEV2)['revoked_at'] is None, (code(r), n_devices(), before_dev))
+break_writes('ews_api_tokens')
+r = login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe-new'))
+break_writes('')
+check('...on a new installation too: the session row it had just added is rolled back', code(r)[0] == 500 and n_devices() == before_dev and len(audits('api_login')) == before_login, (code(r), n_devices(), before_dev))
+break_writes('ews_api_devices')
+r = call('DELETE', '/me/devices/' + DEV2, token=AT2)
+break_writes('')
+check('a database error when signing out a device from the list: 500, the device stays signed in', code(r)[0] == 500 and device_row(DEV2)['revoked_at'] is None and code(call('GET', '/me', token=AT2))[0] == 200, code(r))
+# A password change while the sessions cannot be ended: marked, refused at once, ended later.
+mark = lambda: php("echo wp_json_encode(get_user_option('ews_api_sessions_before',%d));" % uid1).strip().splitlines()[-1]
+n_pending = len(audits('api_sessions_revoke_pending'))
+break_writes('ews_api_devices')
+php("$u=get_userdata(%d); do_action('wp_set_password','yet-another-password',%d,$u);" % (uid1, uid1))
+break_writes('')
+check('a password change while the sessions cannot be ended: the account is marked and it is in the Audit Log', '"password_changed"' in mark() and len(audits('api_sessions_revoke_pending')) == n_pending + 1, mark())
+check('...the old session is refused at once (DEVICE_REVOKED), and ended when it is used', code(call('GET', '/me', token=AT2)) == (401, 'DEVICE_REVOKED') and (device_row(DEV2) or {}).get('revoked_reason') == 'password_changed', device_row(DEV2))
+r = call('POST', '/auth/refresh', {'refresh_token': RT2})
+check('...its refresh token too', code(r)[0] == 401, code(r))
+time.sleep(1.2)
+AT3, RT3, DEV3 = tokens(login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe3')))
+check('...a sign-in after it works', code(call('GET', '/me', token=AT3))[0] == 200)
+php("$o=new EWS_Manager_V31_1(); $o->api_auth_cleanup();")
+check('...and the daily cleanup removes the mark once nothing from before it is left', mark() == 'false' and code(call('GET', '/me', token=AT3))[0] == 200, mark())
 
 # ---------------------------------------------------------------- the Web still works
 st, page, _ = browser.req('/app/?ews_view=time')

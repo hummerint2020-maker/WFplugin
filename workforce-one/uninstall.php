@@ -71,6 +71,8 @@ function ews_uninstall_site() {
         $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $pattern));
     }
     $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like('ews_') . '%'));
+    // Per-site user options (3.31.118: {blog prefix}ews_api_sessions_before).
+    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", '%' . $wpdb->esc_like('ews_api_sessions_before')));
 
     // Custom roles and the ews_* capabilities granted to Administrator.
     foreach (['ews_administrator', 'ews_manager', 'ews_supervisor', 'ews_employee'] as $role) {

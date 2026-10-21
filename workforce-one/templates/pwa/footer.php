@@ -115,6 +115,9 @@ if (!defined('ABSPATH')) exit;
                  counted from the server's clock when this page opened (serverMs) plus the milliseconds since,
                  which changing the phone's clock does not move; the server keeps both and shows any gap. */
               (function(C){
+                // Signed out on purpose (the Log out link): a note left on this phone is removed (3.31.118). A session that ended on its
+                // own keeps it, so it is sent when the same account signs in again.
+                if(!(window.EWS_PUSH_USER>0)&&/[?&]loggedout=1/.test(location.search)){try{localStorage.removeItem('ewsPendingAttempt');}catch(e){}}
                 if(!C||!C.url)return;
                 var K='ewsPendingAttempt',t0=(window.performance&&performance.now)?performance.now():0;
                 function now(){return (window.performance&&performance.now)?performance.now():0;}
@@ -123,6 +126,8 @@ if (!defined('ABSPATH')) exit;
                 var answered=/[?&](time_error|time_success)=/.test(location.search);
                 if(answered)clear();
                 var p=get();
+                // Another account's note on a shared phone: removed, never sent (the server would drop it too).
+                if(p&&p.user!=null&&String(p.user)!==String(C.user)){clear();p=null;}
                 if(p&&!answered){
                   var b=new URLSearchParams();b.set('action','ews_signin_offline');b.set('_wpnonce',C.nonce);
                   for(var k in p)if(Object.prototype.hasOwnProperty.call(p,k))b.set(k,p[k]==null?'':String(p[k]));
@@ -133,7 +138,7 @@ if (!defined('ABSPATH')) exit;
                   if(!f||!f.querySelector)return;
                   var a=f.querySelector('input[name="action"]');if(!a||(a.value!=='ews31_time_event'&&a.value!=='ews_presence_qr_signin'))return;
                   var g=function(n){var i=f.querySelector('input[name="'+n+'"]');return i&&i.value?i.value:'';};
-                  try{localStorage.setItem(K,JSON.stringify({event_type:g('event_type')||'sign_in',phone_ms:Date.now(),server_ms:C.serverMs,elapsed_ms:Math.max(0,Math.round(now()-t0)),latitude:g('latitude'),longitude:g('longitude'),accuracy:g('accuracy')}));}catch(e){}
+                  try{localStorage.setItem(K,JSON.stringify({user:C.user,event_type:g('event_type')||'sign_in',phone_ms:Date.now(),server_ms:C.serverMs,elapsed_ms:Math.max(0,Math.round(now()-t0)),latitude:g('latitude'),longitude:g('longitude'),accuracy:g('accuracy')}));}catch(e){}
                 };
                 // A form sent by its own button (a form held for the face check is noted when it is sent).
                 document.addEventListener('submit',function(e){if(!e.defaultPrevented)window.ewsNoteAttempt(e.target);},false);

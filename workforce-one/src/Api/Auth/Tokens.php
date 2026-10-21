@@ -66,6 +66,15 @@ final class Tokens
     }
 
     /**
+     * A device session that began before a revoke that could not be written (3.31.118: a password change during a database error) is
+     * refused: $before is when that revoke was asked (0 = none), $deviceCreated when the session began (unix seconds).
+     */
+    public static function sessionPredates(int $deviceCreated, int $before): bool
+    {
+        return $before > 0 && $deviceCreated <= $before;
+    }
+
+    /**
      * @param array{expires_at:int,revoked_at?:int|null,device_revoked_at?:int|null} $row Unix times
      */
     public static function accessStatus(array $row, int $now): string

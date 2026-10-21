@@ -103,6 +103,8 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
   check('...the clock and the "keep the app open" note', /\d{1,2}:\d\d/.test(await text('#o-clock-t')) && /Keep the app open/.test(await text('#o-keep')));
   await shot(page, 'offline-2-signin-pressed');
   check('...nothing was recorded', Number(php("global $wpdb; echo (int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$wpdb->prefix}ews_time_logs\");")) === 0);
+  const UID = Number(php("echo get_user_by('login','emp1')->ID;"));
+  check('3.31.118: the note kept on the phone says which account it is', await page.evaluate(() => { try { return JSON.parse(localStorage.getItem('ewsPendingAttempt') || '{}').user; } catch (e) { return null; } }) === UID);
 
   // Back online: the page opens the app by itself, the attempt is sent, a message says so.
   await offline(false);
@@ -143,12 +145,27 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
   await offline(false);
   await page.waitForSelector('#ews-back-online', { timeout: 15000 }).catch(() => {});
 
+  // ------------------------------------------------------------ a note of another account (a shared phone, 3.31.118)
+  const nAtt = () => Number(php("global $wpdb; echo (int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$wpdb->prefix}ews_signin_attempts\");"));
+  const before = nAtt();
+  let sent = 0;
+  const onReq = r => { if (r.method() === 'POST' && /ews_signin_offline/.test(r.postData() || '')) sent++; };
+  page.on('request', onReq);
+  await page.evaluate(() => localStorage.setItem('ewsPendingAttempt', JSON.stringify({ user: 999999, event_type: 'sign_in', phone_ms: Date.now(), server_ms: Date.now(), elapsed_ms: 1000, latitude: '30.1', longitude: '31.2', accuracy: '10' })));
+  await page.goto(B + '/app/?ews_view=time'); await page.waitForTimeout(1500);
+  page.off('request', onReq);
+  check("another account's note on this phone is removed, never sent, never filed for the one signed in", await page.evaluate(() => localStorage.getItem('ewsPendingAttempt')) === null && sent === 0 && nAtt() === before, [sent, nAtt()]);
+
   // ------------------------------------------------------------ logout
   await page.goto(B + '/app/');
+  await page.evaluate(uid => localStorage.setItem('ewsPendingAttempt', JSON.stringify({ user: uid, event_type: 'sign_in', phone_ms: Date.now(), server_ms: Date.now(), elapsed_ms: 1000 })), UID);
+  await page.goto(B + '/app/?ews_view=time&time_success=1');   // the answer page clears its own note; keep one for the logout check
+  await page.evaluate(uid => localStorage.setItem('ewsPendingAttempt', JSON.stringify({ user: uid, event_type: 'sign_in', phone_ms: Date.now(), server_ms: Date.now(), elapsed_ms: 1000 })), UID);
   const out = await page.evaluate(() => { const a = document.querySelector('a[href*="action=logout"]'); return a ? a.href : ''; });
   if (out) await page.goto(out); else await ctx.clearCookies();
   await page.goto(B + '/app/');
   check('after logging out the schedule is no longer kept on the phone', await page.evaluate(() => localStorage.getItem('ewsOfflineSchedule')) === null);
+  check('...nor a Sign In note (3.31.118: the next person on this phone never gets it)', await page.evaluate(() => localStorage.getItem('ewsPendingAttempt')) === null);
 
   // ------------------------------------------------------------ wp-admin preview
   php("delete_option('ews_offline_screen');");

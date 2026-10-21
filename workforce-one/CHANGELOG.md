@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.118
+### Sign-in sessions (external review F04, F08; design `docs/tasks/sessions-integrity.md`)
+Fixes to existing behaviour; no new setting, no database change.
+- **Shared phones:** a Sign In / Out pressed with no network is kept on the phone with the account that pressed it, and is filed only for
+  that account. Before, if someone else signed in on the same phone first, it was filed for them (with the first person's location).
+  Logging out from the app removes it from the phone; a session that ended on its own keeps it until the same account signs in again.
+  Notes kept by the app before this release have no account and are dropped (owner decision; the sign-in attempts log only).
+- **The mobile app API never reports a session as ended when it was not:** a database error on sign-out, or on signing out a device from
+  the list, answers 500 ("Something went wrong") instead of "signed out", and changes nothing; a retry says when it is done.
+- **Sign-in never hands out tokens that were not saved:** the session and its tokens are saved together, or a database error answers
+  500 and the earlier session of that app installation keeps working.
+- **A password change during a database error:** the account is marked, so every app session from before the change is refused at once
+  (DEVICE_REVOKED) and ended at its next use or by the daily cleanup, and it is in the Audit Log ("api_sessions_revoke_pending").
+- With "Safer app sign-in refresh" on, a database error while ending the older tokens of a refresh or a reused session answers 500 and
+  ends nothing; with it off, the refresh works exactly as before (owner decision).
+- The API description documents the 500 answers; an app that gets 500 on sign-out retries up to 3 times, then removes its tokens.
 ## 3.31.117
 ### Attendance corrections and shift swaps (external review F06, F07, F05; design `docs/tasks/corrections-swap-integrity.md`)
 Fixes to existing behaviour; no new setting, no database change.

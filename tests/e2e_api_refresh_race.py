@@ -150,7 +150,29 @@ try:
     check('a database error while checking the account: 500, the device stays (not "not linked")', code(r) == (500, 'INTERNAL_ERROR') and device(dev)['revoked_at'] is None, r)
     r = refresh(rt, headers={'X-E2E-Fail-Refresh': 'issue'})
     check('new tokens that could not be saved are never handed out: 500', code(r) == (500, 'INTERNAL_ERROR') and device(dev)['revoked_at'] is None, r)
-    check('...and the next retry gets a working pair', code(refresh(rt)) == (200, 'ok'))
+    r = refresh(rt)
+    check('...and the next retry gets a working pair', code(r) == (200, 'ok'))
+    at2, rt2 = r[1]['data']['access_token'], r[1]['data']['refresh_token']
+    r = refresh(rt2, headers={'X-E2E-Fail-Refresh': 'access'})
+    unused = q("SELECT used_at FROM {p}ews_api_tokens WHERE device_id=%d AND kind='refresh' ORDER BY id DESC LIMIT 1" % int(device(dev)['id']))[0]['used_at'] is None
+    check('3.31.118: a database error ending the older access tokens: 500, the refresh token stays unused', code(r) == (500, 'INTERNAL_ERROR') and unused and device(dev)['revoked_at'] is None, r)
+    r = refresh(rt2)
+    check('...the retry works, and the older access token is ended then', code(r) == (200, 'ok') and code(call('GET', '/me', token=at2))[0] == 401, (code(r), code(call('GET', '/me', token=at2))))
+    rt3 = r[1]['data']['refresh_token']
+    refresh(rt3)
+    php("$wpdb->query(\"UPDATE {$p}ews_api_tokens SET used_at='\".gmdate('Y-m-d H:i:s',time()-120).\"' WHERE device_id=%d AND kind='refresh' AND used_at IS NOT NULL\");" % int(device(dev)['id']))
+    r = refresh(rt3, headers={'X-E2E-Fail-Refresh': 'device_revoke'})
+    check('a reuse whose device session cannot be ended: 500, not "reused"; nothing in the Audit Log', code(r) == (500, 'INTERNAL_ERROR') and device(dev)['revoked_at'] is None and reuses() == 0, r)
+    r = refresh(rt3)
+    check('...the next use ends it as a reuse, with one Audit Log row', code(r) == (401, 'REFRESH_REUSED') and device(dev)['revoked_at'] is not None and reuses() == 1, r)
+    clear()
+    at, rt, dev = login()
+    php("$u=get_user_by('login','emp1'); update_user_option($u->ID,'ews_api_sessions_before',['before'=>time()+1,'reason'=>'password_changed']);")
+    try:
+        r = refresh(rt)
+    finally:
+        php("$u=get_user_by('login','emp1'); delete_user_option($u->ID,'ews_api_sessions_before');")
+    check('a session from before a revoke that could not be written: the refresh is DEVICE_REVOKED and the device ends', code(r) == (401, 'DEVICE_REVOKED') and device(dev)['revoked_reason'] == 'password_changed', (r, device(dev)))
 
     # ---------------------------------------------------------------- the rotation revokes only older access tokens
     clear()

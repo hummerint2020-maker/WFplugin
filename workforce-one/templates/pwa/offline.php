@@ -84,6 +84,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-app
   // A Sign In / Out that did not reach the server (saved by the app when it was pressed, 3.31.92).
   function pending(){
     var p=get('ewsPendingAttempt');if(!p||!p.phone_ms)return null;
+    // Another account's note on a shared phone (3.31.118): not shown to the one whose week this phone keeps.
+    var s=get('ewsOfflineSchedule');if(p.user!=null&&s&&s.user!=null&&String(s.user)!==String(p.user))return null;
     var at=Number(p.server_ms)>0?Number(p.server_ms)+Number(p.elapsed_ms||0):Number(p.phone_ms);
     if(Math.abs(Date.now()-Number(p.phone_ms))>12*3600e3)return null;
     return {at:at,action:p.event_type==='sign_out'?'Sign Out':'Sign In',out:p.event_type==='sign_out'};

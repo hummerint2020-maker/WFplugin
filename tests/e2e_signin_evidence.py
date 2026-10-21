@@ -115,15 +115,15 @@ check('a manager of another department sees none of these refusals, nor the time
 
 # ---------------------------------------------------------------- an attempt that never reached the server
 st, page, _ = emp.req('/app/?ews_view=time')
-cfg = re.search(r'\{"url":"[^"]+","nonce":"([^"]+)","serverMs":(\d+)\}', page)
-check('the app page carries what the phone needs to note an attempt (with the server\'s time)', bool(cfg) and 'ewsNoteAttempt' in page)
+cfg = re.search(r'\{"url":"[^"]+","nonce":"([^"]+)","serverMs":(\d+),"user":(\d+)\}', page)
+check('the app page carries what the phone needs to note an attempt (with the server\'s time and the account, 3.31.118)', bool(cfg) and 'ewsNoteAttempt' in page and int(cfg.group(3)) == I['uid'])
 NONCE, SERVER_MS = (cfg.group(1), int(cfg.group(2))) if cfg else ('', 0)
 SERVER_MS -= 10 * 60 * 1000   # as if the page had opened 10 minutes ago (a time in the past, not clipped)
 FOUR = 4 * 60 * 1000
 
 
 def offline(**data):
-    body = {'action': 'ews_signin_offline', '_wpnonce': NONCE, 'event_type': 'sign_out', 'server_ms': SERVER_MS, 'elapsed_ms': FOUR, 'phone_ms': SERVER_MS + FOUR, **data}
+    body = {'action': 'ews_signin_offline', '_wpnonce': NONCE, 'user': I['uid'], 'event_type': 'sign_out', 'server_ms': SERVER_MS, 'elapsed_ms': FOUR, 'phone_ms': SERVER_MS + FOUR, **data}
     st, b, _ = emp.req('/wp-admin/admin-post.php', body)
     try:
         return json.loads(b).get('data', {})
@@ -146,6 +146,11 @@ r = offline(event_type='sign_in', phone_ms=SERVER_MS + 1000, elapsed_ms=1000)
 check('a Sign In that did reach us (recorded within 15 minutes): not kept again', r.get('kept') is False and r.get('reason') == 'reached', r)
 r = offline(phone_ms=SERVER_MS + FOUR, elapsed_ms=8 * 3600 * 1000)
 check('a page open for hours: the time is marked not certain', attempts("result='not_reached' AND time_sure=0") != [] or r.get('reason') == 'reached', r)
+before = len(attempts("result='not_reached'")), len(q("SELECT id FROM {p}ews_audit_log WHERE action='signin_not_reached'"))
+for who, label in ((I['uid'] + 1000, 'another account (a shared phone)'), ('', 'no account (saved before 3.31.118)')):
+    r = offline(user=who, phone_ms=SERVER_MS + 2 * FOUR, elapsed_ms=2 * FOUR)
+    after = len(attempts("result='not_reached'")), len(q("SELECT id FROM {p}ews_audit_log WHERE action='signin_not_reached'"))
+    check('3.31.118: a note of %s is not filed for the account signed in now (nor audited); the phone is told to drop it' % label, r.get('kept') is False and r.get('reason') == 'account' and after == before, (r, after, before))
 evidence(attempts=0)
 check('with the feature off nothing is kept', offline(phone_ms=SERVER_MS).get('kept') is False)
 evidence(attempts=1)

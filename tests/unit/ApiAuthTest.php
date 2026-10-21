@@ -174,4 +174,13 @@ final class ApiAuthTest extends TestCase
         $this->assertSame('name:ghost', LT::identity(0, 'ghost'), 'an unknown name is counted by its cleaned, lower-case spelling');
         $this->assertSame('name:ghost', LT::identity(0, ' GHOST '));
     }
+
+    /** 3.31.118: after a revoke that could not be written, the sessions that began until then are refused. */
+    public function testASessionFromBeforeAFailedRevokeIsRefused(): void
+    {
+        $this->assertFalse(T::sessionPredates(1000, 0), 'no mark');
+        $this->assertTrue(T::sessionPredates(1000, 1000), 'the same second');
+        $this->assertTrue(T::sessionPredates(999, 1000));
+        $this->assertFalse(T::sessionPredates(1001, 1000), 'signed in after the mark');
+    }
 }

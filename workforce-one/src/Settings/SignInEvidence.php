@@ -39,6 +39,16 @@ final class SignInEvidence
     }
 
     /**
+     * Whether an attempt note the phone kept belongs to the account sending it (3.31.118): on a shared phone, a note left by one
+     * account must not be filed for the next one. A note with no account (saved before 3.31.118) does not belong (owner decision).
+     * @param mixed $posted the account id the note carries
+     */
+    public static function noteBelongs($posted, int $current): bool
+    {
+        return $current > 0 && is_scalar($posted) && (string) $posted === (string) $current;
+    }
+
+    /**
      * A time the phone reported for an attempt that never reached the server, checked against the
      * server's own clock: the page carried the server time when it opened, and the browser counted the
      * milliseconds from then to the tap with a clock that changing the phone's time does not move.
