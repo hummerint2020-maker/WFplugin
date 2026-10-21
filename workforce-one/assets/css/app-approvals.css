@@ -1,0 +1,124 @@
+/* Employee app → My approvals and My requests (3.31.103, templates/app/approvals.php and requests.php,
+   owner-approved mockup docs/mockups/my-approvals/). Uses the theme variables of app-shell.css and the
+   request colours of app-requests.css. assets/css/app-approvals-rtl.css is generated with rtlcss
+   (assets/css/README.md). */
+.wfo-app .wfo-apv{max-width:720px;display:flex;flex-direction:column;gap:12px}
+.wfo-app .wfo-apv [hidden]{display:none!important}
+.wfo-app .wfo-apv-toast{border-radius:14px;padding:10px 14px;font-weight:600;font-size:13.5px;background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-apv-toast.is-error{background:#FFE8EC;color:#A51D3E}
+.wfo-app .wfo-apv-toast.is-warning{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-apv-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.wfo-app .wfo-apv-kpi{display:grid;padding:10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-app .wfo-apv-kpi b{font-size:22px;line-height:1.2;color:var(--wfo-ink);font-variant-numeric:tabular-nums}
+.wfo-app .wfo-apv-kpi span{font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-apv-kpi.is-late b{color:#A51D3E}
+.wfo-app .wfo-apv-bar{display:flex;align-items:center;gap:8px}
+.wfo-app .wfo-apv-filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding:2px}
+.wfo-app .wfo-apv-filters::-webkit-scrollbar{display:none}
+.wfo-app .wfo-apv-filters a{flex:0 0 auto;border:1px solid var(--wfo-line);background:var(--wfo-surface);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--wfo-muted);text-decoration:none;white-space:nowrap}
+.wfo-app .wfo-apv-filters a[aria-current]{border-color:var(--wfo-pri);color:var(--wfo-pri);background:var(--wfo-pri-soft);font-weight:600}
+.wfo-app .wfo-apv-list{display:flex;flex-direction:column;gap:10px}
+.wfo-app .wfo-apv-item{--tc:var(--wfo-pri);border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);padding:12px 14px;border-left:4px solid var(--tc)}
+.wfo-app .wfo-apv-item.tone-overtime{--tc:#A3245B}.wfo-app .wfo-apv-item.tone-correction{--tc:#0B7D74}.wfo-app .wfo-apv-item.tone-swap{--tc:#D9480F}.wfo-app .wfo-apv-item.tone-face{--tc:#1F6FD1}
+.wfo-app .wfo-apv-item.is-picked{outline:2px solid var(--wfo-pri)}
+.wfo-app .wfo-apv-item form{display:flex;flex-direction:column;gap:8px;margin:0}
+.wfo-app .wfo-apv-who{display:flex;align-items:center;gap:10px;min-width:0}
+.wfo-app .wfo-apv-av{flex:0 0 auto;width:38px;height:38px;border-radius:12px;display:inline-grid;place-items:center;overflow:hidden;font-weight:700;font-size:13px;color:#fff;background:var(--tc)}
+.wfo-app .wfo-apv-av img{width:100%;height:100%;object-fit:cover;display:block}
+.wfo-app .wfo-apv-t{flex:1;min-width:0}
+.wfo-app .wfo-apv-t b{display:block;font-size:14.5px;color:var(--wfo-ink)}
+.wfo-app .wfo-apv-t small{display:block;font-size:12.5px;color:var(--wfo-muted)}
+.wfo-app .wfo-apv-pick input{width:22px;height:22px;accent-color:var(--wfo-pri)}
+.wfo-app .wfo-apv-what{margin:0;font-size:14px;color:var(--wfo-ink);overflow-wrap:anywhere}
+.wfo-app .wfo-apv-why{margin:0;font-size:13px;color:#A51D3E;background:#FFE8EC;border-radius:10px;padding:6px 10px}
+.wfo-app .wfo-apv-meta{display:flex;flex-wrap:wrap;gap:6px}
+.wfo-app .wfo-apv-pill,.wfo-app .wfo-apv-state{display:inline-flex;align-items:center;min-height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--wfo-bg);color:var(--wfo-muted)}
+.wfo-app .wfo-apv-pill.is-late{background:#FFE8EC;color:#A51D3E}
+.wfo-app .wfo-apv-pill.is-warn{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-apv-pill.is-brand{background:var(--wfo-pri-soft);color:var(--wfo-pri)}
+.wfo-app .wfo-apv-state{flex:0 0 auto}
+.wfo-app .wfo-apv-state.is-waiting{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-apv-state.is-approved{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-apv-state.is-rejected{background:#FFE8EC;color:#A51D3E}
+.wfo-app .wfo-apv-more summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--wfo-pri);list-style:none}
+.wfo-app .wfo-apv-more summary::-webkit-details-marker{display:none}
+.wfo-app .wfo-apv-more[open] summary{margin-bottom:8px}
+.wfo-app .wfo-apv-more h3{margin:10px 0 6px;font-size:13px;color:var(--wfo-muted)}
+.wfo-app .wfo-apv-facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.wfo-app .wfo-apv-facts dt{color:var(--wfo-muted)}
+.wfo-app .wfo-apv-facts dd{margin:0;color:var(--wfo-ink);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.wfo-app .wfo-apv-path{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.wfo-app .wfo-apv-path li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;position:relative;padding-bottom:12px}
+.wfo-app .wfo-apv-path li:not(:last-child)::before{content:"";position:absolute;left:12px;top:26px;bottom:0;border-left:2px solid var(--wfo-line)}
+.wfo-app .wfo-apv-dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;background:var(--wfo-bg);border:2px solid var(--wfo-line);color:var(--wfo-muted)}
+.wfo-app .wfo-apv-path .is-done .wfo-apv-dot{background:#0F6B43;border-color:#0F6B43;color:#fff}
+.wfo-app .wfo-apv-path .is-now .wfo-apv-dot{background:var(--wfo-pri);border-color:var(--wfo-pri);color:#fff}
+.wfo-app .wfo-apv-path .is-rejected .wfo-apv-dot{background:#A51D3E;border-color:#A51D3E;color:#fff}
+.wfo-app .wfo-apv-path .is-skipped .wfo-apv-dot,.wfo-app .wfo-apv-path .is-cancelled .wfo-apv-dot{border-style:dashed}
+.wfo-app .wfo-apv-path b{display:block;font-size:13.5px;color:var(--wfo-ink)}
+.wfo-app .wfo-apv-path .is-skipped b,.wfo-app .wfo-apv-path .is-cancelled b{color:var(--wfo-muted);font-weight:500}
+.wfo-app .wfo-apv-path small{display:block;font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-apv-note{display:grid;gap:4px;font-size:12.5px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-apv-note textarea{font:inherit;font-weight:400;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);padding:8px 10px;background:var(--wfo-surface);color:var(--wfo-ink);resize:vertical;width:100%;box-sizing:border-box}
+.wfo-app .wfo-apv-err{margin:0;font-size:12.5px;color:#A51D3E}
+.wfo-app .wfo-apv-link{margin:0;font-size:13px}
+.wfo-app .wfo-apv-link a{color:var(--wfo-pri)}
+.wfo-app .wfo-apv-acts{display:flex;gap:8px}
+.wfo-app .wfo-apv-acts .wfo-apv-btn{flex:1}
+.wfo-app .wfo-apv-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;font-size:14px;font-weight:600;line-height:1.2;cursor:pointer}
+.wfo-app .wfo-apv-btn.is-sm{min-height:32px;padding:0 10px;font-size:13px}
+.wfo-app .wfo-apv-btn.is-ok{background:#0F6B43;border-color:#0F6B43;color:#fff}
+.wfo-app .wfo-apv-btn.is-bad{color:#A51D3E}
+.wfo-app .wfo-apv-btn[disabled]{opacity:.55;cursor:not-allowed}
+.wfo-app .wfo-apv-btn:focus-visible,.wfo-app .wfo-apv-filters a:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .wfo-apv-withdraw summary{list-style:none;display:inline-flex;width:auto}
+.wfo-app .wfo-apv-withdraw summary::-webkit-details-marker{display:none}
+.wfo-app .wfo-apv-withdraw form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+.wfo-app .wfo-apv-withdraw p{margin:0;font-size:13px;color:var(--wfo-ink);flex-basis:100%}
+.wfo-app .wfo-apv-bulk{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);z-index:5}
+.wfo-app .wfo-apv-bulk span{flex:1;font-size:13px;color:var(--wfo-muted)}
+.wfo-app .wfo-apv-empty{display:grid;justify-items:center;gap:6px;padding:32px 18px;text-align:center;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);color:var(--wfo-muted)}
+.wfo-app .wfo-apv-empty strong{color:var(--wfo-ink)}
+.wfo-app .wfo-apv-cta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:var(--wfo-r-card);background:var(--wfo-pri-soft);color:var(--wfo-pri);font-weight:600;font-size:13.5px;text-decoration:none}
+@media (min-width:900px){.wfo-app .wfo-apv-bulk{bottom:16px}}
+/* The count of requests waiting, on the menu item (layout.php). */
+.wfo-app .wfo-nav-count{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#A51D3E;color:#fff;font-size:10.5px;font-style:normal;font-weight:700;line-height:1;margin-left:6px}
+.wfo-app .wfo-tab{position:relative}
+.wfo-app .wfo-tab .wfo-nav-count{position:absolute;top:2px;left:calc(50% + 6px);margin:0}
+.wfo-app .wfo-more-item{position:relative}
+.wfo-app .wfo-more-item .wfo-nav-count{position:absolute;top:6px;right:10px;margin:0}
+/* My requests → "+ New request" (3.31.105, templates/app/new-request.php). */
+.wfo-app .wfo-apv-bar-gap{flex:1}
+.wfo-app .wfo-apv-btn.is-new{background:var(--wfo-pri);border-color:var(--wfo-pri);color:#fff}
+.wfo-app .wfo-new-group{margin:6px 0 0;font-size:12px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-new-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wfo-app .wfo-new-type{--tc:var(--wfo-pri);display:grid;gap:4px;align-content:start;justify-items:start;min-height:92px;padding:12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-card);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;text-align:start;cursor:pointer}
+.wfo-app .wfo-new-type:hover,.wfo-app .wfo-new-type:focus-visible{border-color:var(--tc)}
+.wfo-app .wfo-new-type[disabled]{opacity:.55;cursor:not-allowed}
+.wfo-app .wfo-new-type b{font-size:13.5px}
+.wfo-app .wfo-new-type small{font-size:11.5px;color:var(--wfo-muted);line-height:1.4}
+.wfo-app .wfo-new-ic{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--tc);color:#fff}
+.wfo-app .wfo-new-type.tone-early{--tc:#7A4FD6}.wfo-app .wfo-new-type.tone-overtime{--tc:#A3245B}.wfo-app .wfo-new-type.tone-correction{--tc:#0B7D74}.wfo-app .wfo-new-type.tone-swap{--tc:#D9480F}.wfo-app .wfo-new-type.tone-face{--tc:#1F6FD1}
+.wfo-app .wfo-new-mates{display:grid;gap:6px}
+.wfo-app .wfo-new-mate{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--wfo-line);border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);cursor:pointer}
+.wfo-app .wfo-new-mate:has(input:checked){border-color:var(--wfo-pri);background:var(--wfo-pri-soft)}
+.wfo-app .wfo-new-mate.is-off{opacity:.55;cursor:not-allowed}
+.wfo-app .wfo-new-mate input{accent-color:var(--wfo-pri);width:18px;height:18px;flex:0 0 auto}
+.wfo-app .wfo-new-mate span{flex:1;min-width:0}
+.wfo-app .wfo-new-mate b{display:block;font-size:13.5px}
+.wfo-app .wfo-new-mate small{display:block;font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-new-mate i{font-style:normal;font-size:11px;font-weight:600;color:var(--wfo-pri);background:var(--wfo-pri-soft);border-radius:999px;padding:2px 8px}
+.wfo-app .wfo-sheet-x[data-new-back] .wfo-icon{transform:scaleX(-1)}
+[dir=rtl] .wfo-app .wfo-sheet-x[data-new-back] .wfo-icon{transform:none}
+/* Substitutes while a manager is away (3.31.107, templates/app/substitutes-bar.php) */
+.wfo-app .wfo-apv-away{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-pri-soft);color:var(--wfo-ink);font-size:13px}
+.wfo-app .wfo-apv-away b{color:var(--wfo-pri)}
+.wfo-app .wfo-apv-away-ic{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--wfo-surface);color:var(--wfo-pri);flex:0 0 auto}
+.wfo-app .wfo-apv-own{display:grid;gap:8px;padding:10px 12px;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-app .wfo-apv-own>.wfo-apv-btn{justify-self:start}
+.wfo-app .wfo-apv-own-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.wfo-app .wfo-apv-own-row>span{display:grid;min-width:0}
+.wfo-app .wfo-apv-own-row b{font-size:13.5px;color:var(--wfo-ink)}
+.wfo-app .wfo-apv-own-row small,.wfo-app .wfo-apv-own-note{font-size:12px;color:var(--wfo-muted)}
+.wfo-app .wfo-sub-field small{display:block;margin-top:4px}
+.wfo-app .wfo-apv-item.tone-advance{--tc:#0B7A4B}.wfo-app .wfo-new-type.tone-advance{--tc:#0B7A4B}

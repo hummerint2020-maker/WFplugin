@@ -18,3 +18,14 @@ QR service) and scanning works without a public CDN.
 Only the three nets used by Face Sign In are bundled: `tiny_face_detector`,
 `face_landmark_68`, `face_recognition`. Previously these were loaded from
 jsDelivr and justadudewhohacks.github.io at runtime.
+
+## DejaVu Sans
+
+| Path | Font | Version | License |
+|------|------|---------|---------|
+| `dejavu/DejaVuSans.ttf` | [DejaVu Sans](https://dejavu-fonts.github.io/) | 2.37 | Bitstream Vera licence; DejaVu changes public domain (`dejavu/LICENSE.txt`) |
+
+Used for payslip PDFs (`src/Payroll/PayslipPdf.php`): it has Latin and Arabic (including the
+presentation forms used to join letters), so names and reasons in Arabic print correctly. Only the
+glyphs a payslip uses are embedded in each PDF (`src/Pdf/TrueTypeFont.php`); the font is not
+renamed or changed.

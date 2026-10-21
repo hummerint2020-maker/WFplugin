@@ -1,0 +1,44 @@
+/* Employee app → My team (3.31.97, templates/app/team.php, owner-approved mockup docs/mockups/org-chart/).
+   Uses the theme variables of app-shell.css. assets/css/app-team-rtl.css is generated with rtlcss
+   (assets/css/README.md). */
+.wfo-app .wfo-team{max-width:640px;display:flex;flex-direction:column;gap:12px}
+.wfo-app .wfo-team-av{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;overflow:hidden;font-weight:600;font-size:13px;color:#fff;background:var(--wfo-pri)}
+.wfo-app .wfo-team-av img{width:100%;height:100%;object-fit:cover;display:block}
+.wfo-app .wfo-team-av.is-s{width:26px;height:26px;font-size:11px}
+.wfo-app .wfo-team-av.is-l{width:72px;height:72px;font-size:22px;box-shadow:0 0 0 4px var(--wfo-surface)}
+.wfo-app .wfo-team-av.tone-0{background:#4836e0}.wfo-app .wfo-team-av.tone-1{background:#0b7d74}.wfo-app .wfo-team-av.tone-2{background:#d9480f}
+.wfo-app .wfo-team-av.tone-3{background:#1f6fd1}.wfo-app .wfo-team-av.tone-4{background:#a3245b}
+
+.wfo-app .wfo-team-ups{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.wfo-app .wfo-team-ups::-webkit-scrollbar{display:none}
+.wfo-app .wfo-team-up{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;padding:3px 3px 3px 12px;border:1px solid var(--wfo-line);border-radius:999px;background:var(--wfo-surface);color:var(--wfo-ink);font-size:13px;text-decoration:none;white-space:nowrap}
+.wfo-app .wfo-team-up:hover,.wfo-app .wfo-team-up:focus-visible{border-color:var(--wfo-pri)}
+.wfo-app .wfo-team-sep{display:inline-flex;color:var(--wfo-muted);flex:0 0 auto}
+[dir=rtl] .wfo-team-sep .wfo-icon,[dir=rtl] .wfo-team-chev .wfo-icon{transform:scaleX(-1)}
+
+.wfo-app .wfo-team-focus{position:relative;overflow:hidden;display:grid;justify-items:center;gap:4px;padding:18px;text-align:center;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-app .wfo-team-focus::before{content:"";position:absolute;right:0;left:0;top:0;height:64px;background:linear-gradient(-135deg,var(--wfo-hero-start),var(--wfo-hero))}
+.wfo-app .wfo-team-focus .wfo-team-av{position:relative;margin-top:22px}
+.wfo-app .wfo-team-focus strong{font-size:18px;color:var(--wfo-ink)}
+.wfo-app .wfo-team-sub{color:var(--wfo-muted);font-size:13px}
+.wfo-app .wfo-team-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px}
+.wfo-app .wfo-team-stats span,.wfo-app .wfo-team-stats a{border-radius:999px;padding:3px 10px;font-size:12.5px;background:var(--wfo-bg);color:var(--wfo-muted);text-decoration:none}
+.wfo-app .wfo-team-stats a{background:var(--wfo-pri-soft);color:var(--wfo-pri);font-weight:600}
+
+.wfo-app .wfo-team-list{border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);overflow:hidden}
+.wfo-app .wfo-team-list h2{margin:0;padding:12px 14px 6px;font-size:13px;font-weight:600;color:var(--wfo-muted)}
+.wfo-app .wfo-team-row{display:flex;align-items:center;gap:10px;padding:10px 14px;color:var(--wfo-ink);text-decoration:none;min-height:56px}
+.wfo-app .wfo-team-row+.wfo-team-row{border-top:1px solid var(--wfo-line)}
+.wfo-app .wfo-team-row:hover,.wfo-app .wfo-team-row:focus-visible{background:var(--wfo-bg)}
+.wfo-app .wfo-team-t{flex:1;min-width:0}
+.wfo-app .wfo-team-t b{display:block;font-weight:600;font-size:14px}
+.wfo-app .wfo-team-t small{display:block;color:var(--wfo-muted);font-size:12.5px}
+.wfo-app .wfo-team-pill{font-size:11.5px;font-weight:600;color:var(--wfo-pri);background:var(--wfo-pri-soft);border-radius:999px;padding:2px 9px}
+.wfo-app .wfo-team-chev{display:inline-flex;color:var(--wfo-muted)}
+.wfo-app .wfo-team-mates{display:flex;gap:10px;overflow-x:auto;padding:4px 14px 14px;scrollbar-width:none}
+.wfo-app .wfo-team-mates a{flex:0 0 72px;display:grid;justify-items:center;gap:4px;font-size:12px;color:var(--wfo-ink);text-decoration:none;text-align:center}
+.wfo-app .wfo-team-mates a span:last-child{max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wfo-app .wfo-team-note{margin:0;color:var(--wfo-muted);font-size:13px;text-align:center}
+.wfo-app .wfo-team-empty{display:grid;justify-items:center;gap:6px;padding:32px 18px;text-align:center;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);color:var(--wfo-muted)}
+.wfo-app .wfo-team-empty strong{color:var(--wfo-ink)}
+.wfo-app .wfo-team-empty-icon{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--wfo-pri-soft);color:var(--wfo-pri)}

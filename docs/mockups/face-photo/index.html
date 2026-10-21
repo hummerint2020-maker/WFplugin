@@ -1,0 +1,183 @@
+<title>Face Sign In Photo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a short brief, then three screens side by side (wp-admin setting, the phone camera, the report), stacking on a phone. */
+:root{
+  --bg:#f3f4f8; --paper:#ffffff; --ink:#1d2033; --muted:#5d6280; --line:#dfe2ec;
+  --accent:#4338ca; --accent-soft:#eceafd; --ok:#0f7a4a; --ok-soft:#e3f5ec; --warn:#9a5b00; --warn-soft:#fdf1dc;
+  --wp-bg:#f0f0f1; --wp-ink:#1d2327; --wp-line:#c3c4c7; --wp-blue:#2271b1;
+  --phone:#111427; --cam:#262a45;
+  --f-display:"Alexandria",system-ui,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12141f; --paper:#1b1e2d; --ink:#e8e9f3; --muted:#a3a8c6; --line:#2e3248;
+  --accent:#a5a0ff; --accent-soft:#262552; --ok:#5fd39b; --ok-soft:#173528; --warn:#f2b55a; --warn-soft:#3a2a12;
+  --wp-bg:#1f2228; --wp-ink:#e6e7ea; --wp-line:#3a3f4a; --wp-blue:#72aee6; --phone:#05060c; --cam:#1c1f33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12141f; --paper:#1b1e2d; --ink:#e8e9f3; --muted:#a3a8c6; --line:#2e3248;
+  --accent:#a5a0ff; --accent-soft:#262552; --ok:#5fd39b; --ok-soft:#173528; --warn:#f2b55a; --warn-soft:#3a2a12;
+  --wp-bg:#1f2228; --wp-ink:#e6e7ea; --wp-line:#3a3f4a; --wp-blue:#72aee6; --phone:#05060c; --cam:#1c1f33; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding:28px 16px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.4vw,34px);margin:0;text-wrap:balance}
+.lead{max-width:68ch;color:var(--muted);margin:6px 0 0}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip b{font-weight:600}
+.screens{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.8fr) minmax(0,1.25fr);gap:22px;align-items:start}
+@media (max-width:1050px){.screens{grid-template-columns:minmax(0,1fr)}}
+.cap{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--accent);margin:0 0 8px;display:flex;gap:8px;align-items:baseline}
+.cap span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:13px}
+figure{margin:0;min-width:0}
+figcaption{color:var(--muted);font-size:13px;margin-top:8px;max-width:60ch}
+/* wp-admin */
+.wp{background:var(--wp-bg);color:var(--wp-ink);border:1px solid var(--line);border-radius:6px;overflow:hidden;font:13px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif}
+.wp-top{background:#1d2327;color:#f0f0f1;padding:6px 12px;font-size:12px}
+.wp-body{padding:14px}
+.wp h2{font-size:20px;font-weight:400;margin:0 0 4px}
+.wp-tabs{display:flex;gap:4px;border-bottom:1px solid var(--wp-line);margin:8px 0 12px;flex-wrap:wrap}
+.wp-tabs a{padding:6px 10px;border:1px solid var(--wp-line);border-bottom:0;background:var(--wp-bg);color:var(--wp-ink);text-decoration:none;font-weight:600;font-size:13px;margin-bottom:-1px}
+.wp-tabs a.on{background:var(--paper)}
+.card{background:var(--paper);border:1px solid var(--wp-line);padding:14px 16px;display:grid;gap:12px}
+.card h3{margin:0;font-size:14px}
+.row{display:flex;gap:12px;align-items:flex-start}
+.toggle{flex:none;width:36px;height:20px;border-radius:20px;background:var(--wp-line);position:relative;margin-top:2px}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+.toggle.on{background:var(--wp-blue)}.toggle.on::after{left:18px}
+.row p{margin:2px 0 0;color:var(--muted)}
+.new{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:1px 6px;margin-inline-start:6px}
+.field{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-inline-start:48px}
+.field input,.field select{border:1px solid var(--wp-line);border-radius:4px;padding:3px 6px;background:var(--paper);color:var(--wp-ink);font:inherit}
+.field input{width:56px}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:4px;padding:8px 10px;font-size:12.5px}
+.btn{display:inline-block;background:var(--wp-blue);color:#fff;border-radius:3px;padding:5px 12px;font-weight:600;justify-self:start}
+/* phone */
+.phone{background:var(--phone);border-radius:34px;padding:12px;max-width:330px;margin:0 auto;box-shadow:0 16px 40px rgba(17,20,39,.22)}
+.screen{background:var(--paper);border-radius:24px;overflow:hidden;direction:rtl;font-family:var(--f-display)}
+.bar{display:flex;justify-content:space-between;padding:10px 16px 4px;font-size:12px;color:var(--muted)}
+.ph-h{padding:6px 16px 10px;font-weight:700;font-size:17px}
+.cam{margin:0 14px;border-radius:18px;background:var(--cam);aspect-ratio:3/4;position:relative;display:grid;place-items:center;overflow:hidden;max-width:100%}
+.oval{width:62%;aspect-ratio:3/4;border:3px solid #7cf0b4;border-radius:50%;display:grid;place-items:center}
+.cam svg{width:70%;opacity:.55}
+.cam .live{position:absolute;top:10px;inset-inline-end:10px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:3px 8px;border-radius:999px}
+.info{margin:12px 14px 0;display:flex;gap:8px;background:var(--accent-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.6}
+.info svg{flex:none;width:18px;height:18px;color:var(--accent);margin-top:2px}
+.status{margin:10px 14px 0;color:var(--ok);font-weight:600;font-size:13px}
+.go{margin:12px 14px 16px;background:var(--accent);color:#fff;text-align:center;border-radius:14px;padding:12px;font-weight:600}
+/* report */
+.tbl-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--wp-line)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-variant-numeric:tabular-nums}
+th,td{text-align:start;padding:8px 10px;border-bottom:1px solid var(--wp-line);vertical-align:middle}
+th{font-weight:600;font-size:12.5px}
+.thumb{width:34px;height:42px;border-radius:6px;background:var(--cam);display:grid;place-items:center;overflow:hidden;border:2px solid transparent}
+.thumb svg{width:80%;opacity:.6}
+.thumb.sel{border-color:var(--wp-blue)}
+.none{color:var(--muted);font-size:12px}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:600}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.flag{background:var(--warn-soft);color:var(--warn)}
+.viewer{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;background:var(--paper);border:1px solid var(--wp-line);border-top:0;padding:14px}
+@media (max-width:520px){.viewer{grid-template-columns:minmax(0,1fr)}}
+.big{aspect-ratio:3/4;border-radius:10px;background:var(--cam);display:grid;place-items:center;max-width:150px}
+.big svg{width:72%;opacity:.6}
+.meta{display:grid;gap:4px;font-size:13px}
+.meta dt{color:var(--muted);font-size:12px}
+.meta dd{margin:0 0 4px}
+.decide{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:8px}
+.decide h2{font-family:var(--f-display);font-size:18px;margin:0}
+.decide ol{margin:0;padding-inline-start:20px;display:grid;gap:6px;max-width:80ch}
+[dir=rtl]{font-family:var(--f-display)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>صورة مع Face Sign In</h1>
+    <p class="lead">مع كل Sign In بالوش بتتحفظ صورة صغيرة من الكاميرا في نفس اللحظة. الـ HR والمدير يقدروا يشوفوها لو شكّوا في تسجيل. الميزة مقفولة لحد ما الأدمن يفتحها، وبتشتغل فوق الحماية اللي نزلت في 3.31.91 (الكود اللي بيتستخدم مرة واحدة ورفض نفس بصمة الوش لو اتبعتت تاني).</p>
+    <div class="brief">
+      <span class="chip"><b>مقفولة افتراضيًا</b> · من Features</span>
+      <span class="chip"><b>30 يوم</b> وبعدين بتتمسح لوحدها</span>
+      <span class="chip">بيشوفها <b>HR + مدير القسم</b> بس</span>
+      <span class="chip">الموظف <b>بيتقاله</b> على شاشة الكاميرا</span>
+      <span class="chip">كل فتح للصورة <b>بيتسجل</b> في Audit Log</span>
+    </div>
+  </header>
+
+  <section class="screens">
+    <figure>
+      <p class="cap">1 · الإعداد <span>wp-admin → Settings → Features</span></p>
+      <div class="wp" dir="ltr">
+        <div class="wp-top">Workforce One</div>
+        <div class="wp-body">
+          <h2>Features</h2>
+          <div class="wp-tabs"><a href="#">Attendance</a><a class="on" href="#">Face Sign In</a><a href="#">Requests</a></div>
+          <div class="card">
+            <h3>Face Sign In</h3>
+            <div class="row"><span class="toggle on" aria-hidden="true"></span><div><strong>Face Sign In</strong><p>Employees confirm it is them with the camera before Sign In.</p></div></div>
+            <div class="row"><span class="toggle on" aria-hidden="true"></span><div><strong>Keep a photo with each Face Sign In</strong><span class="new">New</span><p>A small photo from the camera is saved with the Sign In, for HR to check a doubtful record. Off unless you turn it on.</p></div></div>
+            <div class="field"><label for="days">Keep photos for</label><input id="days" value="30" aria-label="days"><span>days, then delete them</span></div>
+            <div class="field"><label for="who">Who can see them</label><select id="who"><option>HR and the employee's department manager</option><option>HR only</option></select></div>
+            <div class="note">Employees see a line on the camera screen saying a photo is kept, and for how long. Check that your staff policy covers photos at work.</div>
+            <span class="btn">Save</span>
+          </div>
+        </div>
+      </div>
+      <figcaption>زرار جديد تحت Face Sign In. مدة الحفظ ومين يشوف الصور بتتظبط من هنا.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="cap">2 · الموظف <span>App → Sign In → الكاميرا</span></p>
+      <div class="phone"><div class="screen">
+        <div class="bar"><span>8:02</span><span>Workforce One</span></div>
+        <div class="ph-h">تأكيد الوش</div>
+        <div class="cam"><span class="live">مباشر</span>
+          <div class="oval"><svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="42" r="24" fill="#c9cde6"/><path d="M8 120c4-30 22-44 42-44s38 14 42 44z" fill="#c9cde6"/></svg></div>
+        </div>
+        <div class="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <span>بتتحفظ صورة مع تسجيل الحضور ده. الـ HR ومديرك بس يقدروا يشوفوها، وبتتمسح بعد 30 يوم.</span></div>
+        <div class="status">✓ تم التأكد من الوش</div>
+        <div class="go">تسجيل الحضور</div>
+      </div></div>
+      <figcaption>الجملة دي بتظهر بس لو الميزة مفتوحة. مفيش زرار إضافي، والصورة بتتاخد من نفس اللقطة اللي اتعمل بيها التأكد.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="cap">3 · المراجعة <span>wp-admin → Attendance → Sign In / Out</span></p>
+      <div class="wp" dir="ltr">
+        <div class="wp-top">Workforce One</div>
+        <div class="wp-body">
+          <h2>Sign In / Out Report</h2>
+          <div class="wp-tabs"><a class="on" href="#">Sign In / Out</a><a href="#">Insights</a><a href="#">Corrections</a></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Photo</th><th>Employee</th><th>Date</th><th>Event</th><th>Time</th><th>Check</th></tr></thead>
+            <tbody>
+              <tr><td><span class="thumb sel"><svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="42" r="24" fill="#c9cde6"/><path d="M8 120c4-30 22-44 42-44s38 14 42 44z" fill="#c9cde6"/></svg></span></td><td>Mona Adel</td><td>Sun 12 Oct</td><td>Sign In</td><td>08:02</td><td><span class="pill ok">Face matched</span></td></tr>
+              <tr><td><span class="thumb"><svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="42" r="24" fill="#c9cde6"/><path d="M8 120c4-30 22-44 42-44s38 14 42 44z" fill="#c9cde6"/></svg></span></td><td>Karim Fathy</td><td>Sun 12 Oct</td><td>Sign In</td><td>08:11</td><td><span class="pill flag">Outside location</span></td></tr>
+              <tr><td><span class="none">—</span></td><td>Sara Nabil</td><td>Sun 12 Oct</td><td>Sign In</td><td>08:15</td><td><span class="none">Kiosk QR (no photo)</span></td></tr>
+            </tbody>
+          </table></div>
+          <div class="viewer">
+            <div class="big"><svg viewBox="0 0 100 120" aria-hidden="true"><circle cx="50" cy="42" r="24" fill="#c9cde6"/><path d="M8 120c4-30 22-44 42-44s38 14 42 44z" fill="#c9cde6"/></svg></div>
+            <dl class="meta">
+              <dt>Mona Adel · Sign In</dt><dd>Sun 12 Oct 2026, 08:02:14</dd>
+              <dt>Face</dt><dd>Matched (live capture, new challenge)</dd>
+              <dt>Kept until</dt><dd>Tue 11 Nov 2026</dd>
+              <dt>Opened by</dt><dd>You, now (written to the Audit Log)</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <figcaption>عمود صغير فيه الصورة، ولو دوست عليها بتكبر تحت الجدول ومعاها الوقت ونتيجة التأكد. التسجيلات اللي من غير Face (QR من الكشك، أو تسجيل يدوي) مفيهاش صورة.</figcaption>
+    </figure>
+  </section>
+
+  <section class="decide" dir="rtl">
+    <h2>محتاج رأيك في دول قبل ما أبني</h2>
+    <ol>
+      <li>مدة الحفظ الافتراضية 30 يوم، تنفع؟ (أقل حاجة 7 وأكتر حاجة 90)</li>
+      <li>مين يشوف الصور: HR ومدير القسم، ولا HR بس؟ (الاتنين موجودين كاختيار في الإعداد)</li>
+      <li>الصورة كمان مع Sign Out بالوش، ولا مع Sign In بس؟</li>
+      <li>الموظف نفسه يشوف صورته في "أيامي الأخيرة"، ولا لأ؟</li>
+    </ol>
+  </section>
+</div>

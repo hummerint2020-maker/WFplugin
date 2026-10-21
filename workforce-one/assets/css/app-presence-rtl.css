@@ -1,0 +1,40 @@
+/* Employee app → Presence Verification (templates/app/presence.php, 3.31.69). RTL: app-presence-rtl.css
+   (npx rtlcss@4, assets/css/README.md). */
+.wfo-pres{display:flex;flex-direction:column;gap:14px;max-width:560px;margin:0 auto}
+.wfo-app .wfo-pres-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 18px;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);text-align:center}
+.wfo-app .wfo-pres-card h2{margin:4px 0 0;font-size:18px;font-weight:700;line-height:1.35;color:var(--wfo-ink)}
+.wfo-app .wfo-pres-card h2 strong{color:var(--wfo-pri)}
+.wfo-app .wfo-pres-card p{margin:0;max-width:380px;font-size:13px;color:var(--wfo-muted)}
+.wfo-app .wfo-pres-badge{width:60px;height:60px;border-radius:20px;background:var(--wfo-pri-soft);color:var(--wfo-pri);display:flex;align-items:center;justify-content:center}
+.wfo-app .wfo-pres-done.is-ok .wfo-pres-badge{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-pres-done:not(.is-ok) .wfo-pres-badge{background:#FFF2DE;color:#8A4F00}
+.wfo-app .wfo-pres-ask{display:inline-flex;align-items:center;min-height:26px;padding:3px 12px;border-radius:999px;background:#FFF2DE;color:#8A4F00;font-size:12px;font-weight:600}
+.wfo-pres-ring{position:relative;width:132px;height:132px;margin:6px 0 0}
+.wfo-pres-ring svg{width:100%;height:100%;transform:rotate(90deg)}
+.wfo-pres-ring circle{fill:none;stroke-width:10}
+.wfo-pres-ring .track{stroke:#E8E9F2}
+.wfo-pres-ring .bar{stroke:var(--wfo-pri,#5B3FD9);stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.wfo-pres-ring.is-low .bar{stroke:#E06A84}
+.wfo-app .wfo-pres-ring strong{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--wfo-ink);font-variant-numeric:tabular-nums}
+.wfo-app .wfo-pres-left{font-size:12px}
+.wfo-pres-form{display:flex;flex-direction:column;gap:12px;margin:0}
+.wfo-pres-camera{position:relative;height:280px;border-radius:var(--wfo-r-card);background:#101828;overflow:hidden}
+.wfo-app #wfo-presence-scanner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;color:rgba(255,255,255,.75);font-size:13px;text-align:center}
+.wfo-app #wfo-presence-scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.wfo-pres-frame{position:absolute;top:50%;right:50%;width:180px;height:180px;margin:-100px -90px 0 0;border:3px solid var(--wfo-hl,#FFC83D);border-radius:24px;box-shadow:0 0 0 999px rgba(16,24,40,.35);pointer-events:none}
+.wfo-app .wfo-pres-hint{position:absolute;right:0;left:0;bottom:12px;color:#fff;font-size:12.5px;text-align:center;pointer-events:none}
+.wfo-app .wfo-pres-loc{display:flex;align-items:center;gap:8px;margin:0;padding:12px 14px;border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);font-size:13px;color:var(--wfo-ink)}
+.wfo-app .wfo-pres-loc:empty{display:none}
+.wfo-app .wfo-pres-loc[data-state=ready]{background:#E6F7EF;color:#0F6B43}
+.wfo-app .wfo-pres-loc[data-state=denied],.wfo-app .wfo-pres-loc[data-state=failed],.wfo-app .wfo-pres-loc[data-state=insecure]{background:#FFF5F6;color:#A51D3E}
+.wfo-pres-camera.is-off{height:auto;min-height:120px}
+.wfo-pres-camera.is-off .wfo-pres-frame,.wfo-pres-camera.is-off .wfo-pres-hint{display:none}
+.wfo-app .wfo-pres-submit{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;margin:0;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-pri);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.wfo-app .wfo-pres-submit:hover{background:var(--wfo-pri-dark)}
+.wfo-app .wfo-pres-note{margin:0;font-size:12px;color:var(--wfo-muted);text-align:center}
+.wfo-app .wfo-pres-done dl{width:100%;max-width:340px;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wfo-app .wfo-pres-done dl div{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:12px;background:var(--wfo-bg);font-size:13px}
+.wfo-app .wfo-pres-done dt{color:var(--wfo-muted)}
+.wfo-app .wfo-pres-done dd{margin:0;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-pres-thanks{color:#0F6B43!important;font-weight:600}
+@media (prefers-reduced-motion:reduce){.wfo-pres-ring .bar{transition:none}}

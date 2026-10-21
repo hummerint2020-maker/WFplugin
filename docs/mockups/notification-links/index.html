@@ -1,0 +1,178 @@
+<title>Notification Destinations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: a short brief, the wp-admin Notification Policy table with the new "Opens" column, a phone showing where a tap goes, then the decisions. */
+:root{
+  --bg:#f3f4f8; --paper:#ffffff; --ink:#1d2033; --muted:#5d6280; --line:#dfe2ec;
+  --accent:#4338ca; --accent-soft:#eceafd; --ok:#0f7a4a; --ok-soft:#e3f5ec; --warn:#9a5b00; --warn-soft:#fdf1dc;
+  --wp-bg:#f0f0f1; --wp-ink:#1d2327; --wp-line:#c3c4c7; --wp-blue:#2271b1; --wp-paper:#ffffff; --phone:#101225;
+  --f-display:"Alexandria",system-ui,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12141f; --paper:#1b1e2d; --ink:#e8e9f3; --muted:#a3a8c6; --line:#2e3248;
+  --accent:#a5a0ff; --accent-soft:#262552; --ok:#5fd39b; --ok-soft:#173528; --warn:#f2b55a; --warn-soft:#3a2a12;
+  --wp-bg:#1f2228; --wp-ink:#e6e7ea; --wp-line:#3a3f4a; --wp-blue:#72aee6; --wp-paper:#191c22; --phone:#05060c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12141f; --paper:#1b1e2d; --ink:#e8e9f3; --muted:#a3a8c6; --line:#2e3248;
+  --accent:#a5a0ff; --accent-soft:#262552; --ok:#5fd39b; --ok-soft:#173528; --warn:#f2b55a; --warn-soft:#3a2a12;
+  --wp-bg:#1f2228; --wp-ink:#e6e7ea; --wp-line:#3a3f4a; --wp-blue:#72aee6; --wp-paper:#191c22; --phone:#05060c; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;padding-block:28px 48px;padding-inline:16px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:26px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.4vw,34px);margin:0;text-wrap:balance}
+.lead{max-width:72ch;color:var(--muted);margin:6px 0 0;font-family:var(--f-display);font-size:14.5px;line-height:1.9}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;font-family:var(--f-display)}
+.cap{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--accent);margin:0 0 8px}
+.cap span{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:13px}
+.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.75fr);gap:22px;align-items:start}
+@media (max-width:1000px){.two{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;min-width:0}
+figcaption{color:var(--muted);font-size:13.5px;margin-top:8px;font-family:var(--f-display);line-height:1.8}
+/* wp-admin */
+.wp{background:var(--wp-bg);color:var(--wp-ink);border:1px solid var(--line);border-radius:6px;overflow:hidden;font:13px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif}
+.wp-top{background:#1d2327;color:#f0f0f1;padding:6px 12px;font-size:12px}
+.wp-body{padding:14px;display:grid;gap:12px;min-width:0}
+.wp h2{font-size:20px;font-weight:400;margin:0}
+.panel{background:var(--wp-paper);border:1px solid var(--wp-line);border-radius:8px;overflow-x:auto}
+.grid{display:grid;grid-template-columns:minmax(200px,1.5fr) 62px 62px 100px minmax(210px,1.3fr);min-width:740px}
+.grid>div{padding:10px 12px;border-top:1px solid var(--wp-line);display:flex;align-items:center}
+.grid>.h{border-top:0;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;opacity:.75;background:var(--wp-bg)}
+.cat{flex-direction:column;align-items:flex-start!important;gap:2px}
+.cat span{opacity:.7;font-size:12px}
+.new{background:var(--wp-blue);color:#fff;border-radius:3px;font-size:10.5px;padding:0 5px;margin-left:6px;font-weight:600;text-transform:none;letter-spacing:0}
+.tg{width:34px;height:19px;border-radius:19px;background:var(--wp-line);position:relative;flex:none}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#fff}
+.tg.on{background:var(--wp-blue)}.tg.on::after{left:18px}
+.opens{flex-direction:column;align-items:stretch!important;gap:4px}
+.opens select,.opens input{font:inherit;border:1px solid var(--wp-line);border-radius:4px;padding:4px 6px;background:var(--wp-paper);color:var(--wp-ink);width:100%;box-sizing:border-box}
+.opens small{opacity:.7;font-size:11.5px;line-height:1.4}
+.opens .changed{color:var(--warn)}
+.save{display:inline-block;background:var(--wp-blue);color:#fff;border-radius:3px;padding:5px 12px;font-weight:600;justify-self:start}
+/* phone */
+.phone{background:var(--phone);border-radius:32px;padding:10px;max-width:310px;margin:0 auto}
+.screen{background:var(--bg);border-radius:23px;overflow:hidden;min-height:520px;padding:14px;display:grid;gap:12px;align-content:start}
+.push{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:11px 13px;display:grid;gap:3px;font-size:13px;box-shadow:0 6px 18px rgba(16,18,37,.12)}
+.push b{font-size:13.5px}
+.push .app{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.arrow{text-align:center;color:var(--muted);font-family:var(--f-display);font-size:12.5px}
+.dest{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:6px}
+.dest .tag{justify-self:start;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;font-family:var(--f-display)}
+.dest h3{margin:0;font-family:var(--f-display);font-size:17px}
+.dest p{margin:0;color:var(--muted);font-size:13px}
+.pick{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+.pick button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.pick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.pick button:focus-visible,.opens select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.decide{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:8px;font-family:var(--f-display)}
+.decide h2{margin:0;font-size:18px}
+.decide ol{margin:0;padding-inline-start:20px;display:grid;gap:10px;line-height:1.8}
+.decide li span{display:block;color:var(--muted);font-size:13.5px}
+code{font-family:var(--f-mono);font-size:12.5px}
+</style>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <h1>إنت تختار كل إشعار يفتح فين</h1>
+    <p class="lead">في صفحة Notification Policy في wp-admin، جنب كل نوع إشعار (In-App / Push / Mandatory) هيبقى في عمود جديد اسمه <b>Opens</b>. بتختار منه الصفحة اللي الموظف يروحلها لما يدوس على الإشعار، سواء على الموبايل أو من قائمة الإشعارات في التطبيق. الافتراضي هو اللي اتفقنا عليه في 3.31.94.</p>
+    <div class="brief">
+      <span class="chip">نفس المكان من الموبايل ومن التطبيق</span>
+      <span class="chip">"Recommended" = اللي اتفقنا عليه، ومكتوب اسم الصفحة</span>
+      <span class="chip">لو حد مالوش صلاحية على الصفحة: صفحة الإشعارات زي دلوقتي</span>
+      <span class="chip">التغيير بيطبّق على الإشعارات الجديدة</span>
+    </div>
+  </header>
+
+  <section class="two">
+    <figure>
+      <p class="cap">wp-admin → Settings → Notifications <span>جرّب تغيّر أي اختيار في عمود Opens</span></p>
+      <div class="wp" dir="ltr">
+        <div class="wp-top">Workforce One</div>
+        <div class="wp-body">
+          <h2>Notification Policy Center</h2>
+          <div class="panel">
+            <div class="grid" id="grid">
+              <div class="h">Category</div><div class="h">In-App</div><div class="h">Push</div><div class="h">Mandatory</div><div class="h">Opens <span class="new">New</span></div>
+            </div>
+          </div>
+          <p style="margin:0;opacity:.75">"Recommended" opens the exact item when there is one (the task, the presence check, the Sign Out form for that day). Another page opens that page only.</p>
+          <span class="save">Save Notification Policy</span>
+        </div>
+      </div>
+      <figcaption>عمود Opens بيظهر فيه اختيار لكل نوع. Recommended مكتوب جنبه هو بيفتح إيه دلوقتي، فتعرف إنت بتغيّر من إيه لإيه. لو اخترت رابط معين، لازم يكون على نفس الموقع.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="cap">الموظف بيدوس على الإشعار <span>بيتغير مع الجدول</span></p>
+      <div class="pick" role="group" aria-label="Notification" dir="ltr" id="pick"></div>
+      <div class="phone" dir="ltr"><div class="screen">
+        <div class="push" id="push"></div>
+        <div class="arrow">tap ↓</div>
+        <div class="dest" id="dest"></div>
+      </div></div>
+      <figcaption>زرار "Recommended" بيفتح الحاجة نفسها (التاسك نفسها مثلًا). لو اخترت صفحة تانية، بيفتح الصفحة دي بشكل عام.</figcaption>
+    </figure>
+  </section>
+
+  <section class="decide">
+    <h2>محتاج ردك</h2>
+    <ol>
+      <li>الاختيار لكل <b>نوع</b> إشعار (زي ما في الجدول)، ولا عايز كمان تفصل بين اللي بيروح للموظف واللي بيروح للمدير في نفس النوع؟
+        <span>مثال: في "Leave" الموظف بيستلم "إجازتك اتقبلت"، والمدير بيستلم "في طلب محتاج موافقتك". دلوقتي الاتنين بيفتحوا صفحة الإجازات، فاقتراحي: لكل نوع اختيار واحد، وده أبسط.</span></li>
+      <li>نسيب اختيار "A link…" (تكتب رابط بإيدك)، ولا قائمة الصفحات كفاية؟
+        <span>اقتراحي نسيبه، بس يقبل روابط على نفس الموقع بس، عشان محدش يحط رابط بره بالغلط.</span></li>
+      <li>Smart Nudges: كل تذكير ليه مكانه (تذكير الـ Sign In بيفتح الحضور، تذكير التاسك بيفتح التاسك). نخليه برّه الإعداد ده؟
+        <span>اقتراحي آه، نسيبه زي ما هو، لأن مكانه بيتحدد من نوع التذكير مش من الإعداد.</span></li>
+    </ol>
+  </section>
+</div>
+
+<script>
+const PAGES={recommended:"Recommended",dashboard:"Home",schedule:"Schedule",time:"Sign In / Out",vacation:"Leave",overtime:"Overtime",corrections:"Corrections",tasks:"Tasks",pay:"My Pay",profile:"My Profile",polls:"Polls",presence:"Presence",notifications:"Notifications page",link:"A link…"};
+const ROWS=[
+ ["schedule","Schedule","Schedule changes and updates.",[1,1,0],"schedule","Schedule updated","Your schedule for Thursday is now Work from home."],
+ ["swap","Shift Swap","Swap requests and outcomes.",[1,1,0],"schedule","Shift swap to approve","Karim asks to swap Tuesday with Mona."],
+ ["leave","Leave","Leave requests and decisions.",[1,0,0],"vacation","Leave approved","Your annual leave 20–22 Oct is approved."],
+ ["early_leave","Early Leave","Early leave requests and decisions.",[1,0,0],"vacation","Early Leave Request","Sara asks to leave at 15:30 today."],
+ ["overtime","Overtime","Overtime requests and decisions.",[1,0,0],"overtime","Overtime Approved","Your overtime on 12 Oct (17:00–19:00) is approved."],
+ ["correction","Attendance Corrections","Correction requests and the end-of-day reminder.",[1,1,0],"corrections","Correction approved","Your correction for Sun 11 Oct was approved: Sign In 08:55."],
+ ["task","Tasks","Task assignments and reminders.",[1,0,0],"tasks","New Task","Update the stock count sheet (due Thu)."],
+ ["payroll","Payroll","A payslip is ready in My Pay.",[1,1,0],"pay","Payslip ready","Your payslip for September is ready in My Pay."],
+ ["achievement","Achievements","Achievements and recognition.",[1,1,0],"profile","New achievement","On time all month: well done."],
+ ["recognition","Recognition","Kudos from colleagues.",[1,1,0],"profile","You received a Kudos","Mona recognized you for Teamwork."],
+ ["poll","Polls","A new poll to answer.",[1,1,0],"polls","New poll","Which day suits the team lunch?"],
+ ["presence","Presence Verification","A request to verify your presence.",[1,1,1],"presence","Presence Verification","Please verify your presence at Nasr City. Expires in 3 minutes."],
+ ["break","Break","Break alerts.",[1,0,0],"time","Break Time Ended","Your 30-minute break has ended."],
+ ["attendance","Refused Sign In","Refused several times in a day (to managers).",[1,1,0],"wp-admin: Sign In / Out report","Sign In refused several times","Karim was refused 3 times today. See what happened."],
+ ["system","System","General administrative notifications.",[1,0,0],"notifications","Approval needed","Approval #41 waits for an administrator."]
+];
+const grid=document.getElementById('grid'),pick=document.getElementById('pick');
+let cur=0;const choice={};
+function label(k,rec){return k==='recommended'?'Recommended ('+(PAGES[rec]||rec)+')':PAGES[k];}
+ROWS.forEach((r,i)=>{
+  const [key,name,desc,t,rec]=r;choice[key]='recommended';
+  const c=document.createElement('div');c.className='cat';c.innerHTML='<strong></strong><span></span>';c.firstChild.textContent=name;c.lastChild.textContent=desc;grid.appendChild(c);
+  t.forEach(v=>{const d=document.createElement('div');d.innerHTML='<span class="tg'+(v?' on':'')+'" aria-hidden="true"></span>';grid.appendChild(d);});
+  const o=document.createElement('div');o.className='opens';
+  const s=document.createElement('select');s.id='opens-'+key;s.setAttribute('aria-label','Opens: '+name);
+  Object.keys(PAGES).forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=label(k,rec);s.appendChild(op);});
+  const inp=document.createElement('input');inp.id='link-'+key;inp.placeholder='/app/?ews_view=…  (this site only)';inp.hidden=true;inp.setAttribute('aria-label','Link for '+name);
+  const sm=document.createElement('small');
+  s.addEventListener('change',()=>{choice[key]=s.value;inp.hidden=s.value!=='link';sm.textContent=s.value==='recommended'?'':'Changed from '+(PAGES[rec]||rec);sm.className=s.value==='recommended'?'':'changed';cur=i;draw();});
+  inp.addEventListener('input',draw);
+  o.append(s,inp,sm);grid.appendChild(o);
+});
+[0,2,6,11,13].forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=ROWS[i][1];b.dataset.i=i;b.onclick=()=>{cur=i;draw();};pick.appendChild(b);});
+function draw(){
+  const [key,name,,,rec,title,msg]=ROWS[cur];
+  pick.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===cur));
+  const p=document.getElementById('push');p.innerHTML='<div class="app"><span>Workforce One</span><span>now</span></div><b></b><span></span>';p.children[1].textContent=title;p.children[2].textContent=msg;
+  const c=choice[key],d=document.getElementById('dest');
+  let tag,h,t;
+  if(c==='recommended'){tag='Recommended';h=PAGES[rec]||rec;t=key==='task'?'The task opens with its details.':key==='presence'?'The presence check opens, ready to confirm.':rec.startsWith('wp-admin')?'Managers who may open the report go there; others see the notification on the Notifications page.':'The page where this is seen or decided.';}
+  else if(c==='link'){const v=document.getElementById('link-'+key).value.trim();tag='Your link';h=v||'(type a link)';t='Must be on this site. People who may not open it see the notification instead.';}
+  else{tag='Your choice';h=PAGES[c];t='That page opens (not the exact item).';}
+  d.innerHTML='<span class="tag"></span><h3></h3><p></p>';d.children[0].textContent=tag;d.children[1].textContent=h;d.children[2].textContent=t;
+}
+draw();
+</script>

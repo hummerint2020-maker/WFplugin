@@ -1,0 +1,47 @@
+/* Employee app → My Pay (templates/app/pay.php; new look 3.31.69). RTL: app-pay-rtl.css (npx rtlcss@4). */
+.ews-pay{display:flex;flex-direction:column;gap:12px;max-width:640px;margin:0 auto}
+.ews-pay-month{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wfo-app .ews-pay-month b{font-size:17px;font-weight:700;color:var(--wfo-ink)}
+.wfo-app .ews-pay-arrow{width:42px;height:42px;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center;color:var(--wfo-pri);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);text-decoration:none}
+.wfo-app .ews-pay-arrow:not(.next) .wfo-icon{transform:scaleX(-1)}
+.wfo-app .ews-pay-arrow.off{color:#C9CDDB;box-shadow:none}
+.wfo-app .ews-pay-hero{margin:0;padding:18px 20px;border-radius:var(--wfo-r-card);background:var(--wfo-hero-start);color:#fff;box-shadow:var(--wfo-shadow)}
+.wfo-app .ews-pay-hero .k{margin:0;font-size:12.5px;color:rgba(255,255,255,.75)}
+.wfo-app .ews-pay-hero .v{margin:2px 0 10px;font-size:34px;font-weight:700;letter-spacing:-.5px;color:#fff;font-variant-numeric:tabular-nums}
+.wfo-app .ews-pay-hero .v span{font-size:15px;font-weight:600;color:rgba(255,255,255,.8)}
+.wfo-app .ews-pay-pill{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:0 11px;border-radius:999px;font-size:12px;font-weight:600}
+.wfo-app .ews-pay-pill.final{background:rgba(77,187,134,.2);color:#9BE3C0}
+.wfo-app .ews-pay-pill.est{background:rgba(255,200,61,.18);color:var(--wfo-hl)}
+.ews-pay-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.wfo-app .ews-pay-stats>div{padding:10px 4px;border-radius:14px;background:var(--wfo-surface);box-shadow:var(--wfo-shadow);text-align:center;font-size:11px;color:var(--wfo-muted)}
+.wfo-app .ews-pay-stats b{display:block;margin-bottom:2px;font-size:17px;font-weight:700;color:var(--wfo-ink);font-variant-numeric:tabular-nums}
+.wfo-app .ews-pay-stats .is-warn b{color:#8A4F00}
+.wfo-app .ews-pay-stats .is-bad b{color:#A51D3E}
+.wfo-app .ews-pay-stats .is-good b{color:#0F6B43}
+.wfo-app .ews-pay-card{margin:0;border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);overflow:hidden}
+.wfo-app .ews-pay-card h3{margin:0;padding:14px 16px 8px;font-size:15px;font-weight:700;color:var(--wfo-ink)}
+.wfo-app .ews-pay-ln{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:11px 16px;border-top:1px solid var(--wfo-line);font-size:13.5px;color:var(--wfo-ink)}
+.wfo-app .ews-pay-ln-sub{margin-top:2px;font-size:11.5px;color:var(--wfo-muted)}
+.wfo-app .ews-pay-amt{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wfo-app .ews-pay-amt.plus{color:#0F6B43}
+.wfo-app .ews-pay-amt.minus{color:#A51D3E}
+.wfo-app .ews-pay-net .ews-pay-ln{border-top:0}
+.wfo-app .ews-pay-ln.total{padding:16px;font-size:15px;font-weight:700}
+.wfo-app .ews-pay-ln.total .ews-pay-amt{font-size:17px}
+.ews-pay details>summary{list-style:none;cursor:pointer}
+.ews-pay details>summary::-webkit-details-marker{display:none}
+.wfo-app .ews-pay details>summary:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:-2px}
+.wfo-app .ews-pay details[open]>summary .ews-pay-ln{background:var(--wfo-bg)}
+.wfo-app .ews-pay-chev{display:inline-flex;vertical-align:middle;color:var(--wfo-muted);transform:rotate(-90deg);transition:transform .15s}
+.wfo-app .ews-pay details[open] .ews-pay-chev{transform:rotate(90deg)}
+.wfo-app .ews-pay-days{padding:0 16px 10px;background:var(--wfo-bg)}
+.wfo-app .ews-pay-days div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px dashed var(--wfo-line);font-size:12px;color:#3B4466}
+.wfo-app .ews-pay-warn{display:flex;align-items:flex-start;gap:8px;padding:11px 14px;border-radius:var(--wfo-r-ctl);background:#FFF2DE;color:#8A4F00;font-size:12.5px;line-height:1.5}
+.wfo-app .ews-pay-warn .wfo-icon{margin-top:2px}
+.wfo-app .ews-pay-note{padding:11px 14px;border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);color:#3B4466;font-size:12.5px}
+.wfo-app .ews-pay-empty{padding:22px 16px;color:var(--wfo-muted);font-size:13.5px;text-align:center}
+.wfo-app .ews-pay-foot{margin:0 4px;font-size:11.5px;line-height:1.55;color:var(--wfo-muted)}
+.wfo-app .ews-pay-center{text-align:center}
+.wfo-app .ews-pay-pdf{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:var(--wfo-r-ctl);border:1px solid var(--wfo-line);background:var(--wfo-surface);color:var(--wfo-ink);font-size:14px;font-weight:700;text-decoration:none}
+.wfo-app .ews-pay-pdf:hover{border-color:var(--wfo-pri);color:var(--wfo-pri)}
+@media (max-width:420px){.wfo-app .ews-pay-stats>div{font-size:10px}.wfo-app .ews-pay-hero .v{font-size:30px}}

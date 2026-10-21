@@ -1,0 +1,246 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>Workforce One Admin Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a wp-admin frame (dark sidebar + light work area), the current 30-item menu beside the proposed 8 sections; clicking a section opens its page with tabs. */
+:root{
+  --page:#f0f0f1; --panel:#ffffff; --ink:#1d2327; --muted:#646970; --line:#dcdcde;
+  --side:#1d2327; --side-ink:#f0f0f1; --side-muted:#a7aaad; --side-hover:#2c3338; --side-sub:#2c3338;
+  --wp:#2271b1; --wp-ink:#ffffff; --tab:#f6f7f7; --ok:#00a32a; --ok-bg:#edfaef; --warn:#996800; --warn-bg:#fcf9e8; --off:#8c8f94;
+  --sans:"IBM Plex Sans","IBM Plex Sans Arabic",-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --page:#14171a; --panel:#1d2226; --ink:#e7e9ea; --muted:#a2a8ad; --line:#30363b;
+  --side:#0f1214; --side-ink:#e7e9ea; --side-muted:#8d949a; --side-hover:#20262b; --side-sub:#1a1f23;
+  --wp:#4f94d4; --wp-ink:#0b1620; --tab:#232a2f; --ok:#5cc46e; --ok-bg:#16301c; --warn:#e2b84b; --warn-bg:#2e2712; --off:#7b8187; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#14171a; --panel:#1d2226; --ink:#e7e9ea; --muted:#a2a8ad; --line:#30363b;
+  --side:#0f1214; --side-ink:#e7e9ea; --side-muted:#8d949a; --side-hover:#20262b; --side-sub:#1a1f23;
+  --wp:#4f94d4; --wp-ink:#0b1620; --tab:#232a2f; --ok:#5cc46e; --ok-bg:#16301c; --warn:#e2b84b; --warn-bg:#2e2712; --off:#7b8187; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:20px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:22px;font-weight:600;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted);max-width:68ch}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.lang button{border:0;background:transparent;color:var(--ink);font:inherit;padding:6px 14px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--wp);color:var(--wp-ink)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--wp);outline-offset:2px}
+
+.compare{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start}
+.label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+[dir="rtl"] .label{letter-spacing:0}
+
+/* the current menu, as it is today */
+.old{background:var(--side);border-radius:6px;padding-block:6px 10px;color:var(--side-ink)}
+.old .head{display:flex;align-items:center;gap:8px;background:var(--wp);color:#fff;padding:8px 10px;font-weight:600;font-size:13px}
+.old ul{list-style:none;margin:6px 0 0;padding:0}
+.old li{padding:3px 12px;font-size:12.5px;color:var(--side-ink);opacity:.92}
+.old .count{margin:8px 12px 0;font-size:12px;color:var(--side-muted)}
+
+/* the proposed wp-admin frame */
+.frame{display:grid;grid-template-columns:200px 1fr;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:560px}
+nav.side{background:var(--side);color:var(--side-ink);padding-block:8px}
+.side .wpitem{display:flex;align-items:center;gap:8px;padding:7px 12px;color:var(--side-muted);font-size:13px}
+.side .wpitem svg{flex:0 0 18px}
+.side .app{background:var(--wp);color:#fff;font-weight:600}
+.side ul{list-style:none;margin:0;padding:4px 0 8px;background:var(--side-sub)}
+.side li button{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:6px 12px 6px 14px;font-size:13px;color:var(--side-ink);cursor:pointer}
+[dir="rtl"] .side li button{padding:6px 14px 6px 12px}
+.side li button:hover{background:var(--side-hover)}
+.side li button[aria-current="page"]{font-weight:700;color:#fff;box-shadow:inset 3px 0 0 var(--wp)}
+[dir="rtl"] .side li button[aria-current="page"]{box-shadow:inset -3px 0 0 var(--wp)}
+.side li .n{font-size:11px;color:var(--side-muted);font-variant-numeric:tabular-nums}
+
+main.work{padding:18px 22px;min-width:0;display:grid;gap:14px;align-content:start}
+.crumb{color:var(--muted);font-size:12.5px}
+.work h2{margin:0;font-size:23px;font-weight:400}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);padding-bottom:0}
+.tabs button{font:inherit;font-size:13.5px;font-weight:600;color:var(--muted);background:var(--tab);border:1px solid var(--line);border-bottom:0;border-radius:4px 4px 0 0;padding:7px 12px;cursor:pointer;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--panel)}
+.tabs button.is-off{color:var(--off);text-decoration:line-through;cursor:default}
+.page{border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px;padding:16px;display:grid;gap:10px;min-height:180px}
+.page h3{margin:0;font-size:16px}
+.page p{margin:0;color:var(--muted);max-width:70ch}
+.url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--tab);border:1px solid var(--line);border-radius:4px;padding:6px 8px;overflow-x:auto;white-space:nowrap;direction:ltr;text-align:left}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;width:max-content}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:6px;align-content:start}
+.note h4{margin:0;font-size:14px}
+.note p{margin:0;color:var(--muted)}
+
+@media (max-width:820px){
+  .compare{grid-template-columns:1fr}
+  .old ul{columns:2;column-gap:8px}
+  .frame{grid-template-columns:1fr}
+  nav.side ul{display:flex;flex-wrap:wrap;gap:2px;padding:6px}
+  .side li button{padding:6px 10px;border-radius:4px}
+  .side li .n{display:none}
+}
+@media (prefers-reduced-motion:no-preference){.page{animation:fade .18s ease-out}}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+</style>
+
+<div class="wrap" id="app">
+  <header class="top">
+    <div>
+      <h1 data-t="title"></h1>
+      <p class="sub" data-t="lead"></p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" id="l-ar" data-lang="ar" aria-pressed="true">عربي</button>
+      <button type="button" id="l-en" data-lang="en" aria-pressed="false">English</button>
+    </div>
+  </header>
+
+  <div class="compare">
+    <section aria-labelledby="old-l">
+      <p class="label" id="old-l" data-t="today"></p>
+      <div class="old">
+        <div class="head"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M14 19c0-2 2-4 4-4s3 1 3 3"/></svg>Employee Schedule</div>
+        <ul id="old-list"></ul>
+        <p class="count" data-t="oldcount"></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="new-l">
+      <p class="label" id="new-l" data-t="proposed"></p>
+      <div class="frame">
+        <nav class="side" aria-label="wp-admin">
+          <div class="wpitem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12l9-8 9 8M5 10v10h14V10"/></svg><span>Dashboard</span></div>
+          <div class="wpitem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v16H4zM4 9h16"/></svg><span>Posts</span></div>
+          <div class="wpitem app"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M14 19c0-2 2-4 4-4s3 1 3 3"/></svg><span data-t="appname"></span></div>
+          <ul id="sections"></ul>
+          <div class="wpitem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>Users</span></div>
+          <div class="wpitem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>Settings</span></div>
+        </nav>
+        <main class="work" id="work" aria-live="polite"></main>
+      </div>
+    </section>
+  </div>
+
+  <section class="notes" id="notes" aria-label="Notes"></section>
+</div>
+
+<script>
+(function(){
+  var OLD=['Employee Schedule','Employees','Attendance Insights','Sign In / Out Report','Requests Hub','Leaves','Payroll','Attendance Corrections','Face Reset Requests','Departments','Teams','Work Locations','Presence Kiosks','Employee Branches','Schedule Configuration','Auto Attendance','Employee Moments','Smart Nudges','Achievements','Employee Polls','Recognition','Roles & Permissions','Notification Settings','Email Settings','Feature Configuration','Tasks','Audit Log','Employee Profile','View Navigation','Appearance','Approval Workflows','Settings Overview'];
+
+  // Each section: its tabs, each one an existing page (slug kept, so old links still open).
+  var S=[
+    {id:'home',en:'Home',ar:'الرئيسية',tabs:[['ews31','Today','اليوم','Today’s counts, who is in, late or on leave, and what waits for a decision.','أرقام النهارده: مين حاضر ومين متأخر ومين في إجازة، والطلبات اللي مستنية قرار.']]},
+    {id:'people',en:'People',ar:'الموظفين',tabs:[
+      ['ews31-employees','Employees','الموظفين','Add, edit and archive employees.','إضافة وتعديل وأرشفة الموظفين.'],
+      ['ews31-departments','Departments','الأقسام','Departments and their managers.','الأقسام ومديرينها.'],
+      ['ews31-teams','Teams','الفرق','Teams and their members.','الفرق وأعضاؤها.'],
+      ['ews31-employee-branches','Branches','الفروع','Each employee’s main and other branches.','الفرع الأساسي والفروع التانية لكل موظف.'],
+      ['ews31-employee-profile','Profile fields','بيانات الملف','Which fields an employee profile has.','الحقول اللي في ملف الموظف.']]},
+    {id:'attendance',en:'Attendance',ar:'الحضور',tabs:[
+      ['ews31-time-report','Sign In / Out','الحضور والانصراف','Every Sign In and Sign Out, add or fix one, export.','كل تسجيلات الحضور والانصراف، إضافة أو تعديل، وتصدير.'],
+      ['ews31-attendance-insights','Insights','التحليلات','Trends, late and absent patterns.','الاتجاهات وأنماط التأخير والغياب.'],
+      ['ews31-corrections','Corrections','التصحيحات','Employees’ correction requests.','طلبات تصحيح الحضور.','corrections'],
+      ['ews31-auto-attendance','Auto attendance','الحضور التلقائي','Rules that mark attendance automatically.','قواعد تسجيل الحضور تلقائيًا.'],
+      ['ews31-face-reset-requests','Face resets','إعادة الوجه','Requests to enrol a face again.','طلبات تسجيل الوجه من جديد.']]},
+    {id:'requests',en:'Requests',ar:'الطلبات',tabs:[
+      ['ews31-requests','Requests Hub','مركز الطلبات','Every request waiting for a decision, in one list.','كل الطلبات اللي مستنية قرار في قايمة واحدة.'],
+      ['ews31-leaves','Leaves','الإجازات','Leave types, balances and records.','أنواع الإجازات والأرصدة والتسجيلات.'],
+      ['ews31-approvals','Approval workflows','مسارات الموافقة','Who approves what, step by step.','مين يوافق على إيه، خطوة بخطوة.']]},
+    {id:'schedule',en:'Schedule & places',ar:'الجدول والأماكن',tabs:[
+      ['ews31-schedule-config','Schedule','الجدول','Working days, shifts, schedule types, holidays.','أيام العمل والورديات وأنواع الجدول والإجازات الرسمية.'],
+      ['ews31-multi-locations','Work locations','أماكن العمل','Branches and sites on the map.','الفروع والمواقع على الخريطة.'],
+      ['ews31-presence-kiosks','Kiosks','أكشاك الحضور','Tablets and QR codes at the door.','التابلت وأكواد QR على الباب.']]},
+    {id:'pay',en:'Pay',ar:'المرتبات',tabs:[
+      ['ews31-payroll','Payroll','المرتبات','Salaries, the month’s pay, payslips.','الرواتب وحساب الشهر وقسايم المرتب.'],
+      ['ews31-daily-workers','Daily workers','العمالة اليومية','Sites, day sheets, payouts.','المواقع وكشوف اليوم والصرف.','dw']]},
+    {id:'engage',en:'Engagement',ar:'التفاعل',tabs:[
+      ['ews31-moments','Moments','المناسبات','Birthdays and work anniversaries.','أعياد الميلاد وسنوات العمل.'],
+      ['ews31-smart-nudges','Nudges','التنبيهات الذكية','Gentle reminders to employees.','تذكيرات خفيفة للموظفين.'],
+      ['ews31-achievements','Achievements','الإنجازات','Badges and who earned them.','الشارات ومين أخدها.'],
+      ['ews31-polls','Polls','الاستطلاعات','Questions to the team.','أسئلة للفريق.'],
+      ['ews31-recognition','Recognition','التقدير','Kudos between colleagues.','الشكر بين الزملاء.'],
+      ['ews31-tasks','Tasks','المهام','Task settings.','إعدادات المهام.']]},
+    {id:'settings',en:'Settings',ar:'الإعدادات',tabs:[
+      ['ews31-features','Features','المميزات','Turn each feature on or off.','تشغيل وإيقاف كل ميزة.'],
+      ['ews31-notifications','Notifications','الإشعارات','What is sent and to whom.','إيه اللي يتبعت ولمين.'],
+      ['ews31-email','Email','الإيميل','Sender and email templates.','المرسل وقوالب الإيميل.'],
+      ['ews31-roles','Roles & permissions','الصلاحيات','Who can see and do what.','مين يشوف إيه ويعمل إيه.'],
+      ['ews31-appearance','Appearance','الشكل','Theme and colours of the app.','ثيم وألوان التطبيق.'],
+      ['ews31-navigation','App menu','قايمة التطبيق','Names and order of the app’s pages.','أسماء وترتيب صفحات التطبيق.'],
+      ['ews31-employee-profile-settings','Profile page','صفحة الملف','What employees see on their profile.','اللي الموظف بيشوفه في ملفه.'],
+      ['ews31-settings-overview','Overview','نظرة عامة','Every setting on one page, with export.','كل الإعدادات في صفحة واحدة، مع تصدير.'],
+      ['ews31-audit','Audit log','سجل التغييرات','Who changed what, and when.','مين غيّر إيه وامتى.']]}
+  ];
+
+  // Demo: Daily workers is switched off, so its tab is hidden; corrections is on.
+  var OFF={dw:true};
+
+  var T={
+    title:{en:'Workforce One: a shorter admin menu',ar:'Workforce One: قايمة أقصر في لوحة التحكم'},
+    lead:{en:'The same pages, grouped into 8 sections. Click a section on the right to see its tabs.',ar:'نفس الصفحات، متجمّعة في 8 أقسام. دوس على أي قسم عشان تشوف التابات بتاعته.'},
+    today:{en:'Today: 32 items',ar:'دلوقتي: 32 عنصر'},
+    proposed:{en:'Proposed: 8 sections, tabs inside',ar:'المقترح: 8 أقسام وجوّاها تابات'},
+    oldcount:{en:'Every page at one level, including turned-off features.',ar:'كل صفحة في نفس المستوى، حتى المميزات المقفولة.'},
+    appname:{en:'Workforce One',ar:'Workforce One'},
+    same:{en:'The same page as today; only how you reach it changes.',ar:'نفس الصفحة اللي موجودة دلوقتي؛ اللي اتغيّر بس طريقة الوصول ليها.'},
+    oldlink:{en:'Old link still opens it',ar:'اللينك القديم لسه بيفتحها'},
+    offnote:{en:'Daily workers is off in Feature Configuration, so its tab is hidden.',ar:'العمالة اليومية مقفولة من إعدادات المميزات، فالتاب بتاعها مش ظاهر.'},
+    tabsof:{en:'tabs',ar:'تابات'}
+  };
+  var NOTES=[
+    {en:['Feature off, page hidden','A page whose feature is switched off does not show, in the menu or as a tab (here: Daily workers).'],ar:['الميزة مقفولة؟ الصفحة تختفي','أي صفحة ميزتها مقفولة متظهرش، لا في القايمة ولا كتاب (زي العمالة اليومية هنا).']},
+    {en:['Each person sees their part','Permissions stay as they are. A section where every tab is closed to someone does not show for them.'],ar:['كل واحد يشوف اللي يخصه','الصلاحيات زي ما هي. القسم اللي كل تاباته ممنوعة على حد، مش بيظهرله.']},
+    {en:['No broken links','Every page keeps its address (admin.php?page=…), so bookmarks, emails and notifications still open it, inside its section.'],ar:['مفيش لينك يبوظ','كل صفحة بتفضل بنفس عنوانها (admin.php?page=…)، فأي bookmark أو إيميل أو إشعار بيفتحها جوه القسم بتاعها.']},
+    {en:['Arabic on an Arabic site','Section and tab names are translated like the rest of the plugin.'],ar:['عربي على الموقع العربي','أسماء الأقسام والتابات بتتترجم زي باقي البرنامج.']}
+  ];
+
+  var lang='ar', cur='attendance', tab=0;
+  try{var s=localStorage.getItem('wfoMenuLang');if(s==='en'||s==='ar')lang=s;}catch(e){}
+  var app=document.getElementById('app');
+
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function visible(sec){return sec.tabs.filter(function(t){return !(t[5]&&OFF[t[5]]);});}
+
+  function render(){
+    document.documentElement.lang=lang;
+    app.dir=lang==='ar'?'rtl':'ltr';
+    document.querySelectorAll('[data-t]').forEach(function(el){el.textContent=T[el.getAttribute('data-t')][lang];});
+    document.querySelectorAll('.lang button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-lang')===lang));});
+    document.getElementById('old-list').innerHTML=OLD.map(function(n){return '<li>'+esc(n)+'</li>';}).join('');
+
+    document.getElementById('sections').innerHTML=S.map(function(sec){
+      var n=visible(sec).length;
+      return '<li><button type="button" data-sec="'+sec.id+'"'+(sec.id===cur?' aria-current="page"':'')+'><span>'+esc(sec[lang])+'</span>'+(n>1?'<span class="n">'+n+'</span>':'')+'</button></li>';
+    }).join('');
+
+    var sec=S.filter(function(x){return x.id===cur;})[0], tabs=visible(sec);
+    if(tab>=tabs.length)tab=0;
+    var t=tabs[tab], hidden=sec.tabs.length-tabs.length;
+    var h='<div class="crumb">Workforce One › '+esc(sec[lang])+'</div><h2>'+esc(sec[lang])+'</h2>';
+    if(tabs.length>1){
+      h+='<div class="tabs" role="tablist">'+tabs.map(function(x,i){return '<button type="button" role="tab" id="tab-'+i+'" data-tab="'+i+'" aria-selected="'+(i===tab)+'">'+esc(lang==='ar'?x[2]:x[1])+'</button>';}).join('')+'</div>';
+    }
+    h+='<div class="page" role="tabpanel"'+(tabs.length>1?'':' style="border-top:1px solid var(--line);border-radius:6px"')+'>'
+      +'<h3>'+esc(lang==='ar'?t[2]:t[1])+'</h3><p>'+esc(lang==='ar'?t[4]:t[3])+'</p><p>'+esc(T.same[lang])+'</p>'
+      +'<span class="pill ok">✓ '+esc(T.oldlink[lang])+'</span><div class="url">/wp-admin/admin.php?page='+esc(t[0])+'</div>'
+      +(hidden?'<span class="pill warn">'+esc(T.offnote[lang])+'</span>':'')+'</div>';
+    document.getElementById('work').innerHTML=h;
+
+    document.getElementById('notes').innerHTML=NOTES.map(function(n){return '<div class="note"><h4>'+esc(n[lang][0])+'</h4><p>'+esc(n[lang][1])+'</p></div>';}).join('');
+  }
+
+  app.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.lang){lang=b.dataset.lang;try{localStorage.setItem('wfoMenuLang',lang);}catch(x){}render();return;}
+    if(b.dataset.sec){cur=b.dataset.sec;tab=0;render();return;}
+    if(b.dataset.tab){tab=Number(b.dataset.tab);render();var f=document.getElementById('tab-'+tab);if(f)f.focus();}
+  });
+  render();
+})();
+</script>
+</body></html>

@@ -1,0 +1,229 @@
+<title>Workforce One Hosting Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column; the map is the hero, the five flows are its key, two server sheets close. */
+:root {
+  --bg: #F3F4FA;          /* app background */
+  --surface: #FFFFFF;
+  --ink: #141A33;
+  --muted: #5F6585;
+  --line: #D9DBEA;
+  --pri: #5B3FD9;         /* Workforce One violet */
+  --pri-soft: #EBE8FA;
+  --hl: #FFC83D;          /* app highlight */
+  --ok: #1B8A5A;
+  --f-display: "Alexandria", "Segoe UI", Tahoma, sans-serif;
+  --f-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1226; --surface: #181C38; --ink: #ECEDF7; --muted: #A3A8C7; --line: #2C3157;
+  --pri: #9C8CFF; --pri-soft: #262150; --hl: #FFC83D; --ok: #4CC38A; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1226; --surface: #181C38; --ink: #ECEDF7; --muted: #A3A8C7; --line: #2C3157;
+  --pri: #9C8CFF; --pri-soft: #262150; --hl: #FFC83D; --ok: #4CC38A; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.7; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; color: var(--pri); text-transform: uppercase; direction: ltr; text-align: right; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 6vw, 36px); line-height: 1.25; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+h2 { font-family: var(--f-display); font-weight: 500; font-size: 20px; margin: 0 0 10px; }
+
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.map-scroll { overflow-x: auto; }
+svg.map { display: block; width: 100%; min-width: 360px; max-width: 520px; height: auto; margin: 0 auto; color: var(--ink); font-family: var(--f-body); }
+figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); }
+
+.map .frame { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.map .frame-hq { fill: var(--pri-soft); stroke: var(--pri); stroke-width: 1.5; }
+.map .box { fill: var(--surface); stroke: var(--ink); stroke-opacity: .35; stroke-width: 1.2; }
+.map .box-pri { fill: var(--surface); stroke: var(--pri); stroke-width: 1.6; }
+.map .box-ext { fill: var(--surface); stroke: var(--muted); stroke-dasharray: 4 3; stroke-width: 1.2; }
+.map .t { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.map .s { fill: var(--muted); font-size: 11px; }
+.map .h { fill: var(--ink); font-family: var(--f-display); font-size: 13px; font-weight: 700; }
+.map .m { fill: var(--muted); font-family: var(--f-mono); font-size: 10.5px; }
+.map .edge { stroke: var(--ink); stroke-opacity: .7; stroke-width: 1.4; fill: none; }
+.map .edge-pri { stroke: var(--pri); stroke-width: 1.8; fill: none; }
+.map .edge-dash { stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 5 4; fill: none; }
+.map .lbl { fill: var(--ink); font-size: 11px; font-weight: 500; }
+.map .lbl-pri { fill: var(--pri); font-size: 11px; font-weight: 600; }
+.map .num { fill: var(--hl); stroke: var(--ink); stroke-width: 1; }
+.map .num-t { fill: #13235B; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; }
+.map .ah { fill: var(--ink); fill-opacity: .7; }
+.map .ah-pri { fill: var(--pri); }
+.map .ah-dash { fill: var(--muted); }
+
+ol.flows { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.flows li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.flows .n { width: 24px; height: 24px; border-radius: 50%; background: var(--hl); color: #13235B; font-family: var(--f-mono); font-size: 12px; display: grid; place-items: center; margin-top: 3px; }
+.flows b { font-weight: 600; }
+.flows p { margin: 2px 0 0; color: var(--muted); font-size: 14.5px; min-width: 0; }
+code { font-family: var(--f-mono); font-size: .86em; direction: ltr; unicode-bidi: isolate; background: var(--pri-soft); padding: 1px 5px; border-radius: 5px; }
+
+.sheets { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.sheet h3 { font-family: var(--f-display); font-weight: 500; font-size: 16px; margin: 0 0 8px; }
+.sheet ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; font-size: 14.5px; }
+.sheet .tag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--ok); margin-bottom: 6px; }
+footer { color: var(--muted); font-size: 13px; }
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <header>
+    <div class="eyebrow">Workforce One · Hosting</div>
+    <h1>شركات كتير على سيرفر واحد، والتحكم من عندك</h1>
+    <p class="lede">كل شركة ليها موقع منفصل على سيرفر العملاء، ولوحة HQ على سيرفر تاني هي اللي بتقرر مين مشترك. الأرقام على الأسهم بتشاور على الشرح تحت الرسمة.</p>
+  </header>
+
+  <figure>
+    <div class="map-scroll">
+    <svg class="map" viewBox="0 0 460 960" role="img" direction="rtl"
+         aria-label="موبايلات الموظفين تكلم مواقع الشركات على سيرفر العملاء. كل موقع يسأل لوحة HQ على سيرفر منفصل مرة في اليوم عن الترخيص، والوكيل يسألها كل دقيقة عن شركات جديدة. HQ تبعت لينكات دفع Paymob، وPaymob يبلّغها بالدفع. المشغّل بيحدّث المواقع من السيرفر.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0 L10 5 L0 10 z"/></marker>
+        <marker id="ahp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-pri" d="M0 0 L10 5 L0 10 z"/></marker>
+        <marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-dash" d="M0 0 L10 5 L0 10 z"/></marker>
+      </defs>
+
+      <!-- phones -->
+      <rect class="box" x="130" y="16" width="200" height="60" rx="10"/>
+      <text class="t" x="230" y="42" text-anchor="middle">موبايلات الموظفين</text>
+      <text class="s" x="230" y="62" text-anchor="middle">التطبيق (PWA) · Flutter بعدين</text>
+
+      <!-- flow 1 -->
+      <line class="edge" x1="230" y1="76" x2="230" y2="146" marker-end="url(#ah)"/>
+      <circle class="num" cx="200" cy="108" r="9"/><text class="num-t" x="200" y="112" text-anchor="middle">1</text>
+      <text class="lbl" x="250" y="106" text-anchor="end">حضور · طلبات</text>
+      <text class="m" x="250" y="122" text-anchor="end">HTTPS</text>
+
+      <!-- customer server -->
+      <rect class="frame" x="16" y="150" width="400" height="330" rx="14"/>
+      <text class="h" x="400" y="176" text-anchor="start">سيرفر العملاء</text>
+      <text class="m" x="32" y="176" text-anchor="start" direction="ltr">CloudPanel · nginx</text>
+
+      <g>
+        <rect class="box" x="292" y="192" width="112" height="86" rx="10"/>
+        <text class="t" x="348" y="218" text-anchor="middle">شركة أ</text>
+        <text class="m" x="348" y="240" text-anchor="middle" direction="ltr">WordPress</text>
+        <text class="m" x="348" y="256" text-anchor="middle" direction="ltr">Workforce One</text>
+      </g>
+      <g>
+        <rect class="box" x="166" y="192" width="112" height="86" rx="10"/>
+        <text class="t" x="222" y="218" text-anchor="middle">شركة ب</text>
+        <text class="m" x="222" y="240" text-anchor="middle" direction="ltr">WordPress</text>
+        <text class="m" x="222" y="256" text-anchor="middle" direction="ltr">Workforce One</text>
+      </g>
+      <g>
+        <rect class="box" x="40" y="192" width="112" height="86" rx="10"/>
+        <text class="t" x="96" y="218" text-anchor="middle">شركة ج</text>
+        <text class="m" x="96" y="240" text-anchor="middle" direction="ltr">WordPress</text>
+        <text class="m" x="96" y="256" text-anchor="middle" direction="ltr">Workforce One</text>
+      </g>
+      <text class="s" x="222" y="300" text-anchor="middle">لكل شركة: مستخدم لينكس · PHP-FPM · قاعدة بيانات</text>
+      <text class="s" x="222" y="318" text-anchor="middle">الكود ملك root · حساب الشركة من غير صلاحيات كود</text>
+
+      <!-- agent and updates -->
+      <rect class="box" x="40" y="344" width="170" height="70" rx="10"/>
+      <text class="t" x="125" y="370" text-anchor="middle">الوكيل</text>
+      <text class="m" x="125" y="392" text-anchor="middle" direction="ltr">new_company.sh</text>
+      <line class="edge" x1="125" y1="344" x2="125" y2="282" marker-end="url(#ah)"/>
+      <text class="lbl" x="134" y="334" text-anchor="end">يعمل شركة</text>
+
+      <rect class="box" x="226" y="344" width="140" height="70" rx="10"/>
+      <text class="t" x="296" y="370" text-anchor="middle">التحديثات</text>
+      <text class="m" x="296" y="392" text-anchor="middle" direction="ltr">update_company.sh</text>
+      <line class="edge" x1="330" y1="344" x2="330" y2="282" marker-end="url(#ah)"/>
+      <text class="lbl" x="322" y="334" text-anchor="start">نسخة جديدة</text>
+
+      <!-- flow 2: daily license (from the sites row) -->
+      <line class="edge-pri" x1="386" y1="280" x2="386" y2="566" marker-end="url(#ahp)" marker-start="url(#ahp)"/>
+      <circle class="num" cx="386" cy="500" r="9"/><text class="num-t" x="386" y="504" text-anchor="middle">2</text>
+      <text class="lbl-pri" x="370" y="492" text-anchor="start">ترخيص كل يوم</text>
+      <text class="lbl-pri" x="370" y="508" text-anchor="start">رد موقّع</text>
+
+      <!-- flow 3: agent polls HQ -->
+      <line class="edge" x1="88" y1="414" x2="88" y2="566" marker-end="url(#ah)" marker-start="url(#ah)"/>
+      <circle class="num" cx="88" cy="500" r="9"/><text class="num-t" x="88" y="504" text-anchor="middle">3</text>
+      <text class="lbl" x="208" y="492" text-anchor="start">كل دقيقة:</text>
+      <text class="lbl" x="208" y="508" text-anchor="start">فيه شركات جديدة؟</text>
+
+      <!-- HQ server -->
+      <rect class="frame-hq" x="16" y="570" width="400" height="200" rx="14"/>
+      <text class="h" x="400" y="596" text-anchor="start">سيرفر HQ · منفصل</text>
+      <text class="m" x="32" y="596" text-anchor="start" direction="ltr">hq.your-domain</text>
+
+      <rect class="box-pri" x="230" y="614" width="174" height="96" rx="10"/>
+      <text class="t" x="317" y="642" text-anchor="middle">بلجن HQ</text>
+      <text class="s" x="317" y="664" text-anchor="middle">العملاء · المفاتيح</text>
+      <text class="s" x="317" y="682" text-anchor="middle">حالة كل اشتراك</text>
+
+      <rect class="box-pri" x="40" y="614" width="174" height="96" rx="10"/>
+      <text class="t" x="127" y="642" text-anchor="middle">الفواتير والدفع</text>
+      <text class="m" x="127" y="664" text-anchor="middle" direction="ltr">WooCommerce</text>
+      <text class="m" x="127" y="682" text-anchor="middle" direction="ltr">Paymob plugin</text>
+      <line class="edge" x1="214" y1="662" x2="230" y2="662"/>
+      <text class="s" x="222" y="744" text-anchor="middle">الدخول: إنت بس · الاشتراك يحدد الحالة</text>
+
+      <!-- flow 4: payment -->
+      <rect class="box-ext" x="40" y="830" width="174" height="64" rx="10"/>
+      <text class="t" x="127" y="856" text-anchor="middle" direction="ltr">Paymob</text>
+      <text class="s" x="127" y="876" text-anchor="middle">كروت · محافظ · كشك</text>
+      <line class="edge-dash" x1="92" y1="710" x2="92" y2="828" marker-end="url(#ahd)"/>
+      <line class="edge-dash" x1="164" y1="828" x2="164" y2="712" marker-end="url(#ahd)"/>
+      <circle class="num" cx="128" cy="800" r="9"/><text class="num-t" x="128" y="804" text-anchor="middle">4</text>
+      <text class="lbl" x="86" y="790" text-anchor="start">لينك دفع</text>
+      <text class="lbl" x="222" y="790" text-anchor="start">تم الدفع</text>
+
+      <!-- flow 5: operator -->
+      <rect class="box" x="246" y="830" width="158" height="64" rx="10"/>
+      <text class="t" x="325" y="856" text-anchor="middle">إنت (المشغّل)</text>
+      <text class="m" x="325" y="876" text-anchor="middle" direction="ltr">SSH · wp-admin</text>
+      <path class="edge-dash" d="M 404 862 H 440 V 430 H 300 V 416" marker-end="url(#ahd)"/>
+      <circle class="num" cx="440" cy="620" r="9"/><text class="num-t" x="440" y="624" text-anchor="middle">5</text>
+      <line class="edge-dash" x1="325" y1="830" x2="325" y2="712" marker-end="url(#ahd)"/>
+      <text class="lbl" x="334" y="790" text-anchor="end">يدير العملاء</text>
+    </svg>
+    </div>
+    <figcaption>سيرفر العملاء شغّال لوحده، والـ HQ بيقرر مين مشترك. لو HQ وقع، المواقع تكمّل بآخر حالة 7 أيام.</figcaption>
+  </figure>
+
+  <section>
+    <h2>الخطوط الخمسة</h2>
+    <ol class="flows">
+      <li><span class="n">1</span><div><b>الموظفين بيكلّموا موقع شركتهم بس.</b><p>تسجيل الحضور والطلبات بيروح لموقع الشركة على HTTPS. الكاميرا وبصمة الوش محتاجين HTTPS.</p></div></li>
+      <li><span class="n">2</span><div><b>كل موقع بيسأل HQ مرة في اليوم: أنا مشترك؟</b><p>بيبعت مفتاح الترخيص وعدد الموظفين ونسخة البلجن. الرد موقّع، فتغيير الحالة في قاعدة بيانات الموقع مابيفيدش. لو HQ مارّدش، الموقع يكمّل بآخر حالة 7 أيام.</p></div></li>
+      <li><span class="n">3</span><div><b>الوكيل بيسأل HQ كل دقيقة عن شركات جديدة.</b><p>لو فيه، يشغّل <code>new_company.sh</code> ويبلّغ بالنتيجة. HQ معهوش صلاحية root على سيرفر العملاء.</p></div></li>
+      <li><span class="n">4</span><div><b>الفلوس بتعدّي من HQ بس.</b><p>HQ يطلّع الفاتورة ولينك دفع Paymob، والعميل يدفع بالكارت أو المحفظة أو الكشك، وPaymob يبلّغ HQ، والحالة تتحدّث في نفس اليوم.</p></div></li>
+      <li><span class="n">5</span><div><b>إنت الوحيد اللي بيغيّر الكود.</b><p>التحديثات بـ <code>update_company.sh</code> من السيرفر، بنسخة احتياطية ورجوع تلقائي. العملاء نفسهم مايقدروش يثبّتوا أو يعدّلوا أي كود.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="sheets">
+    <div class="sheet">
+      <span class="tag">جاهز ومتجرّب</span>
+      <h3>سيرفر العملاء</h3>
+      <ul>
+        <li>شركة جديدة بأمر واحد: <code>new_company.sh</code></li>
+        <li>حساب "مدير الشركة" بدل Administrator</li>
+        <li>الكود ملك root، ولا PHP يقدر يكتب فيه</li>
+        <li>تحديث لكل الشركات: <code>update_company.sh --all</code></li>
+        <li>26 فحص: <code>check_site.py</code></li>
+      </ul>
+    </div>
+    <div class="sheet">
+      <span class="tag" style="color: var(--pri)">لسه هيتبني</span>
+      <h3>سيرفر HQ</h3>
+      <ul>
+        <li>المرحلة 1: العملاء، والمفاتيح، والحالة يدوي، وموديول الترخيص في البلجن</li>
+        <li>المرحلة 2: WooCommerce وPaymob، وفواتير ولينكات دفع</li>
+        <li>المرحلة 3: خصم شهري من الكارت، والوكيل، وتجربة من الموقع</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Workforce One · خريطة الاستضافة · أكتوبر 2026</footer>
+</div>

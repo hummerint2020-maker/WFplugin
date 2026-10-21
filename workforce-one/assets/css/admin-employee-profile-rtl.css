@@ -1,0 +1,50 @@
+/* wp-admin → Employee Profile (templates/admin/employee-profile.php). RTL copy: npx rtlcss@4 */
+.ews-profile-wrap{max-width:1280px}
+.ews-profile-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:18px 0}
+.ews-profile-person{display:flex;gap:16px;align-items:center}
+.ews-profile-avatar{width:64px;height:64px;border-radius:16px;background:#f0f4ff;border:1px solid #dbe4ff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#3158c8;overflow:hidden}
+.ews-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.ews-profile-title h1{margin:0 0 5px;font-size:28px}
+.ews-profile-title p{margin:0;color:#667085}
+.ews-profile-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ews-profile-pill{display:inline-flex;align-items:center;border:1px solid #e4e7ec;border-radius:999px;padding:4px 9px;font-size:12px;background:#fff;color:#475467}
+.ews-profile-pill.is-active{color:#067647;background:#ecfdf3;border-color:#abefc6}
+.ews-profile-pill.is-inactive{color:#b42318;background:#fef3f2;border-color:#fecdca}
+.ews-profile-actions{display:flex;gap:8px}
+.ews-profile-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.ews-profile-card{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:16px}
+.ews-profile-card .label{font-size:12px;color:#667085}
+.ews-profile-card .value{font-size:23px;font-weight:700;color:#101828;margin-top:5px}
+.ews-profile-card .sub{font-size:12px;color:#667085;margin-top:4px}
+.ews-profile-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:16px}
+.ews-profile-panel{background:#fff;border:1px solid #e4e7ec;border-radius:12px;margin-bottom:16px;overflow:hidden}
+.ews-profile-panel h2{font-size:16px;margin:0;padding:15px 18px;border-bottom:1px solid #eef0f3}
+.ews-profile-body{padding:16px 18px}
+.ews-profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ews-profile-field .k{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#98a2b3}
+.ews-profile-field .v{font-size:14px;color:#344054;margin-top:4px;word-break:break-word}
+.ews-profile-list{margin:0;padding:0;list-style:none}
+.ews-profile-list li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #f2f4f7;font-size:13px}
+.ews-profile-list li:last-child{border-bottom:0}
+.ews-profile-list .muted{color:#667085}
+.ews-profile-table{width:100%;border-collapse:collapse}
+.ews-profile-table th,.ews-profile-table td{padding:10px 12px;border-bottom:1px solid #f0f2f5;text-align:right;font-size:12px}
+.ews-profile-table th{color:#667085;font-weight:600;background:#fafbfc}
+.ews-profile-empty{color:#667085;padding:4px 0}
+.wfo-achievement-admin-badge{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff7e6;border:1px solid #f3d9a2;flex:0 0 auto}
+.wfo-achievement-admin-badge.circle{border-radius:50%}
+.wfo-achievement-admin-badge.shield{border-radius:12px 12px 18px 18px;clip-path:polygon(50% 0,90% 15%,90% 58%,50% 100%,10% 58%,10% 15%)}
+.wfo-achievement-admin-badge.star{border-radius:12px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 95%,50% 72%,21% 95%,32% 57%,2% 35%,39% 35%)}
+.wfo-achievement-admin-badge.ribbon{border-radius:10px 10px 16px 16px}
+.ews-profile-badge{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;background:#f2f4f7;color:#475467}
+.ews-profile-badge.present{background:#ecfdf3;color:#067647}
+.ews-profile-badge.late{background:#fffaeb;color:#b54708}
+.ews-profile-badge.absent{background:#fef3f2;color:#b42318}
+.ews-profile-badge.leave{background:#eff8ff;color:#175cd3}
+@media(max-width:980px){.ews-profile-layout{grid-template-columns:1fr}
+.ews-profile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.ews-profile-head{flex-direction:column}
+.ews-profile-grid,.ews-profile-fields{grid-template-columns:1fr}
+.ews-profile-actions{width:100%}
+.ews-profile-actions .button{flex:1;text-align:center}}
+

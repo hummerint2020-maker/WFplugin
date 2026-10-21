@@ -1,0 +1,313 @@
+<title>Approval Substitutes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: the product's own look (indigo header, white rounded cards, Alexandria), as the approved My approvals mockup. One screen at a time (phone or wp-admin), how it works and the decisions beside it. */
+:root{
+  --bg:#f3f4fa; --card:#ffffff; --ink:#15153a; --sub:#5d6382; --faint:#8b90ab; --line:#e5e7f2; --soft:#f6f7fc;
+  --brand:#4836e0; --brand-soft:#eeecff; --hero-a:#16133f; --hero-b:#3a2bc4; --on-brand:#ffffff; --scrim:rgba(15,16,40,.45);
+  --ok:#0b7a4b; --ok-bg:#e8f7ef; --warn:#8a4f00; --warn-bg:#fff6e5; --bad:#b4233c; --bad-bg:#fdecef;
+  --t-lv:#4836e0; --t-ot:#a3245b; --t-cx:#0b7d74; --t-sw:#d9480f; --t-el:#7a4fd6; --t-fr:#1f6fd1;
+  --shadow:0 1px 2px rgba(21,21,58,.06),0 6px 18px rgba(21,21,58,.06);
+  --font:"Alexandria",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496; --on-brand:#0f1020; --scrim:rgba(0,0,0,.6);
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --t-lv:#8d80ff; --t-ot:#f07aa8; --t-cx:#4fd1c5; --t-sw:#ff9a5c; --t-el:#b69bff; --t-fr:#6aa8ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1020; --card:#191a30; --ink:#ececff; --sub:#a6aacb; --faint:#7d82a6; --line:#2a2c48; --soft:#202240;
+  --brand:#8d80ff; --brand-soft:#26244d; --hero-a:#120f33; --hero-b:#2e2496; --on-brand:#0f1020; --scrim:rgba(0,0,0,.6);
+  --ok:#57d39a; --ok-bg:#12301f; --warn:#f0b54a; --warn-bg:#2d2412; --bad:#ff8a9c; --bad-bg:#3a1520;
+  --t-lv:#8d80ff; --t-ot:#f07aa8; --t-cx:#4fd1c5; --t-sw:#ff9a5c; --t-el:#b69bff; --t-fr:#6aa8ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+h1,h2,h3{text-wrap:balance}
+.wrap{max-width:1180px;margin-inline:auto;display:grid;gap:16px}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.head h1{margin:0;font-size:20px}
+.head p{margin:2px 0 0;color:var(--sub);font-size:13px;max-width:75ch}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:5px 12px;cursor:pointer;color:var(--sub)}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.stage{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:20px;align-items:start}
+.phone{position:relative;background:var(--bg);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;min-height:720px;display:flex;flex-direction:column}
+.bar{padding:16px 16px 18px;color:#fff;background:radial-gradient(120% 140% at 100% 0%,var(--hero-b) 0%,var(--hero-a) 70%)}
+.bar small{display:block;opacity:.75;font-size:11.5px}
+.bar b{font-size:19px}
+.pbody{padding:12px;display:grid;gap:10px;align-content:start;flex:1}
+.top{display:flex;align-items:center;gap:8px}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.filters span{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--sub)}
+.filters span.on{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:600}
+.new{border:0;background:var(--brand);color:var(--on-brand);border-radius:12px;min-height:38px;padding:0 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.item{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:11px 13px;display:flex;gap:10px;align-items:center;border-inline-start:4px solid var(--tc)}
+.item div{flex:1;min-width:0}
+.item b{display:block;font-size:14px}
+.item small{display:block;color:var(--sub);font-size:12px}
+.item.fresh{outline:2px solid var(--brand)}
+.pill{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pill.wait{background:var(--warn-bg);color:var(--warn)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.toast{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:10px 12px;font-weight:600;font-size:13px}
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end}
+.sheet{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:10px 14px 18px;max-height:92%;overflow:auto;display:grid;gap:12px}
+.grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:0 auto}
+.shead{display:flex;align-items:center;gap:8px}
+.shead h2{margin:0;font-size:16px;flex:1}
+.x,.back{border:0;background:var(--soft);border-radius:10px;width:34px;height:34px;cursor:pointer;color:var(--sub);font-size:16px}
+.types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.type{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px;text-align:start;cursor:pointer;display:grid;gap:4px;min-height:96px;align-content:start}
+.type:hover{border-color:var(--tc)}
+.type i{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--on-brand);background:var(--tc);font-size:13px}
+.type b{font-size:13.5px}
+.type small{color:var(--sub);font-size:11.5px;line-height:1.4}
+.type.off{opacity:.55;cursor:not-allowed}
+.group{font-size:11.5px;font-weight:600;color:var(--faint);margin-top:2px}
+.fld{display:grid;gap:4px}
+.fld>span{font-size:12px;font-weight:600;color:var(--sub)}
+.inp{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;width:100%;min-width:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint{color:var(--sub);font-size:12px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.info{background:var(--soft);border-radius:12px;padding:9px 11px;font-size:12.5px;color:var(--sub)}
+.info b{color:var(--ink)}
+.send{border:0;background:var(--brand);color:var(--on-brand);border-radius:12px;min-height:44px;font-weight:600;cursor:pointer;width:100%}
+.mate{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:9px 11px;cursor:pointer;background:var(--card);text-align:start;width:100%}
+.mate[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.mate .av{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:12px;color:var(--on-brand);background:var(--t-sw);flex:0 0 auto}
+.mate div{flex:1;min-width:0}
+.mate b{display:block;font-size:13.5px}
+.mate small{display:block;color:var(--sub);font-size:12px}
+.mate.no{opacity:.5;cursor:not-allowed}
+.swapline{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.swapline .pill{background:var(--soft);color:var(--ink)}
+.notes{display:grid;gap:12px}
+.note{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px 16px}
+.note h3{margin:0 0 6px;font-size:15px}
+.note p,.note li{margin:0;color:var(--sub);font-size:13px}
+.note ul,.note ol{margin:0;padding-inline-start:18px;display:grid;gap:5px}
+.dec{display:grid;gap:8px}
+.dec div{display:flex;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:12px}
+.dec b{color:var(--brand);min-width:18px}
+.dec p{margin:0}
+.dec small{display:block;color:var(--sub)}
+@media (max-width:860px){.stage{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
+/* Substitutes mockup additions */
+.screens{display:flex;flex-wrap:wrap;gap:6px}
+.screens button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;cursor:pointer;color:var(--sub);font-size:13px}
+.screens button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.stage.wide{grid-template-columns:minmax(0,1fr)}
+.sec{display:grid;gap:8px;border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--card)}
+.sec h3{margin:0;font-size:14px}
+.away{display:flex;gap:10px;align-items:center;background:var(--brand-soft);color:var(--ink);border-radius:14px;padding:10px 12px;font-size:12.5px}
+.away b{color:var(--brand)}
+.av{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:12px;color:var(--on-brand);background:var(--brand);flex:0 0 auto}
+.for{display:inline-flex;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--brand-soft);color:var(--brand)}
+.card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:12px 13px;display:grid;gap:8px;border-inline-start:4px solid var(--tc)}
+.card .t{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.card .t b{display:block;font-size:14px}
+.card .t small{display:block;color:var(--sub);font-size:12px}
+.acts{display:flex;gap:8px}
+.acts button{flex:1;border:0;border-radius:11px;min-height:38px;font-weight:600;cursor:pointer}
+.acts .y{background:var(--brand);color:var(--on-brand)}
+.acts .n{background:var(--bad-bg);color:var(--bad)}
+.path{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.path li{display:flex;gap:10px;align-items:flex-start}
+.path .dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex:0 0 auto;background:var(--soft);color:var(--sub)}
+.path .done .dot{background:var(--ok-bg);color:var(--ok)}
+.path .now .dot{background:var(--brand);color:var(--on-brand)}
+.path b{display:block;font-size:13px}
+.path small{display:block;color:var(--sub);font-size:12px}
+.desk{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.desk .wpbar{background:#1d2327;color:#f0f0f1;font-size:12px;padding:7px 14px}
+.desk .in{padding:16px 18px;display:grid;gap:14px}
+.desk h2{margin:0;font-size:19px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+th,td{text-align:start;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:12px;background:var(--soft)}
+td small{display:block;color:var(--sub)}
+.st{display:inline-flex;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px}
+.st.on{background:var(--ok-bg);color:var(--ok)}
+.st.later{background:var(--warn-bg);color:var(--warn)}
+.st.off{background:var(--soft);color:var(--sub)}
+.lnk{border:0;background:none;color:var(--brand);cursor:pointer;padding:0;font-weight:600}
+.lnk.bad{color:var(--bad)}
+.addf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.btn{border:0;background:var(--brand);color:var(--on-brand);border-radius:10px;min-height:38px;padding:0 16px;font-weight:600;cursor:pointer}
+.opt{display:grid;gap:6px;padding:12px;border:1px solid var(--line);border-radius:14px}
+.opt b{font-size:13.5px}
+.opt label{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink)}
+.opt small{color:var(--sub);font-size:12px}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:9px 11px;font-size:12.5px}
+.push{background:var(--soft);border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;font-size:12.5px}
+.push b{display:block}
+</style>
+<div class="wrap">
+  <div class="head">
+    <div><h1 id="h1"></h1><p id="lead"></p></div>
+    <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="ar">العربية</button><button type="button" data-lang="en">English</button></div>
+  </div>
+  <div class="screens" role="group" aria-label="Screens" id="screens"></div>
+  <div class="stage" id="stage">
+    <div id="screen"></div>
+    <div class="notes" id="notes"></div>
+  </div>
+</div>
+
+<script>
+var T={
+ h1:{ar:'البديل وقت الغياب',en:'A substitute while away'},
+ lead:{ar:'ماك أب للمراجعة قبل البناء (المرحلة ٤ من الموافقات). المثال: منى عادل مديرة، واخدة إجازة من ٢٠ لـ ٢٤ أكتوبر، وسامي علي بيوافق مكانها. كل الأسماء والأرقام أمثلة.',en:'A mockup to review before building (approvals, stage 4). The example: Mona Adel is a manager on leave 20–24 Oct, and Sami Ali decides for her. All names and numbers are examples.'},
+ s1:{ar:'١ · المديرة بتطلب إجازة',en:'1 · The manager asks for leave'},
+ s2:{ar:'٢ · البديل: موافقاتي',en:'2 · The substitute: My approvals'},
+ s3:{ar:'٣ · الموظف: طلباتي',en:'3 · The employee: My requests'},
+ s4:{ar:'٤ · صفحة البدلاء (HR)',en:'4 · HR: Substitutes page'},
+ s5:{ar:'٥ · الإعدادات',en:'5 · Settings'},
+ brand:{ar:'WE Data · Workforce One',en:'WE Data · Workforce One'},
+ // 1
+ lv:{ar:'إجازة',en:'Leave'},f_type:{ar:'نوع الإجازة',en:'Leave type'},annual:{ar:'سنوية · باقي ١٥',en:'Annual · 15 left'},f_from:{ar:'من',en:'From'},f_to:{ar:'لحد',en:'To'},
+ lv_info:{ar:'<b>٥ أيام شغل</b> · الرصيد بعدها ١٠ · هيقرر: خالد فوزي',en:'<b>5 working days</b> · balance after 10 · decided by: Khaled Fawzy'},
+ away_h:{ar:'مين يوافق مكانك وانتي غايبة؟',en:'Who decides for you while you are away?'},
+ away_p:{ar:'٣ موظفين بيرجعولك في الموافقات. طلباتهم في الأيام دي هتروح للي تختاريه.',en:'3 people report to you. Their requests on these days go to the person you pick.'},
+ p1:{ar:'خالد فوزي',en:'Khaled Fawzy'},p1s:{ar:'مديرك',en:'Your manager'},
+ p2:{ar:'سامي علي',en:'Sami Ali'},p2s:{ar:'مدير في نفس الإدارة',en:'A manager in your department'},
+ p3:{ar:'نهى سمير',en:'Noha Samir'},p3s:{ar:'إجازة من ٢٢ أكتوبر، مش متاحة',en:'On leave from 22 Oct, not available'},
+ p4:{ar:'حد تاني…',en:'Someone else…'},p4s:{ar:'دوّري بالاسم',en:'Search by name'},
+ none:{ar:'من غير بديل',en:'No substitute'},nones:{ar:'الطلبات تستناكي وتطلع للمستوى اللي بعده بعد المهلة',en:'Requests wait for you and move up after the deadline'},
+ away_note:{ar:'البديل بيشتغل لما الإجازة تتوافق، ويقف لو اتلغت. سامي هيوصله إشعار.',en:'The substitute starts once the leave is approved and stops if it is cancelled. Sami gets a notification.'},
+ send:{ar:'ابعت الطلب',en:'Send request'},
+ // 2
+ apv:{ar:'موافقاتي',en:'My approvals'},
+ banner:{ar:'<b>بتوافق مكان منى عادل</b> لحد الخميس ٢٤ أكتوبر · ٣ طلبات',en:'<b>Deciding for Mona Adel</b> until Thu 24 Oct · 3 requests'},
+ c1:{ar:'أحمد حسن · إجازة سنوية',en:'Ahmed Hassan · Annual leave'},c1s:{ar:'٢٨–٣٠ أكتوبر · ٣ أيام · مستني من ٤ ساعات شغل',en:'28–30 Oct · 3 days · waiting 4 working hours'},
+ c2:{ar:'ريم مجدي · أوفرتايم',en:'Reem Magdy · Overtime'},c2s:{ar:'٢١ أكتوبر · ١٨:٠٠–٢٠:٠٠',en:'21 Oct · 18:00–20:00'},
+ c3:{ar:'فريدة حسام · تصحيح حضور',en:'Farida Hossam · Attendance correction'},c3s:{ar:'نسيت الانصراف ١٩ أكتوبر · اتنقل من منى لما الإجازة بدأت',en:'Forgot Sign Out on 19 Oct · moved from Mona when her leave started'},
+ c4:{ar:'محمد طارق · إجازة',en:'Mohamed Tarek · Leave'},c4s:{ar:'فريقك انت · من غير بديل',en:'Your own team · no substitute'},
+ forMona:{ar:'بالنيابة عن منى',en:'For Mona'},yes:{ar:'موافق',en:'Approve'},no:{ar:'رفض',en:'Reject'},
+ push:{ar:'إشعار يوصل لسامي يوم ٢٠ أكتوبر',en:'Sami\'s notification on 20 Oct'},
+ pushb:{ar:'إنت بتوافق مكان منى عادل لحد ٢٤ أكتوبر. فيه ٣ طلبات مستنياك.',en:'You decide for Mona Adel until 24 Oct. 3 requests are waiting.'},
+ // 3
+ mine:{ar:'طلباتي',en:'My requests'},r1:{ar:'إجازة سنوية · ٢٨–٣٠ أكتوبر',en:'Annual leave · 28–30 Oct'},wait:{ar:'مستني · المستوى ١ من ٢',en:'Waiting · level 1 of 2'},
+ who:{ar:'مين يقرر',en:'Who decides it'},
+ st1:{ar:'المدير المباشر · سامي علي',en:'Direct manager · Sami Ali'},st1s:{ar:'بالنيابة عن منى عادل (في إجازة لحد ٢٤ أكتوبر) · بيقرر دلوقتي',en:'For Mona Adel (on leave until 24 Oct) · deciding now'},
+ st2:{ar:'HR · سارة نبيل',en:'HR · Sara Nabil'},st2s:{ar:'بعد المدير',en:'After the manager'},
+ r2:{ar:'أوفرتايم · ١٥ أكتوبر · ٢ س',en:'Overtime · 15 Oct · 2 h'},ok:{ar:'اتوافق',en:'Approved'},
+ r2p:{ar:'وافق: سامي علي بالنيابة عن منى عادل',en:'Approved by Sami Ali for Mona Adel'},
+ // 4
+ wp:{ar:'لوحة التحكم ← الموافقات ← البدلاء',en:'Dashboard → Approvals → Substitutes'},
+ subs:{ar:'البدلاء',en:'Substitutes'},
+ subs_p:{ar:'مين بيوافق مكان مين وفي أنهي أيام. اللي اتعمل من طلب إجازة بيمشي مع الإجازة.',en:'Who decides for whom, and on which days. One set from a leave request follows that leave.'},
+ th1:{ar:'المدير',en:'Manager'},th2:{ar:'البديل',en:'Substitute'},th3:{ar:'الأيام',en:'Days'},th4:{ar:'حدده',en:'Set by'},th5:{ar:'الحالة',en:'Status'},th6:{ar:'',en:''},
+ rw1:{ar:'منى عادل',en:'Mona Adel'},rw1b:{ar:'سامي علي',en:'Sami Ali'},rw1c:{ar:'٢٠–٢٤ أكتوبر',en:'20–24 Oct'},rw1d:{ar:'منى، مع طلب الإجازة',en:'Mona, with her leave request'},rw1e:{ar:'شغال · ٣ طلبات',en:'Active · 3 requests'},
+ rw2:{ar:'خالد فوزي',en:'Khaled Fawzy'},rw2b:{ar:'سارة نبيل',en:'Sara Nabil'},rw2c:{ar:'٢–٦ نوفمبر',en:'2–6 Nov'},rw2d:{ar:'HR (مأمورية)',en:'HR (business trip)'},rw2e:{ar:'مستني ميعاده',en:'Scheduled'},
+ rw3:{ar:'نهى سمير',en:'Noha Samir'},rw3b:{ar:'خالد فوزي',en:'Khaled Fawzy'},rw3c:{ar:'١–٣ أكتوبر',en:'1–3 Oct'},rw3d:{ar:'نهى، مع طلب الإجازة',en:'Noha, with her leave request'},rw3e:{ar:'خلص · قرر ٥',en:'Ended · decided 5'},
+ end:{ar:'إنهاء الآن',en:'End now'},edit:{ar:'تعديل',en:'Edit'},cancel:{ar:'إلغاء',en:'Cancel'},
+ add:{ar:'إضافة بديل',en:'Add a substitute'},a1:{ar:'المدير',en:'Manager'},a2:{ar:'البديل',en:'Substitute'},a3:{ar:'من',en:'From'},a4:{ar:'لحد',en:'To'},a5:{ar:'السبب (اختياري)',en:'Reason (optional)'},
+ a6:{ar:'حفظ',en:'Save'},
+ clash:{ar:'سارة نبيل نفسها عندها إجازة ٥ نوفمبر. اختار حد تاني أو غيّر الأيام.',en:'Sara Nabil is on leave herself on 5 Nov. Pick someone else or change the days.'},
+ // 5
+ set:{ar:'الإعدادات ← الموافقات',en:'Settings → Approvals'},
+ o1:{ar:'البديل وقت الغياب',en:'A substitute while away'},o1a:{ar:'شغّال',en:'On'},o1s:{ar:'مقفول افتراضيًا. لما يبقى مقفول كل حاجة زي النهارده.',en:'Off by default. While it is off, nothing changes.'},
+ o2:{ar:'المدير وهو غايب',en:'The manager while away'},o2a:{ar:'يقدر يقرر هو كمان لو حب (من الموبايل)',en:'Can still decide too, if they want (from the phone)'},o2b:{ar:'البديل بس',en:'Only the substitute'},
+ o3:{ar:'الطلبات اللي كانت مستنية لما الغياب يبدأ',en:'Requests already waiting when the absence starts'},o3a:{ar:'تتنقل للبديل',en:'Move to the substitute'},o3b:{ar:'تفضل مع المدير',en:'Stay with the manager'},
+ o4:{ar:'لما المدير يرجع',en:'When the manager is back'},o4a:{ar:'اللي لسه مستني يرجع له، ويوصله ملخص: سامي قرر ٤ طلبات',en:'What is still waiting goes back to them, with a summary: Sami decided 4 requests'},o4b:{ar:'يفضل مع البديل لحد ما يتقرر',en:'Stays with the substitute until decided'},
+ o5:{ar:'نسأل المدير عن بديل وهو بيطلب إجازة',en:'Ask managers for a substitute when they request leave'},o5a:{ar:'اختياري',en:'Optional'},o5b:{ar:'لازم',en:'Required'},o5c:{ar:'مانسألش (HR بس)',en:'Don\'t ask (HR only)'},
+ // notes
+ n1:{ar:'إزاي بيشتغل',en:'How it works'},
+ n1a:{ar:'البديل = مدير، بديل، من يوم لحد يوم. بيتحدد من طلب الإجازة (المدير نفسه) أو من صفحة البدلاء (HR، لأي سبب: مأمورية، تدريب).',en:'A substitute is a manager, a substitute and days. It is set with a leave request (by the manager) or on the Substitutes page (by HR, for any reason: a trip, a course).'},
+ n1b:{ar:'في الأيام دي، أي مستوى موافقة كان هيروح للمدير بيروح للبديل، ومكتوب عليه "بالنيابة عن منى". ده لكل الأنواع: إجازة، أوفرتايم، تصحيح، تبديل، إعادة الوجه.',en:'On those days, every approval level that would go to the manager goes to the substitute, marked "For Mona". This covers every type: leave, overtime, correction, swap, face reset.'},
+ n1c:{ar:'البديل مايقدرش يوافق على طلبه هو: طلبه بيروح للمستوى اللي بعده زي النهارده.',en:'A substitute cannot decide their own request: it goes to the next level, as today.'},
+ n1d:{ar:'لو البديل نفسه غاب، مفيش بديل للبديل: الطلب بيطلع للمستوى اللي بعده بعد المهلة، زي النهارده.',en:'If the substitute is away too, there is no substitute for the substitute: the request moves up after the deadline, as today.'},
+ n1e:{ar:'كل قرار متسجل في سجل التدقيق باسم البديل و"بالنيابة عن" المدير.',en:'Every decision is in the Audit Log under the substitute\'s name, "for" the manager.'},
+ dq:{ar:'قرارات قبل البناء',en:'Decisions before building'},
+ q1:{ar:'المديرة وهي في إجازة تقدر تقرر هي كمان؟',en:'Can the manager still decide while on leave?'},q1a:{ar:'اقتراحي: أيوه، اللي يقرر الأول. ده إعداد.',en:'Proposal: yes, whoever decides first. A setting.'},
+ q2:{ar:'الطلبات اللي كانت مستنياها قبل الإجازة؟',en:'Requests already waiting before the leave?'},q2a:{ar:'اقتراحي: تتنقل للبديل أول يوم.',en:'Proposal: they move to the substitute on the first day.'},
+ q3:{ar:'لما ترجع؟',en:'When she is back?'},q3a:{ar:'اقتراحي: اللي لسه مستني يرجع لها، ويوصلها ملخص باللي اتقرر.',en:'Proposal: what is still waiting goes back to her, with a summary of what was decided.'},
+ q4:{ar:'مين ينفع يبقى بديل؟',en:'Who can be a substitute?'},q4a:{ar:'اقتراحي: أي موظف شغال. بنقترح الأول مديرها، والمديرين في نفس الإدارة. اللي في إجازة في نفس الأيام مش متاح.',en:'Proposal: any active employee. We suggest her manager and the managers in her department first. Someone on leave on the same days is not available.'},
+ q5:{ar:'السؤال وقت طلب الإجازة إجباري؟',en:'Is the question in the leave request required?'},q5a:{ar:'اقتراحي: اختياري. لو مااختارتش، الطلبات تستنى وتطلع بعد المهلة زي النهارده.',en:'Proposal: optional. Without one, requests wait and move up after the deadline, as today.'},
+ q6:{ar:'المدير يقدر يحدد بديل من غير إجازة (مأمورية مثلًا)؟',en:'Can a manager set one without a leave (a business trip)?'},q6a:{ar:'اقتراحي: من الموبايل كمان، زرار "هبقى غايب" في موافقاتي. HR تقدر دايمًا من صفحة البدلاء.',en:'Proposal: also from the phone, an "I\'ll be away" button in My approvals. HR can always do it on the Substitutes page.'}
+};
+var lang='ar',scr=1,pick='p2';
+function t(k){return (T[k]||{})[lang]||k;}
+function f(label,inner){return '<label class="fld"><span>'+label+'</span>'+inner+'</label>';}
+function ini(n){return t(n).split(' ').map(function(w){return w[0];}).join('').slice(0,2);}
+function bar(title){return '<div class="bar"><small>'+t('brand')+'</small><b>'+t(title)+'</b></div>';}
+function s1(){
+  var P=[['p1','p1s',0],['p2','p2s',0],['p3','p3s',1],['p4','p4s',0],['none','nones',0]];
+  return '<div class="phone">'+bar('lv')+'<div class="pbody">'
+   +f(t('f_type'),'<select class="inp" id="lt"><option>'+t('annual')+'</option></select>')
+   +'<div class="row2">'+f(t('f_from'),'<input class="inp" id="lf" type="date" value="2026-10-20">')+f(t('f_to'),'<input class="inp" id="lto" type="date" value="2026-10-24">')+'</div>'
+   +'<div class="info">'+t('lv_info')+'</div>'
+   +'<div class="sec"><h3>'+t('away_h')+'</h3><p class="hint">'+t('away_p')+'</p>'
+   +P.map(function(p){var no=p[2];return '<button type="button" class="mate'+(no?' no':'')+'" '+(no?'disabled':'data-pick="'+p[0]+'" aria-pressed="'+(pick===p[0])+'"')+'><span class="av" aria-hidden="true">'+(p[0]==='none'?'–':p[0]==='p4'?'+':ini(p[0]))+'</span><div><b>'+t(p[0])+'</b><small>'+t(p[1])+'</small></div></button>';}).join('')
+   +'<p class="hint">'+t('away_note')+'</p></div>'
+   +'<button type="button" class="send">'+t('send')+'</button></div></div>';
+}
+function card(k,c,forit,moved){
+  return '<div class="card" style="--tc:var(--t-'+c+')"><div class="t"><div><b>'+t(k)+'</b><small>'+t(k+'s')+'</small></div>'+(forit?'<span class="for">'+t('forMona')+'</span>':'')+'</div><div class="acts"><button type="button" class="n">'+t('no')+'</button><button type="button" class="y">'+t('yes')+'</button></div></div>';
+}
+function s2(){
+  return '<div class="phone">'+bar('apv')+'<div class="pbody">'
+   +'<div class="away"><span class="av" aria-hidden="true">'+ini('rw1')+'</span><span>'+t('banner')+'</span></div>'
+   +card('c1','lv',1)+card('c2','ot',1)+card('c3','cx',1)+card('c4','lv',0)
+   +'<div class="push"><span aria-hidden="true">🔔</span><div><b>'+t('push')+'</b>'+t('pushb')+'</div></div>'
+   +'</div></div>';
+}
+function s3(){
+  return '<div class="phone">'+bar('mine')+'<div class="pbody">'
+   +'<div class="card" style="--tc:var(--t-lv)"><div class="t"><div><b>'+t('r1')+'</b></div><span class="pill wait">'+t('wait')+'</span></div>'
+   +'<div class="fld"><span>'+t('who')+'</span></div><ol class="path">'
+   +'<li class="now"><span class="dot" aria-hidden="true">1</span><div><b>'+t('st1')+'</b><small>'+t('st1s')+'</small></div></li>'
+   +'<li><span class="dot" aria-hidden="true">2</span><div><b>'+t('st2')+'</b><small>'+t('st2s')+'</small></div></li></ol></div>'
+   +'<div class="card" style="--tc:var(--t-ot)"><div class="t"><div><b>'+t('r2')+'</b><small>'+t('r2p')+'</small></div><span class="pill ok">'+t('ok')+'</span></div></div>'
+   +'</div></div>';
+}
+function s4(){
+  var R=[['rw1','on',['end']],['rw2','later',['edit','cancel']],['rw3','off',[]]];
+  return '<div class="desk"><div class="wpbar">'+t('wp')+'</div><div class="in"><div><h2>'+t('subs')+'</h2><p class="hint">'+t('subs_p')+'</p></div>'
+   +'<div class="tbl"><table><thead><tr><th>'+t('th1')+'</th><th>'+t('th2')+'</th><th>'+t('th3')+'</th><th>'+t('th4')+'</th><th>'+t('th5')+'</th><th></th></tr></thead><tbody>'
+   +R.map(function(r){var k=r[0];return '<tr><td><b>'+t(k)+'</b></td><td>'+t(k+'b')+'</td><td>'+t(k+'c')+'</td><td>'+t(k+'d')+'</td><td><span class="st '+r[1]+'">'+t(k+'e')+'</span></td><td>'+r[2].map(function(a){return '<button type="button" class="lnk'+(a==='end'||a==='cancel'?' bad':'')+'">'+t(a)+'</button>';}).join(' · ')+'</td></tr>';}).join('')
+   +'</tbody></table></div>'
+   +'<div class="sec"><h3>'+t('add')+'</h3><div class="addf">'
+   +f(t('a1'),'<select class="inp" id="am"><option>'+t('rw2')+'</option></select>')+f(t('a2'),'<select class="inp" id="as"><option>'+t('rw2b')+'</option></select>')
+   +f(t('a3'),'<input class="inp" id="af" type="date" value="2026-11-02">')+f(t('a4'),'<input class="inp" id="at" type="date" value="2026-11-06">')
+   +f(t('a5'),'<input class="inp" id="ar" type="text">')+'<button type="button" class="btn">'+t('a6')+'</button></div>'
+   +'<div class="warnbox">'+t('clash')+'</div></div></div></div>';
+}
+function opt(k,ch,name){return '<div class="opt"><b>'+t(k)+'</b>'+ch.map(function(c,i){return '<label><input type="radio" name="'+name+'" id="'+name+i+'"'+(i===0?' checked':'')+'><span>'+t(c)+'</span></label>';}).join('')+'</div>';}
+function s5(){
+  return '<div class="desk"><div class="wpbar">'+t('set')+'</div><div class="in">'
+   +'<div class="opt"><b>'+t('o1')+'</b><label><input type="checkbox" id="o1"><span>'+t('o1a')+'</span></label><small>'+t('o1s')+'</small></div>'
+   +opt('o2',['o2a','o2b'],'o2')+opt('o3',['o3a','o3b'],'o3')+opt('o4',['o4a','o4b'],'o4')+opt('o5',['o5a','o5b','o5c'],'o5')
+   +'</div></div>';
+}
+function render(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  document.getElementById('h1').textContent=t('h1');document.getElementById('lead').textContent=t('lead');
+  document.querySelectorAll('[data-lang]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.lang===lang));});
+  document.getElementById('screens').innerHTML=[1,2,3,4,5].map(function(i){return '<button type="button" data-scr="'+i+'" aria-pressed="'+(scr===i)+'">'+t('s'+i)+'</button>';}).join('');
+  document.getElementById('stage').className='stage'+(scr>=4?' wide':'');
+  document.getElementById('screen').innerHTML=[s1,s2,s3,s4,s5][scr-1]();
+  document.getElementById('notes').innerHTML='<div class="note"><h3>'+t('n1')+'</h3><ul><li>'+t('n1a')+'</li><li>'+t('n1b')+'</li><li>'+t('n1c')+'</li><li>'+t('n1d')+'</li><li>'+t('n1e')+'</li></ul></div>'
+   +'<div class="note"><h3>'+t('dq')+'</h3><div class="dec">'+[1,2,3,4,5,6].map(function(i){return '<div><b>'+(lang==='ar'?'٠١٢٣٤٥٦٧٨٩'[i]:i)+'</b><p>'+t('q'+i)+'<small>'+t('q'+i+'a')+'</small></p></div>';}).join('')+'</div></div>';
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;var d=b.dataset;
+  if(d.lang)lang=d.lang;else if(d.scr)scr=+d.scr;else if(d.pick)pick=d.pick;else return;
+  render();
+});
+render();
+</script>

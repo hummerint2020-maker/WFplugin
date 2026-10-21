@@ -1,0 +1,148 @@
+/* Employee app → Sign In / Out (templates/app/time.php): the avatar with its progress ring, the
+   one main action, the checks, breaks, today's record, QR / presence / Face panels and their dialogs.
+   Uses the theme variables of app-shell.css; scoped to win over the older rules in workforce-one.css.
+   assets/css/app-time-rtl.css is generated with rtlcss (assets/css/README.md). */
+
+.wfo-app .wfo-clock{max-width:760px;margin:0 auto 16px;padding:0;background:none;border:0;box-shadow:none;text-align:start;display:flex;flex-direction:column;gap:14px}
+.wfo-app .wfo-clock h2,.wfo-app .wfo-clock h3,.wfo-app .wfo-clock p{margin:0}
+
+/* the hero card */
+.wfo-clock-hero{background:var(--wfo-hero);color:#fff;border-radius:calc(var(--wfo-r-card) + 8px);padding:18px 20px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:var(--wfo-shadow)}
+.wfo-clock-top{align-self:stretch;display:flex;justify-content:space-between;gap:10px;font-size:12px;color:rgba(255,255,255,.78)}
+.wfo-app .wfo-clock-hero .ews-time-date{margin:0;color:inherit;font-size:12px;font-weight:500;text-align:start;letter-spacing:0}
+.wfo-clock-face{display:flex;flex-direction:column;align-items:center;gap:12px}
+.wfo-clock-avatar{position:relative;width:168px;height:168px;flex:0 0 auto}
+.wfo-clock-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(90deg)}
+.wfo-ring-track{fill:none;stroke:rgba(255,255,255,.16);stroke-width:8}
+.wfo-ring-fill{fill:none;stroke:var(--wfo-hl);stroke-width:8;stroke-linecap:round}
+.wfo-clock-hero.is-in .wfo-ring-fill,.wfo-clock-hero.is-done .wfo-ring-fill{stroke:#4ADE80}
+.wfo-clock-hero.is-break .wfo-ring-fill{stroke:#FFB547}
+.wfo-clock-photo{position:absolute;inset:16px;width:calc(100% - 32px);height:calc(100% - 32px);border-radius:999px;object-fit:cover;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.wfo-clock-initials{display:flex;align-items:center;justify-content:center;color:var(--wfo-hero-start);font-size:44px;font-weight:700}
+.wfo-clock-pip{position:absolute;bottom:8px;inset-inline-end:8px;width:40px;height:40px;border-radius:999px;border:4px solid var(--wfo-hero-mid);box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#E8EAF4;color:#3B4466}
+.wfo-clock-hero.is-in .wfo-clock-pip{background:#22C55E;color:#fff}
+.wfo-clock-hero.is-break .wfo-clock-pip{background:#FFB547;color:#3A2300}
+.wfo-clock-hero.is-done .wfo-clock-pip{background:#9097B5;color:#fff}
+.wfo-clock-who{display:flex;flex-direction:column;align-items:center;gap:4px}
+.wfo-clock-name{font-size:21px;font-weight:700;line-height:1.3}
+.wfo-clock-meta{font-size:12px;color:rgba(255,255,255,.7)}
+.wfo-clock-chip{display:inline-flex;align-items:center;gap:6px;margin-top:4px;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:600}
+.wfo-clock-time{display:flex;align-items:baseline;gap:8px}
+.wfo-clock-time span{font-size:13px;color:rgba(255,255,255,.75)}
+.wfo-clock-time strong{font-size:30px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+
+/* the window message, as a status pill on the hero */
+.wfo-app .wfo-clock-hero .ews-time-window{margin:0;max-width:520px;padding:8px 14px;border-radius:var(--wfo-r-ctl);font-size:13px;line-height:1.5;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff}
+.wfo-app .wfo-clock-hero .ews-time-window.open strong{color:#9FF0C1}
+.wfo-app .wfo-clock-hero .ews-time-window.closed strong{color:#FFD48A}
+
+/* the main action: one big button */
+.wfo-app .wfo-clock-hero .ews-time-actions{display:block;align-self:stretch;max-width:520px;width:100%;margin:0 auto}
+.wfo-app .wfo-clock-hero .ews-time-actions form[hidden]{display:none}
+.wfo-app .wfo-clock-hero .ews-time-btn{width:100%;min-height:58px;display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:999px;padding:0 20px;font:inherit;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(0,0,0,.22)}
+.wfo-app .wfo-clock-hero .ews-time-btn.sign-in{background:var(--wfo-hl);color:var(--wfo-hl-ink)}
+.wfo-app .wfo-clock-hero .ews-time-btn.out{background:#fff;color:var(--wfo-hero-start)}
+.wfo-app .wfo-clock-hero .ews-time-btn:disabled{opacity:1;background:rgba(255,255,255,.14);color:rgba(255,255,255,.65);box-shadow:none;cursor:not-allowed}
+.wfo-app .wfo-clock-hero .ews-time-btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+[dir=rtl] .wfo-clock-hero .ews-time-btn .wfo-icon{transform:scaleX(-1)}
+
+/* checks */
+.wfo-clock-checks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wfo-clock-checks li{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border-radius:var(--wfo-r-ctl);background:var(--wfo-surface);box-shadow:var(--wfo-shadow)}
+.wfo-clock-checks li>span:last-child{display:flex;flex-direction:column;min-width:0;line-height:1.35}
+.wfo-clock-checks strong{font-size:13px;color:var(--wfo-ink)}
+.wfo-clock-checks small{font-size:12px;color:var(--wfo-muted);overflow-wrap:anywhere}
+.wfo-check-icon{width:36px;height:36px;flex:0 0 auto;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center}
+.wfo-clock-checks .is-ok .wfo-check-icon{background:#E6F7EF;color:#0F8A55}
+.wfo-clock-checks .is-info .wfo-check-icon{background:#E7EEFF;color:#2B5BD7}
+.wfo-clock-checks .is-warn .wfo-check-icon{background:#FFF2DE;color:#B86A00}
+.wfo-clock-checks .is-none .wfo-check-icon{background:#EEF0F5;color:#3B4466}
+
+/* panels: breaks, today's record, QR, presence, Face */
+.wfo-app .wfo-panel{margin:0;background:var(--wfo-surface);border:0;border-radius:var(--wfo-r-card);box-shadow:var(--wfo-shadow);padding:16px 18px;text-align:start}
+.wfo-app .ews-face-lab.wfo-panel{max-width:760px;margin:0 auto 14px;box-sizing:border-box}
+.wfo-app .wfo-panel .ews-break-head,.wfo-app .wfo-panel .ews-face-lab-head{display:flex;align-items:flex-start;gap:12px;margin:0 0 12px}
+.wfo-app .wfo-panel .ews-break-head>div:nth-child(2),.wfo-app .wfo-panel .ews-face-lab-head>div{flex:1 1 auto;min-width:0}
+.wfo-app .wfo-panel h3{font-size:16px;font-weight:600;color:var(--wfo-ink)}
+.wfo-app .wfo-panel p{font-size:13px;color:var(--wfo-muted);line-height:1.5;margin-top:2px}
+.wfo-panel-icon{width:42px;height:42px;flex:0 0 auto;border-radius:var(--wfo-r-sm);display:flex;align-items:center;justify-content:center;background:#FFF2DE;color:#B86A00}
+.wfo-panel-icon.is-blue{background:#E7EEFF;color:#2B5BD7}
+.wfo-panel-icon.is-purple{background:var(--wfo-pri-soft);color:var(--wfo-pri)}
+.wfo-panel-tag{flex:0 0 auto;font-size:12px;font-weight:600;color:var(--wfo-muted);background:var(--wfo-bg);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.wfo-app .ews-face-lab .ews-face-lab-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:var(--wfo-r-ctl);border:1px solid var(--wfo-line);background:var(--wfo-surface);color:var(--wfo-ink);font:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
+.wfo-app .ews-face-lab .ews-face-lab-btn:hover{background:var(--wfo-bg)}
+.wfo-app .ews-face-lab .ews-face-lab-btn:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+
+.wfo-app .ews-break-kicker{display:block;font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--wfo-muted)}
+.wfo-app .ews-break-count{flex:0 0 auto;text-align:center;background:var(--wfo-bg);border-radius:var(--wfo-r-sm);padding:6px 12px}
+.wfo-app .ews-break-count strong{display:block;font-size:22px;line-height:1.1;color:var(--wfo-ink)}
+.wfo-app .ews-break-count span{font-size:11px;color:var(--wfo-muted)}
+.wfo-app .ews-break-live{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+.wfo-app .ews-break-live>div{background:#FFF7E8;border-radius:var(--wfo-r-sm);padding:12px;display:flex;flex-direction:column;gap:2px;color:#5A3700}
+.wfo-app .ews-break-live strong{font-size:26px;font-weight:700}
+.wfo-app .ews-break-live-label,.wfo-app .ews-break-limit span{font-size:11px;font-weight:600;letter-spacing:.3px}
+.wfo-app .ews-break-live small{font-size:12px;opacity:.8}
+.wfo-app .ews-break-btn{width:100%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--wfo-r-ctl);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.wfo-app .ews-break-btn.start{background:#FFF2DE;color:#8A4F00}
+.wfo-app .ews-break-btn.resume{background:var(--wfo-hero-start);color:#fff}
+.wfo-app .ews-break-btn:focus-visible{outline:2px solid var(--wfo-pri);outline-offset:2px}
+.wfo-app .ews-break-btn span{font-size:inherit;font-weight:inherit;background:none;padding:0;margin:0;color:inherit}
+.wfo-app .ews-break-btn .wfo-btn-note{font-weight:500;opacity:.8}
+.wfo-app .ews-break-exhausted{display:flex;align-items:center;gap:8px;padding:12px;border-radius:var(--wfo-r-sm);background:#E6F7EF;color:#0F6B43;font-size:13px}
+
+.wfo-app .wfo-clock .ews-time-history{margin:0}
+.wfo-app .wfo-clock .ews-time-history h3{margin:0 0 6px}
+.wfo-app .wfo-clock .ews-time-row{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 22px 11px 0;border-bottom:1px solid var(--wfo-line);font-size:14px}
+.wfo-app .wfo-clock .ews-time-row:last-child{border-bottom:0}
+.wfo-app .wfo-clock .ews-time-row::before{content:"";position:absolute;right:2px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:999px;border:2px solid var(--wfo-line);box-sizing:border-box}
+.wfo-app .wfo-clock .ews-time-row.is-done::before{background:#22C55E;border-color:#22C55E}
+.wfo-app .wfo-clock .ews-time-row span{color:var(--wfo-muted)}
+.wfo-app .wfo-clock .ews-time-row strong{color:var(--wfo-ink);font-weight:600;text-align:end}
+.wfo-app .ews-break-history-title{margin:12px 0 2px;font-size:12px;font-weight:600;color:var(--wfo-muted)}
+
+/* empty states (not linked, not a working day, attendance off) */
+.wfo-app .wfo-clock-empty{background:var(--wfo-surface);border-radius:var(--wfo-r-card);box-shadow:var(--wfo-shadow);padding:32px 22px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.wfo-app .wfo-clock-empty .ews-time-icon{width:64px;height:64px;margin:0 0 4px;border-radius:999px;background:var(--wfo-pri-soft);color:var(--wfo-pri);display:flex;align-items:center;justify-content:center;font-size:0}
+.wfo-app .wfo-clock-empty h2{font-size:19px;color:var(--wfo-ink)}
+.wfo-app .wfo-clock-empty p{color:var(--wfo-muted);font-size:14px;line-height:1.6;max-width:480px}
+.wfo-app .wfo-clock-empty .ews-time-date{color:var(--wfo-muted);font-size:12px;margin:0}
+
+/* result notices */
+.wfo-app #ews-time-flash{max-width:760px;margin:0 auto 12px;border-radius:var(--wfo-r-ctl);padding:12px 14px;font-size:14px}
+
+/* dialogs: location gate, Face, QR */
+.wfo-app .ews-location-gate{background:rgba(11,14,31,.6)}
+.wfo-app .ews-location-gate-card{border:0;border-radius:calc(var(--wfo-r-card) + 4px);font-family:var(--wfo-font)}
+.wfo-app .ews-location-icon{width:64px;height:64px;margin:0 auto 12px;border-radius:999px;background:#E7EEFF;color:#2B5BD7;display:flex;align-items:center;justify-content:center;font-size:0}
+.wfo-app .ews-location-retry{min-height:46px;padding:0 18px;border:0;border-radius:var(--wfo-r-ctl);background:var(--wfo-hero-start);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.wfo-app .ews-face-modal{background:rgba(11,14,31,.6)}
+.wfo-app .ews-face-card{border-radius:calc(var(--wfo-r-card) + 4px);font-family:var(--wfo-font);color:var(--wfo-ink)}
+.wfo-app .ews-face-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.wfo-app .ews-face-top h3{margin:0;font-size:17px}
+.wfo-app .ews-face-top p{margin:4px 0 0;color:var(--wfo-muted);font-size:12px}
+.wfo-app .ews-face-close{width:40px;height:40px;flex:0 0 auto;border-radius:12px;border:1px solid var(--wfo-line);background:var(--wfo-surface);color:var(--wfo-ink);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0}
+.wfo-app .ews-face-stage{border-radius:var(--wfo-r-card)}
+.wfo-app .ews-face-status{margin-top:10px;font-size:13px;color:var(--wfo-muted);text-align:center}
+.wfo-app .ews-face-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.wfo-app .ews-face-actions button,.wfo-app #wfo-qr-form .ews-time-btn{flex:1 1 0;min-height:46px;border-radius:var(--wfo-r-ctl);font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--wfo-line);background:var(--wfo-surface);color:var(--wfo-ink)}
+.wfo-app .ews-face-actions .ews-face-verify,.wfo-app .ews-face-actions .ews-face-enroll,.wfo-app #wfo-qr-form .ews-time-btn{background:var(--wfo-hero-start);color:#fff;border-color:transparent}
+.wfo-app #wfo-qr-form{margin-top:12px}
+.wfo-app #wfo-qr-form .ews-time-btn{width:100%}
+.wfo-app #wfo-qr-form .ews-time-btn:disabled{opacity:.5;cursor:not-allowed}
+
+@media (max-width:820px){
+    .wfo-app .wfo-clock{gap:12px}
+    .wfo-clock-hero{padding:16px 16px 20px;gap:12px}
+    .wfo-clock-avatar{width:152px;height:152px}
+    .wfo-clock-initials{font-size:38px}
+    .wfo-clock-time strong{font-size:26px}
+    .wfo-clock-checks{grid-template-columns:1fr;gap:8px}
+    .wfo-clock-checks li{padding:10px 12px}
+    .wfo-app .ews-break-live{grid-template-columns:1fr 1fr}
+}
+@media (min-width:821px){
+    .wfo-clock-face{flex-direction:row;gap:22px;text-align:start}
+    .wfo-clock-who{align-items:flex-start}
+    .wfo-clock-time{flex-direction:column;align-items:flex-start;gap:0;margin-inline-start:auto}
+    .wfo-clock-face{align-self:stretch}
+}

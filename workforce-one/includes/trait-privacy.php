@@ -15,11 +15,11 @@ if (!defined('ABSPATH')) exit;
 trait EWS_Privacy_Trait {
 
     private function privacy_location_retention_days(){
-        return max(0,min(3650,(int)get_option('ews_location_retention_days',0)));
+        return max(0,min(3650,(int)$this->option('ews_location_retention_days')));
     }
 
     private function privacy_face_delete_inactive(){
-        return (int)get_option('ews_face_delete_inactive',1)===1;
+        return (int)$this->option('ews_face_delete_inactive')===1;
     }
 
     private function privacy_schedule(){
@@ -45,7 +45,7 @@ trait EWS_Privacy_Trait {
             $faces=$wpdb->prefix.'ews_face_profiles';
             $ids=$wpdb->get_col("SELECT f.employee_id FROM {$faces} f LEFT JOIN {$this->employees} e ON e.id=f.employee_id WHERE e.id IS NULL OR e.active=0");
             if($ids){
-                $requests=get_option('ews_face_reset_requests',array());
+                $requests=$this->option('ews_face_reset_requests');
                 foreach($ids as $id){
                     $id=(int)$id;
                     if($this->face_delete_template($id)){
@@ -62,8 +62,8 @@ trait EWS_Privacy_Trait {
     private function privacy_settings_section(){
         $days=$this->privacy_location_retention_days();
         $face=$this->privacy_face_delete_inactive()?1:0;
-        $delete_all=(int)get_option('ews_delete_data_on_uninstall',0);
-        $last=get_option('ews_privacy_cleanup_last_run','');
+        $delete_all=(int)$this->option('ews_delete_data_on_uninstall');
+        $last=$this->option('ews_privacy_cleanup_last_run');
         $choices=[0=>__('Keep indefinitely','workforce-one'),30=>__('30 days','workforce-one'),90=>__('90 days','workforce-one'),180=>__('180 days','workforce-one'),365=>__('1 year','workforce-one'),730=>__('2 years','workforce-one')];
         /* translators: %d: number of days */
         if(!isset($choices[$days]))$choices[$days]=sprintf(__('%d days','workforce-one'),$days);
