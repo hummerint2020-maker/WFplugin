@@ -73,6 +73,21 @@ trait EWS_Schedule_Types_Trait {
             return self::$ews_schedule_type_by_name_cache[$name]=null;
         }
 
+    /**
+     * The days an employee's schedule has a leave: a type with the leave rule (inactive ones included) or "Leave", as the reports plan
+     * them (3.31.117, attendance corrections: the report result says Holiday or Off Day for a leave on a public holiday or a day off).
+     * @return array<string,true> date => true
+     */
+    private function schedule_leave_dates($employee_id,$from,$to){
+            global $wpdb;
+            $out=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date BETWEEN %s AND %s",(int)$employee_id,$from,$to)) as $r){
+                $type=$this->schedule_type_config((string)$r->status);
+                if(\WorkforceOne\Attendance\Insights::planCategory((string)$r->status,$type?(string)($type['attendance_rule']??''):null)==='Leave')$out[(string)$r->work_date]=true;
+            }
+            return $out;
+        }
+
     private function schedule_type_requires_sign_in($name){
             $type=$this->schedule_type_config($name);
             return $type?(bool)$type['requires_sign_in']:false;

@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) exit;
  *   settings    Settings\CorrectionSettings::config()
  *   pending     another request for the day is waiting          month_count   requests this month
  *   reason, has_photo
- *   no_work     the day is a leave, a holiday or a day off (NO_WORK_RESULTS) with no approved overtime
+ *   no_work     the day is a leave (whatever overtime), or a holiday or a day off without approved overtime (noWork())
  *   started     the first day the employee is in the system (Y-m-d; '' = unknown)
  */
 final class CorrectionRules
@@ -29,6 +29,19 @@ final class CorrectionRules
      * recorded that day (3.31.115, owner decision 2026-10-20: someone who came in on a holiday may still fix that day). HR may.
      */
     public const NO_WORK_RESULTS = ['Leave', 'Holiday', 'Off Day'];
+
+    /**
+     * A day nobody is expected to work (3.31.117, owner decision 2026-10-21: the leave wins over overtime). $leave: the employee's
+     * schedule has a leave that day (a leave across a public holiday or on a weekly day off reads otherwise in the report result);
+     * $overtime: approved overtime that day (a day off or a holiday the employee was asked to work); $result: the report result.
+     */
+    public static function noWork(bool $leave, bool $overtime, bool $working_day, string $result): bool
+    {
+        if ($leave) return true;
+        if ($overtime) return false;
+        if (!$working_day) return true;   // a weekly day off has no report row when nothing was recorded
+        return in_array($result, self::NO_WORK_RESULTS, true);
+    }
 
     /** @param array<string,mixed> $f @return string '' or an error code from ERRORS */
     public static function check(array $f): string

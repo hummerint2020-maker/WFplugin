@@ -122,3 +122,8 @@ a swap stuck Awaiting with its engine APPROVED after `changed` (Q4).
 - Q4 a swap refused with `changed`: **keep it Pending/Awaiting** (can be rejected or cancelled); auto-expire later as its own decision.
 - Q5 overtime requests on a leave day: **not refused in this PR**; separate decision.
 - Q6 the auto-close note for upgrade-case requests: **keep the existing text**.
+
+## Owner's answers (2026-10-21)
+All six as recommended: Q1 fix the `pending_hr` withdraw in this PR; Q2 no automatic repair (CHANGELOG explains); Q3 show "Closed
+automatically" on an auto-closed correction's path (display only); Q4 a swap refused with `changed` stays Pending/Awaiting; Q5 overtime
+on a leave day not refused in this PR; Q6 keep the existing auto-close note.

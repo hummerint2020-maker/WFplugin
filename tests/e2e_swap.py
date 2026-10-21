@@ -7,10 +7,10 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_swap.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import os, re, sys
+import atexit, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, ids, php, q, results, today, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, ids, php, q, results, today, wp, HERE  # noqa: E402
 
 DAY = today.isoformat()  # always inside the week the schedule page shows
 
@@ -191,6 +191,49 @@ _, qs, _ = create(e2)
 s9 = last()
 _, qs, _ = emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s9), swap_id=s9, decision='accept')
 check('back to "Colleague only": accepting swaps at once, as before', qs.get('swap_done') == 'accepted' and swap(s9)['status'] == 'Accepted', (qs, swap(s9)))
+
+# 3.31.117: the days are written only if they are still as read; a schedule saved at the same moment is never overwritten.
+php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-swap-mu.php');" % os.path.join(HERE, 'e2e_swap_mu.php'))
+atexit.register(lambda: php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-swap-mu.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-swap.txt');"))
+
+
+def stale(eid=0, status=''):
+    php("file_put_contents(WPMU_PLUGIN_DIR.'/ews-e2e-swap.txt','%s');" % ('stale %d %s %s' % (eid, DAY, status) if eid else ''))
+
+
+def accept(sid):
+    return emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', sid), swap_id=sid, decision='accept')[1]
+
+
+notes = lambda: int(q("SELECT COUNT(*) c FROM {p}ews_notifications WHERE title='Schedule Swap Completed'")[0]['c'])
+set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+for who, mine, theirs in ((e1, 'Office', 'WFH'), (e2, 'WFH', 'Office')):
+    _, qs, _ = create(e2)
+    sid = last()
+    set_schedule(who, 'Vacation')   # a leave approved for that day a moment ago
+    stale(who, mine)                # the swap read the day just before
+    before = notes()
+    qs = accept(sid)
+    stale()
+    check('a leave saved at the same moment on the %s\'s day: the swap is refused (changed) and the leave stays' % ('requester' if who == e1 else 'colleague'),
+          qs.get('swap_error') == 'changed' and swap(sid)['status'] == 'Pending' and sched(who) == 'Vacation' and sched(e2 if who == e1 else e1) == ('WFH' if who == e1 else 'Office') and notes() == before,
+          (qs, swap(sid), sched(e1), sched(e2)))
+    php("$wpdb->update($p.'ews_schedule_swaps',['status'=>'Cancelled'],['id'=>%d]);" % sid)
+    set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+for table in ('ews_schedule', 'ews_schedule_swaps'):
+    _, qs, _ = create(e2)
+    sid = last()
+    n = swap_form_nonce(emp2, 'ews_swap_respond', sid)
+    break_writes(table)
+    qs = emp2.post('ews_swap_respond', _wpnonce=n, swap_id=sid, decision='accept')[1]
+    break_writes('')
+    check('a database error on %s while accepting: nothing changes (the swap still waits, both days as they were)' % table,
+          qs.get('swap_error') == 'save' and swap(sid)['status'] == 'Pending' and sched(e1) == 'Office' and sched(e2) == 'WFH', (qs, swap(sid), sched(e1), sched(e2)))
+    php("$wpdb->update($p.'ews_schedule_swaps',['status'=>'Cancelled'],['id'=>%d]);" % sid)
+_, qs, _ = create(e2)
+sid = last()
+qs = accept(sid)
+check('...and with nothing in the way the swap goes through as before', qs.get('swap_done') == 'accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, sched(e1), sched(e2)))
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

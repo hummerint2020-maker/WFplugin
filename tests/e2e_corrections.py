@@ -12,10 +12,10 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_corrections.py <state-di
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import datetime, html, json, os, re, sys, urllib.parse, urllib.request, uuid
+import atexit, datetime, html, json, os, re, sys, urllib.parse, urllib.request, uuid
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, php, q, results, today, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, php, q, results, today, wp, HERE  # noqa: E402
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 
@@ -413,6 +413,114 @@ php("$wpdb->insert($p.'ews_schedule',['employee_id'=>%d,'work_date'=>'%s','statu
 res2 = decide(mgr, int(r_pend2['id']), 'approve')
 check('...the same when the manager approves it in the app', res2.get('cx_done') == 'closed' and cx(int(r_pend2['id']))['status'] == 'rejected' and not events(E, D5), (res2, cx(int(r_pend2['id'])).get('status')))
 php("""$wpdb->query("DELETE FROM {$p}ews_attendance_corrections WHERE work_date='%(d)s'"); $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(d)s'");""" % {'e': E, 'd': D5})
+
+# ---------------------------------------------------------------- 3.31.117: the leave wins over overtime; closing is all or nothing
+LV = D5
+
+
+def reset_day(d):
+    php("""foreach(['ews_attendance_corrections'=>'work_date','ews_time_logs'=>'work_date','ews_overtime_requests'=>'overtime_date'] as $t=>$c) $wpdb->query("DELETE FROM {$p}$t WHERE $c='%(d)s'");
+        $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(d)s'"); $wpdb->query("DELETE FROM {$p}ews_company_calendar WHERE title='Bank Holiday'");""" % {'d': d, 'e': E})
+
+
+def on_leave(d):
+    php("$wpdb->query(\"DELETE FROM {$p}ews_schedule WHERE employee_id=%(e)d AND work_date='%(d)s'\"); $wpdb->insert($p.'ews_schedule',['employee_id'=>%(e)d,'work_date'=>'%(d)s','status'=>'Vacation']);" % {'d': d, 'e': E})
+
+
+def with_overtime(d):
+    php("$wpdb->insert($p.'ews_overtime_requests',['employee_id'=>%d,'overtime_date'=>'%s','start_time'=>'09:00:00','end_time'=>'13:00:00','requested_minutes'=>240,'reason'=>'stock count','status'=>'Approved','requested_at'=>current_time('mysql')]);" % (E, d))
+
+
+def holiday(d):
+    php("$wpdb->insert($p.'ews_company_calendar',['event_date'=>'%s','title'=>'Bank Holiday','event_type'=>'general_leave','active'=>1]);" % d)
+
+
+php("update_option('ews_feature_overtime',1,false);")
+reset_day(LV); on_leave(LV); with_overtime(LV)
+tp = emp.req('/app/?ews_view=time')[1]
+check('3.31.117: a leave day with approved overtime and nothing recorded: no Correct button (the leave wins)', 'data-date="%s"' % LV not in tp)
+check('...and the request is refused (no_work), from the app and the API alike (cx_create)', mk(LV, 'employee', 'in').get('error') == 'no_work')
+holiday(LV)
+check('a leave across a public holiday, with approved overtime: refused (the report says Holiday, the schedule says leave)', mk(LV, 'employee', 'in').get('error') == 'no_work')
+php("$wpdb->query(\"DELETE FROM {$p}ews_company_calendar WHERE title='Bank Holiday'\"); update_option('ews_working_days',%s,false);" % json.dumps([x for x in range(7) if x != wd]))
+check('a leave written on a weekly day off, with approved overtime: refused', mk(LV, 'employee', 'in').get('error') == 'no_work')
+php("update_option('ews_working_days',[0,1,2,3,4,5,6],false); $wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>1,'work_date'=>'%s','event_type'=>'sign_in','event_at'=>'%s 09:00:00','scheduled_status'=>'Vacation']);" % (E, LV, LV))
+r_rec = mk(LV, 'employee', 'out')
+check('...a leave day with something recorded can still be corrected (3.31.115)', 'id' in r_rec, r_rec)
+reset_day(LV); holiday(LV); with_overtime(LV)
+r_hol = mk(LV, 'employee', 'in')
+check('a public holiday with approved overtime stays correctable (the employee was asked to work)', 'id' in r_hol, r_hol)
+reset_day(LV)
+# A request made before 3.31.117 on such a day (it was accepted then): closed when it is decided.
+r_old = mk(LV, 'employee', 'in')
+on_leave(LV); with_overtime(LV)
+res = decide(mgr, int(r_old['id']), 'approve')
+check('...a request waiting on a leave day with approved overtime (accepted before 3.31.117) is closed when approved, not applied', res.get('cx_done') == 'closed' and cx(int(r_old['id']))['status'] == 'rejected' and not events(E, LV), (res, cx(int(r_old['id'])).get('status')))
+reset_day(LV)
+
+# The close in one transaction (F07): with a Level 1 workflow the approval request is cancelled with it, or nothing changes.
+php("""$wf=(int)$wpdb->get_var("SELECT id FROM {$p}ews_approval_workflows WHERE workflow_key='attendance_correction'");
+    $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>'LEVEL_1','active'=>1],['id'=>$wf]);
+    $wpdb->insert($p.'ews_approval_workflow_steps',['workflow_id'=>$wf,'step_order'=>1,'step_type'=>'APPROVAL','resolver_type'=>'SPECIFIC_USER','resolver_value'=>(string)get_user_by('login','cxhr')->ID,'required'=>1,'active'=>1]);
+    $d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-corrections-mu.php');""" % os.path.join(HERE, 'e2e_corrections_mu.php'))
+atexit.register(lambda: php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-corrections-mu.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-corrections.txt');"))
+
+
+def engine(cid):
+    r = q("SELECT id,status FROM {p}ews_approval_requests WHERE entity_type='attendance_correction' AND entity_id=%d" % cid)
+    return r[0] if r else {}
+
+
+def steps(cid):
+    e = engine(cid)
+    return [(x['status'], x['skip_reason'] or '') for x in q("SELECT status,skip_reason FROM {p}ews_approval_steps WHERE approval_request_id=%d ORDER BY step_order" % int(e.get('id') or 0))]
+
+
+def mode(m):
+    php("file_put_contents(WPMU_PLUGIN_DIR.'/ews-e2e-corrections.txt','%s');" % m)
+
+
+qs = request(emp, LV, 'in', time_in='09:00', reason='forgot')
+C9 = last_cx()
+open_status = engine(C9).get('status')
+on_leave(LV)
+for table in ('ews_approval_requests', 'ews_attendance_corrections'):
+    break_writes(table)
+    res = decide(hr, C9, 'approve')
+    break_writes('')
+    check('a database error on %s while closing: nothing changes (the correction and its approval request still wait)' % table,
+          res.get('cx_error') == 'save' and cx(C9)['status'] == 'pending' and engine(C9).get('status') == open_status, (res, cx(C9).get('status'), engine(C9)))
+closed_before = len(q("SELECT id FROM {p}ews_audit_log WHERE action='correction_closed'"))
+mode('engine-moved')
+res = decide(hr, C9, 'approve')
+mode('')
+check('the approval request decided at the same moment it is closed: the close is undone (done), the correction still waits',
+      res.get('cx_error') == 'done' and cx(C9)['status'] == 'pending' and engine(C9).get('status') == open_status and len(q("SELECT id FROM {p}ews_audit_log WHERE action='correction_closed'")) == closed_before, (res, cx(C9).get('status'), engine(C9)))
+stale = call('cx_close', "(function()use($wpdb,$p){$c=$wpdb->get_row(\"SELECT * FROM {$p}ews_attendance_corrections WHERE id=%d\");$wpdb->update($p.'ews_attendance_corrections',['status'=>'pending_hr'],['id'=>%d]);return $c;})()" % (C9, C9)).strip().splitlines()[-1]
+php("$wpdb->update($p.'ews_attendance_corrections',['status'=>'pending'],['id'=>%d]);" % C9)
+check('...a close with a request read before another decision moved it: done, the approval request left as it is', stale == '"done"' and engine(C9).get('status') == open_status, (stale, engine(C9)))
+res = decide(hr, C9, 'approve')
+path = call('approval_paths', "[['attendance_correction','attendance_correction',%d]]" % C9)
+check('closed: the correction is rejected with the reason and its approval request cancelled, its level marked closed',
+      res.get('cx_done') == 'closed' and cx(C9)['status'] == 'rejected' and engine(C9).get('status') == 'CANCELLED' and steps(C9) == [('CANCELLED', 'closed')], (res, engine(C9), steps(C9)))
+check('...its approval path says "Closed automatically", not "Withdrawn by the employee"', 'Closed automatically' in path and 'Withdrawn by the employee' not in path, path[-300:])
+reset_day(LV)
+
+# Waiting for HR (the manager levels approved): it can be withdrawn (it failed before), and closed by HR on a leave day.
+for what in ('withdraw', 'close'):
+    qs = request(emp, LV, 'in', time_in='09:00', reason='forgot')
+    C10 = last_cx()
+    php("$wpdb->update($p.'ews_attendance_corrections',['status'=>'pending_hr','needs_hr'=>1],['id'=>%d]); $wpdb->update($p.'ews_approval_requests',['status'=>'APPROVED','current_step'=>null],['entity_type'=>'attendance_correction','entity_id'=>%d]);" % (C10, C10))
+    if what == 'withdraw':
+        out = call('cx_withdraw', str(C10), str(E)).strip().splitlines()[-1]
+        check('a correction waiting for HR can be withdrawn by the employee; its approval request stays approved (by the manager)', out == 'true' and cx(C10)['status'] == 'cancelled' and engine(C10).get('status') == 'APPROVED', (out, cx(C10).get('status')))
+    else:
+        on_leave(LV)
+        res = decide(hr, C10, 'approve', in_admin=True)
+        check('...waiting for HR on a day that became a leave: HR\'s approval closes it, the approval request stays approved', res.get('cx_done') == 'closed' and cx(C10)['status'] == 'rejected' and engine(C10).get('status') == 'APPROVED' and not events(E, LV), (res, cx(C10).get('status')))
+    reset_day(LV)
+php("""$wf=(int)$wpdb->get_var("SELECT id FROM {$p}ews_approval_workflows WHERE workflow_key='attendance_correction'"); $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>'NONE','active'=>0],['id'=>$wf]); $wpdb->query("DELETE FROM {$p}ews_approval_workflow_steps WHERE workflow_id=".$wf);
+    update_option('ews_feature_overtime',0,false); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-corrections-mu.php');""")
 
 # ---------------------------------------------------------------- API routes
 routes = json.loads(emp.req('/wp-json/workforce-one/v1')[1] or '{}').get('routes', {})
