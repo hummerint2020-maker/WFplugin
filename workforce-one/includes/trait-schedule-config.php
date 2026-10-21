@@ -105,6 +105,7 @@ trait EWS_Schedule_Config_Trait {
         $live=[];$on=[];
         foreach($clean as $c){$id=(int)$c['id'];$v=$this->shift_saved($id);if($v){$live[$id]=$v;$on[$id]=$this->shift_times_on($id,$from)?:$v;}}
         $times=array_flip(['start','end','grace','sign_in_cutoff_minutes','overnight']);
+        $posted=$clean;   // as posted: what the dated versions compare with
         foreach($clean as &$c){
             $id=(int)$c['id'];
             if(!isset($on[$id]))continue;   // a new shift
@@ -116,7 +117,7 @@ trait EWS_Schedule_Config_Trait {
         unset($c);
         update_option('ews_shifts',$clean,false);
         // Shifts whose times changed get them from $from; the days before keep the old ones (3.31.108).
-        $changed=$this->shift_versions_record($live,$on,$clean,$from);
+        $changed=$this->shift_versions_record($live,$on,$posted,$from);
         update_option('ews_shifts_highest_id',max(array_merge([$highest],array_column($clean,'id'))),false);
         $this->invalidate_schedule_runtime_cache();
         $this->audit('shifts_update','settings',0,'Shifts updated'.($changed?' · new times for '.$changed.' shift(s) from '.$from:''));

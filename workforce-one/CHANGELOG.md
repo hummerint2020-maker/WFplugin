@@ -21,7 +21,8 @@ Fixes to existing behaviour; no new setting, no database change.
   that day: a save from a day before a later saved change is refused (see above).
 - The company hours form shows today's times, all four fields (it showed today's start and end with the grace and overnight of a change
   saved for a later day, and saving it as shown undid or refused that change). Saving it with the times unchanged (only "absent after")
-  no longer writes the times.
+  no longer writes the times. The same for the shifts: saving the list as shown (to rename a shift, for example) keeps a shift's change
+  saved for a later day.
 ## 3.31.115
 ### Attendance corrections: no request on a day nobody works (owner decision 2026-10-20)
 - "My recent days" no longer offers **Correct** on a leave day, a public holiday or a day off when nothing was recorded that day,

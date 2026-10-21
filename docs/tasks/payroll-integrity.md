@@ -96,3 +96,29 @@ value for the newest row.
 - Q1: no automatic repair; the CHANGELOG explains the two dated saves for HR who know the day.
 - Q2: refuse (`times_later`), for the company hours and for a shift (explained with an example first).
 - Q3: 20 seconds.
+
+## Implementation notes and review (3.31.116)
+Where the code differs from the design:
+- The company hours form shows today's times for all four fields (start, end, grace, overnight) from one source, and a save whose times
+  did not change writes no times (only "absent after"). The same for the shifts: an unchanged shift keeps the option's times. Without
+  this, saving a form as shown undid a change already saved for a later day, or was refused with `times_later` (review finding 1).
+- The per-shift path compares the post with the shift as it counts on `$from` and settles with the option's times (not today's), so a
+  change from a day after a later saved change keeps that change.
+- Some tests from §8 sit in other files: the second reopen and the invalid `times_from` are in `e2e_advances` / `e2e_shift_history`.
+
+Independent review (read-only), findings and what was done:
+1. CONFIRMED: the company hours form mixed today's start/end with the later grace/overnight; saving it undid a later change or was
+   refused. **Fixed** (form from one source; unchanged times not written; same for shifts, found while fixing). e2e: the form shows
+   today's values; saving it as shown keeps the later change (company hours and a shift); a change from a day after it keeps it.
+2. Reported CONFIRMED (a later shift change takes effect today): **refuted** on tracing. `shifts()` overlays `shift_times_on(id, today)`,
+   which returns the older stored version while a later one exists. e2e added: today's shift keeps 09:00 until the later day.
+3. CONFIRMED: `times_later` also refuses a day before a version whose day has passed, so the two-save repair (Q1) cannot be used where a
+   dated change was saved after the affected day. **Not changed** (owner decision Q2 was "refuse"); the limit is in the CHANGELOG and is
+   an owner question: allow inserting between past versions (HR only) in a later release?
+4. Tests: added overnight-only dated, the forms' as-shown saves, the today check; the two-months close now runs in CI on a 6-worker
+   server (MySQL: both months close, one waits for the other; SQLite: one is refused as `changed`) and fails instead of skipping when
+   the server is expected; the test mu-plugin is removed on exit. Not added: a payroll-figure check for grace-only (the figures read the
+   same `shift_times_on` that is checked), a separate BEGINNING-path e2e (covered by the `testSettle` unit test).
+5. PLAUSIBLE (the company form showed the admin's own shift): **fixed** by 1.
+6. PLAUSIBLE (reopen fails when the advances table is missing): **not changed**; the table is created on every install and upgrade, and
+   refusing the reopen in that broken state changes nothing.

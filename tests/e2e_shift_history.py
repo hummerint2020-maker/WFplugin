@@ -123,7 +123,7 @@ def save_shifts(frm, **over):
 saved_101 = lambda: php("foreach(get_option('ews_shifts') as $s) if((int)$s['id']===101) echo $s['start'].'|'.$s['grace'];").strip().splitlines()[-1]
 qs = save_shifts(d(0), **{'shifts[0][start]': '09:00', 'shifts[0][end]': '17:00'})   # the form as shown today, e.g. to rename a shift
 check('3.31.116: saving the shifts as the form shows them today keeps the change saved for a later day', qs.get('schedule_notice') == 'shifts_saved'
-      and saved_101() == '08:30|10' and json.loads(call('shift_times_on', 101, d(2)))['start'] == '08:30' and json.loads(call('shift_times_on', 101, d(1)))['start'] == '09:00', (qs, saved_101()))
+      and saved_101() == '08:30|10' and json.loads(call('shift_times_on', 101, d(2)))['start'] == '08:30' and json.loads(call('shift_times_on', 101, d(1)))['start'] == '09:00', (qs, saved_101(), q("SELECT from_date,start_time,grace FROM {p}ews_shift_versions WHERE shift_id=101")))
 qs = save_shifts(d(4), **{'shifts[0][grace]': 12})
 check('...a change from a day after it keeps it: %s has 08:30 and grace 10, %s grace 12' % (d(2), d(4)), qs.get('schedule_notice') == 'shifts_saved'
       and json.loads(call('shift_times_on', 101, d(2)))['start'] == '08:30' and json.loads(call('shift_times_on', 101, d(2)))['grace'] == 10
