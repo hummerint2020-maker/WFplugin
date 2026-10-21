@@ -843,14 +843,19 @@ trait EWS_Approvals_Trait {
      * @return true|string|false true: cancelled or nothing open; 'moved': it was decided while being closed; false: a database error
      */
     private function approval_close_open($workflow_key,$entity_type,$entity_id,$closed=false){
+        global $wpdb;
+        $wpdb->last_error='';
         $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
+        if(!$ar && $wpdb->last_error!=='')return false;   // not read: not "nothing open"
         $this->substitutes_sync_at_shutdown();
         if(!$ar || in_array($ar->status,['APPROVED','REJECTED','CANCELLED'],true))return true;
-        global $wpdb;$t=$this->approval_tables();
+        $t=$this->approval_tables();
+        // The levels first, then the request: the order approval_act() locks them in, so a decision at the same moment waits instead of
+        // deadlocking. Both roll back with the caller's transaction when the request was decided meanwhile.
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED'".($closed?",skip_reason='closed'":'')." WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))===false)return false;
         $n=$wpdb->update($t['requests'],['status'=>'CANCELLED','current_step'=>null,'completed_at'=>current_time('mysql')],['id'=>(int)$ar->id,'status'=>(string)$ar->status]);
         if($n===false)return false;
-        if($n!==1)return 'moved';
-        return $wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED'".($closed?",skip_reason='closed'":'')." WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))!==false;
+        return $n===1?true:'moved';
     }
 
     /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */

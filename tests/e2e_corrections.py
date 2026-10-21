@@ -484,7 +484,7 @@ qs = request(emp, LV, 'in', time_in='09:00', reason='forgot')
 C9 = last_cx()
 open_status = engine(C9).get('status')
 on_leave(LV)
-for table in ('ews_approval_requests', 'ews_attendance_corrections'):
+for table in ('ews_approval_requests', 'ews_approval_steps', 'ews_attendance_corrections'):
     break_writes(table)
     res = decide(hr, C9, 'approve')
     break_writes('')
@@ -494,8 +494,8 @@ closed_before = len(q("SELECT id FROM {p}ews_audit_log WHERE action='correction_
 mode('engine-moved')
 res = decide(hr, C9, 'approve')
 mode('')
-check('the approval request decided at the same moment it is closed: the close is undone (done), the correction still waits',
-      res.get('cx_error') == 'done' and cx(C9)['status'] == 'pending' and engine(C9).get('status') == open_status and len(q("SELECT id FROM {p}ews_audit_log WHERE action='correction_closed'")) == closed_before, (res, cx(C9).get('status'), engine(C9)))
+check('the approval request decided at the same moment it is closed: the close is undone (try again), the correction still waits',
+      res.get('cx_error') == 'approval' and cx(C9)['status'] == 'pending' and engine(C9).get('status') == open_status and len(q("SELECT id FROM {p}ews_audit_log WHERE action='correction_closed'")) == closed_before, (res, cx(C9).get('status'), engine(C9)))
 stale = call('cx_close', "(function()use($wpdb,$p){$c=$wpdb->get_row(\"SELECT * FROM {$p}ews_attendance_corrections WHERE id=%d\");$wpdb->update($p.'ews_attendance_corrections',['status'=>'pending_hr'],['id'=>%d]);return $c;})()" % (C9, C9)).strip().splitlines()[-1]
 php("$wpdb->update($p.'ews_attendance_corrections',['status'=>'pending'],['id'=>%d]);" % C9)
 check('...a close with a request read before another decision moved it: done, the approval request left as it is', stale == '"done"' and engine(C9).get('status') == open_status, (stale, engine(C9)))
@@ -517,7 +517,9 @@ for what in ('withdraw', 'close'):
     else:
         on_leave(LV)
         res = decide(hr, C10, 'approve', in_admin=True)
-        check('...waiting for HR on a day that became a leave: HR\'s approval closes it, the approval request stays approved', res.get('cx_done') == 'closed' and cx(C10)['status'] == 'rejected' and engine(C10).get('status') == 'APPROVED' and not events(E, LV), (res, cx(C10).get('status')))
+        told = q("SELECT id FROM {p}ews_notifications WHERE entity_id=%d AND message LIKE '%%Closed automatically%%'" % C10)
+        check('...waiting for HR on a day that became a leave: HR\'s approval closes it, the approval request stays approved, the employee is told',
+              res.get('cx_done') == 'closed' and cx(C10)['status'] == 'rejected' and engine(C10).get('status') == 'APPROVED' and not events(E, LV) and told, (res, cx(C10).get('status'), told))
     reset_day(LV)
 php("""$wf=(int)$wpdb->get_var("SELECT id FROM {$p}ews_approval_workflows WHERE workflow_key='attendance_correction'"); $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>'NONE','active'=>0],['id'=>$wf]); $wpdb->query("DELETE FROM {$p}ews_approval_workflow_steps WHERE workflow_id=".$wf);
     update_option('ews_feature_overtime',0,false); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-corrections-mu.php');""")

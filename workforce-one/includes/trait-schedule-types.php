@@ -30,7 +30,7 @@ trait EWS_Schedule_Types_Trait {
                 if(!is_array($type))continue;
                 $name=trim(sanitize_text_field($type['name']??''));
                 if($name==='')continue;
-                if($active_only && empty($type['active']))continue;
+                // Every type in the cache, inactive ones too (3.31.117: the first call's filter stayed for the whole request).
                 $rule=sanitize_key($type['attendance_rule']??'attendance');
                 if(!in_array($rule,['attendance','leave','business_trip'],true))$rule='attendance';
                 $defaults=['icon'=>'•','bg_color'=>'#f2f4f7','text_color'=>'#667085','border_color'=>'#e5e7eb'];
@@ -82,8 +82,9 @@ trait EWS_Schedule_Types_Trait {
             global $wpdb;
             $out=[];
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT work_date,status FROM {$this->schedule} WHERE employee_id=%d AND work_date BETWEEN %s AND %s",(int)$employee_id,$from,$to)) as $r){
-                $type=$this->schedule_type_config((string)$r->status);
-                if(\WorkforceOne\Attendance\Insights::planCategory((string)$r->status,$type?(string)($type['attendance_rule']??''):null)==='Leave')$out[(string)$r->work_date]=true;
+                $status=trim((string)$r->status);   // as report_days() reads it
+                $type=$this->schedule_type_config($status);
+                if(\WorkforceOne\Attendance\Insights::planCategory($status,$type?(string)($type['attendance_rule']??''):null)==='Leave')$out[(string)$r->work_date]=true;
             }
             return $out;
         }

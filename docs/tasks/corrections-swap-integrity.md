@@ -127,3 +127,28 @@ a swap stuck Awaiting with its engine APPROVED after `changed` (Q4).
 All six as recommended: Q1 fix the `pending_hr` withdraw in this PR; Q2 no automatic repair (CHANGELOG explains); Q3 show "Closed
 automatically" on an auto-closed correction's path (display only); Q4 a swap refused with `changed` stays Pending/Awaiting; Q5 overtime
 on a leave day not refused in this PR; Q6 keep the existing auto-close note.
+
+## Implementation notes and review (3.31.117)
+Where the code differs from the design:
+- The leave read is `schedule_leave_dates()` in the schedule module (`trait-schedule-types.php`, in its api list), not `cx_leave_dates`
+  in corrections (module boundaries).
+- Q3 ("Closed automatically" on the path): `approval_close_open(..., $closed)` writes `skip_reason='closed'` on the cancelled levels (an
+  existing column, no schema change); the path reads it. Decided from the correction's status would have needed the approvals module to
+  read the corrections table.
+- `approval_close_open` cancels the levels before the request (the order `approval_act` locks them in) and treats a failed read as an
+  error. A request decided while being closed returns `approval` ("could not be recorded, try again"), not `done`.
+- `save` message is neutral ("It could not be saved; nothing was changed"), since a failed request submission uses it too.
+- Tests: the `pending_hr` withdraw is called directly in `e2e_corrections.py`; the swap race is tested on the colleague's accept only.
+
+Independent review (read-only): no blocking defects. Findings and what was done:
+1. PLAUSIBLE, lock order against `approval_act` (deadlock surfacing as `save`): **fixed** (levels first).
+2. CONFIRMED, the `save` text said "the decision" also for a failed submission: **fixed** (neutral text).
+3. PLAUSIBLE, existing: the schedule types cache kept the first call's active-only filter, so an inactive leave type could be missed:
+   **fixed** (the cache holds every type; the filter applies on return).
+4. PLAUSIBLE, a failed read of the approval request counted as "nothing open": **fixed**.
+5. PLAUSIBLE, status not trimmed as `report_days` does: **fixed**.
+6. PLAUSIBLE, `done` shown while the correction still waits: **fixed** (`approval`, try again).
+7. Note, existing, out of scope: an administrator approving an Awaiting swap with more than one level applies it while its approval
+   request moves to the next level only. Recorded for a later release.
+Tests added after the review: a database error on the approval levels while closing; the employee told when HR's approval closes a
+request waiting for HR. CHANGELOG: "closed when it is approved".

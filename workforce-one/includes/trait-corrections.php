@@ -393,7 +393,7 @@ trait EWS_Corrections_Trait {
     /**
      * Closes such a request: rejected with the reason, its approval request cancelled if still open, the employee told. One transaction,
      * the request first (3.31.117): a decision made at the same moment wins and leaves the approval request as it is.
-     * @return string closed | done | save
+     * @return string closed | done | approval | save
      */
     private function cx_close($c){
         global $wpdb;
@@ -403,7 +403,7 @@ trait EWS_Corrections_Trait {
         if($ok===false){$wpdb->query('ROLLBACK');return 'save';}
         if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
         $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$c->id,true);
-        if($engine==='moved'){$wpdb->query('ROLLBACK');return 'done';}
+        if($engine==='moved'){$wpdb->query('ROLLBACK');return 'approval';}   // decided by an approver meanwhile: nothing changed, try again
         if($engine===false){$wpdb->query('ROLLBACK');return 'save';}
         if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
         $this->cx_after_rejected($c,$note);
@@ -588,7 +588,7 @@ trait EWS_Corrections_Trait {
             'done'=>__('This request was already decided.','workforce-one'),
             'stale'=>__('The day changed since this request was made, so it cannot be applied. Reject it, or ask HR to correct the day.','workforce-one'),
             'approval'=>__('The approval could not be recorded. Please try again.','workforce-one'),
-            'save'=>__('The decision could not be saved; nothing was changed. Please try again.','workforce-one'),
+            'save'=>__('It could not be saved; nothing was changed. Please try again.','workforce-one'),
         ];
         return $m[$code]??__('Something went wrong. Please try again.','workforce-one');
     }
