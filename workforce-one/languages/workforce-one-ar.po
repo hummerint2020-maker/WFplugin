@@ -7497,3 +7497,13 @@ msgstr "أُغلق تلقائيًا"
 
 msgid "The day is now a leave, a holiday or a day off, so nothing was applied. The employee was told. HR can still correct the day directly."
 msgstr "أصبح اليوم إجازة أو عطلة أو يوم راحة، فلم يُطبَّق شيء. تم إبلاغ الموظف. ويمكن للموارد البشرية تصحيح اليوم مباشرةً."
+
+
+msgid "Mobile app API"
+msgstr "واجهة تطبيق الموبايل"
+
+msgid "Lets the Android and iPhone apps read the signed-in employee’s profile and menu, their own schedule and today’s attendance. Read only: it changes no rule, permission or request, and an employee can only ever read their own data. Off, the apps get “disabled” and nothing else changes."
+msgstr "تتيح لتطبيقي أندرويد وآيفون قراءة ملف الموظف المسجّل دخوله وقائمته وجدوله الخاص وحضور اليوم. للقراءة فقط: لا تغيّر أي قاعدة أو صلاحية أو طلب، ولا يقرأ الموظف إلا بياناته هو. عند الإيقاف تردّ التطبيقات بـ «معطّلة» ولا يتغيّر شيء آخر."
+
+msgid "Safer app sign-in refresh: a phone that refreshes its sign-in several times at once, or retries, stays signed in (up to 4 more times within 30 seconds); a database error no longer signs it out. Off: as before."
+msgstr "تجديد أكثر أمانًا لدخول التطبيق: الهاتف الذي يجدّد دخوله أكثر من مرة في اللحظة نفسها، أو يعيد المحاولة، يبقى مسجّلًا (حتى 4 مرات إضافية خلال 30 ثانية)، وخطأ قاعدة البيانات لم يعد يُخرجه. عند الإيقاف: كما كان."

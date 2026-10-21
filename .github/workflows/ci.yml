@@ -46,6 +46,10 @@ jobs:
         run: python3 tests/check_translations.py
       - name: Module boundaries do not grow (docs/architecture/modules.md)
         run: python3 tests/check_modules.py
+      - name: API contract (OpenAPI matches the routes, error codes and examples)
+        run: |
+          python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
+          python3 tests/check_openapi.py
 
   e2e:
     name: WordPress + MySQL e2e
@@ -175,6 +179,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_foundation.py "$S"
       - name: Native app authentication (tokens, refresh rotation, devices, rate limits, isolation)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_auth.py "$S"
+      - name: Mobile app API e2e (bootstrap, my schedule, today)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_api_app.py "$S"
       - name: Notifications page (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_notifications_view.py "$S"
       - name: Tasks page (employee app)
@@ -191,6 +197,14 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_corrections.py "$S"
       - name: Daily workers (day sheet from inside the site, national ID, modes, payouts, never mixed with staff)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_daily_workers.py "$S"
+      - name: Refresh-token race (safer refresh switch, grace uses, database errors, truly concurrent refreshes on a 6-worker server)
+        run: |
+          PHP_CLI_SERVER_WORKERS=6 php -S 127.0.0.1:8081 -t "$WP" tests/router.php > "$S/server8081.log" 2>&1 &
+          RACE_PID=$!
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8081/wp-json/workforce-one/v1/meta && break; sleep 1; done
+          rc=0; WFO_RACE_URL=http://127.0.0.1:8081 WP_CLI="wp --path=$WP" python3 tests/e2e_api_refresh_race.py "$S" || rc=$?
+          kill $RACE_PID 2>/dev/null || true
+          exit $rc
       - name: Office minimum (counters, warning, team shares, leave note, weekly reminder, never blocks saving)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_office_minimum.py "$S"
       - name: wp-admin menu in sections (8 sections, tabs, old links, permissions, features off, Arabic)

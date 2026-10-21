@@ -51,6 +51,16 @@ final class ApiAuthTest extends TestCase
         $this->assertSame($now + 900, T::accessExpiry($now, $now + 86400));
     }
 
+    /** The refresh grace with "Safer app sign-in refresh" on (3.31.114): 4 more uses within 30 s, the boundary second included. */
+    public function testRefreshGrace(): void
+    {
+        $now = 1_800_000_000;
+        $this->assertSame(30, T::REFRESH_GRACE);
+        $this->assertSame(4, T::REFRESH_GRACE_USES);
+        $this->assertSame($now - 30, T::graceCutoff($now), 'a token used 30 s ago is still inside the grace (used_at >= cutoff)');
+        $this->assertSame(T::USED, T::refreshStatus(['used_at' => 'x', 'revoked_at' => 'y', 'expires_at' => $now + 10, 'session_expires_at' => $now + 10], $now), 'a used token stays USED before REVOKED');
+    }
+
     public function testLoginThrottle(): void
     {
         $now = 1_800_000_000;
@@ -125,6 +135,8 @@ final class ApiAuthTest extends TestCase
         $this->assertSame([
             'GET /meta' => 'public', 'POST /auth/login' => 'credentials', 'POST /auth/refresh' => 'credentials', 'POST /auth/logout' => 'token',
             'GET /me' => 'token', 'GET /me/devices' => 'token', 'DELETE /me/devices/(?P<id>[a-f0-9]{32})' => 'token',
+            // 3.31.113: mobile app API 1 (docs/tasks/mobile-api-1.md), read only, token only.
+            'GET /me/bootstrap' => 'token', 'GET /me/schedule' => 'token', 'GET /attendance/today' => 'token',
             // 3.31.74: attendance corrections (docs/tasks/attendance-corrections.md), token only.
             'GET /corrections/days' => 'token', 'GET /corrections' => 'token', 'POST /corrections' => 'token', 'GET /corrections/pending' => 'token',
             'POST /corrections/(?P<id>\\d+)/decision' => 'token',

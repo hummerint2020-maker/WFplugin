@@ -33,7 +33,8 @@
       "api": [
         "app_view_url",
         "app_home_url",
-        "admin_nav_tab_labels"
+        "admin_nav_tab_labels",
+        "app_screens"
       ]
     },
     "people": {
@@ -96,6 +97,7 @@
       "label": "Schedule: working time, schedule types, the planner, swaps, office minimum",
       "traits": [
         "work-time",
+        "schedule-api",
         "schedule-config",
         "schedule-types",
         "schedule-view",
@@ -126,7 +128,9 @@
         "shift_version_insert",
         "company_hours_now",
         "shift_versions_all",
-        "shift_for_employee_on"
+        "shift_for_employee_on",
+        "api_status_labels",
+        "working_hours"
       ]
     },
     "locations": {
@@ -143,12 +147,16 @@
         "kiosks",
         "presence_verifications"
       ],
-      "api": []
+      "api": [
+        "branch_days",
+        "branch_today"
+      ]
     },
     "attendance": {
       "label": "Attendance: Sign In / Out, breaks, face, corrections, evidence, auto attendance",
       "traits": [
         "attendance",
+        "attendance-api",
         "auto-attendance",
         "breaks",
         "face",
@@ -380,7 +388,8 @@
       "traits": [
         "pwa",
         "offline-screen",
-        "api-auth"
+        "api-auth",
+        "api-me"
       ],
       "tables": [
         "api_tokens",
@@ -388,7 +397,15 @@
         "api_rate_limits",
         "api_idempotency"
       ],
-      "api": []
+      "api": [
+        "api_app_guard",
+        "api_ok",
+        "api_fail",
+        "api_me_document",
+        "api_feature_flags",
+        "app_api_enabled",
+        "api_refresh_safe_enabled"
+      ]
     },
     "health": {
       "label": "System health: performance collector and screen",

@@ -24,6 +24,11 @@ final class Tokens
     public const SESSION_MAX = 180 * 86400;
     /** Seconds after a refresh token was used in which the same token may be used once more (a retry or two requests at the same moment). */
     public const REFRESH_GRACE = 30;
+    /**
+     * With the "Safer app sign-in refresh" switch on (3.31.114): how many more times a used refresh token is accepted within
+     * REFRESH_GRACE seconds of its first use (retries, or an app and its extensions refreshing at the same moment).
+     */
+    public const REFRESH_GRACE_USES = 4;
 
     public const OK = 'ok';
     public const EXPIRED = 'expired';
@@ -93,5 +98,11 @@ final class Tokens
     public static function accessExpiry(int $now, int $sessionExpiresAt): int
     {
         return min($now + self::ACCESS_TTL, $sessionExpiresAt);
+    }
+
+    /** The oldest first use still inside the grace (3.31.114): a token used at this second or later is accepted, 1 s earlier not. */
+    public static function graceCutoff(int $now): int
+    {
+        return $now - self::REFRESH_GRACE;
     }
 }

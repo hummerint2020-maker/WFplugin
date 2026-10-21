@@ -24,6 +24,8 @@ trait EWS_Features_Trait {
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
                 'my_approvals'=>$this->my_approvals_enabled(),
+                'app_api'=>$this->app_api_enabled(),
+                'api_refresh_safe'=>$this->api_refresh_safe_enabled(),
                 'substitutes'=>$this->substitutes_enabled(),
                 'advances'=>$this->advances_enabled(),
                 'health'=>$this->health_enabled(),
@@ -102,6 +104,8 @@ trait EWS_Features_Trait {
         if(isset($post['corrections_present']))update_option('ews_feature_corrections',$flag('corrections_enabled')?1:0,false);
         // My approvals and My requests (3.31.103).
         if(isset($post['my_approvals_present']))update_option('ews_feature_my_approvals',$flag('my_approvals_enabled')?1:0,false);
+        if(isset($post['app_api_present']) && (bool)(int)$this->option('ews_feature_app_api')!==$flag('app_api_enabled'))update_option('ews_feature_app_api',$flag('app_api_enabled')?1:0,false);   // nothing is written while it stays off
+        if(isset($post['app_api_present']) && $this->api_refresh_safe_enabled()!==$flag('api_refresh_safe'))update_option('ews_feature_api_refresh_safe',$flag('api_refresh_safe')?1:0,false);   // the refresh fix (3.31.114), same rule
         // Salary advances (3.31.109).
         if(isset($post['advances_present'])){
             update_option('ews_feature_advances',$flag('advances_enabled')?1:0,false);

@@ -26,6 +26,9 @@ workforce-one/
     Api/Hooks.php, Routes.php          REST transport: one route table under workforce-one/v1 (today the Face routes)
     Api/Response.php, ErrorMap.php     response envelope and request ids; domain codes → stable API codes + HTTP status
     Api/Meta.php                       GET /meta: the public bootstrap document (only the keys listed there)
+    Api/Bootstrap.php, Api/AttendanceToday.php, Api/Period.php, Api/LocalTime.php  GET /me/bootstrap and GET /attendance/today documents, the schedule period and the parameters that may not name another employee, site-local times with the UTC offset (3.31.113)
+    Schedule/ScheduleDays.php          GET /me/schedule: one employee's days (status, shift, branch)
+    Attendance/TodayState.php          the facts AttendanceService::today() returns
     Api/Auth/Tokens.php, LoginThrottle.php, Bearer.php, LoginInput.php, ClientIp.php  token format and states, login limits, the token headers, the login body, the client address behind a trusted proxy
     Attendance/AutoRules.php, AutoHooks.php  Auto Attendance rules: days, overnight, what is due
     Audit/AuditFilters.php             Audit Log date range and paging

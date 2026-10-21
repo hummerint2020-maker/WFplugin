@@ -26,6 +26,7 @@ final class SchemaCheck
         'ews_time_logs' => ['source', 'corrects_id', 'correction_id', 'location_id', 'branch_flag', 'photo_key'],
         'ews_schedule' => ['location_id'],
         'ews_notifications' => ['link'],
+        'ews_api_tokens' => ['grace_uses'],
     ];
 
     /**

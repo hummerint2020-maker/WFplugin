@@ -112,6 +112,28 @@ trait EWS_Branches_Trait {
         return ['id'=>$id,'name'=>(string)$locs[$id]->name,'planned'=>$planned>0,'main_name'=>isset($locs[$main])?(string)$locs[$main]->name:''];
     }
 
+    /**
+     * The branch shown for each of several days (3.31.113, GET /me/schedule): what branch_today() shows, for a list of dates with one
+     * query. null for a date where nothing is shown (the setting is off, or the company has one place).
+     * @param string[] $days
+     * @return array<string,array{id:int,name:string,planned:bool}|null>
+     */
+    private function branch_days($employee_id,array $days){
+        $out=[];foreach($days as $d)$out[$d]=null;
+        $cfg=$this->branch_settings();
+        if(empty($cfg['show_branch']))return $out;
+        $locs=$this->branch_locations();
+        if(count($locs)<2)return $out;
+        $main=$this->branch_main_id($employee_id);
+        $planned=$this->branch_planned_bulk([(int)$employee_id],$days)[(int)$employee_id]??[];
+        foreach($days as $d){
+            $p=(int)($planned[$d]??0);if(!isset($locs[$p]))$p=0;   // a planned branch that no longer exists: the main branch, as branch_today()
+            $id=$p?:$main;
+            if(isset($locs[$id]))$out[$d]=['id'=>(int)$id,'name'=>(string)$locs[$id]->name,'planned'=>$p>0];
+        }
+        return $out;
+    }
+
     /** @param int[] $employee_ids @param string[] $days @return array<int,array<string,int>> planned branch per employee and day */
     private function branch_planned_bulk(array $employee_ids,array $days){
         global $wpdb;$out=[];

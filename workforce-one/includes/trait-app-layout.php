@@ -82,7 +82,7 @@ trait EWS_App_Layout_Trait {
     }
 
     /** Menu items from View Navigation, limited to the views this user may open. */
-    private function app_navigation(){
+    private function app_navigation($with_counts=true){
         $cfg=$this->option('ews_frontend_navigation');
         if(!is_array($cfg))$cfg=[];
         // 3.31.106: My approvals and My requests were desktop-only by default, so a phone had no way to them.
@@ -103,7 +103,7 @@ trait EWS_App_Layout_Trait {
             $item=array_merge($def,(isset($cfg[$key])&&is_array($cfg[$key]))?$cfg[$key]:[]);
             $desktop=sanitize_text_field((string)($item['label']??''))?:$def['label'];
             $mobile=sanitize_text_field((string)($item['mobile_label']??''))?:$def['mobile_label'];
-            $items[]=['key'=>$key,'icon'=>$def['icon'],'url'=>$this->app_view_url($key),'count'=>$key==='approvals'?$this->my_approvals_count():0,
+            $items[]=['key'=>$key,'icon'=>$def['icon'],'url'=>$this->app_view_url($key),'count'=>$with_counts&&$key==='approvals'?$this->my_approvals_count():0,
                 'desktop_label'=>$i18n[$desktop]??$desktop,'mobile_label'=>$i18n[$mobile]??$mobile,
                 'desktop_visible'=>!empty($item['desktop_visible']),'mobile_visible'=>!empty($item['mobile_visible']),
                 'desktop_order'=>(int)($item['desktop_order']??$def['desktop_order']),'mobile_order'=>(int)($item['mobile_order']??$def['mobile_order'])];
@@ -113,6 +113,18 @@ trait EWS_App_Layout_Trait {
         usort($desktop,function($a,$b){return $a['desktop_order']<=>$b['desktop_order'];});
         usort($mobile,function($a,$b){return $a['mobile_order']<=>$b['mobile_order'];});
         return [$desktop,$mobile];
+    }
+
+    /**
+     * The phone menu of the current user for the apps (3.31.113, GET /me/bootstrap): the same items, order and labels as the
+     * Web's phone menu (View Navigation), without links or badge counts.
+     * @return list<array{key:string,label:string,order:int}>
+     */
+    private function app_screens(){
+        [$desktop,$mobile]=$this->app_navigation(false);
+        $out=[];
+        foreach($mobile as $item)$out[]=['key'=>(string)$item['key'],'label'=>(string)$item['mobile_label'],'order'=>(int)$item['mobile_order']];
+        return $out;
     }
 
     /** Log out back to this page, which then confirms it ("You have been logged out"). */

@@ -13,6 +13,40 @@
   closed when it is decided ("Closed automatically", its approval request cancelled, the employee told, the approver shown why),
   so a day never holds both attendance and a leave. Approved overtime counts only while the Overtime feature is on (as in the
   reports); the day an employee was added counts with one day of margin (the database clock may be UTC).
+## 3.31.114
+### Security: the app's sign-in refresh (switch, off by default)
+Design and owner decisions: `docs/tasks/refresh-race.md`. Turned on in wp-admin → Features → Mobile app API → "Safer app sign-in refresh".
+Off, the refresh works exactly as in 3.31.111.
+- **The problem it fixes:** when a phone refreshed its sign-in three or more times at the same moment (an app and its extensions, or
+  several requests waking up together), the third was taken for a stolen token and the phone was signed out; a database error
+  (a lock timeout) also signed it out.
+- **On:** within 30 seconds of its first use a refresh token is accepted up to 4 more times, each with its own new pair; a later or a
+  6th use still ends the device session and is in the Audit Log as before. Every decision is one conditional database update, so
+  requests at the same moment cannot both win. A database error answers 500 and never signs the phone out. A refresh during a logout or a
+  password change answers DEVICE_REVOKED (not a theft in the Audit Log); a disabled account answers ACCOUNT_DISABLED. New tokens that
+  could not be saved are never handed out, and the daily "api_refresh" Audit Log row is written once even for refreshes at the same moment.
+- **Database:** a new column `ews_api_tokens.grace_uses` (added on upgrade; unused while the switch is off).
+- **Contract:** `docs/api/openapi.yaml` (`/auth/refresh`): the rule above, a 500 response, and a 7th client rule (on a 500 or a network
+  failure retry the same refresh token, at most 3 times within 30 seconds; never an older one).
+- **Tests:** `tests/e2e_api_refresh_race.py`, with a second 6-worker server in CI so the refreshes really happen at the same moment.
+
+## 3.31.113
+### New: Mobile app API 1 (off by default)
+First step of preparing Workforce One for the Android and iPhone apps: WordPress stays the backend and the admin, the apps use the REST API.
+Nothing changes in any business process, permission or existing endpoint. Design and owner decisions: `docs/tasks/mobile-api-1.md`.
+- **Switch:** Feature Configuration → Mobile app API (off by default). Off, the three new routes answer 403 `FORBIDDEN` with `details.reason: "disabled"`;
+  `/meta`, `/me`, sign-in and the Web are unchanged.
+- **`GET /me/bootstrap`:** the `/me` document (unchanged) plus the features (the same flags as `/meta`), the screens of the user's phone menu (the same
+  items, order and labels as the Web's View Navigation, without links or badge counts) and facts about the site (time zone, today, working days).
+- **`GET /me/schedule?from=&to=`:** the signed-in employee's own days: status, shift and times (ISO 8601 with the site's offset; an overnight shift ends the
+  next day; shift history applies on every date) and branch (only where the Web shows one). Default: the Web's current week; at most 42 days.
+- **`GET /attendance/today`:** the current work day (an overnight shift stays on the day it started), the Sign In / Out / break state and what could be done now.
+  Built by `AttendanceService::today()`, which asks the same rules with the same facts as recording (shared fact builders), so the two cannot drift apart.
+- **The employee is always the one of the token:** a parameter that names another person (`employee_id`, `employee`, `user_id`, `user`, `eid`) is refused with 400.
+- **Contract:** `docs/api/openapi.yaml` (OpenAPI 3.1: every native v1 route, full schemas and examples for the new ones, the error codes, and the client rules for
+  refreshing tokens); `tests/check_openapi.py` keeps it in step with the routes and the error codes, and validates every example.
+- The employee's shift is read once per request (memoized, cleared when it is written), so 42 days cost the same queries as 7.
+- Not in this release (on purpose): the app UI, recording Sign In/Out, requests and approvals, and the refresh-token concurrency fix (a separate security release).
 
 ## 3.31.112
 ### Faster: the two repeated queries the System health screen flagged
