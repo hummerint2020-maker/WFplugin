@@ -148,9 +148,13 @@ const SHOTS = process.env.OFFLINE_SHOTS || '';
   // ------------------------------------------------------------ a note of another account (a shared phone, 3.31.118)
   const nAtt = () => Number(php("global $wpdb; echo (int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$wpdb->prefix}ews_signin_attempts\");"));
   const before = nAtt();
+  let sent = 0;
+  const onReq = r => { if (r.method() === 'POST' && /ews_signin_offline/.test(r.postData() || '')) sent++; };
+  page.on('request', onReq);
   await page.evaluate(() => localStorage.setItem('ewsPendingAttempt', JSON.stringify({ user: 999999, event_type: 'sign_in', phone_ms: Date.now(), server_ms: Date.now(), elapsed_ms: 1000, latitude: '30.1', longitude: '31.2', accuracy: '10' })));
   await page.goto(B + '/app/?ews_view=time'); await page.waitForTimeout(1500);
-  check("another account's note on this phone is removed and never filed for the one signed in", await page.evaluate(() => localStorage.getItem('ewsPendingAttempt')) === null && nAtt() === before, nAtt());
+  page.off('request', onReq);
+  check("another account's note on this phone is removed, never sent, never filed for the one signed in", await page.evaluate(() => localStorage.getItem('ewsPendingAttempt')) === null && sent === 0 && nAtt() === before, [sent, nAtt()]);
 
   // ------------------------------------------------------------ logout
   await page.goto(B + '/app/');

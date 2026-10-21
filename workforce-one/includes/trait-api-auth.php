@@ -608,14 +608,17 @@ trait EWS_Api_Auth_Trait {
 
     /**
      * Ends a device session and every token of it: the device first (every token check reads it), then the tokens.
-     * @return int|false 1 when it was active, 0 when it had already ended, false on a database error (3.31.118)
+     * @return int|false 1 when it was active, 0 when it had already ended, false when the session could not be ended (3.31.118)
      */
     private function api_revoke_device($device_id,$reason,$user_id=0){
         global $wpdb;$t=$this->api_tables();$now=$this->api_utc(time());
         $n=$wpdb->query($wpdb->prepare("UPDATE {$t['devices']} SET revoked_at=%s,revoked_reason=%s WHERE id=%d AND revoked_at IS NULL",$now,substr((string)$reason,0,40),(int)$device_id));
         if($n===false)return false;
         $n=(int)$n;
-        if($wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND revoked_at IS NULL",$now,(int)$device_id))===false)return false;
+        // The device row is the guard (every token check reads it): once it is ended the session has ended, even if its tokens could not
+        // be marked too; they are refused anyway and deleted when they expire.
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND revoked_at IS NULL",$now,(int)$device_id))===false)
+            error_log('Workforce One: the tokens of device session '.(int)$device_id.' could not be marked revoked (the session itself has ended)');   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- diagnostic only
         if($user_id&&$n&&$reason==='account_disabled')$this->api_audit($user_id,'api_sessions_revoked',(int)$device_id,'account no longer active');
         return $n;
     }
@@ -643,6 +646,9 @@ trait EWS_Api_Auth_Trait {
 
     /** The mark of a revoke that could not be written (per site): sessions that began until now are refused. */
     private function api_sessions_pending($user_id,$reason){
+        // Already marked this second (a password reset fires two hooks): nothing more to write or tell.
+        $cur=$this->api_sessions_mark($user_id);
+        if($cur && $cur['before']>=time())return;
         $ok=update_user_option((int)$user_id,'ews_api_sessions_before',['before'=>time(),'reason'=>substr((string)$reason,0,40)]);
         if($ok===false)error_log('Workforce One: the device sessions of user '.(int)$user_id.' could not be ended or marked ('.$reason.')');   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- the last resort
         $this->api_audit((int)$user_id,'api_sessions_revoke_pending',0,'The device sessions could not be ended now ('.$reason.'): they are refused from now on and ended by the daily cleanup');
@@ -743,12 +749,15 @@ trait EWS_Api_Auth_Trait {
         // Revokes that could not be written (3.31.118): the sessions from before the mark end now; the mark goes once they have.
         $key=$wpdb->get_blog_prefix().'ews_api_sessions_before';
         foreach((array)$wpdb->get_col($wpdb->prepare("SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key=%s",$key)) as $uid){
+            $raw=get_user_meta((int)$uid,$key,true);
             $m=$this->api_sessions_mark((int)$uid);
-            if(!$m){delete_user_option((int)$uid,'ews_api_sessions_before');continue;}
-            $ok=true;
-            foreach((array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND revoked_at IS NULL AND created_at<=%s",(int)$uid,$this->api_utc($m['before']))) as $id)
-                if($this->api_revoke_device((int)$id,$m['reason'])===false)$ok=false;
-            if($ok || $m['before']<$now-Tokens::SESSION_MAX)delete_user_option((int)$uid,'ews_api_sessions_before');
+            if(!$m){delete_user_meta((int)$uid,$key,$raw);continue;}
+            $wpdb->last_error='';
+            $ids=$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND revoked_at IS NULL AND created_at<=%s",(int)$uid,$this->api_utc($m['before'])));
+            $ok=$wpdb->last_error==='';   // the sessions could not be read: the mark stays
+            foreach((array)$ids as $id)if($this->api_revoke_device((int)$id,$m['reason'])===false)$ok=false;
+            // Only this mark: one written meanwhile (a later failed revoke) stays.
+            if($ok || $m['before']<$now-Tokens::SESSION_MAX)delete_user_meta((int)$uid,$key,$raw);
         }
     }
 }

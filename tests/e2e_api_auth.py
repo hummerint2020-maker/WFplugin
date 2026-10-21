@@ -10,7 +10,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_api_auth.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import json, os, re, sys, time, urllib.parse, urllib.request
+import atexit, json, os, re, sys, time, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import B, Session, break_writes, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -292,6 +292,7 @@ php("$wpdb->query(\"DELETE FROM {$p}ews_api_rate_limits\");")
 # ---------------------------------------------------------------- 3.31.118: a database error never reports a session as ended
 clear_limits()
 n_devices = lambda: int(q("SELECT COUNT(*) n FROM {p}ews_api_devices")[0]['n'])
+atexit.register(lambda: (break_writes(''), php("delete_user_option(%d,'ews_api_sessions_before');" % uid1)))   # also when a check crashes
 AT1, RT1, DEV1 = tokens(login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe1')))
 n_out = len(audits('api_logout'))
 break_writes('ews_api_devices')
@@ -302,8 +303,8 @@ check('3.31.118: a database error on logout is 500, not "signed out": the sessio
 break_writes('ews_api_tokens')
 r = call('POST', '/auth/logout', token=AT1)
 break_writes('')
-check('...the device ended but its tokens could not be: 500, and the token is refused anyway; a retry says the session has ended',
-      code(r)[0] == 500 and code(call('GET', '/me', token=AT1)) == (401, 'DEVICE_REVOKED') and code(call('POST', '/auth/logout', token=AT1)) == (401, 'DEVICE_REVOKED'), code(r))
+check('...the device row ended but its tokens could not be marked: signed out (the device row is what every token check reads), and audited',
+      code(r) == (200, 'ok') and code(call('GET', '/me', token=AT1)) == (401, 'DEVICE_REVOKED') and len(audits('api_logout')) == n_out + 1, code(r))
 AT2, RT2, DEV2 = tokens(login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe2')))
 before_dev, before_login = n_devices(), len(audits('api_login'))
 break_writes('ews_api_tokens')
@@ -311,6 +312,10 @@ r = login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-d
 break_writes('')
 check('a sign-in whose tokens cannot be saved is 500: no new session, nothing audited, the earlier session of that installation still works',
       code(r)[0] == 500 and n_devices() == before_dev and len(audits('api_login')) == before_login and code(call('GET', '/me', token=AT2))[0] == 200 and device_row(DEV2)['revoked_at'] is None, (code(r), n_devices(), before_dev))
+break_writes('ews_api_tokens')
+r = login('emp1', 'emp1pass', device=dict(DEVICE, installation_id='e2e-install-dbe-new'))
+break_writes('')
+check('...on a new installation too: the session row it had just added is rolled back', code(r)[0] == 500 and n_devices() == before_dev and len(audits('api_login')) == before_login, (code(r), n_devices(), before_dev))
 break_writes('ews_api_devices')
 r = call('DELETE', '/me/devices/' + DEV2, token=AT2)
 break_writes('')

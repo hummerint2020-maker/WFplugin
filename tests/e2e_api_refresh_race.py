@@ -168,8 +168,10 @@ try:
     clear()
     at, rt, dev = login()
     php("$u=get_user_by('login','emp1'); update_user_option($u->ID,'ews_api_sessions_before',['before'=>time()+1,'reason'=>'password_changed']);")
-    r = refresh(rt)
-    php("$u=get_user_by('login','emp1'); delete_user_option($u->ID,'ews_api_sessions_before');")
+    try:
+        r = refresh(rt)
+    finally:
+        php("$u=get_user_by('login','emp1'); delete_user_option($u->ID,'ews_api_sessions_before');")
     check('a session from before a revoke that could not be written: the refresh is DEVICE_REVOKED and the device ends', code(r) == (401, 'DEVICE_REVOKED') and device(dev)['revoked_reason'] == 'password_changed', (r, device(dev)))
 
     # ---------------------------------------------------------------- the rotation revokes only older access tokens

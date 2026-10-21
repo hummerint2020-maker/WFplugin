@@ -195,7 +195,10 @@ trait EWS_App_Layout_Trait {
         // Placeholders (the labels stay for screen readers) and the fields' own hints for phones.
         $form=str_replace('id="ews_login_username"','id="ews_login_username" placeholder="'.esc_attr__('Username or Email','workforce-one').'" autocomplete="username" autocapitalize="none" spellcheck="false"',$form);
         $form=str_replace('id="ews_login_password"','id="ews_login_password" placeholder="'.esc_attr__('Password','workforce-one').'" autocomplete="current-password"',$form);
-        return $this->render_template('app/login',[
+        // Logged out on purpose: a Sign In note and the schedule kept on this phone go too (3.31.118; the app page does it in its footer,
+        // this login page may have none).
+        $clear=isset($_GET['loggedout'])?"<script>try{localStorage.removeItem('ewsPendingAttempt');localStorage.removeItem('ewsOfflineSchedule');}catch(e){}</script>":'';
+        return $clear.$this->render_template('app/login',[
             'signed_in'=>false,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>'','logout_url'=>'',
             'form'=>$form,'lost_password_url'=>$lost,'worker_url'=>$this->dw_self_anywhere()?$this->dw_worker_url():'',
             'error'=>isset($_GET['login_error'])?__('The username or password is incorrect. Please try again.','workforce-one'):'',

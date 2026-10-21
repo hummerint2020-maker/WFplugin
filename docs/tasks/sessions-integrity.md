@@ -108,3 +108,30 @@ password change ends only this site's sessions (existing).
 All six as recommended: Q1 clear the note only after an explicit logout; Q2 drop notes with no account; Q3 leave the switch-off refresh
 untouched; Q4 per-site "sessions before" option + check on every token use + daily retry; Q5 the app retries logout up to 3 times, then
 wipes its tokens and says so (documented in the OpenAPI); Q6 an Audit Log row only.
+
+## Implementation notes and review (3.31.118)
+Where the code differs from the design:
+- `api_revoke_device` returns false only when the device row cannot be ended. A failure marking its tokens after that is logged, not an
+  error: the device row is what every token check reads, so the session has ended (logout answers "signed out" and is audited; a reuse
+  is reported and audited). This keeps the Audit Log row a theft needs (review finding 3).
+- The account check of an offline note runs after the feature check, so with the feature off the answer is `off` as before (§5).
+- A note with no account is sent without a `user` field (not `user=''`): the same refusal.
+- The `[employee_login]` page clears the note and the kept schedule itself when it shows after a logout (its page may have no app footer).
+- The offline page does not show another account's note (compared with the account of the kept schedule).
+- Uninstall removes the per-site mark (`{blog prefix}ews_api_sessions_before`).
+
+Independent review (read-only), findings and what was done:
+1. CONFIRMED, the daily cleanup deleted the mark when it could not read the devices: **fixed** (a failed read keeps the mark).
+2. CONFIRMED, the `[employee_login]` "Log out" link did not clear the note (no app footer there): **fixed** (that page clears it).
+3. CONFIRMED, when only the tokens could not be marked, the logout / reuse Audit Log row was lost: **fixed** (see above).
+4. PLAUSIBLE, the cleanup could delete a newer mark: **fixed** (deletes only the value it read).
+5. CONFIRMED, a password reset's two hooks in one second wrote a false "could not be marked" log and a second Audit Log row: **fixed**.
+6. CONFIRMED, uninstall left the mark: **fixed**.
+7. CONFIRMED, `account` answered before `off`: **fixed** (reordered).
+8. PLAUSIBLE, the offline page showed another account's note: **fixed** (display only).
+9. PLAUSIBLE, the login transaction makes the existing login-vs-password-change window a few milliseconds longer: **not changed** (the
+   window existed before; the device row is invisible only until COMMIT).
+10. OpenAPI text for `DELETE /me/devices/{id}` 500: now accurate (a 500 means the device row could not be ended).
+Tests added after the review: a sign-in on a new installation whose tokens cannot be saved (the new session row rolled back); the browser
+check proves another account's note is never sent (request watched); `break_writes` and the mark are cleaned up on exit / in finally.
+Not added: an admin `wp_update_user` password change (it fires the same `wp_set_password` hook that is tested).

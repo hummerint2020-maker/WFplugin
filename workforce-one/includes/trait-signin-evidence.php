@@ -179,10 +179,10 @@ trait EWS_Signin_Evidence_Trait {
     public function evidence_offline_report(){
         if(!is_user_logged_in())wp_send_json_error(['reason'=>'login'],401);
         check_ajax_referer('ews_signin_offline','_wpnonce');
+        if(!$this->attempts_enabled())wp_send_json_success(['kept'=>false,'reason'=>'off']);
         // Only the account that pressed the button (3.31.118): a note left by another account on a shared phone, or saved before
         // 3.31.118 with no account, is dropped. A 200, so the phone clears it.
         if(!SignInEvidence::noteBelongs($_POST['user']??null,get_current_user_id()))wp_send_json_success(['kept'=>false,'reason'=>'account']);
-        if(!$this->attempts_enabled())wp_send_json_success(['kept'=>false,'reason'=>'off']);
         $emp=$this->current_employee();
         if(!$emp)wp_send_json_success(['kept'=>false,'reason'=>'employee']);
         $type=sanitize_key($_POST['event_type']??'');
