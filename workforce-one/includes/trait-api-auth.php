@@ -566,7 +566,7 @@ trait EWS_Api_Auth_Trait {
         global $wpdb;$t=$this->api_tables();
         // Signing in again on the same app installation replaces that installation's session.
         foreach((array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND installation_id=%s AND revoked_at IS NULL",(int)$user->ID,$info['installation_id'])) as $old)
-            if($this->api_revoke_device((int)$old,'replaced')===false)return null;   // checked (3.31.118): the caller rolls back
+            if($this->api_revoke_device((int)$old,'replaced',0,true)===false)return null;   // checked (3.31.118): the caller rolls back
         $ok=$wpdb->insert($t['devices'],[
             'public_id'=>bin2hex(random_bytes(16)),'user_id'=>(int)$user->ID,'installation_id'=>$info['installation_id'],'platform'=>$info['platform'],
             'model'=>$info['model'],'app_version'=>$info['app_version'],'created_at'=>$this->api_utc($now),'last_seen_at'=>$this->api_utc($now),
@@ -608,17 +608,20 @@ trait EWS_Api_Auth_Trait {
 
     /**
      * Ends a device session and every token of it: the device first (every token check reads it), then the tokens.
+     * $strict (sign-in, inside its transaction): a failure marking the tokens is a failure too, so the whole sign-in rolls back.
      * @return int|false 1 when it was active, 0 when it had already ended, false when the session could not be ended (3.31.118)
      */
-    private function api_revoke_device($device_id,$reason,$user_id=0){
+    private function api_revoke_device($device_id,$reason,$user_id=0,$strict=false){
         global $wpdb;$t=$this->api_tables();$now=$this->api_utc(time());
         $n=$wpdb->query($wpdb->prepare("UPDATE {$t['devices']} SET revoked_at=%s,revoked_reason=%s WHERE id=%d AND revoked_at IS NULL",$now,substr((string)$reason,0,40),(int)$device_id));
         if($n===false)return false;
         $n=(int)$n;
         // The device row is the guard (every token check reads it): once it is ended the session has ended, even if its tokens could not
         // be marked too; they are refused anyway and deleted when they expire.
-        if($wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND revoked_at IS NULL",$now,(int)$device_id))===false)
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND revoked_at IS NULL",$now,(int)$device_id))===false){
+            if($strict)return false;
             error_log('Workforce One: the tokens of device session '.(int)$device_id.' could not be marked revoked (the session itself has ended)');   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- diagnostic only
+        }
         if($user_id&&$n&&$reason==='account_disabled')$this->api_audit($user_id,'api_sessions_revoked',(int)$device_id,'account no longer active');
         return $n;
     }

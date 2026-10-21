@@ -135,3 +135,6 @@ Independent review (read-only), findings and what was done:
 Tests added after the review: a sign-in on a new installation whose tokens cannot be saved (the new session row rolled back); the browser
 check proves another account's note is never sent (request watched); `break_writes` and the mark are cleaned up on exit / in finally.
 Not added: an admin `wp_update_user` password change (it fires the same `wp_set_password` hook that is tested).
+- Found by the post-review run: at sign-in, the replaced installation's revoke is strict (a failure marking its tokens fails the sign-in
+  and rolls it back); elsewhere the device row alone decides. On SQLite a failed statement had rolled the transaction back early and left
+  the new session row in place.
