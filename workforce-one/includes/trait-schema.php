@@ -310,6 +310,7 @@ private function ensure_break_schema(){
                 expires_at DATETIME NOT NULL,
                 created_at DATETIME NOT NULL,
                 used_at DATETIME NULL,
+                grace_uses TINYINT UNSIGNED NOT NULL DEFAULT 0,
                 revoked_at DATETIME NULL,
                 PRIMARY KEY(id),
                 UNIQUE KEY token_hash(token_hash),
@@ -328,7 +329,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.109'; }
+        private function ews_schema_target(){ return '3.31.114'; }
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

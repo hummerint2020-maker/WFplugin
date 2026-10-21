@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-20T21:50:22+00:00\n"
+"POT-Creation-Date: 2026-10-20T21:53:29+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -37,7 +37,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:25
 #: includes/trait-app-layout.php:79
 #: includes/trait-app-layout.php:96
-#: templates/admin/features.php:147
+#: templates/admin/features.php:150
 msgid "People"
 msgstr ""
 
@@ -164,7 +164,7 @@ msgid "Approval workflows"
 msgstr ""
 
 #: includes/trait-admin-nav.php:52
-#: templates/admin/features.php:112
+#: templates/admin/features.php:115
 #: templates/admin/substitutes.php:21
 msgid "Substitutes"
 msgstr ""
@@ -281,7 +281,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:74
 #: includes/trait-admin.php:102
 #: includes/trait-system-health.php:645
-#: templates/admin/features.php:102
+#: templates/admin/features.php:105
 #: templates/admin/system-health.php:42
 msgid "System health"
 msgstr ""
@@ -3263,7 +3263,7 @@ msgstr ""
 #. translators: %d: number of days
 #. translators: %d: days
 #: includes/trait-privacy.php:69
-#: templates/admin/features.php:108
+#: templates/admin/features.php:111
 #, php-format
 msgid "%d days"
 msgstr ""
@@ -3374,11 +3374,11 @@ msgstr ""
 msgid "No employees to show."
 msgstr ""
 
-#: includes/trait-schema.php:417
+#: includes/trait-schema.php:418
 msgid "The Workforce One database update did not finish."
 msgstr ""
 
-#: includes/trait-schema.php:418
+#: includes/trait-schema.php:419
 msgid "It is tried again every 10 minutes. If this stays, send this to your host or developer:"
 msgstr ""
 
@@ -4286,14 +4286,14 @@ msgid "Off"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:119
+#: templates/admin/features.php:122
 #: templates/app/time.php:118
 #: templates/app/time.php:168
 msgid "Optional"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:119
+#: templates/admin/features.php:122
 msgid "Required"
 msgstr ""
 
@@ -5042,130 +5042,134 @@ msgstr ""
 msgid "Lets the Android and iPhone apps read the signed-in employee’s profile and menu, their own schedule and today’s attendance. Read only: it changes no rule, permission or request, and an employee can only ever read their own data. Off, the apps get “disabled” and nothing else changes."
 msgstr ""
 
-#: templates/admin/features.php:102
-msgid "Measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors, and lists what to look at first. The data stays in this site’s database; nothing is sent anywhere. Adds about 1 ms to a Workforce One request."
+#: templates/admin/features.php:101
+msgid "Safer app sign-in refresh: a phone that refreshes its sign-in several times at once, or retries, stays signed in (up to 4 more times within 30 seconds); a database error no longer signs it out. Off: as before."
 msgstr ""
 
 #: templates/admin/features.php:105
+msgid "Measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors, and lists what to look at first. The data stays in this site’s database; nothing is sent anywhere. Adds about 1 ms to a Workforce One request."
+msgstr ""
+
+#: templates/admin/features.php:108
 msgid "On a network only a super admin can change this."
 msgstr ""
 
-#: templates/admin/features.php:107
+#: templates/admin/features.php:110
 msgid "Detailed query data from this share of requests"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/admin/features.php:107
+#: templates/admin/features.php:110
 #, php-format
 msgid "%d%% of requests"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/admin/features.php:108
+#: templates/admin/features.php:111
 msgid "Keep the daily history for"
 msgstr ""
 
-#: templates/admin/features.php:112
+#: templates/admin/features.php:115
 msgid "A substitute while a manager is away"
 msgstr ""
 
-#: templates/admin/features.php:112
+#: templates/admin/features.php:115
 msgid "While a manager is away, the requests that would wait for them wait for their substitute, marked \"for\" them, in every request type. A manager picks one when they ask for leave, or with \"I'll be away\" in My approvals (any start and end time); HR can set one for anyone."
 msgstr ""
 
-#: templates/admin/features.php:116
+#: templates/admin/features.php:119
 msgid "The manager can still decide while away"
 msgstr ""
 
-#: templates/admin/features.php:117
+#: templates/admin/features.php:120
 msgid "When the manager is back, what still waits"
 msgstr ""
 
-#: templates/admin/features.php:117
+#: templates/admin/features.php:120
 msgid "Goes back to the manager"
 msgstr ""
 
-#: templates/admin/features.php:117
+#: templates/admin/features.php:120
 msgid "Stays with the substitute until decided"
 msgstr ""
 
-#: templates/admin/features.php:118
+#: templates/admin/features.php:121
 msgid "Who can be a substitute"
 msgstr ""
 
-#: templates/admin/features.php:118
+#: templates/admin/features.php:121
 msgid "Any active employee"
 msgstr ""
 
-#: templates/admin/features.php:118
+#: templates/admin/features.php:121
 msgid "Managers only (someone reports to them)"
 msgstr ""
 
-#: templates/admin/features.php:118
+#: templates/admin/features.php:121
 msgid "Someone in the same department"
 msgstr ""
 
-#: templates/admin/features.php:119
+#: templates/admin/features.php:122
 msgid "Ask managers for one when they request leave"
 msgstr ""
 
-#: templates/admin/features.php:119
+#: templates/admin/features.php:122
 msgid "Do not ask (HR sets them)"
 msgstr ""
 
-#: templates/admin/features.php:132
+#: templates/admin/features.php:135
 msgid "Office Minimum"
 msgstr ""
 
-#: templates/admin/features.php:132
+#: templates/admin/features.php:135
 msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
 msgstr ""
 
-#: templates/admin/features.php:133
+#: templates/admin/features.php:136
 msgid "Enabled"
 msgstr ""
 
-#: templates/admin/features.php:136
+#: templates/admin/features.php:139
 msgid "Minimum each day"
 msgstr ""
 
-#: templates/admin/features.php:136
+#: templates/admin/features.php:139
 msgid "people in the office"
 msgstr ""
 
-#: templates/admin/features.php:137
+#: templates/admin/features.php:140
 msgid "Working days only; company holidays and days off are not checked."
 msgstr ""
 
-#: templates/admin/features.php:138
+#: templates/admin/features.php:141
 msgid "A different day (optional)"
 msgstr ""
 
-#: templates/admin/features.php:140
+#: templates/admin/features.php:143
 msgid "Empty = the minimum above. 0 = no minimum that day."
 msgstr ""
 
-#: templates/admin/features.php:141
+#: templates/admin/features.php:144
 msgid "Who counts as in the office"
 msgstr ""
 
-#: templates/admin/features.php:143
+#: templates/admin/features.php:146
 msgid "Leave, trips and training count only if ticked here."
 msgstr ""
 
-#: templates/admin/features.php:144
+#: templates/admin/features.php:147
 msgid "Each team's share"
 msgstr ""
 
-#: templates/admin/features.php:145
+#: templates/admin/features.php:148
 msgid "Automatic, by team size. You can fix a number for a team."
 msgstr ""
 
-#: templates/admin/features.php:146
+#: templates/admin/features.php:149
 msgid "No teams yet: the minimum is checked for the whole company."
 msgstr ""
 
-#: templates/admin/features.php:147
+#: templates/admin/features.php:150
 #: templates/app/attendance-insights.php:46
 #: templates/app/attendance.php:119
 #: templates/app/employees.php:22
@@ -5176,32 +5180,32 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/admin/features.php:147
+#: templates/admin/features.php:150
 msgid "Automatic share"
 msgstr ""
 
-#: templates/admin/features.php:147
+#: templates/admin/features.php:150
 msgid "Fixed number"
 msgstr ""
 
-#: templates/admin/features.php:149
+#: templates/admin/features.php:152
 msgid "Auto"
 msgstr ""
 
-#: templates/admin/features.php:151
+#: templates/admin/features.php:154
 msgid "People in no team share one line (\"No team\")."
 msgstr ""
 
-#: templates/admin/features.php:152
+#: templates/admin/features.php:155
 #: templates/app/tasks.php:188
 msgid "Reminder"
 msgstr ""
 
-#: templates/admin/features.php:152
+#: templates/admin/features.php:155
 msgid "Every week, send schedule managers the days below the minimum next week"
 msgstr ""
 
-#: templates/admin/features.php:153
+#: templates/admin/features.php:156
 msgid "Reminder day"
 msgstr ""
 

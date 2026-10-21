@@ -2,7 +2,7 @@
 /**
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
- * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global, app_api)
+ * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global, app_api, api_refresh_safe)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
  * @var array<string,int|float> $face           face tuning values
@@ -96,6 +96,9 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-app-api"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Mobile app API', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Lets the Android and iPhone apps read the signed-in employee’s profile and menu, their own schedule and today’s attendance. Read only: it changes no rule, permission or request, and an employee can only ever read their own data. Off, the apps get “disabled” and nothing else changes.', 'workforce-one'); ?></div></div>
     <?php $switch('app_api_enabled', $on['app_api']); ?>
+</div>
+<div class="wfo-feature-fields">
+    <label><input type="checkbox" name="api_refresh_safe" value="1" <?php checked(!empty($on['api_refresh_safe'])); ?>> <?php esc_html_e('Safer app sign-in refresh: a phone that refreshes its sign-in several times at once, or retries, stays signed in (up to 4 more times within 30 seconds); a database error no longer signs it out. Off: as before.', 'workforce-one'); ?></label>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-system-health"><div class="wfo-feature-head">
