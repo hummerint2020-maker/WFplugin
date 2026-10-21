@@ -10,6 +10,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_advances.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
+import atexit
 import html, json, os, re, sys, threading, time, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -296,6 +297,7 @@ check('...and a new one can be asked again', ask(400, 1).get('adv_sent') == '1')
 php("""foreach(['ews_salary_advances','ews_advance_instalments','ews_payroll_runs','ews_payslips'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->update($p.'ews_employees',['active'=>1,'last_working_day'=>null],['id'=>%d]); update_option('ews_feature_advances',1,false);
     $d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-payroll-mu.php');""" % (ids['emp'], os.path.join(HERE, 'e2e_payroll_mu.php')))
+atexit.register(lambda: php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll-mu.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll.txt');"))   # also when a check crashes
 
 
 def pmode(m):
@@ -370,6 +372,13 @@ if race_up:
     pmode('')
     with_it = [r['run_id'] for r in q("SELECT run_id,data FROM {p}ews_payslips") if '"instalment_id":%d' % inst in r['data'] or '"instalment_ids":[%d' % inst in r['data']]
     check('two months closed at the same moment: the shared instalment is on exactly one payslip, taken by that month', len(with_it) == 1 and taken(ids['emp']) == [int(with_it[0])], (out, with_it, taken(ids['emp'])))
+    # MySQL: the lock makes the second close wait and count again, so both close. SQLite has no lock: the row count refuses one.
+    sqlite = php("echo defined('DB_ENGINE')&&DB_ENGINE==='sqlite'?'1':'0';").strip().splitlines()[-1] == '1'
+    closed = sorted('payroll_saved=closed' in out.get(mo, '') for mo in (M1, M2))
+    check('...%s' % ('SQLite, no lock: one closes, the other is refused as changed' if sqlite else 'with the lock both months close, one after the other'),
+          closed == ([False, True] if sqlite else [True, True]) and (not sqlite or any('payroll_error=changed' in v for v in out.values())), out)
+elif os.environ.get('WFO_RACE_URL'):
+    check('the multi-worker server for the two-months-at-once close is up (%s)' % RACE, False)
 else:
     print('SKIP the two-months-at-once close (no multi-worker server at %s)' % RACE)
 php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll-mu.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll.txt');")

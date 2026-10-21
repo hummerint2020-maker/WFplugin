@@ -17,7 +17,11 @@ Fixes to existing behaviour; no new setting, no database change.
   changes nothing ("The month could not be reopened"), and a second reopen of the same month says it is not closed instead of reporting success.
 - **Sites that changed the grace or overnight setting alone since 3.31.108:** that change applied to past days too and cannot be found
   afterwards, so it is not repaired automatically (owner decision). HR who know the day can fix it with two dated saves: the old value
-  from the first affected day, then the new value from the day it really started.
+  from the first affected day, then the new value from the day it really started. This works only when no dated change was saved after
+  that day: a save from a day before a later saved change is refused (see above).
+- The company hours form shows today's times, all four fields (it showed today's start and end with the grace and overnight of a change
+  saved for a later day, and saving it as shown undid or refused that change). Saving it with the times unchanged (only "absent after")
+  no longer writes the times.
 ## 3.31.115
 ### Attendance corrections: no request on a day nobody works (owner decision 2026-10-20)
 - "My recent days" no longer offers **Correct** on a leave day, a public holiday or a day off when nothing was recorded that day,

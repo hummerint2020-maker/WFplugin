@@ -111,8 +111,23 @@ shifts = {'shifts[0][id]': 101, 'shifts[0][name]': 'Morning', 'shifts[0][start]'
           'shifts[1][id]': 102, 'shifts[1][name]': 'Evening', 'shifts[1][start]': '14:00', 'shifts[1][end]': '22:00', 'shifts[1][grace]': 15, 'shifts[1][sign_in_cutoff_minutes]': 240, 'shifts[1][active]': 1}
 st, qs, _ = adm.post('ews31_shifts_save', _wpnonce=m.group(1) if m else 'x', times_from=d(2), **shifts)
 check('the morning shift gets new times from a later day: before it, the old times', qs.get('schedule_notice') == 'shifts_saved' and json.loads(call('shift_times_on', 101, d(2)))['start'] == '08:30' and json.loads(call('shift_times_on', 101, d(1)))['start'] == '09:00', qs)
+check('...today too: the shift as Sign In and today\'s reports read it keeps 09:00 until that day', [x['start'] for x in json.loads(call('shifts')) if x['id'] == 101] == ['09:00'])
 check('...the days before keep them in the reports (a morning day before the change: 09:00)', json.loads(call('shift_times_on', 101, d(-10)))['start'] == '09:00')
 check('...the page lists the dated times', 'data-shift-versions' in adm.req('/wp-admin/admin.php?page=ews31-schedule-config')[1])
+def save_shifts(frm, **over):
+    st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
+    m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" name=\"_wp_http_referer\"[^>]*><input type=\"hidden\" name=\"action\" value=\"ews31_shifts_save\"", page)
+    return adm.post('ews31_shifts_save', _wpnonce=m.group(1) if m else 'x', times_from=frm, **dict(shifts, **over))[1]
+
+
+saved_101 = lambda: php("foreach(get_option('ews_shifts') as $s) if((int)$s['id']===101) echo $s['start'].'|'.$s['grace'];").strip().splitlines()[-1]
+qs = save_shifts(d(0), **{'shifts[0][start]': '09:00', 'shifts[0][end]': '17:00'})   # the form as shown today, e.g. to rename a shift
+check('3.31.116: saving the shifts as the form shows them today keeps the change saved for a later day', qs.get('schedule_notice') == 'shifts_saved'
+      and saved_101() == '08:30|10' and json.loads(call('shift_times_on', 101, d(2)))['start'] == '08:30' and json.loads(call('shift_times_on', 101, d(1)))['start'] == '09:00', (qs, saved_101()))
+qs = save_shifts(d(4), **{'shifts[0][grace]': 12})
+check('...a change from a day after it keeps it: %s has 08:30 and grace 10, %s grace 12' % (d(2), d(4)), qs.get('schedule_notice') == 'shifts_saved'
+      and json.loads(call('shift_times_on', 101, d(2)))['start'] == '08:30' and json.loads(call('shift_times_on', 101, d(2)))['grace'] == 10
+      and json.loads(call('shift_times_on', 101, d(4)))['grace'] == 12 and json.loads(call('shift_times_on', 101, d(1)))['start'] == '09:00', qs)
 st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
 m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" name=\"_wp_http_referer\"[^>]*><input type=\"hidden\" name=\"action\" value=\"ews31_working_hours_save\"", page)
 st, qs, _ = adm.post('ews31_working_hours_save', _wpnonce=m.group(1) if m else 'x', work_start='07:00', work_end='15:00', grace_period=10, absent_after=120, times_from=d(0))
@@ -147,6 +162,16 @@ check('a change made without a date, then a dated one: the days in between keep 
 qs = save_hours(work_start='06:00', grace_period=40, times_from=d(5))
 check('grace alone on top of the newest dated times: the days before it keep theirs (it used to apply to every day back to the last change)',
       qs.get('schedule_notice') == 'hours_saved' and times(d(4))['grace'] == 30 and times(d(5))['grace'] == 40, (times(d(4)), times(d(5))))
+# the form shows today's times, all from one source, and saving it as shown keeps the change saved for a later day
+st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
+shown = {k: m.group(1) if m else None for k, m in ((k, re.search(r'name="%s" value="([^"]*)"' % k, page)) for k in ('work_start', 'work_end', 'grace_period'))}
+check('the company hours form shows today\'s times, also the grace (not the one saved for a later day)', shown == {'work_start': '07:00', 'work_end': '15:00', 'grace_period': '30'}, shown)
+qs = save_hours(work_start=shown['work_start'], work_end=shown['work_end'], grace_period=int(shown['grace_period']), absent_after=150, times_from=d(0))
+opt = php("echo get_option('ews_grace_period').'|'.get_option('ews_absent_after_minutes').'|'.get_option('ews_working_hours')['start'];").strip().splitlines()[-1]
+check('...saving the form as shown (only "absent after" changed) is saved and keeps the later change (from %s: 06:00, grace 40)' % d(5),
+      qs.get('schedule_notice') == 'hours_saved' and opt == '40|150|06:00' and times(d(5))['start'] == '06:00' and times(d(5))['grace'] == 40 and times(d(0))['grace'] == 30, (qs, opt, times(d(5))))
+qs = save_hours(work_start='06:00', grace_period=40, allow_overnight_shift=1, times_from=d(6))
+check('overnight alone from a later day: dated (the days before keep it off)', qs.get('schedule_notice') == 'hours_saved' and times(d(5))['overnight'] == 0 and times(d(6))['overnight'] == 1, (qs, times(d(5)), times(d(6))))
 st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
 m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" name=\"_wp_http_referer\"[^>]*><input type=\"hidden\" name=\"action\" value=\"ews31_shifts_save\"", page)
 st, qs, _ = adm.post('ews31_shifts_save', _wpnonce=m.group(1) if m else 'x', times_from=d(0), **dict(shifts, **{'shifts[0][grace]': 20}))

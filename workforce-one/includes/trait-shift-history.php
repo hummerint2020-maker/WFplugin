@@ -272,15 +272,18 @@ trait EWS_Shift_History_Trait {
         wp_safe_redirect(add_query_arg($r===true?['shift_done'=>'saved']:['shift_error'=>$r],$back).'#ews-shift-history');exit;
     }
 
-    /** Record new versions for the shifts whose times changed, from $from (Schedule Configuration). @param array<int,array<string,mixed>> $before @param array<int,array<string,mixed>> $after */
-    private function shift_versions_record(array $before,array $after,$from){
-        $old=[];foreach($before as $s)$old[(int)$s['id']]=$s;
+    /**
+     * Record new versions for the shifts whose times changed, from $from (Schedule Configuration). $live: each existing shift as saved (the
+     * option); $on: as it counts on $from (3.31.116). A shift in neither is new.
+     * @param array<int,array<string,mixed>> $live @param array<int,array<string,mixed>> $on @param array<int,array<string,mixed>> $after
+     */
+    private function shift_versions_record(array $live,array $on,array $after,$from){
         $n=0;
         foreach($after as $s){
             $id=(int)$s['id'];
-            if(!isset($old[$id])){$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$s);continue;}   // a new shift: its times from the start
-            if(!ShiftPeriods::timesChanged($old[$id],$s))continue;
-            $this->shift_version_settle($id,$from,$old[$id]);   // the days before $from keep what they count with now (3.31.116)
+            if(!isset($live[$id])){$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$s);continue;}   // a new shift: its times from the start
+            if(!ShiftPeriods::timesChanged($on[$id],$s))continue;
+            $this->shift_version_settle($id,$from,$live[$id]);   // the days before $from keep what they count with now (3.31.116)
             $this->shift_version_insert($id,$from,$s);$n++;
         }
         return $n;

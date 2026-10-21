@@ -26,14 +26,17 @@ trait EWS_Schedule_Config_Trait {
         $events=(array)$this->company_calendar_events(current_time('Y-m-d'),'2099-12-31');
         $delete_urls=[];
         foreach($events as $event)$delete_urls[(int)$event->id]=wp_nonce_url(add_query_arg(['action'=>'ews31_general_leave_delete','id'=>(int)$event->id],admin_url('admin-post.php')),'ews_general_leave_delete_'.(int)$event->id);
+        // The company hours of today, all four from one source (3.31.116): a change saved for a later day is in the options already, and
+        // the form showed today's start and end with that later grace and overnight; saving it unchanged then undid or refused that change.
+        $company=$this->shift_times_on(0,current_time('Y-m-d'))?:$this->company_hours_now();
         echo $this->render_template('admin/schedule-config',[
             'types'=>$types,
             'active_types'=>count(array_filter($types,function($t){return !empty($t['active']);})),
             'events'=>$events,'delete_urls'=>$delete_urls,
-            'hours'=>$this->working_hours(),
-            'grace_period'=>ConfigRules::graceMinutes($this->option('ews_grace_period')),
+            'hours'=>['start'=>(string)$company['start'],'end'=>(string)$company['end']],
+            'grace_period'=>ConfigRules::graceMinutes($company['grace']),
             'absent_after'=>ConfigRules::absentAfterMinutes($this->option('ews_absent_after_minutes')),
-            'overnight_enabled'=>(bool)(int)$this->option('ews_allow_overnight_shift'),
+            'overnight_enabled'=>!empty($company['overnight']),
             'shifts'=>$this->shifts(),'versions'=>$this->shift_versions_all(),'today'=>current_time('Y-m-d'),'can_past'=>$this->can('ews_manage_settings'),
             'working_days'=>$this->working_days(),
             'day_names'=>$this->working_day_names(),
@@ -62,15 +65,16 @@ trait EWS_Schedule_Config_Trait {
         $changed=\WorkforceOne\Schedule\ShiftPeriods::timesChanged($before,$after);
         // New times from a day before a change already saved for later would overwrite it (owner decision 2026-10-21: refused).
         if($changed && $this->shift_version_later(0,$from)!==null)$this->schedule_config_redirect(['schedule_error'=>'times_later']);
-        // The dated versions first, then the options: if an option write fails, nothing counts differently.
+        // The dated versions first, then the options: if an option write fails, nothing counts differently. Unchanged times are not
+        // written: the options may hold a change saved for a later day, and writing today's times there would undo it.
         if($changed){
             $this->shift_version_settle(0,$from,$live);
             $this->shift_version_insert(0,$from,$after);
+            $result=$this->working_hours_save($start,$end,$end);
+            if(is_wp_error($result))$this->schedule_config_redirect(['schedule_error'=>'hours_invalid']);
+            update_option('ews_allow_overnight_shift',$overnight?1:0,false);
+            update_option('ews_grace_period',$grace,false);
         }
-        $result=$this->working_hours_save($start,$end,$end);
-        if(is_wp_error($result))$this->schedule_config_redirect(['schedule_error'=>'hours_invalid']);
-        update_option('ews_allow_overnight_shift',$overnight?1:0,false);
-        update_option('ews_grace_period',$grace,false);
         if($absent!==null)update_option('ews_absent_after_minutes',$absent,false);
         $this->invalidate_working_hours_runtime_cache();
         $this->audit('working_hours_update','settings',0,$start.' - '.$end.' · grace '.$grace.' · overnight '.($overnight?'on':'off').($changed?' · from '.$from:''));
@@ -97,15 +101,22 @@ trait EWS_Schedule_Config_Trait {
         if($error)$this->schedule_config_redirect(['schedule_error'=>$error]);
         foreach($clean as &$shift)$shift['name']=sanitize_text_field($shift['name']);
         unset($shift);
-        // New times from a day before a change already saved for later would overwrite it (owner decision 2026-10-21: refused).
-        $old=[];foreach($before as $b)$old[(int)$b['id']]=$b;
-        foreach($clean as $c){
+        // Each shift as saved (the option, which may hold a change saved for a later day) and as it counts on $from (3.31.116).
+        $live=[];$on=[];
+        foreach($clean as $c){$id=(int)$c['id'];$v=$this->shift_saved($id);if($v){$live[$id]=$v;$on[$id]=$this->shift_times_on($id,$from)?:$v;}}
+        $times=array_flip(['start','end','grace','sign_in_cutoff_minutes','overnight']);
+        foreach($clean as &$c){
             $id=(int)$c['id'];
-            if(isset($old[$id]) && \WorkforceOne\Schedule\ShiftPeriods::timesChanged($old[$id],$c) && $this->shift_version_later($id,$from)!==null)$this->schedule_config_redirect(['schedule_error'=>'times_later']);
+            if(!isset($on[$id]))continue;   // a new shift
+            // Unchanged: the option keeps its times (the form shows today's; writing them would undo a change saved for a later day).
+            if(!\WorkforceOne\Schedule\ShiftPeriods::timesChanged($on[$id],$c)){$c=array_merge($c,array_intersect_key($live[$id],$times));continue;}
+            // New times from a day before a change already saved for later would overwrite it (owner decision 2026-10-21: refused).
+            if($this->shift_version_later($id,$from)!==null)$this->schedule_config_redirect(['schedule_error'=>'times_later']);
         }
+        unset($c);
         update_option('ews_shifts',$clean,false);
         // Shifts whose times changed get them from $from; the days before keep the old ones (3.31.108).
-        $changed=$this->shift_versions_record($before,$clean,$from);
+        $changed=$this->shift_versions_record($live,$on,$clean,$from);
         update_option('ews_shifts_highest_id',max(array_merge([$highest],array_column($clean,'id'))),false);
         $this->invalidate_schedule_runtime_cache();
         $this->audit('shifts_update','settings',0,'Shifts updated'.($changed?' · new times for '.$changed.' shift(s) from '.$from:''));
