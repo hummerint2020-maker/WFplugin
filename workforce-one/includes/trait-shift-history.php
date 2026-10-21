@@ -99,6 +99,33 @@ trait EWS_Shift_History_Trait {
         self::$ews_shift_versions_cache=null;self::$ews_working_hours_cache=[];self::$ews_shift_for_employee_cache=[];self::$ews_shifts_cache=null;
     }
 
+    /**
+     * Before new times are saved from $from (3.31.116): record the times the shift counts with now ($live, the option) where the history
+     * would otherwise lose them, so the days before $from keep exactly what they are counted with today (ShiftPeriods::settle).
+     * @param array<string,mixed> $live @return string the settle action (beginning | rewrite | none | later)
+     */
+    private function shift_version_settle($shift_id,$from,array $live){
+        $all=$this->shift_versions_all();
+        $do=ShiftPeriods::settle($all[(int)$shift_id]??[],(string)$from,$live);
+        if($do['action']==='beginning')$this->shift_version_insert($shift_id,ShiftPeriods::BEGINNING,$live);
+        elseif($do['action']==='rewrite'){
+            global $wpdb;$t=$this->shift_history_tables();
+            // Only the times: the row keeps its id, its day and who made it.
+            $wpdb->update($t['versions'],['start_time'=>(string)$live['start'],'end_time'=>(string)$live['end'],'grace'=>max(0,min(180,(int)($live['grace']??10))),
+                'sign_in_cutoff_minutes'=>max(0,min(1440,(int)($live['sign_in_cutoff_minutes']??240))),'overnight'=>!empty($live['overnight'])?1:0],
+                ['shift_id'=>(int)$shift_id,'from_date'=>(string)$do['from']]);
+            self::$ews_shift_versions_cache=null;self::$ews_working_hours_cache=[];self::$ews_shift_for_employee_cache=[];self::$ews_shifts_cache=null;
+        }
+        return $do['action'];
+    }
+
+    /** A later dated change already saved for this shift (3.31.116: saving times from an earlier day is refused). @return string|null its day */
+    private function shift_version_later($shift_id,$from){
+        $all=$this->shift_versions_all();
+        $do=ShiftPeriods::settle($all[(int)$shift_id]??[],(string)$from,[]);
+        return $do['action']==='later'?(string)$do['from']:null;
+    }
+
     /** Every shift's dated times. @return array<int,list<array<string,mixed>>> shift id => versions */
     private function shift_versions_all(){
         if(self::$ews_shift_versions_cache!==null)return self::$ews_shift_versions_cache;
@@ -245,15 +272,18 @@ trait EWS_Shift_History_Trait {
         wp_safe_redirect(add_query_arg($r===true?['shift_done'=>'saved']:['shift_error'=>$r],$back).'#ews-shift-history');exit;
     }
 
-    /** Record new versions for the shifts whose times changed, from $from (Schedule Configuration). @param array<int,array<string,mixed>> $before @param array<int,array<string,mixed>> $after */
-    private function shift_versions_record(array $before,array $after,$from){
-        $old=[];foreach($before as $s)$old[(int)$s['id']]=$s;
+    /**
+     * Record new versions for the shifts whose times changed, from $from (Schedule Configuration). $live: each existing shift as saved (the
+     * option); $on: as it counts on $from (3.31.116). A shift in neither is new.
+     * @param array<int,array<string,mixed>> $live @param array<int,array<string,mixed>> $on @param array<int,array<string,mixed>> $after
+     */
+    private function shift_versions_record(array $live,array $on,array $after,$from){
         $n=0;
         foreach($after as $s){
             $id=(int)$s['id'];
-            if(!isset($old[$id])){$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$s);continue;}   // a new shift: its times from the start
-            if(!ShiftPeriods::timesChanged($old[$id],$s))continue;
-            if(!$this->shift_times_on($id,ShiftPeriods::BEGINNING))$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$old[$id]);
+            if(!isset($live[$id])){$this->shift_version_insert($id,ShiftPeriods::BEGINNING,$s);continue;}   // a new shift: its times from the start
+            if(!ShiftPeriods::timesChanged($on[$id],$s))continue;
+            $this->shift_version_settle($id,$from,$live[$id]);   // the days before $from keep what they count with now (3.31.116)
             $this->shift_version_insert($id,$from,$s);$n++;
         }
         return $n;

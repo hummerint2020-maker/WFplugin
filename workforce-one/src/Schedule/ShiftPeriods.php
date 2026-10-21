@@ -107,4 +107,21 @@ final class ShiftPeriods
         }
         return false;
     }
+
+    /**
+     * What to do with a shift's dated times before new ones are saved from $from (3.31.116, docs/tasks/payroll-integrity.md). $live is
+     * what the newest version counts with now (the option). beginning: no version yet, record $live from the start; rewrite: the newest
+     * version starts before $from and its stored values differ from $live, so store $live in it (it counts with $live today, and will keep
+     * doing so once it is no longer the newest); none: nothing to do; later: a version already starts after $from (refused, owner decision).
+     * @param list<array<string,mixed>> $versions @param array<string,mixed> $live @return array{action:string,from?:string}
+     */
+    public static function settle(array $versions, string $from, array $live): array
+    {
+        if (!$versions) return ['action' => 'beginning'];
+        $latest = null;
+        foreach ($versions as $v) if ($latest === null || (string) $v['from'] > (string) $latest['from']) $latest = $v;
+        if ((string) $latest['from'] > $from) return ['action' => 'later', 'from' => (string) $latest['from']];
+        if ((string) $latest['from'] === $from || !self::timesChanged($latest, $live)) return ['action' => 'none'];
+        return ['action' => 'rewrite', 'from' => (string) $latest['from']];
+    }
 }

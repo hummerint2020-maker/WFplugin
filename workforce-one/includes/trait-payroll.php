@@ -267,54 +267,86 @@ trait EWS_Payroll_Trait {
     public function payroll_close(){
         if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
         check_admin_referer('ews_payroll_close');
-        global $wpdb;$this->ensure_payroll_schema();$t=$this->payroll_tables();
+        $this->ensure_payroll_schema();
         $month=$this->payroll_month_post();
         if(!$month)$this->payroll_redirect(['payroll_error'=>'month']);
         $back=['month'=>$month];
         if($month>=current_time('Y-m'))$this->payroll_redirect($back+['payroll_error'=>'not_ended']);
-        if($this->payroll_run($month))$this->payroll_redirect($back+['payroll_error'=>'already_closed']);
-        $people=array_values(array_filter($this->payroll_month($month),function($x){return $x['pay']!==null;}));
-        if(!$people)$this->payroll_redirect($back+['payroll_error'=>'nothing']);
-        foreach($people as $x)if($x['pay']['review'])$this->payroll_redirect($back+['payroll_error'=>'review']);
+        // One lock for every month (3.31.116): a late advance instalment is due in each open month, so a close and a reopen of any
+        // month never run at the same time. The locked part returns a code; redirecting inside it would skip the lock release.
+        $r=$this->ews_with_lock('payroll',function()use($month){return $this->payroll_close_locked($month);},['error'=>'busy'],20);
+        if(isset($r['error']))$this->payroll_redirect($back+['payroll_error'=>$r['error']]);
         $rules=$this->payroll_rules();
-        $total=round(array_sum(array_map(function($x){return (float)$x['pay']['net'];},$people)),2);
-        // One transaction (3.31.90): the month is closed with every payslip, or not at all. Before, a
-        // payslip that failed to save left a closed month with missing payslips, reported as closed.
-        if($wpdb->query('START TRANSACTION')===false)$this->payroll_redirect($back+['payroll_error'=>'save']);
-        $ok=$wpdb->insert($t['runs'],['month'=>$month,'employees'=>count($people),'total_net'=>$total,'currency'=>$rules['currency'],'closed_by'=>get_current_user_id(),'closed_at'=>current_time('mysql')],['%s','%d','%f','%s','%d','%s']);
-        if(!$ok){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'already_closed']);}
-        $run_id=(int)$wpdb->insert_id;
-        foreach($people as $x){
-            $ok=$wpdb->insert($t['payslips'],['run_id'=>$run_id,'employee_id'=>(int)$x['employee']->id,'net'=>$x['pay']['net'],
-                'data'=>wp_json_encode(['employee'=>['id'=>(int)$x['employee']->id,'name'=>(string)$x['employee']->name],'currency'=>$rules['currency'],'rules'=>$rules,'pay'=>$x['pay']])],['%d','%d','%f','%s']);
-            if(!$ok){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
-        }
-        if((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['payslips']} WHERE run_id=%d",$run_id))!==count($people)){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
-        // Salary advance instalments on these payslips are taken now (3.31.109), in the same transaction.
-        if($this->advances_enabled() && !$this->advance_mark_taken($run_id,$people)){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
-        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->payroll_redirect($back+['payroll_error'=>'save']);}
-        $this->audit('payroll_closed','payroll',$run_id,$month.': '.count($people).' payslips');
         if($rules['employee_view']){
             $label=date('F Y',strtotime($month.'-01'));
-            foreach($people as $x){
-                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll','Payslip ready','Your payslip for '.$label.' is ready in My Pay.',['type'=>'info','entity_id'=>$run_id,'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
+            foreach($r['people'] as $x){
+                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll','Payslip ready','Your payslip for '.$label.' is ready in My Pay.',['type'=>'info','entity_id'=>$r['run_id'],'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
             }
         }
         $this->payroll_redirect($back+['payroll_saved'=>'closed']);
     }
 
+    /** Closes a month under the payroll lock. @return array{error:string}|array{run_id:int,people:list<array<string,mixed>>} */
+    private function payroll_close_locked($month){
+        global $wpdb;$t=$this->payroll_tables();
+        if($this->payroll_run($month))return ['error'=>'already_closed'];
+        // Worked out before the transaction: it may create tables, which would end an open transaction on MySQL.
+        $people=array_values(array_filter($this->payroll_month($month),function($x){return $x['pay']!==null;}));
+        if(!$people)return ['error'=>'nothing'];
+        foreach($people as $x)if($x['pay']['review'])return ['error'=>'review'];
+        $rules=$this->payroll_rules();
+        $total=round(array_sum(array_map(function($x){return (float)$x['pay']['net'];},$people)),2);
+        // One transaction (3.31.90): the month is closed with every payslip, or not at all.
+        if($wpdb->query('START TRANSACTION')===false)return ['error'=>'save'];
+        $ok=$wpdb->insert($t['runs'],['month'=>$month,'employees'=>count($people),'total_net'=>$total,'currency'=>$rules['currency'],'closed_by'=>get_current_user_id(),'closed_at'=>current_time('mysql')],['%s','%d','%f','%s','%d','%s']);
+        if(!$ok){$wpdb->query('ROLLBACK');return ['error'=>'already_closed'];}
+        $run_id=(int)$wpdb->insert_id;
+        foreach($people as $x){
+            $ok=$wpdb->insert($t['payslips'],['run_id'=>$run_id,'employee_id'=>(int)$x['employee']->id,'net'=>$x['pay']['net'],
+                'data'=>wp_json_encode(['employee'=>['id'=>(int)$x['employee']->id,'name'=>(string)$x['employee']->name],'currency'=>$rules['currency'],'rules'=>$rules,'pay'=>$x['pay']])],['%d','%d','%f','%s']);
+            if(!$ok){$wpdb->query('ROLLBACK');return ['error'=>'save'];}
+        }
+        if((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['payslips']} WHERE run_id=%d",$run_id))!==count($people)){$wpdb->query('ROLLBACK');return ['error'=>'save'];}
+        // Salary advance instalments on these payslips are taken now (3.31.109), in the same transaction. Each must be taken by this
+        // month: one already taken by another month means these payslips deduct it a second time (3.31.116), so nothing is closed.
+        if($this->advances_enabled()){
+            $taken=$this->advance_mark_taken($run_id,$people);
+            if($taken!==true){$wpdb->query('ROLLBACK');return ['error'=>$taken==='changed'?'changed':'save'];}
+        }
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return ['error'=>'save'];}
+        $this->audit('payroll_closed','payroll',$run_id,$month.': '.count($people).' payslips');
+        return ['run_id'=>$run_id,'people'=>$people];
+    }
+
     public function payroll_reopen(){
         if(!$this->can('ews_manage_payroll'))wp_die('Access denied');
         check_admin_referer('ews_payroll_reopen');
-        global $wpdb;$this->ensure_payroll_schema();$t=$this->payroll_tables();
+        $this->ensure_payroll_schema();
         $month=$this->payroll_month_post();
-        $run=$month?$this->payroll_run($month):null;
-        if(!$run)$this->payroll_redirect(['month'=>$month,'payroll_error'=>'not_closed']);
-        $this->advance_release_run((int)$run->id);   // its advance instalments are due again (3.31.109)
-        $wpdb->delete($t['payslips'],['run_id'=>(int)$run->id],['%d']);
-        $wpdb->delete($t['runs'],['id'=>(int)$run->id],['%d']);
-        $this->audit('payroll_reopened','payroll',(int)$run->id,$month);
+        if(!$month)$this->payroll_redirect(['month'=>$month,'payroll_error'=>'not_closed']);
+        $r=$this->ews_with_lock('payroll',function()use($month){return $this->payroll_reopen_locked($month);},['error'=>'busy'],20);
+        if(isset($r['error']))$this->payroll_redirect(['month'=>$month,'payroll_error'=>$r['error']]);
         $this->payroll_redirect(['month'=>$month,'payroll_saved'=>'reopened']);
+    }
+
+    /**
+     * Reopens a month under the payroll lock, in one transaction (3.31.116): the run, its payslips and its advance instalments change
+     * together or not at all. @return array{error:string}|array{run_id:int}
+     */
+    private function payroll_reopen_locked($month){
+        global $wpdb;$t=$this->payroll_tables();
+        $run=$this->payroll_run($month);
+        if(!$run)return ['error'=>'not_closed'];
+        if($wpdb->query('START TRANSACTION')===false)return ['error'=>'reopen_save'];
+        $n=$wpdb->delete($t['runs'],['id'=>(int)$run->id],['%d']);
+        if($n===false){$wpdb->query('ROLLBACK');return ['error'=>'reopen_save'];}
+        if($n!==1){$wpdb->query('ROLLBACK');return ['error'=>'not_closed'];}   // reopened by someone else meanwhile
+        if($wpdb->delete($t['payslips'],['run_id'=>(int)$run->id],['%d'])===false){$wpdb->query('ROLLBACK');return ['error'=>'reopen_save'];}
+        // Its advance instalments are due again (3.31.109), also when advances are switched off since.
+        if($this->advance_release_run((int)$run->id)===false){$wpdb->query('ROLLBACK');return ['error'=>'reopen_save'];}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return ['error'=>'reopen_save'];}
+        $this->audit('payroll_reopened','payroll',(int)$run->id,$month);
+        return ['run_id'=>(int)$run->id];
     }
 
     /** My Pay: switched on by an administrator, for an employee with a salary or a payslip. */

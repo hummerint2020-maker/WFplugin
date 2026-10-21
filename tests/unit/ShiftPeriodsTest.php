@@ -76,4 +76,18 @@ final class ShiftPeriodsTest extends TestCase
         $this->assertFalse(P::timesChanged($a, ['name' => 'Renamed'] + $a), 'a new name is not new times');
         $this->assertTrue(P::timesChanged($a, ['grace' => 15] + $a));
     }
+
+    /** 3.31.116: what is done with the dated times before new ones are saved (docs/tasks/payroll-integrity.md). */
+    public function testSettle(): void
+    {
+        $t = ['start' => '09:00', 'end' => '17:00', 'grace' => 10, 'sign_in_cutoff_minutes' => 240, 'overnight' => 0];
+        $this->assertSame(['action' => 'beginning'], P::settle([], '2026-10-21', $t), 'no history yet: the live times from the start');
+        $v = [['from' => P::BEGINNING] + $t, ['from' => '2026-09-01'] + $t];
+        $this->assertSame(['action' => 'none'], P::settle($v, '2026-10-21', $t), 'the newest version already has the live values');
+        $this->assertSame(['action' => 'rewrite', 'from' => '2026-09-01'], P::settle($v, '2026-10-21', ['grace' => 20] + $t), 'changed without a date (an import): the newest version keeps what it counts with today');
+        $this->assertSame(['action' => 'none'], P::settle($v, '2026-09-01', ['grace' => 20] + $t), 'saved again on the same day: that version is replaced');
+        $this->assertSame(['action' => 'later', 'from' => '2026-09-01'], P::settle($v, '2026-08-15', $t), 'a change already saved for a later day');
+        $this->assertTrue(P::timesChanged($t, ['grace' => 15] + $t), 'grace alone is a change');
+        $this->assertTrue(P::timesChanged($t, ['overnight' => 1] + $t), 'overnight alone is a change');
+    }
 }

@@ -250,7 +250,13 @@ jobs:
       - name: Shift history (periods per employee, dated shift times, every day counted with its own shift)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_shift_history.py "$S"
       - name: Salary advances (off by default, limits, the approval engine, paid by Finance, instalments in Payroll, leaving)
-        run: WP_CLI="wp --path=$WP" python3 tests/e2e_advances.py "$S"
+        run: |
+          PHP_CLI_SERVER_WORKERS=6 php -S 127.0.0.1:8081 -t "$WP" tests/router.php > "$S/server8081.log" 2>&1 &
+          RACE_PID=$!
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8081/wp-json/workforce-one/v1/meta && break; sleep 1; done
+          rc=0; WFO_RACE_URL=http://127.0.0.1:8081 WP_CLI="wp --path=$WP" python3 tests/e2e_advances.py "$S" || rc=$?
+          kill $RACE_PID 2>/dev/null || true
+          exit $rc
       - name: System health (off and inert, the collector, privacy scan, findings, notice, email, retention, switching off)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_system_health.py "$S"
       - name: Query batching e2e (approval paths)

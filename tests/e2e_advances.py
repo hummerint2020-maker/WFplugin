@@ -10,10 +10,11 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_advances.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import html, json, os, re, sys, urllib.parse
+import atexit
+import html, json, os, re, sys, threading, time, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, php, q, results, wp, HERE  # noqa: E402
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 php("""$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'ensure_advances_schema');$m->setAccessible(true);$m->invoke($o);""")
@@ -291,6 +292,96 @@ ask(900, 3, 'again')
 qs = decide(mona, 'reject', 'Not now')
 check('the manager rejects: rejected, with the note to the employee', advances()[-1]['status'] == 'Rejected' and q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND title='Your salary advance was rejected'" % ids['emp_uid']), (qs, advances()[-1]))
 check('...and a new one can be asked again', ask(400, 1).get('adv_sent') == '1')
+
+# ---------------------------------------------------------------- 3.31.116: closing and reopening change everything or nothing
+php("""foreach(['ews_salary_advances','ews_advance_instalments','ews_payroll_runs','ews_payslips'] as $t) $wpdb->query("DELETE FROM {$p}$t");
+    $wpdb->update($p.'ews_employees',['active'=>1,'last_working_day'=>null],['id'=>%d]); update_option('ews_feature_advances',1,false);
+    $d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-payroll-mu.php');""" % (ids['emp'], os.path.join(HERE, 'e2e_payroll_mu.php')))
+atexit.register(lambda: php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll-mu.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll.txt');"))   # also when a check crashes
+
+
+def pmode(m):
+    php("file_put_contents(WPMU_PLUGIN_DIR.'/ews-e2e-payroll.txt','%s');" % m)
+
+
+def run_of(month):
+    r = q("SELECT id FROM {p}ews_payroll_runs WHERE month='%s'" % month)
+    return int(r[0]['id']) if r else 0
+
+
+M1, M2 = ids['before'][:7], ids['last']
+make_advance(ids['emp'], 'Paid', [M1, M2], 600)   # M1's instalment is late in M2: both are on M2's payslip
+check('two instalments on the last month\'s payslip (one from the month before)', len([1 for r, _ in lines(M2, ids['emp']) if 'Advance' in r]) == 2, lines(M2, ids['emp']))
+pmode('take-none')
+loc = close_month(M2)
+check('an instalment already taken by another month (none taken now): the close is refused, nothing closed', 'payroll_error=changed' in loc and not run_of(M2) and taken(ids['emp']) == [0, 0]
+      and not q("SELECT id FROM {p}ews_payslips"), (loc, taken(ids['emp'])))
+pmode('take-one')
+loc = close_month(M2)
+check('...only one of the two taken: refused too, nothing taken, nothing closed', 'payroll_error=changed' in loc and not run_of(M2) and taken(ids['emp']) == [0, 0], (loc, taken(ids['emp'])))
+pmode('')
+loc = close_month(M2)
+R = run_of(M2)
+check('...all taken: the month closes with both', 'payroll_saved=closed' in loc and R and taken(ids['emp']) == [R, R], (loc, taken(ids['emp'])))
+n_slips = len(q("SELECT id FROM {p}ews_payslips WHERE run_id=%d" % R))
+for table in ('ews_advance_instalments', 'ews_payroll_runs', 'ews_payslips'):
+    break_writes(table)
+    loc = reopen_month(M2)
+    break_writes('')
+    check('reopening with the %s write failing: refused, and the month stays closed with its payslips and instalments' % table.replace('ews_', ''),
+          'payroll_error=reopen_save' in loc and run_of(M2) == R and len(q("SELECT id FROM {p}ews_payslips WHERE run_id=%d" % R)) == n_slips and taken(ids['emp']) == [R, R], (loc, run_of(M2), taken(ids['emp'])))
+loc = reopen_month(M2)
+check('...then a normal reopen: the run, the payslips and the taking are gone together', 'payroll_saved=reopened' in loc and not run_of(M2) and not q("SELECT id FROM {p}ews_payslips WHERE run_id=%d" % R) and taken(ids['emp']) == [0, 0], (loc, taken(ids['emp'])))
+st, body, h = adm.req('/wp-admin/admin-post.php', {'action': 'ews_payroll_reopen', '_wpnonce': session_nonce(adm, ids['admin_uid'], 'ews_payroll_reopen'), 'month': M2})
+check('...and a second reopen (an old page) says it is not closed', 'payroll_error=not_closed' in html.unescape(h.get('Location', '')), h.get('Location'))
+close_month(M2)
+php("update_option('ews_feature_advances',0,false);")
+loc = reopen_month(M2)
+php("update_option('ews_feature_advances',1,false);")
+check('reopening while advances are switched off still gives the instalments back', 'payroll_saved=reopened' in loc and taken(ids['emp']) == [0, 0], (loc, taken(ids['emp'])))
+
+# Two months closed at the same moment share the late instalment: it is deducted once (on a multi-worker server, when one runs).
+RACE = os.environ.get('WFO_RACE_URL', 'http://127.0.0.1:8081')
+try:
+    urllib.request.urlopen(RACE + '/wp-json/workforce-one/v1/meta', timeout=5)
+    race_up = True
+except Exception:  # noqa: BLE001
+    race_up = False
+if race_up:
+    php("""foreach(['ews_advance_instalments','ews_salary_advances','ews_payroll_runs','ews_payslips'] as $t) $wpdb->query("DELETE FROM {$p}$t");""")
+    make_advance(ids['emp'], 'Paid', [M1], 300)
+    inst = int(q("SELECT id FROM {p}ews_advance_instalments ORDER BY id DESC LIMIT 1")[0]['id'])
+    nonces = {}
+    for mo in (M1, M2):
+        page = adm.req('/wp-admin/admin.php?page=ews31-payroll&month=' + mo)[1]
+        m = re.search(r'name="action" value="ews_payroll_close".*?name="_wpnonce" value="([^"]+)"', page, re.S) or re.search(r'name="_wpnonce" value="([^"]+)"[^>]*>(?:(?!</form>).)*?name="action" value="ews_payroll_close"', page, re.S)
+        nonces[mo] = m.group(1) if m else 'x'
+    pmode('slow')
+    out = {}
+
+    def close_at(mo):
+        data = urllib.parse.urlencode({'action': 'ews_payroll_close', '_wpnonce': nonces[mo], 'month': mo}).encode()
+        try:
+            r = adm.op.open(urllib.request.Request(RACE + '/wp-admin/admin-post.php', data=data), timeout=90)
+            out[mo] = html.unescape(r.headers.get('Location', ''))
+        except urllib.error.HTTPError as e:
+            out[mo] = html.unescape(e.headers.get('Location', ''))
+    ts = [threading.Thread(target=close_at, args=(mo,)) for mo in (M1, M2)]
+    ts[0].start(); time.sleep(0.5); ts[1].start()
+    [t.join() for t in ts]
+    pmode('')
+    with_it = [r['run_id'] for r in q("SELECT run_id,data FROM {p}ews_payslips") if '"instalment_id":%d' % inst in r['data'] or '"instalment_ids":[%d' % inst in r['data']]
+    check('two months closed at the same moment: the shared instalment is on exactly one payslip, taken by that month', len(with_it) == 1 and taken(ids['emp']) == [int(with_it[0])], (out, with_it, taken(ids['emp'])))
+    # MySQL: the lock makes the second close wait and count again, so both close. SQLite has no lock: the row count refuses one.
+    sqlite = php("echo defined('DB_ENGINE')&&DB_ENGINE==='sqlite'?'1':'0';").strip().splitlines()[-1] == '1'
+    closed = sorted('payroll_saved=closed' in out.get(mo, '') for mo in (M1, M2))
+    check('...%s' % ('SQLite, no lock: one closes, the other is refused as changed' if sqlite else 'with the lock both months close, one after the other'),
+          closed == ([False, True] if sqlite else [True, True]) and (not sqlite or any('payroll_error=changed' in v for v in out.values())), out)
+elif os.environ.get('WFO_RACE_URL'):
+    check('the multi-worker server for the two-months-at-once close is up (%s)' % RACE, False)
+else:
+    print('SKIP the two-months-at-once close (no multi-worker server at %s)' % RACE)
+php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll-mu.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-payroll.txt');")
 
 php("""foreach(['ews_salary_advances','ews_advance_instalments','ews_pay_rates','ews_payroll_runs','ews_payslips','ews_approval_requests','ews_approval_steps','ews_employee_relationships'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name='gone'");
