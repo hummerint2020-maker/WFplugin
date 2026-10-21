@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.116
+### Payroll integrity (external review F11, F02, F01; design `docs/tasks/payroll-integrity.md`)
+Fixes to existing behaviour; no new setting, no database change.
+- **Working hours:** a save that is refused (a bad "from" day, or times wrong) now changes nothing; before, the grace period, the
+  overnight setting and "absent after" were already saved. A change of the **grace period or the overnight setting on its own** is now
+  dated like a change of the start and end times: past days keep the lateness and pay they had. Before, it changed every past day,
+  also in payroll months not yet closed (closed months keep their payslips).
+- **Times saved from a day before a change already saved for later** are refused ("New times are already saved from a later day"),
+  for the company hours and for each shift (owner decision): pick that day or a later one.
+- When a dated change follows an undated one, the days before keep the times they were counted with until now.
+- **Closing payroll:** an advance instalment is never deducted twice. Two months closed at the same moment wait for each other (up to
+  20 seconds, then "Payroll is being closed or reopened by someone else"); if an instalment was taken by another month in between,
+  the close is undone and refused ("The month changed while it was being closed").
+- **Reopening payroll** is all or nothing: the run, its payslips and the instalments it took are returned in one step; a database error
+  changes nothing ("The month could not be reopened"), and a second reopen of the same month says it is not closed instead of reporting success.
+- **Sites that changed the grace or overnight setting alone since 3.31.108:** that change applied to past days too and cannot be found
+  afterwards, so it is not repaired automatically (owner decision). HR who know the day can fix it with two dated saves: the old value
+  from the first affected day, then the new value from the day it really started.
 ## 3.31.115
 ### Attendance corrections: no request on a day nobody works (owner decision 2026-10-20)
 - "My recent days" no longer offers **Correct** on a leave day, a public holiday or a day off when nothing was recorded that day,

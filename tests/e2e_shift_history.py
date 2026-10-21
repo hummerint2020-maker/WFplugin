@@ -20,6 +20,7 @@ ids = json.loads(php("""
     update_option('ews_shifts',[['id'=>101,'name'=>'Morning','start'=>'09:00','end'=>'17:00','grace'=>10,'sign_in_cutoff_minutes'=>240,'overnight'=>0,'active'=>1],
         ['id'=>102,'name'=>'Evening','start'=>'14:00','end'=>'22:00','grace'=>15,'sign_in_cutoff_minutes'=>240,'overnight'=>0,'active'=>1]],false);
     update_option('ews_working_hours',['start'=>'08:00','normal_until'=>'16:00','end'=>'16:00'],false);
+    foreach(['ews_grace_period','ews_allow_overnight_shift','ews_absent_after_minutes'] as $o) delete_option($o);
     $wpdb->update($p.'ews_employees',['default_shift_id'=>101],['id'=>$eid]);
     // As the update does it: the history from the beginning, with the shift and times of now.
     $o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'shift_history_seed');$m->setAccessible(true);$m->invoke($o);
@@ -117,11 +118,45 @@ m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" 
 st, qs, _ = adm.post('ews31_working_hours_save', _wpnonce=m.group(1) if m else 'x', work_start='07:00', work_end='15:00', grace_period=10, absent_after=120, times_from=d(0))
 check('the company hours too: new from today, the old ones before', qs.get('schedule_notice') == 'hours_saved' and json.loads(call('shift_times_on', 0, d(0)))['start'] == '07:00' and json.loads(call('shift_times_on', 0, d(-1)))['start'] == '08:00', qs)
 
+# 3.31.116: grace and overnight are dated too, a refused save changes nothing, an earlier day than a later change is refused
+def save_hours(**kw):
+    st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
+    m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" name=\"_wp_http_referer\"[^>]*><input type=\"hidden\" name=\"action\" value=\"ews31_working_hours_save\"", page)
+    data = dict(work_start='07:00', work_end='15:00', grace_period=10, absent_after=120)
+    data.update(kw)
+    return adm.post('ews31_working_hours_save', _wpnonce=m.group(1) if m else 'x', **data)[1]
+
+
+def times(day, shift=0):
+    return json.loads(call('shift_times_on', shift, day))
+
+
+n_versions = lambda: int(q("SELECT COUNT(*) n FROM {p}ews_shift_versions WHERE shift_id=0")[0]['n'])
+qs = save_hours(grace_period=20, times_from=d(0))
+check('grace changed alone, from today: dated (the days before keep 10, today has 20)', qs.get('schedule_notice') == 'hours_saved' and times(d(-1))['grace'] == 10 and times(d(0))['grace'] == 20, (qs, times(d(-1)), times(d(0))))
+before_n, before_grace = n_versions(), php("echo get_option('ews_grace_period');").strip().splitlines()[-1]
+qs = save_hours(grace_period=45, absent_after=200, times_from='2026-13-45')
+check('a refused day changes nothing: not the grace, not "absent after", no new dated times', qs.get('schedule_error') == 'times_from' and n_versions() == before_n
+      and php("echo get_option('ews_grace_period').'|'.get_option('ews_absent_after_minutes');").strip().splitlines()[-1] == before_grace + '|120', qs)
+qs = save_hours(grace_period=25, times_from=d(-2))
+check('new times from a day before a change already saved for later are refused (it would overwrite it)', qs.get('schedule_error') == 'times_later' and times(d(0))['grace'] == 20 and times(d(-2))['grace'] == 10, qs)
+php("update_option('ews_grace_period',30,false);")   # changed without a date (an import, a script)
+qs = save_hours(work_start='06:00', grace_period=30, times_from=d(3))
+check('a change made without a date, then a dated one: the days in between keep what they counted with (30), the days before keep 10',
+      qs.get('schedule_notice') == 'hours_saved' and times(d(1))['grace'] == 30 and times(d(1))['start'] == '07:00' and times(d(3))['start'] == '06:00' and times(d(-1))['grace'] == 10, (times(d(1)), times(d(3))))
+qs = save_hours(work_start='06:00', grace_period=40, times_from=d(5))
+check('grace alone on top of the newest dated times: the days before it keep theirs (it used to apply to every day back to the last change)',
+      qs.get('schedule_notice') == 'hours_saved' and times(d(4))['grace'] == 30 and times(d(5))['grace'] == 40, (times(d(4)), times(d(5))))
+st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
+m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" name=\"_wp_http_referer\"[^>]*><input type=\"hidden\" name=\"action\" value=\"ews31_shifts_save\"", page)
+st, qs, _ = adm.post('ews31_shifts_save', _wpnonce=m.group(1) if m else 'x', times_from=d(0), **dict(shifts, **{'shifts[0][grace]': 20}))
+check('a shift too: new times from a day before its change already saved for later are refused', qs.get('schedule_error') == 'times_later' and times(d(2), 101)['grace'] == 10, qs)
+
 # the Employees page change and the Audit Log
 check('the Audit Log has every change', len(q("SELECT id FROM {p}ews_audit_log WHERE action IN ('shift_period_set','shift_period_removed')")) >= 4)
 
 php("""foreach(['ews_employee_shift_periods','ews_shift_versions'] as $t) $wpdb->query("DELETE FROM {$p}$t"); $wpdb->query("DELETE FROM {$p}ews_time_logs WHERE employee_id=%d"); $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=%d AND work_date='%s'");
-    $wpdb->update($p.'ews_employees',['default_shift_id'=>null],['id'=>%d]); delete_option('ews_shifts'); delete_option('ews_working_hours');
+    $wpdb->update($p.'ews_employees',['default_shift_id'=>null],['id'=>%d]); delete_option('ews_shifts'); delete_option('ews_working_hours'); foreach(['ews_grace_period','ews_allow_overnight_shift','ews_absent_after_minutes'] as $o) delete_option($o);
     $o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'shift_history_seed');$m->setAccessible(true);$m->invoke($o);""" % (ids['emp'], ids['emp'], past, ids['emp']))
 print('%d / %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)
