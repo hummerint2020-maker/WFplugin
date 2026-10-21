@@ -174,7 +174,7 @@ trait EWS_App_Layout_Trait {
         $brand=['app_name'=>$cfg['app_name'],'company_name'=>$cfg['company_name'],'tagline'=>$cfg['tagline'],'logo_url'=>$cfg['logo_url'],'show'=>$cfg['login_brand']==='1'];
         if(is_user_logged_in()){
             $url=remove_query_arg(['login','loggedout','login_error'])?:home_url('/');
-            return $this->render_template('app/login',['signed_in'=>true,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>$url,'logout_url'=>wp_logout_url($url),'form'=>'','lost_password_url'=>'','error'=>'','message'=>'','worker_url'=>'']);
+            return $this->render_template('app/login',['signed_in'=>true,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>$url,'logout_url'=>wp_logout_url(add_query_arg('loggedout','1',$url)),'form'=>'','lost_password_url'=>'','error'=>'','message'=>'','worker_url'=>'']);
         }
         $redirect=esc_url_raw(remove_query_arg(['login_error','loggedout'],wp_unslash($_GET['redirect_to']??(get_permalink()?:home_url('/')))));
         // Mark this form so a failed login comes back here (app_login_failed) instead of wp-login.php.

@@ -203,6 +203,8 @@ trait EWS_Api_Auth_Trait {
         if(isset($map[$status]))return self::$api_token_cache[$hash]=$map[$status];
         $user=get_userdata((int)$row['user_id']);
         if(!$user)return self::$api_token_cache[$hash]=ErrorMap::TOKEN_INVALID;
+        // A revoke that could not be written (3.31.118): the sessions from before it are refused, and this one is ended now if it can be.
+        if($this->api_session_predates($user->ID,$row['device_created_at'])){$this->api_revoke_device((int)$row['device_id'],$this->api_sessions_pending_reason($user->ID));return self::$api_token_cache[$hash]=ErrorMap::DEVICE_REVOKED;}
         // The account is checked on every request: an archived employee or a removed role stops at once.
         [$gate,$employee]=$this->api_account_gate($user);
         if($gate!=='ok')return self::$api_token_cache[$hash]=$gate;
@@ -315,9 +317,12 @@ trait EWS_Api_Auth_Trait {
             return $this->api_fail($gate);
         }
         $this->api_limit_clear(LoginThrottle::USER,$keys[LoginThrottle::USER]);
+        // The session and its tokens are saved together, or nothing is (3.31.118): the app never gets tokens that were not stored.
+        global $wpdb;
+        if($wpdb->query('START TRANSACTION')===false)return $this->api_internal_error();
         $device=$this->api_device_create($user,$in['device'],$now);
-        if(!$device)return Response::internalError($this->api_request_id(),$this->api_server_time(),$this->api_message(ErrorMap::INTERNAL_ERROR));
-        $pair=$this->api_issue_pair($device,$now);
+        $pair=$device?$this->api_issue_pair($device,$now,true):null;
+        if(!$pair || $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return $this->api_internal_error();}
         $this->api_audit($user->ID,'api_login',$device['id'],$user->user_login.' / '.$device['platform'].' '.$device['model'].' / app '.$device['app_version'].' / ip='.$ip);
         return $this->api_ok($this->api_session_payload($pair,$device));
     }
@@ -426,7 +431,7 @@ trait EWS_Api_Auth_Trait {
         $token=is_array($body)&&is_string($body['refresh_token']??null)?$body['refresh_token']:'';
         if(Tokens::kindOf($token,$this->api_site_id(),Tokens::REFRESH)===null)return $this->api_fail(ErrorMap::REFRESH_INVALID);
         global $wpdb;$t=$this->api_tables();$now=time();
-        $row=$wpdb->get_row($wpdb->prepare("SELECT k.id,k.device_id,k.user_id,k.expires_at,k.used_at,k.revoked_at,d.revoked_at device_revoked_at,d.expires_at session_expires_at FROM {$t['tokens']} k JOIN {$t['devices']} d ON d.id=k.device_id WHERE k.token_hash=%s AND k.kind='refresh' LIMIT 1",Tokens::hash($token,$this->api_secret())),ARRAY_A);
+        $row=$wpdb->get_row($wpdb->prepare("SELECT k.id,k.device_id,k.user_id,k.expires_at,k.used_at,k.revoked_at,d.revoked_at device_revoked_at,d.created_at device_created_at,d.expires_at session_expires_at FROM {$t['tokens']} k JOIN {$t['devices']} d ON d.id=k.device_id WHERE k.token_hash=%s AND k.kind='refresh' LIMIT 1",Tokens::hash($token,$this->api_secret())),ARRAY_A);
         if($row===null && $wpdb->last_error!=='')return $this->api_internal_error();
         if(!$row)return $this->api_fail(ErrorMap::REFRESH_INVALID);
         // The SELECT only routes the request; the UPDATEs below decide.
@@ -439,21 +444,25 @@ trait EWS_Api_Auth_Trait {
         $user=get_userdata((int)$row['user_id']);
         if(!$user){
             if($wpdb->last_error!=='')return $this->api_internal_error();
-            $this->api_revoke_device((int)$row['device_id'],'user_deleted');return $this->api_fail(ErrorMap::REFRESH_INVALID);
+            if($this->api_revoke_device((int)$row['device_id'],'user_deleted')===false)error_log('Workforce One: a device session could not be ended (user_deleted)');   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- refused anyway
+            return $this->api_fail(ErrorMap::REFRESH_INVALID);
+        }
+        if($this->api_session_predates($user->ID,$row['device_created_at'])){
+            $this->api_revoke_device((int)$row['device_id'],$this->api_sessions_pending_reason($user->ID));return $this->api_fail(ErrorMap::DEVICE_REVOKED);
         }
         [$gate]=$this->api_account_gate($user);
         if($gate!=='ok'){
             if($wpdb->last_error!=='')return $this->api_internal_error();
-            $this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID);return $this->api_fail($gate);
+            if($this->api_revoke_device((int)$row['device_id'],'account_disabled',(int)$user->ID)===false)error_log('Workforce One: a device session could not be ended (account_disabled)');   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- refused anyway
+            return $this->api_fail($gate);
         }
         if($status===Tokens::OK){
+            // The access tokens issued before this refresh token end first, checked (3.31.118): a database error here is 500 and leaves the
+            // refresh token unused. Only those: a pair another request issued from it a moment ago stays valid.
+            if($wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND kind='access' AND revoked_at IS NULL AND id<%d",$this->api_utc($now),(int)$row['device_id'],(int)$row['id']))===false)return $this->api_internal_error();
             $used=$wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET used_at=%s WHERE id=%d AND used_at IS NULL AND revoked_at IS NULL",$this->api_utc($now),(int)$row['id']));
             if($used===false)return $this->api_internal_error();
-            if($used===1){
-                // Only the access tokens issued before this refresh token: a pair another request issued from it a moment ago stays valid.
-                $wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND kind='access' AND revoked_at IS NULL AND id<%d",$this->api_utc($now),(int)$row['device_id'],(int)$row['id']));
-                return $this->api_refresh_issue($row,$user,$now,true);
-            }
+            if($used===1)return $this->api_refresh_issue($row,$user,$now,true);
         }
         return $this->api_refresh_grace_take($row,$user,$now);
     }
@@ -479,6 +488,8 @@ trait EWS_Api_Auth_Trait {
     /** A refresh token used twice: it may have been stolen. The whole device session ends. */
     private function api_refresh_reused(array $row,$safe=false){
         $ended=$this->api_revoke_device((int)$row['device_id'],'refresh_reuse');
+        // With the refresh switch on, a revoke that could not be written is 500: the session is not reported as ended (3.31.118).
+        if($safe && $ended===false)return $this->api_internal_error();
         // With the refresh switch on, only the request that really ended the session writes the Audit Log row (a burst writes one).
         if(!$safe || $ended)$this->api_audit((int)$row['user_id'],'api_refresh_reuse',(int)$row['device_id'],'A refresh token was used again: the device session was ended / ip='.$this->api_client_ip());
         return $this->api_fail(ErrorMap::REFRESH_REUSED);
@@ -488,7 +499,8 @@ trait EWS_Api_Auth_Trait {
 
     public function api_auth_logout($request){
         $s=self::$api_session;
-        $this->api_revoke_device((int)$s['device_id'],'logout');
+        // A revoke that could not be written is 500, never "signed out" (3.31.118); a retry then answers DEVICE_REVOKED when it did end.
+        if($this->api_revoke_device((int)$s['device_id'],'logout')===false)return $this->api_internal_error();
         $this->api_audit((int)$s['user_id'],'api_logout',(int)$s['device_id'],$s['user']->user_login.' / '.$s['platform'].' '.$s['model']);
         return $this->api_ok(['signed_out'=>true]);
     }
@@ -536,7 +548,7 @@ trait EWS_Api_Auth_Trait {
         // Only the caller's own devices; anyone else's is "not found" (no hint that it exists).
         $id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE public_id=%s AND user_id=%d AND revoked_at IS NULL LIMIT 1",$public,(int)$s['user_id']));
         if(!$id)return $this->api_fail(ErrorMap::NOT_FOUND);
-        $this->api_revoke_device($id,'revoked_by_user');
+        if($this->api_revoke_device($id,'revoked_by_user')===false)return $this->api_internal_error();   // 3.31.118
         $this->api_audit((int)$s['user_id'],'api_device_revoked',$id,$s['user']->user_login.' signed out a device'.($id===(int)$s['device_id']?' (this one)':''));
         return $this->api_ok(['revoked'=>true,'current'=>$id===(int)$s['device_id']]);
     }
@@ -553,7 +565,8 @@ trait EWS_Api_Auth_Trait {
     private function api_device_create(WP_User $user,array $info,$now){
         global $wpdb;$t=$this->api_tables();
         // Signing in again on the same app installation replaces that installation's session.
-        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND installation_id=%s AND revoked_at IS NULL",(int)$user->ID,$info['installation_id'])) as $old)$this->api_revoke_device((int)$old,'replaced');
+        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND installation_id=%s AND revoked_at IS NULL",(int)$user->ID,$info['installation_id'])) as $old)
+            if($this->api_revoke_device((int)$old,'replaced')===false)return null;   // checked (3.31.118): the caller rolls back
         $ok=$wpdb->insert($t['devices'],[
             'public_id'=>bin2hex(random_bytes(16)),'user_id'=>(int)$user->ID,'installation_id'=>$info['installation_id'],'platform'=>$info['platform'],
             'model'=>$info['model'],'app_version'=>$info['app_version'],'created_at'=>$this->api_utc($now),'last_seen_at'=>$this->api_utc($now),
@@ -593,27 +606,62 @@ trait EWS_Api_Auth_Trait {
         ];
     }
 
-    /** Ends a device session and every token of it. @return int 1 when it was active */
+    /**
+     * Ends a device session and every token of it: the device first (every token check reads it), then the tokens.
+     * @return int|false 1 when it was active, 0 when it had already ended, false on a database error (3.31.118)
+     */
     private function api_revoke_device($device_id,$reason,$user_id=0){
         global $wpdb;$t=$this->api_tables();$now=$this->api_utc(time());
-        $n=(int)$wpdb->query($wpdb->prepare("UPDATE {$t['devices']} SET revoked_at=%s,revoked_reason=%s WHERE id=%d AND revoked_at IS NULL",$now,substr((string)$reason,0,40),(int)$device_id));
-        $wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND revoked_at IS NULL",$now,(int)$device_id));
+        $n=$wpdb->query($wpdb->prepare("UPDATE {$t['devices']} SET revoked_at=%s,revoked_reason=%s WHERE id=%d AND revoked_at IS NULL",$now,substr((string)$reason,0,40),(int)$device_id));
+        if($n===false)return false;
+        $n=(int)$n;
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['tokens']} SET revoked_at=%s WHERE device_id=%d AND revoked_at IS NULL",$now,(int)$device_id))===false)return false;
         if($user_id&&$n&&$reason==='account_disabled')$this->api_audit($user_id,'api_sessions_revoked',(int)$device_id,'account no longer active');
         return $n;
     }
 
     /**
      * Ends every device session of a user (password changed, user deleted, employee archived...).
-     * This is also what a future "Sign out all devices" will call. @return int sessions ended
+     * This is also what a future "Sign out all devices" will call. A revoke that could not be written leaves a mark on the user
+     * (api_sessions_pending): every session from before it is refused at its next use and ended by the daily cleanup (3.31.118).
+     * @return int|false sessions ended, false when some could not be
      */
     public function api_revoke_user_sessions($user_id,$reason){
         global $wpdb;$t=$this->api_tables();$user_id=(int)$user_id;
         if(!$user_id)return 0;
-        $ids=(array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND revoked_at IS NULL",$user_id));
+        $wpdb->last_error='';
+        $ids=$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND revoked_at IS NULL",$user_id));
+        $failed=$wpdb->last_error!=='';
         $n=0;
-        foreach($ids as $id)$n+=$this->api_revoke_device((int)$id,$reason);
+        foreach((array)$ids as $id){$r=$this->api_revoke_device((int)$id,$reason);if($r===false)$failed=true;else $n+=$r;}
         if($n)$this->api_audit($user_id,'api_sessions_revoked',0,$n.' device session(s) ended: '.$reason);
-        return $n;
+        if(!$failed)return $n;
+        // A deleted user's tokens are refused anyway (no user).
+        if($reason!=='user_deleted')$this->api_sessions_pending($user_id,$reason);
+        return false;
+    }
+
+    /** The mark of a revoke that could not be written (per site): sessions that began until now are refused. */
+    private function api_sessions_pending($user_id,$reason){
+        $ok=update_user_option((int)$user_id,'ews_api_sessions_before',['before'=>time(),'reason'=>substr((string)$reason,0,40)]);
+        if($ok===false)error_log('Workforce One: the device sessions of user '.(int)$user_id.' could not be ended or marked ('.$reason.')');   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- the last resort
+        $this->api_audit((int)$user_id,'api_sessions_revoke_pending',0,'The device sessions could not be ended now ('.$reason.'): they are refused from now on and ended by the daily cleanup');
+    }
+
+    /** @return array{before:int,reason:string}|null */
+    private function api_sessions_mark($user_id){
+        $m=get_user_option('ews_api_sessions_before',(int)$user_id);
+        return is_array($m)&&(int)($m['before']??0)>0?['before'=>(int)$m['before'],'reason'=>(string)($m['reason']??'password_changed')]:null;
+    }
+
+    private function api_session_predates($user_id,$device_created_at){
+        $m=$this->api_sessions_mark($user_id);
+        return $m!==null && Tokens::sessionPredates($this->api_unix($device_created_at),$m['before']);
+    }
+
+    private function api_sessions_pending_reason($user_id){
+        $m=$this->api_sessions_mark($user_id);
+        return $m?$m['reason']:'password_changed';
     }
 
     // ------------------------------------------------------------------ revocation hooks (src/Api/Hooks.php)
@@ -692,5 +740,15 @@ trait EWS_Api_Auth_Trait {
         $old=$this->api_utc($now-90*DAY_IN_SECONDS);
         $wpdb->query($wpdb->prepare("DELETE FROM {$t['devices']} WHERE (revoked_at IS NOT NULL AND revoked_at < %s) OR expires_at < %s",$old,$old));
         $wpdb->query($wpdb->prepare("DELETE FROM {$t['limits']} WHERE window_start < %s",$this->api_utc($now-DAY_IN_SECONDS)));
+        // Revokes that could not be written (3.31.118): the sessions from before the mark end now; the mark goes once they have.
+        $key=$wpdb->get_blog_prefix().'ews_api_sessions_before';
+        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key=%s",$key)) as $uid){
+            $m=$this->api_sessions_mark((int)$uid);
+            if(!$m){delete_user_option((int)$uid,'ews_api_sessions_before');continue;}
+            $ok=true;
+            foreach((array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$t['devices']} WHERE user_id=%d AND revoked_at IS NULL AND created_at<=%s",(int)$uid,$this->api_utc($m['before']))) as $id)
+                if($this->api_revoke_device((int)$id,$m['reason'])===false)$ok=false;
+            if($ok || $m['before']<$now-Tokens::SESSION_MAX)delete_user_option((int)$uid,'ews_api_sessions_before');
+        }
     }
 }

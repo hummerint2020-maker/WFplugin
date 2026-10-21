@@ -103,3 +103,8 @@ password change ends only this site's sessions (existing).
 4. A failed revoke on a password change: per-site "sessions before" option + check on every use + daily retry / log + cron only / a column.
 5. App rule when logout answers 500: retry up to 3 times, then wipe the tokens on the phone and say so.
 6. Tell the admin about a pending revoke: Audit Log row only / a wp-admin notice.
+
+## Owner's answers (2026-10-21)
+All six as recommended: Q1 clear the note only after an explicit logout; Q2 drop notes with no account; Q3 leave the switch-off refresh
+untouched; Q4 per-site "sessions before" option + check on every token use + daily retry; Q5 the app retries logout up to 3 times, then
+wipes its tokens and says so (documented in the OpenAPI); Q6 an Audit Log row only.

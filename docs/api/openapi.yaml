@@ -19,7 +19,8 @@ components:
     bearer:
       type: http
       scheme: bearer
-      description: A Workforce One access token (wfo_at_...), valid 15 minutes. Also accepted in the X-WFO-Authorization header.
+      description: A Workforce One access token (wfo_at_...), valid 15 minutes. Also accepted in the X-WFO-Authorization header. After a password
+        change a token may answer 401 DEVICE_REVOKED before the session list shows the device as ended (3.31.118).
   schemas:
     Meta:
       type: object
@@ -873,7 +874,7 @@ paths:
     post:
       summary: Sign in
       description: HTTPS only. Right or wrong, existing user or not, a blocked account gets the same answer. Signing in again on the same installation
-        replaces its session.
+        replaces its session. A database error is 500 and creates no session; the earlier session of the installation keeps working (3.31.118).
       tags:
       - Auth
       operationId: postauth_login
@@ -1026,6 +1027,21 @@ paths:
                   request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
                   server_time: '2026-10-20T09:15:02+03:00'
                   api_version: '1.0'
+        '500':
+          description: 'A database error: no session was created and nothing changed. Retry.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: INTERNAL_ERROR
+                  message: Something went wrong. Please try again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
   /auth/refresh:
     post:
       summary: Refresh the session
@@ -1129,7 +1145,7 @@ paths:
   /auth/logout:
     post:
       summary: Sign out this device
-      description: Ends this device session and every token of it.
+      description: Ends this device session and every token of it. A database error is 500, never "signed out" (3.31.118).
       tags:
       - Auth
       operationId: postauth_logout
@@ -1179,6 +1195,23 @@ paths:
                 error:
                   code: TOKEN_INVALID
                   message: Your session is not valid. Please sign in again.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '500':
+          description: 'A database error: the session may not have ended. Retry (up to 3 times); a 401 DEVICE_REVOKED on a retry means it did
+            end. If it still fails, remove the tokens from the phone and tell the user they are signed out on this phone; the session ends from
+            another device''s list or when it expires.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: INTERNAL_ERROR
+                  message: Something went wrong. Please try again.
                 meta:
                   request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
                   server_time: '2026-10-20T09:15:02+03:00'
@@ -1407,6 +1440,21 @@ paths:
                 error:
                   code: NOT_FOUND
                   message: Not found.
+                meta:
+                  request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
+                  server_time: '2026-10-20T09:15:02+03:00'
+                  api_version: '1.0'
+        '500':
+          description: 'A database error: the device may still be signed in (it stays in the list). Retry.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                success: false
+                error:
+                  code: INTERNAL_ERROR
+                  message: Something went wrong. Please try again.
                 meta:
                   request_id: 01M5BB19V9R3A8MJ3XKJRHMBTM
                   server_time: '2026-10-20T09:15:02+03:00'

@@ -1,7 +1,7 @@
 <?php
 /**
  * Test only (tests/e2e_api_refresh_race.py): copied to the test site's mu-plugins and removed by the test; never part of
- * the plugin. A request carrying X-E2E-Fail-Refresh: winner|grace|issue|gate gets that one database statement of the refresh
+ * the plugin. A request carrying X-E2E-Fail-Refresh: winner|grace|issue|gate|access|device_revoke gets that one database statement of the refresh
  * broken (invalid SQL), as a lock timeout or a lost connection would, so the test can see that it never ends the session.
  */
 if (!empty($_SERVER['HTTP_X_E2E_FAIL_REFRESH'])) {
@@ -12,6 +12,8 @@ if (!empty($_SERVER['HTTP_X_E2E_FAIL_REFRESH'])) {
             'grace'  => '/^\s*UPDATE \S*ews_api_tokens SET grace_uses=grace_uses\+1/i',
             'issue'  => '/^\s*INSERT INTO `?\S*ews_api_tokens/i',
             'gate'   => '/^\s*SELECT \* FROM \S*ews_employees WHERE wp_user_id=\d+ ORDER BY active DESC/i',
+            'access' => '/^\s*UPDATE \S*ews_api_tokens SET revoked_at=.*kind=\'access\'/i',      // 3.31.118: older access tokens at a rotation
+            'device_revoke' => '/^\s*UPDATE \S*ews_api_devices SET revoked_at=/i',                // 3.31.118: ending the device session
         ];
         return isset($match[$ews_e2e_fail]) && preg_match($match[$ews_e2e_fail], $q) ? 'SELECT broken FROM no_such_table_e2e' : $q;
     });

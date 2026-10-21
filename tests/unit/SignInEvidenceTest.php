@@ -30,4 +30,14 @@ final class SignInEvidenceTest extends TestCase
         $this->assertFalse($long['sure'], 'a page open for hours (sleep) is not trusted');
         $this->assertSame(1_760_000_000, E::offlineTime($open + 10 * 3600 * 1000, $open, 2 * 3600 * 1000, 1_760_000_000)['at'], 'never later than it arrived');
     }
+
+    /** 3.31.118: a note the phone kept is filed only for the account that pressed the button. */
+    public function testAnOfflineNoteBelongsOnlyToItsAccount(): void
+    {
+        $this->assertTrue(E::noteBelongs(5, 5));
+        $this->assertTrue(E::noteBelongs('5', 5));
+        foreach (['', null, '6', 6, [5], '5 ', 0] as $posted) $this->assertFalse(E::noteBelongs($posted, 5), var_export($posted, true));
+        $this->assertFalse(E::noteBelongs(0, 0), 'nobody signed in');
+        $this->assertFalse(E::noteBelongs('0', 0));
+    }
 }
