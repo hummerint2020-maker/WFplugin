@@ -8,7 +8,7 @@ Wipes Workforce One test data and changes the site time zone (restored); never r
 import html, json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, php, q, results, wp, HERE  # noqa: E402
 
 PAGE = '/wp-admin/admin.php?page=ews31-auto-attendance'
 
@@ -138,6 +138,24 @@ st, _, h = adm.req(html.unescape(bulk.group(1)).split('127.0.0.1:8080')[-1]) if 
 check('bulk Sign Out signs out everyone still signed in today (%d)' % expected, expected >= 2 and 'bulk_sign_out=%d&' % expected in h.get('Location', '') + '&' and not q(OPEN), (expected, h.get('Location'), logs(ids['emp'])))
 check('...and closes their open break', q("SELECT status FROM {p}ews_break_sessions WHERE employee_id=%d" % ids['emp'])[0]['status'] == 'Completed')
 check('...after asking for confirmation (no inline script)', bulk and 'data-ews-confirm=' in bulk.group(0) and 'onclick' not in bulk.group(0))
+
+# ---------------------------------------------------------------- 3.31.119: one event even when two runs meet
+import atexit, subprocess  # noqa: E402
+atexit.register(lambda: (break_writes(''), php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-slow-timelog.php');")))
+php("""$wpdb->query("DELETE FROM {$p}ews_time_logs WHERE employee_id=%d AND event_type='sign_out'"); $d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d);
+    file_put_contents($d.'/ews-e2e-slow-timelog.php','<?php add_filter("query",function($q){ if(preg_match("/^\\\\s*INSERT INTO `?\\\\S*ews_time_logs/i",$q)) usleep(1500000); return $q; });');""" % ids['emp'])
+call = "$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'auto_attendance_event'); $m->setAccessible(true); $sch=(object)['status'=>'Office']; echo wp_json_encode($m->invoke($o,%d,'%s','sign_out','23:58',$sch,0));" % (ids['emp'], TODAY)
+wp_cmd = os.environ.get('WP_CLI', 'wp').split()
+procs = [subprocess.Popen(wp_cmd + ['eval', '$p=$GLOBALS["wpdb"]->prefix; ' + call], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True) for _ in range(2)]
+outs = [p_.communicate(timeout=60)[0].strip().splitlines()[-1:] for p_ in procs]
+php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-slow-timelog.php');")
+n_out = len(q("SELECT id FROM {p}ews_time_logs WHERE employee_id=%d AND work_date='%s' AND event_type='sign_out'" % (ids['emp'], TODAY)))
+check('two automatic Sign Outs at the same moment record one (the lock, or the check after the insert)', n_out == 1 and sum('"ok":true' in ''.join(o) for o in outs) == 1, (n_out, outs))
+php("$wpdb->query(\"DELETE FROM {$p}ews_time_logs WHERE employee_id=%d AND event_type='sign_out'\");" % ids['emp'])
+break_writes('ews_time_logs', 'INSERT')
+r = php("$p=$GLOBALS['wpdb']->prefix; " + call).strip().splitlines()[-1]
+break_writes('')
+check('a database error: nothing recorded, the failure in the Audit Log', '"db_error"' in r and not q("SELECT id FROM {p}ews_time_logs WHERE employee_id=%d AND event_type='sign_out'" % ids['emp']) and q("SELECT id FROM {p}ews_audit_log WHERE action='auto_sign_out_failed'"), r)
 
 emp = Session('emp1', 'emp1pass')
 st, body, _ = emp.req(PAGE)

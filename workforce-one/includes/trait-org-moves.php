@@ -88,33 +88,61 @@ trait EWS_Org_Moves_Trait {
             'current_manager'=>$current && $this->people_active_id($current)?$current:0,'date'=>(string)$date,'today'=>current_time('Y-m-d'),
             'reason'=>(string)$reason,'reason_required'=>(bool)$reason_required];
         if($to)$facts['manager_ok']=(bool)$this->people_active_id($to);
-        $facts['scheduled_exists']=(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->org_moves_table()} WHERE employee_id=%d AND status='scheduled' AND id<>%d LIMIT 1",$employee_id,(int)$ignore_scheduled_id));
+        $facts['scheduled_exists']=(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->org_moves_table()} WHERE employee_id=%d AND status IN ('scheduled','applying') AND id<>%d LIMIT 1",$employee_id,(int)$ignore_scheduled_id));
         if($to && $check_loop)$facts['would_loop']=$this->org_tree()->wouldLoop($employee_id,$to);
         return MoveRules::check($facts);
     }
 
     /**
-     * Does a move now: the new manager, the waiting requests, the history row and the Audit Log.
+     * Does a move now: the new manager, the waiting requests, the history row and the Audit Log. All or nothing (3.31.119).
+     * $claim: the claim time of a scheduled move ($scheduled_id) being done by the daily run.
      * @return array{ok:bool,requests:int,id:int}
      */
-    private function org_move_apply($employee_id,$to,$date,$reason,$source,$scheduled_id=0){
-        global $wpdb;
+    private function org_move_apply($employee_id,$to,$date,$reason,$source,$scheduled_id=0,$claim=null){
         $employee_id=(int)$employee_id;$to=(int)$to;
         $from=$this->people_manager_of($employee_id);
-        if(!$this->employee_admin_set_supervisor($employee_id,$to))return ['ok'=>false,'requests'=>0,'id'=>0];
-        $moved=$this->approval_reassign_supervisor($employee_id,$from,$to);
-        $row=['employee_id'=>$employee_id,'from_manager_id'=>$from,'to_manager_id'=>$to,'effective_date'=>$date,'reason'=>(string)$reason,'status'=>'done',
-            'source'=>$source,'requests_moved'=>$moved,'applied_at'=>current_time('mysql')];
-        if($scheduled_id){
-            $wpdb->update($this->org_moves_table(),$row,['id'=>(int)$scheduled_id]);
-            $id=(int)$scheduled_id;
+        $row=['employee_id'=>$employee_id,'from_manager_id'=>$from,'to_manager_id'=>$to,'effective_date'=>$date,'reason'=>(string)$reason,'status'=>'done','source'=>$source];
+        $r=$this->org_supervisor_change($employee_id,$from,$to,$row,$scheduled_id?['id'=>(int)$scheduled_id,'at'=>(string)$claim]:null);
+        if(!$r['ok'])return $r;
+        $this->org_reset_runtime_caches($employee_id);
+        $this->audit('org_move','employee',$employee_id,$this->org_move_summary($employee_id,$from,$to,$date,$reason).($r['requests']?' · '.$r['requests'].' waiting approval step(s) moved':'').' · '.$source);
+        return $r;
+    }
+
+    /**
+     * The supervisor, the waiting approval steps and the history row, in one transaction (3.31.119); the new manager is told after it.
+     * A scheduled move's row is written only while this run still holds its claim.
+     * @param array<string,mixed> $row @param array{id:int,at:string}|null $claim @return array{ok:bool,requests:int,id:int}
+     */
+    private function org_supervisor_change($employee_id,$from,$to,array $row,$claim=null){
+        global $wpdb;$t=$this->org_moves_table();$now=current_time('mysql');
+        $fail=['ok'=>false,'requests'=>0,'id'=>0];
+        if($wpdb->query('START TRANSACTION')===false)return $fail;
+        if(!$this->employee_admin_set_supervisor((int)$employee_id,(int)$to)){$wpdb->query('ROLLBACK');return $fail;}
+        $pending=0;
+        $moved=$this->approval_reassign_supervisor((int)$employee_id,(int)$from,(int)$to,$pending);
+        if($moved===false){$wpdb->query('ROLLBACK');return $fail;}
+        $row['requests_moved']=$moved;$row['applied_at']=$now;
+        if($claim){
+            $n=$wpdb->update($t,$row+['note'=>''],['id'=>(int)$claim['id'],'status'=>'applying','applied_at'=>(string)$claim['at']]);
+            if($n!==1){$wpdb->query('ROLLBACK');return $fail;}   // a database error, or the claim was taken back (an interrupted run)
+            $id=(int)$claim['id'];
         }else{
-            $wpdb->insert($this->org_moves_table(),$row+['created_by'=>get_current_user_id(),'created_at'=>current_time('mysql')]);
+            if($wpdb->insert($t,$row+['created_by'=>get_current_user_id(),'created_at'=>$now])===false){$wpdb->query('ROLLBACK');return $fail;}
             $id=(int)$wpdb->insert_id;
         }
-        $this->org_reset_runtime_caches($employee_id);
-        $this->audit('org_move','employee',$employee_id,$this->org_move_summary($employee_id,$from,$to,$date,$reason).($moved?' · '.$moved.' waiting approval step(s) moved':'').' · '.$source);
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return $fail;}
+        $this->approval_reassign_notify((int)$employee_id,(int)$to,$pending);
         return ['ok'=>true,'requests'=>$moved,'id'=>$id];
+    }
+
+    /** The supervisor alone (the chart off, or unchanged), both of its writes together (3.31.119). @return bool */
+    private function org_set_supervisor_only($employee_id,$supervisor_id){
+        global $wpdb;
+        if($wpdb->query('START TRANSACTION')===false)return false;
+        if(!$this->employee_admin_set_supervisor((int)$employee_id,(int)$supervisor_id)){$wpdb->query('ROLLBACK');return false;}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return false;}
+        return true;
     }
 
     /** A move dated after today: kept and done on its day. @return int */
@@ -148,10 +176,12 @@ trait EWS_Org_Moves_Trait {
         $t=$this->org_moves_table();
         if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t))!==$t)return 0;
         $today=current_time('Y-m-d');$done=0;
+        $this->org_moves_recover();
         $due=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t} WHERE status='scheduled' AND effective_date<=%s ORDER BY effective_date ASC,id ASC LIMIT 200",$today)) as $m){
-            // Claimed first, so two visits at the same time do not both do it.
-            if($wpdb->update($t,['status'=>'applying'],['id'=>(int)$m->id,'status'=>'scheduled'])===1)$due[]=$m;
+            // Claimed first, so two visits at the same time do not both do it; the claim time tells an interrupted run (3.31.119).
+            $m->claim=current_time('mysql');
+            if($wpdb->update($t,['status'=>'applying','applied_at'=>$m->claim],['id'=>(int)$m->id,'status'=>'scheduled'])===1)$due[]=$m;
         }
         // In passes: a move that would make a loop now may be fine once another move of the same day is done.
         while($due){
@@ -159,10 +189,12 @@ trait EWS_Org_Moves_Trait {
             foreach($due as $m){
                 $code=$this->org_move_check((int)$m->employee_id,(int)$m->to_manager_id,(string)$m->effective_date,(string)$m->reason,false,(int)$m->id);
                 if($code==='loop'){$later[]=$m;continue;}
-                if($code==='same'){$wpdb->update($t,['status'=>'done','note'=>'already in place','applied_at'=>current_time('mysql')],['id'=>(int)$m->id]);continue;}
+                $mine=['id'=>(int)$m->id,'status'=>'applying','applied_at'=>$m->claim];   // only while this run holds the claim
+                if($code==='same'){$wpdb->update($t,['status'=>'done','note'=>'already in place','applied_at'=>current_time('mysql')],$mine);continue;}
                 if($code!==null && $code!=='date'){$this->org_move_failed($m,$code);continue;}
-                $r=$this->org_move_apply((int)$m->employee_id,(int)$m->to_manager_id,(string)$m->effective_date,(string)$m->reason,(string)$m->source,(int)$m->id);
-                if(!$r['ok'])$wpdb->update($t,['status'=>'scheduled'],['id'=>(int)$m->id]);
+                $r=$this->org_move_apply((int)$m->employee_id,(int)$m->to_manager_id,(string)$m->effective_date,(string)$m->reason,(string)$m->source,(int)$m->id,$m->claim);
+                // Not done (nothing was changed): back to scheduled for the next run.
+                if(!$r['ok'])$wpdb->update($t,['status'=>'scheduled','applied_at'=>null],$mine);
                 else $done++;
             }
             if(count($later)===count($due)){foreach($later as $m)$this->org_move_failed($m,'loop');break;}
@@ -173,8 +205,30 @@ trait EWS_Org_Moves_Trait {
 
     private function org_move_failed($m,$code){
         global $wpdb;
-        $wpdb->update($this->org_moves_table(),['status'=>'failed','note'=>$code,'applied_at'=>current_time('mysql')],['id'=>(int)$m->id]);
+        $where=['id'=>(int)$m->id,'status'=>'applying'];
+        if(isset($m->claim))$where['applied_at']=$m->claim;
+        if($wpdb->update($this->org_moves_table(),['status'=>'failed','note'=>$code,'applied_at'=>current_time('mysql')],$where)!==1)return;
         $this->audit('org_move_failed','employee',(int)$m->employee_id,'Scheduled move #'.(int)$m->id.' not done: '.$code);
+    }
+
+    /**
+     * Moves left "applying" by a run that died (3.31.119, MoveRules::recover): done again once, or failed ("interrupted") for HR to
+     * cancel or redo when it was already done again, or claimed before 3.31.119 (owner decision 2026-10-21).
+     */
+    private function org_moves_recover(){
+        global $wpdb;$t=$this->org_moves_table();$now=current_time('timestamp');
+        foreach((array)$wpdb->get_results("SELECT * FROM {$t} WHERE status='applying' ORDER BY id ASC LIMIT 200") as $m){
+            $at=$m->applied_at!==null && (string)$m->applied_at!==''?(int)strtotime((string)$m->applied_at):null;
+            $do=MoveRules::recover($at,(string)$m->note,$now);
+            if($do==='wait')continue;
+            $where=$at===null?$wpdb->prepare('id=%d AND status=%s AND applied_at IS NULL',(int)$m->id,'applying'):$wpdb->prepare('id=%d AND status=%s AND applied_at=%s',(int)$m->id,'applying',(string)$m->applied_at);
+            if($do==='resume'){
+                if($wpdb->query("UPDATE {$t} SET status='scheduled',applied_at=NULL,note='resumed' WHERE {$where}")===1)
+                    $this->audit('org_move_resumed','employee',(int)$m->employee_id,'Scheduled move #'.(int)$m->id.' was interrupted: it is done again');
+            }elseif($wpdb->query($wpdb->prepare("UPDATE {$t} SET status='failed',note='interrupted',applied_at=%s WHERE {$where}",current_time('mysql')))===1){
+                $this->audit('org_move_failed','employee',(int)$m->employee_id,'Scheduled move #'.(int)$m->id.' not done: interrupted');
+            }
+        }
     }
 
     /** At most once an hour, while the chart is on: the scheduled moves whose day has come. */
@@ -223,19 +277,6 @@ trait EWS_Org_Moves_Trait {
     private function org_redirect(array $args){
         wp_safe_redirect(add_query_arg(array_filter($args,static function($v){return $v!==0 && $v!=='' && $v!==null;}),admin_url('admin.php')));
         exit;
-    }
-
-    /**
-     * While the chart is on, a supervisor changed on the Employees page is kept as a move (from today,
-     * no reason) and their waiting requests go to the new supervisor too.
-     */
-    private function org_record_employees_page_change($employee_id,$from,$to){
-        if(!$this->org_enabled() || (int)$from===(int)$to)return;
-        global $wpdb;
-        $moved=$this->approval_reassign_supervisor((int)$employee_id,(int)$from,(int)$to);
-        $wpdb->insert($this->org_moves_table(),['employee_id'=>(int)$employee_id,'from_manager_id'=>(int)$from,'to_manager_id'=>(int)$to,'effective_date'=>current_time('Y-m-d'),
-            'reason'=>'','status'=>'done','source'=>'employees','requests_moved'=>$moved,'created_by'=>get_current_user_id(),'created_at'=>current_time('mysql'),'applied_at'=>current_time('mysql')]);
-        $this->audit('org_move','employee',(int)$employee_id,$this->org_move_summary((int)$employee_id,(int)$from,(int)$to,current_time('Y-m-d'),'').($moved?' · '.$moved.' waiting approval step(s) moved':'').' · employees');
     }
 
     /**

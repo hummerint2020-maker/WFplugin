@@ -98,7 +98,7 @@ trait EWS_Employee_Admin_Trait {
         $id=(int)$wpdb->insert_id;
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
         $this->shift_period_add($id,(int)$in['default_shift_id'],\WorkforceOne\Schedule\ShiftPeriods::BEGINNING,'',false);   // shift history (3.31.108)
-        if(!$this->employee_admin_set_supervisor($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
+        if(!$this->org_set_supervisor_only($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->audit('employee_create','employee',$id,$in['name'].' / '.$in['domain_name']);
         $this->employee_admin_redirect(['employee_notice'=>'added']);
     }
@@ -115,16 +115,22 @@ trait EWS_Employee_Admin_Trait {
         // Inactive: paid up to the last working day (kept from before when not sent); active again: none.
         $last_day=$in['active']?null:$this->employee_last_working_day_input((string)($old->last_working_day??''));
         // A new shift here counts from today; the days before keep the old one (3.31.108, shift history).
-        if((int)$old->default_shift_id!==(int)$in['default_shift_id'])$this->shift_period_add($id,(int)$in['default_shift_id'],current_time('Y-m-d'),'',false);
+        // Saved first and checked (3.31.119): a shift that could not be saved changes nothing else.
+        if((int)$old->default_shift_id!==(int)$in['default_shift_id'] && $this->shift_period_add($id,(int)$in['default_shift_id'],current_time('Y-m-d'),'',false)!==true)$this->employee_admin_redirect(['employee_error'=>'save']);
         $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')]+($in['job_title']!==null?['job_title'=>$in['job_title']!==''?$in['job_title']:null]:[]),['id'=>$id]);
         if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
         // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).
         if(!empty($old->wp_user_id) && (((int)$old->active===1 && !$in['active']) || (int)$old->wp_user_id!==(int)$in['wp_user_id']))$this->api_revoke_user_sessions((int)$old->wp_user_id,$in['active']?'employee_unlinked':'employee_archived');
         $old_supervisor=$this->people_manager_of($id);
-        if(!$this->employee_admin_set_supervisor($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
-        // Kept as a move in the organization chart's history while the chart is on (3.31.98).
-        $this->org_record_employees_page_change($id,$old_supervisor,(int)$in['supervisor_id']);
+        $new_supervisor=(int)$in['supervisor_id'];
+        if($this->org_enabled() && $old_supervisor!==$new_supervisor){
+            // Kept as a move in the organization chart's history while the chart is on (3.31.98), with the waiting requests: all or nothing (3.31.119).
+            $r=$this->org_supervisor_change($id,$old_supervisor,$new_supervisor,['employee_id'=>$id,'from_manager_id'=>$old_supervisor,'to_manager_id'=>$new_supervisor,
+                'effective_date'=>current_time('Y-m-d'),'reason'=>'','status'=>'done','source'=>'employees']);
+            if(!$r['ok'])$this->employee_admin_redirect(['employee_error'=>'save']);
+            $this->audit('org_move','employee',$id,$this->org_move_summary($id,$old_supervisor,$new_supervisor,current_time('Y-m-d'),'').($r['requests']?' · '.$r['requests'].' waiting approval step(s) moved':'').' · employees');
+        }elseif(!$this->org_set_supervisor_only($id,$new_supervisor))$this->employee_admin_redirect(['employee_error'=>'save']);
         if(is_wp_error($this->sync_employee_teams($id,$in['team_ids'])))$this->employee_admin_redirect(['employee_error'=>'teams']);
         $this->audit('employee_update','employee',$id,$in['name'].' / '.$in['domain_name'].' / '.$in['email'].' / teams='.count($in['team_ids']));
         if((int)$old->active!==$in['active'])$this->audit('employee_status_change','employee',$id,'Status: '.((int)$old->active?'Active':'Inactive').' -> '.($in['active']?'Active':'Inactive').($last_day?' / last working day '.$last_day:''));

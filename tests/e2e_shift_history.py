@@ -9,7 +9,7 @@ Wipes Workforce One test data; never run against a real site.
 import json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, d, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, d, php, q, results, wp, HERE  # noqa: E402
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 ids = json.loads(php("""
@@ -176,6 +176,39 @@ st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-schedule-config')
 m = re.search(r"name=\"_wpnonce\" value=\"([^\"]+)\"[^<]*<input type=\"hidden\" name=\"_wp_http_referer\"[^>]*><input type=\"hidden\" name=\"action\" value=\"ews31_shifts_save\"", page)
 st, qs, _ = adm.post('ews31_shifts_save', _wpnonce=m.group(1) if m else 'x', times_from=d(0), **dict(shifts, **{'shifts[0][grace]': 20}))
 check('a shift too: new times from a day before its change already saved for later are refused', qs.get('schedule_error') == 'times_later' and times(d(2), 101)['grace'] == 10, qs)
+
+# 3.31.119: a shift change is saved all or nothing
+import atexit  # noqa: E402
+atexit.register(lambda: break_writes(''))
+now_shift = lambda: q("SELECT default_shift_id FROM {p}ews_employees WHERE id=%d" % ids['emp'])[0]['default_shift_id']
+before_p, before_s = periods(), now_shift()
+other = 101 if str(before_s) != '101' else 102
+for table, verb, frm in (('ews_employee_shift_periods', 'INSERT', d(9)), ('ews_employee_shift_periods', 'UPDATE', d(9)), ('ews_employees', 'UPDATE', d(0))):
+    break_writes(table, verb)
+    qs = change(other, frm, 'all or nothing')
+    break_writes('')
+    check('3.31.119: a database error on %s %s while changing the shift: "could not be saved", nothing changed' % (verb, table),
+          qs.get('shift_error') == 'save' and periods() == before_p and now_shift() == before_s, (qs, periods(), before_p, now_shift(), before_s))
+check('...the history has no gap, no overlap, no closed last period', json.loads(php("""$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'shift_periods_of');$m->setAccessible(true);echo wp_json_encode(\\WorkforceOne\\Schedule\\ShiftPeriods::problems($m->invoke($o,%d)));""" % ids['emp']).splitlines()[-1]) == [])
+qs = change(other, d(20), 'later')
+fut = [x for x in q("SELECT id,from_date FROM {p}ews_employee_shift_periods WHERE employee_id=%d" % ids['emp']) if x['from_date'] == d(20)]
+check('...with nothing in the way the change is saved', qs.get('shift_done') == 'saved' and len(fut) == 1, (qs, fut))
+with_future = periods()
+page = adm.req(PROFILE)[1]
+break_writes('ews_employee_shift_periods', 'DELETE')
+st, qs, _ = adm.post('ews_shift_period_save', _wpnonce=nonce(page, 'ews_shift_period_save'), employee_id=ids['emp'], remove=fut[0]['id'] if fut else 0)
+break_writes('')
+check('removing an upcoming change during a database error: "could not be saved", it stays', qs.get('shift_error') == 'save' and periods() == with_future, (qs, periods()))
+page = adm.req(PROFILE)[1]
+st, qs, _ = adm.post('ews_shift_period_save', _wpnonce=nonce(page, 'ews_shift_period_save'), employee_id=ids['emp'], remove=fut[0]['id'] if fut else 0)
+check('...and is removed when it works, the period before taking its days back', qs.get('shift_done') == 'removed' and periods() == before_p, (qs, periods(), before_p))
+# The check once after the upgrade: a history a failed save left (the last period closed) is listed in the Audit Log, once.
+php("""$wpdb->query("UPDATE {$p}ews_employee_shift_periods SET to_date='%s' WHERE employee_id=%d AND to_date IS NULL"); delete_option('ews_shift_history_checked'); delete_option('ews_shift_history_synced'); $wpdb->query("DELETE FROM {$p}ews_audit_log WHERE action='shift_history_gap'");""" % (d(-1), ids['emp']))
+php("$o=new EWS_Manager_V31_1(); $o->shift_history_daily(); delete_option('ews_shift_history_synced'); $o->shift_history_daily();")
+gaps = q("SELECT entity_id,details FROM {p}ews_audit_log WHERE action='shift_history_gap'")
+check('the check after the upgrade lists a broken history once in the Audit Log (nothing repaired)', len(gaps) == 1 and str(gaps[0]['entity_id']) == str(ids['emp']) and 'last_closed' in gaps[0]['details']
+      and q("SELECT to_date FROM {p}ews_employee_shift_periods WHERE employee_id=%d ORDER BY from_date DESC LIMIT 1" % ids['emp'])[0]['to_date'] == d(-1), gaps)
+php("""$wpdb->query("UPDATE {$p}ews_employee_shift_periods SET to_date=NULL WHERE employee_id=%d AND to_date='%s'");""" % (ids['emp'], d(-1)))
 
 # the Employees page change and the Audit Log
 check('the Audit Log has every change', len(q("SELECT id FROM {p}ews_audit_log WHERE action IN ('shift_period_set','shift_period_removed')")) >= 4)

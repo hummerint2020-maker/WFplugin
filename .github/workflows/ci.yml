@@ -215,6 +215,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_organization.py "$S"
       - name: Auto Attendance
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_auto_attendance.py "$S"
+      - name: Deactivate and activate again (every scheduled event cleared, also those with arguments; the recurring ones come back)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_lifecycle.py "$S"
       - name: Employee Polls
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_polls.py "$S"
       - name: Installable app (PWA)

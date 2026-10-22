@@ -69,7 +69,7 @@ $i18n = [
 $people_n = count($data['people']);
 $wide = $data['wide'];
 $attention = count($data['without']) + count($data['archived']) + count($data['looped']) + count($data['moves']['failed']);
-$failed_why = ['loop' => __('it would put them under someone who reports to them', 'workforce-one'), 'employee' => __('the employee was archived', 'workforce-one'), 'manager' => __('the new manager was archived', 'workforce-one')];
+$failed_why = ['loop' => __('it would put them under someone who reports to them', 'workforce-one'), 'employee' => __('the employee was archived', 'workforce-one'), 'manager' => __('the new manager was archived', 'workforce-one'), 'interrupted' => __('it was interrupted while being done; check their manager, then dismiss it or move them again', 'workforce-one')];
 $source = ['chart' => __('Org chart', 'workforce-one'), 'employees' => __('Employees page', 'workforce-one'), 'import' => __('Excel import', 'workforce-one')];
 ?>
 <div class="wrap wfo-org" id="wfo-org">

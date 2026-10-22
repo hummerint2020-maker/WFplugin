@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.31.119
+### All-or-nothing saves and cleanup (external review F12, F13, F14, F15, F10; design `docs/tasks/cleanup-integrity.md`)
+Fixes to existing behaviour; no new setting, no database change.
+- **An employee's shift change** (Employee Profile, Employees page) is saved all or nothing: a database error changes nothing ("The
+  shift could not be saved"), so the days after a change are never left without a shift. Two people changing the same employee's shift
+  at the same moment no longer overlap: the second waits, or is told to check the history and try again.
+- **Moving someone under another manager** (Org chart, Excel import, a scheduled move, the Employees page): the new manager, the
+  waiting requests and the history are saved together, and the new manager is told only once the move is saved. A failed save keeps the
+  old manager (before, a failed write could leave the employee with no manager).
+- **A scheduled move interrupted half way** no longer stays "applying" forever: it is done again once; interrupted again, or left from
+  before this release, it shows under "Needs attention" as interrupted, for HR to dismiss or redo (owner decision). A second move for the
+  same person cannot be scheduled while one is being done.
+- **Automatic attendance** (rules and Bulk Sign Out) uses the same per-employee lock and duplicate check as a Sign In / Out from the
+  app: an automatic Sign Out at the moment the employee taps Sign Out, or two overlapping runs, record one event.
+- **Deactivating** the plugin clears every scheduled event (also each break's reminders and the push batches), on every site of a
+  network; **uninstalling** clears them and, when the data is deleted, also removes the Site Foreman role. Sites that deactivated or
+  uninstalled before this release may keep old break reminders until the next deactivate; they do nothing.
+- **Shift histories with a gap** left by a save that failed before this release are listed once in the Audit Log
+  ("shift_history_gap") for HR to check; nothing is repaired automatically (owner decision).
+- The daily system health rows are rebuilt all or nothing (diagnostic data).
 ## 3.31.118
 ### Sign-in sessions (external review F04, F08; design `docs/tasks/sessions-integrity.md`)
 Fixes to existing behaviour; no new setting, no database change.

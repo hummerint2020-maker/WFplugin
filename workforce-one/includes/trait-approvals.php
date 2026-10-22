@@ -312,9 +312,11 @@ trait EWS_Approvals_Trait {
     /**
      * An employee was moved under another manager (3.31.98): the steps of their open requests waiting
      * for the old manager now wait for the new one, who is told. Steps already decided keep who
-     * decided them. @return int steps moved
+     * decided them. The new manager is told by approval_reassign_notify(), after the caller's commit (3.31.119).
+     * @param int $pending set to the moved steps waiting now @return int|false steps moved, false on a database error
      */
-    private function approval_reassign_supervisor($employee_id,$from_employee_id,$to_employee_id){
+    private function approval_reassign_supervisor($employee_id,$from_employee_id,$to_employee_id,&$pending=0){
+        $pending=0;
         global $wpdb;
         $t=$this->approval_tables();
         $from=(int)$from_employee_id;$to=$to_employee_id?$this->people_employee((int)$to_employee_id,true):null;
@@ -323,15 +325,20 @@ trait EWS_Approvals_Trait {
             WHERE r.requester_employee_id=%d AND i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id=%d AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')",(int)$employee_id,$from)));
         if(!$ids)return 0;
         $ph=implode(',',array_fill(0,count($ids),'%d'));
-        $wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph)",array_merge([(int)$to->id,(int)$to->wp_user_id],$ids)));
-        $now=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE id IN ($ph) AND status='PENDING'",$ids));
-        if($now && (int)$to->wp_user_id){
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph)",array_merge([(int)$to->id,(int)$to->wp_user_id],$ids)))===false)return false;
+        $pending=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE id IN ($ph) AND status='PENDING'",$ids));
+        return count($ids);
+    }
+
+    /** The new manager is told about the moved requests waiting for them now (3.31.119: after the move is saved). */
+    private function approval_reassign_notify($employee_id,$to_employee_id,$pending){
+        $to=$to_employee_id?$this->people_employee((int)$to_employee_id,true):null;
+        if($pending && $to && (int)$to->wp_user_id){
             $who=$this->people_name((int)$employee_id);
             $this->notify((int)$to->wp_user_id,'system',__('Requests now waiting for you','workforce-one'),
                 sprintf(/* translators: %s: employee name */__('%s reports to you now: their requests waiting for approval now wait for you.','workforce-one'),$who),
                 ['entity'=>'approval','push'=>true]);
         }
-        return count($ids);
     }
 
     /** Resolve the actual approver from the configured resolver. */

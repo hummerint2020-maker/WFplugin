@@ -249,6 +249,7 @@
         "approval_self_gate",
         "approval_waiting_on_supervisors",
         "approval_reassign_supervisor",
+        "approval_reassign_notify",
         "approvals_return_view",
         "approval_posted_note",
         "approval_close",

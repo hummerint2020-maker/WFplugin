@@ -73,6 +73,24 @@ trait EWS_Auto_Attendance_Trait {
      * $event_date (the next day for an overnight rule's Sign Out). Never duplicates an event.
      */
     private function auto_attendance_event($employee_id,$date,$type,$target_time,$sch,$rule_id,$event_date=null){
+        // The same per-employee lock as a Sign In / Out from the app (3.31.119): an automatic Sign Out at the moment the employee taps
+        // Sign Out, or two overlapping runs, record one event. Without the lock (SQLite, a timeout) the check after the insert decides.
+        $locked=$this->attendance_lock((int)$employee_id);
+        try{ return $this->auto_attendance_event_locked($employee_id,$date,$type,$target_time,$sch,$rule_id,$event_date); }
+        finally{ if($locked)$this->attendance_unlock((int)$employee_id); }
+    }
+
+    /** The first event of its kind on the day is kept, as AttendanceService does: true when $id is it (a later duplicate is removed). */
+    private function auto_attendance_first_kept($employee_id,$date,$type,$id){
+        global $wpdb;
+        $kinds=$type==='sign_out'?"'sign_out'":"'sign_in','late_sign_in'";
+        $first=(int)$wpdb->get_var($wpdb->prepare("SELECT MIN(id) FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ($kinds)",(int)$employee_id,$date));
+        if(!$first || $first===(int)$id)return true;
+        $wpdb->delete($this->time_logs,['id'=>(int)$id],['%d']);
+        return false;
+    }
+
+    private function auto_attendance_event_locked($employee_id,$date,$type,$target_time,$sch,$rule_id,$event_date=null){
         $event_date=$event_date?:$date;
         global $wpdb;
         // One indexed attendance lookup is enough for both duplicate protection
@@ -110,6 +128,9 @@ trait EWS_Auto_Attendance_Trait {
             'source'=>'auto',
         ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
         if($ok===false){$this->audit('auto_'.$type.'_failed','time_log',0,$emp->name.' / Rule #'.$rule_id.' / '.$wpdb->last_error);return ['ok'=>false,'reason'=>'db_error'];}
+        $new_id=(int)$wpdb->insert_id;
+        if(!$this->auto_attendance_first_kept($employee_id,$date,$type,$new_id))return ['ok'=>false,'reason'=>$type==='sign_out'?'already_signed_out':'already_signed_in'];
+        $wpdb->insert_id=$new_id;
         $this->audit('auto_'.$type,'time_log',(int)$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$event_at.' / source=Auto / rule='.$rule_id);
         return ['ok'=>true,'id'=>(int)$wpdb->insert_id];
     }
@@ -220,6 +241,11 @@ trait EWS_Auto_Attendance_Trait {
             $sign_in=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE id=%d LIMIT 1",(int)$row->sign_in_id));
             if(!$sign_in){$failed++;continue;}
             if(!$this->employee_attendance_enabled((int)$sign_in->employee_id)){$skipped++;continue;}
+            // One employee at a time under their attendance lock (3.31.119), checked again under it: a Sign Out the employee taps at
+            // this moment is not doubled. A short wait: a busy employee is checked after the insert instead.
+            $eid=(int)$sign_in->employee_id;
+            $locked=$this->attendance_lock($eid,2);
+            try{
             $existing=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type='sign_out' LIMIT 1",(int)$row->employee_id,$date));
             if($existing){$skipped++;continue;}
             $ok=$wpdb->insert($this->time_logs,[
@@ -239,9 +265,11 @@ trait EWS_Auto_Attendance_Trait {
                 'source'=>'auto',
             ],['%d','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s']);
             if($ok===false){$failed++;continue;}
+            $new_id=(int)$wpdb->insert_id;
+            if(!$this->auto_attendance_first_kept($eid,$date,'sign_out',$new_id)){$skipped++;continue;}
             $signed_out++;
             $emp=$this->people_employee((int)$sign_in->employee_id);
-            $this->audit('auto_sign_out','time_log',(int)$wpdb->insert_id,($emp?$emp->name:('Employee #'.(int)$sign_in->employee_id)).' / '.$sign_in->scheduled_status.' / '.$now.' / source=Auto / bulk=1');
+            $this->audit('auto_sign_out','time_log',$new_id,($emp?$emp->name:('Employee #'.(int)$sign_in->employee_id)).' / '.$sign_in->scheduled_status.' / '.$now.' / source=Auto / bulk=1');
 
             // If an employee is still on an open break, close it at the bulk sign-out
             // time so the break state cannot remain open after attendance is closed.
@@ -250,12 +278,15 @@ trait EWS_Auto_Attendance_Trait {
                 $open=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE employee_id=%d AND work_date=%s AND status='Open' ORDER BY id DESC LIMIT 1",(int)$sign_in->employee_id,$date));
                 if($open){
                     $minutes=max(0,(int)floor((strtotime($now)-strtotime($open->start_at))/60));
-                    $wpdb->update($bt,['end_at'=>$now,'actual_minutes'=>$minutes,'status'=>'Completed'],['id'=>(int)$open->id],['%s','%d','%s'],['%d']);
-                    wp_clear_scheduled_hook('ews_break_duration_reminder',[(int)$open->id]);
-                    wp_clear_scheduled_hook('ews_break_manager_escalation',[(int)$open->id]);
-                    $this->audit('break_auto_closed','break',(int)$open->id,($emp?$emp->name:('Employee #'.(int)$sign_in->employee_id)).' / '.$now.' / '.$minutes.'m / bulk_sign_out');
+                    // Only a break still open (the employee may end it at this moment); its reminders go only when it was closed here.
+                    if($wpdb->update($bt,['end_at'=>$now,'actual_minutes'=>$minutes,'status'=>'Completed'],['id'=>(int)$open->id,'status'=>'Open'],['%s','%d','%s'],['%d','%s'])===1){
+                        wp_clear_scheduled_hook('ews_break_duration_reminder',[(int)$open->id]);
+                        wp_clear_scheduled_hook('ews_break_manager_escalation',[(int)$open->id]);
+                        $this->audit('break_auto_closed','break',(int)$open->id,($emp?$emp->name:('Employee #'.(int)$sign_in->employee_id)).' / '.$now.' / '.$minutes.'m / bulk_sign_out');
+                    }
                 }
             }
+            }finally{ if($locked)$this->attendance_unlock($eid); }
         }
         $this->audit('auto_sign_out_bulk','time_log',0,'Date='.$date.' / signed_out='.$signed_out.' / skipped='.$skipped.' / failed='.$failed);
         wp_safe_redirect(admin_url('admin.php?page=ews31-auto-attendance&bulk_sign_out='.$signed_out.'&bulk_skipped='.$skipped.'&bulk_failed='.$failed));

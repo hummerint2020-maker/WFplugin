@@ -9,13 +9,14 @@
  * events are cleared and all data is kept, so a reinstall picks up where it left off.
  */
 if (!defined('WP_UNINSTALL_PLUGIN')) exit;
+if (!defined('ABSPATH')) exit;
+// The list of the plugin's scheduled events and roles (3.31.119); uninstall runs without the plugin's autoloader.
+require_once __DIR__ . '/src/Support/Lifecycle.php';
 
 function ews_uninstall_site() {
     global $wpdb;
 
-    foreach (['ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_privacy_cleanup', 'ews_break_duration_reminder', 'ews_break_manager_escalation', 'ews_tasks_tick', 'ews_corrections_tick', 'ews_office_minimum_tick', 'ews_approvals_tick', 'ews_health_rollup'] as $hook) {
-        wp_unschedule_hook($hook);
-    }
+    \WorkforceOne\Support\Lifecycle::clearCron();
 
     if ((int) get_option('ews_delete_data_on_uninstall', 0) !== 1) return;
 
@@ -75,9 +76,7 @@ function ews_uninstall_site() {
     $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", '%' . $wpdb->esc_like('ews_api_sessions_before')));
 
     // Custom roles and the ews_* capabilities granted to Administrator.
-    foreach (['ews_administrator', 'ews_manager', 'ews_supervisor', 'ews_employee'] as $role) {
-        remove_role($role);
-    }
+    \WorkforceOne\Support\Lifecycle::removeRoles();
     $admin = get_role('administrator');
     if ($admin) {
         foreach (array_keys($admin->capabilities) as $cap) {

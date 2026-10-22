@@ -7510,3 +7510,15 @@ msgstr "تجديد أكثر أمانًا لدخول التطبيق: الهاتف
 
 msgid "It could not be saved; nothing was changed. Please try again."
 msgstr "تعذّر الحفظ، ولم يتغيّر شيء. حاول مرة أخرى."
+
+msgid "The shift could not be saved. Nothing was changed; please try again."
+msgstr "تعذّر حفظ الوردية، ولم يتغيّر شيء. حاول مرة أخرى."
+
+msgid "This employee's shift was changed by someone else at the same moment. Check the history and try again."
+msgstr "غيّر شخص آخر وردية هذا الموظف في نفس اللحظة. راجع السجل وحاول مرة أخرى."
+
+msgid "This employee's shift is being saved by someone else. Try again in a moment."
+msgstr "يحفظ شخص آخر وردية هذا الموظف الآن. حاول بعد لحظة."
+
+msgid "it was interrupted while being done; check their manager, then dismiss it or move them again"
+msgstr "توقّف أثناء التنفيذ؛ راجع مديره ثم تجاهله أو انقله مرة أخرى"

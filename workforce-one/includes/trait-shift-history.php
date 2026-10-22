@@ -197,7 +197,8 @@ trait EWS_Shift_History_Trait {
     /**
      * A new period: the employee is on $shift_id from $from. The period before ends the day before; one
      * on the same day is replaced. The employee's shift now (employees.default_shift_id) follows.
-     * @return true|string a refusal code (date, shift, past)
+     * One employee's periods are changed by one request at a time, all or nothing (3.31.119).
+     * @return true|string a refusal code (date, shift, past, save, changed, busy)
      */
     private function shift_period_add($employee_id,$shift_id,$from,$reason='',$check_past=true){
         $employee_id=(int)$employee_id;$shift_id=(int)$shift_id;$today=current_time('Y-m-d');
@@ -205,24 +206,51 @@ trait EWS_Shift_History_Trait {
         foreach($this->shifts() as $s)if((int)$s['id']===$shift_id)$shift_ok=true;
         $error=ShiftPeriods::check((string)$from,$today,!$check_past || $this->can('ews_manage_settings'),$shift_ok);
         if($error!==null)return $error;
-        global $wpdb;$t=$this->shift_history_tables();$now=current_time('mysql');
+        $r=$this->ews_with_lock('shift_periods_'.$employee_id,function()use($employee_id,$shift_id,$from,$reason){return $this->shift_period_add_locked($employee_id,$shift_id,(string)$from,(string)$reason);},'busy',10);
+        if($r!==true)return $r;
+        $this->audit('shift_period_set','employee',$employee_id,'shift #'.$shift_id.' from '.$from.($from<$today?' (a past day: those days are counted again)':'').($reason!==''?' · '.$reason:''));
+        return true;
+    }
+
+    /**
+     * The writes of shift_period_add(), in one transaction, each checked: the previous period is closed only if it is still as read, so
+     * two saves at the same moment never overlap (the second is "changed"). @return true|string save | changed
+     */
+    private function shift_period_add_locked($employee_id,$shift_id,$from,$reason){
+        global $wpdb;$t=$this->shift_history_tables();$now=current_time('mysql');$today=current_time('Y-m-d');
+        unset(self::$ews_shift_periods_cache[$employee_id]);
+        if($wpdb->query('START TRANSACTION')===false)return 'save';
+        $fail=function($code)use($wpdb,$employee_id){$wpdb->query('ROLLBACK');unset(self::$ews_shift_periods_cache[$employee_id]);return $code;};
         $periods=$this->shift_periods_of($employee_id);
         if(!$periods){
             // No history yet (an employee added before the history, or by an import): what was before stays.
             $old=$this->people_shift_id($employee_id);
-            $wpdb->insert($t['periods'],['employee_id'=>$employee_id,'shift_id'=>$old,'from_date'=>ShiftPeriods::BEGINNING,'to_date'=>null,'reason'=>'','created_by'=>0,'created_at'=>$now]);
+            if($wpdb->insert($t['periods'],['employee_id'=>$employee_id,'shift_id'=>$old,'from_date'=>ShiftPeriods::BEGINNING,'to_date'=>null,'reason'=>'','created_by'=>0,'created_at'=>$now])===false)return $fail('save');
             unset(self::$ews_shift_periods_cache[$employee_id]);$periods=$this->shift_periods_of($employee_id);
         }
-        $plan=ShiftPeriods::insert($periods,(string)$from);
+        $plan=ShiftPeriods::insert($periods,$from);
+        $by=(int)get_current_user_id();$why=mb_substr($reason,0,190);
         if($plan['replace']){
-            $wpdb->update($t['periods'],['shift_id'=>$shift_id,'reason'=>mb_substr((string)$reason,0,190),'created_by'=>(int)get_current_user_id(),'created_at'=>$now],['id'=>$plan['replace']]);
+            $n=$wpdb->update($t['periods'],['shift_id'=>$shift_id,'reason'=>$why,'created_by'=>$by,'created_at'=>$now],['id'=>$plan['replace'],'from_date'=>$from]);
+            if($n===false)return $fail('save');
+            // 0 rows: the same values (MySQL counts changed rows only), or the period is gone.
+            if($n===0 && !$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['periods']} WHERE id=%d AND from_date=%s",(int)$plan['replace'],$from)))return $fail('changed');
         }else{
-            if($plan['close'])$wpdb->update($t['periods'],['to_date'=>$plan['close_to']],['id'=>$plan['close']]);
-            $wpdb->insert($t['periods'],['employee_id'=>$employee_id,'shift_id'=>$shift_id,'from_date'=>(string)$from,'to_date'=>$plan['to'],'reason'=>mb_substr((string)$reason,0,190),'created_by'=>(int)get_current_user_id(),'created_at'=>$now]);
+            if($plan['close']){
+                $was=null;foreach($periods as $p)if((int)$p['id']===(int)$plan['close'])$was=$p['to'];
+                $n=$wpdb->query($was===null
+                    ?$wpdb->prepare("UPDATE {$t['periods']} SET to_date=%s WHERE id=%d AND to_date IS NULL",$plan['close_to'],(int)$plan['close'])
+                    :$wpdb->prepare("UPDATE {$t['periods']} SET to_date=%s WHERE id=%d AND to_date=%s",$plan['close_to'],(int)$plan['close'],$was));
+                if($n===false)return $fail('save');
+                if($n!==1)return $fail('changed');   // closed or changed by someone else at the same moment
+            }
+            if($wpdb->insert($t['periods'],['employee_id'=>$employee_id,'shift_id'=>$shift_id,'from_date'=>$from,'to_date'=>$plan['to'],'reason'=>$why,'created_by'=>$by,'created_at'=>$now])===false)return $fail('save');
         }
         unset(self::$ews_shift_periods_cache[$employee_id]);
-        $this->shift_sync_current($employee_id);
-        $this->audit('shift_period_set','employee',$employee_id,'shift #'.$shift_id.' from '.$from.($from<$today?' (a past day: those days are counted again)':'').($reason!==''?' · '.$reason:''));
+        $p=ShiftPeriods::on($this->shift_periods_of($employee_id),$today);
+        if($p && !$this->people_set_shift_id($employee_id,(int)$p['shift_id']))return $fail('save');
+        if($wpdb->query('COMMIT')===false)return $fail('save');
+        unset(self::$ews_shift_periods_cache[$employee_id],self::$ews_shift_for_employee_cache[$employee_id]);self::$ews_working_hours_cache=[];
         return true;
     }
 
@@ -240,21 +268,56 @@ trait EWS_Shift_History_Trait {
         update_option('ews_shift_history_synced',$today,true);
         global $wpdb;$t=$this->shift_history_tables();
         if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['periods']))!==$t['periods'])return;
+        $this->shift_history_check_once();
         foreach((array)$wpdb->get_col($wpdb->prepare("SELECT DISTINCT employee_id FROM {$t['periods']} WHERE from_date<=%s AND from_date>=%s",$today,gmdate('Y-m-d',strtotime($today.' -7 days')))) as $eid)$this->shift_sync_current((int)$eid);
     }
 
-    /** Remove a period that has not started; the one before takes its days back. */
-    private function shift_period_remove($employee_id,$period_id){
+    /**
+     * Once after 3.31.119: an employee whose periods have a gap, an overlap or a closed last one (a save that failed half way before
+     * 3.31.119) gets one Audit Log row, for HR to check; nothing is repaired (owner decision 2026-10-21).
+     */
+    private function shift_history_check_once(){
+        if(get_option('ews_shift_history_checked'))return;
+        update_option('ews_shift_history_checked',time(),false);
         global $wpdb;$t=$this->shift_history_tables();
-        $periods=$this->shift_periods_of((int)$employee_id);$p=null;
-        foreach($periods as $x)if((int)$x['id']===(int)$period_id)$p=$x;
-        if(!$p || $p['from']<=current_time('Y-m-d'))return false;
-        $plan=ShiftPeriods::afterRemove($periods,(int)$period_id);
-        $wpdb->delete($t['periods'],['id'=>(int)$period_id]);
-        if($plan['extend'])$wpdb->update($t['periods'],['to_date'=>$plan['to']],['id'=>$plan['extend']]);
-        unset(self::$ews_shift_periods_cache[(int)$employee_id]);
-        $this->audit('shift_period_removed','employee',(int)$employee_id,'shift #'.$p['shift_id'].' from '.$p['from']);
-        return true;
+        $by=[];
+        foreach((array)$wpdb->get_results("SELECT employee_id,from_date,to_date FROM {$t['periods']} ORDER BY employee_id,from_date") as $r)
+            $by[(int)$r->employee_id][]=['from'=>(string)$r->from_date,'to'=>$r->to_date!==null&&$r->to_date!==''?(string)$r->to_date:null];
+        foreach($by as $eid=>$periods){
+            $p=ShiftPeriods::problems($periods);
+            if($p)$this->audit('shift_history_gap','employee',(int)$eid,'The shift history needs checking ('.implode(', ',$p).'): change the shift from the right day on the Employee Profile');
+        }
+    }
+
+    /** Remove a period that has not started; the one before takes its days back. All or nothing (3.31.119). @return true|string */
+    private function shift_period_remove($employee_id,$period_id){
+        $employee_id=(int)$employee_id;$period_id=(int)$period_id;
+        $r=$this->ews_with_lock('shift_periods_'.$employee_id,function()use($employee_id,$period_id){
+            global $wpdb;$t=$this->shift_history_tables();
+            unset(self::$ews_shift_periods_cache[$employee_id]);
+            $periods=$this->shift_periods_of($employee_id);$p=null;
+            foreach($periods as $x)if((int)$x['id']===$period_id)$p=$x;
+            if(!$p || $p['from']<=current_time('Y-m-d'))return 'date';
+            $plan=ShiftPeriods::afterRemove($periods,$period_id);
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
+            $fail=function($code)use($wpdb,$employee_id){$wpdb->query('ROLLBACK');unset(self::$ews_shift_periods_cache[$employee_id]);return $code;};
+            $n=$wpdb->delete($t['periods'],['id'=>$period_id]);
+            if($n===false)return $fail('save');
+            if($n!==1)return $fail('changed');
+            if($plan['extend']){
+                $was=null;foreach($periods as $x)if((int)$x['id']===(int)$plan['extend'])$was=$x['to'];
+                $n=$was===null?0:$wpdb->query($plan['to']===null
+                    ?$wpdb->prepare("UPDATE {$t['periods']} SET to_date=NULL WHERE id=%d AND to_date=%s",(int)$plan['extend'],$was)
+                    :$wpdb->prepare("UPDATE {$t['periods']} SET to_date=%s WHERE id=%d AND to_date=%s",$plan['to'],(int)$plan['extend'],$was));
+                if($n===false)return $fail('save');
+                if($n!==1)return $fail('changed');
+            }
+            if($wpdb->query('COMMIT')===false)return $fail('save');
+            unset(self::$ews_shift_periods_cache[$employee_id]);
+            $this->audit('shift_period_removed','employee',$employee_id,'shift #'.$p['shift_id'].' from '.$p['from']);
+            return true;
+        },'busy',10);
+        return $r;
     }
 
     /** wp-admin → Employee Profile → Change the shift (admin-post ews_shift_period_save / ews_shift_period_remove). */
@@ -266,7 +329,7 @@ trait EWS_Shift_History_Trait {
         if(!$this->people_employee($employee_id)){wp_safe_redirect(add_query_arg('shift_error','date',$back));exit;}
         if(isset($_POST['remove'])){
             $ok=$this->shift_period_remove($employee_id,absint($_POST['remove']));
-            wp_safe_redirect(add_query_arg($ok?['shift_done'=>'removed']:['shift_error'=>'date'],$back).'#ews-shift-history');exit;
+            wp_safe_redirect(add_query_arg($ok===true?['shift_done'=>'removed']:['shift_error'=>$ok],$back).'#ews-shift-history');exit;
         }
         $r=$this->shift_period_add($employee_id,absint($_POST['shift_id']??0),sanitize_text_field(wp_unslash($_POST['from_date']??'')),sanitize_text_field(wp_unslash($_POST['reason']??'')));
         wp_safe_redirect(add_query_arg($r===true?['shift_done'=>'saved']:['shift_error'=>$r],$back).'#ews-shift-history');exit;
@@ -311,7 +374,10 @@ trait EWS_Shift_History_Trait {
                 'reason'=>$p['reason'],'state'=>$p['from']>$today?'later':(($p['to']===null||$p['to']>=$today)?'now':'past'),'removable'=>$p['from']>$today];
         }
         $done=sanitize_key($_GET['shift_done']??'');$error=sanitize_key($_GET['shift_error']??'');
-        $msg=['date'=>__('Pick a valid day.','workforce-one'),'shift'=>__('Pick a shift.','workforce-one'),'past'=>__('Only HR can change the shift from a past day.','workforce-one')];
+        $msg=['date'=>__('Pick a valid day.','workforce-one'),'shift'=>__('Pick a shift.','workforce-one'),'past'=>__('Only HR can change the shift from a past day.','workforce-one'),
+            'save'=>__('The shift could not be saved. Nothing was changed; please try again.','workforce-one'),
+            'changed'=>__('This employee\'s shift was changed by someone else at the same moment. Check the history and try again.','workforce-one'),
+            'busy'=>__('This employee\'s shift is being saved by someone else. Try again in a moment.','workforce-one')];
         return ['rows'=>$rows,'shifts'=>$names,'today'=>$today,'can_past'=>$this->can('ews_manage_settings'),
             'notice'=>$done!==''?['type'=>'success','text'=>$done==='removed'?__('The upcoming change was removed.','workforce-one'):__('Shift saved.','workforce-one')]:($error!==''?['type'=>'error','text'=>$msg[$error]??$msg['date']]:null)];
     }

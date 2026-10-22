@@ -430,7 +430,9 @@ trait EWS_System_Health_Trait {
         $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT route,version,{$sum},MAX(ms_max) ms_max,MAX(q_max) q_max,MAX(mem_max) mem_max,MAX(mem_pct_max) mem_pct_max FROM {$t['hourly']} WHERE hour>=%s AND hour<=%s GROUP BY route,version",$day.' 00:00:00',$day.' 23:59:59'),ARRAY_A);
         if(!$rows)return;
         usort($rows,function($a,$b){return [$a['route'],0]<=>[$b['route'],0] ?: version_compare((string)$a['version'],(string)$b['version']);});   // older release first
-        $wpdb->delete($t['daily'],['day'=>$day]);
+        // The day's rows are replaced together (3.31.119): a write that fails keeps the rows of before (rebuilt at the next hourly run).
+        $tx=$wpdb->query('START TRANSACTION')!==false;
+        $bad=$wpdb->delete($t['daily'],['day'=>$day])===false;
         // One row per route and release. A '' version is the running release; the table's unique key would refuse a second
         // row for the same pair, so the first (older release first) is kept, as when each row was inserted on its own.
         $out=[];
@@ -454,8 +456,11 @@ trait EWS_System_Health_Trait {
             $quiet=$wpdb->suppress_errors(true);
             $ok=$wpdb->query($sql);
             $wpdb->suppress_errors($quiet);
-            if($ok===false)foreach($chunk as $row)$wpdb->insert($t['daily'],$row);
+            if($ok===false)foreach($chunk as $row)if($wpdb->insert($t['daily'],$row)===false)$bad=true;
         }
+        if(!$tx)return;
+        if($bad){$wpdb->query('ROLLBACK');error_log('Workforce One: the system health rows of '.$day.' could not be rebuilt; the previous ones are kept');}   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- diagnostic data
+        elseif($wpdb->query('COMMIT')===false)$wpdb->query('ROLLBACK');
     }
 
     /** Old rows out, in batches; a hard cap on the rows kept sets ews_health_full. */
