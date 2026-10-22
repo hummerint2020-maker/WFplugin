@@ -1,6 +1,7 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Requests\Hub;
 use WorkforceOne\Schedule\SwapRules;
 
 /**
@@ -62,26 +63,37 @@ trait EWS_Swap_Trait {
      * 'expired' (no longer Pending) or 'save'.
      */
     private function swap_apply($r){
-            global $wpdb;$table=$this->ensure_swap_schema();
+            global $wpdb;$this->ensure_swap_schema();
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
+            $out=$this->swap_apply_rows($r);
+            if($out!==true){$wpdb->query('ROLLBACK');return $out;}
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+            return true;
+        }
+
+    /**
+     * swap_apply() inside a transaction the caller owns (3.31.120): never starts, commits or rolls back; on anything but true the
+     * caller rolls back. Lets the administrator's last approval and the exchange be one transaction.
+     */
+    private function swap_apply_rows($r){
+            global $wpdb;
             $a=$this->schedule_for_employee_date($r->requester_employee_id,$r->work_date);
             $b=$this->schedule_for_employee_date($r->target_employee_id,$r->work_date);
             $error=SwapRules::checkStillCurrent((string)$r->requester_status,(string)$r->target_status,$a?$a->status:null,$b?$b->status:null);
             if($error)return $error;
             $now=current_time('mysql');$uid=get_current_user_id();
-            if($wpdb->query('START TRANSACTION')===false)return 'save';
             // Claimed first, then each day written only if it is still as read (3.31.117): a schedule saved at the same moment (a leave
             // approved, the grid, another swap) is never overwritten, and of two accepts at once the second is "expired".
             $updated=$this->swap_close((int)$r->id,'Accepted',(string)$r->status);
-            if($updated!==1){$wpdb->query('ROLLBACK');return $updated===false?'save':'expired';}
+            if($updated!==1)return $updated===false?'save':'expired';
             $writes=[[$a,(int)$r->requester_employee_id,(string)$r->target_status],[$b,(int)$r->target_employee_id,(string)$r->requester_status]];
             usort($writes,function($x,$y){return (int)$x[0]->id<=>(int)$y[0]->id;});   // the same order in every swap: no deadlock
             foreach($writes as [$row,$employee_id,$status]){
                 $n=$wpdb->update($this->schedule,['status'=>$status,'updated_by'=>$uid,'updated_at'=>$now],
                     ['id'=>(int)$row->id,'employee_id'=>$employee_id,'work_date'=>(string)$r->work_date,'status'=>(string)$row->status],['%s','%d','%s'],['%d','%d','%s','%s']);
-                if($n===false){$wpdb->query('ROLLBACK');return 'save';}
-                if($n!==1){$wpdb->query('ROLLBACK');return 'changed';}
+                if($n===false)return 'save';
+                if($n!==1)return 'changed';
             }
-            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
             return true;
         }
 
@@ -173,27 +185,50 @@ trait EWS_Swap_Trait {
         }
 
     /**
-     * Decision taken from the wp-admin Requests page. Returns true or an error code; the caller
-     * redirects. Unlike a peer acceptance it does not count towards collaboration achievements.
+     * Decision taken from the wp-admin Requests page. Returns a Hub outcome; the caller redirects. With levels the administrator
+     * decides the current level only, as for leave and overtime (3.31.120): the decision and, on the last level, the exchange are
+     * one transaction, so a schedule changed since the request leaves the level open. Unlike a peer acceptance it does not count
+     * towards collaboration achievements.
      */
     private function swap_admin_decide($id,$decision){
             global $wpdb;$table=$this->ensure_swap_schema();
             $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status IN ('Pending','Awaiting') LIMIT 1",(int)$id));
-            if(!$r)return 'not_found';
+            if(!$r)return Hub::ERROR;
             $approve=$decision==='approve';
-            // Waiting for the approvers: the administrator's decision closes the approval request too.
-            if($r->status==='Awaiting'){$ar=$this->approval_find_request('shift_swap','schedule_swap',(int)$id);if($ar&&strpos((string)$ar->status,'WAITING')===0&&is_wp_error($this->approval_act((int)$ar->id,$approve?'approve':'reject','',true,true)))return 'approval';}
+            $ar=$r->status==='Awaiting'?$this->approval_find_request('shift_swap','schedule_swap',(int)$id):null;
+            if($ar&&Hub::isOpenApproval((string)$ar->status)){
+                if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
+                if(is_wp_error($this->approval_act((int)$ar->id,$approve?'approve':'reject','',false,true))){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                $fresh=$this->approval_find_request('shift_swap','schedule_swap',(int)$id);
+                if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                $outcome=Hub::workflowOutcome((string)$fresh->status);
+                $done=true;
+                if($outcome===Hub::APPROVED)$done=$this->swap_apply_rows($r);
+                elseif($outcome===Hub::REJECTED)$done=$this->swap_close((int)$id,'Rejected','Awaiting')===1?true:'save';
+                if($done!==true){$wpdb->query('ROLLBACK');return $done==='changed'?Hub::CHANGED:Hub::ERROR;}
+                if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                if($outcome===Hub::ADVANCED){$this->swap_notify_approver($fresh,$r);return Hub::ADVANCED;}
+                $this->swap_admin_done($r,$outcome===Hub::APPROVED);
+                return $outcome;
+            }
+            // Pending (the colleague has not answered), or the approval already decided: the administrator decides the swap itself.
             if($approve){
                 $applied=$this->swap_apply($r);
-                if($applied!==true)return $applied;
-            }elseif($this->swap_close($id,'Rejected',(string)$r->status)!==1)return 'save';
+                if($applied!==true)return $applied==='changed'?Hub::CHANGED:Hub::ERROR;
+            }elseif($this->swap_close($id,'Rejected',(string)$r->status)!==1)return Hub::ERROR;
+            $this->swap_admin_done($r,$approve);
+            return Hub::outcome($decision);
+        }
+
+    /** Audit row and the two participants' notes after an administrator's final decision. */
+    private function swap_admin_done($r,$approve){
+            $id=(int)$r->id;
             $actor=wp_get_current_user()->display_name;
             $this->swap_audit($approve?'SCHEDULE_SWAP_ACCEPTED':'SCHEDULE_SWAP_REJECTED',$r,($approve?'Swap approved by administrator ':'Swap rejected by administrator ').$actor);
             $title=$approve?'Schedule Swap Completed':'Schedule Swap Rejected';
             $type=$approve?'success':'warning';
             $this->swap_notify($this->swap_employee_user_id($r->requester_employee_id),$title,$approve?'Your schedule swap was completed by an administrator.':'Your schedule swap request was rejected by an administrator.',$type,$id,false);
             $this->swap_notify($this->swap_employee_user_id($r->target_employee_id),$title,$approve?'Your schedule has been updated after an administrator approved a swap.':'A schedule swap offered to you was rejected by an administrator.',$type,$id,false);
-            return true;
         }
 
     /** Pending swaps for the wp-admin Requests page. */

@@ -103,7 +103,8 @@ trait EWS_Notifications_Trait {
     /** Saves an in-app notification when the policy for $category allows it. */
     private function notification_insert($user_id,$category,$title,$message,$type,$entity,$entity_id,$link=''){
         global $wpdb;
-        if(!$this->notification_in_app_allowed($category))return 0;
+        $user_id=absint($user_id);
+        if(!$user_id||!$this->notification_in_app_allowed($category))return 0;   // no recipient: nothing to save, not a failed write
         $this->ensure_notifications_schema();
         $id=$this->notification_inbox()->publish([
             'user_id'=>$user_id,

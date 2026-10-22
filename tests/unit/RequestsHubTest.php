@@ -48,6 +48,11 @@ final class RequestsHubTest extends TestCase
     {
         $this->assertSame('Approval recorded and moved to the next level.', Hub::hubNotice('advanced'));
         $this->assertNull(Hub::hubNotice('nope'));
+        $this->assertStringContainsString('changed since the request', (string) Hub::hubNotice(Hub::CHANGED));
+        $this->assertTrue(Hub::isErrorNotice(Hub::ERROR));
+        $this->assertTrue(Hub::isErrorNotice(Hub::CHANGED));
+        $this->assertFalse(Hub::isErrorNotice(Hub::ADVANCED));
+        $this->assertFalse(Hub::isErrorNotice(''));
         $this->assertSame('Approval recorded and moved to the next level.', Hub::faceResetNotice('advanced'));
         $this->assertNull(Hub::faceResetNotice(''));
     }

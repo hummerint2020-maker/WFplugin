@@ -11,7 +11,7 @@ $check = static function ($condition, $message) {
     if (!$condition) throw new RuntimeException($message);
     echo "PASS {$message}\n";
 };
-$check($wpdb->query("CREATE TEMPORARY TABLE {$table} LIKE {$source}") !== false, 'inbox schema installs on activation');
+$check($wpdb->query("CREATE TEMPORARY TABLE {$table} LIKE {$source}") !== false, 'contract table copied from the installed inbox schema');
 $db = clone $wpdb;
 $db->prefix = $prefix;
 $inbox = new Inbox(new WordPressInboxStore($db));
@@ -55,6 +55,13 @@ try {
         $wpdb->prefix = $originalPrefix;
     }
     $check($first === $factory->invoke($manager), 'returning to original site restores its inbox');
+
+    // 3.31.120: no recipient is nothing to save, not a failed write (no misleading notification_insert_failed row).
+    $insert = new ReflectionMethod($manager, 'notification_insert');
+    $insert->setAccessible(true);
+    $audits = static function () use ($wpdb) { return (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ews_audit_log WHERE action='notification_insert_failed'"); };
+    $failed = $audits();
+    $check($insert->invoke($manager, 0, 'general', 'Nobody', 'Test', 'info', null, null) === 0 && $audits() === $failed, 'a notification without a recipient saves nothing and logs no failure');
 } finally {
     $wpdb->query("DROP TEMPORARY TABLE IF EXISTS {$table}");
 }

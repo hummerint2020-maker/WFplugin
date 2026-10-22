@@ -147,10 +147,14 @@ adm.post('ews31_requests_decision', _wpnonce=n, request_type='shift_swap', reque
 check('admin Requests page rejects the swap', swap(s5)['status'] == 'Rejected' and sched(e1) == 'Office', (swap(s5), sched(e1)))
 
 # 3.31.89: the Shift Swap workflow can add approvers after the colleague (here Level 1 = Emp Three).
-def configure_swap(mode, approver=0):
-    php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod('EWS_Manager_V31_1','approval_configure_workflow'); $m->setAccessible(true);
-    $r=$m->invoke($o,'shift_swap','%s',%s,\\WorkforceOne\\Approvals\\Workflows::IN_USE['shift_swap'][1]); echo is_wp_error($r)?$r->get_error_message():'ok';""" % (
-        mode, "[1=>['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0]]" if mode == 'PEER' else "[1=>['resolver_type'=>'SPECIFIC_EMPLOYEE','resolver_value'=>%d]]" % approver))
+def configure_swap(mode, approver=0, approver2=0):
+    if mode == 'PEER':
+        steps = "[1=>['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0]]"
+    else:
+        steps = "[1=>['resolver_type'=>'SPECIFIC_EMPLOYEE','resolver_value'=>%d]%s]" % (approver, ",2=>['resolver_type'=>'SPECIFIC_EMPLOYEE','resolver_value'=>%d]" % approver2 if approver2 else '')
+    out = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod('EWS_Manager_V31_1','approval_configure_workflow'); $m->setAccessible(true);
+    $r=$m->invoke($o,'shift_swap','%s',%s,\\WorkforceOne\\Approvals\\Workflows::IN_USE['shift_swap'][1]); echo is_wp_error($r)?$r->get_error_message():'ok';""" % (mode, steps))
+    assert out.strip().endswith('ok'), out
 
 
 configure_swap('LEVEL_1', e3)
@@ -234,6 +238,118 @@ _, qs, _ = create(e2)
 sid = last()
 qs = accept(sid)
 check('...and with nothing in the way the swap goes through as before', qs.get('swap_done') == 'accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, sched(e1), sched(e2)))
+
+# 3.31.120 (owner decision): with two levels the administrator decides the current level only, as for leave and overtime.
+e4 = int(php("""$u=username_exists('emp4')?:wp_create_user('emp4','emp4pass','emp4@example.com');
+    $e=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE wp_user_id=%d",$u));
+    if(!$e){$wpdb->insert($p.'ews_employees',['name'=>'Emp Four','domain_name'=>'emp4','email'=>'emp4@example.com','wp_user_id'=>$u,'active'=>1,'attendance_enabled'=>1]);$e=$wpdb->insert_id;}
+    echo $e;""").splitlines()[-1])
+emp4 = Session('emp4', 'emp4pass')
+configure_swap('LEVEL_2', e3, e4)
+
+
+def engine(sid):
+    ar = q("SELECT id,status FROM {p}ews_approval_requests WHERE entity_type='schedule_swap' AND entity_id=%d" % sid)
+    if not ar:
+        return None, []
+    return ar[0]['status'], [(int(r['step_order']), r['status']) for r in q("SELECT step_order,status FROM {p}ews_approval_steps WHERE approval_request_id=%s ORDER BY step_order" % ar[0]['id'])]
+
+
+def notified(eid, sid):
+    return int(q("SELECT COUNT(*) c FROM {p}ews_notifications WHERE user_id=(SELECT wp_user_id FROM {p}ews_employees WHERE id=%d) AND entity='swap' AND entity_id=%d" % (eid, sid))[0]['c'])
+
+
+def audits(sid):
+    return int(q("SELECT COUNT(*) c FROM {p}ews_audit_log WHERE action='SCHEDULE_SWAP_ACCEPTED' AND entity_id=%d" % sid)[0]['c'])
+
+
+def awaiting():
+    set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+    create(e2)
+    sid = last()
+    qs = accept(sid)
+    assert qs.get('swap_done') == 'awaiting' and swap(sid)['status'] == 'Awaiting', (qs, swap(sid))
+    return sid
+
+
+def admin(sid, decision):
+    return adm.post('ews31_requests_decision', _wpnonce=adm.admin_request_nonce('shift_swap', sid), request_type='shift_swap', request_id=sid, decision=decision)[1]
+
+
+a1 = awaiting()
+old_form = swap_form_nonce(emp3, 'ews_swap_decide', a1)
+before_notes, before_audits = notes(), audits(a1)
+qs = admin(a1, 'approve')
+check('two levels, the administrator approves level 1: moved to level 2, the days are not exchanged yet',
+      qs.get('request_notice') == 'advanced' and swap(a1)['status'] == 'Awaiting' and sched(e1) == 'Office' and sched(e2) == 'WFH'
+      and engine(a1) == ('WAITING_FOR_LEVEL_2', [(1, 'APPROVED'), (2, 'PENDING')]), (qs, swap(a1), sched(e1), sched(e2), engine(a1)))
+check('...the level 2 approver is told; nobody is told it is completed and no "accepted" audit row', notified(e4, a1) >= 1 and notes() == before_notes and audits(a1) == before_audits, (notified(e4, a1), notes(), audits(a1)))
+st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-requests&request_notice=advanced')
+check('...the Requests page shows the moved-on notice and the swap at level 2', 'moved to the next level' in page and re.search(r'Approval #\d+ · Level 2', page) is not None)
+_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=old_form, swap_id=a1, decision='reject')
+check('...the level 1 approver\'s form from before is refused', qs.get('swap_error') == 'access' and swap(a1)['status'] == 'Awaiting', (qs, swap(a1)))
+_, qs, _ = emp4.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp4, 'ews_swap_decide', a1), swap_id=a1, decision='approve')
+check('...the level 2 approver approves in the app: the days are exchanged', qs.get('swap_done') == 'approved' and swap(a1)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(a1)))
+
+a2 = awaiting()
+admin(a2, 'approve')
+before_notes = notes()
+qs = admin(a2, 'approve')
+check('the administrator approves both levels: exchanged, the approval closed, both told',
+      qs.get('request_notice') == 'approved' and swap(a2)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office'
+      and engine(a2) == ('APPROVED', [(1, 'APPROVED'), (2, 'APPROVED')]) and notes() == before_notes + 2, (qs, swap(a2), engine(a2), notes() - before_notes))
+
+a3 = awaiting()
+qs = admin(a3, 'reject')
+check('the administrator rejects at level 1: closed with its approval, the days unchanged',
+      qs.get('request_notice') == 'rejected' and swap(a3)['status'] == 'Rejected' and engine(a3)[0] == 'REJECTED' and sched(e1) == 'Office' and sched(e2) == 'WFH', (qs, swap(a3), engine(a3)))
+a4 = awaiting()
+admin(a4, 'approve')
+qs = admin(a4, 'reject')
+check('...and at level 2', qs.get('request_notice') == 'rejected' and swap(a4)['status'] == 'Rejected' and engine(a4)[0] == 'REJECTED' and sched(e1) == 'Office', (qs, swap(a4), engine(a4)))
+
+a5 = awaiting()
+admin(a5, 'approve')
+set_schedule(e2, 'Vacation')   # a leave approved for that day a moment ago
+stale(e2, 'WFH')                # the swap read the day just before
+before_notes = notes()
+qs = admin(a5, 'approve')
+stale()
+check('the last level with a schedule changed since the request: nothing saved, the level stays open, the leave stays',
+      qs.get('request_notice') == 'changed' and swap(a5)['status'] == 'Awaiting' and engine(a5) == ('WAITING_FOR_LEVEL_2', [(1, 'APPROVED'), (2, 'PENDING')])
+      and sched(e2) == 'Vacation' and sched(e1) == 'Office' and notes() == before_notes, (qs, swap(a5), engine(a5), sched(e1), sched(e2)))
+st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-requests&request_notice=changed')
+check('...the Requests page says the schedule changed, as an error', 'changed since the request' in page and 'notice-error' in page)
+qs = admin(a5, 'reject')
+check('...and it can then be rejected cleanly', qs.get('request_notice') == 'rejected' and swap(a5)['status'] == 'Rejected' and engine(a5)[0] == 'REJECTED' and sched(e2) == 'Vacation', (qs, swap(a5), engine(a5)))
+
+for table, verb, decision, level2 in (('ews_schedule', '', 'approve', True), ('ews_approval_requests', '', 'approve', False), ('ews_schedule_swaps', '', 'reject', True)):
+    sid = awaiting()
+    if level2:
+        admin(sid, 'approve')
+    before = engine(sid)
+    n = adm.admin_request_nonce('shift_swap', sid)
+    break_writes(table, verb)
+    qs = adm.post('ews31_requests_decision', _wpnonce=n, request_type='shift_swap', request_id=sid, decision=decision)[1]
+    break_writes('')
+    check('a database error on %s while the administrator decides level %d: nothing changes' % (table, 2 if level2 else 1),
+          qs.get('request_notice') == 'error' and swap(sid)['status'] == 'Awaiting' and engine(sid) == before and sched(e1) == 'Office' and sched(e2) == 'WFH',
+          (qs, swap(sid), engine(sid), before, sched(e1), sched(e2)))
+    admin(sid, 'reject')
+
+a6 = awaiting()
+php("$wpdb->update($p.'ews_approval_requests',['status'=>'APPROVED'],['entity_type'=>'schedule_swap','entity_id'=>%d]);" % a6)
+qs = admin(a6, 'approve')
+check('an approval already decided while the swap still waits (an earlier failed exchange): the administrator\'s approval exchanges the days',
+      qs.get('request_notice') == 'approved' and swap(a6)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(a6)))
+
+set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+create(e2)
+a7 = last()
+qs = admin(a7, 'approve')
+check('a swap the colleague has not answered yet: the administrator decides it directly, with no approval request',
+      qs.get('request_notice') == 'approved' and swap(a7)['status'] == 'Accepted' and engine(a7) == (None, []) and sched(e1) == 'WFH', (qs, swap(a7), engine(a7)))
+configure_swap('PEER')
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
