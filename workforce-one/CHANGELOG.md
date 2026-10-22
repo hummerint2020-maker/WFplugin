@@ -11,14 +11,15 @@ Fixes to existing behaviour; no new setting, no database change.
   old manager (before, a failed write could leave the employee with no manager).
 - **A scheduled move interrupted half way** no longer stays "applying" forever: it is done again once; interrupted again, or left from
   before this release, it shows under "Needs attention" as interrupted, for HR to dismiss or redo (owner decision). A second move for the
-  same person cannot be scheduled while one is being done.
+  same person cannot be scheduled while one is being done. A request step already decided keeps who decided it during a move.
 - **Automatic attendance** (rules and Bulk Sign Out) uses the same per-employee lock and duplicate check as a Sign In / Out from the
   app: an automatic Sign Out at the moment the employee taps Sign Out, or two overlapping runs, record one event.
 - **Deactivating** the plugin clears every scheduled event (also each break's reminders and the push batches), on every site of a
   network; **uninstalling** clears them and, when the data is deleted, also removes the Site Foreman role. Sites that deactivated or
   uninstalled before this release may keep old break reminders until the next deactivate; they do nothing.
 - **Shift histories with a gap** left by a save that failed before this release are listed once in the Audit Log
-  ("shift_history_gap") for HR to check; nothing is repaired automatically (owner decision).
+  ("shift_history_gap") for HR to check; nothing is repaired automatically (owner decision). Changing the shift from the right day
+  on the Employee Profile fixes it.
 - The daily system health rows are rebuilt all or nothing (diagnostic data).
 ## 3.31.118
 ### Sign-in sessions (external review F04, F08; design `docs/tasks/sessions-integrity.md`)

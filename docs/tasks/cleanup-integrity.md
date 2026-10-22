@@ -112,3 +112,29 @@ an owner decision (Q4) → 3.31.120. Tasks claim-first kept.
 ## Owner's answers (2026-10-21)
 All as recommended: Q1 old stuck moves → failed ("interrupted"), shown for HR; Q2 one Audit Log row per employee with a gap, no repair;
 Q3 a move interrupted twice → failed; Q4 (3.31.120) the administrator decides the current level only, as leave and overtime.
+
+## Implementation notes and review (3.31.119)
+Where the code differs from the design:
+- The Employees page no longer writes `employees.default_shift_id` itself: the shift history sets it under its lock (review 3), so an
+  older form saved at the same moment cannot put the previous shift back. The page reports `save` for any refused shift change (busy,
+  changed, a shift that no longer exists); a shift id that no longer exists now blocks the save instead of being stored.
+- The create path uses `org_set_supervisor_only` (its two supervisor writes together); the design left it unchanged.
+- `shift_sync_current` (the daily job) runs under the employee's shift lock and reads again (review 5).
+- `approval_reassign_supervisor` moves only steps still PENDING / WAITING (review 7).
+- Not added from §7: `tests/e2e_cleanup_mu.php` (a run that dies is simulated with seeded rows), the shift race on the 6-worker server,
+  Bulk Sign Out vs a tap, a broken daily health insert, uninstall with data kept.
+
+Independent review (read-only), findings and what was done:
+1. CONFIRMED, MySQL counts changed rows: closing a period that already ends there (the repair the Audit Log asks for) was "changed":
+   **fixed** (nothing to close then; the same for the extend on removal); e2e repairs a closed last period.
+2. CONFIRMED, the unit test's hook scan missed every five-minute hook (the interval name came first): **fixed** (every ews_ literal
+   of the call, minus the interval; the five hooks asserted); e2e_lifecycle checks that no ews_ event is left at all.
+3. PLAUSIBLE, the Employees page wrote default_shift_id outside the lock: **fixed** (not written there).
+4. CONFIRMED, removing an upcoming change failed when the period before was open (overlapping data): **fixed**.
+5. PLAUSIBLE, the daily sync wrote default_shift_id without the lock: **fixed**.
+6. PLAUSIBLE, a move claimed by old code during the upgrade is marked interrupted at once: **not changed** (owner Q1; HR sees it and
+   dismisses it; a done move then has an extra Audit Log row).
+7. PLAUSIBLE, existing: the reassign UPDATE had no status check: **fixed**.
+8. PLAUSIBLE, two first requests could both run the one-time check: **fixed** (`add_option` claims it).
+9. Nits: the automatic event returns its own id (**fixed**); the losing row's delete is not checked (left: the next run's check finds it).
+10. Tests: on MySQL (CI) the lock serialises the two-process race, on SQLite the check after the insert does; both pass the same test.

@@ -20,9 +20,13 @@ final class LifecycleTest extends TestCase
         $found = [];
         foreach ($this->sources() as $file) {
             $src = (string) file_get_contents($file);
-            if (preg_match_all("/wp_schedule_(?:single_)?event\\s*\\([^;]*?'(ews_[a-z0-9_]+)'\\s*(?:,|\\))/", $src, $m)) foreach ($m[1] as $hook) $found[$hook] = true;
+            // Every ews_ literal in the call's arguments (the hook may come after an interval such as 'ews_auto_five_minutes').
+            if (preg_match_all('/wp_schedule_(?:single_)?event\\s*\\(([^;]*)\\)\\s*;/', $src, $calls)) foreach ($calls[1] as $args)
+                if (preg_match_all("/'(ews_[a-z0-9_]+)'/", $args, $m)) foreach ($m[1] as $hook) $found[$hook] = true;
         }
         unset($found['ews_auto_five_minutes']);   // a schedule interval, not a hook
+        foreach (['ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_tasks_tick', 'ews_corrections_tick', 'ews_office_minimum_tick'] as $five)
+            $this->assertArrayHasKey($five, $found, 'the scan finds the hooks scheduled after an interval name');
         $this->assertNotEmpty($found);
         foreach (array_keys($found) as $hook) $this->assertContains($hook, Lifecycle::CRON_HOOKS, $hook . ' is scheduled but not cleared on deactivate / uninstall');
     }

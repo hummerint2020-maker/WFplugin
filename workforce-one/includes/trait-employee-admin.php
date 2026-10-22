@@ -117,7 +117,9 @@ trait EWS_Employee_Admin_Trait {
         // A new shift here counts from today; the days before keep the old one (3.31.108, shift history).
         // Saved first and checked (3.31.119): a shift that could not be saved changes nothing else.
         if((int)$old->default_shift_id!==(int)$in['default_shift_id'] && $this->shift_period_add($id,(int)$in['default_shift_id'],current_time('Y-m-d'),'',false)!==true)$this->employee_admin_redirect(['employee_error'=>'save']);
-        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')]+($in['job_title']!==null?['job_title'=>$in['job_title']!==''?$in['job_title']:null]:[]),['id'=>$id]);
+        // default_shift_id is not written here (3.31.119): the shift history sets it under its lock, so an older form saved at the same
+        // moment cannot put the previous shift back.
+        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')]+($in['job_title']!==null?['job_title'=>$in['job_title']!==''?$in['job_title']:null]:[]),['id'=>$id]);
         if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
         $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
         // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).

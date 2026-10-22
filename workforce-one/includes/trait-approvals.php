@@ -325,7 +325,7 @@ trait EWS_Approvals_Trait {
             WHERE r.requester_employee_id=%d AND i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id=%d AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')",(int)$employee_id,$from)));
         if(!$ids)return 0;
         $ph=implode(',',array_fill(0,count($ids),'%d'));
-        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph)",array_merge([(int)$to->id,(int)$to->wp_user_id],$ids)))===false)return false;
+        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph) AND status IN ('PENDING','WAITING')",array_merge([(int)$to->id,(int)$to->wp_user_id],$ids)))===false)return false;
         $pending=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE id IN ($ph) AND status='PENDING'",$ids));
         return count($ids);
     }

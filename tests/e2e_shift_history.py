@@ -208,7 +208,9 @@ php("$o=new EWS_Manager_V31_1(); $o->shift_history_daily(); delete_option('ews_s
 gaps = q("SELECT entity_id,details FROM {p}ews_audit_log WHERE action='shift_history_gap'")
 check('the check after the upgrade lists a broken history once in the Audit Log (nothing repaired)', len(gaps) == 1 and str(gaps[0]['entity_id']) == str(ids['emp']) and 'last_closed' in gaps[0]['details']
       and q("SELECT to_date FROM {p}ews_employee_shift_periods WHERE employee_id=%d ORDER BY from_date DESC LIMIT 1" % ids['emp'])[0]['to_date'] == d(-1), gaps)
-php("""$wpdb->query("UPDATE {$p}ews_employee_shift_periods SET to_date=NULL WHERE employee_id=%d AND to_date='%s'");""" % (ids['emp'], d(-1)))
+qs = change(other, d(0), 'the fix the Audit Log asks for')
+probs = json.loads(php("""$o=new EWS_Manager_V31_1();$m=new ReflectionMethod($o,'shift_periods_of');$m->setAccessible(true);echo wp_json_encode(\\WorkforceOne\\Schedule\\ShiftPeriods::problems($m->invoke($o,%d)));""" % ids['emp']).splitlines()[-1])
+check('...HR fixes it by changing the shift from the right day (the old period already ends the day before: nothing to close)', qs.get('shift_done') == 'saved' and probs == [], (qs, probs, periods()))
 
 # the Employees page change and the Audit Log
 check('the Audit Log has every change', len(q("SELECT id FROM {p}ews_audit_log WHERE action IN ('shift_period_set','shift_period_removed')")) >= 4)

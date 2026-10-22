@@ -132,7 +132,7 @@ trait EWS_Auto_Attendance_Trait {
         if(!$this->auto_attendance_first_kept($employee_id,$date,$type,$new_id))return ['ok'=>false,'reason'=>$type==='sign_out'?'already_signed_out':'already_signed_in'];
         $wpdb->insert_id=$new_id;
         $this->audit('auto_'.$type,'time_log',(int)$wpdb->insert_id,$emp->name.' / '.$sch->status.' / '.$event_at.' / source=Auto / rule='.$rule_id);
-        return ['ok'=>true,'id'=>(int)$wpdb->insert_id];
+        return ['ok'=>true,'id'=>$new_id];
     }
 
     /** The five-minute cron: record what each enabled rule has due (src/Attendance/AutoRules.php). */

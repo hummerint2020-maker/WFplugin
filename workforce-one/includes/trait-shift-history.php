@@ -238,7 +238,8 @@ trait EWS_Shift_History_Trait {
         }else{
             if($plan['close']){
                 $was=null;foreach($periods as $p)if((int)$p['id']===(int)$plan['close'])$was=$p['to'];
-                $n=$wpdb->query($was===null
+                // Already ending there (a save that failed half way before 3.31.119): nothing to close. MySQL counts changed rows only.
+                $n=$was===$plan['close_to']?1:$wpdb->query($was===null
                     ?$wpdb->prepare("UPDATE {$t['periods']} SET to_date=%s WHERE id=%d AND to_date IS NULL",$plan['close_to'],(int)$plan['close'])
                     :$wpdb->prepare("UPDATE {$t['periods']} SET to_date=%s WHERE id=%d AND to_date=%s",$plan['close_to'],(int)$plan['close'],$was));
                 if($n===false)return $fail('save');
@@ -256,9 +257,14 @@ trait EWS_Shift_History_Trait {
 
     /** employees.default_shift_id = the shift of today (a change on a future day reaches it when the day comes). */
     private function shift_sync_current($employee_id){
-        $p=ShiftPeriods::on($this->shift_periods_of((int)$employee_id),current_time('Y-m-d'));
-        if($p)$this->people_set_shift_id((int)$employee_id,(int)$p['shift_id']);
-        unset(self::$ews_shift_for_employee_cache[(int)$employee_id]);self::$ews_working_hours_cache=[];
+        $employee_id=(int)$employee_id;
+        // Under the employee's shift lock, read again (3.31.119): a change being saved at the same moment is not overwritten.
+        $this->ews_with_lock('shift_periods_'.$employee_id,function()use($employee_id){
+            unset(self::$ews_shift_periods_cache[$employee_id]);
+            $p=ShiftPeriods::on($this->shift_periods_of($employee_id),current_time('Y-m-d'));
+            if($p)$this->people_set_shift_id($employee_id,(int)$p['shift_id']);
+        },null,10);
+        unset(self::$ews_shift_for_employee_cache[$employee_id]);self::$ews_working_hours_cache=[];
     }
 
     /** Once a day: the employees whose new period starts today get it as their shift now. */
@@ -277,8 +283,7 @@ trait EWS_Shift_History_Trait {
      * 3.31.119) gets one Audit Log row, for HR to check; nothing is repaired (owner decision 2026-10-21).
      */
     private function shift_history_check_once(){
-        if(get_option('ews_shift_history_checked'))return;
-        update_option('ews_shift_history_checked',time(),false);
+        if(get_option('ews_shift_history_checked') || !add_option('ews_shift_history_checked',time(),'','no'))return;   // add_option: one request does it
         global $wpdb;$t=$this->shift_history_tables();
         $by=[];
         foreach((array)$wpdb->get_results("SELECT employee_id,from_date,to_date FROM {$t['periods']} ORDER BY employee_id,from_date") as $r)
@@ -304,9 +309,11 @@ trait EWS_Shift_History_Trait {
             $n=$wpdb->delete($t['periods'],['id'=>$period_id]);
             if($n===false)return $fail('save');
             if($n!==1)return $fail('changed');
-            if($plan['extend']){
-                $was=null;foreach($periods as $x)if((int)$x['id']===(int)$plan['extend'])$was=$x['to'];
-                $n=$was===null?0:$wpdb->query($plan['to']===null
+            $was=null;
+            if($plan['extend'])foreach($periods as $x)if((int)$x['id']===(int)$plan['extend'])$was=$x['to'];
+            // The period before still open (overlapping data from before 3.31.119): it already covers those days.
+            if($plan['extend'] && $was!==null && $was!==$plan['to']){
+                $n=$wpdb->query($plan['to']===null
                     ?$wpdb->prepare("UPDATE {$t['periods']} SET to_date=NULL WHERE id=%d AND to_date=%s",(int)$plan['extend'],$was)
                     :$wpdb->prepare("UPDATE {$t['periods']} SET to_date=%s WHERE id=%d AND to_date=%s",$plan['to'],(int)$plan['extend'],$was));
                 if($n===false)return $fail('save');
