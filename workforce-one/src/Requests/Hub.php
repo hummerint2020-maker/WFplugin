@@ -17,6 +17,8 @@ final class Hub
     public const REJECTED = 'rejected';
     public const ADVANCED = 'advanced';
     public const ERROR = 'error';
+    /** A swap the administrator approved last but whose schedule changed since the request: nothing was changed (3.31.120). */
+    public const CHANGED = 'changed';
 
     public static function isDecision(string $decision): bool
     {
@@ -86,8 +88,15 @@ final class Hub
             self::REJECTED => 'Request rejected successfully.',
             self::ADVANCED => 'Approval recorded and moved to the next level.',
             self::ERROR => 'The request could not be processed.',
+            self::CHANGED => 'Nothing was changed: a schedule day of this swap changed since the request. You can reject it.',
         ];
         return $messages[$key] ?? null;
+    }
+
+    /** The hub notice is shown as an error. */
+    public static function isErrorNotice(string $key): bool
+    {
+        return $key === self::ERROR || $key === self::CHANGED;
     }
 
     /** Notice shown after a Face Reset page decision, or null for an unknown key. */

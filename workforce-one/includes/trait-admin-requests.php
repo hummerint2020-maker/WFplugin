@@ -43,7 +43,8 @@ trait EWS_Admin_Requests_Trait {
             $add('early_leave',$r->id,$r->employee_id,'Early Leave',$r->requested_at,Hub::details($r->work_date,Hub::duration((int)$r->leave_minutes),(string)$r->reason));
         }
         foreach($this->swap_pending_rows() as $r){
-            $add('shift_swap',$r->id,$r->requester_employee_id,'Shift Swap',$r->created_at,Hub::details($r->work_date,$r->requester_status.' ↔ '.$r->target_status));
+            // Waiting for the approvers: the column shows the current level, the one an administrator's decision takes (3.31.120).
+            $add('shift_swap',$r->id,$r->requester_employee_id,'Shift Swap',$r->created_at,Hub::details($r->work_date,$r->requester_status.' ↔ '.$r->target_status),$r->status==='Awaiting'?['shift_swap','schedule_swap',(int)$r->id]:null);
         }
         $legacy=$wpdb->prefix.'ews_vacation_requests';
         if($this->admin_requests_table_exists($legacy)){
@@ -91,7 +92,7 @@ trait EWS_Admin_Requests_Trait {
         $notice_key=sanitize_key($_GET['request_notice']??'');
         echo $this->render_template('admin/requests',[
             'rows'=>$this->admin_request_rows(),
-            'notice'=>Hub::hubNotice($notice_key),'notice_is_error'=>$notice_key===Hub::ERROR,
+            'notice'=>Hub::hubNotice($notice_key),'notice_is_error'=>Hub::isErrorNotice($notice_key),
             'post_url'=>admin_url('admin-post.php'),
         ]);
     }
@@ -106,7 +107,7 @@ trait EWS_Admin_Requests_Trait {
             case 'leave_cancellation': $outcome=$this->leave_admin_decide($id,true,$decision);break;
             case 'overtime':           $outcome=$this->overtime_admin_decide($id,$decision);break;
             case 'early_leave':        $outcome=$this->early_leave_admin_decide($id,$decision);break;
-            case 'shift_swap':         $outcome=$this->swap_admin_decide($id,$decision)===true?Hub::outcome($decision):Hub::ERROR;break;
+            case 'shift_swap':         $outcome=$this->swap_admin_decide($id,$decision);break;
             case 'legacy_vacation':    $outcome=$this->legacy_vacation_admin_decide($id,$decision);break;
             case 'correction':         $outcome=$this->cx_hub_decide($id,$decision);break;
             default:                   $outcome=$this->face_reset_decide($id,$decision,true);

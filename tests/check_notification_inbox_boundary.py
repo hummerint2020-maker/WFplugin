@@ -9,6 +9,21 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / 'workforce-one/src/Notifications'
 errors = []
 
+# Function calls: a leading backslash (\\get_option) is the same call; a namespaced name (Foo\\bar) is kept and reported.
+CALL = re.compile(r'(?<![\w>:\\])\\?((?:[A-Za-z_]\w*\\)*[A-Za-z_]\w*)\s*\(')
+# The inbox table in the legacy trait; ews_notifications_cleanup (the cron hook) is not it.
+LEGACY_SQL = re.compile(r'ews_notifications(?!\w)|\$this->notifications\b')
+
+def calls_in(text):
+    return set(CALL.findall(text))
+
+# Self-test, so a loosened pattern cannot pass silently.
+assert calls_in('\\get_option("x");') == {'get_option'}
+assert calls_in('Foo\\bar();') == {'Foo\\bar'}
+assert calls_in('$this->x(); self::y(); Store::z();') == set()
+assert LEGACY_SQL.search('{$wpdb->prefix}ews_notifications WHERE')
+assert not LEGACY_SQL.search("wp_schedule_event(time(),'daily','ews_notifications_cleanup')")
+
 def source(path):
     text = path.read_text(encoding='utf-8')
     return re.sub(r'/\*.*?\*/|//[^\n]*', '', text, flags=re.S)
@@ -17,7 +32,7 @@ for name in ('Inbox.php', 'InboxStore.php'):
     text = source(MODULE / name)
     # Pure use cases may only call their contract, own methods and PHP built-ins.
     allowed = {'defined', 'exit', 'array_key_exists', 'max', 'min', 'abs', 'unset'}
-    calls = set(re.findall(r'(?<![\w>:\\])([a-zA-Z_]\w*)\s*\(', text))
+    calls = calls_in(text)
     declarations = set(re.findall(r'function\s+(\w+)\s*\(', text))
     unknown = calls - declarations - allowed - {'if', 'return'}
     if unknown:
@@ -33,7 +48,7 @@ for name in ('WordPressInboxStore.php', 'InboxSchema.php'):
         errors.append(f'{name}: dependency on shared plugin or another module')
 
 legacy = source(ROOT / 'workforce-one/includes/trait-notifications.php')
-if re.search(r'ews_notifications|\$this->notifications\b', legacy):
+if LEGACY_SQL.search(legacy):
     errors.append('legacy Notifications trait owns inbox SQL again')
 if errors:
     raise SystemExit('\n'.join(errors))

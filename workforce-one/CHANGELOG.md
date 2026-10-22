@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.31.120
+### Shift swaps decided by an administrator with approval levels (owner decision Q4 of 3.31.119; design `docs/tasks/swap-admin-levels.md`)
+Fixes to existing behaviour; no new setting, no database change.
+- **Requests page, a swap waiting for approvers with two or more levels:** the administrator now decides the current level only, as
+  for leave and overtime. Approving level 1 records it and tells the next approver ("Approval recorded and moved to the next level");
+  the days are exchanged only on the last level. Before, approving level 1 exchanged the days at once and left the request open at
+  level 2.
+- **The last level** and the exchange are saved together. If a schedule day of the swap changed since the request, nothing is saved:
+  the level stays open and the page says so ("a schedule day of this swap changed since the request"), so the swap can be rejected.
+  Rejecting at any level closes the swap and its approval together. A swap the colleague has not answered yet, and workflows without
+  levels, work as before.
+- The Requests page shows a swap waiting for approvers with its approval and current level ("Approval #n · Level 2"), not "Peer".
+- Swaps exchanged early by this error before 3.31.120 keep an approval request that is still open; it is not repaired (owner
+  decision). It is not listed anywhere, but when Shift Swap deadlines are set it can still send a reminder to its approver or an
+  escalation notice to the administrators for a swap that is already done; those can be ignored.
+- Notifications (internal): a notification without a recipient is no longer recorded as a failed save; the inbox boundary check also
+  catches calls written with a leading backslash.
 ## 3.31.119
 ### All-or-nothing saves and cleanup (external review F12, F13, F14, F15, F10; design `docs/tasks/cleanup-integrity.md`)
 Fixes to existing behaviour; no new setting, no database change.
