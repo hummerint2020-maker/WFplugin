@@ -38,7 +38,9 @@ ids = json.loads(php("""
         $wpdb->insert($p.'ews_employees',['name'=>$name,'domain_name'=>$login,'email'=>$login.'@example.com','wp_user_id'=>$uid,'active'=>1,'attendance_enabled'=>1]);
         $out[$login]=(int)$wpdb->insert_id;$out[$login.'_uid']=(int)$uid;
     }
-    $wpdb->update($p.'ews_employees',['department_id'=>null],['id'=>$eid]);
+    $wpdb->query("DELETE FROM {$p}ews_departments WHERE code='lg-e2e'");
+    $wpdb->insert($p.'ews_departments',['name'=>'Level Guard E2E','code'=>'lg-e2e','active'=>1]); $dep=(int)$wpdb->insert_id;
+    $wpdb->query("UPDATE {$p}ews_employees SET department_id=$dep WHERE id=$eid OR domain_name='lgpeer'");
     $type=(int)$wpdb->get_var("SELECT id FROM {$p}ews_leave_types WHERE name='Annual Leave'");
     $wpdb->query("UPDATE {$p}ews_leave_types SET active=1,deduct_balance=1,annual_entitlement=21,kind='planned',after_days=0 WHERE id=$type");
     $wpdb->insert($p.'ews_leave_balances',['employee_id'=>$eid,'leave_type_id'=>$type,'leave_year'=>(int)current_time('Y'),'entitlement'=>21,'used'=>0,'pending'=>0]);
@@ -72,7 +74,13 @@ def forms(page):
     """Every form of a page: {field: value} of its hidden inputs (and the decision button values under '_buttons')."""
     out = []
     for f in re.findall(r'<form.*?</form>', page, re.S):
-        fields = {html.unescape(n): html.unescape(v) for n, v in re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)"', f)}
+        fields = {}
+        for tag in re.findall(r'<input\b[^>]*>', f):
+            if 'type="hidden"' not in tag:
+                continue
+            n, v = re.search(r'name="([^"]+)"', tag), re.search(r'value="([^"]*)"', tag)
+            if n:
+                fields[html.unescape(n.group(1))] = html.unescape(v.group(1)) if v else ''
         fields['_buttons'] = re.findall(r'name="decision" value="([^"]+)"', f)
         out.append(fields)
     return out
@@ -326,7 +334,7 @@ send(adm, f, 'approve')
 qs = send(adm, f, 'approve')
 check('face reset, Requests page sent twice: "moved", level 2 still waits', qs.get('request_notice') == 'moved' and engine('face_reset_request', E) == AT2, (qs, engine('face_reset_request', E)))
 php("(new WP_User(%d))->add_cap('ews_manage_employees');" % ids['lgbig_uid'])
-f = form(big, '/wp-admin/admin.php?page=ews31-face-reset', action='ews31_face_reset_reject', employee_id=E)
+f = form(big, '/wp-admin/admin.php?page=ews31-face-reset-requests', action='ews31_face_reset_reject', employee_id=E)
 check('...the Face Reset page form sends its level', f is not None and f.get('approval_step', '0') != '0', f)
 php("$wpdb->query(\"UPDATE {$p}ews_approval_steps SET status='APPROVED' WHERE status='PENDING'\");")   # decided elsewhere meanwhile
 qs = big.post('ews31_face_reset_reject', **{k: v for k, v in f.items() if k not in ('_buttons', 'action')})[1]
@@ -352,8 +360,10 @@ php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-
 atexit.register(lambda: (php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-level-guard.php');"), os.path.exists(mu) and os.unlink(mu)))
 qs = send(adm, f, 'approve')
 php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-level-guard.php');")
-check('two decisions at the same moment: the second finds its level taken and changes nothing ("moved"), level 2 still waits',
-      qs.get('request_notice') == 'moved' and engine('leave', L7) == AT2 and leave_status(L7) == 'Pending', (qs, engine('leave', L7)))
+# The other decision ran on the same database connection, so the refused one's rollback undoes it too: what counts is that this
+# decision did not take level 2 instead, and that nothing of it was saved.
+check('two decisions at the same moment: the second finds its level taken and changes nothing ("moved")',
+      qs.get('request_notice') == 'moved' and engine('leave', L7) == ('WAITING_FOR_LEVEL_1', [(1, 'PENDING'), (2, 'WAITING')]) and leave_status(L7) == 'Pending', (qs, engine('leave', L7)))
 
 # ---------------------------------------------------------------- unchanged: single level, early leave
 configure('vacation', 'LEVEL_1', ('SUPERVISOR', 0))
@@ -364,4 +374,5 @@ check('one level: the decision is as before', leave_status(L8) == 'Approved', (q
 qs = send(mona, f, 'approve')
 check('...sent again: already decided, as before', qs.get('leave_done') == '1' and leave_status(L8) == 'Approved', qs)
 
-results()
+print(f'{sum(results)} / {len(results)}')
+sys.exit(0 if all(results) else 1)

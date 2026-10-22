@@ -354,14 +354,15 @@ trait EWS_Corrections_Trait {
         if(!in_array($c->status,['pending','pending_hr'],true))return 'done';
         $from=$from===null||$from===''?null:sanitize_key((string)$from);
         if($from!==null && $from!==$c->status)return 'moved';
+        // The level the page showed, before who may decide it: the approver of a level decided since is told it moved (3.31.122).
+        $ar=$c->status==='pending' && \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())?$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id):null;
+        $open=$ar && Hub::isOpenApproval((string)$ar->status);
+        if($step!==null && (($open && $this->approval_level_moved((int)$ar->id,$step)) || (!$open && (int)$step>0)))return 'moved';
         if($decision==='reject' && $note==='')return 'note';
         if((int)$c->employee_user_id && (int)$c->employee_user_id===get_current_user_id())return 'own';
         if($admin && !$this->cx_is_hr())return 'access';
         if(!$admin && !$this->cx_can_decide($c))return 'access';
         // The day has since become a leave, a holiday or a day off: the request is closed, its approval request with it (owner decision).
-        $ar=$c->status==='pending' && \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())?$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id):null;
-        $open=$ar && Hub::isOpenApproval((string)$ar->status);
-        if($step!==null && (($open && $this->approval_level_moved((int)$ar->id,$step)) || (!$open && (int)$step>0)))return 'moved';
         if($decision==='approve' && $this->cx_should_close($c))return $this->cx_close($c);
         if($open){
             $acted=$this->approval_act((int)$ar->id,$decision,$note,true,$admin,$step);
