@@ -7,6 +7,7 @@ stylesheets, fonts and icons from `workforce-one/assets/`.
 - `attendance-corrections/`: `docs/tasks/attendance-corrections.md`
 - `daily-workers/`: `docs/tasks/daily-workers.md`
 - `office-minimum/`: `docs/tasks/office-minimum.md` (its Attendance screens start from snapshots of the real page in `_kit/snap/`)
+- `week-lock/`: `docs/tasks/week-lock.md` (same Attendance snapshots; `week-lock.css` uses logical properties, so its `-rtl` copy is identical)
 
 Every screen is written twice, `<screen>.ar.html` (RTL) and `<screen>.en.html`, by
 `_kit/build.py`. Edit the screens in `_kit/screens_*.py` and rebuild; don't edit the HTML by hand:
