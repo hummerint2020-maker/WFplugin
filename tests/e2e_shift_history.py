@@ -203,7 +203,7 @@ page = adm.req(PROFILE)[1]
 st, qs, _ = adm.post('ews_shift_period_save', _wpnonce=nonce(page, 'ews_shift_period_save'), employee_id=ids['emp'], remove=fut[0]['id'] if fut else 0)
 check('...and is removed when it works, the period before taking its days back', qs.get('shift_done') == 'removed' and periods() == before_p, (qs, periods(), before_p))
 # The check once after the upgrade: a history a failed save left (the last period closed) is listed in the Audit Log, once.
-php("""$wpdb->query("UPDATE {$p}ews_employee_shift_periods SET to_date='%s' WHERE employee_id=%d AND to_date IS NULL"); delete_option('ews_shift_history_checked'); delete_option('ews_shift_history_synced'); $wpdb->query("DELETE FROM {$p}ews_audit_log WHERE action='shift_history_gap'");""" % (d(-1), ids['emp']))
+php("""$wpdb->query("DELETE FROM {$p}ews_employee_shift_periods WHERE employee_id=%d AND from_date>='%s'"); $wpdb->query("UPDATE {$p}ews_employee_shift_periods SET to_date='%s' WHERE employee_id=%d AND to_date IS NULL"); delete_option('ews_shift_history_checked'); delete_option('ews_shift_history_synced'); $wpdb->query("DELETE FROM {$p}ews_audit_log WHERE action='shift_history_gap'");""" % (ids['emp'], d(0), d(-1), ids['emp']))
 php("$o=new EWS_Manager_V31_1(); $o->shift_history_daily(); delete_option('ews_shift_history_synced'); $o->shift_history_daily();")
 gaps = q("SELECT entity_id,details FROM {p}ews_audit_log WHERE action='shift_history_gap'")
 check('the check after the upgrade lists a broken history once in the Audit Log (nothing repaired)', len(gaps) == 1 and str(gaps[0]['entity_id']) == str(ids['emp']) and 'last_closed' in gaps[0]['details']
