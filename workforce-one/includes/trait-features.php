@@ -31,6 +31,7 @@ trait EWS_Features_Trait {
                 'health'=>$this->health_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
+                'week_lock'=>$this->week_lock_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
                 'presence_verification'=>(bool)(int)$this->option('ews_presence_verification'),
                 'breaks'=>$this->break_enabled(),
@@ -60,6 +61,8 @@ trait EWS_Features_Trait {
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
             'privacy_html'=>$this->privacy_settings_section(),
             'office_minimum'=>$this->om_settings(),'om_teams'=>$this->om_admin_teams(),'om_statuses'=>$this->schedule_type_names(true),
+            'week_lock'=>$this->week_lock_settings(),'week_lock_next'=>$this->week_lock_next(),'timezone'=>wp_timezone_string(),'week_lock_can'=>$this->week_lock_can_override(),
+            'roles_url'=>admin_url('admin.php?page=ews31-roles'),
             'weekday_names'=>$this->working_day_names(),'working_days'=>$this->working_days(),
             'saved'=>isset($_GET['features_saved']),
             'error'=>$error!==''?FeatureSettings::errorMessage($error):null,
@@ -78,6 +81,12 @@ trait EWS_Features_Trait {
         if(isset($post['office_minimum_present'])){
             [$om,$om_error]=\WorkforceOne\Settings\OfficeMinimumSettings::fromPost($post,$this->schedule_type_names(true));
             if($om_error!=='')$this->features_redirect(['features_error'=>'om_'.$om_error]);
+        }
+        $wl=null;
+        // Only someone who may edit a final week may move the cutoff or switch the lock off, or a week could be reopened unaudited.
+        if(isset($post['week_lock_present'])&&$this->week_lock_can_override()){
+            [$wl,$wl_error]=\WorkforceOne\Settings\WeekLockSettings::fromPost($post);
+            if($wl_error!=='')$this->features_redirect(['features_error'=>'wl_'.$wl_error]);
         }
         [$early,$error]=FeatureSettings::earlyLeave($post['early_leave_max']??120,$post['early_leave_monthly']??240);
         if($error)$this->features_redirect(['features_error'=>$error]);
@@ -180,6 +189,15 @@ trait EWS_Features_Trait {
             update_option('ews_office_minimum',$om,false);
             update_option('ews_feature_office_minimum',$flag('office_minimum_enabled')?1:0,false);
             if($om_before!==\WorkforceOne\Settings\OfficeMinimumSettings::config($om)||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om['min'].'; statuses='.implode(',',$om['statuses']).'; reminder='.($om['reminder']?'on':'off'));
+        }
+        if($wl!==null){
+            $wl_before=$this->week_lock_settings();$wl_was=$this->week_lock_enabled();
+            update_option('ews_week_lock',$wl,false);
+            update_option('ews_feature_week_lock',$flag('week_lock_enabled')?1:0,false);
+            $wl_on=$this->week_lock_enabled();
+            // Switched on: the cutoff that has passed already does not send a notification now (only the next one does).
+            if($wl_on&&!$wl_was){$c=\WorkforceOne\Settings\WeekLockSettings::config($wl);update_option('ews_week_lock_notified',\WorkforceOne\Schedule\WeekLock::latest(current_time('mysql'),$this->working_days(),(int)$c['cutoff_day'],(string)$c['cutoff_time'])['week'],false);}
+            if($wl_before!==\WorkforceOne\Settings\WeekLockSettings::config($wl)||$wl_was!==$wl_on)$this->audit('week_lock_update','settings',0,($wl_on?'enabled':'disabled').'; cutoff='.$wl['cutoff_day'].' '.$wl['cutoff_time'].'; notify='.($wl['notify']?'on':'off'));
         }
         update_option('ews_confirmation_actions',FeatureSettings::confirmActions($post['confirm_actions']??[]),false);
 

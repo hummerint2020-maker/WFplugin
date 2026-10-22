@@ -95,6 +95,8 @@ trait EWS_Swap_Trait {
                 if($n===false)return 'save';
                 if($n!==1)return 'changed';
             }
+            // Week lock (3.31.121): an approved swap is applied as usual, also in a final week, and recorded.
+            foreach([(int)$r->requester_employee_id,(int)$r->target_employee_id] as $eid)$this->week_lock_record_request($eid,[(string)$r->work_date],'swap','swap #'.(int)$r->id);
             return true;
         }
 

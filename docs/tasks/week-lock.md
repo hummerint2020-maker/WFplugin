@@ -136,3 +136,36 @@ attendance lock for past weeks.
 8. A manager's change on a locked day becomes a request to HR, with a reason. Owner: **two releases** — R1 the lock itself (off by
    default; the manager's change is refused with a message for now), R2 right after it: the "schedule change request" to HR (a new
    approval type, designed then). The owner may leave the switch off until R2 ships.
+
+## Implementation notes (3.31.121)
+Where the code differs from the design:
+- No `past` or `requests` settings: the owner's answers fixed them (past weeks stay final; requests always write, audited), so
+  `ews_week_lock` holds only the cutoff day, time and the employee notification.
+- Requests (S6-S10) are never refused; `week_lock_record_request()` adds one Audit Log row per request for the days it wrote into a
+  final week. Swap requests on final days are allowed (owner answer 4).
+- The grid's whole week is read-only for people without "Edit a locked week" (the lock is per week, so a page is all or nothing);
+  the server still checks every cell, so a page opened before the cutoff and saved after it is refused cell by cell.
+- The cutoff notification runs on its own five-minute event (`ews_week_lock_tick`, listed in `Support\Lifecycle`), sends only a
+  cutoff of the last 24 hours, once (`ews_week_lock_notified`), and switching the lock on marks the cutoff that already passed.
+- The schema target moves to 3.31.121 so `ensure_roles_permissions()` gives the EWS Administrator role the new permission on upgrade.
+- The single-day handler (`att_single`, no form posts it) refuses a final week with a message; it has no e2e case (its nonce
+  needs a page that does not exist).
+- Mobile API: no `locked` field yet (release 2 with the change request).
+
+## Independent review (3.31.121)
+No money or upgrade problem; off leaves every page byte-identical. Fixed:
+1. Feature Configuration let anyone with "Manage Settings" (EWS Manager by default) move the cutoff or switch the lock off and so
+   reopen a final week unaudited: only "Edit a locked week" holders can change the Week lock settings now; for others the card is
+   read-only and a posted form keeps the saved values.
+2. The new Audit Log rows named the employee as a schedule row: they use the entity "employee" now.
+3. The "Branch…" fill of a read-only week stayed enabled (it only marked cells that could never be saved): disabled.
+4. `att_single` read the day even with the lock off: only for an allowed edit now.
+5. The no-JavaScript form rewrote an unchanged day of a final week (its note): left alone now.
+6. Two overlapping cron runs could both send the cutoff notification: claimed with one conditional UPDATE.
+7. An allowed CSV import into a final week was one summary row: one `schedule_locked_edit` per changed day now.
+8. A save with both refused and conflicting cells reported only the refused ones: both now.
+9. The unit test used an unsorted working-days list production never passes: sorted, as `working_days()` returns.
+10. e2e: a wider margin before midnight, cleanup at exit whatever fails, new cases for 1, 5 and 7.
+Not changed: the approval-engine leave, leave cancellation and swap writes have no e2e of their own (they call the same recorder the
+tested legacy leave path does); the Arabic dual form keeps its number ("لم يُحفظ %d تغييران") because the translation check
+requires the placeholder in every form.

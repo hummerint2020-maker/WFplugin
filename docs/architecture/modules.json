@@ -104,7 +104,8 @@
         "swap",
         "attendance-grid",
         "office-minimum",
-        "shift-history"
+        "shift-history",
+        "week-lock"
       ],
       "tables": [
         "schedule",
@@ -131,7 +132,17 @@
         "shift_versions_all",
         "shift_for_employee_on",
         "api_status_labels",
-        "working_hours"
+        "working_hours",
+        "week_lock_enabled",
+        "week_lock_settings",
+        "week_lock_refusal",
+        "week_lock_audit_edit",
+        "week_lock_audit_refused",
+        "week_lock_record_request",
+        "week_lock_view",
+        "week_lock_when",
+        "week_lock_next",
+        "week_lock_can_override"
       ]
     },
     "locations": {

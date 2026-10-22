@@ -144,6 +144,8 @@ final class FeatureSettings
             'om_team' => 'Office Minimum: a team\'s fixed number must be 0 or more. Nothing was saved.',
             'om_statuses' => 'Office Minimum: tick at least one status that counts as in the office. Nothing was saved.',
             'om_time' => 'Office Minimum: the reminder time is not valid. Nothing was saved.',
+            'wl_day' => 'Week lock: choose the cutoff day. Nothing was saved.',
+            'wl_time' => 'Week lock: the cutoff time is not valid. Nothing was saved.',
         ];
         if (isset($om[$code])) return $om[$code];
         return $code === 'early_leave_monthly'

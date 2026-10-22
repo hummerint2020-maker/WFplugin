@@ -249,7 +249,7 @@ trait EWS_Attendance_Trait {
             if(!$t)wp_die('Invalid week.');
             [$dates,$sun]=$this->week_dates_configured($week);
             if(!$dates)wp_die('No working days are configured.');
-            $saved=0;$skipped=0;$invalid=0;$conflicts=0;
+            $saved=0;$skipped=0;$invalid=0;$conflicts=0;$locked=0;
 
             /*
              * The Attendance grid now submits only cells that the current
@@ -314,6 +314,9 @@ trait EWS_Attendance_Trait {
                     }
 
                     $date=$dates[$day_index];
+                    // Week lock (3.31.121): a final week is not changed, except by "Edit a locked week" (audited).
+                    $lock=$this->week_lock_refusal($date);
+                    if($lock==='locked'){$locked++;continue;}
                     $result=$this->save_att_if_unchanged($eid,$date,$status,$original);
 
                     if(!empty($result['conflict'])){
@@ -338,6 +341,7 @@ trait EWS_Attendance_Trait {
                             (int)$result['id'],
                             $date.' | Old: '.$old_value.' | New: '.$status
                         );
+                        if($lock==='override')$this->week_lock_audit_edit($eid,$date,'grid',$old_value,$status);
                     }
                 }
             }else{
@@ -379,11 +383,15 @@ trait EWS_Attendance_Trait {
                             "SELECT status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",
                             $eid,$date
                         ));
+                        // The fallback sends every day: an unchanged day of a final week is left alone (not even its note), a changed one refused.
+                        $lock=$this->week_lock_refusal($date);
+                        if($lock==='locked'){if($old_status!==$status)$locked++;continue;}
                         $id=$this->save_att($eid,$date,$status,$note);
                         if($id && $old_status!==$status){
                             $old_value=$old_status!==null?(string)$old_status:'Not Set';
                             $saved++;
                             $this->audit('attendance_grid','schedule',$id,$date.' | Old: '.$old_value.' | New: '.$status);
+                            if($lock==='override')$this->week_lock_audit_edit($eid,$date,'grid',$old_value,$status);
                         }elseif($id){
                             $saved++;
                         }
@@ -399,10 +407,11 @@ trait EWS_Attendance_Trait {
                 'grid_invalid'=>$invalid
             ];
             if($conflicts>0)$args['grid_conflict']=$conflicts;
+            if($locked>0){$args['grid_locked']=$locked;$this->week_lock_audit_refused($locked,'grid');}
             $this->redirect($args);
         }
 
-    public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field(wp_unslash($_POST['work_date']));$s=sanitize_text_field(wp_unslash($_POST['status']));$n=sanitize_textarea_field(wp_unslash($_POST['note']??''));if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
+    public function att_single(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_single');$eid=absint($_POST['employee_id']);$d=sanitize_text_field(wp_unslash($_POST['work_date']));$s=sanitize_text_field(wp_unslash($_POST['status']));$n=sanitize_textarea_field(wp_unslash($_POST['note']??''));if(!$eid||!$this->valid_date($d)||!in_array($s,$this->statuses(),true))wp_die('Invalid attendance.');if(!$this->employee_attendance_enabled($eid))wp_die('Attendance tracking is disabled for this employee.');if(!$this->department_scope_allows_employee($eid))wp_die('You cannot manage attendance outside your Department.');$lock=$this->week_lock_refusal($d);if($lock==='locked'){$this->week_lock_audit_refused(1,'single');wp_die(esc_html__('This week is final. To change a day, ask HR.','workforce-one'));}$old=$lock==='override'?$this->schedule_for_employee_date($eid,$d):null;$id=$this->save_att($eid,$d,$s,$n);$this->audit('attendance_single','schedule',$id,$d.' => '.$s);if($lock==='override')$this->week_lock_audit_edit($eid,$d,'single',$old?(string)$old->status:'',$s);$this->redirect(['ews_view'=>'attendance','saved'=>1]);}
 
     /*
      * Parse and validate an attendance CSV (columns: domain_name, work_date, status, note —
@@ -441,6 +450,7 @@ trait EWS_Attendance_Trait {
                 elseif(!$this->employee_attendance_enabled((int)$emp->id))$error='Attendance tracking is disabled for this employee';
                 elseif(!$this->department_scope_allows_employee((int)$emp->id))$error='Employee is outside your Department';
                 elseif(isset($seen[$emp->id.'|'.$date]))$error='Duplicate of line '.$seen[$emp->id.'|'.$date];
+                elseif($this->week_lock_refusal($date)==='locked')$error=__('The week of this day is final','workforce-one');   // week lock (3.31.121)
                 if(!$error)$seen[$emp->id.'|'.$date]=$line;
                 $rows[]=['line'=>$line,'domain'=>$domain,'employee'=>$emp?$emp->name:'','eid'=>$emp?(int)$emp->id:0,'date'=>$raw_date,'normalized_date'=>$date,'status'=>$status?:$raw_status,'note'=>$note,'valid'=>$error==='','error'=>$error];
             }
@@ -451,7 +461,10 @@ trait EWS_Attendance_Trait {
 
     public function att_preview(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_preview');if(empty($_FILES['attendance_csv']['tmp_name']))wp_die('CSV required.');$p=$this->parse_csv($_FILES['attendance_csv']['tmp_name']);if(isset($p['error']))wp_die(esc_html($p['error']));$t=wp_generate_uuid4();set_transient('ews31_preview_'.$t.'_'.get_current_user_id(),$p['rows'],15*MINUTE_IN_SECONDS);$this->redirect(['ews_view'=>'attendance','preview'=>$t]);}
 
-    public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field(wp_unslash($_POST['token']));$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}$this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}
+    public function att_import(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_import');$t=sanitize_text_field(wp_unslash($_POST['token']));$rows=get_transient('ews31_preview_'.$t.'_'.get_current_user_id());if(!is_array($rows))wp_die('Preview expired.');$ok=0;$bad=0;$locked=0;foreach($rows as $r){if(!$r['valid']){$bad++;continue;}if(!$this->employee_attendance_enabled((int)$r['eid'])){$bad++;continue;}if(!$this->department_scope_allows_employee((int)$r['eid'])){$bad++;continue;}
+            // Week lock (3.31.121): checked again, the cutoff may have passed since the preview.
+            $lock=$this->week_lock_refusal($r['normalized_date']);if($lock==='locked'){$bad++;$locked++;continue;}$was=$lock==='override'?$this->schedule_for_employee_date((int)$r['eid'],$r['normalized_date']):null;
+            $this->save_att($r['eid'],$r['normalized_date'],$r['status'],$r['note']);$ok++;if($lock==='override'&&(!$was||(string)$was->status!==(string)$r['status']))$this->week_lock_audit_edit((int)$r['eid'],$r['normalized_date'],'import',$was?(string)$was->status:'',(string)$r['status']);}delete_transient('ews31_preview_'.$t.'_'.get_current_user_id());$this->audit('attendance_bulk_import','schedule',0,'Imported '.$ok.'; Rejected '.$bad);$this->week_lock_audit_refused($locked,'import');$this->redirect(['ews_view'=>'attendance','imported'=>$ok,'rejected'=>$bad]);}
 
     public function att_sample(){if(!$this->can('ews_manage_attendance'))wp_die('Access denied');check_admin_referer('ews31_att_sample');nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename=attendance_import_sample.csv');echo "\xEF\xBB\xBF";$o=fopen('php://output','w');fputcsv($o,['domain_name','work_date','status','note']);fputcsv($o,['employee.domain','2026-08-09','Office','Normal attendance']);fputcsv($o,['employee.domain','2026-08-10','WFH','Working from home']);fputcsv($o,['employee02','2026-08-11','Vacation','Annual leave']);fclose($o);exit;}
 

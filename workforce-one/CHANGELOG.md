@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.121
+### Week lock (new, off by default; design `docs/tasks/week-lock.md`, mockups `docs/mockups/week-lock/`)
+Feature Configuration → **Week lock**. From a weekly cutoff (Thursday 5:00 PM site time by default) next week's schedule is final and
+stays final, so the current and past weeks are final too. When it is off, nothing changes.
+- **Managers** can no longer change a final week on the Attendance page: the days are read-only and the page says why. A change saved
+  after the cutoff passed while the page was open is refused ("N changes were not saved") and the other changes are saved. The CSV
+  import shows rows in a final week as errors in its preview and checks them again at import.
+- **"Edit a locked week"**, a new permission (Roles & Permissions), held by site administrators and the EWS Administrator role by
+  default: they can still change a final week; each change is in the Audit Log ("schedule_locked_edit").
+- **Requests are not blocked** (owner decision): leave, leave cancellations and swaps are requested, approved and applied as usual,
+  also on final days; each write into a final week is recorded ("schedule_locked_by_leave", "_by_leave_cancel", "_by_swap").
+- **Attendance is not locked**: corrections and HR fix it as today.
+- **Employees** see "Final" on the week in their schedule, and get a notification at the cutoff with their days ("Next week's
+  schedule is final"; can be turned off). Switching the lock on does not send the cutoff that has passed already.
+- Every refused save is one Audit Log row ("schedule_locked_refused"); settings changes are "week_lock_update".
+- Next release: a manager's change on a final day becomes a request to HR with a reason (owner decision).
+- The schema version moves to 3.31.121 so the roles get the new permission on upgrade; no table or column changes.
+
 ## 3.31.120
 ### Shift swaps decided by an administrator with approval levels (owner decision Q4 of 3.31.119; design `docs/tasks/swap-admin-levels.md`)
 Fixes to existing behaviour; no new setting, no database change.

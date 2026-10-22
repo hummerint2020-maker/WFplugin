@@ -177,6 +177,21 @@ trait EWS_Frontend_Trait {
             return '<div id="'.esc_attr($id).'" class="ews-ux-modal" data-type="'.esc_attr($type).'" role="dialog" aria-modal="true"><div class="ews-ux-modal-card"><button type="button" class="ews-ux-close" aria-label="'.esc_attr__('Close','workforce-one').'">×</button><div class="ews-ux-icon">'.$icon.'</div><h3>'.esc_html($title).'</h3><p>'.esc_html($message).'</p><div class="ews-ux-actions">'.$actions.'</div></div></div>';
         }
         private function ux_notice_from_query(){
+            if(isset($_GET['grid_locked'])){
+                // Week lock (3.31.121): the week became final while the grid was open.
+                $count=absint($_GET['grid_locked']);
+                $saved=absint($_GET['grid_saved']??0);
+                /* translators: %d: number of schedule changes */
+                $title=sprintf(_n('%d change was not saved','%d changes were not saved',$count,'workforce-one'),$count);
+                $message=__('This week is final now.','workforce-one');
+                /* translators: %d: number of schedule changes */
+                if($saved>0)$message.=' '.sprintf(_n('%d other change was saved successfully.','%d other changes were saved successfully.',$saved,'workforce-one'),$saved);
+                $conflicts=absint($_GET['grid_conflict']??0);
+                /* translators: %d: number of schedule changes */
+                if($conflicts>0)$message.=' '.sprintf(_n('%d schedule change was not saved because another manager changed the same cell before you saved.','%d schedule changes were not saved because another manager changed the same cell before you saved.',$conflicts,'workforce-one'),$conflicts);
+                $message.=' '.__('To change a day of a final week, ask HR.','workforce-one');
+                return $this->ux_modal($title,$message,'error');
+            }
             if(isset($_GET['grid_conflict'])){
                 $count=absint($_GET['grid_conflict']);
                 $saved=absint($_GET['grid_saved']??0);
@@ -597,7 +612,7 @@ trait EWS_Frontend_Trait {
              * attendance grid save result).
              */
             $u=remove_query_arg(['preview','time_success','time_error','time_reset','time_saved',
-                'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict',
+                'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict','grid_locked',
                 'leave_sent','leave_error','leave_done','leave_cancel_sent','early_error',
                 'break_success','break_error','overtime_sent','overtime_error','overtime_done','overtime_rejected',
                 'swap_error','swap_sent','swap_done',
