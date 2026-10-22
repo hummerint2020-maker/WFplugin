@@ -90,4 +90,18 @@ final class ShiftPeriodsTest extends TestCase
         $this->assertTrue(P::timesChanged($t, ['grace' => 15] + $t), 'grace alone is a change');
         $this->assertTrue(P::timesChanged($t, ['overnight' => 1] + $t), 'overnight alone is a change');
     }
+
+    /** 3.31.119: the upgrade check finds the periods a half-done save left. */
+    public function testProblems(): void
+    {
+        $p = function ($from, $to) { return ['from' => $from, 'to' => $to]; };
+        $this->assertSame([], P::problems([]));
+        $this->assertSame([], P::problems([$p('2000-01-01', '2026-03-31'), $p('2026-04-01', null)]));
+        $this->assertSame(['last_closed'], P::problems([$p('2000-01-01', '2026-03-31')]), 'the new period was never written');
+        $this->assertSame(['gap'], P::problems([$p('2000-01-01', '2026-03-30'), $p('2026-04-01', null)]));
+        $this->assertSame(['overlap'], P::problems([$p('2000-01-01', null), $p('2026-04-01', null)]));
+        $this->assertSame(['overlap'], P::problems([$p('2000-01-01', '2026-04-05'), $p('2026-04-01', null)]));
+        $this->assertSame(['same_start'], P::problems([$p('2000-01-01', '2026-03-31'), $p('2026-04-01', null), $p('2026-04-01', null)]));
+        $this->assertSame([], P::problems([$p('2026-04-01', null), $p('2000-01-01', '2026-03-31')]), 'any order');
+    }
 }

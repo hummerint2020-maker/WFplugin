@@ -101,9 +101,9 @@ def ids():
 
 
 
-def break_writes(table=''):
-    """Make every INSERT / UPDATE on one table fail ('' = stop), through tests/e2e_break_writes.php."""
+def break_writes(table='', verb=''):
+    """Make every INSERT / UPDATE / DELETE on one table fail, or only one kind (verb='INSERT'); '' = stop. tests/e2e_break_writes.php."""
     if table:
-        php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-break-writes.php'); file_put_contents($d.'/ews-e2e-break-writes.txt','%s');" % (os.path.join(HERE, 'e2e_break_writes.php'), table))
+        php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); copy('%s',$d.'/ews-e2e-break-writes.php'); file_put_contents($d.'/ews-e2e-break-writes.txt','%s');" % (os.path.join(HERE, 'e2e_break_writes.php'), (table + ' ' + verb).strip()))
     else:
         php("@unlink(WPMU_PLUGIN_DIR.'/ews-e2e-break-writes.php'); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-break-writes.txt');")

@@ -150,11 +150,11 @@ trait EWS_Attendance_Trait {
      * available (SQLite, some clusters) the request goes on unlocked and AttendanceService's
      * check after the insert keeps the first row only.
      */
-    private function attendance_lock($employee_id){
+    private function attendance_lock($employee_id,$wait=5){
             global $wpdb;
             if(defined('DB_ENGINE') && DB_ENGINE==='sqlite')return false;
             $prev=$wpdb->suppress_errors(true);
-            $got=$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,%d)',$this->attendance_lock_name($employee_id),5));
+            $got=$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,%d)',$this->attendance_lock_name($employee_id),(int)$wait));
             $wpdb->suppress_errors($prev);
             return (string)$got==='1';
         }

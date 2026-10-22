@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.118
+ * Version: 3.31.119
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.118');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.119');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -334,7 +334,14 @@ class EWS_Manager_V31_1 {
             return true;
         }
 
-    static function deactivate(){ wp_clear_scheduled_hook('ews_notifications_cleanup'); wp_clear_scheduled_hook('ews_auto_attendance_tick'); wp_clear_scheduled_hook('ews_smart_nudges_tick'); wp_clear_scheduled_hook('ews_tasks_tick'); wp_clear_scheduled_hook('ews_corrections_tick'); wp_clear_scheduled_hook('ews_office_minimum_tick'); wp_clear_scheduled_hook('ews_approvals_tick'); wp_clear_scheduled_hook('ews_privacy_cleanup'); wp_clear_scheduled_hook('ews_health_rollup'); wp_unschedule_hook('ews_push_deliver'); }
+    /** Every scheduled event of the plugin (3.31.119: also those with arguments), on every site when deactivated for the network. */
+    static function deactivate($network_wide=false){
+        if(is_multisite() && $network_wide){
+            foreach(get_sites(['fields'=>'ids','number'=>0]) as $site_id){switch_to_blog((int)$site_id);\WorkforceOne\Support\Lifecycle::clearCron();restore_current_blog();}
+            return;
+        }
+        \WorkforceOne\Support\Lifecycle::clearCron();
+    }
 
 }
 

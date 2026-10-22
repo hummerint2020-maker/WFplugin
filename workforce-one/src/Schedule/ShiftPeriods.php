@@ -124,4 +124,27 @@ final class ShiftPeriods
         if ((string) $latest['from'] === $from || !self::timesChanged($latest, $live)) return ['action' => 'none'];
         return ['action' => 'rewrite', 'from' => (string) $latest['from']];
     }
+
+    /**
+     * What is wrong with an employee's periods (3.31.119: earlier saves that failed half way): the last one closed, a gap, an overlap,
+     * two with the same start. [] when they are in order with no gap and no overlap. @param list<array<string,mixed>> $periods
+     * @return list<string>
+     */
+    public static function problems(array $periods): array
+    {
+        if (!$periods) return [];
+        usort($periods, function ($a, $b) { return strcmp((string) $a['from'], (string) $b['from']); });
+        $out = [];
+        $last = end($periods);
+        if ($last['to'] !== null && $last['to'] !== '') $out[] = 'last_closed';
+        for ($i = 1; $i < count($periods); $i++) {
+            $prev = $periods[$i - 1];
+            $cur = $periods[$i];
+            if ((string) $prev['from'] === (string) $cur['from']) { $out[] = 'same_start'; continue; }
+            $want = gmdate('Y-m-d', strtotime($cur['from'] . ' 00:00:00 UTC') - 86400);
+            if ($prev['to'] === null || $prev['to'] === '' || (string) $prev['to'] > $want) $out[] = 'overlap';
+            elseif ((string) $prev['to'] < $want) $out[] = 'gap';
+        }
+        return array_values(array_unique($out));
+    }
 }

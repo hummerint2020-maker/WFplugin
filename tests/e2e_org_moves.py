@@ -11,7 +11,7 @@ Wipes Workforce One test data; never run against a real site.
 import datetime, html, io, json, os, re, sys, urllib.parse, urllib.request, uuid, zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, ids, php, q, results, wp, HERE  # noqa: E402
 
 CHART = '/wp-admin/admin.php?page=ews31-org-chart'
 TODAY = php("echo current_time('Y-m-d');").splitlines()[-1]
@@ -200,6 +200,45 @@ st, r, _ = adm.post('ews31_employee_update', _wpnonce=un, id=E['khaled'], name='
                     department_id=0, supervisor_employee_ref='', attendance_enabled=1, active=1)
 check('...with the chart off, the Employees page works as before (no history)', manager(E['khaled']) == 0 and len(q("SELECT id FROM {p}ews_org_moves WHERE employee_id=%d" % E['khaled'])) == 2)
 php("update_option('ews_org_chart',['enabled'=>1,'audience'=>'everyone'],false);")
+
+# ---------------------------------------------------------------- 3.31.119: a move is saved all or nothing; an interrupted one is not lost
+import atexit  # noqa: E402
+atexit.register(lambda: break_writes(''))
+n_moves = lambda: int(q("SELECT COUNT(*) n FROM {p}ews_org_moves")[0]['n'])
+hana_mgr, before = manager(E['hana']), n_moves()
+for table, verb in (('ews_org_moves', 'INSERT'), ('ews_employee_relationships', 'INSERT')):
+    page, _ = chart(adm)
+    data = {'_wpnonce': nonce(page, 'ews_org_move'), 'employee_id': E['hana'], 'manager_ref': ref('Ahmed Samir', E['ahmed']), 'effective_date': TODAY, 'reason': 'All or nothing'}
+    break_writes(table, verb)
+    r = adm.post('ews_org_move', **data)[1]
+    break_writes('')
+    check('3.31.119: a database error on %s %s during a move: not done, her manager unchanged (never "no manager"), no history row' % (verb, table),
+          r.get('org_error') == 'apply' and manager(E['hana']) == hana_mgr and n_moves() == before, (r, manager(E['hana']), hana_mgr))
+st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-employees')
+un = re.search(r'name="action" value="ews31_employee_update">.*?name="_wpnonce" value="([^"]+)"', page, re.S).group(1)
+k_mgr = manager(E['khaled'])
+break_writes('ews_org_moves', 'INSERT')
+st, r, _ = adm.post('ews31_employee_update', _wpnonce=un, id=E['khaled'], name='Khaled Hamdy', domain_name='khaled.hamdy', email='khaled.hamdy@example.com',
+                    department_id=0, supervisor_employee_ref=ref('Ahmed Samir', E['ahmed']), attendance_enabled=1, active=1)
+break_writes('')
+check('...the Employees page too: "could not be saved", the supervisor unchanged', r.get('employee_error') == 'save' and manager(E['khaled']) == k_mgr, (r, manager(E['khaled'])))
+# Moves left "applying" by a run that died: before this release (no claim time), interrupted once, interrupted twice.
+php("""$t=$p.'ews_org_moves'; $now=current_time('mysql'); $ago=date('Y-m-d H:i:s',current_time('timestamp')-1200);
+    $row=function($e,$to,$at,$note)use($wpdb,$t,$now){$wpdb->insert($t,['employee_id'=>$e,'from_manager_id'=>0,'to_manager_id'=>$to,'effective_date'=>current_time('Y-m-d'),'reason'=>'stuck','status'=>'applying','source'=>'chart','note'=>$note,'created_by'=>1,'created_at'=>$now]+($at?['applied_at'=>$at]:[]));};
+    $row(%(hana)d,%(ahmed)d,null,''); $row(%(nour)d,%(ahmed)d,$ago,''); $row(%(hassan)d,%(ahmed)d,$ago,'resumed');
+    $wpdb->query("UPDATE {$t} SET applied_at=NULL WHERE employee_id=%(hana)d AND status='applying'"); delete_transient('ews_org_moves_checked');""" % E)
+php("do_action('ews_privacy_cleanup');")
+st_ = lambda e: q("SELECT status,note FROM {p}ews_org_moves WHERE employee_id=%d AND reason='stuck' ORDER BY id DESC LIMIT 1" % e)[0]
+check('a move left "applying" from before this release: shown as interrupted (not redone), her manager unchanged', st_(E['hana']) == {'status': 'failed', 'note': 'interrupted'} and manager(E['hana']) == hana_mgr, st_(E['hana']))
+check('a move interrupted once (claimed 20 minutes ago): done again, once', st_(E['nour'])['status'] == 'done' and manager(E['nour']) == E['ahmed'] and len(q("SELECT id FROM {p}ews_audit_log WHERE action='org_move_resumed'")) == 1, st_(E['nour']))
+check('a move interrupted twice: shown as interrupted', st_(E['hassan']) == {'status': 'failed', 'note': 'interrupted'} and manager(E['hassan']) == 0, st_(E['hassan']))
+page, d = chart(adm)
+stuck = [str(x['id']) for x in q("SELECT id FROM {p}ews_org_moves WHERE reason='stuck' AND status='failed'")]
+check('...both are under Needs attention, with Dismiss, and say why', len(stuck) == 2 and all('data-failed="%s"' % i in page for i in stuck) and page.count('it was interrupted while being done') >= 2, stuck)
+php("$wpdb->insert($p.'ews_org_moves',['employee_id'=>%d,'from_manager_id'=>0,'to_manager_id'=>%d,'effective_date'=>current_time('Y-m-d'),'reason'=>'busy','status'=>'applying','source'=>'chart','applied_at'=>current_time('mysql'),'created_by'=>1,'created_at'=>current_time('mysql')]);" % (E['khaled'], E['ahmed']))
+check('a second move cannot be scheduled while one is being done', move(adm, E['khaled'], ref('Mona Adel', E['mona']), date=TOMORROW).get('org_error') == 'scheduled')
+php("""$wpdb->query("DELETE FROM {$p}ews_org_moves WHERE reason IN ('stuck','busy')");""")
+php("$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'employee_admin_set_supervisor'); $m->setAccessible(true); $m->invoke($o,%d,%d); $m->invoke($o,%d,0);" % (E['nour'], E['karim'], E['hassan']))
 
 # ---------------------------------------------------------------- Excel: export
 page, d = chart(adm)

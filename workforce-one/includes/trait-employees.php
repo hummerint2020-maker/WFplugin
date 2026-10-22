@@ -96,12 +96,12 @@ trait EWS_Employees_Trait {
         return self::$ews_people_shift_memo[$id]=(int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d",$id));
     }
 
-    /** Set the shift an employee is on now (the shift history keeps it in step, 3.31.108). */
+    /** Set the shift an employee is on now (the shift history keeps it in step, 3.31.108). @return bool false on a database error (3.31.119) */
     private function people_set_shift_id($employee_id,$shift_id){
         global $wpdb;
         unset(self::$ews_people_shift_memo[(int)$employee_id]);
-        if($shift_id)$wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=%d WHERE id=%d AND COALESCE(default_shift_id,0)<>%d",(int)$shift_id,(int)$employee_id,(int)$shift_id));
-        else $wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=NULL WHERE id=%d AND default_shift_id IS NOT NULL",(int)$employee_id));
+        if($shift_id)return $wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=%d WHERE id=%d AND COALESCE(default_shift_id,0)<>%d",(int)$shift_id,(int)$employee_id,(int)$shift_id))!==false;
+        return $wpdb->query($wpdb->prepare("UPDATE {$this->employees} SET default_shift_id=NULL WHERE id=%d AND default_shift_id IS NOT NULL",(int)$employee_id))!==false;
     }
 
     /** Every employee (archived too) with the shift they are on now. @return array<int,int> id => shift id */

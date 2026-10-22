@@ -64,4 +64,19 @@ final class MoveRules
     {
         return (int) round((strtotime($b . ' 00:00:00 UTC') - strtotime($a . ' 00:00:00 UTC')) / 86400);
     }
+
+    /** A move claimed this long ago and still "applying" was interrupted (3.31.119). */
+    public const STALE_CLAIM = 900;
+
+    /**
+     * A scheduled move still "applying" (3.31.119): its run died. Done again once (resume), failed when it was already resumed or was
+     * claimed before 3.31.119 (no claim time: the change may have been half done then), or left while its run may still be going (wait).
+     * @param int|null $claimedAt unix seconds
+     */
+    public static function recover(?int $claimedAt, string $note, int $now): string
+    {
+        if ($claimedAt === null || $claimedAt <= 0) return 'fail';
+        if ($now - $claimedAt < self::STALE_CLAIM) return 'wait';
+        return $note === 'resumed' ? 'fail' : 'resume';
+    }
 }

@@ -44,4 +44,15 @@ final class MoveRulesTest extends TestCase
         $this->assertSame(-1, R::daysBetween('2026-10-14', '2026-10-13'));
         $this->assertSame(365, R::daysBetween('2026-01-01', '2027-01-01'));
     }
+
+    /** 3.31.119: a move left "applying" by a run that died. */
+    public function testRecover(): void
+    {
+        $now = 1_800_000_000;
+        $this->assertSame('fail', R::recover(null, '', $now), 'claimed before 3.31.119: no claim time');
+        $this->assertSame('wait', R::recover($now - R::STALE_CLAIM + 1, '', $now), 'its run may still be going');
+        $this->assertSame('resume', R::recover($now - R::STALE_CLAIM, '', $now));
+        $this->assertSame('resume', R::recover($now - 86400, 'loop', $now));
+        $this->assertSame('fail', R::recover($now - R::STALE_CLAIM, 'resumed', $now), 'interrupted twice');
+    }
 }

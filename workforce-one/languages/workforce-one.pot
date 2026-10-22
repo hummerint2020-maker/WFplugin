@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.117\n"
+"Project-Id-Version: Workforce One 3.31.118\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-21T21:19:24+00:00\n"
+"POT-Creation-Date: 2026-10-21T23:50:33+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -30,7 +30,7 @@ msgid "Internal"
 msgstr ""
 
 #: includes/trait-admin-nav.php:24
-#: includes/trait-system-health.php:557
+#: includes/trait-system-health.php:562
 msgid "Home"
 msgstr ""
 
@@ -280,7 +280,7 @@ msgstr ""
 #. translators: %s: site name
 #: includes/trait-admin-nav.php:74
 #: includes/trait-admin.php:102
-#: includes/trait-system-health.php:645
+#: includes/trait-system-health.php:650
 #: templates/admin/features.php:105
 #: templates/admin/system-health.php:42
 msgid "System health"
@@ -770,11 +770,11 @@ msgctxt "log in to the app"
 msgid "Sign In"
 msgstr ""
 
-#: includes/trait-app-layout.php:201
+#: includes/trait-app-layout.php:204
 msgid "The username or password is incorrect. Please try again."
 msgstr ""
 
-#: includes/trait-app-layout.php:202
+#: includes/trait-app-layout.php:205
 msgid "You have been logged out successfully."
 msgstr ""
 
@@ -851,108 +851,108 @@ msgstr ""
 msgid "Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub."
 msgstr ""
 
-#: includes/trait-approvals.php:330
+#: includes/trait-approvals.php:338
 msgid "Requests now waiting for you"
 msgstr ""
 
 #. translators: %s: employee name
-#: includes/trait-approvals.php:331
+#: includes/trait-approvals.php:339
 #, php-format
 msgid "%s reports to you now: their requests waiting for approval now wait for you."
 msgstr ""
 
-#: includes/trait-approvals.php:687
+#: includes/trait-approvals.php:694
 #: templates/admin/org-chart.php:44
 msgid "Direct manager"
 msgstr ""
 
-#: includes/trait-approvals.php:687
+#: includes/trait-approvals.php:694
 msgid "Manager's manager"
 msgstr ""
 
-#: includes/trait-approvals.php:687
+#: includes/trait-approvals.php:694
 msgid "Department manager"
 msgstr ""
 
-#: includes/trait-approvals.php:688
+#: includes/trait-approvals.php:695
 msgid "Team manager"
 msgstr ""
 
-#: includes/trait-approvals.php:688
+#: includes/trait-approvals.php:695
 #: templates/admin/corrections.php:84
 #: templates/admin/substitutes.php:18
 #: templates/app/corrections.php:69
 msgid "HR"
 msgstr ""
 
-#: includes/trait-approvals.php:688
+#: includes/trait-approvals.php:695
 msgid "Finance"
 msgstr ""
 
-#: includes/trait-approvals.php:689
-#: includes/trait-approvals.php:690
+#: includes/trait-approvals.php:696
+#: includes/trait-approvals.php:697
 msgid "Approver"
 msgstr ""
 
-#: includes/trait-approvals.php:689
+#: includes/trait-approvals.php:696
 msgid "Colleague"
 msgstr ""
 
-#: includes/trait-approvals.php:790
+#: includes/trait-approvals.php:797
 #: includes/trait-my-approvals.php:97
 msgid "Administrators"
 msgstr ""
 
 #. translators: 1: substitute, 2: the manager away
-#: includes/trait-approvals.php:795
-#: includes/trait-approvals.php:796
+#: includes/trait-approvals.php:802
+#: includes/trait-approvals.php:803
 #, php-format
 msgid "%1$s for %2$s"
 msgstr ""
 
 #. translators: 1: person, 2: date and time
-#: includes/trait-approvals.php:800
+#: includes/trait-approvals.php:807
 #, php-format
 msgid "%1$s approved · %2$s"
 msgstr ""
 
 #. translators: 1: person, 2: date and time
-#: includes/trait-approvals.php:801
+#: includes/trait-approvals.php:808
 #, php-format
 msgid "%1$s rejected · %2$s"
 msgstr ""
 
 #. translators: %s: working hours
-#: includes/trait-approvals.php:804
+#: includes/trait-approvals.php:811
 #, php-format
 msgid "Deciding now · waiting %s working hours"
 msgstr ""
 
 #. translators: 1: page, 2: number of pages
-#: includes/trait-approvals.php:807
+#: includes/trait-approvals.php:814
 #: templates/admin/system-health.php:126
 #: templates/app/list-pager.php:18
 msgid "Next"
 msgstr ""
 
-#: includes/trait-approvals.php:808
+#: includes/trait-approvals.php:815
 #: includes/trait-corrections.php:642
 msgid "Closed automatically"
 msgstr ""
 
-#: includes/trait-approvals.php:808
+#: includes/trait-approvals.php:815
 msgid "Withdrawn by the employee"
 msgstr ""
 
-#: includes/trait-approvals.php:811
+#: includes/trait-approvals.php:818
 msgid "Not needed for this request"
 msgstr ""
 
-#: includes/trait-approvals.php:811
+#: includes/trait-approvals.php:818
 msgid "Skipped: the approver made the request"
 msgstr ""
 
-#: includes/trait-approvals.php:811
+#: includes/trait-approvals.php:818
 msgid "Skipped: nobody to decide it"
 msgstr ""
 
@@ -982,14 +982,14 @@ msgstr ""
 #: includes/trait-org-import.php:35
 #: includes/trait-org-import.php:69
 #: includes/trait-org-import.php:93
-#: includes/trait-org-moves.php:189
-#: includes/trait-org-moves.php:211
+#: includes/trait-org-moves.php:243
+#: includes/trait-org-moves.php:265
 #: includes/trait-presence.php:71
 #: includes/trait-presence.php:82
 #: includes/trait-presence.php:95
 #: includes/trait-presence.php:98
 #: includes/trait-private-files.php:128
-#: includes/trait-signin-evidence.php:273
+#: includes/trait-signin-evidence.php:276
 #: includes/trait-task-extras.php:103
 #: includes/trait-task-extras.php:118
 #: includes/trait-task-extras.php:130
@@ -1111,8 +1111,8 @@ msgstr ""
 #: includes/trait-corrections.php:201
 #: includes/trait-daily-workers.php:458
 #: includes/trait-daily-workers.php:460
-#: includes/trait-signin-evidence.php:275
-#: includes/trait-signin-evidence.php:277
+#: includes/trait-signin-evidence.php:278
+#: includes/trait-signin-evidence.php:280
 #: includes/trait-task-extras.php:186
 #: includes/trait-task-extras.php:188
 msgid "File not found."
@@ -2107,7 +2107,7 @@ msgid "Planned for today"
 msgstr ""
 
 #. translators: %s: amount
-#: includes/trait-employee-admin.php:191
+#: includes/trait-employee-admin.php:197
 #, php-format
 msgid "This employee still owes %s of a salary advance. The rest is taken off their last pay."
 msgstr ""
@@ -2687,7 +2687,7 @@ msgstr ""
 
 #. translators: %d: hours
 #: includes/trait-leave-view.php:21
-#: includes/trait-system-health.php:591
+#: includes/trait-system-health.php:596
 #: templates/app/new-request.php:81
 #: templates/app/overtime.php:49
 #, php-format
@@ -3387,34 +3387,46 @@ msgstr ""
 msgid "It is tried again every 10 minutes. If this stays, send this to your host or developer:"
 msgstr ""
 
-#: includes/trait-shift-history.php:303
-#: includes/trait-shift-history.php:324
+#: includes/trait-shift-history.php:366
+#: includes/trait-shift-history.php:390
 msgid "Company working hours"
 msgstr ""
 
 #. translators: %d: minutes
-#: includes/trait-shift-history.php:309
+#: includes/trait-shift-history.php:372
 #, php-format
 msgid "grace %d min"
 msgstr ""
 
-#: includes/trait-shift-history.php:314
+#: includes/trait-shift-history.php:377
 msgid "Pick a valid day."
 msgstr ""
 
-#: includes/trait-shift-history.php:314
+#: includes/trait-shift-history.php:377
 msgid "Pick a shift."
 msgstr ""
 
-#: includes/trait-shift-history.php:314
+#: includes/trait-shift-history.php:377
 msgid "Only HR can change the shift from a past day."
 msgstr ""
 
-#: includes/trait-shift-history.php:316
+#: includes/trait-shift-history.php:378
+msgid "The shift could not be saved. Nothing was changed; please try again."
+msgstr ""
+
+#: includes/trait-shift-history.php:379
+msgid "This employee's shift was changed by someone else at the same moment. Check the history and try again."
+msgstr ""
+
+#: includes/trait-shift-history.php:380
+msgid "This employee's shift is being saved by someone else. Try again in a moment."
+msgstr ""
+
+#: includes/trait-shift-history.php:382
 msgid "The upcoming change was removed."
 msgstr ""
 
-#: includes/trait-shift-history.php:316
+#: includes/trait-shift-history.php:382
 msgid "Shift saved."
 msgstr ""
 
@@ -3578,24 +3590,24 @@ msgid "With %s"
 msgstr ""
 
 #. translators: %s: a page of the employee app
-#: includes/trait-system-health.php:559
+#: includes/trait-system-health.php:564
 #, php-format
 msgid "App: %s"
 msgstr ""
 
 #. translators: %s: a page of the employee app
-#: includes/trait-system-health.php:559
+#: includes/trait-system-health.php:564
 msgid "App: other page"
 msgstr ""
 
 #. translators: %s: a scheduled job
-#: includes/trait-system-health.php:560
+#: includes/trait-system-health.php:565
 #, php-format
 msgid "Job: %s"
 msgstr ""
 
 #. translators: 1: page, 2: times
-#: includes/trait-system-health.php:573
+#: includes/trait-system-health.php:578
 #, php-format
 msgid "%1$s stopped with a PHP fatal error %2$d time"
 msgid_plural "%1$s stopped with a PHP fatal error %2$d times"
@@ -3603,149 +3615,149 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: page, 2: times
-#: includes/trait-system-health.php:573
+#: includes/trait-system-health.php:578
 msgid "Look at the PHP errors list for the file and line."
 msgstr ""
 
 #. translators: 1: job, 2: duration
-#: includes/trait-system-health.php:574
+#: includes/trait-system-health.php:579
 #, php-format
 msgid "%1$s has not run for %2$s"
 msgstr ""
 
 #. translators: 1: job, 2: duration
-#: includes/trait-system-health.php:574
+#: includes/trait-system-health.php:579
 msgid "WP-Cron may not be running on this site (for example DISABLE_WP_CRON is set and no server cron calls it)."
 msgstr ""
 
 #. translators: %s: job
-#: includes/trait-system-health.php:575
+#: includes/trait-system-health.php:580
 #, php-format
 msgid "%s failed on its last run"
 msgstr ""
 
 #. translators: %s: job
-#: includes/trait-system-health.php:575
+#: includes/trait-system-health.php:580
 msgid "It stopped with a PHP error or did not finish."
 msgstr ""
 
 #. translators: 1: page, 2: failed, 3: runs
-#: includes/trait-system-health.php:576
+#: includes/trait-system-health.php:581
 #, php-format
 msgid "%1$s ended with a server error %2$d times in %3$d"
 msgstr ""
 
 #. translators: 1: page, 2: failed, 3: runs
-#: includes/trait-system-health.php:576
+#: includes/trait-system-health.php:581
 msgid "A server error is a PHP fatal error or an HTTP 500."
 msgstr ""
 
 #. translators: 1: page, 2: time
-#: includes/trait-system-health.php:577
+#: includes/trait-system-health.php:582
 #, php-format
 msgid "1 in 20 loads of %1$s takes longer than %2$s"
 msgstr ""
 
 #. translators: %s: limit
-#: includes/trait-system-health.php:577
+#: includes/trait-system-health.php:582
 #, php-format
 msgid "The limit for this page is %s."
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-system-health.php:577
+#: includes/trait-system-health.php:582
 #, php-format
 msgid "Worst %s"
 msgstr ""
 
 #. translators: %s: page
-#: includes/trait-system-health.php:578
+#: includes/trait-system-health.php:583
 #, php-format
 msgid "%s is slower than before"
 msgstr ""
 
 #. translators: %s: version
-#: includes/trait-system-health.php:578
+#: includes/trait-system-health.php:583
 #, php-format
 msgid "It started with version %s."
 msgstr ""
 
 #. translators: %s: version
-#: includes/trait-system-health.php:578
+#: includes/trait-system-health.php:583
 msgid "Typical load time went up over the last days."
 msgstr ""
 
 #. translators: 1: before, 2: after
-#: includes/trait-system-health.php:578
+#: includes/trait-system-health.php:583
 #, php-format
 msgid "Typical %1$s → %2$s"
 msgstr ""
 
 #. translators: 1: page, 2: times
-#: includes/trait-system-health.php:579
+#: includes/trait-system-health.php:584
 #, php-format
 msgid "%1$s runs the same query %2$d times in one load"
 msgstr ""
 
 #. translators: %s: function
-#: includes/trait-system-health.php:579
+#: includes/trait-system-health.php:584
 #, php-format
 msgid "It comes from %s, most likely inside a loop. One query for all rows would do."
 msgstr ""
 
 #. translators: %s: function
-#: includes/trait-system-health.php:579
+#: includes/trait-system-health.php:584
 msgid "Most likely inside a loop. One query for all rows would do."
 msgstr ""
 
 #. translators: 1: page, 2: queries
-#: includes/trait-system-health.php:580
+#: includes/trait-system-health.php:585
 #, php-format
 msgid "%1$s makes %2$d database queries per load"
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-system-health.php:581
+#: includes/trait-system-health.php:586
 #, php-format
 msgid "One query took %s"
 msgstr ""
 
 #. translators: 1: time, 2: function
-#: includes/trait-system-health.php:581
+#: includes/trait-system-health.php:586
 #, php-format
 msgid "One query took %1$s (from %2$s)"
 msgstr ""
 
 #. translators: %s: page
-#: includes/trait-system-health.php:581
+#: includes/trait-system-health.php:586
 #, php-format
 msgid "Seen on %s."
 msgstr ""
 
 #. translators: 1: page, 2: percent
-#: includes/trait-system-health.php:582
+#: includes/trait-system-health.php:587
 #, php-format
 msgid "%1$s used %2$d%% of its memory limit"
 msgstr ""
 
 #. translators: 1: page, 2: percent
-#: includes/trait-system-health.php:582
+#: includes/trait-system-health.php:587
 msgid "The limit is the one that request ran under (wp-admin and scheduled jobs often have a larger one)."
 msgstr ""
 
 #. translators: 1: page, 2: percent
-#: includes/trait-system-health.php:583
+#: includes/trait-system-health.php:588
 msgid "New PHP warning in Workforce One code"
 msgstr ""
 
 #. translators: 1: file, 2: line
-#: includes/trait-system-health.php:584
+#: includes/trait-system-health.php:589
 #, php-format
 msgid "New PHP warning in %1$s:%2$d"
 msgstr ""
 
 #. translators: %d: times
-#: includes/trait-system-health.php:584
+#: includes/trait-system-health.php:589
 #, php-format
 msgid "%d time"
 msgid_plural "%d times"
@@ -3753,12 +3765,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: times
-#: includes/trait-system-health.php:585
+#: includes/trait-system-health.php:590
 msgid "Workforce One adds database queries to other pages of the site"
 msgstr ""
 
 #. translators: %d: queries
-#: includes/trait-system-health.php:585
+#: includes/trait-system-health.php:590
 #, php-format
 msgid "About %d queries on each page that is not its own."
 msgstr ""
@@ -3766,7 +3778,7 @@ msgstr ""
 #. translators: %d: minutes
 #. translators: %s: minutes
 #. translators: %d: break number
-#: includes/trait-system-health.php:591
+#: includes/trait-system-health.php:596
 #: templates/app/pay.php:93
 #: templates/app/pay.php:96
 #: templates/app/pay.php:97
@@ -3779,7 +3791,7 @@ msgid "%d min"
 msgstr ""
 
 #. translators: %d: count
-#: includes/trait-system-health.php:612
+#: includes/trait-system-health.php:617
 #, php-format
 msgid "%d critical"
 msgid_plural "%d critical"
@@ -3787,7 +3799,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: count
-#: includes/trait-system-health.php:613
+#: includes/trait-system-health.php:618
 #, php-format
 msgid "%d warning"
 msgid_plural "%d warnings"
@@ -3795,40 +3807,40 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: count
-#: includes/trait-system-health.php:614
+#: includes/trait-system-health.php:619
 #, php-format
 msgid "%d note"
 msgid_plural "%d notes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-system-health.php:616
+#: includes/trait-system-health.php:621
 msgid "System health:"
 msgstr ""
 
-#: includes/trait-system-health.php:616
+#: includes/trait-system-health.php:621
 msgid "Look at this first →"
 msgstr ""
 
-#: includes/trait-system-health.php:619
+#: includes/trait-system-health.php:624
 msgid "Hide for 7 days"
 msgstr ""
 
 #. translators: %s: site name
-#: includes/trait-system-health.php:644
+#: includes/trait-system-health.php:649
 #, php-format
 msgid "System health found these on %s:"
 msgstr ""
 
-#: includes/trait-system-health.php:705
+#: includes/trait-system-health.php:710
 msgid "Typical time over the last days"
 msgstr ""
 
-#: includes/trait-system-health.php:715
+#: includes/trait-system-health.php:720
 msgid "Not enough days yet."
 msgstr ""
 
-#: includes/trait-system-health.php:788
+#: includes/trait-system-health.php:793
 msgid "queries per load"
 msgstr ""
 
@@ -5334,6 +5346,10 @@ msgstr ""
 
 #: templates/admin/org-chart.php:72
 msgid "the new manager was archived"
+msgstr ""
+
+#: templates/admin/org-chart.php:72
+msgid "it was interrupted while being done; check their manager, then dismiss it or move them again"
 msgstr ""
 
 #: templates/admin/org-chart.php:73
