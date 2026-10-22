@@ -700,3 +700,22 @@ Add `docs/mockups/_kit/screens_schedulechange.py`, starting from `snap/attendanc
 - /home/user/WFplugin/workforce-one/includes/trait-advances.php
 - /home/user/WFplugin/workforce-one/templates/app/attendance.php
 - Also: /home/user/WFplugin/workforce-one/includes/trait-week-lock.php, /home/user/WFplugin/workforce-one/includes/trait-admin-requests.php, /home/user/WFplugin/workforce-one/includes/trait-my-approvals.php, /home/user/WFplugin/workforce-one/src/Approvals/Workflows.php, /home/user/WFplugin/workforce-one/includes/trait-schema.php, /home/user/WFplugin/workforce-one/src/Settings/Options.php, /home/user/WFplugin/docs/architecture/modules.json
+## Owner's answers (2026-10-22)
+All as recommended:
+0. Order: first 3.31.122, the approval-engine fix for a repeated Requests page post (all types); then this feature on top of it.
+1. Approver: HR by default; the levels are configurable in Approval Workflows like any other type.
+2. Statuses: every type except leave types (leave goes through a leave request so the balance is counted); `allow_leave`
+   can allow them.
+3. One request holds many days and people (up to `max_days`, default 25); HR approves or rejects it as a whole.
+4. The employee is told when the change is applied; `notify_on_request` can also tell them at request time.
+5. A day changed before the decision is skipped and the others are applied, with the reason shown; `changed_day=refuse`
+   can refuse the whole request instead.
+6. Expiry: after 14 days without a decision (`expire_days`, 0 = never), and when its month is closed in Payroll.
+7. Only days of final weeks can be requested; HR decides in My approvals and on the Requests page, so the feature needs My
+   approvals on.
+8. Its own switch, off by default, working only while the week lock is on; switching it or the week lock off closes the
+   waiting requests and tells the managers.
+9. Mobile app: nothing new in this release.
+10. Past days: up to 14 days back (`past_days`), never in a month closed in Payroll.
+11. CSV import: final-week rows can be sent to HR as one request with one reason (`import`, on by default once the feature
+    is on); in R2a or R2b depending on size.
