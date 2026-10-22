@@ -48,7 +48,7 @@ trait EWS_Week_Lock_Trait {
 
     /** An edit of a final week by someone allowed to: one Audit Log row. */
     private function week_lock_audit_edit($employee_id,$date,$source,$old,$new){
-        $this->audit('schedule_locked_edit','schedule',(int)$employee_id,sprintf('%s | %s | %s → %s (final week)',$date,$source,$old!==null&&$old!==''?$old:'Not Set',$new));
+        $this->audit('schedule_locked_edit','employee',(int)$employee_id,sprintf('%s | %s | %s → %s (final week)',$date,$source,$old!==null&&$old!==''?$old:'Not Set',$new));
     }
 
     /** Refused edits of a final week: one row per request, not per day. */
@@ -63,7 +63,7 @@ trait EWS_Week_Lock_Trait {
     private function week_lock_record_request($employee_id,array $dates,$source,$ref){
         if(!$this->week_lock_enabled()||!$dates)return;
         $locked=array_values(array_filter(array_unique($dates),function($d){return $this->week_lock_is_locked($d);}));
-        if($locked)$this->audit('schedule_locked_by_'.$source,'schedule',(int)$employee_id,$ref.' | '.implode(', ',$locked).' (final week)');
+        if($locked)$this->audit('schedule_locked_by_'.$source,'employee',(int)$employee_id,$ref.' | '.implode(', ',$locked).' (final week)');
     }
 
     /**
@@ -103,7 +103,12 @@ trait EWS_Week_Lock_Trait {
         // Only a cutoff of the last day: switching it on, or a site that was down for a week, does not send an old one.
         if($last['week']===''||strtotime($now)-strtotime($last['at'])>DAY_IN_SECONDS)return;
         if((string)get_option('ews_week_lock_notified','')===$last['week'])return;
-        update_option('ews_week_lock_notified',$last['week'],false);
+        // Claimed with one conditional UPDATE: of two overlapping cron runs only one tells everyone.
+        global $wpdb;
+        add_option('ews_week_lock_notified','','','no');
+        $claimed=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value=%s WHERE option_name='ews_week_lock_notified' AND option_value<>%s",$last['week'],$last['week']));
+        wp_cache_delete('ews_week_lock_notified','options');
+        if($claimed!==1)return;
         $this->week_lock_notify($last['week']);
     }
 

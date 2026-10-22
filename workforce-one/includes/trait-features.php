@@ -61,7 +61,7 @@ trait EWS_Features_Trait {
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
             'privacy_html'=>$this->privacy_settings_section(),
             'office_minimum'=>$this->om_settings(),'om_teams'=>$this->om_admin_teams(),'om_statuses'=>$this->schedule_type_names(true),
-            'week_lock'=>$this->week_lock_settings(),'week_lock_next'=>$this->week_lock_next(),'timezone'=>wp_timezone_string(),
+            'week_lock'=>$this->week_lock_settings(),'week_lock_next'=>$this->week_lock_next(),'timezone'=>wp_timezone_string(),'week_lock_can'=>$this->week_lock_can_override(),
             'roles_url'=>admin_url('admin.php?page=ews31-roles'),
             'weekday_names'=>$this->working_day_names(),'working_days'=>$this->working_days(),
             'saved'=>isset($_GET['features_saved']),
@@ -83,7 +83,8 @@ trait EWS_Features_Trait {
             if($om_error!=='')$this->features_redirect(['features_error'=>'om_'.$om_error]);
         }
         $wl=null;
-        if(isset($post['week_lock_present'])){
+        // Only someone who may edit a final week may move the cutoff or switch the lock off, or a week could be reopened unaudited.
+        if(isset($post['week_lock_present'])&&$this->week_lock_can_override()){
             [$wl,$wl_error]=\WorkforceOne\Settings\WeekLockSettings::fromPost($post);
             if($wl_error!=='')$this->features_redirect(['features_error'=>'wl_'.$wl_error]);
         }

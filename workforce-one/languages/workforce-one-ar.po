@@ -7624,3 +7624,12 @@ msgstr "صفوف الأسابيع النهائية تظهر في المعاين�
 
 msgid "This week's schedule is final since %s. You can still request leave or a swap."
 msgstr "جدول هذا الأسبوع نهائي منذ %s. يمكنك طلب إجازة أو تبديل كالمعتاد."
+
+msgid "Disabled"
+msgstr "معطّل"
+
+msgid "Only people with \"Edit a locked week\" can change these settings."
+msgstr "لا يغيّر هذه الإعدادات إلا من لديه صلاحية «تعديل أسبوع مقفول»."
+
+msgid "By default: site administrators and the EWS Administrator role."
+msgstr "افتراضيًا: مديرو الموقع ودور EWS Administrator."

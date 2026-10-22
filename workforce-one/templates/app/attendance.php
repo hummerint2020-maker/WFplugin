@@ -162,7 +162,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
                         <?php foreach ($statuses as $s): ?><option value="<?php echo esc_attr($s); ?>"><?php echo esc_html($s); ?></option><?php endforeach; ?>
                     </select>
                     <?php echo $om_counter($d); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?>
-                    <?php if ($branch): ?><select class="wfo-attg-fill-branch" data-ews-fill-branch="<?php echo (int) $i; ?>" aria-label="<?php echo esc_attr(sprintf(/* translators: %s: day */ __('Branch for everyone on %s', 'workforce-one'), date_i18n('D d M', strtotime($d)))); ?>">
+                    <?php if ($branch): ?><select class="wfo-attg-fill-branch" data-ews-fill-branch="<?php echo (int) $i; ?>"<?php echo $wl_readonly ? ' disabled' : ''; ?> aria-label="<?php echo esc_attr(sprintf(/* translators: %s: day */ __('Branch for everyone on %s', 'workforce-one'), date_i18n('D d M', strtotime($d)))); ?>">
                         <option value=""><?php esc_html_e('Branch…', 'workforce-one'); ?></option>
                         <option value="main"><?php esc_html_e('Their main branch', 'workforce-one'); ?></option>
                         <?php foreach ($branch['names'] as $bid => $bname): ?><option value="<?php echo (int) $bid; ?>"><?php echo esc_html($bname); ?></option><?php endforeach; ?>

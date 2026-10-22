@@ -12,7 +12,7 @@ final class WeekLock
     /**
      * The first day of the week $date is in, anchored on the first working day like week_dates_configured(): a day that is
      * not a working day belongs to the week of the working day before it.
-     * @param int[] $workingDays weekdays (0 = Sunday), in the company's order
+     * @param int[] $workingDays weekdays (0 = Sunday), sorted as working_days() returns them
      */
     public static function weekStart(string $date, array $workingDays): string
     {

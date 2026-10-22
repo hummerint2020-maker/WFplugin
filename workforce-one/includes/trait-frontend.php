@@ -186,6 +186,9 @@ trait EWS_Frontend_Trait {
                 $message=__('This week is final now.','workforce-one');
                 /* translators: %d: number of schedule changes */
                 if($saved>0)$message.=' '.sprintf(_n('%d other change was saved successfully.','%d other changes were saved successfully.',$saved,'workforce-one'),$saved);
+                $conflicts=absint($_GET['grid_conflict']??0);
+                /* translators: %d: number of schedule changes */
+                if($conflicts>0)$message.=' '.sprintf(_n('%d schedule change was not saved because another manager changed the same cell before you saved.','%d schedule changes were not saved because another manager changed the same cell before you saved.',$conflicts,'workforce-one'),$conflicts);
                 $message.=' '.__('To change a day of a final week, ask HR.','workforce-one');
                 return $this->ux_modal($title,$message,'error');
             }

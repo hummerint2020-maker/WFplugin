@@ -36,6 +36,7 @@
  * @var array{week:string,at:string} $week_lock_next   the next cutoff
  * @var string $timezone                       the site's time zone
  * @var string $roles_url                      Roles & Permissions
+ * @var bool $week_lock_can                    may change the Week lock settings ("Edit a locked week")
  * @var array<int,array{name:string,size:int,share:int}> $om_teams   teams with their size and automatic share
  * @var string[] $om_statuses                  the schedule statuses that exist
  * @var string[] $weekday_names                 0 = Sunday
@@ -164,20 +165,21 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 
 <div class="wfo-feature-section" id="ews-week-lock"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Week lock', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('From a fixed time every week, next week\'s schedule is final and stays final: managers can no longer change it. Leave and swaps are still applied, and attendance is still fixed through corrections. Off by default.', 'workforce-one'); ?></div></div>
-    <?php $switch('week_lock_enabled', $on['week_lock'], __('Enabled', 'workforce-one')); ?>
+    <?php if ($week_lock_can) { $switch('week_lock_enabled', $on['week_lock'], __('Enabled', 'workforce-one')); } else { ?><span class="wfo-feature-status"><?php echo $on['week_lock'] ? esc_html__('Enabled', 'workforce-one') : esc_html__('Disabled', 'workforce-one'); ?></span><?php } ?>
 </div>
-<div class="wfo-wl-admin"><table class="form-table" role="presentation">
+<?php if (!$week_lock_can): ?><p class="description"><?php esc_html_e('Only people with "Edit a locked week" can change these settings.', 'workforce-one'); ?></p><?php endif; ?>
+<fieldset<?php echo $week_lock_can ? '' : ' disabled'; ?>><div class="wfo-wl-admin"><table class="form-table" role="presentation">
     <tr><th scope="row"><label for="ews-wl-day"><?php esc_html_e('Cutoff', 'workforce-one'); ?></label></th><td>
         <select id="ews-wl-day" name="wl_cutoff_day"><?php foreach ($weekday_names as $w => $n): ?><option value="<?php echo (int) $w; ?>" <?php selected((int) $week_lock['cutoff_day'], (int) $w); ?>><?php echo esc_html($n); ?></option><?php endforeach; ?></select>
         <input type="time" name="wl_cutoff_time" value="<?php echo esc_attr($week_lock['cutoff_time']); ?>" aria-label="<?php esc_attr_e('Cutoff time', 'workforce-one'); ?>">
         <p class="description"><?php /* translators: %s: the site's time zone */ echo esc_html(sprintf(__('Every week at this time, next week\'s schedule becomes final. Site time: %s (WordPress Settings → General).', 'workforce-one'), $timezone)); ?></p></td></tr>
     <tr><th scope="row"><?php esc_html_e('Next cutoff', 'workforce-one'); ?></th><td><p><?php /* translators: 1: date and time, 2: first day of the week */ echo esc_html(sprintf(__('%1$s, for the week of %2$s. Weeks before it are final.', 'workforce-one'), date_i18n(__('D j M, g:i A', 'workforce-one'), strtotime($week_lock_next['at'])), date_i18n('j M', strtotime($week_lock_next['week'])))); ?></p></td></tr>
-    <tr><th scope="row"><?php esc_html_e('Who can edit a final week', 'workforce-one'); ?></th><td><p><?php esc_html_e('Site administrators and the EWS Administrator role.', 'workforce-one'); ?></p>
+    <tr><th scope="row"><?php esc_html_e('Who can edit a final week', 'workforce-one'); ?></th><td><p><?php esc_html_e('By default: site administrators and the EWS Administrator role.', 'workforce-one'); ?></p>
         <p class="description"><?php esc_html_e('The "Edit a locked week" permission. Give it to other roles (such as HR) on', 'workforce-one'); ?> <a href="<?php echo esc_url($roles_url); ?>"><?php esc_html_e('Roles & Permissions', 'workforce-one'); ?></a>. <?php esc_html_e('Every change they make to a final week is in the Audit Log.', 'workforce-one'); ?></p></td></tr>
     <tr><th scope="row"><?php esc_html_e('Requests', 'workforce-one'); ?></th><td><p><?php esc_html_e('Leave, leave cancellations and swaps are requested, approved and applied as usual, also on final days. Each change they make to a final week is in the Audit Log.', 'workforce-one'); ?></p></td></tr>
     <tr><th scope="row"><?php esc_html_e('Employees', 'workforce-one'); ?></th><td><label><input type="checkbox" name="wl_notify" value="1" <?php checked((int) $week_lock['notify'], 1); ?>> <?php esc_html_e('Send everyone with a schedule that week a notification at the cutoff: "Next week\'s schedule is final"', 'workforce-one'); ?></label>
         <p class="description"><?php esc_html_e('Employees always see "Final" on the week in their schedule.', 'workforce-one'); ?></p></td></tr>
-</table></div></div>
+</table></div></fieldset></div>
 
 <div class="wfo-feature-section" id="ews-daily-workers"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Daily Workers</div><div class="wfo-feature-desc">Day labourers without an email or an account: foremen record each site's day from inside the site with a group photo, workers can sign in with their mobile and a PIN, payout sheets and labour cost per project. Never mixed with staff. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-daily-workers&tab=settings')); ?>">Settings</a></div></div>

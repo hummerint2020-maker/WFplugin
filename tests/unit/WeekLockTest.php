@@ -15,7 +15,8 @@ final class WeekLockTest extends TestCase
         $this->assertSame('2026-10-11', WeekLock::weekStart('2026-10-16', self::SUN_THU), 'Friday belongs to the week before it');
         $this->assertSame('2026-10-11', WeekLock::weekStart('2026-10-17', self::SUN_THU), 'and Saturday');
         $this->assertSame('2026-10-12', WeekLock::weekStart('2026-10-14', [1, 2, 3, 4, 5]), 'Mon–Fri');
-        $this->assertSame('2026-10-10', WeekLock::weekStart('2026-10-14', [6, 0, 1, 2, 3]), 'Sat–Wed');
+        $this->assertSame('2026-10-11', WeekLock::weekStart('2026-10-14', [0, 1, 2, 3, 6]), 'Sat–Wed: working_days() is sorted, so the week starts on Sunday');
+        $this->assertSame('2026-10-11', WeekLock::weekStart('2026-10-17', [0, 1, 2, 3, 6]), '...and that Saturday is its last day');
         $this->assertSame('2026-10-07', WeekLock::weekStart('2026-10-13', [3]), 'a single working day');
         $this->assertSame('2026-10-13', WeekLock::weekStart('2026-10-13', []), 'no working days: the day itself');
         $this->assertSame('', WeekLock::weekStart('not a date', self::SUN_THU));
@@ -43,12 +44,12 @@ final class WeekLockTest extends TestCase
     {
         $now = '2026-10-13 10:00:00';   // Tuesday of the week of 11 Oct
         foreach (['2026-10-11', '2026-10-13', '2026-10-15'] as $day) {
-            foreach ([self::SUN_THU, [1, 2, 3, 4, 5], [6, 0, 1, 2, 3], [3]] as $days) {
+            foreach ([self::SUN_THU, [1, 2, 3, 4, 5], [0, 1, 2, 3, 6], [3]] as $days) {
                 $this->assertTrue(WeekLock::isLocked(WeekLock::weekStart($day, $days), $now, 4, '17:00'), $day . ' with ' . implode(',', $days));
             }
         }
-        // A day off that becomes the first working day of a week starts the next week, which is not final yet.
-        $this->assertFalse(WeekLock::isLocked(WeekLock::weekStart('2026-10-17', [6, 0, 1, 2, 3]), $now, 4, '17:00'));
+        // A Saturday that becomes a working day stays in the week it was in (working_days() is sorted).
+        $this->assertTrue(WeekLock::isLocked(WeekLock::weekStart('2026-10-17', [0, 1, 2, 3, 6]), $now, 4, '17:00'));
     }
 
     public function testNextAndLatest(): void

@@ -1,13 +1,14 @@
 """Behaviour tests for the week lock (3.31.121, docs/tasks/week-lock.md): from a weekly cutoff the coming week's schedule is
 final and stays final. Managers can no longer change it (grid, no-JavaScript form, single day, CSV import); people with "Edit a
-locked week" can, audited. Approved requests are applied as usual and recorded. Employees see "Final" and are told at the
+locked week" can, audited. Approved requests are applied as usual and recorded (here a leave decided on the Requests page;
+the other request paths call the same recorder). Employees see "Final" and are told at the
 cutoff. Off by default; off changes nothing.
 
 Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_week_lock.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import html, json, os, re, sys, urllib.parse, uuid
+import atexit, html, json, os, re, sys, urllib.parse, uuid
 import urllib.request, urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -125,7 +126,9 @@ ctx = seed()
 W0, W1, W2 = ctx['w0'], ctx['w1'], ctx['w2']
 adm, mgr = Session('admin', 'admin'), Session('emp1', 'emp1pass')
 php("$u=new WP_User(%d); $u->add_cap('ews_manage_attendance');" % ctx['mona_uid'])
-late_enough = ctx['now'] < '23:58'   # the "later today" cutoff needs a minute left today
+# Whatever happens below, the next suites start without the switch and the manager's extra permissions.
+atexit.register(lambda: php("$u=new WP_User(%d); foreach(['ews_manage_attendance','ews_week_lock_override','ews_manage_settings'] as $c) $u->remove_cap($c); delete_option('ews_feature_week_lock'); delete_option('ews_week_lock'); delete_option('ews_week_lock_notified');" % ctx['mona_uid']))
+late_enough = ctx['now'] < '23:30'   # the "later today" cutoff needs time left today (the run takes minutes)
 
 # ---------------------------------------------------------------- off: nothing changes
 pg = page(mgr, W1[0])
@@ -167,6 +170,16 @@ check('the open week saves as before', qs.get('grid_saved') == '1' and 'grid_loc
 day = W1.index(W1[0])
 qs = grid_save(mgr, W1[0], legacy={'att[%d][%d]' % (ctx['omar'], day): 'Office', 'att[%d][%d]' % (ctx['mona'], day): 'WFH'})
 check('no-JavaScript form: an unchanged day is fine, a changed one is refused', qs.get('grid_locked') == '1' and sched(ctx['mona'], W1[0]) == 'Office', qs)
+php("$wpdb->update($p.'ews_schedule',['note'=>'keep me'],['employee_id'=>%d,'work_date'=>'%s']);" % (ctx['omar'], W1[0]))
+grid_save(mgr, W1[0], legacy={'att[%d][%d]' % (ctx['omar'], day): 'Office', 'att[%d][note_%d]' % (ctx['omar'], day): ''})
+check('...and an unchanged day of a final week is not rewritten (its note stays)', q("SELECT note FROM {p}ews_schedule WHERE employee_id=%d AND work_date='%s'" % (ctx['omar'], W1[0])) == [{'note': 'keep me'}])
+php("$u=new WP_User(%d); $u->add_cap('ews_manage_settings');" % ctx['mona_uid'])
+fields = [(k, v) for k, v in form_fields(mgr.req(FEAT)[1], 'ews31_features_save') if not k.startswith('wl_') and k != 'week_lock_enabled'] + [('wl_cutoff_day', '6'), ('wl_cutoff_time', '23:00')]
+st, body, h = mgr.req('/wp-admin/admin-post.php', urllib.parse.urlencode(fields).encode())
+check('someone without "Edit a locked week" cannot switch the lock off or move the cutoff', 'features_saved=1' in h.get('Location', '')
+      and php("echo (int)get_option('ews_feature_week_lock').' '.get_option('ews_week_lock')['cutoff_time'];").strip() == '1 00:00', h.get('Location'))
+check('...the card is read-only for them', 'Only people with "Edit a locked week"' in mgr.req(FEAT)[1])
+php("$u=new WP_User(%d); $u->remove_cap('ews_manage_settings');" % ctx['mona_uid'])
 # ---------------------------------------------------------------- HR / administrator: "Edit a locked week"
 pg = page(adm, W1[0])
 check('an administrator sees the week is final and can still edit it', 'you can still edit it' in pg and 'data-ews-cell' in pg and 'ews-save-all' in pg)
@@ -180,6 +193,13 @@ php("$u=new WP_User(%d); $u->remove_cap('ews_week_lock_override');" % ctx['mona_
 check('the EWS Administrator role holds "Edit a locked week" after the upgrade', php("echo (int)get_role('ews_administrator')->has_cap('ews_week_lock_override');").strip() == '1')
 
 # ---------------------------------------------------------------- CSV import
+target = W1[3] if len(W1) > 3 else W1[1]
+st, body, h = upload(adm, {'action': 'ews31_att_preview', '_wpnonce': form_nonce(page(adm, W2[0]), 'ews31_att_preview') or 'x'}, 'domain_name,work_date,status,note\nomar,%s,WFH,\n' % target)
+token = urllib.parse.parse_qs(urllib.parse.urlparse(h.get('Location', '')).query).get('preview', [''])[0]
+pv = adm.req('/app/?ews_view=attendance&week=%s&preview=%s' % (W2[0], token))[1]
+st, body, h = adm.req('/wp-admin/admin-post.php', {'action': 'ews31_att_import', '_wpnonce': form_nonce(pv, 'ews31_att_import') or 'x', 'token': token})
+check('an administrator\'s import into a final week is saved, each day audited', 'imported=1' in h.get('Location', '') and sched(ctx['omar'], target) == 'WFH'
+      and '%s | import | %s → WFH (final week)' % (target, 'Office' if target in (W1[0], W1[1]) else 'Not Set') in audits('schedule_locked_edit'), (h.get('Location'), audits('schedule_locked_edit')))
 pg = page(mgr, W2[0])
 csv = 'domain_name,work_date,status,note\nomar,%s,WFH,\nomar,%s,WFH,\n' % (W1[2] if len(W1) > 2 else W1[0], W2[1])
 st, body, h = upload(mgr, {'action': 'ews31_att_preview', '_wpnonce': form_nonce(pg, 'ews31_att_preview') or 'x'}, csv)
@@ -228,7 +248,6 @@ check('notification off: nothing is sent', q("SELECT COUNT(*) c FROM {p}ews_noti
 lock(on=False)
 qs = grid_save(mgr, W1[0], [change(ctx['omar'], 'w1', W1[0], 'Office', original='WFH')])
 check('switched off: the week can be changed again', qs.get('grid_saved') == '1' and sched(ctx['omar'], W1[0]) == 'Office', qs)
-php("$u=new WP_User(%d); $u->remove_cap('ews_manage_attendance'); delete_option('ews_feature_week_lock'); delete_option('ews_week_lock'); delete_option('ews_week_lock_notified');" % ctx['mona_uid'])
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

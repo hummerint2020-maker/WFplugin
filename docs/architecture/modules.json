@@ -141,7 +141,8 @@
         "week_lock_record_request",
         "week_lock_view",
         "week_lock_when",
-        "week_lock_next"
+        "week_lock_next",
+        "week_lock_can_override"
       ]
     },
     "locations": {
