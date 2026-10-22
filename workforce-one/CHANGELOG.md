@@ -11,8 +11,10 @@ Fixes to existing behaviour; no new setting, no database change.
   the level stays open and the page says so ("a schedule day of this swap changed since the request"), so the swap can be rejected.
   Rejecting at any level closes the swap and its approval together. A swap the colleague has not answered yet, and workflows without
   levels, work as before.
-- Swaps exchanged early by this error before 3.31.120 keep an approval request that is still open but shown to no one; it does
-  nothing and is not repaired (owner decision).
+- The Requests page shows a swap waiting for approvers with its approval and current level ("Approval #n · Level 2"), not "Peer".
+- Swaps exchanged early by this error before 3.31.120 keep an approval request that is still open; it is not repaired (owner
+  decision). It is not listed anywhere, but when Shift Swap deadlines are set it can still send a reminder to its approver or an
+  escalation notice to the administrators for a swap that is already done; those can be ignored.
 - Notifications (internal): a notification without a recipient is no longer recorded as a failed save; the inbox boundary check also
   catches calls written with a leading backslash.
 ## 3.31.119

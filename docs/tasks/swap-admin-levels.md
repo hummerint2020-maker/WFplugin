@@ -80,3 +80,24 @@ the `swap_apply` split touches the colleague-accept path (covered by the 3.31.11
 4. Engine REJECTED, swap Awaiting: admin may still approve (override) / reject only.
 5. Hub message for a refused apply: the generic error / a new "schedule changed since the request" notice.
 6. Swaps applied too early before 3.31.120: no repair, CHANGELOG explains / an upgrade routine cancels their open engine requests.
+
+## Owner's answers (2026-10-22)
+Q1 roll everything back; Q2 leave the app approver path as it is; Q3 no past-day check; Q4 the administrator may still approve;
+Q5 **a special notice** ("a schedule day of this swap changed since the request"); Q6 no repair.
+
+## Implementation notes and review (3.31.120)
+Where the code differs from the design:
+- Q5: `Hub::CHANGED` ('changed') with `Hub::isErrorNotice()`; the text is English like the other Requests page notices (that page
+  is not translated). A refused exchange on the direct path (Pending, or an approval already decided) shows it too.
+- The Requests page did not show the level of an Awaiting swap ("Peer"): the row now carries its approval request, so it shows
+  "Approval #n · Level n" (the design assumed it already did).
+- `swap_close` uses the table name directly instead of `ensure_swap_schema()`: it runs inside the transaction, where a dbDelta on
+  an out-of-date schema would commit the approval decision early (review 5). Every caller reads the swap through the schema first.
+
+Independent review: no CONFIRMED code bug. Fixed: the CHANGELOG (an orphaned approval from before can still send deadline
+reminders or escalations when Shift Swap deadlines are set; the Approval column line), the missing tests (one level with a
+changed schedule; an approval REJECTED while the swap waits), a test that could pass on another error notice, and `swap_close`
+inside the transaction.
+Not fixed (owner question): a repeated post (double click, two administrators) decides the next level too, since the form does not
+say which level it decides. It is the same today for leave, overtime and every Requests page type; the fix (post the level, refuse
+when it moved on) belongs in the approval engine for all types, in its own release.

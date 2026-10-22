@@ -45,7 +45,8 @@ trait EWS_Swap_Trait {
 
     /** Moves a swap from $from (Pending, or Awaiting the approvers) to $status. Returns 1 on success, 0 if it had moved on, false on a DB error. */
     private function swap_close($id,$status,$from='Pending'){
-            global $wpdb;$table=$this->ensure_swap_schema();
+            // The callers read the swap first (schema ensured); it also runs inside transactions, where a dbDelta would commit (3.31.120).
+            global $wpdb;$table=$wpdb->prefix.'ews_schedule_swaps';
             return $wpdb->update($table,['status'=>$status,'responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>$id,'status'=>$from],['%s','%d','%s'],['%d','%s']);
         }
 

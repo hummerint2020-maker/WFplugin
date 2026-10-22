@@ -319,7 +319,7 @@ check('the last level with a schedule changed since the request: nothing saved, 
       qs.get('request_notice') == 'changed' and swap(a5)['status'] == 'Awaiting' and engine(a5) == ('WAITING_FOR_LEVEL_2', [(1, 'APPROVED'), (2, 'PENDING')])
       and sched(e2) == 'Vacation' and sched(e1) == 'Office' and notes() == before_notes, (qs, swap(a5), engine(a5), sched(e1), sched(e2)))
 st, page, _ = adm.req('/wp-admin/admin.php?page=ews31-requests&request_notice=changed')
-check('...the Requests page says the schedule changed, as an error', 'changed since the request' in page and 'notice-error' in page)
+check('...the Requests page says the schedule changed, as an error', re.search(r'notice-error[^>]*><p>Nothing was changed: a schedule day of this swap changed since the request', page) is not None)
 qs = admin(a5, 'reject')
 check('...and it can then be rejected cleanly', qs.get('request_notice') == 'rejected' and swap(a5)['status'] == 'Rejected' and engine(a5)[0] == 'REJECTED' and sched(e2) == 'Vacation', (qs, swap(a5), engine(a5)))
 
@@ -342,6 +342,24 @@ php("$wpdb->update($p.'ews_approval_requests',['status'=>'APPROVED'],['entity_ty
 qs = admin(a6, 'approve')
 check('an approval already decided while the swap still waits (an earlier failed exchange): the administrator\'s approval exchanges the days',
       qs.get('request_notice') == 'approved' and swap(a6)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(a6)))
+
+a8 = awaiting()
+php("$wpdb->update($p.'ews_approval_requests',['status'=>'REJECTED'],['entity_type'=>'schedule_swap','entity_id'=>%d]);" % a8)
+qs = admin(a8, 'approve')
+check('an approval rejected while the swap still waits: the administrator may still approve it (owner decision)',
+      qs.get('request_notice') == 'approved' and swap(a8)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(a8)))
+
+configure_swap('LEVEL_1', e3)
+a9 = awaiting()
+set_schedule(e1, 'Vacation')
+stale(e1, 'Office')
+qs = admin(a9, 'approve')
+stale()
+check('one level, the schedule changed since the request: nothing saved, the level stays open (before, the approval was kept)',
+      qs.get('request_notice') == 'changed' and swap(a9)['status'] == 'Awaiting' and engine(a9) == ('WAITING_FOR_LEVEL_1', [(1, 'PENDING')]) and sched(e1) == 'Vacation' and sched(e2) == 'WFH',
+      (qs, swap(a9), engine(a9), sched(e1), sched(e2)))
+admin(a9, 'reject')
+configure_swap('LEVEL_2', e3, e4)
 
 set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
 create(e2)
