@@ -2,20 +2,29 @@
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Notifications\PushEndpoint;
+use WorkforceOne\Notifications\Inbox;
+use WorkforceOne\Notifications\InboxSchema;
+use WorkforceOne\Notifications\WordPressInboxStore;
 
 trait EWS_Notifications_Trait {
 
-    private $notifications;
-    private static $notifications_schema_ready = false;
-    private static $ews_notification_unread_cache = [];
+    /** @var array<string,\WorkforceOne\Notifications\Inbox> One inbox per site, including switch_to_blog() requests. */
+    private $notification_inboxes = [];
+    /** @var array<string,\WorkforceOne\Notifications\InboxSchema> */
+    private $notification_inbox_schemas = [];
     private static $ews_vapid_public_key_cache = null;
     /** Pushes waiting for the end of this request (notify()); see push_flush(). */
     private static $ews_push_queue = [];
 
+    private function notification_inbox(): Inbox {
+        global $wpdb;
+        $site=$wpdb->prefix;
+        if(!isset($this->notification_inboxes[$site]))$this->notification_inboxes[$site]=new Inbox(new WordPressInboxStore($wpdb));
+        return $this->notification_inboxes[$site];
+    }
+
     private function invalidate_notification_unread_cache($user_id=0){
-        $user_id=absint($user_id);
-        if($user_id)unset(self::$ews_notification_unread_cache[$user_id]);
-        else self::$ews_notification_unread_cache=[];
+        $this->notification_inbox()->invalidateUnread(absint($user_id));
     }
 
     private function notification_policy_categories(){
@@ -86,33 +95,9 @@ trait EWS_Notifications_Trait {
 
     private function ensure_notifications_schema($force=false){
         global $wpdb;
-        $this->notifications=$wpdb->prefix.'ews_notifications';
-        if(self::$notifications_schema_ready && !$force) return;
-        if(!$force && $this->ews_schema_is_current()) return;
-        $charset=$wpdb->get_charset_collate();
-        $exists=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->notifications));
-        if(!$exists || $force){
-            require_once ABSPATH.'wp-admin/includes/upgrade.php';
-            dbDelta("CREATE TABLE {$this->notifications} (
-                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                user_id BIGINT UNSIGNED NOT NULL,
-                title VARCHAR(190) NOT NULL,
-                message TEXT NOT NULL,
-                type VARCHAR(30) NOT NULL DEFAULT 'info',
-                entity VARCHAR(80) NULL,
-                entity_id BIGINT UNSIGNED NULL,
-                is_read TINYINT(1) NOT NULL DEFAULT 0,
-                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                read_at DATETIME NULL,
-                link TEXT NULL,
-                PRIMARY KEY(id),
-                KEY user_unread(user_id,is_read),
-                KEY user_read_date(user_id,is_read,created_at),
-                KEY created_at(created_at),
-                KEY entity(entity,entity_id)
-            ) {$charset};");
-        }
-        self::$notifications_schema_ready=true;
+        $site=$wpdb->prefix;
+        if(!isset($this->notification_inbox_schemas[$site]))$this->notification_inbox_schemas[$site]=new InboxSchema($wpdb);
+        $this->notification_inbox_schemas[$site]->ensure((bool)$force,$this->ews_schema_is_current());
     }
 
     /** Saves an in-app notification when the policy for $category allows it. */
@@ -120,7 +105,7 @@ trait EWS_Notifications_Trait {
         global $wpdb;
         if(!$this->notification_in_app_allowed($category))return 0;
         $this->ensure_notifications_schema();
-        $ok=$wpdb->insert($this->notifications,[
+        $id=$this->notification_inbox()->publish([
             'user_id'=>$user_id,
             'title'=>sanitize_text_field($title),
             'message'=>wp_kses_post($message),
@@ -130,14 +115,13 @@ trait EWS_Notifications_Trait {
             'is_read'=>0,
             'created_at'=>current_time('mysql'),
             'link'=>$link!==''?esc_url_raw($link):null,
-        ],['%d','%s','%s','%s','%s','%d','%d','%s','%s']);
-        if($ok===false){
+        ]);
+        if(!$id){
             if(method_exists($this,'audit')) $this->audit('notification_insert_failed','notification',0,'user_id='.$user_id.'; '.$wpdb->last_error);
             if(defined('WP_DEBUG') && WP_DEBUG && function_exists('error_log')) error_log('[Workforce One] notification_insert_failed: '.$wpdb->last_error);
             return 0;
         }
-        $this->invalidate_notification_unread_cache($user_id);
-        return (int)$wpdb->insert_id;
+        return $id;
     }
 
     /**
@@ -166,7 +150,7 @@ trait EWS_Notifications_Trait {
         if(!$reachable){
             // A page this person may not open: the app's Notifications page, with this notification shown.
             $link=$this->notification_focus_link($id);
-            if($id){global $wpdb;$wpdb->update($this->notifications,['link'=>esc_url_raw($link)],['id'=>$id],['%s'],['%d']);}
+            if($id)$this->notification_inbox()->setLink($id,esc_url_raw($link));
         }
         if(($opt['push']??true) && $this->notification_push_allowed($category)){
             // Opening it from the phone marks it read (ews_nid, see notification_mark_landed()).
@@ -206,9 +190,8 @@ trait EWS_Notifications_Trait {
     public function notification_mark_landed(){
         $id=absint($_GET['ews_nid']??0); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- marks the reader's own notification read, nothing else
         if(!$id||!is_user_logged_in())return;
-        global $wpdb;
         $this->ensure_notifications_schema();
-        if($wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d AND is_read=0",current_time('mysql'),$id,get_current_user_id())))$this->invalidate_notification_unread_cache(get_current_user_id());
+        $this->notification_inbox()->markRead($id,get_current_user_id(),current_time('mysql'),true);
     }
 
     /** End of the request: the queued pushes go to WP-Cron as one event, started right away. */
@@ -293,13 +276,10 @@ trait EWS_Notifications_Trait {
         }
 
     private function notification_unread_count($user_id=null){
-        global $wpdb;
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return 0;
-        if(array_key_exists($user_id,self::$ews_notification_unread_cache))return self::$ews_notification_unread_cache[$user_id];
         $this->ensure_notifications_schema();
-        self::$ews_notification_unread_cache[$user_id]=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->notifications} WHERE user_id=%d AND is_read=0",$user_id));
-        return self::$ews_notification_unread_cache[$user_id];
+        return $this->notification_inbox()->unreadCount($user_id);
     }
 
     /**
@@ -313,27 +293,18 @@ trait EWS_Notifications_Trait {
     }
 
     private function notification_rows($user_id=null,$limit=30,$filter='all'){
-        global $wpdb;
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return [];
         $this->ensure_notifications_schema();
-        $limit=max(1,min(100,absint($limit)));
-        $filter=$filter==='unread'?'unread':'all';
-        $where="user_id=%d";
-        $args=[$user_id];
-        if($filter==='unread'){ $where.=' AND is_read=0'; }
-        $args[]=$limit;
-        return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->notifications} WHERE {$where} ORDER BY is_read ASC, created_at DESC LIMIT %d",$args));
+        return $this->notification_inbox()->rows($user_id,absint($limit),$filter==='unread');
     }
 
     public function notification_read(){
         if(!is_user_logged_in())wp_die('You must be logged in.');
         $id=absint($_POST['notification_id']??0);
         check_admin_referer('ews_notification_read_'.$id);
-        global $wpdb;
         $this->ensure_notifications_schema();
-        $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d",current_time('mysql'),$id,get_current_user_id()));
-        $this->invalidate_notification_unread_cache(get_current_user_id());
+        $this->notification_inbox()->markRead($id,get_current_user_id(),current_time('mysql'));
         $redirect=wp_get_referer()?:remove_query_arg('action');
         wp_safe_redirect($redirect);exit;
     }
@@ -345,12 +316,11 @@ trait EWS_Notifications_Trait {
         // Built from the app's page, never from this admin-post request (it would come back here).
         if(!$id){wp_safe_redirect($list);exit;}
         check_admin_referer('ews_notification_open_'.$id);
-        global $wpdb;
         $this->ensure_notifications_schema();
-        $note=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->notifications} WHERE id=%d AND user_id=%d LIMIT 1",$id,get_current_user_id()));
+        $note=$this->notification_inbox()->findForUser($id,get_current_user_id());
         if(!$note){wp_safe_redirect($list);exit;}
         if(!(int)$note->is_read){
-            $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE id=%d AND user_id=%d AND is_read=0",current_time('mysql'),$id,get_current_user_id()));
+            $this->notification_inbox()->markRead($id,get_current_user_id(),current_time('mysql'),true);
             $this->invalidate_notification_unread_cache(get_current_user_id());
         }
         wp_safe_redirect($this->notification_url($note));exit;
@@ -359,10 +329,8 @@ trait EWS_Notifications_Trait {
     public function notification_read_all(){
         if(!is_user_logged_in())wp_die('You must be logged in.');
         check_admin_referer('ews_notification_read_all');
-        global $wpdb;
         $this->ensure_notifications_schema();
-        $wpdb->query($wpdb->prepare("UPDATE {$this->notifications} SET is_read=1,read_at=%s WHERE user_id=%d AND is_read=0",current_time('mysql'),get_current_user_id()));
-        $this->invalidate_notification_unread_cache(get_current_user_id());
+        $this->notification_inbox()->markAllRead(get_current_user_id(),current_time('mysql'));
         $redirect=wp_get_referer()?:$this->app_home_url();
         wp_safe_redirect($redirect);exit;
     }
@@ -413,14 +381,13 @@ trait EWS_Notifications_Trait {
     }
 
     public function cleanup_notifications(){
-        global $wpdb;
         if(method_exists($this,'attendance_idempotency_cleanup'))$this->attendance_idempotency_cleanup();
         if(method_exists($this,'api_auth_cleanup'))$this->api_auth_cleanup();
         $this->ensure_notifications_schema();
         $days=(int)$this->option('ews_notification_retention_days');
         if($days<=0)return;
         $cutoff=gmdate('Y-m-d H:i:s',time()-($days*DAY_IN_SECONDS));
-        $wpdb->query($wpdb->prepare("DELETE FROM {$this->notifications} WHERE created_at < %s",$cutoff));
+        $this->notification_inbox()->deleteBefore($cutoff);
     }
 
 

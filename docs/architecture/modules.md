@@ -7,6 +7,10 @@ another, and a module can later be moved, replaced or switched off on its own.
 
 ## Where we are (step 1, October 2026)
 
+The [Notifications inbox extraction](notification-inbox.md) is the first database-backed
+application slice moved behind an explicit service/store contract. The legacy ratchet below
+still measures trait dependencies; an additional CI check guards this extracted slice.
+
 - **Pure rules are already split by module** in `src/<Module>/` (24 folders, about 9,500 lines). They
   make no database calls and have unit tests.
 - **The code that runs the plugin is not split yet.** `includes/trait-*.php` holds 62 traits (about
