@@ -101,3 +101,5 @@ inside the transaction.
 Not fixed (owner question): a repeated post (double click, two administrators) decides the next level too, since the form does not
 say which level it decides. It is the same today for leave, overtime and every Requests page type; the fix (post the level, refuse
 when it moved on) belongs in the approval engine for all types, in its own release.
+Owner's answer (2026-10-22): fix it in its own release, in the approval engine for every Requests page type (the form posts the
+level it shows; a decision on a level that moved on is refused), before the week-lock feature.
