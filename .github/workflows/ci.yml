@@ -211,6 +211,8 @@ jobs:
           exit $rc
       - name: Office minimum (counters, warning, team shares, leave note, weekly reminder, never blocks saving)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_office_minimum.py "$S"
+      - name: Week lock (final weeks, override, requests, notification)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_week_lock.py "$S"
       - name: wp-admin menu in sections (8 sections, tabs, old links, permissions, features off, Arabic)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_admin_nav.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery

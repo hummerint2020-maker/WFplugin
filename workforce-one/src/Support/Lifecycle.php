@@ -14,7 +14,7 @@ final class Lifecycle
     public const CRON_HOOKS = [
         'ews_notifications_cleanup', 'ews_auto_attendance_tick', 'ews_smart_nudges_tick', 'ews_tasks_tick', 'ews_corrections_tick',
         'ews_office_minimum_tick', 'ews_approvals_tick', 'ews_privacy_cleanup', 'ews_health_rollup', 'ews_break_duration_reminder',
-        'ews_break_manager_escalation', 'ews_push_deliver',
+        'ews_break_manager_escalation', 'ews_push_deliver', 'ews_week_lock_tick',
     ];
 
     public const ROLES = ['ews_administrator', 'ews_manager', 'ews_supervisor', 'ews_employee', 'ews_foreman'];

@@ -128,6 +128,7 @@ trait EWS_Admin_Requests_Trait {
         $emp=$this->people_employee((int)$r->employee_id);
         $approve=$decision==='approve';
         $now=current_time('mysql');$uid=get_current_user_id();
+        $written=[];
         if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
         $ok=$wpdb->update($table,['status'=>$approve?'Approved':'Rejected','reviewed_by'=>$uid,'reviewed_at'=>$now],['id'=>$id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s'])===1;
         if($ok && $approve && $emp){
@@ -135,12 +136,13 @@ trait EWS_Admin_Requests_Trait {
             for($ts=strtotime($r->start_date);$ok && $ts<=strtotime($r->end_date);$ts=strtotime('+1 day',$ts)){
                 $date=date('Y-m-d',$ts);
                 if(!$this->is_working_day($date))continue;
-                $existing=$this->schedule_for_employee_date((int)$emp->id,$date);
+                $existing=$this->schedule_for_employee_date((int)$emp->id,$date);$written[]=$date;
                 $ok=($existing
                     ?$wpdb->update($this->schedule,['status'=>'Vacation','note'=>$note,'updated_by'=>$uid,'updated_at'=>$now],['id'=>$existing->id])
                     :$wpdb->insert($this->schedule,['employee_id'=>(int)$emp->id,'work_date'=>$date,'status'=>'Vacation','note'=>$note,'updated_by'=>$uid,'updated_at'=>$now],['%d','%s','%s','%s','%d','%s']))!==false;
             }
         }
+        if($ok && $approve && $emp)$this->week_lock_record_request((int)$emp->id,$written,'leave','legacy vacation #'.(int)$id);   // week lock (3.31.121)
         if(!$ok || $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
         if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?'Vacation Approved':'Vacation Rejected',$approve?'Your vacation request has been approved.':'Your vacation request has been rejected.',['entity_id'=>$id,'push'=>false]);
         return Hub::outcome($decision);

@@ -136,3 +136,18 @@ attendance lock for past weeks.
 8. A manager's change on a locked day becomes a request to HR, with a reason. Owner: **two releases** — R1 the lock itself (off by
    default; the manager's change is refused with a message for now), R2 right after it: the "schedule change request" to HR (a new
    approval type, designed then). The owner may leave the switch off until R2 ships.
+
+## Implementation notes (3.31.121)
+Where the code differs from the design:
+- No `past` or `requests` settings: the owner's answers fixed them (past weeks stay final; requests always write, audited), so
+  `ews_week_lock` holds only the cutoff day, time and the employee notification.
+- Requests (S6-S10) are never refused; `week_lock_record_request()` adds one Audit Log row per request for the days it wrote into a
+  final week. Swap requests on final days are allowed (owner answer 4).
+- The grid's whole week is read-only for people without "Edit a locked week" (the lock is per week, so a page is all or nothing);
+  the server still checks every cell, so a page opened before the cutoff and saved after it is refused cell by cell.
+- The cutoff notification runs on its own five-minute event (`ews_week_lock_tick`, listed in `Support\Lifecycle`), sends only a
+  cutoff of the last 24 hours, once (`ews_week_lock_notified`), and switching the lock on marks the cutoff that already passed.
+- The schema target moves to 3.31.121 so `ensure_roles_permissions()` gives the EWS Administrator role the new permission on upgrade.
+- The single-day handler (`att_single`, no form posts it) refuses a final week with a message; it has no e2e case (its nonce
+  needs a page that does not exist).
+- Mobile API: no `locked` field yet (release 2 with the change request).

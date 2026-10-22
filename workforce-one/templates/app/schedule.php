@@ -18,6 +18,7 @@
  * @var string[] $legend                status names
  * @var string $range
  * @var string $week_start
+ * @var array{locked:bool,since:string,override:bool,soon:string}|null $week_lock  Week lock (3.31.121); null when off
  * @var string $week_label
  * @var string $prev_url
  * @var string $next_url
@@ -58,7 +59,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
     <section class="wfo-sched-top">
         <div class="ews-week-nav wfo-weeknav">
             <a href="<?php echo esc_url($prev_url); ?>" aria-label="<?php esc_attr_e('Previous week', 'workforce-one'); ?>" class="wfo-weeknav-prev"><?php echo Icons::svg('chevron', 20, 2.2); ?></a>
-            <div class="wfo-weeknav-text"><span><?php echo esc_html($week_text); ?></span><small dir="ltr"><?php echo esc_html($range); ?></small></div>
+            <div class="wfo-weeknav-text"><span><?php echo esc_html($week_text); ?></span><small dir="ltr"><?php echo esc_html($range); ?></small><?php if (!empty($week_lock['locked'])): ?><em class="wfo-wl-final"><?php echo Icons::svg('lock', 12, 2.4); ?><?php esc_html_e('Final', 'workforce-one'); ?></em><?php endif; ?></div>
             <a href="<?php echo esc_url($next_url); ?>" aria-label="<?php esc_attr_e('Next week', 'workforce-one'); ?>" class="wfo-weeknav-next"><?php echo Icons::svg('chevron', 20, 2.2); ?></a>
         </div>
         <div class="ews-schedule-tools wfo-sched-tools ews-no-print">
@@ -87,6 +88,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
             </li>
             <?php endforeach; ?>
         </ol>
+        <?php if (!empty($week_lock['locked'])): ?><p class="wfo-wl-emp-note"><?php echo Icons::svg('lock', 14, 2.2); ?><span><?php /* translators: %s: date and time */ echo esc_html(sprintf(__('This week\'s schedule is final since %s. You can still request leave or a swap.', 'workforce-one'), date_i18n(__('D j M, g:i A', 'workforce-one'), strtotime($week_lock['since'])))); ?></span></p><?php endif; ?>
         <button type="button" class="ews-btn wfo-btn-solid wfo-myweek-swap ews-no-print" data-wfo-sheet="wfo-swap-sheet" aria-haspopup="dialog"><?php echo Icons::svg('swap', 16); ?><?php esc_html_e('Request a swap', 'workforce-one'); ?></button>
     </section>
     <?php endif; ?>

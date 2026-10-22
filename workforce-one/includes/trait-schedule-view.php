@@ -122,7 +122,7 @@ trait EWS_Schedule_View_Trait {
         wp_enqueue_style('workforce-one-schedule-page');
         return $this->render_template('app/schedule',[
             'emps'=>$emps,'list'=>$list,'list_keep'=>$this->list_keep_args('schedule'),'swap_people'=>$swap_people,'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'cells'=>$cells,'people'=>$people,'legend'=>$legend,
-            'range'=>$range,'week_start'=>date('Y-m-d',$sun),
+            'range'=>$range,'week_start'=>date('Y-m-d',$sun),'week_lock'=>$this->week_lock_view(date('Y-m-d',$sun)),
             'week_label'=>TeamOrder::weekLabel(date('Y-m-d',$sun),date('Y-m-d',$this_week))??$range,
             'prev_url'=>add_query_arg(['ews_view'=>'schedule','week'=>date('Y-m-d',strtotime('-7 days',$sun))]),
             'next_url'=>add_query_arg(['ews_view'=>'schedule','week'=>date('Y-m-d',strtotime('+7 days',$sun))]),

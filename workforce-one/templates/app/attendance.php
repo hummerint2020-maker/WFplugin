@@ -38,6 +38,8 @@
  * @var string $post_url
  * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int}|null $office_min  Office minimum (3.31.77); null when off
  * @var string $office_min_html     its warning card and teams sheets (templates/app/office-minimum.php)
+ * @var array{locked:bool,since:string,override:bool,soon:string}|null $week_lock  Week lock (3.31.121); null when off
+ * @var callable $week_lock_when     "Thu 8 Oct, 5:00 PM"
  */
 if (!defined('ABSPATH')) exit;
 $om_counter = static function (string $d) use ($office_min): string {
@@ -77,9 +79,10 @@ $result = static function (array $badge, string $detail_sep) use ($result_icons,
     return $html;
 };
 $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'workforce-one'), 'leave' => __('Leave', 'workforce-one'), 'trip' => __('Business Trip', 'workforce-one')];
+$wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
 ?>
 <?php if ($message): ?><div class="ews-notice wfo-att-notice<?php echo $message['error'] ? ' ews-notice-error' : ''; ?>"><?php echo esc_html($message['text']); ?></div><?php endif; ?>
-<div class="ews-attendance-page wfo-att">
+<div class="ews-attendance-page wfo-att<?php echo $wl_readonly ? ' wfo-wl-locked' : ''; ?>">
     <section class="wfo-att-top">
         <div class="wfo-att-intro">
             <span class="ews-dash-kicker wfo-att-kicker"><?php esc_html_e('MANAGER CONTROL CENTER', 'workforce-one'); ?></span>
@@ -91,7 +94,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                 <input type="hidden" name="ews_view" value="attendance">
                 <label class="ews-att-week-range" title="<?php esc_attr_e('Choose a date', 'workforce-one'); ?>">
                     <?php echo Icons::svg('calendar', 18); ?>
-                    <strong dir="ltr"><?php echo esc_html($range); ?></strong>
+                    <strong dir="ltr"><?php echo esc_html($range); ?></strong><?php if ($week_lock && $week_lock['locked']): ?><span class="wfo-wl-final is-small"><?php echo Icons::svg('lock', 12, 2.4); ?><?php esc_html_e('Final', 'workforce-one'); ?></span><?php endif; ?>
                     <input type="date" name="week" value="<?php echo esc_attr($dates[0]); ?>" data-ews-autosubmit aria-label="<?php esc_attr_e('Choose week', 'workforce-one'); ?>">
                 </label>
             </form>
@@ -106,6 +109,25 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
         <div class="ews-att-stat absent"><span><?php echo Icons::svg('alert', 20); ?></span><div><b><?php echo (int) $summary['Absent']; ?></b><small><?php esc_html_e('Absent days', 'workforce-one'); ?></small></div></div>
         <div class="ews-att-stat rate"><span><?php echo Icons::svg('insights', 20); ?></span><div><b><?php echo (int) $rate; ?>%</b><small><?php esc_html_e('Attendance rate', 'workforce-one'); ?></small></div></div>
     </div>
+
+    <?php if ($week_lock && ($week_lock['locked'] || $week_lock['soon'] !== '')): $wl_kind = $week_lock['soon'] !== '' ? 'soon' : ($week_lock['override'] ? 'override' : 'locked'); ?>
+    <section class="wfo-wl-banner is-<?php echo esc_attr($wl_kind); ?>" role="status">
+        <span class="wfo-wl-ico"><?php echo Icons::svg($wl_kind === 'soon' ? 'overtime' : ($wl_kind === 'override' ? 'key' : 'lock'), 20, 2.2); ?></span>
+        <div class="wfo-wl-text">
+        <?php if ($wl_kind === 'soon'): ?>
+            <h3><?php /* translators: %s: time of day */ echo esc_html(sprintf(__('This week becomes final today at %s', 'workforce-one'), date_i18n(get_option('time_format'), strtotime($week_lock['soon'])))); ?></h3>
+            <p><?php esc_html_e('After that, only people with "Edit a locked week" can change it. Leave and swaps are still applied as usual.', 'workforce-one'); ?></p>
+        <?php elseif ($wl_kind === 'override'): ?>
+            <h3><?php esc_html_e('This week is final, and you can still edit it', 'workforce-one'); ?></h3>
+            <p><?php /* translators: %s: date and time */ echo esc_html(sprintf(__('Locked since %s. Every change you make is recorded in the Audit Log under your name.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
+        <?php else: ?>
+            <h3><?php esc_html_e('This week is final', 'workforce-one'); ?></h3>
+            <p><?php /* translators: %s: date and time */ echo esc_html(sprintf(__('Locked since %s. Approved leave and swaps are still applied. To change a day, ask HR.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
+        <?php endif; ?>
+        </div>
+        <?php if ($wl_kind !== 'soon'): ?><span class="wfo-wl-final<?php echo $wl_kind === 'override' ? ' is-override' : ''; ?>"><?php echo Icons::svg($wl_kind === 'override' ? 'key' : 'lock', 14, 2.2); ?><?php echo $wl_kind === 'override' ? esc_html__('Edit a locked week', 'workforce-one') : esc_html__('Final', 'workforce-one'); ?></span><?php endif; ?>
+    </section>
+    <?php endif; ?>
 
     <section class="ews-att-controls wfo-att-card">
         <div class="ews-att-control-head">
@@ -135,7 +157,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
             <?php foreach ($dates as $i => $d): ?>
                 <div class="ews-day-quick <?php echo $d === $today ? 'is-today' : ''; ?>">
                     <label for="wfo-fill-<?php echo (int) $i; ?>"><?php echo esc_html(date_i18n('D', strtotime($d))); ?><small><?php echo esc_html(date_i18n('d M', strtotime($d))); ?></small></label>
-                    <select id="wfo-fill-<?php echo (int) $i; ?>" data-ews-fill-day="<?php echo (int) $i; ?>">
+                    <select id="wfo-fill-<?php echo (int) $i; ?>" data-ews-fill-day="<?php echo (int) $i; ?>"<?php echo $wl_readonly ? ' disabled' : ''; ?>>
                         <option value=""><?php esc_html_e('Set…', 'workforce-one'); ?></option>
                         <?php foreach ($statuses as $s): ?><option value="<?php echo esc_attr($s); ?>"><?php echo esc_html($s); ?></option><?php endforeach; ?>
                     </select>
@@ -180,7 +202,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
                         <td class="ews-att-employee"><?php echo $avatar($e); ?><div><strong><?php echo $badges($e); ?></strong><small><?php echo esc_html($e->domain_name); ?></small><?php if (!empty($e->_schedule_primary_team)): ?><span class="ews-att-team-label"><?php echo esc_html($e->_schedule_primary_team); ?></span><?php endif; ?></div></td>
                         <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; $planned = (string) $day['planned']; ?>
                         <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?><?php echo esc_attr($plan_class($planned)); ?>" data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($planned); ?>"<?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); ?> data-branch="<?php echo $pb ? $pb : ''; ?>" data-branches="<?php echo esc_attr(implode(',', $branch['mine'][$eid] ?? [])); ?>" data-main-name="<?php echo esc_attr($branch['names'][$branch['main'][$eid] ?? 0] ?? ''); ?>"<?php endif; ?>>
-                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip" data-ews-cell aria-haspopup="dialog" data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b><?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); $takes = in_array($planned, $branch['statuses'], true); ?><small class="wfo-attg-branch<?php echo $pb ? '' : ' is-main'; ?>"<?php echo $takes ? '' : ' hidden'; ?>><?php echo esc_html($pb && isset($branch['names'][$pb]) ? $branch['names'][$pb] : ($branch['names'][$branch['main'][$eid] ?? 0] ?? '')); ?></small><?php endif; ?></button>
+                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip"<?php echo $wl_readonly ? ' disabled aria-disabled="true"' : ' data-ews-cell aria-haspopup="dialog"'; ?> data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b><?php if ($wl_readonly): ?><span class="wfo-wl-cell-lock" aria-hidden="true"><?php echo Icons::svg('lock', 12, 2.4); ?></span><?php endif; ?><?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); $takes = in_array($planned, $branch['statuses'], true); ?><small class="wfo-attg-branch<?php echo $pb ? '' : ' is-main'; ?>"<?php echo $takes ? '' : ' hidden'; ?>><?php echo esc_html($pb && isset($branch['names'][$pb]) ? $branch['names'][$pb] : ($branch['names'][$branch['main'][$eid] ?? 0] ?? '')); ?></small><?php endif; ?></button>
                             <div class="ews-att-result <?php echo esc_attr($day['badge']['class']); ?>"><?php echo $result($day['badge'], 'small'); ?></div>
                         </td>
                         <?php endforeach; ?>
@@ -209,11 +231,15 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
             </div><?php endif; ?>
         </div>
 
+        <?php if ($wl_readonly): ?>
+        <div class="ews-att-savebar wfo-wl-savebar"><?php echo Icons::svg('lock', 16, 2.2); ?><span><?php esc_html_e('The week is final: there is nothing to save.', 'workforce-one'); ?></span></div>
+        <?php else: ?>
         <div class="ews-att-savebar">
             <span class="wfo-attg-count" aria-live="polite" data-none="<?php esc_attr_e('No changes yet. Tap a day to change it.', 'workforce-one'); ?>" data-one="<?php esc_attr_e('1 change not saved yet', 'workforce-one'); ?>" data-many="<?php /* translators: %d: number of changed days (2 or more) */ esc_attr_e('%d changes not saved yet', 'workforce-one'); ?>" data-leave="<?php esc_attr_e('You have changes that are not saved yet.', 'workforce-one'); ?>"><?php esc_html_e('No changes yet. Tap a day to change it.', 'workforce-one'); ?></span>
             <button type="button" class="ews-btn wfo-attg-undo" hidden><?php echo Icons::svg('close', 15, 2.2); ?><?php esc_html_e('Undo', 'workforce-one'); ?></button>
             <button type="submit" name="attendance_save" value="1" class="ews-btn ews-save-all"><?php echo Icons::svg('check', 17, 2.4); ?><?php esc_html_e('Save Schedule & Attendance', 'workforce-one'); ?></button>
         </div>
+        <?php endif; ?>
     </form>
 
     <?php if ($preview_token !== '' && $preview_rows === null): ?>
@@ -255,6 +281,7 @@ $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'wor
         <summary><span class="wfo-att-csv-icon"><?php echo Icons::svg('reports', 20); ?></span><span class="wfo-att-csv-title"><strong><?php esc_html_e('Advanced: Bulk CSV Import', 'workforce-one'); ?></strong><span><?php esc_html_e('Use this when you have many rows from Excel.', 'workforce-one'); ?></span></span><span class="wfo-att-chev" aria-hidden="true"><?php echo Icons::svg('chevron', 18, 2.2); ?></span></summary>
         <div class="ews-csv-inside">
             <p><?php esc_html_e('Download the sample, fill it in Excel, upload it, review validation, then import.', 'workforce-one'); ?></p>
+            <?php if ($week_lock): ?><p class="wfo-wl-csv"><?php echo Icons::svg('lock', 14, 2.2); ?><?php esc_html_e('Rows in a final week show as errors in the preview and are not saved.', 'workforce-one'); ?></p><?php endif; ?>
             <div class="ews-drop">
                 <form method="post" action="<?php echo esc_url($post_url); ?>" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="ews31_att_preview"><?php wp_nonce_field('ews31_att_preview'); ?>

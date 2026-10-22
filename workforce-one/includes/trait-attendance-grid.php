@@ -81,6 +81,7 @@ trait EWS_Attendance_Grid_Trait {
         }
         $office_min=$this->om_attendance($dates);
         return $this->render_template('app/attendance',[
+            'week_lock'=>$this->week_lock_view($dates[0]),'week_lock_when'=>function($at){return $this->week_lock_when($at);},
             'office_min'=>$office_min,'office_min_html'=>$office_min?$this->render_template('app/office-minimum',['om'=>$office_min]):'',
             'people'=>$people,
             'emps'=>$emps,'list'=>$list,'branch'=>$branch,'branch_filter'=>$branch_filter,'branch_filter_names'=>$branch_filter_names,'list_keep'=>$this->list_keep_args('attendance'),'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,

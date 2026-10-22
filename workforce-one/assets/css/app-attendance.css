@@ -306,3 +306,26 @@
 .wfo-om-how{margin:2px 0 0;font-size:11.5px;color:#6A7090;line-height:1.6}
 
 .wfo-om-day.is-changed{outline:2px dashed currentColor;outline-offset:1px}
+
+/* Week lock (3.31.121): the banner above the schedule controls, the "Final" mark and read-only days. Logical properties: the same in -rtl. */
+.wfo-wl-banner{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:14px 18px;border-radius:var(--wfo-r-card,20px);background:#EEF2FF;border:1px solid #C9D3FB}
+.wfo-wl-banner.is-locked{background:#F1F0FA;border-color:#CFCBEF}
+.wfo-wl-banner.is-override{background:#FFF8E8;border-color:#F5D9A0}
+.wfo-wl-ico{width:38px;height:38px;flex:0 0 auto;border-radius:12px;background:#13235B;color:#fff;display:flex;align-items:center;justify-content:center}
+.wfo-wl-banner.is-soon .wfo-wl-ico{background:#5B3FD9}
+.wfo-wl-banner.is-override .wfo-wl-ico{background:#FFC83D;color:#13235B}
+.wfo-wl-text{min-width:0;flex:1}
+.wfo-wl-text h3{margin:0;font-size:15.5px;font-weight:700;color:#13235B}
+.wfo-wl-text p{margin:2px 0 0;font-size:12.5px;color:#4A5275;line-height:1.6}
+.wfo-wl-banner.is-override h3{color:#5C3A00}
+.wfo-wl-banner.is-override p{color:#7A5A1F}
+.wfo-wl-final{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;background:#13235B;color:#fff;font-size:12px;font-weight:700;white-space:nowrap}
+.wfo-wl-final.is-override{background:#FFC83D;color:#13235B}
+.wfo-wl-final.is-small{padding:2px 8px;font-size:11px;margin-inline-start:8px;vertical-align:middle}
+.wfo-wl-locked .wfo-attg-chip{cursor:not-allowed}
+.wfo-wl-locked .wfo-attg-chip:disabled{opacity:1}
+.wfo-wl-cell-lock{display:inline-flex;margin-inline-start:4px;opacity:.55;vertical-align:middle}
+.wfo-wl-locked .ews-day-quick select:disabled{opacity:.55;cursor:not-allowed}
+.wfo-wl-savebar{display:flex;align-items:center;gap:8px;justify-content:center;color:#4A5275;font-size:13px}
+.wfo-wl-csv{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;background:#F1F0FA;color:#13235B;font-size:12.5px}
+@media (max-width:600px){.wfo-wl-banner .wfo-wl-final{display:none}}

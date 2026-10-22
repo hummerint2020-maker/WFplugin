@@ -2,14 +2,14 @@
 # This file is distributed under the Proprietary.
 msgid ""
 msgstr ""
-"Project-Id-Version: Workforce One 3.31.118\n"
+"Project-Id-Version: Workforce One 3.31.121\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/workforce-one\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-21T23:50:33+00:00\n"
+"POT-Creation-Date: 2026-10-22T11:54:11+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: workforce-one\n"
@@ -37,7 +37,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:25
 #: includes/trait-app-layout.php:79
 #: includes/trait-app-layout.php:96
-#: templates/admin/features.php:150
+#: templates/admin/features.php:155
 msgid "People"
 msgstr ""
 
@@ -47,7 +47,7 @@ msgstr ""
 #: includes/trait-daily-workers.php:1619
 #: templates/admin/daily-workers.php:211
 #: templates/app/attendance-insights.php:61
-#: templates/app/attendance.php:163
+#: templates/app/attendance.php:185
 #: templates/app/dw-day.php:180
 msgid "Attendance"
 msgstr ""
@@ -56,6 +56,7 @@ msgstr ""
 #: includes/trait-app-layout.php:96
 #: templates/admin/corrections.php:43
 #: templates/admin/corrections.php:125
+#: templates/admin/features.php:177
 msgid "Requests"
 msgstr ""
 
@@ -84,7 +85,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:38
 #: templates/app/attendance-insights.php:29
 #: templates/app/attendance-insights.php:43
-#: templates/app/attendance.php:171
+#: templates/app/attendance.php:193
 #: templates/app/dashboard.php:83
 #: templates/app/dashboard.php:124
 #: templates/app/dw-day.php:53
@@ -92,15 +93,16 @@ msgstr ""
 #: templates/app/new-request.php:87
 #: templates/app/notifications.php:20
 #: templates/app/overtime.php:117
-#: templates/app/schedule.php:166
+#: templates/app/schedule.php:168
 #: templates/app/time.php:66
 msgid "Today"
 msgstr ""
 
 #: includes/trait-admin-nav.php:39
 #: includes/trait-app-layout.php:79
+#: templates/admin/features.php:178
 #: templates/app/attendance-insights.php:82
-#: templates/app/attendance.php:103
+#: templates/app/attendance.php:106
 #: templates/app/employees.php:19
 msgid "Employees"
 msgstr ""
@@ -164,7 +166,7 @@ msgid "Approval workflows"
 msgstr ""
 
 #: includes/trait-admin-nav.php:52
-#: templates/admin/features.php:115
+#: templates/admin/features.php:120
 #: templates/admin/substitutes.php:21
 msgid "Substitutes"
 msgstr ""
@@ -191,7 +193,7 @@ msgstr ""
 #: includes/trait-admin-nav.php:57
 #: includes/trait-admin.php:87
 #: includes/trait-my-approvals.php:134
-#: templates/admin/features.php:84
+#: templates/admin/features.php:89
 msgid "Advances"
 msgstr ""
 
@@ -242,8 +244,8 @@ msgstr ""
 #: includes/trait-admin-nav.php:66
 #: includes/trait-app-layout.php:79
 #: includes/trait-dashboard-view.php:27
-#: includes/trait-notifications.php:886
-#: includes/trait-notifications.php:889
+#: includes/trait-notifications.php:854
+#: includes/trait-notifications.php:857
 msgid "Notifications"
 msgstr ""
 
@@ -281,14 +283,14 @@ msgstr ""
 #: includes/trait-admin-nav.php:74
 #: includes/trait-admin.php:102
 #: includes/trait-system-health.php:650
-#: templates/admin/features.php:105
+#: templates/admin/features.php:110
 #: templates/admin/system-health.php:42
 msgid "System health"
 msgstr ""
 
 #: includes/trait-admin.php:87
 #: templates/admin/advances.php:22
-#: templates/admin/features.php:84
+#: templates/admin/features.php:89
 msgid "Salary advances"
 msgstr ""
 
@@ -354,16 +356,16 @@ msgid "It could not be decided. Try again."
 msgstr ""
 
 #: includes/trait-advances.php:134
-#: includes/trait-frontend.php:209
 #: includes/trait-frontend.php:221
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:233
+#: includes/trait-frontend.php:242
 #: includes/trait-my-approvals.php:173
 msgid "Write why you reject it, then reject it again."
 msgstr ""
 
 #: includes/trait-advances.php:134
-#: includes/trait-frontend.php:209
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:242
 msgid "Another request of yours is being saved. Try again in a moment."
 msgstr ""
 
@@ -457,7 +459,7 @@ msgstr ""
 #. translators: %d: months
 #: includes/trait-advances.php:260
 #: includes/trait-corrections.php:1038
-#: includes/trait-leave.php:553
+#: includes/trait-leave.php:556
 #: includes/trait-overtime.php:321
 #: templates/admin/advances.php:29
 #: templates/admin/corrections.php:80
@@ -671,13 +673,13 @@ msgstr ""
 #. translators: 1: days left, 2: leave type
 #: includes/trait-app-layout.php:79
 #: includes/trait-app-layout.php:96
-#: includes/trait-leave.php:554
+#: includes/trait-leave.php:557
 #: includes/trait-my-approvals.php:134
 #: includes/trait-my-approvals.php:220
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:71
-#: templates/app/attendance.php:79
+#: templates/app/attendance.php:73
+#: templates/app/attendance.php:81
 #: templates/app/new-request.php:49
 msgid "Leave"
 msgstr ""
@@ -723,7 +725,7 @@ msgstr ""
 
 #: includes/trait-app-layout.php:79
 #: includes/trait-app-layout.php:96
-#: templates/app/schedule.php:101
+#: templates/app/schedule.php:103
 msgid "My team"
 msgstr ""
 
@@ -957,12 +959,12 @@ msgid "Skipped: nobody to decide it"
 msgstr ""
 
 #: includes/trait-attendance-api.php:36
-#: includes/trait-frontend.php:549
+#: includes/trait-frontend.php:561
 msgid "On Time"
 msgstr ""
 
 #: includes/trait-attendance-api.php:36
-#: includes/trait-frontend.php:549
+#: includes/trait-frontend.php:561
 msgid "Late Arrival"
 msgstr ""
 
@@ -1107,6 +1109,14 @@ msgstr ""
 msgid "Unable to record this action."
 msgstr ""
 
+#: includes/trait-attendance.php:414
+msgid "This week is final. To change a day, ask HR."
+msgstr ""
+
+#: includes/trait-attendance.php:453
+msgid "The week of this day is final"
+msgstr ""
+
 #: includes/trait-corrections.php:199
 #: includes/trait-corrections.php:201
 #: includes/trait-daily-workers.php:458
@@ -1187,7 +1197,7 @@ msgstr ""
 #: includes/trait-corrections.php:640
 #: includes/trait-corrections.php:643
 #: includes/trait-corrections.php:644
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
@@ -1199,14 +1209,14 @@ msgstr ""
 #. translators: %d: number of requests
 #: includes/trait-corrections.php:541
 #: includes/trait-corrections.php:641
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: templates/admin/corrections.php:64
 #: templates/admin/corrections.php:118
 #: templates/admin/corrections.php:125
 #: templates/admin/daily-workers.php:242
 #: templates/app/presence.php:20
 #: templates/app/requests.php:17
-#: templates/app/schedule.php:51
+#: templates/app/schedule.php:52
 msgid "Rejected"
 msgstr ""
 
@@ -1335,7 +1345,7 @@ msgid "The day changed since this request was made, so it cannot be applied. Rej
 msgstr ""
 
 #: includes/trait-corrections.php:590
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "The approval could not be recorded. Please try again."
 msgstr ""
 
@@ -1397,7 +1407,7 @@ msgstr ""
 
 #: includes/trait-corrections.php:1037
 #: includes/trait-overtime.php:320
-#: includes/trait-swap.php:320
+#: includes/trait-swap.php:358
 #: templates/admin/corrections.php:80
 #: templates/admin/corrections.php:164
 #: templates/admin/daily-workers.php:232
@@ -1405,7 +1415,7 @@ msgstr ""
 #: templates/app/correction-sheet.php:31
 #: templates/app/dw-day.php:51
 #: templates/app/new-request.php:109
-#: templates/app/schedule.php:262
+#: templates/app/schedule.php:264
 msgid "Day"
 msgstr ""
 
@@ -1467,7 +1477,7 @@ msgstr ""
 
 #: includes/trait-daily-workers.php:353
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:71
+#: templates/app/attendance.php:73
 #: templates/app/dw-day.php:58
 #: templates/app/dw-day.php:96
 #: templates/app/dw-day.php:180
@@ -1486,13 +1496,13 @@ msgstr ""
 #: includes/trait-schedule-view.php:79
 #: templates/app/attendance-insights.php:22
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:71
+#: templates/app/attendance.php:73
 #: templates/app/dw-day.php:60
 #: templates/app/dw-day.php:96
 #: templates/app/dw-day.php:180
 #: templates/app/my-profile.php:38
 #: templates/app/pay.php:60
-#: templates/app/schedule.php:37
+#: templates/app/schedule.php:38
 msgid "Absent"
 msgstr ""
 
@@ -1906,7 +1916,7 @@ msgstr ""
 #: includes/trait-daily-workers.php:1615
 #: includes/trait-daily-workers.php:1616
 #: includes/trait-daily-workers.php:1619
-#: includes/trait-leave.php:550
+#: includes/trait-leave.php:553
 #: templates/admin/daily-workers.php:60
 #: templates/admin/daily-workers.php:121
 #: templates/admin/daily-workers.php:125
@@ -2039,7 +2049,7 @@ msgid "Worker"
 msgstr ""
 
 #: includes/trait-daily-workers.php:1619
-#: templates/app/attendance.php:228
+#: templates/app/attendance.php:254
 #: templates/app/leave.php:147
 #: templates/app/my-profile.php:154
 #: templates/app/new-request.php:72
@@ -2107,7 +2117,7 @@ msgid "Planned for today"
 msgstr ""
 
 #. translators: %s: amount
-#: includes/trait-employee-admin.php:197
+#: includes/trait-employee-admin.php:199
 #, php-format
 msgid "This employee still owes %s of a salary advance. The rest is taken off their last pay."
 msgstr ""
@@ -2181,10 +2191,10 @@ msgstr ""
 #: templates/admin/org-chart.php:216
 #: templates/admin/org-chart.php:245
 #: templates/admin/substitutes.php:40
-#: templates/app/attendance.php:249
+#: templates/app/attendance.php:275
 #: templates/app/employee.php:84
 #: templates/app/my-profile.php:183
-#: templates/app/schedule.php:241
+#: templates/app/schedule.php:243
 #: templates/app/substitutes-bar.php:29
 msgid "Cancel"
 msgstr ""
@@ -2200,7 +2210,7 @@ msgstr ""
 #. translators: %s: day
 #: includes/trait-frontend.php:177
 #: templates/app/attendance-insights.php:82
-#: templates/app/attendance.php:198
+#: templates/app/attendance.php:220
 #: templates/app/correction-sheet.php:28
 #: templates/app/dw-day.php:135
 #: templates/app/dw-day.php:158
@@ -2213,8 +2223,8 @@ msgstr ""
 #: templates/app/new-request.php:22
 #: templates/app/office-minimum.php:33
 #: templates/app/overtime.php:114
-#: templates/app/schedule.php:257
-#: templates/app/schedule.php:274
+#: templates/app/schedule.php:259
+#: templates/app/schedule.php:276
 #: templates/app/substitutes-bar.php:12
 #: templates/app/tasks.php:152
 #: templates/app/tasks.php:262
@@ -2224,456 +2234,473 @@ msgid "Close"
 msgstr ""
 
 #. translators: %d: number of schedule changes
-#: includes/trait-frontend.php:184
+#: includes/trait-frontend.php:185
 #, php-format
-msgid "%d schedule change was not saved because another manager changed the same cell before you saved."
-msgid_plural "%d schedule changes were not saved because another manager changed the same cell before you saved."
+msgid "%d change was not saved"
+msgid_plural "%d changes were not saved"
 msgstr[0] ""
 msgstr[1] ""
 
-#. translators: %d: number of schedule changes
 #: includes/trait-frontend.php:186
+msgid "This week is final now."
+msgstr ""
+
+#. translators: %d: number of schedule changes
+#: includes/trait-frontend.php:188
+#: includes/trait-frontend.php:198
 #, php-format
 msgid "%d other change was saved successfully."
 msgid_plural "%d other changes were saved successfully."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-frontend.php:187
+#: includes/trait-frontend.php:189
+msgid "To change a day of a final week, ask HR."
+msgstr ""
+
+#. translators: %d: number of schedule changes
+#: includes/trait-frontend.php:196
+#, php-format
+msgid "%d schedule change was not saved because another manager changed the same cell before you saved."
+msgid_plural "%d schedule changes were not saved because another manager changed the same cell before you saved."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-frontend.php:199
 msgid "Please refresh the Attendance page and review the latest schedule."
 msgstr ""
 
-#: includes/trait-frontend.php:188
+#: includes/trait-frontend.php:200
 msgid "Schedule Conflict"
 msgstr ""
 
-#: includes/trait-frontend.php:194
+#: includes/trait-frontend.php:206
 msgid "Saved Successfully"
 msgstr ""
 
-#: includes/trait-frontend.php:194
+#: includes/trait-frontend.php:206
 msgid "Your changes have been saved."
 msgstr ""
 
-#: includes/trait-frontend.php:195
+#: includes/trait-frontend.php:207
 msgid "Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:195
+#: includes/trait-frontend.php:207
 msgid "Your leave request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:196
+#: includes/trait-frontend.php:208
 msgid "Request Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:196
+#: includes/trait-frontend.php:208
 msgid "The leave request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:197
+#: includes/trait-frontend.php:209
 msgid "Cancellation Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:197
+#: includes/trait-frontend.php:209
 msgid "Your cancellation request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:198
+#: includes/trait-frontend.php:210
 msgid "Attendance Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:198
+#: includes/trait-frontend.php:210
 msgid "Your attendance action was completed successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:199
+#: includes/trait-frontend.php:211
 msgid "Day Reset"
 msgstr ""
 
-#: includes/trait-frontend.php:199
+#: includes/trait-frontend.php:211
 msgid "The selected attendance day has been reset successfully."
 msgstr ""
 
-#: includes/trait-frontend.php:200
+#: includes/trait-frontend.php:212
 msgid "Attendance Saved"
 msgstr ""
 
-#: includes/trait-frontend.php:200
+#: includes/trait-frontend.php:212
 msgid "The attendance schedule has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:201
+#: includes/trait-frontend.php:213
 msgid "Overtime Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:201
+#: includes/trait-frontend.php:213
 msgid "The overtime request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:202
+#: includes/trait-frontend.php:214
 msgid "Overtime Rejected"
 msgstr ""
 
-#: includes/trait-frontend.php:202
+#: includes/trait-frontend.php:214
 msgid "The overtime request has been rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:205
+#: includes/trait-frontend.php:217
 msgid "Attendance Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:206
+#: includes/trait-frontend.php:218
 msgid "Break Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:207
+#: includes/trait-frontend.php:219
 msgid "Break Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:209
-#: includes/trait-frontend.php:214
-#: includes/trait-frontend.php:230
-#: includes/trait-leave.php:439
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:242
+#: includes/trait-leave.php:442
 #: includes/trait-overtime.php:259
 msgid "You cannot decide your own request. Another approver must."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 #: includes/trait-leave-view.php:124
 msgid "Overtime Requests are currently disabled."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: includes/trait-frontend.php:209
-#: includes/trait-frontend.php:210
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:222
 msgid "Please review the overtime request and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "The overtime request could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "The overtime request could not be updated. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:209
-#: includes/trait-frontend.php:214
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:242
 #: includes/trait-presence.php:128
 #: includes/trait-presence.php:171
 #: includes/trait-presence.php:186
 msgid "Your account is not linked to an active employee."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "Please select a valid future date."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "Please enter a valid overtime time range."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "Please enter a reason for the overtime request."
 msgstr ""
 
-#: includes/trait-frontend.php:209
+#: includes/trait-frontend.php:221
 msgid "The requested overtime overlaps another overtime request."
 msgstr ""
 
-#: includes/trait-frontend.php:210
+#: includes/trait-frontend.php:222
 msgid "Overtime Action Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:212
+#: includes/trait-frontend.php:224
 msgid "Overtime Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:212
+#: includes/trait-frontend.php:224
 msgid "Your overtime request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:214
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:242
 msgid "Please select a valid future date range."
 msgstr ""
 
-#: includes/trait-frontend.php:214
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:242
 msgid "The selected range contains no working days."
 msgstr ""
 
-#: includes/trait-frontend.php:214
+#: includes/trait-frontend.php:226
 msgid "You already have a pending or approved vacation overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:214
+#: includes/trait-frontend.php:226
 msgid "We could not save the vacation request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:215
+#: includes/trait-frontend.php:227
 msgid "Vacation Request Not Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:215
+#: includes/trait-frontend.php:227
 msgid "Please review the vacation details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:217
+#: includes/trait-frontend.php:229
 msgid "Vacation Request Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:217
+#: includes/trait-frontend.php:229
 msgid "Your vacation request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:218
+#: includes/trait-frontend.php:230
 msgid "Vacation Request Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:218
+#: includes/trait-frontend.php:230
 msgid "The vacation request has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "Please select a valid employee and work date for the shift swap."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "The selected employee could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "These schedules cannot be swapped. Both employees must have different Office/WFH schedules on this day."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "A pending swap request already exists for this day."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "The shift swap could not be saved. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "The shift swap request could not be found."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "The schedule changed after the swap request was created, so it can no longer be accepted."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "The swap request has already been processed or expired."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "This day has already passed, so it can no longer be swapped."
 msgstr ""
 
-#: includes/trait-frontend.php:221
+#: includes/trait-frontend.php:233
 msgid "This swap is not waiting for your approval."
 msgstr ""
 
-#: includes/trait-frontend.php:222
+#: includes/trait-frontend.php:234
 msgid "Shift Swap Not Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:222
+#: includes/trait-frontend.php:234
 msgid "Please review the shift swap and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:224
+#: includes/trait-frontend.php:236
 msgid "Shift Swap Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:224
+#: includes/trait-frontend.php:236
 msgid "Your shift swap request has been submitted."
 msgstr ""
 
-#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:238
 msgid "The shift swap was accepted and both schedules were updated."
 msgstr ""
 
-#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:238
 msgid "The shift swap request was rejected."
 msgstr ""
 
-#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:238
 msgid "The shift swap request was cancelled."
 msgstr ""
 
-#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:238
 msgid "You accepted the swap. It is applied once it is approved."
 msgstr ""
 
-#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:238
 msgid "The swap was approved and both schedules were updated."
 msgstr ""
 
-#: includes/trait-frontend.php:226
+#: includes/trait-frontend.php:238
 msgid "Approved. The swap now waits for the next approver."
 msgstr ""
 
-#: includes/trait-frontend.php:227
+#: includes/trait-frontend.php:239
 msgid "Shift Swap Updated"
 msgstr ""
 
-#: includes/trait-frontend.php:227
+#: includes/trait-frontend.php:239
 msgid "The shift swap has been updated."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "You already have a pending or approved leave overlapping this period."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "Insufficient available balance for this Leave Type."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "A leave cannot span two calendar years. Please submit one request for each year."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "This leave can no longer be asked for those days: it is too long after them."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "We could not save the leave request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "Pick who decides for you while you are away."
 msgstr ""
 
-#: includes/trait-frontend.php:230
+#: includes/trait-frontend.php:242
 msgid "That person cannot decide for you on these days (away themselves, or not allowed). Pick someone else."
 msgstr ""
 
-#: includes/trait-frontend.php:231
+#: includes/trait-frontend.php:243
 msgid "Leave Request Not Submitted"
 msgstr ""
 
-#: includes/trait-frontend.php:231
+#: includes/trait-frontend.php:243
 msgid "Please review the leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 msgid "Please select a future date for Early Leave."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 #: templates/app/leave.php:48
 msgid "Early Leave is available only on a configured working day."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 msgid "Early Leave is available only on an Office workday. It cannot be requested on Work From Home or Leave/Vacation days."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 #: templates/app/leave.php:49
 msgid "The requested Early Leave exceeds the maximum duration allowed for one request."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 #: templates/app/leave.php:50
 msgid "The requested Early Leave exceeds the remaining monthly allowance."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 msgid "We could not submit the Early Leave request. Please try again."
 msgstr ""
 
-#: includes/trait-frontend.php:234
+#: includes/trait-frontend.php:246
 msgid "This request can no longer be approved because the employee is no longer scheduled for an eligible Office workday."
 msgstr ""
 
-#: includes/trait-frontend.php:235
+#: includes/trait-frontend.php:247
 #: templates/app/leave.php:45
 msgid "Early Leave Not Available"
 msgstr ""
 
-#: includes/trait-frontend.php:235
+#: includes/trait-frontend.php:247
 msgid "Please review the Early Leave details and try again."
 msgstr ""
 
-#: includes/trait-frontend.php:421
+#: includes/trait-frontend.php:433
 msgid "Task overdue"
 msgstr ""
 
-#: includes/trait-frontend.php:421
+#: includes/trait-frontend.php:433
 msgid "Due today"
 msgstr ""
 
 #. translators: 1: task title, 2: due date
-#: includes/trait-frontend.php:424
+#: includes/trait-frontend.php:436
 #, php-format
 msgid "%1$s was due on %2$s."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:424
+#: includes/trait-frontend.php:436
 #, php-format
 msgid "%s is due today."
 msgstr ""
 
 #. translators: %s: task title
-#: includes/trait-frontend.php:425
+#: includes/trait-frontend.php:437
 msgid "Open Task"
 msgstr ""
 
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: templates/app/attendance-insights.php:24
 #: templates/app/leave.php:121
 #: templates/app/leave.php:135
 #: templates/app/presence.php:20
-#: templates/app/schedule.php:51
+#: templates/app/schedule.php:52
 msgid "Pending"
 msgstr ""
 
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: templates/admin/substitutes.php:16
 #: templates/app/presence.php:20
 #: templates/app/requests.php:17
-#: templates/app/schedule.php:51
+#: templates/app/schedule.php:52
 msgid "Cancelled"
 msgstr ""
 
-#: includes/trait-frontend.php:543
-#: templates/app/schedule.php:51
+#: includes/trait-frontend.php:555
+#: templates/app/schedule.php:52
 msgid "Accepted"
 msgstr ""
 
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: includes/trait-tasks.php:246
 #: templates/app/tasks.php:41
 #: templates/app/tasks.php:104
 msgid "Completed"
 msgstr ""
 
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: templates/app/presence.php:20
 #: templates/app/requests.php:17
 msgid "Expired"
 msgstr ""
 
-#: includes/trait-frontend.php:543
+#: includes/trait-frontend.php:555
 #: templates/app/presence.php:20
 msgid "Verified"
 msgstr ""
 
-#: includes/trait-frontend.php:556
+#: includes/trait-frontend.php:568
 msgid "Attendance tracking is disabled"
 msgstr ""
 
-#: includes/trait-frontend.php:556
+#: includes/trait-frontend.php:568
 msgid "Attendance is not required for your employee profile."
 msgstr ""
 
@@ -2701,35 +2728,35 @@ msgid "Available only on Office workdays · Maximum per request: %1$s hours · M
 msgstr ""
 
 #. translators: %s: number of days
-#: includes/trait-leave.php:549
+#: includes/trait-leave.php:552
 #, php-format
 msgid "%s day"
 msgid_plural "%s days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/trait-leave.php:550
+#: includes/trait-leave.php:553
 #: templates/admin/daily-workers.php:258
 msgid "Dates"
 msgstr ""
 
-#: includes/trait-leave.php:551
+#: includes/trait-leave.php:554
 msgid "Balance after cancelling"
 msgstr ""
 
-#: includes/trait-leave.php:551
+#: includes/trait-leave.php:554
 msgid "Balance after"
 msgstr ""
 
-#: includes/trait-leave.php:552
+#: includes/trait-leave.php:555
 msgid "Others in the department away"
 msgstr ""
 
-#: includes/trait-leave.php:554
+#: includes/trait-leave.php:557
 msgid "Leave cancellation"
 msgstr ""
 
-#: includes/trait-leave.php:571
+#: includes/trait-leave.php:574
 msgid "Cancellation asked"
 msgstr ""
 
@@ -2745,10 +2772,10 @@ msgstr ""
 #: templates/admin/corrections.php:163
 #: templates/admin/org-chart.php:132
 #: templates/admin/org-chart.php:138
-#: templates/app/attendance.php:166
-#: templates/app/attendance.php:228
+#: templates/app/attendance.php:188
+#: templates/app/attendance.php:254
 #: templates/app/reports.php:53
-#: templates/app/schedule.php:126
+#: templates/app/schedule.php:128
 msgid "Employee"
 msgstr ""
 
@@ -2897,36 +2924,36 @@ msgstr ""
 msgid "Already asked, waiting"
 msgstr ""
 
-#: includes/trait-notifications.php:396
+#: includes/trait-notifications.php:365
 msgid "Just now"
 msgstr ""
 
 #. translators: %s: time span like "5 mins"
 #. translators: %s: human-readable time difference
 #. translators: %s: time
-#: includes/trait-notifications.php:396
-#: includes/trait-notifications.php:875
+#: includes/trait-notifications.php:365
+#: includes/trait-notifications.php:843
 #: templates/admin/system-health.php:39
 #, php-format
 msgid "%s ago"
 msgstr ""
 
 #. translators: %s: time
-#: includes/trait-notifications.php:397
+#: includes/trait-notifications.php:366
 #, php-format
 msgid "Yesterday · %s"
 msgstr ""
 
-#: includes/trait-notifications.php:883
+#: includes/trait-notifications.php:851
 msgid "You’re all caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:883
+#: includes/trait-notifications.php:851
 msgid "No new notifications."
 msgstr ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:889
+#: includes/trait-notifications.php:857
 #, php-format
 msgid "%d unread"
 msgid_plural "%d unread"
@@ -2934,11 +2961,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: unread count
-#: includes/trait-notifications.php:889
+#: includes/trait-notifications.php:857
 msgid "All caught up"
 msgstr ""
 
-#: includes/trait-notifications.php:891
+#: includes/trait-notifications.php:859
 msgid "View all notifications →"
 msgstr ""
 
@@ -3268,7 +3295,7 @@ msgstr ""
 #. translators: %d: number of days
 #. translators: %d: days
 #: includes/trait-privacy.php:69
-#: templates/admin/features.php:111
+#: templates/admin/features.php:116
 #, php-format
 msgid "%d days"
 msgstr ""
@@ -3343,10 +3370,10 @@ msgstr ""
 #: includes/trait-schedule-api.php:16
 #: includes/trait-schedule-view.php:79
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:60
+#: templates/app/attendance.php:62
 #: templates/app/dashboard.php:47
 #: templates/app/my-profile.php:38
-#: templates/app/schedule.php:37
+#: templates/app/schedule.php:38
 #: templates/app/time.php:64
 msgid "Not Set"
 msgstr ""
@@ -3356,7 +3383,7 @@ msgstr ""
 #: templates/app/dashboard.php:48
 #: templates/app/dashboard.php:72
 #: templates/app/my-profile.php:38
-#: templates/app/schedule.php:37
+#: templates/app/schedule.php:38
 msgid "General Leave"
 msgstr ""
 
@@ -3370,8 +3397,8 @@ msgid "Please sign in."
 msgstr ""
 
 #: includes/trait-schedule-view.php:90
-#: templates/app/schedule.php:97
-#: templates/app/schedule.php:115
+#: templates/app/schedule.php:99
+#: templates/app/schedule.php:117
 msgid "Team Schedule"
 msgstr ""
 
@@ -3387,46 +3414,46 @@ msgstr ""
 msgid "It is tried again every 10 minutes. If this stays, send this to your host or developer:"
 msgstr ""
 
-#: includes/trait-shift-history.php:366
-#: includes/trait-shift-history.php:390
+#: includes/trait-shift-history.php:373
+#: includes/trait-shift-history.php:397
 msgid "Company working hours"
 msgstr ""
 
 #. translators: %d: minutes
-#: includes/trait-shift-history.php:372
+#: includes/trait-shift-history.php:379
 #, php-format
 msgid "grace %d min"
 msgstr ""
 
-#: includes/trait-shift-history.php:377
+#: includes/trait-shift-history.php:384
 msgid "Pick a valid day."
 msgstr ""
 
-#: includes/trait-shift-history.php:377
+#: includes/trait-shift-history.php:384
 msgid "Pick a shift."
 msgstr ""
 
-#: includes/trait-shift-history.php:377
+#: includes/trait-shift-history.php:384
 msgid "Only HR can change the shift from a past day."
 msgstr ""
 
-#: includes/trait-shift-history.php:378
+#: includes/trait-shift-history.php:385
 msgid "The shift could not be saved. Nothing was changed; please try again."
 msgstr ""
 
-#: includes/trait-shift-history.php:379
+#: includes/trait-shift-history.php:386
 msgid "This employee's shift was changed by someone else at the same moment. Check the history and try again."
 msgstr ""
 
-#: includes/trait-shift-history.php:380
+#: includes/trait-shift-history.php:387
 msgid "This employee's shift is being saved by someone else. Try again in a moment."
 msgstr ""
 
-#: includes/trait-shift-history.php:382
+#: includes/trait-shift-history.php:389
 msgid "The upcoming change was removed."
 msgstr ""
 
-#: includes/trait-shift-history.php:382
+#: includes/trait-shift-history.php:389
 msgid "Shift saved."
 msgstr ""
 
@@ -3546,45 +3573,45 @@ msgstr ""
 msgid "Substitute cancelled."
 msgstr ""
 
-#: includes/trait-swap.php:221
+#: includes/trait-swap.php:259
 msgid "Swap accepted, waiting for approval"
 msgstr ""
 
 #. translators: 1: colleague, 2: day
-#: includes/trait-swap.php:223
+#: includes/trait-swap.php:261
 #, php-format
 msgid "%1$s accepted your swap for %2$s. It is applied once it is approved."
 msgstr ""
 
-#: includes/trait-swap.php:233
+#: includes/trait-swap.php:271
 msgid "Shift swap to approve"
 msgstr ""
 
 #. translators: 1: employee, 2: colleague, 3: day, 4: status, 5: status
-#: includes/trait-swap.php:235
+#: includes/trait-swap.php:273
 #, php-format
 msgid "%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s."
 msgstr ""
 
-#: includes/trait-swap.php:317
-#: includes/trait-swap.php:331
+#: includes/trait-swap.php:355
+#: includes/trait-swap.php:369
 msgid "Shift swap"
 msgstr ""
 
 #. translators: 1: day, 2: colleague's name
-#: includes/trait-swap.php:319
+#: includes/trait-swap.php:357
 #, php-format
 msgid "%1$s with %2$s (they accepted)"
 msgstr ""
 
 #. translators: %s: colleague's name
-#: includes/trait-swap.php:333
+#: includes/trait-swap.php:371
 #, php-format
 msgid "Waiting for %s to accept"
 msgstr ""
 
 #. translators: %s: colleague's name
-#: includes/trait-swap.php:333
+#: includes/trait-swap.php:371
 #, php-format
 msgid "With %s"
 msgstr ""
@@ -3946,6 +3973,18 @@ msgstr ""
 msgid "Low"
 msgstr ""
 
+#. translators: 1: date and time, 2: first day of the week
+#. translators: %s: date and time
+#: includes/trait-week-lock.php:86
+#: templates/admin/features.php:174
+#: templates/app/schedule.php:91
+msgid "D j M, g:i A"
+msgstr ""
+
+#: includes/trait-week-lock.php:125
+msgid "Next week's schedule is final"
+msgstr ""
+
 #: templates/admin/advances.php:25
 msgid "Salary advances are off."
 msgstr ""
@@ -4119,7 +4158,7 @@ msgstr ""
 #: templates/admin/daily-workers.php:232
 #: templates/admin/substitutes.php:29
 #: templates/admin/system-health.php:126
-#: templates/app/attendance.php:228
+#: templates/app/attendance.php:254
 #: templates/app/my-profile.php:154
 msgid "Status"
 msgstr ""
@@ -4181,7 +4220,7 @@ msgstr ""
 #: templates/app/leave.php:120
 #: templates/app/leave.php:163
 #: templates/app/overtime.php:90
-#: templates/app/schedule.php:227
+#: templates/app/schedule.php:229
 msgid "Approve"
 msgstr ""
 
@@ -4191,8 +4230,8 @@ msgstr ""
 #: templates/app/corrections.php:108
 #: templates/app/leave.php:31
 #: templates/app/overtime.php:90
-#: templates/app/schedule.php:227
-#: templates/app/schedule.php:234
+#: templates/app/schedule.php:229
+#: templates/app/schedule.php:236
 msgid "Reject"
 msgstr ""
 
@@ -4303,14 +4342,14 @@ msgid "Off"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:122
+#: templates/admin/features.php:127
 #: templates/app/time.php:118
 #: templates/app/time.php:168
 msgid "Optional"
 msgstr ""
 
 #: templates/admin/corrections.php:142
-#: templates/admin/features.php:122
+#: templates/admin/features.php:127
 msgid "Required"
 msgstr ""
 
@@ -4938,6 +4977,7 @@ msgid "\"Foreman (daily workers)\", \"Pay daily workers\" and \"View national ID
 msgstr ""
 
 #: templates/admin/daily-workers.php:271
+#: templates/admin/features.php:176
 msgid "Roles & Permissions"
 msgstr ""
 
@@ -5023,172 +5063,173 @@ msgstr ""
 msgid "A past day counts those days again (lateness, overtime, hours); closed payroll months do not change."
 msgstr ""
 
-#: templates/admin/features.php:84
+#: templates/admin/features.php:89
 msgid "Employees ask for an advance from My requests → New request and choose how many months to pay it back over. It is decided on the approval engine (by default the direct manager, then Finance); Finance records it as paid, and the instalments come off the pay from the month after."
 msgstr ""
 
-#: templates/admin/features.php:88
+#: templates/admin/features.php:93
 msgid "The most per advance, in months of salary (0 = no limit by salary)"
 msgstr ""
 
-#: templates/admin/features.php:89
+#: templates/admin/features.php:94
 msgid "And at most this amount (0 = none)"
 msgstr ""
 
-#: templates/admin/features.php:90
+#: templates/admin/features.php:95
 msgid "The most instalments (months)"
 msgstr ""
 
-#: templates/admin/features.php:91
+#: templates/admin/features.php:96
 msgid "After how many months with the company"
 msgstr ""
 
-#: templates/admin/features.php:92
+#: templates/admin/features.php:97
 msgid "Times Finance may move an instalment to the end, per advance (0 = no limit)"
 msgstr ""
 
-#: templates/admin/features.php:93
+#: templates/admin/features.php:98
 msgid "One open advance at a time"
 msgstr ""
 
-#: templates/admin/features.php:97
+#: templates/admin/features.php:102
 msgid "Mobile app API"
 msgstr ""
 
-#: templates/admin/features.php:97
+#: templates/admin/features.php:102
 msgid "Lets the Android and iPhone apps read the signed-in employee’s profile and menu, their own schedule and today’s attendance. Read only: it changes no rule, permission or request, and an employee can only ever read their own data. Off, the apps get “disabled” and nothing else changes."
 msgstr ""
 
-#: templates/admin/features.php:101
+#: templates/admin/features.php:106
 msgid "Safer app sign-in refresh: a phone that refreshes its sign-in several times at once, or retries, stays signed in (up to 4 more times within 30 seconds); a database error no longer signs it out. Off: as before."
 msgstr ""
 
-#: templates/admin/features.php:105
+#: templates/admin/features.php:110
 msgid "Measures how long Workforce One’s pages, actions and scheduled jobs take, their database queries, memory and PHP errors, and lists what to look at first. The data stays in this site’s database; nothing is sent anywhere. Adds about 1 ms to a Workforce One request."
 msgstr ""
 
-#: templates/admin/features.php:108
+#: templates/admin/features.php:113
 msgid "On a network only a super admin can change this."
 msgstr ""
 
-#: templates/admin/features.php:110
+#: templates/admin/features.php:115
 msgid "Detailed query data from this share of requests"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/admin/features.php:110
+#: templates/admin/features.php:115
 #, php-format
 msgid "%d%% of requests"
 msgstr ""
 
 #. translators: %d: percent
-#: templates/admin/features.php:111
+#: templates/admin/features.php:116
 msgid "Keep the daily history for"
 msgstr ""
 
-#: templates/admin/features.php:115
+#: templates/admin/features.php:120
 msgid "A substitute while a manager is away"
 msgstr ""
 
-#: templates/admin/features.php:115
+#: templates/admin/features.php:120
 msgid "While a manager is away, the requests that would wait for them wait for their substitute, marked \"for\" them, in every request type. A manager picks one when they ask for leave, or with \"I'll be away\" in My approvals (any start and end time); HR can set one for anyone."
 msgstr ""
 
-#: templates/admin/features.php:119
+#: templates/admin/features.php:124
 msgid "The manager can still decide while away"
 msgstr ""
 
-#: templates/admin/features.php:120
+#: templates/admin/features.php:125
 msgid "When the manager is back, what still waits"
 msgstr ""
 
-#: templates/admin/features.php:120
+#: templates/admin/features.php:125
 msgid "Goes back to the manager"
 msgstr ""
 
-#: templates/admin/features.php:120
+#: templates/admin/features.php:125
 msgid "Stays with the substitute until decided"
 msgstr ""
 
-#: templates/admin/features.php:121
+#: templates/admin/features.php:126
 msgid "Who can be a substitute"
 msgstr ""
 
-#: templates/admin/features.php:121
+#: templates/admin/features.php:126
 msgid "Any active employee"
 msgstr ""
 
-#: templates/admin/features.php:121
+#: templates/admin/features.php:126
 msgid "Managers only (someone reports to them)"
 msgstr ""
 
-#: templates/admin/features.php:121
+#: templates/admin/features.php:126
 msgid "Someone in the same department"
 msgstr ""
 
-#: templates/admin/features.php:122
+#: templates/admin/features.php:127
 msgid "Ask managers for one when they request leave"
 msgstr ""
 
-#: templates/admin/features.php:122
+#: templates/admin/features.php:127
 msgid "Do not ask (HR sets them)"
 msgstr ""
 
-#: templates/admin/features.php:135
+#: templates/admin/features.php:140
 msgid "Office Minimum"
 msgstr ""
 
-#: templates/admin/features.php:135
+#: templates/admin/features.php:140
 msgid "A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked."
 msgstr ""
 
-#: templates/admin/features.php:136
+#: templates/admin/features.php:141
+#: templates/admin/features.php:167
 msgid "Enabled"
 msgstr ""
 
-#: templates/admin/features.php:139
+#: templates/admin/features.php:144
 msgid "Minimum each day"
 msgstr ""
 
-#: templates/admin/features.php:139
+#: templates/admin/features.php:144
 msgid "people in the office"
 msgstr ""
 
-#: templates/admin/features.php:140
+#: templates/admin/features.php:145
 msgid "Working days only; company holidays and days off are not checked."
 msgstr ""
 
-#: templates/admin/features.php:141
+#: templates/admin/features.php:146
 msgid "A different day (optional)"
 msgstr ""
 
-#: templates/admin/features.php:143
+#: templates/admin/features.php:148
 msgid "Empty = the minimum above. 0 = no minimum that day."
 msgstr ""
 
-#: templates/admin/features.php:144
+#: templates/admin/features.php:149
 msgid "Who counts as in the office"
 msgstr ""
 
-#: templates/admin/features.php:146
+#: templates/admin/features.php:151
 msgid "Leave, trips and training count only if ticked here."
 msgstr ""
 
-#: templates/admin/features.php:147
+#: templates/admin/features.php:152
 msgid "Each team's share"
 msgstr ""
 
-#: templates/admin/features.php:148
+#: templates/admin/features.php:153
 msgid "Automatic, by team size. You can fix a number for a team."
 msgstr ""
 
-#: templates/admin/features.php:149
+#: templates/admin/features.php:154
 msgid "No teams yet: the minimum is checked for the whole company."
 msgstr ""
 
-#: templates/admin/features.php:150
+#: templates/admin/features.php:155
 #: templates/app/attendance-insights.php:46
-#: templates/app/attendance.php:119
+#: templates/app/attendance.php:141
 #: templates/app/employees.php:22
 #: templates/app/my-profile.php:94
 #: templates/app/office-minimum.php:37
@@ -5197,33 +5238,96 @@ msgstr ""
 msgid "Team"
 msgstr ""
 
-#: templates/admin/features.php:150
+#: templates/admin/features.php:155
 msgid "Automatic share"
 msgstr ""
 
-#: templates/admin/features.php:150
+#: templates/admin/features.php:155
 msgid "Fixed number"
 msgstr ""
 
-#: templates/admin/features.php:152
+#: templates/admin/features.php:157
 msgid "Auto"
 msgstr ""
 
-#: templates/admin/features.php:154
+#: templates/admin/features.php:159
 msgid "People in no team share one line (\"No team\")."
 msgstr ""
 
-#: templates/admin/features.php:155
+#: templates/admin/features.php:160
 #: templates/app/tasks.php:188
 msgid "Reminder"
 msgstr ""
 
-#: templates/admin/features.php:155
+#: templates/admin/features.php:160
 msgid "Every week, send schedule managers the days below the minimum next week"
 msgstr ""
 
-#: templates/admin/features.php:156
+#: templates/admin/features.php:161
 msgid "Reminder day"
+msgstr ""
+
+#: templates/admin/features.php:166
+msgid "Week lock"
+msgstr ""
+
+#: templates/admin/features.php:166
+msgid "From a fixed time every week, next week's schedule is final and stays final: managers can no longer change it. Leave and swaps are still applied, and attendance is still fixed through corrections. Off by default."
+msgstr ""
+
+#: templates/admin/features.php:170
+msgid "Cutoff"
+msgstr ""
+
+#: templates/admin/features.php:172
+msgid "Cutoff time"
+msgstr ""
+
+#. translators: %s: the site's time zone
+#: templates/admin/features.php:173
+#, php-format
+msgid "Every week at this time, next week's schedule becomes final. Site time: %s (WordPress Settings → General)."
+msgstr ""
+
+#. translators: %s: the site's time zone
+#: templates/admin/features.php:174
+msgid "Next cutoff"
+msgstr ""
+
+#. translators: 1: date and time, 2: first day of the week
+#: templates/admin/features.php:174
+#, php-format
+msgid "%1$s, for the week of %2$s. Weeks before it are final."
+msgstr ""
+
+#. translators: 1: date and time, 2: first day of the week
+#: templates/admin/features.php:175
+msgid "Who can edit a final week"
+msgstr ""
+
+#. translators: 1: date and time, 2: first day of the week
+#: templates/admin/features.php:175
+msgid "Site administrators and the EWS Administrator role."
+msgstr ""
+
+#: templates/admin/features.php:176
+msgid "The \"Edit a locked week\" permission. Give it to other roles (such as HR) on"
+msgstr ""
+
+#: templates/admin/features.php:176
+msgid "Every change they make to a final week is in the Audit Log."
+msgstr ""
+
+#: templates/admin/features.php:177
+msgid "Leave, leave cancellations and swaps are requested, approved and applied as usual, also on final days. Each change they make to a final week is in the Audit Log."
+msgstr ""
+
+#: templates/admin/features.php:178
+msgid "Send everyone with a schedule that week a notification at the cutoff: \"Next week's schedule is final\""
+msgstr ""
+
+#: templates/admin/features.php:179
+msgid "Employees always see \"Final\" on the week in their schedule."
 msgstr ""
 
 #: templates/admin/org-chart.php:39
@@ -5634,10 +5738,10 @@ msgstr ""
 
 #: templates/admin/substitutes.php:29
 #: templates/admin/substitutes.php:48
-#: templates/app/attendance.php:54
+#: templates/app/attendance.php:56
 #: templates/app/corrections.php:69
-#: templates/app/schedule.php:144
-#: templates/app/schedule.php:162
+#: templates/app/schedule.php:146
+#: templates/app/schedule.php:164
 msgid "Manager"
 msgstr ""
 
@@ -5724,7 +5828,7 @@ msgid "Warning"
 msgstr ""
 
 #: templates/admin/system-health.php:38
-#: templates/app/attendance.php:228
+#: templates/app/attendance.php:254
 msgid "Note"
 msgstr ""
 
@@ -5939,7 +6043,7 @@ msgid "Overdue"
 msgstr ""
 
 #: templates/admin/system-health.php:127
-#: templates/app/attendance.php:72
+#: templates/app/attendance.php:74
 #: templates/app/correction-days.php:50
 msgid "Not scheduled"
 msgstr ""
@@ -6329,7 +6433,7 @@ msgid "Changes apply right away."
 msgstr ""
 
 #: templates/app/approvals.php:34
-#: templates/app/schedule.php:232
+#: templates/app/schedule.php:234
 msgid "Waiting for you"
 msgstr ""
 
@@ -6449,7 +6553,7 @@ msgid "Approving…"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:79
+#: templates/app/attendance.php:81
 #: templates/app/dashboard.php:149
 #: templates/app/new-request.php:107
 #: templates/app/new-request.php:110
@@ -6457,7 +6561,7 @@ msgid "Office"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:79
+#: templates/app/attendance.php:81
 #: templates/app/dashboard.php:149
 #: templates/app/new-request.php:107
 #: templates/app/new-request.php:110
@@ -6465,7 +6569,7 @@ msgid "WFH"
 msgstr ""
 
 #: templates/app/attendance-insights.php:22
-#: templates/app/attendance.php:79
+#: templates/app/attendance.php:81
 msgid "Business Trip"
 msgstr ""
 
@@ -6475,7 +6579,7 @@ msgstr ""
 
 #. translators: %d: minutes
 #: templates/app/attendance-insights.php:24
-#: templates/app/attendance.php:71
+#: templates/app/attendance.php:73
 #: templates/app/correction-days.php:42
 msgid "Late"
 msgstr ""
@@ -6489,21 +6593,21 @@ msgid "Selected Day"
 msgstr ""
 
 #: templates/app/attendance-insights.php:34
-#: templates/app/attendance.php:89
-#: templates/app/schedule.php:49
-#: templates/app/schedule.php:60
+#: templates/app/attendance.php:92
+#: templates/app/schedule.php:50
+#: templates/app/schedule.php:61
 msgid "Previous week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:35
-#: templates/app/schedule.php:67
+#: templates/app/schedule.php:68
 msgid "Week"
 msgstr ""
 
 #: templates/app/attendance-insights.php:36
-#: templates/app/attendance.php:98
-#: templates/app/schedule.php:49
-#: templates/app/schedule.php:62
+#: templates/app/attendance.php:101
+#: templates/app/schedule.php:50
+#: templates/app/schedule.php:63
 msgid "Next week"
 msgstr ""
 
@@ -6542,198 +6646,247 @@ msgstr ""
 msgid "No employees in this category."
 msgstr ""
 
-#: templates/app/attendance.php:46
+#: templates/app/attendance.php:48
 msgid "No minimum"
 msgstr ""
 
-#: templates/app/attendance.php:47
+#: templates/app/attendance.php:49
 msgid "In the office / minimum"
 msgstr ""
 
-#: templates/app/attendance.php:53
-#: templates/app/schedule.php:144
+#: templates/app/attendance.php:55
+#: templates/app/schedule.php:146
 msgid "You"
 msgstr ""
 
-#: templates/app/attendance.php:72
+#: templates/app/attendance.php:74
 msgid "Awaiting sign in"
 msgstr ""
 
-#: templates/app/attendance.php:85
+#: templates/app/attendance.php:88
 msgid "MANAGER CONTROL CENTER"
 msgstr ""
 
-#: templates/app/attendance.php:86
+#: templates/app/attendance.php:89
 msgid "Manage your team schedule and see attendance results in one place."
 msgstr ""
 
-#: templates/app/attendance.php:92
+#: templates/app/attendance.php:95
 msgid "Choose a date"
 msgstr ""
 
-#: templates/app/attendance.php:95
+#: templates/app/attendance.php:97
+#: templates/app/attendance.php:128
+#: templates/app/schedule.php:62
+msgid "Final"
+msgstr ""
+
+#: templates/app/attendance.php:98
 msgid "Choose week"
 msgstr ""
 
-#: templates/app/attendance.php:104
+#: templates/app/attendance.php:107
 msgid "Present days"
 msgstr ""
 
-#: templates/app/attendance.php:105
+#: templates/app/attendance.php:108
 #: templates/app/pay.php:59
 msgid "Late days"
 msgstr ""
 
-#: templates/app/attendance.php:106
+#: templates/app/attendance.php:109
 msgid "Absent days"
 msgstr ""
 
-#: templates/app/attendance.php:107
+#: templates/app/attendance.php:110
 msgid "Attendance rate"
 msgstr ""
 
-#: templates/app/attendance.php:112
-msgid "Schedule Controls"
-msgstr ""
-
-#: templates/app/attendance.php:112
-msgid "Set the planned schedule for everyone on this page on a specific day."
-msgstr ""
-
-#: templates/app/attendance.php:112
-msgid "Set the planned schedule for everyone on a specific day."
-msgstr ""
-
+#. translators: %s: time of day
 #: templates/app/attendance.php:118
-msgid "Search employee..."
+#, php-format
+msgid "This week becomes final today at %s"
 msgstr ""
 
-#: templates/app/attendance.php:120
-msgid "All teams"
+#. translators: %s: time of day
+#: templates/app/attendance.php:119
+msgid "After that, only people with \"Edit a locked week\" can change it. Leave and swaps are still applied as usual."
 msgstr ""
 
-#: templates/app/attendance.php:127
-msgid "Branch"
+#: templates/app/attendance.php:121
+msgid "This week is final, and you can still edit it"
+msgstr ""
+
+#. translators: %s: date and time
+#: templates/app/attendance.php:122
+#, php-format
+msgid "Locked since %s. Every change you make is recorded in the Audit Log under your name."
+msgstr ""
+
+#: templates/app/attendance.php:124
+msgid "This week is final"
+msgstr ""
+
+#. translators: %s: date and time
+#: templates/app/attendance.php:125
+#, php-format
+msgid "Locked since %s. Approved leave and swaps are still applied. To change a day, ask HR."
 msgstr ""
 
 #: templates/app/attendance.php:128
+msgid "Edit a locked week"
+msgstr ""
+
+#: templates/app/attendance.php:134
+msgid "Schedule Controls"
+msgstr ""
+
+#: templates/app/attendance.php:134
+msgid "Set the planned schedule for everyone on this page on a specific day."
+msgstr ""
+
+#: templates/app/attendance.php:134
+msgid "Set the planned schedule for everyone on a specific day."
+msgstr ""
+
+#: templates/app/attendance.php:140
+msgid "Search employee..."
+msgstr ""
+
+#: templates/app/attendance.php:142
+msgid "All teams"
+msgstr ""
+
+#: templates/app/attendance.php:149
+msgid "Branch"
+msgstr ""
+
+#: templates/app/attendance.php:150
 msgid "All branches"
 msgstr ""
 
-#: templates/app/attendance.php:139
+#: templates/app/attendance.php:161
 msgid "Set…"
 msgstr ""
 
 #. translators: %s: day
-#: templates/app/attendance.php:143
+#: templates/app/attendance.php:165
 #, php-format
 msgid "Branch for everyone on %s"
 msgstr ""
 
 #. translators: %s: day
-#: templates/app/attendance.php:144
+#: templates/app/attendance.php:166
 msgid "Branch…"
 msgstr ""
 
-#: templates/app/attendance.php:145
+#: templates/app/attendance.php:167
 msgid "Their main branch"
 msgstr ""
 
 #. translators: 1: people with a record, 2: people absent
-#: templates/app/attendance.php:173
+#: templates/app/attendance.php:195
 #, php-format
 msgid "%1$d recorded · %2$d absent"
 msgstr ""
 
-#: templates/app/attendance.php:192
+#: templates/app/attendance.php:214
 msgid "No employee matches this search."
 msgstr ""
 
-#: templates/app/attendance.php:204
+#: templates/app/attendance.php:226
 msgid "Branch for this day"
 msgstr ""
 
-#: templates/app/attendance.php:206
+#: templates/app/attendance.php:228
 msgid "Main branch"
 msgstr ""
 
+#: templates/app/attendance.php:235
+msgid "The week is final: there is nothing to save."
+msgstr ""
+
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:213
+#: templates/app/attendance.php:238
 msgid "No changes yet. Tap a day to change it."
 msgstr ""
 
-#: templates/app/attendance.php:213
+#: templates/app/attendance.php:238
 msgid "1 change not saved yet"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:213
+#: templates/app/attendance.php:238
 #, php-format
 msgid "%d changes not saved yet"
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:213
+#: templates/app/attendance.php:238
 msgid "You have changes that are not saved yet."
 msgstr ""
 
 #. translators: %d: number of changed days (2 or more)
-#: templates/app/attendance.php:214
+#: templates/app/attendance.php:239
 msgid "Undo"
 msgstr ""
 
-#: templates/app/attendance.php:215
+#: templates/app/attendance.php:240
 msgid "Save Schedule & Attendance"
 msgstr ""
 
-#: templates/app/attendance.php:220
+#: templates/app/attendance.php:246
 msgid "The CSV preview has expired. Please upload the file again."
 msgstr ""
 
-#: templates/app/attendance.php:225
+#: templates/app/attendance.php:251
 msgid "CSV Preview"
 msgstr ""
 
-#: templates/app/attendance.php:226
+#: templates/app/attendance.php:252
 msgid "Existing entries for the same employee and date will be replaced."
 msgstr ""
 
-#: templates/app/attendance.php:228
+#: templates/app/attendance.php:254
 msgid "Line"
 msgstr ""
 
-#: templates/app/attendance.php:228
+#: templates/app/attendance.php:254
 #: templates/app/reports.php:56
 msgid "Result"
 msgstr ""
 
 #. translators: %d: number of rows
-#: templates/app/attendance.php:246
+#: templates/app/attendance.php:272
 #, php-format
 msgid "Import %d row(s)"
 msgstr ""
 
-#: templates/app/attendance.php:255
+#: templates/app/attendance.php:281
 msgid "Advanced: Bulk CSV Import"
 msgstr ""
 
-#: templates/app/attendance.php:255
+#: templates/app/attendance.php:281
 msgid "Use this when you have many rows from Excel."
 msgstr ""
 
-#: templates/app/attendance.php:257
+#: templates/app/attendance.php:283
 msgid "Download the sample, fill it in Excel, upload it, review validation, then import."
 msgstr ""
 
-#: templates/app/attendance.php:261
+#: templates/app/attendance.php:284
+msgid "Rows in a final week show as errors in the preview and are not saved."
+msgstr ""
+
+#: templates/app/attendance.php:288
 msgid "Upload CSV"
 msgstr ""
 
-#: templates/app/attendance.php:262
+#: templates/app/attendance.php:289
 msgid "Validate & Preview"
 msgstr ""
 
-#: templates/app/attendance.php:265
+#: templates/app/attendance.php:292
 msgid "Download Sample CSV"
 msgstr ""
 
@@ -7100,7 +7253,7 @@ msgstr[1] ""
 
 #: templates/app/corrections.php:123
 #: templates/app/overtime.php:106
-#: templates/app/schedule.php:248
+#: templates/app/schedule.php:250
 msgid "Decided"
 msgstr ""
 
@@ -7819,8 +7972,8 @@ msgid "Email Address"
 msgstr ""
 
 #: templates/app/employees.php:29
-#: templates/app/schedule.php:145
-#: templates/app/schedule.php:162
+#: templates/app/schedule.php:147
+#: templates/app/schedule.php:164
 msgid "No Team"
 msgstr ""
 
@@ -8476,7 +8629,7 @@ msgid "That day: %s"
 msgstr ""
 
 #: templates/app/new-request.php:112
-#: templates/app/schedule.php:265
+#: templates/app/schedule.php:267
 msgid "Swap with"
 msgstr ""
 
@@ -8485,7 +8638,7 @@ msgid "Colleagues in your department. You can swap only with someone whose day i
 msgstr ""
 
 #: templates/app/new-request.php:117
-#: templates/app/schedule.php:270
+#: templates/app/schedule.php:272
 msgid "Your colleague gets your day and you get theirs once they accept."
 msgstr ""
 
@@ -8652,7 +8805,7 @@ msgstr ""
 #. translators: %d: number of people
 #: templates/app/office-minimum.php:40
 #: templates/app/people.php:23
-#: templates/app/schedule.php:97
+#: templates/app/schedule.php:99
 #, php-format
 msgid "%d person"
 msgid_plural "%d people"
@@ -9315,102 +9468,109 @@ msgstr ""
 msgid "Open it on the Schedule page"
 msgstr ""
 
-#: templates/app/schedule.php:49
+#: templates/app/schedule.php:50
 msgid "This week"
 msgstr ""
 
-#: templates/app/schedule.php:51
-#: templates/app/schedule.php:244
+#: templates/app/schedule.php:52
+#: templates/app/schedule.php:246
 msgid "Waiting for approval"
 msgstr ""
 
-#: templates/app/schedule.php:55
+#: templates/app/schedule.php:56
 msgid "Schedule emails sent:"
 msgstr ""
 
-#: templates/app/schedule.php:55
+#: templates/app/schedule.php:56
 msgid "skipped:"
 msgstr ""
 
-#: templates/app/schedule.php:55
+#: templates/app/schedule.php:56
 msgid "failed:"
 msgstr ""
 
-#: templates/app/schedule.php:68
+#: templates/app/schedule.php:69
 msgid "View Week"
 msgstr ""
 
-#: templates/app/schedule.php:77
+#: templates/app/schedule.php:78
 msgid "My week"
 msgstr ""
 
-#: templates/app/schedule.php:90
-#: templates/app/schedule.php:257
+#. translators: %s: date and time
+#: templates/app/schedule.php:91
+#, php-format
+msgid "This week's schedule is final since %s. You can still request leave or a swap."
+msgstr ""
+
+#. translators: %s: date and time
+#: templates/app/schedule.php:92
+#: templates/app/schedule.php:259
 msgid "Request a swap"
 msgstr ""
 
-#: templates/app/schedule.php:100
+#: templates/app/schedule.php:102
 msgid "Whose schedule"
 msgstr ""
 
-#: templates/app/schedule.php:102
+#: templates/app/schedule.php:104
 msgid "My department"
 msgstr ""
 
-#: templates/app/schedule.php:108
-#: templates/app/schedule.php:111
+#: templates/app/schedule.php:110
+#: templates/app/schedule.php:113
 msgid "Search colleague"
 msgstr ""
 
-#: templates/app/schedule.php:115
+#: templates/app/schedule.php:117
 msgid "The schedule PDF was downloaded. Attach it to your WhatsApp message."
 msgstr ""
 
-#: templates/app/schedule.php:115
+#: templates/app/schedule.php:117
 msgid "The PDF could not be prepared. Please try again."
 msgstr ""
 
-#: templates/app/schedule.php:117
+#: templates/app/schedule.php:119
 msgid "Send each active employee their own schedule for this week?"
 msgstr ""
 
-#: templates/app/schedule.php:117
+#: templates/app/schedule.php:119
 msgid "Email everyone"
 msgstr ""
 
-#: templates/app/schedule.php:117
+#: templates/app/schedule.php:119
 msgctxt "short button label"
 msgid "Email"
 msgstr ""
 
-#: templates/app/schedule.php:137
+#: templates/app/schedule.php:139
 msgid "No employees found"
 msgstr ""
 
-#: templates/app/schedule.php:137
+#: templates/app/schedule.php:139
 msgid "There are no active employees to display."
 msgstr ""
 
-#: templates/app/schedule.php:172
+#: templates/app/schedule.php:174
 msgid "No colleague matches your search."
 msgstr ""
 
-#: templates/app/schedule.php:194
+#: templates/app/schedule.php:196
 msgid "Asked you"
 msgstr ""
 
-#: templates/app/schedule.php:194
+#: templates/app/schedule.php:196
 msgid "You asked"
 msgstr ""
 
 #. translators: %s: "This week", "Next week" or a date range
-#: templates/app/schedule.php:207
+#: templates/app/schedule.php:209
 #, php-format
 msgid "Shift swaps · %s"
 msgstr ""
 
 #. translators: %d: number of swaps
-#: templates/app/schedule.php:209
+#: templates/app/schedule.php:211
 #, php-format
 msgid "%d swap to approve"
 msgid_plural "%d swaps to approve"
@@ -9418,7 +9578,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of swap requests
-#: templates/app/schedule.php:210
+#: templates/app/schedule.php:212
 #, php-format
 msgid "%d swap waiting for you"
 msgid_plural "%d swaps waiting for you"
@@ -9426,7 +9586,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of swaps
-#: templates/app/schedule.php:211
+#: templates/app/schedule.php:213
 #, php-format
 msgid "%d swap waiting for approval"
 msgid_plural "%d swaps waiting for approval"
@@ -9434,8 +9594,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of swap requests
-#: templates/app/schedule.php:212
-#: templates/app/schedule.php:215
+#: templates/app/schedule.php:214
+#: templates/app/schedule.php:217
 #, php-format
 msgid "%d request sent"
 msgid_plural "%d requests sent"
@@ -9443,39 +9603,39 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of swap requests
-#: templates/app/schedule.php:213
+#: templates/app/schedule.php:215
 msgid "Need to swap a day?"
 msgstr ""
 
-#: templates/app/schedule.php:217
+#: templates/app/schedule.php:219
 msgid "Request Swap"
 msgstr ""
 
-#: templates/app/schedule.php:220
+#: templates/app/schedule.php:222
 msgid "To approve"
 msgstr ""
 
-#: templates/app/schedule.php:225
+#: templates/app/schedule.php:227
 msgid "Both agreed"
 msgstr ""
 
-#: templates/app/schedule.php:236
+#: templates/app/schedule.php:238
 msgid "Accept"
 msgstr ""
 
-#: templates/app/schedule.php:239
+#: templates/app/schedule.php:241
 msgid "Sent by you"
 msgstr ""
 
-#: templates/app/schedule.php:266
+#: templates/app/schedule.php:268
 msgid "Select colleague"
 msgstr ""
 
-#: templates/app/schedule.php:269
+#: templates/app/schedule.php:271
 msgid "Send Request"
 msgstr ""
 
-#: templates/app/schedule.php:273
+#: templates/app/schedule.php:275
 msgid "You have no Office or WFH days left this week to swap."
 msgstr ""
 

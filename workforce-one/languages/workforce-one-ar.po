@@ -7522,3 +7522,105 @@ msgstr "يحفظ شخص آخر وردية هذا الموظف الآن. حاول
 
 msgid "it was interrupted while being done; check their manager, then dismiss it or move them again"
 msgstr "توقّف أثناء التنفيذ؛ راجع مديره ثم تجاهله أو انقله مرة أخرى"
+
+msgid "This week is final. To change a day, ask HR."
+msgstr "هذا الأسبوع نهائي. لتغيير يوم، تواصل مع الموارد البشرية."
+
+msgid "The week of this day is final"
+msgstr "أسبوع هذا اليوم نهائي"
+
+msgid "%d change was not saved"
+msgid_plural "%d changes were not saved"
+msgstr[0] "لم يُحفظ %d تغيير"
+msgstr[1] "لم يُحفظ %d تغيير"
+msgstr[2] "لم يُحفظ %d تغييران"
+msgstr[3] "لم تُحفظ %d تغييرات"
+msgstr[4] "لم يُحفظ %d تغييرًا"
+msgstr[5] "لم يُحفظ %d تغيير"
+
+msgid "This week is final now."
+msgstr "هذا الأسبوع أصبح نهائيًا الآن."
+
+msgid "To change a day of a final week, ask HR."
+msgstr "لتغيير يوم في أسبوع نهائي، تواصل مع الموارد البشرية."
+
+msgid "D j M, g:i A"
+msgstr "D j M، g:i A"
+
+msgid "Next week's schedule is final"
+msgstr "جدول الأسبوع القادم أصبح نهائيًا"
+
+msgid "Week lock"
+msgstr "قفل الأسبوع"
+
+msgid "From a fixed time every week, next week's schedule is final and stays final: managers can no longer change it. Leave and swaps are still applied, and attendance is still fixed through corrections. Off by default."
+msgstr "من موعد ثابت كل أسبوع يصبح جدول الأسبوع القادم نهائيًا ويبقى نهائيًا: لا يستطيع المديرون تغييره. الإجازات والتبديلات تُطبَّق كالمعتاد، والحضور يُصحَّح بالتصحيحات كما هو. معطّل افتراضيًا."
+
+msgid "Cutoff"
+msgstr "موعد القفل"
+
+msgid "Cutoff time"
+msgstr "وقت القفل"
+
+msgid "Every week at this time, next week's schedule becomes final. Site time: %s (WordPress Settings → General)."
+msgstr "في هذا الموعد كل أسبوع يصبح جدول الأسبوع القادم نهائيًا. بتوقيت الموقع: %s (إعدادات WordPress ← عام)."
+
+msgid "Next cutoff"
+msgstr "القفل القادم"
+
+msgid "%1$s, for the week of %2$s. Weeks before it are final."
+msgstr "%1$s، لأسبوع %2$s. الأسابيع التي قبله نهائية."
+
+msgid "Who can edit a final week"
+msgstr "من يستطيع تعديل أسبوع نهائي"
+
+msgid "Site administrators and the EWS Administrator role."
+msgstr "مديرو الموقع ودور EWS Administrator."
+
+msgid "The \"Edit a locked week\" permission. Give it to other roles (such as HR) on"
+msgstr "صلاحية «تعديل أسبوع مقفول». يمكنك منحها لأدوار أخرى (مثل الموارد البشرية) من"
+
+msgid "Every change they make to a final week is in the Audit Log."
+msgstr "كل تغيير يجرونه على أسبوع نهائي يُسجَّل في سجل التدقيق."
+
+msgid "Leave, leave cancellations and swaps are requested, approved and applied as usual, also on final days. Each change they make to a final week is in the Audit Log."
+msgstr "الإجازات وإلغاء الإجازات والتبديلات تُطلب ويُوافق عليها وتُطبَّق كالمعتاد، حتى في الأيام النهائية. كل تغيير تُحدثه في أسبوع نهائي يُسجَّل في سجل التدقيق."
+
+msgid "Send everyone with a schedule that week a notification at the cutoff: \"Next week's schedule is final\""
+msgstr "أرسل لكل من له جدول في ذلك الأسبوع إشعارًا وقت القفل: «جدول الأسبوع القادم أصبح نهائيًا»"
+
+msgid "Employees always see \"Final\" on the week in their schedule."
+msgstr "يرى الموظفون علامة «نهائي» على الأسبوع في جدولهم دائمًا."
+
+msgid "Final"
+msgstr "نهائي"
+
+msgid "This week becomes final today at %s"
+msgstr "هذا الأسبوع يصبح نهائيًا اليوم الساعة %s"
+
+msgid "After that, only people with \"Edit a locked week\" can change it. Leave and swaps are still applied as usual."
+msgstr "بعد ذلك لا يغيّره إلا من لديه صلاحية «تعديل أسبوع مقفول». الإجازات والتبديلات تُطبَّق كالمعتاد."
+
+msgid "This week is final, and you can still edit it"
+msgstr "هذا الأسبوع نهائي، ويمكنك تعديله"
+
+msgid "Locked since %s. Every change you make is recorded in the Audit Log under your name."
+msgstr "مقفول منذ %s. كل تغيير تجريه يُسجَّل في سجل التدقيق باسمك."
+
+msgid "This week is final"
+msgstr "هذا الأسبوع نهائي"
+
+msgid "Locked since %s. Approved leave and swaps are still applied. To change a day, ask HR."
+msgstr "مقفول منذ %s. الإجازات والتبديلات الموافق عليها تُطبَّق كالمعتاد. لتغيير يوم، تواصل مع الموارد البشرية."
+
+msgid "Edit a locked week"
+msgstr "تعديل أسبوع مقفول"
+
+msgid "The week is final: there is nothing to save."
+msgstr "الأسبوع نهائي: لا توجد تغييرات للحفظ."
+
+msgid "Rows in a final week show as errors in the preview and are not saved."
+msgstr "صفوف الأسابيع النهائية تظهر في المعاينة كأخطاء ولا تُحفظ."
+
+msgid "This week's schedule is final since %s. You can still request leave or a swap."
+msgstr "جدول هذا الأسبوع نهائي منذ %s. يمكنك طلب إجازة أو تبديل كالمعتاد."

@@ -224,3 +224,9 @@
 .wfo-app .wfo-sched .wfo-sched-scope{display:inline-flex;align-self:flex-start;width:max-content;max-width:100%;gap:2px;margin:0 0 12px;padding:4px;border-radius:var(--wfo-r-ctl);background:var(--wfo-bg)}
 .wfo-app .wfo-sched .wfo-sched-scope a{display:flex;align-items:center;min-height:36px;padding:0 16px;border-radius:10px;color:var(--wfo-muted);font-size:13.5px;font-weight:600;text-decoration:none}
 .wfo-app .wfo-sched .wfo-sched-scope a[aria-current=page]{background:var(--wfo-hero-start);color:#fff;font-weight:700}
+
+/* Week lock (3.31.121): "Final" on the week, and the note under My week. Logical properties: the same in -rtl. */
+.wfo-wl-final{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;background:#13235B;color:#fff;font-size:11px;font-weight:700;white-space:nowrap}
+.wfo-weeknav-text .wfo-wl-final{margin:4px 0 0;font-style:normal}
+.wfo-wl-emp-note{display:flex;align-items:flex-start;gap:8px;margin:12px 0 0;padding:10px 12px;border-radius:14px;background:#F1F0FA;color:#13235B;font-size:12.5px;line-height:1.6}
+.wfo-wl-emp-note .wfo-icon{flex:0 0 auto;margin-top:2px}

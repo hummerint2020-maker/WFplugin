@@ -163,7 +163,8 @@ trait EWS_Leave_Trait {
                 if($q===false)return new WP_Error('leave_balance','Could not update leave balance.');
             }
             $snap=$wpdb->prefix.'ews_leave_schedule_snapshots';
-            foreach(WorkingDays::dates($r->start_date,$r->end_date,$this->working_days()) as $date){
+            $leave_dates=WorkingDays::dates($r->start_date,$r->end_date,$this->working_days());
+            foreach($leave_dates as $date){
                 $existing=$this->schedule_for_employee_date((int)$emp->id,$date);
                 if($existing){
                     $q=$wpdb->insert($snap,['leave_request_id'=>$r->id,'employee_id'=>$emp->id,'work_date'=>$date,'had_schedule'=>1,'schedule_id'=>$existing->id,'status'=>$existing->status,'note'=>$existing->note,'schedule_data'=>wp_json_encode($existing)],['%d','%d','%s','%d','%d','%s','%s','%s']);
@@ -176,6 +177,7 @@ trait EWS_Leave_Trait {
                 }
                 if($q===false)return new WP_Error('leave_schedule','Could not apply vacation schedule.');
             }
+            $this->week_lock_record_request((int)$emp->id,$leave_dates,'leave','leave #'.(int)$r->id);   // applied as usual, recorded (3.31.121)
             return true;
         }
 
@@ -209,6 +211,7 @@ trait EWS_Leave_Trait {
             }
             $q=$wpdb->update($wpdb->prefix.'ews_leave_requests',['status'=>'Cancelled','cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],['id'=>(int)$r->id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s','%s','%d','%s'],['%d','%s','%s']);
             if($q!==1)return $q===false?'save':'done';
+            $this->week_lock_record_request((int)$emp->id,array_map(function($x){return (string)$x->work_date;},$rows),'leave_cancel','leave #'.(int)$r->id);
             return true;
         }
 
