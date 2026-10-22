@@ -151,3 +151,21 @@ Where the code differs from the design:
 - The single-day handler (`att_single`, no form posts it) refuses a final week with a message; it has no e2e case (its nonce
   needs a page that does not exist).
 - Mobile API: no `locked` field yet (release 2 with the change request).
+
+## Independent review (3.31.121)
+No money or upgrade problem; off leaves every page byte-identical. Fixed:
+1. Feature Configuration let anyone with "Manage Settings" (EWS Manager by default) move the cutoff or switch the lock off and so
+   reopen a final week unaudited: only "Edit a locked week" holders can change the Week lock settings now; for others the card is
+   read-only and a posted form keeps the saved values.
+2. The new Audit Log rows named the employee as a schedule row: they use the entity "employee" now.
+3. The "Branch…" fill of a read-only week stayed enabled (it only marked cells that could never be saved): disabled.
+4. `att_single` read the day even with the lock off: only for an allowed edit now.
+5. The no-JavaScript form rewrote an unchanged day of a final week (its note): left alone now.
+6. Two overlapping cron runs could both send the cutoff notification: claimed with one conditional UPDATE.
+7. An allowed CSV import into a final week was one summary row: one `schedule_locked_edit` per changed day now.
+8. A save with both refused and conflicting cells reported only the refused ones: both now.
+9. The unit test used an unsorted working-days list production never passes: sorted, as `working_days()` returns.
+10. e2e: a wider margin before midnight, cleanup at exit whatever fails, new cases for 1, 5 and 7.
+Not changed: the approval-engine leave, leave cancellation and swap writes have no e2e of their own (they call the same recorder the
+tested legacy leave path does); the Arabic dual form keeps its number ("لم يُحفظ %d تغييران") because the translation check
+requires the placeholder in every form.

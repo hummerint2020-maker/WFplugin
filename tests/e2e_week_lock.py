@@ -178,7 +178,7 @@ fields = [(k, v) for k, v in form_fields(mgr.req(FEAT)[1], 'ews31_features_save'
 st, body, h = mgr.req('/wp-admin/admin-post.php', urllib.parse.urlencode(fields).encode())
 check('someone without "Edit a locked week" cannot switch the lock off or move the cutoff', 'features_saved=1' in h.get('Location', '')
       and php("echo (int)get_option('ews_feature_week_lock').' '.get_option('ews_week_lock')['cutoff_time'];").strip() == '1 00:00', h.get('Location'))
-check('...the card is read-only for them', 'Only people with "Edit a locked week"' in mgr.req(FEAT)[1])
+check('...the card is read-only for them', 'Only people with &quot;Edit a locked week&quot; can change these settings.' in mgr.req(FEAT)[1])
 php("$u=new WP_User(%d); $u->remove_cap('ews_manage_settings');" % ctx['mona_uid'])
 # ---------------------------------------------------------------- HR / administrator: "Edit a locked week"
 pg = page(adm, W1[0])
