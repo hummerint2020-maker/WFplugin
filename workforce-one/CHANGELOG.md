@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.122
+### A decision applies only to the approval level you saw (approval engine, every type; design `docs/tasks/approval-level-guard.md`)
+A fix to the documented rule (owner decision of 3.31.120); no new setting, no database change.
+- **Before:** a second post of the same decision (a double click, a resubmitted page, two administrators, or a page opened before
+  another approver acted) found the next level open and decided it too. On the Requests page an administrator could approve two
+  levels with one page.
+- **Now** every decision form sends the level it shows. When the request has moved to another level since the page was opened,
+  nothing is changed and the page says so: "This request moved to another level since you opened the page; nothing was changed."
+  Open the page again to decide the level it is at now.
+- Every page that decides: the wp-admin Requests page (all types), Face Reset Requests and Attendance Corrections; in the app Leave
+  (requests and cancellations), Overtime, Schedule (swaps), Attendance Corrections and My approvals (each card and "Approve the
+  selected"). Attendance corrections also send their stage, so a manager's repeat never becomes HR's second approval.
+- Two decisions sent at the same moment cannot both count: the level is updated only while it is still the one shown.
+- A form without the level (a page opened before the update, an older app) decides the current level, as before (owner decision).
+- The app API: `POST /corrections/{id}/decision` takes optional `step` and `stage` (from `GET /corrections/pending`, which now returns
+  them); a request that moved on is refused with reason `moved`.
+- My approvals, "Approve the selected": a salary advance that could not be decided is now counted as not approved (before, it was
+  counted as approved).
+
 ## 3.31.121
 ### Week lock (new, off by default; design `docs/tasks/week-lock.md`, mockups `docs/mockups/week-lock/`)
 Feature Configuration → **Week lock**. From a weekly cutoff (Thursday 5:00 PM site time by default) next week's schedule is final and

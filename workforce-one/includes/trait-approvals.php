@@ -181,6 +181,53 @@ trait EWS_Approvals_Trait {
         return sanitize_textarea_field(wp_unslash($_POST['note']??'')); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the caller checked its nonce
     }
 
+    /**
+     * The approval level the form showed (3.31.122): its step id, 0 when it showed no open level, null when the form did not say
+     * (a page opened before 3.31.122: the current level, as before).
+     */
+    private function approval_posted_step(){
+        return \WorkforceOne\Approvals\LevelGuard::posted(isset($_POST['approval_step'])?wp_unslash($_POST['approval_step']):null); // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput -- the caller checked its nonce; LevelGuard::posted() keeps digits only
+    }
+
+    /**
+     * The level the form showed is no longer the open one (3.31.122): checked before a module's own checks, so the person is told it
+     * moved. $approval_request_id 0: the request has no approval request (the workflow is off), so no level is open.
+     */
+    private function approval_level_moved($approval_request_id,$posted){
+        if($posted===null)return false;
+        $step=(int)$approval_request_id?$this->approval_current_step((int)$approval_request_id):null;
+        return \WorkforceOne\Approvals\LevelGuard::check((int)$posted,$step?(int)$step->id:0)!==\WorkforceOne\Approvals\LevelGuard::OK;
+    }
+
+    private function approval_moved_error(){
+        return new WP_Error('approval_moved','This request moved to another level since the page was opened; nothing was changed.');
+    }
+
+    /** What a module tells the person when the engine refused a decision: note | moved | approval. */
+    private function approval_error_code($error){
+        $code=is_wp_error($error)?$error->get_error_code():'';
+        if($code==='approval_note_required')return 'note';
+        if($code==='approval_moved')return 'moved';
+        return 'approval';
+    }
+
+    /**
+     * The open level of each request, for the forms of a list (3.31.122): approval_request_key() => step id (0 = none open).
+     * @param array<int,array{0:string,1:string,2:int}> $keys [workflow_key, entity_type, entity_id]
+     * @return array<string,int>
+     */
+    private function approval_shown_steps(array $keys){
+        $found=$this->approval_find_requests($keys);
+        $current=$this->approval_current_steps(array_map(function($ar){return (int)$ar->id;},array_values($found)));
+        $out=[];
+        foreach($keys as $k){
+            $key=$this->approval_request_key((string)$k[0],(string)$k[1],(int)$k[2]);
+            $ar=$found[$key]??null;
+            $out[$key]=$ar && isset($current[(int)$ar->id])?(int)$current[(int)$ar->id]->id:0;
+        }
+        return $out;
+    }
+
     /** Reminder and move-up times of a workflow, in working hours (0 = never; 3.31.100). @return array{remind:int,escalate:int} */
     private function approval_deadlines($workflow_key){
         $all=get_option('ews_approval_deadlines',[]);
@@ -622,8 +669,12 @@ trait EWS_Approvals_Trait {
         return new WP_Error('approval_not_authorized','You are not the assigned approver.');
     }
 
-    /** Apply a decision to the current pending step and advance the state machine. */
-    private function approval_act($approval_request_id,$decision,$comment='',$manage_transaction=true,$allow_admin_override=false){
+    /**
+     * Apply a decision to the current pending step and advance the state machine. $expected_step: the level the form showed
+     * (approval_posted_step(), 3.31.122); when the open level is another one the decision is refused (approval_moved), and the
+     * update touches only that step. null = the form did not say: the current level, as before.
+     */
+    private function approval_act($approval_request_id,$decision,$comment='',$manage_transaction=true,$allow_admin_override=false,$expected_step=null){
         global $wpdb;
         $t=$this->approval_tables();
         $approval_request_id=absint($approval_request_id);
@@ -633,6 +684,8 @@ trait EWS_Approvals_Trait {
         $request=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['requests']} WHERE id=%d LIMIT 1",$approval_request_id));
         if(!$request)return new WP_Error('approval_not_found','Approval request not found.');
         $step=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='PENDING' ORDER BY step_order ASC LIMIT 1",$approval_request_id));
+        // Before the approver check, so the approver of a level already decided is told it moved, not that it is not theirs.
+        if(\WorkforceOne\Approvals\LevelGuard::check($expected_step===null?null:(int)$expected_step,$step?(int)$step->id:0)!==\WorkforceOne\Approvals\LevelGuard::OK)return $this->approval_moved_error();
         if(!$step)return new WP_Error('approval_not_pending','No pending approval step.');
         $uid=(int)get_current_user_id();
         if(!$allow_admin_override && !is_user_logged_in())return new WP_Error('approval_not_authorized','You are not the assigned approver.');
@@ -655,7 +708,7 @@ trait EWS_Approvals_Trait {
             'acted_by_wp_user_id'=>$uid?:null,
             'self_decision'=>$is_self?1:0,
         ],['id'=>(int)$step->id,'status'=>'PENDING'],['%s','%s','%s','%s','%d','%d'],['%d','%s']);
-        if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_stale','Approval step was already handled.');}
+        if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return $expected_step!==null?$this->approval_moved_error():new WP_Error('approval_stale','Approval step was already handled.');}
         if($next){
             $set=['status'=>'PENDING','pending_since'=>$now];
             $route=(int)$next->approver_employee_id?$this->substitute_route((int)$next->approver_employee_id,(int)$request->requester_employee_id):null;

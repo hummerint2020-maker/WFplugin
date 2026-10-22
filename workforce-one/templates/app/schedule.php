@@ -196,9 +196,11 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                 . '<p class="wfo-rq-meta">' . esc_html(($in ? __('Asked you', 'workforce-one') : __('You asked', 'workforce-one')) . ' · ' . date_i18n('D, d M', strtotime((string) $sr->work_date))) . '</p>'
                 . '<span class="wfo-swap-trade">' . $chip((string) $sr->requester_status) . Icons::svg('swap', 14) . $chip((string) $sr->target_status) . '</span></div>' . $side . '</div>';
         };
-        $form_open = static function (string $action, string $nonce, int $id) use ($post_url): string {
+        // $step: the approval level shown, null for the colleague's answer (no level); 3.31.122.
+        $form_open = static function (string $action, string $nonce, int $id, ?int $step = null) use ($post_url): string {
             return '<form method="post" action="' . esc_url($post_url) . '">' . wp_nonce_field($nonce, '_wpnonce', true, false)
-                . '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="swap_id" value="' . $id . '">';
+                . '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="swap_id" value="' . $id . '">'
+                . ($step === null ? '' : '<input type="hidden" name="approval_step" value="' . $step . '">');
         };
         $show_panel = !$has_myweek || $swap_requests || $swap_approvals;
         ?>
@@ -221,7 +223,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
         <?php if ($swap_approvals): ?>
             <h4 class="wfo-rq-group"><?php esc_html_e('To approve', 'workforce-one'); ?></h4>
             <div class="wfo-rq-card" data-swap-approvals><?php foreach ($swap_approvals as $sr):
-                $f = $form_open('ews_swap_decide', 'ews_swap_decide_' . (int) $sr->id, (int) $sr->id); ?>
+                $f = $form_open('ews_swap_decide', 'ews_swap_decide_' . (int) $sr->id, (int) $sr->id, (int) ($sr->approval_step ?? 0)); ?>
                 <div class="wfo-rq-row has-actions"><?php echo $avatar((int) $sr->requester_employee_id, (string) $sr->requester_name); ?>
                     <div class="wfo-rq-main"><p class="wfo-rq-title"><?php echo esc_html($sr->requester_name . ' ↔ ' . $sr->target_name); ?></p>
                         <p class="wfo-rq-meta"><?php echo esc_html(__('Both agreed', 'workforce-one') . ' · ' . date_i18n('D, d M', strtotime((string) $sr->work_date))); ?></p>

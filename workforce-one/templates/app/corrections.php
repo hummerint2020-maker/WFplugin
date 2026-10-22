@@ -102,7 +102,7 @@ $row = static function ($c) use ($icons, $state, $change, $type_label, $status_l
                 </details>
                 <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-cx-decide">
                     <?php wp_nonce_field('ews_correction_decide_' . (int) $c->id); ?>
-                    <input type="hidden" name="action" value="ews_correction_decide"><input type="hidden" name="correction_id" value="<?php echo (int) $c->id; ?>">
+                    <input type="hidden" name="action" value="ews_correction_decide"><input type="hidden" name="correction_id" value="<?php echo (int) $c->id; ?>"><input type="hidden" name="approval_step" value="<?php echo (int) $c->approval_step; ?>"><input type="hidden" name="request_stage" value="<?php echo esc_attr((string) $c->status); ?>">
                     <label class="screen-reader-text" for="wfo-cx-note-<?php echo (int) $c->id; ?>"><?php esc_html_e('Note to the employee', 'workforce-one'); ?></label>
                     <textarea id="wfo-cx-note-<?php echo (int) $c->id; ?>" name="note" rows="2" placeholder="<?php esc_attr_e('Note to the employee (required to reject)', 'workforce-one'); ?>"></textarea>
                     <div class="wfo-rq-actions"><button class="wfo-rq-btn is-no" type="submit" name="decision" value="reject"><?php echo Icons::svg('close', 16, 2.2); ?><?php esc_html_e('Reject', 'workforce-one'); ?></button><button class="wfo-rq-btn is-yes" type="submit" name="decision" value="approve"><?php echo Icons::svg('check', 16, 2.2); ?><?php esc_html_e('Approve', 'workforce-one'); ?></button></div>

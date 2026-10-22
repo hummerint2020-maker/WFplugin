@@ -19,11 +19,12 @@ trait EWS_Admin_Requests_Trait {
         $names=[];
         $deferred=[];
         // $ar is the request's key [workflow, entity, id]: the approval requests are found together after the last row (3.31.112).
-        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null)use(&$rows,&$deferred){
+        // $stage: a correction's own stage (pending | pending_hr), posted with the decision like the level (3.31.122).
+        $add=function($type,$id,$employee_id,$title,$requested_at,$detail,$ar=null,$stage='')use(&$rows,&$deferred){
             $key=$type.':'.(int)$id;
             if(isset($rows[$key]))return;
             $rows[$key]=true;
-            $deferred[$key]=[$type,$id,$employee_id,$title,$requested_at,$detail,$ar];
+            $deferred[$key]=[$type,$id,$employee_id,$title,$requested_at,$detail,$ar,$stage];
         };
 
         $lt=$wpdb->prefix.'ews_leave_requests';$types=$wpdb->prefix.'ews_leave_types';
@@ -53,7 +54,7 @@ trait EWS_Admin_Requests_Trait {
             }
         }
         foreach($this->cx_hub_rows() as $r){
-            $add('correction',$r->id,$r->employee_id,'Attendance Correction',$r->requested_at,Hub::details($r->work_date,$this->cx_type_label((string)$r->type),$this->cx_change_text($r,'en'),(string)$r->reason,$r->status==='pending_hr'?'Second level (HR)':''),['attendance_correction','attendance_correction',(int)$r->id]);
+            $add('correction',$r->id,$r->employee_id,'Attendance Correction',$r->requested_at,Hub::details($r->work_date,$this->cx_type_label((string)$r->type),$this->cx_change_text($r,'en'),(string)$r->reason,$r->status==='pending_hr'?'Second level (HR)':''),['attendance_correction','attendance_correction',(int)$r->id],(string)$r->status);
         }
         foreach($this->face_reset_requests() as $employee_id=>$r){
             if(!is_array($r)||($r['status']??'')!=='pending')continue;
@@ -64,7 +65,7 @@ trait EWS_Admin_Requests_Trait {
         $current=$this->approval_current_steps(array_map(function($ar){return (int)$ar->id;},array_values($found)));
         $briefs=$this->people_brief_by_ids(array_column($deferred,2));
         $rows=[];
-        foreach($deferred as $key=>[$type,$id,$employee_id,$title,$requested_at,$detail,$ref]){
+        foreach($deferred as $key=>[$type,$id,$employee_id,$title,$requested_at,$detail,$ref,$stage]){
             $employee_id=(int)$employee_id;
             if(!array_key_exists($employee_id,$names)){
                 $name=$employee_id&&isset($briefs[$employee_id])?$briefs[$employee_id]->name:null;
@@ -76,6 +77,8 @@ trait EWS_Admin_Requests_Trait {
                 'type'=>$type,'id'=>(int)$id,'title'=>$title,'employee'=>$names[$employee_id],'detail'=>$detail,
                 'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted)),
                 'requested_at'=>(string)$requested_at,
+                // The level this row shows (0: none open), so a decision never lands on a later one (3.31.122).
+                'step'=>$step?(int)$step->id:0,'stage'=>(string)$stage,
                 'nonce'=>wp_create_nonce('ews_admin_request_decision_'.$type.'_'.(int)$id),
             ];
         }

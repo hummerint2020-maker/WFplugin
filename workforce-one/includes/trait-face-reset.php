@@ -118,9 +118,12 @@ trait EWS_Face_Reset_Trait {
         $employee_id=absint($employee_id);
         if(!$employee_id || !Hub::isDecision($decision) || !$this->face_reset_requested($employee_id))return Hub::ERROR;
         $ar=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
+        $posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
         if($ar && Hub::isOpenApproval((string)$ar->status)){
+            if($this->approval_level_moved((int)$ar->id,$posted))return Hub::MOVED;
             if(!$as_admin && !$this->approval_can_act((int)$ar->id))return Hub::ERROR;
-            if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',true,$as_admin)))return Hub::ERROR;
+            $acted=$this->approval_act((int)$ar->id,$decision,'',true,$as_admin,$posted);
+            if(is_wp_error($acted))return Hub::fromEngineError($acted->get_error_code());
             $fresh=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
             $outcome=Hub::workflowOutcome($fresh?(string)$fresh->status:null);
             if($outcome===Hub::ADVANCED){
@@ -134,6 +137,7 @@ trait EWS_Face_Reset_Trait {
             }
             return $this->face_reset_finish($employee_id,$outcome===Hub::APPROVED,'by approval workflow')?$outcome:Hub::ERROR;
         }
+        if((int)$posted>0)return Hub::MOVED;
         if(!$as_admin && $this->face_reset_workflow_active())return Hub::ERROR;
         return $this->face_reset_finish($employee_id,$decision==='approve',$as_admin?'from the Requests Hub':'by manager')?Hub::outcome($decision):Hub::ERROR;
     }
@@ -150,6 +154,7 @@ trait EWS_Face_Reset_Trait {
             $emp=$employee_id?$this->face_reset_employee($employee_id):null;
             $name=$emp?$emp->name:('Employee #'.$employee_id);
             if(($r['status']??'')==='pending'){
+                $step=null;
                 if($workflow_active){
                     // Approvers only see what is waiting for them.
                     $ar=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
@@ -162,6 +167,7 @@ trait EWS_Face_Reset_Trait {
                     'requested_by'=>$by?$by->display_name:($by_id?'User #'.$by_id:'Employee'),
                     'requested_at'=>(string)($r['requested_at']??''),
                     'enrolled'=>$this->face_template_for_employee($employee_id)!==false,
+                    'step'=>$step?(int)$step->id:0,   // the level shown, posted with the decision (3.31.122)
                 ];
             }else{
                 $uid=absint($r['handled_by']??0);$u=$uid?get_userdata($uid):false;
@@ -177,7 +183,7 @@ trait EWS_Face_Reset_Trait {
         $notice_key=sanitize_key($_GET['face_reset_notice']??'');
         echo $this->render_template('admin/face-reset-requests',[
             'pending'=>$pending,'history'=>array_slice($history,0,50),
-            'notice'=>Hub::faceResetNotice($notice_key),'notice_is_error'=>$notice_key===Hub::ERROR,
+            'notice'=>Hub::faceResetNotice($notice_key),'notice_is_error'=>Hub::isErrorNotice($notice_key),
             'post_url'=>admin_url('admin-post.php'),
         ]);
     }

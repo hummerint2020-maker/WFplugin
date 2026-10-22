@@ -19,6 +19,8 @@ final class Hub
     public const ERROR = 'error';
     /** A swap the administrator approved last but whose schedule changed since the request: nothing was changed (3.31.120). */
     public const CHANGED = 'changed';
+    /** The request moved to another approval level since the page was opened: nothing was changed (3.31.122). */
+    public const MOVED = 'moved';
 
     public static function isDecision(string $decision): bool
     {
@@ -29,6 +31,12 @@ final class Hub
     public static function outcome(string $decision): string
     {
         return $decision === 'approve' ? self::APPROVED : self::REJECTED;
+    }
+
+    /** Outcome of a decision the approval engine refused: MOVED for a level that moved on, else ERROR (3.31.122). */
+    public static function fromEngineError(string $code): string
+    {
+        return $code === 'approval_moved' ? self::MOVED : self::ERROR;
     }
 
     /** Outcome after the approval engine acted: final status, or ADVANCED while levels remain. */
@@ -89,6 +97,7 @@ final class Hub
             self::ADVANCED => 'Approval recorded and moved to the next level.',
             self::ERROR => 'The request could not be processed.',
             self::CHANGED => 'Nothing was changed: a schedule day of this swap changed since the request. You can reject it.',
+            self::MOVED => 'This request moved to another level since you opened the page; nothing was changed.',
         ];
         return $messages[$key] ?? null;
     }
@@ -96,7 +105,7 @@ final class Hub
     /** The hub notice is shown as an error. */
     public static function isErrorNotice(string $key): bool
     {
-        return $key === self::ERROR || $key === self::CHANGED;
+        return $key === self::ERROR || $key === self::CHANGED || $key === self::MOVED;
     }
 
     /** Notice shown after a Face Reset page decision, or null for an unknown key. */
@@ -107,6 +116,7 @@ final class Hub
             self::REJECTED => 'Face reset request rejected. The current enrollment remains active.',
             self::ADVANCED => 'Approval recorded and moved to the next level.',
             self::ERROR => 'The face reset request could not be processed.',
+            self::MOVED => 'This request moved to another level since you opened the page; nothing was changed.',
         ];
         return $messages[$key] ?? null;
     }

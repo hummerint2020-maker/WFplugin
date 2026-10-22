@@ -31,7 +31,7 @@ trait EWS_Leave_View_Trait {
         if($workflow && (int)$workflow->active===1){
             // Only the requests whose current approval step is assigned to this user.
             $at=$this->approval_tables();
-            return ['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("{$select},ai.step_order {$from} JOIN {$at['requests']} ar ON ar.entity_type=%s AND ar.entity_id=r.id JOIN {$at['instances']} ai ON ai.approval_request_id=ar.id AND ai.status='PENDING' AND ai.approver_wp_user_id=%d WHERE {$where} ORDER BY r.requested_at ASC",$entity,get_current_user_id()))];
+            return ['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("{$select},ai.step_order,ai.id approval_step {$from} JOIN {$at['requests']} ar ON ar.entity_type=%s AND ar.entity_id=r.id JOIN {$at['instances']} ai ON ai.approval_request_id=ar.id AND ai.status='PENDING' AND ai.approver_wp_user_id=%d WHERE {$where} ORDER BY r.requested_at ASC",$entity,get_current_user_id()))];
         }
         if(!$this->can('ews_manage_settings'))return null;
         return ['mine'=>false,'rows'=>(array)$wpdb->get_results("{$select} {$from} WHERE {$where} ORDER BY r.requested_at ASC")];
@@ -144,7 +144,7 @@ trait EWS_Leave_View_Trait {
         $workflow=$this->approval_workflow('overtime');
         if($workflow && (int)$workflow->active===1 && \WorkforceOne\Approvals\Workflows::isLevels((string)$workflow->approval_mode)){
             $at=$this->approval_tables();
-            $approvals=['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("SELECT r.*,e.name employee_name,ars.step_order FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id INNER JOIN {$at['requests']} ar ON ar.entity_type='overtime_request' AND ar.entity_id=r.id INNER JOIN {$at['instances']} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING' AND ars.approver_wp_user_id=%d WHERE r.status='Pending' ORDER BY r.requested_at ASC",get_current_user_id()))];
+            $approvals=['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("SELECT r.*,e.name employee_name,ars.step_order,ars.id approval_step FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id INNER JOIN {$at['requests']} ar ON ar.entity_type='overtime_request' AND ar.entity_id=r.id INNER JOIN {$at['instances']} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING' AND ars.approver_wp_user_id=%d WHERE r.status='Pending' ORDER BY r.requested_at ASC",get_current_user_id()))];
         }elseif($this->can('ews_manage_settings')){
             $approvals=['mine'=>false,'rows'=>(array)$wpdb->get_results("SELECT r.*,e.name employee_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id WHERE r.status='Pending' ORDER BY r.requested_at ASC")];
         }

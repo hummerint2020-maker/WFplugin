@@ -25,9 +25,10 @@
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; $decision_form() and $empty() escape their output.
-$decision_form = static function (string $action, string $nonce, int $id, string $approve_label) use ($post_url): string {
+// $step: the approval level shown (0: none), so the decision never lands on a later level (3.31.122).
+$decision_form = static function (string $action, string $nonce, int $id, string $approve_label, int $step = 0) use ($post_url): string {
     return '<div class="ews-vac-actions"><form method="post" action="' . esc_url($post_url) . '">' . wp_nonce_field($nonce, '_wpnonce', true, false)
-        . '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="request_id" value="' . $id . '">'
+        . '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="request_id" value="' . $id . '"><input type="hidden" name="approval_step" value="' . $step . '">'
         . '<button class="button button-primary wfo-btn-approve" name="decision" value="approve">' . Icons::svg('check', 16, 2.4) . esc_html($approve_label) . '</button><button class="button wfo-btn-reject" name="decision" value="reject">' . Icons::svg('close', 16, 2.2) . esc_html__('Reject', 'workforce-one') . '</button></form></div>';
 };
 $level = static function (object $r): string {
@@ -117,7 +118,7 @@ $early_messages = [
             <?php if (!empty($r->om)): ?><div class="wfo-om-note"><?php echo Icons::svg('office', 18, 2.2); ?><div><strong><?php echo esc_html(sprintf(/* translators: 1: day, 2: people in the office, 3: minimum */ __('Approving makes %1$s %2$d of %3$d in the office', 'workforce-one'), date_i18n('l j F', strtotime($r->om['date'])), $r->om['office'], $r->om['min'])); ?></strong><?php
                 if ($r->om['team'] !== '') echo esc_html(sprintf(/* translators: 1: team, 2: in the office, 3: the team's share */ __('%1$s would have %2$d of their share of %3$d.', 'workforce-one'), $r->om['team'], $r->om['team_office'], $r->om['share']) . ' ');
                 esc_html_e('This is only a warning; you can still approve.', 'workforce-one'); ?></div></div><?php endif; ?>
-            <?php echo $decision_form('ews_vacation_request_respond', 'ews_vacation_respond', (int) $r->id, __('Approve', 'workforce-one')); ?>
+            <?php echo $decision_form('ews_vacation_request_respond', 'ews_vacation_respond', (int) $r->id, __('Approve', 'workforce-one'), (int) ($r->approval_step ?? 0)); ?>
         </div><span class="ews-vac-status ews-vac-pending"><?php echo Icons::svg('overtime', 14, 2.2); ?><?php esc_html_e('Pending', 'workforce-one'); ?></span></div>
     <?php endforeach; ?>
 </div>
@@ -131,7 +132,7 @@ $early_messages = [
         <div class="ews-vac-row"><div class="wfo-req-main">
             <div class="ews-vac-date"><strong><?php echo esc_html($r->employee_name); ?></strong><span><?php echo esc_html($r->type_name . $level($r)); ?></span></div>
             <div class="ews-vac-meta"><?php echo esc_html($range((string) $r->start_date, (string) $r->end_date)); ?></div>
-            <?php echo $decision_form('ews_leave_cancel_respond', 'ews_leave_cancel_respond', (int) $r->id, __('Approve Cancellation', 'workforce-one')); ?>
+            <?php echo $decision_form('ews_leave_cancel_respond', 'ews_leave_cancel_respond', (int) $r->id, __('Approve Cancellation', 'workforce-one'), (int) ($r->approval_step ?? 0)); ?>
         </div><span class="ews-vac-status ews-vac-pending"><?php echo Icons::svg('overtime', 14, 2.2); ?><?php esc_html_e('Pending', 'workforce-one'); ?></span></div>
     <?php endforeach; ?>
 </div>

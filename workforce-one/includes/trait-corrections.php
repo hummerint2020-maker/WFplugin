@@ -341,41 +341,46 @@ trait EWS_Corrections_Trait {
     /* ------------------------------------------------------------------ decide */
 
     /**
-     * A decision on a request. $admin: an administrator or HR deciding in wp-admin (any level).
+     * A decision on a request. $admin: an administrator or HR deciding in wp-admin (any level). $step and $from: the approval level
+     * and the stage (pending | pending_hr) the page showed (3.31.122); a request that moved on since is refused with 'moved'.
+     * null: the page did not say, the current level and stage as before.
      * @return string approved | rejected | advanced | pending_hr, or an error code
      */
-    private function cx_decide($id,$decision,$note,$admin=false){
+    private function cx_decide($id,$decision,$note,$admin=false,$step=null,$from=null){
         if(!in_array($decision,['approve','reject'],true))return 'invalid';
         $note=trim((string)$note);
         $c=$this->cx_get($id);
         if(!$c)return 'not_found';
         if(!in_array($c->status,['pending','pending_hr'],true))return 'done';
+        $from=$from===null||$from===''?null:sanitize_key((string)$from);
+        if($from!==null && $from!==$c->status)return 'moved';
         if($decision==='reject' && $note==='')return 'note';
         if((int)$c->employee_user_id && (int)$c->employee_user_id===get_current_user_id())return 'own';
         if($admin && !$this->cx_is_hr())return 'access';
         if(!$admin && !$this->cx_can_decide($c))return 'access';
         // The day has since become a leave, a holiday or a day off: the request is closed, its approval request with it (owner decision).
+        $ar=$c->status==='pending' && \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())?$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id):null;
+        $open=$ar && Hub::isOpenApproval((string)$ar->status);
+        if($step!==null && (($open && $this->approval_level_moved((int)$ar->id,$step)) || (!$open && (int)$step>0)))return 'moved';
         if($decision==='approve' && $this->cx_should_close($c))return $this->cx_close($c);
-        if($c->status==='pending' && \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())){
-            $ar=$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id);
-            if($ar && Hub::isOpenApproval((string)$ar->status)){
-                if(is_wp_error($this->approval_act((int)$ar->id,$decision,$note,true,$admin)))return 'approval';
-                $fresh=$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id);
-                $st=$fresh?strtoupper((string)$fresh->status):'';
-                if($st==='REJECTED')return $this->cx_finalize((int)$c->id,false,$note);
-                if($st==='APPROVED')return $this->cx_after_manager((int)$c->id);
-                $next=$fresh?$this->approval_current_step((int)$fresh->id):null;
-                if($next && $next->approver_wp_user_id)$this->cx_notify_decider((int)$next->approver_wp_user_id,$c);
-                return 'advanced';
-            }
+        if($open){
+            $acted=$this->approval_act((int)$ar->id,$decision,$note,true,$admin,$step);
+            if(is_wp_error($acted))return $this->approval_error_code($acted)==='moved'?'moved':'approval';
+            $fresh=$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id);
+            $st=$fresh?strtoupper((string)$fresh->status):'';
+            if($st==='REJECTED')return $this->cx_finalize((int)$c->id,false,$note);
+            if($st==='APPROVED')return $this->cx_after_manager((int)$c->id);
+            $next=$fresh?$this->approval_current_step((int)$fresh->id):null;
+            if($next && $next->approver_wp_user_id)$this->cx_notify_decider((int)$next->approver_wp_user_id,$c);
+            return 'advanced';
         }
-        if($decision==='reject')return $this->cx_finalize((int)$c->id,false,$note);
+        if($decision==='reject')return $this->cx_finalize((int)$c->id,false,$note,false,$c->status);
         if($c->status==='pending' && !$admin)return $this->cx_after_manager((int)$c->id);
         if($c->status==='pending' && $admin && (int)$c->needs_hr){
             // HR deciding a request that needs HR anyway: both levels at once.
             global $wpdb;$wpdb->update($this->cx_table(),['manager_by'=>get_current_user_id(),'manager_at'=>current_time('mysql')],['id'=>(int)$c->id],['%d','%s'],['%d']);
         }
-        return $this->cx_finalize((int)$c->id,true,$note);
+        return $this->cx_finalize((int)$c->id,true,$note,false,$c->status);
     }
 
     /**
@@ -427,13 +432,15 @@ trait EWS_Corrections_Trait {
 
     /**
      * Approves (adds the events) or rejects a request. The day is checked again first: if it changed
-     * since the request (the employee signed out after all), the request stays open.
+     * since the request (the employee signed out after all), the request stays open. $from: the stage the decision was taken at
+     * (3.31.122); a request that left it meanwhile is not touched ('done').
      * @return string approved | rejected, or an error code
      */
-    private function cx_finalize($id,$approve,$note,$direct=false){
+    private function cx_finalize($id,$approve,$note,$direct=false,$from=null){
         global $wpdb;
         $c=$this->cx_get($id);
         if(!$c)return 'not_found';
+        if($from!==null && $c->status!==$from)return 'done';
         $emp=$this->people_employee((int)$c->employee_id);
         if(!$emp)return 'employee';
         $now=current_time('mysql');
@@ -588,6 +595,7 @@ trait EWS_Corrections_Trait {
             'done'=>__('This request was already decided.','workforce-one'),
             'stale'=>__('The day changed since this request was made, so it cannot be applied. Reject it, or ask HR to correct the day.','workforce-one'),
             'approval'=>__('The approval could not be recorded. Please try again.','workforce-one'),
+            'moved'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one'),
             'save'=>__('It could not be saved; nothing was changed. Please try again.','workforce-one'),
         ];
         return $m[$code]??__('Something went wrong. Please try again.','workforce-one');
@@ -610,12 +618,18 @@ trait EWS_Corrections_Trait {
         $this->cx_back(['cx_sent'=>$r['status']]);
     }
 
+    /** The stage (pending | pending_hr) the form showed with the decision (3.31.122), or null. */
+    private function cx_posted_stage(){
+        $s=isset($_POST['request_stage'])?sanitize_key(wp_unslash($_POST['request_stage'])):''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the caller checked its nonce
+        return $s===''?null:$s;
+    }
+
     public function correction_decide(){
         if(!is_user_logged_in())wp_die('You must be logged in.');
         $id=absint($_POST['correction_id']??0);
         check_admin_referer('ews_correction_decide_'.$id);
         $admin=!empty($_POST['in_admin']) && is_admin();
-        $r=$this->cx_decide($id,sanitize_key($_POST['decision']??''),sanitize_textarea_field(wp_unslash($_POST['note']??'')),$admin);
+        $r=$this->cx_decide($id,sanitize_key($_POST['decision']??''),sanitize_textarea_field(wp_unslash($_POST['note']??'')),$admin,$this->approval_posted_step(),$this->cx_posted_stage());
         $ok=in_array($r,['approved','rejected','advanced','pending_hr','closed'],true);
         $this->cx_back($ok?['cx_done'=>$r]:['cx_error'=>$r]);
     }
@@ -740,6 +754,15 @@ trait EWS_Corrections_Trait {
         }
         $rows=array_values(array_filter($rows,function($r)use($me){return (int)$r->employee_user_id!==$me;}));
         foreach($rows as $r)$r->evidence=$this->cx_evidence($r);
+        return $this->cx_with_steps($rows);
+    }
+
+    /** Each request's open approval level (approval_step, 0 = none), posted with the decision (3.31.122). @param object[] $rows @return object[] */
+    private function cx_with_steps(array $rows){
+        $keys=[];
+        foreach($rows as $r)if($r->status==='pending')$keys[]=['attendance_correction','attendance_correction',(int)$r->id];
+        $steps=$keys?$this->approval_shown_steps($keys):[];
+        foreach($rows as $r)$r->approval_step=$steps[$this->approval_request_key('attendance_correction','attendance_correction',(int)$r->id)]??0;
         return $rows;
     }
 
@@ -872,6 +895,7 @@ trait EWS_Corrections_Trait {
                 LEFT JOIN {$this->employees} e ON e.id=c.employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id LEFT JOIN {$wpdb->users} u ON u.ID=c.decided_by LEFT JOIN {$wpdb->users} m ON m.ID=c.manager_by
                 {$where} ORDER BY c.requested_at DESC LIMIT %d OFFSET %d",$per,($page-1)*$per));
             foreach($rows as $r)$r->photo_url=$this->cx_photo_url($r);
+            $rows=$this->cx_with_steps($rows);
             $data+=['rows'=>$rows,'counts'=>$counts,'status'=>$status,'type'=>$type,'q'=>$q,'paged'=>$page,'pages'=>max(1,(int)ceil($total/$per)),'total'=>$total];
         }elseif($tab==='report'){
             $data+=$this->cx_report($month,$dept);
@@ -964,7 +988,8 @@ trait EWS_Corrections_Trait {
 
     /** Requests Hub decision (administrator). */
     private function cx_hub_decide($id,$decision){
-        $r=$this->cx_decide($id,$decision,$decision==='reject'?'Rejected on the Requests page.':'',true);
+        $r=$this->cx_decide($id,$decision,$decision==='reject'?'Rejected on the Requests page.':'',true,$this->approval_posted_step(),$this->cx_posted_stage());
+        if($r==='moved')return Hub::MOVED;
         if($r==='approved')return Hub::APPROVED;
         if($r==='rejected'||$r==='closed')return Hub::REJECTED;
         if(in_array($r,['advanced','pending_hr'],true))return Hub::ADVANCED;
@@ -1015,13 +1040,16 @@ trait EWS_Corrections_Trait {
 
     public function api_corrections_pending($request){
         if($e=$this->cx_api_guard())return $e;
-        return $this->api_ok(['requests'=>array_map(function($c){return $this->cx_api_view($c)+['employee'=>(string)$c->employee_name,'evidence'=>array_diff_key($c->evidence,['photo_url'=>1])];},$this->cx_to_decide())]);
+        return $this->api_ok(['requests'=>array_map(function($c){return $this->cx_api_view($c)+['employee'=>(string)$c->employee_name,'evidence'=>array_diff_key($c->evidence,['photo_url'=>1]),'step'=>(int)($c->approval_step??0),'stage'=>(string)$c->status];},$this->cx_to_decide())]);
     }
 
     public function api_corrections_decide($request){
         if($e=$this->cx_api_guard())return $e;
         $id=absint($request['id']);
-        $r=$this->cx_decide($id,sanitize_key((string)$request->get_param('decision')),sanitize_textarea_field((string)$request->get_param('note')),false);
+        // The level and stage the app showed (3.31.122, optional): a request that moved on since is refused with reason "moved".
+        $step=$request->get_param('step');$stage=$request->get_param('stage');
+        $r=$this->cx_decide($id,sanitize_key((string)$request->get_param('decision')),sanitize_textarea_field((string)$request->get_param('note')),false,
+            \WorkforceOne\Approvals\LevelGuard::posted(is_scalar($step)?(string)$step:null),is_string($stage)?$stage:null);
         if(in_array($r,['approved','rejected','advanced','pending_hr','closed'],true))return $this->api_ok(['outcome'=>$r,'request'=>$this->cx_api_view($this->cx_get($id))]);
         if($r==='not_found')return $this->api_fail(\WorkforceOne\Api\ErrorMap::NOT_FOUND);
         if(in_array($r,['access','own'],true))return $this->api_fail(\WorkforceOne\Api\ErrorMap::FORBIDDEN,['reason'=>$r]);
@@ -1038,7 +1066,7 @@ trait EWS_Corrections_Trait {
         if(trim((string)$c->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$c->reason];
         return ['employee_id'=>(int)$c->employee_id,'tone'=>'correction','kind'=>__('Attendance correction','workforce-one'),
             'what'=>$this->cx_day_label((string)$c->work_date).' · '.$this->cx_change_text($c),'facts'=>$facts,'since'=>(string)$c->requested_at,
-            'action'=>'ews_correction_decide','nonce'=>'ews_correction_decide_'.(int)$id,'fields'=>['correction_id'=>(int)$id],'link'=>add_query_arg('ews_view','corrections',$this->app_home_url())];
+            'action'=>'ews_correction_decide','nonce'=>'ews_correction_decide_'.(int)$id,'fields'=>['correction_id'=>(int)$id,'request_stage'=>'pending'],'link'=>add_query_arg('ews_view','corrections',$this->app_home_url())];
     }
 
     /** An employee's corrections for My requests, newest first. @return list<array<string,mixed>> */

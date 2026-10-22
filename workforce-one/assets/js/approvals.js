@@ -9,7 +9,7 @@
     var i18n = {};
     try { i18n = JSON.parse((root.querySelector('[data-apv-i18n]') || {}).textContent || '{}'); } catch (e) { i18n = {}; }
     var max = parseInt(root.getAttribute('data-bulk-max'), 10) || 20;
-    var errSel = /[?&](leave_error|overtime_error|cx_error|swap_error)=/;
+    var errSel = /[?&](leave_error|overtime_error|cx_error|swap_error|adv_error)=/;
 
     // Caught on the way down (capture), before the app's own "Are you sure?" dialog on the form
     // (workforce-one.js) opens for a reject that cannot be sent without a reason.

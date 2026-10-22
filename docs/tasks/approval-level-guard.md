@@ -94,3 +94,21 @@ real page. Messages change from "could not be processed" / "access denied" to "m
 
 ## Owner's answer (2026-10-22)
 1. (a) A decision posted without a level decides the current level, as today.
+
+## Implementation notes (3.31.122)
+- `src/Approvals/LevelGuard.php` as designed. `approval_act()` takes `$expected_step` last; the check runs before the approver
+  check, and a 0-row update with a posted step returns `approval_moved` (without one it stays `approval_stale`).
+- Helpers in the approvals module api: `approval_posted_step()`, `approval_level_moved()`, `approval_error_code()`,
+  `approval_shown_steps()`. The `approval_step_field()` helper from the design was not needed: each form already has its own
+  markup, so each one adds the hidden field itself.
+- Where a module decides without the engine (the engine off, or a request whose approval is already decided), a form that showed a
+  level (`approval_step` > 0) is refused with "moved": Requests page for leave, overtime and swaps; Face Reset; app Leave, leave
+  cancellation and Overtime; corrections.
+- Corrections: `cx_decide(..., $step, $from)` checks the stage first, then the level; `cx_finalize($from)` and the reject path update
+  only while the request is still at the stage read (the stage is the one `cx_decide` read, also when the form did not send it).
+- `Hub::fromEngineError()` maps `approval_moved` to `MOVED`. The design's "`cx_mark_rejected` gains a parameter" was not needed:
+  it already updates `WHERE status=<the stage read>`.
+- The app's swap, leave and overtime messages and the advances message use one translated text.
+- Tests: `tests/unit/LevelGuardTest.php`, `RequestsHubTest::testMovedLevel`, `tests/e2e_level_guard.py` (in CI). Advances are covered
+  through the shared helpers and the My approvals form; their own double-post is not in the e2e (the advance flow needs payroll set
+  up), see the review.

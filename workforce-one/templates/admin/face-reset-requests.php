@@ -2,7 +2,7 @@
 /**
  * wp-admin "Face Reset Requests" page.
  *
- * @var array<int,array{employee_id:int,name:string,domain:string,requested_by:string,requested_at:string,enrolled:bool}> $pending
+ * @var array<int,array{employee_id:int,name:string,domain:string,requested_by:string,requested_at:string,enrolled:bool,step:int}> $pending
  * @var array<int,array{name:string,status:string,requested_at:string,handled_at:string,handled_by:string}> $history
  * @var string|null $notice
  * @var bool $notice_is_error
@@ -29,8 +29,8 @@ if (!defined('ABSPATH')) exit;
                 <td><?php echo esc_html($r['requested_at']); ?></td>
                 <td><?php echo $r['enrolled'] ? '<span style="color:#008a20;font-weight:700">Enrolled</span>' : '<span style="color:#b32d2e">Not enrolled</span>'; ?></td>
                 <td><div style="display:flex;gap:8px;align-items:center">
-                    <form method="post" action="<?php echo esc_url($post_url); ?>"><?php wp_nonce_field('ews_face_reset_approve_' . $eid); ?><input type="hidden" name="action" value="ews31_face_reset_approve"><input type="hidden" name="employee_id" value="<?php echo $eid; ?>"><button class="button button-primary" type="submit">Approve Reset</button></form>
-                    <form method="post" action="<?php echo esc_url($post_url); ?>"><?php wp_nonce_field('ews_face_reset_reject_' . $eid); ?><input type="hidden" name="action" value="ews31_face_reset_reject"><input type="hidden" name="employee_id" value="<?php echo $eid; ?>"><button class="button" type="submit">Reject</button></form>
+                    <form method="post" action="<?php echo esc_url($post_url); ?>"><?php wp_nonce_field('ews_face_reset_approve_' . $eid); ?><input type="hidden" name="action" value="ews31_face_reset_approve"><input type="hidden" name="employee_id" value="<?php echo $eid; ?>"><input type="hidden" name="approval_step" value="<?php echo (int) $r['step']; ?>"><button class="button button-primary" type="submit">Approve Reset</button></form>
+                    <form method="post" action="<?php echo esc_url($post_url); ?>"><?php wp_nonce_field('ews_face_reset_reject_' . $eid); ?><input type="hidden" name="action" value="ews31_face_reset_reject"><input type="hidden" name="employee_id" value="<?php echo $eid; ?>"><input type="hidden" name="approval_step" value="<?php echo (int) $r['step']; ?>"><button class="button" type="submit">Reject</button></form>
                 </div></td>
             </tr>
         <?php endforeach; ?>
