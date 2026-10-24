@@ -237,11 +237,13 @@ def main():
     sys.path.insert(0, KIT)
     import build as module   # the screens import this file as "build", a second copy when run as a script
     module.Build.out, module.Build.assets = Build.out, Build.assets
-    import screens_corrections, screens_workers, screens_office, screens_weeklock
+    import screens_corrections, screens_workers, screens_office, screens_weeklock, screens_schedulechange, screens_swapinbox
     screens_corrections.build()
     screens_workers.build()
     screens_office.build()
     screens_weeklock.build()
+    screens_schedulechange.build()
+    screens_swapinbox.build()
     # the start page: _kit/home.html (written without <html>/<head>, as the Artifact page is published)
     home = open(os.path.join(KIT, 'home.html')).read().replace('url(assets/', 'url(' + Build.assets.replace('../../../', '../../', 1))
     open(os.path.join(Build.out, 'index.html'), 'w').write('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'

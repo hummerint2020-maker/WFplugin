@@ -637,7 +637,7 @@ Add `docs/mockups/_kit/screens_schedulechange.py`, starting from `snap/attendanc
 
 ### Release split (recommended)
 - **3.31.122:** the engine fix for the repeated Requests page post. The owner already approved it, before the week lock.
-- **R2a, 3.31.123:**
+- **R2a, 3.31.124:**
   - tables, settings, switch;
   - grid request mode and the R1 draft conversion;
   - create, decide and apply with the guard;
@@ -719,3 +719,8 @@ All as recommended:
 10. Past days: up to 14 days back (`past_days`), never in a month closed in Payroll.
 11. CSV import: final-week rows can be sent to HR as one request with one reason (`import`, on by default once the feature
     is on); in R2a or R2b depending on size.
+12. Banner text (2026-10-24, asked while reviewing the R1 banner): the text of the final-week banner on the Attendance page is a
+    setting on the Week lock card (title and text, Arabic and English; `{since}` is the lock time; empty keeps the default text).
+    Part of 3.31.123.
+
+Note (2026-10-24): 3.31.123 became a swap fix release (owner report); this feature is now 3.31.125 (3.31.124: swaps decided in My approvals, owner decision).

@@ -1,0 +1,46 @@
+/* Schedule change request (mockup of Step 2's styles: app-attendance.css, app-approvals.css, admin-features.css).
+   Logical properties only, so schedule-change-rtl.css is the same file. */
+
+/* request mode: the days of a final week can be picked again */
+.wfo-sc-mode .wfo-attg-chip{cursor:pointer}
+.wfo-sc-mode .ews-att-day.is-changed .wfo-attg-chip{outline:2px solid #5B3FD9;outline-offset:1px}
+.wfo-sc-asked .wfo-attg-chip::after{content:"";position:absolute}
+.wfo-sc-pending .wfo-attg-chip{cursor:not-allowed;opacity:.85;position:relative}
+.wfo-sc-badge{display:inline-flex;align-items:center;gap:3px;margin-inline-start:5px;padding:1px 6px;border-radius:999px;background:#FFF1D6;color:#7A4B00;font-size:10.5px;font-weight:700;vertical-align:middle}
+.wfo-sc-savebar .ews-save-all{background:#5B3FD9}
+.wfo-sc-primary{display:inline-flex;align-items:center;gap:6px}
+
+/* the send sheet, the HR card, My requests */
+.wfo-sc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wfo-sc-list li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 12px;border-radius:12px;background:#F6F5FD;border:1px solid #E5E2F7;font-size:13px}
+.wfo-sc-list li b{color:#13235B}
+.wfo-sc-list li>span:first-of-type{color:#4A5275;grid-column:1}
+.wfo-sc-list li .wfo-sc-change{grid-column:2;grid-row:1/span 2;align-self:center;display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#13235B;white-space:nowrap}
+.wfo-sc-change em{display:inline-flex;color:#5B3FD9;font-style:normal}
+[dir="rtl"] .wfo-sc-change em{transform:scaleX(-1)}
+.wfo-sc-list li.is-warn{background:#FFF8E8;border-color:#F5D9A0}
+.wfo-sc-since{grid-column:1/-1;display:flex;align-items:center;gap:5px;color:#7A4B00;font-size:12px;margin-top:2px}
+.wfo-sc-list.is-card{margin:10px 0}
+.wfo-sc-list.is-mini{margin:8px 0 0}
+.wfo-sc-refused,.wfo-sc-om{display:flex;align-items:flex-start;gap:8px;margin:10px 0;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.6}
+.wfo-sc-refused{background:#FDECEC;color:#8A1F1F}
+.wfo-sc-om{background:#EEF2FF;color:#13235B}
+.wfo-sc-refused .wfo-icon,.wfo-sc-om .wfo-icon{flex:0 0 auto;margin-top:2px}
+.wfo-sc-hint{display:block;margin-top:4px;color:#6B7194;font-size:12px}
+.wfo-apv-item.tone-schedule{border-inline-start:4px solid #5B3FD9}
+
+/* CSV preview */
+.wfo-sc-tohr{display:inline-flex;align-items:center;gap:5px;color:#5B3FD9;font-weight:700}
+.wfo-sc-csv-reason{margin:12px 0}
+.wfo-sc-csv-reason textarea{width:100%;box-sizing:border-box}
+
+/* wp-admin */
+.wfo-sc-block{margin-top:14px;padding-top:6px;border-top:1px solid #dcdcde}
+.wfo-sc-block h3{margin:10px 0 0}
+.wfo-sc-opts{display:flex;flex-wrap:wrap;gap:6px 16px}
+.wfo-sc-dep{display:flex;align-items:center;gap:6px;color:#1a7f37;margin:6px 0 0}
+.wfo-sc-warn{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#fcf9e8;border-inline-start:4px solid #dba617}
+.wfo-sc-path{padding:8px 12px;background:#f6f7f7;border-radius:4px}
+.wfo-sc-texts{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;max-width:900px}
+.wfo-sc-texts label{display:flex;flex-direction:column;gap:4px;font-weight:600}
+@media (max-width:782px){.wfo-sc-texts{grid-template-columns:1fr}}

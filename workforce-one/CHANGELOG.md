@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.31.123
+### Fixes: the swap sheet (owner report on 3.31.122)
+No new setting, no database change.
+- **"Swap with a colleague" in My requests → New request:** the list of colleagues showed each name one letter per line, because
+  the sheet's text-field style made the radio button as wide as the row. Radios and checkboxes in every sheet now keep their own
+  size and show a focus outline (the Daily workers "Move to another site" choice had the same fault).
+- The sheet's "Send request" button now looks disabled when nobody can swap that day (it already was).
+- Next (3.31.124, owner decision): a colleague accepts a swap in My approvals, which lists everything that waits for the person;
+  the Schedule page shows one line with the count and a link instead of request lists.
+
 ## 3.31.122
 ### A decision applies only to the approval level you saw (approval engine, every type; design `docs/tasks/approval-level-guard.md`)
 A fix to the documented rule (owner decision of 3.31.120); no new setting, no database change.
