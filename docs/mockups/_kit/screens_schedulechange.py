@@ -254,6 +254,14 @@ def admin_settings():
             (T('ملف الإكسيل', 'CSV import'), '<label><input type="checkbox" checked> %s</label>' % esc(T('صفوف الأسابيع النهائية تتبعت لـ HR كطلب واحد بسبب واحد', 'Rows in a final week are sent to HR as one request with one reason'))),
             (T('الموظف', 'The employee'), '<label><input type="checkbox"> %s</label><p class="description">%s</p>' % (
                 esc(T('بلّغه كمان وقت الطلب', 'Also tell them when it is requested')), esc(T('لما يتطبّق بيتبلّغ دايمًا، زي أي تغيير جدول.', 'They are always told when it is applied, like any schedule change.')))),
+            (T('كلام البانر', 'Banner text'), ('<p class="description">%s</p><div class="wfo-sc-texts">'
+                '<label>%s<input type="text" class="regular-text" placeholder="%s"></label><label>%s<textarea rows="2" class="large-text" placeholder="%s"></textarea></label>'
+                '<label>%s<input type="text" dir="ltr" class="regular-text" placeholder="This week is final"></label><label>%s<textarea rows="2" dir="ltr" class="large-text" placeholder="Locked since {since}. Approved leave and swaps are still applied. To change a day, ask HR."></textarea></label></div>'
+                '<p class="description">%s</p>') % (
+                esc(T('اللي بيظهر للمديرين فوق صفحة الحضور لما الأسبوع يبقى نهائي. سيبه فاضي عشان يفضل الكلام الافتراضي.', 'What managers see above the Attendance page when the week is final. Leave it empty to keep the default text.')),
+                esc(T('العنوان (عربي)', 'Title (Arabic)')), esc('الأسبوع ده نهائي'), esc(T('الشرح (عربي)', 'Text (Arabic)')), esc('مقفول منذ {since}. الإجازات والتبديلات الموافق عليها تُطبَّق كالمعتاد. لتغيير يوم، تواصل مع الموارد البشرية.'),
+                esc(T('العنوان (إنجليزي)', 'Title (English)')), esc(T('الشرح (إنجليزي)', 'Text (English)')),
+                esc(T('{since} بيتحط مكانها ميعاد القفل. كل مستخدم بيشوف النص بلغة الموقع عنده.', '{since} is replaced by the time the week was locked. Each person sees the text in their own language.')))),
             (T('مين بيوافق', 'Who approves'), '<p>%s <a href="#">%s</a></p>' % (esc(T('HR، مستوى واحد. تقدر تغيّره من', 'HR, one level. Change it on')), esc(T('مسارات الموافقة ← تغيير جدول', 'Approval Workflows → Schedule Change')))),
         ]
         form = '<table class="form-table" role="presentation">%s</table>' % ''.join('<tr><th scope="row">%s</th><td>%s</td></tr>' % (esc(k), v) for k, v in rows)

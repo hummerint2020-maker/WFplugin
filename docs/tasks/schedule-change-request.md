@@ -719,3 +719,6 @@ All as recommended:
 10. Past days: up to 14 days back (`past_days`), never in a month closed in Payroll.
 11. CSV import: final-week rows can be sent to HR as one request with one reason (`import`, on by default once the feature
     is on); in R2a or R2b depending on size.
+12. Banner text (2026-10-24, asked while reviewing the R1 banner): the text of the final-week banner on the Attendance page is a
+    setting on the Week lock card (title and text, Arabic and English; `{since}` is the lock time; empty keeps the default text).
+    Part of 3.31.123.
