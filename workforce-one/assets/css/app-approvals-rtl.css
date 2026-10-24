@@ -124,3 +124,12 @@
 .wfo-app .wfo-apv-own-row small,.wfo-app .wfo-apv-own-note{font-size:12px;color:var(--wfo-muted)}
 .wfo-app .wfo-sub-field small{display:block;margin-top:4px}
 .wfo-app .wfo-apv-item.tone-advance{--tc:#0B7A4B}.wfo-app .wfo-new-type.tone-advance{--tc:#0B7A4B}
+
+/* A swap asked of the person (3.31.124): what each one works that day, the hint, the card a notification opened. */
+.wfo-app .wfo-apv-item.tone-swap .wfo-si-trade{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:10px 0;padding:10px 12px;border-radius:var(--wfo-r-ctl);background:var(--wfo-pri-soft)}
+.wfo-app .wfo-si-trade small{display:block;color:var(--wfo-muted);font-size:11.5px}
+.wfo-app .wfo-si-trade b{display:block;font-size:15px}
+.wfo-app .wfo-si-arrow{display:flex;color:var(--wfo-pri)}
+.wfo-app .wfo-si-note{margin:6px 0 0;color:var(--wfo-muted);font-size:12px}
+.wfo-app .wfo-si-note.is-warn{color:#8A5A00}
+.wfo-app .wfo-apv-item.is-focus{box-shadow:0 0 0 3px var(--wfo-pri)}

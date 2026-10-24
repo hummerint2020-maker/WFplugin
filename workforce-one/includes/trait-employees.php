@@ -48,6 +48,16 @@ trait EWS_Employees_Trait {
      * @param array<int,int> $employee_ids
      * @return array<int,object>
      */
+    /** Whole employee rows for many ids with one query per 500 (3.31.124), only the active ones when asked. @return array<int,object> */
+    private function people_by_ids(array $employee_ids,$active_only=false){
+        global $wpdb;$out=[];
+        $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));
+        foreach(array_chunk($ids,500) as $chunk){
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->employees} WHERE id IN (".implode(',',array_fill(0,count($chunk),'%d')).')'.($active_only?' AND active=1':''),$chunk)) as $e)$out[(int)$e->id]=$e;
+        }
+        return $out;
+    }
+
     private function people_brief_by_ids(array $employee_ids){
         global $wpdb;$out=[];
         $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));

@@ -17,7 +17,7 @@ def seed():
     out = php("""
         $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
         foreach(['ews_schedule','ews_company_calendar','ews_teams','ews_team_members','ews_departments','ews_schedule_swaps'] as $t) $wpdb->query("DELETE FROM {$p}$t");
-        update_option('ews_working_days',[0,1,2,3,4,5,6],false);
+        update_option('ews_working_days',[0,1,2,3,4,5,6],false); delete_option('ews_feature_my_approvals');   // the swap panel (My approvals on lists swaps there instead, tests/e2e_swap_inbox.py)
         $wpdb->insert($p.'ews_departments',['name'=>'Ops','code'=>'ops','active'=>1]); $dep=$wpdb->insert_id;
         $mk=function($name)use($wpdb,$p,$dep){$wpdb->insert($p.'ews_employees',['name'=>$name,'domain_name'=>strtolower(str_replace(' ','',$name)),'email'=>strtolower(str_replace(' ','',$name)).'@example.com','active'=>1,'department_id'=>$dep]);return $wpdb->insert_id;};
         $wpdb->update($p.'ews_employees',['name'=>'Me Myself','department_id'=>$dep],['id'=>$eid]);

@@ -87,11 +87,22 @@ trait EWS_My_Approvals_Trait {
             if($card)$cards[$i]=$card;
         }
         $paths=$this->approval_paths(array_map(function($i)use($rows){return [(string)$rows[$i]->workflow_key,(string)$rows[$i]->entity_type,(int)$rows[$i]->entity_id];},array_keys($cards)));
+        // Swaps a colleague asked of this person (3.31.124): their answer is not an engine level, so they come from the swaps themselves.
+        $peer=$me?$this->swap_peer_cards((int)$me->id):[];
+        $s=$this->approval_settings();$days=$this->working_days();$now=current_time('mysql');
+        foreach($peer as [$r,$emp,$card]){
+            $hours=\WorkforceOne\Approvals\WorkingHours::between((string)$r->created_at,$now,$days,$s['day_start'],$s['day_end']);
+            $out[]=$card+['id'=>0,'workflow'=>'shift_swap','entity_type'=>'schedule_swap','entity_id'=>(int)$r->id,
+                'name'=>(string)$emp->name,'title'=>trim((string)($emp->job_title??'')),'picture'=>$this->employee_picture_url($emp),
+                'path'=>['id'=>0,'level'=>0,'levels'=>0,'hours'=>$hours,'overdue'=>false,'moved_from'=>'','note'=>'','steps'=>[]],
+                'admins'=>false,'note_required'=>false,'for'=>'','with'=>''];
+        }
         foreach($rows as $i=>$row){
             if(!isset($cards[$i]))continue;
             $card=$cards[$i];
             $path=$paths[$this->approval_request_key((string)$row->workflow_key,(string)$row->entity_type,(int)$row->entity_id)]??null;
             if(!$path)continue;
+            if(!empty($card['path_before']))$path['steps']=array_merge($card['path_before'],$path['steps']);
             $emp=$this->people_employee((int)$card['employee_id']);
             if(!empty($card['action']))$card['fields']=(array)($card['fields']??[])+['approval_step'=>(int)$row->step_id];   // the level shown (3.31.122)
             $mine=false;
@@ -108,6 +119,12 @@ trait EWS_My_Approvals_Trait {
             return $b['path']['hours']<=>$a['path']['hours'];
         });
         return $this->my_approvals_memo=$out;
+    }
+
+    /** How many shift swaps wait for the signed-in person's decision, asked of them or as approver (the Schedule page, 3.31.124). */
+    private function my_approvals_swap_count(){
+        if(!$this->my_approvals_enabled() || !is_user_logged_in())return 0;
+        return count(array_filter($this->my_approvals_items(),function($it){return $it['tone']==='swap';}));
     }
 
     /** How many requests wait for the signed-in person (the menu and the home card). */
@@ -151,7 +168,7 @@ trait EWS_My_Approvals_Trait {
         return $this->render_template('app/approvals',['subs'=>$subs,
             'items'=>$shown,'all'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'week'=>$week,
             'kind'=>$kind,'kinds'=>array_intersect_key($kinds,$present),'base_url'=>$this->my_approvals_clean_url('approvals'),'post_url'=>admin_url('admin-post.php'),
-            'notice'=>$this->my_approvals_notice(),'bulk_max'=>20,
+            'notice'=>$this->my_approvals_notice(),'bulk_max'=>20,'focus'=>isset($_GET['apv_swap'])?'apv-swap-'.absint($_GET['apv_swap']):'', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
         ]);
     }
 
@@ -170,11 +187,31 @@ trait EWS_My_Approvals_Trait {
         if(isset($_GET['adv_done']))return ['type'=>'success','text'=>__('The advance was decided.','workforce-one')];
         if(isset($_GET['adv_error']))return ['type'=>'error','text'=>$this->advance_error_text(sanitize_key($_GET['adv_error']))];
         if(isset($_GET['leave_rejected']))return ['type'=>'success','text'=>__('The leave request was rejected, and the employee was told.','workforce-one')];
-        if(isset($_GET['swap_done']))return ['type'=>'success','text'=>__('The shift swap was updated.','workforce-one')];
+        if(isset($_GET['swap_done'])){
+            $done=['accepted'=>__('You accepted: both schedules are updated.','workforce-one'),'awaiting'=>__('You accepted. It now goes to the approver.','workforce-one'),
+                'rejected'=>__('Rejected, and they were told.','workforce-one')];
+            return ['type'=>'success','text'=>$done[sanitize_key($_GET['swap_done'])]??__('The shift swap was updated.','workforce-one')];
+        }
         if(isset($_GET['swap_error'])){
             $code=sanitize_key($_GET['swap_error']);
-            if($code==='moved')return ['type'=>'error','text'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one')];
-            return ['type'=>'error','text'=>$code==='note'?__('Write why you reject it, then reject it again.','workforce-one'):__('The shift swap could not be decided. Open it on the Schedule page.','workforce-one')];
+            $err=['moved'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one'),
+                'note'=>__('Write why you reject it, then reject it again.','workforce-one'),
+                'not_found'=>__('This swap is no longer waiting: it was withdrawn or already answered.','workforce-one'),
+                'expired'=>__('This swap is no longer waiting: it was withdrawn or already answered.','workforce-one'),
+                'changed'=>__('The schedule changed after the swap request was created, so it can no longer be accepted.','workforce-one'),
+                'past_date'=>__('This day has already passed, so it can no longer be swapped.','workforce-one')];
+            return ['type'=>'error','text'=>$err[$code]??__('The shift swap could not be decided. Try again.','workforce-one')];
+        }
+        // A notification's link to a swap that no longer waits for this person (3.31.124).
+        $focus='apv-swap-'.absint($_GET['apv_swap']??0);
+        $listed=isset($_GET['apv_swap']) && array_filter($this->my_approvals_items(),function($it)use($focus){return ($it['anchor']??'')===$focus;});
+        if(isset($_GET['apv_swap']) && !$listed){
+            $emp=$this->current_employee();
+            $st=$emp?$this->swap_state_for(absint($_GET['apv_swap']),(int)$emp->id):'other';
+            $m=['withdrawn'=>__('This swap request is no longer waiting for your answer: it was withdrawn.','workforce-one'),
+                'answered'=>__('This swap request is no longer waiting for your answer: it was already answered.','workforce-one'),
+                'past'=>__('This swap request is no longer waiting for your answer: its day has passed.','workforce-one')];
+            if(isset($m[$st]))return ['type'=>'warning','text'=>$m[$st]];
         }
         // phpcs:enable
         return null;
@@ -182,7 +219,7 @@ trait EWS_My_Approvals_Trait {
 
     /** A view's address without this page's own filters and results, for "All" and the filter chips. */
     private function my_approvals_clean_url($view){
-        return remove_query_arg(['apv_kind','apv_bulk','apv_asked','req_state','req_done','req_error','leave_rejected','swap_done','swap_error'],$this->app_view_url($view));
+        return remove_query_arg(['apv_kind','apv_swap','apv_bulk','apv_asked','req_state','req_done','req_error','leave_rejected','swap_done','swap_error'],$this->app_view_url($view));
     }
 
     /** App → My requests. */
@@ -194,7 +231,8 @@ trait EWS_My_Approvals_Trait {
         $paths=$this->approval_paths(array_map(function($it){return $it['approval'];},$items));   // one batch, not several queries per request
         foreach($items as &$it){
             [$wk,$et,$eid]=$it['approval'];
-            $it['path']=$paths[$this->approval_request_key($wk,$et,$eid)]??null;
+            $it['path']=$paths[$this->approval_request_key($wk,$et,$eid)]??($it['path']??null);
+            if($it['path'] && !empty($it['path_before']) && (int)$it['path']['id'])$it['path']['steps']=array_merge($it['path_before'],$it['path']['steps']);
             if(($it['note']??'')==='' && $it['path'] && $it['path']['note']!=='')$it['note']=$it['path']['note'];
         }
         unset($it);
@@ -261,6 +299,7 @@ trait EWS_My_Approvals_Trait {
             case 'overtime': $r=$this->overtime_withdraw($id,(int)$emp->id);break;
             case 'correction': $r=$this->corrections_enabled()?$this->cx_withdraw($id,(int)$emp->id):'access';break;
             case 'advance': $r=$this->advances_enabled()?$this->advance_withdraw($id,(int)$emp->id):'access';break;
+            case 'swap': $r=$this->swap_withdraw($id,(int)$emp->id);break;
             default: $r='access';
         }
         wp_safe_redirect(add_query_arg($r===true?['req_done'=>$kind]:['req_error'=>$r],$back));exit;
