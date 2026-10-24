@@ -142,6 +142,27 @@ const SHOTS = process.env.APV_SHOTS || '';
   await Promise.all([ep.waitForURL(/ews_view=requests/), ep.click('#wfo-new-leave [type="submit"]')]);
   await ep.waitForLoadState('load'); await ep.waitForSelector('[data-req^="leave-"]', { timeout: 5000 }).catch(() => {});
   check('...sent: back on My requests with the new leave in the list', await ep.locator('[data-req^="leave-"]').count() >= 1 && php(`global $wpdb; echo (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ews_leave_requests WHERE start_date='${day}'");`) === '1');
+  // The swap sheet (3.31.123 fix): each colleague is a row with a small radio and the name beside it. Before, the sheet's text
+  // field style made the radio as wide as the row and squeezed the name into a column one letter wide.
+  const swapDay = php(`global $wpdb; $p=$wpdb->prefix; $wpdb->query("DELETE FROM {$p}ews_departments WHERE code='apv-sw'");
+    $wpdb->insert($p.'ews_departments',['name'=>'APV SW','code'=>'apv-sw','active'=>1]); $dep=(int)$wpdb->insert_id;
+    $eid=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE wp_user_id=%d",get_user_by('login','emp1')->ID));
+    $mona=(int)$wpdb->get_var("SELECT id FROM {$p}ews_employees WHERE domain_name='apvmona'");
+    $wpdb->query("UPDATE {$p}ews_employees SET department_id=$dep WHERE id IN ($eid,$mona)");
+    $d=gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +3 days'));
+    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='$d' AND employee_id IN ($eid,$mona)");
+    $wpdb->insert($p.'ews_schedule',['employee_id'=>$eid,'work_date'=>$d,'status'=>'WFH']); $wpdb->insert($p.'ews_schedule',['employee_id'=>$mona,'work_date'=>$d,'status'=>'Office']);
+    echo $d;`);
+  await ep.goto(B + '/app/?ews_view=requests');
+  await ep.evaluate(d => { const s = document.getElementById('wfo-new-swap'); s.showModal(); const day = s.querySelector('select[name="work_date"]'); day.value = d; day.dispatchEvent(new Event('change')); }, swapDay);
+  const mate = await ep.evaluate(() => { const r = document.querySelector('#wfo-new-swap .wfo-new-mate'); if (!r) return null;
+    return { radio: r.querySelector('input').getBoundingClientRect().width, name: r.querySelector('span').getBoundingClientRect().width, row: r.getBoundingClientRect().width,
+      send: !document.querySelector('#wfo-new-swap [data-new-swap-send]').disabled }; });
+  check('the swap sheet on a phone: the radio is small and the colleague\'s name has the row (not one letter per line)', mate && mate.radio <= 24 && mate.name > mate.row / 2 && mate.send, mate);
+  await shot(ep, 'new-request-swap');
+  php(`global $wpdb; $p=$wpdb->prefix; $dep=(int)$wpdb->get_var("SELECT id FROM {$p}ews_departments WHERE code='apv-sw'");
+    $wpdb->query("UPDATE {$p}ews_employees SET department_id=NULL WHERE department_id=$dep"); $wpdb->query("DELETE FROM {$p}ews_departments WHERE id=$dep");
+    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='${swapDay}'");`);
   check('no JavaScript errors', errors.length === 0, errors);
 
   await browser.close();

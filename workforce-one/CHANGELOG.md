@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.123
+### Fixes: shift swaps (owner report on 3.31.122)
+No new setting, no database change.
+- **A swap for a day of another week could not be accepted.** The Schedule page listed only the swaps of the week it shows, and the
+  colleague's notification opens the current week. So a swap asked on Saturday for next Sunday was nowhere the colleague could
+  find it (and My approvals lists a swap only once the colleague has accepted). The Schedule page now lists every swap still
+  waiting, from today on, whatever week is shown, with its day.
+- **"Swap with a colleague" in My requests → New request:** the list of colleagues showed each name one letter per line, because
+  the sheet's text-field style made the radio button as wide as the row. Fixed.
+- The sheet's "Send request" button now looks disabled when nobody can swap that day (it already was).
+
 ## 3.31.122
 ### A decision applies only to the approval level you saw (approval engine, every type; design `docs/tasks/approval-level-guard.md`)
 A fix to the documented rule (owner decision of 3.31.120); no new setting, no database change.

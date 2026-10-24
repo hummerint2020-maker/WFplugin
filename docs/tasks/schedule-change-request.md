@@ -637,7 +637,7 @@ Add `docs/mockups/_kit/screens_schedulechange.py`, starting from `snap/attendanc
 
 ### Release split (recommended)
 - **3.31.122:** the engine fix for the repeated Requests page post. The owner already approved it, before the week lock.
-- **R2a, 3.31.123:**
+- **R2a, 3.31.124:**
   - tables, settings, switch;
   - grid request mode and the R1 draft conversion;
   - create, decide and apply with the guard;
@@ -722,3 +722,5 @@ All as recommended:
 12. Banner text (2026-10-24, asked while reviewing the R1 banner): the text of the final-week banner on the Attendance page is a
     setting on the Week lock card (title and text, Arabic and English; `{since}` is the lock time; empty keeps the default text).
     Part of 3.31.123.
+
+Note (2026-10-24): 3.31.123 became a swap fix release (owner report); this feature is now 3.31.124.
