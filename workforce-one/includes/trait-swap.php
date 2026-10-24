@@ -334,10 +334,8 @@ trait EWS_Swap_Trait {
             $where="(s.requester_employee_id=%d OR s.target_employee_id=%d)";
             $args=[$emp_id,$emp_id];
             if($week_start && $week_end){
-                // The week shown, plus every swap still open from today on (3.31.123): a request for a day of another week (next
-                // Sunday, asked on Saturday) was not on the page the colleague's notification opens, so it could not be accepted.
-                $where.=" AND (s.work_date BETWEEN %s AND %s OR (s.status IN ('Pending','Awaiting') AND s.work_date>=%s))";
-                $args[]=$week_start;$args[]=$week_end;$args[]=current_time('Y-m-d');
+                $where.=" AND s.work_date BETWEEN %s AND %s";
+                $args[]=$week_start;$args[]=$week_end;
             }
             $sql="SELECT s.*,a.name requester_name,b.name target_name
                   FROM {$table} s
