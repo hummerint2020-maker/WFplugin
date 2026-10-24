@@ -2091,7 +2091,8 @@ paths:
   /corrections/pending:
     get:
       summary: Corrections waiting for my decision
-      description: Full schema in its own PR.
+      description: 'Full schema in its own PR. Each request carries step (its open approval level, 0 for none) and stage
+        (3.31.122), to send back with the decision.'
       tags:
       - Corrections
       operationId: getcorrections_pending
@@ -2158,7 +2159,9 @@ paths:
   /corrections/{id}/decision:
     post:
       summary: Decide a correction
-      description: Full schema in its own PR.
+      description: 'Full schema in its own PR. Optional body fields (3.31.122): step, the approval level the app showed (the
+        step of /corrections/pending, 0 for none), and stage (pending | pending_hr). A request that moved on since is refused:
+        VALIDATION_FAILED with details.reason moved. Without them the current level is decided, as before.'
       tags:
       - Corrections
       operationId: postcorrections_id_decision

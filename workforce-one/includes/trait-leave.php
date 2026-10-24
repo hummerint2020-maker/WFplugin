@@ -332,12 +332,14 @@ trait EWS_Leave_Trait {
             if(!$id||!in_array($decision,['approve','reject'],true))wp_die('Invalid decision.');
             $this->ensure_leave_schema();
 
-            $ar=null;
+            $ar=null;$posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
             if($this->leave_approval_active()){
                 $ar=$this->approval_find_request('vacation','leave',$id);
                 if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
+                if($this->approval_level_moved((int)$ar->id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
                 if(!$this->approval_can_act((int)$ar->id))wp_die('Access denied');
-            }elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
+            }elseif($this->approval_level_moved_for('vacation','leave',$id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
+            elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 
             $r=$this->leave_request_row($id);
             if(!$r||$r->status!=='Pending')$this->leave_redirect(['leave_done'=>1]);
@@ -350,11 +352,11 @@ trait EWS_Leave_Trait {
 
             // Outcome: 'APPROVED', 'REJECTED' or (multi-level) still waiting for the next level.
             $outcome=$decision==='approve'?'APPROVED':'REJECTED';
-            $this->leave_transaction(function()use(&$outcome,$ar,$decision,$id,$r,$emp,$bal,$now){
+            $this->leave_transaction(function()use(&$outcome,$ar,$decision,$id,$r,$emp,$bal,$now,$posted){
                 if($ar){
                     // The reason typed with the decision (3.31.103), needed to reject when the workflow asks for one.
-                    $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false);
-                    if(is_wp_error($acted))return $acted->get_error_code()==='approval_note_required'?'note':'approval';
+                    $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false,false,$posted);
+                    if(is_wp_error($acted))return $this->approval_error_code($acted);
                     $fresh=$this->approval_find_request('vacation','leave',$id);
                     if(!$fresh)return 'approval';
                     $outcome=$fresh->status;
@@ -428,12 +430,14 @@ trait EWS_Leave_Trait {
             $id=absint($_POST['request_id']??0);
             $decision=sanitize_key($_POST['decision']??'');
 
-            $ar=null;
+            $ar=null;$posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
             if($this->leave_approval_active()){
                 $ar=$this->approval_find_request('vacation','leave_cancellation',$id);
                 if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
+                if($this->approval_level_moved((int)$ar->id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
                 if(!$this->approval_can_act((int)$ar->id))wp_die('Access denied');
-            }elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
+            }elseif($this->approval_level_moved_for('vacation','leave_cancellation',$id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
+            elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 
             $r=$this->leave_request_row($id,"AND r.status='Approved' AND r.cancellation_status='Pending'");
             if(!$r||!in_array($decision,['approve','reject'],true))wp_die('Invalid cancellation.');
@@ -445,10 +449,10 @@ trait EWS_Leave_Trait {
             $now=current_time('mysql');
 
             $outcome=$decision==='approve'?'APPROVED':'REJECTED';
-            $this->leave_transaction(function()use(&$outcome,$ar,$decision,$id,$r,$emp,$bal,$now){
+            $this->leave_transaction(function()use(&$outcome,$ar,$decision,$id,$r,$emp,$bal,$now,$posted){
                 if($ar){
-                    $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false);
-                    if(is_wp_error($acted))return $acted->get_error_code()==='approval_note_required'?'note':'approval';
+                    $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false,false,$posted);
+                    if(is_wp_error($acted))return $this->approval_error_code($acted);
                     $fresh=$this->approval_find_request('vacation','leave_cancellation',$id);
                     if(!$fresh)return 'approval';
                     $outcome=$fresh->status;
@@ -501,7 +505,8 @@ trait EWS_Leave_Trait {
                 // The decision and, when it is the last one, the leave itself in one transaction (3.31.102):
                 // before, the balance could change while the leave stayed Pending, or the other way round.
                 if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
-                if(is_wp_error($this->approval_act((int)$ar->id,$decision,'',false,true))){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                $acted=$this->approval_act((int)$ar->id,$decision,'',false,true,$this->approval_posted_step());
+                if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return Hub::fromEngineError($acted->get_error_code());}
                 $fresh=$this->approval_find_request('vacation',$entity,$id);
                 if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $outcome=Hub::workflowOutcome((string)$fresh->status);
@@ -518,6 +523,7 @@ trait EWS_Leave_Trait {
                 }
                 return Hub::ADVANCED;
             }
+            if($this->approval_level_moved_for('vacation',$entity,$id,$this->approval_posted_step()))return Hub::MOVED;   // the page showed another level (3.31.122)
             if(!$cancel)$this->approval_self_gate((int)($emp->wp_user_id??0),true,'vacation #'.(int)$id);   // administrators may; the Audit Log marks it
             return $commit($decision==='approve'?'APPROVED':'REJECTED')?Hub::outcome($decision):Hub::ERROR;
         }

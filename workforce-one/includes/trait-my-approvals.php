@@ -93,6 +93,7 @@ trait EWS_My_Approvals_Trait {
             $path=$paths[$this->approval_request_key((string)$row->workflow_key,(string)$row->entity_type,(int)$row->entity_id)]??null;
             if(!$path)continue;
             $emp=$this->people_employee((int)$card['employee_id']);
+            if(!empty($card['action']))$card['fields']=(array)($card['fields']??[])+['approval_step'=>(int)$row->step_id];   // the level shown (3.31.122)
             $mine=false;
             foreach($path['steps'] as $st)if($st['state']==='now' && $st['who']===__('Administrators','workforce-one'))$mine=true;
             $out[]=$card+['id'=>(int)$row->approval_request_id,'workflow'=>(string)$row->workflow_key,'entity_type'=>(string)$row->entity_type,'entity_id'=>(int)$row->entity_id,
@@ -170,7 +171,11 @@ trait EWS_My_Approvals_Trait {
         if(isset($_GET['adv_error']))return ['type'=>'error','text'=>$this->advance_error_text(sanitize_key($_GET['adv_error']))];
         if(isset($_GET['leave_rejected']))return ['type'=>'success','text'=>__('The leave request was rejected, and the employee was told.','workforce-one')];
         if(isset($_GET['swap_done']))return ['type'=>'success','text'=>__('The shift swap was updated.','workforce-one')];
-        if(isset($_GET['swap_error']))return ['type'=>'error','text'=>sanitize_key($_GET['swap_error'])==='note'?__('Write why you reject it, then reject it again.','workforce-one'):__('The shift swap could not be decided. Open it on the Schedule page.','workforce-one')];
+        if(isset($_GET['swap_error'])){
+            $code=sanitize_key($_GET['swap_error']);
+            if($code==='moved')return ['type'=>'error','text'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one')];
+            return ['type'=>'error','text'=>$code==='note'?__('Write why you reject it, then reject it again.','workforce-one'):__('The shift swap could not be decided. Open it on the Schedule page.','workforce-one')];
+        }
         // phpcs:enable
         return null;
     }

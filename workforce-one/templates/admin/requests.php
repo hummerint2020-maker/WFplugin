@@ -2,7 +2,7 @@
 /**
  * wp-admin "Requests Hub" page.
  *
- * @var array<int,array{type:string,id:int,title:string,employee:string,detail:string,approval:string,requested_at:string,nonce:string}> $rows
+ * @var array<int,array{type:string,id:int,title:string,employee:string,detail:string,approval:string,requested_at:string,step:int,stage:string,nonce:string}> $rows
  * @var string|null $notice
  * @var bool $notice_is_error
  * @var string $post_url
@@ -29,7 +29,7 @@ if (!defined('ABSPATH')) exit;
                 <td><?php echo esc_html($r['requested_at']); ?></td>
                 <td><div style="display:flex;gap:7px;flex-wrap:wrap">
                 <?php foreach (['approve' => ['Approve', 'button button-primary'], 'reject' => ['Reject', 'button']] as $decision => [$label, $class]): ?>
-                    <form method="post" action="<?php echo esc_url($post_url); ?>"><input type="hidden" name="action" value="ews31_requests_decision"><input type="hidden" name="request_type" value="<?php echo esc_attr($r['type']); ?>"><input type="hidden" name="request_id" value="<?php echo (int) $r['id']; ?>"><input type="hidden" name="decision" value="<?php echo esc_attr($decision); ?>"><input type="hidden" name="_wpnonce" value="<?php echo esc_attr($r['nonce']); ?>"><button class="<?php echo esc_attr($class); ?>" type="submit"><?php echo esc_html($label); ?></button></form>
+                    <form method="post" action="<?php echo esc_url($post_url); ?>"><input type="hidden" name="action" value="ews31_requests_decision"><input type="hidden" name="request_type" value="<?php echo esc_attr($r['type']); ?>"><input type="hidden" name="request_id" value="<?php echo (int) $r['id']; ?>"><input type="hidden" name="decision" value="<?php echo esc_attr($decision); ?>"><input type="hidden" name="approval_step" value="<?php echo (int) $r['step']; ?>"><?php if ($r['stage'] !== ''): ?><input type="hidden" name="request_stage" value="<?php echo esc_attr($r['stage']); ?>"><?php endif; ?><input type="hidden" name="_wpnonce" value="<?php echo esc_attr($r['nonce']); ?>"><button class="<?php echo esc_attr($class); ?>" type="submit"><?php echo esc_html($label); ?></button></form>
                 <?php endforeach; ?>
                 </div></td>
             </tr>

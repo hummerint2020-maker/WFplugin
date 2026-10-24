@@ -131,7 +131,7 @@ trait EWS_Advances_Trait {
             'limit'=>__('That is more than you can ask for.','workforce-one'),'open'=>__('You already have an advance open. One at a time.','workforce-one'),
             'service'=>sprintf(/* translators: %d: months */_n('You can ask after %d month with the company.','You can ask after %d months with the company.',$s['min_service_months'],'workforce-one'),$s['min_service_months']),
             'access'=>__('You cannot do that.','workforce-one'),'save'=>__('It could not be saved. Try again.','workforce-one'),'approval'=>__('It could not be decided. Try again.','workforce-one'),
-            'note'=>__('Write why you reject it, then reject it again.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one')];
+            'note'=>__('Write why you reject it, then reject it again.','workforce-one'),'moved'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one')];
         return $m[$code]??$m['save'];
     }
 
@@ -207,10 +207,12 @@ trait EWS_Advances_Trait {
         $a=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['advances']} WHERE id=%d",$id));
         if(!$a || $a->status!=='Pending')$go(['adv_done'=>1]);
         $ar=$this->approval_find_request('salary_advance','salary_advance',$id);
+        $posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
+        if($ar && $this->approval_level_moved(\WorkforceOne\Requests\Hub::isOpenApproval((string)$ar->status)?(int)$ar->id:0,$posted))$go(['adv_error'=>'moved']);
         if(!$ar || !$this->approval_can_act((int)$ar->id))$go(['adv_error'=>'access']);
         if($wpdb->query('START TRANSACTION')===false)$go(['adv_error'=>'save']);
-        $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false);
-        if(is_wp_error($acted)){$wpdb->query('ROLLBACK');$go(['adv_error'=>$acted->get_error_code()==='approval_note_required'?'note':'approval']);}
+        $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),false,false,$posted);
+        if(is_wp_error($acted)){$wpdb->query('ROLLBACK');$go(['adv_error'=>$this->approval_error_code($acted)]);}
         $fresh=$this->approval_find_request('salary_advance','salary_advance',$id);
         $final=$fresh && in_array($fresh->status,['APPROVED','REJECTED'],true);
         if($final)$wpdb->update($t['advances'],['status'=>$fresh->status==='APPROVED'?'Approved':'Rejected','decided_at'=>current_time('mysql')],['id'=>$id,'status'=>'Pending']);

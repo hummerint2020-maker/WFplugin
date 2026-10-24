@@ -213,6 +213,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_office_minimum.py "$S"
       - name: Week lock (final weeks, override, requests, notification)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_week_lock.py "$S"
+      - name: Approval level guard (a decision applies only to the level shown, every type)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_level_guard.py "$S"
       - name: wp-admin menu in sections (8 sections, tabs, old links, permissions, features off, Arabic)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_admin_nav.py "$S"
       - name: Web Push endpoints (SSRF hardening) and delivery

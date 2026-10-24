@@ -19,9 +19,10 @@
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; $decision() and $row() escape their output.
-$decision = static function (int $id, string $value, string $label, string $class, string $icon) use ($post_url): string {
+// $step: the approval level shown (0: none), so the decision never lands on a later level (3.31.122).
+$decision = static function (int $id, string $value, string $label, string $class, string $icon, int $step = 0) use ($post_url): string {
     return '<form method="post" action="' . esc_url($post_url) . '">' . wp_nonce_field('ews_overtime_respond', '_wpnonce', true, false)
-        . '<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="' . $id . '"><input type="hidden" name="decision" value="' . esc_attr($value) . '">'
+        . '<input type="hidden" name="action" value="ews_overtime_request_respond"><input type="hidden" name="request_id" value="' . $id . '"><input type="hidden" name="decision" value="' . esc_attr($value) . '"><input type="hidden" name="approval_step" value="' . $step . '">'
         . '<button class="wfo-rq-btn ' . esc_attr($class) . '" type="submit">' . Icons::svg($icon, 16, 2.2) . esc_html($label) . '</button></form>';
 };
 $day = static function (string $date): string { return date_i18n('D d M', strtotime($date)); };
@@ -87,7 +88,7 @@ $reopen = isset($_GET['overtime_error']); // phpcs:ignore WordPress.Security.Non
                     <p class="wfo-rq-meta"><?php echo esc_html($day((string) $r->overtime_date) . ' · ' . $span($r)); ?> · <strong><?php echo esc_html($r->duration); ?></strong></p>
                     <?php if ((string) $r->reason !== ''): ?><p class="wfo-rq-quote">“<?php echo esc_html($r->reason); ?>”</p><?php endif; ?>
                 </div>
-                <div class="wfo-rq-actions"><?php echo $decision((int) $r->id, 'reject', __('Reject', 'workforce-one'), 'is-no', 'close') . $decision((int) $r->id, 'approve', __('Approve', 'workforce-one'), 'is-yes', 'check'); ?></div>
+                <div class="wfo-rq-actions"><?php echo $decision((int) $r->id, 'reject', __('Reject', 'workforce-one'), 'is-no', 'close', (int) ($r->approval_step ?? 0)) . $decision((int) $r->id, 'approve', __('Approve', 'workforce-one'), 'is-yes', 'check', (int) ($r->approval_step ?? 0)); ?></div>
             </div>
         <?php endforeach; ?>
     </section>

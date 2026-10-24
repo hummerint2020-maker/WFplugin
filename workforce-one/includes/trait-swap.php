@@ -201,7 +201,8 @@ trait EWS_Swap_Trait {
             $ar=$r->status==='Awaiting'?$this->approval_find_request('shift_swap','schedule_swap',(int)$id):null;
             if($ar&&Hub::isOpenApproval((string)$ar->status)){
                 if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
-                if(is_wp_error($this->approval_act((int)$ar->id,$approve?'approve':'reject','',false,true))){$wpdb->query('ROLLBACK');return Hub::ERROR;}
+                $acted=$this->approval_act((int)$ar->id,$approve?'approve':'reject','',false,true,$this->approval_posted_step());
+                if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return Hub::fromEngineError($acted->get_error_code());}
                 $fresh=$this->approval_find_request('shift_swap','schedule_swap',(int)$id);
                 if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $outcome=Hub::workflowOutcome((string)$fresh->status);
@@ -215,6 +216,7 @@ trait EWS_Swap_Trait {
                 return $outcome;
             }
             // Pending (the colleague has not answered), or the approval already decided: the administrator decides the swap itself.
+            if((int)$this->approval_posted_step()>0)return Hub::MOVED;   // the page showed a level that is no longer open (3.31.122)
             if($approve){
                 $applied=$this->swap_apply($r);
                 if($applied!==true)return $applied==='changed'?Hub::CHANGED:Hub::ERROR;
@@ -294,10 +296,12 @@ trait EWS_Swap_Trait {
             $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Awaiting' LIMIT 1",$id));
             if(!$r)$this->swap_redirect(['swap_error'=>'not_found']);
             $ar=$this->approval_find_request('shift_swap','schedule_swap',$id);
+            $posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
+            if($ar && $this->approval_level_moved(Hub::isOpenApproval((string)$ar->status)?(int)$ar->id:0,$posted))$this->swap_redirect(['swap_error'=>'moved']);
             if(!$ar||!$this->approval_can_act((int)$ar->id))$this->swap_redirect(['swap_error'=>'access']);
             if($decision==='approve'){$past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));if($past)$this->swap_redirect(['swap_error'=>$past]);}
-            $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),true);
-            if(is_wp_error($acted))$this->swap_redirect(['swap_error'=>$acted->get_error_code()==='approval_note_required'?'note':'approval']);
+            $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),true,false,$posted);
+            if(is_wp_error($acted))$this->swap_redirect(['swap_error'=>$this->approval_error_code($acted)]);
             $fresh=$this->approval_find_request('shift_swap','schedule_swap',$id);
             if($fresh&&$fresh->status==='APPROVED'){
                 $out=$this->swap_finish_approved($r);
@@ -318,7 +322,7 @@ trait EWS_Swap_Trait {
     private function swap_awaiting_my_approval(){
             if($this->swap_manager_mode()==='')return [];
             global $wpdb;$table=$this->ensure_swap_schema();$at=$this->approval_tables();
-            return (array)$wpdb->get_results($wpdb->prepare("SELECT s.*,a.name requester_name,b.name target_name FROM {$table} s
+            return (array)$wpdb->get_results($wpdb->prepare("SELECT s.*,a.name requester_name,b.name target_name,st.id approval_step FROM {$table} s
                 INNER JOIN {$at['requests']} ar ON ar.entity_type='schedule_swap' AND ar.entity_id=s.id AND ar.status LIKE 'WAITING%%'
                 INNER JOIN {$at['instances']} st ON st.approval_request_id=ar.id AND st.status='PENDING' AND st.approver_wp_user_id=%d
                 LEFT JOIN {$this->employees} a ON a.id=s.requester_employee_id LEFT JOIN {$this->employees} b ON b.id=s.target_employee_id

@@ -7633,3 +7633,6 @@ msgstr "لا يغيّر هذه الإعدادات إلا من لديه صلاح�
 
 msgid "By default: site administrators and the EWS Administrator role."
 msgstr "افتراضيًا: مديرو الموقع ودور EWS Administrator."
+
+msgid "This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is."
+msgstr "انتقل هذا الطلب إلى مستوى موافقة آخر منذ فتحت الصفحة، لذلك لم يتغيّر شيء. افتحه مرة أخرى لترى أين وصل."
