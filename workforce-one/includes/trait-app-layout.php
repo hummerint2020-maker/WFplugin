@@ -79,7 +79,8 @@ trait EWS_App_Layout_Trait {
         }
         // The pages with their own approval lists point to My approvals while it is on (3.31.103).
         // The Schedule page has its own two lines instead (3.31.124).
-        if(in_array($view,['vacation','overtime','corrections'],true) && $this->my_approvals_allowed())$content=$this->my_approvals_link().$content;
+        // Someone without an employee record has no lines there and keeps the link (3.31.124 review).
+        if((in_array($view,['vacation','overtime','corrections'],true) || ($view==='schedule' && !$this->current_employee())) && $this->my_approvals_allowed())$content=$this->my_approvals_link().$content;
         $titles=['pay'=>__('My Pay','workforce-one'),'dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'corrections'=>__('Corrections','workforce-one'),'sites'=>__('My sites','workforce-one'),'payout'=>__('Payout','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>__('Polls','workforce-one'),'team'=>__('My team','workforce-one'),'approvals'=>__('My approvals','workforce-one'),'requests'=>__('My requests','workforce-one')];
         // A colleague's profile belongs to People in the menu.
         return $this->layout($titles[$view]??ucwords(str_replace('-',' ',$view)),$content,$view==='employee'?'people':$view);

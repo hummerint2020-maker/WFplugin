@@ -15,6 +15,8 @@ Works with My approvals on (Settings → Features); with it off nothing changes.
   withdrawn, or expired (the day passed before the colleague answered). While the colleague has not answered it can be withdrawn
   there; the colleague is told. Their own notifications open My requests.
 - A notification opened after the swap moved on says so (withdrawn, already answered, or its day passed) instead of an empty page.
+- A swap from someone deactivated since is left out. A day changed since the request is refused before it reaches the approver
+  too (before, with levels, an Accept posted from an old page sent it to the approver, whose approval then failed).
 
 ## 3.31.123
 ### Fixes: the swap sheet (owner report on 3.31.122)

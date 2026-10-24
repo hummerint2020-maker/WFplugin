@@ -88,14 +88,9 @@ trait EWS_My_Approvals_Trait {
         }
         $paths=$this->approval_paths(array_map(function($i)use($rows){return [(string)$rows[$i]->workflow_key,(string)$rows[$i]->entity_type,(int)$rows[$i]->entity_id];},array_keys($cards)));
         // Swaps a colleague asked of this person (3.31.124): their answer is not an engine level, so they come from the swaps themselves.
-        $peer=$me?$this->swap_peer_waiting((int)$me->id):[];
-        $names=$peer?$this->people_brief_by_ids(array_map(function($r){return (int)$r->requester_employee_id;},$peer)):[];
+        $peer=$me?$this->swap_peer_cards((int)$me->id):[];
         $s=$this->approval_settings();$days=$this->working_days();$now=current_time('mysql');
-        foreach($peer as $r){
-            $card=$this->swap_peer_card($r,$names);
-            if(!$card)continue;
-            $emp=$this->people_employee((int)$card['employee_id']);
-            if(!$emp)continue;
+        foreach($peer as [$r,$emp,$card]){
             $hours=\WorkforceOne\Approvals\WorkingHours::between((string)$r->created_at,$now,$days,$s['day_start'],$s['day_end']);
             $out[]=$card+['id'=>0,'workflow'=>'shift_swap','entity_type'=>'schedule_swap','entity_id'=>(int)$r->id,
                 'name'=>(string)$emp->name,'title'=>trim((string)($emp->job_title??'')),'picture'=>$this->employee_picture_url($emp),
@@ -208,7 +203,9 @@ trait EWS_My_Approvals_Trait {
             return ['type'=>'error','text'=>$err[$code]??__('The shift swap could not be decided. Try again.','workforce-one')];
         }
         // A notification's link to a swap that no longer waits for this person (3.31.124).
-        if(isset($_GET['apv_swap'])){
+        $focus='apv-swap-'.absint($_GET['apv_swap']??0);
+        $listed=isset($_GET['apv_swap']) && array_filter($this->my_approvals_items(),function($it)use($focus){return ($it['anchor']??'')===$focus;});
+        if(isset($_GET['apv_swap']) && !$listed){
             $emp=$this->current_employee();
             $st=$emp?$this->swap_state_for(absint($_GET['apv_swap']),(int)$emp->id):'other';
             $m=['withdrawn'=>__('This swap request is no longer waiting for your answer: it was withdrawn.','workforce-one'),

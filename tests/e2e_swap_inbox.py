@@ -53,6 +53,7 @@ def swap(sid):
     return r[0]['status'] if r else None
 
 
+WD = """$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'swap_withdraw'); $m->setAccessible(true); $r=$m->invoke($o,%d,%d); echo $r===true?'true':$r;"""
 NONCE = []
 
 
@@ -111,9 +112,12 @@ r = m.group(0) if m else ''
 check('My requests: waiting for the colleague\'s answer, with withdraw', 'waiting for their answer' in r and 'name="kind" value="swap"' in r, r[:500])
 
 # ---------------------------------------------------------------- accept (colleague alone)
+n1 = re.search(r'name="_wpnonce" value="([^"]+)"', card(peer, S1)).group(1)
 qs = answer(peer, S1, 'accept')
 check('accepting in My approvals: back there, the days exchanged', qs.get('ews_view') == 'approvals' and qs.get('swap_done') == 'accepted' and swap(S1) == 'Accepted' and sched(E1, NEXT) == 'WFH' and sched(PEER, NEXT) == 'Office', (qs, swap(S1)))
 check('...the card is gone', card(peer, S1) == '')
+qs = peer.post('ews_swap_respond', _wpnonce=n1, ews_return='approvals', swap_id=S1, decision='accept')[1]
+check('...the same answer posted again changes nothing', qs.get('swap_error') == 'not_found' and sched(E1, NEXT) == 'WFH', qs)
 pg = peer.req('/app/?ews_view=approvals&swap_done=accepted')[1]
 check('...and the page says what happened', 'You accepted: both schedules are updated.' in pg)
 note = q("SELECT link link_url FROM {p}ews_notifications WHERE user_id=%d ORDER BY id DESC LIMIT 1" % ids['e1_u'])
@@ -136,7 +140,7 @@ check('...the colleague is told', told and told[0]['title'] == 'Swap request wit
 pg = peer.req('/app/?ews_view=approvals&apv_swap=%d' % S3)[1]
 check('...their notification opened afterwards says it was withdrawn', 'it was withdrawn' in pg)
 qs = answer(peer, S3, 'accept')
-check('...and a card from before cannot accept it', qs.get('swap_error') in ('not_found', None) and swap(S3) == 'Cancelled', qs)
+check('...and a card from before cannot accept it', swap(S3) == 'Cancelled', qs)
 
 # ---------------------------------------------------------------- with an approver after the colleague
 out = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod('EWS_Manager_V31_1','approval_configure_workflow'); $m->setAccessible(true);
@@ -153,6 +157,13 @@ m = re.search(r'<article[^>]*data-req="swap-%d".*?</article>' % S4, pg, re.S)
 check('...My requests: they accepted, no withdraw any more (owner decision)', m and 'they accepted' in m.group(0) and 'name="kind" value="swap"' not in m.group(0), m.group(0)[:400] if m else pg[:200])
 note = q("SELECT link link_url FROM {p}ews_notifications WHERE user_id=(SELECT wp_user_id FROM {p}ews_employees WHERE id=%d) ORDER BY id DESC LIMIT 1" % ids['appr'])
 check('...the approver\'s note opens My approvals', note and 'ews_view=approvals' in note[0]['link_url'], note)
+pg = appr.req('/app/?ews_view=approvals&apv_swap=%d' % S4)[1]
+check('...opened from it, the approver\'s card is marked and nothing says it no longer waits', re.search(r'<article class="wfo-apv-item[^"]*is-focus[^"]*"[^>]*id="apv-swap-%d"' % S4, pg) is not None and 'no longer waiting' not in pg)
+check('...an accepted swap can no longer be withdrawn (owner decision)', php(WD % (S4, E1)).splitlines()[-1] == 'done' and swap(S4) == 'Awaiting')
+S8 = ask(day(14))
+set_day(PEER, day(14), 'Office')   # Mona's day changed since: a page from before posts Accept anyway
+qs = answer(peer, S8, 'accept')
+check('...a day changed since: Accept posted anyway is refused before it reaches the approver', qs.get('swap_error') == 'changed' and swap(S8) == 'Pending', (qs, swap(S8)))
 php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET active=0 WHERE workflow_key='shift_swap'\");")
 
 # ---------------------------------------------------------------- a changed day, a past day
@@ -162,14 +173,27 @@ c = card(peer, S5)
 check('a day changed since the request: only Decline, and it says why', c and 'value="accept"' not in c and 'value="reject"' in c and 'you can only decline it' in c, c[:400])
 S6 = php("$wpdb->insert($p.'ews_schedule_swaps',['requester_employee_id'=>%d,'target_employee_id'=>%d,'work_date'=>'%s','requester_status'=>'Office','target_status'=>'WFH','status'=>'Pending','requested_by'=>1,'created_at'=>current_time('mysql')]); echo $wpdb->insert_id;" % (E1, PEER, PAST)).splitlines()[-1]
 check('a swap whose day passed is not in My approvals', card(peer, int(S6)) == '')
+S9 = ask(day(15))
+check('somebody else cannot withdraw a swap', php(WD % (S9, ids['other'])).splitlines()[-1] == 'done' and swap(S9) == 'Pending')
+php("$wpdb->update($p.'ews_employees',['active'=>0],['id'=>%d]);" % E1)
+check('a swap whose requester was deactivated is left out of My approvals', card(peer, S9) == '')
+php("$wpdb->update($p.'ews_employees',['active'=>1],['id'=>%d]);" % E1)
+# Queries: My approvals' list costs the same with 1 or 5 swaps waiting (no query per swap).
+cost = php("""$p=$wpdb->prefix; $wpdb->query($wpdb->prepare("DELETE FROM {$p}ews_schedule_swaps WHERE status='Pending' AND work_date>=%%s",gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +15 days')))); wp_set_current_user(%d); $n=[];
+    foreach([1,5] as $k){ for($i=count($n)?1:0;$i<$k;$i++) $wpdb->insert($p.'ews_schedule_swaps',['requester_employee_id'=>%d,'target_employee_id'=>%d,'work_date'=>gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +'.(30+$i).' days')),'requester_status'=>'Office','target_status'=>'WFH','status'=>'Pending','requested_by'=>1,'created_at'=>current_time('mysql')]);
+      $o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'my_approvals_items'); $m->setAccessible(true); $m->invoke($o); $o=new EWS_Manager_V31_1();
+      $q=$wpdb->num_queries; $c=count($m->invoke($o)); $n[]=($wpdb->num_queries-$q).':'.$c; }
+    $wpdb->query($wpdb->prepare("DELETE FROM {$p}ews_schedule_swaps WHERE status='Pending' AND work_date>=%%s",gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +15 days')))); echo implode(',',$n);""" % (ids['peer_u'], E1, PEER)).splitlines()[-1]
+a, b = [x.split(':') for x in cost.split(',')]
+check('My approvals\' list: as many queries with 5 swaps waiting as with 1', int(b[1]) - int(a[1]) == 4 and a[0] == b[0], cost)
 check('...and shows as Expired in My requests, without withdraw', re.search(r'data-req="swap-%s".*?is-expired' % S6, emp.req('/app/?ews_view=requests')[1], re.S) is not None)
 
 # ---------------------------------------------------------------- off
 php("delete_option('ews_feature_my_approvals');")
 S7 = ask(day(13))
 check('My approvals off: the swap is still sent', swap(S7) == 'Pending', S7)
-note = q("SELECT link link_url FROM {p}ews_notifications WHERE user_id=%d ORDER BY id DESC LIMIT 1" % ids['peer_u'])
-check('My approvals off: the notification opens the Schedule page, as before', note and 'ews_view=schedule' in note[0]['link_url'], note)
+note = q("SELECT link link_url,title FROM {p}ews_notifications WHERE user_id=%d ORDER BY id DESC LIMIT 1" % ids['peer_u'])
+check('My approvals off: the notification opens the Schedule page, with its text as before', note and 'ews_view=schedule' in note[0]['link_url'] and note[0]['title'] == 'Schedule Swap Request', note)
 pg = peer.req('/app/?ews_view=schedule&week=' + day(13))[1]
 check('...and the Schedule page keeps its swap panel', 'data-swap-inbox-answer' not in pg and re.search(r'name="swap_id" value="%d"' % S7, pg) is not None)
 

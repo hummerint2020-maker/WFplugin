@@ -304,3 +304,15 @@ Add them to `languages/workforce-one-ar.po`, regenerate `.mo` and `l10n.php`, an
 8. The requester's outcome notifications open My requests (the Schedule page when My approvals is off).
 9. Order unchanged: overdue first, then the longest waiting.
 10. Withdraw only while waiting for the colleague (not once Awaiting).
+
+## Where the implementation differs (3.31.124)
+- The swap result texts live in `my_approvals_notice()`; no shared `swap_notice()` (the Schedule page keeps its own, unchanged).
+- `swap_notify()` takes the link from each caller (`swap_requester_url()` for the requester's notes) instead of looking it up.
+- My approvals gets its swap cards from one schedule-module call, `swap_peer_cards()`: the waiting swaps, their requesters
+  (`people_by_ids(..., true)`, one query; a deactivated requester's swap is left out, as the edge-case table says) and whether the
+  type has levels (read once). Same number of queries for 1 or 5 swaps (e2e check).
+- The colleague's request notification has the new text only with My approvals on; off, it is the old text and link.
+- The general My approvals link stays on the Schedule page for someone without an employee record (they get the old panel, not
+  the two lines).
+- Review fix: with levels, an Accept posted from an old page for a day changed since is refused (`changed`) before it reaches the
+  approver; before, the approver's approval failed later and the swap stayed waiting.
