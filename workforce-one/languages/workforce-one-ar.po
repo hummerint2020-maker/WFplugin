@@ -7636,3 +7636,120 @@ msgstr "افتراضيًا: مديرو الموقع ودور EWS Administrator."
 
 msgid "This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is."
 msgstr "انتقل هذا الطلب إلى مستوى موافقة آخر منذ فتحت الصفحة، لذلك لم يتغيّر شيء. افتحه مرة أخرى لترى أين وصل."
+
+msgid "You accepted: both schedules are updated."
+msgstr "قبلت: الجدولين اتحدّثوا."
+
+msgid "You accepted. It now goes to the approver."
+msgstr "قبلت. الطلب رايح دلوقتي للمعتمد."
+
+msgid "Rejected, and they were told."
+msgstr "اترفض، واتبلّغ صاحب الطلب."
+
+msgid "This swap is no longer waiting: it was withdrawn or already answered."
+msgstr "التبديل ده مبقاش مستني: اتسحب أو اترد عليه قبل كده."
+
+msgid "The shift swap could not be decided. Try again."
+msgstr "مقدرناش نسجّل القرار على التبديل. جرّب تاني."
+
+msgid "This swap request is no longer waiting for your answer: it was withdrawn."
+msgstr "طلب التبديل ده مبقاش مستني ردك: اتسحب."
+
+msgid "This swap request is no longer waiting for your answer: it was already answered."
+msgstr "طلب التبديل ده مبقاش مستني ردك: اترد عليه قبل كده."
+
+msgid "This swap request is no longer waiting for your answer: its day has passed."
+msgstr "طلب التبديل ده مبقاش مستني ردك: يومه عدّى."
+
+msgid "%1$s asks to swap %2$s with you: you %3$s, them %4$s."
+msgstr "%1$s طالب يبدّل معاك يوم %2$s: انت هتبقى %3$s، وهو %4$s."
+
+msgid "Swap request"
+msgstr "طلب تبديل"
+
+msgid "With %s · waiting for their answer"
+msgstr "مع %s · مستني رده"
+
+msgid "With %s · the day passed before they answered"
+msgstr "مع %s · اليوم عدّى قبل ما يرد"
+
+msgid "With %s · they accepted"
+msgstr "مع %s · وافق"
+
+msgid "With %s · the days were exchanged"
+msgstr "مع %s · الأيام اتبدّلت"
+
+msgid "With %s · withdrawn"
+msgstr "مع %s · اتسحب"
+
+msgid "With %s · they declined"
+msgstr "مع %s · رفض"
+
+msgid "With %s · not approved"
+msgstr "مع %s · ماتعتمدش"
+
+msgid "Waiting for their answer"
+msgstr "مستني رده"
+
+msgid "Did not answer"
+msgstr "مردّش"
+
+msgid "Answered"
+msgstr "رد"
+
+msgid "After they accept"
+msgstr "بعد ما يوافق"
+
+msgid "Your or their day changed since; you can only decline it."
+msgstr "يومك أو يومه اتغيّر من ساعتها، فتقدر ترفضه بس."
+
+msgid "After you accept, it goes to the approver."
+msgstr "بعد ما توافق، يروح للمعتمد."
+
+msgid "Shift swap · asked of you"
+msgstr "تبديل وردية · مطلوب منك"
+
+msgid "Decline"
+msgstr "رفض"
+
+msgid "You will work"
+msgstr "انت هتشتغل"
+
+msgid "%s will work"
+msgstr "%s هيشتغل"
+
+msgid "Swap request withdrawn"
+msgstr "طلب التبديل اتسحب"
+
+msgid "%1$s withdrew the swap request for %2$s."
+msgstr "%1$s سحب طلب التبديل ليوم %2$s."
+
+msgid "Your answer"
+msgstr "ردك"
+
+msgid "Withdraw it? Your colleague will no longer be asked, and is told."
+msgstr "تسحبه؟ زميلك مش هيتسأل تاني، وهيتبلّغ."
+
+msgid "%d swap request waits for your answer"
+msgid_plural "%d swap requests wait for your answer"
+msgstr[0] "%d طلب تبديل مستني ردك"
+msgstr[1] "%d طلب تبديل مستني ردك"
+msgstr[2] "%d طلب تبديل مستنيين ردك"
+msgstr[3] "%d طلبات تبديل مستنية ردك"
+msgstr[4] "%d طلب تبديل مستني ردك"
+msgstr[5] "%d طلب تبديل مستني ردك"
+
+msgid "Open them in My approvals"
+msgstr "افتحهم في موافقاتي"
+
+msgid "%d swap you asked for is waiting"
+msgid_plural "%d swaps you asked for are waiting"
+msgstr[0] "%d تبديل طلبته مستني"
+msgstr[1] "%d تبديل طلبته مستني"
+msgstr[2] "%d تبديل طلبتهم مستنيين"
+msgstr[3] "%d تبديلات طلبتها مستنية"
+msgstr[4] "%d تبديل طلبته مستني"
+msgstr[5] "%d تبديل طلبته مستني"
+
+msgid "Follow it in My requests"
+msgstr "تابعه في طلباتي"

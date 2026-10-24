@@ -27,6 +27,7 @@
  * @var string $email_url               '' when the user cannot send schedules
  * @var array{sent:int,skipped:int,failed:int}|null $email
  * @var array<string,string> $swap_days  date => my status
+ * @var array{answer:int,answer_url:string,mine:int,mine_url:string}|null $swap_inbox  My approvals on (3.31.124): the two lines instead of the swap panel
  * @var object[] $swap_requests
  * @var object[] $swap_approvals  swaps waiting for this person's approval (Shift Swap workflow with levels, 3.31.89)
  * @var string $post_url
@@ -202,8 +203,15 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
                 . '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="swap_id" value="' . $id . '">'
                 . ($step === null ? '' : '<input type="hidden" name="approval_step" value="' . $step . '">');
         };
-        $show_panel = !$has_myweek || $swap_requests || $swap_approvals;
+        $show_panel = $swap_inbox === null && (!$has_myweek || $swap_requests || $swap_approvals);
         ?>
+    <?php if ($swap_inbox !== null): /* My approvals on (3.31.124): no request lists here, a line to each place that has them */ ?>
+    <div class="wfo-si-lines ews-no-print">
+        <?php if ($swap_inbox['answer'] > 0): ?><a class="wfo-si-line" href="<?php echo esc_url($swap_inbox['answer_url']); ?>" data-swap-inbox-answer><span class="wfo-si-line-ico"><?php echo Icons::svg('swap', 18, 2); ?></span><span><b><?php echo esc_html(sprintf(/* translators: %d: number of swap requests */ _n('%d swap request waits for your answer', '%d swap requests wait for your answer', $swap_inbox['answer'], 'workforce-one'), $swap_inbox['answer'])); ?></b><small><?php esc_html_e('Open them in My approvals', 'workforce-one'); ?></small></span><span class="wfo-si-chev" aria-hidden="true">›</span></a><?php endif; ?>
+        <?php if ($swap_inbox['mine'] > 0): ?><a class="wfo-si-line is-quiet" href="<?php echo esc_url($swap_inbox['mine_url']); ?>" data-swap-inbox-mine><span class="wfo-si-line-ico"><?php echo Icons::svg('clock', 18, 2); ?></span><span><b><?php echo esc_html(sprintf(/* translators: %d: number of swaps */ _n('%d swap you asked for is waiting', '%d swaps you asked for are waiting', $swap_inbox['mine'], 'workforce-one'), $swap_inbox['mine'])); ?></b><small><?php esc_html_e('Follow it in My requests', 'workforce-one'); ?></small></span><span class="wfo-si-chev" aria-hidden="true">›</span></a><?php endif; ?>
+        <?php if (!$has_myweek): ?><button type="button" class="wfo-rq-new" id="ews-open-swap" data-wfo-sheet="wfo-swap-sheet" aria-haspopup="dialog"><?php echo Icons::svg('swap', 18, 2.2); ?><?php esc_html_e('Request Swap', 'workforce-one'); ?></button><?php endif; ?>
+    </div>
+    <?php endif; ?>
     <?php if ($show_panel): ?>
     <section class="wfo-rq ews-swap-panel ews-no-print" aria-labelledby="wfo-swap-title">
         <div class="wfo-rq-hero">

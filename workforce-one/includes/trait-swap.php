@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Requests\Hub;
 use WorkforceOne\Schedule\SwapRules;
+use WorkforceOne\Schedule\SwapInbox;
 
 /**
  * Schedule Swap requests: an employee offers to exchange an Office/WFH day with a colleague
@@ -30,7 +31,7 @@ trait EWS_Swap_Trait {
     private function swap_redirect($args=[]){
             $url=wp_get_referer();
             if(!$url || strpos($url,'admin-post.php')!==false)$url=$this->app_home_url();
-            $url=remove_query_arg(['action','swap_error','swap_sent','swap_done','leave_error','leave_sent','leave_done','leave_cancel_sent','early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','vacation_sent','vacation_error','vacation_done','vacation_rejected','saved','imported','grid_saved','time_reset','time_saved'],$url);
+            $url=remove_query_arg(['action','apv_swap','swap_error','swap_sent','swap_done','leave_error','leave_sent','leave_done','leave_cancel_sent','early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','vacation_sent','vacation_error','vacation_done','vacation_rejected','saved','imported','grid_saved','time_reset','time_saved'],$url);
             $url=add_query_arg('ews_view',$this->approvals_return_view('schedule'),$url);
             if($args)$url=add_query_arg($args,$url);
             wp_safe_redirect($url);
@@ -101,9 +102,26 @@ trait EWS_Swap_Trait {
         }
 
     /** In-app notification plus push (when enabled) for one swap participant. */
-    private function swap_notify($user_id,$title,$message,$type,$swap_id,$push=true){
+    /**
+     * In-app notification plus push. $url null: with My approvals on (3.31.124) the requester's notes open My requests, where the
+     * swap is followed; the others keep the Schedule page (the notification link's default).
+     */
+    private function swap_notify($user_id,$title,$message,$type,$swap_id,$push=true,$url=null){
             if(!$user_id)return;
-            $this->notify($user_id,'swap',$title,$message,['type'=>$type,'entity_id'=>$swap_id,'push'=>$push]);
+            $opt=['type'=>$type,'entity_id'=>$swap_id,'push'=>$push];
+            if($url===null && $this->my_approvals_enabled()){
+                global $wpdb;
+                $req=(int)$wpdb->get_var($wpdb->prepare("SELECT requester_employee_id FROM {$wpdb->prefix}ews_schedule_swaps WHERE id=%d",(int)$swap_id));
+                if($req && (int)$this->swap_employee_user_id($req)===(int)$user_id)$url=add_query_arg('ews_view','requests',$this->app_home_url());
+            }
+            if($url)$opt['url']=$url;
+            $this->notify($user_id,'swap',$title,$message,$opt);
+        }
+
+    /** Where a swap waiting for this person opens (3.31.124): My approvals on the swap, or the Schedule page with My approvals off. */
+    private function swap_inbox_url($id){
+            if(!$this->my_approvals_enabled())return add_query_arg('ews_view','schedule',$this->app_home_url());
+            return add_query_arg(['ews_view'=>'approvals','apv_swap'=>(int)$id],$this->app_home_url()).'#apv-swap-'.(int)$id;
         }
 
     private function swap_audit($action,$r,$detail){
@@ -138,8 +156,9 @@ trait EWS_Swap_Trait {
             if(!$ok)$this->swap_redirect(['swap_error'=>'save']);
             $id=(int)$wpdb->insert_id;
             $this->audit('SCHEDULE_SWAP_REQUESTED','schedule_swap',$id,sprintf('%s requested a swap with %s for %s: %s -> %s; %s -> %s',$requester->name,$target_emp->name,date_i18n('l, d M Y',strtotime($date)),$requester->name,$b->status,$target_emp->name,$a->status));
-            $msg=sprintf('%s requested to swap %s: %s ↔ %s.', $requester->name,date_i18n('l, d M',strtotime($date)),$a->status,$b->status);
-            $this->swap_notify($this->swap_employee_user_id($target),'Schedule Swap Request',$msg,'info',$id);
+            /* translators: 1: colleague, 2: day, 3: the colleague's day after the swap, 4: the requester's day after it */
+            $msg=sprintf(__('%1$s asks to swap %2$s with you: you %3$s, them %4$s.','workforce-one'),$requester->name,date_i18n('l, d M',strtotime($date)),$this->swap_status_word((string)$a->status),$this->swap_status_word((string)$b->status));
+            $this->swap_notify($this->swap_employee_user_id($target),__('Swap request','workforce-one'),$msg,'info',$id,true,$this->swap_inbox_url($id));
             $this->swap_redirect(['swap_sent'=>1]);
         }
 
@@ -273,7 +292,7 @@ trait EWS_Swap_Trait {
             $this->notify((int)$step->approver_wp_user_id,'swap',__('Shift swap to approve','workforce-one'),
                 /* translators: 1: employee, 2: colleague, 3: day, 4: status, 5: status */
                 sprintf(__('%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s.','workforce-one'),(string)$a,(string)$b,date_i18n('l, d M',strtotime($r->work_date)),$r->requester_status,$r->target_status),
-                ['type'=>'info','entity_id'=>(int)$r->id,'url'=>add_query_arg('ews_view','schedule',$this->app_home_url())]);
+                ['type'=>'info','entity_id'=>(int)$r->id,'url'=>$this->swap_inbox_url((int)$r->id)]);
         }
 
     /** The last approver approved: the days are exchanged (if the schedules have not changed since). */
@@ -360,22 +379,118 @@ trait EWS_Swap_Trait {
                 /* translators: 1: day, 2: colleague's name */
                 'what'=>sprintf(__('%1$s with %2$s (they accepted)','workforce-one'),$day,(string)$r->target_name),
                 'facts'=>[[__('Day','workforce-one'),$day],[(string)$r->requester_name,$r->requester_status.' → '.$r->target_status],[(string)$r->target_name,$r->target_status.' → '.$r->requester_status]],'since'=>(string)$r->created_at,
-                'action'=>'ews_swap_decide','nonce'=>'ews_swap_decide_'.(int)$id,'fields'=>['swap_id'=>(int)$id]];
+                'action'=>'ews_swap_decide','nonce'=>'ews_swap_decide_'.(int)$id,'fields'=>['swap_id'=>(int)$id],
+                // The colleague's answer before the levels, as in the path the requester sees (3.31.124).
+                'path_before'=>[['order'=>0,'mark'=>'↔','label'=>(string)$r->target_name,'who'=>'','state'=>'done','sub'=>__('Accepted','workforce-one')]]];
         }
 
     /** The swaps an employee asked for, for My requests (withdrawn on the Schedule page, as today). @return list<array<string,mixed>> */
     private function swap_my_requests($employee_id,$limit=10){
             global $wpdb;$table=$this->ensure_swap_schema();
-            $out=[];
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE requester_employee_id=%d ORDER BY created_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
-                $r->target_name=$this->people_name((int)$r->target_employee_id);
-                $state=['Pending'=>'waiting','Awaiting'=>'waiting','Approved'=>'approved','Accepted'=>'approved','Rejected'=>'rejected','Declined'=>'rejected','Expired'=>'expired','Cancelled'=>'withdrawn'][$r->status]??'cancelled';
-                $out[]=['key'=>'swap-'.(int)$r->id,'tone'=>'swap','title'=>__('Shift swap','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->work_date)),
-                    /* translators: %s: colleague's name */
-                    'sub'=>$r->status==='Pending'?sprintf(__('Waiting for %s to accept','workforce-one'),(string)$r->target_name):sprintf(__('With %s','workforce-one'),(string)$r->target_name),
-                    'state'=>$state,'when'=>(string)$r->created_at,'approval'=>['shift_swap','schedule_swap',(int)$r->id],'withdraw'=>'','id'=>(int)$r->id,'link'=>add_query_arg('ews_view','schedule',$this->app_home_url())];
+            $out=[];$today=current_time('Y-m-d');$inbox=$this->my_approvals_enabled();
+            $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE requester_employee_id=%d ORDER BY created_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit));
+            $names=$this->people_brief_by_ids(array_map(function($r){return (int)$r->target_employee_id;},$rows));
+            $levels=$this->swap_manager_mode()!=='';
+            foreach($rows as $r){
+                $name=isset($names[(int)$r->target_employee_id])?(string)$names[(int)$r->target_employee_id]->name:'';
+                $state=SwapInbox::state((string)$r->status,(string)$r->work_date,$today);
+                $peer=SwapInbox::waitsForPeer((string)$r->status,(string)$r->work_date,$today);
+                // Where it stands (3.31.124): the colleague's answer first, then the approvers' levels (the engine's path, once it starts).
+                if($peer)$sub=sprintf(/* translators: %s: colleague's name */__('With %s · waiting for their answer','workforce-one'),$name);
+                elseif($r->status==='Pending')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · the day passed before they answered','workforce-one'),$name);
+                elseif($r->status==='Awaiting')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · they accepted','workforce-one'),$name);
+                elseif($state==='approved')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · the days were exchanged','workforce-one'),$name);
+                elseif($state==='withdrawn')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · withdrawn','workforce-one'),$name);
+                elseif($state==='rejected')$sub=(int)$r->responded_by && (int)$r->responded_by===(int)$this->swap_employee_user_id((int)$r->target_employee_id)
+                    ?sprintf(/* translators: %s: colleague's name */__('With %s · they declined','workforce-one'),$name):sprintf(/* translators: %s: colleague's name */__('With %s · not approved','workforce-one'),$name);
+                else $sub=sprintf(/* translators: %s: colleague's name */__('With %s','workforce-one'),$name);
+                $colleague=['order'=>0,'mark'=>'↔','label'=>$name!==''?$name:__('Colleague','workforce-one'),'who'=>'',
+                    'state'=>$peer?'now':($r->status==='Pending'?'cancelled':'done'),'sub'=>$peer?__('Waiting for their answer','workforce-one'):($r->status==='Pending'?__('Did not answer','workforce-one'):__('Answered','workforce-one'))];
+                $path=null;
+                if($peer){
+                    $steps=[$colleague];
+                    if($levels)$steps[]=['order'=>1,'state'=>'next','label'=>__('Approver','workforce-one'),'who'=>'','sub'=>__('After they accept','workforce-one')];
+                    $path=['id'=>0,'level'=>0,'levels'=>0,'hours'=>0.0,'overdue'=>false,'moved_from'=>'','note'=>'','steps'=>$steps];
+                }
+                $out[]=['key'=>'swap-'.(int)$r->id,'tone'=>'swap','title'=>__('Shift swap','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->work_date)),'sub'=>$sub,
+                    'state'=>$state,'when'=>(string)$r->created_at,'approval'=>['shift_swap','schedule_swap',(int)$r->id],'id'=>(int)$r->id,
+                    'withdraw'=>$inbox && SwapInbox::canWithdraw((string)$r->status,(string)$r->work_date,$today)?'swap':'',
+                    'path'=>$path,'path_before'=>in_array($r->status,['Awaiting','Accepted','Approved','Rejected'],true) && (int)$r->responded_by?[$colleague]:[],
+                    'link'=>$inbox?'':add_query_arg('ews_view','schedule',$this->app_home_url())];
             }
             return $out;
+        }
+
+    /* ------------------------------------------------------------------ the colleague's answer in My approvals (3.31.124) */
+
+    /** "Office" / "WFH" as the person reads it. */
+    private function swap_status_word($status){
+            $m=['Office'=>__('Office','workforce-one'),'WFH'=>__('WFH','workforce-one')];
+            return $m[(string)$status]??(string)$status;
+        }
+
+    /**
+     * Swaps asked of this employee and not answered yet, whatever week their day is in (owner decision 2026-10-24), with both
+     * schedule days as they are now (a changed day can only be declined). One query.
+     * @return object[]
+     */
+    private function swap_peer_waiting($employee_id){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            return (array)$wpdb->get_results($wpdb->prepare("SELECT s.*,sa.status cur_a,sb.status cur_b FROM {$table} s
+                LEFT JOIN {$this->schedule} sa ON sa.employee_id=s.requester_employee_id AND sa.work_date=s.work_date
+                LEFT JOIN {$this->schedule} sb ON sb.employee_id=s.target_employee_id AND sb.work_date=s.work_date
+                WHERE s.target_employee_id=%d AND s.status='Pending' AND s.work_date>=%s ORDER BY s.created_at ASC LIMIT 50",(int)$employee_id,current_time('Y-m-d')));
+        }
+
+    /**
+     * The card of a swap asked of the person (My approvals): accept or decline, with the form of the Schedule page (ews_swap_respond,
+     * the same checks). No level: the colleague's answer is not an approval level. Never in "Approve the selected".
+     * @param array<int,object> $names people_brief_by_ids()
+     * @return array<string,mixed>|null
+     */
+    private function swap_peer_card($r,array $names){
+            $who=$names[(int)$r->requester_employee_id]??null;
+            if(!$who)return null;
+            $day=date_i18n('l j M',strtotime((string)$r->work_date));
+            $first=trim((string)strtok((string)$who->name,' '));
+            $stale=SwapRules::checkStillCurrent((string)$r->requester_status,(string)$r->target_status,$r->cur_a!==null?(string)$r->cur_a:null,$r->cur_b!==null?(string)$r->cur_b:null)!==null;
+            $hint=$stale?__('Your or their day changed since; you can only decline it.','workforce-one'):($this->swap_manager_mode()!==''?__('After you accept, it goes to the approver.','workforce-one'):'');
+            return ['employee_id'=>(int)$r->requester_employee_id,'tone'=>'swap','kind'=>__('Shift swap · asked of you','workforce-one'),'what'=>$day,'facts'=>[],'since'=>(string)$r->created_at,
+                'action'=>'ews_swap_respond','nonce'=>'ews_swap_respond_'.(int)$r->id,'fields'=>['swap_id'=>(int)$r->id],
+                'peer'=>true,'bulk'=>false,'item_key'=>'swap-'.(int)$r->id,'anchor'=>'apv-swap-'.(int)$r->id,'stale'=>$stale,'hint'=>$hint,
+                'decisions'=>['yes'=>$stale?null:['accept',__('Accept','workforce-one')],'no'=>['reject',__('Decline','workforce-one')]],
+                /* translators: %s: colleague's first name */
+                'trade'=>[[__('You will work','workforce-one'),$this->swap_status_word((string)$r->requester_status)],[sprintf(__('%s will work','workforce-one'),$first),$this->swap_status_word((string)$r->target_status)]]];
+        }
+
+    /** Swaps this employee asked for that still wait (for the colleague or the approvers): the Schedule page's count. */
+    private function swap_waiting_mine_count($employee_id){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE requester_employee_id=%d AND (status='Awaiting' OR (status='Pending' AND work_date>=%s))",(int)$employee_id,current_time('Y-m-d')));
+        }
+
+    /** A swap linked from a notification that no longer waits for this person: withdrawn | answered | past | other ('' when it still waits). */
+    private function swap_state_for($id,$employee_id){
+            global $wpdb;$table=$this->ensure_swap_schema();
+            $r=$wpdb->get_row($wpdb->prepare("SELECT status,work_date FROM {$table} WHERE id=%d AND (target_employee_id=%d OR requester_employee_id=%d)",(int)$id,(int)$employee_id,(int)$employee_id));
+            if(!$r)return 'other';
+            if($r->status==='Cancelled')return 'withdrawn';
+            if($r->status==='Pending')return SwapInbox::waitsForPeer('Pending',(string)$r->work_date,current_time('Y-m-d'))?'':'past';
+            return 'answered';
+        }
+
+    /** The requester withdraws a swap still waiting for the colleague (My requests), and the colleague is told (owner decision). @return true|string */
+    private function swap_withdraw($id,$employee_id){
+            $r=$this->swap_pending_row((int)$id,'AND requester_employee_id=%d',(int)$employee_id);
+            if(!$r || !SwapInbox::canWithdraw('Pending',(string)$r->work_date,current_time('Y-m-d')))return 'done';
+            $ok=$this->swap_close((int)$id,'Cancelled');
+            if($ok!==1)return $ok===false?'save':'done';
+            $name=$this->people_name((int)$employee_id);
+            $this->swap_audit('SCHEDULE_SWAP_CANCELLED',$r,'Swap withdrawn by '.$name);
+            $this->swap_notify($this->swap_employee_user_id((int)$r->target_employee_id),__('Swap request withdrawn','workforce-one'),
+                /* translators: 1: colleague, 2: day */
+                sprintf(__('%1$s withdrew the swap request for %2$s.','workforce-one'),$name,date_i18n('l, d M',strtotime((string)$r->work_date))),'info',(int)$id,true,'');
+            return true;
         }
 
     /**

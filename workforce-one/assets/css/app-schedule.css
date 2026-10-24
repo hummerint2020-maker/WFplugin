@@ -230,3 +230,12 @@
 .wfo-weeknav-text .wfo-wl-final{margin:4px 0 0;font-style:normal}
 .wfo-wl-emp-note{display:flex;align-items:flex-start;gap:8px;margin:12px 0 0;padding:10px 12px;border-radius:14px;background:#F1F0FA;color:#13235B;font-size:12.5px;line-height:1.6}
 .wfo-wl-emp-note .wfo-icon{flex:0 0 auto;margin-top:2px}
+
+/* My approvals on (3.31.124): a line to each place that lists swaps, instead of the swap panel. */
+.wfo-app .wfo-si-lines{display:flex;flex-direction:column;gap:10px;margin:0 0 14px}
+.wfo-app .wfo-si-line{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--wfo-surface,#fff);border:1px solid var(--wfo-line,#E1E3EE);color:inherit;text-decoration:none}
+.wfo-app .wfo-si-line>span:nth-child(2){flex:1;min-width:0}
+.wfo-app .wfo-si-line b{display:block;font-size:14px}
+.wfo-app .wfo-si-line small{display:block;color:var(--wfo-muted,#5F6584);font-size:12px}
+.wfo-app .wfo-si-line-ico{width:36px;height:36px;border-radius:12px;background:var(--wfo-pri-soft,#EBE8FA);color:var(--wfo-pri,#5B3FD9);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.wfo-app .wfo-si-lines .wfo-rq-new{align-self:flex-start}

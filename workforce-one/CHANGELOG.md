@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.124
+### Shift swaps in My approvals (design `docs/tasks/swap-inbox.md`, mockups `docs/mockups/swap-inbox/`)
+Works with My approvals on (Settings → Features); with it off nothing changes. No new setting, no database change.
+- **Before:** a colleague could answer a swap only from the Schedule page, and only on the week that page showed, so a swap for a
+  later week could not be found. The notification opened the Schedule page on the current week.
+- **The colleague** now finds every swap asked of them in My approvals, whatever week its day is in, with what each of them will
+  work that day, and accepts or declines it there. The notification opens My approvals on that swap. A swap whose days changed
+  since it was asked can only be declined, and the card says why. These cards are never part of "Approve the selected".
+- **After the colleague accepts,** the swap goes to the approver as before (when the Shift Swap type has levels), in the same inbox.
+- **The Schedule page** lists no requests: one line counts the swaps waiting for your answer and opens My approvals, one counts the
+  swaps you asked for and opens My requests. The page stays short however many people the company has.
+- **The one who asked** follows the swap in My requests: waiting for the colleague, waiting for the approver, approved, declined,
+  withdrawn, or expired (the day passed before the colleague answered). While the colleague has not answered it can be withdrawn
+  there; the colleague is told. Their own notifications open My requests.
+- A notification opened after the swap moved on says so (withdrawn, already answered, or its day passed) instead of an empty page.
+
 ## 3.31.123
 ### Fixes: the swap sheet (owner report on 3.31.122)
 No new setting, no database change.

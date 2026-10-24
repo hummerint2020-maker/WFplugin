@@ -42,7 +42,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
             <details class="wfo-apv-more"<?php echo $it['state'] === 'waiting' ? ' open' : ''; ?>>
                 <summary><?php esc_html_e('Who decides it', 'workforce-one'); ?></summary>
                 <ol class="wfo-apv-path">
-                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo $st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order']))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
+                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
                 </ol>
             </details>
             <?php endif; ?>
@@ -52,7 +52,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                 <form method="post" action="<?php echo esc_url($post_url); ?>">
                     <?php wp_nonce_field('ews_request_withdraw_' . $it['withdraw'] . '_' . (int) $it['id']); ?>
                     <input type="hidden" name="action" value="ews_request_withdraw"><input type="hidden" name="kind" value="<?php echo esc_attr($it['withdraw']); ?>"><input type="hidden" name="id" value="<?php echo (int) $it['id']; ?>">
-                    <p><?php echo $it['withdraw'] === 'leave' ? esc_html__('Withdraw it? The days go back to your balance.', 'workforce-one') : esc_html__('Withdraw it? Nobody will need to decide it.', 'workforce-one'); ?></p>
+                    <p><?php echo $it['withdraw'] === 'leave' ? esc_html__('Withdraw it? The days go back to your balance.', 'workforce-one') : ($it['withdraw'] === 'swap' ? esc_html__('Withdraw it? Your colleague will no longer be asked, and is told.', 'workforce-one') : esc_html__('Withdraw it? Nobody will need to decide it.', 'workforce-one')); ?></p>
                     <button type="submit" class="wfo-apv-btn is-bad"><?php esc_html_e('Yes, withdraw it', 'workforce-one'); ?></button>
                 </form>
             </details>

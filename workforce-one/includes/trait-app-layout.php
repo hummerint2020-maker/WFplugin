@@ -48,7 +48,10 @@ trait EWS_App_Layout_Trait {
     }
 
     private function render_app_view($view){
-        if(!$this->app_view_allowed($view))$view='dashboard';
+        // A swap notification opened after the swap moved on, or the answer to the last swap waiting (3.31.124):
+        // My approvals says so instead of the Dashboard.
+        $swap_link=$view==='approvals' && (isset($_GET['apv_swap']) || isset($_GET['swap_done']) || isset($_GET['swap_error'])) && $this->my_approvals_enabled() && is_user_logged_in(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+        if(!$swap_link && !$this->app_view_allowed($view))$view='dashboard';
         switch($view){
             case 'schedule': $content=$this->schedule_content(); break;
             case 'attendance': $content=$this->attendance_content(); break;
@@ -75,7 +78,8 @@ trait EWS_App_Layout_Trait {
             default: $content=$this->dashboard_content();
         }
         // The pages with their own approval lists point to My approvals while it is on (3.31.103).
-        if(in_array($view,['vacation','overtime','corrections','schedule'],true) && $this->my_approvals_allowed())$content=$this->my_approvals_link().$content;
+        // The Schedule page has its own two lines instead (3.31.124).
+        if(in_array($view,['vacation','overtime','corrections'],true) && $this->my_approvals_allowed())$content=$this->my_approvals_link().$content;
         $titles=['pay'=>__('My Pay','workforce-one'),'dashboard'=>__('Dashboard','workforce-one'),'schedule'=>__('Schedule','workforce-one'),'time'=>__('Time','workforce-one'),'attendance'=>__('Attendance','workforce-one'),'employees'=>__('Employees','workforce-one'),'reports'=>__('Reports','workforce-one'),'attendance-insights'=>__('Attendance Insights','workforce-one'),'vacation'=>__('Leave','workforce-one'),'overtime'=>__('Overtime','workforce-one'),'corrections'=>__('Corrections','workforce-one'),'sites'=>__('My sites','workforce-one'),'payout'=>__('Payout','workforce-one'),'tasks'=>__('Tasks','workforce-one'),'notifications'=>__('Notifications','workforce-one'),'profile'=>__('My Profile','workforce-one'),'people'=>__('People','workforce-one'),'employee'=>__('Employee Profile','workforce-one'),'presence'=>__('Presence Verification','workforce-one'),'polls'=>__('Polls','workforce-one'),'team'=>__('My team','workforce-one'),'approvals'=>__('My approvals','workforce-one'),'requests'=>__('My requests','workforce-one')];
         // A colleague's profile belongs to People in the menu.
         return $this->layout($titles[$view]??ucwords(str_replace('-',' ',$view)),$content,$view==='employee'?'people':$view);

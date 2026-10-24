@@ -121,6 +121,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_overtime.py "$S"
       - name: Schedule Swap behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_swap.py "$S"
+      - name: Shift swaps in My approvals behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_swap_inbox.py "$S"
       - name: Admin request pages behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_admin_requests.py "$S"
       - name: Leaves admin page behaviour tests

@@ -16,6 +16,7 @@
  * @var array{type:string,text:string}|null $notice
  * @var int $bulk_max
  * @var array<string,mixed> $subs   substitutes (3.31.107, templates/app/substitutes-bar.php)
+ * @var string $focus   the card a notification opened (apv-swap-ID, 3.31.124), or empty
  */
 if (!defined('ABSPATH')) exit;
 $ini = static function (string $name): string {
@@ -52,9 +53,9 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
     <?php endif; ?>
 
     <div class="wfo-apv-list">
-    <?php foreach ($items as $it): $p = $it['path']; $can = $it['action'] !== ''; ?>
-        <article class="wfo-apv-item tone-<?php echo esc_attr($it['tone']); ?><?php echo $p['overdue'] ? ' is-late' : ''; ?>" data-apv-item="<?php echo (int) $it['id']; ?>">
-            <form method="post" action="<?php echo esc_url($post_url); ?>" data-apv-form<?php echo $can ? '' : ' data-apv-nobulk'; ?><?php echo $it['note_required'] ? ' data-note-required' : ''; ?>>
+    <?php foreach ($items as $it): $p = $it['path']; $can = $it['action'] !== ''; $peer = !empty($it['peer']); $bulk = $can && ($it['bulk'] ?? true) !== false; $anchor = (string) ($it['anchor'] ?? ''); ?>
+        <article class="wfo-apv-item tone-<?php echo esc_attr($it['tone']); ?><?php echo $p['overdue'] ? ' is-late' : ''; ?><?php echo $anchor !== '' && $anchor === $focus ? ' is-focus' : ''; ?>" data-apv-item="<?php echo esc_attr((string) ($it['item_key'] ?? (int) $it['id'])); ?>"<?php echo $anchor !== '' ? ' id="' . esc_attr($anchor) . '"' : ''; ?>>
+            <form method="post" action="<?php echo esc_url($post_url); ?>" data-apv-form<?php echo $bulk ? '' : ' data-apv-nobulk'; ?><?php echo $it['note_required'] ? ' data-note-required' : ''; ?>>
             <?php if ($can): ?>
                 <input type="hidden" name="action" value="<?php echo esc_attr($it['action']); ?>">
                 <input type="hidden" name="_wpnonce" value="<?php echo esc_attr(wp_create_nonce($it['nonce'])); ?>">
@@ -64,9 +65,14 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
             <div class="wfo-apv-who">
                 <?php if ($it['picture'] !== ''): ?><span class="wfo-apv-av"><img src="<?php echo esc_url($it['picture']); ?>" alt=""></span><?php else: ?><span class="wfo-apv-av" aria-hidden="true"><?php echo esc_html($ini($it['name'])); ?></span><?php endif; ?>
                 <div class="wfo-apv-t"><b><?php echo esc_html($it['name']); ?></b><small><?php echo esc_html(implode(' · ', array_filter([$it['kind'], $it['title']]))); ?></small></div>
-                <?php if ($can): ?><label class="wfo-apv-pick" hidden><input type="checkbox" data-apv-pick aria-label="<?php echo esc_attr(sprintf(/* translators: %s: employee name */ __('Select the request of %s', 'workforce-one'), $it['name'])); ?>"></label><?php endif; ?>
+                <?php if ($bulk): ?><label class="wfo-apv-pick" hidden><input type="checkbox" data-apv-pick aria-label="<?php echo esc_attr(sprintf(/* translators: %s: employee name */ __('Select the request of %s', 'workforce-one'), $it['name'])); ?>"></label><?php endif; ?>
             </div>
             <p class="wfo-apv-what"><?php echo esc_html($it['what']); ?></p>
+            <?php if ($peer): /* a swap asked of the person (3.31.124): their answer, not an approval level */ ?>
+            <div class="wfo-si-trade"><?php foreach ($it['trade'] as $i => [$who, $day]): ?><?php if ($i): ?><span class="wfo-si-arrow" aria-hidden="true"><?php echo \WorkforceOne\Ui\Icons::svg('swap', 18, 2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?></span><?php endif; ?><div><small><?php echo esc_html($who); ?></small><b><?php echo esc_html($day); ?></b></div><?php endforeach; ?></div>
+            <div class="wfo-apv-meta"><span class="wfo-apv-pill is-brand"><?php esc_html_e('Your answer', 'workforce-one'); ?></span><span class="wfo-apv-pill"><?php echo esc_html(sprintf(/* translators: %s: time, e.g. "2 hours" */ __('%s ago', 'workforce-one'), human_time_diff((int) strtotime((string) $it['since']), (int) current_time('timestamp')))); ?></span></div>
+            <?php if (($it['hint'] ?? '') !== ''): ?><p class="wfo-si-note<?php echo !empty($it['stale']) ? ' is-warn' : ''; ?>"><?php echo esc_html($it['hint']); ?></p><?php endif; ?>
+            <?php else: ?>
             <div class="wfo-apv-meta">
                 <?php if ($p['levels'] > 0): ?><span class="wfo-apv-pill"><?php echo esc_html(sprintf(/* translators: 1: level, 2: number of levels */ __('Level %1$s of %2$s', 'workforce-one'), $num($p['level']), $num($p['levels']))); ?></span><?php endif; ?>
                 <span class="wfo-apv-pill<?php echo $p['overdue'] ? ' is-late' : ''; ?>"><?php echo esc_html(($p['overdue'] ? __('Overdue', 'workforce-one') . ' · ' : '') . sprintf(/* translators: %s: working hours */ __('Waiting %s working h', 'workforce-one'), $num(round($p['hours'], 1)))); ?></span>
@@ -75,12 +81,14 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php if (!empty($it['with'])): ?><span class="wfo-apv-pill" data-apv-with><?php echo esc_html(sprintf(/* translators: %s: the substitute */ __('With %s while you are away', 'workforce-one'), $it['with'])); ?></span><?php endif; ?>
                 <?php if ($it['admins']): ?><span class="wfo-apv-pill is-brand"><?php esc_html_e('For administrators', 'workforce-one'); ?></span><?php endif; ?>
             </div>
+            <?php endif; ?>
+            <?php if (!$peer): ?>
             <details class="wfo-apv-more">
                 <summary><?php esc_html_e('Details', 'workforce-one'); ?></summary>
                 <?php if ($it['facts']): ?><dl class="wfo-apv-facts"><?php foreach ($it['facts'] as [$k, $v]): ?><dt><?php echo esc_html($k); ?></dt><dd><?php echo esc_html($v); ?></dd><?php endforeach; ?></dl><?php endif; ?>
                 <h3><?php esc_html_e('The path', 'workforce-one'); ?></h3>
                 <ol class="wfo-apv-path">
-                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo $st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order']))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
+                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
                 </ol>
                 <?php if ($can): ?>
                 <label class="wfo-apv-note"><span><?php echo $it['note_required'] ? esc_html__('Note (needed to reject)', 'workforce-one') : esc_html__('Note (optional)', 'workforce-one'); ?></span><textarea name="note" rows="2" maxlength="500"></textarea></label>
@@ -88,10 +96,11 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php endif; ?>
                 <?php if (!empty($it['link'])): ?><p class="wfo-apv-link"><a href="<?php echo esc_url($it['link']); ?>"><?php echo $can ? esc_html__('Open its page', 'workforce-one') : esc_html__('Decide it on its page', 'workforce-one'); ?></a></p><?php endif; ?>
             </details>
-            <?php if ($can): ?>
+            <?php endif; ?>
+            <?php if ($can): $dec = $it['decisions'] ?? ['yes' => ['approve', __('Approve', 'workforce-one')], 'no' => ['reject', __('Reject', 'workforce-one')]]; ?>
             <div class="wfo-apv-acts">
-                <button type="submit" name="decision" value="approve" class="wfo-apv-btn is-ok"><?php esc_html_e('Approve', 'workforce-one'); ?></button>
-                <button type="submit" name="decision" value="reject" class="wfo-apv-btn is-bad" data-apv-reject><?php esc_html_e('Reject', 'workforce-one'); ?></button>
+                <?php if (!empty($dec['yes'])): ?><button type="submit" name="decision" value="<?php echo esc_attr($dec['yes'][0]); ?>" class="wfo-apv-btn is-ok"><?php echo esc_html($dec['yes'][1]); ?></button><?php endif; ?>
+                <button type="submit" name="decision" value="<?php echo esc_attr($dec['no'][0]); ?>" class="wfo-apv-btn is-bad"<?php echo $peer ? '' : ' data-apv-reject'; ?>><?php echo esc_html($dec['no'][1]); ?></button>
             </div>
             <?php endif; ?>
             </form>

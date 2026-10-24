@@ -113,6 +113,8 @@ trait EWS_Schedule_View_Trait {
             if($current_emp_id && in_array($mine,SwapRules::SWAPPABLE,true) && !isset($company_leave[$d]) && !SwapRules::checkNotPast($d,$today))$swap_days[$d]=$mine;
         }
         [,$this_week]=$this->week_dates_configured($today);
+        $inbox=$current_emp_id && $this->my_approvals_enabled()?['answer'=>$this->my_approvals_swap_count(),'answer_url'=>add_query_arg('apv_kind','swap',$this->my_approvals_clean_url('approvals')),
+            'mine'=>$this->swap_waiting_mine_count((int)$current_emp_id),'mine_url'=>add_query_arg('req_state','waiting',$this->my_approvals_clean_url('requests'))]:null;
         $range=date('d M',strtotime($dates[0])).' – '.date('d M Y',strtotime($week_end));
         $email=null;
         if(isset($_GET['email_sent'])||isset($_GET['email_skipped'])||isset($_GET['email_failed']))$email=['sent'=>absint($_GET['email_sent']??0),'skipped'=>absint($_GET['email_skipped']??0),'failed'=>absint($_GET['email_failed']??0)];
@@ -131,8 +133,10 @@ trait EWS_Schedule_View_Trait {
             'pdf_name'=>'team-schedule-'.$dates[0].'.pdf',
             'email_url'=>$this->can('ews_view_reports')?wp_nonce_url(add_query_arg(['action'=>'ews31_report_email','start'=>$dates[0],'end'=>$week_end],admin_url('admin-post.php')),'ews31_report'):'',
             'email'=>$email,'swap_days'=>$swap_days,
-            'swap_requests'=>$current_emp_id?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[],
-            'swap_approvals'=>$this->swap_awaiting_my_approval(),
+            // With My approvals on (3.31.124, owner decision) the page lists no requests: one line to My approvals, one to My requests.
+            'swap_inbox'=>$inbox,
+            'swap_requests'=>$current_emp_id && !$inbox?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[],
+            'swap_approvals'=>$inbox?[]:$this->swap_awaiting_my_approval(),
             'post_url'=>admin_url('admin-post.php'),
         ]);
     }
