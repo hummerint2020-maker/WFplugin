@@ -4,8 +4,9 @@ Every form scraped here is the real page's form, so a page that forgets to post 
 workflow: a repeat of the same decision (double click, a resubmitted page, two administrators, a page opened before another
 approver acted) is refused with "moved", level 2 stays open and the request itself is untouched; a fresh page decides level 2;
 a form without the field decides the current level, as before (owner decision). Leave, leave cancellation, overtime, swaps,
-attendance corrections (engine levels and HR's stage, the app API), face resets, My approvals (one card and the bulk count), and
-two decisions at the same moment (forced in the database).
+attendance corrections (engine levels and HR's stage, the app API route), face resets, My approvals (one card), a workflow
+switched off while an approval is still open (decided as before, never refused for ever), and two decisions at the same moment
+(forced in the database). Not here: advances (their flow needs payroll; they share the helpers and the My approvals form).
 
 Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_level_guard.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
@@ -259,7 +260,7 @@ check('...sent twice: "moved", the days not exchanged', qs.get('swap_error') == 
 f = hub('shift_swap', W1)
 send(adm, f, 'approve')
 qs = send(adm, f, 'approve')
-check('...the Requests page decides level 2 once; sent again it is refused (the swap is done)', swap_status(W1) == 'Accepted' and qs.get('request_notice') in ('moved', 'error'), (qs, swap_status(W1)))
+check('...the Requests page decides level 2 once; sent again the swap is already done (error, as before)', swap_status(W1) == 'Accepted' and qs.get('request_notice') == 'error', (qs, swap_status(W1)))
 
 # ---------------------------------------------------------------- attendance corrections
 def new_cx():
@@ -309,6 +310,32 @@ check('...the same manager (also HR) sends the form again: "moved", HR\'s stage 
 php("(new WP_User(%d))->remove_cap('ews_manage_corrections');" % ids['lgmona_uid'])
 configure('attendance_correction', 'LEVEL_2', *TWO)
 
+# A workflow switched off while an approval is still open: every fresh page shows that open level and the decision goes through
+# the module's own path, as before (review finding 1); a page from before still gets "moved".
+C4 = new_cx()
+f_old = form(mona, '/app/?ews_view=corrections', action='ews_correction_decide', correction_id=C4)
+php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET active=0,approval_mode='NONE' WHERE workflow_key='attendance_correction'\"); $wpdb->query(\"UPDATE {$p}ews_approval_steps SET status='APPROVED' WHERE status='PENDING'\"); $wpdb->query(\"UPDATE {$p}ews_approval_steps SET status='PENDING' WHERE status='WAITING'\");")
+qs = send(mona, f_old, 'approve')
+check('workflow switched off, a correction\'s approval still open: the page from before is "moved"', qs.get('cx_error') == 'moved' and cx_status(C4) == 'pending', qs)
+f = form(mona, '/app/?ews_view=corrections', action='ews_correction_decide', correction_id=C4)
+qs = send(mona, f, 'approve')
+check('...a fresh page shows the open level and the manager decides it directly, as before', f is not None and f.get('approval_step', '0') != '0' and cx_status(C4) == 'approved', (f, qs, cx_status(C4)))
+configure('attendance_correction', 'LEVEL_2', *TWO)
+
+O3 = new_ot(d(7))
+php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET active=0,approval_mode='NONE' WHERE workflow_key='overtime'\"); (new WP_User(%d))->add_cap('ews_manage_time');" % ids['lgbig_uid'])
+f = form(adm, '/app/?ews_view=overtime', action='ews_overtime_request_respond', request_id=O3, decision='approve')
+qs = send(adm, f, '')
+check('overtime workflow switched off with its approval open: the Overtime page posts the open level and approves directly', f is not None and f.get('approval_step', '0') != '0' and ot_status(O3) == 'Approved', (f, qs, ot_status(O3)))
+configure('overtime', 'LEVEL_2', *TWO)
+
+L9 = new_leave(d(38))
+php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET active=0 WHERE workflow_key='vacation'\");")
+f = form(adm, '/app/?ews_view=vacation', action='ews_vacation_request_respond', request_id=L9)
+qs = send(adm, f, 'approve')
+check('leave workflow switched off with its approval open: the Leave page posts the open level and approves directly', f is not None and f.get('approval_step', '0') != '0' and leave_status(L9) == 'Approved', (f, qs, leave_status(L9)))
+configure('vacation', 'LEVEL_2', *TWO)
+
 
 # The app API (cx_decide with the step and stage the API passes; the route maps "moved" to VALIDATION_FAILED).
 def cx_decide(uid, cid, step, stage):
@@ -325,6 +352,37 @@ check('API: /corrections/pending gives each request its level', [C3, int(step1),
 check('...a decision with that level: advanced', cx_decide(ids['lgmona_uid'], C3, step1, 'pending') == '"advanced"')
 check('...the same level sent again: moved', cx_decide(ids['lgmona_uid'], C3, step1, 'pending') == '"moved"' and engine('attendance_correction', C3) == AT2)
 check('...without a level, the current one is decided as before (here not theirs: access)', cx_decide(ids['lgmona_uid'], C3, None, None) == '"access"')
+
+# The route itself (/corrections/pending and /corrections/{id}/decision).
+import urllib.request, urllib.error  # noqa: E402
+from e2e_support import B  # noqa: E402
+php("update_option('ews_feature_app_api',1,false);")
+atexit.register(lambda: php("delete_option('ews_feature_app_api');"))
+
+
+def api(path, body=None, token=None):
+    h = {'Content-Type': 'application/json'}
+    if token:
+        h['Authorization'] = 'Bearer ' + token
+    r = urllib.request.Request(B + '/wp-json/workforce-one/v1' + path, data=json.dumps(body).encode() if body is not None else None, headers=h, method='POST' if body is not None else 'GET')
+    try:
+        resp = urllib.request.urlopen(r)
+        return resp.status, json.loads(resp.read().decode() or 'null')
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read().decode() or 'null')
+
+
+st, body = api('/auth/login', {'username': 'lgbig', 'password': 'lgbigpass', 'device': {'installation_id': 'e2e-lg-0001', 'platform': 'android', 'model': 'Pixel', 'app_version': '1.0.0'}})
+TOK = (body or {}).get('data', {}).get('access_token', '')
+st, body = api('/corrections/pending', token=TOK)
+row = [r for r in ((body or {}).get('data') or {}).get('requests', []) if int(r.get('id', 0)) == C3]
+step2 = q("SELECT s.id FROM {p}ews_approval_steps s JOIN {p}ews_approval_requests r ON r.id=s.approval_request_id WHERE r.entity_type='attendance_correction' AND r.entity_id=%d AND s.step_order=2" % C3)[0]['id']
+check('API route: /corrections/pending returns the open level and the stage', st == 200 and row and int(row[0].get('step', 0)) == int(step2) and row[0].get('stage') == 'pending', (st, row))
+st, body = api('/corrections/%d/decision' % C3, {'decision': 'approve', 'step': int(step1), 'stage': 'pending'}, token=TOK)
+check('...a decision with a stale level (a JSON number): VALIDATION_FAILED, reason moved, nothing changed',
+      st in (400, 422) and body['error']['code'] == 'VALIDATION_FAILED' and body['error'].get('details', {}).get('reason') == 'moved' and engine('attendance_correction', C3) == AT2, (st, body))
+st, body = api('/corrections/%d/decision' % C3, {'decision': 'approve', 'step': int(step2), 'stage': 'pending'}, token=TOK)
+check('...with the level it showed: decided', st == 200 and body['data']['outcome'] == 'approved' and cx_status(C3) == 'approved', (st, body))
 
 # ---------------------------------------------------------------- face reset
 php("""$r=get_option('ews_face_reset_requests',[]); $r[%(e)d]=['status'=>'pending','requested_by'=>%(u)d,'requested_at'=>current_time('mysql')]; update_option('ews_face_reset_requests',$r,false);

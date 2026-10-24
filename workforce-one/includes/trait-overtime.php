@@ -177,7 +177,7 @@ trait EWS_Overtime_Trait {
                 $this->overtime_redirect(['overtime_done'=>1]);
             }
 
-            if((int)$posted>0)$this->overtime_redirect(['overtime_error'=>'moved']);
+            if($this->approval_level_moved_for('overtime','overtime_request',$id,$posted))$this->overtime_redirect(['overtime_error'=>'moved']);
             if(!$this->can('ews_manage_time'))$this->overtime_redirect(['overtime_error'=>'access']);
             if(!$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('overtime')==='allow','overtime #'.(int)$id))$this->overtime_redirect(['overtime_error'=>'self']);
             $approved=$decision==='approve';
@@ -294,7 +294,7 @@ trait EWS_Overtime_Trait {
                 }
                 return Hub::ADVANCED;
             }
-            if((int)$this->approval_posted_step()>0)return Hub::MOVED;   // the page showed a level that is no longer open (3.31.122)
+            if($this->approval_level_moved_for('overtime','overtime_request',$id,$this->approval_posted_step()))return Hub::MOVED;   // the page showed another level (3.31.122)
             $requester=$this->people_employee((int)$req->employee_id,true);
             $this->approval_self_gate((int)($requester->wp_user_id??0),true,'overtime #'.(int)$id);   // administrators may; the Audit Log marks it
             return $this->overtime_set_status($id,$decision==='approve'?'Approved':'Rejected')===true?Hub::outcome($decision):Hub::ERROR;

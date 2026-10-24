@@ -338,7 +338,7 @@ trait EWS_Leave_Trait {
                 if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
                 if($this->approval_level_moved((int)$ar->id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
                 if(!$this->approval_can_act((int)$ar->id))wp_die('Access denied');
-            }elseif((int)$posted>0)$this->leave_redirect(['leave_error'=>'moved']);
+            }elseif($this->approval_level_moved_for('vacation','leave',$id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
             elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 
             $r=$this->leave_request_row($id);
@@ -436,7 +436,7 @@ trait EWS_Leave_Trait {
                 if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
                 if($this->approval_level_moved((int)$ar->id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
                 if(!$this->approval_can_act((int)$ar->id))wp_die('Access denied');
-            }elseif((int)$posted>0)$this->leave_redirect(['leave_error'=>'moved']);
+            }elseif($this->approval_level_moved_for('vacation','leave_cancellation',$id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
             elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 
             $r=$this->leave_request_row($id,"AND r.status='Approved' AND r.cancellation_status='Pending'");
@@ -523,7 +523,7 @@ trait EWS_Leave_Trait {
                 }
                 return Hub::ADVANCED;
             }
-            if((int)$this->approval_posted_step()>0)return Hub::MOVED;   // the page showed a level that is no longer open (3.31.122)
+            if($this->approval_level_moved_for('vacation',$entity,$id,$this->approval_posted_step()))return Hub::MOVED;   // the page showed another level (3.31.122)
             if(!$cancel)$this->approval_self_gate((int)($emp->wp_user_id??0),true,'vacation #'.(int)$id);   // administrators may; the Audit Log marks it
             return $commit($decision==='approve'?'APPROVED':'REJECTED')?Hub::outcome($decision):Hub::ERROR;
         }

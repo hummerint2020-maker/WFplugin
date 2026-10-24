@@ -34,7 +34,11 @@ trait EWS_Leave_View_Trait {
             return ['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("{$select},ai.step_order,ai.id approval_step {$from} JOIN {$at['requests']} ar ON ar.entity_type=%s AND ar.entity_id=r.id JOIN {$at['instances']} ai ON ai.approval_request_id=ar.id AND ai.status='PENDING' AND ai.approver_wp_user_id=%d WHERE {$where} ORDER BY r.requested_at ASC",$entity,get_current_user_id()))];
         }
         if(!$this->can('ews_manage_settings'))return null;
-        return ['mine'=>false,'rows'=>(array)$wpdb->get_results("{$select} {$from} WHERE {$where} ORDER BY r.requested_at ASC")];
+        $rows=(array)$wpdb->get_results("{$select} {$from} WHERE {$where} ORDER BY r.requested_at ASC");
+        // An approval still open from before the workflow was switched off: its level, so the decision is not refused (3.31.122).
+        $steps=$rows?$this->approval_shown_steps(array_map(function($r)use($entity){return ['vacation',$entity,(int)$r->id];},$rows)):[];
+        foreach($rows as $r)$r->approval_step=$steps[$this->approval_request_key('vacation',$entity,(int)$r->id)]??0;
+        return ['mine'=>false,'rows'=>$rows];
     }
 
     /** Office minimum (3.31.77): what approving each pending request does to the day (->om, or null). */
@@ -147,6 +151,9 @@ trait EWS_Leave_View_Trait {
             $approvals=['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("SELECT r.*,e.name employee_name,ars.step_order,ars.id approval_step FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id INNER JOIN {$at['requests']} ar ON ar.entity_type='overtime_request' AND ar.entity_id=r.id INNER JOIN {$at['instances']} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING' AND ars.approver_wp_user_id=%d WHERE r.status='Pending' ORDER BY r.requested_at ASC",get_current_user_id()))];
         }elseif($this->can('ews_manage_settings')){
             $approvals=['mine'=>false,'rows'=>(array)$wpdb->get_results("SELECT r.*,e.name employee_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id WHERE r.status='Pending' ORDER BY r.requested_at ASC")];
+            // An approval still open from before the workflow was switched off: its level (3.31.122).
+            $steps=$approvals['rows']?$this->approval_shown_steps(array_map(function($r){return ['overtime','overtime_request',(int)$r->id];},$approvals['rows'])):[];
+            foreach($approvals['rows'] as $r)$r->approval_step=$steps[$this->approval_request_key('overtime','overtime_request',(int)$r->id)]??0;
         }
         if($approvals)foreach($approvals['rows'] as $r)$r->duration=$this->duration_label($r->requested_minutes);
         wp_enqueue_script('workforce-one-overtime');

@@ -154,13 +154,11 @@ trait EWS_Face_Reset_Trait {
             $emp=$employee_id?$this->face_reset_employee($employee_id):null;
             $name=$emp?$emp->name:('Employee #'.$employee_id);
             if(($r['status']??'')==='pending'){
-                $step=null;
-                if($workflow_active){
-                    // Approvers only see what is waiting for them.
-                    $ar=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
-                    $step=$ar?$this->approval_current_step((int)$ar->id):null;
-                    if(!$step || (int)$step->approver_wp_user_id!==(int)get_current_user_id())continue;
-                }
+                // The open level whatever the workflow is set to now, posted with the decision (3.31.122).
+                $ar=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
+                $step=$ar?$this->approval_current_step((int)$ar->id):null;
+                // Approvers only see what is waiting for them.
+                if($workflow_active && (!$step || (int)$step->approver_wp_user_id!==(int)get_current_user_id()))continue;
                 $by_id=absint($r['requested_by']??0);$by=$by_id?get_userdata($by_id):false;
                 $pending[]=[
                     'employee_id'=>$employee_id,'name'=>$name,'domain'=>$emp?$emp->domain_name:'Employee not found',

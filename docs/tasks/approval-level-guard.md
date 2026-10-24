@@ -101,9 +101,10 @@ real page. Messages change from "could not be processed" / "access denied" to "m
 - Helpers in the approvals module api: `approval_posted_step()`, `approval_level_moved()`, `approval_error_code()`,
   `approval_shown_steps()`. The `approval_step_field()` helper from the design was not needed: each form already has its own
   markup, so each one adds the hidden field itself.
-- Where a module decides without the engine (the engine off, or a request whose approval is already decided), a form that showed a
-  level (`approval_step` > 0) is refused with "moved": Requests page for leave, overtime and swaps; Face Reset; app Leave, leave
-  cancellation and Overtime; corrections.
+- Where a module decides without the engine (its workflow off, or a request whose approval is already decided), the posted level is
+  checked against the level open in the engine whatever the workflow is set to now (`approval_level_moved_for()`, review finding 1),
+  and every list shows that open level too (Leave and Overtime manager lists without a workflow, the Face Reset page with its
+  workflow off). Swaps keep "a level posted and none open = moved": their Requests page row shows a level only while Awaiting.
 - Corrections: `cx_decide(..., $step, $from)` checks the stage first, then the level; `cx_finalize($from)` and the reject path update
   only while the request is still at the stage read (the stage is the one `cx_decide` read, also when the form did not send it).
 - `Hub::fromEngineError()` maps `approval_moved` to `MOVED`. The design's "`cx_mark_rejected` gains a parameter" was not needed:
@@ -112,3 +113,19 @@ real page. Messages change from "could not be processed" / "access denied" to "m
 - Tests: `tests/unit/LevelGuardTest.php`, `RequestsHubTest::testMovedLevel`, `tests/e2e_level_guard.py` (in CI). Advances are covered
   through the shared helpers and the My approvals form; their own double-post is not in the e2e (the advance flow needs payroll set
   up), see the review.
+
+## Review (3.31.122, independent, read-only)
+1. CONFIRMED, fixed: a correction whose workflow was switched off while its approval was open was refused as "moved" from every
+   page (the forms showed the engine's open level, the handler expected 0). Now `approval_level_moved_for()` compares with the level
+   open in the engine whatever the mode; e2e: the page from before is "moved", a fresh page decides it directly.
+2. CONFIRMED, fixed: the same for leave (the app list without a workflow posted 0), overtime from My approvals, and the Face Reset
+   page with its workflow off (it posted 0 while an approval was open). The lists now post the open level; e2e for leave and
+   overtime.
+3. PLAUSIBLE, kept as designed: "moved" comes before the access check, so a user with the page's nonce can learn whether a request is
+   open at a given level id. Nothing can be decided with it; the design asks for this order so an old approver is told it moved.
+4. Fixed: the e2e now goes through the API route itself (`/corrections/pending` gives step and stage; a stale step is
+   VALIDATION_FAILED with reason moved; the shown step decides).
+5. Fixed: the swap repeat check now expects the exact outcome; the docstring says what is not covered (advances). The forced race runs
+   on the same connection, so it proves the refusal and that nothing of the refused decision is saved, not that the other one is.
+Not covered by e2e: advances double-post and the bulk count (`adv_error` in approvals.js), escalation or a substitute between load
+and post (the same step id, so not refused by construction), early leave and legacy vacation (they never read the field).

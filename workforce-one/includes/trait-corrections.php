@@ -357,7 +357,8 @@ trait EWS_Corrections_Trait {
         // The level the page showed, before who may decide it: the approver of a level decided since is told it moved (3.31.122).
         $ar=$c->status==='pending' && \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode())?$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id):null;
         $open=$ar && Hub::isOpenApproval((string)$ar->status);
-        if($step!==null && (($open && $this->approval_level_moved((int)$ar->id,$step)) || (!$open && (int)$step>0)))return 'moved';
+        // Against the level open in the engine whatever the workflow is set to now, so a request left open by a switched-off workflow can still be decided.
+        if($this->approval_level_moved_for('attendance_correction','attendance_correction',(int)$c->id,$step))return 'moved';
         if($decision==='reject' && $note==='')return 'note';
         if((int)$c->employee_user_id && (int)$c->employee_user_id===get_current_user_id())return 'own';
         if($admin && !$this->cx_is_hr())return 'access';

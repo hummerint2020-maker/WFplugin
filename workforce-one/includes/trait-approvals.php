@@ -199,6 +199,16 @@ trait EWS_Approvals_Trait {
         return \WorkforceOne\Approvals\LevelGuard::check((int)$posted,$step?(int)$step->id:0)!==\WorkforceOne\Approvals\LevelGuard::OK;
     }
 
+    /**
+     * approval_level_moved() for a request by its key, whatever its workflow is set to now: a request whose approval is still open
+     * after its workflow was switched off is shown with its open level, and a fresh page passes (3.31.122 review).
+     */
+    private function approval_level_moved_for($workflow_key,$entity_type,$entity_id,$posted){
+        if($posted===null)return false;
+        $ar=$this->approval_find_request($workflow_key,$entity_type,(int)$entity_id);
+        return $this->approval_level_moved($ar?(int)$ar->id:0,$posted);
+    }
+
     private function approval_moved_error(){
         return new WP_Error('approval_moved','This request moved to another level since the page was opened; nothing was changed.');
     }

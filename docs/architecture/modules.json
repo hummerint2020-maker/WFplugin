@@ -265,6 +265,7 @@
         "approval_posted_note",
         "approval_posted_step",
         "approval_level_moved",
+        "approval_level_moved_for",
         "approval_error_code",
         "approval_shown_steps",
         "approval_close",
