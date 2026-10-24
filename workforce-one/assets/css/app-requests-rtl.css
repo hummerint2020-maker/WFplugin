@@ -89,6 +89,10 @@ dialog.wfo-sheet[open]{animation:wfo-sheet-in .2s ease-out}
 /* user text (a reason, a task) keeps its own direction inside the other language */
 .wfo-app .wfo-rq-meta,.wfo-app .wfo-rq-quote,.wfo-app .wfo-tk-title,.wfo-app .wfo-tk-desc{unicode-bidi:plaintext}
 .wfo-sheet .wfo-sheet-submit:hover{background:var(--wfo-pri-dark,#4B34B2)}
+/* The text-field rule above is for text fields: a radio or a checkbox in a sheet keeps its own size (3.31.123; before, it took the
+   whole row, and a colleague's name in the swap sheet showed one letter per line). Hidden radios inside styled labels are unchanged. */
+.wfo-sheet .wfo-rq-field input:is([type=radio],[type=checkbox]){width:auto;height:auto;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.wfo-sheet .wfo-rq-field input:is([type=radio],[type=checkbox]):focus-visible{outline:2px solid var(--wfo-pri,#5B3FD9);outline-offset:2px}
 .wfo-sheet .wfo-sheet-submit:disabled{opacity:.5;cursor:not-allowed;background:var(--wfo-pri,#5B3FD9)}
 
 /* ---------------------------------------------------------------- Tasks */

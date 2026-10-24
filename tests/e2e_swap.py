@@ -380,6 +380,18 @@ n9 = swap_form_nonce(emp2, 'ews_swap_respond', s9)
 check('...and the colleague can accept it from the Schedule page as it opens (the current week)', bool(n9))
 _, qs, _ = emp2.post('ews_swap_respond', _wpnonce=n9, swap_id=s9, decision='accept')
 check('...accepted: the days are exchanged', swap(s9)['status'] == 'Accepted' and sched(e1, NEXT) == 'WFH' and sched(e2, NEXT) == 'Office', (qs, swap(s9)))
+check('...a third employee does not see it', swap_form_nonce(Session('emp3', 'emp3pass'), 'ews_swap_respond', s9) is None)
+
+# The same in a final week (week lock on, the swap's week already locked): the colleague still finds and accepts it (owner decision 4).
+php("update_option('ews_feature_week_lock',1,false); update_option('ews_week_lock',['cutoff_day'=>(int)current_time('w'),'cutoff_time'=>'00:00','notify'=>0],false);")
+set_schedule(e1, 'Office', NEXT); set_schedule(e2, 'WFH', NEXT)
+_, qs, _ = create(e2, NEXT)
+s10 = last()
+n10 = swap_form_nonce(emp2, 'ews_swap_respond', s10)
+_, qs, _ = emp2.post('ews_swap_respond', _wpnonce=n10, swap_id=s10, decision='accept')
+check('a final week: the colleague accepts from the Schedule page as it opens, the days are exchanged and the lock records it',
+      bool(n10) and swap(s10)['status'] == 'Accepted' and sched(e1, NEXT) == 'WFH' and q("SELECT id FROM {p}ews_audit_log WHERE action='schedule_locked_by_swap' AND details LIKE '%%swap #%d %%'" % s10), (qs, swap(s10)))
+php("delete_option('ews_feature_week_lock'); delete_option('ews_week_lock');")
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

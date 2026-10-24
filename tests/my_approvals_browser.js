@@ -162,7 +162,7 @@ const SHOTS = process.env.APV_SHOTS || '';
   await shot(ep, 'new-request-swap');
   php(`global $wpdb; $p=$wpdb->prefix; $dep=(int)$wpdb->get_var("SELECT id FROM {$p}ews_departments WHERE code='apv-sw'");
     $wpdb->query("UPDATE {$p}ews_employees SET department_id=NULL WHERE department_id=$dep"); $wpdb->query("DELETE FROM {$p}ews_departments WHERE id=$dep");
-    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='${swapDay}'");`);
+    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='${swapDay}' AND employee_id IN (SELECT id FROM {$p}ews_employees WHERE domain_name='apvmona' OR wp_user_id=".(int)get_user_by('login','emp1')->ID.")");`);
   check('no JavaScript errors', errors.length === 0, errors);
 
   await browser.close();
