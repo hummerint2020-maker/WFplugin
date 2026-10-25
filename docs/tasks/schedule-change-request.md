@@ -723,4 +723,4 @@ All as recommended:
     setting on the Week lock card (title and text, Arabic and English; `{since}` is the lock time; empty keeps the default text).
     Part of 3.31.123.
 
-Note (2026-10-24): 3.31.123 became a swap fix release (owner report); this feature is now 3.31.125 (3.31.124: swaps decided in My approvals, owner decision).
+Note (2026-10-24): 3.31.123 became a swap fix release (owner report); this feature is now 3.31.126 (3.31.124: swaps decided in My approvals, owner decision).
