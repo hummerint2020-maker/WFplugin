@@ -105,8 +105,9 @@ const SHOTS = process.env.ATC_SHOTS || '';
   await page.click('#wfo-ac-sheet [data-wfo-sheet-close]');
 
   // ---------------------------------------------------------------- a phone, Arabic
-  // WordPress's own Arabic may not be installed yet (CI adds it later): right to left is forced for Arabic, as in my_approvals_browser.js.
-  php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents($d.'/ews-e2e-rtl-atc.php', '<?php add_action(\"init\", function(){ if(determine_locale()===\"ar\"){ $GLOBALS[\"wp_locale\"]->text_direction=\"rtl\"; wp_styles()->text_direction=\"rtl\"; } });'); update_option('WPLANG','ar');");
+  // WordPress's own Arabic may not be installed yet (CI adds it later, and WPLANG then refuses "ar"): while this
+  // mu-plugin is there, the page is right to left whatever the language.
+  php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents($d.'/ews-e2e-rtl-atc.php', '<?php add_action(\"init\", function(){ $GLOBALS[\"wp_locale\"]->text_direction=\"rtl\"; wp_styles()->text_direction=\"rtl\"; });'); update_option('WPLANG','ar');");
   const phone = await login({ width: 390, height: 844 });
   await phone.goto(W);
   await phone.waitForTimeout(1500);
@@ -115,7 +116,9 @@ const SHOTS = process.env.ATC_SHOTS || '';
   await phone.waitForTimeout(400);
   const pb = await phone.locator('#wfo-ac-sheet').boundingBox();
   check('a phone: a bottom sheet', pb && Math.abs(pb.y + pb.height - 844) <= 2 && pb.width >= 388, pb);
-  check('...right to left, no sideways scroll', await phone.evaluate(() => getComputedStyle(document.body).direction === 'rtl' && document.documentElement.scrollWidth <= window.innerWidth + 1));
+  const dir = await phone.evaluate(() => [getComputedStyle(document.body).direction, document.documentElement.scrollWidth, window.innerWidth]);
+  check('...right to left', dir[0] === 'rtl', dir);
+  check('...no sideways scroll', dir[1] <= dir[2] + 1, dir);
   await shot(phone, 'atc-phone-ar');
   php("update_option('WPLANG',''); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-rtl-atc.php');");
 
