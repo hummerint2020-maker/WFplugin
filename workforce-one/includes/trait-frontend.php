@@ -284,6 +284,7 @@ trait EWS_Frontend_Trait {
             wp_register_script('workforce-one-leave', $root.'assets/js/leave.js', [], $ver, true);
             wp_register_script('workforce-one-overtime', $root.'assets/js/overtime.js', [], $ver, true);
             wp_register_script('workforce-one-sheet', $root.'assets/js/sheet.js', [], $ver, true);
+            wp_register_script('workforce-one-attendance-cards', $root.'assets/js/attendance-cards.js', ['workforce-one-sheet'], $ver, true);
             wp_register_script('workforce-one-corrections', $root.'assets/js/corrections.js', [], $ver, true);
             wp_register_script('workforce-one-daily-workers', $root.'assets/js/daily-workers.js', [], $ver, true);
             wp_register_script('workforce-one-tasks', $root.'assets/js/tasks.js', [], $ver, true);

@@ -32,6 +32,7 @@ trait EWS_Features_Trait {
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
+                'attendance_cards'=>$this->attendance_cards_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
                 'presence_verification'=>(bool)(int)$this->option('ews_presence_verification'),
                 'breaks'=>$this->break_enabled(),
@@ -113,6 +114,8 @@ trait EWS_Features_Trait {
         if(isset($post['corrections_present']))update_option('ews_feature_corrections',$flag('corrections_enabled')?1:0,false);
         // My approvals and My requests (3.31.103).
         if(isset($post['my_approvals_present']))update_option('ews_feature_my_approvals',$flag('my_approvals_enabled')?1:0,false);
+        // The Attendance page's cards open who and when (3.31.125).
+        if(isset($post['attendance_cards_present']))update_option('ews_feature_attendance_cards',$flag('attendance_cards_enabled')?1:0,false);
         if(isset($post['app_api_present']) && (bool)(int)$this->option('ews_feature_app_api')!==$flag('app_api_enabled'))update_option('ews_feature_app_api',$flag('app_api_enabled')?1:0,false);   // nothing is written while it stays off
         if(isset($post['app_api_present']) && $this->api_refresh_safe_enabled()!==$flag('api_refresh_safe'))update_option('ews_feature_api_refresh_safe',$flag('api_refresh_safe')?1:0,false);   // the refresh fix (3.31.114), same rule
         // Salary advances (3.31.109).
@@ -203,7 +206,7 @@ trait EWS_Features_Trait {
 
         $state=function($on){return $on?'enabled':'disabled';};
         $this->audit('feature_update','settings',0,implode(';',[
-            'tasks='.$state($flag('tasks_enabled')),'corrections='.$state($this->corrections_enabled()),'daily_workers='.$state($this->dw_enabled()),'overtime_requests='.$state($flag('overtime_enabled')),
+            'tasks='.$state($flag('tasks_enabled')),'corrections='.$state($this->corrections_enabled()),'attendance_cards='.$state($this->attendance_cards_enabled()),'daily_workers='.$state($this->dw_enabled()),'overtime_requests='.$state($flag('overtime_enabled')),
             'face_signin='.$state($flag('face_signin_enabled')),'breaks='.$state($flag('break_enabled')),
             'breaks_per_day='.$breaks['per_day'],'break_duration='.$breaks['duration'],'break_escalation='.$breaks['escalation'],
             'early_leave='.$early['max'].'/'.$early['monthly'],'presence_qr='.$state($flag('presence_qr_signin')),

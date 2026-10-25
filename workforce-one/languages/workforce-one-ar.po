@@ -7753,3 +7753,111 @@ msgstr[5] "%d تبديل طلبته مستني"
 
 msgid "Follow it in My requests"
 msgstr "تابعه في طلباتي"
+
+msgid "Attendance card details"
+msgstr "كروت الحضور بالتفاصيل"
+
+msgid "On the Attendance page, each card (Employees, Present, Late, Absent, Attendance rate) opens a list with the person, the day and the time: sign-in and sign-out, the minutes late against the person's shift, or where an absent person was planned. It shows the same people the manager sees on the page, with the page's own filters. Off by default."
+msgstr "في صفحة الحضور، كل كارت (الموظفين، الحضور، التأخير، الغياب، نسبة الحضور) بيفتح ليستة بالموظف واليوم والساعة: الحضور والانصراف، ودقايق التأخير على شيفت الموظف، أو كان المفروض الغايب يبقى فين. بتوري نفس الناس اللي المدير بيشوفهم في الصفحة، وبنفس فلاترها. مقفولة افتراضيًا."
+
+msgid "Each person and their week"
+msgstr "كل موظف وأسبوعه"
+
+msgid "Who signed in on time, with sign-in and sign-out"
+msgstr "مين حضر في الميعاد، بساعة الحضور والانصراف"
+
+msgid "Who was late, which day, and when they signed in"
+msgstr "مين اتأخر وإمتى، وحضر الساعة كام"
+
+msgid "Who was absent, and where they were planned"
+msgstr "مين غاب، وكان المفروض يبقى فين"
+
+msgid "Day by day, and the lowest people"
+msgstr "النسبة يوم بيوم، وأقل الموظفين"
+
+msgid "On time. Late days have their own card."
+msgstr "الحضور في الميعاد. التأخير ليه كارت لوحده."
+
+msgid "A working day with no sign-in, past the absent-after time."
+msgstr "يوم شغل من غير تسجيل حضور، بعد ميعاد الغياب."
+
+msgid "Present + late out of the working days that need a sign-in. Leave and holidays are left out."
+msgstr "الحضور (في الميعاد + متأخر) من أيام الشغل اللي محتاجة تسجيل حضور. الإجازات والعطلات مش محسوبة."
+
+msgid "Late counts from each person's shift start, after its grace period."
+msgstr "التأخير بيتحسب من بداية شيفت كل موظف، بعد فترة السماح."
+
+msgid "Start %1$s; late counts after %2$s (each person's own shift)."
+msgstr "ميعاد الحضور %1$s، والتأخير بيتحسب بعد %2$s (شيفت كل موظف)."
+
+msgid "Nobody in this list."
+msgstr "مفيش حد في الليستة دي."
+
+msgid "Nobody signed in on time this week."
+msgstr "محدش حضر في الميعاد الأسبوع ده."
+
+msgid "No late days this week."
+msgstr "مفيش تأخير الأسبوع ده."
+
+msgid "No absent days this week."
+msgstr "مفيش غياب الأسبوع ده."
+
+msgid "No working days that need a sign-in this week."
+msgstr "مفيش أيام شغل محتاجة تسجيل حضور الأسبوع ده."
+
+msgid "%d min late"
+msgstr "متأخر %d د"
+
+msgid "No sign-out"
+msgstr "ما سجّلش انصراف"
+
+msgid "next day"
+msgstr "اليوم اللي بعده"
+
+msgid "Planned: %s"
+msgstr "كان المفروض: %s"
+
+msgid "Showing %1$d of %2$d"
+msgstr "ظاهر %1$d من %2$d"
+
+msgid "Day by day"
+msgstr "يوم بيوم"
+
+msgid "Lowest this week"
+msgstr "أقل الموظفين الأسبوع ده"
+
+msgid "Up to 10 people below 100% show here."
+msgstr "بيظهر لحد 10 موظفين أقل من 100%."
+
+msgid "%1$d of %2$d days"
+msgstr "%1$d من %2$d أيام"
+
+msgid "Loading…"
+msgstr "بيحمّل…"
+
+msgid "Could not load the list."
+msgstr "مقدرناش نحمّل الليستة."
+
+msgid "Try again"
+msgstr "جرّب تاني"
+
+msgid "This page has expired. Reload it."
+msgstr "الصفحة دي قدمت. حدّثها."
+
+msgid "Not available."
+msgstr "مش متاحة."
+
+msgid "Order"
+msgstr "الترتيب"
+
+msgid "By day"
+msgstr "باليوم"
+
+msgid "Show more"
+msgstr "اعرض المزيد"
+
+msgid "Open in Reports"
+msgstr "افتحها في التقارير"
+
+msgid "The Reports open without the branch or search filter."
+msgstr "التقارير بتفتح من غير فلتر الفرع أو البحث."

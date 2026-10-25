@@ -38,6 +38,15 @@ final class Lateness
         return $date;
     }
 
+    /**
+     * Whole minutes after the shift start of the work day this Sign In counts against (0 when not after it), as the reports
+     * count them (src/Reports/DayMetrics.php): from the start, not from the end of the grace (3.31.125, attendance cards).
+     */
+    public static function minutesLate(int $ts, string $start, string $end, bool $overnight): int
+    {
+        return max(0, intdiv($ts - self::shiftStart(self::dayOf($ts, $start, $end, $overnight), $start), 60));
+    }
+
     /** On Time or Late Arrival for a Sign In at $ts, from its time alone. */
     public static function classify(int $ts, string $start, string $end, bool $overnight, int $graceMinutes): string
     {

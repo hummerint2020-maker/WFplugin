@@ -12,8 +12,14 @@ use WorkforceOne\Attendance\Insights;
  */
 trait EWS_Attendance_Grid_Trait {
 
-    private function attendance_content(){
-        if(!$this->can('ews_manage_attendance'))return $this->ews_empty_state('Attendance unavailable','You do not have permission to manage attendance.');
+    /**
+     * Who and which days the page (and its cards' lists, 3.31.125) show: the people in the viewer's scope with attendance on,
+     * in team order, the week, its holidays, the branch filter and the server search / team filter (Ui\ListPage). One place,
+     * so a card's list always counts what the card counts.
+     * @param array<string,mixed> $get the request's query values
+     * @return array{current_emp_id:int,all_emps:object[],matched:object[],list:array<string,mixed>,dates:string[],sun:int,today:string,week_end:string,holidays:array<string,string>,branch_filter:int,branch_filter_names:array<int,string>}
+     */
+    private function attendance_scope(array $get){
         $current_emp_id=(int)($this->current_employee()->id??0);
         $emps=$this->schedule_employees_ordered(array_values(array_filter($this->department_scoped_employees(),function($e){return !isset($e->attendance_enabled) || (int)$e->attendance_enabled===1;})),$current_emp_id);
         [$dates,$sun]=$this->week_dates();
@@ -28,32 +34,54 @@ trait EWS_Attendance_Grid_Trait {
         $branch_filter=0;$branch_filter_names=[];
         if(count($this->branch_locations())>1&&$this->branch_settings()['mode']!=='single'){
             $branch_filter_names=array_map(function($l){return (string)$l->name;},$this->branch_choices());
-            $branch_filter=absint($_GET['branch']??0);
+            $branch_filter=absint($get['branch']??0);
             if($branch_filter&&isset($branch_filter_names[$branch_filter])){
                 $ids=array_map(function($e){return (int)$e->id;},$emps);$others=$this->branch_other_ids_bulk($ids);
                 $emps=array_values(array_filter($emps,function($e)use($branch_filter,$others){return $this->branch_main_id((int)$e->id)===$branch_filter||in_array($branch_filter,$others[(int)$e->id]??[],true);}));
             }else $branch_filter=0;
         }
-        $list=\WorkforceOne\Ui\ListPage::apply($emps,wp_unslash($_GET));
+        $list=\WorkforceOne\Ui\ListPage::apply($emps,$get);
+        return ['current_emp_id'=>$current_emp_id,'all_emps'=>$all_emps,'matched'=>$list['matched'],'list'=>$list,'dates'=>$dates,'sun'=>$sun,'today'=>$today,
+            'week_end'=>$week_end,'holidays'=>$holidays,'branch_filter'=>$branch_filter,'branch_filter_names'=>$branch_filter_names];
+    }
+
+    /**
+     * Each person and day of the scope through insights_day(), in grid order: $each($pos,$employee,$date,$planned,$day,$events).
+     * The page counts its cards with it and the cards' lists collect their rows with it (3.31.125).
+     * @param object[] $emps
+     * @param string[] $dates
+     * @param array<string,string> $holidays
+     */
+    private function attendance_walk(array $emps,array $dates,$today,array $holidays,callable $each){
+        [$schedule,$events]=$this->insights_load(array_map(function($e){return (int)$e->id;},$emps),$dates[0],$dates[count($dates)-1]);
+        foreach($emps as $pos=>$e){
+            $eid=(int)$e->id;
+            foreach($dates as $d){
+                $planned=$schedule[$eid][$d]??'';
+                $ev=$events[$eid][$d]??[];
+                $each($pos,$e,$d,$planned,$this->insights_day($eid,$planned,$ev,$d,$today,$holidays),$ev);
+            }
+        }
+    }
+
+    private function attendance_content(){
+        if(!$this->can('ews_manage_attendance'))return $this->ews_empty_state('Attendance unavailable','You do not have permission to manage attendance.');
+        $sc=$this->attendance_scope(wp_unslash($_GET));
+        $current_emp_id=$sc['current_emp_id'];$all_emps=$sc['all_emps'];$list=$sc['list'];$emps=$sc['matched'];$dates=$sc['dates'];$sun=$sc['sun'];
+        $today=$sc['today'];$week_end=$sc['week_end'];$holidays=$sc['holidays'];$branch_filter=$sc['branch_filter'];$branch_filter_names=$sc['branch_filter_names'];
         $on_page=array_flip(array_map(function($e){return (int)$e->id;},$list['rows']));
-        $emps=$list['matched'];
-        [$schedule,$events]=$this->insights_load(array_map(function($e){return (int)$e->id;},$emps),$dates[0],$week_end);
 
         // One result per employee and day, plus the summary cards and per-day counts.
         $summary=array_fill_keys(GridRules::SUMMARY,0);
         $day_summary=[];$days=[];
         foreach($dates as $d)$day_summary[$d]=['recorded'=>0,'absent'=>0];
-        foreach($emps as $e){
+        $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day)use(&$summary,&$day_summary,&$days,$on_page,$holidays){
             $eid=(int)$e->id;
-            foreach($dates as $d){
-                $planned=$schedule[$eid][$d]??'';
-                $day=$this->insights_day($eid,$planned,$events[$eid][$d]??[],$d,$today,$holidays);
-                if(isset($summary[$day['actual']]))$summary[$day['actual']]++;
-                if(in_array($day['actual'],['Present','Late'],true))$day_summary[$d]['recorded']++;
-                if($day['actual']==='Absent')$day_summary[$d]['absent']++;
-                if(isset($on_page[$eid]))$days[$eid][$d]=['planned'=>$planned,'actual'=>$day['actual'],'badge'=>GridRules::badge($day['actual'],isset($holidays[$d])?(string)$holidays[$d]:$day['time'])];
-            }
-        }
+            if(isset($summary[$day['actual']]))$summary[$day['actual']]++;
+            if(in_array($day['actual'],['Present','Late'],true))$day_summary[$d]['recorded']++;
+            if($day['actual']==='Absent')$day_summary[$d]['absent']++;
+            if(isset($on_page[$eid]))$days[$eid][$d]=['planned'=>$planned,'actual'=>$day['actual'],'badge'=>GridRules::badge($day['actual'],isset($holidays[$d])?(string)$holidays[$d]:$day['time'])];
+        });
         $emps=$list['rows'];
         $team_options=[];
         foreach($all_emps as $e){
@@ -80,7 +108,15 @@ trait EWS_Attendance_Grid_Trait {
                 'statuses'=>array_values(array_filter($this->schedule_type_names(true),function($st){return $this->schedule_type_requires_location($st);}))];
         }
         $office_min=$this->om_attendance($dates);
+        // The cards' lists (3.31.125): off, nothing more is printed or loaded.
+        $cards=null;
+        if($this->attendance_cards_enabled()){
+            $cards=$this->attendance_cards_view($sc);
+            wp_enqueue_style('workforce-one-requests');
+            wp_enqueue_script('workforce-one-attendance-cards');
+        }
         return $this->render_template('app/attendance',[
+            'cards'=>$cards,
             'week_lock'=>$this->week_lock_view($dates[0]),'week_lock_when'=>function($at){return $this->week_lock_when($at);},
             'office_min'=>$office_min,'office_min_html'=>$office_min?$this->render_template('app/office-minimum',['om'=>$office_min]):'',
             'people'=>$people,
