@@ -34,7 +34,8 @@
         "app_view_url",
         "app_home_url",
         "admin_nav_tab_labels",
-        "app_screens"
+        "app_screens",
+        "app_view_allowed"
       ]
     },
     "people": {
@@ -104,6 +105,7 @@
         "schedule-view",
         "swap",
         "attendance-grid",
+        "attendance-cards",
         "office-minimum",
         "shift-history",
         "week-lock"
@@ -147,7 +149,10 @@
         "week_lock_view",
         "week_lock_when",
         "week_lock_next",
-        "week_lock_can_override"
+        "week_lock_can_override",
+        "attendance_scope",
+        "attendance_walk",
+        "attendance_cards_enabled"
       ]
     },
     "locations": {
@@ -166,6 +171,12 @@
       ],
       "api": [
         "branch_days",
+        "branch_settings",
+        "branch_locations",
+        "branch_choices",
+        "branch_main_id",
+        "branch_other_ids_bulk",
+        "branch_planned_bulk",
         "branch_today"
       ]
     },

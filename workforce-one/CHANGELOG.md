@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.125
+### Attendance cards you can open (design `docs/tasks/attendance-cards.md`, mockups `docs/mockups/attendance-cards/`)
+A switch on the Features page ("Attendance card details"), off by default; off, the Attendance page is exactly as before.
+No database change.
+- **The cards at the top of the manager Attendance page** (Employees, Present days, Late days, Absent days, Attendance rate)
+  are buttons. Each opens a list of who and when: a side sheet on a computer, a bottom sheet on a phone.
+- **Late days:** each late day with the sign-in and sign-out times and the minutes late, counted from the start of the person's
+  own shift on that day (the night shift included). The most minutes late come first. Old "late" records show "Late" without
+  minutes.
+- **Present days** (on time only): sign-in and sign-out, and "No sign-out" (today only once the shift has ended).
+  **Absent days:** where the person was planned (and the branch, when branches follow the schedule).
+- **Employees:** each person's week (present, late, absent, leave, and company holidays apart).
+  **Attendance rate:** the rate day by day and the lowest people this week (up to 10, below 100%).
+- The list follows the page's week, search, team, branch and the manager's department, and always counts what the card
+  counts; it loads only when a card is opened, 20 rows at a time, by day or by employee. A row opens the person's profile;
+  "Open in Reports" opens the Daily Log (with the Reports permission).
+- Behind the scenes the page's scope and day loop are shared with the lists; the page itself is unchanged (checked byte for
+  byte with the switch off) and costs no extra queries with the switch on.
+
 ## 3.31.124
 ### Shift swaps in My approvals (design `docs/tasks/swap-inbox.md`, mockups `docs/mockups/swap-inbox/`)
 Works with My approvals on (Settings → Features); with it off nothing changes. No new setting, no database change.

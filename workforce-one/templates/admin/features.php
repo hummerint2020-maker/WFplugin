@@ -62,6 +62,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="daily_workers_present" value="1">
 <input type="hidden" name="office_minimum_present" value="1">
 <input type="hidden" name="week_lock_present" value="1">
+<input type="hidden" name="attendance_cards_present" value="1">
 <input type="hidden" name="evidence_present" value="1">
 <input type="hidden" name="offline_present" value="1">
 <input type="hidden" name="org_present" value="1">
@@ -79,6 +80,11 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-corrections"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Attendance Corrections</div><div class="wfo-feature-desc">Employees ask to correct a forgotten Sign In / Sign Out or a wrong time; the manager decides with the day's evidence; HR can correct directly. Recorded events are never changed. <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-corrections&tab=settings')); ?>">Settings</a></div></div>
     <?php $switch('corrections_enabled', $on['corrections']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-attendance-cards"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Attendance card details', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('On the Attendance page, each card (Employees, Present, Late, Absent, Attendance rate) opens a list with the person, the day and the time: sign-in and sign-out, the minutes late against the person\'s shift, or where an absent person was planned. It shows the same people the manager sees on the page, with the page\'s own filters. Off by default.', 'workforce-one'); ?></div></div>
+    <?php $switch('attendance_cards_enabled', $on['attendance_cards']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-my-approvals"><div class="wfo-feature-head">
