@@ -24,7 +24,7 @@ trait EWS_Attendance_Cards_Trait {
      * @return array<string,mixed>
      */
     private function attendance_cards_view(array $sc){
-        $list=$sc['list'];$params=['week'=>date('Y-m-d',$sc['sun'])];
+        $list=$sc['list'];$params=['week'=>$sc['dates'][0]];
         // A short list is searched in the browser only (Ui\ListPage): the cards count everyone, and so does the list.
         if($list['paged']){if($list['q']!=='')$params['q']=$list['q'];if($list['team']!=='')$params['team']=$list['team'];}
         if($sc['branch_filter'])$params['branch']=$sc['branch_filter'];
@@ -38,7 +38,10 @@ trait EWS_Attendance_Cards_Trait {
             'team'=>$params['team']??'all','report_page'=>1],$this->app_view_url('reports'));
         $days=[];
         foreach($sc['dates'] as $d)$days[$d]=date_i18n('l j M',strtotime($d));
-        return ['url'=>admin_url('admin-post.php'),'nonce'=>wp_create_nonce('ews_att_cards'),'params'=>$params,'chips'=>array_values(array_filter($chips,'strlen')),
+        $reports_by=[];
+        if($reports!=='')foreach(['present'=>'Present','late'=>'Late','absent'=>'Absent'] as $k=>$st)$reports_by[$k]=add_query_arg('status',$st,$reports);
+        if($reports!=='')$reports_by['people']=add_query_arg('report_type','summary',$reports);   // the rate's sheet has no link (the mockup)
+        return ['url'=>admin_url('admin-post.php'),'reports_by'=>$reports_by,'nonce'=>wp_create_nonce('ews_att_cards'),'params'=>$params,'chips'=>array_values(array_filter($chips,'strlen')),
             'reports_url'=>$reports,'reports_partial'=>$reports!=='' && (isset($params['branch'])||isset($params['q'])),
             // A row opens the person's profile (owner decision 2), for viewers who may open profiles.
             'profile_url'=>$this->app_view_allowed('employee')?add_query_arg('ews_view','employee',$this->app_view_url('people')):'',
@@ -49,7 +52,7 @@ trait EWS_Attendance_Cards_Trait {
     private function att_cards_late($employee_id,$in){
         $cfg=$this->working_hours((int)$employee_id,substr((string)$in->event_at,0,10));
         // An old "late_sign_in" event is Late whatever its time: shown without minutes (owner decision 9).
-        $min=$in->event_type==='late_sign_in'?null:Lateness::minutesLate((int)strtotime((string)$in->event_at),(string)$cfg['start'],(string)$cfg['end'],!empty($cfg['overnight']));
+        $min=$in->event_type==='late_sign_in'?null:max(1,Lateness::minutesLate((int)strtotime((string)$in->event_at),(string)$cfg['start'],(string)$cfg['end'],!empty($cfg['overnight'])));
         return ['min'=>$min,'start'=>(string)$cfg['start'],'grace'=>(int)$cfg['grace']];
     }
 
@@ -74,6 +77,7 @@ trait EWS_Attendance_Cards_Trait {
         // Shift times by day for everyone at once (late minutes, the end of today's shift).
         $this->prime_shift_cache($emps);
         $this->shift_prime_periods(array_map(function($e){return (int)$e->id;},$emps));
+        foreach($emps as $e)if(isset($e->default_shift_id)&&!isset(self::$ews_people_shift_memo[(int)$e->id]))self::$ews_people_shift_memo[(int)$e->id]=(int)$e->default_shift_id;
         $keys=[];$evs=[];$weeks=[];$day_counts=[];$card=['Present'=>0,'Late'=>0,'Absent'=>0];
         foreach($dates as $d)$day_counts[$d]=['present'=>0,'late'=>0,'absent'=>0];
         $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day,$ev)use($kind,&$keys,&$evs,&$weeks,&$day_counts,&$card,$holidays){
@@ -118,8 +122,7 @@ trait EWS_Attendance_Cards_Trait {
                 $row+=['plan'=>$planned,'plan_class'=>sanitize_title($planned!==''?$planned:'not-set')];
                 if($branch&&$this->schedule_type_requires_location($planned)){$bid=($branch['planned'][$eid][$d]??0)?:$this->branch_main_id($eid);$row['branch']=(string)($branch['names'][$bid]??'');}
             }else{
-                $end=null;
-                if($d===$sc['today']){$h=$this->working_hours($eid,$d);$end=(int)strtotime($d.' '.$h['end'].':00');if(!empty($h['overnight'])&&$h['start']>$h['end'])$end+=DAY_IN_SECONDS;}
+                $h=$this->working_hours($eid,$d);$end=(int)strtotime($d.' '.$h['end'].':00');if(!empty($h['overnight'])&&$h['start']>$h['end'])$end+=DAY_IN_SECONDS;
                 $row+=['in'=>$in?date('H:i',strtotime((string)$in->event_at)):'','next_day'=>$in&&substr((string)$in->event_at,0,10)!==$d,
                     'out'=>$outv?date('H:i',strtotime((string)$outv->event_at)):null,
                     'missing_out'=>CardLists::missingOut((bool)$in,(bool)$outv,$d,$sc['today'],$now,$end)];

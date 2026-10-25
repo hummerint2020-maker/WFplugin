@@ -66,7 +66,9 @@ def seed():
         }
         // 70 more people in Ops, planned at the Office, who never signed in (inactive until big(True))
         for($i=1;$i<=%(n)d;$i++){$wpdb->insert($p.'ews_employees',['name'=>sprintf('Big Person %%02d',$i),'domain_name'=>'acbig'.$i,'email'=>"acbig$i@example.com",'active'=>0,'attendance_enabled'=>1,'department_id'=>$ops]);
-            $b=(int)$wpdb->insert_id; foreach($dates as $d) $wpdb->insert($p.'ews_schedule',['employee_id'=>$b,'work_date'=>$d,'status'=>'Office']);}
+            $b=(int)$wpdb->insert_id; foreach($dates as $d) $wpdb->insert($p.'ews_schedule',['employee_id'=>$b,'work_date'=>$d,'status'=>'Office']);
+            // a sign-in on the first day: the lists then go through each person's shift (sign_in_classification())
+            foreach(['sign_in'=>'08:50:00','sign_out'=>'17:00:00'] as $t=>$h) $wpdb->insert($p.'ews_time_logs',['employee_id'=>$b,'user_id'=>1,'work_date'=>$dates[0],'event_type'=>$t,'event_at'=>$dates[0].' '.$h,'scheduled_status'=>'Office']);}
         echo wp_json_encode($ids);
     """ % {'n': N_BIG})
     return json.loads(out.splitlines()[-1])
@@ -325,6 +327,14 @@ big(True)
 large = {k: endpoint_queries(k) for k in ('late', 'absent', 'people')}
 check('a list costs the same queries for 8 people as for 78 (no query per person): %s / %s' % (small, large), small == large and all(v > 0 for v in small.values()), (small, large))
 big(False)
+
+rep = re.search(r'id="wfo-ac-sheet"[^>]*data-reports="([^"]+)"', page)
+reps = json.loads(html.unescape(rep.group(1))) if rep else {}
+check('"Open in Reports" opens the Daily Log on that card\'s result, Employees the Summary (the rate has no link)', 'status=Late' in reps.get('late', '') and 'status=Absent' in reps.get('absent', '')
+      and 'status=Present' in reps.get('present', '') and 'report_type=summary' in reps.get('people', '') and 'rate' not in reps, reps)
+bad = adm.req('/app/?ews_view=attendance&week=abc')[1]
+bp = re.search(r'id="wfo-ac-sheet"[^>]*data-params="([^"]+)"', bad)
+check('a week that is not a date: the list asks for the week the page shows, not 1970', bp and '1970' not in html.unescape(bp.group(1)) and json.loads(html.unescape(bp.group(1)))['week'] >= ctx['week'], bp.group(1) if bp else None)
 
 # ---------------------------------------------------------------- the endpoint refuses
 st, j = api(adm, 'bad', 'late')

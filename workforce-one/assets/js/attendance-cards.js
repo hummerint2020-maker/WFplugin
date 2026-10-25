@@ -14,6 +14,7 @@
         var params = JSON.parse(dialog.getAttribute('data-params') || '{}');
         var days = JSON.parse(dialog.getAttribute('data-days') || '{}');
         var profile = dialog.getAttribute('data-profile') || '';
+        var reports = JSON.parse(dialog.getAttribute('data-reports') || '{}');
         var q = function (sel) { return dialog.querySelector(sel); };
         var body = q('[data-ac-body]'), foot = q('[data-ac-foot]'), more = q('[data-ac-more]'), note = q('[data-ac-note]'), seg = q('[data-ac-seg]');
         var state = { kind: '', order: 'day', next: null, shown: 0, req: 0, ctrl: null, opener: null, lastGroup: '' };
@@ -146,6 +147,21 @@
             if (retry) { var b = el('button', 'wfo-ac-more', T.retry); b.type = 'button'; b.addEventListener('click', function () { load(0); }); body.appendChild(b); }
             foot.hidden = true;
         }
+        // "Show more" failed: the rows already shown stay; the message and Try again are in the footer.
+        function moreFailed(text, offset) {
+            var old = foot.querySelector('.wfo-ac-more-error');
+            if (old) old.remove();
+            var box = el('p', 'wfo-ac-empty wfo-ac-more-error', text + ' ');
+            var b = el('button', 'wfo-ac-more', T.retry);
+            b.type = 'button';
+            b.addEventListener('click', function () { box.remove(); load(offset); });
+            box.appendChild(b);
+            foot.insertBefore(box, foot.firstChild);
+        }
+        function busy(on) {
+            // aria-disabled, not disabled: the focus stays on "Show more" while the next rows load.
+            if (on) more.setAttribute('aria-disabled', 'true'); else more.removeAttribute('aria-disabled');
+        }
         function setCard(d) {
             // The card follows the list (owner decision 6): someone may have signed in since the page was opened.
             var n = state.opener && state.opener.querySelector('[data-ac-card-n]');
@@ -162,15 +178,16 @@
             var qs = Object.keys(args).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(args[k]); }).join('&');
             body.setAttribute('aria-busy', 'true');
             if (!offset) message(T.loading, false);
-            more.disabled = true;
+            busy(true);
             fetch(dialog.getAttribute('data-url') + '?' + qs, { credentials: 'same-origin', cache: 'no-store', signal: state.ctrl ? state.ctrl.signal : undefined })
                 .then(function (r) { return r.json().catch(function () { return { success: false, data: { reason: 'error' } }; }); })
                 .then(function (j) {
                     if (req !== state.req) return;   // an older answer (another card, or the other order)
                     body.removeAttribute('aria-busy');
-                    more.disabled = false;
+                    busy(false);
                     if (!j || !j.success) {
                         var why = j && j.data && j.data.reason;
+                        if (offset && why !== 'nonce' && why !== 'off' && why !== 'access') { moreFailed(T.error, offset); return; }
                         message(why === 'nonce' ? T.expired : (why === 'off' || why === 'access' ? T.unavailable : T.error), why !== 'nonce' && why !== 'off' && why !== 'access');
                         return;
                     }
@@ -191,16 +208,18 @@
                     drawRows(d);
                     state.shown = d.offset + d.rows.length;
                     state.next = d.next;
+                    var hadFocus = document.activeElement === more;
                     q('[data-ac-shown]').textContent = fmt(T.shown, state.shown, d.total);
                     more.hidden = d.next === null;
                     foot.hidden = false;
+                    if (hadFocus && more.hidden) q('[data-ac-shown]').focus();   // the last page: the focus is not lost
                 })
                 .catch(function (e) {
                     if (e && e.name === 'AbortError') return;
                     if (req !== state.req) return;
                     body.removeAttribute('aria-busy');
-                    more.disabled = false;
-                    message(T.error, true);
+                    busy(false);
+                    if (offset) moreFailed(T.error, offset); else message(T.error, true);
                 });
         }
         function start(kind) {
@@ -215,6 +234,10 @@
             q('[data-ac-count]').textContent = '';
             seg.hidden = kind === 'people' || kind === 'rate';
             seg.querySelectorAll('[data-ac-order]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-ac-order') === 'day' ? 'true' : 'false'); });
+            var rep = q('[data-ac-report]');
+            if (rep) { rep.hidden = !reports[kind]; if (reports[kind]) rep.href = reports[kind]; }
+            var err = foot.querySelector('.wfo-ac-more-error');
+            if (err) err.remove();
             note.hidden = !T.note[kind] || kind === 'late';
             note.textContent = T.note[kind] || '';
             load(0);
@@ -245,7 +268,7 @@
             seg.querySelectorAll('[data-ac-order]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
             load(0);
         });
-        more.addEventListener('click', function () { if (state.next !== null) load(state.next); });
+        more.addEventListener('click', function () { if (state.next !== null && more.getAttribute('aria-disabled') !== 'true') load(state.next); });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

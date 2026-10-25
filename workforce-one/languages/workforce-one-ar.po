@@ -7787,7 +7787,7 @@ msgstr "الحضور (في الميعاد + متأخر) من أيام الشغل
 msgid "Late counts from each person's shift start, after its grace period."
 msgstr "التأخير بيتحسب من بداية شيفت كل موظف، بعد فترة السماح."
 
-msgid "Start %1$s; late counts after %2$s (each person's own shift)."
+msgid "Start %1$s, late counts after %2$s (each person's own shift)."
 msgstr "ميعاد الحضور %1$s، والتأخير بيتحسب بعد %2$s (شيفت كل موظف)."
 
 msgid "Nobody in this list."

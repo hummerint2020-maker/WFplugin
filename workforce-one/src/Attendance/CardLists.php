@@ -110,14 +110,15 @@ final class CardLists
     }
 
     /**
-     * Whether a day with a Sign In shows "No sign-out" (owner decision 7): a past day without a Sign Out always; today only
-     * once the person's shift has ended ($shiftEnd, a Unix time; null = unknown, so not shown); never a later day.
+     * Whether a day with a Sign In shows "No sign-out" (owner decision 7): only once the person's shift of that day has ended
+     * ($shiftEnd, a Unix time; an overnight shift from yesterday may still run). Today without a known end: not shown; an
+     * earlier day without one: shown. Never a later day.
      */
     public static function missingOut(bool $hasIn, bool $hasOut, string $date, string $today, int $now, ?int $shiftEnd): bool
     {
         if (!$hasIn || $hasOut || $date > $today) return false;
-        if ($date < $today) return true;
-        return $shiftEnd !== null && $now >= $shiftEnd;
+        if ($shiftEnd === null) return $date < $today;
+        return $now >= $shiftEnd;
     }
 
     /**

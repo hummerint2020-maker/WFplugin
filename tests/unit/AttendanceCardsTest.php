@@ -23,6 +23,9 @@ final class AttendanceCardsTest extends TestCase
         $this->assertSame(135, L::minutesLate(self::t('2026-10-19 00:15'), '22:00', '06:00', true), 'after midnight: against the shift that started the evening before');
         $this->assertSame(0, L::minutesLate(self::t('2026-10-18 21:58'), '22:00', '06:00', true));
         $this->assertSame(L::LATE, L::classify(self::t('2026-10-19 00:15'), '22:00', '06:00', true, 10), 'and the same Sign In is Late by the one rule');
+        $this->assertSame(480, L::minutesLate(self::t('2026-10-19 06:00'), '22:00', '06:00', true), 'exactly at the end: the shift of the evening before');
+        $this->assertSame(0, L::minutesLate(self::t('2026-10-19 06:01'), '22:00', '06:00', true), 'after the end: the next shift, not started');
+        $this->assertSame(5, L::minutesLate(self::t('2026-10-18 09:05'), '09:00', '09:00', false), 'start = end (not overnight)');
     }
 
     public function testEachListTakesItsOwnResult(): void
@@ -102,6 +105,10 @@ final class AttendanceCardsTest extends TestCase
         $this->assertFalse(C::missingOut(true, false, '2026-10-25', '2026-10-25', $now, self::t('2026-10-25 17:00')), 'today, still in the shift');
         $this->assertTrue(C::missingOut(true, false, '2026-10-25', '2026-10-25', self::t('2026-10-25 17:00'), self::t('2026-10-25 17:00')), 'today, the shift has ended');
         $this->assertFalse(C::missingOut(true, false, '2026-10-25', '2026-10-25', $now, null));
+        // Yesterday's night shift (22:00-06:00) at 03:00 today: still running, not "No sign-out" yet.
+        $this->assertFalse(C::missingOut(true, false, '2026-10-24', '2026-10-25', self::t('2026-10-25 03:00'), self::t('2026-10-25 06:00')));
+        $this->assertTrue(C::missingOut(true, false, '2026-10-24', '2026-10-25', self::t('2026-10-25 06:00'), self::t('2026-10-25 06:00')));
+        $this->assertTrue(C::missingOut(true, false, '2026-10-20', '2026-10-25', $now, self::t('2026-10-20 17:00')));
     }
 
     public function testLateNote(): void

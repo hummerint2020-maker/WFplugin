@@ -55,7 +55,7 @@ const SHOTS = process.env.ATC_SHOTS || '';
   const href = await page.locator('#wfo-ac-sheet a.wfo-ac-row').first().getAttribute('href');
   check('...a row opens the person\'s profile (owner decision 2)', /ews_view=employee/.test(href || '') && /employee_id=\d+/.test(href || ''), href);
   const rep = await page.locator('#wfo-ac-sheet [data-ac-report]').getAttribute('href');
-  check('..."Open in Reports" opens the Daily Log of that week', /report_type=attendance/.test(rep || '') && rep.includes('start=' + ctx.dates[0]), rep);
+  check('..."Open in Reports" opens the Daily Log of that week, on the late days', /report_type=attendance/.test(rep || '') && rep.includes('start=' + ctx.dates[0]) && /status=Late/.test(rep), rep);
   await shot(page, 'atc-late');
   await page.click('#wfo-ac-sheet [data-ac-order="employee"]');
   await page.waitForTimeout(300); await waitRows(page);
@@ -81,12 +81,27 @@ const SHOTS = process.env.ATC_SHOTS || '';
   check('...no By day / By employee there', await page.$eval('#wfo-ac-sheet [data-ac-seg]', s => s.hidden));
   await shot(page, 'atc-rate');
   await page.click('#wfo-ac-sheet [data-wfo-sheet-close]');
-  // Opening one card while the previous one still loads never shows the older list.
+  // A slow answer for one card, arriving after another card was opened, is never drawn.
+  await page.route(/action=ews_att_cards.*kind=present/, async route => { await new Promise(r => setTimeout(r, 2000)); await route.continue(); });
   await page.click('[data-ews-card="present"]');
   await page.click('#wfo-ac-sheet [data-wfo-sheet-close]');
   await page.click('[data-ews-card="people"]');
   await waitRows(page);
-  check('a card opened right after another shows its own list', (await page.textContent('#wfo-ac-sheet [data-ac-title]')) === 'Employees' && (await page.locator('#wfo-ac-sheet .wfo-ac-mini').count()) > 0);
+  await page.waitForTimeout(2500);
+  check('a slow answer for another card never replaces the list on screen', (await page.textContent('#wfo-ac-sheet [data-ac-title]')) === 'Employees' && (await page.locator('#wfo-ac-sheet .wfo-ac-mini').count()) > 0 && !/\d{2}:\d{2}/.test(await page.textContent('#wfo-ac-sheet [data-ac-body]')));
+  await page.unroute(/action=ews_att_cards.*kind=present/);
+  // "Show more" keeps the focus; on the last page it moves to the count, which is announced.
+  await page.click('#wfo-ac-sheet [data-wfo-sheet-close]');
+  await page.click('[data-ews-card="people"]');
+  await waitRows(page);
+  let guard = 0;
+  while (await page.locator('#wfo-ac-sheet [data-ac-more]').isVisible() && guard++ < 10) {
+    const n = await rows(page);
+    await page.focus('#wfo-ac-sheet [data-ac-more]'); await page.keyboard.press('Enter');
+    await page.waitForFunction(k => document.querySelectorAll('#wfo-ac-sheet .wfo-ac-list > li').length > k, n, { timeout: 15000 });
+    await page.waitForTimeout(150);
+  }
+  check('..."Show more" to the end: the focus is on the count, which is announced', await page.evaluate(() => { const s = document.querySelector('#wfo-ac-sheet [data-ac-shown]'); return document.activeElement === s && s.getAttribute('aria-live') === 'polite'; }));
   await page.click('#wfo-ac-sheet [data-wfo-sheet-close]');
 
   // ---------------------------------------------------------------- a phone, Arabic

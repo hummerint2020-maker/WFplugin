@@ -124,7 +124,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
             'rate' => __('Present + late out of the working days that need a sign-in. Leave and holidays are left out.', 'workforce-one'),
             'late' => __('Late counts from each person\'s shift start, after its grace period.', 'workforce-one')],
         /* translators: 1: shift start, 2: the time from which a sign-in is late */
-        'late_note' => __('Start %1$s; late counts after %2$s (each person\'s own shift).', 'workforce-one'),
+        'late_note' => __('Start %1$s, late counts after %2$s (each person\'s own shift).', 'workforce-one'),
         'empty' => ['people' => __('Nobody in this list.', 'workforce-one'), 'present' => __('Nobody signed in on time this week.', 'workforce-one'), 'late' => __('No late days this week.', 'workforce-one'),
             'absent' => __('No absent days this week.', 'workforce-one'), 'rate' => __('No working days that need a sign-in this week.', 'workforce-one')],
         /* translators: %d: minutes */
@@ -146,7 +146,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
     </div>
     <dialog class="wfo-sheet wfo-ac-sheet" id="wfo-ac-sheet" aria-labelledby="wfo-ac-title" data-url="<?php echo esc_url($cards['url']); ?>" data-nonce="<?php echo esc_attr($cards['nonce']); ?>"
         data-params="<?php echo esc_attr((string) wp_json_encode($cards['params'])); ?>" data-days="<?php echo esc_attr((string) wp_json_encode($cards['days'])); ?>"
-        data-profile="<?php echo esc_url($cards['profile_url']); ?>" data-reports="<?php echo esc_url($cards['reports_url']); ?>" data-text="<?php echo esc_attr((string) wp_json_encode($ac_text)); ?>">
+        data-profile="<?php echo esc_url($cards['profile_url']); ?>" data-reports="<?php echo esc_attr((string) wp_json_encode(array_map('esc_url_raw', $cards['reports_by']))); ?>" data-text="<?php echo esc_attr((string) wp_json_encode($ac_text)); ?>">
         <div class="wfo-sheet-body">
             <div class="wfo-sheet-grip" aria-hidden="true"></div>
             <div class="wfo-sheet-head wfo-ac-head"><span class="wfo-ac-ico" data-ac-ico aria-hidden="true"></span><div><h2 id="wfo-ac-title"><span data-ac-title></span> <span class="wfo-ac-count" data-ac-count></span></h2><p data-ac-sub></p></div>
@@ -154,8 +154,8 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
             <div class="wfo-ac-bar"><div class="wfo-ac-chips"><?php foreach ($cards['chips'] as $i => $chip): ?><span class="wfo-ac-chip"><?php echo $i === 0 ? Icons::svg('calendar', 14, 2.2) : ''; ?><?php echo esc_html($chip); ?></span><?php endforeach; ?></div>
                 <div class="wfo-ac-seg" role="group" aria-label="<?php esc_attr_e('Order', 'workforce-one'); ?>" data-ac-seg><button type="button" aria-pressed="true" data-ac-order="day"><?php esc_html_e('By day', 'workforce-one'); ?></button><button type="button" aria-pressed="false" data-ac-order="employee"><?php esc_html_e('By employee', 'workforce-one'); ?></button></div></div>
             <p class="wfo-ac-note" data-ac-note hidden></p>
-            <div class="wfo-ac-body" data-ac-body aria-live="polite"></div>
-            <div class="wfo-ac-foot" data-ac-foot hidden><p data-ac-shown></p><div class="wfo-ac-foot-acts"><button type="button" class="wfo-ac-more" data-ac-more><?php esc_html_e('Show more', 'workforce-one'); ?></button>
+            <div class="wfo-ac-body" data-ac-body></div>
+            <div class="wfo-ac-foot" data-ac-foot hidden><p data-ac-shown aria-live="polite" tabindex="-1"></p><div class="wfo-ac-foot-acts"><button type="button" class="wfo-ac-more" data-ac-more><?php esc_html_e('Show more', 'workforce-one'); ?></button>
                 <?php if ($cards['reports_url'] !== ''): ?><a class="wfo-ac-report" data-ac-report href="<?php echo esc_url($cards['reports_url']); ?>"><?php echo Icons::svg('reports', 16, 2.2); ?><?php esc_html_e('Open in Reports', 'workforce-one'); ?></a><?php endif; ?></div>
                 <?php if ($cards['reports_partial']): ?><p class="wfo-ac-hint" data-ac-partial><?php esc_html_e('The Reports open without the branch or search filter.', 'workforce-one'); ?></p><?php endif; ?></div>
             <?php foreach (['people' => 2, 'check' => 2.4, 'overtime' => 2, 'alert' => 2, 'insights' => 2, 'chevron' => 2.2, 'clock' => 2.2, 'leave' => 2.2, 'office' => 2.2, 'wfh' => 2.2, 'calendar' => 2.2] as $ti => $tw): ?><template data-ac-icon="<?php echo esc_attr($ti); ?>"><?php echo Icons::svg($ti, $ti === 'chevron' ? 16 : 14, $tw); ?></template><?php endforeach; ?>
