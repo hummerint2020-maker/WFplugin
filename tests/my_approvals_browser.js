@@ -1,6 +1,7 @@
 /* My approvals (3.31.103) in a real browser (Chromium):
    - "Select" approves several requests at once (each with its own form, one after the other) and the
      page says how many;
+   - a swap a colleague asked for opens from the notification in My approvals, marked, and is accepted there (3.31.124);
    - rejecting without a reason, when the type needs one, opens the details and asks for it (nothing sent);
    - a phone width in Arabic: no sideways scroll, the cards read from the right;
    - My requests on a phone.
@@ -160,7 +161,22 @@ const SHOTS = process.env.APV_SHOTS || '';
       send: !document.querySelector('#wfo-new-swap [data-new-swap-send]').disabled }; });
   check('the swap sheet on a phone: the radio is small and the colleague\'s name has the row (not one letter per line)', mate && mate.radio <= 24 && mate.name > mate.row / 2 && mate.send, mate);
   await shot(ep, 'new-request-swap');
-  php(`global $wpdb; $p=$wpdb->prefix; $dep=(int)$wpdb->get_var("SELECT id FROM {$p}ews_departments WHERE code='apv-sw'");
+  // Sent, the swap waits in Mona's My approvals (3.31.124): her notification opens it there, on a phone in Arabic.
+  await ep.locator('#wfo-new-swap .wfo-new-mate input').first().check();
+  await Promise.all([ep.waitForURL(/ews_view=requests/), ep.click('#wfo-new-swap [data-new-swap-send]')]);
+  const sw = php(`global $wpdb; $p=$wpdb->prefix; echo wp_json_encode($wpdb->get_row("SELECT s.id,s.status,n.link FROM {$p}ews_schedule_swaps s LEFT JOIN {$p}ews_notifications n ON n.entity_id=s.id AND n.user_id=".(int)username_exists('apvmona')." AND n.entity='swap' WHERE s.work_date='${swapDay}' ORDER BY s.id DESC, n.id DESC LIMIT 1"));`);
+  const swr = JSON.parse(sw || 'null');
+  check('...sent: the swap waits for Mona, and her notification opens My approvals on it', swr && swr.status === 'Pending' && /ews_view=approvals/.test(swr.link || '') && /#apv-swap-/.test(swr.link || ''), swr);
+  await pp.goto(swr && swr.link ? swr.link : B + '/app/?ews_view=approvals');
+  const peerCard = pp.locator('[data-apv-item="swap-' + (swr ? swr.id : 0) + '"]');
+  const look = await peerCard.evaluate(el => ({ focus: el.classList.contains('is-focus'), pick: !!el.querySelector('[data-apv-pick]'), trade: !!el.querySelector('.wfo-si-trade'),
+    acts: [...el.querySelectorAll('button[name="decision"]')].map(b => b.value).join(','), top: el.getBoundingClientRect().top, h: window.innerHeight })).catch(() => null);
+  check('...the card is marked and in view, with Accept and Decline, what each works that day, and no Select box', look && look.focus && !look.pick && look.trade && look.acts === 'accept,reject' && look.top >= 0 && look.top < look.h, look);
+  check('...right to left, no sideways scroll', await pp.evaluate(() => getComputedStyle(document.body).direction === 'rtl' && document.documentElement.scrollWidth <= window.innerWidth + 1));
+  await pp.waitForTimeout(1500); await shot(pp, 'swap-inbox-phone-ar');
+  await Promise.all([pp.waitForURL(/swap_done=/, { timeout: 30000 }), peerCard.locator('button[value="accept"]').click()]);
+  check('...accepted: the page says so and the swap is done (it was the only thing waiting)', await pp.locator('.wfo-apv-toast').count() === 1 && php(`global $wpdb; echo $wpdb->get_var("SELECT status FROM {$wpdb->prefix}ews_schedule_swaps WHERE id=".(int)${swr ? swr.id : 0});`) === 'Accepted');
+  php(`global $wpdb; $p=$wpdb->prefix; $wpdb->query("DELETE FROM {$p}ews_schedule_swaps WHERE work_date='${swapDay}'"); $dep=(int)$wpdb->get_var("SELECT id FROM {$p}ews_departments WHERE code='apv-sw'");
     $wpdb->query("UPDATE {$p}ews_employees SET department_id=NULL WHERE department_id=$dep"); $wpdb->query("DELETE FROM {$p}ews_departments WHERE id=$dep");
     $wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='${swapDay}' AND employee_id IN (SELECT id FROM {$p}ews_employees WHERE domain_name='apvmona' OR wp_user_id=".(int)get_user_by('login','emp1')->ID.")");`);
   check('no JavaScript errors', errors.length === 0, errors);

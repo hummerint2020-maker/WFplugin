@@ -69,7 +69,7 @@ def inbox(sess, extra=''):
 
 
 def items(page):
-    return re.findall(r'<article class="wfo-apv-item[^"]*" data-apv-item="(\d+)">(.*?)</article>', page, re.S)
+    return re.findall(r'<article class="wfo-apv-item[^"]*" data-apv-item="(\d+)"[^>]*>(.*?)</article>', page, re.S)
 
 
 def form_of(page, approval_id):
