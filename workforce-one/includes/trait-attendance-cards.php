@@ -77,7 +77,7 @@ trait EWS_Attendance_Cards_Trait {
         // Shift times by day for everyone at once (late minutes, the end of today's shift).
         $this->prime_shift_cache($emps);
         $this->shift_prime_periods(array_map(function($e){return (int)$e->id;},$emps));
-        foreach($emps as $e)if(isset($e->default_shift_id)&&!isset(self::$ews_people_shift_memo[(int)$e->id]))self::$ews_people_shift_memo[(int)$e->id]=(int)$e->default_shift_id;
+        foreach($emps as $e)if(property_exists($e,'default_shift_id')&&!isset(self::$ews_people_shift_memo[(int)$e->id]))self::$ews_people_shift_memo[(int)$e->id]=(int)$e->default_shift_id;
         $keys=[];$evs=[];$weeks=[];$day_counts=[];$card=['Present'=>0,'Late'=>0,'Absent'=>0];
         foreach($dates as $d)$day_counts[$d]=['present'=>0,'late'=>0,'absent'=>0];
         $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day,$ev)use($kind,&$keys,&$evs,&$weeks,&$day_counts,&$card,$holidays){
