@@ -452,3 +452,14 @@ Like `tests/my_approvals_browser.js`.
 12. The side sheet from 701px (no centred box between the phone and the side sheet).
 13. The page's shift-history speed-up is a separate small release (off must change nothing here).
 14. Times in 24-hour format everywhere, as the grid (the note reads "Start 09:00, late counts after 09:10").
+
+## Where the implementation differs (3.31.125)
+- `attendance_scope()` reads the week through `week_dates()` ($_GET), as the page did; both callers pass the same request.
+- The cards open the sheet through sheet.js (`data-wfo-sheet` on each card); attendance-cards.js loads the list on `wfo-sheet-open`.
+- Module boundaries: the branch helpers the grid already called are now `locations` api, and `app_view_allowed` is `shell` api,
+  instead of only `branch_planned_bulk` (the crossings went down; baseline updated).
+- Day labels are the full day name ("Monday 19 Oct"); group headers carry no count.
+- Review fixes: each person's shift comes from the rows already loaded (no query per person); "No sign-out" waits for the end of
+  that day's shift on every day (a night shift from yesterday may still run), not only today; a Late day shows at least 1 minute.
+- The byte-for-byte "off" check (`--record` on 3.31.124, `--compare` on 3.31.125) runs locally, not in CI: the pages carry the
+  seeded ids and dates. CI checks the off page has none of the new markup, the endpoint answers 404, and the same query count.
