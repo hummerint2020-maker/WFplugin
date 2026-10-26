@@ -16,10 +16,14 @@ final class WordPressScheduleDayStore implements ScheduleDayStore
     /** @var string */
     private $calendar;
 
-    public function __construct(\wpdb $db)
+    /**
+     * @param string $scheduleTable the plugin's schedule table, as it was named when the plugin object was built (the old
+     *        code used that name, also inside a switch_to_blog()); the calendar is read with the current prefix, as before
+     */
+    public function __construct(\wpdb $db, string $scheduleTable = '')
     {
         $this->db = $db;
-        $this->table = $db->prefix . 'ews_schedule';
+        $this->table = $scheduleTable !== '' ? $scheduleTable : $db->prefix . 'ews_schedule';
         $this->calendar = $db->prefix . 'ews_company_calendar';
     }
 

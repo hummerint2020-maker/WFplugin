@@ -50,9 +50,10 @@ final class ScheduleDayService
 
     /**
      * Save a day whatever it was (leave, swaps, corrections, imports…). The note is replaced. The person is told when the
-     * status or the note changed. @return int|string the row's id (as the database gives it), 0 on a database error
+     * status or the note changed. A null note is stored as NULL, as before.
+     * @return int|string the row's id (as the database gives it), 0 on a database error
      */
-    public function save(int $employeeId, string $date, string $status, string $note, int $actor)
+    public function save(int $employeeId, string $date, string $status, ?string $note, int $actor)
     {
         $id = $this->store->idOf($employeeId, $date);
         $oldStatus = $id ? $this->store->statusOf((int) $id) : null;

@@ -28,12 +28,16 @@ final class Services
     private $claim;
     /** @var ScheduleNotifier */
     private $scheduleNotifier;
+    /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
+    private $tables;
     /** @var array<string,object> */
     private $made = [];
 
-    public function __construct(\wpdb $db, AuditLog $audit, Clock $clock, People $people, OnceClaim $claim, ScheduleNotifier $scheduleNotifier)
+    /** @param array<string,string> $tables */
+    public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, People $people, OnceClaim $claim, ScheduleNotifier $scheduleNotifier)
     {
         $this->db = $db;
+        $this->tables = $tables;
         $this->audit = $audit;
         $this->clock = $clock;
         $this->people = $people;
@@ -43,7 +47,7 @@ final class Services
 
     public function scheduleDayStore(): ScheduleDayStore
     {
-        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressScheduleDayStore($this->db);
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressScheduleDayStore($this->db, (string) ($this->tables['schedule'] ?? ''));
         return $this->made[__FUNCTION__];
     }
 

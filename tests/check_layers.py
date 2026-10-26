@@ -24,7 +24,9 @@ LIT = re.compile(r"""(?:prefix\s*\.\s*['"]|prefix\}|\{\$p\}|\$p\s*\.\s*['"])ews_
 PROP = re.compile(r'\$this->(' + '|'.join(PROPS) + r')\b(?!\s*\()')
 L2_BAD = [r'\bglobal\s+\$', r'\$wpdb\b', r'\$_(?:GET|POST|REQUEST|COOKIE|SERVER|FILES)\b', r'\becho\b', r'\bprint\b', r'\bexit\b', r'\bdie\b',
           r'\bwp_die\s*\(', r'\bwp_(?:safe_)?redirect\s*\(', r'\bheader\s*\(', r'\bsetcookie\s*\(', r'\bcheck_admin_referer\s*\(', r'\bwp_verify_nonce\s*\(',
-          r'\badd_action\s*\(', r'\badd_filter\s*\(', r'\bEWS_', r'\b(?:include|require)(?:_once)?\b', r'\bget_current_user_id\s*\(', r'\bcurrent_time\s*\(', r'\bwpdb\b']
+          r'\badd_action\s*\(', r'\badd_filter\s*\(', r'\bdo_action\s*\(', r'\bapply_filters\s*\(', r'\bEWS_', r'\b(?:include|require)(?:_once)?\b',
+          r'\bget_current_user_id\s*\(', r'\bwp_get_current_user\s*\(', r'\bcurrent_time\s*\(', r'(?<![\w>:$])time\s*\(\s*\)', r'(?<![\w>:$])date\s*\(',
+          r'\b(?:get|update|add|delete)_option\s*\(', r'\$GLOBALS\b', r'\b(?:printf|print_r|var_dump|wp_send_json\w*)\s*\(', r'\bwpdb\b']
 USE = re.compile(r'^\s*use\s+WorkforceOne\\([A-Za-z0-9_]+)\\([A-Za-z0-9_\\]+)\s*;', re.M)
 FUNC = re.compile(r'function\s+&?([A-Za-z0-9_]+)\s*\(')
 
@@ -68,6 +70,8 @@ def body(src, name):
 def self_test():
     ok = True
     ok &= bool(l2("<?php $x=$wpdb->get_var('x'); echo 1;"))
+    ok &= bool(l2("<?php $v = get_option('x'); do_action('y'); $t = time();")) and len(l2("<?php $v = get_option('x'); do_action('y'); $t = time();")) == 3
+    ok &= not l2("<?php $t = strtotime($now); $d = $this->clock->now(); $x = WeekLock::date($y);")
     ok &= not l2("<?php if (!defined('ABSPATH')) exit; return $this->store->find($id, $date);")
     ok &= bool(l3("<?php use WorkforceOne\\People\\X; $t=$db->prefix.'ews_employees';", 'Schedule', ['schedule']))
     ok &= not l3("<?php $t=$db->prefix . 'ews_schedule';", 'Schedule', ['schedule'])
@@ -120,14 +124,16 @@ def main():
                         if b is None:
                             continue
                         found = True
-                        if re.search(r'\$wpdb\b', b) or tables_in(b):
+                        if re.search(r'\$wpdb\b|\$GLOBALS\s*\[\s*[\'"]wpdb', b) or tables_in(b):
                             fails.append('L5 %s: %s() still runs SQL (it must call its Service)' % (rel, fn))
                 if not found:
                     fails.append('L5 %s(): not found in includes/ (renamed? update modules.json)' % fn)
     # L1: references to layered tables outside their Store, per file.
     counts = {}
-    for d in ('includes', 'src', 'templates'):
-        for base, _, files in os.walk(os.path.join(PLUGIN, d)):
+    tops = [os.path.join(PLUGIN, f) for f in os.listdir(PLUGIN) if f.endswith('.php')]   # the main file, uninstall.php
+    walk = [(PLUGIN, [], [os.path.basename(t) for t in tops])] + [w for d in ('includes', 'src', 'templates') for w in os.walk(os.path.join(PLUGIN, d))]
+    for _ in (0,):
+        for base, _, files in walk:
             for f in files:
                 if not f.endswith('.php'):
                     continue
@@ -138,6 +144,12 @@ def main():
                 if n:
                     counts[rel] = n
     if '--update' in sys.argv:
+        old = json.load(open(BASELINE))['files'] if os.path.exists(BASELINE) else None
+        up = {r: (old.get(r, 0), n) for r, n in counts.items() if old is not None and n > old.get(r, 0)}
+        if up and '--allow-increase' not in sys.argv:
+            for r, (a, b) in sorted(up.items()):
+                print('REFUSED %s: %d -> %d (the baseline only goes down; --allow-increase if the owner agreed)' % (r, a, b))
+            return 1
         json.dump({'_about': 'check_layers.py L1: references to layered tables outside their Store, per file; may only go down', 'files': counts},
                   open(BASELINE, 'w'), indent=2, sort_keys=True)
         print('baseline written:', os.path.relpath(BASELINE, ROOT))

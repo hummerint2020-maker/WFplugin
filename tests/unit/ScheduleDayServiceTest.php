@@ -87,7 +87,8 @@ final class ScheduleDayServiceTest extends TestCase
     {
         $this->store->failInsert = true;
         $this->assertSame(['ok' => false, 'conflict' => false, 'id' => 0], $this->service()->saveIfUnchanged(7, '2026-10-27', 'WFH', null, 3));
-        $this->assertSame([['schedule_insert_failed', 'schedule', 0, 'disk full']], $this->audits);
+        // The winner is looked for first, and that read clears the database's message (wpdb::flush()): as before 3.31.127.
+        $this->assertSame([['schedule_insert_failed', 'schedule', 0, 'Database insert failed.']], $this->audits);
     }
 
     public function testGridUpdateKeepsTheNoteAndRefusesAStaleStatus(): void

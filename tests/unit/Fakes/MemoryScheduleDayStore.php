@@ -26,8 +26,10 @@ final class MemoryScheduleDayStore implements ScheduleDayStore
         return $id;
     }
 
+    /** A read clears the last error, as wpdb::flush() does before every query. */
     private function of(int $e, string $d): ?object
     {
+        $this->error = '';
         foreach ($this->rows as $r) if ((int) $r->employee_id === $e && $r->work_date === $d) return $r;
         return null;
     }
@@ -42,14 +44,15 @@ final class MemoryScheduleDayStore implements ScheduleDayStore
 
     public function findStatusNoteById(int $id): ?object
     {
+        $this->error = '';
         return isset($this->rows[$id]) ? (object) ['id' => $this->rows[$id]->id, 'status' => $this->rows[$id]->status, 'note' => $this->rows[$id]->note] : null;
     }
 
     public function idOf(int $employeeId, string $date): ?string { $r = $this->of($employeeId, $date); return $r ? (string) $r->id : null; }
 
-    public function statusOf(int $id): ?string { return isset($this->rows[$id]) ? (string) $this->rows[$id]->status : null; }
+    public function statusOf(int $id): ?string { $this->error = ''; return isset($this->rows[$id]) ? (string) $this->rows[$id]->status : null; }
 
-    public function noteOf(int $id): ?string { return isset($this->rows[$id]) ? (string) $this->rows[$id]->note : null; }
+    public function noteOf(int $id): ?string { $this->error = ''; return isset($this->rows[$id]) ? (string) $this->rows[$id]->note : null; }
 
     public function insert(array $row): int
     {

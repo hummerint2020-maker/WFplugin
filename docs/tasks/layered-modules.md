@@ -333,7 +333,9 @@ The trick is to render **base and head in the same CI job, against the same data
 3. **First heavy module after schedule:** **People** (L4) before Attendance (L5).
 4. **Cadence:** at most **one move-only release between two feature releases**; each needs the owner's approval like any
    release.
-5. **Golden harness:** runs on **every PR**.
+5. **Golden harness:** runs on **every PR**. A feature PR names what it changes on purpose in `tests/golden/expected.json`
+   (pages that may differ, hook names it adds; no removal allowed); everything else must stay the same; the file is
+   emptied again by the next release (owner decision 2026-10-27).
 6. **Naming:** **Store** (`<Thing>Store` / `WordPress<Thing>Store`), as the inbox.
 7. **Privacy exporters:** **now**, through a read-only `Platform\Data\PrivacyQuery` listed as an allowed cross-module read,
    removed as each module gets its Store.
@@ -370,3 +372,21 @@ Privacy exporters can ship in any feature slot.
   - Proven to fail: one extra space in the Attendance template fails 4 pages; one extra query on the Dashboard fails 3.
 - **check_layers.py:** rules L1–L5 as designed, with self-tests; L6 (options and schema unchanged) is not automated yet:
   the harness's equal pages and writes cover it for this release.
+
+### After the review (3.31.127)
+- The golden harness runs in **its own CI job** (its own WordPress and MySQL), so its seed (a manager capability,
+  departments, teams, a holiday, a night shift) never reaches the other suites.
+- It creates the mu-plugins folder (a fresh WordPress has none), checks that it starts its own server on a free port,
+  refuses to run outside CI (or `GOLDEN_OK=1`) or on a site that is not 127.0.0.1, checks every page answers 200, and
+  fetches a page that differs once more on both sides (a clock boundary between two sides is not a difference).
+- The actions now notify someone (omar gets a WordPress user; days are planned for the coming weeks), keep the raw
+  return types of `save_att()`, and must have saved, notified and claimed the week, else the run fails.
+- Hooks: none may be removed; added ones must be named in `expected.json`.
+- The Store keeps the plugin's schedule table name (`$this->schedule`, as the old code), so a `switch_to_blog()` reads
+  the same table as before; the calendar uses the current prefix, as before.
+- `save()` takes a null note (stored as NULL, as before).
+- `check_layers.py` also bans hooks, options, `time()`/`date()`, `$GLOBALS` and output functions in Services, sees
+  `$GLOBALS['wpdb']`, scans the main plugin file and `uninstall.php` (the baseline rose once for that wider scan), and
+  `--update` refuses an increase unless `--allow-increase`.
+- The unit fake clears its error on reads, as wpdb does, so the insert-failure audit is the one production writes
+  ("Database insert failed.").

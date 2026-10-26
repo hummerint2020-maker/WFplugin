@@ -23,6 +23,9 @@ BASE = os.path.abspath(sys.argv[sys.argv.index('--base') + 1])
 HEAD = os.path.abspath(os.path.join(TESTS, '..', 'workforce-one'))
 WP = shlex.split(os.environ.get('WP_CLI', 'wp'))
 CFG = json.load(open(os.path.join(HERE, 'pages.json')))
+EXPECTED = json.load(open(os.path.join(HERE, 'expected.json')))
+if not (os.environ.get('CI') or os.environ.get('GOLDEN_OK')):
+    sys.exit('the golden harness empties every ews_* table: it runs in CI, or with GOLDEN_OK=1 on a test site')
 
 
 def wp(*args, env=None):
@@ -39,6 +42,9 @@ def php(code):
 ABSPATH = php('echo rtrim(ABSPATH,"/");').splitlines()[-1]
 LINK = php('echo WP_PLUGIN_DIR;').splitlines()[-1] + '/workforce-one'
 MU = php('echo WPMU_PLUGIN_DIR;').splitlines()[-1]
+SITE = php('echo home_url();').splitlines()[-1]
+if not re.match(r'^https?://(127\.0\.0\.1|localhost)(:\d+)?/?$', SITE):
+    sys.exit('not a test site (%s): the golden harness runs only on 127.0.0.1' % SITE)
 if not os.path.islink(LINK):
     sys.exit('the plugin folder must be a link (%s): the harness points it at each side' % LINK)
 ORIGINAL = os.readlink(LINK)
@@ -54,12 +60,22 @@ def point(target):
     os.replace(tmp, LINK)
 
 
+def port_free():
+    import socket
+    with socket.socket() as s:
+        return s.connect_ex(('127.0.0.1', 8080)) != 0
+
+
 def start():
     global server
+    if not port_free():
+        sys.exit('the port 8080 is taken: the golden harness starts its own server (stop the other one)')
     # A fresh process for each side: no file or realpath cache of the other side's code.
     server = subprocess.Popen(['php', '-d', 'realpath_cache_size=0', '-S', '127.0.0.1:8080', '-t', ABSPATH, os.path.join(TESTS, 'router.php')],
                               stdout=subprocess.DEVNULL, stderr=open(os.path.join(S, 'golden-server.log'), 'a'))
     for _ in range(60):
+        if server.poll() is not None:
+            sys.exit('the golden server stopped (see golden-server.log)')
         try:
             import urllib.request
             urllib.request.urlopen('http://127.0.0.1:8080/wp-login.php', timeout=2)
@@ -94,16 +110,18 @@ def normalise(html):
     return html
 
 
-def render(side, sessions, ctx):
-    """{page index: (html, queries)} for the code the link points at."""
+def render(side, sessions, ctx, only=None):
+    """{page index: (html, queries, status)} for the code the link points at."""
     out = {}
     for i, p in enumerate(CFG['pages']):
+        if only is not None and i not in only:
+            continue
         opts = p.get('options') or {}
         if opts:
             php(''.join("update_option(%s,%s,false);" % (json.dumps(k), json.dumps(v)) for k, v in opts.items()))
-        html = sessions[p['user']].req(fill(p['url'], ctx))[1]
+        status, html, _ = sessions[p['user']].req(fill(p['url'], ctx))
         m = re.findall(r'<!--EWSQ=(\d+)-->', html)
-        out[i] = (normalise(html), int(m[-1]) if m else -1)
+        out[i] = (normalise(html), int(m[-1]) if m else -1, status)
         if opts:
             php(''.join("delete_option(%s);" % json.dumps(k) for k in opts))
     return out
@@ -134,8 +152,12 @@ try:
     if seed.returncode:
         sys.exit(seed.stderr[-2000:])
     ctx = json.loads(seed.stdout.strip().splitlines()[-1])
-    php("delete_option('ews_feature_attendance_cards');")
+    php("""delete_option('ews_feature_attendance_cards'); global $wpdb; $p=$wpdb->prefix;
+        $u=username_exists('acomar')?:wp_create_user('acomar','acomar-pass','acomar@example.com');
+        $wpdb->update($p.'ews_employees',['wp_user_id'=>(int)$u],['id'=>%d]);
+        foreach([%d,%d] as $e) for($i=1;$i<=14;$i++){ $d=gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +'.$i.' days')); $wpdb->replace($p.'ews_schedule',['employee_id'=>$e,'work_date'=>$d,'status'=>'Office']); }""" % (ctx['omar'], ctx['omar'], ctx['mona']))
     # The query count of a page, printed at its end (web requests only).
+    os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
     wp('eval-file', os.path.join(HERE, 'snapshot.php'), env={'GOLDEN_MODE': 'save', 'GOLDEN_FILE': SNAP})
 
@@ -153,13 +175,30 @@ try:
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
         for i, (html, _) in pages[side].items():
             open(os.path.join(S, 'golden-pages', side, '%02d.html' % i), 'w').write(html)
+    # A page that differs is fetched once more on both sides (a clock boundary between two sides is not a difference).
+    differ = [i for i in pages['head'] if pages['base'][i][0] != pages['head'][i][0] and pages['base'][i][0] == pages['base2'][i][0]]
+    if differ:
+        for side, target in (('base', BASE), ('head', HEAD)):
+            point(target)
+            restore()
+            start()
+            again = render(side, sessions, ctx, set(differ))
+            stop()
+            for i in differ:
+                pages[side + '_again'] = pages.get(side + '_again', {})
+                pages[side + '_again'][i] = again[i]
+    allowed = {(p['url'], json.dumps(p.get('options') or {}, sort_keys=True)) for p in EXPECTED.get('pages', [])}
     for i, p in enumerate(CFG['pages']):
         name = '%s %s%s' % (p['user'], p['url'], (' with ' + ','.join(p['options'])) if p.get('options') else '')
         b, b2, h = pages['base'][i], pages['base2'][i], pages['head'][i]
+        check('the page answers 200 on both sides: ' + name, b[2] == 200 and h[2] == 200 and 'critical error' not in h[0], (b[2], h[2]))
         if b[0] != b2[0]:
             check('stable on the old code: ' + name, False, 'the old code gave two different pages: add a pattern to pages.json normalise')
             continue
-        same = b[0] == h[0]
+        same = b[0] == h[0] or (i in differ and pages['base_again'][i][0] == pages['head_again'][i][0])
+        if (p['url'], json.dumps(p.get('options') or {}, sort_keys=True)) in allowed:
+            print('EXPECTED (expected.json) %s: %s' % ('the same' if same else 'changed', name))
+            continue
         diff = '' if same else ''.join(list(difflib.unified_diff(b[0].splitlines(True), h[0].splitlines(True), n=1))[:30])
         check('the same page: ' + name, same and len(b[0]) > 500, diff or len(b[0]))
         check('...no more queries (%d → %d)' % (b[1], h[1]), 0 <= h[1] <= b[1], (b[1], h[1]))
@@ -171,8 +210,14 @@ try:
     for k in tb:
         check('the same action trace: ' + k, tb[k] == th.get(k), (json.dumps(tb[k])[:300], json.dumps(th.get(k))[:300]))
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))
+    check('...the actions really saved, notified and claimed the week (else they prove nothing)', tb.get('week_lock_notified') and tb.get('notifications') and tb.get('grid_insert', {}).get('ok'),
+          (tb.get('week_lock_notified'), len(tb.get('notifications') or [])))
     ib, ih = inventory(BASE), inventory(HEAD)
-    check('the same hooks, admin-post actions, shortcodes and REST routes (%d)' % len(ih), ib == ih, sorted(set(ib) ^ set(ih))[:20])
+    from collections import Counter
+    removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
+    check('no hook, admin-post action, shortcode or REST route removed (%d)' % len(ih), not removed, sorted(removed)[:20])
+    extra = sorted(set(added) - set(EXPECTED.get('hooks_added', [])))
+    check('...and none added that expected.json does not name', not extra, extra[:20])
 finally:
     stop()
     point(ORIGINAL)

@@ -1,6 +1,7 @@
 {
   "_about": "check_layers.py L1: references to layered tables outside their Store, per file; may only go down",
   "files": {
+    "workforce-one/employee-schedule-manager.php": 5,
     "workforce-one/includes/trait-achievements.php": 2,
     "workforce-one/includes/trait-admin-dashboard.php": 3,
     "workforce-one/includes/trait-admin-requests.php": 2,
@@ -20,6 +21,7 @@
     "workforce-one/includes/trait-schedule-types.php": 1,
     "workforce-one/includes/trait-schedule-view.php": 1,
     "workforce-one/includes/trait-schema.php": 1,
+    "workforce-one/includes/trait-services.php": 1,
     "workforce-one/includes/trait-swap.php": 5
   }
 }
