@@ -21,7 +21,7 @@
     "workforce-one/includes/trait-schedule-types.php": 1,
     "workforce-one/includes/trait-schedule-view.php": 1,
     "workforce-one/includes/trait-schema.php": 1,
-    "workforce-one/includes/trait-services.php": 1,
-    "workforce-one/includes/trait-swap.php": 5
+    "workforce-one/includes/trait-swap.php": 5,
+    "workforce-one/includes/trait-work-time.php": 1
   }
 }

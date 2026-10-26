@@ -54,6 +54,9 @@ trait EWS_Work_Time_Trait {
             return $cache[$key]=\WorkforceOne\Attendance\ShiftDay::resolve($today,current_time('H:i'),(string)$h['start'],(string)$h['end'],$overnight,$open);
         }
 
+    /** The schedule table's name as the plugin object has it (for the layered Store, 3.31.127). */
+    private function schedule_table_name(){ return (string)$this->schedule; }
+
     private function today_schedule_for_employee($eid){
             return $this->services()->scheduleDays()->day((int)$eid,(string)$this->attendance_day($eid));
         }

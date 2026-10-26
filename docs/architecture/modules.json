@@ -158,7 +158,8 @@
         "attendance_scope",
         "attendance_walk",
         "attendance_cards_enabled",
-        "shift_prime_people"
+        "shift_prime_people",
+        "schedule_table_name"
       ],
       "layered": [
         {

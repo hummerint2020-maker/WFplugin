@@ -39,7 +39,7 @@ trait EWS_Services_Trait {
             foreach($days as $d=>$st)$parts[]=date_i18n('D',strtotime($d)).' '.$st;
             $this->notify($uid,'schedule',__('Next week\'s schedule is final','workforce-one'),implode(' · ',$parts),['url'=>$link,'entity'=>'week_lock']);
         };
-        return new Services($db,['schedule'=>(string)$this->schedule],
+        return new Services($db,['schedule'=>$this->schedule_table_name()],
             new class($audit) implements AuditLog {
                 private $f;
                 public function __construct(callable $f){ $this->f=$f; }

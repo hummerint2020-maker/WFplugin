@@ -173,7 +173,7 @@ try:
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
-        for i, (html, _) in pages[side].items():
+        for i, (html, _q, _st) in pages[side].items():
             open(os.path.join(S, 'golden-pages', side, '%02d.html' % i), 'w').write(html)
     # A page that differs is fetched once more on both sides (a clock boundary between two sides is not a difference).
     differ = [i for i in pages['head'] if pages['base'][i][0] != pages['head'][i][0] and pages['base'][i][0] == pages['base2'][i][0]]
