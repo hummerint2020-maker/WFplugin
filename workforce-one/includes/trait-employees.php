@@ -98,6 +98,15 @@ trait EWS_Employees_Trait {
     }
 
     /** The active employees (id, name, domain_name), by name; at most $limit when given. @return object[] */
+    /** An active employee's name and WordPress user, or null (for the Schedule services, 3.31.127). */
+    private function people_active_brief($employee_id){
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare(
+                "SELECT name,wp_user_id FROM {$this->employees} WHERE id=%d AND active=1",
+                $employee_id
+            ));
+    }
+
     /** The shift an employee is on now (employees.default_shift_id; 0 = company hours). */
     private function people_shift_id($employee_id){
         global $wpdb;

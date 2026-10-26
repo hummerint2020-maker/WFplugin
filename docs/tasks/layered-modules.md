@@ -344,3 +344,29 @@ The trick is to render **base and head in the same CI job, against the same data
 3.31.127 L0+L1 (move only) → 3.31.128 schedule change request (built layered, Engine port) → L2 approvals engine (move)
 → a feature → L4 People (move) → a feature → L3 rest of schedule / L5 Attendance … (one move between features).
 Privacy exporters can ship in any feature slot.
+
+---
+
+## 9. 3.31.127 (L0 + L1): where the implementation differs from the design
+- **Adapters:** the ports' WordPress side is a set of small anonymous classes built in `includes/trait-services.php`
+  (`EWS_Services_Trait::services_build()`), each wrapping a closure made inside the plugin object, instead of a separate
+  `class-ews-legacy-ports.php`. Same rule: nothing in `src/` sees the plugin object.
+- **Ports added now:** `Platform\AuditLog`, `Clock`, `People`, `OnceClaim` and `Schedule\ScheduleNotifier` (the words and
+  links of the two notifications stay in the adapter). `Transaction` waits for the first slice that needs one (none in
+  this slice runs a transaction).
+- **The inbox stays where it is** (its own per-prefix holder in `trait-notifications.php`); moving it into the container
+  is left for the next move release, so this one moves only Schedule.
+- **`save()` keeps its three reads** (id, status, note) exactly as `save_att()` had them; collapsing them is a later,
+  separate commit.
+- **People:** `people_active_brief()` (people module) keeps the exact query the grid's save ran on `ews_employees`.
+- **Golden harness** (`tests/golden/run.py`):
+  - the database is saved and put back by `tests/golden/snapshot.php` (every `ews_*` table with `TRUNCATE` so the ids
+    match, and the plugin's options), not `wp db export`, so it runs on CI's MySQL and on SQLite;
+  - each side gets its own PHP server (no file or realpath cache of the other side) and one login for all sides;
+  - the base is rendered twice: a page that differs on the old code is reported as not stable instead of compared;
+  - pages are compared on HTML and query count (not query shapes yet); the actions run in PHP through the same
+    functions (`actions.php`), not through HTTP posts; the hook inventory is a text scan of both trees;
+  - normalised: the version, WordPress's `userSettings.time` in wp-admin and "N minutes ago".
+  - Proven to fail: one extra space in the Attendance template fails 4 pages; one extra query on the Dashboard fails 3.
+- **check_layers.py:** rules L1–L5 as designed, with self-tests; L6 (options and schema unchanged) is not automated yet:
+  the harness's equal pages and writes cover it for this release.

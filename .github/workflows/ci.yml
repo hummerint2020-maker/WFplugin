@@ -48,6 +48,8 @@ jobs:
         run: python3 tests/check_modules.py
       - name: Extracted Notifications inbox boundary
         run: python3 tests/check_notification_inbox_boundary.py
+      - name: Layered modules stay layered (docs/tasks/layered-modules.md)
+        run: python3 tests/check_layers.py
       - name: API contract (OpenAPI matches the routes, error codes and examples)
         run: |
           python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
@@ -107,6 +109,21 @@ jobs:
         run: wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Notifications inbox storage contract
         run: wp eval-file tests/e2e_notification_inbox.php --path="$WP"
+      - name: Schedule days storage contract
+        run: wp eval-file tests/e2e_schedule_store.php --path="$WP"
+      # The old and the new code on the same site and data: the same pages, no more queries, the same writes
+      # (tests/golden/run.py). It starts its own server, so it runs before the shared one.
+      - name: Golden (the same pages and writes as the base)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || [ "$BASE_SHA" = "$GITHUB_SHA" ]; then
+            echo "No base commit to compare with: skipped"; exit 0
+          fi
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git worktree add /tmp/golden-base "$BASE_SHA"
+          WP_CLI="wp --path=$WP" python3 tests/golden/run.py "$S" --base /tmp/golden-base/workforce-one
+          wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Start PHP server
         run: |
           php -S 127.0.0.1:8080 -t "$WP" tests/router.php > "$S/server.log" 2>&1 &
