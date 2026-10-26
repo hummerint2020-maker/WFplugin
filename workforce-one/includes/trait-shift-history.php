@@ -175,13 +175,30 @@ trait EWS_Shift_History_Trait {
         $ids=array_values(array_filter(array_map('intval',$ids),function($i){return $i>0 && !isset(self::$ews_shift_periods_cache[$i]);}));
         if(!$ids)return;
         global $wpdb;$t=$this->shift_history_tables();
-        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['periods']))!==$t['periods']){foreach($ids as $id)self::$ews_shift_periods_cache[$id]=[];return;}
+        // The table is looked for once a request once it is there (3.31.126: it was looked for once per employee); by name,
+        // so another site of a network is looked at again.
+        if(empty(self::$ews_shift_periods_table[$t['periods']])){
+            if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['periods']))!==$t['periods']){foreach($ids as $id)self::$ews_shift_periods_cache[$id]=[];return;}
+            self::$ews_shift_periods_table[$t['periods']]=true;
+        }
         foreach($ids as $id)self::$ews_shift_periods_cache[$id]=[];
         foreach(array_chunk($ids,500) as $chunk){
             $ph=implode(',',array_fill(0,count($chunk),'%d'));
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['periods']} WHERE employee_id IN ($ph) ORDER BY from_date",$chunk)) as $r)
                 self::$ews_shift_periods_cache[(int)$r->employee_id][]=['id'=>(int)$r->id,'from'=>(string)$r->from_date,'to'=>$r->to_date!==null&&$r->to_date!==''?(string)$r->to_date:null,'shift_id'=>(int)$r->shift_id,'reason'=>(string)$r->reason,'created_by'=>(int)$r->created_by,'created_at'=>(string)$r->created_at];
         }
+    }
+
+    /**
+     * The shifts of many people at once (3.31.126), for a page that walks everyone: employees.default_shift_id, today's
+     * shift and the shift history, so each person costs no query of their own (people_shift_ids()).
+     * @param array<int,object|int> $people employees or employee ids
+     */
+    private function shift_prime_people(array $people){
+        $now=$this->people_shift_ids($people);
+        if(!$now)return;
+        $this->prime_shift_cache(array_map(function($id,$shift){return (object)['id'=>$id,'default_shift_id'=>$shift];},array_keys($now),array_values($now)));
+        $this->shift_prime_periods(array_keys($now));
     }
 
     /** The shift id an employee was on on a day (0 = company hours); the employee's shift when there is no history. */

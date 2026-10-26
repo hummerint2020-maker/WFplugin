@@ -30,7 +30,11 @@ final class Stats
         return $out;
     }
 
-    /** The ms at or below which $p (0..1) of the runs fall: the upper edge of that bucket; above 5 minutes the worst seen. @param array<int,int|string> $hist */
+    /**
+     * The ms at or below which $p (0..1) of the runs fall: the upper edge of that bucket; above 5 minutes the worst seen.
+     * Never more than the worst seen, when it is known (3.31.126: "slow 3 s" with "worst 2.7 s" read as a mistake).
+     * @param array<int,int|string> $hist
+     */
     public static function percentile(array $hist, float $p, int $max = 0): int
     {
         $n = 0;
@@ -40,7 +44,7 @@ final class Stats
         $seen = 0;
         for ($i = 0; $i < self::BUCKETS; $i++) {
             $seen += (int) ($hist[$i] ?? 0);
-            if ($seen >= $need) return $i < count(self::EDGES) ? self::EDGES[$i] : max($max, self::EDGES[count(self::EDGES) - 1]);
+            if ($seen >= $need) return $i < count(self::EDGES) ? ($max > 0 ? min(self::EDGES[$i], $max) : self::EDGES[$i]) : max($max, self::EDGES[count(self::EDGES) - 1]);
         }
         return $max;
     }

@@ -74,10 +74,7 @@ trait EWS_Attendance_Cards_Trait {
         $offset=max(0,(int)($_GET['offset']??0));
         $sc=$this->attendance_scope(wp_unslash($_GET));
         $emps=$sc['matched'];$dates=$sc['dates'];$today=$sc['today'];$holidays=$sc['holidays'];
-        // Shift times by day for everyone at once (late minutes, the end of today's shift).
-        $this->prime_shift_cache($emps);
-        $this->shift_prime_periods(array_map(function($e){return (int)$e->id;},$emps));
-        foreach($emps as $e)if(property_exists($e,'default_shift_id')&&!isset(self::$ews_people_shift_memo[(int)$e->id]))self::$ews_people_shift_memo[(int)$e->id]=(int)$e->default_shift_id;
+        // Shift times by day for everyone at once (late minutes, the end of today's shift): attendance_walk() primes them.
         $keys=[];$evs=[];$weeks=[];$day_counts=[];$card=['Present'=>0,'Late'=>0,'Absent'=>0];
         foreach($dates as $d)$day_counts[$d]=['present'=>0,'late'=>0,'absent'=>0];
         $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day,$ev)use($kind,&$keys,&$evs,&$weeks,&$day_counts,&$card,$holidays){
@@ -111,6 +108,7 @@ trait EWS_Attendance_Cards_Trait {
         $branch=null;
         if($kind==='absent'&&$this->branch_settings()['mode']==='schedule'&&count($this->branch_locations())>1){
             $ids=array_map(function($k)use($emps){return (int)$emps[$k['pos']]->id;},$page['rows']);
+            $this->ews_v321_employee_locations_prime($ids);
             $branch=['planned'=>$this->branch_planned_bulk($ids,array_values(array_unique(array_column($page['rows'],'date')))),'names'=>array_map(function($l){return (string)$l->name;},$this->branch_choices())];
         }
         $now=(int)current_time('timestamp');$rows=[];$shifts=[];

@@ -408,7 +408,16 @@ trait EWS_System_Health_Trait {
         global $wpdb;
         $lastday=(string)$wpdb->get_var("SELECT MAX(day) FROM {$this->health_tables()['daily']}");
         $from=$lastday!==''?max(gmdate('Y-m-d',time()-6*86400),gmdate('Y-m-d',strtotime($lastday.' UTC')-86400)):gmdate('Y-m-d',time()-6*86400);
-        for($t=strtotime($from.' UTC');$t<=time();$t+=86400)$this->health_build_daily(gmdate('Y-m-d',$t));   // days missed while cron was off included
+        $refused='';$batched=false;
+        for($t=strtotime($from.' UTC');$t<=time();$t+=86400){   // days missed while cron was off included
+            $w=$this->health_build_daily(gmdate('Y-m-d',$t));
+            if($w['refused']!=='')$refused=$w['refused'];
+            $batched=$batched||$w['batched'];
+        }
+        // Why the database refused to write the rows together (3.31.126): on one site every row went in one by one. Decided
+        // once for the whole run, after its transactions, so a ROLLBACK cannot undo it and a later day cannot hide it.
+        if($refused!=='')update_option('ews_health_insert_error',['at'=>time(),'error'=>mb_substr($refused,0,300)],false);
+        elseif($batched && get_option('ews_health_insert_error',null)!==null)delete_option('ews_health_insert_error');
         if((string)get_option('ews_health_purged','')!==gmdate('Y-m-d')){
             $this->health_purge();
             update_option('ews_health_purged',gmdate('Y-m-d'),false);
@@ -422,13 +431,16 @@ trait EWS_System_Health_Trait {
         update_option('ews_health_rollup_at',time(),false);
     }
 
-    /** Rebuilds one day's rows from its hourly rows, one row per route and release (a release in the middle of a day splits it). */
+    /**
+     * Rebuilds one day's rows from its hourly rows, one row per route and release (a release in the middle of a day splits it).
+     * @return array{refused:string,batched:bool} the database's answer when it refused a multi-row INSERT; whether one went in
+     */
     private function health_build_daily($day){
         global $wpdb;
         $t=$this->health_tables();$cols=$this->health_sum_columns();
         $sum=implode(',',array_map(function($c){return "SUM({$c}) {$c}";},$cols));
         $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT route,version,{$sum},MAX(ms_max) ms_max,MAX(q_max) q_max,MAX(mem_max) mem_max,MAX(mem_pct_max) mem_pct_max FROM {$t['hourly']} WHERE hour>=%s AND hour<=%s GROUP BY route,version",$day.' 00:00:00',$day.' 23:59:59'),ARRAY_A);
-        if(!$rows)return;
+        if(!$rows)return ['refused'=>'','batched'=>false];
         usort($rows,function($a,$b){return [$a['route'],0]<=>[$b['route'],0] ?: version_compare((string)$a['version'],(string)$b['version']);});   // older release first
         // The day's rows are replaced together (3.31.119): a write that fails keeps the rows of before (rebuilt at the next hourly run).
         $tx=$wpdb->query('START TRANSACTION')!==false;
@@ -444,6 +456,7 @@ trait EWS_System_Health_Trait {
         }
         // Chunks of 100 rows in one INSERT (about 6 queries a rollup instead of about 47); a chunk the database refuses is
         // inserted row by row, so no row is lost on either MySQL or SQLite.
+        $refused='';$batched=false;
         foreach(array_chunk(array_values($out),100) as $chunk){
             $cols=array_keys($chunk[0]);
             $values=[];
@@ -456,11 +469,15 @@ trait EWS_System_Health_Trait {
             $quiet=$wpdb->suppress_errors(true);
             $ok=$wpdb->query($sql);
             $wpdb->suppress_errors($quiet);
-            if($ok===false)foreach($chunk as $row)if($wpdb->insert($t['daily'],$row)===false)$bad=true;
+            if($ok!==false){$batched=true;continue;}
+            if($refused==='')$refused=(string)$wpdb->last_error;   // shown on the Scheduled jobs tab (health_rollup())
+            foreach($chunk as $row)if($wpdb->insert($t['daily'],$row)===false)$bad=true;
         }
-        if(!$tx)return;
+        $out=['refused'=>$refused,'batched'=>$batched];
+        if(!$tx)return $out;
         if($bad){$wpdb->query('ROLLBACK');error_log('Workforce One: the system health rows of '.$day.' could not be rebuilt; the previous ones are kept');}   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- diagnostic data
         elseif($wpdb->query('COMMIT')===false)$wpdb->query('ROLLBACK');
+        return $out;
     }
 
     /** Old rows out, in batches; a hard cap on the rows kept sets ews_health_full. */
@@ -561,6 +578,10 @@ trait EWS_System_Health_Trait {
             $names=$this->admin_nav_tab_labels();
             return $names[$slug]??($slug==='ews31'?__('Home','workforce-one'):$slug);
         }
+        // The routes that are not one page of the plugin (3.31.126: they showed as "app:default", "rest:other"…).
+        $named=['app:default'=>__('App: Dashboard','workforce-one'),'rest:other'=>__('API: WordPress and other plugins','workforce-one'),'post:other'=>__('Actions: WordPress and other plugins','workforce-one'),
+            'cron:other'=>__('Jobs: WordPress and other plugins','workforce-one'),'other:admin'=>__('Other wp-admin pages','workforce-one'),'other:front'=>__('Other pages of the site','workforce-one')];
+        if(isset($named[$route]))return $named[$route];
         if(strpos($route,'app:')===0){$v=substr($route,4);$d=\WorkforceOne\Settings\Navigation::DEFAULTS[$v]['label']??null;return $d?sprintf(/* translators: %s: a page of the employee app */__('App: %s','workforce-one'),__($d,'workforce-one')):__('App: other page','workforce-one');}
         if(strpos($route,'cron:')===0)return sprintf(/* translators: %s: a scheduled job */__('Job: %s','workforce-one'),substr($route,5));
         return $route;
@@ -809,6 +830,8 @@ trait EWS_System_Health_Trait {
                 $vars['jobs'][]=['hook'=>$hook,'every'=>$info['every'],'last'=>$last[$hook]??null,'runs'=>(int)($day['n']??0),'failed'=>(int)$week,'p95'=>$st['p95']??null,'next'=>$next?:0,'status'=>$status,'overdue'=>$overdue];
             }
             $vars['wp_cron_off']=defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
+            $ie=get_option('ews_health_insert_error',null);
+            $vars['insert_error']=is_array($ie)&&!empty($ie['error'])?['at'=>(int)($ie['at']??0),'error'=>(string)$ie['error']]:null;
         }
         echo $this->render_template('admin/system-health',$vars);
     }

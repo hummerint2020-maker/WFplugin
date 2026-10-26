@@ -7861,3 +7861,25 @@ msgstr "افتحها في التقارير"
 
 msgid "The Reports open without the branch or search filter."
 msgstr "التقارير بتفتح من غير فلتر الفرع أو البحث."
+
+msgid "App: Dashboard"
+msgstr "التطبيق: الرئيسية"
+
+msgid "API: WordPress and other plugins"
+msgstr "واجهة API: ووردبريس وإضافات أخرى"
+
+msgid "Actions: WordPress and other plugins"
+msgstr "الإجراءات: ووردبريس وإضافات أخرى"
+
+msgid "Jobs: WordPress and other plugins"
+msgstr "المهام: ووردبريس وإضافات أخرى"
+
+msgid "Other wp-admin pages"
+msgstr "صفحات أخرى في لوحة التحكم"
+
+msgid "Other pages of the site"
+msgstr "صفحات أخرى في الموقع"
+
+#. translators: %s: time ago
+msgid "The daily summary was written one row at a time (%s): the database refused writing the rows together. Its answer:"
+msgstr "كُتب الملخص اليومي صفًا صفًا (%s): رفضت قاعدة البيانات كتابة الصفوف معًا. ردّها:"

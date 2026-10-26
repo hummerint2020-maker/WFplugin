@@ -36,7 +36,7 @@ trait EWS_Attendance_Grid_Trait {
             $branch_filter_names=array_map(function($l){return (string)$l->name;},$this->branch_choices());
             $branch_filter=absint($get['branch']??0);
             if($branch_filter&&isset($branch_filter_names[$branch_filter])){
-                $ids=array_map(function($e){return (int)$e->id;},$emps);$others=$this->branch_other_ids_bulk($ids);
+                $ids=array_map(function($e){return (int)$e->id;},$emps);$others=$this->branch_other_ids_bulk($ids);$this->ews_v321_employee_locations_prime($ids);
                 $emps=array_values(array_filter($emps,function($e)use($branch_filter,$others){return $this->branch_main_id((int)$e->id)===$branch_filter||in_array($branch_filter,$others[(int)$e->id]??[],true);}));
             }else $branch_filter=0;
         }
@@ -54,6 +54,7 @@ trait EWS_Attendance_Grid_Trait {
      */
     private function attendance_walk(array $emps,array $dates,$today,array $holidays,callable $each){
         [$schedule,$events]=$this->insights_load(array_map(function($e){return (int)$e->id;},$emps),$dates[0],$dates[count($dates)-1]);
+        $this->shift_prime_people($emps);   // each day's shift for everyone at once (3.31.126)
         foreach($emps as $pos=>$e){
             $eid=(int)$e->id;
             foreach($dates as $d){
@@ -102,7 +103,7 @@ trait EWS_Attendance_Grid_Trait {
         $branch=null;
         if($this->branch_settings()['mode']==='schedule'&&count($this->branch_locations())>1){
             $page_ids=array_map(function($e){return (int)$e->id;},$emps);
-            $choices=$this->branch_choices();$others=$this->branch_other_ids_bulk($page_ids);$mine=[];$main=[];
+            $choices=$this->branch_choices();$others=$this->branch_other_ids_bulk($page_ids);$mine=[];$main=[];$this->ews_v321_employee_locations_prime($page_ids);
             foreach($page_ids as $eid){$main[$eid]=$this->branch_main_id($eid);$mine[$eid]=array_values(array_filter(array_unique(array_merge([$main[$eid]],$others[$eid]??[])),function($id)use($choices){return isset($choices[$id]);}));}
             $branch=['names'=>array_map(function($l){return (string)$l->name;},$choices),'planned'=>$this->branch_planned_bulk($page_ids,$dates),'mine'=>$mine,'main'=>$main,
                 'statuses'=>array_values(array_filter($this->schedule_type_names(true),function($st){return $this->schedule_type_requires_location($st);}))];

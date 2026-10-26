@@ -92,7 +92,8 @@
         "team_ids_for_employee",
         "people_shift_id",
         "people_set_shift_id",
-        "people_all_shift_ids"
+        "people_all_shift_ids",
+        "people_shift_ids"
       ]
     },
     "schedule": {
@@ -152,7 +153,8 @@
         "week_lock_can_override",
         "attendance_scope",
         "attendance_walk",
-        "attendance_cards_enabled"
+        "attendance_cards_enabled",
+        "shift_prime_people"
       ]
     },
     "locations": {
@@ -177,7 +179,8 @@
         "branch_main_id",
         "branch_other_ids_bulk",
         "branch_planned_bulk",
-        "branch_today"
+        "branch_today",
+        "ews_v321_employee_locations_prime"
       ]
     },
     "attendance": {

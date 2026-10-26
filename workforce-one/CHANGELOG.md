@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.31.126
+### Speed, and what System Health shows (design `docs/tasks/speed-health.md`)
+No switch, no setting, no database change. The pages show exactly what they showed before (checked byte for byte against
+3.31.125 on 11 pages); they ask the database much less. System Health on a live site had found each of these.
+- **Attendance, Attendance Insights, the Daily Log and the Sign In / Out report** read each person's shift, shift history and
+  Work Location for everyone at once instead of one person at a time (a SHOW TABLES and up to four queries per person).
+  On the test site, for 78 people: Attendance 269 → 36 queries, Attendance Insights 263 → about 35, the Daily Log 119 → 39,
+  the Sign In / Out report 253 → about 30. The count no longer grows with the number of people (tests/e2e_speed.py).
+- **My requests → New request → Shift swap:** the colleagues' names in one query (it was one per colleague).
+- **Push notifications:** a batch reads everyone's devices in one query (it was one per person).
+- **Profile photo:** a photo is made 512 px at most in the browser before it is sent, so a phone photo of several MB no longer
+  takes seconds to upload and resize. The server still checks and resizes what it gets.
+- **System Health:**
+  - "Slow (1 in 20)" is never more than "Worst" any more (it showed the top of a time band: "3 s" with a worst of 2.7 s).
+  - The routes that are not one page of the plugin read as words: "App: Dashboard" (was `app:default`), "API: WordPress and
+    other plugins" (was `rest:other`), and the same for actions, jobs and other pages.
+  - When the database refuses to write the daily summary rows together (they are then written one by one, which System Health
+    reported as the same query 115 times), its answer is kept and shown on the Scheduled jobs tab, so the cause can be fixed.
+
 ## 3.31.125
 ### Attendance cards you can open (design `docs/tasks/attendance-cards.md`, mockups `docs/mockups/attendance-cards/`)
 A switch on the Features page ("Attendance card details"), off by default; off, the Attendance page is exactly as before.

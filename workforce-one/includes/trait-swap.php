@@ -546,10 +546,11 @@ trait EWS_Swap_Trait {
             $busy=[];
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT requester_employee_id a,target_employee_id b,work_date FROM {$table} WHERE status IN ('Pending','Awaiting') AND work_date IN ($dph) AND (requester_employee_id=%d OR target_employee_id=%d)",array_merge($dates,[(int)$emp->id,(int)$emp->id]))) as $r)
                 $busy[((int)$r->a===(int)$emp->id?(int)$r->b:(int)$r->a)][(string)$r->work_date]=true;
+            $names=$this->people_brief_by_ids($ids);   // one query, not one per colleague (3.31.126)
             foreach($ids as $id){
                 $days=[];
                 foreach($out['days'] as $d=>$mine){$s=$st[$id][$d]??'';$days[$d]=['status'=>$s,'ok'=>SwapRules::checkSwappable($mine,$s?:null)===null,'busy'=>!empty($busy[$id][$d])];}
-                $out['people'][]=['id'=>$id,'name'=>$this->people_name($id),'team'=>!empty($mates[$id]),'days'=>$days];
+                $out['people'][]=['id'=>$id,'name'=>isset($names[$id])?$names[$id]->name:null,'team'=>!empty($mates[$id]),'days'=>$days];
             }
             usort($out['people'],function($a,$b){return [$b['team'],$a['name']]<=>[$a['team'],$b['name']];});
             return $out;
