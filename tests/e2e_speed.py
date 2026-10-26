@@ -128,17 +128,20 @@ names = json.loads(names)
 check('New request → Shift swap: %d colleagues and their names in %d queries (it was one more per colleague)' % (names['people'], names['n']), names['people'] >= 70 and names['n'] <= 12 and names['ok'], names)
 
 # ---------------------------------------------------------------- a push batch: everyone's devices at once
-push = php("""global $wpdb; $o=new EWS_Manager_V31_1(); $e=new ReflectionMethod($o,'ensure_push_schema'); $e->setAccessible(true); $e->invoke($o);
+push = php("""global $wpdb; $keep=get_option('ews_notification_policy',null);
+    $d=new ReflectionMethod('EWS_Manager_V31_1','notification_policy_defaults'); $d->setAccessible(true); $first=array_key_first($d->invoke(new EWS_Manager_V31_1()));
+    update_option('ews_notification_policy',[$first=>['in_app'=>1,'push'=>1,'mandatory'=>0]],false);   // push on for one kind, put back below
+    $o=new EWS_Manager_V31_1(); $e=new ReflectionMethod($o,'ensure_push_schema'); $e->setAccessible(true); $e->invoke($o);
     $t=new ReflectionMethod($o,'push_table'); $t->setAccessible(true); $table=$t->invoke($o);
     $wpdb->query("DELETE FROM {$table}"); $users=[];
     for($i=1;$i<=12;$i++){ $users[]=1000+$i; foreach([0,1] as $k) $wpdb->insert($table,['user_id'=>1000+$i,'endpoint'=>'https://push.example.invalid/'.$i.'-'.$k,'endpoint_hash'=>hash('sha256','https://push.example.invalid/'.$i.'-'.$k),'p256dh'=>'k','auth'=>'a','updated_at'=>gmdate('Y-m-d H:i:s',time()-$k*60)]); }
     $al=new ReflectionMethod($o,'notification_push_allowed'); $al->setAccessible(true); $cat='';
-    foreach(['system','approval','attendance','tasks','info'] as $c) if($cat==='' && $al->invoke($o,$c)) $cat=$c;
+    $cat=$al->invoke($o,$first)?$first:'';
     $one=new ReflectionMethod($o,'push_jobs_for_user'); $one->setAccessible(true);
     $by=new ReflectionMethod($o,'push_devices_by_user'); $by->setAccessible(true);
     $before=[]; foreach($users as $u) $before[$u]=array_keys($one->invoke($o,$u,'T','M',$cat,0,''));
     $q=$wpdb->num_queries; $dev=$by->invoke($o,$users); $after=[]; foreach($users as $u) $after[$u]=array_keys($one->invoke($o,$u,'T','M',$cat,0,'',$dev)); $n=$wpdb->num_queries-$q;
-    $wpdb->query("DELETE FROM {$table}");
+    $wpdb->query("DELETE FROM {$table}"); if($keep===null) delete_option('ews_notification_policy'); else update_option('ews_notification_policy',$keep,false);
     echo wp_json_encode(['same'=>$before===$after,'n'=>$n,'devices'=>array_sum(array_map('count',$after)),'category'=>$cat]);""")
 push = json.loads(push)
 check('a push batch for 12 people reads their 24 devices in one query, the same devices in the same order', push['same'] and push['n'] <= 2 and push['devices'] == 24, push)
