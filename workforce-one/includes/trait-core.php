@@ -16,8 +16,8 @@ trait EWS_Core_Trait {
     private static $ews_shift_versions_cache = null;
     /** @var array<int,object|null> each employee's Work Location (or the default one), primed for a page that lists many (3.31.126) */
     private static $ews_employee_location_cache = [];
-    /** True once the shift periods table was found in this request (3.31.126). */
-    private static $ews_shift_periods_table = false;
+    /** @var array<string,bool> the shift periods tables found in this request, by name (3.31.126) */
+    private static $ews_shift_periods_table = [];
     private static $ews_schedule_types_cache = null;
     private static $ews_schedule_type_by_name_cache = [];
     private static $ews_company_leave_cache = [];

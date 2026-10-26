@@ -88,10 +88,10 @@ moved = php("""$o=new EWS_Manager_V31_1(); $id=%d;
     $one=new ReflectionMethod($o,'ews_v321_employee_location'); $one->setAccessible(true);
     $prime=new ReflectionMethod($o,'ews_v321_employee_locations_prime'); $prime->setAccessible(true);
     $prime->invoke($o,[$id]); $a=$one->invoke($o,$id)->name;
-    $e=new ReflectionMethod($o,'ews_v321_ensure_locations_table'); $e->setAccessible(true);
-    global $wpdb; $wpdb->replace($wpdb->prefix.'ews_employee_locations_v321',['employee_id'=>$id,'location_id'=>%d]); $e->invoke($o);
+    $e=new ReflectionMethod($o,'ews_v321_locations_changed'); $e->setAccessible(true);
+    global $wpdb; $wpdb->replace($wpdb->prefix.'ews_employee_locations_v321',['employee_id'=>$id,'location_id'=>%d]); $e->invoke($o);   // as each writer does after its write
     echo $a.' -> '.$one->invoke($o,$id)->name;""" % (ids['big'][2], ids['alex']))
-check('...a change to the locations or assignments clears what was read in one go (in the same request)', moved.endswith('Cairo HQ -> Alex Branch'), moved)
+check('...a write to the locations or assignments clears what was read in one go (in the same request)', moved.endswith('Cairo HQ -> Alex Branch'), moved)
 php("$wpdb->query(\"DELETE FROM {$p}ews_employee_locations_v321 WHERE employee_id=%d\");" % ids['big'][2])
 
 BR = '/app/?ews_view=attendance&week=%s&branch=%d' % (WEEK, ids['alex'])

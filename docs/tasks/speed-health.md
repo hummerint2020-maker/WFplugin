@@ -68,5 +68,16 @@ Sign In) were recorded on 3.31.125 and compared byte for byte (nonces and `ver=`
 - The browser resize changes what the server receives: a photo over 2 MB that was refused before may now be accepted (made
   smaller first). EXIF orientation is applied by the browser when it draws.
 
-## Where the implementation differs
-Nothing yet.
+## Where the implementation differs (after the review)
+- The refused INSERT's answer is kept or cleared once per rollup run, after every day's transaction (`health_rollup()`), not
+  inside `health_build_daily()`: a ROLLBACK cannot undo it, and a later day written together cannot hide an earlier refusal.
+  It is cut with `mb_substr()` (a localised MySQL message stays valid UTF-8) and only escaped, not stripped.
+- The Work Locations cache is cleared by `ews_v321_locations_changed()` right after each write (location save, default
+  change, archive, assignment save or clear), not only before it.
+- The shift periods table flag is kept by table name (another site of a network is looked at again).
+- The photo script keeps only the latest choice (a second photo chosen while the first is made smaller wins), catches any
+  error while drawing, and never holds the button for more than 10 s.
+- **The photo change is visible**, unlike the rest: a photo over 512 px is re-encoded in the browser (quality 0.9), so its
+  EXIF data (GPS included) is no longer stored, the browser's orientation is used, and a photo over 2 MB that was refused
+  before can now be accepted once made smaller. A browser too old to apply EXIF orientation when drawing (iOS before 13.4)
+  could save a turned photo sideways.

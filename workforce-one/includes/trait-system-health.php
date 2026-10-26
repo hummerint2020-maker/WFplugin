@@ -408,7 +408,16 @@ trait EWS_System_Health_Trait {
         global $wpdb;
         $lastday=(string)$wpdb->get_var("SELECT MAX(day) FROM {$this->health_tables()['daily']}");
         $from=$lastday!==''?max(gmdate('Y-m-d',time()-6*86400),gmdate('Y-m-d',strtotime($lastday.' UTC')-86400)):gmdate('Y-m-d',time()-6*86400);
-        for($t=strtotime($from.' UTC');$t<=time();$t+=86400)$this->health_build_daily(gmdate('Y-m-d',$t));   // days missed while cron was off included
+        $refused='';$batched=false;
+        for($t=strtotime($from.' UTC');$t<=time();$t+=86400){   // days missed while cron was off included
+            $w=$this->health_build_daily(gmdate('Y-m-d',$t));
+            if($w['refused']!=='')$refused=$w['refused'];
+            $batched=$batched||$w['batched'];
+        }
+        // Why the database refused to write the rows together (3.31.126): on one site every row went in one by one. Decided
+        // once for the whole run, after its transactions, so a ROLLBACK cannot undo it and a later day cannot hide it.
+        if($refused!=='')update_option('ews_health_insert_error',['at'=>time(),'error'=>mb_substr($refused,0,300)],false);
+        elseif($batched && get_option('ews_health_insert_error',null)!==null)delete_option('ews_health_insert_error');
         if((string)get_option('ews_health_purged','')!==gmdate('Y-m-d')){
             $this->health_purge();
             update_option('ews_health_purged',gmdate('Y-m-d'),false);
@@ -422,13 +431,16 @@ trait EWS_System_Health_Trait {
         update_option('ews_health_rollup_at',time(),false);
     }
 
-    /** Rebuilds one day's rows from its hourly rows, one row per route and release (a release in the middle of a day splits it). */
+    /**
+     * Rebuilds one day's rows from its hourly rows, one row per route and release (a release in the middle of a day splits it).
+     * @return array{refused:string,batched:bool} the database's answer when it refused a multi-row INSERT; whether one went in
+     */
     private function health_build_daily($day){
         global $wpdb;
         $t=$this->health_tables();$cols=$this->health_sum_columns();
         $sum=implode(',',array_map(function($c){return "SUM({$c}) {$c}";},$cols));
         $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT route,version,{$sum},MAX(ms_max) ms_max,MAX(q_max) q_max,MAX(mem_max) mem_max,MAX(mem_pct_max) mem_pct_max FROM {$t['hourly']} WHERE hour>=%s AND hour<=%s GROUP BY route,version",$day.' 00:00:00',$day.' 23:59:59'),ARRAY_A);
-        if(!$rows)return;
+        if(!$rows)return ['refused'=>'','batched'=>false];
         usort($rows,function($a,$b){return [$a['route'],0]<=>[$b['route'],0] ?: version_compare((string)$a['version'],(string)$b['version']);});   // older release first
         // The day's rows are replaced together (3.31.119): a write that fails keeps the rows of before (rebuilt at the next hourly run).
         $tx=$wpdb->query('START TRANSACTION')!==false;
@@ -458,15 +470,14 @@ trait EWS_System_Health_Trait {
             $ok=$wpdb->query($sql);
             $wpdb->suppress_errors($quiet);
             if($ok!==false){$batched=true;continue;}
-            // Why the database refused it is kept for the Scheduled jobs tab (3.31.126): on one site every row went in one by one.
-            if($refused==='')$refused=(string)$wpdb->last_error;
+            if($refused==='')$refused=(string)$wpdb->last_error;   // shown on the Scheduled jobs tab (health_rollup())
             foreach($chunk as $row)if($wpdb->insert($t['daily'],$row)===false)$bad=true;
         }
-        if($refused!=='')update_option('ews_health_insert_error',['at'=>time(),'error'=>substr(wp_strip_all_tags($refused),0,300)],false);
-        elseif($batched && get_option('ews_health_insert_error',null)!==null)delete_option('ews_health_insert_error');
-        if(!$tx)return;
+        $out=['refused'=>$refused,'batched'=>$batched];
+        if(!$tx)return $out;
         if($bad){$wpdb->query('ROLLBACK');error_log('Workforce One: the system health rows of '.$day.' could not be rebuilt; the previous ones are kept');}   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- diagnostic data
         elseif($wpdb->query('COMMIT')===false)$wpdb->query('ROLLBACK');
+        return $out;
     }
 
     /** Old rows out, in batches; a hard cap on the rows kept sets ews_health_full. */

@@ -314,6 +314,20 @@ ie = php("echo wp_json_encode(get_option('ews_health_insert_error'));").strip().
 check('...and why the database refused it is kept (3.31.126)', 'ews_no_such_table' in ie or "doesn't exist" in ie or 'no such table' in ie, ie)
 jobs_tab = adm.req(SCREEN + '&tab=jobs')[1]
 check('...and shown on the Scheduled jobs tab', 'data-health-insert-error' in jobs_tab and 'one row at a time' in jobs_tab)
+# Every write refused (the rows of the day are rolled back too): the answer is still kept (review, 3.31.126).
+php("delete_option('ews_health_insert_error');")
+php("""add_filter('query',function($q)use($p){ return preg_match('/^\\s*INSERT INTO `?'.$p.'ews_health_daily/i',$q)?preg_replace('/INSERT INTO `?'.$p.'ews_health_daily`?/','INSERT INTO '.$p.'ews_no_such_table',$q,1):$q;});
+    delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup();""")
+ie2 = php("echo wp_json_encode(get_option('ews_health_insert_error'));").strip().splitlines()[-1]
+check('...kept even when the day\'s rows are rolled back (every row refused)', 'ews_no_such_table' in ie2 or 'no such table' in ie2 or "doesn't exist" in ie2, ie2)
+# Yesterday refused, today written together, in one run: the answer is kept (a later day does not hide it).
+php("""$h=gmdate('Y-m-d H:00:00',time()-86400); $wpdb->insert($p.'ews_health_hourly',['route'=>'batch:y1','hour'=>$h,'slot'=>4,'version'=>'3.31.111','n'=>1,'ms_sum'=>100,'b2'=>1,'last_at'=>gmdate('Y-m-d H:i:s')]);
+    $wpdb->insert($p.'ews_health_hourly',['route'=>'batch:y2','hour'=>$h,'slot'=>4,'version'=>'3.31.111','n'=>1,'ms_sum'=>100,'b2'=>1,'last_at'=>gmdate('Y-m-d H:i:s')]); delete_option('ews_health_insert_error');""")
+php("""$y=gmdate('Y-m-d',time()-86400); add_filter('query',function($q)use($p,$y){ return preg_match('/^\\s*INSERT INTO `?'.$p.'ews_health_daily`? \\(/i',$q) && strpos($q,"'".$y."'")!==false && substr_count($q,'),(')>0?preg_replace('/INSERT INTO `?'.$p.'ews_health_daily`?/','INSERT INTO '.$p.'ews_no_such_table',$q,1):$q;});
+    delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup();""")
+ie3 = php("echo get_option('ews_health_insert_error',null)===null?'gone':'kept';").strip().splitlines()[-1]
+check('...a refused day and a day written together in one run: the answer is kept', ie3 == 'kept', ie3)
+php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE route LIKE 'batch:y%'"); $wpdb->query("DELETE FROM {$p}ews_health_daily WHERE route LIKE 'batch:y%'");""")
 php("delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup();")
 check('...the next rollup that writes the rows together clears it', php("echo get_option('ews_health_insert_error',null)===null?'gone':'kept';").strip().splitlines()[-1] == 'gone')
 php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly WHERE route LIKE 'batch:%'"); $wpdb->query("DELETE FROM {$p}ews_health_daily WHERE route LIKE 'batch:%'");""")

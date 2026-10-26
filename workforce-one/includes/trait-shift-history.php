@@ -175,10 +175,11 @@ trait EWS_Shift_History_Trait {
         $ids=array_values(array_filter(array_map('intval',$ids),function($i){return $i>0 && !isset(self::$ews_shift_periods_cache[$i]);}));
         if(!$ids)return;
         global $wpdb;$t=$this->shift_history_tables();
-        // The table is looked for once a request once it is there (3.31.126: it was looked for once per employee).
-        if(!self::$ews_shift_periods_table){
+        // The table is looked for once a request once it is there (3.31.126: it was looked for once per employee); by name,
+        // so another site of a network is looked at again.
+        if(empty(self::$ews_shift_periods_table[$t['periods']])){
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t['periods']))!==$t['periods']){foreach($ids as $id)self::$ews_shift_periods_cache[$id]=[];return;}
-            self::$ews_shift_periods_table=true;
+            self::$ews_shift_periods_table[$t['periods']]=true;
         }
         foreach($ids as $id)self::$ews_shift_periods_cache[$id]=[];
         foreach(array_chunk($ids,500) as $chunk){

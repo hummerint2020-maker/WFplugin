@@ -63,6 +63,17 @@ const B = 'http://127.0.0.1:8080';
   await send();
   s = saved();
   check('...and saved at its own size', s.w === 300 && s.h === 200, s);
+  // A second photo chosen while the first is still being made smaller: the second is sent (review, 3.31.126).
+  const a = await make(3200, 2400, 'image/jpeg'), b2 = await make(240, 160, 'image/jpeg');
+  await page.goto(B + '/app/?ews_view=profile');
+  await page.waitForTimeout(1200);
+  await page.click('#ews-open-profile-picture');
+  await page.click('#ews-open-photo-upload');
+  await page.setInputFiles('#ews-photo-upload-panel input[type=file]', { name: 'first.jpg', mimeType: 'image/jpeg', buffer: a });
+  await page.setInputFiles('#ews-photo-upload-panel input[type=file]', { name: 'second.jpg', mimeType: 'image/jpeg', buffer: b2 });
+  await page.waitForTimeout(2500);
+  const last = await page.evaluate(() => { const f = document.querySelector('#ews-photo-upload-panel input[type=file]').files[0]; const b = document.querySelector('#ews-photo-upload-panel button[type=submit]'); return { name: f.name, size: f.size, disabled: b.disabled }; });
+  check('a second photo chosen while the first is made smaller: the second is kept, and the button is free', last.name === 'second.jpg' && last.size === b2.length && !last.disabled, last);
   check('no JavaScript errors in the app', errors.length === 0, errors);
   await browser.close();
   php("global $wpdb; $wpdb->update($wpdb->prefix.'ews_employees',['profile_image_type'=>'initials','profile_image_url'=>'','avatar_key'=>null],['domain_name'=>'emp1']);");
