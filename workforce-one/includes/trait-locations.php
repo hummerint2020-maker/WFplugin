@@ -13,6 +13,7 @@ trait EWS_Locations_Trait {
 
     private function ews_v321_ensure_locations_table(){
             global $wpdb;
+            self::$ews_employee_location_cache=[];   // every change to locations or assignments comes through here (3.31.126)
             $table=$this->locations;
             $schema_current=$this->ews_schema_is_current();
             if(!$schema_current && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table){
@@ -64,6 +65,7 @@ trait EWS_Locations_Trait {
 
     private function ews_v321_ensure_employee_map(){
             global $wpdb;
+            self::$ews_employee_location_cache=[];
             $table=$wpdb->prefix.'ews_employee_locations_v321';
             if(!$this->ews_schema_is_current() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table){
                 require_once ABSPATH.'wp-admin/includes/upgrade.php';
@@ -80,6 +82,7 @@ trait EWS_Locations_Trait {
 
     private function ews_v321_employee_location($employee_id){
             global $wpdb;
+            if(array_key_exists((int)$employee_id,self::$ews_employee_location_cache))return self::$ews_employee_location_cache[(int)$employee_id];
             $table=$wpdb->prefix.'ews_employee_locations_v321';
             if(!$this->ews_schema_is_current() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table)return null;
             $lid=(int)$wpdb->get_var($wpdb->prepare("SELECT location_id FROM {$table} WHERE employee_id=%d",(int)$employee_id));
@@ -88,6 +91,33 @@ trait EWS_Locations_Trait {
                 if($row)return $row;
             }
             return $this->ews_default_location();
+        }
+
+    /**
+     * Many employees' Work Locations at once (3.31.126), for a page that lists many: what ews_v321_employee_location()
+     * returns for each (the assigned active location, else the default one), in two queries instead of two per person.
+     * Kept for the request; any change to locations or assignments clears it (ews_v321_ensure_locations_table()).
+     * @param int[] $employee_ids
+     */
+    private function ews_v321_employee_locations_prime(array $employee_ids){
+            global $wpdb;
+            $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids),function($id){return $id>0 && !array_key_exists($id,self::$ews_employee_location_cache);})));
+            if(!$ids)return;
+            $table=$wpdb->prefix.'ews_employee_locations_v321';
+            if(!$this->ews_schema_is_current() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table)return;
+            $found=[];
+            foreach(array_chunk($ids,500) as $chunk){
+                $ph=implode(',',array_fill(0,count($chunk),'%d'));
+                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT m.employee_id AS ews_map_employee_id,l.* FROM {$table} m JOIN {$this->locations} l ON l.id=m.location_id AND l.active=1 WHERE m.employee_id IN ($ph)",$chunk)) as $r){
+                    $eid=(int)$r->ews_map_employee_id;unset($r->ews_map_employee_id);$found[$eid]=$r;
+                }
+            }
+            $default=false;
+            foreach($ids as $id){
+                if(isset($found[$id])){self::$ews_employee_location_cache[$id]=$found[$id];continue;}
+                if($default===false)$default=$this->ews_default_location();
+                self::$ews_employee_location_cache[$id]=$default;
+            }
         }
 
     public function admin_multi_location_save_v321(){

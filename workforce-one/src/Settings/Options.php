@@ -103,6 +103,7 @@ final class Options
         'ews_health_late' => ['group' => 'system', 'label' => 'System health: scheduled jobs that were late at the last summary', 'kind' => 'grouped', 'default' => [], 'builtin' => 'empty', 'internal' => true],
         'ews_health_purged' => ['group' => 'system', 'label' => 'System health: day of the last clean-up', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_health_rollup_at' => ['group' => 'system', 'label' => 'System health: time of the last summary', 'kind' => 'int', 'default' => 0, 'internal' => true],
+        'ews_health_insert_error' => ['group' => 'system', 'label' => 'System health: why the daily rows were last written one at a time', 'kind' => 'grouped', 'default' => [], 'builtin' => 'empty', 'internal' => true],
         'ews_feature_advances' => ['group' => 'features', 'label' => 'Salary advances (approvals)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_advance_settings' => ['group' => 'features', 'label' => 'Salary advances: the most (months of salary, a fixed amount), instalments, one open, months with the company', 'kind' => 'grouped', 'default' => [], 'builtin' => 'one month of salary, 12 instalments, one open at a time', 'page' => 'ews31-features'],
         'ews_feature_substitutes' => ['group' => 'features', 'label' => 'A substitute while a manager is away (approvals)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],

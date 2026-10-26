@@ -85,6 +85,7 @@ trait EWS_Attendance_Insights_Trait {
         $week_start=$dates[0]??$focus;$week_end=$dates[count($dates)-1]??$week_start;
         $range_start=min($week_start,$focus);$range_end=max($week_end,$focus);
         [$schedule,$events]=$this->insights_load($ids,$range_start,$range_end);
+        $this->shift_prime_people($emps);   // each day's shift for everyone at once (3.31.126)
         $holidays=$this->company_leave_dates($range_start,$range_end);
 
         $empty=function($labels){return array_fill_keys($labels,[]);};

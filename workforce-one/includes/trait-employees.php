@@ -106,6 +106,31 @@ trait EWS_Employees_Trait {
         return self::$ews_people_shift_memo[$id]=(int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d",$id));
     }
 
+    /**
+     * The shift many employees are on now, in one query (3.31.126), kept for the request as people_shift_id() keeps it.
+     * An employee loaded with default_shift_id is not read again. @param array<int,object|int> $people @return array<int,int> by id
+     */
+    private function people_shift_ids(array $people){
+        global $wpdb;
+        $ids=[];$missing=[];
+        foreach($people as $p){
+            $id=is_object($p)?(int)($p->id??0):(int)$p;
+            if($id<=0)continue;
+            $ids[$id]=$id;
+            if(isset(self::$ews_people_shift_memo[$id]))continue;
+            if(is_object($p)&&property_exists($p,'default_shift_id'))self::$ews_people_shift_memo[$id]=(int)$p->default_shift_id;
+            else $missing[$id]=$id;
+        }
+        foreach(array_chunk(array_values($missing),500) as $chunk){
+            $ph=implode(',',array_fill(0,count($chunk),'%d'));
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,default_shift_id FROM {$this->employees} WHERE id IN ($ph)",$chunk)) as $r)self::$ews_people_shift_memo[(int)$r->id]=(int)$r->default_shift_id;
+            foreach($chunk as $id)if(!isset(self::$ews_people_shift_memo[$id]))self::$ews_people_shift_memo[$id]=0;   // as people_shift_id() for an unknown id
+        }
+        $out=[];
+        foreach($ids as $id)$out[$id]=self::$ews_people_shift_memo[$id];
+        return $out;
+    }
+
     /** Set the shift an employee is on now (the shift history keeps it in step, 3.31.108). @return bool false on a database error (3.31.119) */
     private function people_set_shift_id($employee_id,$shift_id){
         global $wpdb;

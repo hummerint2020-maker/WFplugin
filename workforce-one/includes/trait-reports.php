@@ -300,8 +300,7 @@ trait EWS_Reports_Trait {
         $today=current_time('Y-m-d');$now=current_time('mysql');
         $allowance=$this->break_enabled()?$this->break_duration_minutes():0;
         $rows=[];
-        $this->prime_shift_cache($emps);
-        $this->shift_prime_periods(array_map(function($x){return (int)$x->id;},$emps));   // past days use the shift history (3.31.108)
+        $this->shift_prime_people($emps);   // past days use the shift history (3.31.108); today's shift and the employee's shift too (3.31.126)
         foreach($emps as $emp){
             $eid=(int)$emp->id;
             foreach($dates as $d){

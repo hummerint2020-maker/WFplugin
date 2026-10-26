@@ -45,6 +45,12 @@ final class HealthStatsTest extends TestCase
         $this->assertSame(7500, S::percentile($h, 0.5, 120000));
         $this->assertSame(7500, S::percentile($h, 0.95, 120000));
         $this->assertSame(120000, S::percentile($h, 1.0, 120000));
+        // Never above the worst seen (3.31.126): runs of 2.1 to 2.7 s are in the 3 s bucket, and the worst is 2.7 s.
+        $h = S::empty();
+        $h[S::bucket(2700)] = 20;
+        $this->assertSame(2700, S::percentile($h, 0.95, 2700));
+        $this->assertSame(2700, S::percentile($h, 0.5, 2700));
+        $this->assertSame(3000, S::percentile($h, 0.95), 'without the worst: the bucket edge, as before');
     }
 
     public function testMergeAndSlower(): void

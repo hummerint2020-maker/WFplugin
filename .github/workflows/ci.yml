@@ -153,6 +153,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_grid.py "$S"
       - name: Attendance cards you can open behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_cards.py "$S"
+      - name: Speed (the same queries for 8 people as for 78)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_speed.py "$S"
       - name: Attendance Insights (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_app_insights.py "$S"
       - name: Leave and Overtime pages (employee app)
@@ -306,6 +308,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" node tests/my_approvals_browser.js
       - name: Attendance cards in a browser
         run: WP_CLI="wp --path=$WP" S="$S" node tests/attendance_cards_browser.js
+      - name: Profile photo made smaller in the browser
+        run: WP_CLI="wp --path=$WP" node tests/profile_photo_browser.js
       - name: Arabic (RTL) pass
         run: |
           wp language core install ar --path="$WP"

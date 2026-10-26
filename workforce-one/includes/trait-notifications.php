@@ -211,9 +211,11 @@ trait EWS_Notifications_Trait {
     public function push_deliver($batch,$key=''){
         // Every device of every person in the batch goes out together (push_send_many, 3.31.71).
         $jobs=[];
+        // Everyone's devices in one query (3.31.126: it was one query per person).
+        $devices=$this->push_devices_by_user(array_map(function($p){return is_array($p)?(int)($p['user_id']??0):0;},is_array($batch)?$batch:[]));
         foreach(is_array($batch)?$batch:[] as $i=>$p){
             if(!is_array($p)||empty($p['user_id']))continue;
-            foreach($this->push_jobs_for_user((int)$p['user_id'],(string)($p['title']??''),(string)($p['message']??''),(string)($p['category']??''),(int)($p['entity_id']??0),(string)($p['url']??'')) as $device_id=>$job)$jobs[$i.':'.$device_id]=$job;
+            foreach($this->push_jobs_for_user((int)$p['user_id'],(string)($p['title']??''),(string)($p['message']??''),(string)($p['category']??''),(int)($p['entity_id']??0),(string)($p['url']??''),$devices) as $device_id=>$job)$jobs[$i.':'.$device_id]=$job;
         }
         $results=[];
         foreach($this->push_send_many($jobs) as $k=>$r)$results[(int)substr((string)$k,strpos((string)$k,':')+1)][]=$r;
@@ -247,14 +249,32 @@ trait EWS_Notifications_Trait {
             return $jobs?$this->push_tally($this->push_send_many($jobs)):$none;
         }
 
-    /** One push per device of a user (the policy for $type permitting). @return array<int,array{0:object,1:array<string,mixed>}> by device id */
-    private function push_jobs_for_user($user_id,$title,$message,$type='info',$entity_id=0,$url=''){
+    /** Many users' devices in one query, newest first for each user, as push_jobs_for_user() reads them. @param int[] $user_ids @return array<int,object[]> by user id */
+    private function push_devices_by_user(array $user_ids){
+            $ids=array_values(array_unique(array_filter(array_map('intval',$user_ids))));
+            $out=array_fill_keys($ids,[]);
+            if(!$ids)return $out;
+            $this->ensure_push_schema();
+            global $wpdb;
+            foreach(array_chunk($ids,500) as $chunk){
+                $ph=implode(',',array_fill(0,count($chunk),'%d'));
+                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id IN ($ph) ORDER BY user_id ASC,updated_at DESC",$chunk)) as $r)$out[(int)$r->user_id][]=$r;
+            }
+            return $out;
+        }
+
+    /**
+     * One push per device of a user (the policy for $type permitting).
+     * @param array<int,object[]>|null $devices the users' devices already read (push_devices_by_user()), else read here
+     * @return array<int,array{0:object,1:array<string,mixed>}> by device id
+     */
+    private function push_jobs_for_user($user_id,$title,$message,$type='info',$entity_id=0,$url='',$devices=null){
             $none=[];
             $category=sanitize_key($type);
             if(!$this->notification_push_allowed($category))return $none;
             $this->ensure_push_schema();
             global $wpdb;
-            $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
+            $rows=is_array($devices)&&isset($devices[(int)$user_id])?$devices[(int)$user_id]:$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->push_table()} WHERE user_id=%d ORDER BY updated_at DESC",$user_id));
             if(!$rows)return $none;
             $resolved_url=$url;
             if(!$resolved_url){

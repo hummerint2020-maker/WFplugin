@@ -89,7 +89,9 @@ trait EWS_Time_Report_Trait {
         $radius_by_employee=[];
         $records=[];
         $range_url=add_query_arg(['start'=>$start,'end'=>$end],admin_url('admin.php?page=ews31-time-report'));
-        $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},array_values($rows)));
+        $page_eids=array_map(function($r){return (int)$r->employee_id;},array_values($rows));
+        $this->shift_prime_people($page_eids);   // the shift history too (3.31.126)
+        $this->ews_v321_employee_locations_prime($page_eids);   // each record's Work Location radius (3.31.126)
         foreach($page_ids as $x){
             if($x->kind==='attempt'){
                 $a=$attempt_rows[(int)$x->id]??null;
@@ -248,7 +250,8 @@ trait EWS_Time_Report_Trait {
         fprintf($f,"\xEF\xBB\xBF");
         fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason','IP address','Source','Correction','Replaced by correction']);
         $radius=[];
-        $this->prime_shift_cache(array_map(function($r){return (int)$r->employee_id;},(array)$rows));
+        $this->shift_prime_people(array_map(function($r){return (int)$r->employee_id;},(array)$rows));   // the shift history too (3.31.126)
+        $this->ews_v321_employee_locations_prime(array_map(function($r){return (int)$r->employee_id;},(array)$rows));   // 3.31.126
         foreach((array)$rows as $r){
             $eid=(int)$r->employee_id;
             if(!isset($radius[$eid]))$radius[$eid]=(int)$this->time_report_site($eid)[2].' m';

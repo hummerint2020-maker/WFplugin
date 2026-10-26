@@ -444,6 +444,7 @@ trait EWS_System_Health_Trait {
         }
         // Chunks of 100 rows in one INSERT (about 6 queries a rollup instead of about 47); a chunk the database refuses is
         // inserted row by row, so no row is lost on either MySQL or SQLite.
+        $refused='';$batched=false;
         foreach(array_chunk(array_values($out),100) as $chunk){
             $cols=array_keys($chunk[0]);
             $values=[];
@@ -456,8 +457,13 @@ trait EWS_System_Health_Trait {
             $quiet=$wpdb->suppress_errors(true);
             $ok=$wpdb->query($sql);
             $wpdb->suppress_errors($quiet);
-            if($ok===false)foreach($chunk as $row)if($wpdb->insert($t['daily'],$row)===false)$bad=true;
+            if($ok!==false){$batched=true;continue;}
+            // Why the database refused it is kept for the Scheduled jobs tab (3.31.126): on one site every row went in one by one.
+            if($refused==='')$refused=(string)$wpdb->last_error;
+            foreach($chunk as $row)if($wpdb->insert($t['daily'],$row)===false)$bad=true;
         }
+        if($refused!=='')update_option('ews_health_insert_error',['at'=>time(),'error'=>substr(wp_strip_all_tags($refused),0,300)],false);
+        elseif($batched && get_option('ews_health_insert_error',null)!==null)delete_option('ews_health_insert_error');
         if(!$tx)return;
         if($bad){$wpdb->query('ROLLBACK');error_log('Workforce One: the system health rows of '.$day.' could not be rebuilt; the previous ones are kept');}   // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- diagnostic data
         elseif($wpdb->query('COMMIT')===false)$wpdb->query('ROLLBACK');
@@ -561,6 +567,10 @@ trait EWS_System_Health_Trait {
             $names=$this->admin_nav_tab_labels();
             return $names[$slug]??($slug==='ews31'?__('Home','workforce-one'):$slug);
         }
+        // The routes that are not one page of the plugin (3.31.126: they showed as "app:default", "rest:other"…).
+        $named=['app:default'=>__('App: Dashboard','workforce-one'),'rest:other'=>__('API: WordPress and other plugins','workforce-one'),'post:other'=>__('Actions: WordPress and other plugins','workforce-one'),
+            'cron:other'=>__('Jobs: WordPress and other plugins','workforce-one'),'other:admin'=>__('Other wp-admin pages','workforce-one'),'other:front'=>__('Other pages of the site','workforce-one')];
+        if(isset($named[$route]))return $named[$route];
         if(strpos($route,'app:')===0){$v=substr($route,4);$d=\WorkforceOne\Settings\Navigation::DEFAULTS[$v]['label']??null;return $d?sprintf(/* translators: %s: a page of the employee app */__('App: %s','workforce-one'),__($d,'workforce-one')):__('App: other page','workforce-one');}
         if(strpos($route,'cron:')===0)return sprintf(/* translators: %s: a scheduled job */__('Job: %s','workforce-one'),substr($route,5));
         return $route;
@@ -809,6 +819,8 @@ trait EWS_System_Health_Trait {
                 $vars['jobs'][]=['hook'=>$hook,'every'=>$info['every'],'last'=>$last[$hook]??null,'runs'=>(int)($day['n']??0),'failed'=>(int)$week,'p95'=>$st['p95']??null,'next'=>$next?:0,'status'=>$status,'overdue'=>$overdue];
             }
             $vars['wp_cron_off']=defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
+            $ie=get_option('ews_health_insert_error',null);
+            $vars['insert_error']=is_array($ie)&&!empty($ie['error'])?['at'=>(int)($ie['at']??0),'error'=>(string)$ie['error']]:null;
         }
         echo $this->render_template('admin/system-health',$vars);
     }
