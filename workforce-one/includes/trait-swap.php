@@ -307,10 +307,50 @@ trait EWS_Swap_Trait {
     private function swap_finish_approved($r){
             $applied=$this->swap_apply($r);
             if($applied!==true)return $applied;
+            $this->swap_approved_after($r);
+            return true;
+        }
+
+    /** Audit row and the two participants' notes after the days were exchanged and committed (3.31.130). */
+    private function swap_approved_after($r){
             $this->swap_audit('SCHEDULE_SWAP_APPROVED',$r,'Swap approved');
             foreach([(int)$r->requester_employee_id,(int)$r->target_employee_id] as $eid)
                 $this->swap_notify($this->swap_employee_user_id($eid),'Schedule Swap Completed',sprintf('Your schedule swap for %s was approved: %s ↔ %s.',date_i18n('l, d M',strtotime($r->work_date)),$r->requester_status,$r->target_status),'success',(int)$r->id,true,(int)$eid===(int)$r->requester_employee_id?$this->swap_requester_url():null);
-            return true;
+        }
+
+    /** Audit row and the two participants' notes after an approver rejected the swap (3.31.130). */
+    private function swap_rejected_after($r){
+            $id=(int)$r->id;
+            $this->swap_audit('SCHEDULE_SWAP_REJECTED',$r,'Swap rejected by approver '.wp_get_current_user()->display_name);
+            foreach([(int)$r->requester_employee_id,(int)$r->target_employee_id] as $eid)
+                $this->swap_notify($this->swap_employee_user_id($eid),'Schedule Swap Rejected',sprintf('The schedule swap for %s was not approved.',date_i18n('l, d M',strtotime($r->work_date))),'warning',$id,true,(int)$eid===(int)$r->requester_employee_id?$this->swap_requester_url():null);
+        }
+
+    /**
+     * An approver's decision and what it does to the swap, in one transaction like the Hub's (3.31.130): the level, the exchange of
+     * the two days (or the Rejected status) are saved together or not at all. Before, the level was decided first and committed on
+     * its own; a schedule that changed in between left the approval APPROVED and the swap Awaiting for ever.
+     * Returns 'approved', 'rejected', 'advanced' or a ?swap_error= code ('changed': a schedule was edited since the request, and
+     * the level stays open). Audit and notifications run after the COMMIT, in the callers.
+     */
+    private function swap_manager_decision($r,$ar,$decision,$note,$posted){
+            global $wpdb;$id=(int)$r->id;
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
+            $acted=$this->approval_act((int)$ar->id,$decision,$note,false,false,$posted);
+            if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return $this->approval_error_code($acted);}
+            $fresh=$this->approval_find_request('shift_swap','schedule_swap',$id);
+            if(!$fresh){$wpdb->query('ROLLBACK');return 'save';}
+            $outcome='advanced';
+            if($fresh->status==='APPROVED'){
+                $outcome='approved';
+                $done=$this->swap_apply_rows($r);
+            }elseif($fresh->status==='REJECTED'){
+                $outcome='rejected';
+                $done=$this->swap_close($id,'Rejected','Awaiting')===1?true:'save';
+            }else $done=true;
+            if($done!==true){$wpdb->query('ROLLBACK');return $done;}
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+            return $outcome;
         }
 
     /** An approver decides a swap waiting for them (app → Schedule). */
@@ -327,21 +367,11 @@ trait EWS_Swap_Trait {
             if($ar && $this->approval_level_moved(Hub::isOpenApproval((string)$ar->status)?(int)$ar->id:0,$posted))$this->swap_redirect(['swap_error'=>'moved']);
             if(!$ar||!$this->approval_can_act((int)$ar->id))$this->swap_redirect(['swap_error'=>'access']);
             if($decision==='approve'){$past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));if($past)$this->swap_redirect(['swap_error'=>$past]);}
-            $acted=$this->approval_act((int)$ar->id,$decision,$this->approval_posted_note(),true,false,$posted);
-            if(is_wp_error($acted))$this->swap_redirect(['swap_error'=>$this->approval_error_code($acted)]);
-            $fresh=$this->approval_find_request('shift_swap','schedule_swap',$id);
-            if($fresh&&$fresh->status==='APPROVED'){
-                $out=$this->swap_finish_approved($r);
-                $this->swap_redirect($out===true?['swap_done'=>'approved']:['swap_error'=>$out]);
-            }
-            if($fresh&&$fresh->status==='REJECTED'){
-                if($this->swap_close($id,'Rejected','Awaiting')!==1)$this->swap_redirect(['swap_error'=>'save']);
-                $this->swap_audit('SCHEDULE_SWAP_REJECTED',$r,'Swap rejected by approver '.wp_get_current_user()->display_name);
-                foreach([(int)$r->requester_employee_id,(int)$r->target_employee_id] as $eid)
-                    $this->swap_notify($this->swap_employee_user_id($eid),'Schedule Swap Rejected',sprintf('The schedule swap for %s was not approved.',date_i18n('l, d M',strtotime($r->work_date))),'warning',$id,true,(int)$eid===(int)$r->requester_employee_id?$this->swap_requester_url():null);
-                $this->swap_redirect(['swap_done'=>'rejected']);
-            }
-            $this->swap_notify_approver($fresh,$r);
+            $out=$this->swap_manager_decision($r,$ar,$decision,$this->approval_posted_note(),$posted);
+            if($out==='approved'){$this->swap_approved_after($r);$this->swap_redirect(['swap_done'=>'approved']);}
+            if($out==='rejected'){$this->swap_rejected_after($r);$this->swap_redirect(['swap_done'=>'rejected']);}
+            if($out!=='advanced')$this->swap_redirect(['swap_error'=>$out]);
+            $this->swap_notify_approver($this->approval_find_request('shift_swap','schedule_swap',$id),$r);
             $this->swap_redirect(['swap_done'=>'advanced']);
         }
 

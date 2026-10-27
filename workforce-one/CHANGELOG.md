@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.130
+### Approvals engine fixes, part 2: the shift swap decision (design `docs/tasks/engine-fixes.md` §2.2; face reset and corrections follow in 3.31.131–132)
+No setting, no switch, no database change.
+- **An approver's decision on a shift swap and the exchange of the two days are now one transaction**, as the Requests Hub's already was.
+  Before, the level was saved as decided first and committed on its own; if a schedule had changed in between (a leave approved, the
+  grid edited) the exchange was refused, the approval stayed APPROVED and the swap stayed "Awaiting" for ever. Now the approver gets the message "The schedule changed after the swap request was created, so it can no longer be accepted", nothing is saved, the level stays open and they can still reject it. A rejection and
+  the swap's Rejected status are saved together as well. The audit rows and the notifications are written after the commit.
+
 ## 3.31.129
 ### Approvals engine fixes, part 1 (design `docs/tasks/engine-fixes.md`; the swap, face reset and correction decisions follow in 3.31.130–132)
 No setting, no switch, no database change. Three fixes, each decided by the owner:
