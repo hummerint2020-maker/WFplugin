@@ -227,7 +227,11 @@ try:
     intended = EXPECTED.get('actions', {})
     for k in tb:
         if k in intended:
-            print('EXPECTED (expected.json) %s: %s' % ('the same' if tb[k] == th.get(k) else 'changed', k))
+            want = intended[k]
+            changed = tb[k] != th.get(k)
+            check('the intended change is there: ' + k + ' (' + (want['reason'] if isinstance(want, dict) else want) + ')', changed, 'listed in expected.json but the same on both sides')
+            if isinstance(want, dict) and 'return' in want:
+                check('...and the new code returns what expected.json says', isinstance(th.get(k), dict) and th[k].get('return') == want['return'], (th.get(k) or {}).get('return') if isinstance(th.get(k), dict) else th.get(k))
             continue
         check('the same action trace: ' + k, tb[k] == th.get(k), first_difference(tb[k], th.get(k)))
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))

@@ -24,6 +24,8 @@ final class MemoryApprovalRequestStore implements ApprovalRequestStore
     public $failDecide = false;
     /** @var bool the next level's update finds it no longer WAITING */
     public $failOpenNext = false;
+    /** @var callable|null runs just before a conditional request update (a decision slipping in between the read and the update) */
+    public $beforeCancelRequest;
     /** @var string */
     public $error = '';
     /** @var array<int,string> */
@@ -182,6 +184,7 @@ final class MemoryApprovalRequestStore implements ApprovalRequestStore
 
     public function cancelRequestIf(int $id, string $status, string $now)
     {
+        if ($this->beforeCancelRequest) ($this->beforeCancelRequest)($this, $id);
         if (!isset($this->requests[$id]) || $this->requests[$id]->status !== $status) return 0;
         $this->requests[$id]->status = 'CANCELLED';
         $this->requests[$id]->current_step = null;

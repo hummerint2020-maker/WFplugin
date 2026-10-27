@@ -7,14 +7,17 @@ No setting, no switch, no database change. Three fixes, each decided by the owne
   the levels and then the request, so two at the same moment could abort one of them ("could not be withdrawn"). Withdrawing now locks
   the levels first, like a decision and like closing a correction. (A decision at the last level against a withdraw can still meet
   on the leave, overtime or advance row itself; that is left for a later release.)
-- **An administrator who made a request can decide it from the Requests Hub** when its level waits for administrators (the approver
-  was the requester and the workflow's rule is "next level" or "administrators"). It is marked as a self-decision and written to the
-  Audit Log. **This reverses 3.31.75**, which said the requester could not decide it, administrators included. A level assigned to
-  someone else (HR, the manager's manager) still cannot be decided by the requester, and neither can an override from someone without
-  the administrator capability.
+- **An administrator who made a request can decide it from the Requests Hub** (leave, overtime, shift swaps, face reset) when its
+  level waits for administrators: because the approver was the requester under the rule "next level" or "administrators", or because
+  nobody could decide it, or because it moved up to administrators after the reminder time. It is marked as a self-decision and written
+  to the Audit Log. **This reverses 3.31.75**, which said the requester could not decide it, administrators included. A level assigned
+  to someone else (HR, the manager's manager) still cannot be decided by the requester, and neither can an override from someone
+  without the administrator capability. Attendance corrections and salary advances are unchanged (a correction's requester never
+  decides it; advances are not on the Hub).
 - **An organisation move also moves the levels a substitute holds.** Open levels waiting for the old manager but held by their cover
   stayed with the cover and, when the cover ended, went back to the OLD manager. They now go to the new manager, or to the new
-  manager's active cover. The Org chart's count of waiting requests includes them.
+  manager's active cover. The Org chart's count of waiting requests includes them. A level the old manager holds as a cover for
+  someone else is that other manager's level: it is no longer moved or counted (it used to be).
 - **Checks:** the golden harness lists the intended differences in `tests/golden/expected.json` (`actions`, with a reason each) and
   compares every other call exactly; new golden scenarios for the Q4 and Q5 cases; unit tests for each fix.
 

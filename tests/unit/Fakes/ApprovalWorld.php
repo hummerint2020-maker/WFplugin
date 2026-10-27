@@ -42,6 +42,8 @@ final class ApprovalWorld
     public $users = [];
     /** @var array<int,bool> administrators (WordPress user ids) */
     public $admins = [];
+    /** @var int how many times isAdmin() was asked */
+    public $adminChecks = 0;
     /** @var array<string,string> */
     public $selfRule = [];
     /** @var array<string,bool> */
@@ -193,7 +195,7 @@ final class ApprovalWorld
         return new class($w) implements Permissions {
             private $w;
             public function __construct($w) { $this->w = $w; }
-            public function isAdmin(int $uid): bool { return !empty($this->w->admins[$uid]); }
+            public function isAdmin(int $uid): bool { $this->w->adminChecks++; return !empty($this->w->admins[$uid]); }
         };
     }
 

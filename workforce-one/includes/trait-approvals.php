@@ -402,7 +402,7 @@ trait EWS_Approvals_Trait {
     /**
      * Whether $uid may decide this pending step: its approver, or (a step sent to administrators, or
      * $admin_override) an administrator. A requester deciding their own request needs the workflow to
-     * allow self-approval. @return true|WP_Error
+     * allow self-approval, except an administrator using the override on a level that waits for administrators (3.31.129). @return true|WP_Error
      */
     private function approval_may_decide($step,$uid,$admin_override){
         $r=$this->services()->approvals()->mayDecide($step,(int)$uid,(bool)$admin_override);
@@ -546,7 +546,8 @@ trait EWS_Approvals_Trait {
 
     /**
      * The employee withdrew a request still waiting (3.31.103, My requests): its approval request is
-     * closed and the levels still to decide are marked withdrawn. The caller owns the transaction.
+     * closed and the levels still to decide are marked withdrawn. The caller owns the transaction, and on false must roll it back:
+     * the levels may already be marked (they are locked first, 3.31.129).
      * @return bool
      */
     private function approval_close($workflow_key,$entity_type,$entity_id){

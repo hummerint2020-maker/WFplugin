@@ -72,6 +72,18 @@ $start = function ($key, $et, $eid, $req, $ctx = [], $manage = true) use ($call)
 $act = function ($id, $decision, $comment = '', $manage = true, $override = false, $expected = null) use ($call) { return $call('approval_act', $id, $decision, $comment, $manage, $override, $expected); };
 $rid = function ($key, $et, $eid) use ($wpdb, $p) { return (int) $wpdb->get_var($wpdb->prepare("SELECT ar.id FROM {$p}ews_approval_requests ar JOIN {$p}ews_approval_workflows w ON w.id=ar.workflow_id WHERE w.workflow_key=%s AND ar.entity_type=%s AND ar.entity_id=%d ORDER BY ar.id DESC LIMIT 1", $key, $et, $eid)); };
 
+$dump = function ($prefix) use (&$trace, $wpdb, $p, $norm) {
+    $rows = function ($sqlstr) use ($wpdb, $norm) { return $norm($wpdb->get_results($sqlstr, ARRAY_A)); };
+    foreach ([
+        'requests' => "SELECT * FROM {$p}ews_approval_requests ORDER BY id",
+        'steps' => "SELECT * FROM {$p}ews_approval_steps ORDER BY id",
+        'substitutes' => "SELECT * FROM {$p}ews_approval_substitutes ORDER BY id",
+        'workflow_steps' => "SELECT * FROM {$p}ews_approval_workflow_steps ORDER BY id",
+        'workflows' => "SELECT * FROM {$p}ews_approval_workflows ORDER BY id",
+        'notifications' => "SELECT user_id,type,entity,entity_id,title,message,link,is_read FROM {$p}ews_notifications ORDER BY id",
+        'audit' => "SELECT user_id,action,entity,entity_id,details FROM {$p}ews_audit_log ORDER BY id",
+    ] as $name => $query) $trace[$prefix . $name] = $rows($query);   // one key per table, so an intended change to one cannot hide a change to another
+};
 // ---------------------------------------------------------------- 1. a leave request through two levels
 $as($P['req']['uid']);
 $run('leave_start', function () use ($start, $P) { return $start('vacation', 'leave', 901, $P['req']['id']); });
@@ -193,6 +205,7 @@ $run('sub2_create_same', function () use ($call, $P) { return $call('substitute_
 $run('sub2_create_leave_linked', function () use ($call, $P) { return $call('substitute_create', $P['lone']['id'], $P['sub']['id'], gmdate('Y-m-d H:i:s', time() + 30 * 86400), gmdate('Y-m-d H:i:s', time() + 31 * 86400), 'leave', '', 999999, 'pending'); });
 $run('sub2_sync_leave_linked', function () use ($call) { return $call('substitutes_sync'); });
 
+$dump('_rows_before:');   // strict: everything up to here must be the same on both sides (the sections below change on purpose)
 // ---------------------------------------------------------------- 7. withdraw and close
 $as($P['req']['uid']);
 $run('withdraw_start', function () use ($start, $P) { return $start('overtime', 'overtime_request', 961, $P['req']['id'], [], false); });
@@ -287,13 +300,5 @@ $run('shutdown_deferred', function () { do_action('shutdown'); return count($GLO
 remove_all_actions('shutdown');
 $as(0);
 $rows = function ($sqlstr) use ($wpdb, $norm) { return $norm($wpdb->get_results($sqlstr, ARRAY_A)); };
-foreach ([
-    'requests' => "SELECT * FROM {$p}ews_approval_requests ORDER BY id",
-    'steps' => "SELECT * FROM {$p}ews_approval_steps ORDER BY id",
-    'substitutes' => "SELECT * FROM {$p}ews_approval_substitutes ORDER BY id",
-    'workflow_steps' => "SELECT * FROM {$p}ews_approval_workflow_steps ORDER BY id",
-    'workflows' => "SELECT * FROM {$p}ews_approval_workflows ORDER BY id",
-    'notifications' => "SELECT user_id,type,entity,entity_id,title,message,link,is_read FROM {$p}ews_notifications ORDER BY id",
-    'audit' => "SELECT user_id,action,entity,entity_id,details FROM {$p}ews_audit_log ORDER BY id",
-] as $name => $query) $trace['_rows:' . $name] = $rows($query);   // one key per table, so an intended change to one cannot hide a change to another
+$dump('_rows:');
 echo wp_json_encode($trace);

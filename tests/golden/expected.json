@@ -9,12 +9,18 @@
     "approvals:reassign_none": "Q5: follows reassign_move",
     "approvals:reassign2_waiting": "Q5: new scenario (both managers covered)",
     "approvals:reassign2_move": "Q5: new scenario (the new manager's cover takes them)",
-    "approvals:selfadmin_admins_override": "Q4: an administrator may decide their own request on a level waiting for administrators",
-    "approvals:selfadmin_next_override": "Q4: same, rule next",
+    "approvals:selfadmin_admins_override": {
+      "reason": "Q4: an administrator may decide their own request on a level waiting for administrators",
+      "return": true
+    },
+    "approvals:selfadmin_next_override": {
+      "reason": "Q4: same, rule next",
+      "return": true
+    },
     "approvals:_rows:steps": "Q1, Q4, Q5: rows follow the changes above",
     "approvals:_rows:requests": "Q4, Q5: rows follow the changes above",
     "approvals:_rows:audit": "Q4: the self-decision is audited",
-    "approvals:_rows:notifications": "Q5: follows the changes above",
+    "approvals:_rows:notifications": "Q4: the administrators are no longer told about the level an administrator decided (shutdown_deferred); Q5: new scenario",
     "approvals:shutdown_deferred": "Q4: the level an administrator decided is no longer told to the administrators at the end of the page"
   },
   "hooks_added": []
