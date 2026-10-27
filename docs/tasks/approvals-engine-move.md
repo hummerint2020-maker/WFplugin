@@ -580,3 +580,10 @@ Each commit runs unit, phpstan, phpcs, golden and the §3.5 suites touched.
    (leave_notify_pending_approvers, face-reset purge) are **not** done in this release (their direct SQL stays as baseline
    debt); the supervisor-relationship code stays in trait-approvals until People moves (§1.11); the schema functions stay in
    the traits; the first enrolment of the approvals tables raises the layer baseline once (`--allow-increase`).
+6. **Where the harness differs from §3.3 (step 1):** the approval trace is `tests/golden/actions_approvals.php`, run in
+   process through the engine's own functions (`ReflectionMethod`), not through the module admin-post handlers (no
+   `GoldenExit` handler runs); the module handlers stay covered by the existing e2e suites. `run.py` runs every
+   `actions*.php` and prefixes the keys (`approvals:<call>`). Each call records its return, the exact SQL in order
+   (timestamps as `T`) and the query count; the end state records every approval, substitute and workflow row, the
+   notifications and the audit log. Checked: equal on unchanged code (3 runs), and it fails when one extra query is added
+   to `approval_current_step()`.

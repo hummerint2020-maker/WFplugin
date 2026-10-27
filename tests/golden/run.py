@@ -128,8 +128,14 @@ def render(side, sessions, ctx, only=None):
 
 
 def actions(ctx):
-    restore()
-    return json.loads(wp('eval-file', os.path.join(HERE, 'actions.php'), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1])
+    """actions.php's trace, and the trace of every other actions_<name>.php under 'name:<key>' (each from the same snapshot)."""
+    out = {}
+    for f in sorted(x for x in os.listdir(HERE) if re.fullmatch(r'actions(_\w+)?\.php', x)):
+        restore()
+        t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1])
+        prefix = '' if f == 'actions.php' else f[8:-4] + ':'
+        out.update({prefix + k: v for k, v in t.items()})
+    return out
 
 
 HOOK = re.compile(r"""(?:add_action|add_filter|add_shortcode|register_rest_route)\(\s*['"]([^'"]+)['"]""")
