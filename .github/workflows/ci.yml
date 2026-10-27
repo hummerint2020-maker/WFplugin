@@ -400,6 +400,11 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
+          # A push to a feature branch is compared with main, as its pull request is, not with the previous push: a release that changes behaviour on purpose
+          # (expected.json "actions") would otherwise fail on its second push, when both sides already carry the change.
+          if [ "${{ github.event_name }}" = "push" ] && [ "$GITHUB_REF_NAME" != "main" ]; then
+            BASE_SHA=$(git ls-remote origin refs/heads/main | cut -f1)
+          fi
           if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || [ "$BASE_SHA" = "$GITHUB_SHA" ]; then
             echo "No base commit to compare with: skipped"; exit 0
           fi
