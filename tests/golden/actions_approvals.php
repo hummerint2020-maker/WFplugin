@@ -72,6 +72,18 @@ $start = function ($key, $et, $eid, $req, $ctx = [], $manage = true) use ($call)
 $act = function ($id, $decision, $comment = '', $manage = true, $override = false, $expected = null) use ($call) { return $call('approval_act', $id, $decision, $comment, $manage, $override, $expected); };
 $rid = function ($key, $et, $eid) use ($wpdb, $p) { return (int) $wpdb->get_var($wpdb->prepare("SELECT ar.id FROM {$p}ews_approval_requests ar JOIN {$p}ews_approval_workflows w ON w.id=ar.workflow_id WHERE w.workflow_key=%s AND ar.entity_type=%s AND ar.entity_id=%d ORDER BY ar.id DESC LIMIT 1", $key, $et, $eid)); };
 
+$dump = function ($prefix) use (&$trace, $wpdb, $p, $norm) {
+    $rows = function ($sqlstr) use ($wpdb, $norm) { return $norm($wpdb->get_results($sqlstr, ARRAY_A)); };
+    foreach ([
+        'requests' => "SELECT * FROM {$p}ews_approval_requests ORDER BY id",
+        'steps' => "SELECT * FROM {$p}ews_approval_steps ORDER BY id",
+        'substitutes' => "SELECT * FROM {$p}ews_approval_substitutes ORDER BY id",
+        'workflow_steps' => "SELECT * FROM {$p}ews_approval_workflow_steps ORDER BY id",
+        'workflows' => "SELECT * FROM {$p}ews_approval_workflows ORDER BY id",
+        'notifications' => "SELECT user_id,type,entity,entity_id,title,message,link,is_read FROM {$p}ews_notifications ORDER BY id",
+        'audit' => "SELECT user_id,action,entity,entity_id,details FROM {$p}ews_audit_log ORDER BY id",
+    ] as $name => $query) $trace[$prefix . $name] = $rows($query);   // one key per table, so an intended change to one cannot hide a change to another
+};
 // ---------------------------------------------------------------- 1. a leave request through two levels
 $as($P['req']['uid']);
 $run('leave_start', function () use ($start, $P) { return $start('vacation', 'leave', 901, $P['req']['id']); });
@@ -193,6 +205,7 @@ $run('sub2_create_same', function () use ($call, $P) { return $call('substitute_
 $run('sub2_create_leave_linked', function () use ($call, $P) { return $call('substitute_create', $P['lone']['id'], $P['sub']['id'], gmdate('Y-m-d H:i:s', time() + 30 * 86400), gmdate('Y-m-d H:i:s', time() + 31 * 86400), 'leave', '', 999999, 'pending'); });
 $run('sub2_sync_leave_linked', function () use ($call) { return $call('substitutes_sync'); });
 
+$dump('_rows_before:');   // strict: everything up to here must be the same on both sides (the sections below change on purpose)
 // ---------------------------------------------------------------- 7. withdraw and close
 $as($P['req']['uid']);
 $run('withdraw_start', function () use ($start, $P) { return $start('overtime', 'overtime_request', 961, $P['req']['id'], [], false); });
@@ -227,6 +240,35 @@ $run('reassign_move', function () use ($call, $P) { $pending = 0; $r = $call('ap
 $run('reassign_none', function () use ($call, $P) { $pending = 0; $r = $call('approval_reassign_supervisor', $P['req']['id'], $P['mgr']['id'], $P['other']['id'], $pending); return [$r, $pending]; });
 $run('reassign_notify', function () use ($call, $P) { return $call('approval_reassign_notify', $P['req']['id'], $P['other']['id'], 1); });
 
+// 9b. (3.31.129) the new manager has a cover too: the levels the old manager's cover held go to the new manager's cover
+$wpdb->insert($p . 'ews_approval_substitutes', ['manager_employee_id' => $P['other']['id'], 'substitute_employee_id' => $P['lone']['id'], 'starts_at' => gmdate('Y-m-d H:i:s', time() - 3600), 'ends_at' => gmdate('Y-m-d H:i:s', time() + 7 * 86400),
+    'status' => 'active', 'source' => 'hr', 'reason' => '', 'decided' => 0, 'created_by' => $admin, 'created_at' => gmdate('Y-m-d H:i:s'), 'started_at' => gmdate('Y-m-d H:i:s', time() - 3600)]);
+$as($P['req']['uid']);
+$run('reassign2_start', function () use ($start, $P) { return $start('vacation', 'leave', 982, $P['req']['id'], [], false); });
+$as($admin);
+$run('reassign2_waiting', function () use ($call) { return $call('approval_waiting_on_supervisors'); });
+$run('reassign2_move', function () use ($call, $P) { $pending = 0; $r = $call('approval_reassign_supervisor', $P['req']['id'], $P['mgr']['id'], $P['other']['id'], $pending); return [$r, $pending]; });
+
+// 9c. (3.31.129) an administrator who made the request decides it from the Hub (the override) on a level waiting for administrators
+$adm = $emp('apadmin', 'Ap Admin');
+$wpdb->update($p . 'ews_employees', ['wp_user_id' => $admin], ['id' => $adm['id']]);
+$wf('face_reset', 'SEQUENTIAL', [['SPECIFIC_USER', (string) $admin]]);
+foreach (['admins', 'next'] as $i => $rule) {
+    update_option('ews_approval_self_rule', ['face_reset' => $rule], false);
+    $as($admin);
+    $run('selfadmin_' . $rule . '_start', function () use ($start, $adm, $i) { return $start('face_reset', 'face_reset_request', 990 + $i, $adm['id'], [], false); });
+    $R = $rid('face_reset', 'face_reset_request', 990 + $i);
+    $run('selfadmin_' . $rule . '_no_override', function () use ($act, $R) { return $act($R, 'approve', '', false); });
+    $run('selfadmin_' . $rule . '_override', function () use ($act, $R) { return $act($R, 'approve', '', false, true); });
+}
+// The same on a level assigned to someone else: still refused with the override.
+update_option('ews_approval_self_rule', ['face_reset' => 'admins'], false);
+$wf('face_reset', 'SEQUENTIAL', [['SPECIFIC_USER', (string) $P['hr']['uid']]]);
+$run('selfadmin_other_level_start', function () use ($start, $adm) { return $start('face_reset', 'face_reset_request', 992, $adm['id'], [], false); });
+$R = $rid('face_reset', 'face_reset_request', 992);
+$run('selfadmin_other_level_override', function () use ($act, $R) { return $act($R, 'approve', '', false, true); });
+delete_option('ews_approval_self_rule');
+
 // ---------------------------------------------------------------- 10. reads for pages
 $keys = [['vacation', 'leave', 901], ['vacation', 'leave', 951], ['vacation', 'leave', 971], ['overtime', 'overtime_request', 911], ['attendance_correction', 'attendance_correction', 962], ['vacation', 'leave', 555]];
 $nowfix = gmdate('Y-m-d H:i:s', $base + 3 * 86400);
@@ -258,13 +300,5 @@ $run('shutdown_deferred', function () { do_action('shutdown'); return count($GLO
 remove_all_actions('shutdown');
 $as(0);
 $rows = function ($sqlstr) use ($wpdb, $norm) { return $norm($wpdb->get_results($sqlstr, ARRAY_A)); };
-$trace['_rows'] = [
-    'requests' => $rows("SELECT * FROM {$p}ews_approval_requests ORDER BY id"),
-    'steps' => $rows("SELECT * FROM {$p}ews_approval_steps ORDER BY id"),
-    'substitutes' => $rows("SELECT * FROM {$p}ews_approval_substitutes ORDER BY id"),
-    'workflow_steps' => $rows("SELECT * FROM {$p}ews_approval_workflow_steps ORDER BY id"),
-    'workflows' => $rows("SELECT * FROM {$p}ews_approval_workflows ORDER BY id"),
-    'notifications' => $rows("SELECT user_id,type,entity,entity_id,title,message,link,is_read FROM {$p}ews_notifications ORDER BY id"),
-    'audit' => $rows("SELECT user_id,action,entity,entity_id,details FROM {$p}ews_audit_log ORDER BY id"),
-];
+$dump('_rows:');
 echo wp_json_encode($trace);

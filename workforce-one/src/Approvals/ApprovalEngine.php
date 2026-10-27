@@ -18,8 +18,9 @@ if (!defined('ABSPATH')) exit;
  * the COMMIT; false = the caller owns the transaction (it may still roll back), so the administrators are told at the end of
  * the page, and only if the level still waits for them.
  *
- * Lock order (do not change): deciding locks the level (step) row, then the request row. Withdrawing (closeWithdrawn) locks the
- * request first, then its levels; closeOpen locks the levels first, then the request. The caller's own row comes before both.
+ * Lock order (do not change): deciding, withdrawing (closeWithdrawn) and closing (closeOpen) all lock the levels (step rows)
+ * first, then the request row (withdrawing did the reverse before 3.31.129, which could deadlock with a decision). The caller's
+ * own row comes before both.
  *
  * Actor and time come in as arguments or ports: nothing here asks WordPress who is signed in. Names and codes come already
  * cleaned (sanitize_key, absint) by the trait that calls this.
@@ -265,7 +266,8 @@ final class ApprovalEngine
 
     /**
      * Whether $userId may decide this pending level: its approver, or (a level sent to administrators, or $adminOverride) an
-     * administrator. A requester deciding their own request needs the workflow to allow it.
+     * administrator. A requester deciding their own request needs the workflow to allow it, except an administrator using the
+     * override on a level that waits for administrators (3.31.129; before, "the requester cannot decide it, administrators included").
      */
     public function mayDecide(object $step, int $userId, bool $adminOverride): ApprovalResult
     {
@@ -273,7 +275,10 @@ final class ApprovalEngine
         if (!$request) return ApprovalResult::error('approval_not_found', 'Approval request not found.');
         $isSelf = $userId && $userId === $this->requesterUserId($request);
         if ($isSelf && $this->policy->selfRule($this->workflows->keyById((int) $request->workflow_id)) !== 'allow') {
-            return ApprovalResult::error('approval_self_not_allowed', 'This workflow does not allow approving your own request.');
+            $adminLevel = !empty($step->rerouted) && !(int) $step->approver_wp_user_id;   // the level waits for administrators
+            if (!($adminOverride && $adminLevel && $this->permissions->isAdmin($userId))) {
+                return ApprovalResult::error('approval_self_not_allowed', 'This workflow does not allow approving your own request.');
+            }
         }
         if ($adminOverride) return ApprovalResult::ok(true);
         if ($userId && (int) $step->approver_wp_user_id === $userId) return ApprovalResult::ok(true);
@@ -381,8 +386,10 @@ final class ApprovalEngine
         if (!$ar) return true;
         if (in_array($ar->status, ['APPROVED', 'REJECTED', 'CANCELLED'], true)) return false;
         $now = $this->clock->now();
-        if ($this->requests->cancelRequestIf((int) $ar->id, (string) $ar->status, $now) !== 1) return false;
-        return $this->requests->cancelOpenSteps((int) $ar->id, false);
+        // The levels first, then the request, as a decision locks them (3.31.129). On false the caller must roll back: the levels
+        // may already be marked cancelled while the request had been decided meanwhile.
+        if (!$this->requests->cancelOpenSteps((int) $ar->id, false)) return false;
+        return $this->requests->cancelRequestIf((int) $ar->id, (string) $ar->status, $now) === 1;
     }
 
     /**
@@ -420,6 +427,9 @@ final class ApprovalEngine
         $ids = $this->requests->supervisorStepIds($employeeId, $fromEmployeeId);
         if (!$ids) return 0;
         if ($this->requests->reassignSteps($ids, (int) $to->id, (int) $to->wp_user_id) === false) return false;
+        // The new manager's cover, when there is one, decides for them (3.31.129; the levels a cover of the old manager held come along).
+        $route = $this->substitutes->route((int) $to->id, $employeeId);
+        if ($route && $this->requests->routeStepsToSubstitute($ids, (int) $route['employee']->id, (int) $route['employee']->wp_user_id, (int) $to->id, (int) $route['row']->id) === false) return false;
         $pending = $this->requests->countPending($ids);
         return count($ids);
     }

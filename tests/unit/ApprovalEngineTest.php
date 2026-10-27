@@ -332,4 +332,138 @@ final class ApprovalEngineTest extends TestCase
         $this->w->requests->steps[1]->status = 'CANCELLED';   // the caller rolled back or withdrew meanwhile
         $this->assertFalse($this->w->engine()->stillWithAdministrators($id, 1));
     }
+
+    public function testWithdrawLocksTheLevelsBeforeTheRequest(): void
+    {
+        $this->start('vacation');
+        $this->w->requests->log = [];
+        $this->assertTrue($this->w->engine()->closeWithdrawn('vacation', 'x', 1));
+        $this->assertSame(['cancelSteps 1', 'cancelRequest 1'], $this->w->requests->log, 'as a decision locks them (3.31.129)');
+    }
+
+    public function testAnAdministratorMayDecideTheirOwnRequestOnALevelWaitingForAdministrators(): void
+    {
+        $this->w->person(7, 'Admin', 70);
+        $this->w->admins[70] = true;
+        $this->w->workflow(11, 'face_reset', 'LEVEL_1', [['SPECIFIC_USER', '70']]);
+        foreach (['admins', 'next'] as $rule) {
+            $this->w->selfRule['face_reset'] = $rule;
+            $id = $this->w->engine()->start('face_reset', 'x', $rule === 'admins' ? 1 : 2, 7, [], true)->value;
+            $step = $this->w->requests->currentStep($id);
+            $this->assertSame(1, (int) $step->rerouted, $rule);
+            $this->assertSame('approval_self_not_allowed', $this->w->engine()->mayDecide($step, 70, false)->code, $rule . ': no override');
+            $this->assertTrue($this->w->engine()->mayDecide($step, 70, true)->ok, $rule . ': the Hub override');
+            $this->assertTrue($this->act($id, 'reject', 70, '', true, true)->ok, $rule . ': a reject needs no note with the override');
+            $done = array_values(array_filter($this->w->requests->steps, function ($s) use ($id) { return (int) $s->approval_request_id === $id; }))[0];
+            $this->assertSame([1, 'REJECTED'], [(int) $done->self_decision, $done->status]);
+        }
+        $this->assertSame('approval_self_decision', $this->w->audits[count($this->w->audits) - 1][0]);
+    }
+
+    public function testTheOverrideDoesNotOpenALevelAssignedToSomeoneElseOrAnHrOverride(): void
+    {
+        $this->w->person(7, 'Admin', 70);
+        $this->w->person(8, 'Hr', 80);
+        $this->w->admins[70] = true;
+        $this->w->workflow(11, 'face_reset', 'LEVEL_1', [['SPECIFIC_USER', '80']]);
+        $this->w->selfRule['face_reset'] = 'admins';
+        $id = $this->w->engine()->start('face_reset', 'x', 1, 7, [], true)->value;
+        $step = $this->w->requests->currentStep($id);
+        $this->assertSame(80, (int) $step->approver_wp_user_id);
+        $this->assertSame('approval_self_not_allowed', $this->w->engine()->mayDecide($step, 70, true)->code, 'the level is assigned to HR');
+        $this->w->person(9, 'Not admin', 90);
+        $this->w->workflow(12, 'other_type', 'LEVEL_1', [['SPECIFIC_USER', '90']]);
+        $this->w->selfRule['other_type'] = 'admins';
+        $id2 = $this->w->engine()->start('other_type', 'x', 1, 9, [], true)->value;
+        $this->assertSame('approval_self_not_allowed', $this->w->engine()->mayDecide($this->w->requests->currentStep($id2), 90, true)->code, 'an override without manage_options');
+    }
+
+    public function testReassignAlsoMovesTheLevelsAnOldCoverHolds(): void
+    {
+        $this->w->person(6, 'Old cover', 60);
+        $this->w->person(8, 'New manager', 80);
+        $this->w->routes[2] = ['employee' => $this->w->employees[6], 'row' => (object) ['id' => 9]];
+        $this->start('vacation');
+        $step = $this->w->requests->steps[1];
+        $this->assertSame([6, 2], [(int) $step->approver_employee_id, (int) $step->for_employee_id]);
+        $this->assertSame([1 => [2 => 1]], $this->w->requests->waitingOnSupervisors(), 'counted under the manager being covered');
+        unset($this->w->routes[2]);
+        $pending = 0;
+        $this->assertSame(1, $this->w->engine()->reassignSupervisor(1, 2, 8, $pending));
+        $this->assertSame([80, 8, null, null], [(int) $step->approver_wp_user_id, (int) $step->approver_employee_id, $step->for_employee_id, $step->substitute_id]);
+        $this->assertSame(1, $pending);
+    }
+
+    public function testReassignGoesToTheNewManagersActiveCover(): void
+    {
+        $this->w->person(6, 'Cover', 60);
+        $this->w->person(8, 'New manager', 80);
+        $this->start('vacation');
+        $this->w->routes[8] = ['employee' => $this->w->employees[6], 'row' => (object) ['id' => 5]];
+        $pending = 0;
+        $this->assertSame(1, $this->w->engine()->reassignSupervisor(1, 2, 8, $pending));
+        $step = $this->w->requests->steps[1];
+        $this->assertSame([60, 8, 5], [(int) $step->approver_wp_user_id, (int) $step->for_employee_id, (int) $step->substitute_id]);
+        $this->assertSame(1, $pending);
+        $this->assertSame(0, $this->w->engine()->reassignSupervisor(1, 2, 8, $pending), 'nothing left for the old manager');
+    }
+
+    public function testReassignDoesNotRouteTheRequestersOwnCoverOrWaitingLevels(): void
+    {
+        $this->w->person(8, 'New manager', 80);
+        $this->start('vacation');
+        $this->w->routes[8] = ['employee' => $this->w->employees[1], 'row' => (object) ['id' => 5]];   // the requester is the cover
+        $pending = 0;
+        $this->w->engine()->reassignSupervisor(1, 2, 8, $pending);
+        $this->assertSame(80, (int) $this->w->requests->steps[1]->approver_wp_user_id, 'stays with the new manager');
+        $this->assertNull($this->w->requests->steps[1]->substitute_id);
+        $this->assertSame('WAITING', $this->w->requests->steps[2]->status, 'level 2 is routed when it opens');
+    }
+
+    public function testWithdrawOfARequestDecidedMeanwhileReturnsFalseWithTheLevelsAlreadyMarked(): void
+    {
+        $id = $this->start('vacation')->value;
+        // A decision commits between the read and the conditional update: the request no longer has the status that was read.
+        $this->w->requests->beforeCancelRequest = function ($store, $rid) {
+            $store->requests[$rid]->status = 'APPROVED';
+        };
+        $this->w->requests->log = [];
+        $this->assertFalse($this->w->engine()->closeWithdrawn('vacation', 'x', 1), 'the caller must roll back');
+        $this->assertSame(['cancelSteps ' . $id], $this->w->requests->log, 'the levels were marked first, the request update found 0 rows');
+    }
+
+    public function testTheOverrideAsksIsAdminOnlyForASelfDecisionUnderNextOrAdmins(): void
+    {
+        $id = $this->start('vacation')->value;
+        $step = $this->w->requests->currentStep($id);
+        $this->w->engine()->mayDecide($step, 50, true);
+        $this->w->engine()->mayDecide($step, 20, false);
+        $this->assertSame(0, $this->w->adminChecks, 'not a self-decision');
+        $this->w->person(7, 'Solo', 70);
+        $this->w->admins[70] = true;
+        $this->w->workflow(11, 'face_reset', 'LEVEL_1', [['SPECIFIC_USER', '70']]);
+        $solo = $this->w->engine()->start('face_reset', 'x', 1, 7, [], true)->value;   // rule 'allow'
+        $this->assertTrue($this->w->engine()->mayDecide($this->w->requests->currentStep($solo), 70, true)->ok);
+        $this->assertSame(0, $this->w->adminChecks, 'rule allow: nothing to ask');
+    }
+
+    public function testReassignLeavesAWaitingSupervisorLevelAndALevelHeldForAnotherManagerAlone(): void
+    {
+        $this->w->workflow(13, 'sup2', 'LEVEL_2', [['SUPERVISOR'], ['SUPERVISOR']]);
+        $this->w->person(8, 'New manager', 80);
+        $this->w->engine()->start('sup2', 'x', 1, 1, [], true);
+        $steps = array_values(array_filter($this->w->requests->steps, function ($s) { return $s->resolver_type === 'SUPERVISOR'; }));
+        $waiting = $steps[count($steps) - 1];
+        $this->assertSame('WAITING', $waiting->status);
+        $this->w->routes[8] = ['employee' => $this->w->employees[4], 'row' => (object) ['id' => 5]];
+        $pending = 0;
+        $this->assertSame(2, $this->w->engine()->reassignSupervisor(1, 2, 8, $pending));
+        $this->assertSame([8, null, null], [(int) $waiting->approver_employee_id, $waiting->for_employee_id, $waiting->substitute_id], 'a WAITING level moves to the manager, not to the cover');
+        $this->assertSame(1, $pending, 'only the PENDING one counts');
+        // A level the old manager holds as a cover for someone else is that manager's level, not theirs: it stays.
+        $other = (object) ['id' => 99, 'approval_request_id' => $waiting->approval_request_id, 'step_order' => 9, 'resolver_type' => 'SUPERVISOR', 'status' => 'PENDING', 'approver_employee_id' => 2, 'for_employee_id' => 5, 'substitute_id' => 3, 'approver_wp_user_id' => 20];
+        $this->w->requests->steps[99] = $other;
+        $this->assertSame([], $this->w->requests->supervisorStepIds(1, 2));
+        $this->assertSame('PENDING', $other->status);
+    }
 }
