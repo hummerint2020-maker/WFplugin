@@ -216,8 +216,16 @@ try:
     tb = actions(ctx)
     point(HEAD)
     th = actions(ctx)
+    def first_difference(a, b):
+        """Where two traces first differ, for the failure message: the first SQL statement that is not the same."""
+        if isinstance(a, dict) and isinstance(b, dict) and isinstance(a.get('sql'), list) and isinstance(b.get('sql'), list):
+            for i in range(max(len(a['sql']), len(b['sql']))):
+                x, y = (a['sql'][i] if i < len(a['sql']) else None), (b['sql'][i] if i < len(b['sql']) else None)
+                if x != y:
+                    return 'statement %d: old %s | new %s' % (i, json.dumps(x)[:260], json.dumps(y)[:260])
+        return (json.dumps(a)[:300], json.dumps(b)[:300])
     for k in tb:
-        check('the same action trace: ' + k, tb[k] == th.get(k), (json.dumps(tb[k])[:300], json.dumps(th.get(k))[:300]))
+        check('the same action trace: ' + k, tb[k] == th.get(k), first_difference(tb[k], th.get(k)))
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))
     check('...the actions really saved, notified and claimed the week (else they prove nothing)', tb.get('week_lock_notified') and tb.get('notifications') and tb.get('grid_insert', {}).get('ok'),
           (tb.get('week_lock_notified'), len(tb.get('notifications') or [])))
