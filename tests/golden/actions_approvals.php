@@ -62,6 +62,7 @@ $norm = function ($v) use (&$norm) {
 $trace = [];
 $as = function ($uid) { wp_set_current_user((int) $uid); };
 $run = function ($label, callable $fn) use (&$trace, &$sql, $norm, $wpdb) {
+    wp_cache_flush();   // every call starts with a cold object cache, so when WordPress happens to have loaded a user earlier does not show
     $sql = [];
     $q0 = $wpdb->num_queries;
     $ret = $fn();
