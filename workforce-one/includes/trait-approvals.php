@@ -194,9 +194,7 @@ trait EWS_Approvals_Trait {
      * moved. $approval_request_id 0: the request has no approval request (the workflow is off), so no level is open.
      */
     private function approval_level_moved($approval_request_id,$posted){
-        if($posted===null)return false;
-        $step=(int)$approval_request_id?$this->approval_current_step((int)$approval_request_id):null;
-        return \WorkforceOne\Approvals\LevelGuard::check((int)$posted,$step?(int)$step->id:0)!==\WorkforceOne\Approvals\LevelGuard::OK;
+        return $this->services()->approvalReads()->levelMoved((int)$approval_request_id,$posted===null?null:(int)$posted);
     }
 
     /**
@@ -204,9 +202,7 @@ trait EWS_Approvals_Trait {
      * after its workflow was switched off is shown with its open level, and a fresh page passes (3.31.122 review).
      */
     private function approval_level_moved_for($workflow_key,$entity_type,$entity_id,$posted){
-        if($posted===null)return false;
-        $ar=$this->approval_find_request($workflow_key,$entity_type,(int)$entity_id);
-        return $this->approval_level_moved($ar?(int)$ar->id:0,$posted);
+        return $this->services()->approvalReads()->levelMovedFor(sanitize_key((string)$workflow_key),sanitize_key((string)$entity_type),(int)$entity_id,$posted===null?null:(int)$posted);
     }
 
     private function approval_moved_error(){
@@ -227,15 +223,7 @@ trait EWS_Approvals_Trait {
      * @return array<string,int>
      */
     private function approval_shown_steps(array $keys){
-        $found=$this->approval_find_requests($keys);
-        $current=$this->approval_current_steps(array_map(function($ar){return (int)$ar->id;},array_values($found)));
-        $out=[];
-        foreach($keys as $k){
-            $key=$this->approval_request_key((string)$k[0],(string)$k[1],(int)$k[2]);
-            $ar=$found[$key]??null;
-            $out[$key]=$ar && isset($current[(int)$ar->id])?(int)$current[(int)$ar->id]->id:0;
-        }
-        return $out;
+        return $this->services()->approvalReads()->shownSteps($keys);
     }
 
     /** Reminder and move-up times of a workflow, in working hours (0 = never; 3.31.100). @return array{remind:int,escalate:int} */
@@ -257,16 +245,8 @@ trait EWS_Approvals_Trait {
         return ['hr_user'=>absint($s['hr_user']??0),'finance_user'=>absint($s['finance_user']??0),'day_start'=>$start,'day_end'=>$end];
     }
 
-    /** The WordPress user of the employee who made an approval request (0 = none). */
-    private function approval_requester_user_id($request){
-        global $wpdb;
-        if(!$request)return 0;
-        return (int)$this->people_user_id((int)$request->requester_employee_id);
-    }
-
     private function approval_workflow_key_by_id($workflow_id){
-        global $wpdb;$t=$this->approval_tables();
-        return (string)$wpdb->get_var($wpdb->prepare("SELECT workflow_key FROM {$t['workflows']} WHERE id=%d",(int)$workflow_id));
+        return $this->services()->workflows()->keyById((int)$workflow_id);
     }
 
     /** Tells the site's administrators that a step waits for them (its approver was the requester). */
@@ -279,45 +259,8 @@ trait EWS_Approvals_Trait {
         }
     }
 
-    /**
-     * Tell administrators once the request is saved (3.31.102). A caller that owns the transaction
-     * ($manage_transaction false) may still roll it back: the message is sent at the end of the page
-     * load, and only when that level still waits for administrators.
-     */
-    private function approval_notify_administrators_after($approval_request_id,$step_order){
-        $request_id=(int)$approval_request_id;$order=(int)$step_order;
-        add_action('shutdown',function()use($request_id,$order){
-            global $wpdb;$t=$this->approval_tables();
-            $still=$wpdb->get_var($wpdb->prepare("SELECT i.id FROM {$t['instances']} i JOIN {$t['requests']} r ON r.id=i.approval_request_id
-                WHERE i.approval_request_id=%d AND i.step_order=%d AND i.status='PENDING' AND i.rerouted=1 AND i.approver_wp_user_id IS NULL",$request_id,$order));
-            if($still)$this->approval_notify_administrators($request_id,$order);
-        },5);
-    }
-
     private function approval_seed_workflows(){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $defaults=[
-            'vacation'=>['Vacation','NONE'],
-            'overtime'=>['Overtime','NONE'],
-            'early_leave'=>['Early Leave','NONE'],
-            'face_reset'=>['Face Reset','NONE'],
-            'shift_swap'=>['Shift Swap','PEER'],
-            'attendance_correction'=>['Attendance Correction','NONE'],
-            'salary_advance'=>['Salary Advance','NONE'],
-        ];
-        foreach($defaults as $key=>$def){
-            $exists=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",$key));
-            if($exists)continue;
-            $wpdb->insert($t['workflows'],[
-                'workflow_key'=>$key,
-                'name'=>$def[0],
-                'approval_mode'=>$def[1],
-                'active'=>0,
-                'created_at'=>current_time('mysql'),
-                'updated_at'=>current_time('mysql'),
-            ],['%s','%s','%s','%d','%s','%s']);
-        }
+        $this->services()->workflows()->seedDefaults();
     }
 
     private function approval_related_employee($employee_id,$relationship_type){
@@ -357,13 +300,7 @@ trait EWS_Approvals_Trait {
      * @return array<int,array<int,int>> requester employee id => [approver employee id => steps]
      */
     private function approval_waiting_on_supervisors(){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $out=[];
-        foreach((array)$wpdb->get_results("SELECT r.requester_employee_id req,i.approver_employee_id appr,COUNT(*) n FROM {$t['instances']} i JOIN {$t['requests']} r ON r.id=i.approval_request_id
-            WHERE i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id IS NOT NULL AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')
-            GROUP BY r.requester_employee_id,i.approver_employee_id") as $x)$out[(int)$x->req][(int)$x->appr]=(int)$x->n;
-        return $out;
+        return $this->services()->approvalReads()->waitingOnSupervisors();
     }
 
     /**
@@ -374,17 +311,10 @@ trait EWS_Approvals_Trait {
      */
     private function approval_reassign_supervisor($employee_id,$from_employee_id,$to_employee_id,&$pending=0){
         $pending=0;
-        global $wpdb;
-        $t=$this->approval_tables();
-        $from=(int)$from_employee_id;$to=$to_employee_id?$this->people_employee((int)$to_employee_id,true):null;
-        if(!$from || !$to || (int)$to->id===$from)return 0;
-        $ids=array_map('intval',(array)$wpdb->get_col($wpdb->prepare("SELECT i.id FROM {$t['instances']} i JOIN {$t['requests']} r ON r.id=i.approval_request_id
-            WHERE r.requester_employee_id=%d AND i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id=%d AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')",(int)$employee_id,$from)));
-        if(!$ids)return 0;
-        $ph=implode(',',array_fill(0,count($ids),'%d'));
-        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph) AND status IN ('PENDING','WAITING')",array_merge([(int)$to->id,(int)$to->wp_user_id],$ids)))===false)return false;
-        $pending=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE id IN ($ph) AND status='PENDING'",$ids));
-        return count($ids);
+        $moved=0;
+        $result=$this->services()->approvals()->reassignSupervisor((int)$employee_id,(int)$from_employee_id,(int)$to_employee_id,$moved);
+        $pending=$moved;
+        return $result;
     }
 
     /** The new manager is told about the moved requests waiting for them now (3.31.119: after the move is saved). */
@@ -396,50 +326,6 @@ trait EWS_Approvals_Trait {
                 sprintf(/* translators: %s: employee name */__('%s reports to you now: their requests waiting for approval now wait for you.','workforce-one'),$who),
                 ['entity'=>'approval','push'=>true]);
         }
-    }
-
-    /** Resolve the actual approver from the configured resolver. */
-    private function approval_resolve_approver($requester_employee_id,$resolver_type,$resolver_value=null,$entity_context=[]){
-        global $wpdb;
-        $resolver_type=strtoupper(sanitize_key($resolver_type));
-        $entity_context=is_array($entity_context)?$entity_context:[];
-
-        if($resolver_type==='SUPERVISOR'){
-            return $this->approval_related_employee($requester_employee_id,'supervisor');
-        }
-        if($resolver_type==='TEAM_MANAGER'){
-            return $this->team_manager_for_employee($requester_employee_id);
-        }
-        if($resolver_type==='MANAGERS_MANAGER'){
-            $manager=$this->approval_related_employee($requester_employee_id,'supervisor');
-            return $manager?$this->approval_related_employee((int)$manager->id,'supervisor'):null;
-        }
-        if($resolver_type==='DEPARTMENT_MANAGER'){
-            return $this->people_department_manager((int)$requester_employee_id);
-        }
-        if($resolver_type==='HR' || $resolver_type==='FINANCE'){
-            $uid=$this->approval_settings()[$resolver_type==='HR'?'hr_user':'finance_user'];
-            if(!$uid || !get_user_by('id',$uid))return null;
-            return $this->people_employee_by_user($uid)?:(object)['id'=>null,'wp_user_id'=>$uid];
-        }
-        if($resolver_type==='SPECIFIC_EMPLOYEE'){
-            $id=absint($resolver_value);
-            return $id?$this->people_employee($id,true):null;
-        }
-        if($resolver_type==='SPECIFIC_USER'){
-            $uid=absint($resolver_value);
-            if(!$uid)return null;
-            $user=get_user_by('id',$uid);
-            if(!$user)return null;
-            $employee=$this->people_employee_by_user($uid);
-            if($employee)return $employee;
-            return (object)['id'=>null,'wp_user_id'=>$uid];
-        }
-        if($resolver_type==='TARGET_EMPLOYEE'){
-            $id=absint(isset($entity_context['target_employee_id'])?$entity_context['target_employee_id']:0);
-            return $id?$this->people_employee($id,true):null;
-        }
-        return null;
     }
 
     /** Create/update one active relationship; V1 keeps one current target per type. */
@@ -471,13 +357,7 @@ trait EWS_Approvals_Trait {
     }
 
     private function approval_workflow($workflow_key){
-        global $wpdb;
-        $t=$this->approval_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",sanitize_key($workflow_key)));
-    }
-
-    private function approval_mode_family($mode){
-        return \WorkforceOne\Approvals\Workflows::modeFamily((string)$mode);
+        return $this->services()->workflows()->workflow(sanitize_key($workflow_key));
     }
 
     /**
@@ -486,40 +366,16 @@ trait EWS_Approvals_Trait {
      * @return true|WP_Error
      */
     private function approval_configure_workflow($workflow_key,$mode,$step_configs=[],$supported=null){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $workflow=$this->approval_workflow($workflow_key);
-        if(!$workflow)return new WP_Error('workflow_not_found','Workflow not found.');
-        $mode=strtoupper(sanitize_key($mode));
-        $plan=\WorkforceOne\Approvals\Workflows::plan($mode,is_array($step_configs)?$step_configs:[],$supported);
-        if(!$plan['ok'])return new WP_Error($plan['code'],$plan['message']);
-        $now=current_time('mysql');
-        if($wpdb->query('START TRANSACTION')===false)return new WP_Error('db_error','Could not start configuration transaction.');
-        $ok=$wpdb->query($wpdb->prepare("UPDATE {$t['workflows']} SET approval_mode=%s,active=1,updated_at=%s WHERE id=%d",$mode,$now,(int)$workflow->id));
-        if($ok===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error',$wpdb->last_error);}
-        if($wpdb->query($wpdb->prepare("DELETE FROM {$t['steps']} WHERE workflow_id=%d",(int)$workflow->id))===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error',$wpdb->last_error);}
-        foreach($plan['steps'] as $step){
-            $row=['workflow_id'=>(int)$workflow->id,'step_order'=>$step['step_order'],'step_type'=>$step['step_type'],'resolver_type'=>$step['resolver_type'],'resolver_value'=>$step['resolver_value'],'required'=>1,'active'=>1,'created_at'=>$now,'updated_at'=>$now];
-            $fmt=['%d','%d','%s','%s','%s','%d','%d','%s','%s'];
-            if($step['min_amount']!==null){$row['min_amount']=$step['min_amount'];$fmt[]='%f';}
-            $ok=$wpdb->insert($t['steps'],$row,$fmt);
-            if($ok===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error',$wpdb->last_error);}
-        }
-        $commit=$wpdb->query('COMMIT');
-        if($commit===false){$wpdb->query('ROLLBACK');return new WP_Error('db_error','Could not commit workflow configuration: '.($wpdb->last_error?:'database commit failed').'.');}
-        return true;
+        $r=$this->services()->workflows()->configure(sanitize_key((string)$workflow_key),strtoupper(sanitize_key($mode)),is_array($step_configs)?$step_configs:[],$supported);
+        return $r->ok?true:new WP_Error($r->code,$r->message);
     }
 
     private function approval_find_request($workflow_key,$entity_type,$entity_id){
-        global $wpdb;
-        $t=$this->approval_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT ar.*,w.workflow_key,w.approval_mode FROM {$t['requests']} ar JOIN {$t['workflows']} w ON w.id=ar.workflow_id WHERE w.workflow_key=%s AND ar.entity_type=%s AND ar.entity_id=%d ORDER BY ar.id DESC LIMIT 1",sanitize_key($workflow_key),sanitize_key($entity_type),(int)$entity_id));
+        return $this->services()->approvalReads()->findRequest(sanitize_key($workflow_key),sanitize_key($entity_type),(int)$entity_id);
     }
 
     private function approval_current_step($approval_request_id){
-        global $wpdb;
-        $t=$this->approval_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='PENDING' ORDER BY step_order ASC LIMIT 1",(int)$approval_request_id));
+        return $this->services()->approvalReads()->currentStep((int)$approval_request_id);
     }
 
     /**
@@ -529,135 +385,18 @@ trait EWS_Approvals_Trait {
      * @return array<int,object>
      */
     private function approval_current_steps(array $approval_request_ids){
-        global $wpdb;$t=$this->approval_tables();$out=[];
-        $ids=array_values(array_unique(array_filter(array_map('intval',$approval_request_ids))));
-        foreach(array_chunk($ids,500) as $chunk){
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE status='PENDING' AND approval_request_id IN (".implode(',',array_fill(0,count($chunk),'%d')).') ORDER BY approval_request_id ASC,step_order ASC',$chunk)) as $r){
-                if(!isset($out[(int)$r->approval_request_id]))$out[(int)$r->approval_request_id]=$r;
-            }
-        }
-        return $out;
+        return $this->services()->approvalReads()->currentSteps($approval_request_ids);
     }
 
     /** Start an approval instance and snapshot all resolved approvers. */
     private function approval_start($workflow_key,$entity_type,$entity_id,$requester_employee_id,$entity_context=[],$manage_transaction=true){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $workflow=$wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$t['workflows']} WHERE workflow_key=%s AND active=1 LIMIT 1",
-            sanitize_key($workflow_key)
-        ));
-        if(!$workflow)return new WP_Error('approval_workflow_not_found','Approval workflow is not configured.');
-
-        $existing=$wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$t['requests']} WHERE entity_type=%s AND entity_id=%d AND workflow_id=%d LIMIT 1",
-            sanitize_key($entity_type),(int)$entity_id,(int)$workflow->id
-        ));
-        if($existing)return new WP_Error('approval_already_started','Approval workflow already exists for this request.');
-
-        $steps=$wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$t['steps']} WHERE workflow_id=%d AND active=1 ORDER BY step_order ASC",
-            (int)$workflow->id
-        ));
-
-        $mode=strtoupper((string)$workflow->approval_mode);
-        $family=$this->approval_mode_family($mode);
-        if($family==='NONE')$steps=[];
-        elseif(!in_array($family,['SEQUENTIAL','PEER'],true))return new WP_Error('approval_invalid_mode','Approval workflow has an invalid approval mode.');
-        elseif(!$steps&&$family!=='PEER')return new WP_Error('approval_steps_missing','Approval workflow requires configured approval steps.');
-        if($family==='PEER'&&!$steps){
-            $target_id=absint($entity_context['target_employee_id']??0);
-            if(!$target_id)return new WP_Error('peer_target_missing','Peer approval requires target_employee_id.');
-            $steps=[(object)['step_order'=>1,'step_type'=>'PEER','resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>null,'required'=>1,'active'=>1]];
-        }
-
-        if(!$steps){
-            $ok=$wpdb->insert($t['requests'],[
-                'workflow_id'=>(int)$workflow->id,
-                'entity_type'=>sanitize_key($entity_type),
-                'entity_id'=>(int)$entity_id,
-                'requester_employee_id'=>(int)$requester_employee_id,
-                'status'=>'APPROVED',
-                'current_step'=>null,
-                'completed_at'=>current_time('mysql'),
-            ],['%d','%s','%d','%d','%s',null,'%s']);
-            if($ok===false)return new WP_Error('approval_db_error',$wpdb->last_error);
-            return (int)$wpdb->insert_id;
-        }
-
-        // Who decides each level, fixed when the request starts. A level whose condition does not apply
-        // is skipped; when its approver is the requester, the workflow's rule decides (3.31.100). A level
-        // with nobody to decide it (no manager, HR not set, an approver without a WordPress user) goes to
-        // the next level, or to administrators when there is none: the request is never refused for it
-        // (3.31.101; before, a requester without a manager could not ask at all).
-        $W=\WorkforceOne\Approvals\Workflows::class;
-        $amount=isset($entity_context['amount']) && is_numeric($entity_context['amount'])?(float)$entity_context['amount']:null;
-        $self_rule=$this->approval_self_rule($workflow_key);
-        $requester_uid=(int)$this->people_user_id((int)$requester_employee_id);
-        $plan=[];$facts=[];
-        foreach($steps as $step){
-            $order=(int)$step->step_order;
-            $min=isset($step->min_amount)?$W::minAmount($step->min_amount):null;
-            $approver=null;$rerouted=false;$skip='';
-            if($family!=='PEER' && !$W::applies($min,$amount)){
-                $skip='condition';
-            }else{
-                $approver=$this->approval_resolve_approver($requester_employee_id,$step->resolver_type,$step->resolver_value,$entity_context);
-                if($approver && !(int)$approver->wp_user_id)$approver=null;
-                if($family==='PEER'){
-                    if(!$approver)return new WP_Error('approval_approver_missing','The colleague of this request could not be found.');
-                }elseif($approver && $self_rule!=='allow'
-                    && (((int)($approver->id??0) && (int)$approver->id===(int)$requester_employee_id) || ($requester_uid && (int)$approver->wp_user_id===$requester_uid))){
-                    $approver=null;   // decided by the next level, or by an administrator (approval_can_act)
-                    if($self_rule==='next')$skip='self';else $rerouted=true;
-                }elseif(!$approver){
-                    $skip='missing';  // nobody to decide it: the next level, or administrators
-                }
-            }
-            $plan[$order]=['step'=>$step,'approver'=>$approver,'rerouted'=>$rerouted];
-            $facts[$order]=['skip'=>$skip];
-        }
-        $start=\WorkforceOne\Approvals\StateMachine::start($facts,$family);
-        $now=current_time('mysql');
-
-        if($manage_transaction && $wpdb->query('START TRANSACTION')===false)return new WP_Error('approval_db_error','Could not start approval transaction.');
-        $row=['workflow_id'=>(int)$workflow->id,'entity_type'=>sanitize_key($entity_type),'entity_id'=>(int)$entity_id,'requester_employee_id'=>(int)$requester_employee_id,'status'=>$start['request']];
-        $fmt=['%d','%s','%d','%d','%s'];
-        if($start['current_step']!==null){$row['current_step']=$start['current_step'];$fmt[]='%d';}else{$row['completed_at']=$now;$fmt[]='%s';}
-        $ok=$wpdb->insert($t['requests'],$row,$fmt);
-        if($ok===false){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
-        $approval_id=(int)$wpdb->insert_id;
-
-        $admins_now=0;
-        foreach($plan as $order=>$p){
-            $st=$start['steps'][$order];$approver=$p['approver'];$rerouted=$p['rerouted']||$st['rerouted'];
-            $row=['approval_request_id'=>$approval_id,'step_order'=>$order,'resolver_type'=>$p['step']->resolver_type,'resolver_value'=>$p['step']->resolver_value,'status'=>$st['status'],'rerouted'=>$rerouted?1:0];
-            $fmt=['%d','%d','%s','%s','%s','%d'];
-            // A manager away with a substitute (3.31.107): the level waits for the substitute, "for" the manager.
-            $route=$approver && $st['status']==='PENDING' && (int)($approver->id??0)?$this->substitute_route((int)$approver->id,(int)$requester_employee_id):null;
-            if($route){$row['for_employee_id']=(int)$approver->id;$row['substitute_id']=(int)$route['row']->id;$fmt[]='%d';$fmt[]='%d';$approver=$route['employee'];}
-            if($approver){$row['approver_employee_id']=$approver->id?(int)$approver->id:null;$row['approver_wp_user_id']=(int)$approver->wp_user_id;$fmt[]='%d';$fmt[]='%d';}
-            if($st['skip']!==''){$row['skip_reason']=$st['skip'];$fmt[]='%s';}
-            if($st['status']==='PENDING'){$row['pending_since']=$now;$fmt[]='%s';if($rerouted && !$approver)$admins_now=$order;}
-            $ok=$wpdb->insert($t['instances'],$row,$fmt);
-            if($ok===false){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
-        }
-        if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval request.');}
-        if($admins_now){if($manage_transaction)$this->approval_notify_administrators($approval_id,$admins_now);else $this->approval_notify_administrators_after($approval_id,$admins_now);}
-        return $approval_id;
+        $r=$this->services()->approvals()->start(sanitize_key($workflow_key),sanitize_key($entity_type),(int)$entity_id,(int)$requester_employee_id,is_array($entity_context)?$entity_context:[],(bool)$manage_transaction);
+        return $r->ok?$r->value:new WP_Error($r->code,$r->message);
     }
 
     private function approval_can_act($approval_request_id,$step_order=null){
         if(!is_user_logged_in())return false;
-        global $wpdb;
-        $t=$this->approval_tables();
-        $sql="SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='PENDING'";
-        $args=[(int)$approval_request_id];
-        if($step_order!==null){$sql.=' AND step_order=%d';$args[]=(int)$step_order;}
-        $sql.=' LIMIT 1';
-        $step=$wpdb->get_row($wpdb->prepare($sql,$args));
-        if(!$step)return false;
-        return $this->approval_may_decide($step,(int)get_current_user_id(),false)===true;
+        return $this->services()->approvals()->canAct((int)$approval_request_id,$step_order===null?null:(int)$step_order,(int)get_current_user_id());
     }
 
     /**
@@ -666,17 +405,8 @@ trait EWS_Approvals_Trait {
      * allow self-approval. @return true|WP_Error
      */
     private function approval_may_decide($step,$uid,$admin_override){
-        global $wpdb;$t=$this->approval_tables();
-        $request=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['requests']} WHERE id=%d",(int)$step->approval_request_id));
-        if(!$request)return new WP_Error('approval_not_found','Approval request not found.');
-        $is_self=$uid && $uid===$this->approval_requester_user_id($request);
-        if($is_self && !$this->approval_self_allowed($this->approval_workflow_key_by_id((int)$request->workflow_id)))
-            return new WP_Error('approval_self_not_allowed','This workflow does not allow approving your own request.');
-        if($admin_override)return true;
-        if($uid && (int)$step->approver_wp_user_id===$uid)return true;
-        if($this->substitute_manager_may_decide($step,$uid))return true;   // the manager away, deciding anyway (3.31.107)
-        if(!empty($step->rerouted) && !(int)$step->approver_wp_user_id && $uid && user_can($uid,'manage_options'))return true;
-        return new WP_Error('approval_not_authorized','You are not the assigned approver.');
+        $r=$this->services()->approvals()->mayDecide($step,(int)$uid,(bool)$admin_override);
+        return $r->ok?true:new WP_Error($r->code,$r->message);
     }
 
     /**
@@ -685,61 +415,8 @@ trait EWS_Approvals_Trait {
      * update touches only that step. null = the form did not say: the current level, as before.
      */
     private function approval_act($approval_request_id,$decision,$comment='',$manage_transaction=true,$allow_admin_override=false,$expected_step=null){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $approval_request_id=absint($approval_request_id);
-        $decision=sanitize_key($decision);
-        $comment=sanitize_textarea_field($comment);
-        if(!$approval_request_id||!in_array($decision,['approve','reject'],true))return new WP_Error('invalid_decision','Invalid approval decision.');
-        $request=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['requests']} WHERE id=%d LIMIT 1",$approval_request_id));
-        if(!$request)return new WP_Error('approval_not_found','Approval request not found.');
-        $step=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='PENDING' ORDER BY step_order ASC LIMIT 1",$approval_request_id));
-        // Before the approver check, so the approver of a level already decided is told it moved, not that it is not theirs.
-        if(\WorkforceOne\Approvals\LevelGuard::check($expected_step===null?null:(int)$expected_step,$step?(int)$step->id:0)!==\WorkforceOne\Approvals\LevelGuard::OK)return $this->approval_moved_error();
-        if(!$step)return new WP_Error('approval_not_pending','No pending approval step.');
-        $uid=(int)get_current_user_id();
-        if(!$allow_admin_override && !is_user_logged_in())return new WP_Error('approval_not_authorized','You are not the assigned approver.');
-        $may=$this->approval_may_decide($step,$uid,(bool)$allow_admin_override);
-        if(is_wp_error($may))return $may;
-        // A reason to reject, when the workflow asks for one (3.31.103); an administrator's override on the Requests Hub is not held to it.
-        if($decision==='reject' && trim($comment)==='' && !$allow_admin_override && $this->approval_reject_note_required($this->approval_workflow_key_by_id((int)$request->workflow_id)))
-            return new WP_Error('approval_note_required','Write why you reject it.');
-        $is_self=$uid && $uid===$this->approval_requester_user_id($request);
-
-        $now=current_time('mysql');
-        $next=$decision==='approve'?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id=%d AND status='WAITING' ORDER BY step_order ASC LIMIT 1",$approval_request_id)):null;
-        $to=\WorkforceOne\Approvals\StateMachine::afterDecision($decision,$next?(int)$next->step_order:null);
-        if($manage_transaction && $wpdb->query('START TRANSACTION')===false)return new WP_Error('approval_db_error','Could not start approval transaction.');
-        $ok=$wpdb->update($t['instances'],[
-            'status'=>$to['step'],
-            'decision'=>$decision,
-            'comment'=>$comment,
-            'acted_at'=>$now,
-            'acted_by_wp_user_id'=>$uid?:null,
-            'self_decision'=>$is_self?1:0,
-        ],['id'=>(int)$step->id,'status'=>'PENDING'],['%s','%s','%s','%s','%d','%d'],['%d','%s']);
-        if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return $expected_step!==null?$this->approval_moved_error():new WP_Error('approval_stale','Approval step was already handled.');}
-        if($next){
-            $set=['status'=>'PENDING','pending_since'=>$now];
-            $route=(int)$next->approver_employee_id?$this->substitute_route((int)$next->approver_employee_id,(int)$request->requester_employee_id):null;
-            if($route){$set+=['approver_employee_id'=>(int)$route['employee']->id,'approver_wp_user_id'=>(int)$route['employee']->wp_user_id,'for_employee_id'=>(int)$next->approver_employee_id,'substitute_id'=>(int)$route['row']->id];}
-            $ok=$wpdb->update($t['instances'],$set,['id'=>(int)$next->id,'status'=>'WAITING'],null,['%d','%s']);
-            if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
-            $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'current_step'=>$to['current_step']],['id'=>$approval_request_id],['%s','%d'],['%d']);
-        }elseif($decision==='reject'){
-            $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'completed_at'=>$now],['id'=>$approval_request_id],['%s','%s'],['%d']);
-        }else{
-            $ok=$wpdb->update($t['requests'],['status'=>$to['request'],'current_step'=>null,'completed_at'=>$now],['id'=>$approval_request_id],['%s','%d','%s'],['%d']);
-        }
-        if($ok!==1){if($manage_transaction)$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error',$wpdb->last_error);}
-        if($manage_transaction && $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return new WP_Error('approval_db_error','Could not commit approval decision.');}
-        $this->substitute_after_decision($step,$uid);
-        if($is_self)$this->audit('approval_self_decision','approval_request',$approval_request_id,
-            $this->approval_workflow_key_by_id((int)$request->workflow_id).' · level '.(int)$step->step_order.' · '.$decision);
-        if($next && !empty($next->rerouted) && !(int)$next->approver_wp_user_id){
-            if($manage_transaction)$this->approval_notify_administrators($approval_request_id,(int)$next->step_order);else $this->approval_notify_administrators_after($approval_request_id,(int)$next->step_order);
-        }
-        return true;
+        $r=$this->services()->approvals()->act(absint($approval_request_id),sanitize_key($decision),sanitize_textarea_field($comment),(bool)$manage_transaction,(bool)$allow_admin_override,$expected_step===null?null:(int)$expected_step,(int)get_current_user_id(),is_user_logged_in());
+        return $r->ok?true:new WP_Error($r->code,$r->message);
     }
     /**
      * The correction requests that go to HR whatever the mode (Attendance Corrections → Settings), for
@@ -779,25 +456,7 @@ trait EWS_Approvals_Trait {
      * @return array<string,object>
      */
     private function approval_find_requests(array $keys){
-        global $wpdb;
-        $groups=[];
-        foreach($keys as $k){
-            if(!is_array($k)||count($k)<3)continue;
-            $groups[sanitize_key((string)$k[0])."\0".sanitize_key((string)$k[1])][(int)$k[2]]=true;
-        }
-        if(!$groups)return [];
-        $t=$this->approval_tables();$out=[];
-        $where=[];
-        foreach($groups as $g=>$ids){
-            [$wk,$et]=explode("\0",$g);
-            foreach(array_chunk(array_keys($ids),500) as $chunk)$where[]=$wpdb->prepare('(w.workflow_key=%s AND ar.entity_type=%s AND ar.entity_id IN ('.implode(',',array_fill(0,count($chunk),'%d')).'))',array_merge([$wk,$et],$chunk));
-        }
-        $rows=(array)$wpdb->get_results("SELECT ar.*,w.workflow_key,w.approval_mode FROM {$t['requests']} ar JOIN {$t['workflows']} w ON w.id=ar.workflow_id WHERE ".implode(' OR ',$where).' ORDER BY ar.id DESC');
-        foreach($rows as $r){
-            $key=$this->approval_request_key($r->workflow_key,$r->entity_type,$r->entity_id);
-            if(!isset($out[$key]))$out[$key]=$r;
-        }
-        return $out;
+        return $this->services()->approvalReads()->findRequests($keys);
     }
 
     /**
@@ -820,16 +479,11 @@ trait EWS_Approvals_Trait {
      * @return array<string,array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null> by approval_request_key()
      */
     private function approval_paths(array $keys,$now=null){
-        global $wpdb;$t=$this->approval_tables();
         $found=$this->approval_find_requests($keys);
         $out=[];
         foreach($keys as $k)$out[$this->approval_request_key($k[0],$k[1],$k[2])]=null;
         if(!$found)return $out;
-        $by_request=[];
-        $ids=array_map(function($r){return (int)$r->id;},array_values($found));
-        foreach(array_chunk($ids,500) as $chunk){
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t['instances']} WHERE approval_request_id IN (".implode(',',array_fill(0,count($chunk),'%d')).') ORDER BY approval_request_id ASC,step_order ASC',$chunk)) as $r)$by_request[(int)$r->approval_request_id][]=$r;
-        }
+        $by_request=$this->services()->approvalReads()->stepsOf(array_map(function($r){return (int)$r->id;},array_values($found)));
         // Everyone's name: the active employee linked to the user (lowest id first), else the WordPress display name.
         $uids=[];$for_ids=[];
         foreach($by_request as $rows)foreach($rows as $r){
@@ -896,13 +550,7 @@ trait EWS_Approvals_Trait {
      * @return bool
      */
     private function approval_close($workflow_key,$entity_type,$entity_id){
-        $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
-        $this->substitutes_sync_at_shutdown();   // a withdrawn leave cancels its substitute (3.31.107)
-        if(!$ar)return true;
-        if(in_array($ar->status,['APPROVED','REJECTED','CANCELLED'],true))return false;
-        global $wpdb;$t=$this->approval_tables();$now=current_time('mysql');
-        if($wpdb->update($t['requests'],['status'=>'CANCELLED','current_step'=>null,'completed_at'=>$now],['id'=>(int)$ar->id,'status'=>(string)$ar->status])!==1)return false;
-        return $wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED' WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))!==false;
+        return $this->services()->approvals()->closeWithdrawn(sanitize_key($workflow_key),sanitize_key($entity_type),(int)$entity_id);
     }
 
     /**
@@ -913,19 +561,7 @@ trait EWS_Approvals_Trait {
      * @return true|string|false true: cancelled or nothing open; 'moved': it was decided while being closed; false: a database error
      */
     private function approval_close_open($workflow_key,$entity_type,$entity_id,$closed=false){
-        global $wpdb;
-        $wpdb->last_error='';
-        $ar=$this->approval_find_request($workflow_key,$entity_type,$entity_id);
-        if(!$ar && $wpdb->last_error!=='')return false;   // not read: not "nothing open"
-        $this->substitutes_sync_at_shutdown();
-        if(!$ar || in_array($ar->status,['APPROVED','REJECTED','CANCELLED'],true))return true;
-        $t=$this->approval_tables();
-        // The levels first, then the request: the order approval_act() locks them in, so a decision at the same moment waits instead of
-        // deadlocking. Both roll back with the caller's transaction when the request was decided meanwhile.
-        if($wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET status='CANCELLED'".($closed?",skip_reason='closed'":'')." WHERE approval_request_id=%d AND status IN ('PENDING','WAITING')",(int)$ar->id))===false)return false;
-        $n=$wpdb->update($t['requests'],['status'=>'CANCELLED','current_step'=>null,'completed_at'=>current_time('mysql')],['id'=>(int)$ar->id,'status'=>(string)$ar->status]);
-        if($n===false)return false;
-        return $n===1?true:'moved';
+        return $this->services()->approvals()->closeOpen(sanitize_key($workflow_key),sanitize_key($entity_type),(int)$entity_id,(bool)$closed);
     }
 
     /** wp-admin → Approval Workflows: the mode and approvers of each workflow in use, and supervisors. */

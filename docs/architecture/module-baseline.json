@@ -6,7 +6,6 @@
   "approvals->attendance": 7,
   "approvals->leave": 2,
   "approvals->overtime": 2,
-  "approvals->people": 1,
   "approvals->schedule": 4,
   "attendance->approvals": 6,
   "attendance->engagement": 1,

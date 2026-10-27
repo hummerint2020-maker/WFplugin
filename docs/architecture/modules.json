@@ -339,9 +339,6 @@
         "substitute_leave_check",
         "substitute_leave_saved",
         "substitutes_sync_at_shutdown",
-        "substitute_route",
-        "substitute_manager_may_decide",
-        "substitute_after_decision",
         "substitute_settings",
         "substitute_app_data",
         "substitute_notice",
@@ -352,7 +349,83 @@
         "approval_current_step",
         "approval_find_request",
         "approval_settings",
-        "approval_workflow"
+        "approval_workflow",
+        "approval_notify_administrators"
+      ],
+      "layered": [
+        {
+          "slice": "engine",
+          "tables": [
+            "approval_workflows",
+            "approval_workflow_steps",
+            "approval_requests",
+            "approval_steps"
+          ],
+          "store": [
+            "workforce-one/src/Approvals/Data/WordPressApprovalRequestStore.php",
+            "workforce-one/src/Approvals/Data/WordPressWorkflowStore.php"
+          ],
+          "services": [
+            "workforce-one/src/Approvals/ApprovalEngine.php",
+            "workforce-one/src/Approvals/ApprovalReads.php",
+            "workforce-one/src/Approvals/WorkflowService.php",
+            "workforce-one/src/Approvals/DeadlineService.php"
+          ],
+          "moved": [
+            "approval_start",
+            "approval_act",
+            "approval_can_act",
+            "approval_may_decide",
+            "approval_close",
+            "approval_close_open",
+            "approval_find_request",
+            "approval_find_requests",
+            "approval_current_step",
+            "approval_current_steps",
+            "approval_paths",
+            "approval_path",
+            "approval_shown_steps",
+            "approval_level_moved",
+            "approval_level_moved_for",
+            "approval_workflow",
+            "approval_workflow_key_by_id",
+            "approval_configure_workflow",
+            "approval_seed_workflows",
+            "approval_reassign_supervisor",
+            "approval_waiting_on_supervisors",
+            "approval_deadlines_tick",
+            "my_approvals_items",
+            "my_approvals_allowed",
+            "approvals_content"
+          ],
+          "traits_clean": [
+            "approval-deadlines",
+            "my-approvals"
+          ]
+        },
+        {
+          "slice": "substitutes",
+          "tables": [
+            "approval_substitutes"
+          ],
+          "store": "workforce-one/src/Approvals/Data/WordPressSubstituteStore.php",
+          "services": [
+            "workforce-one/src/Approvals/SubstituteService.php"
+          ],
+          "moved": [
+            "substitutes_sync",
+            "substitute_finish",
+            "substitute_check",
+            "substitute_create",
+            "substitute_app_data",
+            "substitute_end",
+            "admin_substitutes"
+          ]
+        }
+      ],
+      "exports": [
+        "WorkforceOne\\Approvals\\ApprovalEngine",
+        "WorkforceOne\\Approvals\\ApprovalReads"
       ]
     },
     "notifications": {
