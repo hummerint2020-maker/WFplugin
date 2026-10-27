@@ -112,6 +112,12 @@ interface ApprovalRequestStore
      */
     public function reassignSteps(array $stepIds, int $toEmployeeId, int $toUserId);
 
+    /**
+     * Sends open levels to the cover of their new manager, "for" that manager. @param list<int> $stepIds
+     * @return int|false
+     */
+    public function routeStepsToSubstitute(array $stepIds, int $substituteEmployeeId, int $substituteUserId, int $managerEmployeeId, int $substituteRowId);
+
     /** @param list<int> $stepIds */
     public function countPending(array $stepIds): int;
 

@@ -132,13 +132,17 @@ check('off: other people\'s requests still go to the boss as before', st_ and st
 decide(boss, lid_e, 'approve')
 check('...and he decides them', steps(lid_e)[0]['status'] == 'APPROVED')
 
-# an administrator who asks for their own leave cannot push it through the Requests Hub either
-php("$e=(int)$wpdb->get_var(\"SELECT id FROM {$p}ews_employees WHERE domain_name='boss'\"); $wpdb->update($p.'ews_employees',['wp_user_id'=>%d],['id'=>$e]);" % ids['admin_uid'])
+# 3.31.129: an administrator who asks for their own leave decides it on the Requests Hub when its level waits for administrators
+# (before: "the requester cannot decide it, administrators included", 3.31.75). The Audit Log marks the self-decision.
+php("$wpdb->query(\"DELETE FROM {$p}ews_audit_log WHERE action='approval_self_decision'\"); $e=(int)$wpdb->get_var(\"SELECT id FROM {$p}ews_employees WHERE domain_name='boss'\"); $wpdb->update($p.'ews_employees',['wp_user_id'=>%d],['id'=>$e]);" % ids['admin_uid'])
 qs, lid = submit(adm, d(9))
+ar0, st0 = steps(lid)
+check('an administrator\'s own leave waits for administrators (no approver, rerouted)', st0 and st0[0]['approver_wp_user_id'] is None and st0[0]['rerouted'] == '1', st0)
 n = adm.admin_request_nonce('leave', lid)
 adm.post('ews31_requests_decision', _wpnonce=n or 'missing', request_type='leave', request_id=lid, decision='approve')
 ar, st_ = steps(lid)
-check('off: an administrator cannot approve their own request through the Requests Hub', ar and ar['status'] == 'WAITING_FOR_LEVEL_1' and leave_status(lid) == 'Pending', (qs, ar, leave_status(lid)))
+audit = q("SELECT details FROM {p}ews_audit_log WHERE action='approval_self_decision'")
+check('3.31.129: an administrator approves their own request through the Requests Hub (marked as a self-decision, audited)', ar and ar['status'] == 'APPROVED' and leave_status(lid) == 'Approved' and st_[0]['self_decision'] == '1' and len(audit) == 1, (qs, ar, st_, audit, leave_status(lid)))
 php("$wpdb->update($p.'ews_employees',['wp_user_id'=>%d],['domain_name'=>'boss']);" % ids['boss_uid'])
 
 # ---------------------------------------------------------------- 3.31.111: no workflow at all

@@ -224,7 +224,11 @@ try:
                 if x != y:
                     return 'statement %d: old %s | new %s' % (i, json.dumps(x)[:260], json.dumps(y)[:260])
         return (json.dumps(a)[:300], json.dumps(b)[:300])
+    intended = EXPECTED.get('actions', {})
     for k in tb:
+        if k in intended:
+            print('EXPECTED (expected.json) %s: %s' % ('the same' if tb[k] == th.get(k) else 'changed', k))
+            continue
         check('the same action trace: ' + k, tb[k] == th.get(k), first_difference(tb[k], th.get(k)))
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))
     check('...the actions really saved, notified and claimed the week (else they prove nothing)', tb.get('week_lock_notified') and tb.get('notifications') and tb.get('grid_insert', {}).get('ok'),

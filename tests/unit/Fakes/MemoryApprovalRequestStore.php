@@ -212,7 +212,15 @@ final class MemoryApprovalRequestStore implements ApprovalRequestStore
 
     public function waitingOnSupervisors(): array
     {
-        return [];
+        $out = [];
+        foreach ($this->steps as $s) {
+            $r = $this->requests[(int) $s->approval_request_id] ?? null;
+            $who = $s->for_employee_id ?: $s->approver_employee_id;
+            if ($r && $s->resolver_type === 'SUPERVISOR' && in_array($s->status, ['PENDING', 'WAITING'], true) && $who !== null && !in_array($r->status, ['APPROVED', 'REJECTED', 'CANCELLED'], true)) {
+                $out[(int) $r->requester_employee_id][(int) $who] = ($out[(int) $r->requester_employee_id][(int) $who] ?? 0) + 1;
+            }
+        }
+        return $out;
     }
 
     public function supervisorStepIds(int $requesterEmployeeId, int $fromEmployeeId): array
@@ -221,7 +229,7 @@ final class MemoryApprovalRequestStore implements ApprovalRequestStore
         foreach ($this->steps as $s) {
             $r = $this->requests[(int) $s->approval_request_id] ?? null;
             if ($r && (int) $r->requester_employee_id === $requesterEmployeeId && $s->resolver_type === 'SUPERVISOR' && in_array($s->status, ['PENDING', 'WAITING'], true)
-                && (int) $s->approver_employee_id === $fromEmployeeId && !in_array($r->status, ['APPROVED', 'REJECTED', 'CANCELLED'], true)) $ids[] = (int) $s->id;
+                && (int) ($s->for_employee_id ?: $s->approver_employee_id) === $fromEmployeeId && !in_array($r->status, ['APPROVED', 'REJECTED', 'CANCELLED'], true)) $ids[] = (int) $s->id;
         }
         return $ids;
     }
@@ -234,6 +242,25 @@ final class MemoryApprovalRequestStore implements ApprovalRequestStore
                 $this->steps[$id]->approver_employee_id = $toEmployeeId;
                 $this->steps[$id]->approver_wp_user_id = $toUserId;
                 $this->steps[$id]->rerouted = 0;
+                $this->steps[$id]->for_employee_id = null;
+                $this->steps[$id]->substitute_id = null;
+                $this->log[] = 'reassign ' . $id;
+                $n++;
+            }
+        }
+        return $n;
+    }
+
+    public function routeStepsToSubstitute(array $stepIds, int $substituteEmployeeId, int $substituteUserId, int $managerEmployeeId, int $substituteRowId)
+    {
+        $n = 0;
+        foreach ($stepIds as $id) {
+            if (isset($this->steps[$id]) && $this->steps[$id]->status === 'PENDING') {
+                $this->steps[$id]->approver_employee_id = $substituteEmployeeId;
+                $this->steps[$id]->approver_wp_user_id = $substituteUserId;
+                $this->steps[$id]->for_employee_id = $managerEmployeeId;
+                $this->steps[$id]->substitute_id = $substituteRowId;
+                $this->log[] = 'route ' . $id;
                 $n++;
             }
         }

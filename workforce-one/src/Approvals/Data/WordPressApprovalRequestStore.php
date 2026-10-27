@@ -156,9 +156,9 @@ final class WordPressApprovalRequestStore implements ApprovalRequestStore
     public function waitingOnSupervisors(): array
     {
         $out = [];
-        foreach ((array) $this->db->get_results("SELECT r.requester_employee_id req,i.approver_employee_id appr,COUNT(*) n FROM {$this->steps} i JOIN {$this->requests} r ON r.id=i.approval_request_id
-            WHERE i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id IS NOT NULL AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')
-            GROUP BY r.requester_employee_id,i.approver_employee_id") as $x) {
+        foreach ((array) $this->db->get_results("SELECT r.requester_employee_id req,COALESCE(i.for_employee_id,i.approver_employee_id) appr,COUNT(*) n FROM {$this->steps} i JOIN {$this->requests} r ON r.id=i.approval_request_id
+            WHERE i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND COALESCE(i.for_employee_id,i.approver_employee_id) IS NOT NULL AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')
+            GROUP BY r.requester_employee_id,COALESCE(i.for_employee_id,i.approver_employee_id)") as $x) {
             $out[(int) $x->req][(int) $x->appr] = (int) $x->n;
         }
         return $out;
@@ -167,13 +167,20 @@ final class WordPressApprovalRequestStore implements ApprovalRequestStore
     public function supervisorStepIds(int $requesterEmployeeId, int $fromEmployeeId): array
     {
         return array_map('intval', (array) $this->db->get_col($this->db->prepare("SELECT i.id FROM {$this->steps} i JOIN {$this->requests} r ON r.id=i.approval_request_id
-            WHERE r.requester_employee_id=%d AND i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND i.approver_employee_id=%d AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')", $requesterEmployeeId, $fromEmployeeId)));
+            WHERE r.requester_employee_id=%d AND i.resolver_type='SUPERVISOR' AND i.status IN ('PENDING','WAITING') AND COALESCE(i.for_employee_id,i.approver_employee_id)=%d AND r.status NOT IN ('APPROVED','REJECTED','CANCELLED')", $requesterEmployeeId, $fromEmployeeId)));
     }
 
     public function reassignSteps(array $stepIds, int $toEmployeeId, int $toUserId)
     {
         $ph = implode(',', array_fill(0, count($stepIds), '%d'));
-        return $this->db->query($this->db->prepare("UPDATE {$this->steps} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0 WHERE id IN ($ph) AND status IN ('PENDING','WAITING')", array_merge([$toEmployeeId, $toUserId], $stepIds)));
+        return $this->db->query($this->db->prepare("UPDATE {$this->steps} SET approver_employee_id=%d,approver_wp_user_id=%d,rerouted=0,for_employee_id=NULL,substitute_id=NULL WHERE id IN ($ph) AND status IN ('PENDING','WAITING')", array_merge([$toEmployeeId, $toUserId], $stepIds)));
+    }
+
+    public function routeStepsToSubstitute(array $stepIds, int $substituteEmployeeId, int $substituteUserId, int $managerEmployeeId, int $substituteRowId)
+    {
+        $ph = implode(',', array_fill(0, count($stepIds), '%d'));
+        return $this->db->query($this->db->prepare("UPDATE {$this->steps} SET approver_employee_id=%d,approver_wp_user_id=%d,for_employee_id=%d,substitute_id=%d,reminded_at=NULL WHERE id IN ($ph) AND status='PENDING'",
+            array_merge([$substituteEmployeeId, $substituteUserId, $managerEmployeeId, $substituteRowId], $stepIds)));
     }
 
     public function countPending(array $stepIds): int
