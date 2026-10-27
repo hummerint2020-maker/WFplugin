@@ -587,3 +587,34 @@ Each commit runs unit, phpstan, phpcs, golden and the §3.5 suites touched.
    (timestamps as `T`) and the query count; the end state records every approval, substitute and workflow row, the
    notifications and the audit log. Checked: equal on unchanged code (3 runs), and it fails when one extra query is added
    to `approval_current_step()`.
+7. **Where the implementation differs from the design (3.31.128):**
+   - **People and Org ports are one:** `Approvals\ApprovalDirectory` (user of an employee, an employee by id or by user, name,
+     user exists, has reports, supervisor / team manager / department manager) instead of extending `Platform\People` and a
+     separate `Org`. `Platform\People` is the Schedule's port and is left as it was. `Platform\Transaction` and
+     `Platform\Permissions` are as designed.
+   - **Ports are held together** in `ApprovalPorts` (policy, notifier, after-the-page, directory, deadline notifier) and
+     `SubstitutePorts` (policy, leave facts, notifier), so the container takes two arguments, not ten.
+   - **`ApprovalPolicy`** has `selfRule`, `rejectNoteRequired`, `settings` and `workingDays`; it is lazy, so options are read
+     at the same points as before. The deadline hours are still read by the trait (`approval_deadlines()`), which decides
+     whether the tick has anything to do before a Service is built.
+   - **`waitingOnSupervisors`** is in `ApprovalReads` (it only reads). `purge` is not built: the two optional cross-module
+     replacements (§9.5) were left out, so `face_reset_clear_finished_approval` and `leave_notify_pending_approvers` keep their
+     SQL and stay in the baseline.
+   - **`SubstituteService implements SubstituteRouting`**, the small port the engine uses, so the engine never sees the
+     substitutes' Store. `substitute_app_data` passes a presenter to `decidingFor()` so the page's own reads (names) happen
+     between the Service's reads in the old order.
+   - **Deleted** (nobody else called them): `approval_resolve_approver`, `approval_mode_family`, `approval_self_allowed`,
+     `approval_requester_user_id`, `approval_notify_administrators_after` (now the `AfterRequest` adapter),
+     `approval_escalate`, `substitute_active_for`, `substitute_route`, `substitute_manager_may_decide`,
+     `substitute_after_decision`, `substitute_take_waiting`, `substitute_begin`. `substitute_route`,
+     `substitute_manager_may_decide` and `substitute_after_decision` also left the module's `api` list in `modules.json`;
+     `approval_notify_administrators` joined it (the container's adapter calls it).
+   - **`approval_invalid_mode` cannot happen:** `Workflows::modeFamily()` maps any unknown mode to NONE, so the check in
+     `start()` is dead code. It was moved as it was (a faithful move) and is a candidate for the quirks release.
+   - **Stays in the traits as baseline debt** (design §2.5): `admin_approval_workflows` (three reads, one joining
+     employees), the schema functions, the relationship code (People's, not moved), and the helpers `approval_tables()` /
+     `substitutes_table()`. The first enrolment of these tables raised the layer baseline once
+     (`check_layers.py --update --allow-increase`): `trait-approvals` 10, `trait-substitutes` 2, `trait-swap` +1,
+     `trait-leave` +1, `trait-leave-view` 2, `trait-corrections` 1, `trait-employee-admin` 1, `trait-face-reset` 1.
+   - **Golden:** 91 engine calls and the rows they leave (`tests/golden/actions_approvals.php`), and 9 pages with
+     `tests/golden/seed_approvals.php` (users gdmgr and gdreq). `run.py` runs every `actions*.php`.
