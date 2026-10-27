@@ -11,7 +11,7 @@ Wipes Workforce One test data; never run against a real site.
 import json, os, re, sys, urllib.error, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, d, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, d, ids, php, q, results, wp, HERE  # noqa: E402
 
 HUB = '/wp-admin/admin.php?page=ews31-requests'
 FACE_PAGE = '/wp-admin/admin.php?page=ews31-face-reset-requests'
@@ -223,7 +223,7 @@ count_notes = lambda: int(q("SELECT COUNT(*) c FROM {p}ews_notifications WHERE t
 count_audit = lambda: int(q("SELECT COUNT(*) c FROM {p}ews_audit_log WHERE action='face_reset_approved'")[0]['c'])
 def open_level():
     return [(int(r['step_order']), r['status']) for r in q("SELECT step_order,status FROM {p}ews_approval_steps WHERE approval_request_id=(SELECT id FROM {p}ews_approval_requests WHERE entity_type='face_reset_request' AND entity_id=%d) ORDER BY step_order" % eid)]
-for how, table, verb, via in (('removing the face fails (hub)', 'face_profiles', 'DELETE', 'hub'), ('removing the face fails (Face Reset page)', 'face_profiles', 'DELETE', 'page'),
+for how, table, verb, via in (('removing the face fails (hub)', 'ews_face_profiles', 'DELETE', 'hub'), ('removing the face fails (Face Reset page)', 'ews_face_profiles', 'DELETE', 'page'),
                               ('saving the request option fails (hub)', 'options', 'UPDATE', 'hub')):
     check('[tx] a new reset can be requested', enroll_and_request_reset(emp))
     check('[tx] the first level only advances', hub_decide(adm, 'face_reset', eid, 'approve') == 'advanced')
