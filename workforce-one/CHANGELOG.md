@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.31.132
+### Approvals engine fixes, part 4: the attendance correction decision (design `docs/tasks/engine-fixes.md` §2.2); closes the series
+No setting, no switch, no database change.
+- **With approval levels, the last approver's decision and what it does to the correction are one transaction** (rejecting, the
+  manager stage, the events added to the day). Before, the level was saved as decided first and committed on its own; if the day had
+  changed meanwhile (the employee signed out after all) or the database failed, the approval stayed APPROVED while the correction
+  stayed "pending", and nobody could decide it from the app again. Now nothing is saved, the approver gets the message, the level stays
+  open, nothing is added to the day and nothing is audited, and they can decide again. The payroll carry for a closed month, the Audit
+  Log and the notes follow the commit.
+- **Closing and withdrawing a correction lock the approval before the correction**, the order a decision uses, so a decision and a
+  withdraw (or the automatic close of a request whose day became a leave) at the same moment no longer deadlock.
+- The writes of an approval are all checked (before, a failed time-log insert after the first was ignored in one place, and a failed
+  `manager_by` update in another); the first failure stops the decision and rolls it back.
+
 ## 3.31.131
 ### Approvals engine fixes, part 3: the face reset decision (design `docs/tasks/engine-fixes.md` §2.2; the correction decisions follow in 3.31.132)
 No setting, no switch, no database change.

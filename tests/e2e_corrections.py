@@ -521,6 +521,46 @@ for what in ('withdraw', 'close'):
         check('...waiting for HR on a day that became a leave: HR\'s approval closes it, the approval request stays approved, the employee is told',
               res.get('cx_done') == 'closed' and cx(C10)['status'] == 'rejected' and engine(C10).get('status') == 'APPROVED' and not events(E, LV) and told, (res, cx(C10).get('status'), told))
     reset_day(LV)
+# 3.31.132: with an approval level open, the last approver's decision and what it does to the correction are one transaction. Whatever
+# fails afterwards (the day changed, a database error), nothing is saved: the correction waits, its level stays open, no events are
+# added, nothing is audited, and the same approver can decide again.
+corr_audit = lambda: len(q("SELECT id FROM {p}ews_audit_log WHERE action IN ('correction_approved','correction_rejected')"))
+corr_events = lambda: [e for e in events(E, LV) if e['source'] == 'correction']
+def waiting_out():
+    reset_day(LV)
+    php("$wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>0,'work_date'=>'%s','event_type'=>'sign_in','event_at'=>'%s 08:10:00','scheduled_status'=>'Office','source'=>'app']);" % (E, LV, LV))
+    request(emp, LV, 'out', time_out='16:00', reason='forgot')
+    cid = last_cx()
+    return cid, engine(cid).get('status'), steps(cid)
+cid, open_s, open_steps = waiting_out()
+php("$wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>0,'work_date'=>'%s','event_type'=>'sign_out','event_at'=>'%s 17:00:00','scheduled_status'=>'Office','source'=>'app']);" % (E, LV, LV))
+a0 = corr_audit()
+res = decide(hr, cid, 'approve')
+check('the last approver approves after the employee signed out meanwhile (stale): refused, the correction waits, its level stays open, nothing added or audited',
+      res.get('cx_error') == 'stale' and cx(cid)['status'] == 'pending' and engine(cid).get('status') == open_s and steps(cid) == open_steps and not corr_events() and corr_audit() == a0, (res, cx(cid).get('status'), engine(cid), steps(cid)))
+res = decide(hr, cid, 'reject', 'no longer needed')
+check('...and the same approver can still reject it', res.get('cx_done') == 'rejected' and cx(cid)['status'] == 'rejected' and engine(cid).get('status') == 'REJECTED', (res, cx(cid).get('status'), engine(cid)))
+for decision, table, verb in (('approve', 'ews_time_logs', 'INSERT'), ('approve', 'ews_attendance_corrections', 'UPDATE'), ('reject', 'ews_attendance_corrections', 'UPDATE')):
+    cid, open_s, open_steps = waiting_out()
+    a0 = corr_audit()
+    break_writes(table, verb)
+    res = decide(hr, cid, decision, 'no' if decision == 'reject' else '')
+    break_writes('')
+    check('a database error on %s %s while the last approver %ss: refused (save), the correction waits, its level stays open, nothing added or audited' % (verb, table, decision),
+          res.get('cx_error') == 'save' and cx(cid)['status'] == 'pending' and engine(cid).get('status') == open_s and steps(cid) == open_steps and not corr_events() and corr_audit() == a0, (res, cx(cid).get('status'), engine(cid), steps(cid)))
+    res = decide(hr, cid, decision, 'no' if decision == 'reject' else '')
+    want = 'approved' if decision == 'approve' else 'rejected'
+    check('...and once the database works the same decision goes through', res.get('cx_done') == want and cx(cid)['status'] == want and bool(corr_events()) == (decision == 'approve') and corr_audit() == a0 + 1, (res, cx(cid).get('status'), corr_events()))
+# A withdraw and a close lock the approval before the correction now (the order a decision uses): they still work and still all-or-nothing.
+cid, open_s, open_steps = waiting_out()
+break_writes('ews_attendance_corrections', 'UPDATE')
+out = call('cx_withdraw', str(cid), str(E)).strip().splitlines()[-1]
+break_writes('')
+check('a withdraw whose correction update fails: nothing changes (the approval request was cancelled in the same transaction and is back)', out == '"save"' or out == '"done"', out)
+check('...the correction waits and its approval request and level are as they were', cx(cid)['status'] == 'pending' and engine(cid).get('status') == open_s and steps(cid) == open_steps, (cx(cid).get('status'), engine(cid), steps(cid)))
+out = call('cx_withdraw', str(cid), str(E)).strip().splitlines()[-1]
+check('...and the withdraw works afterwards', out == 'true' and cx(cid)['status'] == 'cancelled' and engine(cid).get('status') == 'CANCELLED', (out, cx(cid).get('status'), engine(cid)))
+reset_day(LV)
 php("""$wf=(int)$wpdb->get_var("SELECT id FROM {$p}ews_approval_workflows WHERE workflow_key='attendance_correction'"); $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>'NONE','active'=>0],['id'=>$wf]); $wpdb->query("DELETE FROM {$p}ews_approval_workflow_steps WHERE workflow_id=".$wf);
     update_option('ews_feature_overtime',0,false); @unlink(WPMU_PLUGIN_DIR.'/ews-e2e-corrections-mu.php');""")
 

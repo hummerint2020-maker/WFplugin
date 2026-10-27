@@ -316,18 +316,33 @@ trait EWS_Corrections_Trait {
 
     /** After the manager level: to HR when the request needs it, otherwise approved. @return string outcome */
     private function cx_after_manager($id){
-        global $wpdb;
         $c=$this->cx_get($id);
         if(!$c)return 'not_found';
-        $wpdb->update($this->cx_table(),['manager_by'=>get_current_user_id(),'manager_at'=>current_time('mysql')],['id'=>(int)$id],['%d','%s'],['%d']);
-        if((int)$c->needs_hr){
-            $ok=$wpdb->update($this->cx_table(),['status'=>'pending_hr'],['id'=>(int)$id,'status'=>'pending'],['%s'],['%d','%s']);
-            if($ok!==1)return 'done';
-            $c=$this->cx_get($id);
-            foreach($this->cx_hr_users() as $u)if($u!==(int)$c->employee_user_id)$this->cx_notify_decider($u,$c);
-            return 'pending_hr';
-        }
+        $r=$this->cx_manager_rows($c);
+        if($r!==true)return $r;
+        if((int)$c->needs_hr){$this->cx_pending_hr_notify($this->cx_get($id));return 'pending_hr';}
         return $this->cx_finalize($id,true,'');
+    }
+
+    /**
+     * The writes of the manager stage (3.31.132): who decided and when, and, for a request that needs HR too, the move to pending_hr.
+     * Each is checked. @return true|string true, or save | done (it was not pending any more)
+     */
+    private function cx_manager_rows($c){
+        global $wpdb;
+        if($wpdb->update($this->cx_table(),['manager_by'=>get_current_user_id(),'manager_at'=>current_time('mysql')],['id'=>(int)$c->id],['%d','%s'],['%d'])===false)return 'save';
+        if((int)$c->needs_hr){
+            $ok=$wpdb->update($this->cx_table(),['status'=>'pending_hr'],['id'=>(int)$c->id,'status'=>'pending'],['%s'],['%d','%s']);
+            if($ok===false)return 'save';
+            if($ok!==1)return 'done';
+        }
+        return true;
+    }
+
+    /** HR is told a request waits for them (after the manager stage was saved). */
+    private function cx_pending_hr_notify($c){
+        if(!$c)return;
+        foreach($this->cx_hr_users() as $u)if($u!==(int)$c->employee_user_id)$this->cx_notify_decider($u,$c);
     }
 
     private function cx_notify_decider($user_id,$c){
@@ -365,17 +380,7 @@ trait EWS_Corrections_Trait {
         if(!$admin && !$this->cx_can_decide($c))return 'access';
         // The day has since become a leave, a holiday or a day off: the request is closed, its approval request with it (owner decision).
         if($decision==='approve' && $this->cx_should_close($c))return $this->cx_close($c);
-        if($open){
-            $acted=$this->approval_act((int)$ar->id,$decision,$note,true,$admin,$step);
-            if(is_wp_error($acted))return $this->approval_error_code($acted)==='moved'?'moved':'approval';
-            $fresh=$this->approval_find_request('attendance_correction','attendance_correction',(int)$c->id);
-            $st=$fresh?strtoupper((string)$fresh->status):'';
-            if($st==='REJECTED')return $this->cx_finalize((int)$c->id,false,$note);
-            if($st==='APPROVED')return $this->cx_after_manager((int)$c->id);
-            $next=$fresh?$this->approval_current_step((int)$fresh->id):null;
-            if($next && $next->approver_wp_user_id)$this->cx_notify_decider((int)$next->approver_wp_user_id,$c);
-            return 'advanced';
-        }
+        if($open)return $this->cx_decide_open($c,$ar,$decision,$note,$admin,$step);
         if($decision==='reject')return $this->cx_finalize((int)$c->id,false,$note,false,$c->status);
         if($c->status==='pending' && !$admin)return $this->cx_after_manager((int)$c->id);
         if($c->status==='pending' && $admin && (int)$c->needs_hr){
@@ -383,6 +388,51 @@ trait EWS_Corrections_Trait {
             global $wpdb;$wpdb->update($this->cx_table(),['manager_by'=>get_current_user_id(),'manager_at'=>current_time('mysql')],['id'=>(int)$c->id],['%d','%s'],['%d']);
         }
         return $this->cx_finalize((int)$c->id,true,$note,false,$c->status);
+    }
+
+    /**
+     * A decision on a request whose approval levels are open (3.31.132): the level and what it does to the correction (rejected, the
+     * manager stage, the events added) are one transaction, like the Requests Hub's other types. Before, the level was saved as decided
+     * first; a day that had changed since (stale) left the approval APPROVED and the correction pending for ever. Now the level stays
+     * open. Audit, notifications and the payroll carry follow the COMMIT.
+     * @return string approved | rejected | advanced | pending_hr, or an error code
+     */
+    private function cx_decide_open($c,$ar,$decision,$note,$admin,$step){
+        global $wpdb;
+        $id=(int)$c->id;
+        // The reads (the day, the plan, the payroll figure) before BEGIN: payroll may create its tables, an implicit COMMIT. Used only
+        // when this decision is the last one.
+        $pre=$decision==='approve'?$this->cx_finalize_prepare($id,true):null;
+        if($wpdb->query('START TRANSACTION')===false)return 'save';
+        $acted=$this->approval_act((int)$ar->id,$decision,$note,false,$admin,$step);
+        if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return $this->approval_error_code($acted)==='moved'?'moved':'approval';}
+        $fresh=$this->approval_find_request('attendance_correction','attendance_correction',$id);
+        if(!$fresh){$wpdb->query('ROLLBACK');return 'save';}
+        $st=strtoupper((string)$fresh->status);
+        $out='advanced';$done=true;
+        if($st==='REJECTED'){
+            $out='rejected';
+            $m=$this->cx_mark_rejected($c,$note);
+            $done=$m===1?true:($m===false?'save':'done');
+        }elseif($st==='APPROVED'){
+            if($pre==='close'){$wpdb->query('ROLLBACK');return $this->cx_close($this->cx_get($id));}
+            if(!is_array($pre)){$wpdb->query('ROLLBACK');return is_string($pre)?$pre:'save';}   // the day changed: the level stays open
+            $done=$this->cx_manager_rows($c);
+            if($done===true){
+                if((int)$c->needs_hr)$out='pending_hr';
+                else{$out='approved';$done=$this->cx_finalize_rows($pre,'');}
+            }
+        }
+        if($done!==true){$wpdb->query('ROLLBACK');return $done;}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+        if($out==='rejected')$this->cx_after_rejected($c,$note);
+        elseif($out==='pending_hr')$this->cx_pending_hr_notify($this->cx_get($id));
+        elseif($out==='approved')$this->cx_finalize_after($pre,false);
+        else{
+            $next=$this->approval_current_step((int)$fresh->id);
+            if($next && $next->approver_wp_user_id)$this->cx_notify_decider((int)$next->approver_wp_user_id,$c);
+        }
+        return $out;
     }
 
     /**
@@ -399,19 +449,21 @@ trait EWS_Corrections_Trait {
 
     /**
      * Closes such a request: rejected with the reason, its approval request cancelled if still open, the employee told. One transaction,
-     * the request first (3.31.117): a decision made at the same moment wins and leaves the approval request as it is.
+     * the approval first (3.31.132, as a decision locks them): a decision made at the same moment wins and leaves everything as it is.
      * @return string closed | done | approval | save
      */
     private function cx_close($c){
         global $wpdb;
         $note=__('Closed automatically: the day is now a leave, a holiday or a day off.','workforce-one');
         if($wpdb->query('START TRANSACTION')===false)return 'save';
-        $ok=$this->cx_mark_rejected($c,$note);
-        if($ok===false){$wpdb->query('ROLLBACK');return 'save';}
-        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
+        // The approval first, then the request: the order a decision locks them in (3.31.132; before, the request came first and a decision
+        // at the same moment could deadlock with this). A decision made meanwhile wins: nothing is changed.
         $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$c->id,true);
         if($engine==='moved'){$wpdb->query('ROLLBACK');return 'approval';}   // decided by an approver meanwhile: nothing changed, try again
         if($engine===false){$wpdb->query('ROLLBACK');return 'save';}
+        $ok=$this->cx_mark_rejected($c,$note);
+        if($ok===false){$wpdb->query('ROLLBACK');return 'save';}
+        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
         if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
         $this->cx_after_rejected($c,$note);
         $this->audit('correction_closed','employee',(int)$c->employee_id,$c->employee_name.' '.$c->work_date.': the day is now a leave, a holiday or a day off');
@@ -435,57 +487,90 @@ trait EWS_Corrections_Trait {
     /**
      * Approves (adds the events) or rejects a request. The day is checked again first: if it changed
      * since the request (the employee signed out after all), the request stays open. $from: the stage the decision was taken at
-     * (3.31.122); a request that left it meanwhile is not touched ('done').
+     * (3.31.122); a request that left it meanwhile is not touched ('done'). Its own transaction: the open-approval decision uses the
+     * three parts (prepare, rows, after) inside its own (cx_decide_open()).
      * @return string approved | rejected, or an error code
      */
     private function cx_finalize($id,$approve,$note,$direct=false,$from=null){
         global $wpdb;
+        $p=$this->cx_finalize_prepare($id,$approve,$from);
+        if($p==='close')return $this->cx_close($this->cx_get($id));
+        if(!is_array($p))return $p;
+        if(!$approve){
+            if($this->cx_mark_rejected($p['c'],$note)!==1)return 'done';
+            $this->cx_after_rejected($p['c'],$note);
+            return 'rejected';
+        }
+        if($wpdb->query('START TRANSACTION')===false)return 'save';
+        $done=$this->cx_finalize_rows($p,$note);
+        if($done!==true){$wpdb->query('ROLLBACK');return $done;}
+        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+        $this->cx_finalize_after($p,$direct);
+        return 'approved';
+    }
+
+    /**
+     * The reads of cx_finalize() (3.31.132), before any transaction: the request, the employee and, for an approval, the day as it is
+     * now, the plan and the net pay of a closed month. Payroll may create its tables (an implicit COMMIT), so this runs before BEGIN.
+     * @return array|string the facts, or not_found | done | employee | close (the day is now a leave, a holiday or a day off) | stale
+     */
+    private function cx_finalize_prepare($id,$approve,$from=null){
         $c=$this->cx_get($id);
         if(!$c)return 'not_found';
         if($from!==null && $c->status!==$from)return 'done';
         $emp=$this->people_employee((int)$c->employee_id);
         if(!$emp)return 'employee';
-        $now=current_time('mysql');
-        if(!$approve){
-            if($this->cx_mark_rejected($c,$note)!==1)return 'done';
-            $this->cx_after_rejected($c,$note);
-            return 'rejected';
-        }
+        if(!$approve)return ['c'=>$c,'emp'=>$emp];
         // The day as it is now must still accept the correction.
         $in=['date'=>(string)$c->work_date,'type'=>(string)$c->type,'target'=>(string)$c->target,'reason'=>(string)$c->reason?:'-',
             'time_in'=>$c->sign_in_at?substr((string)$c->sign_in_at,11,5):'','time_out'=>$c->sign_out_at?substr((string)$c->sign_out_at,11,5):''];
         $facts=$this->cx_facts($emp,$in,'hr',true);
         $facts['now']='23:59';   // a request made earlier today stays valid
         // The same check as in cx_decide(), for a request that reaches here another way (HR's second level).
-        if($approve && $this->cx_should_close($c))return $this->cx_close($c);
+        if($this->cx_should_close($c))return 'close';
         $error=CorrectionRules::check($facts);
         if($error!=='')return 'stale';
         $plan=CorrectionRules::plan($facts);
         $day=$this->cx_day((int)$emp->id,(string)$c->work_date);
         $month=substr((string)$c->work_date,0,7);
-        $before=$this->cx_payroll_net((int)$emp->id,$month);
-        if($wpdb->query('START TRANSACTION')===false)return 'save';
-        $ok=$wpdb->update($this->cx_table(),['status'=>'approved','decided_by'=>get_current_user_id(),'decided_at'=>$now,'decision_note'=>$note!==''?mb_substr($note,0,1000):null],['id'=>(int)$id,'status'=>$c->status],['%s','%d','%s','%s'],['%d','%s']);
-        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
+        return ['c'=>$c,'emp'=>$emp,'plan'=>$plan,'day'=>$day,'before'=>$this->cx_payroll_net((int)$emp->id,$month)];
+    }
+
+    /**
+     * The writes of an approval (3.31.132), inside the caller's transaction: the request approved if it is still as read, the events
+     * added, their ids kept. Each is checked and the first failure stops it; the caller rolls back.
+     * @return true|string true, or done (it is not as read any more) | save (a database error)
+     */
+    private function cx_finalize_rows(array $p,$note){
+        global $wpdb;
+        $c=$p['c'];$emp=$p['emp'];$plan=$p['plan'];$day=$p['day'];$id=(int)$c->id;
+        $now=current_time('mysql');
+        $ok=$wpdb->update($this->cx_table(),['status'=>'approved','decided_by'=>get_current_user_id(),'decided_at'=>$now,'decision_note'=>$note!==''?mb_substr($note,0,1000):null],['id'=>$id,'status'=>$c->status],['%s','%d','%s','%s'],['%d','%s']);
+        if($ok===false)return 'save';
+        if($ok!==1)return 'done';
         $sch=$this->schedule_for_employee_date((int)$emp->id,(string)$c->work_date);
         $ids=[];
         foreach($plan['events'] as $ev){
             $orig=$plan['supersede']===$ev['type']?($ev['type']==='sign_in'?$day['in']:$day['out']):null;
             $row=['employee_id'=>(int)$emp->id,'user_id'=>(int)$emp->wp_user_id?:get_current_user_id(),'work_date'=>(string)$c->work_date,'event_type'=>$ev['type'],'event_at'=>$ev['at'],
                 'scheduled_status'=>$orig?(string)$orig->scheduled_status:($sch?(string)$sch->status:'Not Set'),'location_status'=>'correction','created_at'=>$now,
-                'source'=>'correction','correction_id'=>(int)$id,'corrects_id'=>$orig?(int)$orig->id:null];
+                'source'=>'correction','correction_id'=>$id,'corrects_id'=>$orig?(int)$orig->id:null];
             if($orig && isset($orig->location_id))$row+=['location_id'=>$orig->location_id,'branch_flag'=>$orig->branch_flag];
-            if($wpdb->insert($this->time_logs,$row)===false){$wpdb->query('ROLLBACK');return 'save';}
+            if($wpdb->insert($this->time_logs,$row)===false)return 'save';
             $ids[]=(int)$wpdb->insert_id;
         }
-        $wpdb->update($this->cx_table(),['applied_ids'=>implode(',',$ids)],['id'=>(int)$id],['%s'],['%d']);
-        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
-        $carried=$this->cx_payroll_carry($this->cx_get($id),$before);
+        if($wpdb->update($this->cx_table(),['applied_ids'=>implode(',',$ids)],['id'=>$id],['%s'],['%d'])===false)return 'save';
+        return true;
+    }
+
+    /** After an approval was saved (3.31.132): the payroll carry, the Audit Log and the employee's note. */
+    private function cx_finalize_after(array $p,$direct){
+        $c=$p['c'];$id=(int)$c->id;
+        $carried=$this->cx_payroll_carry($this->cx_get($id),$p['before']);
         if(!$direct)$this->audit('correction_approved','employee',(int)$c->employee_id,$c->employee_name.' '.$c->work_date.': '.$this->cx_change_text($c,'en').($carried!==''?' — payroll: '.$carried:''));
         if((int)$c->employee_user_id)$this->notify((int)$c->employee_user_id,'correction',__('Correction approved','workforce-one'),
             /* translators: 1: day, 2: the change */
-            sprintf(__('Your correction for %1$s was approved: %2$s.','workforce-one'),$this->cx_day_label((string)$c->work_date),$this->cx_change_text($c)),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','corrections',$this->app_home_url())]);
-        return 'approved';
+            sprintf(__('Your correction for %1$s was approved: %2$s.','workforce-one'),$this->cx_day_label((string)$c->work_date),$this->cx_change_text($c)),['entity_id'=>$id,'url'=>add_query_arg('ews_view','corrections',$this->app_home_url())]);
     }
 
     /* ------------------------------------------------------------------ payroll */
@@ -1090,11 +1175,12 @@ trait EWS_Corrections_Trait {
     private function cx_withdraw($id,$employee_id){
         global $wpdb;
         if($wpdb->query('START TRANSACTION')===false)return 'save';
-        $ok=$wpdb->query($wpdb->prepare("UPDATE {$this->cx_table()} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",get_current_user_id(),current_time('mysql'),(int)$id,(int)$employee_id));
-        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
-        // Waiting for HR, its approval request is already APPROVED by the manager levels: it stays so (3.31.117; it failed before).
+        // The approval first, then the request (3.31.132, the order a decision locks them in). Waiting for HR, its approval request is
+        // already APPROVED by the manager levels: it stays so (3.31.117; it failed before).
         $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$id);
         if($engine!==true){$wpdb->query('ROLLBACK');return $engine==='moved'?'done':'save';}
+        $ok=$wpdb->query($wpdb->prepare("UPDATE {$this->cx_table()} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",get_current_user_id(),current_time('mysql'),(int)$id,(int)$employee_id));
+        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
         if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
         $this->audit('correction_withdrawn','employee',(int)$employee_id,'Correction #'.(int)$id.' withdrawn by the employee');
         return true;
