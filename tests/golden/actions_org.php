@@ -25,8 +25,9 @@ $fix = function ($s) use ($dates) { return strtr($s, $dates); };
 $sql = [];
 $fault = null;
 add_filter('query', function ($q) use (&$sql, $fix) {
-    $q = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $q);
-    $sql[] = $fix(trim(preg_replace('/\s+/', ' ', $q)));
+    $n = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $q);
+    $n = preg_replace("/(_transient_timeout_\w+', ')\d+/", '$1TS', $n);
+    $sql[] = $fix(trim(preg_replace('/\s+/', ' ', $n)));
     return $q;
 }, 1);
 add_filter('query', function ($q) use (&$fault) {
@@ -34,7 +35,7 @@ add_filter('query', function ($q) use (&$fault) {
     return $q;
 }, 5);
 $norm = function ($v) use (&$norm, $dates) {
-    if ($v instanceof WP_Error) return ['wp_error' => $v->get_error_code(), 'message' => $v->get_error_message()];
+    if ($v instanceof WP_Error) return ['wp_error' => $v->get_error_code(), 'message' => preg_replace('/(<|&lt;)div.*$/s', '', $v->get_error_message())];
     if (is_object($v)) $v = get_object_vars($v);
     if (is_array($v)) {
         $o = [];
@@ -45,6 +46,7 @@ $norm = function ($v) use (&$norm, $dates) {
         if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $v)) return 'T';
         $v = preg_replace('/_wpnonce=[0-9a-f]+/', '_wpnonce=N', strtr($v, $dates));
         $v = preg_replace('#^https?://[^/]+#', '', $v);
+        $v = preg_replace('/(<|&lt;)div.*$/s', '', $v);   // the query log a failed query appends
     }
     return $v;
 };
@@ -325,7 +327,7 @@ $faulty('fault_sync_insert', '/^\s*INSERT\s+INTO\s+`?' . preg_quote($p, '/') . '
 
 // ---------------------------------------------------------------- the people tables, notifications and the Audit Log at the end
 $as(0);
-$rows = function ($q) use ($wpdb, $norm, $fix) { return $norm(json_decode($fix(wp_json_encode($wpdb->get_results($q, ARRAY_A))), true)); };
+$rows = function ($q) use ($wpdb, $norm, $fix) { return $norm(json_decode($fix(preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', wp_json_encode($wpdb->get_results($q, ARRAY_A)))), true)); };
 foreach ([
     'employees' => "SELECT * FROM {$p}ews_employees ORDER BY id",
     'relationships' => "SELECT * FROM {$p}ews_employee_relationships ORDER BY id",
