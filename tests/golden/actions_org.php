@@ -75,6 +75,11 @@ $newEmp = function ($name, $domain, $dept = null, $active = 1) use ($wpdb, $p) {
     $wpdb->insert($p . 'ews_employees', ['name' => $name, 'domain_name' => $domain, 'email' => $domain . '@example.com', 'active' => $active, 'attendance_enabled' => 1, 'department_id' => $dept]);
     return (int) $wpdb->insert_id;
 };
+$fresh = function ($name) use ($newEmp, $wpdb, $p, $c) {   // an employee under Mona, for one move that must start from a known state
+    $id = $newEmp($name, strtolower(str_replace(' ', '', $name)), $c['ops']);
+    $wpdb->insert($p . 'ews_employee_relationships', ['employee_id' => $id, 'relationship_type' => 'supervisor', 'related_employee_id' => $c['mona'], 'active' => 1]);
+    return $id;
+};
 $orgc = $newEmp('Org C', 'orgc', $c['ops']);
 $orgd = $newEmp('Org D', 'orgd', $c['ops']);
 $orge = $newEmp('Org E', 'orge', $c['ops']);
@@ -127,6 +132,7 @@ $run('submit_no_manager_picked', function () use ($sub, $c, $D0) { return $sub([
 $run('submit_reason_missing', function () use ($sub, $c, $D0) { return $sub(['employee_id' => $c['nour'], 'manager_ref' => 'Mona · #' . $c['mona'], 'effective_date' => $D0, 'reason' => '']); });
 $run('submit_scheduled_exists', function () use ($sub, $c, $D0) { return $sub(['employee_id' => $c['lina'], 'manager_ref' => 'Sam · #' . $c['sam'], 'effective_date' => $D0, 'reason' => 'r']); });
 $run('submit_loop', function () use ($sub, $c, $D0) { return $sub(['employee_id' => $c['mona'], 'manager_ref' => 'Ali · #' . $c['ali'], 'effective_date' => $D0, 'reason' => 'r']); });
+$faulty('fault_move_update_approval_steps', '/^\s*UPDATE\s+`?' . preg_quote($p, '/') . 'ews_approval_steps`?\s/i', function () use ($sub, $gdreq, $c, $D0) { return $sub(['employee_id' => $gdreq, 'manager_ref' => 'Mona · #' . $c['mona'], 'effective_date' => $D0, 'reason' => 'fault']); });
 $run('submit_move_now', function () use ($sub, $gdreq, $c, $D0) { return $sub(['employee_id' => $gdreq, 'manager_ref' => 'Mona · #' . $c['mona'], 'effective_date' => $D0, 'reason' => 'new team']); });
 $run('submit_move_now_again_same', function () use ($sub, $gdreq, $c, $D0) { return $sub(['employee_id' => $gdreq, 'manager_ref' => 'Mona · #' . $c['mona'], 'effective_date' => $D0, 'reason' => 'again']); });
 $run('submit_to_no_manager', function () use ($sub, $c, $D0) { return $sub(['employee_id' => $c['rana'], 'no_manager' => '1', 'effective_date' => $D0, 'reason' => 'leaves the tree']); });
@@ -157,11 +163,10 @@ foreach ([
     'insert_org_moves' => '/^\s*INSERT\s+INTO\s+`?' . preg_quote($p, '/') . 'ews_org_moves`?\s/i',
     'insert_relationships' => '/^\s*INSERT\s+INTO\s+`?' . preg_quote($p, '/') . 'ews_employee_relationships`?\s/i',
     'update_relationships' => '/^\s*UPDATE\s+`?' . preg_quote($p, '/') . 'ews_employee_relationships`?\s/i',
-    'update_approval_steps' => '/^\s*UPDATE\s+`?' . preg_quote($p, '/') . 'ews_approval_steps`?\s/i',
     'commit' => '/^\s*COMMIT\s*$/i',
     'start' => '/^\s*START\s+TRANSACTION\s*$/i',
 ] as $name => $re) {
-    $faulty('fault_move_' . $name, $re, function () use ($sub, $moveFields, $c, $gdmgr, $orge) { return $sub($moveFields($c['ali'], $c['sam'])); });
+    $faulty('fault_move_' . $name, $re, function () use ($sub, $moveFields, $c, $fresh, $name) { return $sub($moveFields($fresh('Fault ' . $name), $c['sam'])); });
 }
 $faulty('fault_set_only_commit', '/^\s*COMMIT\s*$/i', function () use ($call, $orgc, $c) { return $call('org_set_supervisor_only', $orgc, $c['mona']); });
 $faulty('fault_set_only_start', '/^\s*START\s+TRANSACTION\s*$/i', function () use ($call, $orgc, $c) { return $call('org_set_supervisor_only', $orgc, $c['mona']); });
@@ -273,7 +278,7 @@ $run('dept_delete_denied', function () use ($depDel, $empty) { return $depDel($e
 $as($admin);
 $run('dept_bad_nonce', function () use ($dep) { return $dep(['name' => 'X', 'code' => 'x'], 'bad'); });
 $run('dept_required', function () use ($dep) { return $dep(['name' => '', 'code' => '']); });
-$run('dept_new', function () use ($dep, $c) { return $dep(['name' => 'Logistics', 'code' => 'LOG-1', 'description' => "Boxes\nand trucks", 'manager_employee_id' => $c['sam']]); });
+$run('dept_new', function () use ($dep, $c) { return $dep(['name' => 'Logistics', 'code' => 'LOG-1', 'description' => "Boxes\nand trucks"]); });
 $logi = (int) $wpdb->get_var("SELECT id FROM {$p}ews_departments WHERE code='log-1'");
 $run('dept_duplicate', function () use ($dep) { return $dep(['name' => 'Logistics', 'code' => 'other']); });
 $run('dept_duplicate_archived', function () use ($dep) { return $dep(['name' => 'Gone', 'code' => 'gone2']); });
@@ -283,7 +288,10 @@ $run('dept_edit_ok', function () use ($dep, $logi, $c) { return $dep(['departmen
 $faulty('fault_dept_update', '/^\s*UPDATE\s+`?' . preg_quote($p, '/') . 'ews_departments`?\s/i', function () use ($dep, $logi) { return $dep(['department_id' => $logi, 'name' => 'Logistics 3', 'code' => 'log-3']); });
 $faulty('fault_dept_insert', '/^\s*INSERT\s+INTO\s+`?' . preg_quote($p, '/') . 'ews_departments`?\s/i', function () use ($dep) { return $dep(['name' => 'Broken', 'code' => 'broken']); });
 $run('dept_archive_with_employees', function () use ($depDel, $c) { return $depDel($c['ops']); });
-$run('dept_archive_with_teams', function () use ($depDel, $c) { return $depDel($c['sales']); });
+$wpdb->insert($p . 'ews_teams', ['name' => 'In Empty', 'manager_employee_id' => null, 'department_id' => $empty, 'active' => 1]);
+$emptyTeam = (int) $wpdb->insert_id;
+$run('dept_archive_with_teams', function () use ($depDel, $empty) { return $depDel($empty); });
+$wpdb->update($p . 'ews_teams', ['active' => 0], ['id' => $emptyTeam]);
 $run('dept_archive_bad_nonce', function () use ($depDel, $empty) { return $depDel($empty, 'bad'); });
 $faulty('fault_dept_archive', '/^\s*UPDATE\s+`?' . preg_quote($p, '/') . 'ews_departments`?\s/i', function () use ($depDel, $empty) { return $depDel($empty); });
 $run('dept_archive_empty', function () use ($depDel, $empty) { return $depDel($empty); });
