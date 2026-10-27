@@ -162,6 +162,8 @@ try:
         $u=username_exists('acomar')?:wp_create_user('acomar','acomar-pass','acomar@example.com');
         $wpdb->update($p.'ews_employees',['wp_user_id'=>(int)$u],['id'=>%d]);
         foreach([%d,%d] as $e) for($i=1;$i<=14;$i++){ $d=gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +'.$i.' days')); $wpdb->replace($p.'ews_schedule',['employee_id'=>$e,'work_date'=>$d,'status'=>'Office']); }""" % (ctx['omar'], ctx['omar'], ctx['mona']))
+    # The approvals' people, workflows and open requests (plain SQL; the pages of the approvals read them).
+    wp('eval-file', os.path.join(HERE, 'seed_approvals.php'))
     # The query count of a page, printed at its end (web requests only).
     os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
@@ -175,7 +177,8 @@ try:
         start()
         # One login for all sides: the same session, so the same nonces on every page.
         if sessions is None:
-            sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass')}
+            sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass'),
+                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass')}
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
