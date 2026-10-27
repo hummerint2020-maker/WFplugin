@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.31.131
+### Approvals engine fixes, part 3: the face reset decision (design `docs/tasks/engine-fixes.md` §2.2; the correction decisions follow in 3.31.132)
+No setting, no switch, no database change.
+- **The last approver's decision on a Face Reset, the removal of the face and the closing of the request are now one transaction**
+  (the Face Reset page and the Requests Hub). Before, the level was saved as decided first and committed on its own; if the face could
+  not be removed (a database error) the request stayed "pending" while its approval was already APPROVED, and no one could decide it
+  again from the page. Now nothing is saved, the approver gets the error and the level stays open, so they can try again. The
+  audit row and the employee's note are written after the commit. Rejections are saved together with the request in the same way.
+  The object cache of the request option is cleared after a rollback, so the next read sees what the database holds.
+
 ## 3.31.130
 ### Approvals engine fixes, part 2: the shift swap decision (design `docs/tasks/engine-fixes.md` §2.2; face reset and corrections follow in 3.31.131–132)
 No setting, no switch, no database change.

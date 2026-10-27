@@ -90,13 +90,27 @@ trait EWS_Face_Reset_Trait {
 
     /**
      * Completes a reset request: removes the face (when approved), closes the request, audits it
-     * and tells the employee. Returns false only when the face could not be removed.
+     * and tells the employee. Returns false only when the face could not be removed (or the request not closed).
      */
     private function face_reset_finish($employee_id,$approved,$how){
+        if(!$this->face_reset_finish_rows($employee_id,$approved))return false;
+        $this->face_reset_finish_after($employee_id,$approved,$how);
+        return true;
+    }
+
+    /**
+     * The writes of face_reset_finish() (3.31.131): the face removed (when approved) and the request closed in the option. Each is
+     * checked; false on the first that fails. Inside a transaction the caller rolls back, then calls face_reset_forget_cache().
+     */
+    private function face_reset_finish_rows($employee_id,$approved){
         if($approved && !$this->face_delete_template($employee_id))return false;
         $requests=$this->face_reset_requests();
         $requests[$employee_id]=array_merge((array)($requests[$employee_id]??[]),['status'=>$approved?'approved':'rejected','handled_by'=>get_current_user_id(),'handled_at'=>current_time('mysql')]);
-        update_option('ews_face_reset_requests',$requests,false);
+        return update_option('ews_face_reset_requests',$requests,false);
+    }
+
+    /** The audit row and the employee's note after a finished reset has been saved. */
+    private function face_reset_finish_after($employee_id,$approved,$how){
         $this->audit($approved?'face_reset_approved':'face_reset_rejected','employee',$employee_id,'Face reset '.($approved?'approved':'rejected').' '.$how.'.');
         $emp=$this->face_reset_employee($employee_id);
         if($emp && !empty($emp->wp_user_id)){
@@ -105,7 +119,16 @@ trait EWS_Face_Reset_Trait {
                 $approved?'Your Face Reset request has been approved. You can now enroll your new face.':'Your Face Reset request has been rejected. Your current face enrollment remains active.',
                 $approved?'success':'warning',$employee_id,add_query_arg('ews_view','time',$this->app_home_url()));
         }
-        return true;
+    }
+
+    /**
+     * After a ROLLBACK of face_reset_finish_rows(): the option and the face's recent-descriptors meta were rewritten in the object
+     * cache, not only in the database; forget them so the next read sees what the database holds.
+     */
+    private function face_reset_forget_cache($employee_id){
+        wp_cache_delete('ews_face_reset_requests','options');
+        $uid=(int)$this->people_user_id($employee_id);
+        if($uid)wp_cache_delete($uid,'user_meta');
     }
 
     /**
@@ -122,10 +145,18 @@ trait EWS_Face_Reset_Trait {
         if($ar && Hub::isOpenApproval((string)$ar->status)){
             if($this->approval_level_moved((int)$ar->id,$posted))return Hub::MOVED;
             if(!$as_admin && !$this->approval_can_act((int)$ar->id))return Hub::ERROR;
-            $acted=$this->approval_act((int)$ar->id,$decision,'',true,$as_admin,$posted);
-            if(is_wp_error($acted))return Hub::fromEngineError($acted->get_error_code());
+            // The level, the face and the request option are saved together or not at all (3.31.131); the audit row and the notes follow the COMMIT.
+            global $wpdb;
+            if($wpdb->query('START TRANSACTION')===false)return Hub::ERROR;
+            $acted=$this->approval_act((int)$ar->id,$decision,'',false,$as_admin,$posted);
+            if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return Hub::fromEngineError($acted->get_error_code());}
             $fresh=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
-            $outcome=Hub::workflowOutcome($fresh?(string)$fresh->status:null);
+            if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}   // a read error must not commit a final decision as "advanced"
+            $outcome=Hub::workflowOutcome((string)$fresh->status);
+            if($outcome!==Hub::ADVANCED && !$this->face_reset_finish_rows($employee_id,$outcome===Hub::APPROVED)){
+                $wpdb->query('ROLLBACK');$this->face_reset_forget_cache($employee_id);return Hub::ERROR;
+            }
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->face_reset_forget_cache($employee_id);return Hub::ERROR;}
             if($outcome===Hub::ADVANCED){
                 $next=$fresh?$this->approval_current_step((int)$fresh->id):null;
                 if($next && !empty($next->approver_wp_user_id)){
@@ -135,7 +166,8 @@ trait EWS_Face_Reset_Trait {
                 }
                 return Hub::ADVANCED;
             }
-            return $this->face_reset_finish($employee_id,$outcome===Hub::APPROVED,'by approval workflow')?$outcome:Hub::ERROR;
+            $this->face_reset_finish_after($employee_id,$outcome===Hub::APPROVED,'by approval workflow');
+            return $outcome;
         }
         if((int)$posted>0)return Hub::MOVED;
         if(!$as_admin && $this->face_reset_workflow_active())return Hub::ERROR;

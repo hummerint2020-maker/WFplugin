@@ -11,7 +11,7 @@ Wipes Workforce One test data; never run against a real site.
 import json, os, re, sys, urllib.error, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, d, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, d, ids, php, q, results, wp, HERE  # noqa: E402
 
 HUB = '/wp-admin/admin.php?page=ews31-requests'
 FACE_PAGE = '/wp-admin/admin.php?page=ews31-face-reset-requests'
@@ -216,6 +216,27 @@ check('[workflow] Face Reset page: second approval completes it', face_decide(ad
 check('[workflow] a new reset can be requested', enroll_and_request_reset(emp))
 check('[workflow] hub rejects at the first level', hub_decide(adm, 'face_reset', eid, 'reject') == 'rejected' and enrolled() and reset_status() == 'rejected')
 check('[workflow] ...the employee is told', notified('Face Reset Rejected'))
+
+# 3.31.131: the last level, the face and the request option are one transaction. Whatever fails, nothing is saved: the level stays
+# open, the face stays enrolled, the request stays pending, nobody is told and nothing is audited.
+count_notes = lambda: int(q("SELECT COUNT(*) c FROM {p}ews_notifications WHERE title='Face Reset Approved'")[0]['c'])
+count_audit = lambda: int(q("SELECT COUNT(*) c FROM {p}ews_audit_log WHERE action='face_reset_approved'")[0]['c'])
+def open_level():
+    return [(int(r['step_order']), r['status']) for r in q("SELECT step_order,status FROM {p}ews_approval_steps WHERE approval_request_id=(SELECT id FROM {p}ews_approval_requests WHERE entity_type='face_reset_request' AND entity_id=%d) ORDER BY step_order" % eid)]
+for how, table, verb, via in (('removing the face fails (hub)', 'ews_face_profiles', 'DELETE', 'hub'), ('removing the face fails (Face Reset page)', 'ews_face_profiles', 'DELETE', 'page'),
+                              ('saving the request option fails (hub)', 'options', 'UPDATE', 'hub')):
+    check('[tx] a new reset can be requested', enroll_and_request_reset(emp))
+    check('[tx] the first level only advances', hub_decide(adm, 'face_reset', eid, 'approve') == 'advanced')
+    php("update_user_meta(%d,'ews_face_recent',['seeded']);" % ids()['uid'])   # removed with the face: must come back with the rollback
+    recent = lambda: php("echo json_encode(get_user_meta(%d,'ews_face_recent',true));" % ids()['uid']).strip()
+    levels, notes_before, audit_before = open_level(), count_notes(), count_audit()
+    break_writes(table, verb)
+    got = hub_decide(adm, 'face_reset', eid, 'approve') if via == 'hub' else face_decide(adm, 'approve')
+    break_writes('')
+    check('[tx] %s: refused, the face stays, the request stays pending, the last level stays open, nobody told, nothing audited' % how,
+          got == 'error' and enrolled() and reset_status() == 'pending' and open_level() == levels and count_notes() == notes_before and count_audit() == audit_before and recent() == '["seeded"]',
+          (recent(), got, enrolled(), reset_status(), open_level(), levels))
+    check('[tx] ...and once the database works the same approval goes through', hub_decide(adm, 'face_reset', eid, 'approve') == 'approved' and not enrolled() and reset_status() == 'approved' and count_notes() == notes_before + 1)
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
