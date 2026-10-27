@@ -227,13 +227,15 @@ for how, table, verb, via in (('removing the face fails (hub)', 'ews_face_profil
                               ('saving the request option fails (hub)', 'options', 'UPDATE', 'hub')):
     check('[tx] a new reset can be requested', enroll_and_request_reset(emp))
     check('[tx] the first level only advances', hub_decide(adm, 'face_reset', eid, 'approve') == 'advanced')
+    php("update_user_meta(%d,'ews_face_recent',['seeded']);" % ids()['uid'])   # removed with the face: must come back with the rollback
+    recent = lambda: php("echo json_encode(get_user_meta(%d,'ews_face_recent',true));" % ids()['uid']).strip()
     levels, notes_before, audit_before = open_level(), count_notes(), count_audit()
     break_writes(table, verb)
     got = hub_decide(adm, 'face_reset', eid, 'approve') if via == 'hub' else face_decide(adm, 'approve')
     break_writes('')
     check('[tx] %s: refused, the face stays, the request stays pending, the last level stays open, nobody told, nothing audited' % how,
-          got == 'error' and enrolled() and reset_status() == 'pending' and open_level() == levels and count_notes() == notes_before and count_audit() == audit_before,
-          (got, enrolled(), reset_status(), open_level(), levels))
+          got == 'error' and enrolled() and reset_status() == 'pending' and open_level() == levels and count_notes() == notes_before and count_audit() == audit_before and recent() == '["seeded"]',
+          (recent(), got, enrolled(), reset_status(), open_level(), levels))
     check('[tx] ...and once the database works the same approval goes through', hub_decide(adm, 'face_reset', eid, 'approve') == 'approved' and not enrolled() and reset_status() == 'approved' and count_notes() == notes_before + 1)
 
 print(f'{sum(results)} / {len(results)}')

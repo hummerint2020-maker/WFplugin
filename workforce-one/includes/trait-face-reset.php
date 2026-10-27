@@ -151,7 +151,8 @@ trait EWS_Face_Reset_Trait {
             $acted=$this->approval_act((int)$ar->id,$decision,'',false,$as_admin,$posted);
             if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return Hub::fromEngineError($acted->get_error_code());}
             $fresh=$this->approval_find_request('face_reset','face_reset_request',$employee_id);
-            $outcome=Hub::workflowOutcome($fresh?(string)$fresh->status:null);
+            if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}   // a read error must not commit a final decision as "advanced"
+            $outcome=Hub::workflowOutcome((string)$fresh->status);
             if($outcome!==Hub::ADVANCED && !$this->face_reset_finish_rows($employee_id,$outcome===Hub::APPROVED)){
                 $wpdb->query('ROLLBACK');$this->face_reset_forget_cache($employee_id);return Hub::ERROR;
             }
