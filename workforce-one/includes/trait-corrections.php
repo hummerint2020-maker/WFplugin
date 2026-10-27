@@ -402,7 +402,7 @@ trait EWS_Corrections_Trait {
         $id=(int)$c->id;
         // The reads (the day, the plan, the payroll figure) before BEGIN: payroll may create its tables, an implicit COMMIT. Used only
         // when this decision is the last one.
-        $pre=$decision==='approve'?$this->cx_finalize_prepare($id,true):null;
+        $pre=$decision==='approve' && !(int)$c->needs_hr?$this->cx_finalize_prepare($id,true):null;   // a request that needs HR only moves to HR here: HR's stage checks the day
         if($wpdb->query('START TRANSACTION')===false)return 'save';
         $acted=$this->approval_act((int)$ar->id,$decision,$note,false,$admin,$step);
         if(is_wp_error($acted)){$wpdb->query('ROLLBACK');return $this->approval_error_code($acted)==='moved'?'moved':'approval';}
@@ -415,12 +415,14 @@ trait EWS_Corrections_Trait {
             $m=$this->cx_mark_rejected($c,$note);
             $done=$m===1?true:($m===false?'save':'done');
         }elseif($st==='APPROVED'){
-            if($pre==='close'){$wpdb->query('ROLLBACK');return $this->cx_close($this->cx_get($id));}
-            if(!is_array($pre)){$wpdb->query('ROLLBACK');return is_string($pre)?$pre:'save';}   // the day changed: the level stays open
-            $done=$this->cx_manager_rows($c);
-            if($done===true){
-                if((int)$c->needs_hr)$out='pending_hr';
-                else{$out='approved';$done=$this->cx_finalize_rows($pre,'');}
+            if((int)$c->needs_hr){
+                $done=$this->cx_manager_rows($c);
+                if($done===true)$out='pending_hr';
+            }else{
+                if($pre==='close'){$wpdb->query('ROLLBACK');return $this->cx_close($this->cx_get($id));}
+                if(!is_array($pre)){$wpdb->query('ROLLBACK');return is_string($pre)?$pre:'save';}   // the day changed: the level stays open
+                $done=$this->cx_manager_rows($c);
+                if($done===true){$out='approved';$done=$this->cx_finalize_rows($pre,'');}
             }
         }
         if($done!==true){$wpdb->query('ROLLBACK');return $done;}
@@ -1174,12 +1176,15 @@ trait EWS_Corrections_Trait {
     /** The employee withdraws a correction still waiting (My requests). @return true|string */
     private function cx_withdraw($id,$employee_id){
         global $wpdb;
+        // Only the employee's own request, still waiting: checked before the approval is touched (3.31.132).
+        if(!$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->cx_table()} WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",(int)$id,(int)$employee_id)))return 'done';
         if($wpdb->query('START TRANSACTION')===false)return 'save';
         // The approval first, then the request (3.31.132, the order a decision locks them in). Waiting for HR, its approval request is
         // already APPROVED by the manager levels: it stays so (3.31.117; it failed before).
         $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$id);
         if($engine!==true){$wpdb->query('ROLLBACK');return $engine==='moved'?'done':'save';}
         $ok=$wpdb->query($wpdb->prepare("UPDATE {$this->cx_table()} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",get_current_user_id(),current_time('mysql'),(int)$id,(int)$employee_id));
+        if($ok===false){$wpdb->query('ROLLBACK');return 'save';}
         if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
         if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
         $this->audit('correction_withdrawn','employee',(int)$employee_id,'Correction #'.(int)$id.' withdrawn by the employee');

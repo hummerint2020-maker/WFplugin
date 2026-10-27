@@ -551,12 +551,23 @@ for decision, table, verb in (('approve', 'ews_time_logs', 'INSERT'), ('approve'
     res = decide(hr, cid, decision, 'no' if decision == 'reject' else '')
     want = 'approved' if decision == 'approve' else 'rejected'
     check('...and once the database works the same decision goes through', res.get('cx_done') == want and cx(cid)['status'] == want and bool(corr_events()) == (decision == 'approve') and corr_audit() == a0 + 1, (res, cx(cid).get('status'), corr_events()))
+# A request that needs HR too: the last manager level only moves it to HR (HR's stage checks the day), also when the day has changed.
+for stale_day in (False, True):
+    cid, open_s, open_steps = waiting_out()
+    php("$wpdb->update($p.'ews_attendance_corrections',['needs_hr'=>1],['id'=>%d]);" % cid)
+    if stale_day:
+        php("$wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>0,'work_date'=>'%s','event_type'=>'sign_out','event_at'=>'%s 17:00:00','scheduled_status'=>'Office','source'=>'app']);" % (E, LV, LV))
+    res = decide(hr, cid, 'approve')
+    check('a request that needs HR%s: the last manager level moves it to HR in one transaction, the approval approved, nothing added to the day' % (' (the day changed meanwhile)' if stale_day else ''),
+          res.get('cx_done') == 'pending_hr' and cx(cid)['status'] == 'pending_hr' and engine(cid).get('status') == 'APPROVED' and not corr_events() and cx(cid)['manager_by'], (res, cx(cid).get('status'), engine(cid)))
+    out = call('cx_withdraw', str(cid), str(E + 999)).strip().splitlines()[-1]
+    check('...another employee cannot withdraw it (and the approval is not touched)', out == '"done"' and cx(cid)['status'] == 'pending_hr' and engine(cid).get('status') == 'APPROVED', (out, cx(cid).get('status')))
 # A withdraw and a close lock the approval before the correction now (the order a decision uses): they still work and still all-or-nothing.
 cid, open_s, open_steps = waiting_out()
 break_writes('ews_attendance_corrections', 'UPDATE')
 out = call('cx_withdraw', str(cid), str(E)).strip().splitlines()[-1]
 break_writes('')
-check('a withdraw whose correction update fails: nothing changes (the approval request was cancelled in the same transaction and is back)', out == '"save"' or out == '"done"', out)
+check('a withdraw whose correction update fails: save, nothing changes (the approval request was cancelled in the same transaction and is back)', out == '"save"', out)
 check('...the correction waits and its approval request and level are as they were', cx(cid)['status'] == 'pending' and engine(cid).get('status') == open_s and steps(cid) == open_steps, (cx(cid).get('status'), engine(cid), steps(cid)))
 out = call('cx_withdraw', str(cid), str(E)).strip().splitlines()[-1]
 check('...and the withdraw works afterwards', out == 'true' and cx(cid)['status'] == 'cancelled' and engine(cid).get('status') == 'CANCELLED', (out, cx(cid).get('status'), engine(cid)))

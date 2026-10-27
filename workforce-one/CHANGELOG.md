@@ -11,6 +11,10 @@ No setting, no switch, no database change.
   Log and the notes follow the commit.
 - **Closing and withdrawing a correction lock the approval before the correction**, the order a decision uses, so a decision and a
   withdraw (or the automatic close of a request whose day became a leave) at the same moment no longer deadlock.
+- A request that needs HR as well: the last manager level only moves it to HR (HR's stage checks the day, as before).
+  Withdrawing checks the request is the employee's own and still waiting before it touches the approval.
+- Corrections that were left half-done by the old behaviour (approval APPROVED, correction still pending) are not repaired
+  automatically; a department manager or HR can still finish them from the app, as before.
 - The writes of an approval are all checked (before, a failed time-log insert after the first was ignored in one place, and a failed
   `manager_by` update in another); the first failure stops the decision and rolls it back.
 
