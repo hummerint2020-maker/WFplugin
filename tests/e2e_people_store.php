@@ -148,6 +148,7 @@ $keep = $wpdb->prefix;
 $wpdb->prefix = $prefix;   // a container built under another prefix still reads the plugin's own employees table
 $b = $svc->invoke($o);
 $wpdb->prefix = $keep;
-$check($b !== $a && $b->people()->employee(1) === $a->people()->employee(1), 'a container for another prefix reads the same employees table (the plugin property)');
+$first = (int) $wpdb->get_var("SELECT MIN(id) FROM {$wpdb->prefix}ews_employees");
+$check($b !== $a && $b->people()->employee($first) == $a->people()->employee($first) && ($first === 0 || $b->people()->employee($first) !== null), 'a container for another prefix reads the same employees table (the plugin property)');
 $check($a->people() === $a->people() && $a->org() === $a->org() && $a->people() instanceof \WorkforceOne\Platform\People, 'the container builds one PeopleDirectory (also the Platform\People port) and one OrgDirectory');
 echo "ALL PASS\n";
