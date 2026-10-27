@@ -136,7 +136,7 @@ def actions(ctx):
     out = {}
     for f in sorted(x for x in os.listdir(HERE) if re.fullmatch(r'actions(_\w+)?\.php', x)):
         restore()
-        t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1])
+        t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1])
         prefix = '' if f == 'actions.php' else f[8:-4] + ':'
         out.update({prefix + k: v for k, v in t.items()})
     return out
@@ -169,7 +169,7 @@ try:
     # The approvals' people, workflows and open requests (plain SQL; the pages of the approvals read them).
     wp('eval-file', os.path.join(HERE, 'seed_approvals.php'))
     # The people module's reporting lines, managers, teams and org-move history (ids merged into ctx for the page urls).
-    ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_people.php'), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1]))
+    ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_people.php'), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1]))
     # The query count of a page, printed at its end (web requests only).
     os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
