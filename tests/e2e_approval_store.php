@@ -56,7 +56,8 @@ $check($rq->insertRequest(['workflow_id' => $wid, 'entity_type' => 'leave', 'ent
 $rq->clearError();
 $check($rq->lastError() === '', 'clearError empties the last error');
 $level = function ($order, $status, $extra = []) use ($rq, $req, $now) {
-    return $rq->insertStep($extra + ['approval_request_id' => $req, 'step_order' => $order, 'resolver_type' => 'SUPERVISOR', 'resolver_value' => null, 'status' => $status, 'rerouted' => 0, 'approver_employee_id' => 2, 'approver_wp_user_id' => 20, 'pending_since' => $status === 'PENDING' ? $now : null], ['%d', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s']);
+    // array_merge keeps the keys in the order of the formats; an extra only replaces a value.
+    return $rq->insertStep(array_merge(['approval_request_id' => $req, 'step_order' => $order, 'resolver_type' => 'SUPERVISOR', 'resolver_value' => null, 'status' => $status, 'rerouted' => 0, 'approver_employee_id' => 2, 'approver_wp_user_id' => 20, 'pending_since' => $status === 'PENDING' ? $now : null], $extra), ['%d', '%d', '%s', '%s', '%s', '%d', '%d', '%d', '%s']);
 };
 $check($level(1, 'PENDING') && $level(2, 'WAITING', ['approver_employee_id' => 3, 'approver_wp_user_id' => 30]) && !$level(2, 'WAITING'), 'insertStep: two levels, and the UNIQUE request and order refuses a repeat');
 $check($rq->requestRow($req) == $rq->requestForCheck($req) && $rq->requestRow(999999) === null, 'requestRow and requestForCheck read the same row');

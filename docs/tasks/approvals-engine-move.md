@@ -603,7 +603,7 @@ Each commit runs unit, phpstan, phpcs, golden and the §3.5 suites touched.
    - **`SubstituteService implements SubstituteRouting`**, the small port the engine uses, so the engine never sees the
      substitutes' Store. `substitute_app_data` passes a presenter to `decidingFor()` so the page's own reads (names) happen
      between the Service's reads in the old order.
-   - **Deleted** (nobody else called them): `approval_resolve_approver`, `approval_mode_family`, `approval_self_allowed`,
+   - **Deleted** (nobody else called them): `approval_resolve_approver`, `approval_mode_family`,
      `approval_requester_user_id`, `approval_notify_administrators_after` (now the `AfterRequest` adapter),
      `approval_escalate`, `substitute_active_for`, `substitute_route`, `substitute_manager_may_decide`,
      `substitute_after_decision`, `substitute_take_waiting`, `substitute_begin`. `substitute_route`,
