@@ -246,6 +246,18 @@ try:
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))
     check('...the actions really saved, notified and claimed the week (else they prove nothing)', tb.get('week_lock_notified') and tb.get('notifications') and tb.get('grid_insert', {}).get('ok'),
           (tb.get('week_lock_notified'), len(tb.get('notifications') or [])))
+    org = {k[4:]: v for k, v in tb.items() if k.startswith('org:')}
+    def ret(k):
+        return (org.get(k) or {}).get('return')
+    def to(k):
+        r = ret(k)
+        return r.get('to', '') if isinstance(r, dict) else ''
+    check('...the org-writes trace really moved, scheduled, failed, imported, saved and archived (else it proves nothing)',
+          bool(org) and 'org_notice=moved' in to('submit_move_now') and 'org_notice=scheduled' in to('submit_scheduled') and 'org_error=apply' in to('fault_move_commit')
+          and ret('apply_due') == 4 and 'org_notice=imported' in to('import_now') and 'department_saved=1' in to('dept_edit_ok') and 'team_saved=1' in to('team_new')
+          and 'department_deleted=1' in to('dept_archive_empty') and 'department_error=has_teams' in to('dept_archive_with_teams') and 'team_error=save' in to('fault_team_commit')
+          and ret('check_loop') == 'loop' and ret('set_supervisor') is True and ret('fault_set_only_commit') is False,
+          {k: ret(k) for k in ('submit_move_now', 'apply_due', 'check_loop', 'set_supervisor', 'fault_set_only_commit')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
