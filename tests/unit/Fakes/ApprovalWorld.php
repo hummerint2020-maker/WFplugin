@@ -98,7 +98,7 @@ final class ApprovalWorld
             public function __construct($w) { $this->w = $w; }
             public function begin(): bool { $this->w->tx[] = 'begin'; return !$this->w->failBegin; }
             public function commit(): bool { $this->w->tx[] = 'commit'; return !$this->w->failCommit; }
-            public function rollback(): void { $this->w->tx[] = 'rollback'; }
+            public function rollback(): void { $this->w->tx[] = 'rollback'; $this->w->requests->error = ''; $this->w->workflows->error = ''; }   // as wpdb: a query clears last_error
         };
     }
 

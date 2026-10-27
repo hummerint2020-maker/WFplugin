@@ -445,7 +445,7 @@ trait EWS_Approvals_Trait {
 
     /** The key a request is found under in the batch helpers. */
     private function approval_request_key($workflow_key,$entity_type,$entity_id){
-        return sanitize_key((string)$workflow_key).'|'.sanitize_key((string)$entity_type).'|'.(int)$entity_id;
+        return \WorkforceOne\Approvals\ApprovalReads::requestKey((string)$workflow_key,(string)$entity_type,(int)$entity_id);   // the same function the Service builds its map with
     }
 
     /**

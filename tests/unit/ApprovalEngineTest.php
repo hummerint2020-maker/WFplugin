@@ -140,7 +140,7 @@ final class ApprovalEngineTest extends TestCase
         $this->w->requests->failStepInsertAt = 2;
         $r = $this->start('vacation');
         $this->assertSame('approval_db_error', $r->code);
-        $this->assertSame('insert step failed', $r->message);
+        $this->assertSame('', $r->message, 'read after the ROLLBACK, which clears the database message (as before the move)');
         $this->assertSame(['begin', 'rollback'], $this->w->tx);
         $this->w->tx = [];
         $this->w->requests->failStepInsertAt = 4;
@@ -148,7 +148,8 @@ final class ApprovalEngineTest extends TestCase
         $this->assertSame([], $this->w->tx);
         $this->w->requests->failStepInsertAt = 0;
         $this->w->requests->failInsertRequest = true;
-        $this->assertSame('insert request failed', $this->start('vacation', 3)->message);
+        $this->assertSame('', $this->start('vacation', 3)->message);
+        $this->assertSame('insert request failed', $this->start('vacation', 4, [], false)->message, 'the caller owns the transaction: nothing cleared the message');
     }
 
     public function testBeginAndCommitFailuresAreReported(): void

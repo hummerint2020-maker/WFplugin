@@ -172,6 +172,26 @@ $run('sub_act_level1', function () use ($act, $SB) { return $act($SB, 'approve',
 $as($P['boss']['uid']);
 $run('sub_act_level2', function () use ($act, $SB) { return $act($SB, 'approve'); });
 
+// The substitutes' own writes: a cover that starts (what waits moves to the substitute), one that ends and sends it back or keeps it
+// (the setting), one created through the check, and one tied to a leave that is not there.
+$as($P['req']['uid']);
+$run('sub2_start', function () use ($start, $P) { return $start('vacation', 'leave', 955, $P['req']['id'], [], false); });
+$wpdb->insert($p . 'ews_approval_substitutes', ['manager_employee_id' => $P['mgr']['id'], 'substitute_employee_id' => $P['other']['id'], 'starts_at' => gmdate('Y-m-d H:i:s', time() - 60), 'ends_at' => gmdate('Y-m-d H:i:s', time() + 3 * 86400),
+    'status' => 'scheduled', 'source' => 'hr', 'reason' => '', 'decided' => 0, 'created_by' => $admin, 'created_at' => gmdate('Y-m-d H:i:s')]);
+$as(0);
+$run('sub2_sync_start', function () use ($call) { return $call('substitutes_sync'); });
+$run('sub2_sync_end_back', function () use ($call) { return $call('substitutes_sync', gmdate('Y-m-d H:i:s', time() + 5 * 86400)); });
+$wpdb->insert($p . 'ews_approval_substitutes', ['manager_employee_id' => $P['boss']['id'], 'substitute_employee_id' => $P['hr']['id'], 'starts_at' => gmdate('Y-m-d H:i:s', time() - 60), 'ends_at' => gmdate('Y-m-d H:i:s', time() + 86400),
+    'status' => 'active', 'source' => 'hr', 'reason' => '', 'decided' => 2, 'created_by' => $admin, 'created_at' => gmdate('Y-m-d H:i:s')]);
+update_option('ews_substitute_settings', ['manager_decides' => 1, 'on_return' => 'stay'], false);
+$run('sub2_sync_end_stay', function () use ($call) { return $call('substitutes_sync', gmdate('Y-m-d H:i:s', time() + 5 * 86400)); });
+delete_option('ews_substitute_settings');
+$as($admin);
+$run('sub2_create', function () use ($call, $P) { return $call('substitute_create', $P['lone']['id'], $P['other']['id'], gmdate('Y-m-d H:i:s', time() + 20 * 86400), gmdate('Y-m-d H:i:s', time() + 22 * 86400), 'hr', 'trip'); });
+$run('sub2_create_same', function () use ($call, $P) { return $call('substitute_create', $P['lone']['id'], $P['lone']['id'], gmdate('Y-m-d H:i:s', time() + 20 * 86400), gmdate('Y-m-d H:i:s', time() + 22 * 86400), 'hr'); });
+$run('sub2_create_leave_linked', function () use ($call, $P) { return $call('substitute_create', $P['lone']['id'], $P['sub']['id'], gmdate('Y-m-d H:i:s', time() + 30 * 86400), gmdate('Y-m-d H:i:s', time() + 31 * 86400), 'leave', '', 999999, 'pending'); });
+$run('sub2_sync_leave_linked', function () use ($call) { return $call('substitutes_sync'); });
+
 // ---------------------------------------------------------------- 7. withdraw and close
 $as($P['req']['uid']);
 $run('withdraw_start', function () use ($start, $P) { return $start('overtime', 'overtime_request', 961, $P['req']['id'], [], false); });

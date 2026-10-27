@@ -618,3 +618,8 @@ Each commit runs unit, phpstan, phpcs, golden and the §3.5 suites touched.
      `trait-leave` +1, `trait-leave-view` 2, `trait-corrections` 1, `trait-employee-admin` 1, `trait-face-reset` 1.
    - **Golden:** 91 engine calls and the rows they leave (`tests/golden/actions_approvals.php`), and 9 pages with
      `tests/golden/seed_approvals.php` (users gdmgr and gdreq). `run.py` runs every `actions*.php`.
+8. **Review (3.31.128), what was done:** the request key is built by one function (`ApprovalReads::requestKey()`) on both
+   sides; the unit fakes clear the database message on ROLLBACK like wpdb; the substitutes' writes were added to the golden
+   trace. **Not done, recorded:** the two-process race tests of §7 (decide vs decide, vs closeOpen, vs withdraw): the lock
+   order is unchanged and checked by the SQL trace, `e2e_request_races.py` (kept green) covers the races, and the Store e2e is
+   single-process. `substitute_create` tells the substitute only when the new row reads back (the old code warned and told user 0).

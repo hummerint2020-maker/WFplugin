@@ -63,13 +63,13 @@ final class WorkflowServiceTest extends TestCase
     {
         $this->w->workflows->failUpdate = true;
         $r = $this->w->workflowService()->configure('overtime', 'LEVEL_1', [1 => ['resolver_type' => 'SUPERVISOR', 'resolver_value' => 0]], null);
-        $this->assertSame(['db_error', 'update failed'], [$r->code, $r->message]);
+        $this->assertSame(['db_error', ''], [$r->code, $r->message]);
         $this->assertSame(['begin', 'rollback'], $this->w->tx);
         $this->w->workflows->failUpdate = false;
         $this->w->tx = [];
         $this->w->workflows->failStepAt = 1;
         $r = $this->w->workflowService()->configure('overtime', 'LEVEL_1', [1 => ['resolver_type' => 'SUPERVISOR', 'resolver_value' => 0]], null);
-        $this->assertSame('insert failed', $r->message);
+        $this->assertSame('', $r->message);
         $this->assertSame(['begin', 'rollback'], $this->w->tx);
     }
 
