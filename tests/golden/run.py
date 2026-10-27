@@ -224,6 +224,7 @@ try:
     tb = actions(ctx)
     point(HEAD)
     th = actions(ctx)
+    json.dump({k: v for k, v in th.items() if k.startswith('org:')}, open(os.path.join(S, 'golden-org-trace.json'), 'w'), indent=1)
     def first_difference(a, b):
         """Where two traces first differ, for the failure message: the first SQL statement that is not the same."""
         if isinstance(a, dict) and isinstance(b, dict) and isinstance(a.get('sql'), list) and isinstance(b.get('sql'), list):
