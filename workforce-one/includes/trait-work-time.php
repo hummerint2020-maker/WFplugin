@@ -98,7 +98,6 @@ trait EWS_Work_Time_Trait {
         }
 
     private function shift_for_employee($employee_id=0){
-            global $wpdb;
             $employee_id=absint($employee_id);
             if(!$employee_id){$emp=$this->current_employee();$employee_id=$emp?(int)$emp->id:0;}
             if(!$employee_id)return null;
@@ -144,7 +143,6 @@ trait EWS_Work_Time_Trait {
      * @param array<int,object|int> $employees
      */
     private function prime_shift_cache(array $employees){
-            global $wpdb;
             $shift_ids=[];$missing=[];
             foreach($employees as $e){
                 $id=is_object($e)?absint($e->id??0):absint($e);

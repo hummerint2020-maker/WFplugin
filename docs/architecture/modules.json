@@ -97,7 +97,83 @@
         "people_set_shift_id",
         "people_all_shift_ids",
         "people_shift_ids",
-        "people_active_brief"
+        "people_active_brief",
+        "people_names_by_ids",
+        "approval_related_employee",
+        "approval_supervisor_ids",
+        "team_manager_for_employee",
+        "team_ids_by_employee",
+        "emps",
+        "employee_attendance_enabled"
+      ],
+      "layered": [
+        {
+          "slice": "directory",
+          "namespace": "People",
+          "tables": [
+            "employees",
+            "employee_relationships",
+            "departments",
+            "teams",
+            "team_members",
+            "org_moves"
+          ],
+          "store": [
+            "workforce-one/src/People/Data/WordPressPeopleStore.php",
+            "workforce-one/src/People/Data/WordPressReportingStore.php",
+            "workforce-one/src/People/Data/WordPressDepartmentStore.php",
+            "workforce-one/src/People/Data/WordPressTeamStore.php"
+          ],
+          "services": [
+            "workforce-one/src/People/PeopleDirectory.php",
+            "workforce-one/src/People/OrgDirectory.php"
+          ],
+          "moved": [
+            "people_employee",
+            "people_employee_by_user",
+            "people_names_by_user",
+            "people_by_ids",
+            "people_brief_by_ids",
+            "people_active_id",
+            "people_name",
+            "people_user_id",
+            "people_department_member_ids",
+            "people_in_department",
+            "people_active_brief",
+            "people_shift_id",
+            "people_shift_ids",
+            "people_set_shift_id",
+            "people_all_shift_ids",
+            "people_active_list",
+            "people_active_users",
+            "people_active_ids",
+            "people_active_user_ids",
+            "people_active_count",
+            "people_names_by_ids",
+            "emps",
+            "employee_attendance_enabled",
+            "people_manager_ids",
+            "people_org_rows",
+            "people_has_reports",
+            "people_manager_of",
+            "people_department_manager",
+            "team_manager_for_employee",
+            "team_member_ids",
+            "team_ids_for_employee",
+            "team_ids_by_employee",
+            "approval_related_employee",
+            "approval_supervisor_ids",
+            "shift_for_employee",
+            "prime_shift_cache"
+          ],
+          "traits_clean": [
+            "org-chart"
+          ]
+        }
+      ],
+      "exports": [
+        "WorkforceOne\\People\\PeopleDirectory",
+        "WorkforceOne\\People\\OrgDirectory"
       ]
     },
     "schedule": {
