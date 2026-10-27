@@ -98,13 +98,12 @@ trait EWS_Work_Time_Trait {
         }
 
     private function shift_for_employee($employee_id=0){
-            global $wpdb;
             $employee_id=absint($employee_id);
             if(!$employee_id){$emp=$this->current_employee();$employee_id=$emp?(int)$emp->id:0;}
             if(!$employee_id)return null;
             if(array_key_exists($employee_id,self::$ews_shift_for_employee_cache))return self::$ews_shift_for_employee_cache[$employee_id];
             // Today's shift is the employee's shift now; the shift history keeps it in step (3.31.108).
-            $shift_id=(int)$wpdb->get_var($wpdb->prepare("SELECT default_shift_id FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id));
+            $shift_id=$this->services()->people()->shiftIdNow($employee_id);
             if(!$shift_id)return self::$ews_shift_for_employee_cache[$employee_id]=null;
             foreach($this->shifts() as $shift){
                 if((int)$shift['id']===$shift_id && !empty($shift['active']))return self::$ews_shift_for_employee_cache[$employee_id]=$shift;
@@ -144,7 +143,6 @@ trait EWS_Work_Time_Trait {
      * @param array<int,object|int> $employees
      */
     private function prime_shift_cache(array $employees){
-            global $wpdb;
             $shift_ids=[];$missing=[];
             foreach($employees as $e){
                 $id=is_object($e)?absint($e->id??0):absint($e);
@@ -152,11 +150,8 @@ trait EWS_Work_Time_Trait {
                 if(is_object($e)&&property_exists($e,'default_shift_id'))$shift_ids[$id]=(int)$e->default_shift_id;
                 else $missing[$id]=$id;
             }
-            foreach(array_chunk(array_values($missing),500) as $chunk){
-                $ph=implode(',',array_fill(0,count($chunk),'%d'));
-                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,default_shift_id FROM {$this->employees} WHERE id IN ($ph)",$chunk)) as $r)$shift_ids[(int)$r->id]=(int)$r->default_shift_id;
-                foreach($chunk as $id){ if(!isset($shift_ids[$id]))$shift_ids[$id]=0; }
-            }
+            foreach($this->services()->people()->storedShiftIds(array_values($missing)) as $id=>$shift_id)$shift_ids[$id]=$shift_id;
+            foreach($missing as $id){ if(!isset($shift_ids[$id]))$shift_ids[$id]=0; }
             if(!$shift_ids)return;
             $active=[];
             foreach($this->shifts() as $shift){ if(!empty($shift['active']) && !isset($active[(int)$shift['id']]))$active[(int)$shift['id']]=$shift; }

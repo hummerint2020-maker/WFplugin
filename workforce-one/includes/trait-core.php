@@ -8,8 +8,8 @@ trait EWS_Core_Trait {
     private static $ews_current_employee_cache = [];
     private static $ews_shifts_cache = null;
     private static $ews_shift_for_employee_cache = [];
-    /** @var array<int,int> employees.default_shift_id by employee, for one request (3.31.113); cleared whenever it is written. */
-    private static $ews_people_shift_memo = [];
+    /** @var \WorkforceOne\People\PeopleMemo|null the people module's request memos (3.31.133): each employee's shift (3.31.113) and the active list; cleared whenever an employee is written */
+    private static $ews_people_memo = null;
     private static $ews_working_hours_cache = [];
     // Shift history (3.31.108): each employee's shift periods, and every shift's dated times.
     private static $ews_shift_periods_cache = [];
@@ -21,13 +21,16 @@ trait EWS_Core_Trait {
     private static $ews_schedule_types_cache = null;
     private static $ews_schedule_type_by_name_cache = [];
     private static $ews_company_leave_cache = [];
-    private static $ews_emps_cache = null;
+
+    private static function people_memo(){
+            return self::$ews_people_memo ?? (self::$ews_people_memo = new \WorkforceOne\People\PeopleMemo());
+        }
 
     private function invalidate_employee_runtime_cache($employee_id=0,$wp_user_id=0){
             $employee_id=absint($employee_id); $wp_user_id=absint($wp_user_id);
-            if($employee_id){unset(self::$ews_shift_for_employee_cache[$employee_id],self::$ews_shift_periods_cache[$employee_id],self::$ews_people_shift_memo[$employee_id],self::$ews_employee_location_cache[$employee_id]);self::$ews_working_hours_cache=[];}
+            if($employee_id){unset(self::$ews_shift_for_employee_cache[$employee_id],self::$ews_shift_periods_cache[$employee_id],self::$ews_employee_location_cache[$employee_id]);self::$ews_working_hours_cache=[];}
             if($wp_user_id)unset(self::$ews_current_employee_cache[$wp_user_id]);
-            self::$ews_emps_cache=null;
+            self::people_memo()->forget($employee_id);
         }
 
     private function invalidate_schedule_runtime_cache(){
@@ -66,11 +69,7 @@ trait EWS_Core_Trait {
 
 
     private function employee_attendance_enabled($employee_id){
-            global $wpdb;
-            $employee_id=absint($employee_id);
-            if(!$employee_id)return false;
-            $value=$wpdb->get_var($wpdb->prepare("SELECT attendance_enabled FROM {$this->employees} WHERE id=%d LIMIT 1",$employee_id));
-            return $value===null ? true : ((int)$value===1);
+            return $this->services()->people()->attendanceEnabled(absint($employee_id));
         }
 
 function current_employee(){
@@ -223,15 +222,13 @@ function current_employee(){
     private function audit($a,$e,$id=0,$d=''){global $wpdb;$wpdb->insert($this->audit,['user_id'=>get_current_user_id(),'action'=>$a,'entity'=>$e,'entity_id'=>$id,'details'=>$d,'created_at'=>current_time('mysql')]);}
 
     private function emps(){
-            if(self::$ews_emps_cache!==null)return self::$ews_emps_cache;
-            global $wpdb;
-            self::$ews_emps_cache=$wpdb->get_results("SELECT * FROM {$this->employees} WHERE active=1 ORDER BY name ASC");
+            $people=$this->services()->people();
+            if($people->activeAllLoaded())return $people->activeAll();
+            $rows=$people->activeAll();
             // Their shifts come with the rows: no query per employee in lists (Attendance, Insights, …).
-            if(method_exists($this,'prime_shift_cache'))$this->prime_shift_cache((array)self::$ews_emps_cache);
-            return self::$ews_emps_cache;
+            if(method_exists($this,'prime_shift_cache'))$this->prime_shift_cache((array)$rows);
+            return $rows;
         }
-
-    private function emp_domain($d){global $wpdb;return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->employees} WHERE domain_name=%s AND active=1 LIMIT 1",trim($d)));}
 
 
         /** The Attendance grid's guarded save (ScheduleDayService::saveIfUnchanged(), 3.31.127). */

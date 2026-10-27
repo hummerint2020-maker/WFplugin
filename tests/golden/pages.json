@@ -1,5 +1,5 @@
 {
-  "_about": "Pages the golden harness renders on the old and the new code (tests/golden/run.py). {week} and {d0}..{d4} come from the seed (last week). 'options' are set before the page on both sides and removed after. Add the pages of each slice a release moves.",
+  "_about": "Pages the golden harness renders on the old and the new code (tests/golden/run.py). {week} and {d0}..{d4} come from the seed (last week). 'options' are set before the page on both sides and removed after. Add the pages of each slice a release moves. A page may name a 'expect' text that must be in it (else it could be a login page or the Dashboard on both sides and the comparison would prove nothing).",
   "pages": [
     {
       "user": "admin",
@@ -163,6 +163,201 @@
         "ews_feature_my_approvals": 1,
         "ews_feature_substitutes": 1
       }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees",
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&paged=2",
+      "expect": "Old Boss"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&s=omar",
+      "expect": "Omar Ontime"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Dispatcher"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employee-profile&employee_id={omar}",
+      "expect": "Omar Ontime"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-departments",
+      "expect": "Ops"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-departments&department_id={ops}",
+      "expect": "Ops"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-teams",
+      "expect": "Alpha"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-teams&team_id={alpha}",
+      "expect": "Alpha"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-org-chart",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Operations Lead"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      },
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people&people_search=omar",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      },
+      "expect": "Omar Ontime"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people&people_team={alpha}",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      },
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=employee&employee_id={omar}",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      },
+      "expect": "Omar Ontime"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=employees",
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=team",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Dispatcher"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=team",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Dispatcher"
+    },
+    {
+      "user": "acomar",
+      "url": "/app/?ews_view=team&person={lina}",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Lina Late"
+    },
+    {
+      "user": "acomar",
+      "url": "/app/?ews_view=profile",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      },
+      "expect": "Omar Ontime"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=attendance&week={week}",
+      "expect": "Lina Late"
     }
   ],
   "normalise": [

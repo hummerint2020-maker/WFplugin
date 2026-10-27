@@ -14,7 +14,7 @@ use WorkforceOne\Approvals\SubstitutePorts;
 use WorkforceOne\Platform\AuditLog;
 use WorkforceOne\Platform\Clock;
 use WorkforceOne\Platform\OnceClaim;
-use WorkforceOne\Platform\People;
+use WorkforceOne\People\PeoplePorts;
 use WorkforceOne\Platform\Permissions;
 use WorkforceOne\Platform\Services;
 use WorkforceOne\Platform\Transaction;
@@ -39,8 +39,6 @@ trait EWS_Services_Trait {
 
     private function services_build(\wpdb $db): Services {
         $audit=function($a,$e,$id,$d){$this->audit($a,$e,$id,$d);};
-        $brief=function($eid){return $this->people_active_brief($eid);};
-        $active=function($eid){return $this->people_employee($eid,true);};
         $day_changed=function($uid,$date,$status,$id){
             $label=date_i18n('l, d M Y',strtotime($date));
             $this->notify($uid,'schedule','Schedule Updated','Your schedule for <strong>'.esc_html($label).'</strong> is now <strong>'.esc_html($status).'</strong>.',
@@ -51,7 +49,7 @@ trait EWS_Services_Trait {
             foreach($days as $d=>$st)$parts[]=date_i18n('D',strtotime($d)).' '.$st;
             $this->notify($uid,'schedule',__('Next week\'s schedule is final','workforce-one'),implode(' · ',$parts),['url'=>$link,'entity'=>'week_lock']);
         };
-        return new Services($db,['schedule'=>$this->schedule_table_name()],
+        return new Services($db,['schedule'=>$this->schedule_table_name(),'employees'=>$this->employees],
             new class($audit) implements AuditLog {
                 private $f;
                 public function __construct(callable $f){ $this->f=$f; }
@@ -60,12 +58,7 @@ trait EWS_Services_Trait {
             new class implements Clock {
                 public function now(): string { return current_time('mysql'); }
             },
-            new class($brief,$active) implements People {
-                private $brief;private $active;
-                public function __construct(callable $brief,callable $active){ $this->brief=$brief;$this->active=$active; }
-                public function activeBrief(int $employeeId): ?object { $r=($this->brief)($employeeId); return is_object($r)?$r:null; }
-                public function activeEmployee(int $employeeId): ?object { $r=($this->active)($employeeId); return is_object($r)?$r:null; }
-            },
+            new PeoplePorts(self::people_memo()),
             new class($db) implements OnceClaim {
                 private $db;
                 public function __construct(\wpdb $db){ $this->db=$db; }

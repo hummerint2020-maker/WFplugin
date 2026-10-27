@@ -37,17 +37,7 @@ trait EWS_Org_Chart_Trait {
 
     /** Each active employee's direct manager (0 = none), from the newest supervisor relationship. @return array<int,int> */
     private function people_manager_ids(){
-        global $wpdb;
-        $rt=$wpdb->prefix.'ews_employee_relationships';
-        $out=[];
-        foreach((array)$wpdb->get_col("SELECT id FROM {$this->employees} WHERE active=1") as $id)$out[(int)$id]=0;
-        if(!$out)return $out;
-        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$rt))!==$rt)return $out;
-        foreach((array)$wpdb->get_results("SELECT employee_id,related_employee_id FROM {$rt} WHERE relationship_type='supervisor' AND active=1 AND related_employee_id IS NOT NULL ORDER BY id DESC") as $r){
-            $e=(int)$r->employee_id;
-            if(isset($out[$e]) && !$out[$e])$out[$e]=(int)$r->related_employee_id;
-        }
-        return $out;
+        return $this->services()->org()->managerIds();
     }
 
     /** The organization chart of the active employees (OrgTree). */
@@ -57,13 +47,7 @@ trait EWS_Org_Chart_Trait {
 
     /** The active employees as the chart shows them, by id. @return array<int,object> */
     private function people_org_rows(){
-        global $wpdb;
-        $d=$wpdb->prefix.'ews_departments';
-        $has_dept=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$d))===$d;
-        $rows=(array)$wpdb->get_results("SELECT e.id,e.name,e.domain_name,e.job_title,e.department_id,e.wp_user_id,e.profile_image_type,e.profile_image_url,e.avatar_key".($has_dept?",d.name department_name FROM {$this->employees} e LEFT JOIN {$d} d ON d.id=e.department_id":" FROM {$this->employees} e")." WHERE e.active=1 ORDER BY e.name ASC");
-        $out=[];
-        foreach($rows as $r)$out[(int)$r->id]=$r;
-        return $out;
+        return $this->services()->org()->orgRows();
     }
 
     /* ------------------------------------------------------------------ wp-admin → People → Org chart */
@@ -163,10 +147,7 @@ trait EWS_Org_Chart_Trait {
 
     /** Does an active employee report directly to this one? */
     private function people_has_reports($employee_id){
-        global $wpdb;
-        $rt=$wpdb->prefix.'ews_employee_relationships';
-        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$rt))!==$rt)return false;
-        return (bool)$wpdb->get_var($wpdb->prepare("SELECT r.id FROM {$rt} r JOIN {$this->employees} e ON e.id=r.employee_id AND e.active=1 WHERE r.related_employee_id=%d AND r.relationship_type='supervisor' AND r.active=1 LIMIT 1",$employee_id));
+        return $this->services()->org()->hasReports((int)$employee_id);
     }
 
     /** Whom the signed-in person may look at in My team (null = anyone). @return array<int,bool>|null */

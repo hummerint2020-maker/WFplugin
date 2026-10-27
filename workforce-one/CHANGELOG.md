@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.133
+### People reads move to Controllers → Services → Stores (L4a; design `docs/tasks/people-store.md`)
+No setting, no switch, no database change, and nothing you can see: every page, query and write is the same as in 3.31.132 (the golden harness compares 51 pages and 77 People calls with the old code, byte for byte and statement for statement).
+- **The employees, reporting lines, departments and teams that other modules read now live behind two services** (`PeopleDirectory`, `OrgDirectory`) over four Stores that hold all their SQL. The plugin's `people_*`, `team_*` and `approval_related_employee` / `approval_supervisor_ids` functions keep their names and answers and call them.
+- **One owner for the request caches:** the shift each employee is on and the list of active employees (`emps()`) are held in one object (`PeopleMemo`) instead of two statics on the plugin; the speed guarantees of 3.31.126 (one query per 500 people, not one each) are unchanged.
+- **New shared read:** `people_names_by_ids()` (a name next to a row, one query per 500 ids), not used by any page yet.
+- Five functions nobody called (`team_manager_for_team`, `team_is_member`, `department_for_employee`, `department_same`, `emp_domain`) are removed.
+- Schedule's two shift reads (`shift_for_employee`, `prime_shift_cache`) read through the same Store. Tests: 23 new unit tests, a storage contract on real tables (`tests/e2e_people_store.php`, also in CI), and the golden harness now covers the People pages and calls.
 ## 3.31.132
 ### Approvals engine fixes, part 4: the attendance correction decision (design `docs/tasks/engine-fixes.md` §2.2); closes the series
 No setting, no switch, no database change.

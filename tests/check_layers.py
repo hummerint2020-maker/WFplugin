@@ -21,7 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_modules import PROPS, strip_comments  # noqa: E402
 
 LIT = re.compile(r"""(?:prefix\s*\.\s*['"]|prefix\}|\{\$p\}|\$p\s*\.\s*['"])ews_([a-z0-9_]+)""")
-HELPERS = {'approval_tables': 'approval_steps', 'substitutes_table': 'approval_substitutes'}   # $this->helper() hands out table names: one reference each
+HELPERS = {'approval_tables': 'approval_steps', 'substitutes_table': 'approval_substitutes', 'team_tables': 'teams', 'department_tables': 'departments',
+           'org_moves_table': 'org_moves'}   # $this->helper() hands out table names: one reference each
 HELPER = re.compile(r'\$this->(' + '|'.join(HELPERS) + r')\s*\(')
 PROP = re.compile(r'\$this->(' + '|'.join(PROPS) + r')\b(?!\s*\()')
 L2_BAD = [r'\bglobal\s+\$', r'\$wpdb\b', r'\$_(?:GET|POST|REQUEST|COOKIE|SERVER|FILES)\b', r'\becho\b', r'\bprint\b', r'\bexit\b', r'\bdie\b',
@@ -81,6 +82,7 @@ def self_test():
     ok &= not l4("<?php\nuse WorkforceOne\\Platform\\Clock;\n", 'Schedule', [])
     ok &= bool(tables_in("<?php $wpdb->get_row(\"SELECT * FROM {$this->schedule}\");"))
     ok &= tables_in("<?php $t=$this->approval_tables(); $s=$this->substitutes_table();") == ['approval_steps', 'approval_substitutes']
+    ok &= tables_in("<?php $t=$this->team_tables(); $d=$this->department_tables(); $m=$this->org_moves_table();") == ['teams', 'departments', 'org_moves']
     ok &= not tables_in("<?php private function approval_tables(){ return []; }")
     ok &= (body("<?php function a(){ if(1){ x(); } } function b(){}", 'a') or '').count('{') == 2
     return ok

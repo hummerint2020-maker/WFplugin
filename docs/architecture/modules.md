@@ -63,6 +63,10 @@ Both will go through the other modules' functions rather than their tables.
    direct uses, 295 → 239 table crossings. What is left are joins that put an employee's name next to
    rows in lists and reports (time report, corrections, the dashboard's Audit labels, tasks); they
    need a shared read for names that keeps one query per page, the next part of this step.
+   **3.31.133 (L4a, `docs/tasks/people-store.md`):** the reads moved behind `PeopleDirectory` and `OrgDirectory`
+   (`src/People/`), over four Stores that own all their SQL; the shared names read exists
+   (`people_names_by_ids`, one query per 500 ids) but no page uses it yet (a separate release, it changes SQL). The org
+   writes (L4b) and the employee writes and pages (L4c) follow.
 2. **Move modules out of the shared object, least tied first:** notifications, polls (engagement),
    daily workers, the installed app, then leave, overtime and attendance, last payroll and reports.
    Each becomes a class in `src/<Module>/` with its own hook registration and public functions; the
