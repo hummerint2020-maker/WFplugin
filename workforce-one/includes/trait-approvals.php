@@ -264,15 +264,7 @@ trait EWS_Approvals_Trait {
     }
 
     private function approval_related_employee($employee_id,$relationship_type){
-        global $wpdb;
-        $t=$this->approval_tables();
-        return $wpdb->get_row($wpdb->prepare(
-            "SELECT e.* FROM {$t['relationships']} r
-             JOIN {$this->employees} e ON e.id=r.related_employee_id
-             WHERE r.employee_id=%d AND r.relationship_type=%s AND r.active=1 AND e.active=1
-             ORDER BY r.id DESC LIMIT 1",
-            (int)$employee_id,sanitize_key($relationship_type)
-        ));
+        return $this->services()->org()->relatedEmployee((int)$employee_id,sanitize_key($relationship_type));
     }
 
     /**
@@ -281,17 +273,7 @@ trait EWS_Approvals_Trait {
      * @param list<int> $employee_ids @return array<int,int>
      */
     private function approval_supervisor_ids(array $employee_ids){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));
-        $out=array_fill_keys($ids,0);
-        foreach(array_chunk($ids,500) as $chunk){
-            $ph=implode(',',array_fill(0,count($chunk),'%d'));
-            $rows=$wpdb->get_results($wpdb->prepare("SELECT r.employee_id,r.related_employee_id FROM {$t['relationships']} r JOIN {$this->employees} e ON e.id=r.related_employee_id
-                WHERE r.employee_id IN ($ph) AND r.relationship_type='supervisor' AND r.active=1 AND e.active=1 ORDER BY r.id DESC",$chunk));
-            foreach((array)$rows as $r){ if(empty($out[(int)$r->employee_id]))$out[(int)$r->employee_id]=(int)$r->related_employee_id; }
-        }
-        return $out;
+        return $this->services()->org()->supervisorIds($employee_ids);
     }
 
     /**

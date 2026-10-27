@@ -49,9 +49,7 @@ trait EWS_Org_Moves_Trait {
 
     /** The manager an employee has now (0 = none), archived or not. */
     private function people_manager_of($employee_id){
-        global $wpdb;
-        $rt=$wpdb->prefix.'ews_employee_relationships';
-        return (int)$wpdb->get_var($wpdb->prepare("SELECT related_employee_id FROM {$rt} WHERE employee_id=%d AND relationship_type='supervisor' AND active=1 AND related_employee_id IS NOT NULL ORDER BY id DESC LIMIT 1",(int)$employee_id));
+        return $this->services()->org()->managerOf((int)$employee_id);
     }
 
     /** @return array<string,string> error code => message */

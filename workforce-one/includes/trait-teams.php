@@ -58,41 +58,26 @@ trait EWS_Teams_Trait {
         return true;
     }
 
-    private function team_manager_for_team($team_id){
-        global $wpdb; $t=$this->team_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT e.* FROM {$t['teams']} tm JOIN {$this->employees} e ON e.id=tm.manager_employee_id WHERE tm.id=%d AND tm.active=1 AND e.active=1 LIMIT 1",absint($team_id)));
-    }
-
     /** Resolve the active manager of the first active team membership for an employee. */
     private function team_manager_for_employee($employee_id){
-        global $wpdb; $t=$this->team_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT e.*,tm.id AS team_id,tm.name AS team_name FROM {$t['teams']} tm JOIN {$t['members']} m ON m.team_id=tm.id AND m.active=1 JOIN {$this->employees} e ON e.id=tm.manager_employee_id AND e.active=1 WHERE m.employee_id=%d AND tm.active=1 ORDER BY tm.id ASC LIMIT 1",absint($employee_id)));
+        return $this->services()->org()->teamManagerFor(absint($employee_id));
     }
 
     /** The active members of a team (3.31.105). @return list<int> */
     private function team_member_ids($team_id){
-        global $wpdb; $t=$this->team_tables();
         $this->ensure_teams_schema();
-        return array_map('intval',$wpdb->get_col($wpdb->prepare("SELECT employee_id FROM {$t['members']} WHERE team_id=%d AND active=1",absint($team_id))));
+        return $this->services()->org()->teamMemberIds(absint($team_id));
     }
 
     private function team_ids_for_employee($employee_id){
-        global $wpdb; $t=$this->team_tables();
         $this->ensure_teams_schema();
-        return array_map('intval',$wpdb->get_col($wpdb->prepare("SELECT team_id FROM {$t['members']} WHERE employee_id=%d AND active=1 ORDER BY team_id ASC",absint($employee_id))));
+        return $this->services()->org()->teamIdsOf(absint($employee_id));
     }
 
     /** team_ids_for_employee() for many employees in one query. @param list<int> $employee_ids @return array<int,list<int>> */
     private function team_ids_by_employee(array $employee_ids){
-        global $wpdb; $t=$this->team_tables();
         $this->ensure_teams_schema();
-        $ids=array_values(array_unique(array_filter(array_map('intval',$employee_ids))));
-        $out=array_fill_keys($ids,[]);
-        foreach(array_chunk($ids,500) as $chunk){
-            $ph=implode(',',array_fill(0,count($chunk),'%d'));
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,team_id FROM {$t['members']} WHERE employee_id IN ($ph) AND active=1 ORDER BY team_id ASC",$chunk)) as $r)$out[(int)$r->employee_id][]=(int)$r->team_id;
-        }
-        return $out;
+        return $this->services()->org()->teamIdsByEmployee($employee_ids);
     }
 
     private function sync_employee_teams($employee_id,$team_ids){
@@ -120,11 +105,6 @@ trait EWS_Teams_Trait {
             if($ok===false) return new WP_Error('team_membership_save','Could not save team membership: '.$wpdb->last_error);
         }
         return true;
-    }
-
-    private function team_is_member($team_id,$employee_id){
-        global $wpdb; $t=$this->team_tables();
-        return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['members']} WHERE team_id=%d AND employee_id=%d AND active=1 LIMIT 1",absint($team_id),absint($employee_id)));
     }
 
     /** wp-admin → Teams: create / edit a team (department, manager, members); archive teams. */

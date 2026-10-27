@@ -14,6 +14,17 @@ use WorkforceOne\Approvals\SubstituteService;
 use WorkforceOne\Approvals\Data\WordPressWorkflowStore;
 use WorkforceOne\Approvals\Data\WorkflowStore;
 use WorkforceOne\Approvals\WorkflowService;
+use WorkforceOne\People\Data\DepartmentStore;
+use WorkforceOne\People\Data\PeopleStore;
+use WorkforceOne\People\Data\ReportingStore;
+use WorkforceOne\People\Data\TeamStore;
+use WorkforceOne\People\Data\WordPressDepartmentStore;
+use WorkforceOne\People\Data\WordPressPeopleStore;
+use WorkforceOne\People\Data\WordPressReportingStore;
+use WorkforceOne\People\Data\WordPressTeamStore;
+use WorkforceOne\People\OrgDirectory;
+use WorkforceOne\People\PeopleDirectory;
+use WorkforceOne\People\PeoplePorts;
 use WorkforceOne\Schedule\Data\ScheduleDayStore;
 use WorkforceOne\Schedule\Data\WordPressScheduleDayStore;
 use WorkforceOne\Schedule\ScheduleDayService;
@@ -35,8 +46,8 @@ final class Services
     private $audit;
     /** @var Clock */
     private $clock;
-    /** @var People */
-    private $people;
+    /** @var PeoplePorts */
+    private $peoplePorts;
     /** @var OnceClaim */
     private $claim;
     /** @var ScheduleNotifier */
@@ -55,7 +66,7 @@ final class Services
     private $made = [];
 
     /** @param array<string,string> $tables */
-    public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, People $people, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
+    public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
         Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts)
     {
         $this->substitutePorts = $substitutePorts;
@@ -63,12 +74,50 @@ final class Services
         $this->tables = $tables;
         $this->audit = $audit;
         $this->clock = $clock;
-        $this->people = $people;
+        $this->peoplePorts = $peoplePorts;
         $this->claim = $claim;
         $this->scheduleNotifier = $scheduleNotifier;
         $this->tx = $tx;
         $this->permissions = $permissions;
         $this->approvalPorts = $approvalPorts;
+    }
+
+    public function peopleStore(): PeopleStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressPeopleStore($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    public function reportingStore(): ReportingStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressReportingStore($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    public function departmentStore(): DepartmentStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressDepartmentStore($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    public function teamStore(): TeamStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressTeamStore($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Who the employees are (3.31.133): the people module's reads, also the Platform\People port the Schedule services use. */
+    public function people(): PeopleDirectory
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new PeopleDirectory($this->peopleStore(), $this->peoplePorts->memo);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Who reports to whom, and who manages what (3.31.133). */
+    public function org(): OrgDirectory
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new OrgDirectory($this->peopleStore(), $this->reportingStore(), $this->departmentStore(), $this->teamStore());
+        return $this->made[__FUNCTION__];
     }
 
     public function scheduleDayStore(): ScheduleDayStore
@@ -79,7 +128,7 @@ final class Services
 
     public function scheduleDays(): ScheduleDayService
     {
-        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ScheduleDayService($this->scheduleDayStore(), $this->people, $this->scheduleNotifier, $this->audit, $this->clock);
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ScheduleDayService($this->scheduleDayStore(), $this->people(), $this->scheduleNotifier, $this->audit, $this->clock);
         return $this->made[__FUNCTION__];
     }
 

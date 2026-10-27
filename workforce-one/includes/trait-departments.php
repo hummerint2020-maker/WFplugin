@@ -16,8 +16,8 @@ trait EWS_Departments_Trait {
 
     /** The active manager of an employee's department (null: no department, or no manager; 3.31.100, the Department manager approver). */
     private function people_department_manager($employee_id){
-        global $wpdb;$this->ensure_departments_schema();$t=$this->department_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT m.* FROM {$this->employees} e JOIN {$t['departments']} d ON d.id=e.department_id AND d.active=1 JOIN {$this->employees} m ON m.id=d.manager_employee_id AND m.active=1 WHERE e.id=%d LIMIT 1",(int)$employee_id));
+        $this->ensure_departments_schema();
+        return $this->services()->org()->departmentManager((int)$employee_id);
     }
 
     private function ensure_departments_schema(){
@@ -83,15 +83,7 @@ trait EWS_Departments_Trait {
         return array_map('intval',wp_list_pluck($this->department_scoped_employees(),'id'));
     }
 
-    private function department_for_employee($employee_id){
-        global $wpdb; $t=$this->department_tables();
-        return $wpdb->get_row($wpdb->prepare("SELECT d.* FROM {$t['departments']} d JOIN {$this->employees} e ON e.department_id=d.id WHERE e.id=%d AND d.active=1 LIMIT 1",absint($employee_id)));
-    }
 
-    private function department_same($employee_a,$employee_b){
-        global $wpdb;
-        return (bool)$wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$this->employees} a JOIN {$this->employees} b ON b.id=%d WHERE a.id=%d AND a.active=1 AND b.active=1 AND a.department_id IS NOT NULL AND a.department_id=b.department_id LIMIT 1",absint($employee_b),absint($employee_a)));
-    }
 
     private function department_redirect($args){
         wp_safe_redirect(add_query_arg($args,admin_url('admin.php?page=ews31-departments')));exit;
