@@ -163,6 +163,181 @@
         "ews_feature_my_approvals": 1,
         "ews_feature_substitutes": 1
       }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&paged=2"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&s=omar"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employee-profile&employee_id={omar}"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-departments"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-departments&department_id={ops}"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-teams"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-teams&team_id={alpha}"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-org-chart",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people&people_search=omar",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people&people_team={alpha}",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=employee&employee_id={omar}",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=employees"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=team",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      }
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=team",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      }
+    },
+    {
+      "user": "acomar",
+      "url": "/app/?ews_view=team&person={lina}",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      }
+    },
+    {
+      "user": "acomar",
+      "url": "/app/?ews_view=profile",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      }
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=attendance&week={week}"
     }
   ],
   "normalise": [

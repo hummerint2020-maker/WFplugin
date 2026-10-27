@@ -101,6 +101,9 @@ def fill(url, ctx):
     url = url.replace('{week}', ctx['week'])
     for i, d in enumerate(ctx['dates']):
         url = url.replace('{d%d}' % i, d)
+    for k, v in ctx.items():   # the ids of the seeds ({omar}, {ops}, ...)
+        if isinstance(v, (int, str)):
+            url = url.replace('{%s}' % k, str(v))
     return url
 
 
@@ -118,7 +121,8 @@ def render(side, sessions, ctx, only=None):
             continue
         opts = p.get('options') or {}
         if opts:
-            php(''.join("update_option(%s,%s,false);" % (json.dumps(k), json.dumps(v)) for k, v in opts.items()))
+            # An array option is written as decoded JSON (a PHP array), a scalar as itself.
+            php(''.join("update_option(%s,json_decode(%s,true),false);" % (json.dumps(k), json.dumps(json.dumps(v))) for k, v in opts.items()))
         status, html, _ = sessions[p['user']].req(fill(p['url'], ctx))
         m = re.findall(r'<!--EWSQ=(\d+)-->', html)
         out[i] = (normalise(html), int(m[-1]) if m else -1, status)
@@ -164,6 +168,8 @@ try:
         foreach([%d,%d] as $e) for($i=1;$i<=14;$i++){ $d=gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +'.$i.' days')); $wpdb->replace($p.'ews_schedule',['employee_id'=>$e,'work_date'=>$d,'status'=>'Office']); }""" % (ctx['omar'], ctx['omar'], ctx['mona']))
     # The approvals' people, workflows and open requests (plain SQL; the pages of the approvals read them).
     wp('eval-file', os.path.join(HERE, 'seed_approvals.php'))
+    # The people module's reporting lines, managers, teams and org-move history (ids merged into ctx for the page urls).
+    ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_people.php'), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1]))
     # The query count of a page, printed at its end (web requests only).
     os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
@@ -178,7 +184,7 @@ try:
         # One login for all sides: the same session, so the same nonces on every page.
         if sessions is None:
             sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass'),
-                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass')}
+                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass')}
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
