@@ -93,43 +93,19 @@ trait EWS_Week_Lock_Trait {
 
     /* ------------------------------------------------------------------ the cutoff notification */
 
-    /** Every five minutes (WP-Cron): once per cutoff, tell everyone with a schedule that week. */
+    /** Every five minutes (WP-Cron): once per cutoff, tell everyone with a schedule that week (WeekLockService, 3.31.127). */
     public function week_lock_tick(){
         if(!$this->week_lock_enabled())return;
-        $cfg=$this->week_lock_settings();
-        if(!$cfg['notify'])return;
-        $now=$this->week_lock_now();
-        $last=WeekLock::latest($now,$this->working_days(),(int)$cfg['cutoff_day'],(string)$cfg['cutoff_time']);
-        // Only a cutoff of the last day: switching it on, or a site that was down for a week, does not send an old one.
-        if($last['week']===''||strtotime($now)-strtotime($last['at'])>DAY_IN_SECONDS)return;
-        if((string)get_option('ews_week_lock_notified','')===$last['week'])return;
-        // Claimed with one conditional UPDATE: of two overlapping cron runs only one tells everyone.
-        global $wpdb;
-        add_option('ews_week_lock_notified','','','no');
-        $claimed=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value=%s WHERE option_name='ews_week_lock_notified' AND option_value<>%s",$last['week'],$last['week']));
-        wp_cache_delete('ews_week_lock_notified','options');
-        if($claimed!==1)return;
-        $this->week_lock_notify($last['week']);
+        $week=$this->services()->weekLock()->dueWeek($this->week_lock_settings(),$this->week_lock_now(),$this->working_days());
+        if($week!=='')$this->week_lock_notify($week);
     }
 
     /** "Next week's schedule is final", with each person's days. @return int people told */
     private function week_lock_notify($week_start){
-        global $wpdb;
         [$dates]=$this->week_dates_configured($week_start);
         if(!$dates)return 0;
-        $ph=implode(',',array_fill(0,count($dates),'%s'));
         $users=[];
         foreach($this->people_active_users() as $e)$users[(int)$e->id]=(int)$e->wp_user_id;
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE work_date IN ($ph) ORDER BY work_date ASC",...$dates));
-        $by=[];
-        foreach($rows as $r)if(!empty($users[(int)$r->employee_id]))$by[$users[(int)$r->employee_id]][(string)$r->work_date]=(string)$r->status;
-        $url=add_query_arg(['ews_view'=>'schedule','week'=>$dates[0]],$this->app_home_url());
-        foreach($by as $uid=>$days){
-            $parts=[];
-            foreach($days as $d=>$st)$parts[]=date_i18n('D',strtotime($d)).' '.$st;
-            $this->notify($uid,'schedule',__('Next week\'s schedule is final','workforce-one'),implode(' · ',$parts),['url'=>$url,'entity'=>'week_lock']);
-        }
-        $this->audit('week_lock_notified','schedule',0,$dates[0].': '.count($by).' people');
-        return count($by);
+        return $this->services()->weekLock()->notifyWeek($dates,$users,add_query_arg(['ews_view'=>'schedule','week'=>$dates[0]],$this->app_home_url()));
     }
 }

@@ -19,8 +19,7 @@ trait EWS_Swap_Trait {
     /* ------------------------------------------------------------------ helpers */
 
     private function schedule_for_employee_date($eid,$date){
-            global $wpdb;
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",$eid,$date));
+            return $this->services()->scheduleDays()->day((int)$eid,(string)$date);
         }
 
     private function swap_employee_user_id($employee_id){

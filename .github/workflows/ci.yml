@@ -48,6 +48,8 @@ jobs:
         run: python3 tests/check_modules.py
       - name: Extracted Notifications inbox boundary
         run: python3 tests/check_notification_inbox_boundary.py
+      - name: Layered modules stay layered (docs/tasks/layered-modules.md)
+        run: python3 tests/check_layers.py
       - name: API contract (OpenAPI matches the routes, error codes and examples)
         run: |
           python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
@@ -107,6 +109,8 @@ jobs:
         run: wp eval-file tests/e2e_setup.php --path="$WP"
       - name: Notifications inbox storage contract
         run: wp eval-file tests/e2e_notification_inbox.php --path="$WP"
+      - name: Schedule days storage contract
+        run: wp eval-file tests/e2e_schedule_store.php --path="$WP"
       - name: Start PHP server
         run: |
           php -S 127.0.0.1:8080 -t "$WP" tests/router.php > "$S/server.log" 2>&1 &
@@ -337,3 +341,68 @@ jobs:
         run: |
           grep -i "workforce-one\|PHP Fatal" "$WP/wp-content/debug.log" | tail -100 || echo "no plugin entries"
           tail -50 "$S/server.log" || true
+
+  golden:
+    name: Golden (old and new code, same pages and writes)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      WP: /tmp/wordpress
+      S: /tmp/wf-e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, gd, openssl
+          coverage: none
+          tools: wp-cli
+      # setup-php's wp-cli tool is not always installed; fall back to the official phar.
+      - name: Install WP-CLI
+        run: |
+          if ! command -v wp >/dev/null 2>&1; then
+            curl -fsSL --retry 3 -o /tmp/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+            sudo install -m 0755 /tmp/wp-cli.phar /usr/local/bin/wp
+          fi
+          wp --version
+      - name: Install WordPress
+        run: |
+          mkdir -p "$S"
+          wp core download --path="$WP" --quiet
+          wp config create --path="$WP" --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1 --skip-check
+          wp config set --path="$WP" WP_DEBUG true --raw
+          wp config set --path="$WP" WP_DEBUG_LOG true --raw
+          wp config set --path="$WP" WP_DEBUG_DISPLAY false --raw
+          wp config set --path="$WP" DISABLE_WP_CRON true --raw
+          # Native API over HTTP for the test server only; a request sending X-E2E-Require-Https gets the production HTTPS rule.
+          wp config set --path="$WP" WORKFORCE_ONE_API_ALLOW_HTTP "empty(\$_SERVER['HTTP_X_E2E_REQUIRE_HTTPS'])" --raw
+          wp core install --path="$WP" --url=http://127.0.0.1:8080 --title=CI --admin_user=admin --admin_password=admin --admin_email=ci@example.com --skip-email
+          wp rewrite structure '/%postname%/' --path="$WP"
+          ln -s "$GITHUB_WORKSPACE/workforce-one" "$WP/wp-content/plugins/workforce-one"
+      - name: Activate plugin (schema install on MySQL)
+        run: |
+          wp plugin activate workforce-one --path="$WP"
+          test "$(wp option get ews_schema_version --path="$WP")" = "$(grep -oP "ews_schema_target\(\)\{ return '\K[0-9.]+" workforce-one/includes/trait-schema.php)"
+          wp eval 'global $wpdb; $n=count($wpdb->get_col("SHOW TABLES LIKE \"{$wpdb->prefix}ews\\_%\"")); echo "ews tables: $n\n"; if($n<37) exit(1);' --path="$WP"
+      - name: Seed test data
+        run: wp eval-file tests/e2e_setup.php --path="$WP"
+      # The old and the new code on the same site and data: the same pages, no more queries, the same writes
+      # (tests/golden/run.py, docs/tasks/layered-modules.md). Its own job: its seed never reaches the other suites.
+      - name: Golden (the same pages and writes as the base)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || [ "$BASE_SHA" = "$GITHUB_SHA" ]; then
+            echo "No base commit to compare with: skipped"; exit 0
+          fi
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git worktree add /tmp/golden-base "$BASE_SHA"
+          WP_CLI="wp --path=$WP" python3 tests/golden/run.py "$S" --base /tmp/golden-base/workforce-one

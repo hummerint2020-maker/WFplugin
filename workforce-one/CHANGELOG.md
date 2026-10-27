@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.127
+### Layered modules, step 1 (design `docs/tasks/layered-modules.md`)
+Nothing changes on any page or in any write: this release moves code and adds the checks that keep it moved. No setting,
+no switch, no database change.
+- **Schedule days are the first layered slice:** the schedule reads and writes (the Attendance grid's guarded save, the
+  free save used by leave, swaps, corrections and imports, the day of an employee, the company holidays) and the Week lock
+  notification now live in `src/Schedule/` as Services (`ScheduleDayService`, `WeekLockService`) over a Store
+  (`Data/WordPressScheduleDayStore`), the only code that runs their SQL. The old functions keep their names and call them.
+- **A small container** (`src/Platform/Services.php`, one per site) builds the services; they reach the rest of the plugin
+  only through ports (Audit Log, clock, People, notifications), never through the plugin object.
+- **Checks in CI:**
+  - `tests/check_layers.py`: a layered table is read only by its Store (the other files may only use it less), Services
+    hold no SQL, no request data and no output, Stores touch only their own tables, moved functions stay thin.
+  - The golden harness (`tests/golden/run.py`) runs the old and the new code on the same site and data on every PR:
+    22 pages must be the same byte for byte and run no more queries, and a set of writes (grid saves, free saves, the week
+    lock notice) must leave the same rows.
+  - `tests/e2e_schedule_store.php` (the Store on the real database) and unit tests on an in-memory Store.
+
 ## 3.31.126
 ### Speed, and what System Health shows (design `docs/tasks/speed-health.md`)
 No switch, no setting, no database change. The pages show exactly what they showed before (checked byte for byte against

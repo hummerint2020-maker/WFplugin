@@ -1,0 +1,127 @@
+{
+  "_about": "Pages the golden harness renders on the old and the new code (tests/golden/run.py). {week} and {d0}..{d4} come from the seed (last week). 'options' are set before the page on both sides and removed after. Add the pages of each slice a release moves.",
+  "pages": [
+    {
+      "user": "admin",
+      "url": "/app/"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=attendance&week={week}"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=attendance&week={week}",
+      "options": {
+        "ews_feature_week_lock": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=attendance&week={week}",
+      "options": {
+        "ews_feature_attendance_cards": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=attendance&week={week}&q=big+person+0"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=attendance-insights&week={week}"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=schedule&week={week}"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=reports&report_type=attendance&start={d0}&end={d4}"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-features"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-features",
+      "options": {
+        "ews_feature_week_lock": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={d0}&end={d4}"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-attendance-insights&week={week}"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-requests"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-schedule-config"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=schedule"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=schedule&week={week}",
+      "options": {
+        "ews_feature_week_lock": 1
+      }
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=time"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=profile"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=vacation"
+    },
+    {
+      "user": "emp1",
+      "url": "/app/?ews_view=requests"
+    }
+  ],
+  "normalise": [
+    [
+      "ver=3\\.\\d+\\.\\d+(?:\\.\\d+)?",
+      "ver=V"
+    ],
+    [
+      "\\b3\\.31\\.\\d+\\b",
+      "VERSION"
+    ],
+    [
+      "<!--EWSQ=\\d+-->",
+      ""
+    ],
+    [
+      "(var userSettings = \\{[^}]*\"time\":\")\\d+",
+      "\\1T"
+    ],
+    [
+      "\\b\\d+ (?:sec|second|min|minute|hour|day|week|month|year)s? ago\\b",
+      "N ago"
+    ]
+  ]
+}

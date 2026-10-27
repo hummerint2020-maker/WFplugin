@@ -54,9 +54,11 @@ trait EWS_Work_Time_Trait {
             return $cache[$key]=\WorkforceOne\Attendance\ShiftDay::resolve($today,current_time('H:i'),(string)$h['start'],(string)$h['end'],$overnight,$open);
         }
 
+    /** The schedule table's name as the plugin object has it (for the layered Store, 3.31.127). */
+    private function schedule_table_name(){ return (string)$this->schedule; }
+
     private function today_schedule_for_employee($eid){
-            global $wpdb;
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",$eid,$this->attendance_day($eid)));
+            return $this->services()->scheduleDays()->day((int)$eid,(string)$this->attendance_day($eid));
         }
 
     private function today_events($eid){
@@ -294,12 +296,7 @@ trait EWS_Work_Time_Trait {
         }
 
     private function company_calendar_events($start,$end){
-            global $wpdb;
-            $table=$wpdb->prefix.'ews_company_calendar';
-            return $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $table WHERE event_date BETWEEN %s AND %s AND event_type='general_leave' AND active=1 ORDER BY event_date ASC,id ASC",
-                $start,$end
-            ));
+            return $this->services()->scheduleDays()->companyHolidays((string)$start,(string)$end);
         }
 
     private function company_leave_dates($start,$end){

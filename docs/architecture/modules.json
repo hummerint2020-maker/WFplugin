@@ -11,12 +11,15 @@
         "settings-overview",
         "settings-pages",
         "private-files",
-        "privacy"
+        "privacy",
+        "services"
       ],
       "tables": [
         "audit_log"
       ],
-      "api": []
+      "api": [
+        "services"
+      ]
     },
     "shell": {
       "label": "App and wp-admin shell: layout, menus, home pages, appearance",
@@ -93,7 +96,8 @@
         "people_shift_id",
         "people_set_shift_id",
         "people_all_shift_ids",
-        "people_shift_ids"
+        "people_shift_ids",
+        "people_active_brief"
       ]
     },
     "schedule": {
@@ -154,7 +158,38 @@
         "attendance_scope",
         "attendance_walk",
         "attendance_cards_enabled",
-        "shift_prime_people"
+        "shift_prime_people",
+        "schedule_table_name"
+      ],
+      "layered": [
+        {
+          "slice": "days",
+          "tables": [
+            "schedule",
+            "company_calendar"
+          ],
+          "store": "workforce-one/src/Schedule/Data/WordPressScheduleDayStore.php",
+          "services": [
+            "workforce-one/src/Schedule/ScheduleDayService.php",
+            "workforce-one/src/Schedule/WeekLockService.php"
+          ],
+          "moved": [
+            "save_att_if_unchanged",
+            "save_att",
+            "today_schedule_for_employee",
+            "schedule_for_employee_date",
+            "company_calendar_events",
+            "week_lock_tick",
+            "week_lock_notify"
+          ],
+          "traits_clean": [
+            "week-lock"
+          ]
+        }
+      ],
+      "exports": [
+        "WorkforceOne\\Schedule\\ScheduleDayService",
+        "WorkforceOne\\Schedule\\WeekLockService"
       ]
     },
     "locations": {
