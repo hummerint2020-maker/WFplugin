@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.128
+### The approvals engine moves to Controllers, Services, Stores (design `docs/tasks/approvals-engine-move.md`)
+Nothing changes on any page, in any write or in any message: this release moves code. No setting, no switch, no database change.
+The quirks of the engine that the design lists (its section 8) are left exactly as they were, to be decided one by one.
+- **Services** (`src/Approvals/`): `ApprovalEngine` (start a request, decide a level, who may decide, withdraw, close, reassign
+  on an organisation move), `ApprovalReads` (find a request, its open level, the path of many requests, the My approvals
+  inbox), `WorkflowService` (the workflows and saving one in a single transaction), `DeadlineService` (reminders and moving
+  a request up) and `SubstituteService` (a manager away with someone deciding for them).
+- **Stores** (`src/Approvals/Data/`): the only code that runs SQL on the approval tables (`ApprovalRequestStore`,
+  `WorkflowStore`, `SubstituteStore`, each with its WordPress implementation). The SQL is the SQL the traits ran, in the
+  same order, so the locks are taken in the same order (a decision locks the level, then the request).
+- **Ports** (`src/Platform/Transaction`, `Permissions`; `src/Approvals/ApprovalPolicy`, `ApprovalDirectory`,
+  `ApprovalNotifier`, `AfterRequest`, `DeadlineNotifier`, `SubstitutePolicy`, `LeaveFacts`, `SubstituteNotifier`): the
+  Services reach the settings, the people, the messages and the end of the page only through them.
+- **The functions every module calls keep their names and signatures** (`approval_start`, `approval_act`, `approval_can_act`,
+  `approval_close`, `approval_paths`, …): leave, overtime, swaps, corrections, advances and face reset change nothing.
+- **Checks:** the golden harness now also runs the approvals engine in process on the old and the new code and compares the
+  exact SQL of every call (91 calls and the rows they leave: every request type, levels, the self rule, a substitute,
+  withdraw, deadlines, an organisation move) and 9 more pages (My approvals, My requests, Approval Workflows, Substitutes, the Requests Hub);
+  `tests/check_layers.py` takes several Stores and counts the table-name helpers; unit tests for each Service on in-memory
+  Stores, and `tests/e2e_approval_store.php` for the Stores on the real database.
+
 ## 3.31.127
 ### Layered modules, step 1 (design `docs/tasks/layered-modules.md`)
 Nothing changes on any page or in any write: this release moves code and adds the checks that keep it moved. No setting,

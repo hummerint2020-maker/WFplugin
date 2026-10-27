@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_modules import PROPS, strip_comments  # noqa: E402
 
 LIT = re.compile(r"""(?:prefix\s*\.\s*['"]|prefix\}|\{\$p\}|\$p\s*\.\s*['"])ews_([a-z0-9_]+)""")
+HELPERS = {'approval_tables': 'approval_steps', 'substitutes_table': 'approval_substitutes'}   # $this->helper() hands out table names: one reference each
+HELPER = re.compile(r'\$this->(' + '|'.join(HELPERS) + r')\s*\(')
 PROP = re.compile(r'\$this->(' + '|'.join(PROPS) + r')\b(?!\s*\()')
 L2_BAD = [r'\bglobal\s+\$', r'\$wpdb\b', r'\$_(?:GET|POST|REQUEST|COOKIE|SERVER|FILES)\b', r'\becho\b', r'\bprint\b', r'\bexit\b', r'\bdie\b',
           r'\bwp_die\s*\(', r'\bwp_(?:safe_)?redirect\s*\(', r'\bheader\s*\(', r'\bsetcookie\s*\(', r'\bcheck_admin_referer\s*\(', r'\bwp_verify_nonce\s*\(',
@@ -32,7 +34,7 @@ FUNC = re.compile(r'function\s+&?([A-Za-z0-9_]+)\s*\(')
 
 
 def tables_in(src):
-    return [PROPS[p] for p in PROP.findall(src)] + LIT.findall(src)
+    return [PROPS[p] for p in PROP.findall(src)] + LIT.findall(src) + [HELPERS[h] for h in HELPER.findall(src)]
 
 
 GUARD = re.compile(r"if\s*\(\s*!\s*defined\(\s*'ABSPATH'\s*\)\s*\)\s*exit\s*;")
@@ -78,6 +80,8 @@ def self_test():
     ok &= bool(l4("<?php\nuse WorkforceOne\\Payroll\\Run;\n", 'Schedule', []))
     ok &= not l4("<?php\nuse WorkforceOne\\Platform\\Clock;\n", 'Schedule', [])
     ok &= bool(tables_in("<?php $wpdb->get_row(\"SELECT * FROM {$this->schedule}\");"))
+    ok &= tables_in("<?php $t=$this->approval_tables(); $s=$this->substitutes_table();") == ['approval_steps', 'approval_substitutes']
+    ok &= not tables_in("<?php private function approval_tables(){ return []; }")
     ok &= (body("<?php function a(){ if(1){ x(); } } function b(){}", 'a') or '').count('{') == 2
     return ok
 
@@ -99,18 +103,20 @@ def main():
             ns = sl.get('namespace', ns)
             for t in sl['tables']:
                 layered_tables[t] = name + '.' + sl['slice']
-            own_files.add(sl['store'])
+            stores = sl['store'] if isinstance(sl['store'], list) else [sl['store']]
+            own_files.update(stores)
             for f in sl['services']:
                 src = read(f)
                 for p in l2(src):
                     fails.append('L2 %s: %s' % (f, p))
                 for u in l4(src, ns, exports):
                     fails.append('L4 %s: %s (not Platform, Support, its module or an export)' % (f, u))
-            src = read(sl['store'])
-            for b in l3(src, ns, sl['tables']):
-                fails.append('L3 %s: %s (a Store touches only its slice)' % (sl['store'], b))
-            for u in l4(src, ns, exports):
-                fails.append('L4 %s: %s' % (sl['store'], u))
+            for store in stores:
+                src = read(store)
+                for b in l3(src, ns, sl['tables']):
+                    fails.append('L3 %s: %s (a Store touches only its slice)' % (store, b))
+                for u in l4(src, ns, exports):
+                    fails.append('L4 %s: %s' % (store, u))
             for trait in sl.get('traits_clean', []):
                 rel = 'workforce-one/includes/trait-%s.php' % trait
                 if re.search(r'global\s+\$wpdb', read(rel)):

@@ -100,6 +100,69 @@
     {
       "user": "emp1",
       "url": "/app/?ews_view=requests"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-approvals"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-requests",
+      "options": {
+        "ews_feature_substitutes": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-substitutes",
+      "options": {
+        "ews_feature_substitutes": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=approvals",
+      "options": {
+        "ews_feature_my_approvals": 1,
+        "ews_feature_substitutes": 1
+      }
+    },
+    {
+      "user": "gdmgr",
+      "url": "/app/?ews_view=approvals",
+      "options": {
+        "ews_feature_my_approvals": 1,
+        "ews_feature_substitutes": 1
+      }
+    },
+    {
+      "user": "gdmgr",
+      "url": "/app/?ews_view=approvals&apv_kind=late",
+      "options": {
+        "ews_feature_my_approvals": 1
+      }
+    },
+    {
+      "user": "gdmgr",
+      "url": "/app/",
+      "options": {
+        "ews_feature_my_approvals": 1
+      }
+    },
+    {
+      "user": "gdreq",
+      "url": "/app/?ews_view=requests",
+      "options": {
+        "ews_feature_my_approvals": 1
+      }
+    },
+    {
+      "user": "gdreq",
+      "url": "/app/?ews_view=requests&new=1",
+      "options": {
+        "ews_feature_my_approvals": 1,
+        "ews_feature_substitutes": 1
+      }
     }
   ],
   "normalise": [
@@ -122,6 +185,10 @@
     [
       "\\b\\d+ (?:sec|second|min|minute|hour|day|week|month|year)s? ago\\b",
       "N ago"
+    ],
+    [
+      "((?:min|value)=\")\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d\"",
+      "\\1NOW\""
     ]
   ]
 }

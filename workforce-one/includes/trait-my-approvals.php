@@ -41,8 +41,7 @@ trait EWS_My_Approvals_Trait {
         if(in_array($uid,[$s['hr_user'],$s['finance_user']],true))return true;
         $emp=$this->current_employee();
         if($emp && $this->people_has_reports((int)$emp->id))return true;
-        global $wpdb;$t=$this->approval_tables();
-        return (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t['instances']} WHERE approver_wp_user_id=%d OR acted_by_wp_user_id=%d LIMIT 1",$uid,$uid));
+        return $this->services()->approvalReads()->hasAnyStep($uid);
     }
 
     private function my_requests_allowed(){
@@ -71,15 +70,12 @@ trait EWS_My_Approvals_Trait {
         $this->my_approvals_memo=[];
         if(!$this->my_approvals_enabled() || !is_user_logged_in())return [];
         $this->ensure_approval_schema();
-        global $wpdb;$t=$this->approval_tables();$uid=(int)get_current_user_id();
+        $uid=(int)get_current_user_id();
         $admin=user_can($uid,'manage_options');
         // A manager away still sees what waits for their substitute, when they may decide it (3.31.107).
         $me=$this->current_employee();
         $away=$me && $this->substitutes_enabled() && $this->substitute_settings()['manager_decides']?(int)$me->id:0;
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT i.id step_id,i.approval_request_id,i.pending_since,i.approver_wp_user_id,i.for_employee_id,r.entity_type,r.entity_id,r.requester_employee_id,w.workflow_key FROM {$t['instances']} i
-            JOIN {$t['requests']} r ON r.id=i.approval_request_id JOIN {$t['workflows']} w ON w.id=r.workflow_id
-            WHERE i.status='PENDING' AND r.status LIKE 'WAITING%%' AND (i.approver_wp_user_id=%d OR (%d=1 AND i.rerouted=1 AND i.approver_wp_user_id IS NULL) OR (%d>0 AND i.for_employee_id=%d))
-            ORDER BY i.pending_since ASC,i.id ASC LIMIT 200",$uid,$admin?1:0,$away,$away));
+        $rows=$this->services()->approvalReads()->inboxRows($uid,(bool)$admin,$away);
         $out=[];
         $cards=[];
         foreach($rows as $i=>$row){
@@ -160,8 +156,7 @@ trait EWS_My_Approvals_Trait {
         $kinds=$this->my_approvals_kinds();
         $present=[];foreach($items as $it)$present[$it['tone']]=true;
         $shown=array_values(array_filter($items,function($it)use($kind){return $kind===''||($kind==='late'?$it['path']['overdue']:$it['tone']===$kind);}));
-        global $wpdb;$t=$this->approval_tables();
-        $week=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$t['instances']} WHERE acted_by_wp_user_id=%d AND acted_at>=%s",(int)get_current_user_id(),gmdate('Y-m-d H:i:s',current_time('timestamp')-7*DAY_IN_SECONDS)));
+        $week=$this->services()->approvalReads()->decidedSince((int)get_current_user_id(),gmdate('Y-m-d H:i:s',current_time('timestamp')-7*DAY_IN_SECONDS));
         wp_enqueue_script('workforce-one-approvals');
         $subs=$this->substitute_app_data($this->current_employee());
         if(!empty($subs['can_set'])){wp_enqueue_style('workforce-one-requests');wp_enqueue_script('workforce-one-sheet');}

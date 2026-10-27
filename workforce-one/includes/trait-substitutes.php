@@ -72,41 +72,6 @@ trait EWS_Substitutes_Trait {
         return $this->substitutes_enabled() && $emp && $this->people_has_reports((int)$emp->id);
     }
 
-    /** The substitute deciding for this manager now, or null (scheduled ones whose time came count before the sync marks them). */
-    private function substitute_active_for($manager_employee_id,$now=null){
-        if(!$this->substitutes_enabled() || !(int)$manager_employee_id)return null;
-        global $wpdb;$t=$this->substitutes_table();$now=$now?:current_time('mysql');
-        $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t} WHERE manager_employee_id=%d AND status IN ('scheduled','active') AND starts_at<=%s AND ends_at>%s ORDER BY id DESC LIMIT 1",(int)$manager_employee_id,$now,$now));
-        return $row?:null;
-    }
-
-    /**
-     * For a level about to wait for $approver_employee_id: who decides it instead. Not the substitute's
-     * own request (it stays with the manager). @return array{employee:object,row:object}|null
-     */
-    private function substitute_route($approver_employee_id,$requester_employee_id){
-        $row=$this->substitute_active_for((int)$approver_employee_id);
-        if(!$row || (int)$row->substitute_employee_id===(int)$requester_employee_id)return null;
-        $sub=$this->people_employee((int)$row->substitute_employee_id,true);
-        if(!$sub || !(int)$sub->wp_user_id)return null;
-        return ['employee'=>$sub,'row'=>$row];
-    }
-
-    /** Whether $uid is the manager a step waits "for" and may still decide it (setting). */
-    private function substitute_manager_may_decide($step,$uid){
-        if(!$uid || empty($step->for_employee_id) || !$this->substitute_settings()['manager_decides'])return false;
-        return (int)$this->people_user_id((int)$step->for_employee_id)===(int)$uid;
-    }
-
-    /** After a decision: count it for the substitute who took it, and bring substitutes up to date at the end of the request. */
-    private function substitute_after_decision($step,$uid){
-        if(!empty($step->substitute_id) && (int)$step->approver_wp_user_id===(int)$uid){
-            global $wpdb;$t=$this->substitutes_table();
-            $wpdb->query($wpdb->prepare("UPDATE {$t} SET decided=decided+1 WHERE id=%d",(int)$step->substitute_id));
-        }
-        $this->substitutes_sync_at_shutdown();
-    }
-
     private function substitutes_sync_at_shutdown(){
         if(!$this->substitutes_enabled() || $this->substitutes_shutdown_sync)return;
         $this->substitutes_shutdown_sync=true;
@@ -132,72 +97,27 @@ trait EWS_Substitutes_Trait {
      * @return array{started:int,ended:int,cancelled:int,moved:int}
      */
     public function substitutes_sync($now=null){
-        $done=['started'=>0,'ended'=>0,'cancelled'=>0,'moved'=>0];
-        if(!$this->substitutes_enabled())return $done;
-        global $wpdb;$t=$this->substitutes_table();
-        $now=is_string($now)&&$now!==''?$now:current_time('mysql');
-        foreach((array)$wpdb->get_results("SELECT * FROM {$t} WHERE leave_request_id IS NOT NULL AND status IN ('pending','scheduled','active')") as $row){
-            $do=Substitutes::forLeave((string)$row->status,(string)$this->leave_status_of((int)$row->leave_request_id));
-            if($do==='schedule' && $wpdb->update($t,['status'=>'scheduled'],['id'=>(int)$row->id,'status'=>'pending'])===1){
-                $row->status='scheduled';$this->substitute_tell_picked($row);
-            }elseif($do==='cancel' && $this->substitute_finish($row,'cancelled',$now))$done['cancelled']++;
-        }
-        foreach((array)$wpdb->get_results("SELECT * FROM {$t} WHERE status IN ('scheduled','active') ORDER BY starts_at ASC") as $row){
-            $do=Substitutes::transition((string)$row->status,(string)$row->starts_at,(string)$row->ends_at,$now);
-            if($do==='start'){if($this->substitute_begin($row,$now))$done['started']++;}
-            elseif($do==='end'){if($this->substitute_finish($row,'ended',$now))$done['ended']++;}
-            elseif($do==='expire'){$wpdb->update($t,['status'=>'ended','ended_at'=>$now],['id'=>(int)$row->id,'status'=>'scheduled']);}
-        }
-        foreach((array)$wpdb->get_results("SELECT * FROM {$t} WHERE status='active'") as $row)$done['moved']+=$this->substitute_take_waiting($row);
-        return $done;
-    }
-
-    /** The levels waiting for the manager (not yet "for" anyone) go to the substitute. @return int how many */
-    private function substitute_take_waiting($row){
-        $sub=$this->people_employee((int)$row->substitute_employee_id,true);
-        if(!$sub || !(int)$sub->wp_user_id)return 0;
-        global $wpdb;$t=$this->approval_tables();
-        $n=$wpdb->query($wpdb->prepare("UPDATE {$t['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,for_employee_id=%d,substitute_id=%d,reminded_at=NULL
-            WHERE status='PENDING' AND approver_employee_id=%d AND for_employee_id IS NULL
-            AND approval_request_id IN (SELECT id FROM {$t['requests']} WHERE status LIKE 'WAITING%%' AND requester_employee_id<>%d)",
-            (int)$sub->id,(int)$sub->wp_user_id,(int)$row->manager_employee_id,(int)$row->id,(int)$row->manager_employee_id,(int)$sub->id));
-        return (int)$n;
-    }
-
-    private function substitute_begin($row,$now){
-        global $wpdb;$t=$this->substitutes_table();
-        if($wpdb->update($t,['status'=>'active','started_at'=>$now],['id'=>(int)$row->id,'status'=>'scheduled'])!==1)return false;
-        $moved=$this->substitute_take_waiting($row);
-        $manager=$this->people_name((int)$row->manager_employee_id);
-        $this->audit('substitute_started','approval_substitute',(int)$row->id,'employee #'.(int)$row->substitute_employee_id.' for #'.(int)$row->manager_employee_id.' · '.$moved.' waiting moved');
-        $this->notify((int)$this->people_user_id((int)$row->substitute_employee_id),'system',sprintf(/* translators: %s: manager name */__('You decide for %s','workforce-one'),$manager),
-            sprintf(/* translators: 1: manager name, 2: date and time, 3: number of requests */_n('Until %2$s, requests that would wait for %1$s wait for you. %3$d is waiting now.','Until %2$s, requests that would wait for %1$s wait for you. %3$d are waiting now.',$moved,'workforce-one'),$manager,$this->substitute_when((string)$row->ends_at),$moved),
-            ['entity'=>'approval','push'=>true]);
-        return true;
+        return $this->services()->substitutes()->sync(is_string($now)?$now:null);
     }
 
     /** End (its time is over, or ended now) or cancel a substitute; what still waits goes back to the manager unless the setting keeps it. */
     private function substitute_finish($row,$status,$now){
-        global $wpdb;$t=$this->substitutes_table();$was=(string)$row->status;
-        if($wpdb->update($t,['status'=>$status,'ended_at'=>$now],['id'=>(int)$row->id,'status'=>$was])!==1)return false;
-        $this->audit('substitute_'.$status,'approval_substitute',(int)$row->id,'employee #'.(int)$row->substitute_employee_id.' for #'.(int)$row->manager_employee_id);
-        if($was!=='active')return true;
-        $back=0;$still=0;
-        $a=$this->approval_tables();
-        $muid=(int)$this->people_user_id((int)$row->manager_employee_id);
-        if($this->substitute_settings()['on_return']==='back' && $muid){
-            $back=(int)$wpdb->query($wpdb->prepare("UPDATE {$a['instances']} SET approver_employee_id=%d,approver_wp_user_id=%d,for_employee_id=NULL,substitute_id=NULL,reminded_at=NULL WHERE substitute_id=%d AND status='PENDING'",
-                (int)$row->manager_employee_id,$muid,(int)$row->id));
-        }else{
-            $still=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$a['instances']} WHERE substitute_id=%d AND status='PENDING'",(int)$row->id));
-        }
-        $decided=(int)$wpdb->get_var($wpdb->prepare("SELECT decided FROM {$t} WHERE id=%d",(int)$row->id));
-        $sub=$this->people_name((int)$row->substitute_employee_id);
+        return $this->services()->substitutes()->finish($row,(string)$status,(string)$now);
+    }
+
+    /** The substitute is told the cover started ($moved levels went to them now). */
+    private function substitute_tell_started($row,$moved,$manager){
+        $this->notify((int)$this->people_user_id((int)$row->substitute_employee_id),'system',sprintf(/* translators: %s: manager name */__('You decide for %s','workforce-one'),$manager),
+            sprintf(/* translators: 1: manager name, 2: date and time, 3: number of requests */_n('Until %2$s, requests that would wait for %1$s wait for you. %3$d is waiting now.','Until %2$s, requests that would wait for %1$s wait for you. %3$d are waiting now.',$moved,'workforce-one'),$manager,$this->substitute_when((string)$row->ends_at),$moved),
+            ['entity'=>'approval','push'=>true]);
+    }
+
+    /** The manager is told the cover ended: what the substitute decided, what went back, what still waits for the substitute. */
+    private function substitute_tell_ended($muid,$row,$decided,$back,$still,$sub){
         $msg=sprintf(/* translators: 1: substitute name, 2: number of requests */_n('%1$s decided %2$d request for you while you were away.','%1$s decided %2$d requests for you while you were away.',$decided,'workforce-one'),$sub,$decided);
         if($back)$msg.=' '.sprintf(/* translators: %d: number of requests */_n('%d still waits for you.','%d still wait for you.',$back,'workforce-one'),$back);
         if($still)$msg.=' '.sprintf(/* translators: 1: number of requests, 2: substitute name */_n('%1$d still waits for %2$s.','%1$d still wait for %2$s.',$still,'workforce-one'),$still,$sub);
         $this->notify($muid,'system',__('Your substitute has ended','workforce-one'),$msg,['entity'=>'approval','push'=>true]);
-        return true;
     }
 
     /** The substitute is told they were picked (when it is scheduled). */
@@ -222,17 +142,7 @@ trait EWS_Substitutes_Trait {
      * @return string|null same, dates, past, who, away, overlap, manager, substitute
      */
     private function substitute_check($manager_id,$substitute_id,$starts,$ends,$ignore_id=0){
-        $manager=$this->people_employee((int)$manager_id,true);$cand=$this->people_employee((int)$substitute_id,true);
-        global $wpdb;$t=$this->substitutes_table();
-        $overlap=false;$away=false;
-        if($manager && $cand && $starts!=='' && $ends!=='' && $ends>$starts){
-            $overlap=(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t} WHERE manager_employee_id=%d AND status IN ('pending','scheduled','active') AND starts_at<%s AND ends_at>%s AND id<>%d LIMIT 1",(int)$manager->id,$ends,$starts,(int)$ignore_id));
-            // Away themselves: on leave on one of those days, or with a substitute of their own then.
-            $away=$this->leave_away_between((int)$cand->id,substr($starts,0,10),substr(gmdate('Y-m-d H:i:s',strtotime($ends)-1),0,10))
-                || (bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$t} WHERE manager_employee_id=%d AND status IN ('pending','scheduled','active') AND starts_at<%s AND ends_at>%s LIMIT 1",(int)$cand->id,$ends,$starts));
-        }
-        return Substitutes::check(['manager'=>$manager?(int)$manager->id:0,'substitute'=>$cand?(int)$cand->id:0,'starts'=>$starts,'ends'=>$ends,'now'=>current_time('mysql'),
-            'eligible'=>$this->substitute_eligible($manager,$cand),'away'=>$away,'overlap'=>$overlap]);
+        return $this->services()->substitutes()->check((int)$manager_id,(int)$substitute_id,(string)$starts,(string)$ends,(int)$ignore_id);
     }
 
     /** A message for a refusal code. */
@@ -247,18 +157,7 @@ trait EWS_Substitutes_Trait {
 
     /** Save a substitute row. @return int|string the id, or a refusal code */
     private function substitute_create($manager_id,$substitute_id,$starts,$ends,$source,$reason='',$leave_id=0,$status='scheduled'){
-        $error=$this->substitute_check($manager_id,$substitute_id,$starts,$ends);
-        if($error!==null)return $error;
-        global $wpdb;$t=$this->substitutes_table();
-        $row=['manager_employee_id'=>(int)$manager_id,'substitute_employee_id'=>(int)$substitute_id,'starts_at'=>$starts,'ends_at'=>$ends,'status'=>$status,'source'=>$source,
-            'reason'=>mb_substr((string)$reason,0,255),'created_by'=>(int)get_current_user_id(),'created_at'=>current_time('mysql')];
-        if($leave_id)$row['leave_request_id']=(int)$leave_id;
-        if($wpdb->insert($t,$row)===false)return 'save';
-        $id=(int)$wpdb->insert_id;
-        $this->audit('substitute_set','approval_substitute',$id,'employee #'.(int)$substitute_id.' for #'.(int)$manager_id.' · '.$starts.' → '.$ends.' · '.$source);
-        if($status==='scheduled')$this->substitute_tell_picked($wpdb->get_row($wpdb->prepare("SELECT * FROM {$t} WHERE id=%d",$id)));
-        $this->substitutes_sync();
-        return $id;
+        return $this->services()->substitutes()->create((int)$manager_id,(int)$substitute_id,(string)$starts,(string)$ends,(string)$source,(string)$reason,(int)$leave_id,(string)$status,(int)get_current_user_id());
     }
 
     /**
@@ -316,15 +215,12 @@ trait EWS_Substitutes_Trait {
     /** For My approvals: who I decide for now, and my own substitutes. @return array<string,mixed> */
     private function substitute_app_data($emp){
         if(!$this->substitutes_enabled() || !$emp)return ['on'=>false];
-        global $wpdb;$t=$this->substitutes_table();$a=$this->approval_tables();$now=current_time('mysql');
-        $for=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t} WHERE substitute_employee_id=%d AND status='active' ORDER BY ends_at ASC",(int)$emp->id)) as $r){
-            $n=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$a['instances']} WHERE substitute_id=%d AND status='PENDING'",(int)$r->id));
-            $for[]=['name'=>$this->people_name((int)$r->manager_employee_id),'until'=>$this->substitute_when((string)$r->ends_at),'waiting'=>$n];
-        }
+        $now=current_time('mysql');
+        $subs=$this->services()->substitutes();
+        $for=$subs->decidingFor((int)$emp->id,function($r,$n){return ['name'=>$this->people_name((int)$r->manager_employee_id),'until'=>$this->substitute_when((string)$r->ends_at),'waiting'=>$n];});
         $own=[];
         if($this->substitute_can_set_own($emp)){
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$t} WHERE manager_employee_id=%d AND status IN ('pending','scheduled','active') AND ends_at>%s ORDER BY starts_at ASC",(int)$emp->id,$now)) as $r)
+            foreach($subs->ownOpen((int)$emp->id,$now) as $r)
                 $own[]=['id'=>(int)$r->id,'name'=>$this->people_name((int)$r->substitute_employee_id),'from'=>$this->substitute_when((string)$r->starts_at),'to'=>$this->substitute_when((string)$r->ends_at),'status'=>(string)$r->status,'leave'=>(int)$r->leave_request_id>0];
         }
         return ['on'=>true,'for'=>$for,'own'=>$own,'can_set'=>$this->substitute_can_set_own($emp),'people'=>$this->substitute_can_set_own($emp)?$this->substitute_choices($emp):[],
@@ -364,8 +260,7 @@ trait EWS_Substitutes_Trait {
         if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
         $id=absint($_POST['id']??0);
         check_admin_referer('ews_substitute_end_'.$id);
-        global $wpdb;$t=$this->substitutes_table();
-        $row=$this->substitutes_enabled()?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t} WHERE id=%d",$id)):null;
+        $row=$this->substitutes_enabled()?$this->services()->substitutes()->find($id):null;
         $emp=$this->current_employee();
         $mine=$row && $emp && (int)$row->manager_employee_id===(int)$emp->id;
         if(!$row || (!$mine && !$this->substitutes_can_manage()) || !in_array($row->status,['pending','scheduled','active'],true)){wp_safe_redirect($this->substitute_back(['sub_error'=>'access']));exit;}
@@ -389,8 +284,7 @@ trait EWS_Substitutes_Trait {
     public function admin_substitutes(){
         if(!$this->substitutes_can_manage())wp_die('Access denied');
         $this->substitutes_maybe_sync();
-        global $wpdb;$t=$this->substitutes_table();
-        $rows=$this->substitutes_enabled()?(array)$wpdb->get_results("SELECT * FROM {$t} ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'pending' THEN 2 ELSE 3 END,starts_at DESC LIMIT 200"):[];
+        $rows=$this->substitutes_enabled()?$this->services()->substitutes()->adminRows():[];
         foreach($rows as $r){$r->manager=$this->people_name((int)$r->manager_employee_id);$r->substitute=$this->people_name((int)$r->substitute_employee_id);$r->from=$this->substitute_when((string)$r->starts_at);$r->to=$this->substitute_when((string)$r->ends_at);}
         $people=$this->people_active_users();
         echo $this->render_template('admin/substitutes',['on'=>$this->substitutes_enabled(),'rows'=>$rows,'people'=>$people,'notice'=>$this->substitute_notice(),

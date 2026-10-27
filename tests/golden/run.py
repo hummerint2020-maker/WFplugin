@@ -128,8 +128,14 @@ def render(side, sessions, ctx, only=None):
 
 
 def actions(ctx):
-    restore()
-    return json.loads(wp('eval-file', os.path.join(HERE, 'actions.php'), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1])
+    """actions.php's trace, and the trace of every other actions_<name>.php under 'name:<key>' (each from the same snapshot)."""
+    out = {}
+    for f in sorted(x for x in os.listdir(HERE) if re.fullmatch(r'actions(_\w+)?\.php', x)):
+        restore()
+        t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1])
+        prefix = '' if f == 'actions.php' else f[8:-4] + ':'
+        out.update({prefix + k: v for k, v in t.items()})
+    return out
 
 
 HOOK = re.compile(r"""(?:add_action|add_filter|add_shortcode|register_rest_route)\(\s*['"]([^'"]+)['"]""")
@@ -156,6 +162,8 @@ try:
         $u=username_exists('acomar')?:wp_create_user('acomar','acomar-pass','acomar@example.com');
         $wpdb->update($p.'ews_employees',['wp_user_id'=>(int)$u],['id'=>%d]);
         foreach([%d,%d] as $e) for($i=1;$i<=14;$i++){ $d=gmdate('Y-m-d',strtotime(current_time('Y-m-d').' +'.$i.' days')); $wpdb->replace($p.'ews_schedule',['employee_id'=>$e,'work_date'=>$d,'status'=>'Office']); }""" % (ctx['omar'], ctx['omar'], ctx['mona']))
+    # The approvals' people, workflows and open requests (plain SQL; the pages of the approvals read them).
+    wp('eval-file', os.path.join(HERE, 'seed_approvals.php'))
     # The query count of a page, printed at its end (web requests only).
     os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
@@ -169,7 +177,8 @@ try:
         start()
         # One login for all sides: the same session, so the same nonces on every page.
         if sessions is None:
-            sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass')}
+            sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass'),
+                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass')}
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
@@ -207,8 +216,16 @@ try:
     tb = actions(ctx)
     point(HEAD)
     th = actions(ctx)
+    def first_difference(a, b):
+        """Where two traces first differ, for the failure message: the first SQL statement that is not the same."""
+        if isinstance(a, dict) and isinstance(b, dict) and isinstance(a.get('sql'), list) and isinstance(b.get('sql'), list):
+            for i in range(max(len(a['sql']), len(b['sql']))):
+                x, y = (a['sql'][i] if i < len(a['sql']) else None), (b['sql'][i] if i < len(b['sql']) else None)
+                if x != y:
+                    return 'statement %d: old %s | new %s' % (i, json.dumps(x)[:260], json.dumps(y)[:260])
+        return (json.dumps(a)[:300], json.dumps(b)[:300])
     for k in tb:
-        check('the same action trace: ' + k, tb[k] == th.get(k), (json.dumps(tb[k])[:300], json.dumps(th.get(k))[:300]))
+        check('the same action trace: ' + k, tb[k] == th.get(k), first_difference(tb[k], th.get(k)))
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))
     check('...the actions really saved, notified and claimed the week (else they prove nothing)', tb.get('week_lock_notified') and tb.get('notifications') and tb.get('grid_insert', {}).get('ok'),
           (tb.get('week_lock_notified'), len(tb.get('notifications') or [])))
