@@ -181,6 +181,23 @@ emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond',
 _, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7), swap_id=s7, decision='reject')
 check('the approver rejects: closed, the days unchanged', qs.get('swap_done') == 'rejected' and swap(s7)['status'] == 'Rejected' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(s7)))
 
+# 3.31.130: the approver's decision and the exchange are one transaction. The schedule changed after the colleague accepted: the app
+# approver's approval is refused ('changed') and the level stays open (before, the level was saved APPROVED and the swap stayed Awaiting).
+set_schedule(e1, 'WFH'); set_schedule(e2, 'Office')
+_, qs, _ = create(e2)
+s7b = last()
+emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s7b), swap_id=s7b, decision='accept')
+set_schedule(e1, 'Vacation')
+_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7b), swap_id=s7b, decision='approve')
+ar7 = q("SELECT status FROM {p}ews_approval_requests WHERE entity_type='schedule_swap' AND entity_id=%d" % s7b)
+st7 = [r['status'] for r in q("SELECT status FROM {p}ews_approval_steps WHERE approval_request_id=(SELECT id FROM {p}ews_approval_requests WHERE entity_type='schedule_swap' AND entity_id=%d)" % s7b)]
+check('the approver approves after a schedule changed: refused, the swap Awaiting, the level still open, the leave stays',
+      qs.get('swap_error') == 'changed' and swap(s7b)['status'] == 'Awaiting' and [r['status'] for r in ar7] != ['APPROVED'] and st7 == ['PENDING'] and sched(e1) == 'Vacation',
+      (qs, swap(s7b), ar7, st7))
+_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7b), swap_id=s7b, decision='reject')
+check('...and the same approver can still reject it', qs.get('swap_done') == 'rejected' and swap(s7b)['status'] == 'Rejected', (qs, swap(s7b)))
+set_schedule(e1, 'WFH'); set_schedule(e2, 'Office')
+
 _, qs, _ = create(e2)
 s8 = last()
 emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s8), swap_id=s8, decision='accept')
