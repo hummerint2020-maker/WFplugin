@@ -55,16 +55,18 @@ final class MemoryPeopleStore implements PeopleStore
     {
         $this->note('rowsByIds ' . implode(',', $ids));
         $out = [];
-        foreach ($ids as $id) if (isset($this->rows[$id]) && (!$activeOnly || $this->rows[$id]->active === '1')) $out[] = clone $this->rows[$id];
-        return $out;
+        foreach ($ids as $id) if (isset($this->rows[$id]) && (!$activeOnly || $this->rows[$id]->active === '1')) $out[(int) $id] = clone $this->rows[$id];
+        ksort($out);   // IN() without ORDER BY comes back in primary-key order
+        return array_values($out);
     }
 
     public function briefsByIds(array $ids): array
     {
         $this->note('briefsByIds ' . implode(',', $ids));
         $out = [];
-        foreach ($ids as $id) if (isset($this->rows[$id])) $out[] = (object) ['id' => $this->rows[$id]->id, 'name' => $this->rows[$id]->name, 'wp_user_id' => $this->rows[$id]->wp_user_id];
-        return $out;
+        foreach ($ids as $id) if (isset($this->rows[$id])) $out[(int) $id] = (object) ['id' => $this->rows[$id]->id, 'name' => $this->rows[$id]->name, 'wp_user_id' => $this->rows[$id]->wp_user_id];
+        ksort($out);
+        return array_values($out);
     }
 
     public function activeId(int $id): ?string

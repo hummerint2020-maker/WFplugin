@@ -138,6 +138,24 @@ $run('team_ids_for_employee', function () use ($call, $c) { return $call('team_i
 $run('team_ids_by_employee', function () use ($call, $ids) { return $call('team_ids_by_employee', $ids); });
 $run('team_ids_by_employee_many', function () use ($call, $many) { return $call('team_ids_by_employee', $many); });
 
+// ---------------------------------------------------------------- 6b. branches the first run does not reach
+$run('active_list_all', function () use ($call) { return $call('people_active_list'); });
+$run('active_count_all', function () use ($call) { return $call('people_active_count'); });
+$run('active_user_ids_all', function () use ($call) { return $call('people_active_user_ids'); });
+$run('team_ids_by_employee_empty', function () use ($call) { return $call('team_ids_by_employee', []); });
+$run('invalidate_user_only', function () use ($call, $c) { $call('invalidate_employee_runtime_cache', 0, $c['subuser']); return $call('emps'); });
+$big2 = array_slice($big, 0, 2);
+$run('shift_for_employee_after_prime', function () use ($call, $big2) { return [$call('shift_for_employee', $big2[0]), $call('shift_for_employee', $big2[1])]; });   // primed above: no query
+// the tables a fresh install may not have yet: the reads answer without them
+$rename = function ($from, $to) use ($wpdb, $p) { $wpdb->query("ALTER TABLE {$p}{$from} RENAME TO {$p}{$to}"); };
+$rename('ews_employee_relationships', 'ews_employee_relationships_x');
+$run('manager_ids_no_table', function () use ($call) { return $call('people_manager_ids'); });
+$run('has_reports_no_table', function () use ($call, $c) { return $call('people_has_reports', $c['mona']); });
+$rename('ews_employee_relationships_x', 'ews_employee_relationships');
+$rename('ews_departments', 'ews_departments_x');
+$run('org_rows_no_table', function () use ($call) { return $call('people_org_rows'); });
+$rename('ews_departments_x', 'ews_departments');
+
 // ---------------------------------------------------------------- 7. the signed-in employee
 $as($c['acomar']);
 $run('current_employee', function () use ($call) { return $call('current_employee'); });

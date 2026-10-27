@@ -207,6 +207,8 @@ try:
         name = '%s %s%s' % (p['user'], p['url'], (' with ' + ','.join(p['options'])) if p.get('options') else '')
         b, b2, h = pages['base'][i], pages['base2'][i], pages['head'][i]
         check('the page answers 200 on both sides: ' + name, b[2] == 200 and h[2] == 200 and 'critical error' not in h[0], (b[2], h[2]))
+        if p.get('expect'):
+            check('the page shows what it should (%s): %s' % (p['expect'], name), p['expect'] in h[0] and p['expect'] in b[0] and 'id="loginform"' not in h[0], len(h[0]))
         if b[0] != b2[0]:
             check('stable on the old code: ' + name, False, 'the old code gave two different pages: add a pattern to pages.json normalise')
             continue

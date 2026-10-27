@@ -52,6 +52,20 @@ trait EWS_Employees_Trait {
         return $this->services()->people()->namesByIds($employee_ids);
     }
 
+    /** The active employee related to this one by a relationship type (the newest line), or null (3.31.133: moved here from the approvals trait with the reporting lines). */
+    private function approval_related_employee($employee_id,$relationship_type){
+        return $this->services()->org()->relatedEmployee((int)$employee_id,sanitize_key($relationship_type));
+    }
+
+    /**
+     * Each employee's active supervisor id (0 = none) for many employees in one query; the same answer as
+     * approval_related_employee($id,'supervisor') per employee (the newest relationship).
+     * @param list<int> $employee_ids @return array<int,int>
+     */
+    private function approval_supervisor_ids(array $employee_ids){
+        return $this->services()->org()->supervisorIds($employee_ids);
+    }
+
     /** The id if the employee exists and is active (as a string, like a query result), else null. */
     private function people_active_id($employee_id){
         return $this->services()->people()->activeId((int)$employee_id);

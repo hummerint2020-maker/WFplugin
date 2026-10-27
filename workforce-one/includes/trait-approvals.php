@@ -263,19 +263,6 @@ trait EWS_Approvals_Trait {
         $this->services()->workflows()->seedDefaults();
     }
 
-    private function approval_related_employee($employee_id,$relationship_type){
-        return $this->services()->org()->relatedEmployee((int)$employee_id,sanitize_key($relationship_type));
-    }
-
-    /**
-     * Each employee's active supervisor id (0 = none) for many employees in one query; the same
-     * answer as approval_related_employee($id,'supervisor') per employee (the newest relationship).
-     * @param list<int> $employee_ids @return array<int,int>
-     */
-    private function approval_supervisor_ids(array $employee_ids){
-        return $this->services()->org()->supervisorIds($employee_ids);
-    }
-
     /**
      * The steps waiting for an employee's direct manager (resolver SUPERVISOR, now or at a later level)
      * on requests still open, per requester and approver, for the Org chart's Move (3.31.98).

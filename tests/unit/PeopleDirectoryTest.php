@@ -66,7 +66,7 @@ final class PeopleDirectoryTest extends TestCase
     {
         $this->assertSame([1, 2], array_keys($this->dir->byIds([1, 2, 2, 0, 99])));
         $this->assertSame([1, 2], array_keys($this->dir->byIds([1, 2, 3], true)));
-        $this->assertSame([3 => 'Old', 1 => 'Mona'], $this->dir->namesByIds([3, 1, 77]), 'archived too; unknown ids left out; the order of the Store');
+        $this->assertSame([1 => 'Mona', 3 => 'Old'], $this->dir->namesByIds([3, 1, 77]), 'archived too; unknown ids left out; the Store\'s order (primary key)');
         $this->assertSame('13', $this->dir->briefsByIds([3])[3]->wp_user_id);
     }
 

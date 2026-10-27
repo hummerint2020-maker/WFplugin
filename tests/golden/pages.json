@@ -1,5 +1,5 @@
 {
-  "_about": "Pages the golden harness renders on the old and the new code (tests/golden/run.py). {week} and {d0}..{d4} come from the seed (last week). 'options' are set before the page on both sides and removed after. Add the pages of each slice a release moves.",
+  "_about": "Pages the golden harness renders on the old and the new code (tests/golden/run.py). {week} and {d0}..{d4} come from the seed (last week). 'options' are set before the page on both sides and removed after. Add the pages of each slice a release moves. A page may name a 'expect' text that must be in it (else it could be a login page or the Dashboard on both sides and the comparison would prove nothing).",
   "pages": [
     {
       "user": "admin",
@@ -166,15 +166,18 @@
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-employees"
+      "url": "/wp-admin/admin.php?page=ews31-employees",
+      "expect": "Lina Late"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-employees&paged=2"
+      "url": "/wp-admin/admin.php?page=ews31-employees&paged=2",
+      "expect": "Old Boss"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-employees&s=omar"
+      "url": "/wp-admin/admin.php?page=ews31-employees&s=omar",
+      "expect": "Omar Ontime"
     },
     {
       "user": "admin",
@@ -185,27 +188,33 @@
           "audience": "managers",
           "title_required": 0
         }
-      }
+      },
+      "expect": "Dispatcher"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-employee-profile&employee_id={omar}"
+      "url": "/wp-admin/admin.php?page=ews31-employee-profile&employee_id={omar}",
+      "expect": "Omar Ontime"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-departments"
+      "url": "/wp-admin/admin.php?page=ews31-departments",
+      "expect": "Ops"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-departments&department_id={ops}"
+      "url": "/wp-admin/admin.php?page=ews31-departments&department_id={ops}",
+      "expect": "Ops"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-teams"
+      "url": "/wp-admin/admin.php?page=ews31-teams",
+      "expect": "Alpha"
     },
     {
       "user": "admin",
-      "url": "/wp-admin/admin.php?page=ews31-teams&team_id={alpha}"
+      "url": "/wp-admin/admin.php?page=ews31-teams&team_id={alpha}",
+      "expect": "Alpha"
     },
     {
       "user": "admin",
@@ -216,7 +225,8 @@
           "audience": "managers",
           "title_required": 0
         }
-      }
+      },
+      "expect": "Operations Lead"
     },
     {
       "user": "admin",
@@ -232,7 +242,8 @@
           "show_achievements": 1,
           "show_recognition": 0
         }
-      }
+      },
+      "expect": "Lina Late"
     },
     {
       "user": "admin",
@@ -248,7 +259,8 @@
           "show_achievements": 1,
           "show_recognition": 0
         }
-      }
+      },
+      "expect": "Omar Ontime"
     },
     {
       "user": "admin",
@@ -264,7 +276,8 @@
           "show_achievements": 1,
           "show_recognition": 0
         }
-      }
+      },
+      "expect": "Lina Late"
     },
     {
       "user": "admin",
@@ -280,11 +293,13 @@
           "show_achievements": 1,
           "show_recognition": 0
         }
-      }
+      },
+      "expect": "Omar Ontime"
     },
     {
       "user": "admin",
-      "url": "/app/?ews_view=employees"
+      "url": "/app/?ews_view=employees",
+      "expect": "Lina Late"
     },
     {
       "user": "admin",
@@ -295,7 +310,8 @@
           "audience": "managers",
           "title_required": 0
         }
-      }
+      },
+      "expect": "Dispatcher"
     },
     {
       "user": "emp1",
@@ -306,7 +322,8 @@
           "audience": "managers",
           "title_required": 0
         }
-      }
+      },
+      "expect": "Dispatcher"
     },
     {
       "user": "acomar",
@@ -317,7 +334,8 @@
           "audience": "managers",
           "title_required": 0
         }
-      }
+      },
+      "expect": "Lina Late"
     },
     {
       "user": "acomar",
@@ -333,11 +351,13 @@
           "show_achievements": 1,
           "show_recognition": 0
         }
-      }
+      },
+      "expect": "Omar Ontime"
     },
     {
       "user": "emp1",
-      "url": "/app/?ews_view=attendance&week={week}"
+      "url": "/app/?ews_view=attendance&week={week}",
+      "expect": "Lina Late"
     }
   ],
   "normalise": [
