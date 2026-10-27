@@ -181,23 +181,6 @@ emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond',
 _, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7), swap_id=s7, decision='reject')
 check('the approver rejects: closed, the days unchanged', qs.get('swap_done') == 'rejected' and swap(s7)['status'] == 'Rejected' and sched(e1) == 'WFH' and sched(e2) == 'Office', (qs, swap(s7)))
 
-# 3.31.130: the approver's decision and the exchange are one transaction. The schedule changed after the colleague accepted: the app
-# approver's approval is refused ('changed') and the level stays open (before, the level was saved APPROVED and the swap stayed Awaiting).
-set_schedule(e1, 'WFH'); set_schedule(e2, 'Office')
-_, qs, _ = create(e2)
-s7b = last()
-emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s7b), swap_id=s7b, decision='accept')
-set_schedule(e1, 'Vacation')
-_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7b), swap_id=s7b, decision='approve')
-ar7 = q("SELECT status FROM {p}ews_approval_requests WHERE entity_type='schedule_swap' AND entity_id=%d" % s7b)
-st7 = [r['status'] for r in q("SELECT status FROM {p}ews_approval_steps WHERE approval_request_id=(SELECT id FROM {p}ews_approval_requests WHERE entity_type='schedule_swap' AND entity_id=%d)" % s7b)]
-check('the approver approves after a schedule changed: refused, the swap Awaiting, the level still open, the leave stays',
-      qs.get('swap_error') == 'changed' and swap(s7b)['status'] == 'Awaiting' and [r['status'] for r in ar7] != ['APPROVED'] and st7 == ['PENDING'] and sched(e1) == 'Vacation',
-      (qs, swap(s7b), ar7, st7))
-_, qs, _ = emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', s7b), swap_id=s7b, decision='reject')
-check('...and the same approver can still reject it', qs.get('swap_done') == 'rejected' and swap(s7b)['status'] == 'Rejected', (qs, swap(s7b)))
-set_schedule(e1, 'WFH'); set_schedule(e2, 'Office')
-
 _, qs, _ = create(e2)
 s8 = last()
 emp2.post('ews_swap_respond', _wpnonce=swap_form_nonce(emp2, 'ews_swap_respond', s8), swap_id=s8, decision='accept')
@@ -384,6 +367,50 @@ a7 = last()
 qs = admin(a7, 'approve')
 check('a swap the colleague has not answered yet: the administrator decides it directly, with no approval request',
       qs.get('request_notice') == 'approved' and swap(a7)['status'] == 'Accepted' and engine(a7) == (None, []) and sched(e1) == 'WFH', (qs, swap(a7), engine(a7)))
+configure_swap('PEER')
+
+# 3.31.130: an app approver's decision and the exchange are one transaction. Whatever fails after the level was decided (a day changed
+# since the request, a database error on the schedule or on the swap), nothing is saved, the level stays open, nobody is told.
+configure_swap('LEVEL_1', e3)
+set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+audit_n = lambda: int(q("SELECT COUNT(*) c FROM {p}ews_audit_log WHERE action IN ('SCHEDULE_SWAP_APPROVED','SCHEDULE_SWAP_REJECTED')")[0]['c'])
+def app_decide(sid, decision):
+    return emp3.post('ews_swap_decide', _wpnonce=swap_form_nonce(emp3, 'ews_swap_decide', sid), swap_id=sid, decision=decision)[1]
+def awaiting_app():
+    create(e2)
+    sid = last()
+    accept(sid)
+    return sid
+untouched = ('WAITING_FOR_LEVEL_1', [(1, 'PENDING')])
+for how in ('a day changed (after the swap was claimed)', 'a database error on ews_schedule', 'a database error on ews_schedule_swaps (reject)'):
+    sid = awaiting_app()
+    before_notes, before_audit = notes(), audit_n()
+    day1 = 'Office'
+    if how.startswith('a day'):
+        set_schedule(e1, 'Vacation'); day1 = 'Vacation'   # saved a moment ago, the approver's read still sees Office
+        stale(e1, 'Office')
+    decision = 'reject' if 'reject' in how else 'approve'
+    if 'ews_schedule_swaps' in how:
+        break_writes('ews_schedule_swaps')
+    elif 'ews_schedule' in how:
+        break_writes('ews_schedule')
+    qs = app_decide(sid, decision)
+    break_writes('')
+    stale()
+    err = 'changed' if how.startswith('a day') else 'save'
+    check('the approver decides in the app with %s: refused (%s), the swap Awaiting, the level open, both days as they were, nobody told' % (how, err),
+          qs.get('swap_error') == err and swap(sid)['status'] == 'Awaiting' and engine(sid) == untouched and sched(e1) == day1 and sched(e2) == 'WFH' and notes() == before_notes and audit_n() == before_audit,
+          (qs, swap(sid), engine(sid), sched(e1), sched(e2)))
+    set_schedule(e1, 'Office')
+    qs = app_decide(sid, 'reject')
+    check('...and the same approver can still reject it afterwards', qs.get('swap_done') == 'rejected' and swap(sid)['status'] == 'Rejected' and engine(sid)[0] == 'REJECTED', (qs, swap(sid), engine(sid)))
+sid = awaiting_app()
+set_schedule(e1, 'Vacation')
+qs = app_decide(sid, 'approve')
+check('a schedule changed since the request (seen when the approver decides): refused, the level stays open, the leave stays',
+      qs.get('swap_error') == 'changed' and swap(sid)['status'] == 'Awaiting' and engine(sid) == untouched and sched(e1) == 'Vacation', (qs, swap(sid), engine(sid)))
+app_decide(sid, 'reject')
+set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
 configure_swap('PEER')
 
 print(f'{sum(results)} / {len(results)}')
