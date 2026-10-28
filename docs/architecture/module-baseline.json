@@ -41,7 +41,7 @@
   "payroll->schedule": 1,
   "payroll->shell": 1,
   "people->app": 2,
-  "people->approvals": 3,
+  "people->approvals": 2,
   "people->attendance": 2,
   "people->engagement": 11,
   "people->locations": 2,

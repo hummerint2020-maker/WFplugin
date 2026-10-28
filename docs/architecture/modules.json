@@ -104,12 +104,16 @@
         "team_manager_for_employee",
         "team_ids_by_employee",
         "emps",
-        "employee_attendance_enabled"
+        "employee_attendance_enabled",
+        "approval_set_relationship"
       ],
       "layered": [
         {
           "slice": "directory",
-          "namespace": ["People", "Organization"],
+          "namespace": [
+            "People",
+            "Organization"
+          ],
           "tables": [
             "employees",
             "employee_relationships",
@@ -122,11 +126,17 @@
             "workforce-one/src/People/Data/WordPressPeopleStore.php",
             "workforce-one/src/People/Data/WordPressReportingStore.php",
             "workforce-one/src/People/Data/WordPressDepartmentStore.php",
-            "workforce-one/src/People/Data/WordPressTeamStore.php"
+            "workforce-one/src/People/Data/WordPressTeamStore.php",
+            "workforce-one/src/People/Data/WordPressOrgMoveStore.php"
           ],
           "services": [
             "workforce-one/src/People/PeopleDirectory.php",
-            "workforce-one/src/People/OrgDirectory.php"
+            "workforce-one/src/People/OrgDirectory.php",
+            "workforce-one/src/People/ReportingService.php",
+            "workforce-one/src/People/OrgMoveService.php",
+            "workforce-one/src/People/OrgImportService.php",
+            "workforce-one/src/People/DepartmentService.php",
+            "workforce-one/src/People/TeamService.php"
           ],
           "moved": [
             "people_employee",
@@ -164,10 +174,32 @@
             "approval_related_employee",
             "approval_supervisor_ids",
             "shift_for_employee",
-            "prime_shift_cache"
+            "prime_shift_cache",
+            "org_move_check",
+            "org_move_apply",
+            "org_supervisor_change",
+            "org_set_supervisor_only",
+            "org_move_schedule",
+            "org_move_summary",
+            "org_moves_apply_due",
+            "org_move_cancel",
+            "org_moves_for_chart",
+            "org_import_people",
+            "org_import_apply",
+            "admin_departments",
+            "department_save",
+            "department_delete",
+            "admin_teams",
+            "team_save",
+            "team_delete",
+            "sync_employee_teams",
+            "approval_set_relationship",
+            "approval_relationship_save",
+            "employee_admin_set_supervisor"
           ],
           "traits_clean": [
-            "org-chart"
+            "org-chart",
+            "org-import"
           ]
         }
       ],

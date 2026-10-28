@@ -19,7 +19,7 @@ final class TeamService
     /** @var DepartmentStore */
     private $departments;
     /** @var PeopleStore */
-    private $employees;
+    private $peopleStore;
     /** @var PeopleDirectory */
     private $people;
     /** @var Transaction */
@@ -33,7 +33,7 @@ final class TeamService
     {
         $this->store = $store;
         $this->departments = $departments;
-        $this->employees = $employees;
+        $this->peopleStore = $employees;
         $this->people = $people;
         $this->tx = $tx;
         $this->audit = $audit;
@@ -139,7 +139,7 @@ final class TeamService
     {
         $teamIds = array_values(array_unique(array_filter($teamIds)));
         $now = $this->clock->now();
-        $department = (int) $this->employees->departmentIdOf($employeeId);
+        $department = (int) $this->peopleStore->departmentIdOf($employeeId);
         foreach ($teamIds as $teamId) {
             $teamDepartment = $this->store->activeDepartmentOf($teamId);
             if ($teamDepartment === null || (int) $teamDepartment !== $department) return ['code' => 'team_department_mismatch', 'message' => 'Selected team does not belong to the employee department.'];
