@@ -14,6 +14,10 @@ use WorkforceOne\Approvals\SubstitutePorts;
 use WorkforceOne\Platform\AuditLog;
 use WorkforceOne\Platform\Clock;
 use WorkforceOne\Platform\OnceClaim;
+use WorkforceOne\People\Actor;
+use WorkforceOne\People\EmployeeChanged;
+use WorkforceOne\People\OrgApprovals;
+use WorkforceOne\People\OrgClock;
 use WorkforceOne\People\PeoplePorts;
 use WorkforceOne\Platform\Permissions;
 use WorkforceOne\Platform\Services;
@@ -49,6 +53,9 @@ trait EWS_Services_Trait {
             foreach($days as $d=>$st)$parts[]=date_i18n('D',strtotime($d)).' '.$st;
             $this->notify($uid,'schedule',__('Next week\'s schedule is final','workforce-one'),implode(' · ',$parts),['url'=>$link,'entity'=>'week_lock']);
         };
+        $reassign=function($employee,$from,$to,&$pending){return $this->approval_reassign_supervisor($employee,$from,$to,$pending);};
+        $tell_manager=function($employee,$to,$pending){$this->approval_reassign_notify($employee,$to,$pending);};
+        $employee_changed=function($employee,$wp_user){$this->invalidate_employee_runtime_cache($employee,$wp_user);};
         return new Services($db,['schedule'=>$this->schedule_table_name(),'employees'=>$this->employees],
             new class($audit) implements AuditLog {
                 private $f;
@@ -58,7 +65,26 @@ trait EWS_Services_Trait {
             new class implements Clock {
                 public function now(): string { return current_time('mysql'); }
             },
-            new PeoplePorts(self::people_memo()),
+            new PeoplePorts(self::people_memo(),
+                new class implements OrgClock {
+                    public function now(): string { return current_time('mysql'); }
+                    public function today(): string { return current_time('Y-m-d'); }
+                    public function timestamp(): int { return (int)current_time('timestamp'); }
+                },
+                new class implements Actor {
+                    public function userId(): int { return get_current_user_id(); }
+                },
+                new class($reassign,$tell_manager) implements OrgApprovals {
+                    private $reassign; private $tell;
+                    public function __construct(callable $reassign,callable $tell){ $this->reassign=$reassign; $this->tell=$tell; }
+                    public function reassignSupervisor(int $employeeId,int $fromEmployeeId,int $toEmployeeId,int &$pending){ return ($this->reassign)($employeeId,$fromEmployeeId,$toEmployeeId,$pending); }
+                    public function tellNewManager(int $employeeId,int $toEmployeeId,int $pending): void { ($this->tell)($employeeId,$toEmployeeId,$pending); }
+                },
+                new class($employee_changed) implements EmployeeChanged {
+                    private $f;
+                    public function __construct(callable $f){ $this->f=$f; }
+                    public function changed(int $employeeId,int $wpUserId): void { ($this->f)($employeeId,$wpUserId); }
+                }),
             new class($db) implements OnceClaim {
                 private $db;
                 public function __construct(\wpdb $db){ $this->db=$db; }
