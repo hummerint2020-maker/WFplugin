@@ -6,6 +6,8 @@ use WorkforceOne\People\Data\PeopleStore;
 /** An in-memory PeopleStore for the unit tests (3.31.133): rows are objects with string values, as wpdb gives them; every call is recorded. */
 final class MemoryPeopleStore implements PeopleStore
 {
+    /** @var OrgWorld|null */
+    public $world;
     /** @var array<int,object> */
     public $rows = [];
     /** @var list<string> */
@@ -202,5 +204,28 @@ final class MemoryPeopleStore implements PeopleStore
         $this->note('orgRows ' . ($withDepartments ? 'with' : 'without'));
         $this->lastWithDepartments = $withDepartments;
         return array_values(array_filter($this->rows, function ($r) { return $r->active === '1'; }));
+    }
+
+    public function importRows(): array
+    {
+        $this->note('importRows');
+        return array_values(array_map(function ($r) { return clone $r; }, $this->rows));
+    }
+
+    public function setJobTitle(int $employeeId, string $title, string $now)
+    {
+        $this->note('setJobTitle ' . $employeeId);
+        if ($this->world) $this->world->note('people setJobTitle ' . $employeeId);
+        if ($this->world && $this->world->fails('people.setJobTitle')) return false;
+        $r = $this->rows[$employeeId] ?? null;
+        if (!$r || $r->active !== '1') return 0;
+        $r->job_title = $title;
+        return 1;
+    }
+
+    public function departmentIdOf(int $employeeId): ?string
+    {
+        $this->note('departmentIdOf ' . $employeeId);
+        return isset($this->rows[$employeeId]) && $this->rows[$employeeId]->department_id !== null ? (string) $this->rows[$employeeId]->department_id : (isset($this->rows[$employeeId]) ? '' : null);
     }
 }
