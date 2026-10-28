@@ -72,7 +72,7 @@ $gdreq = (int) $wpdb->get_var("SELECT id FROM {$p}ews_employees WHERE domain_nam
 $gdmgr = (int) $wpdb->get_var("SELECT id FROM {$p}ews_employees WHERE domain_name='gdmgr'");
 $shifts = array_values(array_map(function ($s) { return (int) $s['id']; }, array_values($call('shifts'))));
 $shiftA = $shifts[0];
-$shiftB = $shifts[1] ?? $shifts[0];
+$shiftB = $shifts[1] ?? 0;   // a second shift when the site has one, else "no shift" (still a change)
 $newUser = function ($login) { return (int) (username_exists($login) ?: wp_create_user($login, 'pw-' . $login, $login . '@example.com')); };
 $newEmp = function ($name, $domain, $dept = null, $active = 1, $user = null, $shift = null, $extra = []) use ($wpdb, $p) {
     $wpdb->insert($p . 'ews_employees', $extra + ['name' => $name, 'domain_name' => $domain, 'email' => $domain . '@example.com', 'active' => $active, 'attendance_enabled' => 1, 'department_id' => $dept, 'wp_user_id' => $user, 'default_shift_id' => $shift]);
