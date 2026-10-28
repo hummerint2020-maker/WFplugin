@@ -297,34 +297,6 @@ trait EWS_Approvals_Trait {
         }
     }
 
-    /** Create/update one active relationship; V1 keeps one current target per type. */
-    private function approval_set_relationship($employee_id,$relationship_type,$related_employee_id=0,$related_wp_user_id=0){
-        global $wpdb;
-        $t=$this->approval_tables();
-        $employee_id=absint($employee_id);
-        $relationship_type=sanitize_key($relationship_type);
-        $related_employee_id=absint($related_employee_id);
-        $related_wp_user_id=absint($related_wp_user_id);
-        if(!$employee_id||!$relationship_type)return new WP_Error('invalid_relationship','Invalid employee relationship.');
-        if(!$related_employee_id&&!$related_wp_user_id)return new WP_Error('invalid_target','A related employee or WordPress user is required.');
-        $ok=$wpdb->query($wpdb->prepare(
-            "UPDATE {$t['relationships']} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type=%s AND active=1",
-            current_time('mysql'),$employee_id,$relationship_type
-        ));
-        if($ok===false)return new WP_Error('db_error',$wpdb->last_error);
-        $ok=$wpdb->insert($t['relationships'],[
-            'employee_id'=>$employee_id,
-            'relationship_type'=>$relationship_type,
-            'related_employee_id'=>$related_employee_id?:null,
-            'related_wp_user_id'=>$related_wp_user_id?:null,
-            'active'=>1,
-            'created_at'=>current_time('mysql'),
-            'updated_at'=>current_time('mysql'),
-        ],['%d','%s','%d','%d','%d','%s','%s']);
-        if($ok===false)return new WP_Error('db_error',$wpdb->last_error);
-        return (int)$wpdb->insert_id;
-    }
-
     private function approval_workflow($workflow_key){
         return $this->services()->workflows()->workflow(sanitize_key($workflow_key));
     }
@@ -621,18 +593,6 @@ trait EWS_Approvals_Trait {
         update_option('ews_approval_settings',$new,false);
         $this->audit('approval_settings','approval_workflow',0,'HR user #'.$hr.' · Finance user #'.$fin.' · '.$start.'–'.$end);
         wp_safe_redirect(add_query_arg('approval_saved',1,$back).'#ews-approval-settings');exit;
-    }
-
-    public function approval_relationship_save(){
-        if(!current_user_can('manage_options'))wp_die('Access denied');check_admin_referer('ews_approval_relationship_save');
-        $employee_id=absint($_POST['employee_id']??0);$supervisor_id=isset($_POST['supervisor_employee_ref'])?\WorkforceOne\Support\Picker::parse((string)wp_unslash($_POST['supervisor_employee_ref'])):absint($_POST['supervisor_employee_id']??0);
-        $this->ensure_approval_schema();global $wpdb;$t=$this->approval_tables();
-        // Back to the same page and search of the Supervisor Relationships list.
-        $back=['page'=>'ews31-approvals'];parse_str((string)wp_parse_url((string)wp_get_referer(),PHP_URL_QUERY),$q);foreach(['paged','s'] as $k)if(!empty($q[$k]))$back[$k]=$k==='paged'?absint($q[$k]):sanitize_text_field((string)$q[$k]);
-        $ok=$supervisor_id===0||($supervisor_id>0&&$supervisor_id!==$employee_id&&(bool)$this->people_active_id($supervisor_id));
-        if(!$ok){wp_safe_redirect(add_query_arg($back+['approval_error'=>1,'approval_error_message'=>rawurlencode('Pick the supervisor from the list.')],admin_url('admin.php')).'#ews-supervisors');exit;}
-        if($employee_id){$wpdb->query($wpdb->prepare("UPDATE {$t['relationships']} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type='supervisor' AND active=1",current_time('mysql'),$employee_id));if($supervisor_id)$this->approval_set_relationship($employee_id,'supervisor',$supervisor_id,0);}
-        $this->audit('approval_relationship_update','employee',$employee_id,'supervisor='.$supervisor_id);wp_safe_redirect(add_query_arg($back+['approval_saved'=>1],admin_url('admin.php')).'#ews-supervisors');exit;
     }
 
     /** A Specific Employee / User approver: "Name · #id" from the pick list (3.31.71), or the plain id. */

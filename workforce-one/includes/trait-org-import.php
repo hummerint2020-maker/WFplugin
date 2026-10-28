@@ -20,14 +20,7 @@ trait EWS_Org_Import_Trait {
 
     /** Every employee for the import, by id. @return array<int,array{id:int,name:string,domain:string,title:string,manager:int,active:bool}> */
     private function org_import_people(){
-        global $wpdb;
-        $managers=$this->people_manager_ids();
-        $out=[];
-        foreach((array)$wpdb->get_results("SELECT id,name,domain_name,job_title,active FROM {$this->employees}") as $r){
-            $id=(int)$r->id;
-            $out[$id]=['id'=>$id,'name'=>(string)$r->name,'domain'=>(string)$r->domain_name,'title'=>(string)($r->job_title??''),'manager'=>(int)($managers[$id]??0),'active'=>(int)$r->active===1];
-        }
-        return $out;
+        return $this->services()->orgImport()->people();
     }
 
     /** The managers file (admin-post ews_org_export). */
@@ -98,34 +91,9 @@ trait EWS_Org_Import_Trait {
         if(!empty($_POST['cancel']))$this->org_redirect($back);
         if(!is_array($saved) || empty($saved['plan']))$this->org_redirect($back+['org_error'=>'expired']);
         if(!$this->org_enabled())$this->org_redirect($back+['org_error'=>'off']);
-        global $wpdb;
         $plan=$saved['plan'];$date=(string)$saved['date'];$reason=(string)$saved['reason'];
-        $scheduled=MoveRules::isScheduled($date,current_time('Y-m-d'));
-        $moved=0;$planned=0;$skipped=0;$titles=0;
-        // Checked again (the people may have changed since the preview), in passes: a row that would make a
-        // loop now may be fine once another row of the file is done (B no longer under A, then A under B).
-        $pending=$plan['moves'];
-        while($pending){
-            $later=[];
-            foreach($pending as $m){
-                $code=$this->org_move_check((int)$m['employee'],(int)$m['to'],$date,$reason,false,0,!$scheduled);
-                if($code==='loop'){$later[]=$m;continue;}
-                if($code){$skipped++;continue;}
-                if($scheduled){$this->org_move_schedule((int)$m['employee'],(int)$m['to'],$date,$reason,'import');$planned++;continue;}
-                $r=$this->org_move_apply((int)$m['employee'],(int)$m['to'],$date,$reason,'import');
-                if($r['ok'])$moved++;else $skipped++;
-            }
-            if(count($later)===count($pending)){$skipped+=count($later);break;}
-            $pending=$later;
-        }
-        foreach($plan['titles'] as $t){
-            if($wpdb->update($this->employees,['job_title'=>$t['to'],'updated_at'=>current_time('mysql')],['id'=>(int)$t['employee'],'active'=>1])){
-                $titles++;
-                $this->audit('employee_job_title','employee',(int)$t['employee'],'"'.$t['from'].'" → "'.$t['to'].'" · import');
-            }
-        }
-        $this->audit('org_imported','settings',0,$saved['file'].': '.$moved.' moved, '.$planned.' scheduled for '.$date.', '.$titles.' job titles, '.$skipped.' skipped, '.count($plan['problems']).' rows not used');
-        $this->org_redirect($back+['org_notice'=>'imported','moved'=>$moved,'planned'=>$planned,'titles'=>$titles,'skipped'=>$skipped]);
+        $r=$this->services()->orgImport()->apply($plan,$date,$reason,(string)$saved['file']);
+        $this->org_redirect($back+['org_notice'=>'imported','moved'=>$r['moved'],'planned'=>$r['planned'],'titles'=>$r['titles'],'skipped'=>$r['skipped']]);
     }
 
     /** The preview shown on the page, with names. @return array<string,mixed>|null */

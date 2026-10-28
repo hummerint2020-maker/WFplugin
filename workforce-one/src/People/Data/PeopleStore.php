@@ -71,4 +71,13 @@ interface PeopleStore
 
     /** The active employees as the org chart shows them, by name. @return list<object> */
     public function orgRows(bool $withDepartments): array;
+
+    /** Every employee (any state) for the managers import: id, name, domain_name, job_title, active. @return list<object> */
+    public function importRows(): array;
+
+    /** Sets the job title of an active employee. @return int|false rows changed */
+    public function setJobTitle(int $employeeId, string $title, string $now);
+
+    /** The employee's department id (null: no such employee; "" or null column: none). */
+    public function departmentIdOf(int $employeeId): ?string;
 }
