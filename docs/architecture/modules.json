@@ -109,7 +109,7 @@
       "layered": [
         {
           "slice": "directory",
-          "namespace": "People",
+          "namespace": ["People", "Organization"],
           "tables": [
             "employees",
             "employee_relationships",
