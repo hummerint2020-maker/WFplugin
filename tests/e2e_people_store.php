@@ -5,6 +5,7 @@
  * so nothing of the site is touched. Run with wp eval-file (CI's MySQL; SQLite works too).
  */
 use WorkforceOne\People\Data\WordPressDepartmentStore;
+use WorkforceOne\People\Data\WordPressOrgMoveStore;
 use WorkforceOne\People\Data\WordPressPeopleStore;
 use WorkforceOne\People\Data\WordPressReportingStore;
 use WorkforceOne\People\Data\WordPressTeamStore;
@@ -15,14 +16,15 @@ $check = static function ($condition, $message) {
     echo "PASS {$message}\n";
 };
 $prefix = 'ppl_contract_';
-$tables = ['ews_employees', 'ews_employee_relationships', 'ews_departments', 'ews_teams', 'ews_team_members'];
+$tables = ['ews_employees', 'ews_employee_relationships', 'ews_departments', 'ews_teams', 'ews_team_members', 'ews_org_moves'];
 foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$prefix}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $tables) { foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$prefix}{$t}"); });
-$wpdb->query("CREATE TABLE {$prefix}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, domain_name VARCHAR(190) NOT NULL, email VARCHAR(190) NULL, wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, default_shift_id BIGINT UNSIGNED NULL, attendance_enabled TINYINT NULL DEFAULT 1, job_title VARCHAR(120) NULL, profile_image_type VARCHAR(20) NULL, profile_image_url TEXT NULL, avatar_key VARCHAR(80) NULL, PRIMARY KEY (id))");
-$wpdb->query("CREATE TABLE {$prefix}ews_employee_relationships (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, relationship_type VARCHAR(40) NOT NULL, related_employee_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, PRIMARY KEY (id))");
-$wpdb->query("CREATE TABLE {$prefix}ews_departments (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, manager_employee_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, PRIMARY KEY (id))");
-$wpdb->query("CREATE TABLE {$prefix}ews_teams (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, manager_employee_id BIGINT UNSIGNED NULL, department_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, PRIMARY KEY (id))");
-$wpdb->query("CREATE TABLE {$prefix}ews_team_members (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, team_id BIGINT UNSIGNED NOT NULL, employee_id BIGINT UNSIGNED NOT NULL, active TINYINT NOT NULL DEFAULT 1, PRIMARY KEY (id))");
+$wpdb->query("CREATE TABLE {$prefix}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, domain_name VARCHAR(190) NOT NULL, email VARCHAR(190) NULL, wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, default_shift_id BIGINT UNSIGNED NULL, attendance_enabled TINYINT NULL DEFAULT 1, job_title VARCHAR(120) NULL, profile_image_type VARCHAR(20) NULL, profile_image_url TEXT NULL, avatar_key VARCHAR(80) NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
+$wpdb->query("CREATE TABLE {$prefix}ews_employee_relationships (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, relationship_type VARCHAR(40) NOT NULL, related_employee_id BIGINT UNSIGNED NULL, related_wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
+$wpdb->query("CREATE TABLE {$prefix}ews_departments (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, code VARCHAR(80) NOT NULL DEFAULT '', description TEXT NULL, manager_employee_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY department_name (name))");
+$wpdb->query("CREATE TABLE {$prefix}ews_teams (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, description TEXT NULL, manager_employee_id BIGINT UNSIGNED NULL, department_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY team_name (name))");
+$wpdb->query("CREATE TABLE {$prefix}ews_team_members (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, team_id BIGINT UNSIGNED NOT NULL, employee_id BIGINT UNSIGNED NOT NULL, active TINYINT NOT NULL DEFAULT 1, joined_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
+$wpdb->query("CREATE TABLE {$prefix}ews_org_moves (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, from_manager_id BIGINT UNSIGNED NOT NULL DEFAULT 0, to_manager_id BIGINT UNSIGNED NOT NULL DEFAULT 0, effective_date DATE NOT NULL, reason VARCHAR(255) NOT NULL DEFAULT '', status VARCHAR(20) NOT NULL DEFAULT 'done', source VARCHAR(20) NOT NULL DEFAULT 'chart', requests_moved INT UNSIGNED NOT NULL DEFAULT 0, note VARCHAR(255) NOT NULL DEFAULT '', created_by BIGINT UNSIGNED NOT NULL DEFAULT 0, created_at DATETIME NOT NULL, applied_at DATETIME NULL, PRIMARY KEY (id))");
 $db = clone $wpdb;
 $db->prefix = $prefix;
 $emp = $prefix . 'ews_employees';
@@ -128,6 +130,101 @@ $check($T->activeManagerFor($mona)->name === 'Omar' && $T->activeManagerFor($mon
 $check($T->activeMemberIds($alpha) === [(string) $mona, (string) $twin] && $T->activeTeamIdsOf($mona) === [(string) $alpha, (string) $beta] && $T->activeTeamIdsOf($twin) === [(string) $alpha], 'team members and teams of an employee');
 $tr = $T->activeTeamRowsByEmployees($ids501);
 $check(count($tr) === 3 && $tr[0]->team_id === (string) $alpha, 'activeTeamRowsByEmployees: by team, across the chunks');
+
+// ---- 3.31.134: the writes
+$dbx = clone $wpdb;
+$dbx->prefix = 'ppl_missing_';
+$now = '2026-10-28 09:00:00';
+$later = '2026-10-28 09:30:00';
+$ids = [$mona, $omar, $old, $twin];
+// reporting lines
+$db->query("DELETE FROM {$rt}");
+$line($omar, $mona);
+$check($R->deactivate($omar, 'supervisor', $now) === 1 && $R->deactivate($omar, 'supervisor', $now) === 0, 'deactivate: the changed count, then 0 when nothing is left');
+$line($omar, $mona);
+$line($omar, $twin, 'dotted');
+$check($R->deactivateSupervisor($omar, $now) === 1 && $R->deactivateSupervisor($omar, $now) === 0 && $R->relatedActive($omar, 'dotted')->name === 'Twin', 'deactivateSupervisor: only the supervisor line');
+$check($R->insertLine($omar, 'supervisor', $mona, 0, $now) === 1 && $R->insertId() > 0 && $R->currentManagerId($omar) === $mona, 'insertLine: a related employee');
+$check($R->insertLine($omar, 'dotted', 0, 55, $now) === 1 && $db->get_var("SELECT related_wp_user_id FROM {$rt} WHERE id=" . $R->insertId()) === '55' && $db->get_var("SELECT related_employee_id FROM {$rt} WHERE id=" . $R->insertId()) === null, 'insertLine: a WordPress user leaves the employee NULL');
+$quiet = $db->suppress_errors(true);
+$bad = new WordPressReportingStore($db, $emp);
+$rtName = new ReflectionProperty($bad, 'rt');
+$rtName->setAccessible(true);
+$rtName->setValue($bad, $prefix . 'ews_no_such_lines');
+$check($bad->deactivate($omar, 'supervisor', $now) === false && $bad->deactivateSupervisor($omar, $now) === false && $bad->insertLine($omar, 'supervisor', $mona, 0, $now) === false && $bad->lastError() !== '', 'the reporting writes: false on a database error, and the error text');
+$db->suppress_errors($quiet);
+
+// departments
+$DS = new WordPressDepartmentStore($db, $emp);
+$check($DS->insert('Logistics', 'log', "Boxes\nand trucks", 0, $now) === 1 && ($logi = $DS->insertId()) > 0 && $DS->byId($logi)->manager_employee_id === null && $DS->byId(9999) === null, 'department insert: no manager is NULL; byId; null for none');
+$quiet = $db->suppress_errors(true);
+$check($DS->insert('Logistics', 'log2', '', 0, $now) === false, 'department insert: a duplicate name is false (unique key)');
+$db->suppress_errors($quiet);
+$check($DS->update($logi, 'Logistics 2', 'log', 'd', $mona, $later) === 1 && $DS->update(999999, 'x', 'x', '', 0, $later) === 0 && $DS->byId($logi)->manager_employee_id === (string) $mona, 'department update: the changed count, 0 for no such department, the manager');
+$check($DS->duplicateFlags('Logistics 2', 'zzz', 0) === ['1'] && $DS->duplicateFlags('Logistics 2', 'zzz', $logi) === [] && $DS->duplicateFlags('nope', 'log', 0) === ['1'], 'department duplicateFlags: by name or code, not the department itself');
+$db->update($emp, ['department_id' => $logi], ['id' => $omar]);
+$check($DS->activeEmployeeCount($logi) === 1 && $DS->activeEmployeeCount(99999) === 0 && $DS->activeId($logi) === (string) $logi, 'department: the active employee count; activeId');
+$list = $DS->adminList();
+$check(count($list) >= 1 && $list[0]->employee_count !== null && isset($list[0]->manager_name), 'department adminList: the manager name and the employee count');
+$check($DS->archive($logi, $now) === 1 && $DS->archive(999999, $now) === 0 && $DS->activeId($logi) === null && $DS->adminList() === [], 'department archive: 1, 0 for no such department; gone from the list');
+
+// teams
+$TS = new WordPressTeamStore($db, $emp);
+$check($TS->tableExists() === true && (new WordPressTeamStore($dbx, $emp))->tableExists() === false, 'team tableExists follows the prefix');
+$check($TS->insert('Gamma', 'new', $mona, $ops, $now) === 1 && ($gamma = $TS->insertId()) > 0 && $TS->activeById($gamma)->name === 'Gamma' && $TS->activeById(9999) === null, 'team insert, insertId, activeById');
+$quiet = $db->suppress_errors(true);
+$check($TS->insert('Gamma', '', $mona, $ops, $now) === false && $TS->lastError() !== '', 'team insert: a duplicate name is false and lastError says why');
+$db->suppress_errors($quiet);
+$check($TS->update($gamma, 'Gamma 2', 'e', $omar, $ops, $later) === 1 && $TS->update(999999, 'x', '', 0, 0, $later) === 0 && $TS->duplicateFlags('Gamma 2', 0) === ['1'] && $TS->duplicateFlags('Gamma 2', $gamma) === [], 'team update and duplicateFlags');
+$check($TS->memberId($gamma, $mona) === null && $TS->insertMember($gamma, $mona, $now) === 1 && $TS->memberId($gamma, $mona) !== null && $TS->insertMember($gamma, $omar, $now) === 1, 'team members: memberId, insertMember');
+$memberRow = (int) $TS->memberId($gamma, $mona);
+$check($TS->deactivateMembersOfTeam($gamma, $now) === 2 && $TS->deactivateMembersOfTeam($gamma, $now) === 0 && $TS->reactivateMember($memberRow, $later) === 1 && $TS->activeMemberIds($gamma) === [(string) $mona], 'team members: deactivate (counted), reactivate');
+$check($TS->activeCountInDepartment($ops) >= 3 && $TS->activeDepartmentOf($gamma) === (string) $ops && $TS->activeDepartmentOf(9999) === null && $TS->activeId($gamma) === (string) $gamma && $TS->managedIn($omar, $ops) === [(string) $alpha, (string) $gamma], 'team reads: counts, department, managedIn, activeId');
+$check($TS->deactivateMembershipsOf($mona, $now) >= 1 && $TS->activeTeamIdsOf($mona) === []
+    && count($TS->adminList()) >= 3 && count($TS->pageEmployees()) >= 3 && is_array($TS->pageDepartments()), 'team: all memberships of one employee ended; the page lists');
+$check($TS->archive($gamma, $now) === 1 && $TS->deactivateAllMembers($gamma, $now) >= 0 && $TS->activeById($gamma) === null, 'team archive; all members ended');
+
+// the org moves
+$M = new WordPressOrgMoveStore($db);
+$mv = $prefix . 'ews_org_moves';
+$check($M->tableExists() === true && (new WordPressOrgMoveStore($dbx))->tableExists() === false, 'org moves tableExists follows the prefix');
+$row = static function ($employee, $to, $status, $date = '2026-10-28') use ($now) { return ['employee_id' => $employee, 'from_manager_id' => 0, 'to_manager_id' => $to, 'effective_date' => $date, 'reason' => 'r', 'status' => $status, 'source' => 'chart', 'created_by' => 1, 'created_at' => $now]; };
+$check($M->insert($row($omar, $mona, 'scheduled', '2026-10-27')) === 1 && ($m1 = $M->insertId()) > 0 && $M->openIdFor($omar, 0) === (string) $m1 && $M->openIdFor($omar, $m1) === null && $M->openIdFor($mona, 0) === null, 'openIdFor: a scheduled move of the employee, not the ignored one');
+$check(count($M->dueRows('2026-10-28')) === 1 && $M->dueRows('2026-10-26') === [], 'dueRows: the scheduled ones whose day has come');
+$check($M->claim($m1, $now) === 1 && $M->claim($m1, $now) === 0 && $M->applyingRows()[0]->applied_at === $now && $M->openIdFor($omar, 0) === (string) $m1, 'claim: 1 for the run that took it, 0 for the next');
+$check($M->release($m1, $later) === 0 && $M->release($m1, $now) === 1 && $M->byId($m1)->status === 'scheduled' && $M->byId($m1)->applied_at === null, 'release: only with the claim time; back to scheduled');
+$M->claim($m1, $now);
+$check($M->markAlreadyDone($m1, $later, $later) === 0 && $M->markAlreadyDone($m1, $now, $later) === 1 && $M->byId($m1)->note === 'already in place', 'markAlreadyDone: only with the claim time');
+$M->insert($row($omar, $old, 'scheduled', '2026-10-27'));
+$m2 = $M->insertId();
+$M->claim($m2, $now);
+$check($M->fail($m2, $later, 'loop', $later) === 0 && $M->fail($m2, $now, 'loop', $later) === 1 && $M->byId($m2)->note === 'loop', 'fail: with the claim time');
+$M->insert($row($omar, $old, 'scheduled', '2026-10-27'));
+$m3 = $M->insertId();
+$M->claim($m3, $now);
+$check($M->fail($m3, null, 'manager', $later) === 1 && $M->fail($m3, null, 'manager', $later) === 0, 'fail: without a claim time, whatever it was');
+$M->insert($row($omar, $mona, 'scheduled', '2026-10-27'));
+$m4 = $M->insertId();
+$M->claim($m4, $now);
+$check($M->finishClaimed($m4, $later, ['status' => 'done', 'requests_moved' => 3, 'applied_at' => $later]) === 0 && $M->finishClaimed($m4, $now, ['status' => 'done', 'requests_moved' => 3, 'applied_at' => $later]) === 1 && $M->byId($m4)->requests_moved === '3', 'finishClaimed: 1 only while the claim holds (0 otherwise)');
+$M->insert($row($omar, $mona, 'applying', '2026-10-27'));
+$m5 = $M->insertId();
+$db->query("UPDATE {$mv} SET applied_at=NULL WHERE id={$m5}");
+$check($M->resume($m5, $now) === 0 && $M->resume($m5, null) === 1 && $M->byId($m5)->status === 'scheduled' && $M->byId($m5)->note === 'resumed' && $M->byId($m5)->applied_at === null, 'resume: IS NULL for a move claimed without a time; the note');
+$M->claim($m5, $now);
+$check($M->failInterrupted($m5, $later, $later) === 0 && $M->failInterrupted($m5, $now, $later) === 1 && $M->byId($m5)->note === 'interrupted', 'failInterrupted: with the claim time');
+$M->insert($row($omar, $mona, 'applying', '2026-10-27'));
+$m6 = $M->insertId();
+$db->query("UPDATE {$mv} SET applied_at=NULL WHERE id={$m6}");
+$check($M->failInterrupted($m6, null, $later) === 1, 'failInterrupted: a move claimed without a time');
+$M->insert($row($mona, $omar, 'scheduled', '2026-11-30'));
+$m7 = $M->insertId();
+$check($M->cancel($m7, 'failed', $now) === 0 && $M->cancel($m7, 'scheduled', $now) === 1 && $M->byId($m7)->status === 'cancelled' && $M->byId(999999) === null, 'cancel: only from the status given');
+for ($i = 0; $i < 3; $i++) $M->insert($row($twin, $mona, 'done'));
+$M->insert($row($twin, $mona, 'scheduled', '2026-12-01'));
+$check(count($M->doneRows()) >= 4 && (int) $M->doneRows()[0]->id > (int) $M->doneRows()[1]->id && count($M->openRows()) >= 1 && $M->openRows()[0]->effective_date <= $M->openRows()[count($M->openRows()) - 1]->effective_date && count($M->failedRows()) >= 3, 'the lists: done newest first, open by day, failed newest first');
+$db->query("DROP TABLE {$mv}");
+$check($M->tableExists() === false && $M->dueRows('2026-10-28') === [] , 'a dropped org moves table is missing (a real table), and reads of it are empty');
 
 // ---- the table names: employees from the argument, the others from the prefix
 $db2 = clone $wpdb;

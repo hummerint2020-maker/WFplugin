@@ -136,7 +136,7 @@ def actions(ctx):
     out = {}
     for f in sorted(x for x in os.listdir(HERE) if re.fullmatch(r'actions(_\w+)?\.php', x)):
         restore()
-        t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1])
+        t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1])
         prefix = '' if f == 'actions.php' else f[8:-4] + ':'
         out.update({prefix + k: v for k, v in t.items()})
     return out
@@ -169,7 +169,7 @@ try:
     # The approvals' people, workflows and open requests (plain SQL; the pages of the approvals read them).
     wp('eval-file', os.path.join(HERE, 'seed_approvals.php'))
     # The people module's reporting lines, managers, teams and org-move history (ids merged into ctx for the page urls).
-    ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_people.php'), env={'GOLDEN_CTX': json.dumps(ctx)}).splitlines()[-1]))
+    ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_people.php'), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1]))
     # The query count of a page, printed at its end (web requests only).
     os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
@@ -224,6 +224,7 @@ try:
     tb = actions(ctx)
     point(HEAD)
     th = actions(ctx)
+    json.dump({k: v for k, v in th.items() if k.startswith('org:')}, open(os.path.join(S, 'golden-org-trace.json'), 'w'), indent=1)
     def first_difference(a, b):
         """Where two traces first differ, for the failure message: the first SQL statement that is not the same."""
         if isinstance(a, dict) and isinstance(b, dict) and isinstance(a.get('sql'), list) and isinstance(b.get('sql'), list):
@@ -245,6 +246,19 @@ try:
     check('...no action the old code had is missing', set(tb) == set(th), sorted(set(tb) ^ set(th)))
     check('...the actions really saved, notified and claimed the week (else they prove nothing)', tb.get('week_lock_notified') and tb.get('notifications') and tb.get('grid_insert', {}).get('ok'),
           (tb.get('week_lock_notified'), len(tb.get('notifications') or [])))
+    org = {k[4:]: v for k, v in tb.items() if k.startswith('org:')}
+    def ret(k):
+        return (org.get(k) or {}).get('return')
+    def to(k):
+        r = ret(k)
+        return r.get('to', '') if isinstance(r, dict) else ''
+    check('...the org-writes trace really moved, scheduled, failed, imported, saved and archived (else it proves nothing)',
+          bool(org) and 'org_notice=moved' in to('submit_move_now') and 'org_notice=scheduled' in to('submit_scheduled') and 'org_error=apply' in to('fault_move_commit')
+          and ret('apply_due') == 4 and 'org_notice=imported' in to('import_now') and 'department_saved=1' in to('dept_edit_ok') and 'team_saved=1' in to('team_new')
+          and 'department_deleted=1' in to('dept_archive_empty') and 'department_error=has_teams' in to('dept_archive_with_teams') and 'team_error=save' in to('fault_team_commit')
+          and 'requests=' in to('submit_move_now') and bool(tb.get('org:_rows:notifications')) and any('ROLLBACK' in q for q in (org.get('fault_team_member_insert') or {}).get('sql', []))
+          and ret('check_loop') == 'loop' and ret('set_supervisor') is True and ret('fault_set_only_commit') is False,
+          {k: ret(k) for k in ('submit_move_now', 'apply_due', 'check_loop', 'set_supervisor', 'fault_set_only_commit')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)

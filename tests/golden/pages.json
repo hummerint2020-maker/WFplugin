@@ -358,6 +358,62 @@
       "user": "emp1",
       "url": "/app/?ews_view=attendance&week={week}",
       "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-org-chart&focus={lina}&org_notice=moved",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-org-chart&focus={lina}&org_error=loop",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-org-chart&org_notice=imported&planned=2&skipped=1&titles=1",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Operations Lead"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-departments&department_error=duplicate",
+      "expect": "Ops"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-departments&department_saved=1",
+      "expect": "Ops"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-teams&team_error=duplicate",
+      "expect": "Alpha"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-teams&team_saved=1",
+      "expect": "Alpha"
     }
   ],
   "normalise": [

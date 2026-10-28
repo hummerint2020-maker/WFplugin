@@ -168,4 +168,19 @@ final class WordPressPeopleStore implements PeopleStore
         $d = $this->departments;
         return array_values((array) $this->db->get_results("SELECT e.id,e.name,e.domain_name,e.job_title,e.department_id,e.wp_user_id,e.profile_image_type,e.profile_image_url,e.avatar_key" . ($withDepartments ? ",d.name department_name FROM {$this->t} e LEFT JOIN {$d} d ON d.id=e.department_id" : " FROM {$this->t} e") . " WHERE e.active=1 ORDER BY e.name ASC"));
     }
+
+    public function importRows(): array
+    {
+        return array_values((array) $this->db->get_results("SELECT id,name,domain_name,job_title,active FROM {$this->t}"));
+    }
+
+    public function setJobTitle(int $employeeId, string $title, string $now)
+    {
+        return $this->db->update($this->t, ['job_title' => $title, 'updated_at' => $now], ['id' => $employeeId, 'active' => 1]);
+    }
+
+    public function departmentIdOf(int $employeeId): ?string
+    {
+        return $this->db->get_var($this->db->prepare("SELECT department_id FROM {$this->t} WHERE id=%d LIMIT 1", $employeeId));
+    }
 }

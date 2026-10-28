@@ -46,15 +46,20 @@ def l2(src):
     return [p for p in L2_BAD if re.search(p, src)]
 
 
+def namespaces(ns):
+    return list(ns) if isinstance(ns, (list, tuple)) else [ns]   # a slice may own several namespaces (People: People and Organization)
+
+
 def l3(src, own_ns, tables):
+    own_ns = namespaces(own_ns)
     bad = [t for t in LIT.findall(src) if t not in tables] + [t for t in (PROPS[p] for p in PROP.findall(src)) if t not in tables]
-    bad += ['use ' + m[0] for m in USE.findall(src) if m[0] != own_ns]
+    bad += ['use ' + m[0] for m in USE.findall(src) if m[0] not in own_ns]
     bad += ['EWS_'] if re.search(r'\bEWS_', src) else []
     return bad
 
 
 def l4(src, own_ns, exports):
-    return ['use %s\\%s' % m for m in USE.findall(src) if m[0] not in (own_ns, 'Platform', 'Support') and 'WorkforceOne\\%s\\%s' % m not in exports]
+    return ['use %s\\%s' % m for m in USE.findall(src) if m[0] not in (*namespaces(own_ns), 'Platform', 'Support') and 'WorkforceOne\\%s\\%s' % m not in exports]
 
 
 def body(src, name):
@@ -79,6 +84,8 @@ def self_test():
     ok &= bool(l3("<?php use WorkforceOne\\People\\X; $t=$db->prefix.'ews_employees';", 'Schedule', ['schedule']))
     ok &= not l3("<?php $t=$db->prefix . 'ews_schedule';", 'Schedule', ['schedule'])
     ok &= bool(l4("<?php\nuse WorkforceOne\\Payroll\\Run;\n", 'Schedule', []))
+    ok &= not l4("<?php\nuse WorkforceOne\\Organization\\Run;\n", ['People', 'Organization'], []) and bool(l4("<?php\nuse WorkforceOne\\Payroll\\Run;\n", ['People', 'Organization'], []))
+    ok &= not l3("<?php use WorkforceOne\\Organization\\X; $t=$db->prefix.'ews_teams';", ['People', 'Organization'], ['teams'])
     ok &= not l4("<?php\nuse WorkforceOne\\Platform\\Clock;\n", 'Schedule', [])
     ok &= bool(tables_in("<?php $wpdb->get_row(\"SELECT * FROM {$this->schedule}\");"))
     ok &= tables_in("<?php $t=$this->approval_tables(); $s=$this->substitutes_table();") == ['approval_steps', 'approval_substitutes']

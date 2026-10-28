@@ -81,10 +81,7 @@ trait EWS_Employee_Admin_Trait {
     }
 
     private function employee_admin_set_supervisor($id,$supervisor_id){
-        if($supervisor_id)return !is_wp_error($this->approval_set_relationship($id,'supervisor',$supervisor_id,0));
-        global $wpdb;
-        $rt=$this->approval_tables()['relationships'];
-        return $wpdb->query($wpdb->prepare("UPDATE {$rt} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type='supervisor' AND active=1",current_time('mysql'),$id))!==false;
+        return $this->services()->reporting()->setSupervisor((int)$id,absint($supervisor_id));
     }
 
     public function employee_save(){

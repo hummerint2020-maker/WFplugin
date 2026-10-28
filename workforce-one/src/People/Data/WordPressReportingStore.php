@@ -63,4 +63,40 @@ final class WordPressReportingStore implements ReportingStore
     {
         return (bool) $this->db->get_var($this->db->prepare("SELECT r.id FROM {$this->rt} r JOIN {$this->employees} e ON e.id=r.employee_id AND e.active=1 WHERE r.related_employee_id=%d AND r.relationship_type='supervisor' AND r.active=1 LIMIT 1", $employeeId));
     }
+
+    public function deactivate(int $employeeId, string $type, string $now)
+    {
+        return $this->db->query($this->db->prepare(
+            "UPDATE {$this->rt} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type=%s AND active=1",
+            $now, $employeeId, $type
+        ));
+    }
+
+    public function deactivateSupervisor(int $employeeId, string $now)
+    {
+        return $this->db->query($this->db->prepare("UPDATE {$this->rt} SET active=0,updated_at=%s WHERE employee_id=%d AND relationship_type='supervisor' AND active=1", $now, $employeeId));
+    }
+
+    public function insertLine(int $employeeId, string $type, int $relatedEmployeeId, int $relatedWpUserId, string $now)
+    {
+        return $this->db->insert($this->rt, [
+            'employee_id' => $employeeId,
+            'relationship_type' => $type,
+            'related_employee_id' => $relatedEmployeeId ?: null,
+            'related_wp_user_id' => $relatedWpUserId ?: null,
+            'active' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], ['%d', '%s', '%d', '%d', '%d', '%s', '%s']);
+    }
+
+    public function insertId(): int
+    {
+        return (int) $this->db->insert_id;
+    }
+
+    public function lastError(): string
+    {
+        return (string) $this->db->last_error;
+    }
 }

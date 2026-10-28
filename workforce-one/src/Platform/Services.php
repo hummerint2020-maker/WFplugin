@@ -15,16 +15,23 @@ use WorkforceOne\Approvals\Data\WordPressWorkflowStore;
 use WorkforceOne\Approvals\Data\WorkflowStore;
 use WorkforceOne\Approvals\WorkflowService;
 use WorkforceOne\People\Data\DepartmentStore;
+use WorkforceOne\People\Data\OrgMoveStore;
 use WorkforceOne\People\Data\PeopleStore;
 use WorkforceOne\People\Data\ReportingStore;
 use WorkforceOne\People\Data\TeamStore;
 use WorkforceOne\People\Data\WordPressDepartmentStore;
+use WorkforceOne\People\Data\WordPressOrgMoveStore;
 use WorkforceOne\People\Data\WordPressPeopleStore;
 use WorkforceOne\People\Data\WordPressReportingStore;
 use WorkforceOne\People\Data\WordPressTeamStore;
+use WorkforceOne\People\DepartmentService;
 use WorkforceOne\People\OrgDirectory;
+use WorkforceOne\People\OrgImportService;
+use WorkforceOne\People\OrgMoveService;
 use WorkforceOne\People\PeopleDirectory;
 use WorkforceOne\People\PeoplePorts;
+use WorkforceOne\People\ReportingService;
+use WorkforceOne\People\TeamService;
 use WorkforceOne\Schedule\Data\ScheduleDayStore;
 use WorkforceOne\Schedule\Data\WordPressScheduleDayStore;
 use WorkforceOne\Schedule\ScheduleDayService;
@@ -117,6 +124,49 @@ final class Services
     public function org(): OrgDirectory
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new OrgDirectory($this->peopleStore(), $this->reportingStore(), $this->departmentStore(), $this->teamStore());
+        return $this->made[__FUNCTION__];
+    }
+
+    public function orgMoveStore(): OrgMoveStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressOrgMoveStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Reporting lines, written (3.31.134). */
+    public function reporting(): ReportingService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ReportingService($this->reportingStore(), $this->peoplePorts->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The org chart's moves (3.31.134). */
+    public function orgMoves(): OrgMoveService
+    {
+        if (!isset($this->made[__FUNCTION__])) {
+            $this->made[__FUNCTION__] = new OrgMoveService($this->orgMoveStore(), $this->reporting(), $this->people(), $this->org(), $this->tx, $this->audit, $this->peoplePorts);
+        }
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The managers import (3.31.134). */
+    public function orgImport(): OrgImportService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new OrgImportService($this->peopleStore(), $this->org(), $this->orgMoves(), $this->audit, $this->peoplePorts);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The departments page (3.31.134). */
+    public function departments(): DepartmentService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new DepartmentService($this->departmentStore(), $this->teamStore(), $this->people(), $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The teams page, and the teams of one employee (3.31.134). */
+    public function teams(): TeamService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new TeamService($this->teamStore(), $this->departmentStore(), $this->peopleStore(), $this->people(), $this->tx, $this->audit, $this->clock);
         return $this->made[__FUNCTION__];
     }
 
