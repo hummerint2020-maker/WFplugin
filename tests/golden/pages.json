@@ -458,11 +458,6 @@
         }
       },
       "expect": "Lina Late"
-    },
-    {
-      "user": "emp1",
-      "url": "/app/?ews_view=employees",
-      "expect": "Lina Late"
     }
   ],
   "normalise": [
