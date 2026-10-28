@@ -81,7 +81,7 @@ trait EWS_Employee_Admin_Trait {
     }
 
     private function employee_admin_set_supervisor($id,$supervisor_id){
-        return $this->services()->reporting()->setSupervisor((int)$id,(int)$supervisor_id);
+        return $this->services()->reporting()->setSupervisor((int)$id,absint($supervisor_id));
     }
 
     public function employee_save(){

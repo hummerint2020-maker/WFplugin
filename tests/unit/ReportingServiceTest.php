@@ -31,6 +31,7 @@ final class ReportingServiceTest extends TestCase
     {
         $this->assertSame('invalid_relationship', $this->svc->setRelationship(0, 'supervisor', 3, 0)['code']);
         $this->assertSame('invalid_relationship', $this->svc->setRelationship(2, '', 3, 0)['code']);
+        $this->assertSame('invalid_relationship', $this->svc->setRelationship(2, '0', 3, 0)['code'], 'the type "0" is empty to the old code too');
         $this->assertSame('invalid_target', $this->svc->setRelationship(2, 'supervisor', 0, 0)['code']);
         $this->assertSame([], $this->s->w->log);
         $this->assertSame(102 - 1, $this->svc->setRelationship(2, 'dotted', 0, 55), 'a WordPress user is a target too');

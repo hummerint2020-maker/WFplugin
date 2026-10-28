@@ -30,7 +30,7 @@ final class ReportingService
      */
     public function setRelationship(int $employeeId, string $type, int $relatedEmployeeId, int $relatedWpUserId)
     {
-        if (!$employeeId || $type === '') return ['code' => 'invalid_relationship', 'message' => 'Invalid employee relationship.'];
+        if (!$employeeId || !$type) return ['code' => 'invalid_relationship', 'message' => 'Invalid employee relationship.'];
         if (!$relatedEmployeeId && !$relatedWpUserId) return ['code' => 'invalid_target', 'message' => 'A related employee or WordPress user is required.'];
         if ($this->store->deactivate($employeeId, $type, $this->clock->now()) === false) return ['code' => 'db_error', 'message' => $this->store->lastError()];
         if ($this->store->insertLine($employeeId, $type, $relatedEmployeeId, $relatedWpUserId, $this->clock->now()) === false) return ['code' => 'db_error', 'message' => $this->store->lastError()];
