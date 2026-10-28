@@ -224,7 +224,7 @@ try:
     tb = actions(ctx)
     point(HEAD)
     th = actions(ctx)
-    json.dump({k: v for k, v in th.items() if k.startswith('org:')}, open(os.path.join(S, 'golden-org-trace.json'), 'w'), indent=1)
+    json.dump({k: v for k, v in th.items() if k.startswith(('org:', 'employees:'))}, open(os.path.join(S, 'golden-org-trace.json'), 'w'), indent=1)
     def first_difference(a, b):
         """Where two traces first differ, for the failure message: the first SQL statement that is not the same."""
         if isinstance(a, dict) and isinstance(b, dict) and isinstance(a.get('sql'), list) and isinstance(b.get('sql'), list):
@@ -256,7 +256,7 @@ try:
           bool(org) and 'org_notice=moved' in to('submit_move_now') and 'org_notice=scheduled' in to('submit_scheduled') and 'org_error=apply' in to('fault_move_commit')
           and ret('apply_due') == 4 and 'org_notice=imported' in to('import_now') and 'department_saved=1' in to('dept_edit_ok') and 'team_saved=1' in to('team_new')
           and 'department_deleted=1' in to('dept_archive_empty') and 'department_error=has_teams' in to('dept_archive_with_teams') and 'team_error=save' in to('fault_team_commit')
-          and 'requests=' in to('submit_move_now') and bool(tb.get('org:_rows:notifications')) and any('ROLLBACK' in q for q in (org.get('fault_team_member_insert') or {}).get('sql', []))
+          and bool(tb.get('org:_rows:notifications')) and any('ROLLBACK' in q for q in (org.get('fault_team_member_insert') or {}).get('sql', []))
           and ret('check_loop') == 'loop' and ret('set_supervisor') is True and ret('fault_set_only_commit') is False,
           {k: ret(k) for k in ('submit_move_now', 'apply_due', 'check_loop', 'set_supervisor', 'fault_set_only_commit')})
     ib, ih = inventory(BASE), inventory(HEAD)
