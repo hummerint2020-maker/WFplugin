@@ -65,3 +65,6 @@ Tests: unit, phpstan, phpcs, `check_modules`, `check_layers`, translations, gold
 2. Release slicing: one release 3.31.135, or writes in 3.31.135 and pages + profile in 3.31.136? *Recommended: one release, with `employee_update` isolated in its own commit.*
 3. Successful photo upload coverage: e2e only, or a test-only upload override in the harness? *Recommended: e2e only (an override adds a test path to production code).*
 4. Order of the visible fixes left from L4b (h, j, m, n) against t–y. *Recommended: u, w, then h, j, m, n, then the rest.*
+
+## 11. Owner decisions (2026-10-28)
+1. Quirks t–y: moved as they are, fixed in later releases. 2. One release, 3.31.135, with `employee_update` in its own commit. 3. A successful photo upload is covered by `e2e_my_profile.py` only (no test path in production code). 4. Order of the visible fixes after L4c: **u, then w, then h, j, m, n, then the rest.**
