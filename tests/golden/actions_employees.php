@@ -137,8 +137,8 @@ $run('save_team_department', function () use ($save, $form, $teamSales) { return
 $run('save_ok', function () use ($save, $form, $free, $boss, $teamOps, $shiftB) { return $save($form(['wp_user_ref' => '#' . $free, 'supervisor_employee_ref' => '#' . $boss, 'team_ids' => [$teamOps], 'default_shift_id' => $shiftB])); });
 $run('save_ok_minimal', function () use ($save, $form) { return $save($form(['name' => 'Gd Min', 'domain_name' => 'gdmin', 'email' => 'gdmin@example.com', 'default_shift_id' => 0, 'department_id' => 0])); });
 $run('save_ok_with_title', function () use ($save, $form) { return $save($form(['name' => 'Gd Title', 'domain_name' => 'gdtitle', 'email' => 'gdtitle@example.com', 'job_title' => 'Lead Tester'])); });
-$run('save_ok_app_referer', function () use ($save, $form) { return $save($form(['name' => 'Gd App', 'domain_name' => 'gdapp', 'email' => 'gdapp@example.com']), 'ews31_employee_save', $appReferer); });
-$run('save_error_app_referer', function () use ($save, $form) { return $save($form(['domain_name' => 'empa']), 'ews31_employee_save', $appReferer); });
+$run('save_ok_app_referer', function () use ($save, $form, $appReferer) { return $save($form(['name' => 'Gd App', 'domain_name' => 'gdapp', 'email' => 'gdapp@example.com']), 'ews31_employee_save', $appReferer); });
+$run('save_error_app_referer', function () use ($save, $form, $appReferer) { return $save($form(['domain_name' => 'empa']), 'ews31_employee_save', $appReferer); });
 $faulty('save_fault_insert', $table('ews_employees'), function () use ($save, $form) { return $save($form(['name' => 'Gd F1', 'domain_name' => 'gdf1', 'email' => 'gdf1@example.com'])); });
 $faulty('save_fault_supervisor_line', $table('ews_employee_relationships'), function () use ($save, $form, $boss) { return $save($form(['name' => 'Gd F2', 'domain_name' => 'gdf2', 'email' => 'gdf2@example.com', 'supervisor_employee_ref' => '#' . $boss])); });
 $faulty('save_fault_periods_insert', $table('ews_employee_shift_periods'), function () use ($save, $form) { return $save($form(['name' => 'Gd F3', 'domain_name' => 'gdf3', 'email' => 'gdf3@example.com'])); });
@@ -175,7 +175,7 @@ $run('update_deactivate_date', function () use ($upd, $same, $wC, $day) { return
 $run('update_reactivate', function () use ($upd, $same, $wC) { return $upd($same($wC, ['active' => '1'])); });
 $run('update_deactivate_invalid_date', function () use ($upd, $same, $wC) { return $upd($same($wC, ['active' => '0', 'last_working_day' => '2026-13-45'])); });
 $run('update_deactivate_no_date', function () use ($upd, $same, $wE) { return $upd($same($wE, ['active' => '0'])); });
-$run('update_deactivate_sessions', function () use ($upd, $same, $wA) { return $upd($same($wA, ['active' => '0', 'last_working_day' => $GLOBALS['D0']])); });
+$run('update_deactivate_sessions', function () use ($upd, $same, $wA, $D0) { return $upd($same($wA, ['active' => '0', 'last_working_day' => $D0])); });
 $run('update_relink', function () use ($upd, $same, $wB, $free2) { return $upd($same($wB, ['wp_user_ref' => '#' . $free2])); });
 $run('update_unlink', function () use ($upd, $same, $wB) { $f = $same($wB); unset($f['wp_user_ref']); return $upd($f); });
 update_option('ews_feature_advances', 1, false);
@@ -195,7 +195,7 @@ update_option('ews_org_chart', ['enabled' => 0, 'audience' => 'managers', 'title
 $faulty('update_fault_team_members_insert', $table('ews_team_members'), function () use ($upd, $same, $wG, $teamOps) { return $upd($same($wG, ['team_ids' => [$teamOps]])); });
 $run('update_teams_ok', function () use ($upd, $same, $wG, $teamOps) { return $upd($same($wG, ['team_ids' => [$teamOps]])); });
 $run('update_department_change_teams', function () use ($upd, $same, $wG, $c, $teamSales) { return $upd($same($wG, ['department_id' => $c['sales'], 'team_ids' => [$teamSales]])); });
-$run('update_app_referer', function () use ($upd, $same, $wG) { return $upd($same($wG, ['name' => 'Emp G3']), 'ews31_employee_update', $GLOBALS['appReferer']); });
+$run('update_app_referer', function () use ($upd, $same, $wG, $appReferer) { return $upd($same($wG, ['name' => 'Emp G3']), 'ews31_employee_update', $appReferer); });
 
 // ---------------------------------------------------------------- 3. archive (admin-post ews31_employee_archive)
 $as($emp1);

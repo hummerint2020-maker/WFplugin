@@ -254,7 +254,7 @@ try:
         return r.get('to', '') if isinstance(r, dict) else ''
     check('...the org-writes trace really moved, scheduled, failed, imported, saved and archived (else it proves nothing)',
           bool(org) and 'org_notice=moved' in to('submit_move_now') and 'org_notice=scheduled' in to('submit_scheduled') and 'org_error=apply' in to('fault_move_commit')
-          and ret('apply_due') == 4 and 'org_notice=imported' in to('import_now') and 'department_saved=1' in to('dept_edit_ok') and 'team_saved=1' in to('team_new')
+          and ret('apply_due') == 4 and 'requests=' in to('submit_move_now') and bool(tb.get('org:_rows:notifications')) and 'org_notice=imported' in to('import_now') and 'department_saved=1' in to('dept_edit_ok') and 'team_saved=1' in to('team_new')
           and 'department_deleted=1' in to('dept_archive_empty') and 'department_error=has_teams' in to('dept_archive_with_teams') and 'team_error=save' in to('fault_team_commit')
           and any('ROLLBACK' in q for q in (org.get('fault_team_member_insert') or {}).get('sql', []))
           and ret('check_loop') == 'loop' and ret('set_supervisor') is True and ret('fault_set_only_commit') is False,
@@ -268,7 +268,7 @@ try:
           and 'advance_left=' in eto('archive_advance') and 'employee_error=save' in eto('update_fault_employee_update') and 'employee_error=teams' in eto('update_fault_team_members_insert')
           and 'profile_updated=avatar' in eto('profile_avatar_ok') and 'profile_error=size' in eto('profile_upload_size')
           and any(r.get('revoked_reason') == 'employee_archived' for r in emp.get('_rows:devices', []))
-          and any(r.get('action') == 'org_move' for r in emp.get('_rows:audit', []))
+          and any(r.get('action') == 'org_move' and 'waiting approval step(s) moved' in r.get('details', '') for r in emp.get('_rows:audit', [])) and bool(emp.get('_rows:notifications'))
           and any('ROLLBACK' in q for q in (emp.get('update_fault_periods_insert') or {}).get('sql', [])),
           {k: eto(k) for k in ('save_ok', 'update_nochange', 'archive_ok')})
     ib, ih = inventory(BASE), inventory(HEAD)
