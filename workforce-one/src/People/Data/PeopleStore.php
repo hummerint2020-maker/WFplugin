@@ -80,4 +80,53 @@ interface PeopleStore
 
     /** The employee's department id (null: no such employee; "" or null column: none). */
     public function departmentIdOf(int $employeeId): ?string;
+
+    /** The employee as the update form needs it before a change: active, department, user, last working day, shift. */
+    public function former(int $id): ?object;
+
+    /** An employee's state for an archive: active and user. */
+    public function status(int $id): ?object;
+
+    /** The id of another employee with this domain name, or null. */
+    public function domainOwner(string $domain, int $exceptId): ?string;
+
+    /** The id of another employee linked to this WordPress user, or null. */
+    public function userOwner(int $userId, int $exceptId): ?string;
+
+    /** Adds an employee; the fields are sent as given (no formats). @param array<string,mixed> $row @return int|false */
+    public function insert(array $row);
+
+    public function insertId(): int;
+
+    /** Changes the given fields of one employee. @param array<string,mixed> $fields @return int|false rows changed */
+    public function updateFields(int $id, array $fields);
+
+    /** Archives: inactive, with the last working day. @return int|false */
+    public function archive(int $id, string $lastDay, string $now);
+
+    /** The profile picture fields ($key null clears the avatar key). @return int|false */
+    public function setPicture(int $id, string $type, string $url, ?string $key);
+
+    /** How many employees match the search (name, domain or email), any state. */
+    public function adminCount(string $search): int;
+
+    /** One page of the Employees list, active first, by name. @return list<object> */
+    public function adminPage(string $search, int $perPage, int $offset): array;
+
+    /** Every employee, any state, for the supervisor pick list: id, name, domain_name, active. @return list<object> */
+    public function pickList(): array;
+
+    /** The job titles of the active employees, A–Z (at most 300). @return list<string> */
+    public function activeTitles(): array;
+
+    /** The active employees for the app's Employees view: id, name, domain_name, email. @return list<object> */
+    public function contactList(): array;
+
+    /** The people directory page: active employees by name, filtered by a search and/or a list of ids (at most 500). @param list<int>|null $ids @return list<object> */
+    public function directory(string $search, ?array $ids): array;
+
+    /** The public profile fields of an active employee, or null. */
+    public function publicProfile(int $id): ?object;
+
+    public function lastError(): string;
 }

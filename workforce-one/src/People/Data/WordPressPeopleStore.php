@@ -183,4 +183,114 @@ final class WordPressPeopleStore implements PeopleStore
     {
         return $this->db->get_var($this->db->prepare("SELECT department_id FROM {$this->t} WHERE id=%d LIMIT 1", $employeeId));
     }
+
+    public function former(int $id): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT active,department_id,wp_user_id,last_working_day,default_shift_id FROM {$this->t} WHERE id=%d LIMIT 1", $id));
+        return is_object($r) ? $r : null;
+    }
+
+    public function status(int $id): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT active,wp_user_id FROM {$this->t} WHERE id=%d LIMIT 1", $id));
+        return is_object($r) ? $r : null;
+    }
+
+    public function domainOwner(string $domain, int $exceptId): ?string
+    {
+        return $this->db->get_var($this->db->prepare("SELECT id FROM {$this->t} WHERE domain_name=%s AND id<>%d LIMIT 1", $domain, $exceptId));
+    }
+
+    public function userOwner(int $userId, int $exceptId): ?string
+    {
+        return $this->db->get_var($this->db->prepare("SELECT id FROM {$this->t} WHERE wp_user_id=%d AND id<>%d LIMIT 1", $userId, $exceptId));
+    }
+
+    public function insert(array $row)
+    {
+        return $this->db->insert($this->t, $row);
+    }
+
+    public function insertId(): int
+    {
+        return (int) $this->db->insert_id;
+    }
+
+    public function updateFields(int $id, array $fields)
+    {
+        return $this->db->update($this->t, $fields, ['id' => $id]);
+    }
+
+    public function archive(int $id, string $lastDay, string $now)
+    {
+        return $this->db->update($this->t, ['active' => 0, 'last_working_day' => $lastDay, 'updated_at' => $now], ['id' => $id]);
+    }
+
+    public function setPicture(int $id, string $type, string $url, ?string $key)
+    {
+        return $this->db->update($this->t, ['profile_image_type' => $type, 'profile_image_url' => $url, 'avatar_key' => $key], ['id' => $id], ['%s', '%s', '%s'], ['%d']);
+    }
+
+    /** The WHERE of the Employees page's search ('' for none). */
+    private function searchWhere(string $search): string
+    {
+        if ($search === '') return '';
+        $like = '%' . $this->db->esc_like($search) . '%';
+        return $this->db->prepare(' WHERE name LIKE %s OR domain_name LIKE %s OR email LIKE %s', $like, $like, $like);
+    }
+
+    public function adminCount(string $search): int
+    {
+        $where = $this->searchWhere($search);
+        return (int) $this->db->get_var("SELECT COUNT(*) FROM {$this->t}{$where}");
+    }
+
+    public function adminPage(string $search, int $perPage, int $offset): array
+    {
+        $where = $this->searchWhere($search);
+        return array_values((array) $this->db->get_results($this->db->prepare("SELECT * FROM {$this->t}{$where} ORDER BY active DESC,name ASC LIMIT %d OFFSET %d", $perPage, $offset)));
+    }
+
+    public function pickList(): array
+    {
+        return array_values((array) $this->db->get_results("SELECT id,name,domain_name,active FROM {$this->t} ORDER BY name ASC"));
+    }
+
+    public function activeTitles(): array
+    {
+        return array_map('strval', (array) $this->db->get_col("SELECT DISTINCT job_title FROM {$this->t} WHERE active=1 AND job_title IS NOT NULL AND job_title<>'' ORDER BY job_title ASC LIMIT 300"));
+    }
+
+    public function contactList(): array
+    {
+        return array_values((array) $this->db->get_results("SELECT id,name,domain_name,email FROM {$this->t} WHERE active=1 ORDER BY name"));
+    }
+
+    public function directory(string $search, ?array $ids): array
+    {
+        $where = ['active=1'];
+        $args = [];
+        if ($search !== '') {
+            $like = '%' . $this->db->esc_like($search) . '%';
+            $where[] = '(name LIKE %s OR domain_name LIKE %s OR email LIKE %s)';
+            array_push($args, $like, $like, $like);
+        }
+        if ($ids !== null) {
+            $where[] = 'id IN (' . implode(',', array_fill(0, count($ids), '%d')) . ')';
+            $args = array_merge($args, $ids);
+        }
+        $sql = "SELECT id,name,domain_name,profile_image_type,profile_image_url,avatar_key FROM {$this->t} WHERE " . implode(' AND ', $where) . ' ORDER BY name ASC LIMIT 500';
+        return array_values((array) ($args ? $this->db->get_results($this->db->prepare($sql, ...$args)) : $this->db->get_results($sql)));
+    }
+
+    public function publicProfile(int $id): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT id,name,email,profile_image_type,profile_image_url,avatar_key FROM {$this->t} WHERE id=%d AND active=1 LIMIT 1", $id));
+        return is_object($r) ? $r : null;
+    }
+
+    public function lastError(): string
+    {
+        return (string) $this->db->last_error;
+    }
 }
