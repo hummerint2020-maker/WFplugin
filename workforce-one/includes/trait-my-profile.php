@@ -65,9 +65,7 @@ trait EWS_My_Profile_Trait {
         $teams=[];
         $team_ids=$this->team_ids_for_employee($eid);
         if($team_ids){
-            $tt=$this->team_tables();
-            $ph=implode(',',array_fill(0,count($team_ids),'%d'));
-            $teams=(array)$wpdb->get_results($wpdb->prepare("SELECT name FROM {$tt['teams']} WHERE id IN ($ph) AND active=1 ORDER BY name ASC",...$team_ids));
+            $teams=$this->services()->employees()->activeTeamNameRows($team_ids);
         }
 
         $year=(int)current_time('Y');

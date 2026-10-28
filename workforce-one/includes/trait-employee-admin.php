@@ -36,7 +36,6 @@ trait EWS_Employee_Admin_Trait {
 
     /** Reads and validates the posted employee. @return array{0: array<string,mixed>, 1: ?string} */
     private function employee_admin_input($id,$old_department=null){
-        global $wpdb;
         $in=[
             'name'=>sanitize_text_field(wp_unslash($_POST['name']??'')),
             'domain_name'=>sanitize_text_field(wp_unslash($_POST['domain_name']??'')),
@@ -53,31 +52,7 @@ trait EWS_Employee_Admin_Trait {
             'job_title'=>isset($_POST['job_title'])?\WorkforceOne\Settings\OrgChartSettings::title(wp_unslash($_POST['job_title'])):null,
         ];
         $this->ensure_departments_schema();$this->ensure_teams_schema();$this->ensure_approval_schema();
-        $teams=$this->team_tables()['teams'];
-        $facts=[
-            'id'=>$id,'name'=>$in['name'],'domain'=>$in['domain_name'],'email_valid'=>$in['email']!==''&&is_email($in['email']),
-            'department_ok'=>!$in['department_id']||(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_departments WHERE id=%d AND active=1",$in['department_id'])),
-            'domain_taken'=>(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE domain_name=%s AND id<>%d LIMIT 1",$in['domain_name'],$id)),
-            'user_ok'=>$in['wp_user_id']===0||($in['wp_user_id']>0&&get_userdata($in['wp_user_id'])!==false),
-            'user_taken'=>$in['wp_user_id']>0&&(bool)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->employees} WHERE wp_user_id=%d AND id<>%d LIMIT 1",$in['wp_user_id'],$id)),
-            'supervisor_id'=>$in['supervisor_id'],
-            'title_missing'=>!$id && $in['job_title']===''? $this->org_title_required():false,
-        ];
-        if($in['supervisor_id']){
-            $facts['supervisor_ok']=(bool)$this->people_active_id($in['supervisor_id']);
-            $above=$this->approval_related_employee($in['supervisor_id'],'supervisor');
-            $facts['supervisors_supervisor']=$above?(int)$above->id:0;
-            // At any level (3.31.97): the new supervisor must not report to this employee.
-            if($id)$facts['supervisor_reports_to_employee']=$this->org_tree()->wouldLoop((int)$id,(int)$in['supervisor_id']);
-        }
-        if($in['team_ids']){
-            $ph=implode(',',array_fill(0,count($in['team_ids']),'%d'));
-            $matching=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$teams} WHERE active=1 AND department_id=%d AND id IN ($ph)",array_merge([$in['department_id']],$in['team_ids'])));
-            $facts['teams_in_department']=$matching===count($in['team_ids']);
-        }
-        // Only a department change can strand the teams this employee manages.
-        if($id && $old_department!==null && $old_department!==$in['department_id'])$facts['manages_team_elsewhere']=(bool)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$teams} WHERE manager_employee_id=%d AND active=1 AND department_id<>%d",$id,$in['department_id']));
-        return [$in,EmployeeRules::check($facts)];
+        return [$in,$this->services()->employees()->check($in,$in['email']!==''&&is_email($in['email']),$id,$old_department)];
     }
 
     private function employee_admin_set_supervisor($id,$supervisor_id){
@@ -87,90 +62,52 @@ trait EWS_Employee_Admin_Trait {
     public function employee_save(){
         if(!$this->can('ews_manage_employees'))wp_die('Access denied');
         check_admin_referer('ews31_employee_save');
-        global $wpdb;
         [$in,$error]=$this->employee_admin_input(0);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
-        $ok=$wpdb->insert($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'default_shift_id'=>$in['default_shift_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id']]+($in['job_title']!==null&&$in['job_title']!==''?['job_title'=>$in['job_title']]:[]));
-        if($ok===false)$this->employee_admin_redirect(['employee_error'=>'save']);
-        $id=(int)$wpdb->insert_id;
-        $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
-        $this->shift_period_add($id,(int)$in['default_shift_id'],\WorkforceOne\Schedule\ShiftPeriods::BEGINNING,'',false);   // shift history (3.31.108)
-        if(!$this->org_set_supervisor_only($id,$in['supervisor_id']))$this->employee_admin_redirect(['employee_error'=>'save']);
-        $this->audit('employee_create','employee',$id,$in['name'].' / '.$in['domain_name']);
+        $error=$this->services()->employees()->create($in);
+        if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
         $this->employee_admin_redirect(['employee_notice'=>'added']);
     }
 
     public function employee_update(){
         if(!$this->can('ews_manage_employees'))wp_die('Access denied');
         check_admin_referer('ews31_employee_update');
-        global $wpdb;
         $id=absint($_POST['id']??0);
-        $old=$id?$wpdb->get_row($wpdb->prepare("SELECT active,department_id,wp_user_id,last_working_day,default_shift_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
+        $old=$id?$this->services()->employees()->former($id):null;
         if(!$old)$this->employee_admin_redirect(['employee_error'=>'not_found']);
         [$in,$error]=$this->employee_admin_input($id,(int)$old->department_id);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
         // Inactive: paid up to the last working day (kept from before when not sent); active again: none.
         $last_day=$in['active']?null:$this->employee_last_working_day_input((string)($old->last_working_day??''));
-        // A new shift here counts from today; the days before keep the old one (3.31.108, shift history).
-        // Saved first and checked (3.31.119): a shift that could not be saved changes nothing else.
-        if((int)$old->default_shift_id!==(int)$in['default_shift_id'] && $this->shift_period_add($id,(int)$in['default_shift_id'],current_time('Y-m-d'),'',false)!==true)$this->employee_admin_redirect(['employee_error'=>'save']);
-        // default_shift_id is not written here (3.31.119): the shift history sets it under its lock, so an older form saved at the same
-        // moment cannot put the previous shift back.
-        $updated=$wpdb->update($this->employees,['name'=>$in['name'],'domain_name'=>$in['domain_name'],'email'=>$in['email'],'wp_user_id'=>$in['wp_user_id'],'attendance_enabled'=>$in['attendance_enabled'],'department_id'=>$in['department_id'],'active'=>$in['active'],'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')]+($in['job_title']!==null?['job_title'=>$in['job_title']!==''?$in['job_title']:null]:[]),['id'=>$id]);
-        if($updated===false)$this->employee_admin_redirect(['employee_error'=>'save']);
-        $this->invalidate_employee_runtime_cache($id,$in['wp_user_id']);
-        // Made inactive, or linked to another WordPress user: the previous user is signed out of the app (3.31.47).
-        if(!empty($old->wp_user_id) && (((int)$old->active===1 && !$in['active']) || (int)$old->wp_user_id!==(int)$in['wp_user_id']))$this->api_revoke_user_sessions((int)$old->wp_user_id,$in['active']?'employee_unlinked':'employee_archived');
-        $old_supervisor=$this->people_manager_of($id);
-        $new_supervisor=(int)$in['supervisor_id'];
-        if($this->org_enabled() && $old_supervisor!==$new_supervisor){
-            // Kept as a move in the organization chart's history while the chart is on (3.31.98), with the waiting requests: all or nothing (3.31.119).
-            $r=$this->org_supervisor_change($id,$old_supervisor,$new_supervisor,['employee_id'=>$id,'from_manager_id'=>$old_supervisor,'to_manager_id'=>$new_supervisor,
-                'effective_date'=>current_time('Y-m-d'),'reason'=>'','status'=>'done','source'=>'employees']);
-            if(!$r['ok'])$this->employee_admin_redirect(['employee_error'=>'save']);
-            $this->audit('org_move','employee',$id,$this->org_move_summary($id,$old_supervisor,$new_supervisor,current_time('Y-m-d'),'').($r['requests']?' · '.$r['requests'].' waiting approval step(s) moved':'').' · employees');
-        }elseif(!$this->org_set_supervisor_only($id,$new_supervisor))$this->employee_admin_redirect(['employee_error'=>'save']);
-        if(is_wp_error($this->sync_employee_teams($id,$in['team_ids'])))$this->employee_admin_redirect(['employee_error'=>'teams']);
-        $this->audit('employee_update','employee',$id,$in['name'].' / '.$in['domain_name'].' / '.$in['email'].' / teams='.count($in['team_ids']));
-        if((int)$old->active!==$in['active'])$this->audit('employee_status_change','employee',$id,'Status: '.((int)$old->active?'Active':'Inactive').' -> '.($in['active']?'Active':'Inactive').($last_day?' / last working day '.$last_day:''));
-        // Made inactive with an advance still open (3.31.109): the rest comes off the last month's pay.
-        $left=(int)$old->active===1 && !$in['active'] && $this->advances_enabled()?$this->advance_left_for($id):0.0;
-        $this->employee_admin_redirect($left>0?['employee_notice'=>'updated','advance_left'=>$left]:['employee_notice'=>'updated']);
+        $r=$this->services()->employees()->update($id,$old,$in,$last_day);
+        if($r['error'])$this->employee_admin_redirect(['employee_error'=>$r['error']]);
+        $this->employee_admin_redirect($r['advance_left']>0?['employee_notice'=>'updated','advance_left'=>$r['advance_left']]:['employee_notice'=>'updated']);
     }
 
     public function employee_archive(){
         if(!$this->can('ews_manage_employees'))wp_die('Access denied');
         check_admin_referer('ews31_employee_archive');
-        global $wpdb;
         $id=absint($_POST['id']??0);
-        $row=$id?$wpdb->get_row($wpdb->prepare("SELECT active,wp_user_id FROM {$this->employees} WHERE id=%d LIMIT 1",$id)):null;
-        $old=$row?$row->active:null;
-        if($old===null)$this->employee_admin_redirect(['employee_error'=>'not_found']);
+        $row=$id?$this->services()->employees()->status($id):null;
+        if(!$row)$this->employee_admin_redirect(['employee_error'=>'not_found']);
         $last_day=$this->employee_last_working_day_input();
-        if($wpdb->update($this->employees,['active'=>0,'last_working_day'=>$last_day,'updated_at'=>current_time('mysql')],['id'=>$id])===false)$this->employee_admin_redirect(['employee_error'=>'save']);
-        $this->invalidate_employee_runtime_cache($id);
-        // An archived employee is signed out of the app on every device (3.31.47).
-        if(!empty($row->wp_user_id))$this->api_revoke_user_sessions((int)$row->wp_user_id,'employee_archived');
-        if((int)$old!==0)$this->audit('employee_status_change','employee',$id,'Status: Active -> Inactive / last working day '.$last_day);
-        // Still owing a salary advance (3.31.109, owner decision 3): the rest comes off the last pay.
-        $left=(int)$old!==0 && $this->advances_enabled()?$this->advance_left_for($id):0.0;
-        $this->employee_admin_redirect($left>0?['employee_notice'=>'archived','advance_left'=>$left]:['employee_notice'=>'archived']);
+        $r=$this->services()->employees()->archive($id,$row,$last_day);
+        if($r['error'])$this->employee_admin_redirect(['employee_error'=>$r['error']]);
+        $this->employee_admin_redirect($r['advance_left']>0?['employee_notice'=>'archived','advance_left'=>$r['advance_left']]:['employee_notice'=>'archived']);
     }
 
     public function admin_employees(){
         if(!$this->can('ews_manage_employees'))wp_die('Access denied');
-        global $wpdb;
         $this->ensure_departments_schema();$this->ensure_teams_schema();
+        $svc=$this->services()->employees();
         // One page of the list at a time, with a search (3.31.71: the whole list did not fit in memory at 3,000).
         $per=50;$search=sanitize_text_field(wp_unslash($_GET['s']??''));$paged=max(1,absint($_GET['paged']??1));
-        $where='';
-        if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where=$wpdb->prepare(' WHERE name LIKE %s OR domain_name LIKE %s OR email LIKE %s',$like,$like,$like);}
-        $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->employees}{$where}");
+        $total=$svc->adminCount($search);
         $pages=max(1,(int)ceil($total/$per));$paged=min($paged,$pages);
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->employees}{$where} ORDER BY active DESC,name ASC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
+        $rows=$svc->adminPage($search,$per,($paged-1)*$per);
         // Every employee once, for the supervisor pick list and the names shown in it.
-        $people=[];foreach((array)$wpdb->get_results("SELECT id,name,domain_name,active FROM {$this->employees} ORDER BY name ASC") as $p)$people[(int)$p->id]=$p;
-        $teams=(array)$wpdb->get_results("SELECT id,name,manager_employee_id,department_id FROM {$wpdb->prefix}ews_teams WHERE active=1 ORDER BY name ASC");
+        $people=[];foreach($svc->pickList() as $p)$people[(int)$p->id]=$p;
+        $teams=$svc->pageTeams();
         $users=[];
         foreach(get_users(['orderby'=>'display_name','order'=>'ASC','fields'=>['ID','display_name','user_login']]) as $u)$users[(int)$u->ID]=$u->display_name.' ('.$u->user_login.')';
         $shifts=[];$all_shifts=[];
@@ -189,7 +126,7 @@ trait EWS_Employee_Admin_Trait {
         $error=sanitize_key($_GET['employee_error']??'');
         echo $this->render_template('admin/employees',[
             'employees'=>$employees,'people'=>$people,'teams'=>$teams,'users'=>$users,'search'=>$search,'paged'=>$paged,'pages'=>$pages,'total'=>$total,'page_url'=>admin_url('admin.php?page=ews31-employees'),'shifts'=>$shifts,'all_shifts'=>$all_shifts,
-            'departments'=>(array)$wpdb->get_results("SELECT id,name FROM {$wpdb->prefix}ews_departments WHERE active=1 ORDER BY name ASC"),
+            'departments'=>$svc->pageDepartments(),
             'notice'=>EmployeeRules::noticeMessage(sanitize_key($_GET['employee_notice']??'')),
             'error'=>$error!==''?EmployeeRules::errorMessage($error):null,
             // Made inactive with a salary advance still open (3.31.109, owner decision 3): the rest comes off the last pay.
@@ -197,7 +134,7 @@ trait EWS_Employee_Admin_Trait {
             'post_url'=>admin_url('admin-post.php'),
             // Job titles (3.31.97) while the organization chart is on: the field, whether it is required, the titles in use.
             'org'=>$this->org_enabled(),'title_required'=>$this->org_title_required(),
-            'titles'=>$this->org_enabled()?array_map('strval',(array)$wpdb->get_col("SELECT DISTINCT job_title FROM {$this->employees} WHERE active=1 AND job_title IS NOT NULL AND job_title<>'' ORDER BY job_title ASC LIMIT 300")):[],
+            'titles'=>$this->org_enabled()?$svc->activeTitles():[],
             'profile_url'=>admin_url('admin.php?page=ews31-employee-profile'),'today'=>current_time('Y-m-d'),
         ]);
     }

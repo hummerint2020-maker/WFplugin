@@ -19,8 +19,7 @@ trait EWS_Employee_Profile_Trait {
         if(!$emp)wp_die('Employee not found.');
 
         $this->ensure_teams_schema();
-        $tt=$this->team_tables();
-        $teams=(array)$wpdb->get_results($wpdb->prepare("SELECT t.id,t.name,t.manager_employee_id FROM {$tt['teams']} t INNER JOIN {$tt['members']} m ON m.team_id=t.id AND m.employee_id=%d AND m.active=1 WHERE t.active=1 ORDER BY t.name ASC",$employee_id));
+        $teams=$this->services()->employees()->teamsOfWithManager($employee_id);
         $team_labels=[];$manager_of=[];
         foreach($teams as $tm){
             $is_manager=(int)$tm->manager_employee_id===$employee_id;
