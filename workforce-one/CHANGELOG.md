@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.134
+### People org writes move to Controllers → Services → Stores (L4b; design `docs/tasks/people-org-writes.md`)
+No setting, no switch, no database change, and nothing you can see: the golden harness compares 58 pages and 125 org calls (every move, import, supervisor change, department and team save, with faults injected into each write, the transaction start and the commit) with the old code, statement for statement; old quirks are moved as they are.
+- **The organization chart's moves** (check, move now, keep for a date, the daily run with its claims, cancel, the history for the chart) are `OrgMoveService` over `OrgMoveStore`; the Employees page's supervisor change, the Approvals page's supervisor list and `approval_set_relationship` are `ReportingService`; the managers import is `OrgImportService`; the Departments and Teams pages (and the teams of one employee) are `DepartmentService` and `TeamService`. The trait functions keep their names and signatures and call them.
+- **Ports instead of the plugin object:** the clock, who is signed in, the approvals' request transfer (and telling the new manager), and "this employee changed" are four small interfaces built in one place (`trait-services.php`).
+- **`trait-org-import.php` has no SQL at all now**; the layer baseline falls from 226 to 194 references outside a Store.
+- Tests: 36 new unit tests (rollback at each write with nothing told or audited, a failed start with no rollback, the claim cases, recover wait/resume/fail, the passes, the cap of five per person), the storage contract on real tables now covers every write and the org-moves table, the golden harness gained an in-process driver for admin-post handlers (`tests/golden/exit.php`).
+
 ## 3.31.133
 ### People reads move to Controllers → Services → Stores (L4a; design `docs/tasks/people-store.md`)
 No setting, no switch, no database change, and nothing you can see: every page, query and write is the same as in 3.31.132 (the golden harness compares 51 pages and 77 People calls with the old code, byte for byte and statement for statement).
