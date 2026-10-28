@@ -112,7 +112,8 @@
           "slice": "directory",
           "namespace": [
             "People",
-            "Organization"
+            "Organization",
+            "Employees"
           ],
           "tables": [
             "employees",
