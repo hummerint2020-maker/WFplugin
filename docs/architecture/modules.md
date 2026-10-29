@@ -71,6 +71,9 @@ Both will go through the other modules' functions rather than their tables.
    `OrgImportService`, `DepartmentService` and `TeamService` (over the same Stores plus `OrgMoveStore`); `trait-org-import.php` has no SQL left.
    **3.31.135 (L4c, `docs/tasks/people-employee-writes.md`):** the employee writes and pages moved behind `EmployeeService`
    and `ProfileService`. Reads of employee names in other modules (a later release) are what is left of People.
+   **Attendance (3.31.136, L5a, `docs/tasks/attendance-store.md`):** the reads of the time log and the break sessions (today's events, the
+   attendance day, the last device location, the break reads, the overtime day) moved behind `AttendanceLog` over `TimeLogStore` and
+   `BreakStore`; Sign In / Out, breaks, auto attendance, corrections and the time report follow in L5b–L5e.
 2. **Move modules out of the shared object, least tied first:** notifications, polls (engagement),
    daily workers, the installed app, then leave, overtime and attendance, last payroll and reports.
    Each becomes a class in `src/<Module>/` with its own hook registration and public functions; the

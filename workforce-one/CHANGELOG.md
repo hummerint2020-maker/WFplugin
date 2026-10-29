@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.31.136
+### Attendance reads move to Controllers → Services → Stores (L5a; design `docs/tasks/attendance-store.md`)
+No setting, no switch, no database change, and nothing you can see: the golden harness compares 67 pages and 52 attendance reads (today's events with a corrected row hidden, the attendance day for a normal and an overnight shift, the last device location, the break sessions and open break, the overtime day) with the old code, statement for statement. Sign In / Sign Out, breaks, auto attendance, corrections and payroll are not touched.
+- **`AttendanceLog`** over **`TimeLogStore`** and **`BreakStore`** answers today's events, whether yesterday's shift is still open, the last device location, the live Sign In / Sign Out of a day, and the break reads. The trait functions (`today_events`, `attendance_day`, `last_device_location`, `break_sessions_today`, `break_open_session`, and the time-log read of the overtime summary) keep their names and call it; `today_events` and `attendance_day` now live in `trait-attendance.php`.
+- The time-log and break tables join the layer check: 274 references outside a Store are counted in 49 files (the baseline can only go down from here; `tl_live()` counts as a reference).
+- Tests: 7 unit tests, a storage contract on real tables (`tests/e2e_attendance_store.php`, in CI).
+
 ## 3.31.135
 ### People employee writes and pages move to Controllers → Services → Stores (L4c; design `docs/tasks/people-employee-writes.md`); closes the People refactor
 No setting, no switch, no database change, and nothing you can see: the golden harness compares 63 pages and 84 employee calls (adding, updating and archiving an employee with every error code, shift change, lock refused, deactivation with sessions, relink, supervisor change with the chart on and off, team failures, open advance, and the profile picture), with faults injected into each write, with the old code, statement for statement. Old quirks (t–y in the design) are moved as they are.
