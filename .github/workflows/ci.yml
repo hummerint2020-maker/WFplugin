@@ -113,6 +113,8 @@ jobs:
         run: wp eval-file tests/e2e_schedule_store.php --path="$WP"
       - name: People storage contract
         run: wp eval-file tests/e2e_people_store.php --path="$WP"
+      - name: Attendance storage contract
+        run: wp eval-file tests/e2e_attendance_store.php --path="$WP"
       - name: Start PHP server
         run: |
           php -S 127.0.0.1:8080 -t "$WP" tests/router.php > "$S/server.log" 2>&1 &

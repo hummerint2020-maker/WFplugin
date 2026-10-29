@@ -19,7 +19,7 @@ trait EWS_Work_Time_Trait {
             global $wpdb;
             $table=$wpdb->prefix.'ews_overtime_requests';
             $requests=(array)$wpdb->get_results($wpdb->prepare("SELECT id,start_time,end_time FROM {$table} WHERE employee_id=%d AND overtime_date=%s AND status='Approved' ORDER BY start_time ASC",$eid,$date));
-            $events=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY event_at ASC",$eid,$date));
+            $events=$this->services()->attendanceLog()->liveInOut((int)$eid,(string)$date);
             $sign_in=null;$sign_out=null;
             foreach($events as $ev){
                 if(($ev->event_type==='sign_in'||$ev->event_type==='late_sign_in') && !$sign_in)$sign_in=$ev->event_at;
@@ -32,38 +32,11 @@ trait EWS_Work_Time_Trait {
             return ['approved_minutes'=>$o['approved'],'actual_approved_minutes'=>$o['actual'],'unapproved_extra_minutes'=>$o['extra'],'approved_requests'=>$details,'sign_in'=>$sign_in,'sign_out'=>$sign_out,'scheduled_start'=>$cfg['start'],'scheduled_end'=>$cfg['end']];
         }
 
-    /**
-     * The day the employee's current shift belongs to (src/Attendance/ShiftDay.php): today, or, for an
-     * overnight shift after midnight (or still open after its end), the day it started. Sign In / Out,
-     * breaks and the Sign In page all use it.
-     */
-    private function attendance_day($eid){
-            $eid=(int)$eid;$today=current_time('Y-m-d');
-            static $cache=[];
-            $key=$eid.'|'.$today.'|'.current_time('H:i');
-            if(isset($cache[$key]))return $cache[$key];
-            $h=$this->working_hours($eid);
-            $overnight=!empty($h['overnight']) && $h['start']>$h['end'];
-            $open=false;
-            if($overnight && $eid){
-                global $wpdb;
-                $yesterday=date('Y-m-d',strtotime($today.' -1 day'));
-                $types=(array)$wpdb->get_col($wpdb->prepare("SELECT event_type FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s".$this->tl_live()."",$eid,$yesterday));
-                $open=(in_array('sign_in',$types,true)||in_array('late_sign_in',$types,true)) && !in_array('sign_out',$types,true);
-            }
-            return $cache[$key]=\WorkforceOne\Attendance\ShiftDay::resolve($today,current_time('H:i'),(string)$h['start'],(string)$h['end'],$overnight,$open);
-        }
-
     /** The schedule table's name as the plugin object has it (for the layered Store, 3.31.127). */
     private function schedule_table_name(){ return (string)$this->schedule; }
 
     private function today_schedule_for_employee($eid){
             return $this->services()->scheduleDays()->day((int)$eid,(string)$this->attendance_day($eid));
-        }
-
-    private function today_events($eid){
-            global $wpdb;$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s".$this->tl_live()." ORDER BY event_at ASC",$eid,$this->attendance_day($eid)));
-            $o=[];foreach($rows as $r)$o[$r->event_type]=$r;return $o;
         }
 
     private function default_shifts(){

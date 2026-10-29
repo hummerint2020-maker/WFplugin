@@ -372,7 +372,40 @@
         "face_reset_can_ask",
         "face_reset_requested",
         "cx_new_request_sheet",
-        "ews_with_lock"
+        "ews_with_lock",
+        "today_events",
+        "attendance_day",
+        "last_device_location",
+        "time_logs_table_name"
+      ],
+      "layered": [
+        {
+          "slice": "logs",
+          "namespace": [
+            "Attendance"
+          ],
+          "tables": [
+            "time_logs",
+            "break_sessions"
+          ],
+          "store": [
+            "workforce-one/src/Attendance/Data/WordPressTimeLogStore.php",
+            "workforce-one/src/Attendance/Data/WordPressBreakStore.php"
+          ],
+          "services": [
+            "workforce-one/src/Attendance/AttendanceLog.php"
+          ],
+          "moved": [
+            "today_events",
+            "attendance_day",
+            "last_device_location",
+            "break_sessions_today",
+            "break_open_session"
+          ]
+        }
+      ],
+      "exports": [
+        "WorkforceOne\\Attendance\\AttendanceLog"
       ]
     },
     "leave": {

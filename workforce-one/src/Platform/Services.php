@@ -2,6 +2,11 @@
 namespace WorkforceOne\Platform;
 
 use WorkforceOne\Approvals\ApprovalEngine;
+use WorkforceOne\Attendance\AttendanceLog;
+use WorkforceOne\Attendance\Data\BreakStore;
+use WorkforceOne\Attendance\Data\TimeLogStore;
+use WorkforceOne\Attendance\Data\WordPressBreakStore;
+use WorkforceOne\Attendance\Data\WordPressTimeLogStore;
 use WorkforceOne\Approvals\DeadlineService;
 use WorkforceOne\Approvals\ApprovalPorts;
 use WorkforceOne\Approvals\ApprovalReads;
@@ -185,6 +190,25 @@ final class Services
     public function profiles(): ProfileService
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ProfileService($this->peopleStore());
+        return $this->made[__FUNCTION__];
+    }
+
+    public function timeLogStore(): TimeLogStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressTimeLogStore($this->db, (string) ($this->tables['time_logs'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    public function breakStore(): BreakStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressBreakStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** What the attendance log says (3.31.136): today's events, the last location, the shift state, the break reads. */
+    public function attendanceLog(): AttendanceLog
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new AttendanceLog($this->timeLogStore(), $this->breakStore());
         return $this->made[__FUNCTION__];
     }
 

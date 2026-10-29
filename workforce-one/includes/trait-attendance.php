@@ -22,9 +22,36 @@ trait EWS_Attendance_Trait {
         }
 
     /** The employee's last Sign In / Out that had coordinates (for the impossible-movement check). */
+    /** The time-log table's name as the plugin object has it (for the layered Store, 3.31.136). */
+    private function time_logs_table_name(){ return (string)$this->time_logs; }
+
     private function last_device_location($employee_id){
-            global $wpdb;
-            return $wpdb->get_row($wpdb->prepare("SELECT latitude,longitude,location_timestamp FROM {$this->time_logs} WHERE employee_id=%d AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",(int)$employee_id),ARRAY_A);
+            return $this->services()->attendanceLog()->lastDeviceLocation((int)$employee_id);
+        }
+
+    /**
+     * The day the employee's current shift belongs to (src/Attendance/ShiftDay.php): today, or, for an
+     * overnight shift after midnight (or still open after its end), the day it started. Sign In / Out,
+     * breaks and the Sign In page all use it.
+     */
+    private function attendance_day($eid){
+            $eid=(int)$eid;$today=current_time('Y-m-d');
+            static $cache=[];
+            $key=$eid.'|'.$today.'|'.current_time('H:i');
+            if(isset($cache[$key]))return $cache[$key];
+            $h=$this->working_hours($eid);
+            $overnight=!empty($h['overnight']) && $h['start']>$h['end'];
+            $open=false;
+            if($overnight && $eid){
+                $yesterday=date('Y-m-d',strtotime($today.' -1 day'));
+                $open=$this->services()->attendanceLog()->shiftOpenOn($eid,$yesterday);
+            }
+            return $cache[$key]=\WorkforceOne\Attendance\ShiftDay::resolve($today,current_time('H:i'),(string)$h['start'],(string)$h['end'],$overnight,$open);
+        }
+
+    private function today_events($eid){
+            $day=$this->attendance_day($eid);
+            return $this->services()->attendanceLog()->todayEvents((int)$eid,(string)$day);
         }
 
     public function time_event(){
