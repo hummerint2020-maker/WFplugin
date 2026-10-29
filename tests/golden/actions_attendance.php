@@ -44,14 +44,15 @@ $ids = ['omar' => $c['omar'], 'lina' => $c['lina'], 'mona' => $c['mona'], 'ali' 
 foreach ($ids as $name => $id) $run('today_events_' . $name, function () use ($call, $id) { return $call('today_events', $id); });
 // ---------------------------------------------------------------- the attendance day (the static cache is keyed by the minute: a fresh id each time)
 foreach ($ids as $name => $id) $run('attendance_day_' . $name, function () use ($call, $id) { return $call('attendance_day', $id); });
-// an overnight shift: the day is read from yesterday's events (sam signed in yesterday and did not sign out; ziad did both; nour has none)
+// an overnight shift: the day is read from yesterday's events (sam signed in yesterday and did not sign out; twin did both; nour has none)
 update_option('ews_allow_overnight_shift', 1, false);
-update_option('ews_working_hours', ['start' => '23:59', 'end' => '23:58', 'normal_until' => '23:58'], false);   // overnight all day but one minute
+update_option('ews_working_hours', ['start' => '23:59', 'end' => '00:00', 'normal_until' => '00:00'], false);   // overnight all day but the edge minutes: an open shift yesterday decides the day
 $call('invalidate_working_hours_runtime_cache');
+foreach (['sam', 'twin', 'nour'] as $who) $run('hours_overnight_' . $who, function () use ($call, $c, $who) { return $call('working_hours', $c[$who]); });   // no shift of their own: shift_id 0
 $run('attendance_day_overnight_open', function () use ($call, $c) { return $call('attendance_day', $c['sam']); });
-$run('attendance_day_overnight_closed', function () use ($call, $c) { return $call('attendance_day', $c['ziad']); });
+$run('attendance_day_overnight_closed', function () use ($call, $c) { return $call('attendance_day', $c['twin']); });
 $run('attendance_day_overnight_none', function () use ($call, $c) { return $call('attendance_day', $c['nour']); });
-$run('today_events_overnight_open', function () use ($call, $c) { return $call('today_events', $c['sam']); });
+$run('today_events_overnight_open', function () use ($call, $c) { return $call('today_events', $c['sam']); });   // the day is cached for the minute: this call and the one above are in one minute or the trace repeats
 delete_option('ews_allow_overnight_shift');
 delete_option('ews_working_hours');
 $call('invalidate_working_hours_runtime_cache');

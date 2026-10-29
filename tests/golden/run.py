@@ -279,10 +279,10 @@ try:
     json.dump({k: v for k, v in th.items() if k.startswith('attendance:')}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
     check('...the attendance trace really read events, a superseded one hidden, locations, breaks and an overtime day (else it proves nothing)',
           bool(att) and set(aret('today_events_omar') or {}) == {'sign_in'} and set(aret('today_events_lina') or {}) == {'sign_in', 'sign_out'}
-          and (aret('today_events_mona') or {}).get('sign_in', {}).get('event_at') == 'T'
+          and str((aret('today_events_mona') or {}).get('sign_in', {}).get('id')) == str(ctx['att_corrected'])
           and isinstance(aret('last_device_location_omar'), dict) and aret('last_device_location_lina') is None
           and len(aret('break_sessions_lina') or []) == 2 and (aret('break_open_omar') or {}).get('status') == 'Open' and aret('break_remaining_lina') == 0
-          and aret('attendance_day_overnight_open') != aret('attendance_day_overnight_closed') and set(aret('today_events_overnight_open') or {}) == {'sign_in'} and (aret('overtime_summary_lina') or {}).get('sign_out') == 'T'
+          and all((aret('hours_overnight_' + w) or {}).get('shift_id') == 0 for w in ('sam', 'twin', 'nour')) and aret('attendance_day_overnight_open') == 'D-1' and aret('attendance_day_overnight_closed') == 'D0' and aret('attendance_day_overnight_none') == 'D0' and set(aret('today_events_overnight_open') or {}) == {'sign_in'} and (aret('overtime_summary_lina') or {}).get('sign_out') == 'T'
           and all(att.get('_rows:' + t) for t in ('time_logs', 'break_sessions')),
           {k: aret(k) for k in ('today_events_omar', 'last_device_location_omar', 'break_remaining_lina', 'attendance_day_overnight_open')})
     ib, ih = inventory(BASE), inventory(HEAD)

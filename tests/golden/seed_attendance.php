@@ -16,7 +16,7 @@ foreach (['ensure_break_schema', 'ensure_corrections_schema'] as $fn) {
 $today = current_time('Y-m-d');
 $yesterday = gmdate('Y-m-d', strtotime($today . ' -1 day'));
 $at = function ($hhmm, $date = null) use ($today) { return ($date ?: $today) . ' ' . $hhmm . ':00'; };
-$wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date IN ('{$today}','{$yesterday}') AND employee_id IN (" . implode(',', array_map('intval', [$c['omar'], $c['lina'], $c['mona'], $c['ali'], $c['rana'], $c['sam'], $c['ziad']])) . ')');
+$wpdb->query("DELETE FROM {$p}ews_time_logs WHERE work_date IN ('{$today}','{$yesterday}') AND employee_id IN (" . implode(',', array_map('intval', [$c['omar'], $c['lina'], $c['mona'], $c['ali'], $c['rana'], $c['sam'], $c['twin']])) . ')');
 $wpdb->query("DELETE FROM {$p}ews_break_sessions");
 $row = function ($eid, $type, $when, $date, array $extra = []) use ($wpdb, $p) {
     $wpdb->insert($p . 'ews_time_logs', array_merge(['employee_id' => $eid, 'user_id' => 0, 'work_date' => $date, 'event_type' => $type, 'event_at' => $when, 'scheduled_status' => 'Office', 'ip_address' => '10.0.0.1'], $extra));
@@ -35,10 +35,10 @@ $row($c['mona'], 'sign_in', $at('08:00', gmdate('Y-m-d', strtotime($today . ' -2
 $row($c['ali'], 'sign_in', $at('22:00', $yesterday), $yesterday);
 $row($c['rana'], 'sign_in', $at('08:00', $yesterday), $yesterday);
 $row($c['rana'], 'sign_out', $at('16:30', $yesterday), $yesterday);
-// the overnight cases use people no other call asks about (the attendance day is cached per employee and minute): sam open, ziad closed, nour none
+// the overnight cases use people no other call asks about (the attendance day is cached per employee and minute): sam open, twin closed, nour none (none of them has a shift of their own: the company hours decide)
 $row($c['sam'], 'sign_in', $at('23:00', $yesterday), $yesterday);
-$row($c['ziad'], 'sign_in', $at('23:00', $yesterday), $yesterday);
-$row($c['ziad'], 'sign_out', $at('23:30', $yesterday), $yesterday);
+$row($c['twin'], 'sign_in', $at('23:00', $yesterday), $yesterday);
+$row($c['twin'], 'sign_out', $at('23:30', $yesterday), $yesterday);
 $brk = function ($eid, $start, $end, $min, $status) use ($wpdb, $p, $today) {
     $wpdb->insert($p . 'ews_break_sessions', ['employee_id' => $eid, 'user_id' => 0, 'work_date' => $today, 'start_at' => $start, 'end_at' => $end, 'actual_minutes' => $min, 'status' => $status]);
 };

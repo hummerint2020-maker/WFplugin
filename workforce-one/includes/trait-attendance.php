@@ -21,10 +21,10 @@ trait EWS_Attendance_Trait {
             return [$lat!==null?(float)$lat:null,$lng!==null?(float)$lng:null,$acc!==null?(float)$acc:null,$ts!==null?(int)$ts:null];
         }
 
-    /** The employee's last Sign In / Out that had coordinates (for the impossible-movement check). */
     /** The time-log table's name as the plugin object has it (for the layered Store, 3.31.136). */
     private function time_logs_table_name(){ return (string)$this->time_logs; }
 
+    /** The employee's last Sign In / Out that had coordinates (for the impossible-movement check). */
     private function last_device_location($employee_id){
             return $this->services()->attendanceLog()->lastDeviceLocation((int)$employee_id);
         }
