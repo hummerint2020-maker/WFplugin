@@ -15,10 +15,15 @@ use WorkforceOne\Platform\AuditLog;
 use WorkforceOne\Platform\Clock;
 use WorkforceOne\Platform\OnceClaim;
 use WorkforceOne\People\Actor;
+use WorkforceOne\People\AppSessions;
 use WorkforceOne\People\EmployeeChanged;
+use WorkforceOne\People\OpenAdvances;
 use WorkforceOne\People\OrgApprovals;
 use WorkforceOne\People\OrgClock;
+use WorkforceOne\People\OrgFeature;
 use WorkforceOne\People\PeoplePorts;
+use WorkforceOne\People\ShiftHistory;
+use WorkforceOne\People\WpUsers;
 use WorkforceOne\Platform\Permissions;
 use WorkforceOne\Platform\Services;
 use WorkforceOne\Platform\Transaction;
@@ -56,6 +61,12 @@ trait EWS_Services_Trait {
         $reassign=function($employee,$from,$to,&$pending){return $this->approval_reassign_supervisor($employee,$from,$to,$pending);};
         $tell_manager=function($employee,$to,$pending){$this->approval_reassign_notify($employee,$to,$pending);};
         $employee_changed=function($employee,$wp_user){$this->invalidate_employee_runtime_cache($employee,$wp_user);};
+        $shift_add=function($employee,$shift,$date){return $this->shift_period_add($employee,$shift,$date,'',false);};
+        $revoke_sessions=function($wp_user,$reason){$this->api_revoke_user_sessions($wp_user,$reason);};
+        $advances_on=function(){return $this->advances_enabled();};
+        $advance_left=function($employee){return $this->advance_left_for($employee);};
+        $org_on=function(){return $this->org_enabled();};
+        $title_required=function(){return $this->org_title_required();};
         return new Services($db,['schedule'=>$this->schedule_table_name(),'employees'=>$this->employees],
             new class($audit) implements AuditLog {
                 private $f;
@@ -84,6 +95,32 @@ trait EWS_Services_Trait {
                     private $f;
                     public function __construct(callable $f){ $this->f=$f; }
                     public function changed(int $employeeId,int $wpUserId): void { ($this->f)($employeeId,$wpUserId); }
+                },
+                new class($shift_add) implements ShiftHistory {
+                    private $f;
+                    public function __construct(callable $f){ $this->f=$f; }
+                    public function fromBeginning(int $employeeId,int $shiftId){ return ($this->f)($employeeId,$shiftId,\WorkforceOne\Schedule\ShiftPeriods::BEGINNING); }
+                    public function from(int $employeeId,int $shiftId,string $date){ return ($this->f)($employeeId,$shiftId,$date); }
+                },
+                new class($revoke_sessions) implements AppSessions {
+                    private $f;
+                    public function __construct(callable $f){ $this->f=$f; }
+                    public function revoke(int $wpUserId,string $reason): void { ($this->f)($wpUserId,$reason); }
+                },
+                new class($advances_on,$advance_left) implements OpenAdvances {
+                    private $on; private $left;
+                    public function __construct(callable $on,callable $left){ $this->on=$on; $this->left=$left; }
+                    public function enabled(): bool { return (bool)($this->on)(); }
+                    public function leftFor(int $employeeId): float { return (float)($this->left)($employeeId); }
+                },
+                new class implements WpUsers {
+                    public function exists(int $userId): bool { return get_userdata($userId)!==false; }
+                },
+                new class($org_on,$title_required) implements OrgFeature {
+                    private $on; private $title;
+                    public function __construct(callable $on,callable $title){ $this->on=$on; $this->title=$title; }
+                    public function enabled(): bool { return (bool)($this->on)(); }
+                    public function titleRequired(): bool { return (bool)($this->title)(); }
                 }),
             new class($db) implements OnceClaim {
                 private $db;

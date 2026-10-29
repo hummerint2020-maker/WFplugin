@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.135
+### People employee writes and pages move to Controllers → Services → Stores (L4c; design `docs/tasks/people-employee-writes.md`); closes the People refactor
+No setting, no switch, no database change, and nothing you can see: the golden harness compares 63 pages and 84 employee calls (adding, updating and archiving an employee with every error code, shift change, lock refused, deactivation with sessions, relink, supervisor change with the chart on and off, team failures, open advance, and the profile picture), with faults injected into each write, with the old code, statement for statement. Old quirks (t–y in the design) are moved as they are.
+- **`EmployeeService`** now checks, adds, updates and archives employees and reads the Employees page and the people directory; **`ProfileService`** writes the profile picture. The trait functions keep their names and call them; the permission checks, nonces, uploads, files, redirects and audit rows of the profile stay in the controllers.
+- Five more ports (shift history, the app's sessions, salary advances, WordPress users, the organization chart switch), built in one place. No transaction is opened by the employee update: the shift history and the org move keep their own, in the same order as before.
+- `trait-employee-admin.php`, `trait-people-view.php` and `trait-profile-account.php` have no SQL now; the layer baseline falls from 194 to 170 references outside a Store.
+- Tests: 19 new unit tests (the facts and their order, every path of add, update and archive, the sessions truth table, the chart on and off), the storage contract covers every new read and write on real tables.
+
 ## 3.31.134
 ### People org writes move to Controllers → Services → Stores (L4b; design `docs/tasks/people-org-writes.md`)
 No setting, no switch, no database change, and nothing you can see: the golden harness compares 58 pages and 125 org calls (every move, import, supervisor change, department and team save, with faults injected into each write, the transaction start and the commit) with the old code, statement for statement; old quirks are moved as they are.

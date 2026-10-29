@@ -19,7 +19,7 @@ $prefix = 'ppl_contract_';
 $tables = ['ews_employees', 'ews_employee_relationships', 'ews_departments', 'ews_teams', 'ews_team_members', 'ews_org_moves'];
 foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$prefix}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $tables) { foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$prefix}{$t}"); });
-$wpdb->query("CREATE TABLE {$prefix}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, domain_name VARCHAR(190) NOT NULL, email VARCHAR(190) NULL, wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, default_shift_id BIGINT UNSIGNED NULL, attendance_enabled TINYINT NULL DEFAULT 1, job_title VARCHAR(120) NULL, profile_image_type VARCHAR(20) NULL, profile_image_url TEXT NULL, avatar_key VARCHAR(80) NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
+$wpdb->query("CREATE TABLE {$prefix}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, domain_name VARCHAR(190) NOT NULL, email VARCHAR(190) NULL, wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, default_shift_id BIGINT UNSIGNED NULL, attendance_enabled TINYINT NULL DEFAULT 1, job_title VARCHAR(120) NULL, profile_image_type VARCHAR(20) NULL, profile_image_url TEXT NULL, avatar_key VARCHAR(80) NULL, last_working_day DATE NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
 $wpdb->query("CREATE TABLE {$prefix}ews_employee_relationships (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, relationship_type VARCHAR(40) NOT NULL, related_employee_id BIGINT UNSIGNED NULL, related_wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
 $wpdb->query("CREATE TABLE {$prefix}ews_departments (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, code VARCHAR(80) NOT NULL DEFAULT '', description TEXT NULL, manager_employee_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY department_name (name))");
 $wpdb->query("CREATE TABLE {$prefix}ews_teams (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, description TEXT NULL, manager_employee_id BIGINT UNSIGNED NULL, department_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY team_name (name))");
@@ -235,6 +235,53 @@ $check((new WordPressReportingStore($db2, $emp))->tableExists() === false && (ne
 $db2->suppress_errors($quiet);
 $wpdb->query("DROP TABLE {$rt}");
 $check($R->tableExists() === false, 'tableExists is false once the table is gone (a real table, not a temporary one)');
+
+// ---- 3.31.135: the employee writes and the page reads
+$nowE = '2026-10-28 09:00:00';
+$S2 = new WordPressPeopleStore($db, $emp);
+$db->query("DELETE FROM {$emp}");
+$db->query("ALTER TABLE {$emp} AUTO_INCREMENT = 1");
+$check($S2->insert(['name' => 'Zed', 'domain_name' => 'zed', 'email' => 'zed@x.test', 'wp_user_id' => 301, 'default_shift_id' => 0, 'attendance_enabled' => 1, 'department_id' => 5]) === 1 && ($zed = $S2->insertId()) > 0, 'insert: the fields as given; insertId');
+$check($S2->insert(['name' => 'Amy', 'domain_name' => 'amy', 'email' => 'amy@x.test', 'wp_user_id' => 0, 'default_shift_id' => 0, 'attendance_enabled' => 0, 'department_id' => 0, 'job_title' => 'Lead']) === 1 && ($amy = $S2->insertId()) > $zed, 'insert with a job title');
+$quiet = $db->suppress_errors(true);
+$check($S2->domainOwner('zed', $amy) === (string) $zed && $S2->domainOwner('zed', $zed) === null && $S2->domainOwner('nope', 0) === null && $S2->userOwner(301, 0) === (string) $zed && $S2->userOwner(301, $zed) === null, 'domainOwner and userOwner: another employee, not the one being edited');
+$check($S2->lastError() === '' || is_string($S2->lastError()), 'lastError is a string');
+$db->suppress_errors($quiet);
+$former = $S2->former($zed);
+$check($former->active === '1' && $former->department_id === '5' && $former->wp_user_id === '301' && $former->last_working_day === null && $former->default_shift_id === '0' && !isset($former->name) && $S2->former(9999) === null, 'former: the five columns as strings, NULL day; null for none');
+$check($S2->status($zed)->wp_user_id === '301' && !isset($S2->status($zed)->name) && $S2->status(9999) === null, 'status: active and user only');
+$check($S2->updateFields($zed, ['name' => 'Zed 2', 'job_title' => null, 'updated_at' => $nowE]) === 1 && $db->get_var("SELECT name FROM {$emp} WHERE id={$zed}") === 'Zed 2' && $S2->updateFields(999999, ['name' => 'x']) === 0, 'updateFields: the changed count, 0 for none');
+$check($S2->archive($zed, '2026-10-20', $nowE) === 1 && $db->get_row("SELECT active,last_working_day FROM {$emp} WHERE id={$zed}")->last_working_day === '2026-10-20' && $S2->status($zed)->active === '0', 'archive: inactive with the last working day');
+$check($S2->setPicture($amy, 'avatar', 'https://x.test/a.svg', 'cat') === 1 && $db->get_var("SELECT avatar_key FROM {$emp} WHERE id={$amy}") === 'cat' && $S2->setPicture($amy, 'initials', '', null) === 1 && $db->get_var("SELECT avatar_key FROM {$emp} WHERE id={$amy}") === null, 'setPicture: the key, and NULL to clear it');
+$db->update($emp, ['active' => 1], ['id' => $zed]);
+$check($S2->adminCount('') === 2 && $S2->adminCount('zed') === 1 && $S2->adminCount('%') === 0 && $S2->adminCount('_') === 0 && $S2->adminCount('x.test') === 2, 'adminCount: the search escapes % and _, matches name, domain and email');
+$check(array_map(function ($r) { return $r->name; }, $S2->adminPage('', 50, 0)) === ['Amy', 'Zed 2'] && count($S2->adminPage('', 1, 1)) === 1 && $S2->adminPage('', 50, 5) === [] && property_exists($S2->adminPage("", 50, 0)[0], "avatar_key"), 'adminPage: whole rows, active first then by name, with the offset');
+$check(array_map(function ($r) { return $r->domain_name; }, $S2->pickList()) === ['amy', 'zed'] && isset($S2->pickList()[0]->active) && !isset($S2->pickList()[0]->email), 'pickList: id, name, domain, active, by name');
+$check($S2->activeTitles() === ['Lead'] && array_map(function ($r) { return $r->id; }, $S2->contactList()) === [(string) $amy, (string) $zed] && isset($S2->contactList()[0]->email), 'activeTitles and contactList');
+$check(count($S2->directory('', null)) === 2 && count($S2->directory('amy', null)) === 1 && count($S2->directory('', [0])) === 0 && count($S2->directory('', [$zed])) === 1 && count($S2->directory('x.test', [$zed, $amy])) === 2 && $S2->directory('', null)[0]->name === 'Amy' && !isset($S2->directory('', null)[0]->email), 'directory: active only, the search and the ids together, [0] finds nobody');
+$check($S2->publicProfile($amy)->email === 'amy@x.test' && $S2->publicProfile(9999) === null, 'publicProfile');
+$db->update($emp, ['active' => 0], ['id' => $amy]);
+$check($S2->publicProfile($amy) === null, 'publicProfile: an archived employee is not public');
+
+$dsE = new WordPressDepartmentStore($db, $emp);
+$check($dsE->activeIdUnlimited($ops) === null && $dsE->activeIdUnlimited($logi) === null && is_string($dsE->activeIdUnlimited($DS->byId($logi) ? 0 : 0)) === false, 'department activeIdUnlimited: null for archived or none');
+$db->update($dep, ['active' => 1], ['id' => $ops]);
+$check($dsE->activeIdUnlimited($ops) === (string) $ops, 'department activeIdUnlimited: the id when active');
+$db->update($dep, ['active' => 0], ['id' => $ops]);
+
+$db->insert($tt, ['name' => 'Delta', 'manager_employee_id' => $zed, 'department_id' => $ops, 'active' => 1]);
+$delta = (int) $db->insert_id;
+$db->insert($tt, ['name' => 'Epsilon', 'manager_employee_id' => $amy, 'department_id' => $ops + 1, 'active' => 1]);
+$epsilon = (int) $db->insert_id;
+$db->insert($tm, ['team_id' => $delta, 'employee_id' => $zed, 'active' => 1]);
+$db->insert($tm, ['team_id' => $epsilon, 'employee_id' => $zed, 'active' => 1]);
+$T2 = new WordPressTeamStore($db, $emp);
+$check($T2->countActiveInDepartment($ops, [$delta, $epsilon]) === 1 && $T2->countActiveInDepartment($ops, [$delta]) === 1 && $T2->countActiveInDepartment($ops + 1, [$delta]) === 0, 'countActiveInDepartment: the teams of that department among those given');
+$check($T2->managesElsewhere($amy, $ops) >= 1 && $T2->managesElsewhere($zed, $ops) === 0, 'managesElsewhere: a count of the teams managed in another department');
+$check(count($T2->pageTeams()) >= 2 && isset($T2->pageTeams()[0]->department_id) && !isset($T2->pageTeams()[0]->description), 'pageTeams: id, name, manager, department');
+$check(array_map(function ($r) { return $r->name; }, $T2->teamsOfWithManager($zed)) === ['Delta', 'Epsilon'] && isset($T2->teamsOfWithManager($zed)[0]->manager_employee_id), 'teamsOfWithManager');
+$check(array_map(function ($r) { return $r->name; }, $T2->activeNameRows([$delta, $epsilon])) === ['Delta', 'Epsilon'] && $T2->activeNames([$delta, $epsilon]) === ['Delta', 'Epsilon'] && $T2->activeNames([$delta]) === ['Delta'], 'activeNameRows and activeNames: the same names, as rows and as a list');
+$check(count($T2->namesByIds([$delta, 999999])) === 1 && $T2->namesByIds([$delta])[0]->name === 'Delta' && array_map(function ($r) { return $r->name; }, $T2->activeList()) === array_values(array_filter(array_map(function ($r) { return $r->name; }, $T2->activeList()))), 'namesByIds and activeList');
 
 // ---- one container per site, with the employees table of the plugin
 $o = new EWS_Manager_V31_1();

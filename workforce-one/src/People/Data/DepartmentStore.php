@@ -35,4 +35,7 @@ interface DepartmentStore
 
     /** The id of the department when it is active, or null. */
     public function activeId(int $id): ?string;
+
+    /** The id of the department when it is active (no LIMIT, as the Employees check had none), or null. */
+    public function activeIdUnlimited(int $id): ?string;
 }

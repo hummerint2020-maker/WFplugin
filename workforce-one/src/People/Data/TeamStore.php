@@ -77,4 +77,28 @@ interface TeamStore
     public function activeId(int $teamId): ?string;
 
     public function lastError(): string;
+
+    /** How many of these teams are active teams of this department. @param list<int> $teamIds */
+    public function countActiveInDepartment(int $departmentId, array $teamIds): int;
+
+    /** Does this employee manage an active team in a department other than this one? (a count) */
+    public function managesElsewhere(int $employeeId, int $departmentId): int;
+
+    /** The active teams for the Employees page: id, name, manager_employee_id, department_id. @return list<object> */
+    public function pageTeams(): array;
+
+    /** The active teams an employee belongs to, with their manager (the admin profile). @return list<object> */
+    public function teamsOfWithManager(int $employeeId): array;
+
+    /** The names of these teams that are active, A–Z (rows with a name). @param list<int> $ids @return list<object> */
+    public function activeNameRows(array $ids): array;
+
+    /** The names of these teams that are active, A–Z. @param list<int> $ids @return list<string> */
+    public function activeNames(array $ids): array;
+
+    /** id and name of these teams, whatever their state. @param list<int> $ids @return list<object> */
+    public function namesByIds(array $ids): array;
+
+    /** id and name of the active teams, A–Z. @return list<object> */
+    public function activeList(): array;
 }

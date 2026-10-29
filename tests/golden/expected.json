@@ -1,6 +1,6 @@
 {
   "_about": "What this release changes on purpose (tests/golden/run.py; owner decision 2026-10-27): the pages (by their pages.json url and options) that may differ from the base, the action traces (by key, with the reason) whose SQL, return or rows may differ, and the hook / admin-post / shortcode / REST names it adds. Everything else must stay the same. Empty for a move-only release; emptied again by the next release.",
-  "release": "3.31.134",
+  "release": "3.31.135",
   "pages": [],
   "actions": {},
   "hooks_added": []

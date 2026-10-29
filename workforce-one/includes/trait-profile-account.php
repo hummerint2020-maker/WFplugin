@@ -81,15 +81,13 @@ trait EWS_Profile_Account_Trait {
             if(!isset($_POST['_wpnonce'])||!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])),'ews_profile_photo_save'))wp_die('Security check failed.');
             $emp=$this->current_employee();
             if(!$emp)wp_die('Employee account not found.');
-            global $wpdb;
-            $table=$this->employees;
             $action=sanitize_key($_POST['profile_photo_action']??'upload');
             $old_url=(string)($emp->profile_image_url??'');
             if($action==='avatar') {
                 $key=sanitize_key($_POST['avatar_key']??''); $catalog=$this->profile_avatar_catalog();
                 if(!isset($catalog[$key])) wp_die('Invalid avatar selection.');
                 $url=$this->profile_avatar_url($key);
-                $ok=$wpdb->update($table,['profile_image_type'=>'avatar','profile_image_url'=>$url,'avatar_key'=>$key],['id'=>(int)$emp->id],['%s','%s','%s'],['%d']);
+                $ok=$this->services()->profiles()->avatar((int)$emp->id,$key,$url);
                 if($ok===false) wp_die('Could not save the avatar.');
                 $this->delete_employee_profile_image_file($old_url);
                 $this->audit('profile_avatar_update','employee',(int)$emp->id,$emp->name.' selected avatar '.$key);
@@ -97,7 +95,7 @@ trait EWS_Profile_Account_Trait {
                 wp_safe_redirect(add_query_arg(['ews_view'=>'profile','profile_updated'=>'avatar'],$redirect)); exit;
             }
             if($action==='reset'){
-                $ok=$wpdb->update($table,['profile_image_type'=>'initials','profile_image_url'=>'','avatar_key'=>null],['id'=>(int)$emp->id],['%s','%s','%s'],['%d']);
+                $ok=$this->services()->profiles()->reset((int)$emp->id);
                 if($ok===false)wp_die('Could not reset the profile picture.');
                 $this->delete_employee_profile_image_file($old_url);
                 $this->audit('profile_photo_reset','employee',(int)$emp->id,$emp->name.' reset profile picture');
@@ -144,7 +142,7 @@ trait EWS_Profile_Account_Trait {
                 }
             }
             $url=esc_url_raw($uploaded['url']);
-            $ok=$wpdb->update($table,['profile_image_type'=>'photo','profile_image_url'=>$url,'avatar_key'=>null],['id'=>(int)$emp->id],['%s','%s','%s'],['%d']);
+            $ok=$this->services()->profiles()->photo((int)$emp->id,$url);
             if($ok===false){
                 $this->delete_employee_profile_image_file($url);
                 wp_die('Could not save the profile picture.');

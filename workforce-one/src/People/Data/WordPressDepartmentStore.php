@@ -76,4 +76,9 @@ final class WordPressDepartmentStore implements DepartmentStore
     {
         return $this->db->get_var($this->db->prepare("SELECT id FROM {$this->d} WHERE id=%d AND active=1 LIMIT 1", $id));
     }
+
+    public function activeIdUnlimited(int $id): ?string
+    {
+        return $this->db->get_var($this->db->prepare("SELECT id FROM {$this->d} WHERE id=%d AND active=1", $id));
+    }
 }

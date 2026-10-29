@@ -171,11 +171,11 @@ trait EWS_Employees_Trait {
 
     /** Employee app → Employees (managers): the active employees and Add employee (templates/app/employees.php). */
     private function employees_content(){
-        global $wpdb;
-        $rows=(array)$wpdb->get_results("SELECT id,name,domain_name,email FROM {$this->employees} WHERE active=1 ORDER BY name");
+        $svc=$this->services()->employees();
+        $rows=$svc->contactList();
         $team_ids=$this->team_ids_by_employee(array_map(static function($r){return (int)$r->id;},$rows));
         $names=[];$all=array_unique(array_merge([],...array_values($team_ids?:[[]])));
-        if($all){$t=$this->team_tables();$ph=implode(',',array_fill(0,count($all),'%d'));foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,name FROM {$t['teams']} WHERE id IN ($ph)",array_values($all))) as $tm)$names[(int)$tm->id]=(string)$tm->name;}
+        if($all){foreach($svc->teamNamesByIds(array_values($all)) as $tm)$names[(int)$tm->id]=(string)$tm->name;}
         foreach($rows as $r){$r->teams=array_values(array_filter(array_map(static function($id)use($names){return $names[$id]??'';},$team_ids[(int)$r->id]??[])));$r->url=add_query_arg(['ews_view'=>'employee','employee_id'=>(int)$r->id],$this->app_view_url('people'));}
         wp_enqueue_style('workforce-one-employees-page');
         wp_enqueue_script('workforce-one-employees');

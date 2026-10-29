@@ -154,4 +154,47 @@ final class WordPressTeamStore implements TeamStore
     {
         return (string) $this->db->last_error;
     }
+
+    public function countActiveInDepartment(int $departmentId, array $teamIds): int
+    {
+        $ph = implode(',', array_fill(0, count($teamIds), '%d'));
+        return (int) $this->db->get_var($this->db->prepare("SELECT COUNT(*) FROM {$this->teams} WHERE active=1 AND department_id=%d AND id IN ($ph)", array_merge([$departmentId], $teamIds)));
+    }
+
+    public function managesElsewhere(int $employeeId, int $departmentId): int
+    {
+        return (int) $this->db->get_var($this->db->prepare("SELECT COUNT(*) FROM {$this->teams} WHERE manager_employee_id=%d AND active=1 AND department_id<>%d", $employeeId, $departmentId));
+    }
+
+    public function pageTeams(): array
+    {
+        return array_values((array) $this->db->get_results("SELECT id,name,manager_employee_id,department_id FROM {$this->teams} WHERE active=1 ORDER BY name ASC"));
+    }
+
+    public function teamsOfWithManager(int $employeeId): array
+    {
+        return array_values((array) $this->db->get_results($this->db->prepare("SELECT t.id,t.name,t.manager_employee_id FROM {$this->teams} t INNER JOIN {$this->members} m ON m.team_id=t.id AND m.employee_id=%d AND m.active=1 WHERE t.active=1 ORDER BY t.name ASC", $employeeId)));
+    }
+
+    public function activeNameRows(array $ids): array
+    {
+        $ph = implode(',', array_fill(0, count($ids), '%d'));
+        return array_values((array) $this->db->get_results($this->db->prepare("SELECT name FROM {$this->teams} WHERE id IN ($ph) AND active=1 ORDER BY name ASC", ...$ids)));
+    }
+
+    public function activeNames(array $ids): array
+    {
+        return (array) $this->db->get_col($this->db->prepare("SELECT name FROM {$this->teams} WHERE id IN (" . implode(',', array_fill(0, count($ids), '%d')) . ") AND active=1 ORDER BY name ASC", ...$ids));
+    }
+
+    public function namesByIds(array $ids): array
+    {
+        $ph = implode(',', array_fill(0, count($ids), '%d'));
+        return array_values((array) $this->db->get_results($this->db->prepare("SELECT id,name FROM {$this->teams} WHERE id IN ($ph)", array_values($ids))));
+    }
+
+    public function activeList(): array
+    {
+        return array_values((array) $this->db->get_results("SELECT id,name FROM {$this->teams} WHERE active=1 ORDER BY name ASC"));
+    }
 }

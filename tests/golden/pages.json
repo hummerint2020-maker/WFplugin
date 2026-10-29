@@ -414,6 +414,50 @@
       "user": "admin",
       "url": "/wp-admin/admin.php?page=ews31-teams&team_saved=1",
       "expect": "Alpha"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&employee_error=teams",
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&employee_notice=archived&advance_left=900",
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&employee_error=manages_team&paged=1&s=lina",
+      "options": {
+        "ews_org_chart": {
+          "enabled": 1,
+          "audience": "managers",
+          "title_required": 0
+        }
+      },
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=people&people_search=a&people_team={alpha}",
+      "expect": "Lina Late"
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=employee&employee_id={lina}",
+      "options": {
+        "ews_employee_profile_settings": {
+          "enabled": 1,
+          "show_photo": 1,
+          "show_name": 1,
+          "show_team": 1,
+          "show_email": 1,
+          "show_supervisor": 1,
+          "show_achievements": 1,
+          "show_recognition": 0
+        }
+      },
+      "expect": "Lina Late"
     }
   ],
   "normalise": [

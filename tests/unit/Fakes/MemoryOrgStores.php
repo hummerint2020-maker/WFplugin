@@ -221,6 +221,11 @@ final class MemoryDepartmentStore implements DepartmentStore
     {
         return isset($this->rows[$id]) && (int) $this->rows[$id]->active === 1 ? (string) $id : null;
     }
+
+    public function activeIdUnlimited(int $id): ?string
+    {
+        return $this->activeId($id);
+    }
 }
 
 /** In-memory TeamStore for the unit tests (3.31.133): teams are id => [active, manager], members [team, employee, active]. */
@@ -426,6 +431,50 @@ final class MemoryTeamStore implements TeamStore
     public function lastError(): string
     {
         return $this->error;
+    }
+
+    public function countActiveInDepartment(int $departmentId, array $teamIds): int
+    {
+        $this->w('countActiveInDepartment ' . $departmentId);
+        return count(array_filter($teamIds, function ($id) use ($departmentId) { return isset($this->rows[$id]) && (int) $this->rows[$id]->active === 1 && (int) $this->rows[$id]->department_id === $departmentId; }));
+    }
+
+    public function managesElsewhere(int $employeeId, int $departmentId): int
+    {
+        $this->w('managesElsewhere ' . $employeeId . ' ' . $departmentId);
+        return count(array_filter($this->rows, function ($r) use ($employeeId, $departmentId) { return (int) $r->active === 1 && (int) $r->manager_employee_id === $employeeId && (int) $r->department_id !== $departmentId; }));
+    }
+
+    public function pageTeams(): array
+    {
+        return array_values(array_filter($this->rows, function ($r) { return (int) $r->active === 1; }));
+    }
+
+    public function teamsOfWithManager(int $employeeId): array
+    {
+        $out = [];
+        foreach ($this->members as $m) if ($m[1] === $employeeId && $m[2] === 1 && isset($this->rows[$m[0]]) && (int) $this->rows[$m[0]]->active === 1) $out[] = $this->rows[$m[0]];
+        return $out;
+    }
+
+    public function activeNameRows(array $ids): array
+    {
+        return array_values(array_filter($this->rows, function ($r, $id) use ($ids) { return in_array($id, $ids, true) && (int) $r->active === 1; }, ARRAY_FILTER_USE_BOTH));
+    }
+
+    public function activeNames(array $ids): array
+    {
+        return array_map(function ($r) { return (string) $r->name; }, $this->activeNameRows($ids));
+    }
+
+    public function namesByIds(array $ids): array
+    {
+        return array_values(array_filter($this->rows, function ($r, $id) use ($ids) { return in_array($id, $ids, true); }, ARRAY_FILTER_USE_BOTH));
+    }
+
+    public function activeList(): array
+    {
+        return $this->pageTeams();
     }
 }
 

@@ -69,7 +69,8 @@ Both will go through the other modules' functions rather than their tables.
    writes (L4b) and the employee writes and pages (L4c) follow.
    **3.31.134 (L4b, `docs/tasks/people-org-writes.md`):** the org writes moved behind `OrgMoveService`, `ReportingService`,
    `OrgImportService`, `DepartmentService` and `TeamService` (over the same Stores plus `OrgMoveStore`); `trait-org-import.php` has no SQL left.
-   The employee writes and pages (L4c) follow.
+   **3.31.135 (L4c, `docs/tasks/people-employee-writes.md`):** the employee writes and pages moved behind `EmployeeService`
+   and `ProfileService`. Reads of employee names in other modules (a later release) are what is left of People.
 2. **Move modules out of the shared object, least tied first:** notifications, polls (engagement),
    daily workers, the installed app, then leave, overtime and attendance, last payroll and reports.
    Each becomes a class in `src/<Module>/` with its own hook registration and public functions; the

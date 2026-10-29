@@ -112,7 +112,8 @@
           "slice": "directory",
           "namespace": [
             "People",
-            "Organization"
+            "Organization",
+            "Employees"
           ],
           "tables": [
             "employees",
@@ -136,7 +137,9 @@
             "workforce-one/src/People/OrgMoveService.php",
             "workforce-one/src/People/OrgImportService.php",
             "workforce-one/src/People/DepartmentService.php",
-            "workforce-one/src/People/TeamService.php"
+            "workforce-one/src/People/TeamService.php",
+            "workforce-one/src/People/EmployeeService.php",
+            "workforce-one/src/People/ProfileService.php"
           ],
           "moved": [
             "people_employee",
@@ -195,11 +198,23 @@
             "sync_employee_teams",
             "approval_set_relationship",
             "approval_relationship_save",
-            "employee_admin_set_supervisor"
+            "employee_admin_set_supervisor",
+            "employee_admin_input",
+            "employee_save",
+            "employee_update",
+            "employee_archive",
+            "admin_employees",
+            "employees_content",
+            "people_content",
+            "employee_profile_content",
+            "profile_photo_save"
           ],
           "traits_clean": [
             "org-chart",
-            "org-import"
+            "org-import",
+            "employee-admin",
+            "people-view",
+            "profile-account"
           ]
         }
       ],

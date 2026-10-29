@@ -2,11 +2,16 @@
 namespace WorkforceOne\Tests\Fakes;
 
 use WorkforceOne\People\Actor;
+use WorkforceOne\People\AppSessions;
 use WorkforceOne\People\EmployeeChanged;
+use WorkforceOne\People\OpenAdvances;
 use WorkforceOne\People\OrgApprovals;
 use WorkforceOne\People\OrgClock;
+use WorkforceOne\People\OrgFeature;
 use WorkforceOne\People\PeopleMemo;
 use WorkforceOne\People\PeoplePorts;
+use WorkforceOne\People\ShiftHistory;
+use WorkforceOne\People\WpUsers;
 use WorkforceOne\Platform\AuditLog;
 use WorkforceOne\Platform\Clock;
 use WorkforceOne\Platform\Transaction;
@@ -163,6 +168,118 @@ final class OrgFakeChanged implements EmployeeChanged
     }
 }
 
+final class OrgFakeShifts implements ShiftHistory
+{
+    /** @var OrgWorld */
+    private $w;
+
+    public function __construct(OrgWorld $w)
+    {
+        $this->w = $w;
+    }
+
+    public function fromBeginning(int $employeeId, int $shiftId)
+    {
+        $this->w->note('shifts beginning ' . $employeeId . ' ' . $shiftId);
+        return $this->w->fails('shifts.beginning') ? 'busy' : true;
+    }
+
+    public function from(int $employeeId, int $shiftId, string $date)
+    {
+        $this->w->note('shifts from ' . $employeeId . ' ' . $shiftId . ' ' . $date);
+        return $this->w->fails('shifts.from') ? 'busy' : true;
+    }
+}
+
+final class OrgFakeSessions implements AppSessions
+{
+    /** @var OrgWorld */
+    private $w;
+
+    public function __construct(OrgWorld $w)
+    {
+        $this->w = $w;
+    }
+
+    public function revoke(int $wpUserId, string $reason): void
+    {
+        $this->w->note('sessions revoke ' . $wpUserId . ' ' . $reason);
+    }
+}
+
+final class OrgFakeAdvances implements OpenAdvances
+{
+    /** @var OrgWorld */
+    private $w;
+    /** @var bool */
+    public $on = false;
+    /** @var float */
+    public $left = 0.0;
+
+    public function __construct(OrgWorld $w)
+    {
+        $this->w = $w;
+    }
+
+    public function enabled(): bool
+    {
+        $this->w->note('advances enabled');
+        return $this->on;
+    }
+
+    public function leftFor(int $employeeId): float
+    {
+        $this->w->note('advances left ' . $employeeId);
+        return $this->left;
+    }
+}
+
+final class OrgFakeUsers implements WpUsers
+{
+    /** @var OrgWorld */
+    private $w;
+    /** @var list<int> */
+    public $ids = [];
+
+    public function __construct(OrgWorld $w)
+    {
+        $this->w = $w;
+    }
+
+    public function exists(int $userId): bool
+    {
+        $this->w->note('users exists ' . $userId);
+        return in_array($userId, $this->ids, true);
+    }
+}
+
+final class OrgFakeFeature implements OrgFeature
+{
+    /** @var OrgWorld */
+    private $w;
+    /** @var bool */
+    public $on = false;
+    /** @var bool */
+    public $title = false;
+
+    public function __construct(OrgWorld $w)
+    {
+        $this->w = $w;
+    }
+
+    public function enabled(): bool
+    {
+        $this->w->note('org enabled');
+        return $this->on;
+    }
+
+    public function titleRequired(): bool
+    {
+        $this->w->note('org title required');
+        return $this->title;
+    }
+}
+
 /** Everything an org-writes test needs, wired the way the container does it. */
 final class OrgSet
 {
@@ -188,6 +305,16 @@ final class OrgSet
     public $actor;
     /** @var OrgFakeApprovals */
     public $approvals;
+    /** @var OrgFakeShifts */
+    public $shifts;
+    /** @var OrgFakeSessions */
+    public $sessions;
+    /** @var OrgFakeAdvances */
+    public $advances;
+    /** @var OrgFakeUsers */
+    public $users;
+    /** @var OrgFakeFeature */
+    public $org;
     /** @var PeoplePorts */
     public $ports;
 
@@ -205,6 +332,11 @@ final class OrgSet
         $this->clock = new OrgFixedClock();
         $this->actor = new OrgFixedActor();
         $this->approvals = new OrgFakeApprovals($this->w);
-        $this->ports = new PeoplePorts(new PeopleMemo(), $this->clock, $this->actor, $this->approvals, new OrgFakeChanged($this->w));
+        $this->shifts = new OrgFakeShifts($this->w);
+        $this->sessions = new OrgFakeSessions($this->w);
+        $this->advances = new OrgFakeAdvances($this->w);
+        $this->users = new OrgFakeUsers($this->w);
+        $this->org = new OrgFakeFeature($this->w);
+        $this->ports = new PeoplePorts(new PeopleMemo(), $this->clock, $this->actor, $this->approvals, new OrgFakeChanged($this->w), $this->shifts, $this->sessions, $this->advances, $this->users, $this->org);
     }
 }

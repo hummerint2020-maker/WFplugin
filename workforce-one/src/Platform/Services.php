@@ -25,11 +25,13 @@ use WorkforceOne\People\Data\WordPressPeopleStore;
 use WorkforceOne\People\Data\WordPressReportingStore;
 use WorkforceOne\People\Data\WordPressTeamStore;
 use WorkforceOne\People\DepartmentService;
+use WorkforceOne\People\EmployeeService;
 use WorkforceOne\People\OrgDirectory;
 use WorkforceOne\People\OrgImportService;
 use WorkforceOne\People\OrgMoveService;
 use WorkforceOne\People\PeopleDirectory;
 use WorkforceOne\People\PeoplePorts;
+use WorkforceOne\People\ProfileService;
 use WorkforceOne\People\ReportingService;
 use WorkforceOne\People\TeamService;
 use WorkforceOne\Schedule\Data\ScheduleDayStore;
@@ -167,6 +169,22 @@ final class Services
     public function teams(): TeamService
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new TeamService($this->teamStore(), $this->departmentStore(), $this->peopleStore(), $this->people(), $this->tx, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Adding, updating and archiving employees, and the Employees page's reads (3.31.135). */
+    public function employees(): EmployeeService
+    {
+        if (!isset($this->made[__FUNCTION__])) {
+            $this->made[__FUNCTION__] = new EmployeeService($this->peopleStore(), $this->departmentStore(), $this->teamStore(), $this->people(), $this->org(), $this->orgMoves(), $this->teams(), $this->audit, $this->peoplePorts);
+        }
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The signed-in employee's profile picture (3.31.135). */
+    public function profiles(): ProfileService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ProfileService($this->peopleStore());
         return $this->made[__FUNCTION__];
     }
 
