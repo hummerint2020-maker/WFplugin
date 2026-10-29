@@ -44,15 +44,17 @@ $ids = ['omar' => $c['omar'], 'lina' => $c['lina'], 'mona' => $c['mona'], 'ali' 
 foreach ($ids as $name => $id) $run('today_events_' . $name, function () use ($call, $id) { return $call('today_events', $id); });
 // ---------------------------------------------------------------- the attendance day (the static cache is keyed by the minute: a fresh id each time)
 foreach ($ids as $name => $id) $run('attendance_day_' . $name, function () use ($call, $id) { return $call('attendance_day', $id); });
-// an overnight shift: the day is read from yesterday's events (ali signed in yesterday and did not sign out; rana did both)
+// an overnight shift: the day is read from yesterday's events (sam signed in yesterday and did not sign out; ziad did both; nour has none)
 update_option('ews_allow_overnight_shift', 1, false);
-update_option('ews_working_hours', ['start' => '22:00', 'end' => '06:00', 'normal_until' => '06:00'], false);
-$run('attendance_day_overnight_open', function () use ($call, $c) { return $call('attendance_day', $c['ali']); });
-$run('attendance_day_overnight_closed', function () use ($call, $c) { return $call('attendance_day', $c['rana']); });
-$run('attendance_day_overnight_none', function () use ($call, $c) { return $call('attendance_day', $c['omar']); });
-$run('today_events_overnight_open', function () use ($call, $c) { return $call('today_events', $c['ali']); });
+update_option('ews_working_hours', ['start' => '23:59', 'end' => '23:58', 'normal_until' => '23:58'], false);   // overnight all day but one minute
+$call('invalidate_working_hours_runtime_cache');
+$run('attendance_day_overnight_open', function () use ($call, $c) { return $call('attendance_day', $c['sam']); });
+$run('attendance_day_overnight_closed', function () use ($call, $c) { return $call('attendance_day', $c['ziad']); });
+$run('attendance_day_overnight_none', function () use ($call, $c) { return $call('attendance_day', $c['nour']); });
+$run('today_events_overnight_open', function () use ($call, $c) { return $call('today_events', $c['sam']); });
 delete_option('ews_allow_overnight_shift');
 delete_option('ews_working_hours');
+$call('invalidate_working_hours_runtime_cache');
 // ---------------------------------------------------------------- the last device location (NULL columns skipped, newest first)
 foreach ($ids as $name => $id) $run('last_device_location_' . $name, function () use ($call, $id) { return $call('last_device_location', $id); });
 // ---------------------------------------------------------------- breaks

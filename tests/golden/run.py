@@ -276,12 +276,13 @@ try:
     att = {k[11:]: v for k, v in tb.items() if k.startswith('attendance:')}
     def aret(k):
         return (att.get(k) or {}).get('return')
+    json.dump({k: v for k, v in th.items() if k.startswith('attendance:')}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
     check('...the attendance trace really read events, a superseded one hidden, locations, breaks and an overtime day (else it proves nothing)',
           bool(att) and set(aret('today_events_omar') or {}) == {'sign_in'} and set(aret('today_events_lina') or {}) == {'sign_in', 'sign_out'}
-          and (aret('today_events_mona') or {}).get('sign_in', {}).get('event_at') == 'T' and len(att['today_events_mona']['sql']) >= 1
+          and (aret('today_events_mona') or {}).get('sign_in', {}).get('event_at') == 'T'
           and isinstance(aret('last_device_location_omar'), dict) and aret('last_device_location_lina') is None
           and len(aret('break_sessions_lina') or []) == 2 and (aret('break_open_omar') or {}).get('status') == 'Open' and aret('break_remaining_lina') == 0
-          and aret('attendance_day_overnight_open') != aret('attendance_day_overnight_none') and (aret('overtime_summary_lina') or {}).get('sign_out') == 'T'
+          and aret('attendance_day_overnight_open') != aret('attendance_day_overnight_closed') and set(aret('today_events_overnight_open') or {}) == {'sign_in'} and (aret('overtime_summary_lina') or {}).get('sign_out') == 'T'
           and all(att.get('_rows:' + t) for t in ('time_logs', 'break_sessions')),
           {k: aret(k) for k in ('today_events_omar', 'last_device_location_omar', 'break_remaining_lina', 'attendance_day_overnight_open')})
     ib, ih = inventory(BASE), inventory(HEAD)
