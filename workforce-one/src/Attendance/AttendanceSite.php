@@ -24,4 +24,19 @@ interface AttendanceSite
 
     /** @return int[] the users who get the extended-break alert */
     public function managerUserIds(): array;
+
+    /** Is the day a company-wide leave day (a holiday)? Asked through the plugin: it keeps a per-request cache of the calendar. */
+    public function generalLeave(string $day): bool;
+
+    /** Does a schedule type (a status such as Office) ask for a Sign In? */
+    public function requiresSignIn(string $status): bool;
+
+    /** Are breaks switched on? */
+    public function breakEnabled(): bool;
+
+    /** Cancels the two cron events of a break: the reminder, then the manager escalation. */
+    public function clearBreakEvents(int $breakId): void;
+
+    /** Makes sure the break table exists (the old code did, before it touched the table). */
+    public function ensureBreakTable(): void;
 }

@@ -30,4 +30,10 @@ interface BreakStore
 
     /** The manager escalation was sent (the flag is set on the id alone, whatever the status). */
     public function markEscalated(int $id): void;
+
+    /** @return string[] the ids of the employee's break sessions of one work day */
+    public function idsOn(int $employeeId, string $day): array;
+
+    /** Deletes every break session of the employee on the day; the number of rows. */
+    public function deleteDay(int $employeeId, string $day): int;
 }

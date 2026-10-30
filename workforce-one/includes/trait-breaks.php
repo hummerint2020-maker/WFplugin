@@ -122,6 +122,12 @@ trait EWS_Breaks_Trait {
             wp_schedule_single_event($now_utc+($this->break_escalation_minutes()*60),'ews_break_manager_escalation',[$id]);
         }
 
+        /** Cancels the two cron events of a break: the reminder, then the manager escalation. */
+        private function break_clear_events($id){
+            wp_clear_scheduled_hook('ews_break_duration_reminder',[(int)$id]);
+            wp_clear_scheduled_hook('ews_break_manager_escalation',[(int)$id]);
+        }
+
         /** The "Break Ended" notification. */
         private function break_notify_ended($emp,$id,$minutes){
             $this->notify((int)$emp->wp_user_id,'break','Break Ended',$this->break_ended_message($minutes),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);

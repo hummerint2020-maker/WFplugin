@@ -5,6 +5,10 @@ use WorkforceOne\Approvals\ApprovalEngine;
 use WorkforceOne\Attendance\AttendanceContext;
 use WorkforceOne\Attendance\AttendanceLog;
 use WorkforceOne\Attendance\AttendancePorts;
+use WorkforceOne\Attendance\AutoAttendanceService;
+use WorkforceOne\Attendance\Data\AutoRuleStore;
+use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
+use WorkforceOne\Attendance\ManualRecordService;
 use WorkforceOne\Attendance\AttendanceService;
 use WorkforceOne\Attendance\BreakCronService;
 use WorkforceOne\Attendance\Data\WordPressEmployeeLock;
@@ -231,6 +235,26 @@ final class Services
     public function attendance(array $site): AttendanceService
     {
         return new AttendanceService(AttendanceContext::assemble($site, $this->timeLogStore(), $this->breakStore(), $this->employeeLock(), $this->attendancePorts->idempotency));
+    }
+
+    public function autoRuleStore(): AutoRuleStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressAutoRuleStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Auto Attendance (3.31.138): the tick, one automatic event, the bulk Sign Out and the rules page's saves. */
+    public function autoAttendance(): AutoAttendanceService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new AutoAttendanceService($this->autoRuleStore(), $this->timeLogStore(), $this->breakStore(), $this->employeeLock(), $this->scheduleDays(), $this->people(), $this->attendancePorts->site, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The Sign In / Out report's manual add, edit and Reset Day (3.31.138). */
+    public function manualRecords(): ManualRecordService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ManualRecordService($this->timeLogStore(), $this->breakStore(), $this->scheduleDays(), $this->people(), $this->attendancePorts->site, $this->attendancePorts->manual, $this->audit);
+        return $this->made[__FUNCTION__];
     }
 
     /** The reminder and the manager alert of a break (3.31.137). */
