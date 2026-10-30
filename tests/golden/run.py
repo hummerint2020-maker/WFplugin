@@ -276,7 +276,7 @@ try:
     att = {k[11:]: v for k, v in tb.items() if k.startswith('attendance:')}
     def aret(k):
         return (att.get(k) or {}).get('return')
-    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
+    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:', 'records:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
     check('...the attendance trace really read events, a superseded one hidden, locations, breaks and an overtime day (else it proves nothing)',
           bool(att) and set(aret('today_events_omar') or {}) == {'sign_in'} and set(aret('today_events_lina') or {}) == {'sign_in', 'sign_out'}
           and str((aret('today_events_mona') or {}).get('sign_in', {}).get('id')) == str(ctx['att_corrected'])
@@ -304,6 +304,27 @@ try:
           and bool(sg.get('_rows:break_sessions')) and bool(sg.get('_rows:idempotency'))
           and (any('GET_LOCK' in q for q in sg['in_ok']['sql']) == any('RELEASE_LOCK' in q for q in sg['in_ok']['sql'])) and all(any('GET_LOCK' in q for q in sg[k]['sql']) == any('GET_LOCK' in q for q in sg['in_ok']['sql']) for k in ('fault_lock_busy', 'fault_lock_null', 'out_ok')),
           {k: sto(k)[-70:] for k in ('in_ok', 'face_ok_photo', 'loc_outside', 'fault_insert', 'break_1_start')})
+    rc = {k[8:]: v for k, v in tb.items() if k.startswith('records:')}
+    def rto(k):
+        r = (rc.get(k) or {}).get('return')
+        return (r.get('to', '') if isinstance(r, dict) else '') or ''
+    def rret(k):
+        return (rc.get(k) or {}).get('return') or {}
+    audit_actions = [r.get('action') for r in rc.get('_rows:audit', [])]
+    check('...the records trace really ran the tick, recorded and refused automatic events, saved / toggled / deleted rules, signed out in bulk with a break, added / edited / refused manual records and reset a day (else it proves nothing)',
+          bool(rc) and 'auto_sign_in' in audit_actions and 'auto_sign_out' in audit_actions and 'auto_sign_out_bulk' in audit_actions and 'break_auto_closed' in audit_actions
+          and 'auto_sign_in_failed' in audit_actions and 'auto_attendance_rule_create' in audit_actions and 'auto_attendance_rule_update' in audit_actions
+          and 'auto_attendance_rule_toggle' in audit_actions and 'auto_attendance_rule_delete' in audit_actions
+          and 'time_manual_add' in audit_actions and 'time_manual_edit' in audit_actions and 'time_manual_add_failed' in audit_actions and 'time_manual_edit_failed' in audit_actions and 'time_reset' in audit_actions
+          and rret('event_in_ok').get('ok') is True and rret('event_in_again').get('reason') == 'already_signed_in' and rret('event_out_before_in').get('reason') == 'sign_in_after_target'
+          and rret('event_fault_insert').get('reason') == 'db_error' and rret('event_fault_first_row').get('reason') == 'already_signed_in' and rret('event_attendance_disabled').get('reason') == 'attendance_disabled'
+          and 'saved=1' in rto('rule_save_create') and 'saved=1' in rto('rule_save_update_deleted_id') and 'bulk_sign_out=' in rto('bulk_ok') and 'bulk_failed=0' in rto('bulk_ok') and 'bulk_sign_out=0' in rto('bulk_again')
+          and rc.get('crons_after_bulk') == [] and len(rc.get('crons_before_bulk') or []) == 2
+          and 'time_notice=saved' in rto('man_add_in') and 'time_error=duplicate' in rto('man_add_in_duplicate') and 'time_error=order' in rto('man_add_out_before_in') and 'time_error=scope' in rto('man_mgr_other_department')
+          and 'time_error=save' in rto('man_fault_insert') and 'time_error=not_found' in rto('man_edit_not_found') and 'break_reset=2' in rto('reset_with_breaks') and 'time_error=scope' in rto('reset_scope')
+          and any(r.get('enabled') == '0' for r in rc.get('rules_after_ticks', [])) and any(r.get('enabled') == '1' for r in rc.get('rules_after_ticks', []))
+          and (any('GET_LOCK' in q for q in rc['tick_1']['sql']) == any('RELEASE_LOCK' in q for q in rc['tick_1']['sql'])) and (any('GET_LOCK' in q for q in rc['bulk_ok']['sql']) == any('RELEASE_LOCK' in q for q in rc['bulk_ok']['sql'])),
+          {k: rto(k)[-60:] for k in ('rule_save_create', 'bulk_ok', 'man_add_in', 'reset_with_breaks')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
