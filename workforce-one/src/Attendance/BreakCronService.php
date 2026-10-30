@@ -22,12 +22,12 @@ final class BreakCronService
         $this->site = $site;
     }
 
-    public function remind(int $sessionId, int $durationMinutes): void
+    public function remind(int $sessionId): void
     {
         $s = $this->breaks->byId($sessionId);
         if (!$s || $s->status !== 'Open' || (int) $s->duration_notified === 1) return;
         $this->breaks->markReminded((int) $s->id);
-        $this->site->breakTimeEnded((int) $s->user_id, (int) $s->id, 'Your ' . $durationMinutes . '-minute break has ended. Please resume work.');
+        $this->site->breakTimeEnded((int) $s->user_id, (int) $s->id, 'Your ' . $this->site->breakDurationMinutes() . '-minute break has ended. Please resume work.');
     }
 
     public function escalate(int $sessionId): void

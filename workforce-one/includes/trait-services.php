@@ -172,6 +172,7 @@ trait EWS_Services_Trait {
                 public function __construct(callable $call){ $this->call=$call; }
                 public function scheduleBreakEvents(int $breakId): void { ($this->call)('break_schedule_events',$breakId); }
                 public function breakEnded(object $employee,int $breakId,int $minutes): void { ($this->call)('break_notify_ended',$employee,$breakId,$minutes); }
+                public function breakDurationMinutes(): int { return (int)($this->call)('break_duration_minutes'); }
                 public function breakTimeEnded(int $userId,int $breakId,string $message): void { ($this->call)('notify',$userId,'break','Break Time Ended',$message,['entity_id'=>$breakId,'url'=>add_query_arg('ews_view','time',($this->call)('app_home_url'))]); }
                 public function extendedBreak(int $userId,int $breakId,string $message): void { ($this->call)('notify',$userId,'break','Extended Break Alert',$message,['entity_id'=>$breakId,'url'=>add_query_arg('ews_view','time',($this->call)('app_home_url'))]); }
                 public function attendanceEnabled(int $employeeId): bool { return (bool)($this->call)('employee_attendance_enabled',$employeeId); }

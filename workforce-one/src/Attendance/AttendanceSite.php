@@ -12,6 +12,9 @@ interface AttendanceSite
     /** The "Break Ended" notification, after a break was closed. */
     public function breakEnded(object $employee, int $breakId, int $minutes): void;
 
+    /** The break length in minutes (read when the reminder is built, as the setting is read after the flag is set). */
+    public function breakDurationMinutes(): int;
+
     /** The "Break Time Ended" notification to the employee. */
     public function breakTimeEnded(int $userId, int $breakId, string $message): void;
 

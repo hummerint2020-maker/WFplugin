@@ -107,7 +107,7 @@ trait EWS_Breaks_Trait {
 
         public function break_duration_reminder($session_id){
             if(!$this->break_enabled())return;
-            $this->services()->breakCron()->remind((int)$session_id,$this->break_duration_minutes());
+            $this->services()->breakCron()->remind((int)$session_id);
         }
 
         public function break_manager_escalation($session_id){

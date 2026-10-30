@@ -34,6 +34,7 @@ final class BreakCronServiceTest extends TestCase
             public function __construct() { $this->employee = (object) ['id' => 7, 'name' => 'Omar']; }
             public function scheduleBreakEvents(int $breakId): void { $this->log[] = 'schedule'; }
             public function breakEnded(object $employee, int $breakId, int $minutes): void { $this->log[] = 'ended'; }
+            public function breakDurationMinutes(): int { $this->log[] = 'duration?'; return 15; }
             public function breakTimeEnded(int $userId, int $breakId, string $message): void { $this->log[] = "timeEnded $userId $breakId $message"; }
             public function extendedBreak(int $userId, int $breakId, string $message): void { $this->log[] = "extended $userId $breakId $message"; }
             public function attendanceEnabled(int $employeeId): bool { $this->log[] = 'enabled?'; return $this->enabled; }
@@ -46,17 +47,17 @@ final class BreakCronServiceTest extends TestCase
 
     public function testTheReminderIsSentOnceAndTheFlagIsSetBeforeTheNotice(): void
     {
-        $this->svc->remind(1, 15);
-        $this->svc->remind(1, 15);
+        $this->svc->remind(1);
+        $this->svc->remind(1);
         $this->assertSame(['reminded 1'], $this->breaks->calls);
-        $this->assertSame(['timeEnded 70 1 Your 15-minute break has ended. Please resume work.'], $this->site->log);
+        $this->assertSame(['duration?', 'timeEnded 70 1 Your 15-minute break has ended. Please resume work.'], $this->site->log);
     }
 
     public function testNoReminderForAnUnknownOrClosedBreak(): void
     {
-        $this->svc->remind(99, 15);
+        $this->svc->remind(99);
         $this->breaks->rows[0]->status = 'Completed';
-        $this->svc->remind(1, 15);
+        $this->svc->remind(1);
         $this->assertSame([], $this->site->log);
         $this->assertSame([], $this->breaks->calls);
     }
