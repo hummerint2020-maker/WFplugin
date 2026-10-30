@@ -120,3 +120,7 @@ Unit tests: `AutoAttendanceServiceTest` (every `event` reason, the `db_error` au
 4. One release for both parts (auto + manual) as 3.31.138? *Recommended: yes; they share the stores and neither is an approval type.*
 
 Decided by the architect (technical, no visible effect): `firstEventId` is reused for the post-insert check; the `insert_id` restore is dropped as a no-op; `dueRules` returns `(array)`; `ManualRecordSite` is a new port with the scope check staying in the controller code; `AttendanceSite` gains five methods; `auto-attendance` is not `traits_clean`.
+
+## j. Owner decisions
+1. One release for both parts: 3.31.138.
+2. The new money quirks (AT-r, AT-s, AT-t, AT-u, AT-v) are moved as they are and join the fix queue right after AT-i and AT-h; the direction of each fix (AT-v: refuse edits of correction rows; AT-r: a per-day skip the tick honours) is asked when its release is designed.
