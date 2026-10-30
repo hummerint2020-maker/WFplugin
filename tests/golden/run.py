@@ -276,7 +276,7 @@ try:
     att = {k[11:]: v for k, v in tb.items() if k.startswith('attendance:')}
     def aret(k):
         return (att.get(k) or {}).get('return')
-    json.dump({k: v for k, v in th.items() if k.startswith('attendance:')}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
+    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
     check('...the attendance trace really read events, a superseded one hidden, locations, breaks and an overtime day (else it proves nothing)',
           bool(att) and set(aret('today_events_omar') or {}) == {'sign_in'} and set(aret('today_events_lina') or {}) == {'sign_in', 'sign_out'}
           and str((aret('today_events_mona') or {}).get('sign_in', {}).get('id')) == str(ctx['att_corrected'])
@@ -285,6 +285,24 @@ try:
           and all((aret('hours_overnight_' + w) or {}).get('shift_id') == 0 for w in ('sam', 'twin', 'nour')) and aret('attendance_day_overnight_open') == 'D-1' and aret('attendance_day_overnight_closed') == 'D0' and aret('attendance_day_overnight_none') == 'D0' and set(aret('today_events_overnight_open') or {}) == {'sign_in'} and (aret('overtime_summary_lina') or {}).get('sign_out') == 'T'
           and all(att.get('_rows:' + t) for t in ('time_logs', 'break_sessions')),
           {k: aret(k) for k in ('today_events_omar', 'last_device_location_omar', 'break_remaining_lina', 'attendance_day_overnight_open')})
+    sg = {k[7:]: v for k, v in tb.items() if k.startswith('signin:')}
+    def sto(k):
+        r = (sg.get(k) or {}).get('return')
+        return (r.get('to', '') if isinstance(r, dict) else '') or ''
+    def sret(k):
+        return (sg.get(k) or {}).get('return') or {}
+    check('...the Sign In trace really signed in and out, refused, took a Face photo, checked the position, claimed keys, took breaks, failed each write and ran the break crons (else it proves nothing)',
+          bool(sg) and 'time_success' in sto('in_ok') and 'time_success' in sto('out_ok') and 'already%20signed%20in' in sto('in_again') and 'time_success' in sto('face_ok_photo')
+          and 'outside%20your%20assigned' in sto('loc_outside') and 'time_success' in sto('loc_inside_in') and 'Unable%20to%20record' in sto('fault_insert')
+          and 'already%20signed%20in' in sto('fault_first_row') and 'time_success' in sto('fault_lock_busy')
+          and sret('idem_replay').get('details', {}).get('event_id') == sret('idem_first').get('details', {}).get('event_id') and sret('idem_conflict').get('code') == 'idempotency_conflict'
+          and sret('idem_claim_broken').get('code') == 'in_progress' and sret('idem_save_failed_released').get('code') == 'save_failed' and sret('idem_retry_after_release').get('ok') is True
+          and 'break_success' in sto('break_1_start') and 'break_success' in sto('break_1_resume') and 'break_error' in sto('break_3_none_left') and 'break_error' in sto('fault_break_insert')
+          and len(sg.get('crons_after_break_1') or []) == 2 and any(r.get('photo_key') for r in sg.get('_rows:time_logs', []))
+          and any(r.get('title') == 'Break Time Ended' for r in sg.get('_rows:notifications', [])) and any(r.get('title') == 'Extended Break Alert' for r in sg.get('_rows:notifications', []))
+          and any(r.get('action') == 'time_sign_in' for r in sg.get('_rows:audit', [])) and any(r.get('action') == 'time_sign_in_failed' for r in sg.get('_rows:audit', []))
+          and bool(sg.get('_rows:break_sessions')) and bool(sg.get('_rows:idempotency')),
+          {k: sto(k)[-70:] for k in ('in_ok', 'face_ok_photo', 'loc_outside', 'fault_insert', 'break_1_start')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)

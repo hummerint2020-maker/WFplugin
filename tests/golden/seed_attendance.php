@@ -50,4 +50,26 @@ update_option('ews_breaks_per_day', 2, false);
 update_option('ews_feature_overtime', 1, false);
 $wpdb->query("DELETE FROM {$p}ews_overtime_requests WHERE overtime_date='{$today}'");
 $wpdb->insert($p . 'ews_overtime_requests', ['employee_id' => $c['lina'], 'overtime_date' => $today, 'start_time' => '17:00:00', 'end_time' => '19:00:00', 'requested_minutes' => 120, 'status' => 'Approved', 'requested_by' => 1]);
-echo wp_json_encode(['att_today' => $today, 'att_yesterday' => $yesterday, 'att_corrected' => $new]);
+// a default work location when the site has none (the usual seed has one)
+if (!(int) $wpdb->get_var("SELECT COUNT(*) FROM {$p}ews_locations WHERE active=1 AND is_default=1")) $wpdb->insert($p . 'ews_locations', ['name' => 'Cairo HQ', 'latitude' => '30.0444', 'longitude' => '31.2357', 'radius' => 200, 'enforcement' => 0, 'is_default' => 1, 'active' => 1]);
+// ---- people for the write traces (actions_signin.php): each has a user, one case each, and today's plan
+$mk = function ($key, $att = 1) use ($wpdb, $p) {
+    $login = 'atw_' . $key;
+    $uid = (int) (username_exists($login) ?: wp_create_user($login, $login . '-pass', $login . '@example.com'));
+    $wpdb->insert($p . 'ews_employees', ['name' => 'At ' . $key, 'domain_name' => $login, 'email' => $login . '@example.com', 'wp_user_id' => $uid, 'active' => 1, 'attendance_enabled' => $att]);
+    return [(int) $wpdb->insert_id, $uid];
+};
+$ids = [];
+foreach (['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11', 'a12'] as $k) $ids[$k] = $mk($k, 1);
+$ids['off'] = $mk('off', 0);
+$ids['leave'] = $mk('leave', 1);
+$ids['nosched'] = $mk('nosched', 1);
+$ids['ghost'] = [0, (int) (username_exists('atw_ghost') ?: wp_create_user('atw_ghost', 'atw_ghost-pass', 'atw_ghost@example.com'))];   // a user with no employee
+$wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='{$today}' AND employee_id IN (" . implode(',', array_map(function ($v) { return (int) $v[0]; }, $ids)) . ')');
+foreach ($ids as $k => $v) {
+    if (!$v[0] || $k === 'nosched') continue;
+    $wpdb->insert($p . 'ews_schedule', ['employee_id' => $v[0], 'work_date' => $today, 'status' => $k === 'leave' ? 'Leave' : 'Office']);
+}
+$out = ['att_today' => $today, 'att_yesterday' => $yesterday, 'att_corrected' => $new];
+foreach ($ids as $k => $v) { $out['atw_' . $k] = $v[0]; $out['atwu_' . $k] = $v[1]; }
+echo wp_json_encode($out);
