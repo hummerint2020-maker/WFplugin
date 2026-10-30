@@ -30,13 +30,11 @@ trait EWS_Breaks_Trait {
         }
 
         private function break_sessions_today($employee_id){
-            global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            return $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND work_date=%s ORDER BY id ASC",(int)$employee_id,$this->attendance_day($employee_id)));
+            return $this->services()->attendanceLog()->breakSessions((int)$employee_id,(string)$this->attendance_day($employee_id));
         }
 
         private function break_open_session($employee_id){
-            global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE employee_id=%d AND work_date=%s AND status='Open' ORDER BY id DESC LIMIT 1",(int)$employee_id,$this->attendance_day($employee_id)));
+            return $this->services()->attendanceLog()->openBreak((int)$employee_id,(string)$this->attendance_day($employee_id));
         }
 
         private function break_remaining($employee_id){

@@ -67,7 +67,7 @@ trait EWS_Services_Trait {
         $advance_left=function($employee){return $this->advance_left_for($employee);};
         $org_on=function(){return $this->org_enabled();};
         $title_required=function(){return $this->org_title_required();};
-        return new Services($db,['schedule'=>$this->schedule_table_name(),'employees'=>$this->employees],
+        return new Services($db,['schedule'=>$this->schedule_table_name(),'employees'=>$this->employees,'time_logs'=>$this->time_logs_table_name()],
             new class($audit) implements AuditLog {
                 private $f;
                 public function __construct(callable $f){ $this->f=$f; }

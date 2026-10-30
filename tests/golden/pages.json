@@ -458,6 +458,14 @@
         }
       },
       "expect": "Lina Late"
+    },
+    {
+      "user": "acomar",
+      "url": "/app/?ews_view=time"
+    },
+    {
+      "user": "acomar",
+      "url": "/app/"
     }
   ],
   "normalise": [
