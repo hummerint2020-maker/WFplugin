@@ -172,6 +172,11 @@
     {
       "user": "admin",
       "url": "/wp-admin/admin.php?page=ews31-employees&paged=2",
+      "expect": "Employees"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-employees&s=Old+Boss",
       "expect": "Old Boss"
     },
     {

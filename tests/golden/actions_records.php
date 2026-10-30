@@ -30,6 +30,7 @@ add_filter('query', function ($q) use (&$sql, $fix) {
     $n = preg_replace("/(_transient_timeout_\w+', ')\d+/", '$1TS', $n);
     $n = preg_replace('/\b\d{13}\b/', 'TS', $n);
     $n = preg_replace('/`actual_minutes` = \d+/', '`actual_minutes` = N', $n);   // minutes since a break started follow "now"
+    $n = preg_replace('#/ \d+m /#', '/ Nm /', $n);   // ... and so does the audit text of a closed break
     $n = preg_replace("/SET `option_value` = '.*?' WHERE `option_name` = 'cron'/s", "SET `option_value` = 'CRON' WHERE `option_name` = 'cron'", $n);
     $n = preg_replace('/(<|&lt;)div.*?(?=\', \'T\'\))/s', '', $n);
     $sql[] = $fix(trim(preg_replace('/\s+/', ' ', $n)));
