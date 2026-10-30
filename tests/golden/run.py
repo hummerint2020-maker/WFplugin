@@ -323,7 +323,7 @@ try:
           and 'time_notice=saved' in rto('man_add_in') and 'time_error=duplicate' in rto('man_add_in_duplicate') and 'time_error=order' in rto('man_add_out_before_in') and 'time_error=scope' in rto('man_mgr_other_department')
           and 'time_error=save' in rto('man_fault_insert') and 'time_error=not_found' in rto('man_edit_not_found') and 'break_reset=2' in rto('reset_with_breaks') and 'time_error=scope' in rto('reset_scope')
           and any(r.get('enabled') == '0' for r in rc.get('rules_after_ticks', [])) and any(r.get('enabled') == '1' for r in rc.get('rules_after_ticks', []))
-          and (any('GET_LOCK' in q for q in rc['tick_1']['sql']) == any('RELEASE_LOCK' in q for q in rc['tick_1']['sql'])) and (any('GET_LOCK' in q for q in rc['bulk_ok']['sql']) == any('RELEASE_LOCK' in q for q in rc['bulk_ok']['sql'])),
+          and all(sum('GET_LOCK' in q for q in rc[k]['sql']) == sum('RELEASE_LOCK' in q for q in rc[k]['sql']) for k in ('tick_1', 'bulk_ok', 'event_in_ok')),
           {k: rto(k)[-60:] for k in ('rule_save_create', 'bulk_ok', 'man_add_in', 'reset_with_breaks')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter

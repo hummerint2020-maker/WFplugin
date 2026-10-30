@@ -141,6 +141,8 @@ final class AutoAttendanceServiceTest extends TestCase
         $this->assertContains('lock 7 2', $this->w->log);
         $this->assertSame('Completed', $this->w->breaks->rows[0]->status);
         $this->assertSame('480', (string) $this->w->breaks->rows[0]->actual_minutes);
+        $signOut = array_values(array_filter($this->w->logs->rows, function ($r) { return $r->event_type === 'sign_out'; }))[0];
+        $this->assertSame([self::DAY . ' 17:00:00', self::DAY . ' 17:00:00', '70', 'Office', 'auto'], [$signOut->event_at, $signOut->created_at, (string) $signOut->user_id, $signOut->scheduled_status, $signOut->source]);
         $actions = array_map(function ($a) { return $a[0]; }, $this->w->audits);
         $this->assertSame(['auto_sign_out', 'break_auto_closed', 'auto_sign_out_bulk'], $actions);
         $this->assertSame('Date=2026-10-30 / signed_out=1 / skipped=1 / failed=0', $this->w->audits[2][3]);

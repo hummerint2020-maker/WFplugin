@@ -121,6 +121,20 @@ if ($sqlite) {
 }
 
 // ---- L5c (3.31.138): the automatic events, the bulk Sign Out, the manual records and the rules
+$seen = [];
+$capture = static function ($q) use (&$seen) { $seen[] = trim(preg_replace('/\s+/', ' ', $q)); return $q; };
+add_filter('query', $capture, 1);
+$S->firstEventId(11, '2026-10-30', ['sign_out']);
+$S->firstEventId(11, '2026-10-30', ['sign_in', 'late_sign_in']);
+$S->anyOfKinds(11, '2026-10-30', ['sign_in', 'late_sign_in']);
+$S->anyOfKinds(11, '2026-10-30', ['sign_out']);
+remove_filter('query', $capture, 1);
+$check($seen === [
+    "SELECT MIN(id) FROM {$tl} WHERE employee_id=11 AND work_date='2026-10-30' AND event_type IN ('sign_out')",
+    "SELECT MIN(id) FROM {$tl} WHERE employee_id=11 AND work_date='2026-10-30' AND event_type IN ('sign_in','late_sign_in')",
+    "SELECT id FROM {$tl} WHERE employee_id=11 AND work_date='2026-10-30' AND event_type IN ('sign_in','late_sign_in') LIMIT 1",
+    "SELECT id FROM {$tl} WHERE employee_id=11 AND work_date='2026-10-30' AND event_type IN ('sign_out') LIMIT 1",
+], 'firstEventId / anyOfKinds: the prepared IN gives the same text as the old literal IN (sign_in,late_sign_in without a space)');
 $auto = $S->insertAuto(['employee_id' => 11, 'user_id' => 0, 'work_date' => '2026-10-30', 'event_type' => 'sign_in', 'event_at' => '2026-10-30 09:00:00', 'scheduled_status' => 'Office', 'ip_address' => '', 'latitude' => null, 'longitude' => null, 'accuracy' => null, 'location_status' => 'auto', 'distance_meters' => null, 'created_at' => '2026-10-30 09:00:01', 'source' => 'auto']);
 $autoRow = $db->get_row("SELECT * FROM {$tl} WHERE id={$auto}", ARRAY_A);
 $check($auto > 0 && $autoRow['latitude'] === null && $autoRow['location_status'] === 'auto' && $autoRow['user_id'] === '0', 'insertAuto: the id, NULL coordinates stay NULL');

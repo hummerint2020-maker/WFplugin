@@ -1,7 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-use WorkforceOne\Attendance\LocationAssessment;
 use WorkforceOne\Attendance\ManualRecordRules;
 use WorkforceOne\Support\Csv;
 
