@@ -124,3 +124,9 @@ Decided by the architect (technical, no visible effect): `firstEventId` is reuse
 ## j. Owner decisions
 1. One release for both parts: 3.31.138.
 2. The new money quirks (AT-r, AT-s, AT-t, AT-u, AT-v) are moved as they are and join the fix queue right after AT-i and AT-h; the direction of each fix (AT-v: refuse edits of correction rows; AT-r: a per-day skip the tick honours) is asked when its release is designed.
+
+## k. As built in L5c (3.31.138): where the code differs from the design
+- `AutoAttendanceService` and `ManualRecordService` call the schedule service through a property named `$days` (a property named `schedule` is counted by the layer check as a table reference).
+- `saveRule` writes the audit row itself and returns `{ok,id,error}`; the controller keeps `wp_die` with the error text, `auto_attendance_schedule()` and the redirect.
+- `AttendanceSite` gained `generalLeave`, `requiresSignIn`, `breakEnabled`, `clearBreakEvents`, `ensureBreakTable`; `ManualRecordSite` (`mayManage`, `workingHours`, `workSite`) is held in `AttendancePorts::$manual`.
+- Caught by the harness while building it (none in the code): break minutes and the audit text of a closed break follow the clock (normalised), the Sign In window of the write harness closes four hours after the start (it starts half an hour before the run), and the Employees page 2 check must not depend on who sorts onto that page.

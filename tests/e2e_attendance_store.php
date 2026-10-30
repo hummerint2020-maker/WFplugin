@@ -20,7 +20,7 @@ $tables = ['ews_time_logs', 'ews_break_sessions', 'ews_auto_attendance_rules'];
 foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $other, $tables) { foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}"); });
 foreach ([$prefix, $other] as $px) {
-    $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, photo_key VARCHAR(190) NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', ip_address VARCHAR(64) NULL, latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, accuracy DECIMAL(10,2) NULL, location_status VARCHAR(30) NULL, distance_meters DECIMAL(12,2) NULL, created_at DATETIME NULL, source VARCHAR(20) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, photo_key VARCHAR(190) NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_auto_attendance_rules (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, recurrence VARCHAR(20) NOT NULL DEFAULT 'one_time', run_date DATE NULL, weekdays VARCHAR(20) NOT NULL DEFAULT '', sign_in_time VARCHAR(5) NULL, sign_out_time VARCHAR(5) NULL, enabled TINYINT(1) NOT NULL DEFAULT 1, created_by BIGINT UNSIGNED NULL, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_break_sessions (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, start_at DATETIME NOT NULL, end_at DATETIME NULL, actual_minutes INT UNSIGNED NULL, status VARCHAR(20) NOT NULL DEFAULT 'Open', duration_notified TINYINT(1) NOT NULL DEFAULT 0, escalation_notified TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, PRIMARY KEY (id))");
 }
@@ -135,7 +135,7 @@ $S->insert(['employee_id' => 13, 'user_id' => 0, 'work_date' => '2026-10-30', 'e
 $open = $S->openSignInsOn('2026-10-30');
 $byEmp = [];
 foreach ($open as $o) $byEmp[(int) $o->employee_id] = (int) $o->sign_in_id;
-$check($byEmp[11] === $auto && $byEmp[12] === $sin12b && !isset($byEmp[13]) && !isset($byEmp[9]), 'openSignInsOn: the newest live Sign In of anyone without a Sign Out; a replaced row is not it');
+$check($byEmp[11] === $auto && $byEmp[12] === $sin12b && !isset($byEmp[13]) && $byEmp[9] === $id1, 'openSignInsOn: the newest live Sign In of anyone without a Sign Out; a replaced row is not it');
 $check($S->byId($sin13)->employee_id === '13' && $S->byId(999999) === null, 'byId: the whole row, null for none');
 $check($S->signOutIdOn(13, '2026-10-30') > 0 && $S->signOutIdOn(11, '2026-10-30') === 0, 'signOutIdOn: the id, 0 for none');
 $ie = $S->idEmployee($sin13);
