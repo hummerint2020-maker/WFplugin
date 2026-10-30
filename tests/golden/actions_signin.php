@@ -27,7 +27,9 @@ $fault = null;
 add_filter('query', function ($q) use (&$sql, $fix) {
     $n = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $q);
     $n = preg_replace("/(_transient_timeout_\w+', ')\d+/", '$1TS', $n);
-    $n = preg_replace('/location_timestamp\'?,? ?\d{13}/', 'location_timestamp TS', $n);
+    $n = preg_replace('/\b\d{13}\b/', 'TS', $n);   // a device location time (Unix ms)
+    $n = preg_replace("/SET `option_value` = '.*?' WHERE `option_name` = 'cron'/s", "SET `option_value` = 'CRON' WHERE `option_name` = 'cron'", $n);   // the scheduled events carry times
+    $n = preg_replace('/(<|&lt;)div.*?(?=\', \'T\'\))/s', '', $n);   // the query log a failed query appends to an audit text
     $sql[] = $fix(trim(preg_replace('/\s+/', ' ', $n)));
     return $q;
 }, 1);
@@ -50,6 +52,7 @@ $norm = function ($v) use (&$norm, $dates) {
         $v = preg_replace('#^https?://[^/]+#', '', $v);
         $v = preg_replace('/(<|&lt;)div.*$/s', '', $v);
         $v = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $v);
+        if (preg_match('/^\d{13}$/', $v)) return 'TS';
     }
     return $v;
 };
@@ -67,11 +70,12 @@ $faulty = function ($label, $pattern, callable $fn) use (&$fault, $run, $wpdb) {
     try { $run($label, $fn); } finally { $wpdb->suppress_errors($quiet); $fault = null; }
 };
 $post = function ($method, array $fields, $nonce, $referer = null) use ($o) { return golden_post($o, $method, $fields, $nonce, $referer); };
-$cron = function () {
+$baseBreak = (int) $wpdb->get_var("SELECT COALESCE(MAX(id),0) FROM {$p}ews_break_sessions");   // events of older sessions on a used site are not this script's
+$cron = function () use ($baseBreak) {
     $out = [];
     foreach ((array) _get_cron_array() as $ts => $hooks) foreach ($hooks as $hook => $evs) {
         if (strpos($hook, 'ews_break_') !== 0) continue;
-        foreach ($evs as $ev) $out[] = [$hook, $ev['args'], (int) round(($ts - time()) / 60)];
+        foreach ($evs as $ev) if ((int) ($ev['args'][0] ?? 0) > $baseBreak) $out[] = [$hook, $ev['args'], (int) round(($ts - time()) / 60)];
     }
     usort($out, function ($a, $b) { return strcmp(json_encode($a), json_encode($b)); });
     return $out;
@@ -198,6 +202,7 @@ $faulty('fault_break_first_open', ['/^SELECT MIN\(id\) FROM\s+`?' . preg_quote($
 $run('break_ok_after_faults', $bstart);
 $faulty('fault_break_close', ['/^UPDATE\s+`?' . preg_quote($p, '/') . 'ews_break_sessions/i', 'UPDATE ' . $p . 'ews_break_sessions SET status=status WHERE 1=0'], $bresume);
 $faulty('fault_break_lock_busy', ['/^SELECT GET_LOCK/i', 'SELECT 0'], $bresume);
+$run('break_open_for_crons', $bstart);
 update_option('ews_feature_breaks', 0, false);
 $run('break_disabled_start', $bstart);
 $run('break_disabled_resume', $bresume);
