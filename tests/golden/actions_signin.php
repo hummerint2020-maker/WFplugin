@@ -89,7 +89,10 @@ $enforce = function ($on) use ($wpdb, $p) {
 $call('ensure_api_idempotency_schema');
 $wpdb->query("DELETE FROM {$p}ews_api_idempotency");  // a solo run on a used site starts clean (the harness restores its snapshot)
 // ---------------------------------------------------------------- settings (options only; the people and today's plan come from seed_attendance.php)
-update_option('ews_working_hours', ['start' => '00:00', 'normal_until' => '23:59', 'end' => '23:59'], false);
+// the Sign In window is open from the start until 4 hours later: start the day half an hour ago (not before midnight), so it is open whenever the harness runs
+$nowLocal = (int) current_time('timestamp');
+$startAt = gmdate('Y-m-d', $nowLocal - 1800) === $D0 ? gmdate('H:i', $nowLocal - 1800) : '00:00';
+update_option('ews_working_hours', ['start' => $startAt, 'normal_until' => '23:59', 'end' => '23:59'], false);
 update_option('ews_allow_overnight_shift', 0, false);
 update_option('ews_feature_breaks', 1, false);
 update_option('ews_breaks_per_day', 2, false);
