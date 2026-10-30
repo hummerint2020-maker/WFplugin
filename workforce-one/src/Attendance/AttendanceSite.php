@@ -6,12 +6,6 @@ if (!defined('ABSPATH')) exit;
 /** What the break services need from the rest of the plugin: the clock of a break, the person, the managers, the cron events and the notices. */
 interface AttendanceSite
 {
-    /** The two cron events of a new break: the reminder and the manager escalation. */
-    public function scheduleBreakEvents(int $breakId): void;
-
-    /** The "Break Ended" notification, after a break was closed. */
-    public function breakEnded(object $employee, int $breakId, int $minutes): void;
-
     /** The break length in minutes (read when the reminder is built, as the setting is read after the flag is set). */
     public function breakDurationMinutes(): int;
 

@@ -57,7 +57,7 @@ final class AttendanceAssembleTest extends TestCase
         };
     }
 
-    private function service(): AttendanceService
+    private function service(array $override = []): AttendanceService
     {
         $logs = $this->logs;
         $day = '2026-10-30';
@@ -90,7 +90,7 @@ final class AttendanceAssembleTest extends TestCase
             'scheduleBreakEvents' => function ($id) { $this->notices[] = "schedule $id"; },
             'breakEnded' => function ($emp, $id, $minutes) { $this->notices[] = "ended $id $minutes"; },
         ];
-        return new AttendanceService(AttendanceContext::assemble($site, $this->logs, $this->breaks, $this->lock, $this->idem));
+        return new AttendanceService(AttendanceContext::assemble($override + $site, $this->logs, $this->breaks, $this->lock, $this->idem));
     }
 
     public function testSignInIsInsertedThroughTheStoreUnderTheLockAndAudited(): void
@@ -121,16 +121,20 @@ final class AttendanceAssembleTest extends TestCase
 
     public function testADuplicateThatSlippedInRemovesItself(): void
     {
+        // the other request's row exists when the check after the insert runs, but did not when this request looked at today's events
         $this->logs->add(5, 7, '2026-10-30', 'sign_in', '2026-10-30 07:59:59');
-        $svc = $this->service();
-        // the first request's check passed before the other's row existed: simulate it by hiding that row from the events but not from the id check
-        $hidden = array_pop($this->logs->rows);
-        $c = new AttendanceCommand('sign_in');
-        $this->logs->rows = [];
-        $r = $svc->record($c);
-        $this->assertTrue($r->ok);
-        $this->logs->rows[] = $hidden;
-        $this->assertSame(100, $r->details['event_id']);
+        $r = $this->service(['events' => function () { return []; }])->record(new AttendanceCommand('sign_in'));
+        $this->assertFalse($r->ok);
+        $this->assertSame('already_signed_in', $r->code);
+        $this->assertContains('delete 100', $this->logs->calls);
+        $this->assertSame([], array_filter($this->logs->rows, function ($row) { return (int) $row->id === 100; }));
+        $this->assertSame([], $this->audit);
+    }
+
+    public function testASiteThatSuppliesAStoreEntryIsRefused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->service(['lock' => function () { return true; }]);
     }
 
     public function testTheIdempotencyKeyIsClaimedSavedAndReplayed(): void

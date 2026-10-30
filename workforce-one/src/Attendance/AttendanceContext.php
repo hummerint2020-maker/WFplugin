@@ -42,7 +42,7 @@ final class AttendanceContext
      */
     public static function assemble(array $site, Data\TimeLogStore $logs, Data\BreakStore $breaks, EmployeeLock $lock, Idempotency $idem): self
     {
-        return new self($site + [
+        $assembled = [
             'insertTimeLog' => function ($row) use ($logs) { return $logs->insert($row); },
             'insertError' => function () use ($logs) { return $logs->lastError(); },
             'lastInsertId' => function () use ($logs) { return $logs->lastInsertId(); },
@@ -58,7 +58,10 @@ final class AttendanceContext
             'firstOpenBreakId' => function ($eid, $day) use ($breaks) { return $breaks->firstOpenId((int) $eid, $day); },
             'deleteBreak' => function ($id) use ($breaks) { $breaks->delete((int) $id); },
             'closeBreak' => function ($id, $end, $minutes) use ($breaks) { return $breaks->close((int) $id, $end, (int) $minutes); },
-        ]);
+        ];
+        $both = array_intersect_key($site, $assembled);
+        if ($both) throw new \InvalidArgumentException('AttendanceContext::assemble: the site must not supply ' . implode(', ', array_keys($both)) . ' (the Stores and ports do)');
+        return new self($site + $assembled);
     }
 
     /** @param array<string,callable> $callables one for each of KEYS */

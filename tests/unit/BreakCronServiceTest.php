@@ -32,8 +32,6 @@ final class BreakCronServiceTest extends TestCase
             /** @var object|null */
             public $employee;
             public function __construct() { $this->employee = (object) ['id' => 7, 'name' => 'Omar']; }
-            public function scheduleBreakEvents(int $breakId): void { $this->log[] = 'schedule'; }
-            public function breakEnded(object $employee, int $breakId, int $minutes): void { $this->log[] = 'ended'; }
             public function breakDurationMinutes(): int { $this->log[] = 'duration?'; return 15; }
             public function breakTimeEnded(int $userId, int $breakId, string $message): void { $this->log[] = "timeEnded $userId $breakId $message"; }
             public function extendedBreak(int $userId, int $breakId, string $message): void { $this->log[] = "extended $userId $breakId $message"; }

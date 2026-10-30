@@ -56,6 +56,8 @@ if (!(int) $wpdb->get_var("SELECT COUNT(*) FROM {$p}ews_locations WHERE active=1
 $mk = function ($key, $att = 1) use ($wpdb, $p) {
     $login = 'atw_' . $key;
     $uid = (int) (username_exists($login) ?: wp_create_user($login, $login . '-pass', $login . '@example.com'));
+    $have = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE wp_user_id=%d ORDER BY id LIMIT 1", $uid));
+    if ($have) return [$have, $uid];   // a used site: the same person again, not a second employee on one user
     $wpdb->insert($p . 'ews_employees', ['name' => 'At ' . $key, 'domain_name' => $login, 'email' => $login . '@example.com', 'wp_user_id' => $uid, 'active' => 1, 'attendance_enabled' => $att]);
     return [(int) $wpdb->insert_id, $uid];
 };

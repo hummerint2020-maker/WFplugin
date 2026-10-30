@@ -301,7 +301,8 @@ try:
           and len(sg.get('crons_after_break_1') or []) == 2 and any(r.get('photo_key') for r in sg.get('_rows:time_logs', []))
           and any(r.get('title') == 'Break Time Ended' for r in sg.get('_rows:notifications', [])) and any(r.get('title') == 'Extended Break Alert' for r in sg.get('_rows:notifications', []))
           and any(r.get('action') == 'time_sign_in' for r in sg.get('_rows:audit', [])) and any(r.get('action') == 'time_sign_in_failed' for r in sg.get('_rows:audit', []))
-          and bool(sg.get('_rows:break_sessions')) and bool(sg.get('_rows:idempotency')),
+          and bool(sg.get('_rows:break_sessions')) and bool(sg.get('_rows:idempotency'))
+          and (any('GET_LOCK' in q for q in sg['in_ok']['sql']) == any('RELEASE_LOCK' in q for q in sg['in_ok']['sql'])) and all(any('GET_LOCK' in q for q in sg[k]['sql']) == any('GET_LOCK' in q for q in sg['in_ok']['sql']) for k in ('fault_lock_busy', 'fault_lock_null', 'out_ok')),
           {k: sto(k)[-70:] for k in ('in_ok', 'face_ok_photo', 'loc_outside', 'fault_insert', 'break_1_start')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
