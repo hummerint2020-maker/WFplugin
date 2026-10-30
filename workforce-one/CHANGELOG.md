@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.31.137
+### Sign In / Sign Out and break writes move to Controllers → Services → Stores (L5b; design `docs/tasks/attendance-store.md`)
+No setting, no switch, no database change, and nothing you can see: the golden harness records a new trace of 62 write calls (Sign In and Out with every refusal, Face check and its photo, the position check on an enforced site, a refused or lost insert, the check after the insert, the lock busy or not available, idempotency keys claimed, replayed, in conflict and given back, breaks started, resumed, refused and failed, and both break cron jobs) first on the old code, then on the new one, statement for statement. It caught one slip while moving (the break length setting was read before the reminder's first query instead of after the flag) and that is fixed.
+- The context of `AttendanceService` is assembled by `AttendanceContext::assemble()` from **`TimeLogStore`**, **`BreakStore`**, the **`EmployeeLock`** port (the per-employee GET_LOCK, same name and wait) and the **`Idempotency`** port; the service itself is unchanged, byte for byte. The photo of a Face Sign In is kept through `TimeLogStore::setPhoto`.
+- The two break cron jobs are **`BreakCronService`** (the reminder and the manager alert) over the break store and the **`AttendanceSite`** port (cron events, notifications, managers). The idempotency functions moved to `trait-api-auth.php` (the app owns that table) with their names; `trait-breaks.php` has no SQL left.
+- Quirks AT-a to AT-m are moved as they are (a lock that is not taken does not refuse, the check after the insert ignores corrections, the photo update is not audited, the break jobs may notify twice if two overlap). They are fixed later, each in its own release.
+- Tests: 13 new unit tests (the writes through the Stores in order, the lock busy, a failed insert, a duplicate that slipped in, idempotency, the break cron jobs), the storage contract covers every new write on real tables.
+
 ## 3.31.136
 ### Attendance reads move to Controllers → Services → Stores (L5a; design `docs/tasks/attendance-store.md`)
 No setting, no switch, no database change, and nothing you can see: the golden harness compares 67 pages and 50 attendance reads (today's events with a corrected row hidden, the attendance day for a normal and an overnight shift, the last device location, the break sessions and open break, the overtime day) with the old code, statement for statement. Sign In / Sign Out, breaks, auto attendance, corrections and payroll are not touched.

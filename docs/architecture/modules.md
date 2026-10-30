@@ -73,7 +73,7 @@ Both will go through the other modules' functions rather than their tables.
    and `ProfileService`. Reads of employee names in other modules (a later release) are what is left of People.
    **Attendance (3.31.136, L5a, `docs/tasks/attendance-store.md`):** the reads of the time log and the break sessions (today's events, the
    attendance day, the last device location, the break reads, the overtime day) moved behind `AttendanceLog` over `TimeLogStore` and
-   `BreakStore`; Sign In / Out, breaks, auto attendance, corrections and the time report follow in L5b–L5e.
+   `BreakStore`. **3.31.137 (L5b):** the Sign In / Out and break writes moved behind the same Stores, the `EmployeeLock` and `Idempotency` ports and `BreakCronService`; auto attendance, manual records, evidence, the time report and corrections follow in L5c–L5e.
 2. **Move modules out of the shared object, least tied first:** notifications, polls (engagement),
    daily workers, the installed app, then leave, overtime and attendance, last payroll and reports.
    Each becomes a class in `src/<Module>/` with its own hook registration and public functions; the

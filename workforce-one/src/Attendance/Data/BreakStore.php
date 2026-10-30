@@ -11,4 +11,23 @@ interface BreakStore
 
     /** The employee's newest open break of one work day (null when none). */
     public function openOn(int $employeeId, string $day): ?object;
+
+    /** @param array<string,mixed> $row employee_id, user_id, work_date, start_at, status, created_at @return int the new id, 0 on failure */
+    public function insert(array $row): int;
+
+    /** The lowest id of the employee's open breaks of one work day (0 = none). */
+    public function firstOpenId(int $employeeId, string $day): int;
+
+    public function delete(int $id): void;
+
+    /** Ends an open break; false when it was no longer open (the affected count is exactly one). */
+    public function close(int $id, string $endMysql, int $minutes): bool;
+
+    public function byId(int $id): ?object;
+
+    /** The reminder was sent (the flag is set on the id alone, whatever the status). */
+    public function markReminded(int $id): void;
+
+    /** The manager escalation was sent (the flag is set on the id alone, whatever the status). */
+    public function markEscalated(int $id): void;
 }

@@ -47,4 +47,35 @@ final class WordPressTimeLogStore implements TimeLogStore
     {
         return (array) $this->db->get_results($this->db->prepare("SELECT event_type,event_at FROM {$this->t} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out')" . $this->live() . ' ORDER BY event_at ASC', $employeeId, $day));
     }
+
+    public function insert(array $row): int
+    {
+        return $this->db->insert($this->t, $row) === false ? 0 : (int) $this->db->insert_id;
+    }
+
+    public function lastError(): string
+    {
+        return (string) $this->db->last_error;
+    }
+
+    public function lastInsertId(): int
+    {
+        return (int) $this->db->insert_id;
+    }
+
+    public function firstEventId(int $employeeId, string $day, array $types): int
+    {
+        $ph = implode(',', array_fill(0, count($types), '%s'));
+        return (int) $this->db->get_var($this->db->prepare("SELECT MIN(id) FROM {$this->t} WHERE employee_id=%d AND work_date=%s AND event_type IN ($ph)", array_merge([$employeeId, $day], $types)));
+    }
+
+    public function delete(int $id): void
+    {
+        $this->db->delete($this->t, ['id' => $id], ['%d']);
+    }
+
+    public function setPhoto(int $id, string $key): void
+    {
+        $this->db->update($this->t, ['photo_key' => $key], ['id' => $id]);
+    }
 }

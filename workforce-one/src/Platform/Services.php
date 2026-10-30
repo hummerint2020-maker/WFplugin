@@ -2,7 +2,13 @@
 namespace WorkforceOne\Platform;
 
 use WorkforceOne\Approvals\ApprovalEngine;
+use WorkforceOne\Attendance\AttendanceContext;
 use WorkforceOne\Attendance\AttendanceLog;
+use WorkforceOne\Attendance\AttendancePorts;
+use WorkforceOne\Attendance\AttendanceService;
+use WorkforceOne\Attendance\BreakCronService;
+use WorkforceOne\Attendance\Data\WordPressEmployeeLock;
+use WorkforceOne\Attendance\EmployeeLock;
 use WorkforceOne\Attendance\Data\BreakStore;
 use WorkforceOne\Attendance\Data\TimeLogStore;
 use WorkforceOne\Attendance\Data\WordPressBreakStore;
@@ -74,6 +80,8 @@ final class Services
     private $approvalPorts;
     /** @var SubstitutePorts */
     private $substitutePorts;
+    /** @var AttendancePorts */
+    private $attendancePorts;
     /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
     private $tables;
     /** @var array<string,object> */
@@ -81,8 +89,9 @@ final class Services
 
     /** @param array<string,string> $tables */
     public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
-        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts)
+        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts)
     {
+        $this->attendancePorts = $attendancePorts;
         $this->substitutePorts = $substitutePorts;
         $this->db = $db;
         $this->tables = $tables;
@@ -209,6 +218,25 @@ final class Services
     public function attendanceLog(): AttendanceLog
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new AttendanceLog($this->timeLogStore(), $this->breakStore());
+        return $this->made[__FUNCTION__];
+    }
+
+    public function employeeLock(): EmployeeLock
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressEmployeeLock($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Records Sign In / Sign Out and breaks for this request (3.31.137). Built fresh on each call: $site holds the request's closures. @param array<string,callable> $site */
+    public function attendance(array $site): AttendanceService
+    {
+        return new AttendanceService(AttendanceContext::assemble($site, $this->timeLogStore(), $this->breakStore(), $this->employeeLock(), $this->attendancePorts->idempotency));
+    }
+
+    /** The reminder and the manager alert of a break (3.31.137). */
+    public function breakCron(): BreakCronService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new BreakCronService($this->breakStore(), $this->attendancePorts->site);
         return $this->made[__FUNCTION__];
     }
 

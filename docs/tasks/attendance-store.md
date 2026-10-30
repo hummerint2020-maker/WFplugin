@@ -229,3 +229,10 @@ Decided by the architect (technical, no visible effect; owner can overrule): ide
 2. Quirks AT-a…q: move as they are, fix later each in its own release (order AT-i, AT-h, AT-j, AT-e, AT-f, then the rest).
 3. DST (AT-o): documentation only; wall-clock storage kept.
 4. Other modules' `time_logs` reads: left as known debt (payroll excluded either way).
+
+## 14. As built in L5b (3.31.137): where the code differs from the design
+- The ports are `EmployeeLock`, `Idempotency` and `AttendanceSite` (cron events, the two break notices and the "Break Ended" one, the employee, the managers, the minutes since a break started), held in `AttendancePorts`. The design's `BreakTimers` and `AttendanceNotifier` are folded into `AttendanceSite`.
+- `Services::attendance(array $site)` builds the service fresh on each call (no memo); the `attendance_context()` function became `attendance_site()` (the entries that are the plugin's own); `AttendanceContext::assemble()` fills the rest.
+- The idempotency functions (find, claim, cleanup, and the new save and release) live in `trait-api-auth.php`; the adapter calls them by name.
+- Caught by the golden trace while moving: the break length setting must be read after the reminder's flag is set (it is an option query), not before the first SELECT.
+- Not moved (as designed): `ews_with_lock`, schema, `report_days`, corrections' writes, face, presence, insights.

@@ -107,28 +107,24 @@ trait EWS_Breaks_Trait {
 
         public function break_duration_reminder($session_id){
             if(!$this->break_enabled())return;
-            global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            $s=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d LIMIT 1",(int)$session_id));
-            if(!$s||$s->status!=='Open'||(int)$s->duration_notified===1)return;
-            $wpdb->update($table,['duration_notified'=>1],['id'=>(int)$s->id],['%d'],['%d']);
-            $msg='Your '.$this->break_duration_minutes().'-minute break has ended. Please resume work.';
-            $this->notify((int)$s->user_id,'break','Break Time Ended',$msg,['entity_id'=>(int)$s->id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);
+            $this->services()->breakCron()->remind((int)$session_id);
         }
 
         public function break_manager_escalation($session_id){
             if(!$this->break_enabled())return;
-            global $wpdb; $table=$wpdb->prefix.'ews_break_sessions';
-            $s=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d LIMIT 1",(int)$session_id));
-            if(!$s||$s->status!=='Open'||(int)$s->escalation_notified===1)return;
-            if(!$this->employee_attendance_enabled((int)$s->employee_id))return;
-            $wpdb->update($table,['escalation_notified'=>1],['id'=>(int)$s->id],['%d'],['%d']);
-            $emp=$this->people_employee((int)$s->employee_id);
-            if(!$emp)return;
-            $elapsed=max(0,(int)floor((current_time('timestamp',true)-strtotime(get_gmt_from_date($s->start_at)))/60));
-            $msg=$emp->name.' has been on break for '.$elapsed.' minutes and has not resumed work.';
-            foreach($this->break_manager_user_ids() as $uid){
-                $this->notify($uid,'break','Extended Break Alert',$msg,['entity_id'=>(int)$s->id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);
-            }
+            $this->services()->breakCron()->escalate((int)$session_id);
+        }
+
+        /** The reminder and the manager escalation cron events of a new break. */
+        private function break_schedule_events($id){
+            $now_utc=current_time('timestamp',true);
+            wp_schedule_single_event($now_utc+($this->break_duration_minutes()*60),'ews_break_duration_reminder',[$id]);
+            wp_schedule_single_event($now_utc+($this->break_escalation_minutes()*60),'ews_break_manager_escalation',[$id]);
+        }
+
+        /** The "Break Ended" notification. */
+        private function break_notify_ended($emp,$id,$minutes){
+            $this->notify((int)$emp->wp_user_id,'break','Break Ended',$this->break_ended_message($minutes),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);
         }
 
         private function break_ui_data($employee_id){

@@ -5,6 +5,7 @@
  * inline SQL gave. Run with wp eval-file (CI's MySQL; SQLite works too).
  */
 use WorkforceOne\Attendance\Data\WordPressBreakStore;
+use WorkforceOne\Attendance\Data\WordPressEmployeeLock;
 use WorkforceOne\Attendance\Data\WordPressTimeLogStore;
 
 global $wpdb;
@@ -18,8 +19,8 @@ $tables = ['ews_time_logs', 'ews_break_sessions'];
 foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $other, $tables) { foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}"); });
 foreach ([$prefix, $other] as $px) {
-    $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, PRIMARY KEY (id))");
-    $wpdb->query("CREATE TABLE {$px}ews_break_sessions (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, start_at DATETIME NOT NULL, end_at DATETIME NULL, actual_minutes INT UNSIGNED NULL, status VARCHAR(20) NOT NULL DEFAULT 'Open', PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, photo_key VARCHAR(190) NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_break_sessions (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, start_at DATETIME NOT NULL, end_at DATETIME NULL, actual_minutes INT UNSIGNED NULL, status VARCHAR(20) NOT NULL DEFAULT 'Open', duration_notified TINYINT(1) NOT NULL DEFAULT 0, escalation_notified TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, PRIMARY KEY (id))");
 }
 $db = clone $wpdb;
 $db->prefix = $prefix;
@@ -73,4 +74,47 @@ $check($B->openOn(7, '2026-10-28') === null && $B->openOn(8, '2026-10-29') === n
 $moved = clone $wpdb;
 $moved->prefix = $other;
 $check((new WordPressBreakStore($moved))->sessionsOn(7, '2026-10-29') === [], 'break table: built from the prefix it is given (a switched site has its own)');
+
+// ---- the writes (3.31.137): the ids, the failures, the first row, the delete, the photo
+$id1 = $S->insert(['employee_id' => 9, 'user_id' => 3, 'work_date' => '2026-10-30', 'event_type' => 'sign_in', 'event_at' => '2026-10-30 08:00:00']);
+$check($id1 > 0 && $S->lastInsertId() === $id1 && $S->lastError() === '', 'insert: the new id, the same one lastInsertId gives, no error');
+$quiet = $db->suppress_errors(true);
+$bad = $S->insert(['employee_id' => 9, 'no_such_column' => 1]);
+$db->suppress_errors($quiet);
+$check($bad === 0 && $S->lastError() !== '', 'insert: 0 on failure, with the database error');
+$id2 = $S->insert(['employee_id' => 9, 'user_id' => 3, 'work_date' => '2026-10-30', 'event_type' => 'late_sign_in', 'event_at' => '2026-10-30 08:00:01']);
+$check($S->firstEventId(9, '2026-10-30', ['sign_in', 'late_sign_in']) === $id1 && $S->firstEventId(9, '2026-10-30', ['sign_out']) === 0 && $S->firstEventId(8, '2026-10-30', ['sign_in']) === 0, 'firstEventId: the lowest id of the types, 0 when none');
+$S->delete($id2);
+$check($S->firstEventId(9, '2026-10-30', ['late_sign_in']) === 0 && $S->lastInsertId() === $id2, 'delete: the row is gone and insert_id is still the last insert');
+$S->setPhoto($id1, 'photo-key');
+$check($db->get_var("SELECT photo_key FROM {$tl} WHERE id={$id1}") === 'photo-key', 'setPhoto: the key is kept with the row');
+$b1 = $B->insert(['employee_id' => 9, 'user_id' => 3, 'work_date' => '2026-10-30', 'start_at' => '2026-10-30 10:00:00', 'status' => 'Open', 'created_at' => '2026-10-30 10:00:00']);
+$check($b1 > 0 && $B->firstOpenId(9, '2026-10-30') === $b1 && $B->firstOpenId(8, '2026-10-30') === 0, 'break insert and firstOpenId');
+$quiet = $db->suppress_errors(true);
+$badBreak = $B->insert(['employee_id' => 9, 'user_id' => 3, 'work_date' => '2026-10-30', 'start_at' => '2026-10-30 10:00:00', 'status' => 'Open', 'created_at' => '2026-10-30 10:00:00', 'no_such_column' => 'x']);
+$db->suppress_errors($quiet);
+$check($badBreak === 0, 'break insert: 0 on failure');
+$check($B->close($b1, '2026-10-30 10:15:00', 15) === true && $B->close($b1, '2026-10-30 10:16:00', 16) === false, 'break close: true once, false when it was no longer open');
+$row = $B->byId($b1);
+$check($row->status === 'Completed' && $row->actual_minutes === '15' && $B->byId(99999) === null, 'break close: the end, the minutes and the status; byId null for none');
+$b2 = $B->insert(['employee_id' => 9, 'user_id' => 3, 'work_date' => '2026-10-30', 'start_at' => '2026-10-30 12:00:00', 'status' => 'Open', 'created_at' => '2026-10-30 12:00:00']);
+$B->markReminded($b2);
+$B->markEscalated($b2);
+$after = $B->byId($b2);
+$check($after->duration_notified === '1' && $after->escalation_notified === '1' && $B->byId($b1)->duration_notified === '0', 'markReminded / markEscalated: the flags on that id only');
+$B->delete($b2);
+$check($B->byId($b2) === null, 'break delete');
+
+// ---- the employee lock: the name carries the site, SQLite has no such lock
+$lock = new WordPressEmployeeLock($db);
+$sqlite = defined('DB_ENGINE') && DB_ENGINE === 'sqlite';
+if ($sqlite) {
+    $check($lock->lock(9) === false, 'lock: false on SQLite (the request goes on unlocked)');
+} else {
+    $check($lock->lock(9, 1) === true && $lock->lock(9, 1) === true, 'lock: held, and held again by the same connection');
+    $lock->unlock(9);
+    $lock->unlock(9);
+    $name = 'wfo_att_' . substr(md5((defined('DB_NAME') ? DB_NAME : '') . '|' . $prefix), 0, 12) . '_9';
+    $check($db->get_var($db->prepare('SELECT IS_FREE_LOCK(%s)', $name)) === '1', 'lock: released, under the name wfo_att_<site hash>_<employee id>');
+}
 echo "attendance store contract OK\n";

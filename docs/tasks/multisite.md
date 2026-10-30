@@ -25,7 +25,7 @@ one missed filter leaks one company's data to another; not now.
   `self::activate()`. It works, but the first visitor of a new company pays for the whole schema
   install, and a request can race another one.
 - Per-site already, by construction: options (`get_option`), `$wpdb->prefix` tables, the attendance
-  lock name (`attendance_lock_name()` hashes DB_NAME + prefix), `wp_upload_dir()` (task files go to
+  lock name (`WordPressEmployeeLock::name()` hashes DB_NAME + prefix), `wp_upload_dir()` (task files go to
   `uploads/sites/N/workforce-one-tasks`), the API site id (`Tokens::siteId(home_url('/'))`), VAPID
   keys (options).
 - Shared across the network: `$wpdb->users` / `$wpdb->usermeta`. `current_employee()` looks the user

@@ -85,7 +85,7 @@ trait EWS_Attendance_Trait {
             }
             // The photo of the face check that allowed it, when kept (3.31.92).
             $photo=$cmd->faceOk?$this->face_photo_take():null;
-            if($photo && !empty($r->details['event_id'])){global $wpdb;$wpdb->update($this->time_logs,['photo_key'=>$photo],['id'=>(int)$r->details['event_id']]);}
+            if($photo && !empty($r->details['event_id']))$this->services()->timeLogStore()->setPhoto((int)$r->details['event_id'],(string)$photo);
             $type=$cmd->type;$classification=(string)($r->details['classification']??'');
             $success=$type==='sign_in'&&$classification==='Late Arrival'?__('Late Arrival recorded successfully.','workforce-one'):($type==='sign_out'?__('Sign Out recorded successfully.','workforce-one'):__('Sign In recorded successfully.','workforce-one'));
             // At another of their branches than the one planned for today (3.31.72): say so; the manager sees it too.
@@ -110,13 +110,12 @@ trait EWS_Attendance_Trait {
 
     /** Attendance decisions for this request (Sign In / Out, breaks); see AttendanceContext for what it may touch. */
     private function attendance_service(){
-            return new AttendanceService($this->attendance_context());
+            return $this->services()->attendance($this->attendance_site());
         }
 
-    private function attendance_context(){
-            global $wpdb;
-            $breaks=$wpdb->prefix.'ews_break_sessions';
-            return new AttendanceContext([
+    /** The context entries that are the plugin's own (who and when, the rules, the clocks, the audit, the break notices); the Stores, the lock and the idempotency keys come from the services (AttendanceContext::assemble). */
+    private function attendance_site(){
+            return [
                 'employee'=>function(){return $this->current_employee();},
                 'attendanceEnabled'=>function($eid){return $this->employee_attendance_enabled($eid);},
                 'schedule'=>function($eid){return $this->today_schedule_for_employee($eid);},
@@ -136,61 +135,29 @@ trait EWS_Attendance_Trait {
                 'localTime'=>function(){return current_time('timestamp');},
                 'localMysql'=>function(){return current_time('mysql');},
                 'unixTime'=>function(){return time();},
-                'insertTimeLog'=>function($row)use($wpdb){return $wpdb->insert($this->time_logs,$row)===false?0:(int)$wpdb->insert_id;},
-                'insertError'=>function()use($wpdb){return (string)$wpdb->last_error;},
-                'lastInsertId'=>function()use($wpdb){return (int)$wpdb->insert_id;},
-                'firstEventId'=>function($eid,$day,$types)use($wpdb){
-                    $ph=implode(',',array_fill(0,count($types),'%s'));
-                    return (int)$wpdb->get_var($wpdb->prepare("SELECT MIN(id) FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ($ph)",array_merge([(int)$eid,$day],$types)));
-                },
-                'deleteTimeLog'=>function($id)use($wpdb){$wpdb->delete($this->time_logs,['id'=>(int)$id],['%d']);},
                 'evaluateAchievements'=>function($eid,$day){$this->achievement_evaluate_attendance($eid,$day);},
                 'audit'=>function($action,$entity,$id,$details){$this->audit($action,$entity,$id,$details);},
                 'currentUserId'=>function(){return get_current_user_id();},
                 'clientIp'=>function(){return isset($_SERVER['REMOTE_ADDR'])?sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])):'';},
-                'lock'=>function($eid){return $this->attendance_lock($eid);},
-                'unlock'=>function($eid){$this->attendance_unlock($eid);},
-                'idemFind'=>function($uid,$scope,$hash){return $this->attendance_idempotency_find($uid,$scope,$hash);},
-                'idemClaim'=>function($uid,$scope,$hash,$request){return $this->attendance_idempotency_claim($uid,$scope,$hash,$request);},
-                'idemSave'=>function($uid,$scope,$hash,$response)use($wpdb){$wpdb->update($wpdb->prefix.'ews_api_idempotency',['response'=>wp_json_encode($response)],['user_id'=>(int)$uid,'scope'=>$scope,'key_hash'=>$hash],['%s'],['%d','%s','%s']);},
-                'idemRelease'=>function($uid,$scope,$hash)use($wpdb){$wpdb->delete($wpdb->prefix.'ews_api_idempotency',['user_id'=>(int)$uid,'scope'=>$scope,'key_hash'=>$hash],['%d','%s','%s']);},
                 'breakEnabled'=>function(){return $this->break_enabled();},
                 'openBreak'=>function($eid){return $this->break_open_session($eid);},
                 'breakRemaining'=>function($eid){return $this->break_remaining($eid);},
-                'insertBreak'=>function($row)use($wpdb,$breaks){return $wpdb->insert($breaks,$row,['%d','%d','%s','%s','%s','%s'])?(int)$wpdb->insert_id:0;},
-                'firstOpenBreakId'=>function($eid,$day)use($wpdb,$breaks){return (int)$wpdb->get_var($wpdb->prepare("SELECT MIN(id) FROM {$breaks} WHERE employee_id=%d AND work_date=%s AND status='Open'",(int)$eid,$day));},
-                'deleteBreak'=>function($id)use($wpdb,$breaks){$wpdb->delete($breaks,['id'=>(int)$id],['%d']);},
-                'scheduleBreakEvents'=>function($id){
-                    $now_utc=current_time('timestamp',true);
-                    wp_schedule_single_event($now_utc+($this->break_duration_minutes()*60),'ews_break_duration_reminder',[$id]);
-                    wp_schedule_single_event($now_utc+($this->break_escalation_minutes()*60),'ews_break_manager_escalation',[$id]);
-                },
-                'closeBreak'=>function($id,$end,$minutes)use($wpdb,$breaks){return $wpdb->update($breaks,['end_at'=>$end,'actual_minutes'=>$minutes,'status'=>'Completed'],['id'=>(int)$id,'status'=>'Open'],['%s','%d','%s'],['%d','%s'])===1;},
-                'breakEnded'=>function($emp,$id,$minutes){$this->notify((int)$emp->wp_user_id,'break','Break Ended',$this->break_ended_message($minutes),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);},
-            ]);
+                'scheduleBreakEvents'=>function($id){$this->break_schedule_events($id);},
+                'breakEnded'=>function($emp,$id,$minutes){$this->break_notify_ended($emp,$id,$minutes);},
+            ];
         }
 
     /**
-     * Serialises attendance writes of one employee across requests: MySQL / MariaDB GET_LOCK (named
-     * per site and employee, released at the end of the request or when the connection closes; no
-     * table or privilege needed, available on shared hosting). Waits up to 5 seconds. Where it is not
-     * available (SQLite, some clusters) the request goes on unlocked and AttendanceService's
-     * check after the insert keeps the first row only.
+     * Serialises attendance writes of one employee across requests (the EmployeeLock port: MySQL / MariaDB GET_LOCK, named per site and
+     * employee). Waits up to $wait seconds. Where it is not available (SQLite, some clusters) the request goes on unlocked and
+     * AttendanceService's check after the insert keeps the first row only.
      */
     private function attendance_lock($employee_id,$wait=5){
-            global $wpdb;
-            if(defined('DB_ENGINE') && DB_ENGINE==='sqlite')return false;
-            $prev=$wpdb->suppress_errors(true);
-            $got=$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,%d)',$this->attendance_lock_name($employee_id),(int)$wait));
-            $wpdb->suppress_errors($prev);
-            return (string)$got==='1';
+            return $this->services()->employeeLock()->lock((int)$employee_id,(int)$wait);
         }
 
     private function attendance_unlock($employee_id){
-            global $wpdb;
-            $prev=$wpdb->suppress_errors(true);
-            $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$this->attendance_lock_name($employee_id)));
-            $wpdb->suppress_errors($prev);
+            $this->services()->employeeLock()->unlock((int)$employee_id);
         }
 
     /**
@@ -213,39 +180,6 @@ trait EWS_Attendance_Trait {
             finally{
                 if($supported){$prev=$wpdb->suppress_errors(true);$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$name));$wpdb->suppress_errors($prev);}
             }
-        }
-
-    /** Lock names are server-wide: include the site (database + table prefix). At most 64 characters. */
-    private function attendance_lock_name($employee_id){
-            global $wpdb;
-            return 'wfo_att_'.substr(md5((defined('DB_NAME')?DB_NAME:'').'|'.$wpdb->prefix),0,12).'_'.(int)$employee_id;
-        }
-
-    /** @return array{request:string,response:array<string,mixed>|null}|null */
-    private function attendance_idempotency_find($user_id,$scope,$key_hash){
-            global $wpdb;
-            $this->ensure_api_idempotency_schema();
-            $row=$wpdb->get_row($wpdb->prepare("SELECT request_hash,response FROM {$wpdb->prefix}ews_api_idempotency WHERE user_id=%d AND scope=%s AND key_hash=%s LIMIT 1",(int)$user_id,$scope,$key_hash));
-            if(!$row)return null;
-            $response=$row->response!==null&&$row->response!==''?json_decode((string)$row->response,true):null;
-            return ['request'=>(string)$row->request_hash,'response'=>is_array($response)?$response:null];
-        }
-
-    /** Inserts the key as "in progress"; the unique key makes a concurrent second claim fail. */
-    private function attendance_idempotency_claim($user_id,$scope,$key_hash,$request_hash){
-            global $wpdb;
-            $this->ensure_api_idempotency_schema();
-            $prev=$wpdb->suppress_errors(true);
-            $ok=$wpdb->insert($wpdb->prefix.'ews_api_idempotency',['user_id'=>(int)$user_id,'scope'=>$scope,'key_hash'=>$key_hash,'request_hash'=>$request_hash,'created_at'=>current_time('mysql',true)],['%d','%s','%s','%s','%s']);
-            $wpdb->suppress_errors($prev);
-            return (bool)$ok;
-        }
-
-    /** Idempotency keys are kept for 24 hours (daily cleanup). */
-    private function attendance_idempotency_cleanup(){
-            global $wpdb;
-            $this->ensure_api_idempotency_schema();
-            $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}ews_api_idempotency WHERE created_at < %s",gmdate('Y-m-d H:i:s',time()-DAY_IN_SECONDS)));
         }
 
     /** Employee-facing text for a SignInRules result. */
