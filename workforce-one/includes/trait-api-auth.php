@@ -763,4 +763,45 @@ trait EWS_Api_Auth_Trait {
             if($ok || $m['before']<$now-Tokens::SESSION_MAX)delete_user_meta((int)$uid,$key,$raw);
         }
     }
+
+    /* ---- the idempotency keys (ews_api_idempotency, the app's table). Attendance reaches them through the Idempotency port (3.31.137) ---- */
+
+    /** @return array{request:string,response:array<string,mixed>|null}|null */
+    private function attendance_idempotency_find($user_id,$scope,$key_hash){
+            global $wpdb;
+            $this->ensure_api_idempotency_schema();
+            $row=$wpdb->get_row($wpdb->prepare("SELECT request_hash,response FROM {$wpdb->prefix}ews_api_idempotency WHERE user_id=%d AND scope=%s AND key_hash=%s LIMIT 1",(int)$user_id,$scope,$key_hash));
+            if(!$row)return null;
+            $response=$row->response!==null&&$row->response!==''?json_decode((string)$row->response,true):null;
+            return ['request'=>(string)$row->request_hash,'response'=>is_array($response)?$response:null];
+        }
+
+    /** Inserts the key as "in progress"; the unique key makes a concurrent second claim fail. */
+    private function attendance_idempotency_claim($user_id,$scope,$key_hash,$request_hash){
+            global $wpdb;
+            $this->ensure_api_idempotency_schema();
+            $prev=$wpdb->suppress_errors(true);
+            $ok=$wpdb->insert($wpdb->prefix.'ews_api_idempotency',['user_id'=>(int)$user_id,'scope'=>$scope,'key_hash'=>$key_hash,'request_hash'=>$request_hash,'created_at'=>current_time('mysql',true)],['%d','%s','%s','%s','%s']);
+            $wpdb->suppress_errors($prev);
+            return (bool)$ok;
+        }
+
+    /** Keeps the result of the first request with this key. */
+    private function attendance_idempotency_save($user_id,$scope,$key_hash,$response){
+            global $wpdb;
+            $wpdb->update($wpdb->prefix.'ews_api_idempotency',['response'=>wp_json_encode($response)],['user_id'=>(int)$user_id,'scope'=>$scope,'key_hash'=>$key_hash],['%s'],['%d','%s','%s']);
+        }
+
+    /** Gives the key back (a failed save may succeed when retried). */
+    private function attendance_idempotency_release($user_id,$scope,$key_hash){
+            global $wpdb;
+            $wpdb->delete($wpdb->prefix.'ews_api_idempotency',['user_id'=>(int)$user_id,'scope'=>$scope,'key_hash'=>$key_hash],['%d','%s','%s']);
+        }
+
+    /** Idempotency keys are kept for 24 hours (daily cleanup). */
+    private function attendance_idempotency_cleanup(){
+            global $wpdb;
+            $this->ensure_api_idempotency_schema();
+            $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}ews_api_idempotency WHERE created_at < %s",gmdate('Y-m-d H:i:s',time()-DAY_IN_SECONDS)));
+        }
 }

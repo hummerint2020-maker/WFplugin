@@ -2,6 +2,9 @@
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Approvals\AfterRequest;
+use WorkforceOne\Attendance\AttendancePorts;
+use WorkforceOne\Attendance\AttendanceSite;
+use WorkforceOne\Attendance\Idempotency;
 use WorkforceOne\Approvals\ApprovalDirectory;
 use WorkforceOne\Approvals\ApprovalNotifier;
 use WorkforceOne\Approvals\ApprovalPolicy;
@@ -149,7 +152,33 @@ trait EWS_Services_Trait {
             new class implements Permissions {
                 public function isAdmin(int $userId): bool { return (bool)user_can($userId,'manage_options'); }
             },
-            $this->approval_ports(),$this->substitute_ports());
+            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports());
+    }
+
+    /** The attendance services' ports (3.31.137): the idempotency keys of the app and the break notices, cron events and managers. */
+    private function attendance_ports(): AttendancePorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new AttendancePorts(
+            new class($call) implements Idempotency {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function find(int $userId,string $scope,string $keyHash): ?array { $r=($this->call)('attendance_idempotency_find',$userId,$scope,$keyHash); return is_array($r)?$r:null; }
+                public function claim(int $userId,string $scope,string $keyHash,string $requestHash): bool { return (bool)($this->call)('attendance_idempotency_claim',$userId,$scope,$keyHash,$requestHash); }
+                public function save(int $userId,string $scope,string $keyHash,array $response): void { ($this->call)('attendance_idempotency_save',$userId,$scope,$keyHash,$response); }
+                public function release(int $userId,string $scope,string $keyHash): void { ($this->call)('attendance_idempotency_release',$userId,$scope,$keyHash); }
+            },
+            new class($call) implements AttendanceSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function scheduleBreakEvents(int $breakId): void { ($this->call)('break_schedule_events',$breakId); }
+                public function breakEnded(object $employee,int $breakId,int $minutes): void { ($this->call)('break_notify_ended',$employee,$breakId,$minutes); }
+                public function breakTimeEnded(int $userId,int $breakId,string $message): void { ($this->call)('notify',$userId,'break','Break Time Ended',$message,['entity_id'=>$breakId,'url'=>add_query_arg('ews_view','time',($this->call)('app_home_url'))]); }
+                public function extendedBreak(int $userId,int $breakId,string $message): void { ($this->call)('notify',$userId,'break','Extended Break Alert',$message,['entity_id'=>$breakId,'url'=>add_query_arg('ews_view','time',($this->call)('app_home_url'))]); }
+                public function attendanceEnabled(int $employeeId): bool { return (bool)($this->call)('employee_attendance_enabled',$employeeId); }
+                public function employee(int $employeeId): ?object { $e=($this->call)('people_employee',$employeeId); return is_object($e)?$e:null; }
+                public function minutesSince(string $startAtLocal): int { return max(0,(int)floor((current_time('timestamp',true)-strtotime(get_gmt_from_date($startAtLocal)))/60)); }
+                public function managerUserIds(): array { return (array)($this->call)('break_manager_user_ids'); }
+            });
     }
 
     /** The approvals engine's ports (3.31.128): the adapters through which it reaches settings, people, messages and the end of the page. */

@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Everything AttendanceService needs from the site, and nothing else: the plugin builds it from
- * its existing helpers (EWS_Attendance_Trait::attendance_context()), tests build it from fakes.
+ * its existing helpers (EWS_Attendance_Trait::attendance_service()), tests build it from fakes.
  * Each entry is a callable; the typed methods below are the contract.
  */
 final class AttendanceContext
@@ -34,6 +34,32 @@ final class AttendanceContext
 
     /** @var array<string,callable> */
     private $f;
+
+    /**
+     * The context of a site (3.31.137): the entries that read or write the time log, the breaks and the idempotency keys, and the lock,
+     * come from the Stores and ports; $site carries the rest (who and when, the rules, the clocks, the audit, the break notices).
+     * @param array<string,callable> $site every entry of KEYS (and OPTIONAL) that is not listed below
+     */
+    public static function assemble(array $site, Data\TimeLogStore $logs, Data\BreakStore $breaks, EmployeeLock $lock, Idempotency $idem): self
+    {
+        return new self($site + [
+            'insertTimeLog' => function ($row) use ($logs) { return $logs->insert($row); },
+            'insertError' => function () use ($logs) { return $logs->lastError(); },
+            'lastInsertId' => function () use ($logs) { return $logs->lastInsertId(); },
+            'firstEventId' => function ($eid, $day, $types) use ($logs) { return $logs->firstEventId((int) $eid, $day, $types); },
+            'deleteTimeLog' => function ($id) use ($logs) { $logs->delete((int) $id); },
+            'lock' => function ($eid) use ($lock) { return $lock->lock((int) $eid); },
+            'unlock' => function ($eid) use ($lock) { $lock->unlock((int) $eid); },
+            'idemFind' => function ($uid, $scope, $hash) use ($idem) { return $idem->find((int) $uid, $scope, $hash); },
+            'idemClaim' => function ($uid, $scope, $hash, $request) use ($idem) { return $idem->claim((int) $uid, $scope, $hash, $request); },
+            'idemSave' => function ($uid, $scope, $hash, $response) use ($idem) { $idem->save((int) $uid, $scope, $hash, $response); },
+            'idemRelease' => function ($uid, $scope, $hash) use ($idem) { $idem->release((int) $uid, $scope, $hash); },
+            'insertBreak' => function ($row) use ($breaks) { return $breaks->insert($row); },
+            'firstOpenBreakId' => function ($eid, $day) use ($breaks) { return $breaks->firstOpenId((int) $eid, $day); },
+            'deleteBreak' => function ($id) use ($breaks) { $breaks->delete((int) $id); },
+            'closeBreak' => function ($id, $end, $minutes) use ($breaks) { return $breaks->close((int) $id, $end, (int) $minutes); },
+        ]);
+    }
 
     /** @param array<string,callable> $callables one for each of KEYS */
     public function __construct(array $callables)

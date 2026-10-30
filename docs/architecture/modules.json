@@ -390,17 +390,26 @@
           ],
           "store": [
             "workforce-one/src/Attendance/Data/WordPressTimeLogStore.php",
-            "workforce-one/src/Attendance/Data/WordPressBreakStore.php"
+            "workforce-one/src/Attendance/Data/WordPressBreakStore.php",
+            "workforce-one/src/Attendance/Data/WordPressEmployeeLock.php"
           ],
           "services": [
-            "workforce-one/src/Attendance/AttendanceLog.php"
+            "workforce-one/src/Attendance/AttendanceLog.php",
+            "workforce-one/src/Attendance/BreakCronService.php"
           ],
           "moved": [
             "today_events",
             "attendance_day",
             "last_device_location",
             "break_sessions_today",
-            "break_open_session"
+            "break_open_session",
+            "attendance_lock",
+            "attendance_unlock",
+            "break_duration_reminder",
+            "break_manager_escalation"
+          ],
+          "traits_clean": [
+            "breaks"
           ]
         }
       ],
@@ -706,7 +715,12 @@
         "api_me_document",
         "api_feature_flags",
         "app_api_enabled",
-        "api_refresh_safe_enabled"
+        "api_refresh_safe_enabled",
+        "attendance_idempotency_find",
+        "attendance_idempotency_claim",
+        "attendance_idempotency_save",
+        "attendance_idempotency_release",
+        "attendance_idempotency_cleanup"
       ]
     },
     "health": {
