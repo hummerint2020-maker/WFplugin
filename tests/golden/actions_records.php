@@ -29,6 +29,7 @@ add_filter('query', function ($q) use (&$sql, $fix) {
     $n = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $q);
     $n = preg_replace("/(_transient_timeout_\w+', ')\d+/", '$1TS', $n);
     $n = preg_replace('/\b\d{13}\b/', 'TS', $n);
+    $n = preg_replace('/`actual_minutes` = \d+/', '`actual_minutes` = N', $n);   // minutes since a break started follow "now"
     $n = preg_replace("/SET `option_value` = '.*?' WHERE `option_name` = 'cron'/s", "SET `option_value` = 'CRON' WHERE `option_name` = 'cron'", $n);
     $n = preg_replace('/(<|&lt;)div.*?(?=\', \'T\'\))/s', '', $n);
     $sql[] = $fix(trim(preg_replace('/\s+/', ' ', $n)));
@@ -44,7 +45,7 @@ $norm = function ($v) use (&$norm, $dates) {
     if (is_object($v)) $v = get_object_vars($v);
     if (is_array($v)) {
         $out = [];
-        foreach ($v as $k => $x) $out[$k] = ($k === 'nonce' && $x !== '') ? 'N' : $norm($x);
+        foreach ($v as $k => $x) $out[$k] = (($k === 'nonce' || $k === 'actual_minutes') && $x !== '' && $x !== null) ? 'N' : $norm($x);
         return $out;
     }
     if (is_string($v)) {
@@ -55,7 +56,8 @@ $norm = function ($v) use (&$norm, $dates) {
         $v = preg_replace('#^https?://[^/]+#', '', $v);
         $v = preg_replace('/(<|&lt;)div.*$/s', '', $v);
         $v = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $v);
-        $v = preg_replace('/\b\d{2}:\d{2}\b/', 'HM', $v);   // a time of day that follows "now" (the rules' times, the audit texts)
+        $v = preg_replace('/\b\d{2}:\d{2}\b/', 'HM', $v);
+        $v = preg_replace('/\b\d+m\b/', 'Nm', $v);   // a time of day that follows "now" (the rules' times, the audit texts)
     }
     return $v;
 };
@@ -157,11 +159,9 @@ $faulty('event_fault_insert', '/^INSERT INTO\s+`?' . preg_quote($p, '/') . 'ews_
 $faulty('event_fault_first_row', ['/^SELECT MIN\(id\) FROM\s+`?' . preg_quote($p, '/') . 'ews_time_logs/i', 'SELECT 1'], function () use ($ev, $W, $t5) { return $ev($W('a2'), 'sign_in', $t5); });
 $faulty('event_lock_busy', ['/^SELECT GET_LOCK/i', 'SELECT 0'], function () use ($ev, $W, $t5) { return $ev($W('a3'), 'sign_in', $t5); });
 $faulty('event_lock_null', ['/^SELECT GET_LOCK/i', 'SELECT NULL'], function () use ($ev, $W, $t5) { return $ev($W('a4'), 'sign_in', $t5); });
-$faulty('tick_fault_rules_update', '/^UPDATE\s+`?' . preg_quote($p, '/') . 'ews_auto_attendance_rules/i', function () use ($call, $rule, $E, $hm, $D0, $log, $wpdb, $p) {
-    $id = $rule($E('r4'), 'one_time', $D0, '', $hm(-10), null);
-    $log($E('r4'), 'sign_in', $D0, $D0 . ' 00:00:01', ['source' => 'auto']);   // done already: the rule is to be disabled, and that write is broken
-    return $call('process_auto_attendance');
-});
+$rule($E('r4'), 'one_time', $D0, '', $hm(-10), null);
+$log($E('r4'), 'sign_in', $D0, $D0 . ' 00:00:01', ['source' => 'auto']);   // done already: the rule is to be disabled, and that write is broken
+$faulty('tick_fault_rules_update', '/^UPDATE\s+`?' . preg_quote($p, '/') . 'ews_auto_attendance_rules/i', function () use ($call) { return $call('process_auto_attendance'); });
 
 // ---------------------------------------------------------------- 3. the rules page: save, toggle, delete
 $as($admin);
