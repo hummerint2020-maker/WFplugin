@@ -1,105 +1,67 @@
-# Task: attendance correction requests
+# L5e: Attendance corrections behind Controllers → Services → Stores
 
-Owner request (2026-10-09). An employee who forgot to sign out (or in), or whose time is wrong,
-asks for a correction; the manager approves; nothing in the original records is ever changed.
+Design by the read-only architect on main 0b21a73 (L5d merged). `tc:` = `workforce-one/includes/trait-corrections.php`. A move only: same SQL text and order, same locks and transactions in the same order, same option reads at the same moments, same audits, notifications, redirects and `wp_die` texts. Known quirks are moved as they are and queued (§5). No schema, option, hook, route, cron or capability change, so `tests/golden/expected.json` stays empty. Owner decisions are in §9.
 
-## Step 1 — HTML mockups first, then STOP
+## 0. Split
+Three releases, ordered from low to high risk (the reads first, because every write path needs them; the money core last, on a harness that is already proven):
 
-**No PHP, no schema change before the owner approves the mockups.**
+| Release | What moves | Risk | Main hazards |
+|---|---|---|---|
+| **L5e1 Reads** | `cx_day`, `cx_month_count`, `cx_pending_for_day`, `cx_facts`, `cx_started`, `cx_no_work_day`, `cx_get`, `cx_can_decide`, `cx_can_view`, `cx_recent_days`, `cx_to_decide`, `cx_with_steps`, `cx_evidence`, `cx_hub_rows`, `cx_my_requests`; the SQL of `corrections_content`, `admin_corrections`, `cx_report`, `corrections_export`, `api_corrections_mine`; the row lookup of `correction_photo`. `attendance_corrections` is enrolled. | S–M | When options are read, order of the facts, permission reads |
+| **L5e2 Requests and files** | `cx_create` (both paths), photo save and cleanup, `cx_withdraw`, `corrections_tick`, `corrections_remind`, the notices | M | Engine start, the "no approval" auto-approval (money), private files, cron claim |
+| **L5e3 Decisions** | `cx_decide`, `cx_decide_open`, `cx_after_manager`, `cx_manager_rows`, `cx_should_close`, `cx_close`, `cx_mark_rejected`, `cx_after_rejected`, `cx_finalize` (+ `_prepare`, `_rows`, `_after`), `cx_payroll_carry` | L | Transactions, lock order, double decision, `time_logs` writes, payroll carry |
 
-1. Build static HTML mockups of every screen below in `docs/mockups/attendance-corrections/`, one
-   file per screen plus an `index.html` that links them.
-2. They must look like the final product: use the plugin's real stylesheets (`workforce-one/assets/css/`,
-   the app frame `assets/css/app-shell.css` and the matching `-rtl.css` files), real icons, real
-   fonts (`assets/fonts/`), the app's colours and spacing. Realistic Arabic sample data (names,
-   dates, times); every screen in **Arabic (RTL)** and **English**; app screens at phone width
-   (390 px), wp-admin screens at desktop width. Show the empty, error and success states.
-3. Commit, push, and give the owner a way to open them (publish them as a page or attach the
-   files), then **wait for approval or changes**. Apply the owner's changes to the mockups and ask
-   again until approved. Only then start Step 2.
+In L5e2 a port `CorrectionDecider` still calls `cx_finalize` / `cx_after_manager` by name (the HR path and the "no approval" path need them); L5e3 replaces it with the service. Size: about 1,300 lines of code and 1,000 of harness and tests in total.
 
-Screens:
-- Employee, app: day history with the "Request correction" action on a day; the request form (type,
-  correct time, reason, optional photo); "my requests" list with status; the end-of-day push and
-  what it opens.
-- Manager, app: the request card in Approvals with the **evidence panel**; approve / reject with a
-  note.
-- HR, wp-admin: the requests list (filters: status, type, department, employee, month); a direct
-  correction by HR (reason required); the settings page; the corrections report.
-- The day as shown afterwards in Attendance / reports (original + correction, who approved).
+## 1. Data model and upgrade path
+None. `ensure_corrections_schema` (`tc:39-82`, with its `ALTER`s on `time_logs`), `ensure_corrections_schema_once` (`tc:817-823`, a static), `tl_live` (`tc:34`, used by 7 other traits) and `cx_table` (`tc:28`) stay in the trait. Every place that checks `corrections_enabled()` today keeps the check at the same moment; places that do not check it today (CX-i) stay unchecked.
 
-## Step 2 — build
+## 2. New and changed code (namespace `WorkforceOne\Attendance`)
+Every new SQL method copies the SQL text, the `wpdb` call and the formats as they are (no formats stays no formats; raw `int|false` returns stay).
 
-### Types
+- **`Data/CorrectionStore` + `WordPressCorrectionStore`** (table `$db->prefix.'ews_attendance_corrections'`, built on every call as `cx_table()` does): `monthCount` (:101), `pendingForDay` (:106), `insert` (:289, :296; 0 on failure else `insert_id`), `delete(['%d'])` (:292, :302), `setManager` (:333, :388), `toPendingHr` (:335), `markRejected` (:478), `markApproved` (:550), `setApplied` (:564), `setPayrollNote` (:617, :623), `recentFor` (:765), `latestFor` (`LIMIT` stays a literal: 30 at :899, 50 at :1117), `myRequests` (:1166), `tableExists` (:1074), `openForHub` (:1075), `ownOpen` (:1180), `withdraw` (the `query()` call, :1186).
+- **`TimeLogStore` additions** (fixed table): `dayEvents` (:90, store `live()`), `withSuperseded` (:867), `lastLocated` (:872), `firstWorkDate` (:139; must use `$this->db->prefix.'ews_time_logs'` at call time: CX-n), reuse `insert()` for :561.
+- **Read model `Data/CorrectionQuery` + `WordPressCorrectionQuery($db,$timeLogs,$employees)`** under `reads`, writes nothing (L6): `get` (:216), `toDecideByApprover` (:833; joins the approval tables), `toDecideOpen` (:837), `toDecideHr` (:842), `listCounts` / `listTotal` / `listRows` (:979-983; filter object `CorrectionListFilter{from,to,type,department,search,status}`; status only on total and rows), `report` (:1006), `export` (:1032), `remindCandidates` (:936). The departments list (:967) goes through the existing `teamStore()->pageDepartments()`.
+- **`CorrectionRules` additions** (pure): `monthBounds`, `deadlineFrom`, `nextMonth`, `carryReason`.
+- **Ports** (`CorrectionPorts` as a fifth `AttendancePorts` argument; adapters only in `includes/trait-services.php` `correction_ports()`, calling trait functions by name): `CorrectionSite` (enabled, settings, ensureSchema/Once, today, hm, userId, employee, workingHours, leave/overtime dates, workingDay, reportDays, schedule, branchLocations, presence, canManage, isHr, hrUsers, timeManagerIds, remindedOn/markReminded), `CorrectionNotices`, `CorrectionFiles`, `PayrollCarry` (net, closed, adjustmentExists, addAdjustment: payroll module debt), `CorrectionApprovals` (mode, find, currentStep, start, act, closeOpen, levelMovedFor, canAct, shownSteps, isOpen). Reused: `Transaction`, `AuditLog`, `Clock`.
+- **Services** (no SQL, no clock, memoised in `Services`): `CorrectionReads`, `CorrectionRequests` (create, withdraw, tick, remind), `CorrectionDecisions` (decide, decideOpen, afterManager, managerRows, shouldClose, close, markRejected, afterRejected, finalize, prepare, rows, after, carry). Trait functions keep names and signatures and delegate; names that tests call through Reflection stay (`cx_create`, `cx_decide`, `cx_close`, `cx_withdraw`, `cx_to_decide`, `cx_payroll_carry`, `cx_month_count`, `corrections_remind`). Controllers keep nonces, superglobals, transients, redirects, `wp_die`, `Download::*`, `render_template` and every `cx_error_message` text.
 
-Forgot Sign Out; forgot Sign In; wrong time (app failed, no network); whole day missing (was on a
-mission or at a customer). Each type can be switched off.
+## 3. Order to preserve
+- **Facts** (`tc:118-127`): `cx_day` → `working_hours` → today → now → settings (own SELECT after a cache flush: not autoloaded) → pending (only if the date is valid) → month count → `no_work` (leave → overtime → working day → `report_days` only when it decides) → `started`.
+- **Create** (`tc:266-315`): enabled → employee → `dbDelta` (+ `SHOW TABLES`, `COLUMNS`, `INDEX`) → facts → `check` → settings (photo off drops it) → photo save → plan → INSERT → `cx_get` → audit; then by mode: NONE / levels (`approval_start` own BEGIN/COMMIT → find → APPROVED: `cx_after_manager`; else step → `cx_get` → notify); `''` (no active workflow: `get_users` → notify each, skipping the current one); HR path (INSERT pending → `cx_finalize(direct)` → not approved: DELETE and drop photo → audit `correction_direct`).
+- **Decide** (`tc:364-391`): decision valid → `cx_get` → status → posted stage → engine find (pending, levels mode) → `levelMovedFor` → reject needs note → own request → admin needs HR → `cx_can_decide` → approve + `should_close` → `cx_close` → open approval → `decideOpen`; reject → `finalize`; pending and not admin → `afterManager`; pending + admin + `needs_hr` → unchecked `setManager` → `finalize`.
+- **decideOpen** (`tc:400-438`): prepare before BEGIN (approve without `needs_hr`; payroll may create tables) → BEGIN → `act` → find → REJECTED (mark rejected must be 1) / APPROVED + `needs_hr` (manager rows) / APPROVED (close or stale → ROLLBACK, else manager rows → finalize rows → COMMIT, failure → ROLLBACK) → after-work after the COMMIT.
+- **Lock order:** approval steps → approval request → correction row → `time_logs` INSERTs → correction row (`applied_ids`). **No GET_LOCK anywhere** (CX-a).
+- **`cx_finalize`** (`tc:496-512`): prepare (`cx_get` → `people_employee` → facts with `'hr'` and `now='23:59'` → `should_close` → check → plan → `cx_day` → `cx_payroll_net`) → reject without a transaction, or BEGIN → rows (conditional approved UPDATE → `schedule_for_employee_date` → INSERT per event → `applied_ids` UPDATE) → COMMIT → after (carry → audit → notify).
+- **close / withdraw** (3.31.132 order): engine `closeOpen` runs before the correction UPDATE. Codes: close `'moved'`→`'approval'`, `false`→`'save'`, mark rejected `false`→`'save'`, 0→`'done'`; withdraw `'moved'`→`'done'`, UPDATE 0→`'done'`.
+- **Carry** (`tc:597-625`): net after → diff → loop on `payroll_run` for next months → COUNT → INSERT (failure: note, audit `failed`) → audit added → note UPDATE. **Tick:** enabled → settings → H:i → `get_option` → `update_option` → schema once → candidates → per row `working_hours` with one argument → notify.
 
-### Settings (all configurable, owner decision)
+## 4. Golden harness (lessons of L5d applied)
+- `seed_corrections.php` (plain SQL before the snapshot): feature on; settings (all kinds, photo time required, day optional, deadline 7, limit 3 with `above=hr`, `earlier_hr=1`, reminder at 00:00); people `cxemp` (dept A, supervisor `cxmgr`), `cxmgr` (`ews_manage_time`, dept A), `cxmgr2` (dept B), `cxhr` (`ews_manage_corrections`), an overnight employee, an employee without a WordPress user; `time_logs` at fixed times for D-1 (Sign In only), D-2 (none, a working day), D-3 (in and out + a superseded row), a leave day, a company holiday, a day before `created_at`; corrections in every status with distinct fixed `requested_at`; an approval request at level 1 of 2; payroll (`pay_rates`, closed runs for M-3 and M-2, one existing adjustment); a presence row; a `photo_key` row.
+- Traces: `actions_corrections_reads.php` (`cxr:`), `actions_corrections_requests.php` (`cxq:`), `actions_corrections_decide.php` (`cxd:`); `actions_cxcsv.php` (export) and `actions_cxphoto.php` follow the `actions_timecsv.php` pattern (last call, buffer callback, shutdown function).
+- Cases: every refusal code of `CorrectionRules::check`; create (NONE auto-approved, LEVEL_2 pending with the approver told, `''` mode, HR direct ok/stale, above the limit → `pending_hr`, earlier Sign In → HR); decide (every branch in order; `decideOpen` advanced / `pending_hr` / approved / rejected / stale / close); Hub, API, withdraw (`pending`, `pending_hr`, another employee); carry (none, < 0.01, once, closed month skipped); tick twice; feature off (create, API, tick, views; decide and photo off pin CX-i).
+- Fault injection (priority-5 `query` filter): `START TRANSACTION`, `COMMIT`, correction INSERT, `time_logs` INSERT (second event), `applied_ids` UPDATE, approved/rejected/`pending_hr` UPDATE → 0 rows, engine `decideStep`, engine cancel → 0 rows, `approval_start` INSERT, `pay_adjustments` INSERT / COUNT / `SHOW TABLES`, withdraw UPDATE.
+- Rows dumped ORDER BY id (corrections, `time_logs`, approval requests and steps, `pay_adjustments`, audit, notifications). Caps granted by a script are removed first and last (user meta is not in the snapshot). Rows created during the run get fixed `requested_at` outside the recorded SQL. Settings and workflows are written before `$run`; the service must never read settings earlier than the old code. Photo files are recreated on each side. Payroll months fully in the past.
+- `pages.json`: app corrections view (employee, manager, HR, other-department manager), time panel, requests sheet, My approvals card, admin list / report / settings / direct, Requests Hub, REST `corrections/*`; each also with the feature off. `run.py` sanity guards: the audit actions, `time_logs` rows with `source='correction'` and `corrects_id`, START/COMMIT/ROLLBACK counts equal on both sides, the UPDATE order inside `decideOpen` and `close`, reminder count > 0 then 0. Manual self-test in the PR: swapping the order in `cx_close`, dropping `live()` from `dayEvents`, reading settings before `enabled`, moving the payroll read after BEGIN must each fail the trace.
 
-wp-admin → Workforce One → a new **Attendance corrections** settings section, listed on Settings
-Overview:
-- feature on/off and which types are enabled;
-- deadline: a request must be made within **N days** of the day (default 7);
-- monthly limit per employee (default 3) and what happens above it: refused, or allowed but sent to
-  HR / a second level;
-- a request that moves Sign In **earlier** (removes lateness) needs the second level: on/off;
-- photo attachment: off / optional / required, per type;
-- end-of-day reminder ("You did not sign out today. Request a correction?"): on/off and time.
+## 5. Baselines
+`HELPERS['cx_table']='attendance_corrections'` with a self-test; enrol the table in the first L5e1 commit with one `--allow-increase` (`trait-corrections` 33 → about 63, then about 40 after L5e1, 20 after L5e2, 12 after L5e3: schema 7, schema-once 2, `tl_live` 3). `modules.json` attendance `logs`: tables, store, services, `reads` (`WordPressCorrectionQuery`: attendance_corrections, employees, departments, approval_requests, approval_steps, time_logs), `moved` per release. `check_modules --update`: attendance→approvals and →people go down; →payroll stays.
 
-### Approval
+## 6. Quirks (moved as they are, for the fix queue)
+**Money:** CX-a (= AT-j) finalize INSERTs `time_logs` with no attendance lock and no first-row check (`:546-566`); CX-b the carry's `before` is read before BEGIN and `after` after COMMIT, so a concurrent change in the same closed month can double the adjustment; CX-c the carry runs after COMMIT with no retry (a fatal error leaves an approved correction in a closed month with no adjustment and no note); CX-d HR's direct correction does not check for HR's own record; CX-x a month that closes between prepare and COMMIT changes with no carry; CX-v the row's `user_id` falls back to the approver and `scheduled_status` is `'Not Set'` (manual records use `'Not Scheduled'`).
+**Concurrency:** CX-e create takes no lock and has no unique key (two requests for a day, or the monthly limit passed); CX-f `cx_after_manager` outside any transaction in NONE mode; CX-g unconditional `manager_by` UPDATE autocommits before finalize; CX-h a reject in `cx_finalize` returns `'done'` on a database error; CX-r audit before `approval_start`, unchecked DELETE; CX-s HR's direct row is visible as pending during finalize; CX-o the reminder claim is `get_option` then `update_option` (overlapping crons remind twice; overnight employees are never reminded); CX-q `dbDelta` on every create, payroll month computed before BEGIN even when only a level advances.
+**Permissions and privacy:** CX-i decisions, the Hub, photo serve, export and settings save ignore the feature switch; CX-j `in_admin && is_admin()` is always true on `admin-post.php` (HR can decide any level and skip the reject-note rule); CX-k with no active workflow every `ews_manage_time` user in any department is notified with the employee's name and the change; CX-l correction photos and reasons are never deleted, viewing a photo is not audited, a file saved before a failed request is orphaned; CX-m "own request" refusal overrides the engine's self-approval rule; CX-n `cx_started` reads the per-prefix table, `cx_day` the fixed one (= AT-k); CX-t the to-decide list shows only steps where the user is the approver (no substitutes), capped at 100/200, no paging; CX-p the approver's note on the last level is dropped; CX-u the Hub's reject note is fixed English, the limit counts by work-date month; CX-y the direct path's audit omits the payroll text. Related, already logged: AT-i, AT-v, AT-r.
 
-A new workflow key `attendance_correction` in `src/Approvals/Workflows.php` (`IN_USE`), handled
-for `NONE`, `LEVEL_1`, `LEVEL_2` like Vacation and Overtime, with its "No approval" meaning written
-in `NONE_MEANS`. Shows on the Requests Hub and in the app's Approvals.
+What the code checks today, in order — request: logged in → nonce → `current_employee` → enabled → employee → schema → `CorrectionRules::check` → photo (upload, 8 MB, extension and MIME); not checked: active employee, attendance enabled, rate limit. Photo serve: logged in → nonce → row with a photo and `cx_can_view` (own, HR, manager, decider; 403) → key pattern (404) → readable (404). Withdraw: logged in → nonce → allowed and employee → enabled → own and open → engine → UPDATE. Admin page, export, settings, direct: `cx_is_hr` → nonce.
 
-### Evidence panel (what the system knows about that day)
+## 7. Tests
+Unit: new fakes (`MemoryCorrectionStore`, `MemoryCorrectionQuery`, `FakeCorrectionSite`, `FakeCorrectionApprovals`, `FakeTransaction` that records and can fail begin / commit / rollback, `FakePayrollCarry`); `CorrectionReadsTest`, `CorrectionRequestsTest`, `CorrectionDecisionsTest` (every branch in order, each `decideOpen` outcome and its ROLLBACK, close order, CX-h pinned, rows stopping at the first failure, carry cases), `CorrectionRulesTest` additions; `AttendancePorts` fakes get the fifth argument. Storage contract: each new method's SQL equals the old literal, NULLs in unformatted INSERTs, formats, `int|false` returns, `LIMIT` text, the filter WHERE with `%` and `_`, `firstWorkDate` follows `switch_to_blog` while `dayEvents` stays on the fixed table. e2e: corrections(+mu), money_safety, payroll(+mu, close), approvals, approval_engine, my_approvals, level_guard, self_approval, request_races, private_files, api_app, api_foundation, notification_links, lifecycle, system_health, admin_nav, attendance, attendance_parity, time_report, features, timezone, schema, speed, query_batching, every `*_mu`. Gap: the R5 and R6 races (a decision against a withdraw, and the reverse; `docs/tasks/engine-fixes.md:59`) were never built; proposed as L5e3's first commit, on the unchanged code.
 
-Shown to the approver, read-only: the day's events with times and location / integrity results,
-the last device location seen that day and its time, presence-check results, kiosk or QR events,
-the schedule and shift of the day, and the employee's correction count this month. The approver
-decides knowing the facts, not on trust.
+## 8. Risks
+Money (finalize and carry write rows payroll counts; `report_days`, `payroll_month`, `cx_payroll_net` untouched); implicit commits (nothing inside BEGIN may reach `ensure_*` or `dbDelta`; prepare stays before BEGIN); lock order engine → correction → `time_logs`; every write checked, the first failure stops the work; option-read moments (settings, the feature flag, `ews_corrections_reminded`, the first alloptions load); `wpdb->insert_id` read right after the insert; statics stay in the trait; people memo and object cache after ROLLBACK; multisite (CX-n, `*_mu`); names that must not change (Reflection names, hooks `ews_corrections_tick`, `admin_post_ews_correction_*`, routes); `is_uploaded_file` cannot pass in process (the successful upload is covered by an HTTP multipart post in `run.py` and `e2e_corrections`); read models must not become a way to write.
 
-### Never change the original
-
-- The original `ews_time_logs` rows are **never updated or deleted** by a correction.
-- An approved correction is recorded as its own event linked to the request, the approver, the time
-  and, when it replaces a time, the row it supersedes (add what is needed, e.g. a `source` column
-  `app|kiosk|qr|auto|import|correction|admin` and a `corrects_id`; your design).
-- One function returns the **effective day** (originals with superseded rows ignored and corrections
-  applied), and **every reader uses it**. There are ~13 files that read `ews_time_logs` today
-  (`grep -rln "ews_time_logs\|->time_logs" workforce-one`): attendance rules, reports, insights,
-  payroll, the attendance grid, the dashboard, exports. Missing one means two answers for the same
-  day; list them in the PR and test them.
-- HR's direct correction in wp-admin uses the same path with a mandatory reason.
-- Audit Log: request, decision, direct correction (who, what, why).
-
-### Payroll
-
-- Days in Payroll's "needs review" list ("No Sign Out") are resolved by corrections.
-- A **closed** month (`trait-payroll.php`, closed runs keep their figures) is never reopened by a
-  correction: the difference is carried as an adjustment into the next open month, shown with its
-  reason on that payslip.
-
-### Reports
-
-Corrections per employee / department / month, by type and outcome. Frequent corrections are a
-pattern worth seeing (links to the Fraud detection idea in `docs/ideas.md`).
-
-### API
-
-Add the endpoints the Flutter app will need (list days, create request, list my requests, approve /
-reject) to the native API (`src/Api/Routes.php`), token-authenticated, same rules as the Web.
-
-### Tests
-
-New `tests/e2e_corrections.py` in CI: each type end to end; deadline and monthly limit (both
-outcomes of "above the limit"); the second level for an earlier Sign In; original rows untouched
-after approval; every report, payroll and the attendance grid read the corrected day; a closed
-month gets a next-month adjustment; rejection changes nothing; permissions (an employee cannot
-approve their own, a manager only their people). Unit tests for the effective-day function.
-
-### Constraints
-
-PHP 7.4+, PHPStan and phpcs clean, every UI text translated (Arabic), CHANGELOG entry and version
-bump, database version bump with an upgrade step for existing sites.
+## 9. Owner decisions
+1. **Split:** three releases — L5e1 reads (3.31.140), L5e2 requests and files (3.31.141), L5e3 decisions, transaction and payroll carry (3.31.142). Each is delivered and waits for the owner's approval.
+2. **Quirks CX-a…CX-y:** moved as they are and queued. Proposed fix order: money first (CX-b, CX-a / AT-j, CX-c, CX-d, CX-x), then permissions and privacy (CX-i, CX-k, CX-l, CX-j), then CX-f, CX-g, CX-h, CX-e, then the rest. The direction of each fix (CX-d: HR refused or a second HR; CX-i: what happens to open requests when the feature is off; the payroll carry fixes; CX-m) is asked when its release is designed.
+3. **R5 / R6 race tests** (a decision against a withdraw, and the reverse): built as the first commit of L5e3, on the unchanged code.
+4. **CX-l** (retention, exporter and eraser for correction photos and reasons): deferred to the planned privacy work, with EV-n.
