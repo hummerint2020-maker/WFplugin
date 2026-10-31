@@ -45,7 +45,7 @@ $logRow = function ($eid, $type, $when, array $extra = []) use ($wpdb, $p) {
     $wpdb->insert($p . 'ews_time_logs', array_merge(['employee_id' => $eid, 'user_id' => 0, 'work_date' => substr($when, 0, 10), 'event_type' => $type, 'event_at' => $when, 'scheduled_status' => 'Office', 'ip_address' => ''], $extra));
     return (int) $wpdb->insert_id;
 };
-$page = function ($label, $uid, $method, array $get) use (&$trace, &$sql, $o, $as, $norm, $admin) {
+$page = function ($label, $uid, $method, array $get) use (&$trace, &$sql, $o, $as, $norm, $admin, $dates) {
     $as($uid);
     wp_cache_flush();
     $sql = [];
