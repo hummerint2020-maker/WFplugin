@@ -10,13 +10,13 @@ $_SERVER['REMOTE_ADDR'] = '10.9.9.9';
 wp_set_current_user((int) get_user_by('login', 'admin')->ID);
 wp_cache_flush();
 $sql = [];
-ob_start();
+// WordPress flushes every output buffer in its own shutdown hook, before ours runs: a callback keeps what it flushes.
+$csv = '';
+ob_start(function ($chunk) use (&$csv) { $csv .= $chunk; return ''; });
 $level = ob_get_level();
-register_shutdown_function(function () use (&$sql, &$trace, $norm, $level) {
-    while (ob_get_level() > $level) ob_end_flush();
-    $csv = (string) ob_get_contents();
+register_shutdown_function(function () use (&$sql, &$trace, $norm, $level, &$csv) {
+    while (ob_get_level() >= $level) ob_end_flush();
     $trace['csv_admin'] = ['return' => $norm($csv), 'queries' => count($sql), 'sql' => $sql];
-    ob_end_clean();
     echo "\n" . wp_json_encode($trace);
 });
 $range = ['start' => gmdate('Y-m-d', strtotime($D0 . ' -2 days')), 'end' => $D0];

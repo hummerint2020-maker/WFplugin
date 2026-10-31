@@ -20,6 +20,8 @@ $emp = function ($id) use ($call) { return $call('people_employee', (int) $id); 
 $nowTs = (int) current_time('timestamp');
 $localNow = function ($offsetSeconds = 0) use ($nowTs) { return gmdate('Y-m-d H:i:s', $nowTs + $offsetSeconds); };
 $cfg = function (array $o) { update_option('ews_signin_evidence', array_merge(['attempts' => 1, 'photo' => 0, 'alert' => 0, 'attempt_days' => 60, 'photo_days' => 30, 'photo_viewers' => 'hr_manager'], $o), false); };
+$tick = 0;
+$at0 = function () use (&$tick, $D0) { return $D0 . ' 00:30:' . sprintf('%02d', $tick++); };   // fixed times: the report orders by time, and "now" differs between the two runs
 $_SERVER['REMOTE_ADDR'] = '10.9.9.9';
 $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Linux; Android 14; Golden) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36';
 update_option('ews_feature_face_signin', 1, false);
@@ -72,19 +74,19 @@ $run('keep_off', function () use ($call, $emp, $W) { return $call('evidence_keep
 $cfg([]);
 $run('keep_no_employee', function () use ($call) { return $call('evidence_keep', null, ['event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_early']); });
 $as($WU('a1'));
-$run('keep_refused', function () use ($call, $emp, $W) {
-    return $call('evidence_keep', $emp($W('a1')), ['event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'outside_location', 'detail' => str_repeat('x', 300), 'latitude' => 30.1234567, 'longitude' => 31.2, 'accuracy' => 12.5, 'distance_meters' => 850.5, 'location_status' => 'outside', 'source' => 'qr', 'photo_key' => str_repeat('f', 32) . '.jpg']);
+$run('keep_refused', function () use ($call, $emp, $W, $at0) {
+    return $call('evidence_keep', $emp($W('a1')), ['attempted_at' => $at0(), 'event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'outside_location', 'detail' => str_repeat('x', 300), 'latitude' => 30.1234567, 'longitude' => 31.2, 'accuracy' => 12.5, 'distance_meters' => 850.5, 'location_status' => 'outside', 'source' => 'qr', 'photo_key' => str_repeat('f', 32) . '.jpg']);
 });
-$run('keep_face_ok', function () use ($call, $emp, $W) { return $call('evidence_keep', $emp($W('a1')), ['event_type' => 'face', 'result' => 'face_ok', 'reason' => 'face_ok']); });
-$run('keep_face_failed', function () use ($call, $emp, $W) { return $call('evidence_keep', $emp($W('a1')), ['event_type' => 'face', 'result' => 'face_failed', 'reason' => 'face_mismatch', 'detail' => 'zero values stay', 'accuracy' => 0, 'time_sure' => 0]); });
+$run('keep_face_ok', function () use ($call, $emp, $W, $at0) { return $call('evidence_keep', $emp($W('a1')), ['attempted_at' => $at0(), 'event_type' => 'face', 'result' => 'face_ok', 'reason' => 'face_ok']); });
+$run('keep_face_failed', function () use ($call, $emp, $W, $at0) { return $call('evidence_keep', $emp($W('a1')), ['attempted_at' => $at0(), 'event_type' => 'face', 'result' => 'face_failed', 'reason' => 'face_mismatch', 'detail' => 'zero values stay', 'accuracy' => 0, 'time_sure' => 0]); });
 $run('keep_not_reached', function () use ($call, $emp, $W, $D0) {
     return $call('evidence_keep', $emp($W('a1')), ['event_type' => 'sign_out', 'result' => 'not_reached', 'reason' => 'no_network', 'attempted_at' => $D0 . ' 08:00:00', 'phone_time' => $D0 . ' 08:09:00', 'clock_skew' => 540, 'time_sure' => 0, 'reported_at' => $D0 . ' 09:00:00', 'source' => 'offline']);
 });
-$faulty('keep_insert_fault', '/^INSERT INTO\s+`?' . preg_quote($p, '/') . 'ews_signin_attempts/i', function () use ($call, $emp, $W) { return $call('evidence_keep', $emp($W('a1')), ['event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_late']); });
+$faulty('keep_insert_fault', '/^INSERT INTO\s+`?' . preg_quote($p, '/') . 'ews_signin_attempts/i', function () use ($call, $emp, $W, $at0) { return $call('evidence_keep', $emp($W('a1')), ['attempted_at' => $at0(), 'event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_late']); });
 $as($admin);
 // the alert: told once, when the day's refusals reach exactly N
 $cfg(['alert' => 2]);
-$refuse = function ($eid) use ($call, $emp) { return $call('evidence_keep', $emp($eid), ['event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_early']); };
+$refuse = function ($eid) use ($call, $emp, $at0) { return $call('evidence_keep', $emp($eid), ['attempted_at' => $at0(), 'event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_early']); };
 $run('alert_first', function () use ($refuse, $E) { return $refuse($E('r13')); });
 $run('alert_second_tells_the_manager', function () use ($refuse, $E) { return $refuse($E('r13')); });
 $run('alert_third_is_quiet', function () use ($refuse, $E) { return $refuse($E('r13')); });
@@ -116,7 +118,7 @@ $offline = function ($label, $uid, array $post, $nonce = 'ews_signin_offline') u
     $as($admin);
 };
 $body = function ($uid, array $over = []) {
-    $srv = (time() - 120) * 1000;
+    $srv = (time() - 10860) * 1000;   // the press is put three hours back: far from any other row, so the report's order does not depend on the second the run was at
     return array_merge(['user' => $uid, 'event_type' => 'sign_in', 'server_ms' => $srv, 'elapsed_ms' => 60000, 'phone_ms' => $srv + 60000 + 300000, 'latitude' => '30.0444', 'longitude' => '31.2357', 'accuracy' => '15'], $over);
 };
 $offline('offline_logged_out', 0, $body(0));
@@ -128,14 +130,14 @@ $offline('offline_other_account', $WU('a4'), $body(999999));
 $offline('offline_no_employee', (int) $c['atwu_ghost'], $body((int) $c['atwu_ghost']));
 $offline('offline_bad_type', $WU('a5'), $body($WU('a5'), ['event_type' => 'face']));
 $offline('offline_old', $WU('a6'), $body($WU('a6'), ['server_ms' => (time() - 10 * DAY_IN_SECONDS) * 1000]));
-$logRow($W('a7'), 'sign_in', $localNow(-60));
+$logRow($W('a7'), 'sign_in', $localNow(-10800));
 $offline('offline_reached_by_a_record', $WU('a7'), $body($WU('a7')));
-$attemptRow($W('a8'), 'sign_in', 'refused', 'too_early', $localNow(-60));
+$attemptRow($W('a8'), 'sign_in', 'refused', 'too_early', $localNow(-10800));
 $offline('offline_reached_by_an_attempt', $WU('a8'), $body($WU('a8')));
 for ($i = 0; $i < 5; $i++) $attemptRow($W('a9'), 'sign_in', 'not_reached', 'no_network', $localNow(-3 * DAY_IN_SECONDS), ['reported_at' => $localNow(-30)]);
 $offline('offline_limit', $WU('a9'), $body($WU('a9')));
 $offline('offline_kept', $WU('a10'), $body($WU('a10')));
-$offline('offline_kept_not_sure_sign_out', $WU('a11'), $body($WU('a11'), ['event_type' => 'sign_out', 'server_ms' => 0, 'elapsed_ms' => 0, 'phone_ms' => (time() - 90) * 1000, 'latitude' => '', 'accuracy' => 'x']));
+$offline('offline_kept_not_sure_sign_out', $WU('a11'), $body($WU('a11'), ['event_type' => 'sign_out', 'server_ms' => 0, 'elapsed_ms' => 0, 'phone_ms' => (time() - 10830) * 1000, 'latitude' => '', 'accuracy' => 'x']));
 $as($WU('a12'));
 $faulty('offline_insert_fault', '/^INSERT INTO\s+`?' . preg_quote($p, '/') . 'ews_signin_attempts/i', function () use ($o, $WU, $body) { return golden_json($o, 'evidence_offline_report', $body($WU('a12')), 'ews_signin_offline'); });
 $as($admin);

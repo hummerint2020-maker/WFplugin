@@ -101,17 +101,17 @@ $att = function ($eid, $type, $result, $reason, $when, $date, array $extra = [])
     $wpdb->insert($p . 'ews_signin_attempts', array_merge(['employee_id' => $eid, 'user_id' => 0, 'work_date' => $date, 'event_type' => $type, 'result' => $result, 'reason' => $reason, 'attempted_at' => $when, 'ip_address' => '10.0.0.7', 'device' => 'Golden phone', 'source' => 'app'], $extra));
     return (int) $wpdb->insert_id;
 };
-$att($c['omar'], 'sign_in', 'refused', 'outside_location', $at('07:40'), $today, ['detail' => 'Outside the work location', 'latitude' => 30.2, 'longitude' => 31.5, 'accuracy' => 25, 'distance_meters' => 850, 'location_status' => 'outside']);
-$att($c['omar'], 'face', 'face_failed', 'face_mismatch', $at('07:45'), $today, ['photo_key' => $keyOf('a')]);
+$att($c['omar'], 'sign_in', 'refused', 'outside_location', $at('00:10'), $today, ['detail' => 'Outside the work location', 'latitude' => 30.2, 'longitude' => 31.5, 'accuracy' => 25, 'distance_meters' => 850, 'location_status' => 'outside']);
+$att($c['omar'], 'face', 'face_failed', 'face_mismatch', $at('00:11'), $today, ['photo_key' => $keyOf('a')]);
 $att($c['mona'], 'sign_in', 'not_reached', 'no_network', $at('08:10', $yesterday), $yesterday, ['phone_time' => $at('08:12', $yesterday), 'clock_skew' => 2820, 'time_sure' => 0, 'reported_at' => $at('09:00', $yesterday), 'source' => 'offline']);
-$att($c['lina'], 'face', 'face_ok', 'face_ok', $at('07:50'), $today);
+$att($c['lina'], 'face', 'face_ok', 'face_ok', $at('00:12'), $today);
 $wpdb->query("UPDATE {$p}ews_time_logs SET photo_key='" . $keyOf('b') . "' WHERE employee_id=" . (int) $c['lina'] . " AND work_date='{$today}' AND event_type='sign_out'");
 $old = gmdate('Y-m-d', strtotime($today . ' -70 days'));
 $att($c['rana'], 'sign_in', 'refused', 'too_late', $at('11:00', $old), $old, ['photo_key' => $keyOf('c')]);
 $wpdb->query("DELETE FROM {$p}ews_auto_attendance_rules");
 $wpdb->insert($p . 'ews_auto_attendance_rules', ['employee_id' => $c['lina'], 'recurrence' => 'weekly', 'run_date' => null, 'weekdays' => '0,1,2,3,4', 'sign_in_time' => '09:00:00', 'sign_out_time' => '17:00:00', 'enabled' => 1, 'created_by' => 1]);
 $ruleId = (int) $wpdb->insert_id;
-$att($rec['other'][0], 'sign_in', 'refused', 'too_early', $at('06:30'), $today);
+$att($rec['other'][0], 'sign_in', 'refused', 'too_early', $at('00:13'), $today);
 $out = ['att_today' => $today, 'att_yesterday' => $yesterday, 'att_corrected' => $new, 'att_rule' => $ruleId];
 foreach ($ids as $k => $v) { $out['atw_' . $k] = $v[0]; $out['atwu_' . $k] = $v[1]; }
 foreach ($rec as $k => $v) { $out['atr_' . $k] = $v[0]; $out['atru_' . $k] = $v[1]; }
