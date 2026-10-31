@@ -7,7 +7,7 @@
 require_once rtrim((string) getenv('GOLDEN_DIR'), '/') . '/evidence_lib.php';
 update_option('ews_signin_evidence', ['attempts' => 1], false);
 $_SERVER['REMOTE_ADDR'] = '10.9.9.9';
-wp_set_current_user($admin);
+wp_set_current_user((int) get_user_by('login', 'admin')->ID);
 wp_cache_flush();
 $sql = [];
 ob_start();
