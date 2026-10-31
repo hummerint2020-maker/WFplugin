@@ -180,6 +180,8 @@ try:
     ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_people.php'), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1]))
     # The attendance module's rows: today's events (one corrected), coordinates, breaks, an approved overtime request.
     ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_attendance.php'), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1]))
+    # The attendance corrections: requests in every status, the events of their days, a user with the HR capability.
+    ctx.update(json.loads(wp('eval-file', os.path.join(HERE, 'seed_corrections.php'), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1]))
     # The query count of a page, printed at its end (web requests only).
     os.makedirs(MU, exist_ok=True)   # a fresh WordPress has no mu-plugins folder
     open(os.path.join(MU, 'ews-golden-q.php'), 'w').write('<?php if(defined("WP_CLI")&&WP_CLI) return; add_action("shutdown",function(){ global $wpdb; if(!wp_doing_ajax() && !(defined("REST_REQUEST")&&REST_REQUEST)) echo "<!--EWSQ=".(int)$wpdb->num_queries."-->"; },PHP_INT_MAX);')
@@ -194,7 +196,7 @@ try:
         # One login for all sides: the same session, so the same nonces on every page.
         if sessions is None:
             sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass'),
-                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass'), 'atrmgr': Session('atr_mgr', 'atr_mgr-pass')}
+                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass'), 'atrmgr': Session('atr_mgr', 'atr_mgr-pass'), 'cxhr': Session('cxhr', 'cxhr-pass')}
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
@@ -409,6 +411,34 @@ try:
     ev_false = [label for label, fn in ev_conditions if not holds(fn)]
     check('...the evidence trace really kept refused, failed and unsent attempts, told the managers, answered every offline report, served and refused photos, cleaned up, drew the timeline and the report page and exported the CSV (else it proves nothing)',
           not ev_false, [ev_false, 'csv_admin=' + repr(csv_admin[:260]), 'csv_mgr=' + repr(csv_mgr[:120])])
+    cx = {k[19:]: v for k, v in tb.items() if k.startswith('corrections_reads:')}
+    def cxr(k):
+        return (cx.get(k) or {}).get('return')
+    cx_csv = ((tb.get('cxcsv:csv_corrections') or {}).get('return')) or ''
+    cx_conditions = [
+        ('bool(cx)', lambda: bool(cx)),
+        ('mgr may decide a pending request', lambda: cxr('can_decide_pending_mgr') is True),
+        ('the owner may not', lambda: cxr('can_decide_pending_owner') is False),
+        ('HR decides a pending_hr one', lambda: cxr('can_decide_pending_hr_hr') is True),
+        ('mgr sees the other department\'s request? no', lambda: cxr('can_decide_other_dept_mgr') is False),
+        ('modes', lambda: cxr('workflow_mode_levels') == 'LEVEL_1' and cxr('workflow_mode_none') == ''),
+        ('levels: the approver decides', lambda: cxr('can_decide_levels_gdmgr') is True),
+        ('to decide without a workflow (mgr)', lambda: len(cxr('to_decide_none_mgr')) >= 1),
+        ('to decide with levels (the approver)', lambda: len(cxr('to_decide_levels_gdmgr')) == 1),
+        ('to decide (HR)', lambda: len(cxr('to_decide_none_hr')) >= 1),
+        ('a superseded Sign In is skipped', lambda: cxr('day_lina_4_superseded')['in'] is not None and cxr('day_lina_4_superseded')['out'] is not None),
+        ('recent days', lambda: len(cxr('recent_days_r13')) >= 1 and cxr('recent_days_none') == []),
+        ('evidence', lambda: 'events' in cxr('evidence_pending') and 'month_count' in cxr('evidence_pending')),
+        ('my requests', lambda: len(cxr('my_requests_r13')) >= 2 and len(cxr('my_requests_limit1')) == 1),
+        ('hub rows', lambda: len(cxr('hub_rows')) >= 1),
+        ('the app page', lambda: cxr('app_page_employee')['len'] > 1000 and 'switched off' in cxr('app_page_off')['body']),
+        ('the admin list and report', lambda: cxr('admin_list')['len'] > 1000 and cxr('admin_report')['len'] > 1000 and cxr('admin_settings')['len'] > 1000),
+        ('the admin refusals', lambda: cxr('admin_plain_user')['exit'] == 'die' and cxr('admin_manager')['exit'] == 'die'),
+        ('the photo', lambda: cxr('photo_admin')['exit'] == 'none' and cxr('photo_plain')['exit'] == 'die' and cxr('photo_logged_out')['exit'] == 'redirect' and cxr('photo_unknown')['exit'] == 'die'),
+        ('the export file', lambda: cx_csv.startswith('\ufeffEmployee,Department,Day') and cx_csv.count('\n') >= 3),
+    ]
+    cx_false = [label for label, fn in cx_conditions if not holds(fn)]
+    check('...the corrections reads trace really read days, requests, who may decide, the lists, the pages and the export (else it proves nothing)', not cx_false, [cx_false, 'csv=' + repr(cx_csv[:120])])
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
