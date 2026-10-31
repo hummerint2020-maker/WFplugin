@@ -387,19 +387,22 @@
           "tables": [
             "time_logs",
             "break_sessions",
-            "auto_attendance_rules"
+            "auto_attendance_rules",
+            "signin_attempts"
           ],
           "store": [
             "workforce-one/src/Attendance/Data/WordPressTimeLogStore.php",
             "workforce-one/src/Attendance/Data/WordPressBreakStore.php",
             "workforce-one/src/Attendance/Data/WordPressEmployeeLock.php",
-            "workforce-one/src/Attendance/Data/WordPressAutoRuleStore.php"
+            "workforce-one/src/Attendance/Data/WordPressAutoRuleStore.php",
+            "workforce-one/src/Attendance/Data/WordPressAttemptStore.php"
           ],
           "services": [
             "workforce-one/src/Attendance/AttendanceLog.php",
             "workforce-one/src/Attendance/BreakCronService.php",
             "workforce-one/src/Attendance/AutoAttendanceService.php",
-            "workforce-one/src/Attendance/ManualRecordService.php"
+            "workforce-one/src/Attendance/ManualRecordService.php",
+            "workforce-one/src/Attendance/EvidenceService.php"
           ],
           "moved": [
             "today_events",
@@ -418,10 +421,35 @@
             "auto_attendance_delete",
             "auto_attendance_bulk_sign_out",
             "admin_time_save",
-            "admin_time_reset"
+            "admin_time_reset",
+            "evidence_keep",
+            "evidence_offline_report",
+            "face_photo_serve",
+            "evidence_cleanup",
+            "evidence_timeline",
+            "admin_time_report",
+            "admin_time_csv",
+            "admin_auto_attendance"
           ],
           "traits_clean": [
             "breaks"
+          ],
+          "reads": [
+            {
+              "file": "workforce-one/src/Attendance/Data/WordPressTimeReportQuery.php",
+              "tables": [
+                "time_logs",
+                "signin_attempts",
+                "employees"
+              ]
+            },
+            {
+              "file": "workforce-one/src/Attendance/Data/WordPressAutoRuleQuery.php",
+              "tables": [
+                "auto_attendance_rules",
+                "employees"
+              ]
+            }
           ]
         }
       ],

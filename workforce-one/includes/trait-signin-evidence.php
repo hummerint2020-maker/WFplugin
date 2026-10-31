@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Attendance\DeviceLabel;
+use WorkforceOne\Attendance\EvidenceRules;
 use WorkforceOne\Settings\SignInEvidence;
 
 /**
@@ -97,44 +98,7 @@ trait EWS_Signin_Evidence_Trait {
      * @return int the attempt's id (0: not kept)
      */
     private function evidence_keep($emp,array $a){
-        if(!$emp || !$this->attempts_enabled())return 0;
-        $this->ensure_evidence_schema_once();
-        global $wpdb;
-        $at=(string)($a['attempted_at']??current_time('mysql'));
-        $row=[
-            'employee_id'=>(int)$emp->id,'user_id'=>get_current_user_id(),'work_date'=>substr($at,0,10),
-            'event_type'=>substr((string)$a['event_type'],0,20),'result'=>substr((string)$a['result'],0,20),
-            'reason'=>substr((string)($a['reason']??''),0,40),'detail'=>isset($a['detail'])?mb_substr((string)$a['detail'],0,255):null,
-            'attempted_at'=>$at,'ip_address'=>$this->evidence_client_ip(),'device'=>$this->evidence_device(),'source'=>substr((string)($a['source']??'app'),0,20),
-        ];
-        foreach(['latitude','longitude','accuracy','distance_meters','location_status','photo_key','phone_time','clock_skew','time_sure','reported_at'] as $k){
-            if(array_key_exists($k,$a) && $a[$k]!==null && $a[$k]!=='')$row[$k]=$a[$k];
-        }
-        if(!$wpdb->insert($this->attempts_table(),$row))return 0;
-        $id=(int)$wpdb->insert_id;
-        if($row['result']!=='face_ok'){
-            $this->evidence_audit($emp,$id,(object)($row+['distance_meters'=>$row['distance_meters']??null]));
-            $this->evidence_maybe_alert($emp,$row['work_date']);
-        }
-        return $id;
-    }
-
-    /**
-     * The Audit Log line of a refused or unsent attempt (3.31.92, owner's request: everything in one
-     * place). signin_refused (a Sign In / Out refused), face_check_failed, signin_not_reached (pressed
-     * with no network, sent later: the real time from the server's clock, the phone's own time, the gap).
-     */
-    private function evidence_audit($emp,$id,$a){
-        $action=$a->result==='not_reached'?'signin_not_reached':($a->event_type==='face'?'face_check_failed':'signin_refused');
-        $event=$a->event_type==='face'?'Face check':$this->time_event_label((string)$a->event_type);
-        $parts=[(string)$emp->name,$event,$this->evidence_reason_label($a)];
-        if($a->result==='not_reached'){
-            $parts[]='pressed at '.substr((string)$a->attempted_at,11,5).(empty($a->time_sure)?' (not certain)':'');
-            if(!empty($a->phone_time))$parts[]='phone said '.substr((string)$a->phone_time,11,5);
-            if(isset($a->clock_skew) && abs((int)$a->clock_skew)>120)$parts[]='phone clock off by '.round(abs((int)$a->clock_skew)/60).' min';
-        }
-        $parts[]=trim((string)$a->device.' '.(string)$a->ip_address);
-        $this->audit($action,'signin_attempt',$id,implode(' / ',array_filter($parts,'strlen')));
+        return $this->services()->evidence()->keep(is_object($emp)?$emp:null,$a,get_current_user_id(),$this->evidence_client_ip(),$this->evidence_device());
     }
 
     /** A Sign In / Out the app refused (record_time_event). */
@@ -152,13 +116,9 @@ trait EWS_Signin_Evidence_Trait {
         ]);
     }
 
-    /** The department's managers are told once, when an employee reaches N refusals in a day. */
-    private function evidence_maybe_alert($emp,$day){
-        $n=(int)$this->evidence_settings()['alert'];
-        if($n<1)return;
+    /** Tells the employee's department managers (the administrators when there is none) that the day's refusals reached N (EvidenceService decides when). */
+    private function evidence_alert_send($emp,$day,$n){
         global $wpdb;
-        $count=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->attempts_table()} WHERE employee_id=%d AND work_date=%s AND result IN ('refused','face_failed','not_reached')",(int)$emp->id,$day));
-        if($count!==$n)return;
         $users=[];
         foreach(get_users(['capability'=>'ews_manage_time','fields'=>['ID']]) as $u){
             $m=$wpdb->get_row($wpdb->prepare("SELECT department_id FROM {$this->employees} WHERE wp_user_id=%d LIMIT 1",(int)$u->ID));
@@ -192,23 +152,18 @@ trait EWS_Signin_Evidence_Trait {
         $t=SignInEvidence::offlineTime((int)$num('phone_ms'),(int)$num('server_ms'),(int)$num('elapsed_ms'),time());
         if($t['at']<time()-7*DAY_IN_SECONDS)wp_send_json_success(['kept'=>false,'reason'=>'old']);
         $at=gmdate('Y-m-d H:i:s',$t['at']+$offset);
-        global $wpdb;
         // It did reach us after all (the answer was lost): a record or a refusal of the same kind is there.
         $from=gmdate('Y-m-d H:i:s',$t['at']+$offset-900);$to=gmdate('Y-m-d H:i:s',$t['at']+$offset+900);
-        $kinds=$type==='sign_in'?"'sign_in','late_sign_in'":"'sign_out'";
-        $this->ensure_evidence_schema_once();
-        if($wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->time_logs} WHERE employee_id=%d AND event_type IN ($kinds) AND event_at BETWEEN %s AND %s LIMIT 1",(int)$emp->id,$from,$to))
-            || $wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->attempts_table()} WHERE employee_id=%d AND event_type=%s AND attempted_at BETWEEN %s AND %s LIMIT 1",(int)$emp->id,$type,$from,$to)))
-            wp_send_json_success(['kept'=>false,'reason'=>'reached']);
-        // At most 5 a day: a phone cannot flood the report.
-        if((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->attempts_table()} WHERE employee_id=%d AND result='not_reached' AND reported_at>=%s",(int)$emp->id,gmdate('Y-m-d 00:00:00',$now)))>=5)
-            wp_send_json_success(['kept'=>false,'reason'=>'limit']);
-        $id=$this->evidence_keep($emp,[
+        $kinds=$type==='sign_in'?['sign_in','late_sign_in']:['sign_out'];
+        // The checks and the write: EvidenceService (reached / at most 5 a day / kept).
+        $r=$this->services()->evidence()->offline($emp,$type,$from,$to,$kinds,gmdate('Y-m-d 00:00:00',$now),[
             'event_type'=>$type,'result'=>'not_reached','reason'=>'no_network',
             'attempted_at'=>$at,'phone_time'=>$t['phone']>0?gmdate('Y-m-d H:i:s',$t['phone']+$offset):null,'clock_skew'=>(int)$t['skew'],'time_sure'=>$t['sure']?1:0,
             'reported_at'=>current_time('mysql'),'latitude'=>$num('latitude'),'longitude'=>$num('longitude'),'accuracy'=>$num('accuracy'),'source'=>'offline',
-        ]);
-        wp_send_json_success(['kept'=>$id>0]);
+        ],get_current_user_id(),$this->evidence_client_ip(),$this->evidence_device());
+        if($r==='reached')wp_send_json_success(['kept'=>false,'reason'=>'reached']);
+        if($r==='limit')wp_send_json_success(['kept'=>false,'reason'=>'limit']);
+        wp_send_json_success(['kept'=>$r==='kept']);
     }
 
     /** What the app page needs to note an attempt and send it later (empty when off). @return array<string,mixed> */
@@ -269,10 +224,7 @@ trait EWS_Signin_Evidence_Trait {
         if(!is_user_logged_in())auth_redirect();
         $kind=sanitize_key($_GET['kind']??'');$id=absint($_GET['id']??0);
         check_admin_referer('ews_face_photo_'.$kind.'_'.$id);
-        global $wpdb;
-        $row=null;
-        if($kind==='log')$row=$wpdb->get_row($wpdb->prepare("SELECT employee_id,photo_key,event_at at FROM {$this->time_logs} WHERE id=%d",$id));
-        elseif($kind==='attempt')$row=$wpdb->get_row($wpdb->prepare("SELECT employee_id,photo_key,attempted_at at FROM {$this->attempts_table()} WHERE id=%d",$id));
+        $row=$this->services()->evidence()->photo($kind,$id);
         if(!$row || !$this->face_photo_may_view((int)$row->employee_id))wp_die(esc_html__('Access denied','workforce-one'),'',['response'=>403]);
         $key=(string)$row->photo_key;
         if(!preg_match('/^[A-Za-z0-9]{32}\.(jpg|webp)$/',$key))wp_die(esc_html__('File not found.','workforce-one'),'',['response'=>404]);
@@ -289,18 +241,11 @@ trait EWS_Signin_Evidence_Trait {
 
     /** Daily (ews_privacy_cleanup): attempts and photos older than their days are deleted. */
     public function evidence_cleanup(){
-        global $wpdb;
-        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->attempts_table()))!==$this->attempts_table())return;
-        $s=$this->evidence_settings();
-        $attempt_cut=gmdate('Y-m-d H:i:s',current_time('timestamp')-$s['attempt_days']*DAY_IN_SECONDS);
-        $photo_cut=gmdate('Y-m-d H:i:s',current_time('timestamp')-$s['photo_days']*DAY_IN_SECONDS);
-        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT photo_key FROM {$this->attempts_table()} WHERE photo_key IS NOT NULL AND (attempted_at<%s OR attempted_at<%s)",$attempt_cut,$photo_cut)) as $k)$this->private_files_delete('workforce-one-face-photos',(string)$k);
-        $wpdb->query($wpdb->prepare("UPDATE {$this->attempts_table()} SET photo_key=NULL WHERE photo_key IS NOT NULL AND attempted_at<%s",$photo_cut));
-        $wpdb->query($wpdb->prepare("DELETE FROM {$this->attempts_table()} WHERE attempted_at<%s",$attempt_cut));
-        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT photo_key FROM {$this->time_logs} WHERE photo_key IS NOT NULL AND event_at<%s",$photo_cut)) as $k)$this->private_files_delete('workforce-one-face-photos',(string)$k);
-        $wpdb->query($wpdb->prepare("UPDATE {$this->time_logs} SET photo_key=NULL WHERE photo_key IS NOT NULL AND event_at<%s",$photo_cut));
-        // A face check not followed by a Sign In leaves a photo nothing points to: gone after the same days.
-        $limit=time()-$s['photo_days']*DAY_IN_SECONDS;
+        $this->services()->evidence()->cleanup((int)current_time('timestamp'),time());
+    }
+
+    /** The photo files nothing points to, older than the Unix time, are removed (EvidenceService asks last). */
+    private function evidence_sweep_orphans($limit){
         foreach(array_unique([$this->private_files_dir('workforce-one-face-photos'),$this->private_files_legacy_dir('workforce-one-face-photos')]) as $dir){
             foreach((array)glob($dir.'/*.{jpg,webp}',GLOB_BRACE) as $f){if(is_file($f) && filemtime($f)<$limit)wp_delete_file($f);}
         }
@@ -311,17 +256,7 @@ trait EWS_Signin_Evidence_Trait {
     /** Why an attempt was refused, in words (wp-admin is in English). */
     private function evidence_reason_label($a){
         $dist=$a->distance_meters!==null?' ('.$this->format_distance((float)$a->distance_meters).' away)':'';
-        $map=[
-            'outside_location'=>'Outside the work location'.$dist,'outside_kiosk'=>'Outside the kiosk\'s work location'.$dist,
-            'location_required'=>'No location from the phone','kiosk_no_coords'=>'The kiosk\'s location has no coordinates',
-            'face_required'=>'No face check (Face Sign In is required)','no_employee'=>'Not linked to an employee','attendance_disabled'=>'Attendance tracking is off for this employee',
-            'general_leave'=>'Company holiday','not_working_day'=>'Not a working day for them','too_early'=>'Too early','too_late'=>'Too late',
-            'already_signed_in'=>'Already signed in','already_signed_out'=>'Already signed out','not_signed_in'=>'Not signed in yet','on_break'=>'On a break',
-            'save_failed'=>'Could not be saved (server)','in_progress'=>'Another Sign In was being saved','idempotency_conflict'=>'Sent twice',
-            'face_mismatch'=>'Face did not match','face_locked'=>'Face check locked (too many tries)','face_replay'=>'Face data sent again (refused)',
-            'face_challenge'=>'Face check expired','face_not_enrolled'=>'No face enrolled','face_ok'=>'Face matched','no_network'=>'Did not reach the server (no network)',
-        ];
-        return $map[(string)$a->reason]??ucfirst(str_replace('_',' ',(string)$a->reason));
+        return EvidenceRules::reasonLabel((string)$a->reason,$dist);
     }
 
     /** One attempt as a report row. @return array<string,mixed> */
@@ -353,17 +288,17 @@ trait EWS_Signin_Evidence_Trait {
     /** One employee's day, everything in order: records, refusals, face checks. @return array<string,mixed>|null */
     private function evidence_timeline($employee_id,$day){
         if(!$this->time_report_may_manage($employee_id) || !$this->valid_date($day))return null;
-        global $wpdb;
         $emp=$this->people_employee((int)$employee_id);
         if(!$emp)return null;
         $items=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",(int)$employee_id,$day)) as $l){
+        $evidence=$this->services()->evidence();
+        foreach($evidence->dayLogs((int)$employee_id,$day) as $l){
             $items[]=['at'=>(string)$l->event_at,'kind'=>'log','title'=>$this->time_event_label((string)$l->event_type).' recorded',
                 'detail'=>trim(($l->location_status?ucfirst((string)$l->location_status):'').($l->distance_meters!==null?' · '.$this->format_distance((float)$l->distance_meters):'').' · '.$this->time_source_label((string)($l->source??'')),' ·'),
                 'device'=>'','ip'=>(string)($l->ip_address??''),'photo'=>!empty($l->photo_key)&&$this->face_photo_may_view((int)$employee_id)?$this->face_photo_url('log',(int)$l->id,true):''];
         }
-        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->attempts_table()))===$this->attempts_table()){
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->attempts_table()} WHERE employee_id=%d AND work_date=%s",(int)$employee_id,$day)) as $a){
+        if($evidence->tableExists()){
+            foreach($evidence->dayAttempts((int)$employee_id,$day) as $a){
                 $r=$this->evidence_row($a);
                 $title=$a->result==='face_ok'?'Face check matched':($a->result==='not_reached'?$r['event'].' pressed, did not reach the server':$r['event'].' refused: '.$r['reason']);
                 $detail=$a->result==='not_reached'?'Reported by the phone '.($r['late_report']['reported']??'').(abs((int)$a->clock_skew)>120?' · the phone\'s clock was off by '.round(abs((int)$a->clock_skew)/60).' min':'').((int)$a->time_sure!==1?' · time not certain':''):($a->accuracy!==null?'GPS accuracy '.round((float)$a->accuracy).' m':'');

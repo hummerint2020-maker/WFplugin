@@ -1,6 +1,7 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Attendance\Data\TimeReportFilter;
 use WorkforceOne\Attendance\ManualRecordRules;
 use WorkforceOne\Support\Csv;
 
@@ -25,13 +26,11 @@ trait EWS_Time_Report_Trait {
     /**
      * Department scope (3.31.90): a manager sees and changes the records of their own department only,
      * archived employees included (their history); administrators see everyone. As the Attendance page.
-     * The SQL to add to a query joined on employees as "e".
+     * @return int|null null = everyone (administrators), 0 = nobody (no department), n = that department. The report's read model turns it into SQL.
      */
-    private function time_report_scope_sql(){
-        if(current_user_can('manage_options'))return '';
-        $dept=$this->current_department_id();
-        global $wpdb;
-        return $dept?$wpdb->prepare(' AND e.department_id=%d',$dept):' AND 1=0';
+    private function time_report_scope(){
+        if(current_user_can('manage_options'))return null;
+        return (int)$this->current_department_id();
     }
 
     /** May the current user see / change this employee's records here (archived ones included)? */
@@ -46,43 +45,28 @@ trait EWS_Time_Report_Trait {
 
     public function admin_time_report(){
         if(!$this->can('ews_manage_time'))wp_die('Access denied');
-        global $wpdb;
         $start=sanitize_text_field(wp_unslash($_GET['start']??date('Y-m-01',current_time('timestamp'))));
         $end=sanitize_text_field(wp_unslash($_GET['end']??current_time('Y-m-d')));
         if(!$this->valid_date($start)||!$this->valid_date($end)){$start=date('Y-m-01',current_time('timestamp'));$end=current_time('Y-m-d');}
         // 100 records a page, with a search by employee (3.31.71: a month for 3,000 people was 30,000 rows in one page).
         $search=sanitize_text_field(wp_unslash($_GET['s']??''));$per=100;
-        $where=$wpdb->prepare(" WHERE l.work_date BETWEEN %s AND %s",$start,$end).$this->time_report_scope_sql();
-        if($search!==''){$like='%'.$wpdb->esc_like($search).'%';$where.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);}
+        $scope=$this->time_report_scope();
+        $evidence=$this->services()->evidence();
+        $report=$this->services()->timeReport();
         // With refused attempts kept (3.31.92): recorded, refused, or both in time order.
-        $attempts=$this->attempts_enabled() && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->attempts_table()))===$this->attempts_table();
+        $attempts=$this->attempts_enabled() && $evidence->tableExists();
         $show=$attempts?sanitize_key($_GET['show']??'both'):'recorded';
         if(!in_array($show,['recorded','refused','both'],true))$show='both';
-        $aw='';
-        if($attempts){
-            $aw=$wpdb->prepare(" WHERE a.work_date BETWEEN %s AND %s AND a.result<>'face_ok'",$start,$end).$this->time_report_scope_sql();
-            if($search!=='')$aw.=$wpdb->prepare(" AND (e.name LIKE %s OR e.domain_name LIKE %s)",$like,$like);
-        }
-        $parts=[];
-        if($show!=='refused')$parts[]="SELECT 'log' kind,l.id id,l.work_date d,l.event_at t FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id{$where}";
-        if($show!=='recorded')$parts[]="SELECT 'attempt' kind,a.id id,a.work_date d,a.attempted_at t FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id{$aw}";
-        $union=implode(' UNION ALL ',$parts);
-        $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM ({$union}) x");
+        $filter=new TimeReportFilter($start,$end,$search,$show,$attempts,$scope);
+        $total=$report->count($filter);
         $pages=max(1,(int)ceil($total/$per));$paged=min(max(1,absint($_GET['paged']??1)),$pages);
-        $page_ids=(array)$wpdb->get_results($wpdb->prepare("SELECT kind,id FROM ({$union}) x ORDER BY d DESC,t DESC,id DESC LIMIT %d OFFSET %d",$per,($paged-1)*$per));
+        $page_ids=$report->pageKeys($filter,$per,($paged-1)*$per);
         $ids=['log'=>[],'attempt'=>[]];
         foreach($page_ids as $x)$ids[(string)$x->kind][]=(int)$x->id;
-        $rows=[];$attempt_rows=[];
-        if($ids['log']){
-            $in=implode(',',array_map('intval',$ids['log']));
-            foreach((array)$wpdb->get_results("SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.id IN ($in)") as $r)$rows[(int)$r->id]=$r;
-        }
-        if($ids['attempt']){
-            $in=implode(',',array_map('intval',$ids['attempt']));
-            foreach((array)$wpdb->get_results("SELECT a.*,e.name,e.domain_name FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id WHERE a.id IN ($in)") as $r)$attempt_rows[(int)$r->id]=$r;
-        }
+        $rows=$ids['log']?$report->logRows($ids['log']):[];
+        $attempt_rows=$ids['attempt']?$report->attemptRows($ids['attempt']):[];
         $edit_id=absint($_GET['edit_time_id']??0);
-        $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE id=%d",$edit_id)):null;
+        $edit=$edit_id?$this->services()->timeLogStore()->find($edit_id):null;
         if($edit && !$this->time_report_may_manage((int)$edit->employee_id))$edit=null;
         $integrity_labels=['verified'=>'Verified','unreliable'=>'Unreliable','suspicious'=>'Suspicious','not_evaluated'=>'Not evaluated'];
         $radius_by_employee=[];
@@ -126,8 +110,8 @@ trait EWS_Time_Report_Trait {
         // How many were refused in the period, by employee (the summary above the table).
         $refused_summary=null;
         if($attempts){
-            $by=(array)$wpdb->get_results("SELECT a.employee_id,e.name,COUNT(*) n FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id{$aw} AND a.result IN ('refused','face_failed','not_reached') GROUP BY a.employee_id,e.name ORDER BY n DESC,e.name ASC LIMIT 6");
-            $refused_summary=['total'=>(int)$wpdb->get_var("SELECT COUNT(*) FROM {$this->attempts_table()} a LEFT JOIN {$this->employees} e ON e.id=a.employee_id{$aw} AND a.result IN ('refused','face_failed','not_reached')"),'by'=>$by];
+            $by=$report->refusedBy($filter);
+            $refused_summary=['total'=>$report->refusedTotal($filter),'by'=>$by];
         }
         $timeline=isset($_GET['timeline'])&&$attempts?$this->evidence_timeline(absint($_GET['timeline']),sanitize_text_field(wp_unslash($_GET['tdate']??''))):null;
         $error=sanitize_key($_GET['time_error']??'');
@@ -149,7 +133,7 @@ trait EWS_Time_Report_Trait {
         }
         echo $this->render_template('admin/time-report',[
             'start'=>$start,'end'=>$end,'records'=>$records,'form'=>$form,'search'=>$search,'paged'=>$paged,'pages'=>$pages,'total'=>$total,
-            'employees'=>(array)$wpdb->get_results("SELECT e.id,e.name,e.domain_name FROM {$this->employees} e WHERE (e.active=1".($form&&$form['employee_id']?$wpdb->prepare(" OR e.id=%d",$form['employee_id']):'').")".$this->time_report_scope_sql()." ORDER BY e.name ASC"),
+            'employees'=>$report->employees($form&&$form['employee_id']?(int)$form['employee_id']:0,$scope),
             'event_types'=>ManualRecordRules::EVENT_TYPES,
             'saved'=>($_GET['time_notice']??'')==='saved',
             'reset'=>isset($_GET['time_reset'])?[absint($_GET['time_reset']),absint($_GET['break_reset']??0)]:null,
@@ -196,11 +180,7 @@ trait EWS_Time_Report_Trait {
         $start=sanitize_text_field(wp_unslash($_GET['start']??''));
         $end=sanitize_text_field(wp_unslash($_GET['end']??''));
         if(!$this->valid_date($start)||!$this->valid_date($end)||$end<$start)wp_die('Invalid date range.');
-        global $wpdb;
-        $rows=$wpdb->get_results($wpdb->prepare(
-            "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->time_logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->time_logs} l LEFT JOIN {$this->employees} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s".$this->time_report_scope_sql()." ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
-            $start,$end
-        ));
+        $rows=$this->services()->timeReport()->csv($start,$end,$this->time_report_scope());
         nocache_headers();
         header('Content-Type:text/csv; charset=utf-8');
         header('Content-Disposition:attachment; filename=sign_in_out_'.$start.'_to_'.$end.'.csv');

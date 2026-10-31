@@ -132,10 +132,9 @@ trait EWS_Auto_Attendance_Trait {
     /** wp-admin → Auto Attendance: add / edit rules, switch them on or off, bulk Sign Out. */
     public function admin_auto_attendance(){
         if(!$this->can('ews_manage_auto_attendance'))wp_die('Access denied');
-        global $wpdb;$table=$wpdb->prefix.'ews_auto_attendance_rules';
         $edit_id=absint($_GET['edit_rule']??0);
-        $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d",$edit_id)):null;
-        $rows=(array)$wpdb->get_results("SELECT r.*,e.name,e.domain_name FROM {$table} r INNER JOIN {$this->employees} e ON e.id=r.employee_id ORDER BY r.enabled DESC,r.id DESC");
+        $edit=$edit_id?$this->services()->autoRuleStore()->find($edit_id):null;
+        $rows=$this->services()->autoRuleQuery()->listWithNames();
         foreach($rows as $r){
             $r->when=$r->recurrence==='one_time'?(string)$r->run_date:$this->auto_attendance_days_label(array_filter(array_map('absint',explode(',',(string)$r->weekdays)),function($v){return $v>=0&&$v<=6;}));
             $r->overnight=AutoRules::overnight($r->sign_in_time,$r->sign_out_time);

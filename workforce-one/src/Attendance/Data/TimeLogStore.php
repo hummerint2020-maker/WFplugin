@@ -63,4 +63,21 @@ interface TimeLogStore
 
     /** Deletes every row of the employee on the day; the number of rows. */
     public function deleteDay(int $employeeId, string $day): int;
+
+    /** True when the employee has a row of one of these event types between the two times (any row, corrected ones too). @param string[] $types */
+    public function kindsBetween(int $employeeId, array $types, string $from, string $to): bool;
+
+    /** employee_id, photo_key and `at` (the event's time) of one row (null when there is none). */
+    public function photoOf(int $id): ?object;
+
+    /** @return object[] every row of the employee on the day (corrected ones too), in storage order */
+    public function allOn(int $employeeId, string $day): array;
+
+    /** @return string[] the photo keys of the rows older than the time */
+    public function photoKeysBefore(string $cut): array;
+
+    public function clearPhotosBefore(string $cut): void;
+
+    /** One whole row (null when there is none). */
+    public function find(int $id): ?object;
 }

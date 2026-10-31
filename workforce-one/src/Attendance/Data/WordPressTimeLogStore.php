@@ -135,4 +135,37 @@ final class WordPressTimeLogStore implements TimeLogStore
     {
         return (int) $this->db->query($this->db->prepare("DELETE FROM {$this->t} WHERE employee_id=%d AND work_date=%s", $employeeId, $day));
     }
+
+    public function kindsBetween(int $employeeId, array $types, string $from, string $to): bool
+    {
+        $ph = implode(',', array_fill(0, count($types), '%s'));
+        return (bool) $this->db->get_var($this->db->prepare("SELECT id FROM {$this->t} WHERE employee_id=%d AND event_type IN ($ph) AND event_at BETWEEN %s AND %s LIMIT 1", array_merge([$employeeId], $types, [$from, $to])));
+    }
+
+    public function photoOf(int $id): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT employee_id,photo_key,event_at at FROM {$this->t} WHERE id=%d", $id));
+        return is_object($r) ? $r : null;
+    }
+
+    public function allOn(int $employeeId, string $day): array
+    {
+        return (array) $this->db->get_results($this->db->prepare("SELECT * FROM {$this->t} WHERE employee_id=%d AND work_date=%s", $employeeId, $day));
+    }
+
+    public function photoKeysBefore(string $cut): array
+    {
+        return (array) $this->db->get_col($this->db->prepare("SELECT photo_key FROM {$this->t} WHERE photo_key IS NOT NULL AND event_at<%s", $cut));
+    }
+
+    public function clearPhotosBefore(string $cut): void
+    {
+        $this->db->query($this->db->prepare("UPDATE {$this->t} SET photo_key=NULL WHERE photo_key IS NOT NULL AND event_at<%s", $cut));
+    }
+
+    public function find(int $id): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT * FROM {$this->t} WHERE id=%d", $id));
+        return is_object($r) ? $r : null;
+    }
 }
