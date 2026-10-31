@@ -31,7 +31,7 @@ def q(sql):
 
 def check(name, cond, extra=''):
     results.append(bool(cond))
-    print(('PASS ' if cond else 'FAIL ') + name + ('' if cond else '  | ' + str(extra)[:400]))
+    print(('PASS ' if cond else 'FAIL ') + name + ('' if cond else '  | ' + str(extra)[:1500]))
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):

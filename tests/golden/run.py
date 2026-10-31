@@ -24,7 +24,7 @@ FAILED = []
 def check(name, cond, extra=''):
     _check(name, cond, extra)
     if not cond:
-        FAILED.append(name[:150] + '  | ' + str(extra)[:250])
+        FAILED.append(name[:150] + '  | ' + str(extra)[:1500])
 
 S = sys.argv[1]
 BASE = os.path.abspath(sys.argv[sys.argv.index('--base') + 1])
@@ -241,7 +241,8 @@ try:
             for i in range(max(len(a['sql']), len(b['sql']))):
                 x, y = (a['sql'][i] if i < len(a['sql']) else None), (b['sql'][i] if i < len(b['sql']) else None)
                 if x != y:
-                    return 'statement %d: old %s | new %s' % (i, json.dumps(x)[:260], json.dumps(y)[:260])
+                    around = lambda q: [str(t)[:110] for t in q['sql'][max(0, i - 3):i + 4]]
+                    return 'statement %d: old %s | new %s || OLD AROUND %s || NEW AROUND %s' % (i, json.dumps(x)[:200], json.dumps(y)[:200], json.dumps(around(a)), json.dumps(around(b)))
         return (json.dumps(a)[:300], json.dumps(b)[:300])
     intended = EXPECTED.get('actions', {})
     for k in tb:

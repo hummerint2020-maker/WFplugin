@@ -114,21 +114,22 @@ final class EvidenceService
 
     /**
      * Daily: attempts and photos older than their days are deleted (the files first, then the keys, then the rows). The photo files nothing points to go last.
-     * @param int $localTs the site's local time as a timestamp (the cut-offs are local times) @param int $unixTs now, as a Unix time (a file's age)
+     * @param callable $localNow returns the site's local time as a timestamp (the cut-offs are local times); $unixNow returns now as a Unix time (a file's age).
+     *        Both are read when they are needed, not before: reading the time loads the site's options, and that load stays after the table probe as it always was.
      */
-    public function cleanup(int $localTs, int $unixTs): bool
+    public function cleanup(callable $localNow, callable $unixNow): bool
     {
         if (!$this->attempts->exists()) return false;
         $s = $this->site->settings();
-        $attemptCut = gmdate('Y-m-d H:i:s', $localTs - $s['attempt_days'] * 86400);
-        $photoCut = gmdate('Y-m-d H:i:s', $localTs - $s['photo_days'] * 86400);
+        $attemptCut = gmdate('Y-m-d H:i:s', $localNow() - $s['attempt_days'] * 86400);
+        $photoCut = gmdate('Y-m-d H:i:s', $localNow() - $s['photo_days'] * 86400);
         foreach ($this->attempts->photoKeysBefore($attemptCut, $photoCut) as $k) $this->site->deletePhoto((string) $k);
         $this->attempts->clearPhotosBefore($photoCut);
         $this->attempts->deleteBefore($attemptCut);
         foreach ($this->logs->photoKeysBefore($photoCut) as $k) $this->site->deletePhoto((string) $k);
         $this->logs->clearPhotosBefore($photoCut);
         // A face check not followed by a Sign In leaves a photo nothing points to: gone after the same days.
-        $this->site->sweepPhotos($unixTs - $s['photo_days'] * 86400);
+        $this->site->sweepPhotos($unixNow() - $s['photo_days'] * 86400);
         return true;
     }
 

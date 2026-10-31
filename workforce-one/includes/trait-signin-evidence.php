@@ -241,7 +241,7 @@ trait EWS_Signin_Evidence_Trait {
 
     /** Daily (ews_privacy_cleanup): attempts and photos older than their days are deleted. */
     public function evidence_cleanup(){
-        $this->services()->evidence()->cleanup((int)current_time('timestamp'),time());
+        $this->services()->evidence()->cleanup(function(){return (int)current_time('timestamp');},function(){return time();});
     }
 
     /** The photo files nothing points to, older than the Unix time, are removed (EvidenceService asks last). */

@@ -166,7 +166,7 @@ final class EvidenceServiceTest extends TestCase
     public function testCleanupDoesNothingWithoutTheTable(): void
     {
         $this->attempts->table = false;
-        $this->assertFalse($this->service()->cleanup(1000000, 2000000));
+        $this->assertFalse($this->service()->cleanup(function () { $this->fail('the time is not read without the table'); }, function () { $this->fail('nor this one'); }));
         $this->assertSame([], $this->site, 'the settings are not even read');
     }
 
@@ -178,7 +178,7 @@ final class EvidenceServiceTest extends TestCase
         $this->attempts->add(7, 'face', 'face_failed', '2026-10-25 08:00:00', ['photo_key' => 'new-attempt']);
         $this->logs->add(1, 7, '2026-09-01', 'sign_in', '2026-09-01 08:00:00', ['photo_key' => 'old-log']);
         $this->logs->add(2, 7, '2026-10-25', 'sign_in', '2026-10-25 08:00:00', ['photo_key' => 'new-log']);
-        $this->assertTrue($this->service()->cleanup($now, $now));
+        $this->assertTrue($this->service()->cleanup(function () use ($now) { return $now; }, function () use ($now) { return $now; }));
         $this->assertSame(['settings', 'delete old-attempt', 'delete mid-attempt', 'delete old-log', 'sweep ' . ($now - 30 * 86400)], $this->site);
         $this->assertSame(['exists', 'photoKeysBefore', 'clearPhotosBefore', 'deleteBefore'], $this->attempts->calls);
         $this->assertCount(2, $this->attempts->rows, 'the attempt older than 60 days is gone');
