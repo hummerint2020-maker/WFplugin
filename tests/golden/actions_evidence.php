@@ -130,14 +130,14 @@ $offline('offline_other_account', $WU('a4'), $body(999999));
 $offline('offline_no_employee', (int) $c['atwu_ghost'], $body((int) $c['atwu_ghost']));
 $offline('offline_bad_type', $WU('a5'), $body($WU('a5'), ['event_type' => 'face']));
 $offline('offline_old', $WU('a6'), $body($WU('a6'), ['server_ms' => (time() - 10 * DAY_IN_SECONDS) * 1000]));
-$logRow($W('a7'), 'sign_in', $localNow(-10800));
+$logRow($W('a7'), 'sign_in', $localNow(-10800 - 300));   // five minutes before the press: inside the 15-minute window, and never in the same second as another row
 $offline('offline_reached_by_a_record', $WU('a7'), $body($WU('a7')));
-$attemptRow($W('a8'), 'sign_in', 'refused', 'too_early', $localNow(-10800));
+$attemptRow($W('a8'), 'sign_in', 'refused', 'too_early', $localNow(-10800 - 300));
 $offline('offline_reached_by_an_attempt', $WU('a8'), $body($WU('a8')));
 for ($i = 0; $i < 5; $i++) $attemptRow($W('a9'), 'sign_in', 'not_reached', 'no_network', $localNow(-3 * DAY_IN_SECONDS), ['reported_at' => $localNow(-30)]);
 $offline('offline_limit', $WU('a9'), $body($WU('a9')));
 $offline('offline_kept', $WU('a10'), $body($WU('a10')));
-$offline('offline_kept_not_sure_sign_out', $WU('a11'), $body($WU('a11'), ['event_type' => 'sign_out', 'server_ms' => 0, 'elapsed_ms' => 0, 'phone_ms' => (time() - 10830) * 1000, 'latitude' => '', 'accuracy' => 'x']));
+$offline('offline_kept_not_sure_sign_out', $WU('a11'), $body($WU('a11'), ['event_type' => 'sign_out', 'server_ms' => 0, 'elapsed_ms' => 0, 'phone_ms' => (time() - 10800 - 123) * 1000, 'latitude' => '', 'accuracy' => 'x']));
 $as($WU('a12'));
 $faulty('offline_insert_fault', '/^INSERT INTO\s+`?' . preg_quote($p, '/') . 'ews_signin_attempts/i', function () use ($o, $WU, $body) { return golden_json($o, 'evidence_offline_report', $body($WU('a12')), 'ews_signin_offline'); });
 $as($admin);
