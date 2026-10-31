@@ -348,26 +348,67 @@ try:
         return ' '.join((ev.get(k) or {}).get('sql', []))
     csv_admin = (tb.get('timecsv:csv_admin') or {}).get('return') or ''
     csv_mgr = (tb.get('timecsv_mgr:csv_manager') or {}).get('return') or ''
+    def holds(fn):
+        try:
+            return bool(fn())
+        except Exception:
+            return False
+    ev_conditions = [
+        ('bool(ev)', lambda: bool(ev)),
+        ("'signin_refused' in ev_audit", lambda: 'signin_refused' in ev_audit),
+        ("'face_check_failed' in ev_audit", lambda: 'face_check_failed' in ev_audit),
+        ("'signin_not_reached' in ev_audit", lambda: 'signin_not_reached' in ev_audit),
+        ("ev_audit.count('face_photo_viewed') >= 1", lambda: ev_audit.count('face_photo_viewed') >= 1),
+        ("any(r.get('title') == 'Sign In refused several times' for r in ev.get(", lambda: any(r.get('title') == 'Sign In refused several times' for r in ev.get('_rows:notifications', []))),
+        ("ev['keep_refused']['return'] > 0", lambda: ev['keep_refused']['return'] > 0),
+        ("ev['keep_off']['return'] == 0", lambda: ev['keep_off']['return'] == 0),
+        ("ev['keep_no_employee']['return'] == 0", lambda: ev['keep_no_employee']['return'] == 0),
+        ("ev['keep_insert_fault']['return'] == 0", lambda: ev['keep_insert_fault']['return'] == 0),
+        ("ev['keep_face_ok']['return'] > 0", lambda: ev['keep_face_ok']['return'] > 0),
+        ("ev['alert_first']['return'] > 0", lambda: ev['alert_first']['return'] > 0),
+        ("any('ews_notifications' in q for q in ev['alert_second_tells_the_manag", lambda: any('ews_notifications' in q for q in ev['alert_second_tells_the_manager']['sql'])),
+        ("not any('ews_notifications' in q for q in ev['alert_third_is_quiet']['", lambda: not any('ews_notifications' in q for q in ev['alert_third_is_quiet']['sql'])),
+        ("any('ews_notifications' in q for q in ev['alert_no_manager_tells_the_a", lambda: any('ews_notifications' in q for q in ev['alert_no_manager_tells_the_administrators']['sql'])),
+        ("evj('offline_kept').get('kept') is True", lambda: evj('offline_kept').get('kept') is True),
+        ("evj('offline_kept_not_sure_sign_out').get('kept') is True", lambda: evj('offline_kept_not_sure_sign_out').get('kept') is True),
+        ("[evj(k).get('reason') for k in ('offline_off', 'offline_other_account'", lambda: [evj(k).get('reason') for k in ('offline_off', 'offline_other_account', 'offline_no_employee', 'offline_old', 'offline_reached_by_a_record', 'offline_reached_by_an_attempt', 'offline_limit')] == ['off', 'account', 'employee', 'old', 'reached', 'reached', 'limit']),
+        ("evj('offline_logged_out').get('reason') == 'login'", lambda: evj('offline_logged_out').get('reason') == 'login'),
+        ("evj('offline_bad_type').get('reason') == 'type'", lambda: evj('offline_bad_type').get('reason') == 'type'),
+        ("evr('offline_bad_nonce').get('exit') == 'die'", lambda: evr('offline_bad_nonce').get('exit') == 'die'),
+        ("evj('offline_insert_fault').get('kept') is False", lambda: evj('offline_insert_fault').get('kept') is False),
+        ("evr('serve_logged_out').get('exit') == 'redirect'", lambda: evr('serve_logged_out').get('exit') == 'redirect'),
+        ("evr('serve_bad_nonce').get('exit') == 'die'", lambda: evr('serve_bad_nonce').get('exit') == 'die'),
+        ("evr('serve_admin_attempt').get('exit') == 'none'", lambda: evr('serve_admin_attempt').get('exit') == 'none'),
+        ("evr('serve_admin_log_full').get('exit') == 'none'", lambda: evr('serve_admin_log_full').get('exit') == 'none'),
+        ("evr('serve_plain_user').get('exit') == 'die'", lambda: evr('serve_plain_user').get('exit') == 'die'),
+        ("evr('serve_unknown_kind').get('exit') == 'die'", lambda: evr('serve_unknown_kind').get('exit') == 'die'),
+        ("evr('serve_bad_key').get('exit') == 'die'", lambda: evr('serve_bad_key').get('exit') == 'die'),
+        ("evr('serve_missing_file').get('exit') == 'die'", lambda: evr('serve_missing_file').get('exit') == 'die'),
+        ("any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql'", lambda: any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql'])),
+        ("not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnai", lambda: not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnail']['sql'])),
+        ("len(ev['files_after_cleanup']) < len(ev['files_before_cleanup'])", lambda: len(ev['files_after_cleanup']) < len(ev['files_before_cleanup'])),
+        ("any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev", lambda: any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev['cleanup']['sql'])),
+        ("not any('signin_attempts' in q for q in ev['cleanup_no_attempts_table'", lambda: not any('signin_attempts' in q for q in ev['cleanup_no_attempts_table']['sql'] if not q.startswith('SHOW TABLES'))),
+        ("len(ev['cleanup_no_attempts_table']['sql']) == 1", lambda: len(ev['cleanup_no_attempts_table']['sql']) == 1),
+        ("len((ev['timeline_admin_today'].get('return') or {}).get('items', []))", lambda: len((ev['timeline_admin_today'].get('return') or {}).get('items', [])) >= 2),
+        ("ev['timeline_manager_other_department']['return'] is None", lambda: ev['timeline_manager_other_department']['return'] is None),
+        ("ev['timeline_bad_date']['return'] is None", lambda: ev['timeline_bad_date']['return'] is None),
+        ("'UNION ALL' in evsql('report_admin_both')", lambda: 'UNION ALL' in evsql('report_admin_both')),
+        ("'UNION ALL' not in evsql('report_admin_recorded')", lambda: 'UNION ALL' not in evsql('report_admin_recorded')),
+        ("'signin_attempts' not in evsql('report_attempts_off')", lambda: 'signin_attempts' not in evsql('report_attempts_off')),
+        ("'1=0' in evsql('report_manager_without_department')", lambda: '1=0' in evsql('report_manager_without_department')),
+        ("evr('report_admin_both').get('len', 0) > 2000", lambda: evr('report_admin_both').get('len', 0) > 2000),
+        ("evr('report_plain_user').get('exit') == 'die'", lambda: evr('report_plain_user').get('exit') == 'die'),
+        ("evr('auto_page_no_capability').get('exit') == 'die'", lambda: evr('auto_page_no_capability').get('exit') == 'die'),
+        ("evr('auto_page_edit').get('len', 0) > 1000", lambda: evr('auto_page_edit').get('len', 0) > 1000),
+        ("all(evr(k).get('exit') == 'die' for k in ('csv_invalid_range', 'csv_re", lambda: all(evr(k).get('exit') == 'die' for k in ('csv_invalid_range', 'csv_reversed_range', 'csv_bad_nonce', 'csv_no_capability'))),
+        ("csv_admin.startswith('\\ufeffDate,Weekday,Employee')", lambda: csv_admin.startswith('\ufeffDate,Weekday,Employee')),
+        ("csv_admin.count('\\n') >= 4", lambda: csv_admin.count('\n') >= 4),
+        ("csv_mgr.startswith('\\ufeffDate,Weekday,Employee')", lambda: csv_mgr.startswith('\ufeffDate,Weekday,Employee')),
+    ]
+    ev_false = [label for label, fn in ev_conditions if not holds(fn)]
     check('...the evidence trace really kept refused, failed and unsent attempts, told the managers, answered every offline report, served and refused photos, cleaned up, drew the timeline and the report page and exported the CSV (else it proves nothing)',
-          bool(ev) and 'signin_refused' in ev_audit and 'face_check_failed' in ev_audit and 'signin_not_reached' in ev_audit and ev_audit.count('face_photo_viewed') >= 1
-          and any(r.get('title') == 'Sign In refused several times' for r in ev.get('_rows:notifications', []))
-          and ev['keep_refused']['return'] > 0 and ev['keep_off']['return'] == 0 and ev['keep_no_employee']['return'] == 0 and ev['keep_insert_fault']['return'] == 0 and ev['keep_face_ok']['return'] > 0
-          and ev['alert_first']['return'] > 0 and any('ews_notifications' in q for q in ev['alert_second_tells_the_manager']['sql']) and not any('ews_notifications' in q for q in ev['alert_third_is_quiet']['sql'])
-          and any('ews_notifications' in q for q in ev['alert_no_manager_tells_the_administrators']['sql'])
-          and evj('offline_kept').get('kept') is True and evj('offline_kept_not_sure_sign_out').get('kept') is True
-          and [evj(k).get('reason') for k in ('offline_off', 'offline_other_account', 'offline_no_employee', 'offline_old', 'offline_reached_by_a_record', 'offline_reached_by_an_attempt', 'offline_limit')] == ['off', 'account', 'employee', 'old', 'reached', 'reached', 'limit']
-          and evj('offline_logged_out').get('reason') == 'login' and evj('offline_bad_type').get('reason') == 'type' and evr('offline_bad_nonce').get('exit') == 'die' and evj('offline_insert_fault').get('kept') is False
-          and evr('serve_logged_out').get('exit') == 'redirect' and evr('serve_bad_nonce').get('exit') == 'die' and evr('serve_admin_attempt').get('exit') == 'none' and evr('serve_admin_log_full').get('exit') == 'none'
-          and evr('serve_plain_user').get('exit') == 'die' and evr('serve_unknown_kind').get('exit') == 'die' and evr('serve_bad_key').get('exit') == 'die' and evr('serve_missing_file').get('exit') == 'die'
-          and any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql']) and not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnail']['sql'])
-          and len(ev['files_after_cleanup']) < len(ev['files_before_cleanup']) and any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev['cleanup']['sql'])
-          and not any('signin_attempts' in q for q in ev['cleanup_no_attempts_table']['sql'] if not q.startswith('SHOW TABLES')) and len(ev['cleanup_no_attempts_table']['sql']) == 1
-          and len((ev['timeline_admin_today'].get('return') or {}).get('items', [])) >= 2 and ev['timeline_manager_other_department']['return'] is None and ev['timeline_bad_date']['return'] is None
-          and 'UNION ALL' in evsql('report_admin_both') and 'UNION ALL' not in evsql('report_admin_recorded') and 'signin_attempts' not in evsql('report_attempts_off')
-          and '1=0' in evsql('report_manager_without_department') and evr('report_admin_both').get('len', 0) > 2000 and evr('report_plain_user').get('exit') == 'die' and evr('auto_page_no_capability').get('exit') == 'die'
-          and evr('auto_page_edit').get('len', 0) > 1000 and all(evr(k).get('exit') == 'die' for k in ('csv_invalid_range', 'csv_reversed_range', 'csv_bad_nonce', 'csv_no_capability'))
-          and csv_admin.startswith('\ufeffDate,Weekday,Employee') and csv_admin.count('\n') >= 4 and csv_mgr.startswith('\ufeffDate,Weekday,Employee'),
-          {k: evr(k) for k in ('keep_refused', 'offline_kept', 'serve_admin_attempt', 'report_admin_both')})
+          not ev_false, ev_false)
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
