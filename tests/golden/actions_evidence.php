@@ -88,8 +88,9 @@ $refuse = function ($eid) use ($call, $emp) { return $call('evidence_keep', $emp
 $run('alert_first', function () use ($refuse, $E) { return $refuse($E('r13')); });
 $run('alert_second_tells_the_manager', function () use ($refuse, $E) { return $refuse($E('r13')); });
 $run('alert_third_is_quiet', function () use ($refuse, $E) { return $refuse($E('r13')); });
-$cfg(['alert' => 1]);
+$cfg(['alert' => 2]);   // the other department's employee already has one refusal today (the seed): the second reaches 2
 $run('alert_no_manager_tells_the_administrators', function () use ($refuse, $E) { return $refuse($E('other')); });
+$cfg(['alert' => 1]);
 $run('alert_the_manager_is_the_employee', function () use ($refuse, $E) { return $refuse($E('mgr')); });
 $cfg(['alert' => 0]);
 $run('alert_never_when_zero', function () use ($refuse, $E) { return $refuse($E('r1')); });

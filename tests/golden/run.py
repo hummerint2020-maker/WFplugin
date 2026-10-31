@@ -408,7 +408,7 @@ try:
     ]
     ev_false = [label for label, fn in ev_conditions if not holds(fn)]
     check('...the evidence trace really kept refused, failed and unsent attempts, told the managers, answered every offline report, served and refused photos, cleaned up, drew the timeline and the report page and exported the CSV (else it proves nothing)',
-          not ev_false, ev_false)
+          not ev_false, [ev_false, 'csv_admin=' + repr(csv_admin[:260]), 'csv_mgr=' + repr(csv_mgr[:120])])
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
