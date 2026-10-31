@@ -4,7 +4,10 @@
  * table-name rules show), dropped at the end, so nothing of the site is touched. Each method's result is compared with what the old
  * inline SQL gave. Run with wp eval-file (CI's MySQL; SQLite works too).
  */
+use WorkforceOne\Attendance\Data\CorrectionListFilter;
 use WorkforceOne\Attendance\Data\TimeReportFilter;
+use WorkforceOne\Attendance\Data\WordPressCorrectionQuery;
+use WorkforceOne\Attendance\Data\WordPressCorrectionStore;
 use WorkforceOne\Attendance\Data\WordPressAttemptStore;
 use WorkforceOne\Attendance\Data\WordPressAutoRuleQuery;
 use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
@@ -20,13 +23,17 @@ $check = static function ($condition, $message) {
 };
 $prefix = 'att_contract_';
 $other = 'att_contract_other_';
-$tables = ['ews_time_logs', 'ews_break_sessions', 'ews_auto_attendance_rules', 'ews_signin_attempts', 'ews_employees'];
+$tables = ['ews_time_logs', 'ews_break_sessions', 'ews_auto_attendance_rules', 'ews_signin_attempts', 'ews_employees', 'ews_attendance_corrections', 'ews_departments', 'ews_approval_requests', 'ews_approval_steps'];
 foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $other, $tables) { foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}"); });
 foreach ([$prefix, $other] as $px) {
     $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', ip_address VARCHAR(64) NULL, latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, accuracy DECIMAL(10,2) NULL, location_status VARCHAR(30) NULL, distance_meters DECIMAL(12,2) NULL, created_at DATETIME NULL, source VARCHAR(20) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, photo_key VARCHAR(190) NULL, correction_id BIGINT UNSIGNED NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_signin_attempts (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(20) NOT NULL, result VARCHAR(20) NOT NULL, reason VARCHAR(40) NOT NULL DEFAULT '', detail VARCHAR(255) NULL, attempted_at DATETIME NOT NULL, phone_time DATETIME NULL, clock_skew INT NULL, time_sure TINYINT(1) NOT NULL DEFAULT 1, reported_at DATETIME NULL, latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, accuracy FLOAT NULL, distance_meters FLOAT NULL, location_status VARCHAR(20) NULL, ip_address VARCHAR(64) NULL, device VARCHAR(190) NULL, source VARCHAR(20) NOT NULL DEFAULT 'app', photo_key VARCHAR(64) NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL DEFAULT '', domain_name VARCHAR(190) NOT NULL DEFAULT '', active TINYINT(1) NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_attendance_corrections (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, work_date DATE NOT NULL, type VARCHAR(10) NOT NULL, target VARCHAR(10) NULL, sign_in_at DATETIME NULL, sign_out_at DATETIME NULL, old_at DATETIME NULL, reason TEXT NULL, photo_key VARCHAR(64) NULL, photo_name VARCHAR(190) NULL, status VARCHAR(20) NOT NULL DEFAULT 'pending', source VARCHAR(10) NOT NULL DEFAULT 'employee', needs_hr TINYINT(1) NOT NULL DEFAULT 0, above_limit TINYINT(1) NOT NULL DEFAULT 0, earlier TINYINT(1) NOT NULL DEFAULT 0, requested_by BIGINT UNSIGNED NOT NULL DEFAULT 0, requested_at DATETIME NOT NULL, manager_by BIGINT UNSIGNED NULL, manager_at DATETIME NULL, decided_by BIGINT UNSIGNED NULL, decided_at DATETIME NULL, decision_note TEXT NULL, applied_ids VARCHAR(64) NULL, payroll_note VARCHAR(190) NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_departments (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL DEFAULT '', active TINYINT(1) NOT NULL DEFAULT 1, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_approval_requests (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, entity_type VARCHAR(40) NOT NULL DEFAULT '', entity_id BIGINT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_approval_steps (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, approval_request_id BIGINT UNSIGNED NOT NULL DEFAULT 0, step_order INT NOT NULL DEFAULT 1, status VARCHAR(20) NOT NULL DEFAULT 'PENDING', approver_wp_user_id BIGINT UNSIGNED NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_auto_attendance_rules (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, recurrence VARCHAR(20) NOT NULL DEFAULT 'one_time', run_date DATE NULL, weekdays VARCHAR(20) NOT NULL DEFAULT '', sign_in_time VARCHAR(5) NULL, sign_out_time VARCHAR(5) NULL, enabled TINYINT(1) NOT NULL DEFAULT 1, created_by BIGINT UNSIGNED NULL, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_break_sessions (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, start_at DATETIME NOT NULL, end_at DATETIME NULL, actual_minutes INT UNSIGNED NULL, status VARCHAR(20) NOT NULL DEFAULT 'Open', duration_notified TINYINT(1) NOT NULL DEFAULT 0, escalation_notified TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, PRIMARY KEY (id))");
 }
@@ -327,4 +334,115 @@ $list = $rq->listWithNames();
 $mine = array_values(array_filter($list, function ($r) use ($ra, $rb, $rc) { return in_array((int) $r->id, [$ra, $rb, $rc], true); }));
 $check(count($mine) === 2 && (int) $mine[0]->id === $rb && (int) $mine[1]->id === $ra && $mine[0]->name === 'Lina Two' && $mine[1]->domain_name === 'omar1', 'rules list: switched-on first, then newest; a rule of an employee that is gone is not listed');
 $check($R->find($ra)->employee_id === '21' && $R->find(999999) === null, 'AutoRuleStore::find');
+// ---- L5e1 (3.31.140): the correction requests, the correction pages' read model and the day reads of the time logs
+$ct = $prefix . 'ews_attendance_corrections';
+$dt = $prefix . 'ews_departments';
+$CS = new WordPressCorrectionStore($db);
+$CQ = new WordPressCorrectionQuery($db, $em);
+$seen = [];
+add_filter('query', $capture, 1);
+$S->dayEvents(7, '2026-10-29');
+$S->withSuperseded(7, '2026-10-29');
+$S->lastLocated(7, '2026-10-29');
+$S->firstWorkDate(7);
+$CS->monthCount(7, '2026-10-01', '2026-10-31');
+$CS->pendingForDay(7, '2026-10-29');
+$CS->recentFor(7, '2026-10-20', '2026-10-29');
+$CS->latestFor(7, 30);
+$CS->myRequests(7, 20);
+$CS->tableExists();
+$CS->openForHub();
+$CQ->get(5);
+$CQ->toDecideByApprover(9);
+$CQ->toDecideOpen();
+$CQ->toDecideHr();
+$CQ->departments();
+$CQ->report('2026-10-01', '2026-10-31', 0);
+$CQ->report('2026-10-01', '2026-10-31', 5);
+$CQ->export('2026-10-01', '2026-10-31', 0);
+remove_filter('query', $capture, 1);
+$ar = $prefix . 'ews_approval_requests';
+$as = $prefix . 'ews_approval_steps';
+$check($seen === [
+    "SELECT * FROM {$tl} WHERE employee_id=7 AND work_date='2026-10-29' AND event_type IN ('sign_in','late_sign_in','sign_out') AND NOT EXISTS (SELECT 1 FROM {$tl} tl_cx WHERE tl_cx.corrects_id={$tl}.id) ORDER BY event_at ASC,id ASC",
+    "SELECT l.*,(SELECT COUNT(*) FROM {$tl} s WHERE s.corrects_id=l.id) superseded FROM {$tl} l WHERE l.employee_id=7 AND l.work_date='2026-10-29' ORDER BY l.event_at ASC,l.id ASC",
+    "SELECT event_at,location_status,distance_meters FROM {$tl} WHERE employee_id=7 AND work_date='2026-10-29' AND latitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",
+    "SELECT MIN(work_date) FROM {$tl} WHERE employee_id=7",
+    "SELECT COUNT(*) FROM {$ct} WHERE employee_id=7 AND source='employee' AND status IN ('pending','pending_hr','approved') AND work_date BETWEEN '2026-10-01' AND '2026-10-31'",
+    "SELECT * FROM {$ct} WHERE employee_id=7 AND work_date='2026-10-29' AND status IN ('pending','pending_hr') ORDER BY id DESC LIMIT 1",
+    "SELECT * FROM {$ct} WHERE employee_id=7 AND work_date BETWEEN '2026-10-20' AND '2026-10-29' ORDER BY id ASC",
+    "SELECT * FROM {$ct} WHERE employee_id=7 ORDER BY requested_at DESC LIMIT 30",
+    "SELECT * FROM {$ct} WHERE employee_id=7 AND source='employee' ORDER BY requested_at DESC,id DESC LIMIT 20",
+    "SHOW TABLES LIKE '{$ct}'",
+    "SELECT c.* FROM {$ct} c WHERE c.status IN ('pending','pending_hr') ORDER BY c.requested_at ASC",
+    "SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id FROM {$ct} c LEFT JOIN {$em} e ON e.id=c.employee_id WHERE c.id=5",
+    "SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id,ars.step_order FROM {$ct} c INNER JOIN {$em} e ON e.id=c.employee_id INNER JOIN {$ar} ar ON ar.entity_type='attendance_correction' AND ar.entity_id=c.id INNER JOIN {$as} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING' WHERE c.status='pending' AND ars.approver_wp_user_id=9 ORDER BY c.requested_at ASC LIMIT 100",
+    "SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id FROM {$ct} c INNER JOIN {$em} e ON e.id=c.employee_id WHERE c.status='pending' ORDER BY c.requested_at ASC LIMIT 200",
+    "SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id FROM {$ct} c INNER JOIN {$em} e ON e.id=c.employee_id WHERE c.status='pending_hr' ORDER BY c.requested_at ASC LIMIT 200",
+    "SELECT id,name FROM {$dt} WHERE active=1 ORDER BY name ASC",
+    "SELECT c.employee_id,c.type,c.status,e.name,COALESCE(d.name,'') dept FROM {$ct} c LEFT JOIN {$em} e ON e.id=c.employee_id LEFT JOIN {$dt} d ON d.id=e.department_id WHERE c.work_date BETWEEN '2026-10-01' AND '2026-10-31'",
+    "SELECT c.employee_id,c.type,c.status,e.name,COALESCE(d.name,'') dept FROM {$ct} c LEFT JOIN {$em} e ON e.id=c.employee_id LEFT JOIN {$dt} d ON d.id=e.department_id WHERE c.work_date BETWEEN '2026-10-01' AND '2026-10-31' AND e.department_id=5",
+    "SELECT c.*,e.name employee_name,COALESCE(d.name,'') dept,u.display_name decided_name FROM {$ct} c LEFT JOIN {$em} e ON e.id=c.employee_id LEFT JOIN {$dt} d ON d.id=e.department_id LEFT JOIN {$db->users} u ON u.ID=c.decided_by WHERE c.work_date BETWEEN '2026-10-01' AND '2026-10-31' ORDER BY c.work_date ASC,e.name ASC",
+], 'correction requests, the correction pages\' read model and the day reads: the exact text of the old inline SQL');
+
+// the data: employees 21 (dept 5) and 22 (dept 6) from above; days of November 2026
+$db->insert($dt, ['id' => 5, 'name' => 'Ops', 'active' => 1]);
+$db->insert($dt, ['id' => 6, 'name' => 'Sales', 'active' => 1]);
+$db->insert($dt, ['id' => 7, 'name' => 'Old', 'active' => 0]);
+$cx = static function ($eid, $day, $type, $status, $at, array $more = []) use ($db, $ct) {
+    $db->insert($ct, ['employee_id' => $eid, 'work_date' => $day, 'type' => $type, 'status' => $status, 'requested_at' => $at, 'requested_by' => 1] + $more);
+    return (int) $db->insert_id;
+};
+$k1 = $cx(21, '2026-11-03', 'out', 'pending', '2026-11-03 18:00:00');
+$k2 = $cx(21, '2026-11-04', 'in', 'approved', '2026-11-04 09:00:00', ['decided_by' => 1]);
+$k3 = $cx(22, '2026-11-03', 'out', 'pending_hr', '2026-11-03 18:30:00');
+$k4 = $cx(22, '2026-11-05', 'day', 'rejected', '2026-11-05 10:00:00', ['source' => 'hr']);
+$k5 = $cx(21, '2026-11-06', 'out', 'cancelled', '2026-11-06 10:00:00');
+$check($CS->monthCount(21, '2026-11-01', '2026-11-30') === 2 && $CS->monthCount(22, '2026-11-01', '2026-11-30') === 1 && $CS->monthCount(21, '2026-10-01', '2026-10-31') === 0, 'monthCount: employee requests that wait or were approved, in the month; HR\'s and cancelled ones do not count');
+$check((int) $CS->pendingForDay(21, '2026-11-03')->id === $k1 && $CS->pendingForDay(21, '2026-11-04') === null && (int) $CS->pendingForDay(22, '2026-11-03')->id === $k3, 'pendingForDay: the request that still waits, pending or pending_hr, null when none');
+$check(array_map(function ($r) { return (int) $r->id; }, $CS->recentFor(21, '2026-11-01', '2026-11-30')) === [$k1, $k2, $k5] && $CS->recentFor(21, '2026-12-01', '2026-12-31') === [], 'recentFor: by id, oldest first, an array');
+$check(array_map(function ($r) { return (int) $r->id; }, $CS->latestFor(21, 30)) === [$k5, $k2, $k1] && count($CS->latestFor(21, 2)) === 2 && count($CS->latestFor(22, 30)) === 2, 'latestFor: newest request first, any source, the limit');
+$check(array_map(function ($r) { return (int) $r->id; }, $CS->myRequests(21, 20)) === [$k5, $k2, $k1] && array_map(function ($r) { return (int) $r->id; }, $CS->myRequests(22, 20)) === [$k3] && count($CS->myRequests(21, 1)) === 1, 'myRequests: the employee\'s own requests only, newest first, the limit');
+$check($CS->tableExists() === true && (new WordPressCorrectionStore((function () use ($wpdb) { $x = clone $wpdb; $x->prefix = 'att_contract_nope_'; return $x; })()))->tableExists() === false, 'tableExists: by the prefix it is given');
+$check(array_map(function ($r) { return (int) $r->id; }, $CS->openForHub()) === [$k1, $k3], 'openForHub: pending and pending_hr, oldest first');
+$g = $CQ->get($k1);
+$check($g->employee_name === 'Omar One' && (int) $g->department_id === 5 && $g->status === 'pending' && $CQ->get(999999) === null, 'get: the request with the employee\'s name and department; null when none');
+$check(array_map(function ($r) { return (int) $r->id; }, $CQ->toDecideOpen()) === [$k1] && array_map(function ($r) { return (int) $r->id; }, $CQ->toDecideHr()) === [$k3], 'toDecideOpen / toDecideHr: by status, with the employee');
+$db->insert($ar, ['entity_type' => 'attendance_correction', 'entity_id' => $k1]);
+$arq = (int) $db->insert_id;
+$db->insert($as, ['approval_request_id' => $arq, 'step_order' => 1, 'status' => 'PENDING', 'approver_wp_user_id' => 77]);
+$check(array_map(function ($r) { return (int) $r->id; }, $CQ->toDecideByApprover(77)) === [$k1] && (int) $CQ->toDecideByApprover(77)[0]->step_order === 1 && $CQ->toDecideByApprover(78) === [], 'toDecideByApprover: the requests whose open level names the user, with its step');
+$check(array_map(function ($r) { return (int) $r->id; }, $CQ->departments()) === [5, 6], 'departments: the active ones by name');
+$f = new CorrectionListFilter('2026-11-01', '2026-11-30', '', 0, '');
+$counts = [];
+foreach ($CQ->listCounts($f) as $r) $counts[$r->status] = (int) $r->n;
+$check($counts === ['approved' => 1, 'cancelled' => 1, 'pending' => 1, 'pending_hr' => 1, 'rejected' => 1] || ($counts['pending'] === 1 && $counts['approved'] === 1 && $counts['pending_hr'] === 1 && $counts['rejected'] === 1 && $counts['cancelled'] === 1), 'listCounts: a number per status');
+$check($CQ->listTotal($f) === 5, 'listTotal');
+$fo = new CorrectionListFilter('2026-11-01', '2026-11-30', 'out', 5, '');
+$check($CQ->listTotal($fo) === 2, 'listTotal: by kind and department');
+$fs = new CorrectionListFilter('2026-11-01', '2026-11-30', '', 0, 'lina');
+$check($CQ->listTotal($fs) === 2, 'listTotal: a search by name');
+$fs2 = new CorrectionListFilter('2026-11-01', '2026-11-30', '', 0, '50%_');
+$check($CQ->listTotal($fs2) === 0, 'listTotal: % and _ in a search are literal');
+$fp = new CorrectionListFilter('2026-11-01', '2026-11-30', '', 0, '');
+$fp->status = 'pending';
+$check($CQ->listTotal($fp) === 1 && count($CQ->listRows($fp, 50, 0)) === 1, 'listTotal / listRows: a status');
+$rowsAll = $CQ->listRows($f, 2, 0);
+$rowsNext = $CQ->listRows($f, 2, 2);
+$check(array_map(function ($r) { return (int) $r->id; }, $rowsAll) === [$k5, $k4] && count($rowsNext) === 2 && $rowsAll[0]->department_name === 'Ops' && $CQ->listRows($f, 2, 10) === [], 'listRows: newest request first, the page size and offset, the department name');
+$rep = $CQ->report('2026-11-01', '2026-11-30', 0);
+$check(count($rep) === 5 && count($CQ->report('2026-11-01', '2026-11-30', 6)) === 2 && $rep[0]->dept !== null, 'report: every request of the period, one department');
+$exp = $CQ->export('2026-11-01', '2026-11-30', 5);
+$check(count($exp) === 3 && $exp[0]->employee_name === 'Omar One' && $exp[0]->dept === 'Ops' && (string) $exp[0]->work_date === '2026-11-03', 'export: the period\'s requests with the employee and department, by day then name');
+$firstOld = $add(21, '2026-09-01', 'sign_in', '2026-09-01 08:00:00');
+$check($S->firstWorkDate(21) === '2026-09-01' && $S->firstWorkDate(99999) === '' && (new WordPressTimeLogStore($db, $other . 'ews_time_logs'))->firstWorkDate(21) === '2026-09-01', 'firstWorkDate: the earliest work date, read from the site\'s own table whatever table the store was given');
+$e1 = $add(31, '2026-11-10', 'sign_in', '2026-11-10 09:00:00', ['latitude' => 30.1, 'longitude' => 31.2, 'location_status' => 'inside', 'distance_meters' => 12.5]);
+$e2 = $add(31, '2026-11-10', 'sign_in', '2026-11-10 08:30:00', ['corrects_id' => $e1, 'source' => 'correction']);
+$e3 = $add(31, '2026-11-10', 'sign_out', '2026-11-10 17:00:00');
+$check(array_map(function ($r) { return (int) $r->id; }, $S->dayEvents(31, '2026-11-10')) === [$e2, $e3] && $S->dayEvents(31, '2026-11-11') === [], 'dayEvents: the live Sign In / Out rows, a replaced one skipped, oldest first');
+$sup = $S->withSuperseded(31, '2026-11-10');
+$check(count($sup) === 3 && (int) $sup[0]->id === $e2 && (int) $sup[1]->id === $e1 && (int) $sup[1]->superseded === 1 && (int) $sup[0]->superseded === 0, 'withSuperseded: every row of the day with the number of rows that replace it');
+$ll = $S->lastLocated(31, '2026-11-10');
+$check((int) $ll->distance_meters === 13 || (float) $ll->distance_meters === 12.5, 'lastLocated: the newest row with a position') ;
+$check($S->lastLocated(31, '2026-11-11') === null, 'lastLocated: null when none');
 echo "attendance store contract OK\n";

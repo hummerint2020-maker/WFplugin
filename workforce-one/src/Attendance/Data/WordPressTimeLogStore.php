@@ -168,4 +168,25 @@ final class WordPressTimeLogStore implements TimeLogStore
         $r = $this->db->get_row($this->db->prepare("SELECT * FROM {$this->t} WHERE id=%d", $id));
         return is_object($r) ? $r : null;
     }
+
+    public function dayEvents(int $employeeId, string $date): array
+    {
+        return (array) $this->db->get_results($this->db->prepare("SELECT * FROM {$this->t} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out')" . $this->live() . ' ORDER BY event_at ASC,id ASC', $employeeId, $date));
+    }
+
+    public function withSuperseded(int $employeeId, string $date): array
+    {
+        return (array) $this->db->get_results($this->db->prepare("SELECT l.*,(SELECT COUNT(*) FROM {$this->t} s WHERE s.corrects_id=l.id) superseded FROM {$this->t} l WHERE l.employee_id=%d AND l.work_date=%s ORDER BY l.event_at ASC,l.id ASC", $employeeId, $date));
+    }
+
+    public function lastLocated(int $employeeId, string $date): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT event_at,location_status,distance_meters FROM {$this->t} WHERE employee_id=%d AND work_date=%s AND latitude IS NOT NULL ORDER BY event_at DESC LIMIT 1", $employeeId, $date));
+        return is_object($r) ? $r : null;
+    }
+
+    public function firstWorkDate(int $employeeId): string
+    {
+        return (string) $this->db->get_var($this->db->prepare("SELECT MIN(work_date) FROM {$this->db->prefix}ews_time_logs WHERE employee_id=%d", $employeeId));
+    }
 }

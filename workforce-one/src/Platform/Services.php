@@ -8,11 +8,15 @@ use WorkforceOne\Attendance\AttendancePorts;
 use WorkforceOne\Attendance\AutoAttendanceService;
 use WorkforceOne\Attendance\Data\AttemptStore;
 use WorkforceOne\Attendance\Data\AutoRuleQuery;
+use WorkforceOne\Attendance\Data\CorrectionQuery;
+use WorkforceOne\Attendance\Data\CorrectionStore;
 use WorkforceOne\Attendance\Data\AutoRuleStore;
 use WorkforceOne\Attendance\Data\TimeReportQuery;
 use WorkforceOne\Attendance\Data\WordPressAttemptStore;
 use WorkforceOne\Attendance\Data\WordPressAutoRuleQuery;
 use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
+use WorkforceOne\Attendance\Data\WordPressCorrectionQuery;
+use WorkforceOne\Attendance\Data\WordPressCorrectionStore;
 use WorkforceOne\Attendance\Data\WordPressTimeReportQuery;
 use WorkforceOne\Attendance\EvidenceService;
 use WorkforceOne\Attendance\ManualRecordService;
@@ -267,6 +271,19 @@ final class Services
     public function timeReport(): TimeReportQuery
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressTimeReportQuery($this->db, (string) ($this->tables['time_logs'] ?? ''), (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    public function correctionStore(): CorrectionStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The correction pages' reads (3.31.140). */
+    public function correctionQuery(): CorrectionQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''));
         return $this->made[__FUNCTION__];
     }
 

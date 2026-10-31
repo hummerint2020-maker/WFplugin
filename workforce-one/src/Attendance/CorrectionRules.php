@@ -171,6 +171,13 @@ final class CorrectionRules
         return $result !== '' ? 'planned' : ($signed_in ? 'on_time' : 'not_scheduled');
     }
 
+    /** The first and the last day of the month the date is in (the monthly limit, the lists and the report count by work-date month). @return array{0:string,1:string} */
+    public static function monthBounds(string $date): array
+    {
+        $month = substr($date, 0, 7);
+        return [$month . '-01', date('Y-m-t', strtotime($month . '-01'))];
+    }
+
     public static function isDate(string $d): bool
     {
         if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $m)) return false;

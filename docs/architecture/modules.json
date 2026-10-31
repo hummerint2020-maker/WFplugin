@@ -388,14 +388,16 @@
             "time_logs",
             "break_sessions",
             "auto_attendance_rules",
-            "signin_attempts"
+            "signin_attempts",
+            "attendance_corrections"
           ],
           "store": [
             "workforce-one/src/Attendance/Data/WordPressTimeLogStore.php",
             "workforce-one/src/Attendance/Data/WordPressBreakStore.php",
             "workforce-one/src/Attendance/Data/WordPressEmployeeLock.php",
             "workforce-one/src/Attendance/Data/WordPressAutoRuleStore.php",
-            "workforce-one/src/Attendance/Data/WordPressAttemptStore.php"
+            "workforce-one/src/Attendance/Data/WordPressAttemptStore.php",
+            "workforce-one/src/Attendance/Data/WordPressCorrectionStore.php"
           ],
           "services": [
             "workforce-one/src/Attendance/AttendanceLog.php",
@@ -429,7 +431,22 @@
             "evidence_timeline",
             "admin_time_report",
             "admin_time_csv",
-            "admin_auto_attendance"
+            "admin_auto_attendance",
+            "cx_day",
+            "cx_month_count",
+            "cx_pending_for_day",
+            "cx_started",
+            "cx_get",
+            "cx_recent_days",
+            "cx_to_decide",
+            "cx_evidence",
+            "corrections_content",
+            "admin_corrections",
+            "cx_report",
+            "corrections_export",
+            "cx_hub_rows",
+            "api_corrections_mine",
+            "cx_my_requests"
           ],
           "traits_clean": [
             "breaks"
@@ -448,6 +465,16 @@
               "tables": [
                 "auto_attendance_rules",
                 "employees"
+              ]
+            },
+            {
+              "file": "workforce-one/src/Attendance/Data/WordPressCorrectionQuery.php",
+              "tables": [
+                "attendance_corrections",
+                "employees",
+                "departments",
+                "approval_requests",
+                "approval_steps"
               ]
             }
           ]

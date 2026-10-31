@@ -80,4 +80,16 @@ interface TimeLogStore
 
     /** One whole row (null when there is none). */
     public function find(int $id): ?object;
+
+    /** @return object[] the employee's live Sign In / Late Sign In / Sign Out rows on the day (no correction has replaced them), oldest first */
+    public function dayEvents(int $employeeId, string $date): array;
+
+    /** @return object[] every row of the employee on the day with the number of rows that replace it (`superseded`), oldest first */
+    public function withSuperseded(int $employeeId, string $date): array;
+
+    /** The newest row of the day that carries a position (event_at, location_status, distance_meters); null when there is none. */
+    public function lastLocated(int $employeeId, string $date): ?object;
+
+    /** The employee's first work date on record ('' when there is none), read from the table of the current site. */
+    public function firstWorkDate(int $employeeId): string;
 }

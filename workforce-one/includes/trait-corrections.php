@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Attendance\CorrectionRules;
+use WorkforceOne\Attendance\Data\CorrectionListFilter;
 use WorkforceOne\Settings\CorrectionSettings;
 use WorkforceOne\Support\Download;
 use WorkforceOne\Requests\Hub;
@@ -85,9 +86,8 @@ trait EWS_Corrections_Trait {
 
     /** The day's live events: first Sign In and last Sign Out rows (or null). @return array{in:?object,out:?object} */
     private function cx_day($employee_id,$date){
-        global $wpdb;
         $in=null;$out=null;
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()." ORDER BY event_at ASC,id ASC",(int)$employee_id,$date)) as $r){
+        foreach($this->services()->timeLogStore()->dayEvents((int)$employee_id,$date) as $r){
             if($r->event_type==='sign_out')$out=$r;
             elseif(!$in)$in=$r;
         }
@@ -96,14 +96,12 @@ trait EWS_Corrections_Trait {
 
     /** Requests this employee made for days of this month that count towards the limit. */
     private function cx_month_count($employee_id,$date){
-        global $wpdb;
-        $month=substr((string)$date,0,7);
-        return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$this->cx_table()} WHERE employee_id=%d AND source='employee' AND status IN ('pending','pending_hr','approved') AND work_date BETWEEN %s AND %s",(int)$employee_id,$month.'-01',date('Y-m-t',strtotime($month.'-01'))));
+        [$from,$to]=CorrectionRules::monthBounds((string)$date);
+        return $this->services()->correctionStore()->monthCount((int)$employee_id,$from,$to);
     }
 
     private function cx_pending_for_day($employee_id,$date){
-        global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND work_date=%s AND status IN ('pending','pending_hr') ORDER BY id DESC LIMIT 1",(int)$employee_id,$date));
+        return $this->services()->correctionStore()->pendingForDay((int)$employee_id,$date);
     }
 
     /**
@@ -132,11 +130,10 @@ trait EWS_Corrections_Trait {
      * attendance if that is earlier (employees imported after they started). No correction before it; '' when unknown.
      */
     private function cx_started($emp){
-        global $wpdb;
         $c=substr((string)($emp->created_at??''),0,10);
         // created_at is the database server's clock (often UTC), work dates the site's: one day of margin, never a wrong refusal.
         if(CorrectionRules::isDate($c))$c=date('Y-m-d',strtotime($c.' -1 day'));
-        $first=(string)$wpdb->get_var($wpdb->prepare("SELECT MIN(work_date) FROM {$wpdb->prefix}ews_time_logs WHERE employee_id=%d",(int)$emp->id));
+        $first=$this->services()->timeLogStore()->firstWorkDate((int)$emp->id);
         $days=array_filter([$c,$first],function($d){return CorrectionRules::isDate($d);});
         return $days?min($days):'';
     }
@@ -212,8 +209,7 @@ trait EWS_Corrections_Trait {
     /* ------------------------------------------------------------------ who may do what */
 
     private function cx_get($id){
-        global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id FROM {$this->cx_table()} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id WHERE c.id=%d",(int)$id));
+        return $this->services()->correctionQuery()->get((int)$id);
     }
 
     private function cx_workflow_mode(){
@@ -760,9 +756,8 @@ trait EWS_Corrections_Trait {
         $s=$this->correction_settings();
         $today=current_time('Y-m-d');
         $from=date('Y-m-d',strtotime($today.' -'.(int)$s['deadline_days'].' days'));
-        global $wpdb;
         $reqs=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND work_date BETWEEN %s AND %s ORDER BY id ASC",(int)$emp->id,$from,$today)) as $r)$reqs[$r->work_date]=$r;
+        foreach($this->services()->correctionStore()->recentFor((int)$emp->id,$from,$today) as $r)$reqs[$r->work_date]=$r;
         $overtime=$this->overtime_approved_dates((int)$emp->id,$from,$today);
         $leave=$this->schedule_leave_dates((int)$emp->id,$from,$today);
         $started=$this->cx_started($emp);
@@ -824,22 +819,19 @@ trait EWS_Corrections_Trait {
 
     /** Requests the current user may decide, with their evidence. @return object[] */
     private function cx_to_decide(){
-        global $wpdb;
-        $t=$this->cx_table();$me=get_current_user_id();
+        $me=get_current_user_id();
+        $query=$this->services()->correctionQuery();
         $rows=[];
         $mode=$this->cx_workflow_mode();
         if(\WorkforceOne\Approvals\Workflows::isLevels($mode)){
-            $at=$this->approval_tables();
-            $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id,ars.step_order FROM {$t} c INNER JOIN {$this->employees} e ON e.id=c.employee_id
-                INNER JOIN {$at['requests']} ar ON ar.entity_type='attendance_correction' AND ar.entity_id=c.id INNER JOIN {$at['instances']} ars ON ars.approval_request_id=ar.id AND ars.status='PENDING'
-                WHERE c.status='pending' AND ars.approver_wp_user_id=%d ORDER BY c.requested_at ASC LIMIT 100",$me));
+            $rows=$query->toDecideByApprover($me);
         }elseif($this->can('ews_manage_time')){
-            foreach((array)$wpdb->get_results("SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id FROM {$t} c INNER JOIN {$this->employees} e ON e.id=c.employee_id WHERE c.status='pending' ORDER BY c.requested_at ASC LIMIT 200") as $r){
+            foreach($query->toDecideOpen() as $r){
                 if($this->cx_can_manage((int)$r->employee_id))$rows[]=$r;
             }
         }
         if($this->cx_is_hr()){
-            foreach((array)$wpdb->get_results("SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id FROM {$t} c INNER JOIN {$this->employees} e ON e.id=c.employee_id WHERE c.status='pending_hr' ORDER BY c.requested_at ASC LIMIT 200") as $r)$rows[]=$r;
+            foreach($query->toDecideHr() as $r)$rows[]=$r;
         }
         $rows=array_values(array_filter($rows,function($r)use($me){return (int)$r->employee_user_id!==$me;}));
         foreach($rows as $r)$r->evidence=$this->cx_evidence($r);
@@ -855,21 +847,9 @@ trait EWS_Corrections_Trait {
         return $rows;
     }
 
-    /**
-     * What the system knows about the request's day, read-only, for the person deciding.
-     * @return array<string,mixed>
-     */
-    private function cx_evidence($c){
+    /** The day's presence checks of the employee (Presence Verification), when that module's table is there. @return list<array<string,mixed>> */
+    private function cx_presence_rows($eid,$date){
         global $wpdb;
-        $eid=(int)$c->employee_id;$date=(string)$c->work_date;
-        $locs=method_exists($this,'branch_locations')?$this->branch_locations():[];
-        $events=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT l.*,(SELECT COUNT(*) FROM {$this->time_logs} s WHERE s.corrects_id=l.id) superseded FROM {$this->time_logs} l WHERE l.employee_id=%d AND l.work_date=%s ORDER BY l.event_at ASC,l.id ASC",$eid,$date)) as $r){
-            $events[]=['time'=>substr((string)$r->event_at,11,5),'type'=>(string)$r->event_type,'source'=>(string)($r->source??''),'location_status'=>(string)($r->location_status??''),
-                'distance'=>$r->distance_meters!==null?(int)round((float)$r->distance_meters):null,'integrity'=>(string)($r->integrity_status??''),'superseded'=>(int)$r->superseded>0,
-                'place'=>isset($r->location_id,$locs[(int)$r->location_id])?(string)$locs[(int)$r->location_id]->name:''];
-        }
-        $last=$wpdb->get_row($wpdb->prepare("SELECT event_at,location_status,distance_meters FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND latitude IS NOT NULL ORDER BY event_at DESC LIMIT 1",$eid,$date));
         $presence=[];
         if(method_exists($this,'presence_tables')){
             [,$v]=$this->presence_tables();
@@ -879,6 +859,25 @@ trait EWS_Corrections_Trait {
                 }
             }
         }
+        return $presence;
+    }
+
+    /**
+     * What the system knows about the request's day, read-only, for the person deciding.
+     * @return array<string,mixed>
+     */
+    private function cx_evidence($c){
+        $eid=(int)$c->employee_id;$date=(string)$c->work_date;
+        $locs=method_exists($this,'branch_locations')?$this->branch_locations():[];
+        $events=[];
+        $logs=$this->services()->timeLogStore();
+        foreach($logs->withSuperseded($eid,$date) as $r){
+            $events[]=['time'=>substr((string)$r->event_at,11,5),'type'=>(string)$r->event_type,'source'=>(string)($r->source??''),'location_status'=>(string)($r->location_status??''),
+                'distance'=>$r->distance_meters!==null?(int)round((float)$r->distance_meters):null,'integrity'=>(string)($r->integrity_status??''),'superseded'=>(int)$r->superseded>0,
+                'place'=>isset($r->location_id,$locs[(int)$r->location_id])?(string)$locs[(int)$r->location_id]->name:''];
+        }
+        $last=$logs->lastLocated($eid,$date);
+        $presence=$this->cx_presence_rows($eid,$date);
         $sch=$this->schedule_for_employee_date($eid,$date);
         $h=$this->working_hours($eid,(string)$date);
         $s=$this->correction_settings();
@@ -893,10 +892,9 @@ trait EWS_Corrections_Trait {
         if(!$this->corrections_enabled())return '<div class="ews-page"><div class="ews-login-error">'.esc_html__('Attendance corrections are switched off.','workforce-one').'</div></div>';
         $this->ensure_corrections_schema_once();
         $emp=$this->current_employee();
-        global $wpdb;
         $mine=[];$days=[];
         if($emp){
-            $mine=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d ORDER BY requested_at DESC LIMIT 30",(int)$emp->id));
+            $mine=$this->services()->correctionStore()->latestFor((int)$emp->id,30);
             $days=$this->cx_recent_days($emp);
         }
         $decide=$this->cx_to_decide();
@@ -960,29 +958,25 @@ trait EWS_Corrections_Trait {
         $this->ensure_corrections_schema_once();
         $tab=sanitize_key($_GET['tab']??'list');
         if(!in_array($tab,['list','report','settings','direct'],true))$tab='list';
-        global $wpdb;$t=$this->cx_table();
+        $query=$this->services()->correctionQuery();
         $data=['tab'=>$tab,'enabled'=>$this->corrections_enabled(),'features_url'=>admin_url('admin.php?page=ews31-features'),'post_url'=>admin_url('admin-post.php'),
             'url'=>function($a=[]){return $this->cx_admin_url($a);},'type_label'=>function($x){return $this->cx_type_label($x);},'status_label'=>function($x){return $this->cx_status_label($x);},
             'change'=>function($c){return $this->cx_change_text($c);},'notice'=>sanitize_key($_GET['cx_done']??''),'error'=>isset($_GET['cx_error'])?$this->cx_error_message(sanitize_key($_GET['cx_error'])):'',
-            'departments'=>(array)$wpdb->get_results("SELECT id,name FROM {$wpdb->prefix}ews_departments WHERE active=1 ORDER BY name ASC")];
+            'departments'=>$query->departments()];
         $month=sanitize_text_field(wp_unslash($_GET['month']??current_time('Y-m')));
         if(!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/',$month))$month=current_time('Y-m');
         $dept=absint($_GET['department']??0);
         $data+=['month'=>$month,'department'=>$dept];
         if($tab==='list'){
             $status=sanitize_key($_GET['status']??'');$type=sanitize_key($_GET['type']??'');$q=sanitize_text_field(wp_unslash($_GET['s']??''));
-            $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',date('Y-m-t',strtotime($month.'-01')));
-            if(in_array($type,CorrectionSettings::TYPES,true))$where.=$wpdb->prepare(' AND c.type=%s',$type);
-            if($dept)$where.=$wpdb->prepare(' AND e.department_id=%d',$dept);
-            if($q!=='')$where.=$wpdb->prepare(' AND (e.name LIKE %s OR e.domain_name LIKE %s)','%'.$wpdb->esc_like($q).'%','%'.$wpdb->esc_like($q).'%');
+            [$from,$to]=CorrectionRules::monthBounds($month.'-01');
+            $filter=new CorrectionListFilter($from,$to,in_array($type,CorrectionSettings::TYPES,true)?$type:'',$dept,$q);
             $counts=['all'=>0,'pending'=>0,'pending_hr'=>0,'approved'=>0,'rejected'=>0];
-            foreach((array)$wpdb->get_results("SELECT c.status,COUNT(*) n FROM {$t} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id{$where} GROUP BY c.status") as $r){$counts[$r->status]=(int)$r->n;$counts['all']+=(int)$r->n;}
-            if(isset($counts[$status]) && $status!=='all')$where.=$wpdb->prepare(' AND c.status=%s',$status);
+            foreach($query->listCounts($filter) as $r){$counts[$r->status]=(int)$r->n;$counts['all']+=(int)$r->n;}
+            if(isset($counts[$status]) && $status!=='all')$filter->status=$status;
             $page=max(1,absint($_GET['paged']??1));$per=50;
-            $total=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$t} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id{$where}");
-            $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT c.*,e.name employee_name,e.wp_user_id employee_user_id,e.department_id,d.name department_name,u.display_name decided_name,m.display_name manager_name FROM {$t} c
-                LEFT JOIN {$this->employees} e ON e.id=c.employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id LEFT JOIN {$wpdb->users} u ON u.ID=c.decided_by LEFT JOIN {$wpdb->users} m ON m.ID=c.manager_by
-                {$where} ORDER BY c.requested_at DESC LIMIT %d OFFSET %d",$per,($page-1)*$per));
+            $total=$query->listTotal($filter);
+            $rows=$query->listRows($filter,$per,($page-1)*$per);
             foreach($rows as $r)$r->photo_url=$this->cx_photo_url($r);
             $rows=$this->cx_with_steps($rows);
             $data+=['rows'=>$rows,'counts'=>$counts,'status'=>$status,'type'=>$type,'q'=>$q,'paged'=>$page,'pages'=>max(1,(int)ceil($total/$per)),'total'=>$total];
@@ -1000,10 +994,9 @@ trait EWS_Corrections_Trait {
 
     /** Corrections per employee and department in a month, by type and outcome. */
     private function cx_report($month,$dept=0){
-        global $wpdb;$t=$this->cx_table();
-        $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',date('Y-m-t',strtotime($month.'-01'))).($dept?$wpdb->prepare(' AND e.department_id=%d',$dept):'');
+        [$from,$to]=CorrectionRules::monthBounds($month.'-01');
         $people=[];$depts=[];$tot=['all'=>0,'approved'=>0,'rejected'=>0,'open'=>0];
-        foreach((array)$wpdb->get_results("SELECT c.employee_id,c.type,c.status,e.name,COALESCE(d.name,'') dept FROM {$t} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id{$where}") as $r){
+        foreach($this->services()->correctionQuery()->report($from,$to,(int)$dept) as $r){
             $k=(int)$r->employee_id;
             if(!isset($people[$k]))$people[$k]=['name'=>(string)$r->name,'dept'=>(string)$r->dept,'out'=>0,'in'=>0,'time'=>0,'day'=>0,'approved'=>0,'rejected'=>0,'all'=>0];
             $people[$k][$r->type]=($people[$k][$r->type]??0)+1;$people[$k]['all']++;
@@ -1026,10 +1019,10 @@ trait EWS_Corrections_Trait {
         check_admin_referer('ews_corrections_export');
         $month=sanitize_text_field(wp_unslash($_GET['month']??''));
         if(!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/',$month))$month=current_time('Y-m');
-        global $wpdb;$t=$this->cx_table();$dept=absint($_GET['department']??0);
-        $where=$wpdb->prepare(" WHERE c.work_date BETWEEN %s AND %s",$month.'-01',date('Y-m-t',strtotime($month.'-01'))).($dept?$wpdb->prepare(' AND e.department_id=%d',$dept):'');
+        $dept=absint($_GET['department']??0);
+        [$from,$to]=CorrectionRules::monthBounds($month.'-01');
         $rows=[['Employee','Department','Day','Type','Change','Reason','Status','Source','Requested','Decided by','Decided at','Note','Payroll']];
-        foreach((array)$wpdb->get_results("SELECT c.*,e.name employee_name,COALESCE(d.name,'') dept,u.display_name decided_name FROM {$t} c LEFT JOIN {$this->employees} e ON e.id=c.employee_id LEFT JOIN {$wpdb->prefix}ews_departments d ON d.id=e.department_id LEFT JOIN {$wpdb->users} u ON u.ID=c.decided_by{$where} ORDER BY c.work_date ASC,e.name ASC") as $c){
+        foreach($this->services()->correctionQuery()->export($from,$to,$dept) as $c){
             $rows[]=[(string)$c->employee_name,(string)$c->dept,(string)$c->work_date,$this->cx_type_label($c->type),$this->cx_change_text($c),(string)$c->reason,$this->cx_status_label($c->status),(string)$c->source,(string)$c->requested_at,(string)$c->decided_name,(string)$c->decided_at,(string)$c->decision_note,(string)$c->payroll_note];
         }
         $this->audit('report_export','report',0,'Attendance corrections CSV '.$month);
@@ -1070,9 +1063,9 @@ trait EWS_Corrections_Trait {
     /** wp-admin → Requests Hub rows. @return array<int,object> */
     private function cx_hub_rows(){
         if(!$this->corrections_enabled())return [];
-        global $wpdb;
-        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->cx_table()))!==$this->cx_table())return [];
-        return (array)$wpdb->get_results("SELECT c.* FROM {$this->cx_table()} c WHERE c.status IN ('pending','pending_hr') ORDER BY c.requested_at ASC");
+        $store=$this->services()->correctionStore();
+        if(!$store->tableExists())return [];
+        return $store->openForHub();
     }
 
     /** Requests Hub decision (administrator). */
@@ -1113,8 +1106,8 @@ trait EWS_Corrections_Trait {
 
     public function api_corrections_mine($request){
         if($e=$this->cx_api_guard())return $e;
-        global $wpdb;$emp=self::$api_session['employee'];
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d ORDER BY requested_at DESC LIMIT 50",(int)$emp->id));
+        $emp=self::$api_session['employee'];
+        $rows=$this->services()->correctionStore()->latestFor((int)$emp->id,50);
         return $this->api_ok(['requests'=>array_map(function($c){return $this->cx_api_view($c);},$rows)]);
     }
 
@@ -1161,9 +1154,9 @@ trait EWS_Corrections_Trait {
     /** An employee's corrections for My requests, newest first. @return list<array<string,mixed>> */
     private function cx_my_requests($employee_id,$limit=20){
         if(!$this->corrections_enabled())return [];
-        global $wpdb;$this->ensure_corrections_schema_once();
+        $this->ensure_corrections_schema_once();
         $out=[];
-        foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->cx_table()} WHERE employee_id=%d AND source='employee' ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $c){
+        foreach($this->services()->correctionStore()->myRequests((int)$employee_id,(int)$limit) as $c){
             $state=['pending'=>'waiting','pending_hr'=>'waiting','approved'=>'approved','rejected'=>'rejected','cancelled'=>'withdrawn'][$c->status]??'cancelled';
             $out[]=['key'=>'correction-'.(int)$c->id,'tone'=>'correction','title'=>__('Attendance correction','workforce-one').' · '.$this->cx_day_label((string)$c->work_date),
                 'sub'=>$this->cx_change_text($c).($c->status==='pending_hr'?' · '.__('Waiting for HR','workforce-one'):''),'state'=>$state,'when'=>(string)$c->requested_at,

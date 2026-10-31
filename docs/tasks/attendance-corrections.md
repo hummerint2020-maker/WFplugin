@@ -65,3 +65,6 @@ Money (finalize and carry write rows payroll counts; `report_days`, `payroll_mon
 2. **Quirks CX-a…CX-y:** moved as they are and queued. Proposed fix order: money first (CX-b, CX-a / AT-j, CX-c, CX-d, CX-x), then permissions and privacy (CX-i, CX-k, CX-l, CX-j), then CX-f, CX-g, CX-h, CX-e, then the rest. The direction of each fix (CX-d: HR refused or a second HR; CX-i: what happens to open requests when the feature is off; the payroll carry fixes; CX-m) is asked when its release is designed.
 3. **R5 / R6 race tests** (a decision against a withdraw, and the reverse): built as the first commit of L5e3, on the unchanged code.
 4. **CX-l** (retention, exporter and eraser for correction photos and reasons): deferred to the planned privacy work, with EV-n.
+
+## 10. As built — L5e1 (3.31.140)
+Moved: only the reads' SQL, into `CorrectionStore`, `CorrectionQuery` (a read model, listed under `reads`), four `TimeLogStore` reads and `CorrectionRules::monthBounds`. Deviations from the design: the `CorrectionReads` service and the ports were not built (the trait functions orchestrate over the stores until L5e2/L5e3); `departments()` sits in `CorrectionQuery`, not in the People store; the approval tables are referenced by prefix inside the read model and listed in `modules.json`.

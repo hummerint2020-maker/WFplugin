@@ -112,6 +112,51 @@ final class MemoryTimeLogStore implements TimeLogStore
         return $this->lastId;
     }
 
+    public function dayEvents(int $employeeId, string $date): array
+    {
+        $this->calls[] = 'dayEvents ' . $employeeId;
+        $replaced = [];
+        foreach ($this->rows as $r) if (($r->corrects_id ?? null) !== null) $replaced[$r->corrects_id] = true;
+        $out = array_values(array_filter($this->rows, function ($r) use ($employeeId, $date, $replaced) {
+            return (int) $r->employee_id === $employeeId && $r->work_date === $date && in_array($r->event_type, ['sign_in', 'late_sign_in', 'sign_out'], true) && !isset($replaced[$r->id]);
+        }));
+        usort($out, function ($a, $b) { return [$a->event_at, (int) $a->id] <=> [$b->event_at, (int) $b->id]; });
+        return $out;
+    }
+
+    public function withSuperseded(int $employeeId, string $date): array
+    {
+        $this->calls[] = 'withSuperseded ' . $employeeId;
+        $out = [];
+        foreach ($this->rows as $r) {
+            if ((int) $r->employee_id !== $employeeId || $r->work_date !== $date) continue;
+            $n = 0;
+            foreach ($this->rows as $s) if (($s->corrects_id ?? null) !== null && (string) $s->corrects_id === (string) $r->id) $n++;
+            $out[] = (object) ((array) $r + ['superseded' => (string) $n]);
+        }
+        usort($out, function ($a, $b) { return [$a->event_at, (int) $a->id] <=> [$b->event_at, (int) $b->id]; });
+        return $out;
+    }
+
+    public function lastLocated(int $employeeId, string $date): ?object
+    {
+        $this->calls[] = 'lastLocated ' . $employeeId;
+        $best = null;
+        foreach ($this->rows as $r) {
+            if ((int) $r->employee_id !== $employeeId || $r->work_date !== $date || $r->latitude === null) continue;
+            if ($best === null || strcmp($r->event_at, $best->event_at) > 0) $best = $r;
+        }
+        return $best ? (object) ['event_at' => $best->event_at, 'location_status' => $best->location_status ?? null, 'distance_meters' => $best->distance_meters ?? null] : null;
+    }
+
+    public function firstWorkDate(int $employeeId): string
+    {
+        $this->calls[] = 'firstWorkDate ' . $employeeId;
+        $days = [];
+        foreach ($this->rows as $r) if ((int) $r->employee_id === $employeeId) $days[] = $r->work_date;
+        return $days ? min($days) : '';
+    }
+
     public function kindsBetween(int $employeeId, array $types, string $from, string $to): bool
     {
         $this->calls[] = 'kindsBetween ' . implode(',', $types);
