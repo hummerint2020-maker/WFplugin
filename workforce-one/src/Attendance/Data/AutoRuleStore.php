@@ -26,5 +26,8 @@ interface AutoRuleStore
     /** Deletes a rule; the number of rows (0 when there was none). */
     public function remove(int $id): int;
 
+    /** One whole rule (null when there is none). */
+    public function find(int $id): ?object;
+
     public function lastError(): string;
 }

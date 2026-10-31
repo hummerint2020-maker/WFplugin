@@ -7,7 +7,9 @@ docs/architecture/modules.json lists, per module, the slices moved to Controller
       the plugin object, the current user or the clock;
   L3  the Store touches its slice's tables only and nothing of other modules;
   L4  the Services and the Store use only their module, Platform, Support and other modules' "exports";
-  L5  the moved functions in includes/ run no SQL, and a trait listed in traits_clean has no "global $wpdb".
+  L5  the moved functions in includes/ run no SQL, and a trait listed in traits_clean has no "global $wpdb";
+  L6  a read model ("reads" in modules.json: a class that joins tables for a page, 3.31.139) is counted with its slice, touches only the tables it lists
+      (L3, L4) and writes nothing: no insert / update / delete / replace / query call and no INSERT, UPDATE, DELETE, REPLACE, ALTER, DROP or TRUNCATE.
 Each rule is first run on a bad example of its own (a rule that cannot fail fails the check).
 Usage: python3 tests/check_layers.py [--update]   (--update writes the baseline after a release lowered it)
 """
@@ -22,7 +24,7 @@ from check_modules import PROPS, strip_comments  # noqa: E402
 
 LIT = re.compile(r"""(?:prefix\s*\.\s*['"]|prefix\}|\{\$p\}|\$p\s*\.\s*['"])ews_([a-z0-9_]+)""")
 HELPERS = {'approval_tables': 'approval_steps', 'substitutes_table': 'approval_substitutes', 'team_tables': 'teams', 'department_tables': 'departments',
-           'org_moves_table': 'org_moves', 'tl_live': 'time_logs'}   # $this->helper() hands out table names: one reference each
+           'org_moves_table': 'org_moves', 'tl_live': 'time_logs', 'attempts_table': 'signin_attempts'}   # $this->helper() hands out table names: one reference each
 HELPER = re.compile(r'\$this->(' + '|'.join(HELPERS) + r')\s*\(')
 PROP = re.compile(r'\$this->(' + '|'.join(PROPS) + r')\b(?!\s*\()')
 L2_BAD = [r'\bglobal\s+\$', r'\$wpdb\b', r'\$_(?:GET|POST|REQUEST|COOKIE|SERVER|FILES)\b', r'\becho\b', r'\bprint\b', r'\bexit\b', r'\bdie\b',
@@ -30,6 +32,7 @@ L2_BAD = [r'\bglobal\s+\$', r'\$wpdb\b', r'\$_(?:GET|POST|REQUEST|COOKIE|SERVER|
           r'\badd_action\s*\(', r'\badd_filter\s*\(', r'\bdo_action\s*\(', r'\bapply_filters\s*\(', r'\bEWS_', r'\b(?:include|require)(?:_once)?\b',
           r'\bget_current_user_id\s*\(', r'\bwp_get_current_user\s*\(', r'\bcurrent_time\s*\(', r'(?<![\w>:$])time\s*\(\s*\)', r'(?<![\w>:$])date\s*\(',
           r'\b(?:get|update|add|delete)_option\s*\(', r'\$GLOBALS\b', r'\b(?:printf|print_r|var_dump|wp_send_json\w*)\s*\(', r'\bwpdb\b']
+L6_BAD = [r'->\s*(?:insert|update|delete|replace|query)\s*\(', r'(?i)\b(?:INSERT\s+INTO|UPDATE\s+[`\w{$]|DELETE\s+FROM|REPLACE\s+INTO|ALTER\s+TABLE|DROP\s+TABLE|TRUNCATE\s+TABLE)']
 USE = re.compile(r'^\s*use\s+WorkforceOne\\([A-Za-z0-9_]+)\\([A-Za-z0-9_\\]+)\s*;', re.M)
 FUNC = re.compile(r'function\s+&?([A-Za-z0-9_]+)\s*\(')
 
@@ -44,6 +47,11 @@ GUARD = re.compile(r"if\s*\(\s*!\s*defined\(\s*'ABSPATH'\s*\)\s*\)\s*exit\s*;")
 def l2(src):
     src = GUARD.sub('', src)   # the usual "loaded by WordPress only" guard
     return [p for p in L2_BAD if re.search(p, src)]
+
+
+def l6(src):
+    src = GUARD.sub('', src)
+    return [p for p in L6_BAD if re.search(p, src)]
 
 
 def namespaces(ns):
@@ -78,6 +86,7 @@ def body(src, name):
 def self_test():
     ok = True
     ok &= bool(l2("<?php $x=$wpdb->get_var('x'); echo 1;"))
+    ok &= bool(l6("<?php $this->db->update($t, $row, ['id' => 1]);")) and bool(l6("<?php $q = 'DELETE FROM x';")) and bool(l6("<?php $q = \"update {$t} set a=1\";")) and not l6("<?php return $this->db->get_results('SELECT * FROM x ORDER BY id');")
     ok &= bool(l2("<?php $v = get_option('x'); do_action('y'); $t = time();")) and len(l2("<?php $v = get_option('x'); do_action('y'); $t = time();")) == 3
     ok &= not l2("<?php $t = strtotime($now); $d = $this->clock->now(); $x = WeekLock::date($y);")
     ok &= not l2("<?php if (!defined('ABSPATH')) exit; return $this->store->find($id, $date);")
@@ -127,6 +136,15 @@ def main():
                     fails.append('L3 %s: %s (a Store touches only its slice)' % (store, b))
                 for u in l4(src, ns, exports):
                     fails.append('L4 %s: %s' % (store, u))
+            for rd in sl.get('reads', []):
+                own_files.add(rd['file'])
+                src = read(rd['file'])
+                for b in l3(src, ns, rd['tables']):
+                    fails.append('L3 %s: %s (a read model touches only the tables it lists)' % (rd['file'], b))
+                for u in l4(src, ns, exports):
+                    fails.append('L4 %s: %s' % (rd['file'], u))
+                for p in l6(src):
+                    fails.append('L6 %s: %s (a read model writes nothing)' % (rd['file'], p))
             for trait in sl.get('traits_clean', []):
                 rel = 'workforce-one/includes/trait-%s.php' % trait
                 if re.search(r'global\s+\$wpdb', read(rel)):

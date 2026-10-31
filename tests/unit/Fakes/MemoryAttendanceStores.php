@@ -112,6 +112,46 @@ final class MemoryTimeLogStore implements TimeLogStore
         return $this->lastId;
     }
 
+    public function kindsBetween(int $employeeId, array $types, string $from, string $to): bool
+    {
+        $this->calls[] = 'kindsBetween ' . implode(',', $types);
+        foreach ($this->rows as $r) if ((int) $r->employee_id === $employeeId && in_array($r->event_type, $types, true) && $r->event_at >= $from && $r->event_at <= $to) return true;
+        return false;
+    }
+
+    public function photoOf(int $id): ?object
+    {
+        $this->calls[] = 'photoOf ' . $id;
+        foreach ($this->rows as $r) if ((int) $r->id === $id) return (object) ['employee_id' => $r->employee_id, 'photo_key' => $r->photo_key ?? null, 'at' => $r->event_at];
+        return null;
+    }
+
+    public function allOn(int $employeeId, string $day): array
+    {
+        $this->calls[] = 'allOn ' . $employeeId;
+        return array_values(array_filter($this->rows, function ($r) use ($employeeId, $day) { return (int) $r->employee_id === $employeeId && $r->work_date === $day; }));
+    }
+
+    public function photoKeysBefore(string $cut): array
+    {
+        $this->calls[] = 'photoKeysBefore';
+        $out = [];
+        foreach ($this->rows as $r) if (($r->photo_key ?? null) !== null && $r->event_at < $cut) $out[] = $r->photo_key;
+        return $out;
+    }
+
+    public function clearPhotosBefore(string $cut): void
+    {
+        $this->calls[] = 'clearPhotosBefore';
+        foreach ($this->rows as $r) if (($r->photo_key ?? null) !== null && $r->event_at < $cut) $r->photo_key = null;
+    }
+
+    public function find(int $id): ?object
+    {
+        foreach ($this->rows as $r) if ((int) $r->id === $id) return $r;
+        return null;
+    }
+
     public function anyOfKinds(int $employeeId, string $day, array $types): bool
     {
         $this->calls[] = 'anyOfKinds ' . implode(',', $types);
@@ -311,5 +351,93 @@ final class MemoryAutoRuleStore implements \WorkforceOne\Attendance\Data\AutoRul
 
     public function remove(int $id): int { $this->calls[] = 'remove ' . $id; if (!isset($this->rows[$id])) return 0; unset($this->rows[$id]); return 1; }
 
+    public function find(int $id): ?object { return $this->rows[$id] ?? null; }
+
     public function lastError(): string { return $this->fail ? 'Disk full' : ''; }
+}
+
+/** The attempts table, in memory (3.31.139). */
+final class MemoryAttemptStore implements \WorkforceOne\Attendance\Data\AttemptStore
+{
+    /** @var list<object> */
+    public $rows = [];
+    /** @var list<string> */
+    public $calls = [];
+    /** @var bool the table is there */
+    public $table = true;
+    /** @var bool the next insert fails */
+    public $failInsert = false;
+    /** @var int */
+    private $next = 1;
+
+    /** @param array<string,mixed> $more */
+    public function add(int $employeeId, string $type, string $result, string $at, array $more = []): int
+    {
+        $id = $this->next++;
+        $this->rows[] = (object) ($more + ['id' => (string) $id, 'employee_id' => (string) $employeeId, 'event_type' => $type, 'result' => $result, 'work_date' => substr($at, 0, 10), 'attempted_at' => $at, 'reported_at' => null, 'photo_key' => null]);
+        return $id;
+    }
+
+    public function exists(): bool { $this->calls[] = 'exists'; return $this->table; }
+
+    public function insert(array $row): int
+    {
+        $this->calls[] = 'insert';
+        if ($this->failInsert) return 0;
+        $id = $this->next++;
+        $this->rows[] = (object) ($row + ['id' => (string) $id, 'reported_at' => null, 'photo_key' => null]);
+        return $id;
+    }
+
+    public function refusalsOn(int $employeeId, string $day): int
+    {
+        $this->calls[] = 'refusalsOn';
+        return count(array_filter($this->rows, function ($r) use ($employeeId, $day) { return (int) $r->employee_id === $employeeId && $r->work_date === $day && in_array($r->result, ['refused', 'face_failed', 'not_reached'], true); }));
+    }
+
+    public function typeBetween(int $employeeId, string $type, string $from, string $to): bool
+    {
+        $this->calls[] = 'typeBetween';
+        foreach ($this->rows as $r) if ((int) $r->employee_id === $employeeId && $r->event_type === $type && $r->attempted_at >= $from && $r->attempted_at <= $to) return true;
+        return false;
+    }
+
+    public function notReachedSince(int $employeeId, string $since): int
+    {
+        $this->calls[] = 'notReachedSince';
+        return count(array_filter($this->rows, function ($r) use ($employeeId, $since) { return (int) $r->employee_id === $employeeId && $r->result === 'not_reached' && $r->reported_at !== null && $r->reported_at >= $since; }));
+    }
+
+    public function photoOf(int $id): ?object
+    {
+        $this->calls[] = 'photoOf ' . $id;
+        foreach ($this->rows as $r) if ((int) $r->id === $id) return (object) ['employee_id' => $r->employee_id, 'photo_key' => $r->photo_key, 'at' => $r->attempted_at];
+        return null;
+    }
+
+    public function day(int $employeeId, string $day): array
+    {
+        $this->calls[] = 'day';
+        return array_values(array_filter($this->rows, function ($r) use ($employeeId, $day) { return (int) $r->employee_id === $employeeId && $r->work_date === $day; }));
+    }
+
+    public function photoKeysBefore(string $attemptCut, string $photoCut): array
+    {
+        $this->calls[] = 'photoKeysBefore';
+        $out = [];
+        foreach ($this->rows as $r) if ($r->photo_key !== null && ($r->attempted_at < $attemptCut || $r->attempted_at < $photoCut)) $out[] = $r->photo_key;
+        return $out;
+    }
+
+    public function clearPhotosBefore(string $cut): void
+    {
+        $this->calls[] = 'clearPhotosBefore';
+        foreach ($this->rows as $r) if ($r->photo_key !== null && $r->attempted_at < $cut) $r->photo_key = null;
+    }
+
+    public function deleteBefore(string $cut): void
+    {
+        $this->calls[] = 'deleteBefore';
+        $this->rows = array_values(array_filter($this->rows, function ($r) use ($cut) { return $r->attempted_at >= $cut; }));
+    }
 }

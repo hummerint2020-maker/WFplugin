@@ -4,7 +4,11 @@
  * table-name rules show), dropped at the end, so nothing of the site is touched. Each method's result is compared with what the old
  * inline SQL gave. Run with wp eval-file (CI's MySQL; SQLite works too).
  */
+use WorkforceOne\Attendance\Data\TimeReportFilter;
+use WorkforceOne\Attendance\Data\WordPressAttemptStore;
+use WorkforceOne\Attendance\Data\WordPressAutoRuleQuery;
 use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
+use WorkforceOne\Attendance\Data\WordPressTimeReportQuery;
 use WorkforceOne\Attendance\Data\WordPressBreakStore;
 use WorkforceOne\Attendance\Data\WordPressEmployeeLock;
 use WorkforceOne\Attendance\Data\WordPressTimeLogStore;
@@ -16,11 +20,13 @@ $check = static function ($condition, $message) {
 };
 $prefix = 'att_contract_';
 $other = 'att_contract_other_';
-$tables = ['ews_time_logs', 'ews_break_sessions', 'ews_auto_attendance_rules'];
+$tables = ['ews_time_logs', 'ews_break_sessions', 'ews_auto_attendance_rules', 'ews_signin_attempts', 'ews_employees'];
 foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $other, $tables) { foreach ([$prefix, $other] as $px) foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$px}{$t}"); });
 foreach ([$prefix, $other] as $px) {
-    $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', ip_address VARCHAR(64) NULL, latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, accuracy DECIMAL(10,2) NULL, location_status VARCHAR(30) NULL, distance_meters DECIMAL(12,2) NULL, created_at DATETIME NULL, source VARCHAR(20) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, photo_key VARCHAR(190) NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(30) NOT NULL, event_at DATETIME NOT NULL, scheduled_status VARCHAR(40) NOT NULL DEFAULT '', ip_address VARCHAR(64) NULL, latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, accuracy DECIMAL(10,2) NULL, location_status VARCHAR(30) NULL, distance_meters DECIMAL(12,2) NULL, created_at DATETIME NULL, source VARCHAR(20) NULL, location_timestamp BIGINT NULL, corrects_id BIGINT UNSIGNED NULL, photo_key VARCHAR(190) NULL, correction_id BIGINT UNSIGNED NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_signin_attempts (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, event_type VARCHAR(20) NOT NULL, result VARCHAR(20) NOT NULL, reason VARCHAR(40) NOT NULL DEFAULT '', detail VARCHAR(255) NULL, attempted_at DATETIME NOT NULL, phone_time DATETIME NULL, clock_skew INT NULL, time_sure TINYINT(1) NOT NULL DEFAULT 1, reported_at DATETIME NULL, latitude DECIMAL(10,7) NULL, longitude DECIMAL(10,7) NULL, accuracy FLOAT NULL, distance_meters FLOAT NULL, location_status VARCHAR(20) NULL, ip_address VARCHAR(64) NULL, device VARCHAR(190) NULL, source VARCHAR(20) NOT NULL DEFAULT 'app', photo_key VARCHAR(64) NULL, PRIMARY KEY (id))");
+    $wpdb->query("CREATE TABLE {$px}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL DEFAULT '', domain_name VARCHAR(190) NOT NULL DEFAULT '', active TINYINT(1) NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_auto_attendance_rules (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, recurrence VARCHAR(20) NOT NULL DEFAULT 'one_time', run_date DATE NULL, weekdays VARCHAR(20) NOT NULL DEFAULT '', sign_in_time VARCHAR(5) NULL, sign_out_time VARCHAR(5) NULL, enabled TINYINT(1) NOT NULL DEFAULT 1, created_by BIGINT UNSIGNED NULL, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
     $wpdb->query("CREATE TABLE {$px}ews_break_sessions (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL DEFAULT 0, work_date DATE NOT NULL, start_at DATETIME NOT NULL, end_at DATETIME NULL, actual_minutes INT UNSIGNED NULL, status VARCHAR(20) NOT NULL DEFAULT 'Open', duration_notified TINYINT(1) NOT NULL DEFAULT 0, escalation_notified TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, PRIMARY KEY (id))");
 }
@@ -189,4 +195,136 @@ $check($R->remove($r3) === 1 && $R->remove($r3) === 0, 'remove: 1 then 0');
 $other_px = clone $wpdb;
 $other_px->prefix = $other;
 $check((new WordPressAutoRuleStore($other_px))->dueRules('2026-10-30', '2026-10-29') === [], 'rules table: built from the prefix it is given');
+// ---- L5d (3.31.139): the sign-in attempts, the time-log reads of the evidence, the Sign In / Out report's read model and the rules page's list
+$at = $prefix . 'ews_signin_attempts';
+$em = $prefix . 'ews_employees';
+$AT = new WordPressAttemptStore($db);
+$seen = [];
+add_filter('query', $capture, 1);
+$AT->exists();
+$AT->refusalsOn(7, '2026-10-30');
+$AT->typeBetween(7, 'sign_in', '2026-10-30 08:00:00', '2026-10-30 09:00:00');
+$AT->notReachedSince(7, '2026-10-30 00:00:00');
+$AT->photoOf(5);
+$AT->day(7, '2026-10-30');
+$AT->photoKeysBefore('2026-09-01 00:00:00', '2026-10-01 00:00:00');
+$AT->clearPhotosBefore('2026-10-01 00:00:00');
+$AT->deleteBefore('2026-09-01 00:00:00');
+$S->kindsBetween(7, ['sign_in', 'late_sign_in'], '2026-10-30 08:00:00', '2026-10-30 09:00:00');
+$S->kindsBetween(7, ['sign_out'], '2026-10-30 08:00:00', '2026-10-30 09:00:00');
+$S->photoOf(5);
+$S->allOn(7, '2026-10-30');
+$S->photoKeysBefore('2026-10-01 00:00:00');
+$S->clearPhotosBefore('2026-10-01 00:00:00');
+$S->find(5);
+remove_filter('query', $capture, 1);
+$check($seen === [
+    "SHOW TABLES LIKE '{$at}'",
+    "SELECT COUNT(*) FROM {$at} WHERE employee_id=7 AND work_date='2026-10-30' AND result IN ('refused','face_failed','not_reached')",
+    "SELECT id FROM {$at} WHERE employee_id=7 AND event_type='sign_in' AND attempted_at BETWEEN '2026-10-30 08:00:00' AND '2026-10-30 09:00:00' LIMIT 1",
+    "SELECT COUNT(*) FROM {$at} WHERE employee_id=7 AND result='not_reached' AND reported_at>='2026-10-30 00:00:00'",
+    "SELECT employee_id,photo_key,attempted_at at FROM {$at} WHERE id=5",
+    "SELECT * FROM {$at} WHERE employee_id=7 AND work_date='2026-10-30'",
+    "SELECT photo_key FROM {$at} WHERE photo_key IS NOT NULL AND (attempted_at<'2026-09-01 00:00:00' OR attempted_at<'2026-10-01 00:00:00')",
+    "UPDATE {$at} SET photo_key=NULL WHERE photo_key IS NOT NULL AND attempted_at<'2026-10-01 00:00:00'",
+    "DELETE FROM {$at} WHERE attempted_at<'2026-09-01 00:00:00'",
+    "SELECT id FROM {$tl} WHERE employee_id=7 AND event_type IN ('sign_in','late_sign_in') AND event_at BETWEEN '2026-10-30 08:00:00' AND '2026-10-30 09:00:00' LIMIT 1",
+    "SELECT id FROM {$tl} WHERE employee_id=7 AND event_type IN ('sign_out') AND event_at BETWEEN '2026-10-30 08:00:00' AND '2026-10-30 09:00:00' LIMIT 1",
+    "SELECT employee_id,photo_key,event_at at FROM {$tl} WHERE id=5",
+    "SELECT * FROM {$tl} WHERE employee_id=7 AND work_date='2026-10-30'",
+    "SELECT photo_key FROM {$tl} WHERE photo_key IS NOT NULL AND event_at<'2026-10-01 00:00:00'",
+    "UPDATE {$tl} SET photo_key=NULL WHERE photo_key IS NOT NULL AND event_at<'2026-10-01 00:00:00'",
+    "SELECT * FROM {$tl} WHERE id=5",
+], 'attempts and the evidence reads of the time logs: the exact text of the old inline SQL');
+$check($AT->exists() === true && (new WordPressAttemptStore((function () use ($wpdb) { $x = clone $wpdb; $x->prefix = 'att_contract_nope_'; return $x; })()))->exists() === false, 'attempts: exists() by the prefix it is given');
+$quiet = $db->suppress_errors(true);
+$AT->insert(['employee_id' => 7, 'no_such_column' => 1]);
+$db->suppress_errors($quiet);
+$a1 = $AT->insert(['employee_id' => 21, 'user_id' => 0, 'work_date' => '2026-11-02', 'event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_early', 'attempted_at' => '2026-11-02 07:00:00', 'ip_address' => '10.0.0.1', 'device' => 'Pixel', 'source' => 'app']);
+$a2 = $AT->insert(['employee_id' => 22, 'user_id' => 0, 'work_date' => '2026-11-02', 'event_type' => 'face', 'result' => 'face_failed', 'reason' => 'face_mismatch', 'attempted_at' => '2026-11-02 08:00:00', 'photo_key' => str_repeat('a', 32) . '.jpg', 'ip_address' => '', 'device' => '']);
+$a3 = $AT->insert(['employee_id' => 22, 'user_id' => 0, 'work_date' => '2026-11-02', 'event_type' => 'face', 'result' => 'face_ok', 'reason' => 'face_ok', 'attempted_at' => '2026-11-02 08:05:00', 'ip_address' => '', 'device' => '']);
+$a4 = $AT->insert(['employee_id' => 22, 'user_id' => 0, 'work_date' => '2026-11-01', 'event_type' => 'sign_out', 'result' => 'not_reached', 'reason' => 'no_network', 'attempted_at' => '2026-11-01 17:00:00', 'reported_at' => '2026-11-02 09:00:00', 'phone_time' => null, 'clock_skew' => 0, 'time_sure' => 0, 'latitude' => null, 'ip_address' => '', 'device' => '']);
+$row = $db->get_row("SELECT * FROM {$at} WHERE id={$a1}", ARRAY_A);
+$check($a1 > 0 && $row['latitude'] === null && $row['photo_key'] === null && $row['detail'] === null && $row['time_sure'] === '1', 'attempts insert: the id; what was not given stays NULL or its default');
+$check($AT->refusalsOn(22, '2026-11-02') === 1 && $AT->refusalsOn(22, '2026-11-01') === 1 && $AT->refusalsOn(21, '2026-11-02') === 1 && $AT->refusalsOn(99, '2026-11-02') === 0, 'refusalsOn: refused, face failed and unsent count; a matched face check does not');
+$check($AT->typeBetween(21, 'sign_in', '2026-11-02 06:50:00', '2026-11-02 07:10:00') === true && $AT->typeBetween(21, 'sign_out', '2026-11-02 06:50:00', '2026-11-02 07:10:00') === false && $AT->typeBetween(21, 'sign_in', '2026-11-02 07:01:00', '2026-11-02 07:10:00') === false, 'typeBetween');
+$check($AT->notReachedSince(22, '2026-11-02 00:00:00') === 1 && $AT->notReachedSince(22, '2026-11-03 00:00:00') === 0, 'notReachedSince: by the time it was reported');
+$check($AT->photoOf($a2)->photo_key === str_repeat('a', 32) . '.jpg' && $AT->photoOf($a2)->at === '2026-11-02 08:00:00' && (int) $AT->photoOf($a2)->employee_id === 22 && $AT->photoOf(999999) === null, 'photoOf: employee, key and time; null when none');
+$check(count($AT->day(22, '2026-11-02')) === 2 && $AT->day(22, '2026-11-03') === [], 'day: every attempt of the day, an array');
+$check($AT->photoKeysBefore('2026-11-01 00:00:00', '2026-11-03 00:00:00') === [str_repeat('a', 32) . '.jpg'] && $AT->photoKeysBefore('2026-11-01 00:00:00', '2026-11-01 00:00:00') === [], 'photoKeysBefore: the keys older than either time');
+$AT->clearPhotosBefore('2026-11-03 00:00:00');
+$check($AT->photoOf($a2)->photo_key === null, 'clearPhotosBefore: the key is cleared, the row stays');
+$gone = $AT->insert(['employee_id' => 30, 'user_id' => 0, 'work_date' => '2026-10-01', 'event_type' => 'sign_in', 'result' => 'refused', 'reason' => 'too_late', 'attempted_at' => '2026-10-01 08:00:00', 'ip_address' => '', 'device' => '']);
+$check($AT->photoOf($gone) !== null, 'attempts: an old row to delete');
+$AT->deleteBefore('2026-10-15 00:00:00');
+$check($AT->photoOf($gone) === null && $AT->photoOf($a2) !== null, 'deleteBefore: older rows go, newer stay');
+
+// the time-log reads (the photo key an earlier check left is cleared first)
+$db->query("UPDATE {$tl} SET photo_key=NULL");
+$l1 = $add(21, '2026-11-02', 'sign_in', '2026-11-02 08:00:00', ['photo_key' => str_repeat('b', 32) . '.jpg', 'source' => 'app']);
+$l2 = $add(22, '2026-11-02', 'sign_in', '2026-11-02 08:10:00');
+$l3 = $add(22, '2026-11-02', 'sign_in', '2026-11-02 08:30:00', ['corrects_id' => $l2, 'correction_id' => 9, 'source' => 'correction']);
+$check($S->kindsBetween(21, ['sign_in', 'late_sign_in'], '2026-11-02 07:50:00', '2026-11-02 08:10:00') === true && $S->kindsBetween(21, ['sign_out'], '2026-11-02 07:50:00', '2026-11-02 08:10:00') === false && $S->kindsBetween(22, ['sign_in'], '2026-11-02 08:05:00', '2026-11-02 08:15:00') === true, 'kindsBetween: any row of the kinds in the window, a corrected one too');
+$check($S->photoOf($l1)->photo_key === str_repeat('b', 32) . '.jpg' && $S->photoOf($l1)->at === '2026-11-02 08:00:00' && $S->photoOf(999999) === null, 'photoOf (time logs)');
+$check(count($S->allOn(22, '2026-11-02')) === 2 && $S->allOn(22, '2026-11-09') === [], 'allOn: every row of the day, corrected ones too');
+$check($S->photoKeysBefore('2026-11-03 00:00:00') === [str_repeat('b', 32) . '.jpg'] && $S->photoKeysBefore('2026-11-02 00:00:00') === [], 'photoKeysBefore (time logs)');
+$S->clearPhotosBefore('2026-11-03 00:00:00');
+$check($S->photoOf($l1)->photo_key === null && $S->find($l1)->id == $l1 && $S->find(999999) === null, 'clearPhotosBefore (time logs) and find');
+
+// the Sign In / Out report's read model
+$db->insert($em, ['id' => 21, 'name' => 'Omar One', 'domain_name' => 'omar1', 'active' => 1, 'department_id' => 5]);
+$db->insert($em, ['id' => 22, 'name' => 'Lina Two', 'domain_name' => 'lina2', 'active' => 1, 'department_id' => 6]);
+$db->insert($em, ['id' => 23, 'name' => 'Old Three', 'domain_name' => 'old3', 'active' => 0, 'department_id' => 5]);
+$Q = new WordPressTimeReportQuery($db, $tl, $em);
+$seen = [];
+add_filter('query', $capture, 1);
+$Q->count(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'both', true, null));
+$Q->count(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'recorded', false, 5));
+$Q->pageKeys(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'refused', true, 0), 100, 200);
+$Q->refusedTotal(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'both', true, null));
+$Q->refusedBy(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'both', true, 5));
+$Q->employees(23, 5);
+$Q->csv('2026-10-29', '2026-10-30', null);
+remove_filter('query', $capture, 1);
+$lj = "FROM {$tl} l LEFT JOIN {$em} e ON e.id=l.employee_id";
+$aj = "FROM {$at} a LEFT JOIN {$em} e ON e.id=a.employee_id";
+$check($seen === [
+    "SELECT COUNT(*) FROM (SELECT 'log' kind,l.id id,l.work_date d,l.event_at t {$lj} WHERE l.work_date BETWEEN '2026-10-29' AND '2026-10-30' UNION ALL SELECT 'attempt' kind,a.id id,a.work_date d,a.attempted_at t {$aj} WHERE a.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND a.result<>'face_ok') x",
+    "SELECT COUNT(*) FROM (SELECT 'log' kind,l.id id,l.work_date d,l.event_at t {$lj} WHERE l.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND e.department_id=5) x",
+    "SELECT kind,id FROM (SELECT 'attempt' kind,a.id id,a.work_date d,a.attempted_at t {$aj} WHERE a.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND a.result<>'face_ok' AND 1=0) x ORDER BY d DESC,t DESC,id DESC LIMIT 100 OFFSET 200",
+    "SELECT COUNT(*) FROM {$at} a LEFT JOIN {$em} e ON e.id=a.employee_id WHERE a.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND a.result<>'face_ok' AND a.result IN ('refused','face_failed','not_reached')",
+    "SELECT a.employee_id,e.name,COUNT(*) n FROM {$at} a LEFT JOIN {$em} e ON e.id=a.employee_id WHERE a.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND a.result<>'face_ok' AND e.department_id=5 AND a.result IN ('refused','face_failed','not_reached') GROUP BY a.employee_id,e.name ORDER BY n DESC,e.name ASC LIMIT 6",
+    "SELECT e.id,e.name,e.domain_name FROM {$em} e WHERE (e.active=1 OR e.id=23) AND e.department_id=5 ORDER BY e.name ASC",
+    "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$tl} c WHERE c.corrects_id=l.id) replaced_by {$lj} WHERE l.work_date BETWEEN '2026-10-29' AND '2026-10-30' ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
+], 'report read model: the exact text of the old inline SQL (union, scope, paging, summary, picker, CSV)');
+$day = '2026-11-02';
+$F = function ($show, $search = '', $scope = null, $attempts = true) use ($day) { return new TimeReportFilter($day, $day, $search, $show, $attempts, $scope); };
+$check($Q->count($F('both')) === 5 && $Q->count($F('recorded')) === 3 && $Q->count($F('refused')) === 2 && $Q->count($F('recorded', '', null, false)) === 3, 'report count: records, refusals (a matched face check is not one) and both');
+$check($Q->count($F('both', 'lina')) === 3 && $Q->count($F('both', 'omar1')) === 2 && $Q->count($F('both', '', 5)) === 2 && $Q->count($F('both', '', 6)) === 3 && $Q->count($F('both', '', 0)) === 0 && $Q->count($F('both', 'no one')) === 0, 'report count: a search by name or domain, a department, nobody');
+$keys = array_map(function ($k) { return $k->kind . $k->id; }, $Q->pageKeys($F('both'), 100, 0));
+$check($keys === ['log' . $l3, 'log' . $l2, 'log' . $l1, 'attempt' . $a2, 'attempt' . $a1], 'report page: newest first (day, time, then the larger id: the record before the attempt at 08:00)');
+$check(count($Q->pageKeys($F('both'), 2, 0)) === 2 && count($Q->pageKeys($F('both'), 2, 4)) === 1 && $Q->pageKeys($F('both'), 2, 10) === [], 'report page: the page size and the offset');
+$rows = $Q->logRows([$l1, $l2]);
+$ks = array_keys($rows);
+sort($ks);
+$check($ks === [$l1, $l2] && $rows[$l1]->name === 'Omar One' && (int) $rows[$l2]->replaced_by === 9 && $rows[$l1]->replaced_by === null, 'logRows: by id, with the employee and the correction that replaced it');
+$ar = $Q->attemptRows([$a1, $a2]);
+$check(isset($ar[$a1], $ar[$a2]) && $ar[$a2]->name === 'Lina Two' && $ar[$a1]->domain_name === 'omar1', 'attemptRows: by id, with the employee');
+$by = $Q->refusedBy($F('both'));
+$check(count($by) === 2 && $Q->refusedTotal($F('both')) === 2 && (int) $by[0]->n === 1, 'refusedBy / refusedTotal: refused, face failed and unsent in the period');
+$ids = array_map(function ($e) { return (int) $e->id; }, $Q->employees(0, null));
+$check(in_array(21, $ids, true) && in_array(22, $ids, true) && !in_array(23, $ids, true), 'employees: the active ones');
+$check(array_map(function ($e) { return (int) $e->id; }, $Q->employees(23, 5)) === [23, 21] && array_map(function ($e) { return (int) $e->id; }, $Q->employees(0, 6)) === [22] && $Q->employees(0, 0) === [], 'employees: the one asked for too, by department, nobody');
+$csv = $Q->csv($day, $day, 5);
+$check(count($csv) === 1 && $csv[0]->name === 'Omar One' && count($Q->csv($day, $day, null)) === 3 && $Q->csv($day, $day, 0) === [], 'csv: the records of the period in scope with the employee');
+
+// the rules page's list
+$rq = new WordPressAutoRuleQuery($db, $em);
+$ra = $R->insert(['employee_id' => 21, 'recurrence' => 'weekly', 'run_date' => null, 'weekdays' => '1', 'sign_in_time' => '09:00', 'sign_out_time' => null, 'enabled' => 0, 'created_by' => 3, 'created_at' => '2026-10-30 08:00:00']);
+$rb = $R->insert(['employee_id' => 22, 'recurrence' => 'weekly', 'run_date' => null, 'weekdays' => '2', 'sign_in_time' => '09:00', 'sign_out_time' => null, 'enabled' => 1, 'created_by' => 3, 'created_at' => '2026-10-30 08:00:00']);
+$rc = $R->insert(['employee_id' => 999, 'recurrence' => 'weekly', 'run_date' => null, 'weekdays' => '3', 'sign_in_time' => '09:00', 'sign_out_time' => null, 'enabled' => 1, 'created_by' => 3, 'created_at' => '2026-10-30 08:00:00']);
+$list = $rq->listWithNames();
+$mine = array_values(array_filter($list, function ($r) use ($ra, $rb, $rc) { return in_array((int) $r->id, [$ra, $rb, $rc], true); }));
+$check(count($mine) === 2 && (int) $mine[0]->id === $rb && (int) $mine[1]->id === $ra && $mine[0]->name === 'Lina Two' && $mine[1]->domain_name === 'omar1', 'rules list: switched-on first, then newest; a rule of an employee that is gone is not listed');
+$check($R->find($ra)->employee_id === '21' && $R->find(999999) === null, 'AutoRuleStore::find');
 echo "attendance store contract OK\n";

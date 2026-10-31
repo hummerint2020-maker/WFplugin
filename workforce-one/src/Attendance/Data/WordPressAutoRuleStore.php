@@ -53,6 +53,12 @@ final class WordPressAutoRuleStore implements AutoRuleStore
         return (int) $this->db->delete($this->t, ['id' => $id], ['%d']);
     }
 
+    public function find(int $id): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare("SELECT * FROM {$this->t} WHERE id=%d", $id));
+        return is_object($r) ? $r : null;
+    }
+
     public function lastError(): string
     {
         return (string) $this->db->last_error;

@@ -16,7 +16,15 @@ import difflib, json, os, re, shlex, subprocess, sys, time, urllib.parse
 HERE = os.path.dirname(os.path.abspath(__file__))
 TESTS = os.path.dirname(HERE)
 sys.path.insert(0, TESTS)
-from e2e_support import Session, check, results  # noqa: E402
+from e2e_support import Session, check as _check, results  # noqa: E402
+
+FAILED = []
+
+
+def check(name, cond, extra=''):
+    _check(name, cond, extra)
+    if not cond:
+        FAILED.append(name[:150] + '  | ' + str(extra)[:1500])
 
 S = sys.argv[1]
 BASE = os.path.abspath(sys.argv[sys.argv.index('--base') + 1])
@@ -186,7 +194,7 @@ try:
         # One login for all sides: the same session, so the same nonces on every page.
         if sessions is None:
             sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass'),
-                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass')}
+                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass'), 'atrmgr': Session('atr_mgr', 'atr_mgr-pass')}
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
@@ -233,7 +241,12 @@ try:
             for i in range(max(len(a['sql']), len(b['sql']))):
                 x, y = (a['sql'][i] if i < len(a['sql']) else None), (b['sql'][i] if i < len(b['sql']) else None)
                 if x != y:
-                    return 'statement %d: old %s | new %s' % (i, json.dumps(x)[:260], json.dumps(y)[:260])
+                    around = lambda q: [str(t)[:110] for t in q['sql'][max(0, i - 3):i + 4]]
+                    return 'statement %d: old %s | new %s || OLD AROUND %s || NEW AROUND %s' % (i, json.dumps(x)[:200], json.dumps(y)[:200], json.dumps(around(a)), json.dumps(around(b)))
+        ra, rb = (a.get('return') if isinstance(a, dict) else None), (b.get('return') if isinstance(b, dict) else None)
+        if isinstance(ra, dict) and isinstance(rb, dict) and 'body' in ra and ra.get('body') != rb.get('body'):
+            d = [l.rstrip()[:240] for l in difflib.unified_diff(ra['body'].splitlines(), rb['body'].splitlines(), n=0, lineterm='') if not l.startswith(('---', '+++', '@@'))]
+            return 'page differs: ' + ' || '.join(d[:8])
         return (json.dumps(a)[:300], json.dumps(b)[:300])
     intended = EXPECTED.get('actions', {})
     for k in tb:
@@ -276,7 +289,7 @@ try:
     att = {k[11:]: v for k, v in tb.items() if k.startswith('attendance:')}
     def aret(k):
         return (att.get(k) or {}).get('return')
-    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:', 'records:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
+    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:', 'records:', 'evidence:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
     check('...the attendance trace really read events, a superseded one hidden, locations, breaks and an overtime day (else it proves nothing)',
           bool(att) and set(aret('today_events_omar') or {}) == {'sign_in'} and set(aret('today_events_lina') or {}) == {'sign_in', 'sign_out'}
           and str((aret('today_events_mona') or {}).get('sign_in', {}).get('id')) == str(ctx['att_corrected'])
@@ -325,6 +338,77 @@ try:
           and any(r.get('enabled') == '0' for r in rc.get('rules_after_ticks', [])) and any(r.get('enabled') == '1' for r in rc.get('rules_after_ticks', []))
           and all(sum('GET_LOCK' in q for q in rc[k]['sql']) == sum('RELEASE_LOCK' in q for q in rc[k]['sql']) for k in ('tick_1', 'bulk_ok', 'event_in_ok')),
           {k: rto(k)[-60:] for k in ('rule_save_create', 'bulk_ok', 'man_add_in', 'reset_with_breaks')})
+    ev = {k[9:]: v for k, v in tb.items() if k.startswith('evidence:')}
+    def evr(k):
+        return (ev.get(k) or {}).get('return') or {}
+    def evj(k):
+        return (evr(k).get('json') or {}).get('data') or {}
+    ev_audit = [r.get('action') for r in ev.get('_rows:audit', [])]
+    def evsql(k):
+        return ' '.join((ev.get(k) or {}).get('sql', []))
+    csv_admin = (tb.get('timecsv:csv_admin') or {}).get('return') or ''
+    csv_mgr = (tb.get('timecsv_mgr:csv_manager') or {}).get('return') or ''
+    def holds(fn):
+        try:
+            return bool(fn())
+        except Exception:
+            return False
+    ev_conditions = [
+        ('bool(ev)', lambda: bool(ev)),
+        ("'signin_refused' in ev_audit", lambda: 'signin_refused' in ev_audit),
+        ("'face_check_failed' in ev_audit", lambda: 'face_check_failed' in ev_audit),
+        ("'signin_not_reached' in ev_audit", lambda: 'signin_not_reached' in ev_audit),
+        ("ev_audit.count('face_photo_viewed') >= 1", lambda: ev_audit.count('face_photo_viewed') >= 1),
+        ("any(r.get('title') == 'Sign In refused several times' for r in ev.get(", lambda: any(r.get('title') == 'Sign In refused several times' for r in ev.get('_rows:notifications', []))),
+        ("ev['keep_refused']['return'] > 0", lambda: ev['keep_refused']['return'] > 0),
+        ("ev['keep_off']['return'] == 0", lambda: ev['keep_off']['return'] == 0),
+        ("ev['keep_no_employee']['return'] == 0", lambda: ev['keep_no_employee']['return'] == 0),
+        ("ev['keep_insert_fault']['return'] == 0", lambda: ev['keep_insert_fault']['return'] == 0),
+        ("ev['keep_face_ok']['return'] > 0", lambda: ev['keep_face_ok']['return'] > 0),
+        ("ev['alert_first']['return'] > 0", lambda: ev['alert_first']['return'] > 0),
+        ("any('ews_notifications' in q for q in ev['alert_second_tells_the_manag", lambda: any('ews_notifications' in q for q in ev['alert_second_tells_the_manager']['sql'])),
+        ("not any('ews_notifications' in q for q in ev['alert_third_is_quiet']['", lambda: not any('ews_notifications' in q for q in ev['alert_third_is_quiet']['sql'])),
+        ("any('ews_notifications' in q for q in ev['alert_no_manager_tells_the_a", lambda: any('ews_notifications' in q for q in ev['alert_no_manager_tells_the_administrators']['sql'])),
+        ("evj('offline_kept').get('kept') is True", lambda: evj('offline_kept').get('kept') is True),
+        ("evj('offline_kept_not_sure_sign_out').get('kept') is True", lambda: evj('offline_kept_not_sure_sign_out').get('kept') is True),
+        ("[evj(k).get('reason') for k in ('offline_off', 'offline_other_account'", lambda: [evj(k).get('reason') for k in ('offline_off', 'offline_other_account', 'offline_no_employee', 'offline_old', 'offline_reached_by_a_record', 'offline_reached_by_an_attempt', 'offline_limit')] == ['off', 'account', 'employee', 'old', 'reached', 'reached', 'limit']),
+        ("evj('offline_logged_out').get('reason') == 'login'", lambda: evj('offline_logged_out').get('reason') == 'login'),
+        ("evj('offline_bad_type').get('reason') == 'type'", lambda: evj('offline_bad_type').get('reason') == 'type'),
+        ("evr('offline_bad_nonce').get('exit') == 'die'", lambda: evr('offline_bad_nonce').get('exit') == 'die'),
+        ("evj('offline_insert_fault').get('kept') is False", lambda: evj('offline_insert_fault').get('kept') is False),
+        ("evr('serve_logged_out').get('exit') == 'redirect'", lambda: evr('serve_logged_out').get('exit') == 'redirect'),
+        ("evr('serve_bad_nonce').get('exit') == 'die'", lambda: evr('serve_bad_nonce').get('exit') == 'die'),
+        ("evr('serve_admin_attempt').get('exit') == 'none'", lambda: evr('serve_admin_attempt').get('exit') == 'none'),
+        ("evr('serve_admin_log_full').get('exit') == 'none'", lambda: evr('serve_admin_log_full').get('exit') == 'none'),
+        ("evr('serve_plain_user').get('exit') == 'die'", lambda: evr('serve_plain_user').get('exit') == 'die'),
+        ("evr('serve_unknown_kind').get('exit') == 'die'", lambda: evr('serve_unknown_kind').get('exit') == 'die'),
+        ("evr('serve_bad_key').get('exit') == 'die'", lambda: evr('serve_bad_key').get('exit') == 'die'),
+        ("evr('serve_missing_file').get('exit') == 'die'", lambda: evr('serve_missing_file').get('exit') == 'die'),
+        ("any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql'", lambda: any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql'])),
+        ("not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnai", lambda: not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnail']['sql'])),
+        ("len(ev['files_after_cleanup']) < len(ev['files_before_cleanup'])", lambda: len(ev['files_after_cleanup']) < len(ev['files_before_cleanup'])),
+        ("any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev", lambda: any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev['cleanup']['sql'])),
+        ("not any('signin_attempts' in q for q in ev['cleanup_no_attempts_table'", lambda: not any('signin_attempts' in q for q in ev['cleanup_no_attempts_table']['sql'] if not q.startswith('SHOW TABLES'))),
+        ("len(ev['cleanup_no_attempts_table']['sql']) == 1", lambda: len(ev['cleanup_no_attempts_table']['sql']) == 1),
+        ("len((ev['timeline_admin_today'].get('return') or {}).get('items', []))", lambda: len((ev['timeline_admin_today'].get('return') or {}).get('items', [])) >= 2),
+        ("ev['timeline_manager_other_department']['return'] is None", lambda: ev['timeline_manager_other_department']['return'] is None),
+        ("ev['timeline_bad_date']['return'] is None", lambda: ev['timeline_bad_date']['return'] is None),
+        ("'UNION ALL' in evsql('report_admin_both')", lambda: 'UNION ALL' in evsql('report_admin_both')),
+        ("'UNION ALL' not in evsql('report_admin_recorded')", lambda: 'UNION ALL' not in evsql('report_admin_recorded')),
+        ("'signin_attempts' not in evsql('report_attempts_off')", lambda: 'signin_attempts' not in evsql('report_attempts_off')),
+        ("'1=0' in evsql('report_manager_without_department')", lambda: '1=0' in evsql('report_manager_without_department')),
+        ("evr('report_admin_both').get('len', 0) > 2000", lambda: evr('report_admin_both').get('len', 0) > 2000),
+        ("evr('report_plain_user').get('exit') == 'die'", lambda: evr('report_plain_user').get('exit') == 'die'),
+        ("evr('auto_page_no_capability').get('exit') == 'die'", lambda: evr('auto_page_no_capability').get('exit') == 'die'),
+        ("evr('auto_page_edit').get('len', 0) > 1000", lambda: evr('auto_page_edit').get('len', 0) > 1000),
+        ("all(evr(k).get('exit') == 'die' for k in ('csv_invalid_range', 'csv_re", lambda: all(evr(k).get('exit') == 'die' for k in ('csv_invalid_range', 'csv_reversed_range', 'csv_bad_nonce', 'csv_no_capability'))),
+        ("csv_admin.startswith('\\ufeffDate,Weekday,Employee')", lambda: csv_admin.startswith('\ufeffDate,Weekday,Employee')),
+        ("csv_admin.count('\\n') >= 4", lambda: csv_admin.count('\n') >= 4),
+        ("csv_mgr.startswith('\\ufeffDate,Weekday,Employee')", lambda: csv_mgr.startswith('\ufeffDate,Weekday,Employee')),
+    ]
+    ev_false = [label for label, fn in ev_conditions if not holds(fn)]
+    check('...the evidence trace really kept refused, failed and unsent attempts, told the managers, answered every offline report, served and refused photos, cleaned up, drew the timeline and the report page and exported the CSV (else it proves nothing)',
+          not ev_false, [ev_false, 'csv_admin=' + repr(csv_admin[:260]), 'csv_mgr=' + repr(csv_mgr[:120])])
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
@@ -341,5 +425,7 @@ finally:
     if '--keep' not in sys.argv and os.path.exists(SNAP):
         restore()
 
+for f in FAILED:
+    print('FAILED CHECK: ' + f)
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

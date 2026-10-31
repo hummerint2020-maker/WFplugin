@@ -6,8 +6,15 @@ use WorkforceOne\Attendance\AttendanceContext;
 use WorkforceOne\Attendance\AttendanceLog;
 use WorkforceOne\Attendance\AttendancePorts;
 use WorkforceOne\Attendance\AutoAttendanceService;
+use WorkforceOne\Attendance\Data\AttemptStore;
+use WorkforceOne\Attendance\Data\AutoRuleQuery;
 use WorkforceOne\Attendance\Data\AutoRuleStore;
+use WorkforceOne\Attendance\Data\TimeReportQuery;
+use WorkforceOne\Attendance\Data\WordPressAttemptStore;
+use WorkforceOne\Attendance\Data\WordPressAutoRuleQuery;
 use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
+use WorkforceOne\Attendance\Data\WordPressTimeReportQuery;
+use WorkforceOne\Attendance\EvidenceService;
 use WorkforceOne\Attendance\ManualRecordService;
 use WorkforceOne\Attendance\AttendanceService;
 use WorkforceOne\Attendance\BreakCronService;
@@ -240,6 +247,33 @@ final class Services
     public function autoRuleStore(): AutoRuleStore
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressAutoRuleStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    public function attemptStore(): AttemptStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressAttemptStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Sign In evidence (3.31.139): refused and unsent attempts, the offline report's checks, photos, the daily cleanup and a day's timeline. */
+    public function evidence(): EvidenceService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new EvidenceService($this->attemptStore(), $this->timeLogStore(), $this->attendancePorts->evidence, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The Sign In / Out report's reads (3.31.139). */
+    public function timeReport(): TimeReportQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressTimeReportQuery($this->db, (string) ($this->tables['time_logs'] ?? ''), (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The Auto Attendance page's rule list (3.31.139). */
+    public function autoRuleQuery(): AutoRuleQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressAutoRuleQuery($this->db, (string) ($this->tables['employees'] ?? ''));
         return $this->made[__FUNCTION__];
     }
 

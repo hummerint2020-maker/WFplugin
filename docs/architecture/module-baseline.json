@@ -87,7 +87,7 @@
   "approvals->people": 2,
   "approvals->schedule": 2,
   "attendance->payroll": 2,
-  "attendance->people": 25,
+  "attendance->people": 16,
   "attendance->schedule": 2,
   "daily_workers->locations": 10,
   "engagement->attendance": 2,
