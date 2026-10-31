@@ -10,7 +10,7 @@
     "workforce-one/includes/trait-approvals.php": 8,
     "workforce-one/includes/trait-attendance-insights.php": 4,
     "workforce-one/includes/trait-attendance.php": 2,
-    "workforce-one/includes/trait-auto-attendance.php": 15,
+    "workforce-one/includes/trait-auto-attendance.php": 3,
     "workforce-one/includes/trait-branches.php": 5,
     "workforce-one/includes/trait-corrections.php": 33,
     "workforce-one/includes/trait-dashboard-view.php": 2,
@@ -46,7 +46,7 @@
     "workforce-one/includes/trait-task-extras.php": 8,
     "workforce-one/includes/trait-tasks.php": 5,
     "workforce-one/includes/trait-teams.php": 3,
-    "workforce-one/includes/trait-time-report.php": 22,
+    "workforce-one/includes/trait-time-report.php": 15,
     "workforce-one/includes/trait-work-time.php": 1,
     "workforce-one/uninstall.php": 1
   }

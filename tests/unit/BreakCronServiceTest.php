@@ -39,6 +39,11 @@ final class BreakCronServiceTest extends TestCase
             public function employee(int $employeeId): ?object { $this->log[] = 'employee?'; return $this->employee; }
             public function minutesSince(string $startAtLocal): int { return 42; }
             public function managerUserIds(): array { return [900, 901]; }
+            public function generalLeave(string $day): bool { return false; }
+            public function requiresSignIn(string $status): bool { return true; }
+            public function breakEnabled(): bool { return true; }
+            public function clearBreakEvents(int $breakId): void {}
+            public function ensureBreakTable(): void {}
         };
         $this->svc = new BreakCronService($this->breaks, $this->site);
     }

@@ -52,3 +52,28 @@ function golden_post($object, $method, array $post, $nonceAction = null, $refere
         $_POST = $_REQUEST = $_GET = [];
     }
 }
+
+/**
+ * Like golden_post() for a handler that reads $_GET (a link with a nonce): the same exit handling.
+ * @return array{exit:string,to:string}
+ */
+function golden_get($object, $method, array $get, $nonceAction = null)
+{
+    $_POST = [];
+    $fields = $get;
+    if ($nonceAction === 'bad') $fields['_wpnonce'] = 'badnonce000';
+    elseif ($nonceAction !== null) $fields['_wpnonce'] = wp_create_nonce($nonceAction);
+    $_GET = wp_slash($fields);
+    $_REQUEST = $_GET;
+    $_SERVER['REQUEST_METHOD'] = 'GET';
+    $_SERVER['REQUEST_URI'] = '/wp-admin/admin-post.php';
+    unset($_SERVER['HTTP_REFERER']);
+    try {
+        $object->$method();
+        return ['exit' => 'none', 'to' => ''];
+    } catch (GoldenExit $e) {
+        return ['exit' => $e->kind, 'to' => $e->to];
+    } finally {
+        $_POST = $_REQUEST = $_GET = [];
+    }
+}

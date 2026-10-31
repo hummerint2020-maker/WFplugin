@@ -5,6 +5,7 @@ use WorkforceOne\Approvals\AfterRequest;
 use WorkforceOne\Attendance\AttendancePorts;
 use WorkforceOne\Attendance\AttendanceSite;
 use WorkforceOne\Attendance\Idempotency;
+use WorkforceOne\Attendance\ManualRecordSite;
 use WorkforceOne\Approvals\ApprovalDirectory;
 use WorkforceOne\Approvals\ApprovalNotifier;
 use WorkforceOne\Approvals\ApprovalPolicy;
@@ -177,6 +178,18 @@ trait EWS_Services_Trait {
                 public function employee(int $employeeId): ?object { $e=($this->call)('people_employee',$employeeId); return is_object($e)?$e:null; }
                 public function minutesSince(string $startAtLocal): int { return max(0,(int)floor((current_time('timestamp',true)-strtotime(get_gmt_from_date($startAtLocal)))/60)); }
                 public function managerUserIds(): array { return (array)($this->call)('break_manager_user_ids'); }
+                public function generalLeave(string $day): bool { return (bool)($this->call)('company_leave_dates',$day,$day); }
+                public function requiresSignIn(string $status): bool { return (bool)($this->call)('schedule_type_requires_sign_in',$status); }
+                public function breakEnabled(): bool { return (bool)($this->call)('break_enabled'); }
+                public function clearBreakEvents(int $breakId): void { ($this->call)('break_clear_events',$breakId); }
+                public function ensureBreakTable(): void { ($this->call)('ensure_break_schema'); }
+            },
+            new class($call) implements ManualRecordSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function mayManage(int $employeeId): bool { return (bool)($this->call)('time_report_may_manage',$employeeId); }
+                public function workingHours(int $employeeId,string $date): array { return (array)($this->call)('working_hours',$employeeId,$date); }
+                public function workSite(int $employeeId): array { return (array)($this->call)('time_report_site',$employeeId); }
             });
     }
 

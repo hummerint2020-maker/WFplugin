@@ -1,7 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-use WorkforceOne\Attendance\LocationAssessment;
 use WorkforceOne\Attendance\ManualRecordRules;
 use WorkforceOne\Support\Csv;
 
@@ -165,70 +164,29 @@ trait EWS_Time_Report_Trait {
     public function admin_time_save(){
         if(!$this->can('ews_manage_time'))wp_die('Access denied');
         check_admin_referer('ews31_time_save');
-        global $wpdb;
         $id=absint($_POST['time_id']??0);
         $employee_id=absint($_POST['employee_id']??0);
         $work_date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
         $type=sanitize_key($_POST['event_type']??'');
         $event_at=ManualRecordRules::eventAt(sanitize_text_field(wp_unslash($_POST['event_at']??'')));
-        $back=['start'=>$this->valid_date($work_date)?$work_date:current_time('Y-m-d')];$back['end']=$back['start'];
-        $existing=$id?$wpdb->get_row($wpdb->prepare("SELECT id,employee_id FROM {$this->time_logs} WHERE id=%d",$id)):null;
-        if($id && !$existing)$this->time_report_redirect($back+['time_error'=>'not_found']);
-        // Both the record's employee and the chosen one must be in the manager's department (3.31.90).
-        if(($existing && !$this->time_report_may_manage((int)$existing->employee_id)) || ($employee_id && !$this->time_report_may_manage($employee_id)))$this->time_report_redirect($back+['time_error'=>'scope']);
-        // A new record needs an active employee; an existing record may belong to an archived one.
-        $emp=$employee_id?$this->people_employee($employee_id,!$id):null;
-        $facts=['type'=>$type,'date_valid'=>$this->valid_date($work_date),'work_date'=>$work_date,'event_at'=>$event_at,'employee_found'=>(bool)$emp];
-        // A shift that ends after midnight: its Sign Out may be on the next calendar day (3.31.92).
-        if($emp){$h=$this->working_hours((int)$emp->id,$facts['date_valid']?(string)$work_date:'');$facts['overnight']=isset($h['start'],$h['end'])&&(string)$h['end']<=(string)$h['start'];}
-        if(!ManualRecordRules::check($facts)){
-            $others=$wpdb->get_results($wpdb->prepare("SELECT event_type,event_at FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s AND id<>%d AND event_type IN ('sign_in','late_sign_in','sign_out')".$this->tl_live()."",$employee_id,$work_date,$id));
-            $facts['others']=array_map(function($o){return ['type'=>$o->event_type,'at'=>$o->event_at];},(array)$others);
-        }
-        if($error=ManualRecordRules::check($facts))$this->time_report_redirect($back+['time_error'=>$error]);
-
+        $date_valid=$this->valid_date($work_date);
+        $back=['start'=>$date_valid?$work_date:current_time('Y-m-d')];$back['end']=$back['start'];
         $num=function($key){$v=sanitize_text_field(wp_unslash($_POST[$key]??''));return ($v!==''&&is_numeric($v))?(float)$v:null;};
         $lat=$num('latitude');$lng=$num('longitude');$acc=$num('accuracy');
-        [$site_lat,$site_lng,$radius]=$this->time_report_site($employee_id);
-        [$location_status,$distance]=LocationAssessment::geofence($lat,$lng,$site_lat,$site_lng,$radius);
-        $sch=$this->schedule_for_employee_date($employee_id,$work_date);
-        $data=['employee_id'=>$employee_id,'work_date'=>$work_date,'event_type'=>$type,'event_at'=>$event_at,'scheduled_status'=>$sch?$sch->status:'Not Scheduled','latitude'=>$lat,'longitude'=>$lng,'accuracy'=>$acc,'location_status'=>$location_status,'distance_meters'=>$distance];
-        $label=$this->time_event_label($type);
-        if($id){
-            $ok=$wpdb->update($this->time_logs,$data,['id'=>$id]);
-            $action='time_manual_edit';$detail='Admin edited '.$label.' for '.$emp->name.' on '.$work_date;
-        }else{
-            $data['user_id']=$emp->wp_user_id?(int)$emp->wp_user_id:get_current_user_id();
-            $data['source']='admin';
-            $ok=$wpdb->insert($this->time_logs,$data);$id=(int)$wpdb->insert_id;
-            $action='time_manual_add';$detail='Admin added '.$label.' for '.$emp->name.' on '.$work_date;
-        }
-        if($ok===false){
-            $this->audit($action.'_failed','time_log',$id,$wpdb->last_error?:'Database error');
-            $this->time_report_redirect($back+['time_error'=>'save']);
-        }
-        $this->audit($action,'time_log',$id,$detail);
+        // The checks, the geofence and the write: ManualRecordService, in the order they always ran.
+        $r=$this->services()->manualRecords()->save($id,$employee_id,$work_date,$type,$event_at,$date_valid,$lat,$lng,$acc,$this->time_event_label($type),get_current_user_id());
+        if($r['error'])$this->time_report_redirect($back+['time_error'=>$r['error']]);
         $this->time_report_redirect($back+['time_notice'=>'saved']);
     }
 
     public function admin_time_reset(){
         if(!$this->can('ews_manage_time'))wp_die('Access denied');
         check_admin_referer('ews31_time_reset');
-        global $wpdb;
         $employee_id=absint($_POST['employee_id']??0);
         $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
         if(!$employee_id||!$this->valid_date($date))$this->time_report_redirect(['time_error'=>'invalid']);
         if(!$this->time_report_may_manage($employee_id))$this->time_report_redirect(['start'=>$date,'end'=>$date,'time_error'=>'scope']);
-        $deleted=(int)$wpdb->query($wpdb->prepare("DELETE FROM {$this->time_logs} WHERE employee_id=%d AND work_date=%s",$employee_id,$date));
-        // Breaks belong to the attendance day too: clear them (and their pending reminders).
-        $this->ensure_break_schema();
-        $break_table=$wpdb->prefix.'ews_break_sessions';
-        foreach((array)$wpdb->get_col($wpdb->prepare("SELECT id FROM {$break_table} WHERE employee_id=%d AND work_date=%s",$employee_id,$date)) as $break_id){
-            wp_clear_scheduled_hook('ews_break_duration_reminder',[(int)$break_id]);
-            wp_clear_scheduled_hook('ews_break_manager_escalation',[(int)$break_id]);
-        }
-        $break_deleted=(int)$wpdb->query($wpdb->prepare("DELETE FROM {$break_table} WHERE employee_id=%d AND work_date=%s",$employee_id,$date));
-        $this->audit('time_reset','time_log',$employee_id,'Reset attendance and break records for '.$date.' (time_logs='.$deleted.', breaks='.$break_deleted.')');
+        [$deleted,$break_deleted]=$this->services()->manualRecords()->reset($employee_id,$date);
         $this->time_report_redirect(['start'=>$date,'end'=>$date,'time_reset'=>$deleted,'break_reset'=>$break_deleted]);
     }
 

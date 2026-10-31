@@ -37,4 +37,30 @@ interface TimeLogStore
 
     /** Keeps the Face check's photo with the row (the result is not looked at). */
     public function setPhoto(int $id, string $key): void;
+
+    /** An automatic event (Auto Attendance, bulk Sign Out): the 14 columns of the row, each as a string or integer format. @return int the new id, 0 on failure */
+    public function insertAuto(array $row): int;
+
+    /** True when the employee has a row of one of these event types on the day (any row, corrected ones too). @param string[] $types */
+    public function anyOfKinds(int $employeeId, string $day, array $types): bool;
+
+    /** @return object[] employee_id and sign_in_id of everyone with a live Sign In and no Sign Out on the day */
+    public function openSignInsOn(string $day): array;
+
+    public function byId(int $id): ?object;
+
+    /** The id of the employee's Sign Out row on the day (any row, corrected ones too), 0 when there is none. */
+    public function signOutIdOn(int $employeeId, string $day): int;
+
+    /** A row's id and employee (null when there is no such row). */
+    public function idEmployee(int $id): ?object;
+
+    /** @return object[] event_type and event_at of the employee's other live Sign In / Out rows on the day */
+    public function othersOn(int $employeeId, string $day, int $exceptId): array;
+
+    /** Replaces the given columns of one row (as given, no formats). False only on a database error. @param array<string,mixed> $row */
+    public function update(int $id, array $row): bool;
+
+    /** Deletes every row of the employee on the day; the number of rows. */
+    public function deleteDay(int $employeeId, string $day): int;
 }

@@ -66,4 +66,14 @@ final class WordPressBreakStore implements BreakStore
     {
         $this->db->update($this->t, ['escalation_notified' => 1], ['id' => $id], ['%d'], ['%d']);
     }
+
+    public function idsOn(int $employeeId, string $day): array
+    {
+        return (array) $this->db->get_col($this->db->prepare("SELECT id FROM {$this->t} WHERE employee_id=%d AND work_date=%s", $employeeId, $day));
+    }
+
+    public function deleteDay(int $employeeId, string $day): int
+    {
+        return (int) $this->db->query($this->db->prepare("DELETE FROM {$this->t} WHERE employee_id=%d AND work_date=%s", $employeeId, $day));
+    }
 }

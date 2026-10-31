@@ -55,4 +55,10 @@ final class AutoRules
     {
         return self::overnight($signIn, $signOut) ? (new \DateTimeImmutable($runDate . ' 12:00:00', new \DateTimeZone('UTC')))->modify('+1 day')->format('Y-m-d') : $runDate;
     }
+
+    /** Can a day with this schedule status have an automatic Sign In / Out at all? (Not a day off, leave or absence.) */
+    public static function schedulable(string $status): bool
+    {
+        return !in_array($status, ['', 'Not Set', 'Vacation', 'Leave', 'Absent'], true);
+    }
 }

@@ -386,16 +386,20 @@
           ],
           "tables": [
             "time_logs",
-            "break_sessions"
+            "break_sessions",
+            "auto_attendance_rules"
           ],
           "store": [
             "workforce-one/src/Attendance/Data/WordPressTimeLogStore.php",
             "workforce-one/src/Attendance/Data/WordPressBreakStore.php",
-            "workforce-one/src/Attendance/Data/WordPressEmployeeLock.php"
+            "workforce-one/src/Attendance/Data/WordPressEmployeeLock.php",
+            "workforce-one/src/Attendance/Data/WordPressAutoRuleStore.php"
           ],
           "services": [
             "workforce-one/src/Attendance/AttendanceLog.php",
-            "workforce-one/src/Attendance/BreakCronService.php"
+            "workforce-one/src/Attendance/BreakCronService.php",
+            "workforce-one/src/Attendance/AutoAttendanceService.php",
+            "workforce-one/src/Attendance/ManualRecordService.php"
           ],
           "moved": [
             "today_events",
@@ -406,7 +410,15 @@
             "attendance_lock",
             "attendance_unlock",
             "break_duration_reminder",
-            "break_manager_escalation"
+            "break_manager_escalation",
+            "auto_attendance_event",
+            "process_auto_attendance",
+            "auto_attendance_save",
+            "auto_attendance_toggle",
+            "auto_attendance_delete",
+            "auto_attendance_bulk_sign_out",
+            "admin_time_save",
+            "admin_time_reset"
           ],
           "traits_clean": [
             "breaks"

@@ -72,6 +72,31 @@ foreach ($ids as $k => $v) {
     if (!$v[0] || $k === 'nosched') continue;
     $wpdb->insert($p . 'ews_schedule', ['employee_id' => $v[0], 'work_date' => $today, 'status' => $k === 'leave' ? 'Leave' : 'Office']);
 }
+// ---- people for the auto-attendance and manual-record traces (actions_records.php): a department manager who may manage time but not options, and employees in two departments
+$depts = array_map('intval', (array) $wpdb->get_col("SELECT id FROM {$p}ews_departments ORDER BY id LIMIT 2"));
+$deptA = $depts[0] ?? 0;
+$deptB = $depts[1] ?? 0;
+$mkr = function ($key, $dept, $withUser = true) use ($wpdb, $p) {
+    $login = 'atr_' . $key;
+    $uid = $withUser ? (int) (username_exists($login) ?: wp_create_user($login, $login . '-pass', $login . '@example.com')) : 0;
+    $have = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE domain_name=%s ORDER BY id LIMIT 1", $login));
+    if ($have) return [$have, $uid];
+    $wpdb->insert($p . 'ews_employees', ['name' => 'Rec ' . $key, 'domain_name' => $login, 'email' => $login . '@example.com', 'wp_user_id' => $uid ?: null, 'active' => 1, 'attendance_enabled' => 1, 'department_id' => $dept ?: null]);
+    return [(int) $wpdb->insert_id, $uid];
+};
+$rec = [];
+foreach (['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10', 'r11', 'r12'] as $k) $rec[$k] = $mkr($k, $deptA, false);
+$rec['r13'] = $mkr('r13', $deptA, true);    // has a WordPress user (a manual record takes it)
+$rec['other'] = $mkr('other', $deptB, false);   // in the other department
+$rec['mgr'] = $mkr('mgr', $deptA, true);    // the department manager's own employee
+$mgrUser = new WP_User($rec['mgr'][1]);
+$mgrUser->add_cap('ews_manage_time');
+$mgrUser->add_cap('ews_manage_auto_attendance');
+$wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='{$today}' AND employee_id IN (" . implode(',', array_map(function ($v) { return (int) $v[0]; }, $rec)) . ')');
+foreach ($rec as $k => $v) $wpdb->insert($p . 'ews_schedule', ['employee_id' => $v[0], 'work_date' => $today, 'status' => $k === 'r9' ? 'Leave' : 'Office']);
 $out = ['att_today' => $today, 'att_yesterday' => $yesterday, 'att_corrected' => $new];
 foreach ($ids as $k => $v) { $out['atw_' . $k] = $v[0]; $out['atwu_' . $k] = $v[1]; }
+foreach ($rec as $k => $v) { $out['atr_' . $k] = $v[0]; $out['atru_' . $k] = $v[1]; }
+$out['atr_deptA'] = $deptA;
+$out['atr_deptB'] = $deptB;
 echo wp_json_encode($out);
