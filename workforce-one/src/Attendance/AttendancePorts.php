@@ -12,9 +12,12 @@ final class AttendancePorts
     public $site;
     /** @var ManualRecordSite */
     public $manual;
+    /** @var EvidenceSite */
+    public $evidence;
 
-    public function __construct(Idempotency $idempotency, AttendanceSite $site, ManualRecordSite $manual)
+    public function __construct(Idempotency $idempotency, AttendanceSite $site, ManualRecordSite $manual, EvidenceSite $evidence)
     {
+        $this->evidence = $evidence;
         $this->idempotency = $idempotency;
         $this->site = $site;
         $this->manual = $manual;

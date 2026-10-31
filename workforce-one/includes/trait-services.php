@@ -5,6 +5,7 @@ use WorkforceOne\Approvals\AfterRequest;
 use WorkforceOne\Attendance\AttendancePorts;
 use WorkforceOne\Attendance\AttendanceSite;
 use WorkforceOne\Attendance\Idempotency;
+use WorkforceOne\Attendance\EvidenceSite;
 use WorkforceOne\Attendance\ManualRecordSite;
 use WorkforceOne\Approvals\ApprovalDirectory;
 use WorkforceOne\Approvals\ApprovalNotifier;
@@ -190,6 +191,16 @@ trait EWS_Services_Trait {
                 public function mayManage(int $employeeId): bool { return (bool)($this->call)('time_report_may_manage',$employeeId); }
                 public function workingHours(int $employeeId,string $date): array { return (array)($this->call)('working_hours',$employeeId,$date); }
                 public function workSite(int $employeeId): array { return (array)($this->call)('time_report_site',$employeeId); }
+            },
+            new class($call) implements EvidenceSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function settings(): array { return (array)($this->call)('evidence_settings'); }
+                public function ensureSchemaOnce(): void { ($this->call)('ensure_evidence_schema_once'); }
+                public function distance(float $meters): string { return (string)($this->call)('format_distance',$meters); }
+                public function alert(object $employee,string $day,int $n): void { ($this->call)('evidence_alert_send',$employee,$day,$n); }
+                public function deletePhoto(string $key): void { ($this->call)('private_files_delete','workforce-one-face-photos',$key); }
+                public function sweepPhotos(int $olderThan): void { ($this->call)('evidence_sweep_orphans',$olderThan); }
             });
     }
 
