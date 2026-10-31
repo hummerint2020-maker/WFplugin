@@ -77,3 +77,70 @@ function golden_get($object, $method, array $get, $nonceAction = null)
         $_POST = $_REQUEST = $_GET = [];
     }
 }
+
+if (!function_exists('golden_json')) {
+    add_filter('wp_die_ajax_handler', function () {
+        return function ($message, $title = '', $args = []) {
+            throw new GoldenExit('die', is_string($message) ? $message : (string) (is_wp_error($message) ? $message->get_error_message() : ''));
+        };
+    }, PHP_INT_MAX);
+
+    /**
+     * Runs an AJAX handler (wp_send_json_*) in process as the current user: wp_doing_ajax() is true while it runs, the answer it prints is
+     * caught, and the exit that follows it is turned into an exception.
+     * @return array{exit:string,to:string,json:mixed}
+     */
+    function golden_json($object, $method, array $post, $nonceAction = null)
+    {
+        $force = function () { return true; };
+        add_filter('wp_doing_ajax', $force, PHP_INT_MAX);
+        $fields = $post;
+        if ($nonceAction === 'bad') $fields['_wpnonce'] = 'badnonce000';
+        elseif ($nonceAction !== null) $fields['_wpnonce'] = wp_create_nonce($nonceAction);
+        $_GET = [];
+        $_POST = wp_slash($fields);
+        $_REQUEST = $_POST;
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = '/wp-admin/admin-ajax.php';
+        ob_start();
+        $exit = 'none';
+        $to = '';
+        try {
+            $object->$method();
+        } catch (GoldenExit $e) {
+            $exit = $e->kind;
+            $to = $e->to;
+        } finally {
+            $printed = (string) ob_get_clean();
+            remove_filter('wp_doing_ajax', $force, PHP_INT_MAX);
+            $_POST = $_REQUEST = $_GET = [];
+        }
+        return ['exit' => $exit, 'to' => $to, 'json' => json_decode($printed, true)];
+    }
+
+    /**
+     * Runs a wp-admin page method as the current user with a query string and returns what it printed (nonces and times are the caller's to normalise).
+     * @return array{exit:string,to:string,html:string}
+     */
+    function golden_page($object, $method, array $get)
+    {
+        $_POST = [];
+        $_GET = wp_slash($get);
+        $_REQUEST = $_GET;
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/wp-admin/admin.php';
+        ob_start();
+        $exit = 'none';
+        $to = '';
+        try {
+            $object->$method();
+        } catch (GoldenExit $e) {
+            $exit = $e->kind;
+            $to = $e->to;
+        } finally {
+            $html = (string) ob_get_clean();
+            $_POST = $_REQUEST = $_GET = [];
+        }
+        return ['exit' => $exit, 'to' => $to, 'html' => $html];
+    }
+}

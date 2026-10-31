@@ -10,7 +10,7 @@ global $wpdb;
 $p = $wpdb->prefix;
 $c = json_decode((string) getenv('GOLDEN_CTX'), true);
 $m = new EWS_Manager_V31_1();
-foreach (['ensure_break_schema', 'ensure_corrections_schema'] as $fn) {
+foreach (['ensure_break_schema', 'ensure_corrections_schema', 'ensure_evidence_schema', 'ensure_auto_attendance_schema'] as $fn) {
     if (method_exists($m, $fn)) { $r = new ReflectionMethod($m, $fn); $r->setAccessible(true); $r->invoke($m); }
 }
 $today = current_time('Y-m-d');
@@ -94,7 +94,25 @@ $mgrUser->add_cap('ews_manage_time');
 $mgrUser->add_cap('ews_manage_auto_attendance');
 $wpdb->query("DELETE FROM {$p}ews_schedule WHERE work_date='{$today}' AND employee_id IN (" . implode(',', array_map(function ($v) { return (int) $v[0]; }, $rec)) . ')');
 foreach ($rec as $k => $v) $wpdb->insert($p . 'ews_schedule', ['employee_id' => $v[0], 'work_date' => $today, 'status' => $k === 'r9' ? 'Leave' : 'Office']);
-$out = ['att_today' => $today, 'att_yesterday' => $yesterday, 'att_corrected' => $new];
+// ---- sign-in evidence (actions_evidence.php; docs/tasks/attendance-evidence.md §5): refused / unsent attempts, a photo on a Sign Out, and one auto rule
+$keyOf = function ($ch) { return str_repeat($ch, 32) . '.jpg'; };
+$wpdb->query("DELETE FROM {$p}ews_signin_attempts");
+$att = function ($eid, $type, $result, $reason, $when, $date, array $extra = []) use ($wpdb, $p) {
+    $wpdb->insert($p . 'ews_signin_attempts', array_merge(['employee_id' => $eid, 'user_id' => 0, 'work_date' => $date, 'event_type' => $type, 'result' => $result, 'reason' => $reason, 'attempted_at' => $when, 'ip_address' => '10.0.0.7', 'device' => 'Golden phone', 'source' => 'app'], $extra));
+    return (int) $wpdb->insert_id;
+};
+$att($c['omar'], 'sign_in', 'refused', 'outside_location', $at('07:40'), $today, ['detail' => 'Outside the work location', 'latitude' => 30.2, 'longitude' => 31.5, 'accuracy' => 25, 'distance_meters' => 850, 'location_status' => 'outside']);
+$att($c['omar'], 'face', 'face_failed', 'face_mismatch', $at('07:45'), $today, ['photo_key' => $keyOf('a')]);
+$att($c['mona'], 'sign_in', 'not_reached', 'no_network', $at('08:10', $yesterday), $yesterday, ['phone_time' => $at('08:12', $yesterday), 'clock_skew' => 2820, 'time_sure' => 0, 'reported_at' => $at('09:00', $yesterday), 'source' => 'offline']);
+$att($c['lina'], 'face', 'face_ok', 'face_ok', $at('07:50'), $today);
+$wpdb->query("UPDATE {$p}ews_time_logs SET photo_key='" . $keyOf('b') . "' WHERE employee_id=" . (int) $c['lina'] . " AND work_date='{$today}' AND event_type='sign_out'");
+$old = gmdate('Y-m-d', strtotime($today . ' -70 days'));
+$att($c['rana'], 'sign_in', 'refused', 'too_late', $at('11:00', $old), $old, ['photo_key' => $keyOf('c')]);
+$wpdb->query("DELETE FROM {$p}ews_auto_attendance_rules");
+$wpdb->insert($p . 'ews_auto_attendance_rules', ['employee_id' => $c['lina'], 'recurrence' => 'weekly', 'run_date' => null, 'weekdays' => '0,1,2,3,4', 'sign_in_time' => '09:00:00', 'sign_out_time' => '17:00:00', 'enabled' => 1, 'created_by' => 1]);
+$ruleId = (int) $wpdb->insert_id;
+$att($rec['other'][0], 'sign_in', 'refused', 'too_early', $at('06:30'), $today);
+$out = ['att_today' => $today, 'att_yesterday' => $yesterday, 'att_corrected' => $new, 'att_rule' => $ruleId];
 foreach ($ids as $k => $v) { $out['atw_' . $k] = $v[0]; $out['atwu_' . $k] = $v[1]; }
 foreach ($rec as $k => $v) { $out['atr_' . $k] = $v[0]; $out['atru_' . $k] = $v[1]; }
 $out['atr_deptA'] = $deptA;

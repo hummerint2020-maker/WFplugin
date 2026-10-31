@@ -186,7 +186,7 @@ try:
         # One login for all sides: the same session, so the same nonces on every page.
         if sessions is None:
             sessions = {'admin': Session('admin', 'admin'), 'emp1': Session('emp1', 'emp1pass'),
-                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass')}
+                        'gdmgr': Session('gdmgr', 'gdmgr-pass'), 'gdreq': Session('gdreq', 'gdreq-pass'), 'acomar': Session('acomar', 'acomar-pass'), 'atrmgr': Session('atr_mgr', 'atr_mgr-pass')}
         pages[side] = render(side, sessions, ctx)
         stop()
         os.makedirs(os.path.join(S, 'golden-pages', side), exist_ok=True)
@@ -276,7 +276,7 @@ try:
     att = {k[11:]: v for k, v in tb.items() if k.startswith('attendance:')}
     def aret(k):
         return (att.get(k) or {}).get('return')
-    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:', 'records:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
+    json.dump({k: v for k, v in th.items() if k.startswith(('attendance:', 'signin:', 'records:', 'evidence:'))}, open(os.path.join(S, 'golden-att-trace.json'), 'w'), indent=1)
     check('...the attendance trace really read events, a superseded one hidden, locations, breaks and an overtime day (else it proves nothing)',
           bool(att) and set(aret('today_events_omar') or {}) == {'sign_in'} and set(aret('today_events_lina') or {}) == {'sign_in', 'sign_out'}
           and str((aret('today_events_mona') or {}).get('sign_in', {}).get('id')) == str(ctx['att_corrected'])
@@ -325,6 +325,36 @@ try:
           and any(r.get('enabled') == '0' for r in rc.get('rules_after_ticks', [])) and any(r.get('enabled') == '1' for r in rc.get('rules_after_ticks', []))
           and all(sum('GET_LOCK' in q for q in rc[k]['sql']) == sum('RELEASE_LOCK' in q for q in rc[k]['sql']) for k in ('tick_1', 'bulk_ok', 'event_in_ok')),
           {k: rto(k)[-60:] for k in ('rule_save_create', 'bulk_ok', 'man_add_in', 'reset_with_breaks')})
+    ev = {k[9:]: v for k, v in tb.items() if k.startswith('evidence:')}
+    def evr(k):
+        return (ev.get(k) or {}).get('return') or {}
+    def evj(k):
+        return (evr(k).get('json') or {}).get('data') or {}
+    ev_audit = [r.get('action') for r in ev.get('_rows:audit', [])]
+    def evsql(k):
+        return ' '.join((ev.get(k) or {}).get('sql', []))
+    csv_admin = (tb.get('timecsv:csv_admin') or {}).get('return') or ''
+    csv_mgr = (tb.get('timecsv_mgr:csv_manager') or {}).get('return') or ''
+    check('...the evidence trace really kept refused, failed and unsent attempts, told the managers, answered every offline report, served and refused photos, cleaned up, drew the timeline and the report page and exported the CSV (else it proves nothing)',
+          bool(ev) and 'signin_refused' in ev_audit and 'face_check_failed' in ev_audit and 'signin_not_reached' in ev_audit and ev_audit.count('face_photo_viewed') >= 1
+          and any(r.get('title') == 'Sign In refused several times' for r in ev.get('_rows:notifications', []))
+          and ev['keep_refused']['return'] > 0 and ev['keep_off']['return'] == 0 and ev['keep_no_employee']['return'] == 0 and ev['keep_insert_fault']['return'] == 0 and ev['keep_face_ok']['return'] > 0
+          and ev['alert_first']['return'] > 0 and any('ews_notifications' in q for q in ev['alert_second_tells_the_manager']['sql']) and not any('ews_notifications' in q for q in ev['alert_third_is_quiet']['sql'])
+          and any('ews_notifications' in q for q in ev['alert_no_manager_tells_the_administrators']['sql'])
+          and evj('offline_kept').get('kept') is True and evj('offline_kept_not_sure_sign_out').get('kept') is True
+          and [evj(k).get('reason') for k in ('offline_off', 'offline_other_account', 'offline_no_employee', 'offline_old', 'offline_reached_by_a_record', 'offline_reached_by_an_attempt', 'offline_limit')] == ['off', 'account', 'employee', 'old', 'reached', 'reached', 'limit']
+          and evj('offline_logged_out').get('reason') == 'login' and evj('offline_bad_type').get('reason') == 'type' and evr('offline_bad_nonce').get('exit') == 'die' and evj('offline_insert_fault').get('kept') is False
+          and evr('serve_logged_out').get('exit') == 'redirect' and evr('serve_bad_nonce').get('exit') == 'die' and evr('serve_admin_attempt').get('exit') == 'none' and evr('serve_admin_log_full').get('exit') == 'none'
+          and evr('serve_plain_user').get('exit') == 'die' and evr('serve_unknown_kind').get('exit') == 'die' and evr('serve_bad_key').get('exit') == 'die' and evr('serve_missing_file').get('exit') == 'die'
+          and any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql']) and not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnail']['sql'])
+          and len(ev['files_after_cleanup']) < len(ev['files_before_cleanup']) and any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev['cleanup']['sql'])
+          and 'signin_attempts' not in evsql('cleanup_no_attempts_table')
+          and len((ev['timeline_admin_today'].get('return') or {}).get('items', [])) >= 2 and ev['timeline_manager_other_department']['return'] is None and ev['timeline_bad_date']['return'] is None
+          and 'UNION ALL' in evsql('report_admin_both') and 'UNION ALL' not in evsql('report_admin_recorded') and 'signin_attempts' not in evsql('report_attempts_off')
+          and '1=0' in evsql('report_manager_without_department') and evr('report_admin_both').get('len', 0) > 2000 and evr('report_plain_user').get('exit') == 'die' and evr('auto_page_no_capability').get('exit') == 'die'
+          and evr('auto_page_edit').get('len', 0) > 1000 and all(evr(k).get('exit') == 'die' for k in ('csv_invalid_range', 'csv_reversed_range', 'csv_bad_nonce', 'csv_no_capability'))
+          and csv_admin.startswith('\ufeffDate,Weekday,Employee') and csv_admin.count('\n') >= 4 and csv_mgr.startswith('\ufeffDate,Weekday,Employee'),
+          {k: evr(k) for k in ('keep_refused', 'offline_kept', 'serve_admin_attempt', 'report_admin_both')})
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)

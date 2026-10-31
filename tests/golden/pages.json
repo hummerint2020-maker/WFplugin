@@ -471,6 +471,121 @@
     {
       "user": "acomar",
       "url": "/app/"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_today}&end={att_today}",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      },
+      "expect": "Outside the work location"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_yesterday}&end={att_today}&show=refused",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_yesterday}&end={att_today}&show=recorded",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_yesterday}&end={att_today}&s=omar",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_yesterday}&end={att_today}&timeline={omar}&tdate={att_today}",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_yesterday}&end={att_today}&add_time=1&prefill_employee={omar}&prefill_type=sign_out&prefill_date={att_today}",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      }
+    },
+    {
+      "user": "atrmgr",
+      "url": "/wp-admin/admin.php?page=ews31-time-report&start={att_yesterday}&end={att_today}",
+      "options": {
+        "ews_signin_evidence": {
+          "attempts": 1,
+          "photo": 1,
+          "alert": 3,
+          "attempt_days": 60,
+          "photo_days": 30,
+          "photo_viewers": "hr_manager"
+        },
+        "ews_feature_face_signin": 1
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-auto-attendance",
+      "expect": "Auto Attendance"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-auto-attendance&edit_rule={att_rule}"
     }
   ],
   "normalise": [
