@@ -52,11 +52,12 @@ $page = function ($label, $uid, $method, array $get) use (&$trace, &$sql, $o, $a
     wp_cache_flush();
     $sql = [];
     $r = golden_page($o, $method, $get);
-    $html = strtr((string) $r['html'], $dates);   // not $norm(): it cuts everything from the first <div (a database error's markup) on
+    // not $norm(): it cuts everything from the first <div (a database error's markup) on. Times of day first (a pre-filled form carries the minute the run was at), then the dates.
+    $html = preg_replace('/\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?/', 'T', (string) $r['html']);
+    $html = strtr($html, $dates);
     $html = preg_replace('/_wpnonce=[0-9a-f]+/', '_wpnonce=N', $html);
     $html = preg_replace('/(name="_wpnonce"[^>]*value=")[0-9a-f]+/', '$1N', $html);
     $html = preg_replace('/(nonce["\']?\s*[:=]\s*["\'])[0-9a-f]{8,}/i', '$1N', $html);
-    $html = preg_replace('/\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?/', 'T', $html);
     $html = preg_replace('/\b\d{1,2}:\d{2} ?[AP]M\b/', 'HM', $html);
     $html = preg_replace('/\b\d{2}:\d{2}\b/', 'HM', $html);
     $html = preg_replace('#https?://[^/"\']+#', '', $html);
