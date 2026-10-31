@@ -23,6 +23,8 @@ $cfg = function (array $o) { update_option('ews_signin_evidence', array_merge(['
 $_SERVER['REMOTE_ADDR'] = '10.9.9.9';
 $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Linux; Android 14; Golden) AppleWebKit/537.36 Chrome/120.0 Mobile Safari/537.36';
 update_option('ews_feature_face_signin', 1, false);
+// user meta is not in the snapshot: a capability this script gives (the report section) must not be left for the other side's run
+(new WP_User((int) $c['atwu_a1']))->remove_cap('ews_manage_time');
 
 // ---------------------------------------------------------------- photo files (the snapshot restores the database, not the files)
 $dir = $call('private_files_dir', 'workforce-one-face-photos');
@@ -58,7 +60,7 @@ $page = function ($label, $uid, $method, array $get) use (&$trace, &$sql, $o, $a
     $html = preg_replace('/\b\d{1,2}:\d{2} ?[AP]M\b/', 'HM', $html);
     $html = preg_replace('/\b\d{2}:\d{2}\b/', 'HM', $html);
     $html = preg_replace('#https?://[^/"\']+#', '', $html);
-    $trace[$label] = ['return' => ['exit' => $r['exit'], 'to' => $norm($r['to']), 'len' => strlen($html), 'html' => md5($html)], 'queries' => count($sql), 'sql' => $sql];
+    $trace[$label] = ['return' => ['exit' => $r['exit'], 'to' => $norm($r['to']), 'len' => strlen($html), 'html' => md5($html), 'body' => $html], 'queries' => count($sql), 'sql' => $sql];
     $as($admin);
 };
 $as($admin);
@@ -255,4 +257,5 @@ foreach ([
     'audit' => "SELECT user_id,action,entity,entity_id,details FROM {$p}ews_audit_log ORDER BY id",
 ] as $name => $q) $trace['_rows:' . $name] = $rows($q);
 $trace['files_at_the_end'] = $listing();
+(new WP_User($WU('a1')))->remove_cap('ews_manage_time');
 echo "\n" . wp_json_encode($trace);

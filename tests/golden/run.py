@@ -243,6 +243,10 @@ try:
                 if x != y:
                     around = lambda q: [str(t)[:110] for t in q['sql'][max(0, i - 3):i + 4]]
                     return 'statement %d: old %s | new %s || OLD AROUND %s || NEW AROUND %s' % (i, json.dumps(x)[:200], json.dumps(y)[:200], json.dumps(around(a)), json.dumps(around(b)))
+        ra, rb = (a or {}).get('return'), (b or {}).get('return')
+        if isinstance(ra, dict) and isinstance(rb, dict) and 'body' in ra and ra.get('body') != rb.get('body'):
+            d = [l.rstrip()[:240] for l in difflib.unified_diff(ra['body'].splitlines(), rb['body'].splitlines(), n=0, lineterm='') if not l.startswith(('---', '+++', '@@'))]
+            return 'page differs: ' + ' || '.join(d[:8])
         return (json.dumps(a)[:300], json.dumps(b)[:300])
     intended = EXPECTED.get('actions', {})
     for k in tb:
