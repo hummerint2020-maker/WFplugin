@@ -356,7 +356,7 @@ try:
           and evr('serve_plain_user').get('exit') == 'die' and evr('serve_unknown_kind').get('exit') == 'die' and evr('serve_bad_key').get('exit') == 'die' and evr('serve_missing_file').get('exit') == 'die'
           and any('face_photo_viewed' in q for q in ev['serve_admin_log_full']['sql']) and not any('face_photo_viewed' in q for q in ev['serve_admin_log_thumbnail']['sql'])
           and len(ev['files_after_cleanup']) < len(ev['files_before_cleanup']) and any(q.startswith('DELETE FROM') and 'signin_attempts' in q for q in ev['cleanup']['sql'])
-          and 'signin_attempts' not in evsql('cleanup_no_attempts_table')
+          and not any('signin_attempts' in q for q in ev['cleanup_no_attempts_table']['sql'] if not q.startswith('SHOW TABLES')) and len(ev['cleanup_no_attempts_table']['sql']) == 1
           and len((ev['timeline_admin_today'].get('return') or {}).get('items', [])) >= 2 and ev['timeline_manager_other_department']['return'] is None and ev['timeline_bad_date']['return'] is None
           and 'UNION ALL' in evsql('report_admin_both') and 'UNION ALL' not in evsql('report_admin_recorded') and 'signin_attempts' not in evsql('report_attempts_off')
           and '1=0' in evsql('report_manager_without_department') and evr('report_admin_both').get('len', 0) > 2000 and evr('report_plain_user').get('exit') == 'die' and evr('auto_page_no_capability').get('exit') == 'die'

@@ -78,3 +78,11 @@ What the photo serve checks today, in order: logged in (`admin_post_ews_face_pho
 2. **Read models:** built now inside Attendance (`TimeReportQuery`, `AutoRuleQuery`, `reads` list in `modules.json`); the employees picker moves into `TimeReportQuery`. The alert recipients lookup and `time_report_may_manage` stay as People debt.
 3. **Quirks EV-a…EV-m and AT-aa:** moved as they are and queued. Fix order: EV-a, EV-b, EV-c (privacy), EV-h (money), EV-f, then the rest; the direction of each fix is asked when its release is designed.
 4. **EV-n** (no exporter / eraser for attempts and photos): deferred to the planned privacy work, not done here.
+
+## 10. As built in L5d (3.31.139): where the code differs from the design
+- Read-model table counts are not kept in the baseline (§6 said they would be): read files are exempt from L1 and held to their listed tables (L3, L4) and to writing nothing (L6, case-insensitive) instead.
+- `AttendancePorts` got `$evidence` as a fourth constructor argument; `EvidenceSite` has the six methods of §3.
+- `offline()` takes the attempt's array from the controller, built before the checks (`current_time('mysql')` for `reported_at` is read a few microseconds earlier; no SQL or option is involved).
+- `cleanup()` reads `current_time('timestamp')` once for both cut-offs (the old code read it twice); the orphan sweep's `time()` is taken before the deletes (both found by the review, no change to SQL text or order).
+- The harness's report-page traces compare the normalised HTML (md5) as well as the SQL; `run.py` lists every failed check at the end.
+- Review (Opus, read-only): no behaviour change found. Fixed: a sanity guard in `run.py` that could never pass (the fault replaces the query after the recorder logged it), L6 now matches SQL keywords in any case.

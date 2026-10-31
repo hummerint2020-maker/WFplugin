@@ -32,7 +32,7 @@ L2_BAD = [r'\bglobal\s+\$', r'\$wpdb\b', r'\$_(?:GET|POST|REQUEST|COOKIE|SERVER|
           r'\badd_action\s*\(', r'\badd_filter\s*\(', r'\bdo_action\s*\(', r'\bapply_filters\s*\(', r'\bEWS_', r'\b(?:include|require)(?:_once)?\b',
           r'\bget_current_user_id\s*\(', r'\bwp_get_current_user\s*\(', r'\bcurrent_time\s*\(', r'(?<![\w>:$])time\s*\(\s*\)', r'(?<![\w>:$])date\s*\(',
           r'\b(?:get|update|add|delete)_option\s*\(', r'\$GLOBALS\b', r'\b(?:printf|print_r|var_dump|wp_send_json\w*)\s*\(', r'\bwpdb\b']
-L6_BAD = [r'->\s*(?:insert|update|delete|replace|query)\s*\(', r'\b(?:INSERT|UPDATE|DELETE|REPLACE|ALTER|DROP|TRUNCATE)\b']
+L6_BAD = [r'->\s*(?:insert|update|delete|replace|query)\s*\(', r'(?i)\b(?:INSERT\s+INTO|UPDATE\s+[`\w{$]|DELETE\s+FROM|REPLACE\s+INTO|ALTER\s+TABLE|DROP\s+TABLE|TRUNCATE\s+TABLE)']
 USE = re.compile(r'^\s*use\s+WorkforceOne\\([A-Za-z0-9_]+)\\([A-Za-z0-9_\\]+)\s*;', re.M)
 FUNC = re.compile(r'function\s+&?([A-Za-z0-9_]+)\s*\(')
 
@@ -86,7 +86,7 @@ def body(src, name):
 def self_test():
     ok = True
     ok &= bool(l2("<?php $x=$wpdb->get_var('x'); echo 1;"))
-    ok &= bool(l6("<?php $this->db->update($t, $row, ['id' => 1]);")) and bool(l6("<?php $q = 'DELETE FROM x';")) and not l6("<?php return $this->db->get_results('SELECT * FROM x ORDER BY id');")
+    ok &= bool(l6("<?php $this->db->update($t, $row, ['id' => 1]);")) and bool(l6("<?php $q = 'DELETE FROM x';")) and bool(l6("<?php $q = \"update {$t} set a=1\";")) and not l6("<?php return $this->db->get_results('SELECT * FROM x ORDER BY id');")
     ok &= bool(l2("<?php $v = get_option('x'); do_action('y'); $t = time();")) and len(l2("<?php $v = get_option('x'); do_action('y'); $t = time();")) == 3
     ok &= not l2("<?php $t = strtotime($now); $d = $this->clock->now(); $x = WeekLock::date($y);")
     ok &= not l2("<?php if (!defined('ABSPATH')) exit; return $this->store->find($id, $date);")
