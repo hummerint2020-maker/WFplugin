@@ -50,8 +50,14 @@ $page = function ($label, $uid, $method, array $get) use (&$trace, &$sql, $o, $a
     wp_cache_flush();
     $sql = [];
     $r = golden_page($o, $method, $get);
-    $html = preg_replace('/(name="_wpnonce"[^>]*value=")[0-9a-f]+/', '$1N', (string) $norm($r['html']));
+    $html = strtr((string) $r['html'], $dates);   // not $norm(): it cuts everything from the first <div (a database error's markup) on
+    $html = preg_replace('/_wpnonce=[0-9a-f]+/', '_wpnonce=N', $html);
+    $html = preg_replace('/(name="_wpnonce"[^>]*value=")[0-9a-f]+/', '$1N', $html);
     $html = preg_replace('/(nonce["\']?\s*[:=]\s*["\'])[0-9a-f]{8,}/i', '$1N', $html);
+    $html = preg_replace('/\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?/', 'T', $html);
+    $html = preg_replace('/\b\d{1,2}:\d{2} ?[AP]M\b/', 'HM', $html);
+    $html = preg_replace('/\b\d{2}:\d{2}\b/', 'HM', $html);
+    $html = preg_replace('#https?://[^/"\']+#', '', $html);
     $trace[$label] = ['return' => ['exit' => $r['exit'], 'to' => $norm($r['to']), 'len' => strlen($html), 'html' => md5($html)], 'queries' => count($sql), 'sql' => $sql];
     $as($admin);
 };

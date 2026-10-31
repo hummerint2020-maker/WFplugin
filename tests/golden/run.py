@@ -16,7 +16,15 @@ import difflib, json, os, re, shlex, subprocess, sys, time, urllib.parse
 HERE = os.path.dirname(os.path.abspath(__file__))
 TESTS = os.path.dirname(HERE)
 sys.path.insert(0, TESTS)
-from e2e_support import Session, check, results  # noqa: E402
+from e2e_support import Session, check as _check, results  # noqa: E402
+
+FAILED = []
+
+
+def check(name, cond, extra=''):
+    _check(name, cond, extra)
+    if not cond:
+        FAILED.append(name[:150] + '  | ' + str(extra)[:250])
 
 S = sys.argv[1]
 BASE = os.path.abspath(sys.argv[sys.argv.index('--base') + 1])
@@ -371,5 +379,7 @@ finally:
     if '--keep' not in sys.argv and os.path.exists(SNAP):
         restore()
 
+for f in FAILED:
+    print('FAILED CHECK: ' + f)
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
