@@ -411,7 +411,7 @@ try:
     ev_false = [label for label, fn in ev_conditions if not holds(fn)]
     check('...the evidence trace really kept refused, failed and unsent attempts, told the managers, answered every offline report, served and refused photos, cleaned up, drew the timeline and the report page and exported the CSV (else it proves nothing)',
           not ev_false, [ev_false, 'csv_admin=' + repr(csv_admin[:260]), 'csv_mgr=' + repr(csv_mgr[:120])])
-    cx = {k[19:]: v for k, v in tb.items() if k.startswith('corrections_reads:')}
+    cx = {k[18:]: v for k, v in tb.items() if k.startswith('corrections_reads:')}
     def cxr(k):
         return (cx.get(k) or {}).get('return')
     cx_csv = ((tb.get('cxcsv:csv_corrections') or {}).get('return')) or ''
