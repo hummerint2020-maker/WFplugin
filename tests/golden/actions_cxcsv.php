@@ -11,10 +11,17 @@ wp_set_current_user((int) $c['cx_hr_user']);
 wp_cache_flush();
 $sql = [];
 $csv = '';
-ob_start(function ($chunk) use (&$csv) { $csv .= $chunk; return ''; });
-$level = ob_get_level();
-register_shutdown_function(function () use (&$sql, &$trace, $norm, $level, &$csv) {
-    while (ob_get_level() >= $level) ob_end_flush();
+$done = false;
+// Download::send empties every buffer it can remove, then echoes the file: this buffer cannot be removed or cleaned (only flushed), so the file lands in it.
+ob_start(function ($chunk) use (&$csv, &$done) {
+    if ($done) return $chunk;
+    $csv .= $chunk;
+    return '';
+}, 0, PHP_OUTPUT_HANDLER_FLUSHABLE);
+register_shutdown_function(function () use (&$sql, &$trace, $norm, &$csv, &$done) {
+    @ob_flush();
+    $done = true;
+    $csv = preg_split('/\r?\n(?:<br \/>\n)?(?:<b>)?(?:PHP )?(?:Notice|Warning|Deprecated)/', $csv)[0];   // WordPress's own shutdown hook tries to close this buffer first and may print a notice
     $trace['csv_corrections'] = ['return' => $norm($csv), 'queries' => count($sql), 'sql' => $sql];
     echo "\n" . wp_json_encode($trace);
 });
