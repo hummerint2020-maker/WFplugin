@@ -154,6 +154,8 @@ start = f'{YEAR}-12-01' if today.month < 12 else f'{NEXT}-02-01'
 year_of_start = int(start[:4])
 if year_of_start == YEAR:
     end = f'{YEAR}-12-{int(remaining) + 1:02d}'
+    if start <= d(30) <= end:   # the employee's own pending day (d(30)) falls in December for a run in November: take the end of the month instead of overlapping it
+        start, end = f'{YEAR}-12-{31 - int(remaining):02d}', f'{YEAR}-12-31'
     qs = record(start, end)
     check('recording more days than the balance has left is refused', 'leave_record_error' in qs and 'balance' in qs['leave_record_error'].lower(), qs)
 before_m = bal(YEAR, 'Mission')
