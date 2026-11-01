@@ -169,8 +169,8 @@ $mo = substr($D(3), 0, 7);
 $tabs = ['list' => [], 'list_pending' => ['status' => 'pending'], 'list_hr' => ['status' => 'pending_hr'], 'list_all' => ['status' => 'all'], 'list_type' => ['type' => 'out'], 'list_dept' => ['department' => (int) $c['atr_deptA']],
     'list_search' => ['s' => 'rec'], 'list_search_percent' => ['s' => '5%_'], 'list_page2' => ['paged' => 2], 'list_bad_month' => ['month' => 'x'], 'report' => ['tab' => 'report'], 'report_dept' => ['tab' => 'report', 'department' => (int) $c['atr_deptA']],
     'settings' => ['tab' => 'settings'], 'direct' => ['tab' => 'direct'], 'direct_error' => ['tab' => 'direct', 'cx_error' => 'reason'], 'bad_tab' => ['tab' => 'nonsense']];
-foreach ($tabs as $k => $get) {
-    $page('admin_' . $k, $hrU, 'admin_corrections', $get + ['month' => $mo]);
+foreach ($tabs as $k => $tabGet) {
+    $page('admin_' . $k, $hrU, 'admin_corrections', $tabGet + ['month' => $mo]);
 }
 $page('admin_plain_user', $plainU, 'admin_corrections', []);
 $page('admin_manager', $EU('mgr'), 'admin_corrections', []);

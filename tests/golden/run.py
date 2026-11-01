@@ -39,7 +39,7 @@ if not (os.environ.get('CI') or os.environ.get('GOLDEN_OK')):
 def wp(*args, env=None):
     r = subprocess.run(WP + list(args), capture_output=True, text=True, env={**os.environ, 'S': S, **(env or {})})
     if r.returncode:
-        raise RuntimeError('wp ' + ' '.join(args[:2]) + '\n' + r.stderr[-2000:])
+        raise RuntimeError('wp ' + ' '.join(args[:2]) + '\n' + (r.stderr if len(r.stderr) < 3000 else r.stderr[:1200] + ' ... ' + r.stderr[-1500:]))
     return r.stdout.strip()
 
 
