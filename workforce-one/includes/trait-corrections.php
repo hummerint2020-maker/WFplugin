@@ -792,7 +792,8 @@ trait EWS_Corrections_Trait {
         $used=$emp?$this->cx_month_count((int)$emp->id,current_time('Y-m-d')):0;
         return ['types'=>$types,'days'=>$days,'settings'=>$s,'used'=>$used,'post_url'=>admin_url('admin-post.php'),
             'manager'=>$this->cx_manager_name($emp),'open'=>sanitize_key($_GET['cx']??''),'open_date'=>sanitize_text_field(wp_unslash($_GET['cx_date']??'')), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only: the end-of-day push opens the sheet
-            'error'=>isset($_GET['cx_error'])?$this->cx_error_message(sanitize_key($_GET['cx_error'])):''];   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+            // Only a refused request reopens the sheet (cx_retry): a refused decision (a reject without a reason) must not open the approver's own request form.
+            'error'=>isset($_GET['cx_error'],$_GET['cx_retry'])?$this->cx_error_message(sanitize_key($_GET['cx_error'])):''];   // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
     }
 
     private function cx_manager_name($emp){
