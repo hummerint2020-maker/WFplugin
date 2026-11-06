@@ -88,6 +88,12 @@ check('Edit saves the changes and keeps the status', qs.get('task_updated') == '
 
 st, page, _ = emp.req(PAGE + '&task_priority=low')
 check('the priority filter shows only that priority', column(page, 'todo') == ['Order 12 chairs'] and column(page, 'in_progress') == [], (column(page, 'todo'), column(page, 'in_progress')))
+heads = dict(re.findall(r'<section class="wfo-tk-col is-([a-z_]+)".*?<span data-ews-col-count="(\d+)"', page, re.S))
+check('...and the column counts count what it shows (QA report on 3.31.138): To Do 1, In Progress 0 (the high one is not counted)', heads == {'todo': '1', 'in_progress': '0', 'completed': '0'}, heads)
+check('...and the late High task it does not list is not counted as overdue', 'task is overdue' not in page)
+st, page, _ = emp.req(PAGE + '&task_priority=high')
+check('...with High it is listed and counted', column(page, 'in_progress') == ['Prepare roster'] and '1 task is overdue' in page, column(page, 'in_progress'))
+check('...the page carries what the search needs: the late card marked, the sentence for each number', page.count('data-ews-overdue') == 1 and 'data-ews-late-texts=' in page)
 
 # A manager assigns a task to the employee.
 st, page, _ = adm.req(PAGE)

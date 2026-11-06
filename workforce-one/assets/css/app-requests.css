@@ -117,7 +117,7 @@ dialog.wfo-sheet[open]{animation:wfo-sheet-in .2s ease-out}
 .wfo-app .wfo-tk-all{margin:0 4px;font-size:13px;font-weight:600;color:var(--wfo-pri)}
 .wfo-app .wfo-tk-noresult{grid-column:1/-1;margin:0;text-align:center;color:var(--wfo-muted)}
 .wfo-app .wfo-tk-card{position:relative;display:flex;align-items:flex-start;gap:10px;padding:12px 12px 12px 14px;border-radius:16px;background:var(--wfo-surface);box-shadow:0 2px 8px rgba(19,35,91,.06);border-inline-start:4px solid #C9CDDB}
-.wfo-app .wfo-tk-card[hidden]{display:none}
+.wfo-app .wfo-tk-card[hidden],.wfo-app .wfo-tk-late[hidden]{display:none}
 .wfo-app .wfo-tk-card.pr-urgent{border-inline-start-color:#E06A84}
 .wfo-app .wfo-tk-card.pr-high{border-inline-start-color:#E8A33A}
 .wfo-app .wfo-tk-card.pr-normal{border-inline-start-color:#6C8EEB}
