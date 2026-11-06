@@ -71,7 +71,10 @@ row = q("SELECT active,last_working_day FROM {p}ews_employees WHERE id=%d" % I['
 check('archived with the last working day given', qs.get('employee_notice') == 'archived' and row['active'] == '0' and row['last_working_day'] == LAST, (qs, row))
 check('...it is in the Audit Log', 'last working day ' + LAST in json.dumps(q("SELECT details FROM {p}ews_audit_log WHERE action='employee_status_change'")))
 p = pay_of(I['leave'])
-check('the month they left is still on the payroll, paid for 20 days (6000 / 30 × 20 = 4000)', p and p['earned'] == 4000 and p['prorated']['to'] == LAST and p['prorated']['days'] == 20, p and p.get('prorated'))
+import calendar
+_dim = calendar.monthrange(int(MONTH[:4]), int(MONTH[5:7]))[1]
+_earned20 = round(round(6000 / _dim, 2) * 20, 2)   # the day's value is the salary over the days of that month (PayCalculator)
+check('the month they left is still on the payroll, paid for 20 days (6000 / days of the month × 20)', p and abs(float(p['earned']) - _earned20) < 0.005 and p['prorated']['to'] == LAST and p['prorated']['days'] == 20, p and p.get('prorated'))
 check('...the days after the last working day are not counted as absences', p and p['absence']['amount'] == 0 and p['stats']['absent_days'] == 0, p and p['stats'])
 pg = adm.req(PAY + '&month=' + MONTH)[1]
 check('the payroll page lists them, marked archived with the last working day', 'Lena Leaver' in pg and 'last working day' in pg and 'data-archived' in pg, [x in pg for x in ('Lena Leaver', 'last working day', 'data-archived')])
