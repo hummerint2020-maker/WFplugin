@@ -15,7 +15,7 @@
  * @var bool $can_workload
  * @var string $tab                      'my' | 'team' | 'workload'
  * @var string $priority_filter          'all' | a priority
- * @var object|null $counter             todo_count, progress_count, completed_count, overdue_count
+ * @var object|null $counter             todo_count, progress_count, completed_count, overdue_count: what the page lists (filters applied)
  * @var array<string,object[]> $cards    'todo' | 'in_progress' | 'completed' => tasks (+ is_overdue, is_pool, can_take, can_status, status_nonce, can_edit, can_delete, edit_url, view_url, team_name)
  * @var array<int,int[]> $item_counts    task id => [done, all]
  * @var array<int,int> $comment_counts
@@ -73,7 +73,7 @@ $due_text = static function (object $t): string {
 $card = static function (object $t) use ($priorities, $initials, $status_form, $take_form, $form, $tab, $item_counts, $comment_counts, $due_text): string {
     $pr = isset($priorities[$t->priority]) ? (string) $t->priority : 'normal';
     $drag = $t->can_status ? ' draggable="true" data-ews-task-id="' . (int) $t->id . '" data-ews-status="' . esc_attr($t->status) . '" data-ews-nonce="' . esc_attr($t->status_nonce) . '"' : '';
-    $html = '<article class="wfo-tk-card pr-' . esc_attr($pr) . ($t->status === 'completed' ? ' is-done' : '') . ($t->is_pool ? ' is-pool' : '') . '" data-ews-task="' . esc_attr(mb_strtolower((string) $t->title . ' ' . (string) $t->description)) . '"' . $drag . '>';
+    $html = '<article class="wfo-tk-card pr-' . esc_attr($pr) . ($t->status === 'completed' ? ' is-done' : '') . ($t->is_pool ? ' is-pool' : '') . '" data-ews-task="' . esc_attr(mb_strtolower((string) $t->title . ' ' . (string) $t->description)) . '"' . (!empty($t->is_overdue) ? ' data-ews-overdue' : '') . $drag . '>';
     $html .= '<div class="wfo-tk-body"><h4 class="wfo-tk-title"><a href="' . esc_url($t->view_url) . '">' . esc_html($t->title) . '</a></h4>';
     if ((string) $t->description !== '') $html .= '<p class="wfo-tk-desc">' . esc_html($t->description) . '</p>';
     $html .= '<div class="wfo-tk-meta"><span class="wfo-tk-pr pr-' . esc_attr($pr) . '">' . esc_html($priorities[$pr]) . '</span>';
@@ -235,12 +235,16 @@ $sheet = static function (string $id, ?object $task) use ($post_url, $priorities
         <?php endforeach; ?>
     </section>
 <?php else: ?>
-    <?php if ((int) ($counter->overdue_count ?? 0) > 0): ?><p class="wfo-tk-late"><?php echo Icons::svg('alert', 16, 2.2); ?><?php /* translators: %d: number of overdue tasks */ printf(esc_html(_n('%d task is overdue', '%d tasks are overdue', (int) $counter->overdue_count, 'workforce-one')), (int) $counter->overdue_count); ?></p><?php endif; ?>
+    <?php if ((int) ($counter->overdue_count ?? 0) > 0):
+        // The sentence for each number the search can leave (tasks.js), so every language keeps its own plural forms.
+        $late_texts = [];
+        for ($n = 1; $n <= (int) $counter->overdue_count; $n++) $late_texts[$n] = sprintf(/* translators: %d: number of overdue tasks */ _n('%d task is overdue', '%d tasks are overdue', $n, 'workforce-one'), $n); ?>
+    <p class="wfo-tk-late" data-ews-late-texts="<?php echo esc_attr((string) wp_json_encode($late_texts)); ?>"><?php echo Icons::svg('alert', 16, 2.2); ?><span><?php echo esc_html($late_texts[(int) $counter->overdue_count]); ?></span></p><?php endif; ?>
 
     <div class="wfo-tk-board"<?php echo $cfg['drag'] ? ' data-ews-drag data-action="' . esc_url($post_url) . '"' : ''; ?>>
         <?php foreach ($columns as $key => [$title, $count]): ?>
         <section class="wfo-tk-col is-<?php echo esc_attr($key); ?>" data-ews-col="<?php echo esc_attr($key); ?>" aria-labelledby="wfo-tk-col-<?php echo esc_attr($key); ?>">
-            <h3 class="wfo-tk-col-head" id="wfo-tk-col-<?php echo esc_attr($key); ?>"><?php echo esc_html($title); ?> <span><?php echo (int) $count; ?></span></h3>
+            <h3 class="wfo-tk-col-head" id="wfo-tk-col-<?php echo esc_attr($key); ?>"><?php echo esc_html($title); ?> <span data-ews-col-count="<?php echo (int) $count; ?>"><?php echo (int) $count; ?></span></h3>
             <?php foreach ($cards[$key] as $t) echo $card($t); ?>
             <?php if (!$cards[$key]): ?><p class="wfo-tk-none"><?php echo esc_html($key === 'completed' ? __('Nothing finished yet.', 'workforce-one') : __('Nothing here.', 'workforce-one')); ?></p><?php endif; ?>
             <?php if ($key === 'completed' && !$done_all && $done_total > count($cards['completed'])): ?><a class="wfo-tk-all" href="<?php echo esc_url($done_url); ?>"><?php /* translators: %d: number of finished tasks */ printf(esc_html__('Show all %d', 'workforce-one'), (int) $done_total); ?></a><?php endif; ?>

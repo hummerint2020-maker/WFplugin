@@ -220,7 +220,7 @@ trait EWS_My_Approvals_Trait {
     /** App → My requests. */
     private function requests_content(){
         $emp=$this->current_employee();
-        $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id),$this->advance_my_requests((int)$emp->id)):[];
+        $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->early_leave_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id),$this->advance_my_requests((int)$emp->id)):[];
         usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when']);});
         $items=array_slice($items,0,40);
         $paths=$this->approval_paths(array_map(function($it){return $it['approval'];},$items));   // one batch, not several queries per request
@@ -278,7 +278,7 @@ trait EWS_My_Approvals_Trait {
         return ['kinds'=>$kinds]+$data;
     }
 
-    /** My requests → Withdraw (admin-post ews_request_withdraw): a waiting leave, overtime or correction. */
+    /** My requests → Withdraw (admin-post ews_request_withdraw): a waiting leave, overtime, early leave or correction. */
     public function request_withdraw(){
         if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
         $kind=sanitize_key($_POST['kind']??'');$id=absint($_POST['id']??0);
@@ -292,6 +292,7 @@ trait EWS_My_Approvals_Trait {
         switch($kind){
             case 'leave': $r=$this->leave_withdraw($id,(int)$emp->id);break;
             case 'overtime': $r=$this->overtime_withdraw($id,(int)$emp->id);break;
+            case 'early': $r=$this->early_leave_withdraw($id,(int)$emp->id);break;
             case 'correction': $r=$this->corrections_enabled()?$this->cx_withdraw($id,(int)$emp->id):'access';break;
             case 'advance': $r=$this->advances_enabled()?$this->advance_withdraw($id,(int)$emp->id):'access';break;
             case 'swap': $r=$this->swap_withdraw($id,(int)$emp->id);break;

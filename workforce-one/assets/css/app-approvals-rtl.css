@@ -19,7 +19,7 @@
 .wfo-app .wfo-apv-filters a[aria-current]{border-color:var(--wfo-pri);color:var(--wfo-pri);background:var(--wfo-pri-soft);font-weight:600}
 .wfo-app .wfo-apv-list{display:flex;flex-direction:column;gap:10px}
 .wfo-app .wfo-apv-item{--tc:var(--wfo-pri);border-radius:var(--wfo-r-card);background:var(--wfo-surface);box-shadow:var(--wfo-shadow);padding:12px 14px;border-right:4px solid var(--tc)}
-.wfo-app .wfo-apv-item.tone-overtime{--tc:#A3245B}.wfo-app .wfo-apv-item.tone-correction{--tc:#0B7D74}.wfo-app .wfo-apv-item.tone-swap{--tc:#D9480F}.wfo-app .wfo-apv-item.tone-face{--tc:#1F6FD1}
+.wfo-app .wfo-apv-item.tone-early{--tc:#7A4FD6}.wfo-app .wfo-apv-item.tone-overtime{--tc:#A3245B}.wfo-app .wfo-apv-item.tone-correction{--tc:#0B7D74}.wfo-app .wfo-apv-item.tone-swap{--tc:#D9480F}.wfo-app .wfo-apv-item.tone-face{--tc:#1F6FD1}
 .wfo-app .wfo-apv-item.is-picked{outline:2px solid var(--wfo-pri)}
 .wfo-app .wfo-apv-item form{display:flex;flex-direction:column;gap:8px;margin:0}
 .wfo-app .wfo-apv-who{display:flex;align-items:center;gap:10px;min-width:0}
