@@ -49,7 +49,9 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
     }
     function ewsConfirmationMeta(form,submitter){
         var action=(form.querySelector("input[name=\"action\"]")||{}).value||"";
-        var decision=submitter?(submitter.name==="decision"?submitter.value:""):"";
+        var decision=submitter&&submitter.name==="decision"?submitter.value:"";
+        // A form that carries its decision in a hidden field (the Overtime page's Approve / Reject forms) asks too.
+        if(!decision){var hidden=form.querySelector("input[type=\"hidden\"][name=\"decision\"]");if(hidden)decision=hidden.value||"";}
         var cfg=window.ewsConfirmationConfig||{};
         if(cfg.global===false)return null;
         function enabled(key){return cfg.actions&&Object.prototype.hasOwnProperty.call(cfg.actions,key)?!!cfg.actions[key]:true;}

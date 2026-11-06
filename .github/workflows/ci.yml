@@ -314,6 +314,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" node tests/org_chart_browser.js
       - name: My approvals in a browser (approve several at once, a reason to reject, Arabic on a phone, My requests)
         run: WP_CLI="wp --path=$WP" node tests/my_approvals_browser.js
+      - name: Confirmations before a decision in a browser (a decision on the button or in a hidden field, switched off)
+        run: node tests/confirmations_browser.js
       - name: Attendance cards in a browser
         run: WP_CLI="wp --path=$WP" S="$S" node tests/attendance_cards_browser.js
       - name: Profile photo made smaller in the browser
