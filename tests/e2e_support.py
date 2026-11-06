@@ -76,6 +76,7 @@ class Session:
     def post(self, action, **data):
         st, body, h = self.req('/wp-admin/admin-post.php', {'action': action, **data})
         loc = h.get('Location', '')
+        self.last_location = loc   # where the redirect goes (a blank admin-post.php page is a bug)
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(loc).query)
         return st, {k: v[0] for k, v in qs.items()}, body
 

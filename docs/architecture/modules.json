@@ -35,6 +35,7 @@
       "tables": [],
       "api": [
         "app_view_url",
+        "app_return_url",
         "app_home_url",
         "admin_nav_tab_labels",
         "app_screens",

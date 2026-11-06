@@ -137,7 +137,7 @@ trait EWS_Advances_Trait {
 
     /** Where the employee goes back to (My requests). */
     private function advance_back($args){
-        return add_query_arg($args,$this->app_view_url('requests'));
+        return add_query_arg($args,$this->app_return_url('requests'));
     }
 
     /** The default path when the workflow was never saved: the direct manager, then Finance (owner decision). */
@@ -200,7 +200,7 @@ trait EWS_Advances_Trait {
         if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
         check_admin_referer('ews_advance_respond');
         $id=absint($_POST['advance_id']??0);$decision=sanitize_key($_POST['decision']??'');
-        $back=add_query_arg([],$this->app_view_url($this->approvals_return_view('approvals')));
+        $back=$this->app_return_url($this->approvals_return_view('approvals'));
         $go=function($args)use($back){wp_safe_redirect(add_query_arg($args,$back));exit;};
         if(!$this->advances_enabled() || !$id || !in_array($decision,['approve','reject'],true))$go(['adv_error'=>'access']);
         global $wpdb;$t=$this->advances_tables();

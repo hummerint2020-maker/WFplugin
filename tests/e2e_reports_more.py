@@ -113,7 +113,7 @@ st, page, _ = adm.req('/app/?ews_view=reports&report_type=overtime&start=%s&end=
 f = form(page, 'ews_report_view_save')
 check('the filter bar offers "Save view"', f.get('report_type') == 'overtime' and f.get('employee_status') == 'all', f)
 st, _, h = adm.req('/wp-admin/admin-post.php', dict(f, view_name='Overtime check'))
-check('saving a view returns to the report', st in (302, 303) and 'report_type=overtime' in h.get('Location', ''), (st, h.get('Location')))
+check('saving a view returns to the report in the app (not a blank admin-post.php page)', st in (302, 303) and 'report_type=overtime' in h.get('Location', '') and 'ews_view=reports' in h.get('Location', '') and 'admin-post.php' not in urllib.parse.urlparse(h.get('Location', '')).path, (st, h.get('Location')))
 st, page, _ = adm.req('/app/?ews_view=reports')
 chips = re.findall(r'<a class="ews-rc-view" href="([^"]+)">([^<]+)</a>', page)
 check('the saved view is listed on every report', [c[1] for c in chips] == ['Overtime check'], chips)
@@ -129,7 +129,8 @@ check('a quick range is saved as the range', [v.get('range') for v in saved] in 
 
 st, page, _ = adm.req('/app/?ews_view=reports')
 f = next((form(x, 'ews_report_view_delete') for x in re.findall(r'<form.*?</form>', page, re.S) if 'Overtime check' in x), {})
-adm.req('/wp-admin/admin-post.php', f)
+st, _, h = adm.req('/wp-admin/admin-post.php', f)
+check('...removing one returns to the reports in the app', 'ews_view=reports' in h.get('Location', '') and 'admin-post.php' not in urllib.parse.urlparse(h.get('Location', '')).path, h.get('Location'))
 st, page, _ = adm.req('/app/?ews_view=reports')
 check('a saved view can be removed', [c[1] for c in re.findall(r'<a class="ews-rc-view" href="([^"]+)">([^<]+)</a>', page)] == ['Month so far'])
 check('saving needs the nonce', adm.req('/wp-admin/admin-post.php', {'action': 'ews_report_view_save', 'view_name': 'x', '_wpnonce': 'bad'})[0] in (403, 200) and len(json.loads(php("echo wp_json_encode(get_user_meta(1,'ews_report_views',true));") or '[]')) == 1)

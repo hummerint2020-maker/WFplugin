@@ -204,7 +204,7 @@ trait EWS_Reports_Trait {
         $range=sanitize_key($_POST['range']??'');
         $views=\WorkforceOne\Reports\SavedViews::add($this->report_saved_views(),sanitize_text_field(wp_unslash($_POST['view_name']??'')),$filters,$range);
         update_user_meta(get_current_user_id(),'ews_report_views',$views);
-        wp_safe_redirect(add_query_arg(array_merge(['ews_view'=>'reports'],array_filter($filters,'strlen')),$this->app_view_url('reports')));exit;
+        wp_safe_redirect(add_query_arg(array_filter($filters,'strlen'),$this->app_return_url('reports',array_merge(array_keys($filters),['range']))));exit;
     }
 
     /** Report Center → remove a saved view. */
@@ -212,7 +212,7 @@ trait EWS_Reports_Trait {
         if(!$this->can('ews_view_reports'))wp_die('Access denied',403);
         check_admin_referer('ews_report_view');
         update_user_meta(get_current_user_id(),'ews_report_views',\WorkforceOne\Reports\SavedViews::remove($this->report_saved_views(),sanitize_key($_POST['view_id']??'')));
-        wp_safe_redirect(add_query_arg(['ews_view'=>'reports'],$this->app_view_url('reports')));exit;
+        wp_safe_redirect($this->app_return_url('reports'));exit;
     }
 
     private function report_team_context(){
