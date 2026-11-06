@@ -3,7 +3,7 @@ All / Unread, Mark read, Mark all read, opening a notification, the device alert
 
 Usage: python3 tests/e2e_notifications_view.py <state dir>   (after tests/e2e_setup.php)
 """
-import os, re, sys
+import html, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, ids, php, q, results  # noqa: E402
@@ -42,6 +42,8 @@ check('no emoji and no explanation blurb', '🔔' not in page and 'Stay updated 
 st, page, _ = emp.req(PAGE + '&notification_tab=unread')
 titles = re.findall(r'<span class="wfo-notif-title">([^<]+)', page)
 check('Unread shows only the unread ones', titles == ['Swap request', 'Leave approved'], titles)
+tabs = re.search(r'<a class="[^"]*" href="([^"]+)"[^>]*>All</a>', page)
+check('...and its "All" tab leads back to all of them', tabs is not None and 'notification_tab' not in html.unescape(tabs.group(1)), tabs.group(1) if tabs else None)
 
 # Mark one read with the dot button.
 nid = int(q("SELECT id FROM {p}ews_notifications WHERE title='Swap request'")[0]['id'])

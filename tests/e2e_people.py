@@ -5,10 +5,10 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_people.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import json, os, re, sys
+import html, json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, check, php, q, results, wp, HERE  # noqa: E402
 
 PEOPLE = '/app/?ews_view=people'
 
@@ -64,6 +64,12 @@ check('search finds by name', re.findall(r'<div class="wfo-person-main"><strong>
 team = q("SELECT id FROM {p}ews_teams WHERE name='Blue Team'")[0]['id']
 st, page, _ = emp.req(PEOPLE + '&people_team=%s' % team)
 check('the team filter keeps the team', sorted(re.findall(r'<div class="wfo-person-main"><strong>([^<]+)</strong>', page)) == ['Mona Manager', 'Omar Ontime'])
+st, page, _ = emp.req(PEOPLE + '&people_team=%s&people_search=omar' % team)
+clear = re.search(r'<a class="[^"]*wfo-people-btn[^"]*" href="([^"]+)"', page)
+clear_href = html.unescape(clear.group(1)) if clear else ''
+check('Clear removes both the search and the team', clear_href and 'people_search' not in clear_href and 'people_team' not in clear_href and 'ews_view=people' in clear_href, clear_href)
+st, page, _ = emp.req(clear_href.replace(B, '') if clear_href.startswith(B) else clear_href)
+check('...and shows everyone again', sorted(re.findall(r'<div class="wfo-person-main"><strong>([^<]+)</strong>', page)) == sorted(['Mona Manager', 'Omar Ontime', 'أحمد منير']))
 
 # ---------------------------------------------------------------- a colleague's profile
 st, page, _ = emp.req(profile(ids['omar']))
