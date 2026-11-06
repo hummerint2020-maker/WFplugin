@@ -69,6 +69,15 @@ check('a grouped setting reads Customised when it differs from its built-in defa
 php("delete_option('ews_pwa_splash_settings');")
 st, page, _ = adm.req(PAGE)
 check('...and Default when it does not', 'Customised' not in text(row(page, 'ews_pwa_splash_settings')) and 'Default' in text(row(page, 'ews_pwa_splash_settings')))
+# Grouped settings read through their own class (the Offline screen was always "Default", even switched on).
+php("update_option('ews_offline_screen',['enabled'=>1,'timeout'=>20,'schedule'=>1,'keep_note'=>1,'texts'=>[]],false); update_option('ews_org_chart',['enabled'=>0],false); update_option('ews_approval_reject_note',['overtime'=>1],false);")
+st, page, _ = adm.req(PAGE)
+check('the Offline screen switched on reads Customised', 'Customised' in text(row(page, 'ews_offline_screen')), text(row(page, 'ews_offline_screen')))
+check('...the Organization chart saved with its defaults reads Default', 'Customised' not in text(row(page, 'ews_org_chart')) and 'Default' in text(row(page, 'ews_org_chart')), text(row(page, 'ews_org_chart')))
+check('...a reason to reject set for a workflow reads Customised', 'Customised' in text(row(page, 'ews_approval_reject_note')), text(row(page, 'ews_approval_reject_note')))
+st, only, _ = adm.req(PAGE + '&changed=1')
+check('...and "Only changed" lists the Offline screen', row(only, 'ews_offline_screen'))
+php("delete_option('ews_offline_screen'); delete_option('ews_org_chart'); delete_option('ews_approval_reject_note');")
 
 check('secrets are never shown: only Set / Not set', 'TOPSECRETKEY' not in page and 'kiosksecret999' not in page and 'Set' in text(row(page, 'ews_vapid_private_key')), text(row(page, 'ews_vapid_private_key')))
 check('kiosk secrets are counted, not shown', re.search(r'\d+ kiosk secret', text(row(page, 'ews_presence_kiosk_key_*'))) is not None, text(row(page, 'ews_presence_kiosk_key_*')))

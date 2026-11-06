@@ -137,9 +137,43 @@ trait EWS_Settings_Overview_Trait {
                 case 'ews_role_permissions':
                     $n=is_array($raw)?count($raw):0;
                     return [$n>0,$n?$n.' '.($n===1?'role':'roles').' set':''];
+                case 'ews_approval_reject_note':
+                case 'ews_approval_overdue':
+                case 'ews_approval_allow_self':
+                case 'ews_approval_self_rule':
+                case 'ews_approval_deadlines':
+                case 'ews_approval_settings':
+                    // Per workflow (or HR / Finance and the working day): anything saved is a choice made on the Approvals page.
+                    $n=is_array($raw)?count($raw):0;
+                    return [$n>0,$n?$n.' '.($n===1?'entry':'entries').' set':''];
                 default:
-                    return [false,is_array($raw)?count($raw).' '.(count($raw)===1?'entry':'entries'):''];
+                    // A setting with its own reader: compared with what that reader gives for nothing saved.
+                    $read=self::settings_overview_readers()[$name]??null;
+                    if($read!==null)return [is_array($raw)&&$read($raw)!=$read([]),''];
+                    // Anything else stored.
+                    return [is_array($raw)&&$raw!==[],is_array($raw)&&$raw!==[]?count($raw).' '.(count($raw)===1?'entry':'entries').' stored':''];
             }
+        }
+
+    /**
+     * The grouped settings read through a class of their own (the value the plugin works with, defaults filled in).
+     * @return array<string,callable>
+     */
+    private static function settings_overview_readers(){
+            return [
+                'ews_offline_screen'=>[\WorkforceOne\Settings\OfflineScreen::class,'config'],
+                'ews_org_chart'=>[\WorkforceOne\Settings\OrgChartSettings::class,'config'],
+                'ews_branch_settings'=>[\WorkforceOne\Settings\BranchSettings::class,'config'],
+                'ews_correction_settings'=>[\WorkforceOne\Settings\CorrectionSettings::class,'config'],
+                'ews_tasks_settings'=>[\WorkforceOne\Settings\TaskSettings::class,'config'],
+                'ews_signin_evidence'=>[\WorkforceOne\Settings\SignInEvidence::class,'config'],
+                'ews_dw_settings'=>[\WorkforceOne\Settings\DailyWorkerSettings::class,'config'],
+                'ews_office_minimum'=>[\WorkforceOne\Settings\OfficeMinimumSettings::class,'config'],
+                'ews_week_lock'=>[\WorkforceOne\Settings\WeekLockSettings::class,'config'],
+                'ews_advance_settings'=>[\WorkforceOne\Payroll\Advances::class,'settings'],
+                'ews_substitute_settings'=>[\WorkforceOne\Approvals\Substitutes::class,'settings'],
+                'ews_health_settings'=>[\WorkforceOne\Health\Settings::class,'settings'],
+            ];
         }
 
     private function settings_overview_kiosk_keys(){
