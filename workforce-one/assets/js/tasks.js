@@ -1,4 +1,4 @@
-/* Employee app → Tasks (templates/app/tasks.php): search, the priority filter, asking before a task is
+/* Employee app → Tasks (templates/app/tasks.php): search (the column counts follow it), the priority filter, asking before a task is
    deleted, the New task form (who gets it, repeat), the chosen file's name, closing a task or the Edit
    sheet (the page address forgets it), and dragging a card to another column on a computer (it sends
    the same Start / Done / Back form as the buttons; only the allowed moves accept a drop). */
@@ -21,6 +21,12 @@
                 if (hit) shown++;
             });
             if (none) none.hidden = shown > 0 || !q;
+            // Each column's count follows the search: the cards it shows (the page's own count without one).
+            page.querySelectorAll('[data-ews-col]').forEach(function (col) {
+                var n = col.querySelector('[data-ews-col-count]');
+                if (!n) return;
+                n.textContent = q ? String(col.querySelectorAll('.wfo-tk-card:not([hidden])').length) : n.getAttribute('data-ews-col-count');
+            });
         });
 
         page.querySelectorAll('[data-ews-autosubmit]').forEach(function (el) {

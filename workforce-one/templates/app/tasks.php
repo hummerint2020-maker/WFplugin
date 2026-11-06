@@ -15,7 +15,7 @@
  * @var bool $can_workload
  * @var string $tab                      'my' | 'team' | 'workload'
  * @var string $priority_filter          'all' | a priority
- * @var object|null $counter             todo_count, progress_count, completed_count, overdue_count
+ * @var object|null $counter             todo_count, progress_count, completed_count, overdue_count: what the page lists (filters applied)
  * @var array<string,object[]> $cards    'todo' | 'in_progress' | 'completed' => tasks (+ is_overdue, is_pool, can_take, can_status, status_nonce, can_edit, can_delete, edit_url, view_url, team_name)
  * @var array<int,int[]> $item_counts    task id => [done, all]
  * @var array<int,int> $comment_counts
@@ -240,7 +240,7 @@ $sheet = static function (string $id, ?object $task) use ($post_url, $priorities
     <div class="wfo-tk-board"<?php echo $cfg['drag'] ? ' data-ews-drag data-action="' . esc_url($post_url) . '"' : ''; ?>>
         <?php foreach ($columns as $key => [$title, $count]): ?>
         <section class="wfo-tk-col is-<?php echo esc_attr($key); ?>" data-ews-col="<?php echo esc_attr($key); ?>" aria-labelledby="wfo-tk-col-<?php echo esc_attr($key); ?>">
-            <h3 class="wfo-tk-col-head" id="wfo-tk-col-<?php echo esc_attr($key); ?>"><?php echo esc_html($title); ?> <span><?php echo (int) $count; ?></span></h3>
+            <h3 class="wfo-tk-col-head" id="wfo-tk-col-<?php echo esc_attr($key); ?>"><?php echo esc_html($title); ?> <span data-ews-col-count="<?php echo (int) $count; ?>"><?php echo (int) $count; ?></span></h3>
             <?php foreach ($cards[$key] as $t) echo $card($t); ?>
             <?php if (!$cards[$key]): ?><p class="wfo-tk-none"><?php echo esc_html($key === 'completed' ? __('Nothing finished yet.', 'workforce-one') : __('Nothing here.', 'workforce-one')); ?></p><?php endif; ?>
             <?php if ($key === 'completed' && !$done_all && $done_total > count($cards['completed'])): ?><a class="wfo-tk-all" href="<?php echo esc_url($done_url); ?>"><?php /* translators: %d: number of finished tasks */ printf(esc_html__('Show all %d', 'workforce-one'), (int) $done_total); ?></a><?php endif; ?>
