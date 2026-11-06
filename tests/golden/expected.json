@@ -3,6 +3,21 @@
   "release": "3.31.141",
   "pages": [
     {
+      "url": "/app/?ews_view=requests",
+      "reason": "Early leave shows in My requests and can be withdrawn while it waits (QA report on 3.31.138, owner decision 2026-11-06): one more query, and the empty state names it",
+      "options": {
+        "ews_feature_my_approvals": 1
+      }
+    },
+    {
+      "url": "/app/?ews_view=requests&new=1",
+      "reason": "Early leave shows in My requests and can be withdrawn while it waits (QA report on 3.31.138, owner decision 2026-11-06): one more query, and the empty state names it",
+      "options": {
+        "ews_feature_my_approvals": 1,
+        "ews_feature_substitutes": 1
+      }
+    },
+    {
       "url": "/wp-admin/admin.php?page=ews31-requests",
       "reason": "QA 8 (docs/tasks/admin-fallback-reason.md): a level with the administrators says why; the seeded HR level saved without a reason now shows the neutral text"
     },

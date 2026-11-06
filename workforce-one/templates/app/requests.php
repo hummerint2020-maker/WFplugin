@@ -2,7 +2,7 @@
 /**
  * Employee app → My requests (3.31.103, owner-approved mockup docs/mockups/my-approvals/): the
  * person's own leave, overtime, corrections and swaps, newest first, each with where it is level by
- * level; one still waiting can be withdrawn (leave, overtime, correction). Styles: assets/css/app-approvals.css.
+ * level; one still waiting can be withdrawn (leave, overtime, early leave, correction). Styles: assets/css/app-approvals.css.
  *
  * @var list<array<string,mixed>> $items
  * @var string $post_url
@@ -27,7 +27,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
         <?php foreach ($labels as $k => $l): if (empty($counts[$k])) continue; ?><a href="<?php echo esc_url(add_query_arg('req_state', $k, $base_url)); ?>"<?php echo $filter === $k ? ' aria-current="true"' : ''; ?>><?php echo esc_html($l . ' · ' . $num($counts[$k])); ?></a><?php endforeach; ?>
     </nav>
     <?php else: ?>
-    <div class="wfo-apv-empty"><strong><?php esc_html_e('You have no requests yet.', 'workforce-one'); ?></strong><span><?php esc_html_e('Leave, overtime, corrections and swaps you ask for show here, with who decides them.', 'workforce-one'); ?></span></div>
+    <div class="wfo-apv-empty"><strong><?php esc_html_e('You have no requests yet.', 'workforce-one'); ?></strong><span><?php esc_html_e('Leave, overtime, early leave, corrections and swaps you ask for show here, with who decides them.', 'workforce-one'); ?></span></div>
     <?php endif; ?>
 
     <div class="wfo-apv-list">
