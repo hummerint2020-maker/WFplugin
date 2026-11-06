@@ -1157,7 +1157,7 @@ trait EWS_Corrections_Trait {
      * page (cx_can_manage, never one's own). The HR stage is not included. @return list<array<string,mixed>>
      */
     private function cx_legacy_approvals(){
-        if(!$this->corrections_enabled() || !$this->can('ews_manage_time') || \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode()))return [];
+        if(!$this->can('ews_manage_time') || !$this->corrections_enabled() || \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode()))return [];
         $this->ensure_corrections_schema_once();
         $me=get_current_user_id();$out=[];
         foreach($this->services()->correctionQuery()->toDecideOpen() as $c){

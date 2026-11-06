@@ -335,7 +335,7 @@ trait EWS_Overtime_Trait {
      * to the same handler. Requests with an open engine level are dropped by the caller. @return list<array<string,mixed>>
      */
     private function overtime_legacy_approvals(){
-            if(!$this->overtime_enabled() || !$this->can('ews_manage_time') || \WorkforceOne\Approvals\Workflows::isLevels($this->overtime_workflow_mode()))return [];
+            if(!$this->can('ews_manage_time') || !$this->overtime_enabled() || \WorkforceOne\Approvals\Workflows::isLevels($this->overtime_workflow_mode()))return [];
             global $wpdb;$this->ensure_overtime_schema();
             $allow=$this->approval_self_rule('overtime')==='allow';
             $out=[];
