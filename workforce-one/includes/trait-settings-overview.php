@@ -142,10 +142,22 @@ trait EWS_Settings_Overview_Trait {
                 case 'ews_approval_allow_self':
                 case 'ews_approval_self_rule':
                 case 'ews_approval_deadlines':
+                    // Per workflow. Saving a workflow writes its entry in each of these, defaults included: only the
+                    // workflows whose value differs from what the plugin assumes when nothing is saved count.
+                    $W=\WorkforceOne\Approvals\Workflows::class;
+                    $n=0;
+                    foreach(is_array($raw)?$raw:[] as $k=>$v){
+                        $k=sanitize_key((string)$k);
+                        if($name==='ews_approval_reject_note')$n+=(int)(!empty($v)!==($k==='attendance_correction'));
+                        elseif($name==='ews_approval_overdue')$n+=(int)((int)$v>0);
+                        elseif($name==='ews_approval_allow_self')$n+=(int)empty($v);
+                        elseif($name==='ews_approval_self_rule')$n+=(int)($W::selfRule((string)$v)!=='allow');
+                        else{$d=is_array($v)?$W::deadlines($v['remind']??0,$v['escalate']??0):['remind'=>0,'escalate'=>0];$n+=(int)($d['remind']>0||$d['escalate']>0);}
+                    }
+                    return [$n>0,$n?$n.' '.($n===1?'workflow':'workflows').' set':''];
                 case 'ews_approval_settings':
-                    // Per workflow (or HR / Finance and the working day): anything saved is a choice made on the Approvals page.
-                    $n=is_array($raw)?count($raw):0;
-                    return [$n>0,$n?$n.' '.($n===1?'entry':'entries').' set':''];
+                    $a=$this->approval_settings();
+                    return [is_array($raw)&&$a!=['hr_user'=>0,'finance_user'=>0,'day_start'=>'09:00','day_end'=>'17:00'],''];
                 default:
                     // A setting with its own reader: compared with what that reader gives for nothing saved.
                     $read=self::settings_overview_readers()[$name]??null;
