@@ -147,20 +147,30 @@ trait EWS_Frontend_Trait {
             if(!$url || strpos((string)wp_parse_url($url,PHP_URL_PATH),'/wp-admin/')!==false)$url=$this->app_home_url();   // admin-post.php, or a wp-admin page: the app
             $query=[];parse_str((string)wp_parse_url($url,PHP_URL_QUERY),$query);
             $keys=array_map('strval',array_keys($query));
-            $drop=array_values(array_filter($keys,function($k){return \WorkforceOne\Ui\OnceKeys::isOnce($k);}));
+            $drop=array_merge(array_values(array_filter($keys,function($k){return \WorkforceOne\Ui\OnceKeys::isOnce($k);})),$this->app_view_dropped_keys($view));
             $from=isset($query['ews_view'])?sanitize_key((string)$query['ews_view']):'';
             if($from!=='' && $from!==$view)$drop=array_merge($drop,array_diff($keys,\WorkforceOne\Ui\OnceKeys::ROUTING,['ews_view']));
             if($drop||$strip)$url=remove_query_arg(array_values(array_unique(array_merge($drop,$strip))),$url);
             return add_query_arg('ews_view',$view,$url);
         }
 
-            private function app_view_url($view){
-            $url=remove_query_arg([
-                'ews_view','leave_error','leave_sent','leave_done','leave_cancel_sent',
+            /** The address keys a link to $view never keeps: results of forms, sheets to open, and another module's state. @return string[] */
+            private function app_view_dropped_keys($view){
+            $keys=[
+                'leave_error','leave_sent','leave_done','leave_cancel_sent',
                 'early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','saved','imported','grid_saved',
                 'time_reset','time_saved','swap_error','swap_sent','swap_done','vacation_sent','vacation_error','vacation_done','vacation_rejected','profile_updated','profile_error','password_updated','password_error',
                 'cx','cx_date','dw_open'
-            ]);
+            ];
+            // In particular, edit_task is an instruction to render a task editor; keeping it while navigating to Leave/Attendance
+            // causes Tasks to reopen the previously selected task when the user returns.
+            if($view!=='tasks')$keys=array_merge($keys,['edit_task','task_tab','task_status','task_priority','task','task_done']);
+            if($view!=='notifications')$keys[]='notification_tab';
+            return $keys;
+        }
+
+            private function app_view_url($view){
+            $url=remove_query_arg(array_merge(['ews_view'],$this->app_view_dropped_keys(sanitize_key($view))));
             // Any one-time result of a form (dw_added, overtime_done, cx_error…) is shown once, then dropped
             // from the menu links; otherwise its popup comes back on every page.
             $once=array_filter(array_map('strval',array_keys($_GET)),function($k){return \WorkforceOne\Ui\OnceKeys::isOnce($k);}); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- key names only
@@ -173,16 +183,7 @@ trait EWS_Frontend_Trait {
                 $drop=array_diff(array_map('strval',array_keys($_GET)),\WorkforceOne\Ui\OnceKeys::ROUTING,['ews_view']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- key names only
                 if($drop)$url=remove_query_arg(array_values($drop),$url);
             }
-            // Module-specific state must not leak into another module.
-            // In particular, edit_task is an instruction to render a task editor;
-            // keeping it while navigating to Leave/Attendance causes Tasks to
-            // reopen the previously selected task when the user returns.
-            if($view!=='tasks') {
-                $url=remove_query_arg(['edit_task','task_tab','task_status','task_priority','task','task_done'],$url);
-            }
-            if($view!=='notifications') {
-                $url=remove_query_arg(['notification_tab'],$url);
-            }
+            // Module-specific state must not leak into another module (app_view_dropped_keys: the task editor, the notifications tab).
             return add_query_arg('ews_view',$view,$url);
         }
 
