@@ -111,5 +111,6 @@ inbox becomes the only app place for those requests.
 ## 11. Owner decisions (2026-11-06)
 - Q4: old pending requests under a workflow that now has levels are **not shown** (the Requests Hub decides them, as today).
 - Mockup first (CLAUDE.md) before the code.
-- Q1–Q3 (leave requests, corrections, early leave): asked again; not decided yet.
-- The other questions take the recommended answer unless the owner says otherwise.
+- Q1–Q3: **leave requests, attendance corrections (workflow "Not set yet", the `pending` stage) and early leave are cards too** (owner 2026-11-06).
+- The mockup (`docs/mockups/approval-reasons/`) is approved.
+- The other questions: the owner left them to the recommended answers ("شوف الصح واعمله"): Q2 HR stage not in this change; Q5 the workflow's overdue hours; Q6 no waiting time for cancellations; Q7 no note field (corrections keep theirs, required); Q8 selectable in bulk; Q9 a redirect "already decided" instead of the bare page; Q10 not in this change; Q11 "No approval workflow".

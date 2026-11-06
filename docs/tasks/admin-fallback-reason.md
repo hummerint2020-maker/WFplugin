@@ -138,4 +138,5 @@ Checks: unit, phpstan, phpcs, modules, translations, golden.
   Teams/Departments; approver no longer active → Approval Workflows; no manager / no account → organization chart or
   Employees), only for those who can edit it.
 - OQ4: **mockup first** before the code.
-- The other questions take the recommended answer unless the owner says otherwise.
+- The mockup (`docs/mockups/approval-reasons/`) is approved.
+- The other questions: the owner left them to the recommended answers ("شوف الصح واعمله"): OQ2 a visible line on the card; OQ3 Hub text only; OQ5 the reason in My requests without the link; OQ6 skipped levels unchanged in this release; OQ7 waiting requests do not move; OQ8 the requester's name in the notification; OQ9 no switch.
