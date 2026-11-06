@@ -328,7 +328,7 @@ _, qs, _ = hr.post('ews_correction_direct', _wpnonce=dn, employee_ref=ref, date=
 adj = q("SELECT month,kind,amount,reason FROM {p}ews_pay_adjustments WHERE reason LIKE 'Attendance correction%%'")
 check('a correction in a closed month does not reopen it', q("SELECT net,data FROM {p}ews_payslips") == slips_before and len(q("SELECT id FROM {p}ews_payroll_runs")) == 1)
 check('...the difference goes to the next open month as an adjustment with its reason', len(adj) == 1 and adj[0]['month'] == pm['current'] and adj[0]['kind'] == 'bonus' and float(adj[0]['amount']) > 0 and pm['day'] in adj[0]['reason'], adj)
-# The filler days of that month are only for this block, but the blocks after it work on days a few days back (day(5), day(6), day(7)), which are in last month early in a month: clear the Sign Outs on those days only, so the rest of the month still counts as earlier attendance.
+# The filler days of that month are only for this block, but the blocks after it work on days a few days back (day(5), day(6), day(7)), which are in last month early in a month: clear the Sign Ins and Sign Outs on those days only, so the rest of the month still counts as earlier attendance.
 for n_back in (5, 6, 7):
     php("$wpdb->query(\"DELETE FROM {$p}ews_time_logs WHERE employee_id=%d AND work_date='%s' AND event_type IN ('sign_in','sign_out')\");" % (E, day(n_back)))
 
