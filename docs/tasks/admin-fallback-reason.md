@@ -132,3 +132,10 @@ Checks: unit, phpstan, phpcs, modules, translations, golden.
 7. Setting the manager later: also move the requests already waiting for administrators? Today not (separate engine change).
 8. The requester's name in the admin notification? Recommended: yes.
 9. Confirm no switch is needed (wording fix, no routing or permission change).
+
+## 10. Owner decisions (2026-11-06)
+- OQ1: **every reason gets its link** to its setting page (HR/Finance → Approval Workflows; team/department manager →
+  Teams/Departments; approver no longer active → Approval Workflows; no manager / no account → organization chart or
+  Employees), only for those who can edit it.
+- OQ4: **mockup first** before the code.
+- The other questions take the recommended answer unless the owner says otherwise.

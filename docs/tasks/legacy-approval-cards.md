@@ -107,3 +107,9 @@ inbox becomes the only app place for those requests.
 9. A second decider on a cancellation gets a bare "Invalid cancellation." page: a redirect "already decided" instead?
 10. The Overtime page lists legacy requests to "Manage Settings" while only "Manage Sign In / Out" decides: align? Not in this change.
 11. Wording of the pill and the path step.
+
+## 11. Owner decisions (2026-11-06)
+- Q4: old pending requests under a workflow that now has levels are **not shown** (the Requests Hub decides them, as today).
+- Mockup first (CLAUDE.md) before the code.
+- Q1–Q3 (leave requests, corrections, early leave): asked again; not decided yet.
+- The other questions take the recommended answer unless the owner says otherwise.
