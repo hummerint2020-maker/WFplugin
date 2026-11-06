@@ -1,0 +1,7 @@
+/* My approvals: why a level is with administrators (docs/tasks/admin-fallback-reason.md) and requests decided outside an
+   approval workflow (docs/tasks/legacy-approval-cards.md). Logical properties only, so the -rtl copy is the same file. */
+.wfo-app .wfo-apv-why{display:flex;align-items:flex-start;gap:8px;margin:0;padding:9px 12px;border-radius:var(--wfo-r-ctl);background:var(--wfo-pri-soft);color:var(--wfo-text);font-size:13px;line-height:1.55}
+.wfo-app .wfo-apv-why .wfo-icon{flex:none;margin-block-start:2px;color:var(--wfo-pri)}
+.wfo-app .wfo-apv-why a{display:inline-block;margin-inline-start:4px;color:var(--wfo-pri);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.wfo-app .wfo-apv-path small.wfo-apv-pwhy{display:block;color:var(--wfo-text)}
+.wfo-app .wfo-apv-pill.is-legacy{background:#EEF0F4;color:#4A5568}
