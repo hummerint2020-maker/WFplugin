@@ -389,7 +389,7 @@ trait EWS_Notifications_Trait {
             $groups[$key][]=['id'=>(int)$n->id,'title'=>(string)$n->title,'message'=>(string)$n->message,'unread'=>!(int)$n->is_read,'when'=>$when,'icon'=>$icon,'tone'=>$tone,
                 'open_url'=>wp_nonce_url(add_query_arg(['action'=>'ews_notification_open','notification_id'=>(int)$n->id],admin_url('admin-post.php')),'ews_notification_open_'.(int)$n->id)];
         }
-        $all_url=$this->app_view_url('notifications');
+        $all_url=remove_query_arg('notification_tab',$this->app_view_url('notifications'));   // app_view_url keeps the view's own tab: "All" from Unread stayed on Unread
         wp_enqueue_style('workforce-one-notifications-page');
         wp_enqueue_script('workforce-one-notifications');
         return $this->render_template('app/notifications',[
@@ -851,7 +851,7 @@ trait EWS_Notifications_Trait {
     private function notification_bell(){
         if(!is_user_logged_in())return '';
         $count=$this->notification_unread_count();
-        $all_url=$this->app_view_url('notifications');
+        $all_url=remove_query_arg('notification_tab',$this->app_view_url('notifications'));   // app_view_url keeps the view's own tab: "All" from Unread stayed on Unread
         $rows=$this->notification_rows(null,5,'all');
         $items='';
         if($rows){

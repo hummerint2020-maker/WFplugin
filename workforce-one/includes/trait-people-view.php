@@ -34,7 +34,7 @@ trait EWS_People_View_Trait {
         return $this->render_template('app/people',[
             'people'=>$people,'search'=>$search,'team_id'=>$team_id,
             'teams'=>$svc->activeTeams(),
-            'clear_url'=>$this->app_view_url('people'),
+            'clear_url'=>remove_query_arg(['people_search','people_team'],$this->app_view_url('people')),   // app_view_url keeps the view's own filters
         ]);
     }
 
