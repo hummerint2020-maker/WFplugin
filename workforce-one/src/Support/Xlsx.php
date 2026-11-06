@@ -117,12 +117,13 @@ final class Xlsx
         $fh = @fopen($path, 'r');
         if (!$fh) return null;
         $first = (string) fgets($fh);
-        $first = preg_replace('/^\xEF\xBB\xBF/', '', $first);
+        $bom = strncmp($first, "\xEF\xBB\xBF", 3) === 0;
+        if ($bom) $first = substr($first, 3);
         $sep = substr_count($first, ';') > substr_count($first, ',') ? ';' : ',';
-        rewind($fh);
+        // Past the byte order mark: read with it, a quoted first header ("Employee ID") keeps its quotes and is not recognised.
+        fseek($fh, $bom ? 3 : 0);
         $rows = [];
         while (($r = fgetcsv($fh, 0, $sep, '"', '\\')) !== false) {
-            if (!$rows && isset($r[0])) $r[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $r[0]);
             $rows[] = array_map(static function ($v) { $v = (string) $v; return strpos($v, "'") === 0 ? substr($v, 1) : $v; }, $r);
             if (count($rows) > 20000) break;
         }
@@ -157,10 +158,28 @@ final class Xlsx
     private static function xml(string $s): ?\SimpleXMLElement
     {
         if (stripos($s, '<!DOCTYPE') !== false) return null;   // no entities
+        $s = self::unprefixed($s);
         $prev = libxml_use_internal_errors(true);
         $x = simplexml_load_string($s, 'SimpleXMLElement', LIBXML_NONET);
         libxml_use_internal_errors($prev);
         return $x ?: null;
+    }
+
+    /**
+     * Excel writes the spreadsheet and relationship elements in the default namespace (<worksheet>, <row>, <c>); some
+     * other tools give them a prefix (<x:worksheet xmlns:x="...">), which SimpleXML does not see as $x->sheetData. Such a
+     * prefix is turned into the default namespace, unless the part already declares a default namespace.
+     */
+    private static function unprefixed(string $s): string
+    {
+        foreach (['http://schemas.openxmlformats.org/spreadsheetml/2006/main', 'http://schemas.openxmlformats.org/package/2006/relationships'] as $ns) {
+            if (!preg_match('/\sxmlns:([A-Za-z_][\w.-]*)\s*=\s*["\']' . preg_quote($ns, '/') . '["\']/', $s, $m)) continue;
+            if (preg_match('/\sxmlns\s*=\s*["\']/', $s)) continue;
+            $p = preg_quote($m[1], '/');
+            $s = (string) preg_replace('/<(\/?)' . $p . ':/', '<$1', $s);
+            $s = (string) preg_replace('/\sxmlns:' . $p . '(\s*=)/', ' xmlns$1', $s, 1);
+        }
+        return $s;
     }
 
     private static function text(?\SimpleXMLElement $node): string
