@@ -93,6 +93,7 @@ check('...and the column counts count what it shows (QA report on 3.31.138): To 
 check('...and the late High task it does not list is not counted as overdue', 'task is overdue' not in page)
 st, page, _ = emp.req(PAGE + '&task_priority=high')
 check('...with High it is listed and counted', column(page, 'in_progress') == ['Prepare roster'] and '1 task is overdue' in page, column(page, 'in_progress'))
+check('...the page carries what the search needs: the late card marked, the sentence for each number', page.count('data-ews-overdue') == 1 and 'data-ews-late-texts=' in page)
 
 # A manager assigns a task to the employee.
 st, page, _ = adm.req(PAGE)

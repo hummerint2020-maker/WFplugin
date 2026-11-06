@@ -1,4 +1,4 @@
-/* Employee app → Tasks (templates/app/tasks.php): search (the column counts follow it), the priority filter, asking before a task is
+/* Employee app → Tasks (templates/app/tasks.php): search (the column counts and the overdue line follow it), the priority filter, asking before a task is
    deleted, the New task form (who gets it, repeat), the chosen file's name, closing a task or the Edit
    sheet (the page address forgets it), and dragging a card to another column on a computer (it sends
    the same Start / Done / Back form as the buttons; only the allowed moves accept a drop). */
@@ -27,6 +27,15 @@
                 if (!n) return;
                 n.textContent = q ? String(col.querySelectorAll('.wfo-tk-card:not([hidden])').length) : n.getAttribute('data-ews-col-count');
             });
+            // The overdue line too: the late cards the search leaves, in the page's own sentence for that number.
+            var late = page.querySelector('[data-ews-late-texts]');
+            if (late) {
+                var texts = {}, text = late.querySelector('span');
+                try { texts = JSON.parse(late.getAttribute('data-ews-late-texts')) || {}; } catch (e) { texts = {}; }
+                var left = page.querySelectorAll('.wfo-tk-card[data-ews-overdue]:not([hidden])').length;
+                late.hidden = left === 0;
+                if (left && texts[left] && text) text.textContent = texts[left];
+            }
         });
 
         page.querySelectorAll('[data-ews-autosubmit]').forEach(function (el) {
