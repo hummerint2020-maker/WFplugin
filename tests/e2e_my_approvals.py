@@ -4,8 +4,8 @@ signed-in person (leave, overtime, corrections, swaps), with its level, wait in 
 first, "moved up from", the path; a decision taken there goes through the request's own handler and
 comes back; a reason to reject per type; administrators see the levels waiting for them; approving
 several at once (the same forms, one after the other); the menu count, the home card and the link on
-the pages with their own lists; My requests with the path and withdrawing a waiting leave, overtime
-or correction.
+the pages with their own lists; My requests with the path and withdrawing a waiting leave, overtime,
+early leave or correction.
 
 Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_my_approvals.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
@@ -27,7 +27,7 @@ PAGE = '/wp-admin/admin.php?page=ews31-approvals'
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 ids = json.loads(php("""
     $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
-    foreach(['ews_leave_requests','ews_leave_balances','ews_leave_schedule_snapshots','ews_overtime_requests','ews_attendance_corrections','ews_schedule_swaps','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps','ews_employee_relationships','ews_audit_log','ews_notifications'] as $t) $wpdb->query("DELETE FROM {$p}$t");
+    foreach(['ews_leave_requests','ews_leave_balances','ews_leave_schedule_snapshots','ews_overtime_requests','ews_early_leave_requests','ews_attendance_corrections','ews_schedule_swaps','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps','ews_employee_relationships','ews_audit_log','ews_notifications'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
     foreach(['ews_approval_allow_self','ews_approval_self_rule','ews_approval_deadlines','ews_approval_settings','ews_approval_reject_note','ews_approval_overdue','ews_feature_my_approvals'] as $o) delete_option($o);
     update_option('ews_working_days',[0,1,2,3,4,5,6],false);
@@ -234,6 +234,36 @@ allhref = re.search(r'<nav class="wfo-apv-filters".*?<a href="([^"]+)"', apg, re
 check('...the same in My approvals', allhref is None or 'apv_kind' not in html.unescape(allhref.group(1)))
 check('...shown as Withdrawn', 'Withdrawn' in re.search(r'data-req="overtime-%d".*?</article>' % wo, emp.req('/app/?ews_view=requests')[1], re.S).group(0))
 
+# ---------------------------------------------------------------- early leave in My requests (QA report on 3.31.138, owner decision 2026-11-06)
+ew, ed, eo = json.loads(php("""foreach(['Pending'=>60,'Approved'=>30] as $st=>$m){$wpdb->insert($p.'ews_early_leave_requests',['employee_id'=>%d,'work_date'=>current_time('Y-m-d'),'leave_minutes'=>$m,'reason'=>'doctor','status'=>$st,'requested_by'=>%d,'requested_at'=>current_time('mysql')]);$o[]=(int)$wpdb->insert_id;}
+$wpdb->insert($p.'ews_early_leave_requests',['employee_id'=>%d,'work_date'=>current_time('Y-m-d'),'leave_minutes'=>45,'reason'=>'other','status'=>'Pending','requested_by'=>%d,'requested_at'=>current_time('mysql')]);$o[]=(int)$wpdb->insert_id;
+echo wp_json_encode($o);""" % (ids['emp'], ids['emp_uid'], ids['sami'], ids['sami_uid'])).splitlines()[-1])
+mine = emp.req('/app/?ews_view=requests')[1]
+blk = re.search(r'data-req="early-%d".*?</article>' % ew, mine, re.S)
+check('My requests lists the waiting early leave, with Withdraw', blk is not None and 'Early leave' in blk.group(0) and 'tone-early" data-req="early-%d"' % ew in mine and 'value="ews_request_withdraw"' in blk.group(0))
+dblk = re.search(r'data-req="early-%d".*?</article>' % ed, mine, re.S)
+check('...the approved one too, without Withdraw', dblk is not None and 'ews_request_withdraw' not in dblk.group(0))
+check('...not a colleague\'s', 'data-req="early-%d"' % eo not in mine)
+used = lambda: int(q("SELECT COALESCE(SUM(leave_minutes),0) m FROM {p}ews_early_leave_requests WHERE employee_id=%d AND status IN ('Pending','Approved')" % ids['emp'])[0]['m'])
+m = re.search(r'data-req="early-%d".*?name="_wpnonce" value="([^"]+)"' % ew, mine, re.S)
+st, qs, _ = S['sami'].post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ew)
+check('someone else cannot withdraw it', q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ew)[0]['status'] == 'Pending')
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=eo)
+check('...nor can the employee withdraw a colleague\'s by its id (the form is for one request)', st == 403 and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % eo)[0]['status'] == 'Pending', qs)
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=session_nonce(emp, ids['emp_uid'], 'ews_request_withdraw_early_%d' % eo), kind='early', id=eo)
+check('...not even with a token made for that id', qs.get('req_error') == 'done' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % eo)[0]['status'] == 'Pending', qs)
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=session_nonce(emp, ids['emp_uid'], 'ews_request_withdraw_early_%d' % ed), kind='early', id=ed)
+check('...nor an approved one, even with its own form token', qs.get('req_error') == 'done' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ed)[0]['status'] == 'Approved', qs)
+before = used()
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ew)
+check('withdrawing the waiting early leave: cancelled, its 60 minutes free again this month, in the Audit Log', qs.get('req_done') == 'early' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ew)[0]['status'] == 'Cancelled'
+      and used() == before - 60 and q("SELECT id FROM {p}ews_audit_log WHERE action='early_leave_withdrawn' AND entity_id=%d" % ew), (qs, before, used()))
+check('...shown as Withdrawn', 'Withdrawn' in re.search(r'data-req="early-%d".*?</article>' % ew, emp.req('/app/?ews_view=requests')[1], re.S).group(0))
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ew)
+check('...twice: "already decided"', qs.get('req_error') == 'done', qs)
+st, qs, _ = adm.post('ews_early_leave_respond', _wpnonce=session_nonce(adm, ids['admin_uid'], 'ews_early_leave_respond'), request_id=ew, decision='approve')
+check('...a manager deciding it afterwards is told it was already decided or withdrawn, and it stays withdrawn', qs.get('early_error') == 'decided' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ew)[0]['status'] == 'Cancelled', (st, qs))
+
 # ---------------------------------------------------------------- 3.31.105: "+ New request" on My requests
 mine = emp.req('/app/?ews_view=requests')[1]
 kinds = re.findall(r'data-new-kind="([a-z]+)"', mine)
@@ -285,6 +315,6 @@ php("$wpdb->query(\"UPDATE {$p}ews_employees SET department_id=NULL WHERE id IN 
 
 php("""foreach(['ews_feature_my_approvals','ews_approval_reject_note','ews_approval_overdue'] as $o) delete_option($o); update_option('ews_feature_overtime',0,false); update_option('ews_feature_corrections',0,false);
 $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
-foreach(['ews_leave_requests','ews_overtime_requests','ews_attendance_corrections','ews_schedule_swaps','ews_approval_requests','ews_approval_steps'] as $t) $wpdb->query("DELETE FROM {$p}$t");""")
+foreach(['ews_leave_requests','ews_overtime_requests','ews_early_leave_requests','ews_attendance_corrections','ews_schedule_swaps','ews_approval_requests','ews_approval_steps'] as $t) $wpdb->query("DELETE FROM {$p}$t");""")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

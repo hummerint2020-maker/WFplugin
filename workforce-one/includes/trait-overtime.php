@@ -236,7 +236,7 @@ trait EWS_Overtime_Trait {
                 $error=EarlyLeaveRules::check($facts);
             }
             if($error)$this->leave_redirect(['early_error'=>$error]);
-            $ok=$wpdb->insert($wpdb->prefix.'ews_early_leave_requests',['employee_id'=>$emp->id,'work_date'=>$date,'leave_minutes'=>$minutes,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id()],['%d','%s','%d','%s','%s','%d']);
+            $ok=$wpdb->insert($wpdb->prefix.'ews_early_leave_requests',['employee_id'=>$emp->id,'work_date'=>$date,'leave_minutes'=>$minutes,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'requested_at'=>current_time('mysql')],['%d','%s','%d','%s','%s','%d','%s']);   // the site's time, as overtime (not the database server's clock)
             if($ok===false)$this->leave_redirect(['early_error'=>'save']);
             $id=$wpdb->insert_id;
             $msg=$emp->name.' requested Early Leave of '.floor($minutes/60).'h '.($minutes%60).'m on '.$date.'.';
@@ -254,15 +254,15 @@ trait EWS_Overtime_Trait {
             $id=absint($_POST['request_id']??0);$decision=sanitize_key($_POST['decision']??'');
             if(!in_array($decision,['approve','reject'],true))wp_die('Invalid decision.');
             $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE id=%d AND status='Pending'",$id));
-            if(!$r)wp_die('Early Leave request not found.');
-            // Validate the schedule before changing state, so a conflict never leaves it Approved.
-            // The schedule itself stays Office: Early Leave is an attendance exception, not a schedule type.
-            if($decision==='approve'&&!$this->early_leave_can_approve($r))$this->leave_redirect(['early_error'=>'approval_conflict']);
+            // Not waiting any more (withdrawn or decided since the page was opened): say so. Then validate the schedule before
+            // changing state, so a conflict never leaves it Approved. The schedule itself stays Office: Early Leave is an
+            // attendance exception, not a schedule type.
+            if(!$r || ($decision==='approve'&&!$this->early_leave_can_approve($r)))$this->leave_redirect(['early_error'=>$r?'approval_conflict':'decided']);
             $requester=$this->people_employee((int)$r->employee_id,true);
             if(!$this->approval_self_gate((int)($requester->wp_user_id??0),(bool)(int)$this->option('ews_early_leave_self'),'early_leave #'.(int)$id))wp_die(esc_html__('You cannot decide your own request. Another approver must.','workforce-one'),'',['response'=>403]);
             $wpdb->query('START TRANSACTION');
             $updated=$this->early_leave_set_status($id,$decision==='approve'?'Approved':'Rejected');
-            if($updated!==1){$wpdb->query('ROLLBACK');$this->leave_redirect(['early_error'=>$updated===false?'save':'approval_conflict']);}
+            if($updated!==1){$wpdb->query('ROLLBACK');$this->leave_redirect(['early_error'=>$updated===false?'save':'decided']);}
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->leave_redirect(['early_error'=>'save']);}
             $this->early_leave_notify_employee($r,$decision);
             $this->leave_redirect(['leave_done'=>1]);
@@ -349,6 +349,32 @@ trait EWS_Overtime_Trait {
                     'approval'=>['overtime','overtime_request',(int)$r->id],'withdraw'=>$r->status==='Pending'?'overtime':'','id'=>(int)$r->id];
             }
             return $out;
+        }
+
+    /**
+     * The employee's early leave requests for My requests (owner decision 2026-11-06, QA report on 3.31.138): the same
+     * item as overtime's; early leave has no approval engine, so it has no "who decides it" path. Withdrawable while it waits.
+     * @return list<array<string,mixed>>
+     */
+    private function early_leave_my_requests($employee_id,$limit=20){
+            global $wpdb;$this->ensure_leave_schema();
+            $out=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE employee_id=%d ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
+                $out[]=['key'=>'early-'.(int)$r->id,'tone'=>'early','title'=>__('Early leave','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->work_date)).' · '.$this->duration_label((int)$r->leave_minutes),
+                    'sub'=>'','state'=>['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Cancelled'=>'withdrawn'][$r->status]??'cancelled','when'=>(string)$r->requested_at,
+                    'approval'=>['early_leave','early_leave',(int)$r->id],'withdraw'=>$r->status==='Pending'?'early':'','id'=>(int)$r->id];
+            }
+            return $out;
+        }
+
+    /** The employee withdraws an early leave request still waiting (My requests): it no longer counts against the month. @return true|string */
+    private function early_leave_withdraw($id,$employee_id){
+            global $wpdb;$this->ensure_leave_schema();
+            $ok=$wpdb->update($wpdb->prefix.'ews_early_leave_requests',['status'=>'Cancelled','reviewed_by'=>get_current_user_id(),'reviewed_at'=>current_time('mysql')],['id'=>(int)$id,'employee_id'=>(int)$employee_id,'status'=>'Pending'],['%s','%d','%s'],['%d','%d','%s']);
+            if($ok===false)return 'save';
+            if($ok!==1)return 'done';
+            $this->audit('early_leave_withdrawn','early_leave',(int)$id,'Withdrawn by the employee');
+            return true;
         }
 
     /** The employee withdraws an overtime request still waiting (My requests). @return true|string */
