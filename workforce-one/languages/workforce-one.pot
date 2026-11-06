@@ -10931,3 +10931,39 @@ msgstr ""
 #: includes/trait-frontend.php
 msgid "This request was already decided or withdrawn, so nothing was changed."
 msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Anyone who can manage Sign In / Out"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "The overtime approval workflow is not set yet, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Early leave has no approval workflow, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Anyone who can manage settings"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Leave approvals are off, so the cancellation is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Leave approvals are off, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "The correction approval workflow is not set yet, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Deciding now"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "No approval workflow"
+msgstr ""

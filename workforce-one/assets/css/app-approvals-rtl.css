@@ -133,3 +133,5 @@
 .wfo-app .wfo-si-note{margin:6px 0 0;color:var(--wfo-muted);font-size:12px}
 .wfo-app .wfo-si-note.is-warn{color:#8A5A00}
 .wfo-app .wfo-apv-item.is-focus{box-shadow:0 0 0 3px var(--wfo-pri)}
+.wfo-app .wfo-apv-pill.is-legacy{background:#EEF0F4;color:#4A5568}
+.wfo-app .wfo-apv-path small.wfo-apv-pwhy{display:block;color:var(--wfo-ink)}

@@ -110,11 +110,47 @@ trait EWS_My_Approvals_Trait {
                 'for'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id===$uid?$this->people_name((int)$row->for_employee_id):'',
                 'with'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id!==$uid?$this->approval_user_name((int)$row->approver_wp_user_id):''];
         }
+        foreach($this->my_approvals_legacy_items($s,$days,$now) as $it)$out[]=$it;
         usort($out,function($a,$b){
             if($a['path']['overdue']!==$b['path']['overdue'])return $a['path']['overdue']?-1:1;
             return $b['path']['hours']<=>$a['path']['hours'];
         });
         return $this->my_approvals_memo=$out;
+    }
+
+    /**
+     * Requests decided outside an approval workflow (QA 6, owner decisions 2026-11-06, docs/tasks/legacy-approval-cards.md):
+     * overtime and corrections whose workflow is "Not set yet", leave requests and cancellations while leave approvals are off,
+     * early leave. Each module lists them for the people its handler lets decide (the same capability and self rule); a request
+     * with an open engine level is left to its engine card, so nothing shows twice. The card posts to the module's own handler
+     * (approval_step 0: if a level opened meanwhile, the handler says "moved"). No level, and no note where the path keeps none.
+     * @param array<string,mixed> $s approval settings @param array<int,int> $days working days
+     * @return list<array<string,mixed>>
+     */
+    private function my_approvals_legacy_items($s,$days,$now){
+        $cands=array_merge($this->overtime_legacy_approvals(),$this->early_leave_legacy_approvals(),$this->leave_legacy_approvals(),$this->cx_legacy_approvals());
+        if(!$cands)return [];
+        $open=$this->approval_shown_steps(array_map(function($c){return $c['key'];},$cands));
+        $me=get_current_user_id();$admin=current_user_can('manage_options');
+        $out=[];
+        foreach($cands as $c){
+            [$wk,$et,$eid]=$c['key'];
+            if(!empty($open[$this->approval_request_key($wk,$et,$eid)]))continue;
+            $card=$c['card'];
+            $emp=$this->people_employee((int)$card['employee_id'],(bool)$c['active']);
+            if(!$emp && $c['active'])continue;   // its handler refuses a request of an archived employee
+            if($emp && (int)$emp->wp_user_id===$me && !$c['allow'] && !$admin)continue;   // the handler's self rule
+            $wait=($card['wait']??true)!==false;
+            $hours=$wait?\WorkforceOne\Approvals\WorkingHours::between((string)$card['since'],$now,$days,$s['day_start'],$s['day_end']):0.0;
+            $sub=$wait?sprintf(/* translators: %s: working hours */__('Deciding now · waiting %s working hours','workforce-one'),number_format_i18n($hours,$hours<10&&floor($hours)!=$hours?1:0)):__('Deciding now','workforce-one');
+            $card['fields']=(array)($card['fields']??[])+['approval_step'=>0];
+            $out[]=$card+['id'=>0,'item_key'=>'legacy-'.$et.'-'.(int)$eid,'workflow'=>$wk,'entity_type'=>$et,'entity_id'=>(int)$eid,
+                'name'=>$emp?(string)$emp->name:__('Employee','workforce-one'),'title'=>$emp?trim((string)($emp->job_title??'')):'','picture'=>$emp?$this->employee_picture_url($emp):'',
+                'path'=>['id'=>0,'level'=>0,'levels'=>0,'hours'=>$hours,'overdue'=>$wait && $hours>=$this->approval_overdue_hours($wk),'moved_from'=>'','note'=>'',
+                    'steps'=>[['order'=>1,'state'=>'now','label'=>(string)$c['who'],'who'=>'','sub'=>$sub,'why'=>(string)$c['why']]]],
+                'admins'=>false,'legacy'=>true,'wait'=>$wait,'note_field'=>!empty($card['note_field']),'note_required'=>!empty($c['note_required']),'for'=>'','with'=>''];
+        }
+        return $out;
     }
 
     /** How many shift swaps wait for the signed-in person's decision, asked of them or as approver (the Schedule page, 3.31.124). */

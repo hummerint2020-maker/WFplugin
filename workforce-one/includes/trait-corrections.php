@@ -1152,6 +1152,25 @@ trait EWS_Corrections_Trait {
             'action'=>'ews_correction_decide','nonce'=>'ews_correction_decide_'.(int)$id,'fields'=>['correction_id'=>(int)$id,'request_stage'=>'pending'],'link'=>add_query_arg('ews_view','corrections',$this->app_home_url())];
     }
 
+    /**
+     * Corrections waiting while their workflow is "Not set yet", for My approvals (QA 6): the same people as the Corrections
+     * page (cx_can_manage, never one's own). The HR stage is not included. @return list<array<string,mixed>>
+     */
+    private function cx_legacy_approvals(){
+        if(!$this->corrections_enabled() || !$this->can('ews_manage_time') || \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode()))return [];
+        $this->ensure_corrections_schema_once();
+        $me=get_current_user_id();$out=[];
+        foreach($this->services()->correctionQuery()->toDecideOpen() as $c){
+            if((int)$c->employee_user_id===$me || !$this->cx_can_manage((int)$c->employee_id))continue;
+            $card=$this->cx_approval_card((int)$c->id);
+            if(!$card)continue;
+            $card['note_field']=true;
+            $out[]=['key'=>['attendance_correction','attendance_correction',(int)$c->id],'card'=>$card,'allow'=>false,'active'=>false,'note_required'=>true,
+                'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('The correction approval workflow is not set yet, so it is decided as before','workforce-one')];
+        }
+        return $out;
+    }
+
     /** An employee's corrections for My requests, newest first. @return list<array<string,mixed>> */
     private function cx_my_requests($employee_id,$limit=20){
         if(!$this->corrections_enabled())return [];

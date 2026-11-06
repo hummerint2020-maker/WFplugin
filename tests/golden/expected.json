@@ -16,6 +16,14 @@
         "ews_feature_my_approvals": 1,
         "ews_feature_substitutes": 1
       }
+    },
+    {
+      "url": "/app/?ews_view=approvals",
+      "reason": "QA 6 (docs/tasks/legacy-approval-cards.md): requests decided outside an approval workflow are cards for the people who decide them today (the providers read each module's waiting requests)",
+      "options": {
+        "ews_feature_my_approvals": 1,
+        "ews_feature_substitutes": 1
+      }
     }
   ],
   "actions": {},

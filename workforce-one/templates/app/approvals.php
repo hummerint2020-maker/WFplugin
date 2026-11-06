@@ -75,11 +75,12 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
             <?php else: ?>
             <div class="wfo-apv-meta">
                 <?php if ($p['levels'] > 0): ?><span class="wfo-apv-pill"><?php echo esc_html(sprintf(/* translators: 1: level, 2: number of levels */ __('Level %1$s of %2$s', 'workforce-one'), $num($p['level']), $num($p['levels']))); ?></span><?php endif; ?>
-                <span class="wfo-apv-pill<?php echo $p['overdue'] ? ' is-late' : ''; ?>"><?php echo esc_html(($p['overdue'] ? __('Overdue', 'workforce-one') . ' · ' : '') . sprintf(/* translators: %s: working hours */ __('Waiting %s working h', 'workforce-one'), $num(round($p['hours'], 1)))); ?></span>
+                <?php if (($it['wait'] ?? true) !== false): ?><span class="wfo-apv-pill<?php echo $p['overdue'] ? ' is-late' : ''; ?>"><?php echo esc_html(($p['overdue'] ? __('Overdue', 'workforce-one') . ' · ' : '') . sprintf(/* translators: %s: working hours */ __('Waiting %s working h', 'workforce-one'), $num(round($p['hours'], 1)))); ?></span><?php endif; ?>
                 <?php if ($p['moved_from'] !== ''): ?><span class="wfo-apv-pill is-warn"><?php echo esc_html(sprintf(/* translators: %s: person */ __('Moved up from %s', 'workforce-one'), $p['moved_from'])); ?></span><?php endif; ?>
                 <?php if (!empty($it['for'])): ?><span class="wfo-apv-pill is-brand" data-apv-for><?php echo esc_html(sprintf(/* translators: %s: the manager away */ __('For %s', 'workforce-one'), $it['for'])); ?></span><?php endif; ?>
                 <?php if (!empty($it['with'])): ?><span class="wfo-apv-pill" data-apv-with><?php echo esc_html(sprintf(/* translators: %s: the substitute */ __('With %s while you are away', 'workforce-one'), $it['with'])); ?></span><?php endif; ?>
                 <?php if ($it['admins']): ?><span class="wfo-apv-pill is-brand"><?php esc_html_e('For administrators', 'workforce-one'); ?></span><?php endif; ?>
+                <?php if (!empty($it['legacy'])): /* decided outside an approval workflow (QA 6) */ ?><span class="wfo-apv-pill is-legacy"><?php esc_html_e('No approval workflow', 'workforce-one'); ?></span><?php endif; ?>
             </div>
             <?php endif; ?>
             <?php if (!$peer): ?>
@@ -88,9 +89,9 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php if ($it['facts']): ?><dl class="wfo-apv-facts"><?php foreach ($it['facts'] as [$k, $v]): ?><dt><?php echo esc_html($k); ?></dt><dd><?php echo esc_html($v); ?></dd><?php endforeach; ?></dl><?php endif; ?>
                 <h3><?php esc_html_e('The path', 'workforce-one'); ?></h3>
                 <ol class="wfo-apv-path">
-                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
+                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small><?php if (($st['why'] ?? '') !== ''): ?><small class="wfo-apv-pwhy"><?php echo esc_html($st['why']); ?></small><?php endif; ?></div></li><?php endforeach; ?>
                 </ol>
-                <?php if ($can): ?>
+                <?php if ($can && (empty($it['legacy']) || !empty($it['note_field']))): /* a path that keeps no note shows no field (QA 6) */ ?>
                 <label class="wfo-apv-note"><span><?php echo $it['note_required'] ? esc_html__('Note (needed to reject)', 'workforce-one') : esc_html__('Note (optional)', 'workforce-one'); ?></span><textarea name="note" rows="2" maxlength="500"></textarea></label>
                 <p class="wfo-apv-err" data-apv-note-err hidden><?php esc_html_e('Write why you reject it first.', 'workforce-one'); ?></p>
                 <?php endif; ?>

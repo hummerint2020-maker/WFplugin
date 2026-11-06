@@ -269,6 +269,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_approval_engine.py "$S"
       - name: My approvals and My requests (off by default, the inbox, deciding there, a reason to reject, overdue, administrators, withdrawing)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_my_approvals.py "$S"
+      - name: My approvals, requests outside an approval workflow (QA 6)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_my_approvals_legacy.py "$S"
       - name: A substitute while a manager is away (off by default, routed "for" the manager, back on return, with a leave, I'll be away, HR)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_substitutes.py "$S"
       - name: Shift history (periods per employee, dated shift times, every day counted with its own shift)
