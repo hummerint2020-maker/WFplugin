@@ -180,6 +180,14 @@ ba, _ = ar_id('leave', blid)
 apg = inbox(adm)
 check('Big Boss has no manager: his leave waits for administrators, in their inbox, marked', ba in [int(i) for i, _ in items(apg)] and 'For administrators' in dict(items(apg))[str(ba)])
 check('...not in Mona\'s', ba not in [int(i) for i, _ in items(inbox(S['mona']))])
+# QA 8 (3.31.142): the card says why it came to the administrators, with the setting that sends the next ones to the right person.
+bcard = html.unescape(dict(items(apg))[str(ba)])
+check('...the card says why: Big Boss has no direct manager, with the link to set it (organization chart or Employees)',
+      'It came to administrators because Big Boss has no direct manager.' in bcard and 'Set their manager so their next requests go to them' in bcard
+      and ('page=ews31-org-chart' in bcard or 'page=ews31-employees&s=Big' in bcard), bcard[-900:])
+check('...and the path says it too', 'Administrators decide it: no direct manager is set' in bcard)
+bmine = html.unescape(S['big'].req('/app/?ews_view=requests')[1])
+check('...Big Boss sees the reason in My requests, without the link', 'Administrators decide it: no direct manager is set' in bmine and 'Set their manager' not in bmine)
 f = form_of(apg, ba); f['decision'] = 'approve'
 adm.req('/wp-admin/admin-post.php', f)
 check('...an administrator approves it there', ar_id('leave', blid)[1] == 'APPROVED' and q("SELECT status FROM {p}ews_leave_requests WHERE id=%d" % blid)[0]['status'] == 'Approved')

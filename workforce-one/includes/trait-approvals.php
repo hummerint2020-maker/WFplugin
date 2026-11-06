@@ -249,13 +249,79 @@ trait EWS_Approvals_Trait {
         return $this->services()->workflows()->keyById((int)$workflow_id);
     }
 
-    /** Tells the site's administrators that a step waits for them (its approver was the requester). */
-    private function approval_notify_administrators($approval_request_id,$step_order){
-        $request_id=(int)$approval_request_id;
+    /**
+     * Tells the site's administrators that a step waits for them, and why (QA 8, docs/tasks/admin-fallback-reason.md): $reason is
+     * an AdminReason code ('' or 'unknown': a neutral text); $who the requester's employee id, or for 'moved_up' the name of the
+     * approver it moved up from.
+     */
+    private function approval_notify_administrators($approval_request_id,$step_order,$reason='',$who=0){
+        $request_id=(int)$approval_request_id;$order=(int)$step_order;
+        $name=$reason==='moved_up'?(string)$who:((int)$who?$this->people_name((int)$who):'');
+        /* translators: 1: approval request number, 2: approval level */
+        $start=__('Approval #%1$d, level %2$d, waits for an administrator.','workforce-one');
+        $end=__('Decide it in wp-admin → Requests Hub.','workforce-one');
+        switch($name!==''||!in_array($reason,['no_manager','no_managers_manager','no_team_manager','no_department_manager','moved_up'],true)?$reason:'unknown'){
+            case 'self': $msg=sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order);break;
+            case 'no_manager': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: employee name */__('Approval #%1$d, level %2$d, waits for an administrator: %3$s has no direct manager. Decide it in wp-admin → Requests Hub, and set their manager in the organization chart so their next requests go to them.','workforce-one'),$request_id,$order,$name);break;
+            case 'no_managers_manager': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: employee name */__('Approval #%1$d, level %2$d, waits for an administrator: the manager of %3$s has no manager. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order,$name);break;
+            case 'no_team_manager': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: employee name */__('Approval #%1$d, level %2$d, waits for an administrator: the team of %3$s has no manager. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order,$name);break;
+            case 'no_department_manager': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: employee name */__('Approval #%1$d, level %2$d, waits for an administrator: the department of %3$s has no manager. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order,$name);break;
+            case 'no_hr': $msg=sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: HR is not set in Approval Workflows. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order);break;
+            case 'no_finance': $msg=sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: Finance is not set in Approval Workflows. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order);break;
+            case 'approver_gone': $msg=sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: the approver chosen for this level is no longer active. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order);break;
+            case 'no_login': $msg=sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: its approver has no WordPress account. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order);break;
+            case 'moved_up': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: the approver it moved up from */__('Approval #%1$d, level %2$d, waits for an administrator: it was not decided in time and there is nobody above %3$s to move it to. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order,$name);break;
+            default: $msg=sprintf($start,$request_id,$order).' '.$end;
+        }
         foreach(get_users(['capability'=>'manage_options','fields'=>'ID']) as $uid){
-            $this->notify((int)$uid,'system',__('Approval needed','workforce-one'),
-                sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,(int)$step_order),
+            $this->notify((int)$uid,'system',__('Approval needed','workforce-one'),$msg,
                 ['entity'=>'approval','entity_id'=>$request_id,'push'=>true,'url'=>admin_url('admin.php?page=ews31-requests')]);
+        }
+    }
+
+    /** The line under "Administrators" in a request's path: why the level is with them (QA 8). */
+    private function approval_admin_reason_text($code,$from_name=''){
+        switch($code){
+            case 'self': return __('Administrators decide it: the approver made the request','workforce-one');
+            case 'no_manager': return __('Administrators decide it: no direct manager is set','workforce-one');
+            case 'no_managers_manager': return __('Administrators decide it: no manager\'s manager is set','workforce-one');
+            case 'no_team_manager': return __('Administrators decide it: no team manager is set','workforce-one');
+            case 'no_department_manager': return __('Administrators decide it: no department manager is set','workforce-one');
+            case 'no_hr': return __('Administrators decide it: HR is not set','workforce-one');
+            case 'no_finance': return __('Administrators decide it: Finance is not set','workforce-one');
+            case 'approver_gone': return __('Administrators decide it: the chosen approver is no longer active','workforce-one');
+            case 'no_login': return __('Administrators decide it: the approver has no user account','workforce-one');
+            case 'moved_up': return $from_name!==''?sprintf(/* translators: %s: the approver it moved up from */__('Administrators decide it: not decided in time, and nobody is above %s','workforce-one'),$from_name):__('Administrators decide it: not decided in time, and nobody is above','workforce-one');
+            case '': return '';
+            default: return __('Administrators decide it','workforce-one');
+        }
+    }
+
+    /**
+     * The card line for an administrator (QA 8, owner decision 2026-11-06: a link for every reason, only for those who can change
+     * the setting): why it came to them, and where to set it so the next requests go to the right person.
+     * @return array{text:string,link:string,url:string}|null
+     */
+    private function approval_admin_reason_hint($code,$employee_name,$from_name=''){
+        if($code==='')return null;
+        // Each link only for those who can open its page: the organization chart and Employees need ews_manage_employees; Teams,
+        // Departments and Approval Workflows are administrators' pages (manage_options).
+        $people=$this->can('ews_manage_employees');$admin=current_user_can('manage_options');
+        $manager_url=$people?($this->org_enabled()?admin_url('admin.php?page=ews31-org-chart'):add_query_arg('s',rawurlencode((string)$employee_name),admin_url('admin.php?page=ews31-employees'))):'';
+        $workflows_url=$admin?admin_url('admin.php?page=ews31-approvals'):'';
+        $set_manager=__('Set their manager so their next requests go to them','workforce-one');
+        switch($code){
+            case 'self': return ['text'=>__('It came to administrators because the approver made the request.','workforce-one'),'link'=>'','url'=>''];
+            case 'no_manager': return ['text'=>sprintf(/* translators: %s: employee name */__('It came to administrators because %s has no direct manager.','workforce-one'),$employee_name),'link'=>$manager_url?$set_manager:'','url'=>$manager_url];
+            case 'no_managers_manager': return ['text'=>sprintf(/* translators: %s: employee name */__('It came to administrators because the manager of %s has no manager.','workforce-one'),$employee_name),'link'=>$manager_url?__('Set the manager\'s manager','workforce-one'):'','url'=>$manager_url];
+            case 'no_team_manager': $u=$admin?admin_url('admin.php?page=ews31-teams'):'';return ['text'=>sprintf(/* translators: %s: employee name */__('It came to administrators because the team of %s has no manager.','workforce-one'),$employee_name),'link'=>$u?__('Set the team manager','workforce-one'):'','url'=>$u];
+            case 'no_department_manager': $u=$admin?admin_url('admin.php?page=ews31-departments'):'';return ['text'=>sprintf(/* translators: %s: employee name */__('It came to administrators because the department of %s has no manager.','workforce-one'),$employee_name),'link'=>$u?__('Set the department manager','workforce-one'):'','url'=>$u];
+            case 'no_hr': return ['text'=>__('It came to administrators because HR is not set in Approval Workflows.','workforce-one'),'link'=>$workflows_url?__('Set HR','workforce-one'):'','url'=>$workflows_url];
+            case 'no_finance': return ['text'=>__('It came to administrators because Finance is not set in Approval Workflows.','workforce-one'),'link'=>$workflows_url?__('Set Finance','workforce-one'):'','url'=>$workflows_url];
+            case 'approver_gone': return ['text'=>__('It came to administrators because the approver chosen for this level is no longer active.','workforce-one'),'link'=>$workflows_url?__('Choose another approver','workforce-one'):'','url'=>$workflows_url];
+            case 'no_login': return ['text'=>__('It came to administrators because its approver has no user account.','workforce-one'),'link'=>$manager_url?$set_manager:'','url'=>$manager_url];
+            case 'moved_up': return ['text'=>$from_name!==''?sprintf(/* translators: %s: the approver it moved up from */__('It came to administrators because it was not decided in time and nobody is above %s.','workforce-one'),$from_name):__('It came to administrators because it was not decided in time and nobody is above its approver.','workforce-one'),'link'=>'','url'=>''];
+            default: return ['text'=>__('It came to administrators.','workforce-one'),'link'=>'','url'=>''];
         }
     }
 
@@ -476,7 +542,10 @@ trait EWS_Approvals_Trait {
                         $sub=($r->skip_reason??'')==='condition'?__('Not needed for this request','workforce-one'):(($r->skip_reason??'')==='self'?__('Skipped: the approver made the request','workforce-one'):__('Skipped: nobody to decide it','workforce-one'));
                 }
                 if($r->status!=='SKIPPED'){$pos++;if($r->status==='PENDING')$level=$pos;}
-                $steps[]=['order'=>(int)$r->step_order,'state'=>$state,'label'=>$this->approval_resolver_label((string)$r->resolver_type),'who'=>$who,'sub'=>$sub];
+                // Why a level is with the administrators (QA 8): one more line under it, for the approver and the requester alike.
+                $code=in_array($r->status,['PENDING','WAITING'],true)?\WorkforceOne\Approvals\AdminReason::of($r):'';
+                $steps[]=['order'=>(int)$r->step_order,'state'=>$state,'label'=>$this->approval_resolver_label((string)$r->resolver_type),'who'=>$who,'sub'=>$sub,
+                    'why'=>$this->approval_admin_reason_text($code,$code==='moved_up'?$name((int)$r->escalated_from_wp_user_id):''),'why_code'=>$code];
             }
             $wkey=(string)($ar->workflow_key??$workflow_key);
             $out[$key]=['id'=>(int)$ar->id,'workflow'=>$wkey,'status'=>(string)$ar->status,'level'=>$level,'levels'=>$levels,'hours'=>$hours,

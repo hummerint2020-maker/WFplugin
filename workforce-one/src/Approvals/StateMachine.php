@@ -28,9 +28,9 @@ final class StateMachine
      * Each step: skip 'condition' (its condition does not apply), 'self' (the approver is the requester
      * and the rule sends it to the next level), 'missing' (nobody to decide it, 3.31.101) or '' (it
      * applies). A 'self' or 'missing' step with no level acting after it goes to the administrators
-     * instead (rerouted).
+     * instead (rerouted); its 'why' keeps the reason ('self' or 'missing', QA 8), '' on every other step.
      * @param array<int,array{skip:string}> $steps step order => facts, in order
-     * @return array{steps:array<int,array{status:string,rerouted:bool,skip:string}>,request:string,current_step:?int}
+     * @return array{steps:array<int,array{status:string,rerouted:bool,skip:string,why:string}>,request:string,current_step:?int}
      */
     public static function start(array $steps, string $family = 'SEQUENTIAL'): array
     {
@@ -40,8 +40,9 @@ final class StateMachine
         foreach (array_reverse(array_keys($steps)) as $order) {
             $skip = (string) ($steps[$order]['skip'] ?? '');
             $rerouted = false;
-            if (($skip === 'self' || $skip === 'missing') && !$later) { $skip = ''; $rerouted = true; }
-            $out[$order] = ['status' => $skip !== '' ? 'SKIPPED' : 'WAITING', 'rerouted' => $rerouted, 'skip' => $skip];
+            $why = '';
+            if (($skip === 'self' || $skip === 'missing') && !$later) { $why = $skip; $skip = ''; $rerouted = true; }
+            $out[$order] = ['status' => $skip !== '' ? 'SKIPPED' : 'WAITING', 'rerouted' => $rerouted, 'skip' => $skip, 'why' => $why];
             if ($skip === '') $later = true;
         }
         ksort($out);

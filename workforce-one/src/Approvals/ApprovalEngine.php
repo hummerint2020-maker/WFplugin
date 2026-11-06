@@ -132,22 +132,24 @@ final class ApprovalEngine
             $approver = null;
             $rerouted = false;
             $skip = '';
+            $why = '';   // why the level would go to the administrators (QA 8): 'self' or 'no_login' here, 'missing' from StateMachine
             if ($family !== 'PEER' && !$W::applies($min, $amount)) {
                 $skip = 'condition';
             } else {
                 $approver = $this->resolveApprover($requesterEmployeeId, (string) $step->resolver_type, $step->resolver_value, $context);
-                if ($approver && !(int) $approver->wp_user_id) $approver = null;
+                if ($approver && !(int) $approver->wp_user_id) { $approver = null; $why = 'no_login'; }
                 if ($family === 'PEER') {
                     if (!$approver) return ApprovalResult::error('approval_approver_missing', 'The colleague of this request could not be found.');
                 } elseif ($approver && $selfRule !== 'allow'
                     && (((int) ($approver->id ?? 0) && (int) $approver->id === $requesterEmployeeId) || ($requesterUid && (int) $approver->wp_user_id === $requesterUid))) {
                     $approver = null;   // decided by the next level, or by an administrator (canAct)
+                    $why = 'self';
                     if ($selfRule === 'next') $skip = 'self'; else $rerouted = true;
                 } elseif (!$approver) {
                     $skip = 'missing';  // nobody to decide it: the next level, or administrators
                 }
             }
-            $plan[$order] = ['step' => $step, 'approver' => $approver, 'rerouted' => $rerouted];
+            $plan[$order] = ['step' => $step, 'approver' => $approver, 'rerouted' => $rerouted, 'why' => $why];
             $facts[$order] = ['skip' => $skip];
         }
         $start = StateMachine::start($facts, $family);
@@ -167,6 +169,7 @@ final class ApprovalEngine
         if ($approvalId === false) return $this->startFailed($manageTransaction);
 
         $adminsNow = 0;
+        $adminsWhy = '';
         foreach ($plan as $order => $p) {
             $st = $start['steps'][$order];
             $approver = $p['approver'];
@@ -188,14 +191,19 @@ final class ApprovalEngine
                 $fmt[] = '%d';
                 $fmt[] = '%d';
             }
-            if ($st['skip'] !== '') {
-                $row['skip_reason'] = $st['skip'];
+            // A level with the administrators keeps why in skip_reason (QA 8): its own reason ('self', 'no_login'), else 'missing'.
+            $why = $rerouted && !$approver ? ($p['why'] !== '' ? $p['why'] : $st['why']) : '';
+            if ($st['skip'] !== '' || $why !== '') {
+                $row['skip_reason'] = $st['skip'] !== '' ? $st['skip'] : $why;
                 $fmt[] = '%s';
             }
             if ($st['status'] === 'PENDING') {
                 $row['pending_since'] = $now;
                 $fmt[] = '%s';
-                if ($rerouted && !$approver) $adminsNow = $order;
+                if ($rerouted && !$approver) {
+                    $adminsNow = $order;
+                    $adminsWhy = AdminReason::of((object) ['rerouted' => 1, 'skip_reason' => $why, 'resolver_type' => $p['step']->resolver_type]);
+                }
             }
             if (!$this->requests->insertStep($row, $fmt)) return $this->startFailed($manageTransaction);
         }
@@ -204,8 +212,8 @@ final class ApprovalEngine
             return ApprovalResult::error('approval_db_error', 'Could not commit approval request.');
         }
         if ($adminsNow) {
-            if ($manageTransaction) $this->notifier->administratorsNeeded($approvalId, $adminsNow);
-            else $this->after->administratorsIfStillWaiting($approvalId, $adminsNow);
+            if ($manageTransaction) $this->notifier->administratorsNeeded($approvalId, $adminsNow, $adminsWhy, $requesterEmployeeId);
+            else $this->after->administratorsIfStillWaiting($approvalId, $adminsNow, $adminsWhy, $requesterEmployeeId);
         }
         return ApprovalResult::ok($approvalId);
     }
@@ -358,8 +366,9 @@ final class ApprovalEngine
                 $this->workflows->keyById((int) $request->workflow_id) . ' · level ' . (int) $step->step_order . ' · ' . $decision);
         }
         if ($next && !empty($next->rerouted) && !(int) $next->approver_wp_user_id) {
-            if ($manageTransaction) $this->notifier->administratorsNeeded($requestId, (int) $next->step_order);
-            else $this->after->administratorsIfStillWaiting($requestId, (int) $next->step_order);
+            $why = AdminReason::of($next);
+            if ($manageTransaction) $this->notifier->administratorsNeeded($requestId, (int) $next->step_order, $why, (int) $request->requester_employee_id);
+            else $this->after->administratorsIfStillWaiting($requestId, (int) $next->step_order, $why, (int) $request->requester_employee_id);
         }
         return ApprovalResult::ok(true);
     }

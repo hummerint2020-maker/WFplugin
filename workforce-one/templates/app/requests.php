@@ -42,7 +42,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
             <details class="wfo-apv-more"<?php echo $it['state'] === 'waiting' ? ' open' : ''; ?>>
                 <summary><?php esc_html_e('Who decides it', 'workforce-one'); ?></summary>
                 <ol class="wfo-apv-path">
-                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
+                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small><?php if (($st['why'] ?? '') !== ''): ?><small class="wfo-apv-pwhy"><?php echo esc_html($st['why']); ?></small><?php endif; ?></div></li><?php endforeach; ?>
                 </ol>
             </details>
             <?php endif; ?>

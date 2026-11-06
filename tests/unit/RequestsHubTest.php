@@ -29,6 +29,12 @@ final class RequestsHubTest extends TestCase
         $this->assertSame('Approval #7', Hub::approvalLabel('leave', 7, null, false));
         $this->assertSame('Peer', Hub::approvalLabel('shift_swap', 0, null, false));
         $this->assertSame('Legacy / direct', Hub::approvalLabel('overtime', 0, null, false));
+        // QA 8: a level with the administrators says why; a row saved before the reason was kept is neutral.
+        $this->assertSame('Approval #7 · Level 2 · For an administrator (the approver made the request)', Hub::approvalLabel('leave', 7, 2, false, true, 'self'));
+        $this->assertSame('Approval #7 · Level 2 · For an administrator (no direct manager)', Hub::approvalLabel('leave', 7, 2, false, true, 'no_manager'));
+        $this->assertSame('Approval #7 · Level 2 · For an administrator (HR not set)', Hub::approvalLabel('leave', 7, 2, false, true, 'no_hr'));
+        $this->assertSame('Approval #7 · Level 2 · For an administrator', Hub::approvalLabel('leave', 7, 2, false, true, 'unknown'));
+        $this->assertSame('Approval #7 · Level 2 · For an administrator', Hub::approvalLabel('leave', 7, 2, false, true));
     }
 
     public function testDetailsAndDuration(): void
