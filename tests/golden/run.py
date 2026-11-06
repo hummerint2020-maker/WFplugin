@@ -438,7 +438,7 @@ try:
         ('the export file', lambda: cx_csv.startswith('\ufeffEmployee,Department,Day') and cx_csv.count('\n') >= 3),
     ]
     cx_false = [label for label, fn in cx_conditions if not holds(fn)]
-    check('...the corrections reads trace really read days, requests, who may decide, the lists, the pages and the export (else it proves nothing)', not cx_false, [cx_false, 'csv=' + repr(cx_csv[:600]) + ' lines=' + str(cx_csv.count(chr(10)))])
+    check('...the corrections reads trace really read days, requests, who may decide, the lists, the pages and the export (else it proves nothing)', not cx_false, [cx_false, 'modes=' + repr((cxr('workflow_mode_none'), cxr('workflow_mode_levels'))), 'page_employee=' + repr((cxr('app_page_employee') or {}).get('len')), 'page_off=' + repr(str((cxr('app_page_off') or {}).get('body'))[:300]), 'csv_lines=' + str(cx_csv.count(chr(10)))])
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
