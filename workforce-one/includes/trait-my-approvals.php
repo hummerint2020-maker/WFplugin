@@ -21,6 +21,10 @@ trait EWS_My_Approvals_Trait {
 
     /** @var array<int,mixed>|null the inbox of this page load */
     private $my_approvals_memo=null;
+    /** @var bool Whether the memo holds the legacy cards' full details (only the My approvals page needs them; QA 6). */
+    private $my_approvals_memo_full=false;
+    /** @var bool Set by the My approvals page: build the legacy cards in full. */
+    private $my_approvals_full=false;
 
     private function my_approvals_enabled(){ return (bool)$this->option('ews_feature_my_approvals'); }
 
@@ -66,8 +70,8 @@ trait EWS_My_Approvals_Trait {
      * @return list<array<string,mixed>>
      */
     private function my_approvals_items(){
-        if($this->my_approvals_memo!==null)return $this->my_approvals_memo;
-        $this->my_approvals_memo=[];
+        if($this->my_approvals_memo!==null && ($this->my_approvals_memo_full || !$this->my_approvals_full))return $this->my_approvals_memo;
+        $this->my_approvals_memo=[];$this->my_approvals_memo_full=$this->my_approvals_full;
         if(!$this->my_approvals_enabled() || !is_user_logged_in())return [];
         $this->ensure_approval_schema();
         $uid=(int)get_current_user_id();
@@ -131,21 +135,26 @@ trait EWS_My_Approvals_Trait {
         $cands=array_merge($this->overtime_legacy_approvals(),$this->early_leave_legacy_approvals(),$this->leave_legacy_approvals(),$this->cx_legacy_approvals());
         if(!$cands)return [];
         $open=$this->approval_shown_steps(array_map(function($c){return $c['key'];},$cands));
+        $people=$this->people_by_ids(array_map(function($c){return (int)$c['employee_id'];},$cands));   // one read for every card
         $me=get_current_user_id();$admin=current_user_can('manage_options');
         $out=[];
         foreach($cands as $c){
             [$wk,$et,$eid]=$c['key'];
             if(!empty($open[$this->approval_request_key($wk,$et,$eid)]))continue;
-            $card=$c['card'];
-            $emp=$this->people_employee((int)$card['employee_id'],(bool)$c['active']);
+            $emp=$people[(int)$c['employee_id']]??null;
+            if($emp && !(int)$emp->active)$emp=$c['active']?null:$emp;
             if(!$emp && $c['active'])continue;   // its handler refuses a request of an archived employee
             if($emp && (int)$emp->wp_user_id===$me && !$c['allow'] && !$admin)continue;   // the handler's self rule
-            $wait=($card['wait']??true)!==false;
-            $hours=$wait?\WorkforceOne\Approvals\WorkingHours::between((string)$card['since'],$now,$days,$s['day_start'],$s['day_end']):0.0;
+            // The full card only on the My approvals page; elsewhere (menu, Home) what the counts need.
+            $card=$c['card']??null;
+            if(!$card)$card=$this->my_approvals_full?($c['make'])():['tone'=>$c['tone'],'employee_id'=>(int)$c['employee_id'],'since'=>$c['since'],'action'=>'','fields'=>[]];
+            if(!$card)continue;
+            $wait=(bool)$c['wait'] && ($card['wait']??true)!==false;
+            $hours=$wait?\WorkforceOne\Approvals\WorkingHours::between((string)$c['since'],$now,$days,$s['day_start'],$s['day_end']):0.0;
             $sub=$wait?sprintf(/* translators: %s: working hours */__('Deciding now · waiting %s working hours','workforce-one'),number_format_i18n($hours,$hours<10&&floor($hours)!=$hours?1:0)):__('Deciding now','workforce-one');
             $card['fields']=(array)($card['fields']??[])+['approval_step'=>0];
             $out[]=$card+['id'=>0,'item_key'=>'legacy-'.$et.'-'.(int)$eid,'workflow'=>$wk,'entity_type'=>$et,'entity_id'=>(int)$eid,
-                'name'=>$emp?(string)$emp->name:__('Employee','workforce-one'),'title'=>$emp?trim((string)($emp->job_title??'')):'','picture'=>$emp?$this->employee_picture_url($emp):'',
+                'name'=>$emp?(string)$emp->name:__('Employee','workforce-one'),'title'=>$emp?trim((string)($emp->job_title??'')):'','picture'=>$emp&&$this->my_approvals_full?$this->employee_picture_url($emp):'',
                 'path'=>['id'=>0,'level'=>0,'levels'=>0,'hours'=>$hours,'overdue'=>$wait && $hours>=$this->approval_overdue_hours($wk),'moved_from'=>'','note'=>'',
                     'steps'=>[['order'=>1,'state'=>'now','label'=>(string)$c['who'],'who'=>'','sub'=>$sub,'why'=>(string)$c['why']]]],
                 'admins'=>false,'legacy'=>true,'wait'=>$wait,'note_field'=>!empty($card['note_field']),'note_required'=>!empty($c['note_required']),'for'=>'','with'=>''];
@@ -186,6 +195,7 @@ trait EWS_My_Approvals_Trait {
 
     /** App → My approvals. */
     private function approvals_content(){
+        $this->my_approvals_full=true;   // the legacy cards with their details (the menu and Home need only the counts)
         $items=$this->my_approvals_items();
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a filter
         $kind=sanitize_key($_GET['apv_kind']??'');

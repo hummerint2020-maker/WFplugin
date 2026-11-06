@@ -214,7 +214,8 @@ try:
             for i in differ:
                 pages[side + '_again'] = pages.get(side + '_again', {})
                 pages[side + '_again'][i] = again[i]
-    allowed = {(p['url'], json.dumps(p.get('options') or {}, sort_keys=True)) for p in EXPECTED.get('pages', [])}
+    # An entry may name its user (3.31.142): then only that user's page is allowed to differ.
+    allowed = {(p['url'], json.dumps(p.get('options') or {}, sort_keys=True), p.get('user', '*')) for p in EXPECTED.get('pages', [])}
     for i, p in enumerate(CFG['pages']):
         name = '%s %s%s' % (p['user'], p['url'], (' with ' + ','.join(p['options'])) if p.get('options') else '')
         b, b2, h = pages['base'][i], pages['base2'][i], pages['head'][i]
@@ -225,7 +226,8 @@ try:
             check('stable on the old code: ' + name, False, 'the old code gave two different pages: add a pattern to pages.json normalise')
             continue
         same = b[0] == h[0] or (i in differ and pages['base_again'][i][0] == pages['head_again'][i][0])
-        if (p['url'], json.dumps(p.get('options') or {}, sort_keys=True)) in allowed:
+        pk = (p['url'], json.dumps(p.get('options') or {}, sort_keys=True))
+        if pk + ('*',) in allowed or pk + (p['user'],) in allowed:
             print('EXPECTED (expected.json) %s: %s' % ('the same' if same else 'changed', name))
             continue
         diff = '' if same else ''.join(list(difflib.unified_diff(b[0].splitlines(True), h[0].splitlines(True), n=1))[:30])

@@ -1142,8 +1142,8 @@ trait EWS_Corrections_Trait {
     /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
 
     /** A correction waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
-    private function cx_approval_card($id){
-        $c=$this->cx_get((int)$id);
+    private function cx_approval_card($id,$row=null){
+        $c=$row&&(int)$row->id===(int)$id?$row:$this->cx_get((int)$id);
         if(!$c || $c->status!=='pending')return null;
         $facts=[[__('Day','workforce-one'),$this->cx_day_label((string)$c->work_date)],[__('Correction','workforce-one'),$this->cx_type_label((string)$c->type)],[__('Change','workforce-one'),$this->cx_change_text($c)]];
         if(trim((string)$c->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$c->reason];
@@ -1162,10 +1162,8 @@ trait EWS_Corrections_Trait {
         $me=get_current_user_id();$out=[];
         foreach($this->services()->correctionQuery()->toDecideOpen() as $c){
             if((int)$c->employee_user_id===$me || !$this->cx_can_manage((int)$c->employee_id))continue;
-            $card=$this->cx_approval_card((int)$c->id);
-            if(!$card)continue;
-            $card['note_field']=true;
-            $out[]=['key'=>['attendance_correction','attendance_correction',(int)$c->id],'card'=>$card,'allow'=>false,'active'=>false,'note_required'=>true,
+            $out[]=['key'=>['attendance_correction','attendance_correction',(int)$c->id],'employee_id'=>(int)$c->employee_id,'tone'=>'correction','since'=>(string)$c->requested_at,'wait'=>true,
+                'make'=>function()use($c){$card=$this->cx_approval_card((int)$c->id,$c);if($card)$card['note_field']=true;return $card;},'allow'=>false,'active'=>false,'note_required'=>true,
                 'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('The correction approval workflow is not set yet, so it is decided as before','workforce-one')];
         }
         return $out;

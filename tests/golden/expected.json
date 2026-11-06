@@ -23,7 +23,8 @@
       "options": {
         "ews_feature_my_approvals": 1,
         "ews_feature_substitutes": 1
-      }
+      },
+      "user": "admin"
     }
   ],
   "actions": {},

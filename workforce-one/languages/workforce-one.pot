@@ -10967,3 +10967,7 @@ msgstr ""
 #: includes/trait-my-approvals.php
 msgid "No approval workflow"
 msgstr ""
+
+#: includes/trait-frontend.php
+msgid "It was already decided, so nothing was changed."
+msgstr ""

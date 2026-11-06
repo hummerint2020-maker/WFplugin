@@ -441,7 +441,7 @@ trait EWS_Leave_Trait {
 
             if(!in_array($decision,['approve','reject'],true))wp_die('Invalid cancellation.');
             $r=$this->leave_request_row($id,"AND r.status='Approved' AND r.cancellation_status='Pending'");
-            if(!$r)$this->leave_redirect(['leave_done'=>1]);   // decided meanwhile (QA 6, Q9): back with "already decided", not a bare page
+            if(!$r)$this->leave_redirect(['leave_error'=>'decided']);   // decided meanwhile (QA 6, Q9): back with "already decided", not a bare page
             $emp=$this->leave_active_employee($r->employee_id);
             if(!$emp)wp_die('Employee not found.');
             if(!$ar && !$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('vacation')==='allow','vacation cancellation #'.(int)$id))wp_die(esc_html__('You cannot decide your own request. Another approver must.','workforce-one'),'',['response'=>403]);
@@ -541,10 +541,10 @@ trait EWS_Leave_Trait {
      * the facts the approver needs, and the form that decides it (the same as on the Leave page).
      * @return array<string,mixed>|null null when it no longer waits
      */
-    private function leave_approval_card($entity_type,$id){
+    private function leave_approval_card($entity_type,$id,$row=null){
             global $wpdb;
             $cancel=$entity_type==='leave_cancellation';
-            $r=$this->leave_request_row((int)$id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
+            $r=$row&&(int)$row->id===(int)$id?$row:$this->leave_request_row((int)$id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
             if(!$r)return null;
             $days=(float)$r->requested_days;
             $bal=$this->leave_request_balance($r);
@@ -576,12 +576,12 @@ trait EWS_Leave_Trait {
             global $wpdb;$this->ensure_leave_schema();
             $allow=$this->approval_self_rule('vacation')==='allow';
             $out=[];
-            foreach((array)$wpdb->get_results("SELECT id,status FROM {$wpdb->prefix}ews_leave_requests WHERE status='Pending' OR (status='Approved' AND cancellation_status='Pending') ORDER BY requested_at ASC,id ASC LIMIT 200") as $r){
+            foreach((array)$wpdb->get_results("SELECT r.*,lt.name type_name,lt.deduct_balance FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.status='Pending' OR (r.status='Approved' AND r.cancellation_status='Pending') ORDER BY r.requested_at ASC,r.id ASC LIMIT 200") as $r){
                 $cancel=$r->status!=='Pending';$type=$cancel?'leave_cancellation':'leave';
-                $card=$this->leave_approval_card($type,(int)$r->id);
-                if(!$card)continue;
-                if($cancel)$card['wait']=false;
-                $out[]=['key'=>['vacation',$type,(int)$r->id],'card'=>$card,'allow'=>$allow,'active'=>true,'who'=>__('Anyone who can manage settings','workforce-one'),
+                // The card (balance, others away) is built only where it is shown; the counts need the row alone.
+                $out[]=['key'=>['vacation',$type,(int)$r->id],'employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at,'wait'=>!$cancel,
+                    'make'=>function()use($type,$r,$cancel){$c=$this->leave_approval_card($type,(int)$r->id,$r);if($c && $cancel)$c['wait']=false;return $c;},
+                    'allow'=>$allow,'active'=>true,'who'=>__('Anyone who can manage settings','workforce-one'),
                     'why'=>$cancel?__('Leave approvals are off, so the cancellation is decided as before','workforce-one'):__('Leave approvals are off, so it is decided as before','workforce-one')];
             }
             return $out;

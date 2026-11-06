@@ -7913,3 +7913,6 @@ msgstr "بيقرّر دلوقتي"
 
 msgid "No approval workflow"
 msgstr "من غير مسار موافقات"
+
+msgid "It was already decided, so nothing was changed."
+msgstr "اتقرّر قبل كده، فمفيش حاجة اتغيّرت."

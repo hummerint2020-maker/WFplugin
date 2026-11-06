@@ -341,7 +341,7 @@ trait EWS_Overtime_Trait {
             $out=[];
             foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE status='Pending' ORDER BY requested_at ASC,id ASC LIMIT 200") as $r){
                 $card=$this->overtime_approval_card((int)$r->id,$r);
-                if($card)$out[]=['key'=>['overtime','overtime_request',(int)$r->id],'card'=>$card,'allow'=>$allow,'active'=>true,
+                if($card)$out[]=['key'=>['overtime','overtime_request',(int)$r->id],'card'=>$card,'employee_id'=>(int)$r->employee_id,'tone'=>'overtime','since'=>(string)$r->requested_at,'wait'=>true,'allow'=>$allow,'active'=>true,
                     'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('The overtime approval workflow is not set yet, so it is decided as before','workforce-one')];
             }
             return $out;
@@ -359,7 +359,7 @@ trait EWS_Overtime_Trait {
                 $card=['employee_id'=>(int)$r->employee_id,'tone'=>'leave','kind'=>__('Early leave','workforce-one'),
                     'what'=>date_i18n('j M',strtotime((string)$r->work_date)).' · '.$this->duration_label((int)$r->leave_minutes),'facts'=>$facts,'since'=>(string)$r->requested_at,
                     'action'=>'ews_early_leave_respond','nonce'=>'ews_early_leave_respond','fields'=>['request_id'=>(int)$r->id]];
-                $out[]=['key'=>['early_leave','early_leave',(int)$r->id],'card'=>$card,'allow'=>$allow,'active'=>false,
+                $out[]=['key'=>['early_leave','early_leave',(int)$r->id],'card'=>$card,'employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at,'wait'=>true,'allow'=>$allow,'active'=>false,
                     'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('Early leave has no approval workflow, so it is decided as before','workforce-one')];
             }
             return $out;

@@ -136,6 +136,8 @@ check('Manage Sign In / Out sees it in My approvals: "No approval workflow", who
       c and 'No approval workflow' in c and 'Level ' not in c and 'name="note"' not in c and 'Anyone who can manage Sign In / Out' in c and 'not set yet' in c, c[:600])
 check('...counted in the menu', re.search(r'ews_view=approvals', tim.req('/app/')[1]) is not None)
 check('...a manager without that permission does not see it', key not in S['mona'].req(APV)[1])
+st, qs, _ = S['mona'].post('ews_overtime_request_respond', _wpnonce=session_nonce(S['mona'], ids['mona_uid'], 'ews_overtime_respond'), request_id=oid, decision='approve', approval_step=0)
+check('...and cannot decide it by posting the form', qs.get('overtime_error') == 'access' and q("SELECT status FROM {p}ews_overtime_requests WHERE id=%d" % oid)[0]['status'] == 'Pending', qs)
 f, loc = decide(tim, page, key, 'approve')
 row = q("SELECT status,reviewed_by FROM {p}ews_overtime_requests WHERE id=%d" % oid)[0]
 check('approving it there: the overtime handler approves it (reviewed by tim), back in My approvals', row['status'] == 'Approved' and row['reviewed_by'] == str(caps['tim']) and 'ews_view=approvals' in loc and 'overtime_error' not in loc, (row, loc, f))
@@ -158,7 +160,8 @@ save('overtime', 'LEVEL_1', level_1_type='SPECIFIC_USER', level_1_user_ref='Tim 
 started = start_approval('overtime', 'overtime_request', eng, ids['emp'])
 php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0 WHERE workflow_key='overtime'\");")
 page = tim.req(APV)[1]
-check('a request started on a workflow later switched off shows once, as its engine card (not a legacy one)', not started.startswith('ERR') and 'legacy-overtime_request-%d' % eng not in page, (started, 'legacy-overtime_request-%d' % eng in page))
+check('a request started on a workflow later switched off shows once, as its engine card (not a legacy one)', not started.startswith('ERR') and 'legacy-overtime_request-%d' % eng not in page
+      and 'data-apv-item="%s"' % started.strip() in page, (started, 'legacy-overtime_request-%d' % eng in page))
 
 # ---------------------------------------------------------------- early leave
 el = int(php("$wpdb->insert($p.'ews_early_leave_requests',['employee_id'=>%d,'work_date'=>'%s','leave_minutes'=>60,'reason'=>'doctor','status'=>'Pending','requested_by'=>%d,'requested_at'=>current_time('mysql')]);echo $wpdb->insert_id;" % (ids['emp'], d(6), ids['emp_uid'])).splitlines()[-1])
@@ -168,6 +171,17 @@ c = card_of(page, key)
 check('early leave is a card too (Leave tone, "Early leave")', c and 'Early leave' in c and 'No approval workflow' in c, c[:400])
 f, loc = decide(tim, page, key, 'reject')
 check('...rejecting it there: rejected by its handler, back in My approvals', q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % el)[0]['status'] == 'Rejected' and 'ews_view=approvals' in loc, loc)
+
+# ---------------------------------------------------------------- a correction, workflow not set
+cid = int(php("""$wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>%d,'work_date'=>'%s','type'=>'out','sign_out_at'=>'%s 17:30:00','reason'=>'forgot','status'=>'pending','source'=>'employee','requested_by'=>%d,'requested_at'=>current_time('mysql')]);echo $wpdb->insert_id;""" % (ids['emp'], d(-1), d(-1), ids['emp_uid'])).splitlines()[-1])
+page = tim.req(APV)[1]
+key = 'legacy-attendance_correction-%d' % cid
+c = card_of(page, key)
+check('a correction is a card for Manage Sign In / Out, with its note field (a reason is needed to reject)', c and 'No approval workflow' in c and 'name="note"' in c, c[:500])
+f, loc = decide(tim, page, key, 'reject')
+check('...rejecting without a reason is refused by its handler', 'cx_error=note' in loc and q("SELECT status FROM {p}ews_attendance_corrections WHERE id=%d" % cid)[0]['status'] == 'pending', loc)
+f, loc = decide(tim, page, key, 'reject', 'not on that day')
+check('...with a reason it is rejected', q("SELECT status FROM {p}ews_attendance_corrections WHERE id=%d" % cid)[0]['status'] == 'rejected', loc)
 
 # ---------------------------------------------------------------- leave, approvals off
 php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0 WHERE workflow_key='vacation'\");")
@@ -186,7 +200,7 @@ check('its cancellation is a card too, with no waiting time (no "asked on" time 
 f, loc = decide(setty, page, key, 'reject')
 check('...rejecting the cancellation there: the leave stays approved', q("SELECT status,cancellation_status FROM {p}ews_leave_requests WHERE id=%d" % lid)[0] == {'status': 'Approved', 'cancellation_status': 'Rejected'}, q("SELECT status,cancellation_status FROM {p}ews_leave_requests WHERE id=%d" % lid))
 st, body, h = setty.req('/wp-admin/admin-post.php', f)
-check('...a second decision: back with "already decided", not a bare page', st in (301, 302, 303) and 'leave_done=1' in h.get('Location', ''), (st, h.get('Location')))
+check('...a second decision: back with "already decided", not a bare page', st in (301, 302, 303) and 'leave_error=decided' in h.get('Location', ''), (st, h.get('Location')))
 
 # ---------------------------------------------------------------- feature off: nothing
 php("update_option('ews_feature_my_approvals',0,false);")
@@ -195,6 +209,7 @@ check('with My approvals off nobody gets the cards', 'data-apv-item="legacy-' no
 php("""$wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('tim','setty')");foreach(['tim','setty'] as $l){$u=get_user_by('login',$l);if($u){require_once ABSPATH.'wp-admin/includes/user.php';wp_delete_user($u->ID);}}
 delete_option('ews_feature_my_approvals');update_option('ews_feature_overtime',0,false);update_option('ews_feature_corrections',0,false);
 $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
-foreach(['ews_leave_requests','ews_overtime_requests','ews_early_leave_requests','ews_attendance_corrections','ews_approval_requests','ews_approval_steps'] as $t) $wpdb->query("DELETE FROM {$p}$t");""")
+foreach(['ews_leave_requests','ews_overtime_requests','ews_early_leave_requests','ews_attendance_corrections','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps'] as $t) $wpdb->query("DELETE FROM {$p}$t");
+foreach(['ews_approval_self_rule','ews_approval_allow_self','ews_approval_overdue','ews_approval_deadlines','ews_approval_reject_note'] as $o) delete_option($o);""")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
