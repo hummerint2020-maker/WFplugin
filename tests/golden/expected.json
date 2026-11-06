@@ -4,10 +4,6 @@
   "pages": [
     {
       "url": "/app/?ews_view=requests",
-      "reason": "Early leave shows in My requests and can be withdrawn while it waits (QA report on 3.31.138, owner decision 2026-11-06): one more query, and the empty state names it"
-    },
-    {
-      "url": "/app/?ews_view=requests",
       "reason": "Early leave shows in My requests and can be withdrawn while it waits (QA report on 3.31.138, owner decision 2026-11-06): one more query, and the empty state names it",
       "options": {
         "ews_feature_my_approvals": 1

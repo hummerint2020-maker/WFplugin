@@ -10927,3 +10927,7 @@ msgstr ""
 #: templates/kiosk.php:43
 msgid "Connection unavailable. Please check this kiosk connection."
 msgstr ""
+
+#: includes/trait-frontend.php
+msgid "This request was already decided or withdrawn, so nothing was changed."
+msgstr ""

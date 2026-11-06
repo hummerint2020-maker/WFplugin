@@ -261,6 +261,8 @@ check('withdrawing the waiting early leave: cancelled, its 60 minutes free again
 check('...shown as Withdrawn', 'Withdrawn' in re.search(r'data-req="early-%d".*?</article>' % ew, emp.req('/app/?ews_view=requests')[1], re.S).group(0))
 st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ew)
 check('...twice: "already decided"', qs.get('req_error') == 'done', qs)
+st, qs, _ = adm.post('ews_early_leave_respond', _wpnonce=session_nonce(adm, ids['admin_uid'], 'ews_early_leave_respond'), request_id=ew, decision='approve')
+check('...a manager deciding it afterwards is told it was already decided or withdrawn, and it stays withdrawn', qs.get('early_error') == 'decided' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ew)[0]['status'] == 'Cancelled', (st, qs))
 
 # ---------------------------------------------------------------- 3.31.105: "+ New request" on My requests
 mine = emp.req('/app/?ews_view=requests')[1]

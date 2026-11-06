@@ -7883,3 +7883,6 @@ msgstr "صفحات أخرى في الموقع"
 #. translators: %s: time ago
 msgid "The daily summary was written one row at a time (%s): the database refused writing the rows together. Its answer:"
 msgstr "كُتب الملخص اليومي صفًا صفًا (%s): رفضت قاعدة البيانات كتابة الصفوف معًا. ردّها:"
+
+msgid "This request was already decided or withdrawn, so nothing was changed."
+msgstr "تم البت في هذا الطلب أو سحبه بالفعل، لذلك لم يتغيّر شيء."
