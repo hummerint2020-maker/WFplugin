@@ -240,7 +240,7 @@ $wpdb->insert($p.'ews_early_leave_requests',['employee_id'=>%d,'work_date'=>curr
 echo wp_json_encode($o);""" % (ids['emp'], ids['emp_uid'], ids['sami'], ids['sami_uid'])).splitlines()[-1])
 mine = emp.req('/app/?ews_view=requests')[1]
 blk = re.search(r'data-req="early-%d".*?</article>' % ew, mine, re.S)
-check('My requests lists the waiting early leave, with Withdraw', blk is not None and 'Early leave' in blk.group(0) and 'tone-early' in blk.group(0) and 'value="ews_request_withdraw"' in blk.group(0))
+check('My requests lists the waiting early leave, with Withdraw', blk is not None and 'Early leave' in blk.group(0) and 'tone-early" data-req="early-%d"' % ew in mine and 'value="ews_request_withdraw"' in blk.group(0))
 dblk = re.search(r'data-req="early-%d".*?</article>' % ed, mine, re.S)
 check('...the approved one too, without Withdraw', dblk is not None and 'ews_request_withdraw' not in dblk.group(0))
 check('...not a colleague\'s', 'data-req="early-%d"' % eo not in mine)
@@ -249,9 +249,11 @@ m = re.search(r'data-req="early-%d".*?name="_wpnonce" value="([^"]+)"' % ew, min
 st, qs, _ = S['sami'].post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ew)
 check('someone else cannot withdraw it', q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ew)[0]['status'] == 'Pending')
 st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=eo)
-check('...nor can the employee withdraw a colleague\'s by its id', qs.get('req_error') == 'done' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % eo)[0]['status'] == 'Pending', qs)
-st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ed)
-check('...nor an approved one', qs.get('req_error') == 'done' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ed)[0]['status'] == 'Approved', qs)
+check('...nor can the employee withdraw a colleague\'s by its id (the form is for one request)', st == 403 and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % eo)[0]['status'] == 'Pending', qs)
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=session_nonce(emp, ids['emp_uid'], 'ews_request_withdraw_early_%d' % eo), kind='early', id=eo)
+check('...not even with a token made for that id', qs.get('req_error') == 'done' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % eo)[0]['status'] == 'Pending', qs)
+st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=session_nonce(emp, ids['emp_uid'], 'ews_request_withdraw_early_%d' % ed), kind='early', id=ed)
+check('...nor an approved one, even with its own form token', qs.get('req_error') == 'done' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ed)[0]['status'] == 'Approved', qs)
 before = used()
 st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='early', id=ew)
 check('withdrawing the waiting early leave: cancelled, its 60 minutes free again this month, in the Audit Log', qs.get('req_done') == 'early' and q("SELECT status FROM {p}ews_early_leave_requests WHERE id=%d" % ew)[0]['status'] == 'Cancelled'
