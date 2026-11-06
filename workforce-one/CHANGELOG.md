@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.141
+### Fixes from the QA report on 3.31.138 (each reviewed on its own; PRs #30–#35)
+- **No blank page after an advance or a saved report view.** Asking for a salary advance, a level's or Finance's decision on one, and saving or removing a report view sent the person to a blank `admin-post.php` page (the request or decision was saved). They now go back to the app page they came from, with the result shown. The task pages' fallback did the same. Only the redirects changed, not the advance transaction.
+- **Reject on the Overtime page asks first** when the overtime confirmation is on (it was sent at once; Early leave already asked).
+- **A correction rejected without a reason** shows "Write why you reject it" and no longer opens the approver's own Request a correction sheet.
+- **Imports:** a CSV saved with a byte order mark and a quoted first header ("Employee ID") is read (it was refused for missing columns), and so is a workbook whose sheet elements carry a namespace prefix (some tools write `x:worksheet`; it "could not be read").
+- **People → Clear** removes the search and the team; **Notifications → All** leaves the Unread tab.
+- **Settings Overview** compares the grouped settings with their own defaults: the Offline screen switched on read "Default", and 18 grouped settings never showed as Customised or under Only changed. The per-workflow approval settings count only the workflows that differ from the defaults.
+- Tests: the e2e tests that depended on the date (leave admin, corrections, payroll, money safety) work on any day of the year; a browser test for the confirmations; unit tests for the imports.
+
+Not in this release (they need a decision first): legacy requests and leave cancellations in My approvals, early leave in My requests, the reason shown when a request goes to administrators, the task column counts, the attachment error inside the task dialog.
+
 ## 3.31.140
 ### Attendance corrections: the reads move to Stores and a read model (L5e1; design `docs/tasks/attendance-corrections.md`)
 No setting, no switch, no database change, and nothing you can see: the golden harness records a trace on the old code first, then on the new one, statement for statement. It covers the day sheet, the month count, the pending request of a day, the facts of a day (many inputs and a failed query), one request, who may decide and who may see it (no workflow, level 1, levels, other departments), the lists of what waits for a decision per user, the evidence of a request, the hub rows, "my requests", the photo serve cases, the export refusal, the corrections tabs of the admin page (list, status, search, report, settings), the requests page, the app pages with the feature on and off, and the corrections CSV.
