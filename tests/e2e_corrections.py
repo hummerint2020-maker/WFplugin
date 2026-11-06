@@ -171,7 +171,7 @@ _note = decide(mgr, C1, 'reject')
 check('rejecting needs a note', _note.get('cx_error') == 'note' and cx(C1)['status'] == 'pending')
 _after = mgr.req('/app/?' + urllib.parse.urlencode(_note))[1]
 _sheet = re.search(r'<dialog[^>]*id="wfo-cx-sheet"[^>]*>', _after)
-check("...the page says why, and does not open the manager's own request form", 'Write why you reject it' in html.unescape(_after) and (_sheet is None or 'data-show-error="1"' not in _sheet.group(0)), (_note, _sheet.group(0) if _sheet else None))
+check("...the page says why, and does not open the manager's own request form", 'Write why you reject it' in html.unescape(_after) and _sheet is not None and 'data-show-error="1"' not in _sheet.group(0), (_note, _sheet.group(0) if _sheet else None))
 qs = decide(mgr, C1, 'approve')
 ev = events(E, D1)
 check('the manager approves: the day gets its Sign Out', qs.get('cx_done') == 'approved' and cx(C1)['status'] == 'approved', qs)
