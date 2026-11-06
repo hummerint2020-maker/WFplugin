@@ -69,6 +69,23 @@ check('a grouped setting reads Customised when it differs from its built-in defa
 php("delete_option('ews_pwa_splash_settings');")
 st, page, _ = adm.req(PAGE)
 check('...and Default when it does not', 'Customised' not in text(row(page, 'ews_pwa_splash_settings')) and 'Default' in text(row(page, 'ews_pwa_splash_settings')))
+# Grouped settings read through their own class (the Offline screen was always "Default", even switched on).
+php("update_option('ews_offline_screen',['enabled'=>1,'timeout'=>20,'schedule'=>1,'keep_note'=>1,'texts'=>[]],false); update_option('ews_org_chart',['enabled'=>0],false); update_option('ews_approval_reject_note',['overtime'=>1],false);")
+st, page, _ = adm.req(PAGE)
+check('the Offline screen switched on reads Customised', 'Customised' in text(row(page, 'ews_offline_screen')), text(row(page, 'ews_offline_screen')))
+check('...the Organization chart saved with its defaults reads Default', 'Customised' not in text(row(page, 'ews_org_chart')) and 'Default' in text(row(page, 'ews_org_chart')), text(row(page, 'ews_org_chart')))
+check('...a reason to reject set for a workflow reads Customised', 'Customised' in text(row(page, 'ews_approval_reject_note')), text(row(page, 'ews_approval_reject_note')))
+st, only, _ = adm.req(PAGE + '&changed=1')
+check('...and "Only changed" lists the Offline screen', row(only, 'ews_offline_screen'))
+# Saving a workflow writes its entry into every per-workflow setting, with the defaults: still Default.
+php("update_option('ews_approval_reject_note',['overtime'=>0,'attendance_correction'=>1],false); update_option('ews_approval_self_rule',['overtime'=>'allow'],false); update_option('ews_approval_allow_self',['overtime'=>1],false); update_option('ews_approval_deadlines',['overtime'=>['remind'=>0,'escalate'=>0]],false); update_option('ews_approval_overdue',['overtime'=>0],false); update_option('ews_approval_settings',['hr_user'=>0,'finance_user'=>0,'day_start'=>'09:00','day_end'=>'17:00'],false);")
+st, page, _ = adm.req(PAGE)
+same = {k: text(row(page, k)) for k in ('ews_approval_reject_note', 'ews_approval_self_rule', 'ews_approval_allow_self', 'ews_approval_deadlines', 'ews_approval_overdue', 'ews_approval_settings')}
+check('...a workflow saved with its defaults leaves the approval settings Default', all('Customised' not in v and 'Default' in v for v in same.values()), same)
+php("update_option('ews_approval_deadlines',['overtime'=>['remind'=>4,'escalate'=>0]],false);")
+st, page, _ = adm.req(PAGE)
+check('...a reminder set reads Customised', 'Customised' in text(row(page, 'ews_approval_deadlines')), text(row(page, 'ews_approval_deadlines')))
+php("foreach(['ews_offline_screen','ews_org_chart','ews_approval_reject_note','ews_approval_self_rule','ews_approval_allow_self','ews_approval_deadlines','ews_approval_overdue','ews_approval_settings'] as $o) delete_option($o);")
 
 check('secrets are never shown: only Set / Not set', 'TOPSECRETKEY' not in page and 'kiosksecret999' not in page and 'Set' in text(row(page, 'ews_vapid_private_key')), text(row(page, 'ews_vapid_private_key')))
 check('kiosk secrets are counted, not shown', re.search(r'\d+ kiosk secret', text(row(page, 'ews_presence_kiosk_key_*'))) is not None, text(row(page, 'ews_presence_kiosk_key_*')))

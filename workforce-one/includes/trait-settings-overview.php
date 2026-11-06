@@ -137,9 +137,55 @@ trait EWS_Settings_Overview_Trait {
                 case 'ews_role_permissions':
                     $n=is_array($raw)?count($raw):0;
                     return [$n>0,$n?$n.' '.($n===1?'role':'roles').' set':''];
+                case 'ews_approval_reject_note':
+                case 'ews_approval_overdue':
+                case 'ews_approval_allow_self':
+                case 'ews_approval_self_rule':
+                case 'ews_approval_deadlines':
+                    // Per workflow. Saving a workflow writes its entry in each of these, defaults included: only the
+                    // workflows whose value differs from what the plugin assumes when nothing is saved count.
+                    $W=\WorkforceOne\Approvals\Workflows::class;
+                    $n=0;
+                    foreach(is_array($raw)?$raw:[] as $k=>$v){
+                        $k=sanitize_key((string)$k);
+                        if($name==='ews_approval_reject_note')$n+=(int)(!empty($v)!==($k==='attendance_correction'));
+                        elseif($name==='ews_approval_overdue')$n+=(int)((int)$v>0);
+                        elseif($name==='ews_approval_allow_self')$n+=(int)empty($v);
+                        elseif($name==='ews_approval_self_rule')$n+=(int)($W::selfRule((string)$v)!=='allow');
+                        else{$d=is_array($v)?$W::deadlines($v['remind']??0,$v['escalate']??0):['remind'=>0,'escalate'=>0];$n+=(int)($d['remind']>0||$d['escalate']>0);}
+                    }
+                    return [$n>0,$n?$n.' '.($n===1?'workflow':'workflows').' set':''];
+                case 'ews_approval_settings':
+                    $a=$this->approval_settings();
+                    return [is_array($raw)&&$a!=['hr_user'=>0,'finance_user'=>0,'day_start'=>'09:00','day_end'=>'17:00'],''];
                 default:
-                    return [false,is_array($raw)?count($raw).' '.(count($raw)===1?'entry':'entries'):''];
+                    // A setting with its own reader: compared with what that reader gives for nothing saved.
+                    $read=self::settings_overview_readers()[$name]??null;
+                    if($read!==null)return [is_array($raw)&&$read($raw)!=$read([]),''];
+                    // Anything else stored.
+                    return [is_array($raw)&&$raw!==[],is_array($raw)&&$raw!==[]?count($raw).' '.(count($raw)===1?'entry':'entries').' stored':''];
             }
+        }
+
+    /**
+     * The grouped settings read through a class of their own (the value the plugin works with, defaults filled in).
+     * @return array<string,callable>
+     */
+    private static function settings_overview_readers(){
+            return [
+                'ews_offline_screen'=>[\WorkforceOne\Settings\OfflineScreen::class,'config'],
+                'ews_org_chart'=>[\WorkforceOne\Settings\OrgChartSettings::class,'config'],
+                'ews_branch_settings'=>[\WorkforceOne\Settings\BranchSettings::class,'config'],
+                'ews_correction_settings'=>[\WorkforceOne\Settings\CorrectionSettings::class,'config'],
+                'ews_tasks_settings'=>[\WorkforceOne\Settings\TaskSettings::class,'config'],
+                'ews_signin_evidence'=>[\WorkforceOne\Settings\SignInEvidence::class,'config'],
+                'ews_dw_settings'=>[\WorkforceOne\Settings\DailyWorkerSettings::class,'config'],
+                'ews_office_minimum'=>[\WorkforceOne\Settings\OfficeMinimumSettings::class,'config'],
+                'ews_week_lock'=>[\WorkforceOne\Settings\WeekLockSettings::class,'config'],
+                'ews_advance_settings'=>[\WorkforceOne\Payroll\Advances::class,'settings'],
+                'ews_substitute_settings'=>[\WorkforceOne\Approvals\Substitutes::class,'settings'],
+                'ews_health_settings'=>[\WorkforceOne\Health\Settings::class,'settings'],
+            ];
         }
 
     private function settings_overview_kiosk_keys(){
