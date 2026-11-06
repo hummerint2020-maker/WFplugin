@@ -8028,3 +8028,6 @@ msgstr "وصل للمسؤولين لأنه ماتقرّرش في وقته ومف
 
 msgid "It came to administrators."
 msgstr "وصل للمسؤولين."
+
+msgid "Give the approver a user account"
+msgstr "اعمل حساب للمسؤول عن الموافقة"

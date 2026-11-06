@@ -256,11 +256,12 @@ trait EWS_Approvals_Trait {
      */
     private function approval_notify_administrators($approval_request_id,$step_order,$reason='',$who=0){
         $request_id=(int)$approval_request_id;$order=(int)$step_order;
-        $name=$reason==='moved_up'?(string)$who:((int)$who?$this->people_name((int)$who):'');
+        $named=['no_manager','no_managers_manager','no_team_manager','no_department_manager'];
+        $name=$reason==='moved_up'?(string)$who:((int)$who && in_array($reason,$named,true)?$this->people_name((int)$who):'');
         /* translators: 1: approval request number, 2: approval level */
         $start=__('Approval #%1$d, level %2$d, waits for an administrator.','workforce-one');
         $end=__('Decide it in wp-admin → Requests Hub.','workforce-one');
-        switch($name!==''||!in_array($reason,['no_manager','no_managers_manager','no_team_manager','no_department_manager','moved_up'],true)?$reason:'unknown'){
+        switch($name!==''||!in_array($reason,array_merge($named,['moved_up']),true)?$reason:'unknown'){
             case 'self': $msg=sprintf(/* translators: 1: approval request number, 2: approval level */__('Approval #%1$d, level %2$d, waits for an administrator: its approver is the person who made the request. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order);break;
             case 'no_manager': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: employee name */__('Approval #%1$d, level %2$d, waits for an administrator: %3$s has no direct manager. Decide it in wp-admin → Requests Hub, and set their manager in the organization chart so their next requests go to them.','workforce-one'),$request_id,$order,$name);break;
             case 'no_managers_manager': $msg=sprintf(/* translators: 1: approval request number, 2: approval level, 3: employee name */__('Approval #%1$d, level %2$d, waits for an administrator: the manager of %3$s has no manager. Decide it in wp-admin → Requests Hub.','workforce-one'),$request_id,$order,$name);break;
@@ -319,7 +320,7 @@ trait EWS_Approvals_Trait {
             case 'no_hr': return ['text'=>__('It came to administrators because HR is not set in Approval Workflows.','workforce-one'),'link'=>$workflows_url?__('Set HR','workforce-one'):'','url'=>$workflows_url];
             case 'no_finance': return ['text'=>__('It came to administrators because Finance is not set in Approval Workflows.','workforce-one'),'link'=>$workflows_url?__('Set Finance','workforce-one'):'','url'=>$workflows_url];
             case 'approver_gone': return ['text'=>__('It came to administrators because the approver chosen for this level is no longer active.','workforce-one'),'link'=>$workflows_url?__('Choose another approver','workforce-one'):'','url'=>$workflows_url];
-            case 'no_login': return ['text'=>__('It came to administrators because its approver has no user account.','workforce-one'),'link'=>$manager_url?$set_manager:'','url'=>$manager_url];
+            case 'no_login': $u=$people?admin_url('admin.php?page=ews31-employees'):'';return ['text'=>__('It came to administrators because its approver has no user account.','workforce-one'),'link'=>$u?__('Give the approver a user account','workforce-one'):'','url'=>$u];
             case 'moved_up': return ['text'=>$from_name!==''?sprintf(/* translators: %s: the approver it moved up from */__('It came to administrators because it was not decided in time and nobody is above %s.','workforce-one'),$from_name):__('It came to administrators because it was not decided in time and nobody is above its approver.','workforce-one'),'link'=>'','url'=>''];
             default: return ['text'=>__('It came to administrators.','workforce-one'),'link'=>'','url'=>''];
         }
@@ -471,7 +472,7 @@ trait EWS_Approvals_Trait {
      * approver and state (done / now / next / skipped and why / rejected / cancelled), which level it
      * waits at, for how many working hours, from whom it moved up, and the reason of a rejection.
      * One request (My requests card, Advances), or null; the same code as approval_paths() (3.31.112).
-     * @return array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null
+     * @return array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string,why:string,why_code:string}>}|null
      */
     private function approval_path($workflow_key,$entity_type,$entity_id){
         $paths=$this->approval_paths([[$workflow_key,$entity_type,$entity_id]]);
@@ -483,7 +484,7 @@ trait EWS_Approvals_Trait {
      * levels, and the names of everyone on them. Same result as approval_path() for each; a request with no approval is null.
      * @param array<int,array{0:string,1:string,2:int}> $keys
      * @param string|null $now the time the waiting hours are counted to (default: now)
-     * @return array<string,array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string}>}|null> by approval_request_key()
+     * @return array<string,array{id:int,workflow:string,status:string,level:int,levels:int,hours:float,overdue:bool,moved_from:string,note:string,steps:list<array{order:int,state:string,label:string,who:string,sub:string,why:string,why_code:string}>}|null> by approval_request_key()
      */
     private function approval_paths(array $keys,$now=null){
         $found=$this->approval_find_requests($keys);

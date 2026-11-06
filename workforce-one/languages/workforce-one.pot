@@ -11115,3 +11115,7 @@ msgstr ""
 #: includes/trait-approvals.php
 msgid "It came to administrators."
 msgstr ""
+
+#: includes/trait-approvals.php
+msgid "Give the approver a user account"
+msgstr ""
