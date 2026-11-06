@@ -328,6 +328,8 @@ _, qs, _ = hr.post('ews_correction_direct', _wpnonce=dn, employee_ref=ref, date=
 adj = q("SELECT month,kind,amount,reason FROM {p}ews_pay_adjustments WHERE reason LIKE 'Attendance correction%%'")
 check('a correction in a closed month does not reopen it', q("SELECT net,data FROM {p}ews_payslips") == slips_before and len(q("SELECT id FROM {p}ews_payroll_runs")) == 1)
 check('...the difference goes to the next open month as an adjustment with its reason', len(adj) == 1 and adj[0]['month'] == pm['current'] and adj[0]['kind'] == 'bonus' and float(adj[0]['amount']) > 0 and pm['day'] in adj[0]['reason'], adj)
+# The filler days of that month are only for this block: left in place, a run early in a month would find them on the days the next blocks use (a day a few days back is in last month).
+php("$wpdb->query(\"DELETE FROM {$p}ews_time_logs WHERE employee_id=%d AND work_date LIKE '%s-%%'\");$wpdb->query(\"DELETE FROM {$p}ews_schedule WHERE employee_id=%d AND work_date LIKE '%s-%%'\");" % (E, pm['month'], E, pm['month']))
 
 # ---------------------------------------------------------------- end-of-day reminder
 php("$wpdb->insert($p.'ews_time_logs',['employee_id'=>%d,'user_id'=>(int)get_user_by('login','emp1')->ID,'work_date'=>current_time('Y-m-d'),'event_type'=>'sign_in','event_at'=>current_time('Y-m-d').' 00:01:00','scheduled_status'=>'Office','source'=>'app']);" % E)
