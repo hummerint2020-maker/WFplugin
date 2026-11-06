@@ -72,7 +72,7 @@ Also not done in L5e1, picked up in L5e2: `remindCandidates` (the end-of-day rem
 
 Review (independent, read-only): no finding in the plugin code; every moved query matches the old SQL, prepare arguments, order and return types. Fixed from the review: the leave-admin e2e window could still overlap the employee's own pending day for runs in mid-November (it now picks a December window that avoids it); a comment in the corrections e2e. Not changed: the golden check of the superseded Sign In compares normalised times, so it cannot assert 08:30 (the trace itself still compares old against new).
 
-## 11. L5e2 (3.31.142): requests, files and the reminder
+## 11. L5e2 (3.31.143): requests, files and the reminder
 
 Design by the read-only architect on main 3.31.141. `tc:` = `workforce-one/includes/trait-corrections.php` at 3.31.141 (the §2 line numbers are from before L5e1). A move only: SQL text and order, option reads at the same moments, transactions, audits, notifications, redirects, files and every CX quirk stay the same; `tests/golden/expected.json` stays empty.
 
@@ -111,4 +111,4 @@ The schema "once" static; when settings are read; the INSERT column order; raw `
 New quirks found (moved as they are, queued): **CX-z** a failed automatic approval in NONE mode returns `status` without `error` (the app says "sent", the API 201; the row stays pending while its approval is APPROVED); **CX-aa** the reminder uses today's hours for any date; **CX-ab** the tick reads `H:i` and `Y-m-d` separately and can skip a day at midnight.
 
 ### 11.8 Decisions (owner delegated, 2026-11-06)
-L5e2 = 3.31.142, L5e3 = 3.31.143. CX-z goes with the money/state fixes first; CX-aa and CX-ab with the low ones. `cx_facts` stays in the trait in L5e2 (moves in L5e3 with `CorrectionReads`): a recorded deviation from §2. Payroll fixtures in L5e2's seed if feasible, else L5e3. R5/R6 race tests stay L5e3's first commit.
+L5e2 = 3.31.143, L5e3 = 3.31.144 (3.31.142 went to the rest of the QA report). CX-z goes with the money/state fixes first; CX-aa and CX-ab with the low ones. `cx_facts` stays in the trait in L5e2 (moves in L5e3 with `CorrectionReads`): a recorded deviation from §2. Payroll fixtures in L5e2's seed if feasible, else L5e3. R5/R6 race tests stay L5e3's first commit.
