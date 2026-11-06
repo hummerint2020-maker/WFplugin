@@ -30,8 +30,10 @@ seed = json.loads(php(r"""
     echo wp_json_encode(['ids'=>$ids,'work'=>$work,'friday'=>$fridays[0],'last'=>date('Y-m-t',strtotime($month.'-01'))]);
 """ % MONTH).splitlines()[-1])
 I, W, FRI = seed['ids'], seed['work'], seed['friday']
-RAFE = '{:,.2f}'.format(6000 / 30 * (int(seed['last'][-2:]) - 15))  # from the 16th to the month's end
-TOTAL = '{:,.2f}'.format(9690.26 + 6000 / 30 * (int(seed['last'][-2:]) - 15))
+_dim = int(seed['last'][-2:])
+_rafe = round(round(6000 / _dim, 2) * (_dim - 15), 2)   # from the 16th to the month's end: the day's value is the salary over the days of that month (28 to 31), as PayCalculator does
+RAFE = '{:,.2f}'.format(_rafe)
+TOTAL = '{:,.2f}'.format(9690.26 + _rafe)
 P = I['paula']
 
 
@@ -120,7 +122,7 @@ def row(name, pg):
 
 
 check('the month lists every employee with a salary and their net pay', '9,690.26' in row('Paula Pay', page), row('Paula Pay', page))
-check('a salary that starts mid-month is paid for the days from its start (/30)', RAFE in row('Rafe Raise', page), (RAFE, row('Rafe Raise', page)))
+check('a salary that starts mid-month is paid for the days from its start (over the days of that month)', RAFE in row('Rafe Raise', page), (RAFE, row('Rafe Raise', page)))
 check('an employee without a salary is listed as such, not paid', 'No salary' in row('Nadia Nosalary', page), row('Nadia Nosalary', page))
 check('days that need a look are flagged (missing Sign Out)', '1 to review' in row('Paula Pay', page), row('Paula Pay', page))
 check('the total is the sum of the net pay', TOTAL in html.unescape(page), TOTAL)

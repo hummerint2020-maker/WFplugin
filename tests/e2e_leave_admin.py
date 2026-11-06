@@ -153,7 +153,16 @@ remaining = bal(YEAR)['entitlement'] - bal(YEAR)['used'] - bal(YEAR)['pending']
 start = f'{YEAR}-12-01' if today.month < 12 else f'{NEXT}-02-01'
 year_of_start = int(start[:4])
 if year_of_start == YEAR:
-    end = f'{YEAR}-12-{int(remaining) + 1:02d}'
+    # remaining + 1 consecutive days in December that do not overlap the employee's own pending day (d(30)), which falls in December for a run in November
+    import datetime as _dt
+    span = int(remaining) + 1
+    pend = _dt.date.fromisoformat(d(30))
+    dec1, dec31 = _dt.date(YEAR, 12, 1), _dt.date(YEAR, 12, 31)
+    for s0 in [dec1, dec31 - _dt.timedelta(days=span - 1), pend + _dt.timedelta(days=1), pend - _dt.timedelta(days=span)]:
+        e0 = s0 + _dt.timedelta(days=span - 1)
+        if s0 > today and e0 <= dec31 and not (s0 <= pend <= e0):
+            start, end = s0.isoformat(), e0.isoformat()
+            break
     qs = record(start, end)
     check('recording more days than the balance has left is refused', 'leave_record_error' in qs and 'balance' in qs['leave_record_error'].lower(), qs)
 before_m = bal(YEAR, 'Mission')
