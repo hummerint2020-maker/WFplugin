@@ -586,6 +586,145 @@
     {
       "user": "admin",
       "url": "/wp-admin/admin.php?page=ews31-auto-attendance&edit_rule={att_rule}"
+    },
+    {
+      "user": "gdreq",
+      "url": "/app/?ews_view=corrections",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "gdreq",
+      "url": "/app/?ews_view=time",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "atrmgr",
+      "url": "/app/?ews_view=corrections",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/app/?ews_view=corrections",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/app/?ews_view=corrections",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "gdreq",
+      "url": "/app/?ews_view=corrections",
+      "options": {
+        "ews_feature_corrections": 0
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/wp-admin/admin.php?page=ews31-corrections",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/wp-admin/admin.php?page=ews31-corrections&status=pending",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/wp-admin/admin.php?page=ews31-corrections&s=rec&type=out",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/wp-admin/admin.php?page=ews31-corrections&tab=report",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/wp-admin/admin.php?page=ews31-corrections&tab=settings",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "cxhr",
+      "url": "/wp-admin/admin.php?page=ews31-corrections&tab=direct",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-requests",
+      "options": {
+        "ews_feature_corrections": 1,
+        "ews_correction_settings": {
+          "deadline_days": 7,
+          "monthly_limit": 3
+        }
+      }
     }
   ],
   "normalise": [
