@@ -33,6 +33,19 @@
       }
     }
   ],
-  "actions": {},
+  "actions": {
+    "approvals:self_admins_start": "QA 8: a level sent to the administrators keeps why in skip_reason (one more column in the same INSERT) ('self')",
+    "approvals:dl_start_overtime_no_mgr": "QA 8: a level sent to the administrators keeps why in skip_reason (one more column in the same INSERT) ('missing')",
+    "approvals:selfadmin_admins_start": "QA 8: a level sent to the administrators keeps why in skip_reason (one more column in the same INSERT) ('self')",
+    "approvals:selfadmin_next_start": "QA 8: a level sent to the administrators keeps why in skip_reason (one more column in the same INSERT) ('self')",
+    "approvals:_rows_before:steps": "QA 8: the rows of the starts above carry their skip_reason",
+    "approvals:_rows:steps": "QA 8: the rows of the starts above carry their skip_reason",
+    "approvals:dl_tick_early": "QA 8: a level moved up past the top tells the administrators the name of the approver it moved from (one name read) and the reason",
+    "approvals:dl_tick_remind": "QA 8: as dl_tick_early (the move-up in this tick)",
+    "approvals:shutdown_deferred": "QA 8: the deferred notification names the requester (one name read) and says why",
+    "approvals:_rows:notifications": "QA 8: the administrators' notifications say the real reason",
+    "approvals:paths": "QA 8: each step carries 'why' and 'why_code'",
+    "approvals:path_one": "QA 8: each step carries 'why' and 'why_code' (moved up, nobody above)"
+  },
   "hooks_added": []
 }
