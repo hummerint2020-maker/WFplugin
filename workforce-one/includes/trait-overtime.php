@@ -351,6 +351,31 @@ trait EWS_Overtime_Trait {
             return $out;
         }
 
+    /**
+     * The employee's early leave requests for My requests (owner decision 2026-11-06, QA report on 3.31.138): the same
+     * item as overtime's; early leave has no approval engine, so it has no "who decides it" path. Withdrawable while it waits.
+     */
+    private function early_leave_my_requests($employee_id,$limit=20){
+            global $wpdb;$this->ensure_leave_schema();
+            $out=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE employee_id=%d ORDER BY requested_at DESC,id DESC LIMIT %d",(int)$employee_id,(int)$limit)) as $r){
+                $out[]=['key'=>'early-'.(int)$r->id,'tone'=>'early','title'=>__('Early leave','workforce-one').' · '.date_i18n('j M',strtotime((string)$r->work_date)).' · '.$this->duration_label((int)$r->leave_minutes),
+                    'sub'=>'','state'=>['Pending'=>'waiting','Approved'=>'approved','Rejected'=>'rejected','Cancelled'=>'withdrawn'][$r->status]??'cancelled','when'=>(string)$r->requested_at,
+                    'approval'=>['early_leave','early_leave',(int)$r->id],'withdraw'=>$r->status==='Pending'?'early':'','id'=>(int)$r->id];
+            }
+            return $out;
+        }
+
+    /** The employee withdraws an early leave request still waiting (My requests): it no longer counts against the month. @return true|string */
+    private function early_leave_withdraw($id,$employee_id){
+            global $wpdb;$this->ensure_leave_schema();
+            $ok=$wpdb->update($wpdb->prefix.'ews_early_leave_requests',['status'=>'Cancelled','reviewed_by'=>get_current_user_id(),'reviewed_at'=>current_time('mysql')],['id'=>(int)$id,'employee_id'=>(int)$employee_id,'status'=>'Pending'],['%s','%d','%s'],['%d','%d','%s']);
+            if($ok===false)return 'save';
+            if($ok!==1)return 'done';
+            $this->audit('early_leave_withdrawn','early_leave',(int)$id,'Withdrawn by the employee');
+            return true;
+        }
+
     /** The employee withdraws an overtime request still waiting (My requests). @return true|string */
     private function overtime_withdraw($id,$employee_id){
             global $wpdb;

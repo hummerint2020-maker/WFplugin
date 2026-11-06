@@ -6277,8 +6277,8 @@ msgstr "جارٍ الموافقة…"
 msgid "You have no requests yet."
 msgstr "ليس لديك طلبات بعد."
 
-msgid "Leave, overtime, corrections and swaps you ask for show here, with who decides them."
-msgstr "تظهر هنا الإجازات والعمل الإضافي والتصحيحات والتبديلات التي تطلبها، ومن يقرّرها."
+msgid "Leave, overtime, early leave, corrections and swaps you ask for show here, with who decides them."
+msgstr "تظهر هنا الإجازات والعمل الإضافي والانصراف المبكر والتصحيحات والتبديلات التي تطلبها، ومن يقرّرها."
 
 msgid "level %1$s of %2$s"
 msgstr "المستوى %1$s من %2$s"
