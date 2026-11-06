@@ -135,6 +135,25 @@ trait EWS_Frontend_Trait {
             return '<span class="ews-status '.$cls.'" style="'.$style.'">'.$icon.' '.esc_html($s).'</span>';
         }
 
+            /**
+             * Where an admin-post handler sends the person back to in the app: app_view_url() builds on the
+             * current address, which inside admin-post.php is admin-post.php itself, so a redirect built with it opened a
+             * blank page without an action. The app page the form was posted from (not admin-post.php or a wp-admin page), else the
+             * app's page; one-time results are dropped, and so is what another view had put in the address.
+             */
+            private function app_return_url($view,array $strip=[]){
+            $view=sanitize_key($view);
+            $url=wp_get_referer();
+            if(!$url || strpos((string)wp_parse_url($url,PHP_URL_PATH),'/wp-admin/')!==false)$url=$this->app_home_url();   // admin-post.php, or a wp-admin page: the app
+            $query=[];parse_str((string)wp_parse_url($url,PHP_URL_QUERY),$query);
+            $keys=array_map('strval',array_keys($query));
+            $drop=array_values(array_filter($keys,function($k){return \WorkforceOne\Ui\OnceKeys::isOnce($k);}));
+            $from=isset($query['ews_view'])?sanitize_key((string)$query['ews_view']):'';
+            if($from!=='' && $from!==$view)$drop=array_merge($drop,array_diff($keys,\WorkforceOne\Ui\OnceKeys::ROUTING,['ews_view']));
+            if($drop||$strip)$url=remove_query_arg(array_values(array_unique(array_merge($drop,$strip))),$url);
+            return add_query_arg('ews_view',$view,$url);
+        }
+
             private function app_view_url($view){
             $url=remove_query_arg([
                 'ews_view','leave_error','leave_sent','leave_done','leave_cancel_sent',

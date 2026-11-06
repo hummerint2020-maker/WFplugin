@@ -84,7 +84,7 @@ trait EWS_Task_Extras_Trait {
 
     private function task_back($task_id,$args=[]){
         $url=wp_get_referer();
-        if(!$url || strpos($url,'admin-post.php')!==false)$url=add_query_arg('task',(int)$task_id,$this->app_view_url('tasks'));
+        if(!$url || strpos($url,'admin-post.php')!==false)$url=add_query_arg('task',(int)$task_id,$this->app_return_url('tasks'));
         $url=remove_query_arg(['task_saved','task_updated','task_deleted','task_completed','task_error','task_note'],$url);
         wp_safe_redirect($args?add_query_arg($args,$url):$url);exit;
     }
