@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.31.142
+### The rest of the QA report on 3.31.138 (owner decisions 2026-11-06; PRs #37–#40)
+- **Early leave in My requests** with its state; one still waiting can be withdrawn there (it no longer counts against the month, and the Audit Log has it). A new early leave keeps the site's time. A manager deciding one that was withdrawn meanwhile is told so (not a schedule conflict or a blank page).
+- **Tasks: the column counts and the overdue line count what the board shows**: a status or priority filter changes them, and the search updates them as you type (one query less on the page).
+- **Why a request is with the administrators.** Their notification, the Requests Hub, the path in My approvals and My requests, and the administrator's card now give the real reason (no direct manager, no manager's manager, no team or department manager, HR or Finance not set, the approver no longer active or without an account, not decided in time with nobody above, or the approver made the request), with a link to the setting that sends the next requests to the right person, only for those who can open it. Requests saved before show a neutral text. Who decides is unchanged; no database change. Design `docs/tasks/admin-fallback-reason.md`.
+- **Requests decided outside an approval workflow are cards in My approvals** (with My approvals on): overtime and corrections whose workflow is "Not set yet", leave requests and cancellations while leave approvals are off, and early leave, for the people who decide them today, through the same handlers, with "No approval workflow" and who decides. They count in the menu and on Home; one already on a workflow shows once. A second decision on a leave cancellation comes back with "already decided" instead of a bare page. Design `docs/tasks/legacy-approval-cards.md`; mockup `docs/mockups/approval-reasons/`.
+
+Not in this release: the attachment error inside the task dialog (a mockup first).
+
 ## 3.31.141
 ### Fixes from the QA report on 3.31.138 (each reviewed on its own; PRs #30–#35)
 - **No blank page after an advance or a saved report view.** Asking for a salary advance, a level's or Finance's decision on one, and saving or removing a report view sent the person to a blank `admin-post.php` page (the request or decision was saved). They now go back to the app page they came from, with the result shown. The task pages' fallback did the same. Only the redirects changed, not the advance transaction.
