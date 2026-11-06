@@ -196,4 +196,12 @@ final class CorrectionRulesTest extends TestCase
             $this->assertSame($want, CorrectionRules::noWork($leave, $ot, $working, $result), json_encode([$leave, $ot, $working, $result]));
         }
     }
+
+    public function testTheMonthOfADayIsCountedFirstToLastDay(): void
+    {
+        $this->assertSame(['2026-10-01', '2026-10-31'], CorrectionRules::monthBounds('2026-10-29'));
+        $this->assertSame(['2026-02-01', '2026-02-28'], CorrectionRules::monthBounds('2026-02-05'));
+        $this->assertSame(['2028-02-01', '2028-02-29'], CorrectionRules::monthBounds('2028-02-29'), 'a leap year');
+        $this->assertSame(['2026-11-01', '2026-11-30'], CorrectionRules::monthBounds('2026-11'), 'a month alone, as the report gives it plus -01');
+    }
 }
