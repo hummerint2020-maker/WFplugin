@@ -1142,14 +1142,31 @@ trait EWS_Corrections_Trait {
     /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
 
     /** A correction waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
-    private function cx_approval_card($id){
-        $c=$this->cx_get((int)$id);
+    private function cx_approval_card($id,$row=null){
+        $c=$row&&(int)$row->id===(int)$id?$row:$this->cx_get((int)$id);
         if(!$c || $c->status!=='pending')return null;
         $facts=[[__('Day','workforce-one'),$this->cx_day_label((string)$c->work_date)],[__('Correction','workforce-one'),$this->cx_type_label((string)$c->type)],[__('Change','workforce-one'),$this->cx_change_text($c)]];
         if(trim((string)$c->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$c->reason];
         return ['employee_id'=>(int)$c->employee_id,'tone'=>'correction','kind'=>__('Attendance correction','workforce-one'),
             'what'=>$this->cx_day_label((string)$c->work_date).' · '.$this->cx_change_text($c),'facts'=>$facts,'since'=>(string)$c->requested_at,
             'action'=>'ews_correction_decide','nonce'=>'ews_correction_decide_'.(int)$id,'fields'=>['correction_id'=>(int)$id,'request_stage'=>'pending'],'link'=>add_query_arg('ews_view','corrections',$this->app_home_url())];
+    }
+
+    /**
+     * Corrections waiting while their workflow is "Not set yet", for My approvals (QA 6): the same people as the Corrections
+     * page (cx_can_manage, never one's own). The HR stage is not included. @return list<array<string,mixed>>
+     */
+    private function cx_legacy_approvals(){
+        if(!$this->can('ews_manage_time') || !$this->corrections_enabled() || \WorkforceOne\Approvals\Workflows::isLevels($this->cx_workflow_mode()))return [];
+        $this->ensure_corrections_schema_once();
+        $me=get_current_user_id();$out=[];
+        foreach($this->services()->correctionQuery()->toDecideOpen() as $c){
+            if((int)$c->employee_user_id===$me || !$this->cx_can_manage((int)$c->employee_id))continue;
+            $out[]=['key'=>['attendance_correction','attendance_correction',(int)$c->id],'employee_id'=>(int)$c->employee_id,'tone'=>'correction','since'=>(string)$c->requested_at,'wait'=>true,
+                'make'=>function()use($c){$card=$this->cx_approval_card((int)$c->id,$c);if($card)$card['note_field']=true;return $card;},'allow'=>false,'active'=>false,'note_required'=>true,
+                'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('The correction approval workflow is not set yet, so it is decided as before','workforce-one')];
+        }
+        return $out;
     }
 
     /** An employee's corrections for My requests, newest first. @return list<array<string,mixed>> */

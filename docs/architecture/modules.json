@@ -377,7 +377,8 @@
         "today_events",
         "attendance_day",
         "last_device_location",
-        "time_logs_table_name"
+        "time_logs_table_name",
+        "cx_legacy_approvals"
       ],
       "layered": [
         {
@@ -507,7 +508,8 @@
         "leave_form_types",
         "leave_early_form",
         "leave_away_between",
-        "leave_status_of"
+        "leave_status_of",
+        "leave_legacy_approvals"
       ]
     },
     "overtime": {
@@ -526,7 +528,9 @@
         "early_leave_my_requests",
         "early_leave_withdraw",
         "overtime_enabled",
-        "overtime_approved_dates"
+        "overtime_approved_dates",
+        "overtime_legacy_approvals",
+        "early_leave_legacy_approvals"
       ]
     },
     "approvals": {
@@ -585,7 +589,8 @@
         "approval_find_request",
         "approval_settings",
         "approval_workflow",
-        "approval_notify_administrators"
+        "approval_notify_administrators",
+        "approval_self_rule"
       ],
       "layered": [
         {

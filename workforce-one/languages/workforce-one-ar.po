@@ -8031,3 +8031,33 @@ msgstr "وصل للمسؤولين."
 
 msgid "Give the approver a user account"
 msgstr "اعمل حساب للمسؤول عن الموافقة"
+
+msgid "Anyone who can manage Sign In / Out"
+msgstr "اللي يقدر يدير الحضور والانصراف"
+
+msgid "The overtime approval workflow is not set yet, so it is decided as before"
+msgstr "مسار الموافقات للوقت الإضافي لسه مش متحدّد، فبيتقرّر زي الأول"
+
+msgid "Early leave has no approval workflow, so it is decided as before"
+msgstr "الانصراف المبكر مالوش مسار موافقات، فبيتقرّر زي الأول"
+
+msgid "Anyone who can manage settings"
+msgstr "اللي يقدر يدير الإعدادات"
+
+msgid "Leave approvals are off, so the cancellation is decided as before"
+msgstr "موافقات الإجازة مقفولة، فالإلغاء بيتقرّر زي الأول"
+
+msgid "Leave approvals are off, so it is decided as before"
+msgstr "موافقات الإجازة مقفولة، فالطلب بيتقرّر زي الأول"
+
+msgid "The correction approval workflow is not set yet, so it is decided as before"
+msgstr "مسار الموافقات للتصحيحات لسه مش متحدّد، فبيتقرّر زي الأول"
+
+msgid "Deciding now"
+msgstr "بيقرّر دلوقتي"
+
+msgid "No approval workflow"
+msgstr "من غير مسار موافقات"
+
+msgid "It was already decided, so nothing was changed."
+msgstr "اتقرّر قبل كده، فمفيش حاجة اتغيّرت."

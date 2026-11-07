@@ -11119,3 +11119,43 @@ msgstr ""
 #: includes/trait-approvals.php
 msgid "Give the approver a user account"
 msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Anyone who can manage Sign In / Out"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "The overtime approval workflow is not set yet, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Early leave has no approval workflow, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Anyone who can manage settings"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Leave approvals are off, so the cancellation is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Leave approvals are off, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "The correction approval workflow is not set yet, so it is decided as before"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "Deciding now"
+msgstr ""
+
+#: includes/trait-my-approvals.php
+msgid "No approval workflow"
+msgstr ""
+
+#: includes/trait-frontend.php
+msgid "It was already decided, so nothing was changed."
+msgstr ""

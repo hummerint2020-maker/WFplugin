@@ -125,7 +125,8 @@ first = today.replace(day=1).isoformat()
 st, page, _ = adm.req('/app/?ews_view=reports&report_type=summary&start=%s&end=%s' % (first, today.isoformat()))
 st, _, h = adm.req('/wp-admin/admin-post.php', dict(form(page, 'ews_report_view_save'), view_name='Month so far'))
 saved = json.loads(php("echo wp_json_encode(get_user_meta(1,'ews_report_views',true));") or '[]')
-check('a quick range is saved as the range', [v.get('range') for v in saved] in (['', 'this_month'], ['', 'today']) and 'start' not in saved[1], saved)
+# On some days the 1st..today range is also "this week" (the 1st starts the week) or "today" (the 1st): any quick range, never dates.
+check('a quick range is saved as the range', len(saved) == 2 and saved[0].get('range') == '' and saved[1].get('range') in ('this_month', 'this_week', 'today') and 'start' not in saved[1], saved)
 
 st, page, _ = adm.req('/app/?ews_view=reports')
 f = next((form(x, 'ews_report_view_delete') for x in re.findall(r'<form.*?</form>', page, re.S) if 'Overtime check' in x), {})

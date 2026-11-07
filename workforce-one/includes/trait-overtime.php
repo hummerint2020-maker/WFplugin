@@ -316,9 +316,9 @@ trait EWS_Overtime_Trait {
     /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
 
     /** An overtime request waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
-    private function overtime_approval_card($id){
+    private function overtime_approval_card($id,$row=null){
             global $wpdb;
-            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d AND status='Pending' LIMIT 1",(int)$id));
+            $r=$row&&(int)$row->id===(int)$id&&$row->status==='Pending'?$row:$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d AND status='Pending' LIMIT 1",(int)$id));
             if(!$r)return null;
             // Kept left to right inside Arabic text (18:00–21:00, not 21:00–18:00).
             $span="\u{2066}".substr((string)$r->start_time,0,5).'–'.substr((string)$r->end_time,0,5)."\u{2069}";
@@ -327,6 +327,42 @@ trait EWS_Overtime_Trait {
             return ['employee_id'=>(int)$r->employee_id,'tone'=>'overtime','kind'=>__('Overtime','workforce-one'),
                 'what'=>date_i18n('j M',strtotime((string)$r->overtime_date)).' · '.$span.' · '.$this->duration_label((int)$r->requested_minutes),'facts'=>$facts,'since'=>(string)$r->requested_at,
                 'action'=>'ews_overtime_request_respond','nonce'=>'ews_overtime_respond','fields'=>['request_id'=>(int)$id]];
+        }
+
+    /**
+     * Overtime waiting outside an approval workflow (its workflow "Not set yet" or active NONE), for My approvals (QA 6,
+     * docs/tasks/legacy-approval-cards.md): the people who decide it today (Manage Sign In / Out) see it as a card that posts
+     * to the same handler. Requests with an open engine level are dropped by the caller. @return list<array<string,mixed>>
+     */
+    private function overtime_legacy_approvals(){
+            if(!$this->can('ews_manage_time') || !$this->overtime_enabled() || \WorkforceOne\Approvals\Workflows::isLevels($this->overtime_workflow_mode()))return [];
+            global $wpdb;$this->ensure_overtime_schema();
+            $allow=$this->approval_self_rule('overtime')==='allow';
+            $out=[];
+            foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE status='Pending' ORDER BY requested_at ASC,id ASC LIMIT 200") as $r){
+                $card=$this->overtime_approval_card((int)$r->id,$r);
+                if($card)$out[]=['key'=>['overtime','overtime_request',(int)$r->id],'card'=>$card,'employee_id'=>(int)$r->employee_id,'tone'=>'overtime','since'=>(string)$r->requested_at,'wait'=>true,'allow'=>$allow,'active'=>true,
+                    'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('The overtime approval workflow is not set yet, so it is decided as before','workforce-one')];
+            }
+            return $out;
+        }
+
+    /** Early leave waiting (it is never in an approval workflow), for My approvals (QA 6): Manage Sign In / Out decides it. @return list<array<string,mixed>> */
+    private function early_leave_legacy_approvals(){
+            if(!$this->can('ews_manage_time'))return [];
+            global $wpdb;$this->ensure_leave_schema();
+            $allow=(bool)(int)$this->option('ews_early_leave_self');
+            $out=[];
+            foreach((array)$wpdb->get_results("SELECT * FROM {$wpdb->prefix}ews_early_leave_requests WHERE status='Pending' ORDER BY requested_at ASC,id ASC LIMIT 200") as $r){
+                $facts=[[__('Day','workforce-one'),date_i18n('D j M',strtotime((string)$r->work_date))],[__('Length','workforce-one'),$this->duration_label((int)$r->leave_minutes)]];
+                if(trim((string)$r->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$r->reason];
+                $card=['employee_id'=>(int)$r->employee_id,'tone'=>'leave','kind'=>__('Early leave','workforce-one'),
+                    'what'=>date_i18n('j M',strtotime((string)$r->work_date)).' · '.$this->duration_label((int)$r->leave_minutes),'facts'=>$facts,'since'=>(string)$r->requested_at,
+                    'action'=>'ews_early_leave_respond','nonce'=>'ews_early_leave_respond','fields'=>['request_id'=>(int)$r->id]];
+                $out[]=['key'=>['early_leave','early_leave',(int)$r->id],'card'=>$card,'employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at,'wait'=>true,'allow'=>$allow,'active'=>false,
+                    'who'=>__('Anyone who can manage Sign In / Out','workforce-one'),'why'=>__('Early leave has no approval workflow, so it is decided as before','workforce-one')];
+            }
+            return $out;
         }
 
     /** The days an employee has approved overtime between two dates (3.31.115, attendance corrections). @return array<string,true> date => true */
