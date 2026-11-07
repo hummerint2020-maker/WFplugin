@@ -1,0 +1,13 @@
+/* HR letters (docs/tasks/hr-letter.md): new pieces only. Logical properties: the -rtl copy is the same file. */
+.wfo-app .wfo-new-type.tone-letter,.wfo-app .wfo-apv-item.tone-letter{--tc:#2E6E8E}
+.wfo-app .wfo-hl-seg{display:flex;gap:16px;padding-block:6px}
+.wfo-app .wfo-hl-seg label{display:inline-flex;gap:6px;align-items:center;font-weight:500}
+.wfo-app .wfo-hl-dl{display:inline-flex;gap:6px;align-items:center;margin-block-start:10px;text-decoration:none}
+.ews-hl-box{max-width:900px;margin-block:16px;padding:16px 20px;background:#fff;border:1px solid #dcdcde;border-radius:6px}
+.ews-hl-box h2{margin-block-start:0}
+.ews-hl-off{font-size:12px;padding:2px 8px;border-radius:999px;background:#f0f0f1;color:#50575e;vertical-align:middle}
+.ews-hl-err{color:#b32d2e}
+.ews-hl-imgs{display:flex;flex-wrap:wrap;gap:12px}
+.ews-hl-img{display:grid;place-items:center;gap:6px;width:150px;height:96px;border:1px dashed #c3c4c7;border-radius:6px;color:#50575e}
+.ews-hl-imgs .description{flex-basis:100%}
+.ews-hl-sample img{display:block;max-width:100%;margin-block:12px;border:1px solid #dcdcde}
