@@ -115,7 +115,7 @@ $create('fault_none_set_notification', $BU, $B, $in($D(2), 'time', ['target' => 
 $wf('NONE');
 $create('create_mode_none_out', $DU, $Dd, $in($D(1), 'out', ['time_out' => '17:00']));
 $create('create_mode_none_time_earlier', $DU, $Dd, $in($D(2), 'time', ['target' => 'sign_in', 'time_in' => '07:30']));   // needs HR: pending_hr
-$create('fault_mode_none_second_begin', $DU, $Dd, $in($D(4), 'in', ['time_in' => '08:00']), 'employee', null, ['/^\s*START TRANSACTION/i', 'SELECT broken_on_purpose FROM no_such_table_x', 2]);   // CX-z: status 'save', no error
+$create('fault_mode_none_first_begin', $DU, $Dd, $in($D(4), 'in', ['time_in' => '08:00']), 'employee', null, ['/^\s*START TRANSACTION/i', 'SELECT broken_on_purpose FROM no_such_table_x', 1]);   // the engine's NONE start has no transaction: the first is the finalize's. CX-z: status 'save', no error
 $create('fault_mode_none_manager_row', $BU, $B, $in($D(4), 'in', ['time_in' => '08:00']), 'employee', null, '/^\s*UPDATE `' . $Tq . '` SET `manager_by`/i');
 $create('fault_mode_none_start_insert', $BU, $B, $in($D(1), 'out', ['time_out' => '17:00']), 'employee', null, '/^\s*INSERT INTO `' . preg_quote($p . 'ews_approval_requests', '/') . '`/i');
 $settings(['photo' => ['day' => 'optional']]);
@@ -145,8 +145,9 @@ $create('fault_hr_approved_update', $hrU, $A, $in($D(21), 'day', ['time_in' => '
 $create('fault_hr_commit', $hrU, $A, $in($D(21), 'day', ['time_in' => '09:00', 'time_out' => '17:00', 'reason' => 'x']), 'hr', null, '/^\s*COMMIT/i');
 
 // ---------------------------------------------------------------- the controllers: the app's form, HR's direct form, the API
+$as($CU);
+$run('form_request_sent', function () use ($post, $D) { return $post('correction_request', ['date' => $D(2), 'type' => 'time', 'target' => 'sign_in', 'time_in' => '07:55', 'reason' => 'forgot'], 'ews_correction_request'); });
 $as($BU);
-$run('form_request_sent', function () use ($post, $D) { return $post('correction_request', ['date' => $D(4), 'type' => 'in', 'time_in' => '08:15', 'reason' => 'forgot'], 'ews_correction_request'); });
 $run('form_request_refused', function () use ($post, $D) { return $post('correction_request', ['date' => $D(10), 'type' => 'out', 'time_out' => '17:00', 'reason' => 'late'], 'ews_correction_request'); });
 $run('form_request_bad_nonce', function () use ($post, $D) { return $post('correction_request', ['date' => $D(4), 'type' => 'in', 'time_in' => '08:15', 'reason' => 'x'], 'bad'); });
 $as(0);
@@ -175,7 +176,7 @@ $api = function ($label, $uid, $e, array $params) use ($run, $o, $as, $admin, $a
     $as($admin);
 };
 $wf('');
-$api('api_created', $BU, $B, ['date' => $D(2), 'type' => 'time', 'target' => 'sign_in', 'time_in' => '08:10', 'reason' => 'traffic']);
+$api('api_created', $r13U, $r13, ['date' => $D(5), 'type' => 'time', 'target' => 'sign_out', 'time_out' => '16:45', 'reason' => 'traffic']);
 $api('api_refused', $BU, $B, ['date' => $D(10), 'type' => 'out', 'time_out' => '17:00', 'reason' => 'x']);
 $api('api_not_linked', $BU, null, ['date' => $D(2), 'type' => 'out']);
 update_option('ews_feature_corrections', 0, false);

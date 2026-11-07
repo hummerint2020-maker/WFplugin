@@ -25,6 +25,7 @@ $faultHits = 0;   // matches of the fault pattern so far in this call (a fault [
 add_filter('query', function ($q) use (&$sql, $fix) {
     $n = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $q);
     $n = preg_replace("/(_transient_timeout_\w+', ')\d+/", '$1TS', $n);
+    $n = preg_replace("/(`option_value` = ')\d+(' WHERE `option_name` = '_transient_timeout_)/", '$1TS$2', $n);   // a transient set again
     $n = preg_replace('/\b\d{13}\b/', 'TS', $n);
     $n = preg_replace('/`actual_minutes` = \d+/', '`actual_minutes` = N', $n);   // minutes since a break started follow "now"
     $n = preg_replace('#/ \d+m /#', '/ Nm /', $n);

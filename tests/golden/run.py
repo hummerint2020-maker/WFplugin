@@ -528,8 +528,8 @@ try:
             and any(r.get('type') == 'correction' for r in cq.get('_rows:notifications', [])) and any('ews_notifications' in q for q in cqsql('create_none_set_photo_off'))),
         ('no workflow set: the INSERT fault is save', lambda: cqe('fault_none_set_insert') == 'save'),
         ('NONE: approved at once, pending_hr for an earlier Sign In, a whole day approved', lambda: cqs('create_mode_none_out') == 'approved' and cqs('create_mode_none_time_earlier') == 'pending_hr' and cqs('create_mode_none_day') == 'approved'),
-        ('NONE: the second BEGIN fails: status save without error (CX-z)', lambda: cqs('fault_mode_none_second_begin') == 'save' and cqe('fault_mode_none_second_begin') is None),
-        ('NONE: the engine INSERT fault is approval; the second event rolls back', lambda: cqe('fault_mode_none_start_insert') == 'approval' and cqs('fault_mode_none_second_event') == 'save' and any(q.startswith('ROLLBACK') for q in cqsql('fault_mode_none_second_event'))),
+        ('NONE: the finalize BEGIN fails: status save without error (CX-z)', lambda: cqs('fault_mode_none_first_begin') == 'save' and cqe('fault_mode_none_first_begin') is None),
+        ('NONE: the second event rolls back', lambda: cqs('fault_mode_none_second_event') == 'save' and any(q.startswith('ROLLBACK') for q in cqsql('fault_mode_none_second_event'))),
         ('LEVEL_1: pending, the approver told; the engine faults are approval', lambda: cqs('create_level1_out') == 'pending' and cqs('create_level1_in') == 'pending' and cqe('fault_level1_request_insert') == 'approval'
             and any(q.startswith('INSERT INTO') and 'ews_notifications' in q for q in cqsql('create_level1_out'))),
         ('HR: applied at once; refused; every fault is an error and the row goes', lambda: cqs('create_hr_day') == 'approved' and cqs('create_hr_old_day') == 'approved' and cqe('create_hr_refused_time') == 'time' and cqe('create_hr_refused_reason') == 'reason'
@@ -550,7 +550,8 @@ try:
     ]
     cq_false = [label for label, fn in cq_conditions if not holds(fn)]
     check('...the corrections requests trace really refused, sent, approved, applied for HR, failed, withdrew and reminded (else it proves nothing)', not cq_false,
-          [cq_false] + ['%s=%s' % (k, json.dumps(cqr(k))[:200]) for k in ('create_mode_none_out', 'fault_mode_none_second_begin', 'create_level1_out', 'create_hr_day', 'api_created', 'withdraw_ok', 'tick_first', 'remind_today')])
+          [cq_false] + ['%s=%s' % (k, json.dumps(cqr(k))[:200]) for k in ('create_mode_none_out', 'create_mode_none_time_earlier', 'create_mode_none_day', 'fault_mode_none_first_begin', 'fault_mode_none_start_insert', 'fault_mode_none_second_event', 'create_level1_out',
+                                                     'create_hr_day', 'api_created', 'api_refused', 'api_not_linked', 'api_off', 'form_request_sent', 'form_request_refused', 'form_request_bad_nonce', 'form_request_logged_out', 'form_request_no_employee', 'withdraw_ok', 'tick_first', 'remind_today')])
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)
