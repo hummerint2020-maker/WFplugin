@@ -140,3 +140,11 @@ Arabic typography (no justification/kashida, harakat dropped; mitigated by Previ
 generation (failure leaves `approved` + `issue_error`); NONE + pdf issues salary certificates with no human check (owner's choice,
 said in the NONE text); depends on My approvals; golden diffs only on Features / Settings Overview; schema bump + capability; first
 request type layered from birth (review the port design against check_layers L2/L4 before coding).
+
+## Owner decisions on the design (2026-11-07)
+- Q2: **the delivery mode is per letter type**, with a general default.
+- Q7: **salary may appear**; a template that shows it is saved only by someone who also has Manage Payroll; the file is seen only by
+  the employee and HR, non-owner downloads audited.
+- Q11/Q12: **add optional employee fields: Arabic name, gender, hire date** (People module schema change); letters use them when filled.
+- Q14: **try a formal Arabic font (Amiri)** with the built-in writer and send the owner a real sample PDF before the code; fall back to DejaVu.
+- The other questions: pending (recommended answers proposed in §14).
