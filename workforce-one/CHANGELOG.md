@@ -7,6 +7,8 @@
 - **Why a request is with the administrators.** Their notification, the Requests Hub, the path in My approvals and My requests, and the administrator's card now give the real reason (no direct manager, no manager's manager, no team or department manager, HR or Finance not set, the approver no longer active or without an account, not decided in time with nobody above, or the approver made the request), with a link to the setting that sends the next requests to the right person, only for those who can open it. Requests saved before show a neutral text. Who decides is unchanged; no database change. Design `docs/tasks/admin-fallback-reason.md`.
 - **Requests decided outside an approval workflow are cards in My approvals** (with My approvals on): overtime and corrections whose workflow is "Not set yet", leave requests and cancellations while leave approvals are off, and early leave, for the people who decide them today, through the same handlers, with "No approval workflow" and who decides. They count in the menu and on Home; one already on a workflow shows once. A second decision on a leave cancellation comes back with "already decided" instead of a bare page. Design `docs/tasks/legacy-approval-cards.md`; mockup `docs/mockups/approval-reasons/`.
 
+- Tests: the reports test no longer depends on the date (on some days "the 1st to today" is also this week); the golden harness can declare an expected page for one user only; a new e2e suite for the cards outside a workflow; browser tests for the tasks search.
+
 Not in this release: the attachment error inside the task dialog (a mockup first).
 
 ## 3.31.141
