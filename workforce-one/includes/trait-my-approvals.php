@@ -21,7 +21,7 @@ trait EWS_My_Approvals_Trait {
 
     /** @var array<int,mixed>|null the inbox of this page load */
     private $my_approvals_memo=null;
-    /** @var bool Whether the memo holds the legacy cards' full details (only the My approvals page needs them; QA 6). */
+    /** @var bool False while the memo holds a legacy card built without its details (only the My approvals page needs them; QA 6). */
     private $my_approvals_memo_full=false;
     /** @var bool Set by the My approvals page: build the legacy cards in full. */
     private $my_approvals_full=false;
@@ -70,8 +70,9 @@ trait EWS_My_Approvals_Trait {
      * @return list<array<string,mixed>>
      */
     private function my_approvals_items(){
+        // Built again for the My approvals page only when it holds legacy cards built without their details.
         if($this->my_approvals_memo!==null && ($this->my_approvals_memo_full || !$this->my_approvals_full))return $this->my_approvals_memo;
-        $this->my_approvals_memo=[];$this->my_approvals_memo_full=$this->my_approvals_full;
+        $this->my_approvals_memo=[];$this->my_approvals_memo_full=true;
         if(!$this->my_approvals_enabled() || !is_user_logged_in())return [];
         $this->ensure_approval_schema();
         $uid=(int)get_current_user_id();
@@ -147,7 +148,10 @@ trait EWS_My_Approvals_Trait {
             if($emp && (int)$emp->wp_user_id===$me && !$c['allow'] && !$admin)continue;   // the handler's self rule
             // The full card only on the My approvals page; elsewhere (menu, Home) what the counts need.
             $card=$c['card']??null;
-            if(!$card)$card=$this->my_approvals_full?($c['make'])():['tone'=>$c['tone'],'employee_id'=>(int)$c['employee_id'],'since'=>$c['since'],'action'=>'','fields'=>[]];
+            if(!$card){
+                if($this->my_approvals_full)$card=($c['make'])();
+                else{$card=['tone'=>$c['tone'],'employee_id'=>(int)$c['employee_id'],'since'=>$c['since'],'action'=>'','fields'=>[]];$this->my_approvals_memo_full=false;}
+            }
             if(!$card)continue;
             $wait=(bool)$c['wait'] && ($card['wait']??true)!==false;
             $hours=$wait?\WorkforceOne\Approvals\WorkingHours::between((string)$c['since'],$now,$days,$s['day_start'],$s['day_end']):0.0;
