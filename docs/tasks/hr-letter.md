@@ -147,4 +147,21 @@ request type layered from birth (review the port design against check_layers L2/
   the employee and HR, non-owner downloads audited.
 - Q11/Q12: **add optional employee fields: Arabic name, gender, hire date** (People module schema change); letters use them when filled.
 - Q14: **try a formal Arabic font (Amiri)** with the built-in writer and send the owner a real sample PDF before the code; fall back to DejaVu.
-- The other questions: pending (recommended answers proposed in §14).
+- Q14 (after the trial PDFs): **Amiri** (TrueType glyf, the 140 Arabic presentation forms mapped; about +0.4 MB). The trial showed two
+  ordering issues to fix in `ArabicText` with tests: numbers with a thousands separator (١٨٬٥٠٠) and brackets / the full stop at a
+  line's end.
+- Q1: a new type's default mode is **request only**; **each request keeps the mode it was made with**.
+- Q3: **"Other" always goes to HR to upload** (in PDF mode too).
+- Q4: starting types: **Employment certificate, Salary certificate, Experience letter, Embassy letter, Bank letter** (editable).
+- Q5: request-only mode has **"Ready to collect"** (the employee is told).
+- Q6: **the latest file only** (replacing deletes the old one; the Audit Log keeps the history), **kept indefinitely**, uploads up to 10 MB.
+- Q8: the employee's note is **optional**.
+- Q9: HR's own letter is decided by **the administrators**.
+- Q10: **HR may create a letter for an employee, former employees included** (issued directly, audited).
+- Q13: Arabic letters use **Arabic-Indic digits**, the **salary in words**, and the **Hijri date** next to the Gregorian.
+- Q15: **no QR** in this release (the reference number on every letter).
+- Q16: **mobile API later**. Q17: **no personal-data export** in this release.
+- Left to the recommended answers (owner: "decide what is right"): the tile in a new **"Documents"** group of the New request
+  sheet; HR may cancel an approved letter not yet issued; while the feature is off, issued letters stay downloadable by HR only;
+  non-owner downloads and the owner's first download are audited; **EWS Administrator gets "Manage HR letters"** by default (a
+  salary template still needs Manage Payroll); the HR user of Approval Workflows needs the capability like anyone else.
