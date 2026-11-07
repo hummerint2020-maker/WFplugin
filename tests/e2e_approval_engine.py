@@ -168,11 +168,14 @@ clear()
 save('vacation', 'LEVEL_2', level_1_type='SUPERVISOR', level_2_type='FINANCE')
 qs, lid = leave(emp, d(3))
 ar, st_ = steps(lid)
-check('the last level has nobody (Finance not set): administrators decide it', ar and [x['rerouted'] for x in st_] == ['0', '1'] and st_[1]['approver_wp_user_id'] is None and st_[1]['skip_reason'] is None, st_)
+check('the last level has nobody (Finance not set): administrators decide it', ar and [x['rerouted'] for x in st_] == ['0', '1'] and st_[1]['approver_wp_user_id'] is None and st_[1]['skip_reason'] == 'missing', st_)
+# QA 8 (3.31.142): the level keeps why it is with the administrators, and the message says it.
 decide(S['mona'], lid)
 ar, st_ = steps(lid)
-admin_note = q("SELECT title FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid'])
-check('...at level 2 the administrators are told', ar['status'] == 'WAITING_FOR_LEVEL_2' and admin_note, (ar, admin_note))
+admin_note = q("SELECT title,message FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid'])
+check('...at level 2 the administrators are told, and why: Finance is not set', ar['status'] == 'WAITING_FOR_LEVEL_2' and admin_note and 'Finance is not set in Approval Workflows' in admin_note[-1]['message'], (ar, admin_note))
+hub = adm.req('/wp-admin/admin.php?page=ews31-requests')[1]
+check('...the Requests Hub says why too', 'For an administrator (Finance not set)' in hub)
 n = adm.admin_request_nonce('leave', lid)
 adm.req('/wp-admin/admin-post.php', {'action': 'ews31_requests_decision', '_wpnonce': n or 'x', 'request_type': 'leave', 'request_id': lid, 'decision': 'approve'})
 check('...and an administrator approves it on the Requests Hub', steps(lid)[0]['status'] == 'APPROVED' and leave_status(lid) == 'Approved', steps(lid))
@@ -185,6 +188,9 @@ ar, st_ = steps(lid)
 check('someone with no manager (the owner\'s case, one level = direct manager) can ask: administrators decide, they are told',
       qs.get('leave_sent') == '1' and ar and ar['status'] == 'WAITING_FOR_LEVEL_1' and st_[0]['rerouted'] == '1' and st_[0]['approver_wp_user_id'] is None
       and q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid']), (qs, ar, st_))
+msg = q("SELECT message FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed' ORDER BY id DESC LIMIT 1" % ids['admin_uid'])[0]['message']
+check('...the level keeps why (nobody to decide it) and the message names the person without a manager, with the hint (QA 8)',
+      st_[0]['skip_reason'] == 'missing' and 'Big Boss has no direct manager' in msg and 'organization chart' in msg and 'the person who made the request' not in msg, (st_, msg))
 
 clear()
 save('vacation', 'LEVEL_2', level_1_type='DEPARTMENT_MANAGER', level_2_type='SUPERVISOR')
@@ -219,6 +225,7 @@ check('"It goes to the next level" is saved and in the Audit Log', 'approval_sav
 qs, lid = leave(S['mona'], d(3))
 ar, st_ = steps(lid)
 check('Mona asks: level 1 is Big Boss, level 2 is Mona herself, the last → administrators decide it', ar and st_[0]['approver_wp_user_id'] == str(ids['big_uid']) and st_[1]['rerouted'] == '1' and st_[1]['approver_wp_user_id'] is None, st_)
+check('...the level keeps why: the approver made the request (QA 8)', st_[1]['skip_reason'] == 'self', st_)
 clear()
 save('vacation', 'LEVEL_2', self_rule='next', level_1_type='SPECIFIC_EMPLOYEE', level_1_employee_ref='Mona Manager · #%d' % ids['mona'], level_2_type='SUPERVISOR')
 qs, lid = leave(S['mona'], d(3))
@@ -259,6 +266,8 @@ check('...a day later Big Boss has no manager: it moves up to the administrators
 ar, st_ = steps(lid)
 check('...who are told; and then it waits there (no more moves)', st_[0]['rerouted'] == '1' and st_[0]['approver_wp_user_id'] is None and st_[0]['escalations'] == '2'
       and q("SELECT id FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed'" % ids['admin_uid']) and tick('2026-10-20 14:00:00') == '{"reminded":0,"moved":0}', st_)
+msg = q("SELECT message FROM {p}ews_notifications WHERE user_id=%d AND title='Approval needed' ORDER BY id DESC LIMIT 1" % ids['admin_uid'])[0]['message']
+check('...the message says it was not decided in time and nobody is above Big Boss (QA 8)', 'nobody above Big Boss' in msg, msg)
 save('vacation', 'LEVEL_1', level_1_type='SUPERVISOR')
 
 # ---------------------------------------------------------------- 3.31.102: all or nothing, and no message for nothing

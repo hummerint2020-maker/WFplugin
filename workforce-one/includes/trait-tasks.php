@@ -289,22 +289,6 @@ trait EWS_Tasks_Trait {
                        (t.due_date IS NULL), t.due_date ASC, t.created_at DESC";
         $rows=$args ? $wpdb->get_results($wpdb->prepare($sql,...$args)) : $wpdb->get_results($sql);
 
-        // Dashboard counters use the same visibility rules as the list.
-        $counter_where=($manage&&$tab==='team')
-            ? " AND t.is_template=0 AND (t.assigned_to IN (SELECT id FROM {$this->employees} WHERE active=1 AND wp_user_id IS NOT NULL) OR (t.assigned_to IS NULL AND t.team_id IS NOT NULL))"
-            : " AND t.is_template=0 AND (t.created_by=%d OR a.wp_user_id=%d OR (t.assigned_to IS NULL AND t.team_mode='first' AND t.team_id IN ($team_in)))";
-        $counter_args=($manage&&$tab==='team')?[]:[$uid,$uid];
-        $counter_sql="SELECT
-            COALESCE(SUM(CASE WHEN t.status='todo' THEN 1 ELSE 0 END),0) todo_count,
-            COALESCE(SUM(CASE WHEN t.status='in_progress' THEN 1 ELSE 0 END),0) progress_count,
-            COALESCE(SUM(CASE WHEN t.status='completed' THEN 1 ELSE 0 END),0) completed_count,
-            COALESCE(SUM(CASE WHEN t.status<>'completed' AND t.due_date IS NOT NULL AND t.due_date < %s THEN 1 ELSE 0 END),0) overdue_count
-            FROM $table t LEFT JOIN {$this->employees} a ON a.id=t.assigned_to WHERE 1=1 $counter_where";
-        // The due-date placeholder appears in SELECT before the visibility placeholders in WHERE.
-        // Keep arguments in the exact placeholder order; otherwise MySQL compares user IDs to dates.
-        $counter_args = array_merge([current_time('Y-m-d')], $counter_args);
-        $counter=$wpdb->get_row($wpdb->prepare($counter_sql,...$counter_args));
-
         $employees=$manage?$this->tasks_employees():[];
         $edit_id=absint($_GET['edit_task']??0);
         $edit=$edit_id?$wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id=%d AND is_template=0 LIMIT 1",$edit_id)):null;
@@ -341,6 +325,10 @@ trait EWS_Tasks_Trait {
             $t->edit_url=add_query_arg(['edit_task'=>(int)$t->id,'task_tab'=>$tab],$base);
             $cards[isset($cards[$t->status])?$t->status:'todo'][]=$t;
         }
+        // The column counts and the overdue line count what the page lists: the same rows, with the status and
+        // priority filters (owner decision 2026-11-06, QA report on 3.31.138). The search narrows them in the page.
+        $counter=(object)['todo_count'=>count($cards['todo']),'progress_count'=>count($cards['in_progress']),'completed_count'=>count($cards['completed']),
+            'overdue_count'=>count(array_filter((array)$rows,static function($t){return $t->is_overdue;}))];
         // Done: the most recently finished first; a long list is cut (Show all).
         usort($cards['completed'],static function($a,$b){return strcmp((string)$b->completed_at,(string)$a->completed_at);});
         $done_all=isset($_GET['task_done']);

@@ -82,6 +82,7 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php if ($it['admins']): ?><span class="wfo-apv-pill is-brand"><?php esc_html_e('For administrators', 'workforce-one'); ?></span><?php endif; ?>
                 <?php if (!empty($it['legacy'])): /* decided outside an approval workflow (QA 6) */ ?><span class="wfo-apv-pill is-legacy"><?php esc_html_e('No approval workflow', 'workforce-one'); ?></span><?php endif; ?>
             </div>
+            <?php if (!empty($it['admins_hint'])): /* why it came to the administrators, and the setting for the next ones (QA 8) */ ?><p class="wfo-apv-why"><?php echo \WorkforceOne\Ui\Icons::svg('alert', 15, 2.2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><span><?php echo esc_html($it['admins_hint']['text']); ?><?php if ($it['admins_hint']['url'] !== ''): ?> <a href="<?php echo esc_url($it['admins_hint']['url']); ?>"><?php echo esc_html($it['admins_hint']['link']); ?></a><?php endif; ?></span></p><?php endif; ?>
             <?php endif; ?>
             <?php if (!$peer): ?>
             <details class="wfo-apv-more">

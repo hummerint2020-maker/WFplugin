@@ -61,7 +61,7 @@ def steps(lid):
     ar = q("SELECT id,status FROM {p}ews_approval_requests WHERE entity_type='leave' AND entity_id=%d" % lid)
     if not ar:
         return None, []
-    return ar[0], q("SELECT step_order,status,approver_wp_user_id,acted_by_wp_user_id,self_decision,rerouted FROM {p}ews_approval_steps WHERE approval_request_id=%s ORDER BY step_order" % ar[0]['id'])
+    return ar[0], q("SELECT step_order,status,approver_wp_user_id,acted_by_wp_user_id,self_decision,rerouted,skip_reason FROM {p}ews_approval_steps WHERE approval_request_id=%s ORDER BY step_order" % ar[0]['id'])
 
 
 def leave_status(lid):
@@ -114,6 +114,7 @@ qs, lid = submit(boss, d(6))
 ar, st_ = steps(lid)
 check('off: the boss\'s own leave still starts (no error)', not qs.get('leave_error') and ar and ar['status'] == 'WAITING_FOR_LEVEL_1', (qs, ar))
 check('...its level goes to administrators: no approver, marked rerouted, pending', st_[0]['approver_wp_user_id'] is None and st_[0]['rerouted'] == '1' and st_[0]['status'] == 'PENDING', st_)
+check('...it keeps why: the approver made the request (QA 8)', st_[0].get('skip_reason') == 'self', st_)
 notes = q("SELECT user_id,title FROM {p}ews_notifications WHERE title='Approval needed'")
 check('...administrators are told, the boss is not', any(n['user_id'] == str(ids['admin_uid']) for n in notes) and all(n['user_id'] != str(ids['boss_uid']) for n in notes), notes)
 decide(boss, lid, 'approve')

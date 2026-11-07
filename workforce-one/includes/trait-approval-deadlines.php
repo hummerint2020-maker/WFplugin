@@ -41,7 +41,7 @@ trait EWS_Approval_Deadlines_Trait {
                 sprintf(/* translators: 1: request kind, 2: employee name */__('%1$s from %2$s was not decided in time by its approver and now waits for you.','workforce-one'),$kind,$who),
                 ['entity'=>'approval','entity_id'=>(int)$step->approval_request_id,'push'=>true]);
         }else{
-            $this->approval_notify_administrators((int)$step->approval_request_id,(int)$step->step_order);
+            $this->approval_notify_administrators((int)$step->approval_request_id,(int)$step->step_order,'moved_up',$this->approval_user_name((int)$from_uid));
         }
     }
 

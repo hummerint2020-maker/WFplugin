@@ -134,4 +134,7 @@
 .wfo-app .wfo-si-note.is-warn{color:#8A5A00}
 .wfo-app .wfo-apv-item.is-focus{box-shadow:0 0 0 3px var(--wfo-pri)}
 .wfo-app .wfo-apv-pill.is-legacy{background:#EEF0F4;color:#4A5568}
+.wfo-app .wfo-apv-why{display:flex;align-items:flex-start;gap:8px;margin:0;padding:9px 12px;border-radius:var(--wfo-r-ctl);background:var(--wfo-pri-soft);color:var(--wfo-ink);font-size:13px;line-height:1.55}
+.wfo-app .wfo-apv-why .wfo-icon{flex:none;margin-block-start:2px;color:var(--wfo-pri)}
+.wfo-app .wfo-apv-why a{display:inline-block;color:var(--wfo-pri);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .wfo-app .wfo-apv-path small.wfo-apv-pwhy{display:block;color:var(--wfo-ink)}

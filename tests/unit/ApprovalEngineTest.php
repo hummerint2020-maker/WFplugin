@@ -97,6 +97,9 @@ final class ApprovalEngineTest extends TestCase
         $this->assertNull($step->approver_wp_user_id);
         $this->assertSame([[$r->value, 1]], $this->w->told, 'told right after COMMIT when the engine owns the transaction');
         $this->assertSame([], $this->w->later);
+        // QA 8: the level keeps why (nobody to decide it), and the administrators are told the reason and who asked.
+        $this->assertSame('missing', $step->skip_reason);
+        $this->assertSame([[$r->value, 1, 'no_manager', 3]], $this->w->toldWhy);
     }
 
     public function testAdministratorsAreToldLaterWhenTheCallerOwnsTheTransaction(): void
@@ -120,6 +123,8 @@ final class ApprovalEngineTest extends TestCase
         $this->assertSame('PENDING', $steps[2]->status);
         $this->assertSame(1, (int) $steps[2]->rerouted);
         $this->assertNull($steps[2]->approver_wp_user_id);
+        $this->assertSame('self', $steps[2]->skip_reason, 'QA 8: the rule "administrators" keeps why');
+        $this->assertSame('self', end($this->w->toldWhy)[2]);
         $this->w->selfRule['face_reset'] = 'allow';
         $this->w->engine()->start('face_reset', 'x', 3, 2, [], true);
         $steps = array_values($this->w->requests->steps);
@@ -263,6 +268,7 @@ final class ApprovalEngineTest extends TestCase
         $this->w->told = [];
         $this->act($id, 'approve', 20);
         $this->assertSame([[$id, 2]], $this->w->told, 'told right after the COMMIT');
+        $this->assertSame('unknown', $this->w->toldWhy[count($this->w->toldWhy) - 1][2], 'a level saved without a reason: the neutral text');
         $this->w->told = [];
         $id2 = $this->start('vacation', 2)->value;
         $this->w->requests->steps[4]->approver_wp_user_id = null;
