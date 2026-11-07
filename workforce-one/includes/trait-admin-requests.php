@@ -75,7 +75,7 @@ trait EWS_Admin_Requests_Trait {
             $step=$ar?($current[(int)$ar->id]??null):null;
             $rows[$key]=[
                 'type'=>$type,'id'=>(int)$id,'title'=>$title,'employee'=>$names[$employee_id],'detail'=>$detail,
-                'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted)),
+                'approval'=>Hub::approvalLabel($type,$ar?(int)$ar->id:0,$step?(int)$step->step_order:null,$step&&$step->approver_wp_user_id,$step&&!empty($step->rerouted),$step?\WorkforceOne\Approvals\AdminReason::of($step):''),
                 'requested_at'=>(string)$requested_at,
                 // The level this row shows (0: none open), so a decision never lands on a later one (3.31.122).
                 'step'=>$step?(int)$step->id:0,'stage'=>(string)$stage,

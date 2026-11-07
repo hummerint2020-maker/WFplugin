@@ -101,11 +101,13 @@ trait EWS_My_Approvals_Trait {
             if(!empty($card['path_before']))$path['steps']=array_merge($card['path_before'],$path['steps']);
             $emp=$this->people_employee((int)$card['employee_id']);
             if(!empty($card['action']))$card['fields']=(array)($card['fields']??[])+['approval_step'=>(int)$row->step_id];   // the level shown (3.31.122)
-            $mine=false;
-            foreach($path['steps'] as $st)if($st['state']==='now' && $st['who']===__('Administrators','workforce-one'))$mine=true;
+            $mine=false;$why='';
+            foreach($path['steps'] as $st)if($st['state']==='now' && $st['who']===__('Administrators','workforce-one')){$mine=true;$why=(string)($st['why_code']??'');}
+            // Why it came to the administrators, with the setting to fix for the next ones (QA 8; the link only for those who can open it).
+            $hint=$mine?$this->approval_admin_reason_hint($why,$emp?(string)$emp->name:'',$path['moved_from']):null;
             $out[]=$card+['id'=>(int)$row->approval_request_id,'workflow'=>(string)$row->workflow_key,'entity_type'=>(string)$row->entity_type,'entity_id'=>(int)$row->entity_id,
                 'name'=>$emp?(string)$emp->name:__('Employee','workforce-one'),'title'=>$emp?trim((string)($emp->job_title??'')):'','employee_id'=>(int)$card['employee_id'],
-                'picture'=>$emp?$this->employee_picture_url($emp):'','path'=>$path,'admins'=>$mine,'note_required'=>$this->approval_reject_note_required((string)$row->workflow_key),
+                'picture'=>$emp?$this->employee_picture_url($emp):'','path'=>$path,'admins'=>$mine,'admins_hint'=>$hint,'note_required'=>$this->approval_reject_note_required((string)$row->workflow_key),
                 // "For Mona" on the substitute's card; "With Sami" on the manager's (3.31.107).
                 'for'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id===$uid?$this->people_name((int)$row->for_employee_id):'',
                 'with'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id!==$uid?$this->approval_user_name((int)$row->approver_wp_user_id):''];

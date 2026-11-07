@@ -58,6 +58,10 @@ final class ApprovalWorld
     public $told = [];
     /** @var array<int,array<int,int>> administratorsIfStillWaiting(request, order) calls */
     public $later = [];
+    /** @var array<int,array{0:int,1:int,2:string,3:int}> administratorsNeeded(request, order, reason, requester) calls (QA 8) */
+    public $toldWhy = [];
+    /** @var array<int,array{0:int,1:int,2:string,3:int}> administratorsIfStillWaiting(request, order, reason, requester) calls */
+    public $laterWhy = [];
     /** @var int */
     public $synced = 0;
     /** @var array<int,array<int,mixed>> */
@@ -154,7 +158,7 @@ final class ApprovalWorld
         return new class($w) implements ApprovalNotifier {
             private $w;
             public function __construct($w) { $this->w = $w; }
-            public function administratorsNeeded(int $request, int $order): void { $this->w->told[] = [$request, $order]; }
+            public function administratorsNeeded(int $request, int $order, string $reason = '', int $requester = 0): void { $this->w->told[] = [$request, $order]; $this->w->toldWhy[] = [$request, $order, $reason, $requester]; }
         };
     }
 
@@ -165,7 +169,7 @@ final class ApprovalWorld
             private $w;
             public function __construct($w) { $this->w = $w; }
             public function syncSubstitutes(): void { $this->w->synced++; }
-            public function administratorsIfStillWaiting(int $request, int $order): void { $this->w->later[] = [$request, $order]; }
+            public function administratorsIfStillWaiting(int $request, int $order, string $reason = '', int $requester = 0): void { $this->w->later[] = [$request, $order]; $this->w->laterWhy[] = [$request, $order, $reason, $requester]; }
         };
     }
 
