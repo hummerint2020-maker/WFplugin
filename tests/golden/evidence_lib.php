@@ -3,6 +3,7 @@
  * The recording part shared by the evidence traces (actions_evidence.php, actions_timecsv.php, actions_timecsv_mgr.php; docs/tasks/attendance-evidence.md §5):
  * dates as placeholders, the SQL log with times normalised, fault injection by a priority-5 query filter, $run / $faulty / $post / $get. Same as actions_records.php.
  * Needs $wpdb, $p, $c (GOLDEN_CTX) in scope; defines $o, $call, $D0, $DM1, $dates, $fix, $sql, $trace, $norm, $as, $run, $faulty, $post, $get.
+ * A fault is a pattern (every matching statement fails), [pattern, replacement], or [pattern, replacement, n] (only the n-th match).
  */
 global $wpdb;
 $p = $wpdb->prefix;
@@ -20,6 +21,7 @@ $fix = function ($s) use ($dates) { return strtr($s, $dates); };
 // ---------------------------------------------------------------- recording (with in-process fault injection)
 $sql = [];
 $fault = null;
+$faultHits = 0;   // matches of the fault pattern so far in this call (a fault [re, to, n] replaces only the n-th; 3.31.143)
 add_filter('query', function ($q) use (&$sql, $fix) {
     $n = preg_replace('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', 'T', $q);
     $n = preg_replace("/(_transient_timeout_\w+', ')\d+/", '$1TS', $n);
@@ -32,10 +34,12 @@ add_filter('query', function ($q) use (&$sql, $fix) {
     $sql[] = $fix(trim(preg_replace('/\s+/', ' ', $n)));
     return $q;
 }, 1);
-add_filter('query', function ($q) use (&$fault) {
+add_filter('query', function ($q) use (&$fault, &$faultHits) {
     if ($fault === null) return $q;
-    [$re, $to] = is_array($fault) ? $fault : [$fault, 'SELECT broken_on_purpose FROM no_such_table_x'];
-    return preg_match($re, $q) ? $to : $q;
+    [$re, $to, $nth] = is_array($fault) ? $fault + [1 => 'SELECT broken_on_purpose FROM no_such_table_x', 2 => 0] : [$fault, 'SELECT broken_on_purpose FROM no_such_table_x', 0];
+    if (!preg_match($re, $q)) return $q;
+    $faultHits++;
+    return ((int) $nth === 0 || $faultHits === (int) $nth) ? $to : $q;
 }, 5);
 $norm = function ($v) use (&$norm, $dates) {
     if ($v instanceof WP_Error) return ['wp_error' => $v->get_error_code(), 'message' => preg_replace('/(<|&lt;)div.*$/s', '', $v->get_error_message())];
@@ -66,8 +70,9 @@ $run = function ($label, callable $fn) use (&$trace, &$sql, $norm) {
     $ret = $fn();
     $trace[$label] = ['return' => $norm($ret), 'queries' => count($sql), 'sql' => $sql];
 };
-$faulty = function ($label, $pattern, callable $fn) use (&$fault, $run, $wpdb) {
+$faulty = function ($label, $pattern, callable $fn) use (&$fault, &$faultHits, $run, $wpdb) {
     $fault = $pattern;
+    $faultHits = 0;
     $quiet = $wpdb->suppress_errors(true);
     try { $run($label, $fn); } finally { $wpdb->suppress_errors($quiet); $fault = null; }
 };
