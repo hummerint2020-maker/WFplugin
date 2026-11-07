@@ -260,54 +260,7 @@ trait EWS_Corrections_Trait {
      * @return array{id?:int,status?:string,error?:string}
      */
     private function cx_create($emp,array $in,$source='employee',$photo=null){
-        if(!$this->corrections_enabled())return ['error'=>'disabled'];
-        if(!$emp)return ['error'=>'employee'];
-        $this->ensure_corrections_schema();
-        $facts=$this->cx_facts($emp,$in,$source,$this->cx_has_upload($photo));
-        $error=CorrectionRules::check($facts);
-        if($error!=='')return ['error'=>$error];
-        if($source==='employee' && ($this->correction_settings()['photo'][$facts['type']]??'off')==='off')$photo=null;
-        [$key,$name,$perr]=$this->cx_save_photo($photo);
-        if($perr!=='')return ['error'=>$perr];
-        $drop=function()use($key){if($key)$this->private_files_delete('workforce-one-corrections',(string)$key);};   // a request that does not go through leaves no photo behind
-        $plan=CorrectionRules::plan($facts);
-        $times=CorrectionRules::times($facts);
-        $old=$facts['type']==='time'?($facts['target']==='sign_in'?$facts['in']:$facts['out']):null;
-        global $wpdb;$now=current_time('mysql');
-        $row=['employee_id'=>(int)$emp->id,'work_date'=>$facts['date'],'type'=>$facts['type'],'target'=>$facts['type']==='time'?$facts['target']:null,
-            'sign_in_at'=>in_array('sign_in',array_column($plan['events'],'type'),true)?$times['in']:null,
-            'sign_out_at'=>in_array('sign_out',array_column($plan['events'],'type'),true)?$times['out']:null,'old_at'=>$old,
-            'reason'=>mb_substr($facts['reason'],0,1000),'photo_key'=>$key,'photo_name'=>$name,'status'=>$source==='hr'?'approved':'pending','source'=>$source,
-            'needs_hr'=>$plan['needs_hr']?1:0,'above_limit'=>$plan['above_limit']?1:0,'earlier'=>$plan['earlier']?1:0,
-            'requested_by'=>get_current_user_id(),'requested_at'=>$now];
-        if($source==='hr'){
-            $row['status']='pending';   // claimed by cx_finalize below
-            if($wpdb->insert($this->cx_table(),$row)===false){$drop();return ['error'=>'save'];}
-            $id=(int)$wpdb->insert_id;
-            $res=$this->cx_finalize($id,true,(string)$facts['reason'],true);
-            if($res!=='approved'){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);$drop();return ['error'=>$res];}
-            $this->audit('correction_direct','employee',(int)$emp->id,$emp->name.' '.$facts['date'].': '.$this->cx_change_text($this->cx_get($id),'en').' — '.$facts['reason']);
-            return ['id'=>$id,'status'=>'approved'];
-        }
-        if($wpdb->insert($this->cx_table(),$row)===false){$drop();return ['error'=>'save'];}
-        $id=(int)$wpdb->insert_id;
-        $this->audit('correction_request','employee',(int)$emp->id,$emp->name.' '.$facts['date'].': '.$this->cx_change_text($this->cx_get($id),'en'));
-        $mode=$this->cx_workflow_mode();
-        if($mode==='NONE' || \WorkforceOne\Approvals\Workflows::isLevels($mode)){
-            $started=$this->approval_start('attendance_correction','attendance_correction',$id,(int)$emp->id);
-            if(is_wp_error($started)){$wpdb->delete($this->cx_table(),['id'=>$id],['%d']);$drop();return ['error'=>'approval'];}
-            $ar=$this->approval_find_request('attendance_correction','attendance_correction',$id);
-            if($ar && $ar->status==='APPROVED'){$r=$this->cx_after_manager($id);return ['id'=>$id,'status'=>$r];}
-            $step=$ar?$this->approval_current_step((int)$ar->id):null;
-            if($step && $step->approver_wp_user_id)$this->cx_notify_decider((int)$step->approver_wp_user_id,$this->cx_get($id));
-            return ['id'=>$id,'status'=>'pending'];
-        }
-        $c=$this->cx_get($id);
-        foreach(get_users(['capability'=>'ews_manage_time','fields'=>['ID']]) as $m){
-            if((int)$m->ID===get_current_user_id())continue;
-            $this->cx_notify_decider((int)$m->ID,$c);
-        }
-        return ['id'=>$id,'status'=>'pending'];
+        return $this->services()->correctionRequests()->create($emp,$in,(string)$source,$photo,get_current_user_id());   // CorrectionRequests (3.31.143)
     }
 
     /** After the manager level: to HR when the request needs it, otherwise approved. @return string outcome */
@@ -917,37 +870,14 @@ trait EWS_Corrections_Trait {
 
     /* ------------------------------------------------------------------ end-of-day reminder */
 
-    /** WP-Cron every 5 minutes: once a day at the set time, a reminder to everyone still signed in. */
+    /** WP-Cron every 5 minutes: once a day at the set time, a reminder to everyone still signed in (CorrectionRequests, 3.31.143). */
     public function corrections_tick(){
-        if(!$this->corrections_enabled())return;
-        $s=$this->correction_settings();
-        if(empty($s['reminder']) || current_time('H:i')<$s['reminder_time'])return;
-        $today=current_time('Y-m-d');
-        if(get_option('ews_corrections_reminded')===$today)return;
-        update_option('ews_corrections_reminded',$today,false);
-        $this->ensure_corrections_schema_once();
-        $this->corrections_remind($today);
+        $this->services()->correctionRequests()->tick();
     }
 
     /** @return int people reminded */
     private function corrections_remind($date){
-        global $wpdb;
-        $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT e.id,e.wp_user_id,MIN(l.event_at) signed_in FROM {$this->time_logs} l INNER JOIN {$this->employees} e ON e.id=l.employee_id
-            WHERE l.work_date=%s AND l.event_type IN ('sign_in','late_sign_in') AND e.active=1 AND e.wp_user_id IS NOT NULL".$this->tl_live('l.id')."
-            AND NOT EXISTS (SELECT 1 FROM {$this->time_logs} o WHERE o.employee_id=l.employee_id AND o.work_date=l.work_date AND o.event_type='sign_out')
-            GROUP BY e.id,e.wp_user_id",$date));
-        $n=0;
-        foreach($rows as $r){
-            if(!(int)$r->wp_user_id)continue;
-            $h=$this->working_hours((int)$r->id);
-            if(!empty($h['overnight']) && $h['start']>$h['end'])continue;   // still at work
-            $url=add_query_arg(['ews_view'=>'time','cx'=>'out','cx_date'=>$date],$this->app_home_url());
-            $this->notify((int)$r->wp_user_id,'signout_reminder',__('You did not sign out today','workforce-one'),
-                /* translators: %s: time */
-                sprintf(__('You signed in at %s. If you have left, request a correction with the time you left.','workforce-one'),substr((string)$r->signed_in,11,5)),['url'=>$url]);
-            $n++;
-        }
-        return $n;
+        return $this->services()->correctionRequests()->remind((string)$date);
     }
 
     /* ------------------------------------------------------------------ wp-admin */
@@ -1184,22 +1114,9 @@ trait EWS_Corrections_Trait {
         return $out;
     }
 
-    /** The employee withdraws a correction still waiting (My requests). @return true|string */
+    /** The employee withdraws a correction still waiting (My requests; CorrectionRequests, 3.31.143). @return true|string */
     private function cx_withdraw($id,$employee_id){
-        global $wpdb;
-        // Only the employee's own request, still waiting: checked before the approval is touched (3.31.132).
-        if(!$wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->cx_table()} WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",(int)$id,(int)$employee_id)))return 'done';
-        if($wpdb->query('START TRANSACTION')===false)return 'save';
-        // The approval first, then the request (3.31.132, the order a decision locks them in). Waiting for HR, its approval request is
-        // already APPROVED by the manager levels: it stays so (3.31.117; it failed before).
-        $engine=$this->approval_close_open('attendance_correction','attendance_correction',(int)$id);
-        if($engine!==true){$wpdb->query('ROLLBACK');return $engine==='moved'?'done':'save';}
-        $ok=$wpdb->query($wpdb->prepare("UPDATE {$this->cx_table()} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')",get_current_user_id(),current_time('mysql'),(int)$id,(int)$employee_id));
-        if($ok===false){$wpdb->query('ROLLBACK');return 'save';}
-        if($ok!==1){$wpdb->query('ROLLBACK');return 'done';}
-        if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
-        $this->audit('correction_withdrawn','employee',(int)$employee_id,'Correction #'.(int)$id.' withdrawn by the employee');
-        return true;
+        return $this->services()->correctionRequests()->withdraw((int)$id,(int)$employee_id,get_current_user_id());
     }
 
     /** The correction sheet for the New request sheet of My requests (3.31.105): what is left this month, and the sheet itself. @return array{html:string,used:int,limit:int} */

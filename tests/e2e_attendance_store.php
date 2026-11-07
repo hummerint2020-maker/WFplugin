@@ -445,4 +445,47 @@ $check(count($sup) === 3 && (int) $sup[0]->id === $e2 && (int) $sup[1]->id === $
 $ll = $S->lastLocated(31, '2026-11-10');
 $check((int) $ll->distance_meters === 13 || (float) $ll->distance_meters === 12.5, 'lastLocated: the newest row with a position') ;
 $check($S->lastLocated(31, '2026-11-11') === null, 'lastLocated: null when none');
+// ---- L5e2 (3.31.143): a new request, its removal, the withdrawal and the reminder's read
+$seen = [];
+add_filter('query', $capture, 1);
+$n1 = $CS->insert(['employee_id' => 41, 'work_date' => '2026-11-12', 'type' => 'out', 'target' => null, 'sign_in_at' => null, 'sign_out_at' => '2026-11-12 17:00:00', 'old_at' => null, 'reason' => 'forgot', 'photo_key' => null, 'photo_name' => null, 'status' => 'pending', 'source' => 'employee', 'needs_hr' => 0, 'above_limit' => 0, 'earlier' => 0, 'requested_by' => 9, 'requested_at' => '2026-11-12 18:00:00']);
+$open = $CS->ownOpen($n1, 41);
+$w = $CS->withdraw($n1, 41, 9, '2026-11-12 19:00:00');
+$CS->delete($n1);
+$CQ2 = new WordPressCorrectionQuery($db, $em, $tl);
+$CQ2->remindCandidates('2026-11-12');
+remove_filter('query', $capture, 1);
+$check($seen === [
+    "INSERT INTO `{$ct}` (`employee_id`, `work_date`, `type`, `target`, `sign_in_at`, `sign_out_at`, `old_at`, `reason`, `photo_key`, `photo_name`, `status`, `source`, `needs_hr`, `above_limit`, `earlier`, `requested_by`, `requested_at`) VALUES ('41', '2026-11-12', 'out', NULL, NULL, '2026-11-12 17:00:00', NULL, 'forgot', NULL, NULL, 'pending', 'employee', '0', '0', '0', '9', '2026-11-12 18:00:00')",
+    "SELECT id FROM {$ct} WHERE id={$n1} AND employee_id=41 AND status IN ('pending','pending_hr')",
+    "UPDATE {$ct} SET status='cancelled',decided_by=9,decided_at='2026-11-12 19:00:00' WHERE id={$n1} AND employee_id=41 AND status IN ('pending','pending_hr')",
+    "DELETE FROM `{$ct}` WHERE `id` = {$n1}",
+    "SELECT e.id,e.wp_user_id,MIN(l.event_at) signed_in FROM {$tl} l INNER JOIN {$em} e ON e.id=l.employee_id WHERE l.work_date='2026-11-12' AND l.event_type IN ('sign_in','late_sign_in') AND e.active=1 AND e.wp_user_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM {$tl} tl_cx WHERE tl_cx.corrects_id=l.id) AND NOT EXISTS (SELECT 1 FROM {$tl} o WHERE o.employee_id=l.employee_id AND o.work_date=l.work_date AND o.event_type='sign_out') GROUP BY e.id,e.wp_user_id",
+], 'L5e2 requests and the reminder: the exact text of the old inline SQL (NULLs unformatted)');
+$check($n1 > 0 && $open === true && $w === 1, 'insert / ownOpen / withdraw: the new id, the request is the employee\'s own and open, one row withdrawn');
+$n2 = $CS->insert(['employee_id' => 41, 'work_date' => '2026-11-13', 'type' => 'out', 'status' => 'pending', 'requested_at' => '2026-11-13 18:00:00']);
+$check($CS->ownOpen($n2, 42) === false && $CS->withdraw($n2, 42, 9, '2026-11-13 19:00:00') === 0, 'ownOpen / withdraw: another employee\'s request is not theirs, 0 rows');
+$check($CS->withdraw($n2, 41, 9, '2026-11-13 19:00:00') === 1 && $CS->ownOpen($n2, 41) === false && $CS->withdraw($n2, 41, 9, '2026-11-13 19:00:00') === 0, 'withdraw: once, then 0 (no longer waiting)');
+$quiet = $db->suppress_errors(true);
+$check($CS->insert(['no_such_column' => 1]) === 0, 'insert: 0 on failure');
+$bad = clone $db;
+$bad->prefix = 'att_contract_nope_';
+$check((new WordPressCorrectionStore($bad))->withdraw(1, 1, 1, '2026-11-13 19:00:00') === false, 'withdraw: false on a database error');
+$db->suppress_errors($quiet);
+$CS->delete($n2);
+$check($db->get_var("SELECT COUNT(*) FROM {$ct} WHERE id IN ({$n1},{$n2})") === '0', 'delete: the rows are gone');
+// the reminder's people: 51 open (its first Sign In replaced: the replacement counts), 52 signed out, 53 inactive, 54 no user, 55 user 0
+foreach ([[51, 'Rem One', 501, 1], [52, 'Rem Two', 502, 1], [53, 'Rem Three', 503, 0], [54, 'Rem Four', null, 1], [55, 'Rem Five', 0, 1]] as [$id, $name, $uid, $act]) $db->insert($em, ['id' => $id, 'name' => $name, 'wp_user_id' => $uid, 'active' => $act]);
+$r51 = $add(51, '2026-11-12', 'sign_in', '2026-11-12 07:00:00');
+$add(51, '2026-11-12', 'sign_in', '2026-11-12 08:20:00', ['corrects_id' => $r51, 'source' => 'correction']);
+$add(52, '2026-11-12', 'late_sign_in', '2026-11-12 09:10:00');
+$add(52, '2026-11-12', 'sign_out', '2026-11-12 17:00:00');
+$add(53, '2026-11-12', 'sign_in', '2026-11-12 08:00:00');
+$add(54, '2026-11-12', 'sign_in', '2026-11-12 08:00:00');
+$add(55, '2026-11-12', 'sign_in', '2026-11-12 08:00:00');
+$rc = [];
+foreach ($CQ2->remindCandidates('2026-11-12') as $r) $rc[(int) $r->id] = [(string) $r->wp_user_id, (string) $r->signed_in];
+ksort($rc);
+$check($rc === [51 => ['501', '2026-11-12 08:20:00'], 55 => ['0', '2026-11-12 08:00:00']], 'remindCandidates: open days of active employees with a user (0 included), the earliest live Sign In');
+$check($CQ2->remindCandidates('2026-11-11') === [] && (new WordPressCorrectionQuery($db, $em, $other . 'ews_time_logs'))->remindCandidates('2026-11-12') === [], 'remindCandidates: by day; the time-log table it is given, in all three places');
 echo "attendance store contract OK\n";
