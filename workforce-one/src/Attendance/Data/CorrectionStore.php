@@ -26,4 +26,23 @@ interface CorrectionStore
 
     /** @return object[] every request that still waits (pending or pending_hr), oldest first */
     public function openForHub(): array;
+
+    /**
+     * A new request (3.31.143). The row is written as given, in its key order, without formats (NULLs stay NULL).
+     * @param array<string,mixed> $row
+     * @return int the new id, 0 when the INSERT failed
+     */
+    public function insert(array $row): int;
+
+    /** Removes a request (a request whose approval could not start, or HR's correction that could not be applied). Not checked. */
+    public function delete(int $id): void;
+
+    /** Whether the request is the employee's own and still waits (pending or pending_hr). */
+    public function ownOpen(int $id, int $employeeId): bool;
+
+    /**
+     * The employee withdraws their request still waiting: cancelled, by whom and when.
+     * @return int|false the rows changed (1, or 0 when it was no longer waiting), false on a database error
+     */
+    public function withdraw(int $id, int $employeeId, int $userId, string $now);
 }

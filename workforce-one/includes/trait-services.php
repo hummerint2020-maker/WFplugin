@@ -5,6 +5,12 @@ use WorkforceOne\Approvals\AfterRequest;
 use WorkforceOne\Attendance\AttendancePorts;
 use WorkforceOne\Attendance\AttendanceSite;
 use WorkforceOne\Attendance\Idempotency;
+use WorkforceOne\Attendance\CorrectionApprovals;
+use WorkforceOne\Attendance\CorrectionDecider;
+use WorkforceOne\Attendance\CorrectionFiles;
+use WorkforceOne\Attendance\CorrectionNotices;
+use WorkforceOne\Attendance\CorrectionPorts;
+use WorkforceOne\Attendance\CorrectionSite;
 use WorkforceOne\Attendance\EvidenceSite;
 use WorkforceOne\Attendance\ManualRecordSite;
 use WorkforceOne\Approvals\ApprovalDirectory;
@@ -201,6 +207,62 @@ trait EWS_Services_Trait {
                 public function alert(object $employee,string $day,int $n): void { ($this->call)('evidence_alert_send',$employee,$day,$n); }
                 public function deletePhoto(string $key): void { ($this->call)('private_files_delete','workforce-one-face-photos',$key); }
                 public function sweepPhotos(int $olderThan): void { ($this->call)('evidence_sweep_orphans',$olderThan); }
+            },
+            $this->correction_ports($call));
+    }
+
+    /** The correction requests' ports (3.31.143): the plugin functions they reach by name until L5e3 moves the decisions. */
+    private function correction_ports(callable $call): CorrectionPorts {
+        return new CorrectionPorts(
+            new class($call) implements CorrectionSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function enabled(): bool { return (bool)($this->call)('corrections_enabled'); }
+                public function settings(): array { return (array)($this->call)('correction_settings'); }
+                public function ensureSchema(): void { ($this->call)('ensure_corrections_schema'); }
+                public function ensureSchemaOnce(): void { ($this->call)('ensure_corrections_schema_once'); }
+                public function facts(object $employee,array $in,string $source,bool $hasPhoto): array { return (array)($this->call)('cx_facts',$employee,$in,$source,$hasPhoto); }
+                public function changeText(?object $request,string $lang=''): string { return (string)($this->call)('cx_change_text',$request,$lang); }
+                public function timeManagerIds(): array { return array_map(function($u){return (int)$u->ID;},(array)get_users(['capability'=>'ews_manage_time','fields'=>['ID']])); }
+                public function today(): string { return current_time('Y-m-d'); }
+                public function hm(): string { return current_time('H:i'); }
+                public function remindedOn(): string { return (string)get_option('ews_corrections_reminded'); }
+                public function markReminded(string $day): void { update_option('ews_corrections_reminded',$day,false); }
+                public function workingHoursToday(int $employeeId): array { return (array)($this->call)('working_hours',$employeeId); }
+            },
+            new class($call) implements CorrectionNotices {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function decider(int $userId,?object $request): void { ($this->call)('cx_notify_decider',$userId,$request); }
+                public function signOutReminder(int $userId,string $date,string $signedIn): void {
+                    $url=add_query_arg(['ews_view'=>'time','cx'=>'out','cx_date'=>$date],($this->call)('app_home_url'));
+                    ($this->call)('notify',$userId,'signout_reminder',__('You did not sign out today','workforce-one'),
+                        /* translators: %s: time */
+                        sprintf(__('You signed in at %s. If you have left, request a correction with the time you left.','workforce-one'),substr($signedIn,11,5)),['url'=>$url]);
+                }
+            },
+            new class($call) implements CorrectionFiles {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function hasUpload($file): bool { return (bool)($this->call)('cx_has_upload',$file); }
+                public function save($file): array { return (array)($this->call)('cx_save_photo',$file); }
+                public function delete(string $key): void { ($this->call)('private_files_delete','workforce-one-corrections',$key); }
+            },
+            new class($call) implements CorrectionApprovals {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function mode(): string { return (string)($this->call)('cx_workflow_mode'); }
+                public function isLevels(string $mode): bool { return \WorkforceOne\Approvals\Workflows::isLevels($mode); }
+                public function start(int $requestId,int $employeeId): bool { return !is_wp_error(($this->call)('approval_start','attendance_correction','attendance_correction',$requestId,$employeeId)); }
+                public function find(int $requestId): ?object { $r=($this->call)('approval_find_request','attendance_correction','attendance_correction',$requestId); return is_object($r)?$r:null; }
+                public function currentStep(int $approvalRequestId): ?object { $r=($this->call)('approval_current_step',$approvalRequestId); return is_object($r)?$r:null; }
+                public function closeOpen(int $requestId) { return ($this->call)('approval_close_open','attendance_correction','attendance_correction',$requestId); }
+            },
+            new class($call) implements CorrectionDecider {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function afterManager(int $requestId): string { return (string)($this->call)('cx_after_manager',$requestId); }
+                public function finalizeDirect(int $requestId,string $reason): string { return (string)($this->call)('cx_finalize',$requestId,true,$reason,true); }
             });
     }
 

@@ -12,11 +12,14 @@ final class WordPressCorrectionQuery implements CorrectionQuery
     private $t;
     /** @var string */
     private $emps;
+    /** @var string the plugin's time-log table name, as the plugin object fixed it (the reminder's read, 3.31.143) */
+    private $logs;
 
-    public function __construct(\wpdb $db, string $employeesTable)
+    public function __construct(\wpdb $db, string $employeesTable, string $timeLogsTable = '')
     {
         $this->db = $db;
         $this->emps = $employeesTable;
+        $this->logs = $timeLogsTable;
         $this->t = $db->prefix . 'ews_attendance_corrections';
     }
 
@@ -97,5 +100,13 @@ final class WordPressCorrectionQuery implements CorrectionQuery
     {
         $where = $this->whereDays($from, $to, $department);
         return (array) $this->db->get_results("SELECT c.*,e.name employee_name,COALESCE(d.name,'') dept,u.display_name decided_name FROM {$this->t} c LEFT JOIN {$this->emps} e ON e.id=c.employee_id LEFT JOIN {$this->db->prefix}ews_departments d ON d.id=e.department_id LEFT JOIN {$this->db->users} u ON u.ID=c.decided_by{$where} ORDER BY c.work_date ASC,e.name ASC");
+    }
+
+    public function remindCandidates(string $date): array
+    {
+        return (array) $this->db->get_results($this->db->prepare("SELECT e.id,e.wp_user_id,MIN(l.event_at) signed_in FROM {$this->logs} l INNER JOIN {$this->emps} e ON e.id=l.employee_id
+            WHERE l.work_date=%s AND l.event_type IN ('sign_in','late_sign_in') AND e.active=1 AND e.wp_user_id IS NOT NULL" . " AND NOT EXISTS (SELECT 1 FROM {$this->logs} tl_cx WHERE tl_cx.corrects_id=l.id)" . "
+            AND NOT EXISTS (SELECT 1 FROM {$this->logs} o WHERE o.employee_id=l.employee_id AND o.work_date=l.work_date AND o.event_type='sign_out')
+            GROUP BY e.id,e.wp_user_id", $date));
     }
 }
