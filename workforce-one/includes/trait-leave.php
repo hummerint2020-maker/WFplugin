@@ -439,8 +439,9 @@ trait EWS_Leave_Trait {
             }elseif($this->approval_level_moved_for('vacation','leave_cancellation',$id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
             elseif(!$this->can('ews_manage_settings'))wp_die('Access denied');
 
+            if(!in_array($decision,['approve','reject'],true))wp_die('Invalid cancellation.');
             $r=$this->leave_request_row($id,"AND r.status='Approved' AND r.cancellation_status='Pending'");
-            if(!$r||!in_array($decision,['approve','reject'],true))wp_die('Invalid cancellation.');
+            if(!$r)$this->leave_redirect(['leave_error'=>'decided']);   // decided meanwhile (QA 6, Q9): back with "already decided", not a bare page
             $emp=$this->leave_active_employee($r->employee_id);
             if(!$emp)wp_die('Employee not found.');
             if(!$ar && !$this->approval_self_gate((int)($emp->wp_user_id??0),$this->approval_self_rule('vacation')==='allow','vacation cancellation #'.(int)$id))wp_die(esc_html__('You cannot decide your own request. Another approver must.','workforce-one'),'',['response'=>403]);
@@ -540,10 +541,10 @@ trait EWS_Leave_Trait {
      * the facts the approver needs, and the form that decides it (the same as on the Leave page).
      * @return array<string,mixed>|null null when it no longer waits
      */
-    private function leave_approval_card($entity_type,$id){
+    private function leave_approval_card($entity_type,$id,$row=null){
             global $wpdb;
             $cancel=$entity_type==='leave_cancellation';
-            $r=$this->leave_request_row((int)$id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
+            $r=$row&&(int)$row->id===(int)$id?$row:$this->leave_request_row((int)$id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
             if(!$r)return null;
             $days=(float)$r->requested_days;
             $bal=$this->leave_request_balance($r);
@@ -563,6 +564,27 @@ trait EWS_Leave_Trait {
             return ['employee_id'=>(int)$r->employee_id,'tone'=>'leave','kind'=>$cancel?__('Leave cancellation','workforce-one'):__('Leave','workforce-one'),
                 'what'=>$r->type_name.' · '.$days_txt.' · '.$this->leave_day_range($r->start_date,$r->end_date),'facts'=>$facts,'since'=>(string)$r->requested_at,
                 'action'=>$cancel?'ews_leave_cancel_respond':'ews_vacation_request_respond','nonce'=>$cancel?'ews_leave_cancel_respond':'ews_vacation_respond','fields'=>['request_id'=>(int)$id]];
+        }
+
+    /**
+     * Leave requests and cancellations waiting while leave approvals are off, for My approvals (QA 6,
+     * docs/tasks/legacy-approval-cards.md): Manage Settings decides them today, through the same handlers. A cancellation has
+     * no "asked on" time, so its card shows no waiting time. @return list<array<string,mixed>>
+     */
+    private function leave_legacy_approvals(){
+            if(!$this->can('ews_manage_settings') || $this->leave_approval_active())return [];
+            global $wpdb;$this->ensure_leave_schema();
+            $allow=$this->approval_self_rule('vacation')==='allow';
+            $out=[];
+            foreach((array)$wpdb->get_results("SELECT r.*,lt.name type_name,lt.deduct_balance FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.status='Pending' OR (r.status='Approved' AND r.cancellation_status='Pending') ORDER BY r.requested_at ASC,r.id ASC LIMIT 200") as $r){
+                $cancel=$r->status!=='Pending';$type=$cancel?'leave_cancellation':'leave';
+                // The card (balance, others away) is built only where it is shown; the counts need the row alone.
+                $out[]=['key'=>['vacation',$type,(int)$r->id],'employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at,'wait'=>!$cancel,
+                    'make'=>function()use($type,$r,$cancel){$c=$this->leave_approval_card($type,(int)$r->id,$r);if($c && $cancel)$c['wait']=false;return $c;},
+                    'allow'=>$allow,'active'=>true,'who'=>__('Anyone who can manage settings','workforce-one'),
+                    'why'=>$cancel?__('Leave approvals are off, so the cancellation is decided as before','workforce-one'):__('Leave approvals are off, so it is decided as before','workforce-one')];
+            }
+            return $out;
         }
 
     /**
