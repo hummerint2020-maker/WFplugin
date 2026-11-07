@@ -10,5 +10,5 @@ interface AfterRequest
     public function syncSubstitutes(): void;
 
     /** At the end of the page, tells the administrators if the level still waits for them (the caller may have rolled back). */
-    public function administratorsIfStillWaiting(int $approvalRequestId, int $stepOrder): void;
+    public function administratorsIfStillWaiting(int $approvalRequestId, int $stepOrder, string $reason = '', int $requesterEmployeeId = 0): void;
 }

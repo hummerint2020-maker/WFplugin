@@ -83,7 +83,9 @@ res = php("""
     $count=0; $ref=[]; foreach($keys as $k)$ref[]=$old($k[0],$k[1],$k[2],$now); $single_q=$count;
     $bad=[]; $kf=new ReflectionMethod($o,'approval_request_key');$kf->setAccessible(true);
     foreach($keys as $i=>$k){ $a=$ref[$i]; $kk=$kf->invoke($o,$k[0],$k[1],$k[2]); $b=array_key_exists($kk,$batch)?$batch[$kk]:'missing';
-        if(json_encode($a)!==json_encode($b))$bad[]=['key'=>$k,'old'=>$a,'new'=>$b]; }
+        // 3.31.142 (QA 8) adds why / why_code to each step; the rest must stay what 3.31.111 gave.
+        $c=$b; if(is_array($c))foreach($c['steps'] as &$st_){unset($st_['why'],$st_['why_code']);} unset($st_);
+        if(json_encode($a)!==json_encode($c))$bad[]=['key'=>$k,'old'=>$a,'new'=>$c]; }
     $p7001=$batch['vacation|leave|7001'];
     echo wp_json_encode(['batch_q'=>$batch_q,'single_q'=>$single_q,'bad'=>array_slice($bad,0,2),'nbad'=>count($bad),'n'=>count($keys),
         'nonnull'=>count(array_filter($batch)),'sample'=>$batch['overtime|overtime_request|5000']??null,'p7001'=>$p7001,'p7002'=>$batch['overtime|overtime_request|7002'],'p7003'=>$batch['vacation|leave|7003']]);
@@ -97,6 +99,7 @@ check('...a user with two employees shows the active one with the lowest id, a u
       p1 and p1['steps'][2]['who'] == 'Two Lower' and p1['steps'][3]['who'] == 'Plain User', p1 and p1['steps'])
 check('...a rejection keeps its reason and who decided for whom; a level sent to administrators says so',
       p2 and p2['note'] == 'Not this week' and 'for Mona Adel' in p2['steps'][0]['sub'] and p3 and p3['steps'][1]['who'] == 'Administrators' and p3['hours'] > 0, (p2, p3))
+check('...a level with administrators saved before the reason was kept says so neutrally (QA 8)', p3 and p3['steps'][1]['why_code'] == 'unknown' and p3['steps'][1]['why'] == 'Administrators decide it', p3 and p3['steps'][1])
 check('...and one of the engine requests was decided by an administrator', r['sample'] and r['sample']['status'] == 'APPROVED' and any(s['state'] == 'done' for s in r['sample']['steps']), r['sample'])
 check('the batch makes a handful of queries for %d requests (not several per request)' % r['n'], 0 < r['batch_q'] <= 12, r)
 check('...where one at a time makes many more', r['single_q'] > 3 * r['batch_q'], r)

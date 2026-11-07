@@ -54,15 +54,27 @@ final class Hub
         return $approvalStatus !== null && !in_array(strtoupper($approvalStatus), ['APPROVED', 'REJECTED'], true);
     }
 
-    /** "Approval" column: workflow level, peer (swaps) or a direct decision. */
-    public static function approvalLabel(string $type, int $approvalId, ?int $stepOrder, bool $assigned, bool $forAdministrators = false): string
+    /**
+     * "Approval" column: workflow level, peer (swaps) or a direct decision. A level with the administrators says why (QA 8):
+     * $reason is an AdminReason code; '' or 'unknown' (rows saved before the reason was kept) give a neutral text.
+     */
+    public static function approvalLabel(string $type, int $approvalId, ?int $stepOrder, bool $assigned, bool $forAdministrators = false, string $reason = ''): string
     {
         if ($approvalId) {
             $label = 'Approval #' . $approvalId;
-            if ($stepOrder !== null) $label .= ' · Level ' . $stepOrder . ($assigned ? ' · Assigned' : ($forAdministrators ? ' · For an administrator (the approver made the request)' : ''));
+            if ($stepOrder !== null) $label .= ' · Level ' . $stepOrder . ($assigned ? ' · Assigned' : ($forAdministrators ? ' · ' . self::forAdministrators($reason) : ''));
             return $label;
         }
         return $type === 'shift_swap' ? 'Peer' : 'Legacy / direct';
+    }
+
+    /** "For an administrator (why)" for a level with the administrators. */
+    public static function forAdministrators(string $reason): string
+    {
+        $why = ['self' => 'the approver made the request', 'no_manager' => 'no direct manager', 'no_managers_manager' => "no manager's manager",
+            'no_team_manager' => 'no team manager', 'no_department_manager' => 'no department manager', 'no_hr' => 'HR not set', 'no_finance' => 'Finance not set',
+            'approver_gone' => 'approver no longer active', 'no_login' => 'approver has no user account', 'moved_up' => 'moved up, nobody above'];
+        return isset($why[$reason]) ? 'For an administrator (' . $why[$reason] . ')' : 'For an administrator';
     }
 
     /** "2h 5m" for a number of minutes. */

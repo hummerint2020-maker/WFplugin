@@ -84,6 +84,12 @@ final class ApprovalsTest extends TestCase
         $this->assertSame([['PENDING', false, ''], ['WAITING', true, ''], ['SKIPPED', false, 'condition']], array_map(static function ($s) { return [$s['status'], $s['rerouted'], $s['skip']]; }, array_values($r['steps'])));
         $r = SM::start([1 => ['skip' => 'missing']]);
         $this->assertSame(['WAITING_FOR_LEVEL_1', true], [$r['request'], $r['steps'][1]['rerouted']]);
+        // QA 8: a level sent to the administrators keeps why ('missing' or 'self'); every other level has none.
+        $this->assertSame('missing', $r['steps'][1]['why']);
+        $r = SM::start([1 => ['skip' => ''], 2 => ['skip' => 'self'], 3 => ['skip' => 'condition']]);
+        $this->assertSame(['', 'self', ''], array_column($r['steps'], 'why'));
+        $r = SM::start([1 => ['skip' => 'missing'], 2 => ['skip' => '']]);
+        $this->assertSame(['', ''], array_column($r['steps'], 'why'), 'a level skipped to the next keeps its skip reason, no why');
         // Nothing applies: approved at once.
         $r = SM::start([1 => ['skip' => 'condition'], 2 => ['skip' => 'condition']]);
         $this->assertSame(['APPROVED', null], [$r['request'], $r['current_step']]);

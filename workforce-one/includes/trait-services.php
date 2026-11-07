@@ -207,10 +207,10 @@ trait EWS_Services_Trait {
     /** The approvals engine's ports (3.31.128): the adapters through which it reaches settings, people, messages and the end of the page. */
     private function approval_ports(): ApprovalPorts {
         $call=function($fn,...$args){return $this->$fn(...$args);};
-        $after_page=function($request_id,$order){
+        $after_page=function($request_id,$order,$reason='',$requester=0){
             // At the end of the page, once the caller's transaction is over (it may have rolled back): tell the administrators only if the level still waits for them.
-            add_action('shutdown',function()use($request_id,$order){
-                if($this->services()->approvals()->stillWithAdministrators($request_id,$order))$this->approval_notify_administrators($request_id,$order);
+            add_action('shutdown',function()use($request_id,$order,$reason,$requester){
+                if($this->services()->approvals()->stillWithAdministrators($request_id,$order))$this->approval_notify_administrators($request_id,$order,$reason,$requester);
             },5);
         };
         return new ApprovalPorts(
@@ -224,13 +224,13 @@ trait EWS_Services_Trait {
             new class($call) implements ApprovalNotifier {
                 private $call;
                 public function __construct(callable $call){ $this->call=$call; }
-                public function administratorsNeeded(int $approvalRequestId,int $stepOrder): void { ($this->call)('approval_notify_administrators',$approvalRequestId,$stepOrder); }
+                public function administratorsNeeded(int $approvalRequestId,int $stepOrder,string $reason='',int $requesterEmployeeId=0): void { ($this->call)('approval_notify_administrators',$approvalRequestId,$stepOrder,$reason,$requesterEmployeeId); }
             },
             new class($call,$after_page) implements AfterRequest {
                 private $call;private $later;
                 public function __construct(callable $call,callable $later){ $this->call=$call;$this->later=$later; }
                 public function syncSubstitutes(): void { ($this->call)('substitutes_sync_at_shutdown'); }
-                public function administratorsIfStillWaiting(int $approvalRequestId,int $stepOrder): void { ($this->later)($approvalRequestId,$stepOrder); }
+                public function administratorsIfStillWaiting(int $approvalRequestId,int $stepOrder,string $reason='',int $requesterEmployeeId=0): void { ($this->later)($approvalRequestId,$stepOrder,$reason,$requesterEmployeeId); }
             },
             new class($call) implements ApprovalDirectory {
                 private $call;

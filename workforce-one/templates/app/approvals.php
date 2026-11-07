@@ -81,6 +81,7 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php if (!empty($it['with'])): ?><span class="wfo-apv-pill" data-apv-with><?php echo esc_html(sprintf(/* translators: %s: the substitute */ __('With %s while you are away', 'workforce-one'), $it['with'])); ?></span><?php endif; ?>
                 <?php if ($it['admins']): ?><span class="wfo-apv-pill is-brand"><?php esc_html_e('For administrators', 'workforce-one'); ?></span><?php endif; ?>
             </div>
+            <?php if (!empty($it['admins_hint'])): /* why it came to the administrators, and the setting for the next ones (QA 8) */ ?><p class="wfo-apv-why"><?php echo \WorkforceOne\Ui\Icons::svg('alert', 15, 2.2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><span><?php echo esc_html($it['admins_hint']['text']); ?><?php if ($it['admins_hint']['url'] !== ''): ?> <a href="<?php echo esc_url($it['admins_hint']['url']); ?>"><?php echo esc_html($it['admins_hint']['link']); ?></a><?php endif; ?></span></p><?php endif; ?>
             <?php endif; ?>
             <?php if (!$peer): ?>
             <details class="wfo-apv-more">
@@ -88,7 +89,7 @@ $num = static function ($n): string { return number_format_i18n((float) $n, floo
                 <?php if ($it['facts']): ?><dl class="wfo-apv-facts"><?php foreach ($it['facts'] as [$k, $v]): ?><dt><?php echo esc_html($k); ?></dt><dd><?php echo esc_html($v); ?></dd><?php endforeach; ?></dl><?php endif; ?>
                 <h3><?php esc_html_e('The path', 'workforce-one'); ?></h3>
                 <ol class="wfo-apv-path">
-                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small></div></li><?php endforeach; ?>
+                    <?php foreach ($p['steps'] as $st): ?><li class="is-<?php echo esc_attr($st['state']); ?>"><span class="wfo-apv-dot" aria-hidden="true"><?php echo isset($st['mark']) && $st['state'] !== 'done' ? esc_html($st['mark']) : ($st['state'] === 'done' ? '✓' : ($st['state'] === 'rejected' ? '✕' : esc_html($num($st['order'])))); ?></span><div><b><?php echo esc_html($st['label'] . ($st['who'] !== '' ? ' · ' . $st['who'] : '')); ?></b><small><?php echo esc_html($st['sub']); ?></small><?php if (($st['why'] ?? '') !== ''): ?><small class="wfo-apv-pwhy"><?php echo esc_html($st['why']); ?></small><?php endif; ?></div></li><?php endforeach; ?>
                 </ol>
                 <?php if ($can): ?>
                 <label class="wfo-apv-note"><span><?php echo $it['note_required'] ? esc_html__('Note (needed to reject)', 'workforce-one') : esc_html__('Note (optional)', 'workforce-one'); ?></span><textarea name="note" rows="2" maxlength="500"></textarea></label>
