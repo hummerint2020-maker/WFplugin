@@ -487,5 +487,17 @@ $rc = [];
 foreach ($CQ2->remindCandidates('2026-11-12') as $r) $rc[(int) $r->id] = [(string) $r->wp_user_id, (string) $r->signed_in];
 ksort($rc);
 $check($rc === [51 => ['501', '2026-11-12 08:20:00'], 55 => ['0', '2026-11-12 08:00:00']], 'remindCandidates: open days of active employees with a user (0 included), the earliest live Sign In');
-$check($CQ2->remindCandidates('2026-11-11') === [] && (new WordPressCorrectionQuery($db, $em, $other . 'ews_time_logs'))->remindCandidates('2026-11-12') === [], 'remindCandidates: by day; the time-log table it is given, in all three places');
+$check($CQ2->remindCandidates('2026-11-11') === [], 'remindCandidates: by day');
+// the other table: 51 open; 55 signed out there (not in the first table); 52's 06:00 replaced there by 09:00 (live in the first table's terms)
+$otl = $other . 'ews_time_logs';
+$oadd = static function ($eid, $type, $at, array $more = []) use ($db, $otl) { $db->insert($otl, ['employee_id' => $eid, 'work_date' => '2026-11-12', 'event_type' => $type, 'event_at' => $at] + $more); return (int) $db->insert_id; };
+$oadd(51, 'sign_in', '2026-11-12 07:30:00');
+$oadd(55, 'sign_in', '2026-11-12 08:00:00');
+$oadd(55, 'sign_out', '2026-11-12 16:00:00');
+$o52 = $oadd(52, 'sign_in', '2026-11-12 06:00:00');
+$oadd(52, 'sign_in', '2026-11-12 09:00:00', ['corrects_id' => $o52, 'source' => 'correction']);
+$orc = [];
+foreach ((new WordPressCorrectionQuery($db, $em, $otl))->remindCandidates('2026-11-12') as $r) $orc[(int) $r->id] = (string) $r->signed_in;
+ksort($orc);
+$check($orc === [51 => '2026-11-12 07:30:00', 52 => '2026-11-12 09:00:00'], 'remindCandidates: the time-log table it is given, in all three places (the events, the Sign Out, the replaced row)');
 echo "attendance store contract OK\n";

@@ -117,8 +117,8 @@ $create('create_mode_none_out', $DU, $Dd, $in($D(1), 'out', ['time_out' => '17:0
 $create('create_mode_none_time_earlier', $DU, $Dd, $in($D(2), 'time', ['target' => 'sign_in', 'time_in' => '07:30']));   // needs HR: pending_hr
 $create('fault_mode_none_first_begin', $DU, $Dd, $in($D(4), 'in', ['time_in' => '08:00']), 'employee', null, ['/^\s*START TRANSACTION/i', 'SELECT broken_on_purpose FROM no_such_table_x', 1]);   // the engine's NONE start has no transaction: the first is the finalize's. CX-z: status 'save', no error
 $create('fault_mode_none_manager_row', $BU, $B, $in($D(4), 'in', ['time_in' => '08:00']), 'employee', null, '/^\s*UPDATE `' . $Tq . '` SET `manager_by`/i');
-$create('fault_mode_none_start_insert', $BU, $B, $in($D(1), 'out', ['time_out' => '17:00']), 'employee', null, '/^\s*INSERT INTO `' . preg_quote($p . 'ews_approval_requests', '/') . '`/i');
-$settings(['photo' => ['day' => 'optional']]);
+$create('fault_mode_none_start_insert', $r13U, $r13, $in($D(5), 'time', ['target' => 'sign_out', 'time_out' => '16:50']), 'employee', null, '/^\s*INSERT INTO `' . preg_quote($p . 'ews_approval_requests', '/') . '`/i');
+$settings(['photo' => ['day' => 'optional'], 'monthly_limit' => 0]);   // no limit: these two reach the finalize step, not HR
 $create('fault_mode_none_second_event', $BU, $B, $in($D(6), 'day', ['time_in' => '08:00', 'time_out' => '16:00']), 'employee', null, ['/^\s*INSERT INTO `' . $Lq . '`/i', 'SELECT broken_on_purpose FROM no_such_table_x', 2]);
 $create('create_mode_none_day', $DU, $Dd, $in($D(6), 'day', ['time_in' => '08:00', 'time_out' => '16:00']));
 $settings();

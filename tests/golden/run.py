@@ -529,7 +529,7 @@ try:
         ('no workflow set: the INSERT fault is save', lambda: cqe('fault_none_set_insert') == 'save'),
         ('NONE: approved at once, pending_hr for an earlier Sign In, a whole day approved', lambda: cqs('create_mode_none_out') == 'approved' and cqs('create_mode_none_time_earlier') == 'pending_hr' and cqs('create_mode_none_day') == 'approved'),
         ('NONE: the finalize BEGIN fails: status save without error (CX-z)', lambda: cqs('fault_mode_none_first_begin') == 'save' and cqe('fault_mode_none_first_begin') is None),
-        ('NONE: the second event rolls back', lambda: cqs('fault_mode_none_second_event') == 'save' and any(q.startswith('ROLLBACK') for q in cqsql('fault_mode_none_second_event'))),
+        ('NONE: the engine INSERT fault is approval; the second event rolls back', lambda: cqe('fault_mode_none_start_insert') == 'approval' and cqs('fault_mode_none_second_event') == 'save' and any(q.startswith('ROLLBACK') for q in cqsql('fault_mode_none_second_event'))),
         ('LEVEL_1: pending, the approver told; the engine faults are approval', lambda: cqs('create_level1_out') == 'pending' and cqs('create_level1_in') == 'pending' and cqe('fault_level1_request_insert') == 'approval'
             and any(q.startswith('INSERT INTO') and 'ews_notifications' in q for q in cqsql('create_level1_out'))),
         ('HR: applied at once; refused; every fault is an error and the row goes', lambda: cqs('create_hr_day') == 'approved' and cqs('create_hr_old_day') == 'approved' and cqe('create_hr_refused_time') == 'time' and cqe('create_hr_refused_reason') == 'reason'
