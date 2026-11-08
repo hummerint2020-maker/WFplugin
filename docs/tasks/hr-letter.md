@@ -182,3 +182,15 @@ One release for the HR letter type, built and reviewed in three pull requests so
   - Unit tests for all of it. No caller changes, so the payslip, schedule and payout PDFs stay the same (golden unchanged).
 - **HL2, People.** Optional employee fields: Arabic name, gender and hire date. These need a schema change, the employee form, the import and their own mockup first. Still off-by-default safe: the fields are optional and empty.
 - **HL3, the request type.** Covers §2–§13: the table, settings, the workflow, the employee sheet, My requests and My approvals, the Hub, the admin pages, files, generation and the e2e tests. It is the first request type layered from birth: the ports are reviewed against check_layers L2/L4 before coding.
+
+## Owner decisions on HL2, the employee details (2026-11-08)
+- Mockup `docs/mockups/employee-fields/` approved after two changes the owner asked for:
+  - The **employee sees the details on My Profile, read only**, with "Something wrong? Ask HR to correct it". Only HR edits them, in wp-admin.
+  - **Nothing is shown twice:**
+    - The Arabic name sits under the name.
+    - The hiring date is shown as "Employee since" (when it is not set, the day the employee was added, as today).
+    - Gender is the only new row.
+    - HR edits the three through one "Edit" button on the profile.
+- **The import also updates existing employees** (most are there already), so HR can fill the three details in one file.
+- "Employee since" changes only on screen. Rules that use the day the employee was added (e.g. no correction before it) are unchanged.
+- Gender is used only by letters ("Mr." / "Ms." and the matching wording). It is shown only on the profile.
