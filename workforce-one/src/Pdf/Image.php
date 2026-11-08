@@ -26,6 +26,11 @@ final class Image
     /** @var string a /Decode entry (inverted CMYK JPEGs), or '' */
     public $decode = '';
 
+    /** The largest image read, in pixels (a decoded PNG is held in memory; a small file can unpack to a huge one). */
+    public const MAX_PIXELS = 4000000;
+    /** The longest side read, in pixels. */
+    public const MAX_SIDE = 4000;
+
     private function __construct()
     {
     }
@@ -50,20 +55,25 @@ final class Image
     {
         $len = strlen($data);
         $i = 2;
+        $adobe = false;
         while ($i + 9 < $len) {
             if (ord($data[$i]) !== 0xFF) throw new \InvalidArgumentException('image_data');
             $marker = ord($data[$i + 1]);
             if ($marker === 0xD8 || ($marker >= 0xD0 && $marker <= 0xD7) || $marker === 0x01) { $i += 2; continue; }
             $seg = (ord($data[$i + 2]) << 8) | ord($data[$i + 3]);
-            // SOF0–SOF15 except DHT (C4), JPG (C8) and DAC (CC): the frame header with the size and the number of components.
+            if ($marker === 0xFF) { $i++; continue; }   // a fill byte before a marker
+            if ($marker === 0xEE && substr($data, $i + 4, 5) === 'Adobe') $adobe = true;
+            // The frame header with the size and the number of components: baseline, extended or progressive 8-bit DCT only (SOF0–SOF2).
             if ($marker >= 0xC0 && $marker <= 0xCF && !in_array($marker, [0xC4, 0xC8, 0xCC], true)) {
+                if ($marker > 0xC2 || ord($data[$i + 4]) !== 8) throw new \InvalidArgumentException('image_format');
                 $img = new self();
                 $img->height = (ord($data[$i + 5]) << 8) | ord($data[$i + 6]);
                 $img->width = (ord($data[$i + 7]) << 8) | ord($data[$i + 8]);
                 $components = ord($data[$i + 9]);
                 if ($img->width < 1 || $img->height < 1 || !in_array($components, [1, 3, 4], true)) throw new \InvalidArgumentException('image_data');
+                self::guard($img->width, $img->height);
                 $img->colorSpace = $components === 1 ? 'DeviceGray' : ($components === 3 ? 'DeviceRGB' : 'DeviceCMYK');
-                if ($components === 4) $img->decode = ' /Decode [1 0 1 0 1 0 1 0]';   // Adobe CMYK JPEGs are stored inverted
+                if ($components === 4 && $adobe) $img->decode = ' /Decode [1 0 1 0 1 0 1 0]';   // Adobe (APP14) CMYK JPEGs are stored inverted
                 $img->filter = 'DCTDecode';
                 $img->data = $data;
                 return $img;
@@ -86,7 +96,10 @@ final class Image
             $type = substr($data, $pos + 4, 4);
             $body = substr($data, $pos + 8, $n);
             if (strlen($body) !== $n) throw new \InvalidArgumentException('image_data');
-            if ($type === 'IHDR') $ihdr = unpack('Nw/Nh/Cdepth/Ccolor/Ccompression/Cfilter/Cinterlace', $body);
+            if ($type === 'IHDR') {
+                if ($n !== 13) throw new \InvalidArgumentException('image_data');
+                $ihdr = unpack('Nw/Nh/Cdepth/Ccolor/Ccompression/Cfilter/Cinterlace', $body);
+            }
             elseif ($type === 'PLTE') $palette = $body;
             elseif ($type === 'tRNS') $trns = $body;
             elseif ($type === 'IDAT') $idat .= $body;
@@ -96,10 +109,11 @@ final class Image
         if (!$ihdr || $ihdr['w'] < 1 || $ihdr['h'] < 1 || $ihdr['depth'] !== 8 || $ihdr['interlace'] !== 0 || $ihdr['compression'] !== 0) throw new \InvalidArgumentException('image_format');
         $channels = [0 => 1, 2 => 3, 3 => 1, 4 => 2, 6 => 4][$ihdr['color']] ?? 0;
         if (!$channels || ($ihdr['color'] === 3 && $palette === '')) throw new \InvalidArgumentException('image_format');
-        $raw = @gzuncompress($idat);
         $w = (int) $ihdr['w'];
         $h = (int) $ihdr['h'];
+        self::guard($w, $h);
         $stride = $w * $channels;
+        $raw = @gzuncompress($idat, $h * ($stride + 1));
         if (!is_string($raw) || strlen($raw) !== $h * ($stride + 1)) throw new \InvalidArgumentException('image_data');
         $pixels = self::unfilter($raw, $w, $h, $channels);
         $color = '';
@@ -120,6 +134,7 @@ final class Image
         } elseif ($color0 === 3) {
             for ($p = 0, $t = $w * $h; $p < $t; $p++) {
                 $idx = ord($pixels[$p]);
+                if ($idx * 3 + 3 > strlen($palette)) throw new \InvalidArgumentException('image_data');
                 $color .= substr($palette, $idx * 3, 3);
                 $a = $idx < strlen($trns) ? $trns[$idx] : "\xFF";
                 $alpha .= $a;
@@ -143,6 +158,12 @@ final class Image
         $img->data = (string) gzcompress($color, 6);
         $img->alpha = $hasAlpha ? (string) gzcompress($alpha, 6) : '';
         return $img;
+    }
+
+    /** Refuses an image too large to decode safely. */
+    private static function guard(int $w, int $h): void
+    {
+        if ($w > self::MAX_SIDE || $h > self::MAX_SIDE || $w * $h > self::MAX_PIXELS) throw new \InvalidArgumentException('image_size');
     }
 
     /** Reverses PNG's per-row filters (None, Sub, Up, Average, Paeth). */

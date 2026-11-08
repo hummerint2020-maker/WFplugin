@@ -103,6 +103,35 @@ final class LetterPdfToolsTest extends TestCase
         }
     }
 
+    public function testBrokenOrHugeImagesAreRefused(): void
+    {
+        $png = function (string $ihdr, string $extra = '', string $idat = ''): string {
+            $chunk = static function ($t, $b) { return pack('N', strlen($b)) . $t . $b . pack('N', crc32($t . $b)); };
+            return "\x89PNG\r\n\x1A\n" . $chunk('IHDR', $ihdr) . $extra . $chunk('IDAT', $idat) . $chunk('IEND', '');
+        };
+        $chunk = static function ($t, $b) { return pack('N', strlen($b)) . $t . $b . pack('N', crc32($t . $b)); };
+        $cases = [
+            'short IHDR' => $png("\0\0\0\1"),
+            'too many pixels' => $png(pack('NNCCCCC', 5000, 5000, 8, 6, 0, 0, 0), '', (string) gzcompress('')),
+            'palette index past the palette' => $png(pack('NNCCCCC', 1, 1, 8, 3, 0, 0, 0), $chunk('PLTE', "\xFF\0\0"), (string) gzcompress("\0\x05")),
+            'a 12-bit JPEG' => "\xFF\xD8\xFF\xC1\0\x11\x0C\0\x01\0\x01\x03" . str_repeat("\0", 12),
+            'a lossless JPEG' => "\xFF\xD8\xFF\xC3\0\x11\x08\0\x01\0\x01\x03" . str_repeat("\0", 12),
+        ];
+        foreach ($cases as $label => $bad) {
+            try { Image::fromString($bad); $this->fail('refused: ' . $label); } catch (\InvalidArgumentException $e) { $this->assertNotSame('', $e->getMessage(), $label); }
+        }
+        $cmyk = "\xFF\xD8\xFF\xC0\0\x14\x08\0\x01\0\x01\x04" . str_repeat("\0", 14);
+        $this->assertSame('', Image::fromString($cmyk)->decode, 'CMYK without the Adobe marker is not inverted');
+        $adobe = "\xFF\xD8\xFF\xEE\0\x0EAdobe\0\x64\0\0\0\0\x02" . substr($cmyk, 2);
+        $this->assertSame(' /Decode [1 0 1 0 1 0 1 0]', Image::fromString($adobe)->decode);
+    }
+
+    public function testArabicQuotesAndBracesMirror(): void
+    {
+        $this->assertSame([0xAB], array_slice(A::visual('«شركة»', 'R'), 0, 1), 'the closing » is drawn as « on the left');
+        $this->assertSame([0x7B], array_slice(A::visual('{الاسم}', 'R'), 0, 1));
+    }
+
     public function testADocumentWithoutImagesIsAsBefore(): void
     {
         $d = new Document(self::amiri());
@@ -135,8 +164,11 @@ final class LetterPdfToolsTest extends TestCase
     {
         $ar = [0 => 'صفر', 1 => 'واحد', 11 => 'أحد عشر', 12 => 'اثنا عشر', 21 => 'واحد وعشرون', 200 => 'مائتان', 1000 => 'ألف', 2000 => 'ألفان',
             3500 => 'ثلاثة آلاف وخمسمائة', 15000 => 'خمسة عشر ألفًا', 18500 => 'ثمانية عشر ألفًا وخمسمائة', 200000 => 'مائتا ألف',
-            1250 => 'ألف ومائتان وخمسون', 1000000 => 'مليون', 2500000 => 'مليونان وخمسمائة ألف'];
+            1250 => 'ألف ومائتان وخمسون', 1000000 => 'مليون', 2500000 => 'مليونان وخمسمائة ألف',
+            101000 => 'مائة ألف وألف', 102000 => 'مائة ألف وألفان', 201000 => 'مائتا ألف وألف', 103000 => 'مائة وثلاثة آلاف', 111000 => 'مائة وأحد عشر ألفًا',
+            1001000 => 'مليون وألف', 101000000 => 'مائة مليون ومليون'];
         foreach ($ar as $n => $w) $this->assertSame($w, NumberWords::arabic($n), (string) $n);
+        try { NumberWords::arabic(1000000000000); $this->fail('beyond the range'); } catch (\InvalidArgumentException $e) { $this->assertSame('number_range', $e->getMessage()); }
         $this->assertSame('eighteen thousand five hundred', NumberWords::english(18500));
         $this->assertSame('one million two hundred thirty-four thousand five hundred sixty-seven', NumberWords::english(1234567));
         $this->assertSame('zero', NumberWords::english(0));

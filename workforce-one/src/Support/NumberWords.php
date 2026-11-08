@@ -30,9 +30,10 @@ final class NumberWords
         return strtr($s, ['0' => '٠', '1' => '١', '2' => '٢', '3' => '٣', '4' => '٤', '5' => '٥', '6' => '٦', '7' => '٧', '8' => '٨', '9' => '٩']);
     }
 
-    /** A whole number in Arabic words (0 to 999,999,999,999). */
+    /** A whole number in Arabic words (0 to 999,999,999,999). @throws \InvalidArgumentException beyond that */
     public static function arabic(int $n): string
     {
+        if ($n > 999999999999 || $n < -999999999999) throw new \InvalidArgumentException('number_range');
         if ($n < 0) return 'سالب ' . self::arabic(-$n);
         if ($n === 0) return 'صفر';
         $parts = [];
@@ -45,9 +46,10 @@ final class NumberWords
         return implode(' و', $parts);
     }
 
-    /** A whole number in English words (0 to 999,999,999,999). */
+    /** A whole number in English words (0 to 999,999,999,999). @throws \InvalidArgumentException beyond that */
     public static function english(int $n): string
     {
+        if ($n > 999999999999 || $n < -999999999999) throw new \InvalidArgumentException('number_range');
         if ($n < 0) return 'minus ' . self::english(-$n);
         if ($n === 0) return 'zero';
         $parts = [];
@@ -72,6 +74,8 @@ final class NumberWords
             $head = $h === 2 ? 'مائتا' : self::AR_HUNDREDS[$h];
             return $head . ' ' . $forms[0];
         }
+        // 101 000 / 102 000: "مائة ألف وألف" / "مائة ألف وألفان" (the one or two is counted by the noun itself).
+        if ($g > 100 && ($r === 1 || $r === 2)) return self::arabicScale($g - $r, $forms) . ' و' . $forms[$r - 1];
         $words = self::arabicBelow1000($g);
         if ($r >= 3 && $r <= 10) return $words . ' ' . $forms[2];
         if ($r >= 11) return $words . ' ' . $forms[3];

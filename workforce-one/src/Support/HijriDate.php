@@ -5,7 +5,8 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * The Hijri date of a Gregorian day (HR letters, owner decision Q13): the Umm al-Qura calendar through PHP's intl extension when the
- * site has it, else the tabular (arithmetic) calendar, which can differ from Umm al-Qura by a day. Pure: no WordPress calls.
+ * site has it, else the tabular (arithmetic) calendar, which often differs from Umm al-Qura by a day and sometimes by two (HR letters will say
+ * so where the Hijri date is switched on). Pure: no WordPress calls.
  */
 final class HijriDate
 {
