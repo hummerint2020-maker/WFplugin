@@ -194,3 +194,7 @@ One release for the HR letter type, built and reviewed in three pull requests so
 - **The import also updates existing employees** (most are there already), so HR can fill the three details in one file.
 - "Employee since" changes only on screen. Rules that use the day the employee was added (e.g. no correction before it) are unchanged.
 - Gender is used only by letters ("Mr." / "Ms." and the matching wording). It is shown only on the profile.
+- **Update from a file** (owner choice 2026-11-08, option 1; mockup screens `import` and `import-preview` approved):
+  - On the Employees page: HR downloads a file with every employee and their current details, fills `name_ar`, `gender` and `hire_date`, uploads it, sees a preview, then applies it.
+  - In the preview, refused rows show with their reason and are not applied. An empty cell means "leave it as it is".
+  - Every change goes to the Audit Log. It is separate from the organization chart's managers import.
