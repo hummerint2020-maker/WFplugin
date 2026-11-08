@@ -64,15 +64,12 @@ def add_form():
         body = ('<h1>%s</h1><form class="ews-ef-add"><h2>%s</h2><p><input placeholder="%s"></p><p><input placeholder="%s"></p><p><input placeholder="%s"></p>'
                 '<details open><summary>%s</summary><p><input dir="rtl" lang="ar" placeholder="%s"></p>'
                 '<p><select><option>%s</option><option>%s</option><option>%s</option></select> <label>%s <input type="date"></label></p></details>'
-                '<p><button class="button button-primary">%s</button></p></form>'
-                '<div class="notice notice-info inline"><p>%s</p></div>') % (
+                '<p><button class="button button-primary">%s</button></p></form>') % (
                     esc(T('الموظفين', 'Employees')), esc(T('إضافة موظف', 'Add Employee')), esc(T('اسم الموظف', 'Employee Name')),
                     esc(T('اسم الدومين', 'Domain Name')), esc(T('البريد', 'Email')),
                     esc(T('بيانات الخطابات (اختياري)', 'Details for letters (optional)')), esc(T('الاسم بالعربي', 'Name in Arabic')),
                     esc(T('النوع: مش متسجل', 'Gender: not set')), esc(T('ذكر', 'Male')), esc(T('أنثى', 'Female')), esc(T('تاريخ التعيين', 'Hiring date')),
-                    esc(T('إضافة', 'Add')),
-                    esc(T('ملف الاستيراد (Excel/CSV) بقى ياخد ٣ أعمدة اختيارية: name_ar, gender (male/female), hire_date (YYYY-MM-DD).',
-                          'The import file (Excel/CSV) takes three optional columns: name_ar, gender (male/female), hire_date (YYYY-MM-DD).')))
+                    esc(T('إضافة', 'Add')))
         return admin_page(T('الموظفين', 'Employees'), body, SUB, 'emp', feature_css=CSS)
     return make
 
@@ -97,18 +94,61 @@ def my_profile(filled=True):
     return make
 
 
+def import_upload():
+    def make():
+        steps = ''.join('<li>%s</li>' % esc(x) for x in [
+            T('نزّل الملف: فيه كل الموظفين ببياناتهم الحالية.', 'Download the file: every employee with their current details.'),
+            T('املا الأعمدة name_ar و gender (male أو female) و hire_date (YYYY-MM-DD). أي عمود تاني بيتجاهل.', 'Fill the columns name_ar, gender (male or female) and hire_date (YYYY-MM-DD). Other columns are ignored.'),
+            T('ارفعه هنا: هتشوف التغييرات الأول، ومفيش حاجة بتتحفظ قبل ما تدوس "تطبيق".', 'Upload it here: you see the changes first; nothing is saved before you press Apply.')])
+        body = ('<h1 class="wp-heading-inline">%s</h1><a href="#" class="page-title-action">%s</a><hr class="wp-header-end">'
+                '<div class="ews-ef-add"><h2>%s</h2><ol class="ews-ef-steps">%s</ol>'
+                '<p><a href="#" class="button">%s</a></p>'
+                '<p><input type="file" accept=".xlsx,.csv"> <button class="button button-primary">%s</button></p>'
+                '<p class="description">%s</p></div>') % (
+                    esc(T('الموظفين', 'Employees')), esc(T('تحديث البيانات من ملف', 'Update details from a file')),
+                    esc(T('تحديث الاسم بالعربي والنوع وتاريخ التعيين من ملف', 'Update name in Arabic, gender and hiring date from a file')), steps,
+                    esc(T('تنزيل ملف الموظفين (Excel)', 'Download the employees file (Excel)')), esc(T('رفع ومعاينة', 'Upload and preview')),
+                    esc(T('Excel أو CSV. الخانة الفاضية معناها "سيبها زي ما هي".', 'Excel or CSV. An empty cell means "leave it as it is".')))
+        return admin_page(T('الموظفين', 'Employees'), body, SUB, 'emp', feature_css=CSS)
+    return make
+
+
+def import_preview():
+    def make():
+        rows = [('asamir', 'Ahmed Samir', T('الاسم بالعربي', 'Name in Arabic'), '—', 'أحمد سمير عبد الله', ''),
+                ('asamir', 'Ahmed Samir', T('النوع', 'Gender'), '—', T('ذكر', 'Male'), ''),
+                ('asamir', 'Ahmed Samir', T('تاريخ التعيين', 'Hiring date'), '—', '2021-03-01', ''),
+                ('madel', 'Mona Adel', T('تاريخ التعيين', 'Hiring date'), '2022-01-10', '2021-12-10', ''),
+                ('knagy', 'Karim Nagy', T('النوع', 'Gender'), '', 'm', T('النوع لازم يكون male أو female', 'Gender must be male or female')),
+                ('sfathy', '', '', '', '', T('مفيش موظف بالدومين ده', 'No employee with this domain name')),
+                ('ralaa', 'Rana Alaa', T('تاريخ التعيين', 'Hiring date'), '', '2027-01-01', T('التاريخ في المستقبل', 'The date is in the future'))]
+        trs = ''.join('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (
+            ' class="ews-ef-refused"' if err else '', esc(d), esc(n), esc(f), esc(o), esc(nw), esc(err or T('هيتغير', 'Will change'))) for d, n, f, o, nw, err in rows)
+        body = ('<h1>%s</h1><div class="notice notice-info inline"><p>%s</p></div>'
+                '<table class="widefat striped"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>'
+                '<p><button class="button button-primary">%s</button> <a href="#" class="button">%s</a></p><p class="description">%s</p>') % (
+                    esc(T('معاينة التحديث', 'Preview the update')),
+                    esc(T('٤ تغييرات لـ ٢ موظف هتتطبق. ٣ صفوف مرفوضة ومش هتتطبق. ٤٢ موظف من غير تغيير.', '4 changes for 2 employees will be applied. 3 rows are refused and will not be applied. 42 employees without a change.')),
+                    esc(T('الدومين', 'Domain name')), esc(T('الموظف', 'Employee')), esc(T('الحقل', 'Field')), esc(T('الحالي', 'Now')), esc(T('الجديد', 'New')), esc(T('النتيجة', 'Result')), trs,
+                    esc(T('تطبيق ٤ تغييرات', 'Apply 4 changes')), esc(T('إلغاء', 'Cancel')),
+                    esc(T('كل تغيير بيتسجل في سجل التدقيق باسمك.', 'Every change is kept in the Audit Log under your name.')))
+        return admin_page(T('الموظفين', 'Employees'), body, SUB, 'emp', feature_css=CSS)
+    return make
+
+
 def build():
-    for slug, make in [('my-profile', my_profile()), ('my-profile-empty', my_profile(False)), ('profile', profile()), ('profile-empty', profile(filled=False)), ('profile-edit', profile(edit=True)), ('add', add_form())]:
+    for slug, make in [('my-profile', my_profile()), ('my-profile-empty', my_profile(False)), ('profile', profile()), ('profile-empty', profile(filled=False)), ('profile-edit', profile(edit=True)), ('add', add_form()), ('import', import_upload()), ('import-preview', import_preview())]:
         write(F, slug, make)
     D = 'desk'
     gallery(F, 'Employee details for letters — mockups', (
         '<p>Three <b>optional</b> fields on an employee for HR letters (owner decision): <b>the name in Arabic</b>, <b>gender</b> and the '
         '<b>hiring date</b>. An Arabic letter uses the Arabic name; gender picks "Mr." or "Ms." and the matching wording; the hiring date '
         'is the "employed since" date. Left empty, a letter uses the employee name, wording that fits anyone, and the day the employee was '
-        'added. Edited on the employee profile in wp-admin, in Add Employee and in the import file. Changes are audited.</p>'), [
+        'added. Edited on the employee profile in wp-admin, in Add Employee, and for many employees at once from a file (preview, then apply). Changes are audited.</p>'), [
         ('The employee profile', '', [('profile', 'Filled in', D), ('profile-empty', 'Not filled in yet (most employees after the update)', D),
                                       ('profile-edit', 'Editing them', D)]),
-        ('Adding employees', '', [('add', 'Add Employee and the import columns', D)]),
+        ('Adding employees', '', [('add', 'Add Employee: the optional details', D)]),
+        ('Updating existing employees from a file (owner decision 2026-11-08)', '', [('import', 'Download the file, fill it, upload it', D), ('import-preview', 'Preview: what changes, what is refused; then Apply', D)]),
         ('The employee (app, read only; owner decision 2026-11-08)', '', [('my-profile', 'My Profile: the details, filled in', 'phone'),
                                                                          ('my-profile-empty', 'My Profile: not filled in yet', 'phone')]),
     ])
