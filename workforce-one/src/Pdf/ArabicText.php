@@ -37,26 +37,37 @@ final class ArabicText
         return (bool) preg_match('/[\x{0600}-\x{06FF}]/u', $text);
     }
 
+    /** Separators that stay inside a number when they sit between two digits (HR letters): 1,500 · ١٨٬٥٠٠ · 3.5 · ٣٫٥ · 10:30 · 7/11. */
+    private const NUMBER_SEPARATORS = [0x2C, 0x2E, 0x3A, 0x2F, 0x066B, 0x066C];
+
     /**
      * Codepoints in the order they are drawn, left to right.
+     * @param string $base the paragraph's direction: 'R' (an Arabic document: a line that starts with a number or a Latin word is
+     *                     still right-to-left), 'L', or '' to take it from the first strong character, as before (HR letters)
      * @return int[]
      */
-    public static function visual(string $text): array
+    public static function visual(string $text, string $base = ''): array
     {
         $cps = self::codepoints($text);
-        if (!self::hasArabic($text)) return $cps;
+        if ($base === '' && !self::hasArabic($text)) return $cps;
         $shaped = self::shape($cps);
         // Direction of each character: R (Arabic), L (Latin letters, digits), N (spaces, punctuation).
         $dir = array_map(static function ($c) { return self::isArabic($c) ? 'R' : (self::isStrongLtr($c) ? 'L' : 'N'); }, $shaped);
-        $para = 'L';
-        foreach ($dir as $d) {
-            if ($d !== 'N') {
-                $para = $d;
-                break;
+        // A separator between two digits belongs to the number (its groups keep their order).
+        $n = count($dir);
+        for ($i = 1; $i < $n - 1; $i++) {
+            if (in_array($shaped[$i], self::NUMBER_SEPARATORS, true) && self::isDigit($shaped[$i - 1]) && self::isDigit($shaped[$i + 1])) $dir[$i] = 'L';
+        }
+        $para = $base === 'R' || $base === 'L' ? $base : 'L';
+        if ($base !== 'R' && $base !== 'L') {
+            foreach ($dir as $d) {
+                if ($d !== 'N') {
+                    $para = $d;
+                    break;
+                }
             }
         }
         // A neutral takes the direction of its neighbours when both agree, else the paragraph's.
-        $n = count($dir);
         for ($i = 0; $i < $n; $i++) {
             if ($dir[$i] !== 'N') continue;
             $j = $i; while ($j < $n && $dir[$j] === 'N') $j++;
@@ -119,12 +130,17 @@ final class ArabicText
 
     private static function isArabic(int $c): bool
     {
-        return ($c >= 0x0600 && $c <= 0x06FF && !($c >= 0x0660 && $c <= 0x0669)) || ($c >= 0xFB50 && $c <= 0xFEFC);
+        return ($c >= 0x0600 && $c <= 0x06FF && !($c >= 0x0660 && $c <= 0x0669) && !($c >= 0x06F0 && $c <= 0x06F9)) || ($c >= 0xFB50 && $c <= 0xFEFC);
     }
 
     private static function isStrongLtr(int $c): bool
     {
-        return ($c >= 0x30 && $c <= 0x39) || ($c >= 0x41 && $c <= 0x5A) || ($c >= 0x61 && $c <= 0x7A) || ($c >= 0xC0 && $c <= 0x24F) || ($c >= 0x0660 && $c <= 0x0669);
+        return ($c >= 0x30 && $c <= 0x39) || ($c >= 0x41 && $c <= 0x5A) || ($c >= 0x61 && $c <= 0x7A) || ($c >= 0xC0 && $c <= 0x24F) || ($c >= 0x0660 && $c <= 0x0669) || ($c >= 0x06F0 && $c <= 0x06F9);
+    }
+
+    private static function isDigit(int $c): bool
+    {
+        return ($c >= 0x30 && $c <= 0x39) || ($c >= 0x0660 && $c <= 0x0669) || ($c >= 0x06F0 && $c <= 0x06F9);
     }
 
     /** @return int[] */
