@@ -132,9 +132,9 @@ $create('fault_level1_step_insert', $CU, $C, $in($D(4), 'in', ['time_in' => '08:
 $create('fault_level1_commit', $CU, $C, $in($D(4), 'in', ['time_in' => '08:00']), 'employee', null, '/^\s*COMMIT/i');
 $create('create_level1_in', $CU, $C, $in($D(4), 'in', ['time_in' => '08:00']));
 
-// ---------------------------------------------------------------- HR: applied at once, refused, and its faults (mona; HR's own source)
+// ---------------------------------------------------------------- HR: applied at once (cxq_d: a day only this trace touches), refused, and its faults (HR's own source)
 $wf('');
-$create('create_hr_day', $hrU, $mona, $in($D(6), 'day', ['time_in' => '09:00', 'time_out' => '17:00', 'reason' => 'mission']), 'hr');
+$create('create_hr_day', $hrU, $Dd, $in($D(12), 'day', ['time_in' => '09:00', 'time_out' => '17:00', 'reason' => 'mission']), 'hr');
 $create('create_hr_refused_time', $hrU, $mona, $in($D(5), 'out'), 'hr');
 $create('create_hr_refused_reason', $hrU, $mona, $in($D(5), 'out', ['time_out' => '17:00', 'reason' => '']), 'hr');
 $create('create_hr_old_day', $hrU, $A, $in($D(20), 'day', ['time_in' => '09:00', 'time_out' => '17:00', 'reason' => 'audit']), 'hr');   // no deadline for HR
