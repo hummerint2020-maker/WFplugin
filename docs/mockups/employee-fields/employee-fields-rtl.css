@@ -1,0 +1,13 @@
+/* Employee details for letters (HR letters HL2): the block on the wp-admin profile, the edit form, the Add Employee section. Logical properties: the -rtl copy is identical. */
+.ews-ef-block{margin-block-start:18px;padding-block-start:16px;border-block-start:1px dashed #d0d5dd}
+.ews-ef-blockhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-block-end:10px}
+.ews-ef-blockhead h3{margin:0;font-size:14px;color:#1d2939}
+.ews-ef-empty{color:#98a2b3!important;font-style:italic}
+.ews-ef-block .description{margin-block-start:10px}
+.ews-ef-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:#344054;margin-block-end:12px;max-width:360px}
+.ews-ef-form input,.ews-ef-form select{font-weight:400}
+.ews-ef-add{background:#fff;padding:18px;max-width:650px;margin-block-end:14px}
+.ews-ef-add h2{margin-block-start:0}
+.ews-ef-add input:not([type="date"]){width:100%}
+.ews-ef-add details{border:1px solid #e4e7ec;border-radius:8px;padding:10px 14px}
+.ews-ef-add summary{cursor:pointer;font-weight:600;color:#344054}
