@@ -18,6 +18,7 @@ use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
 use WorkforceOne\Attendance\Data\WordPressCorrectionQuery;
 use WorkforceOne\Attendance\Data\WordPressCorrectionStore;
 use WorkforceOne\Attendance\Data\WordPressTimeReportQuery;
+use WorkforceOne\Attendance\CorrectionRequests;
 use WorkforceOne\Attendance\EvidenceService;
 use WorkforceOne\Attendance\ManualRecordService;
 use WorkforceOne\Attendance\AttendanceService;
@@ -283,7 +284,14 @@ final class Services
     /** The correction pages' reads (3.31.140). */
     public function correctionQuery(): CorrectionQuery
     {
-        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''));
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''), (string) ($this->tables['time_logs'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Attendance correction requests (3.31.143): a new request, HR's own correction, the employee's withdrawal and the end-of-day reminder. */
+    public function correctionRequests(): CorrectionRequests
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new CorrectionRequests($this->correctionStore(), $this->correctionQuery(), $this->attendancePorts->corrections, $this->tx, $this->audit, $this->clock);
         return $this->made[__FUNCTION__];
     }
 
