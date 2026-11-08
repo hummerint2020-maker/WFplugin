@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.31.143
+### L5e2: attendance correction requests behind a service (a move only; PR #42)
+- A new correction request (the employee's, and HR's own correction applied at once), the employee's withdrawal and the end-of-day "you did not sign out" reminder now run in the `CorrectionRequests` service, with a store and a read model for their SQL. The same reads and writes in the same order, the same transactions, audits and notifications: nothing changes for anyone. Design `docs/tasks/attendance-corrections.md` §11.
+- Tests: a new golden trace compares the old and the new code on every refusal, each workflow mode, HR's direct correction, faults on every write, the app form, HR's form and the API, withdrawals and the reminder, plus real photo uploads; unit tests for the service; the storage contract pins the SQL text.
+
 ## 3.31.142
 ### The rest of the QA report on 3.31.138 (owner decisions 2026-11-06; PRs #37–#40)
 - **Early leave in My requests** with its state; one still waiting can be withdrawn there (it no longer counts against the month, and the Audit Log has it). A new early leave keeps the site's time. A manager deciding one that was withdrawn meanwhile is told so (not a schedule conflict or a blank page).
