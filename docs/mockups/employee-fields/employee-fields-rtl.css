@@ -11,3 +11,5 @@
 .ews-ef-add input:not([type="date"]){width:100%}
 .ews-ef-add details{border:1px solid #e4e7ec;border-radius:8px;padding:10px 14px}
 .ews-ef-add summary{cursor:pointer;font-weight:600;color:#344054}
+.wfo-profile .ews-ef-empty{color:#98a2b3;font-style:italic}
+.ews-ef-note{display:flex;align-items:center;gap:6px;margin:12px 0 0;font-size:13px;color:#667085}

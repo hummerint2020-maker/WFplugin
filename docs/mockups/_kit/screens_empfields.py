@@ -5,7 +5,7 @@ Three optional fields on an employee: the name in Arabic, gender and hiring date
 name, wording that fits anyone, and the day the employee was added. Edited on the employee's profile in wp-admin; also in the
 Add Employee form and the Excel import. Nothing changes for anyone until they are filled.
 """
-from build import T, esc, admin_page, write, gallery
+from build import T, esc, icon, app_page, admin_page, write, gallery
 
 F = 'employee-fields'
 CSS = 'employee-fields.css'
@@ -75,8 +75,28 @@ def add_form():
     return make
 
 
+def my_profile(filled=True):
+    def make():
+        rows = [(T('القسم', 'Department'), T('الحسابات', 'Accounts')), (T('المدير المباشر', 'Supervisor'), T('كريم ناجي', 'Karim Nagy')),
+                (T('الوردية', 'Shift'), T('الافتراضية للشركة', 'Company Default'))]
+        letters = [(T('الاسم بالعربي', 'Name in Arabic'), 'أحمد سمير عبد الله' if filled else ''), (T('النوع', 'Gender'), T('ذكر', 'Male') if filled else ''),
+                   (T('تاريخ التعيين', 'Hiring date'), T('١ مارس ٢٠٢١', '1 Mar 2021') if filled else '')]
+        dl = ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % (esc(k), esc(v)) for k, v in rows)
+        dl2 = ''.join('<div><dt>%s</dt><dd%s>%s</dd></div>' % (esc(k), '' if v else ' class="ews-ef-empty"', esc(v or T('مش متسجل', 'Not set'))) for k, v in letters)
+        body = ('<div class="ews-my-profile wfo-profile"><div class="wfo-profile-grid"><div class="wfo-profile-col">'
+                '<section class="wfo-profile-card"><div class="wfo-profile-card-head"><span class="wfo-profile-card-icon">%s</span><div><h3>%s</h3><p>%s</p></div></div>'
+                '<dl class="wfo-profile-fields">%s</dl></section>'
+                '<section class="wfo-profile-card"><div class="wfo-profile-card-head"><span class="wfo-profile-card-icon is-blue">%s</span><div><h3>%s</h3><p>%s</p></div></div>'
+                '<dl class="wfo-profile-fields">%s</dl><p class="ews-ef-note">%s %s</p></section></div></div></div>') % (
+                    icon('user', 20), esc(T('بياناتي', 'My Information')), esc(T('بياناتك الشخصية وبيانات الشغل', 'Your personal and work information')), dl,
+                    icon('file', 20), esc(T('بيانات الخطابات', 'Details for letters')), esc(T('بتظهر في خطابات HR', 'Shown on your HR letters')), dl2,
+                    icon('info', 15, 2), esc(T('فيها حاجة غلط؟ بلّغ الموارد البشرية وهي تصححها.', 'Something wrong? Ask HR to correct it.')))
+        return app_page(T('ملفي', 'My Profile'), body, active='more', css_files=('app-profile.css',), feature_css=CSS, who=('أحمد سمير', 'Ahmed Samir'))
+    return make
+
+
 def build():
-    for slug, make in [('profile', profile()), ('profile-empty', profile(filled=False)), ('profile-edit', profile(edit=True)), ('add', add_form())]:
+    for slug, make in [('my-profile', my_profile()), ('my-profile-empty', my_profile(False)), ('profile', profile()), ('profile-empty', profile(filled=False)), ('profile-edit', profile(edit=True)), ('add', add_form())]:
         write(F, slug, make)
     D = 'desk'
     gallery(F, 'Employee details for letters — mockups', (
@@ -87,4 +107,6 @@ def build():
         ('The employee profile', '', [('profile', 'Filled in', D), ('profile-empty', 'Not filled in yet (most employees after the update)', D),
                                       ('profile-edit', 'Editing them', D)]),
         ('Adding employees', '', [('add', 'Add Employee and the import columns', D)]),
+        ('The employee (app, read only; owner decision 2026-11-08)', '', [('my-profile', 'My Profile: the details, filled in', 'phone'),
+                                                                         ('my-profile-empty', 'My Profile: not filled in yet', 'phone')]),
     ])
