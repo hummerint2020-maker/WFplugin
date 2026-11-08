@@ -165,3 +165,20 @@ request type layered from birth (review the port design against check_layers L2/
   sheet; HR may cancel an approved letter not yet issued; while the feature is off, issued letters stay downloadable by HR only;
   non-owner downloads and the owner's first download are audited; **EWS Administrator gets "Manage HR letters"** by default (a
   salary template still needs Manage Payroll); the HR user of Approval Workflows needs the capability like anyone else.
+
+## Mockup approved (owner, 2026-11-08)
+The ten screens of `docs/mockups/hr-letter/` and the sample letters were approved as they are.
+
+## 16. Delivery in parts (2026-11-08)
+One release for the HR letter type, built and reviewed in three pull requests so each stays reviewable. Nothing is visible until the third.
+- **HL1, PDF groundwork (pure, unused until HL3).**
+  - Amiri bundled in `assets/vendor/amiri/` with its OFL licence.
+  - `ArabicText::visual()` takes the paragraph direction from the caller: a line of an Arabic letter that starts with a number stays right-to-left (the trial's third line).
+  - A separator between digits (`٬` `٫` `,` `.` `:` `/`) stays inside the number, so `١٨٬٥٠٠` is not split into reversed groups.
+  - `Pdf/TextBlock`: word wrapping in logical order, each line put in visual order, right-aligned for Arabic.
+  - `Pdf/Image`: JPEG passed through; PNG with alpha written as an SMask. `Document::image()` draws it, which needs a font name per document.
+  - `Support/HijriDate`: Umm al-Qura through PHP intl when it is there, the tabular calendar otherwise.
+  - `Support/NumberWords`: Arabic and English amounts in words, and Arabic-Indic digits.
+  - Unit tests for all of it. No caller changes, so the payslip, schedule and payout PDFs stay the same (golden unchanged).
+- **HL2, People.** Optional employee fields: Arabic name, gender and hire date. These need a schema change, the employee form, the import and their own mockup first. Still off-by-default safe: the fields are optional and empty.
+- **HL3, the request type.** Covers §2–§13: the table, settings, the workflow, the employee sheet, My requests and My approvals, the Hub, the admin pages, files, generation and the e2e tests. It is the first request type layered from birth: the ports are reviewed against check_layers L2/L4 before coding.
