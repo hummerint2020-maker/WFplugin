@@ -23,32 +23,34 @@ def head():
 
 
 def info(edit=False, filled=True):
-    base = (field(T('اسم الموظف', 'Employee Name'), 'Ahmed Samir') + field(T('اسم الدومين', 'Domain Name'), 'asamir')
-            + field(T('البريد', 'Email'), 'asamir@nile.example') + field(T('مستخدم ووردبريس', 'WordPress User'), 'asamir')
-            + field(T('الحالة', 'Status'), T('نشط', 'Active')) + field(T('موظف من', 'Employee Since'), T('١٢ يناير ٢٠٢٣', '12 Jan 2023')))
+    """The real Employee Information panel: the Arabic name under the name, the hiring date as "Employee Since" (the day the employee was
+    added while it is not set), gender the only new row. No separate block, nothing shown twice."""
+    name = '<div class="ews-profile-field"><div class="k">%s</div><div class="v">Ahmed Samir%s</div></div>' % (
+        esc(T('اسم الموظف', 'Employee Name')), ('<br><span class="ews-ef-sub" dir="rtl" lang="ar">أحمد سمير عبد الله</span>' if filled else ''))
+    since = '<div class="ews-profile-field"><div class="k">%s</div><div class="v">%s%s</div></div>' % (
+        esc(T('موظف من', 'Employee Since')), esc(T('١ مارس ٢٠٢١', '1 Mar 2021') if filled else T('١٢ يناير ٢٠٢٣', '12 Jan 2023')),
+        '' if filled else '<br><span class="ews-ef-sub">%s</span>' % esc(T('تاريخ إضافته للنظام: تاريخ التعيين مش متسجل', 'Added to the system: hiring date not set')))
+    gender = field(T('النوع', 'Gender'), T('ذكر', 'Male') if filled else T('مش متسجل', 'Not set'), not filled)
+    base = (name + field(T('اسم الدومين', 'Domain Name'), 'asamir') + field(T('البريد', 'Email'), 'asamir@nile.example')
+            + field(T('مستخدم ووردبريس', 'WordPress User'), 'asamir') + field(T('الحالة', 'Status'), T('نشط', 'Active')) + since + gender)
     if not edit:
-        letters = (field(T('الاسم بالعربي', 'Name in Arabic'), 'أحمد سمير عبد الله' if filled else T('مش متسجل', 'Not set'), not filled)
-                   + field(T('النوع', 'Gender'), T('ذكر', 'Male') if filled else T('مش متسجل', 'Not set'), not filled)
-                   + field(T('تاريخ التعيين', 'Hiring date'), T('١ مارس ٢٠٢١', '1 Mar 2021') if filled else T('مش متسجل', 'Not set'), not filled))
-        block = ('<div class="ews-ef-block"><div class="ews-ef-blockhead"><h3>%s</h3><a href="#" class="button button-small">%s</a></div>'
-                 '<div class="ews-profile-fields">%s</div><p class="description">%s</p></div>') % (
-                     esc(T('بيانات الخطابات', 'Details for letters')), esc(T('تعديل', 'Edit')), letters,
-                     esc(T('اختيارية. خطابات HR بتستخدمها لما تكون متسجلة.', 'Optional. HR letters use them when they are filled.')))
+        tail = '<p class="ews-ef-actions"><a href="#" class="button button-small">%s</a> <span class="description">%s</span></p>' % (
+            esc(T('تعديل الاسم بالعربي والنوع وتاريخ التعيين', 'Edit name in Arabic, gender, hiring date')),
+            esc(T('اختيارية، وخطابات HR بتستخدمها لما تكون متسجلة.', 'Optional; HR letters use them when they are filled.')))
     else:
-        block = ('<form class="ews-ef-block ews-ef-form"><div class="ews-ef-blockhead"><h3>%s</h3></div>'
-                 '<label>%s<input type="text" dir="rtl" lang="ar" value="أحمد سمير عبد الله" maxlength="190"></label>'
-                 '<label>%s<select><option>%s</option><option selected>%s</option><option>%s</option></select></label>'
-                 '<label>%s<input type="date" value="2021-03-01"></label>'
-                 '<p class="description">%s</p><p><button class="button button-primary">%s</button> <a href="#" class="button">%s</a></p></form>') % (
-                     esc(T('بيانات الخطابات', 'Details for letters')),
-                     esc(T('الاسم بالعربي', 'Name in Arabic')),
-                     esc(T('النوع', 'Gender')), esc(T('— مش متسجل —', '— Not set —')), esc(T('ذكر', 'Male')), esc(T('أنثى', 'Female')),
-                     esc(T('تاريخ التعيين', 'Hiring date')),
-                     esc(T('لو فاضية: الخطاب بيستخدم اسم الموظف، وكلام يناسب الكل ("السيد/السيدة")، وتاريخ إضافته للنظام. التعديل بيتسجل في سجل التدقيق.',
-                           'Left empty, a letter uses the employee name, wording that fits anyone ("Mr./Ms."), and the day the employee was added. Changes are kept in the Audit Log.')),
-                     esc(T('حفظ', 'Save')), esc(T('إلغاء', 'Cancel')))
+        tail = ('<form class="ews-ef-block ews-ef-form">'
+                '<label>%s<input type="text" dir="rtl" lang="ar" value="أحمد سمير عبد الله" maxlength="190"></label>'
+                '<label>%s<select><option>%s</option><option selected>%s</option><option>%s</option></select></label>'
+                '<label>%s<input type="date" value="2021-03-01"></label>'
+                '<p class="description">%s</p><p><button class="button button-primary">%s</button> <a href="#" class="button">%s</a></p></form>') % (
+                    esc(T('الاسم بالعربي', 'Name in Arabic')),
+                    esc(T('النوع', 'Gender')), esc(T('— مش متسجل —', '— Not set —')), esc(T('ذكر', 'Male')), esc(T('أنثى', 'Female')),
+                    esc(T('تاريخ التعيين', 'Hiring date')),
+                    esc(T('لو فاضية: الخطاب بيستخدم اسم الموظف، وكلام يناسب الكل ("السيد/السيدة")، وتاريخ إضافته للنظام. التعديل بيتسجل في سجل التدقيق.',
+                          'Left empty, a letter uses the employee name, wording that fits anyone ("Mr./Ms."), and the day the employee was added. Changes are kept in the Audit Log.')),
+                    esc(T('حفظ', 'Save')), esc(T('إلغاء', 'Cancel')))
     return ('<div class="ews-profile-layout"><div><section class="ews-profile-panel"><h2>%s</h2><div class="ews-profile-body"><div class="ews-profile-fields">%s</div>%s</div></section></div></div>') % (
-        esc(T('بيانات الموظف', 'Employee Information')), base, block)
+        esc(T('بيانات الموظف', 'Employee Information')), base, tail)
 
 
 def profile(edit=False, filled=True):
@@ -76,20 +78,21 @@ def add_form():
 
 
 def my_profile(filled=True):
-    """The real My Information card (templates/app/my-profile.php) with the three details after the name, read only."""
+    """The real My Information card (templates/app/my-profile.php): the Arabic name under the name, "Employee since" (the hiring date, or
+    the day the employee was added), and gender. Read only; nothing shown twice."""
     def make():
-        nv = lambda v: v if filled else ''
-        rows = [(T('الاسم', 'Name'), 'Ahmed Samir', ''), (T('الاسم بالعربي', 'Name in Arabic'), nv('أحمد سمير عبد الله'), 'new'),
-                (T('النوع', 'Gender'), nv(T('ذكر', 'Male')), 'new'), (T('تاريخ التعيين', 'Hiring date'), nv(T('١ مارس ٢٠٢١', '1 Mar 2021')), 'new'),
-                (T('الدومين', 'Domain'), 'asamir', ''), (T('البريد', 'Email'), 'asamir@nile.example', ''), (T('الفريق', 'Team'), T('فريق الحسابات', 'Accounts Team'), ''),
-                (T('المدير المباشر', 'Supervisor'), T('كريم ناجي', 'Karim Nagy'), ''), (T('الوردية', 'Shift'), T('الافتراضية للشركة', 'Company Default'), '')]
-        dl = ''.join('<div%s><dt>%s</dt><dd%s>%s</dd></div>' % (' class="ews-ef-new"' if tag else '', esc(k), '' if v else ' class="ews-ef-empty"', esc(v or T('مش متسجل', 'Not set'))) for k, v, tag in rows)
+        name = 'Ahmed Samir' + ('<br><span class="ews-ef-sub" dir="rtl" lang="ar">أحمد سمير عبد الله</span>' if filled else '')
+        rows = [(T('الاسم', 'Name'), name, False), (T('النوع', 'Gender'), esc(T('ذكر', 'Male')) if filled else '', True),
+                (T('موظف من', 'Employee since'), esc(T('١ مارس ٢٠٢١', '1 Mar 2021') if filled else T('١٢ يناير ٢٠٢٣', '12 Jan 2023')), False),
+                (T('الدومين', 'Domain'), 'asamir', False), (T('البريد', 'Email'), 'asamir@nile.example', False), (T('الفريق', 'Team'), esc(T('فريق الحسابات', 'Accounts Team')), False),
+                (T('المدير المباشر', 'Supervisor'), esc(T('كريم ناجي', 'Karim Nagy')), False), (T('الوردية', 'Shift'), esc(T('الافتراضية للشركة', 'Company Default')), False)]
+        dl = ''.join('<div><dt>%s</dt><dd%s>%s</dd></div>' % (esc(k), ' class="ews-ef-empty"' if (opt and not v) else '', v or esc(T('مش متسجل', 'Not set'))) for k, v, opt in rows)
         body = ('<div class="ews-my-profile wfo-profile"><div class="wfo-profile-grid"><div class="wfo-profile-col">'
                 '<section class="wfo-profile-card"><div class="wfo-profile-card-head"><span class="wfo-profile-card-icon">%s</span><div><h3>%s</h3><p>%s</p></div></div>'
                 '<dl class="wfo-profile-fields">%s</dl><p class="ews-ef-note">%s %s</p></section></div></div></div>') % (
                     icon('user', 20), esc(T('بياناتي', 'My Information')), esc(T('بياناتك الشخصية وبيانات الشغل', 'Your personal and work information')), dl,
-                    icon('info', 15, 2), esc(T('الاسم بالعربي والنوع وتاريخ التعيين بيظهروا في خطابات HR. فيها حاجة غلط؟ بلّغ الموارد البشرية وهي تصححها.',
-                                               'The name in Arabic, gender and hiring date appear on your HR letters. Something wrong? Ask HR to correct it.')))
+                    icon('info', 15, 2), esc(T('دي البيانات اللي بتظهر في خطابات HR. فيها حاجة غلط؟ بلّغ الموارد البشرية وهي تصححها.',
+                                               'This is what appears on your HR letters. Something wrong? Ask HR to correct it.')))
         return app_page(T('ملفي', 'My Profile'), body, active='more', css_files=('app-profile.css',), feature_css=CSS, who=('أحمد سمير', 'Ahmed Samir'))
     return make
 

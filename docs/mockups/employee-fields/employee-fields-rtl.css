@@ -15,3 +15,5 @@
 .ews-ef-note{display:flex;align-items:flex-start;gap:6px;line-height:1.6;margin:12px 0 0;font-size:13px;color:#667085}
 .ews-ef-note svg{flex:none;margin-block-start:4px}
 .wfo-profile .ews-ef-new dt::after{content:"";display:inline-block;inline-size:6px;block-size:6px;border-radius:50%;background:#5b3fd9;margin-inline-start:6px;vertical-align:middle}
+.ews-ef-sub{font-size:13px;color:#667085}
+.ews-ef-actions{margin-block-start:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
