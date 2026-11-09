@@ -8721,3 +8721,187 @@ msgstr "ملاحظة لـ HR"
 
 msgid "Download the letter (PDF)"
 msgstr "تحميل الخطاب (PDF)"
+
+#, php-format
+msgid "%d characters at most."
+msgstr "%d حرف بحد أقصى."
+
+#, php-format
+msgid "%d years together"
+msgstr "%d سنة مع بعض"
+
+msgid "A cake, its candle blown out and \"HAPPY BIRTHDAY\", once a day when they open the app."
+msgstr "تورتة وشمعة بتطفي و\"HAPPY BIRTHDAY\"، مرة واحدة في اليوم أول ما يفتح التطبيق."
+
+msgid "A few seconds of movement when a page opens, then the decorations stay quietly behind the content."
+msgstr "ثواني حركة لما الصفحة تفتح، وبعدها الزينة تفضل هادية ورا المحتوى."
+
+msgid "Birthdays only, if on"
+msgstr "أعياد الميلاد بس، لو شغالة"
+
+msgid "Celebrate each employee on their birthday"
+msgstr "احتفل بكل موظف في عيد ميلاده"
+
+msgid "Decorations and colours for an occasion on the employee app, the login page and kiosks. You switch it on and off; nothing starts by itself."
+msgstr "زينة وألوان للمناسبة على تطبيق الموظفين وصفحة الدخول والكشك. إنت اللي بتشغّلها وبتقفلها؛ مافيش حاجة بتشتغل لوحدها."
+
+msgid "Eid Mubarak"
+msgstr "عيد فطر مبارك"
+
+msgid "Eid al-Adha"
+msgstr "عيد الأضحى"
+
+msgid "Eid al-Adha Mubarak"
+msgstr "عيد أضحى مبارك"
+
+msgid "Eid al-Fitr"
+msgstr "عيد الفطر"
+
+msgid "Employee Moments"
+msgstr "لحظات الموظفين"
+
+msgid "Empty: until you switch it off."
+msgstr "فاضي: لحد ما تقفلها."
+
+msgid "Everyone sees the decorations on the birthday of:"
+msgstr "الكل يشوف زينة عيد ميلاد:"
+
+msgid "Falling over the whole screen"
+msgstr "تنزل على الشاشة كلها"
+
+msgid "Falls over the screen once for a few seconds, then is gone. It never blocks a tap or stays over Sign In / Out."
+msgstr "تنزل على الشاشة مرة لثواني وتختفي. عمرها ما تمنع لمسة ولا تفضل على زرار الحضور."
+
+msgid "For \"N years together\" on the company's birthday."
+msgstr "لـ \"N سنة مع بعض\" في عيد ميلاد الشركة."
+
+#, php-format
+msgid "From the %s team"
+msgstr "من فريق %s"
+
+msgid "Greeting card title"
+msgstr "عنوان كارت التهنئة"
+
+msgid "Halloween"
+msgstr "الهالوين"
+
+msgid "Happy Halloween"
+msgstr "هالوين سعيد"
+
+msgid "Happy National Day"
+msgstr "كل سنة ومصر بخير"
+
+msgid "Happy New Year"
+msgstr "سنة سعيدة"
+
+msgid "Happy Valentine's Day"
+msgstr "عيد حب سعيد"
+
+msgid "Happy birthday to us"
+msgstr "عيد ميلاد سعيد لينا"
+
+msgid "Happy birthday!"
+msgstr "كل سنة وانت طيب!"
+
+#, php-format
+msgid "Happy birthday, %s!"
+msgstr "كل سنة وانت طيب يا %s!"
+
+msgid "Have a great day, from all the team"
+msgstr "يوم سعيد من كل الفريق"
+
+msgid "Hide decorations"
+msgstr "إخفاء الزينة"
+
+#, php-format
+msgid "Hold Ctrl (⌘ on a Mac) to pick several, %d at most. On their day the decorations and a greeting with their name show to every employee (not on kiosks or the login page)."
+msgstr "دوس Ctrl (أو ⌘ على الماك) عشان تختار أكتر من واحد، %d بحد أقصى. في يوم ميلادهم الزينة والتهنئة باسمهم تظهر لكل الموظفين (مش في الكشك ولا صفحة الدخول)."
+
+msgid "How it shows"
+msgstr "تظهر إزاي"
+
+msgid "In the employee's birthday you may write {name} for their first name, and {years} in the company's birthday for the number of years."
+msgstr "في عيد ميلاد الموظف تقدر تكتب {name} ويتحط مكانها اسمه الأول، وفي عيد ميلاد الشركة {years} لعدد السنين."
+
+msgid "Last day (optional)"
+msgstr "آخر يوم (اختياري)"
+
+msgid "National day · Egypt"
+msgstr "عيد وطني · مصر"
+
+msgid "New Year"
+msgstr "رأس السنة"
+
+msgid "No occasion"
+msgstr "ولا مناسبة"
+
+msgid "Occasion"
+msgstr "المناسبة"
+
+msgid "Occasions"
+msgstr "المناسبات"
+
+#, php-format
+msgid "On their day only they see the decorations and \"Happy birthday\". The year is never shown. %1$d of %2$d employees have a birthday saved in"
+msgstr "في يوم ميلاده هو بس يشوف الزينة و\"كل سنة وانت طيب\". السنة مش بتظهر. %1$d من %2$d موظف متسجل لهم تاريخ ميلاد في"
+
+msgid "Once a day for each employee."
+msgstr "مرة واحدة في اليوم لكل موظف."
+
+msgid "Ramadan"
+msgstr "رمضان"
+
+msgid "Ramadan Kareem"
+msgstr "رمضان كريم"
+
+msgid "Show on kiosk screens"
+msgstr "تظهر على شاشات الكشك"
+
+msgid "The big words of the occasion's moment"
+msgstr "الكلام الكبير في لحظة المناسبة"
+
+msgid "The cake moment for everyone on the picked people's birthday"
+msgstr "مشهد التورتة لكل الموظفين في عيد ميلاد الأشخاص المختارين"
+
+msgid "The cake moment for the birthday person"
+msgstr "مشهد التورتة لصاحب عيد الميلاد"
+
+msgid "The company occasion only, never names."
+msgstr "مناسبة الشركة بس، من غير أسامي."
+
+msgid "The company's birthday"
+msgstr "عيد ميلاد الشركة"
+
+msgid "The company's founding date"
+msgstr "تاريخ تأسيس الشركة"
+
+msgid "The employee's birthday"
+msgstr "عيد ميلاد الموظف"
+
+msgid "The line under it"
+msgstr "السطر اللي تحت العنوان"
+
+msgid "The line under the moment"
+msgstr "السطر اللي تحت اللحظة"
+
+#, php-format
+msgid "The occasion ended on %s. Choose another one or a new last day."
+msgstr "المناسبة خلصت يوم %s. اختار مناسبة تانية أو آخر يوم جديد."
+
+msgid "The occasion on now (one at a time)"
+msgstr "المناسبة الشغالة (واحدة بس في نفس الوقت)"
+
+msgid "The words for each occasion"
+msgstr "الكلام لكل مناسبة"
+
+msgid "Top bar and background"
+msgstr "الشريط اللي فوق والخلفية"
+
+msgid "Valentine's Day"
+msgstr "عيد الحب"
+
+msgid "Wish them a great day"
+msgstr "اتمنالهم يوم حلو"
+
+msgid "Write the words each occasion shows, in Arabic and English. An empty box uses the built-in words."
+msgstr "اكتب الكلام اللي يظهر في كل مناسبة بالعربي والإنجليزي. الخانة الفاضية بتاخد الكلام الجاهز."

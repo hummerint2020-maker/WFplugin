@@ -47,8 +47,7 @@ trait EWS_Occasions_Trait {
             $due=[];
             foreach($c['people'] as $pid)if(Occasions::isBirthday((string)($saved[$pid]['birthday']??''),$today))$due[]=(int)$pid;
             if($due){
-                global $wpdb;
-                foreach((array)$wpdb->get_results("SELECT id,name FROM {$this->employees} WHERE active=1 AND id IN (".implode(',',array_map('intval',$due)).")") as $r)
+                foreach((array)$this->people_by_ids($due,true) as $r)
                     $ctx['picked'][]=['id'=>(int)$r->id,'name'=>(string)$r->name,'birthday'=>(string)($saved[(int)$r->id]['birthday']??'')];
             }
         }
@@ -92,7 +91,7 @@ trait EWS_Occasions_Trait {
             'halloween'=>[__('Happy Halloween','workforce-one'),$team,'HAPPY HALLOWEEN',$team],
             'national'=>[__('Happy National Day','workforce-one'),$team,__('Happy National Day','workforce-one'),$team],
             /* translators: %d: years since the company was founded */
-            'company_birthday'=>[$years?sprintf(_n('%d year together','%d years together',$years,'workforce-one'),$years):__('Happy birthday to us','workforce-one'),$app,'',''],
+            'company_birthday'=>[$years?sprintf(__('%d years together','workforce-one'),$years):__('Happy birthday to us','workforce-one'),$app,'',''],
             /* translators: %s: the employee's first name */
             'birthday'=>[$first!==''?sprintf(__('Happy birthday, %s!','workforce-one'),$first):__('Happy birthday!','workforce-one'),$o['name']!==''?__('Wish them a great day','workforce-one'):__('Have a great day, from all the team','workforce-one'),'HAPPY BIRTHDAY',
                 /* translators: %s: the employee's first name */
