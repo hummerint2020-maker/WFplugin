@@ -36,6 +36,19 @@ adm, emp, hr, other = Session('admin', 'admin'), Session('emp1', 'emp1pass'), Se
 ADMIN = '/wp-admin/admin.php?page=ews31-hr-letters'
 
 
+def session_nonce(s, uid, action):
+    """The nonce this logged-in session would get for an action (its form or link is not shown to it)."""
+    jar = [h for h in s.op.handlers if hasattr(h, 'cookiejar')][0].cookiejar
+    c = [x for x in jar if x.name.startswith('wordpress_logged_in_')][0]
+    return php("$_COOKIE[LOGGED_IN_COOKIE]=%s; wp_set_current_user(%d); echo wp_create_nonce('%s');" % (json.dumps(urllib.parse.unquote(c.value)), uid, action)).strip().splitlines()[-1]
+
+
+def hr_file_url(letter_id):
+    page = hr.req(ADMIN + '&tab=list')[1]
+    m = re.search(r'href="([^"]*action=ews_hr_letter_file&(?:amp;|#038;)id=%d&[^"]*)"' % letter_id, page)
+    return html.unescape(m.group(1)) if m else ''
+
+
 def letters():
     return q("SELECT * FROM {p}ews_hr_letters ORDER BY id")
 
@@ -121,7 +134,8 @@ def audits(action):
 # ---- off by default
 page = emp.req('/app/?ews_view=requests&new=1')[1]
 check('off: no HR letter tile', 'wfo-new-letter' not in page and 'data-new-kind="letter"' not in page)
-check('off: a request is refused', ask(type='employment', language='ar').get('hl_error') == 'access' and not letters())
+st, qs, _ = emp.post('ews_hr_letter_request', _wpnonce=session_nonce(emp, ids['emp_uid'], 'ews_hr_letter_request'), ews_return='requests', type='employment', language='ar')
+check('off: a request is refused', qs.get('hl_error') == 'access' and not letters(), qs)
 st, page, _ = hr.req(ADMIN)
 check('off: no HR letters page before letters exist', 'ews31_hr_letter_action' not in page, st)
 check('the table and the inactive workflow row are there while off', q("SELECT COUNT(*) c FROM {p}ews_approval_workflows WHERE workflow_key='hr_letter'")[0]['c'] == '1')
@@ -152,10 +166,12 @@ check('the employee downloads it (inline, not stored)', st == 200 and body[:5] =
 check('...the first download is audited once', audits('hr_letter_downloaded') == ['First download by the employee'])
 fetch(emp, url)
 check('...not again', len(audits('hr_letter_downloaded')) == 1)
-st, body, h = fetch(other, url)
-check('another employee cannot open it', st == 403 and body[:5] != b'%PDF-', st)
-st, body, h = fetch(hr, url)
-check('HR can, and it is audited', st == 200 and body[:5] == b'%PDF-' and len(audits('hr_letter_downloaded')) == 2)
+other_url = '/wp-admin/admin-post.php?action=ews_hr_letter_file&id=%s&_wpnonce=%s' % (L1['id'], session_nonce(other, ids['other1_uid'], 'ews_hr_letter_file_%s' % L1['id']))
+st, body, h = fetch(other, other_url)
+check('another employee cannot open it (a valid link of their own: the access check refuses)', st == 403 and body[:5] != b'%PDF-', st)
+hr_url = hr_file_url(int(L1['id']))
+st, body, h = fetch(hr, hr_url)
+check('HR can (from the HR letters page), and it is audited', st == 200 and body[:5] == b'%PDF-' and len(audits('hr_letter_downloaded')) == 2, (st, hr_url))
 
 # ---- the salary certificate
 qs = ask(type='salary', language='ar')
@@ -209,7 +225,8 @@ page = emp.req('/app/?ews_view=requests')[1]
 n = re.search(r'name="_wpnonce" value="([^"]+)"[^<]*<input type="hidden" name="_wp_http_referer"[^>]*>\s*<input type="hidden" name="action" value="ews_request_withdraw"><input type="hidden" name="kind" value="letter"><input type="hidden" name="id" value="%s">' % L7['id'], page)
 st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=n.group(1) if n else 'none', kind='letter', id=L7['id'])
 check('the employee withdraws a waiting letter', qs.get('req_done') == 'letter' and letter(L7['id'])['status'] == 'withdrawn' and letter(L7['id'])['open_key'] is None, (qs, n is not None))
-check('...its approval is closed', q("SELECT status FROM {p}ews_approval_requests WHERE workflow_key='hr_letter' AND entity_id=%s" % L7['id'])[0]['status'] == 'CANCELLED')
+ar = q("SELECT r.status FROM {p}ews_approval_requests r JOIN {p}ews_approval_workflows w ON w.id=r.workflow_id WHERE w.workflow_key='hr_letter' AND r.entity_type='hr_letter' AND r.entity_id=%s" % L7['id'])
+check('...its approval is closed', ar and ar[0]['status'] == 'CANCELLED', ar)
 ask(type='other', other_text='Club membership letter', language='ar')
 L8 = letters()[-1]
 check('"Other": HR uploads it, any number open', L8['delivery'] == 'upload' and L8['open_key'] is None and L8['other_text'] == 'Club membership letter')
@@ -256,11 +273,14 @@ check('...a template without it is saved', qs.get('hl_done') == 'saved' and 'g:Ù
 # ---- off again: the employee loses access, HR keeps the page and the files
 php("update_option('ews_feature_hr_letters',0,false);")
 check('off: the employee cannot download', fetch(emp, url)[0] == 403)
-st, body, _ = fetch(hr, url)
+st, body, _ = fetch(hr, hr_url)
 check('off: HR still can', st == 200 and body[:5] == b'%PDF-')
+check('off: HR cannot deliver or decide', admin_action(int(L8['id']), 'cancel', reason='x') == {} or letter(L8['id'])['status'] == 'approved')
 st, page, _ = hr.req(ADMIN)
 check('off: the HR letters page stays (letters exist) with the warning', 'HR letters are off' in page)
 check('off: no letter on the Requests Hub', 'HR Letter' not in adm.req('/wp-admin/admin.php?page=ews31-requests')[1])
 
+# Leave nothing behind for the next suites: letters off, never used, no workflow.
+php("foreach(['ews_feature_hr_letters','ews_hr_letters_ever','ews_hr_letter_types','ews_approval_settings'] as $o) delete_option($o); $wpdb->query(\"DELETE FROM {$p}ews_hr_letters\"); $wpdb->query(\"UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0 WHERE workflow_key='hr_letter'\");")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

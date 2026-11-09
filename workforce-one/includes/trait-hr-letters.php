@@ -339,7 +339,12 @@ trait EWS_Hr_Letters_Trait {
     public function hr_letter_admin_action(){
         $id=absint($_POST['letter_id']??0);$do=sanitize_key($_POST['do']??'');
         $this->hr_letter_admin_guard('ews31_hr_letter_action_'.$id);
+        // While letters are off nothing is delivered or decided: HR keeps the page and the downloads only (design §3).
+        if(!$this->hr_letters_enabled())$this->hr_letter_admin_back(['hl_error'=>'access']);
         $uid=(int)get_current_user_id();
+        // Making a salary letter again reads today's salary: Manage Payroll too, as for the preview and the direct letter (decision 6).
+        $row=$this->services()->letterStore()->find($id);
+        if($do==='regenerate' && $row && (int)$row->with_salary && !$this->can('ews_manage_payroll'))$this->hr_letter_admin_back(['hl_error'=>'payroll']);
         $issuer=$this->services()->letterIssuer();$dec=$this->services()->letterDecisions();
         switch($do){
             case 'upload': $r=$issuer->upload($id,$_FILES['letter_file']??null,$uid);$ok='uploaded';break; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- checked by the upload port
@@ -360,6 +365,7 @@ trait EWS_Hr_Letters_Trait {
         $in=[];foreach(['type','other_text','addressee','language','make'] as $f)$in[$f]=sanitize_text_field(wp_unslash($_POST[$f]??''));
         $me=$this->current_employee();
         $upload=!empty($_FILES['letter_file']['name'])?$_FILES['letter_file']:null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- checked by the upload port
+        if($in['make']==='upload' && $upload===null)$this->hr_letter_admin_back(['hl_error'=>'file'],'new');
         $r=$this->services()->letterRequests()->createForEmployee($emp,$in,$upload,(int)get_current_user_id(),$me?(int)$me->id:0,$this->can('ews_manage_payroll'));
         if($r['id']===0)$this->hr_letter_admin_back(['hl_error'=>$r['error']],'new');
         $this->hr_letter_admin_back($r['error']===''?['hl_done'=>'created']:['hl_error'=>$r['error']]);
@@ -379,7 +385,7 @@ trait EWS_Hr_Letters_Trait {
             if($changed && \WorkforceOne\HrLetters\LetterTemplate::usesSalary($post['tpl_'.$l]) && !$this->can('ews_manage_payroll'))$this->hr_letter_admin_back(['hl_error'=>'payroll','type'=>$key],'types');
         }
         $r=\WorkforceOne\HrLetters\LetterSettings::saveType($types,$key,$post,$this->hr_letter_settings()['new_type_delivery']);
-        if($r['error']!=='')$this->hr_letter_admin_back(['hl_error'=>$r['error'],'type'=>$key,'hl_unknown'=>implode(' ',$r['unknown'])],'types');
+        if($r['error']!=='')$this->hr_letter_admin_back(['hl_error'=>$r['error'],'type'=>$key,'hl_unknown'=>rawurlencode(implode(' ',$r['unknown']))],'types');
         update_option('ews_hr_letter_types',$r['types'],false);
         $this->audit('hr_letter_type_saved','settings',0,'HR letter type '.$r['key'].' saved');
         $this->hr_letter_admin_back(['hl_done'=>'saved','type'=>$r['key']],'types');

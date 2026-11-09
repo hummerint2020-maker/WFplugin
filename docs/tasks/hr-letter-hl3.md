@@ -136,3 +136,14 @@ rejected / withdrawn, Other exempt · 11 (a) default types as the mockup · 12 r
 ## Mockup addition approved (owner, 2026-11-09)
 `docs/mockups/hr-letter/`: admin-new (Letter for an employee), admin-ready (ready to collect with a note, cancel with a reason, a letter that
 could not be made), hub (a waiting letter on the Requests Hub), notices (the notification texts). The owner said "موافق ابدأ".
+
+## Review (independent, read-only) and what was done
+- Fixed: the e2e suite's withdraw check queried a column that does not exist (the rest of the suite never ran); HR's download used the
+  employee's link (its nonce is per user) and another employee's refusal came from the nonce, not the access check — now each uses a link
+  of their own; the "off" request now carries a valid nonce; the unknown-placeholder message lost its braces in the redirect; a failed
+  letter in a bulk approve counted as approved (approvals.js); HR's actions (upload, regenerate, ready, cancel) are refused while letters
+  are off, and Upload is hidden then; regenerating a salary letter needs Manage Payroll too (the spirit of decision 6: it reads today's
+  salary); the preview's reference number used the employee's id; the e2e suite leaves nothing behind; inactive types are not offered in
+  "Letter for an employee"; "I upload a PDF" without a file is refused; a docblock moved back.
+- Not done (deviations, to be raised with the owner): no browser test and no multisite suite yet; no e2e for upgrade, uninstall and races;
+  the Requests Hub keeps its standard Approve label; the letter's own page "Letter for an employee" is a tab, not a separate page.

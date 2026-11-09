@@ -163,7 +163,6 @@ trait EWS_Services_Trait {
             $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports());
     }
 
-    /** The attendance services' ports (3.31.137): the idempotency keys of the app and the break notices, cron events and managers. */
     /** The HR letters' ports (HL3): the adapters through which its services reach the site, the approvals engine, notifications, files and Payroll. */
     private function letter_ports(): \WorkforceOne\HrLetters\LetterPorts {
         $call=function($fn,...$args){return $this->$fn(...$args);};
@@ -227,6 +226,7 @@ trait EWS_Services_Trait {
             });
     }
 
+    /** The attendance services' ports (3.31.137): the idempotency keys of the app and the break notices, cron events and managers. */
     private function attendance_ports(): AttendancePorts {
         $call=function($fn,...$args){return $this->$fn(...$args);};
         return new AttendancePorts(

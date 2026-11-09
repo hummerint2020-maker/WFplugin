@@ -116,7 +116,7 @@ final class LetterIssuer
     {
         $e = $this->query->employee($employeeId);
         if (!$e) return ['pdf' => '', 'error' => 'employee'];
-        $f = (object) ((array) $e + ['id' => 0, 'requested_at' => $this->clock->now(), 'language' => $language, 'addressee' => $addressee, 'type_label' => $typeLabel, 'other_text' => '', 'employee_id' => $employeeId]);
+        $f = (object) (['id' => 0] + array_diff_key((array) $e, ['id' => 1]) + ['requested_at' => $this->clock->now(), 'language' => $language, 'addressee' => $addressee, 'type_label' => $typeLabel, 'other_text' => '', 'employee_id' => $employeeId]);
         [$pdf, $error] = $this->make($f, $template);
         return ['pdf' => $pdf, 'error' => $error];
     }
