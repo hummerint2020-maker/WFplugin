@@ -11355,3 +11355,680 @@ msgstr ""
 #: includes
 msgid "The preview could not be kept on this site. Upload a smaller file (fewer rows)."
 msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "HR letters"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "An HR letter request"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "An HR letter request waits for you"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "%1$s asked for \"%2$s\" (%3$s). Open My approvals."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Arabic"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "English"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your HR letter is ready"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Your \"%s\" letter is ready. Open My requests to download it."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your HR letter request was approved"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Your \"%s\" request was approved. HR is preparing it; you will be told when it is ready."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your HR letter is ready to collect"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Your \"%1$s\" letter is ready to collect from HR: %2$s."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Your \"%s\" letter is ready to collect from HR."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your HR letter request was rejected"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Your \"%1$s\" request was rejected. Reason: %2$s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Your \"%s\" request was rejected."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "HR cancelled your letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "HR cancelled your \"%1$s\" letter. Reason: %2$s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your HR letter was updated"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "HR updated your \"%s\" letter. Download the new copy from My requests."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "the type has no template in this language"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "no pay rate is on file"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "the PDF could not be made"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "the file could not be saved"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "An HR letter waits for its file"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "\"%1$s\" for %2$s was approved. Upload it from HR letters."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "An HR letter to prepare"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "\"%1$s\" for %2$s was approved. Prepare it and mark it ready to collect."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "An HR letter could not be made"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Could not make \"%1$s\" for %2$s: %3$s. Regenerate it or upload a file."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Pick a letter type."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Only the letters in the list can be asked for."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Write which letter you need."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "This letter is not available in that language."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The note is too long (500 characters at most)."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "You already asked for this letter in this language and it is not ready yet."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your salary is not on file yet, so this letter cannot be made. Ask HR."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "This letter is no longer waiting for that: it was already decided or changed."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "You cannot make a letter for yourself here: ask in the app and the administrators decide."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "This letter shows the salary: it needs \"Manage payroll\" too."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The type has no template in this language."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The PDF could not be made."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The file could not be saved."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Choose a PDF file."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The file is larger than 10 MB."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Only PDF files can be attached."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The file is not there any more."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Pick an employee."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Upload a JPEG or PNG image of 1 MB at most."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Give the type a name."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The template has a placeholder that is not in the list."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Ready"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Ready to collect"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Approved · being made"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Approved · HR is preparing it"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "To %s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "you will be told when HR attaches it"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Collect it from HR · %s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Collect it from HR"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Arabic name"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Automatic PDF once approved"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "HR uploads the file"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Request only (ready to collect)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Language"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Addressed to"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Delivery"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Employee data"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "HR letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "to %s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Shows the salary"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Approve and issue the letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The file is attached and the employee was told."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The letter was made again and the employee was told."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Marked ready to collect; the employee was told."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The letter was cancelled; the employee was told."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The letter was made for the employee."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The letter request was decided."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Your letter is ready. Download it below."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letter asked. You will be told when it is decided."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Employees ask HR for a letter from My requests; it goes through the \"HR Letter\" approval workflow (HR at one level by default). Each type is a PDF made from its template, a file HR uploads, or the request only."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Types & templates"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The \"HR Letter\" workflow"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "HR is not set in Approval Workflows: requests will go to the administrators."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "My approvals and My requests is off: employees will have nowhere to ask."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Languages"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Addressed to (default, Arabic)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Addressed to (default, English)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Currency in letters (Arabic · English; empty = the payroll currency code)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "\"Other\": employees may ask for a letter not in the list"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "One open request per type and language"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letters"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letterhead"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Automatic PDF"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Request only"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Issued"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The type has no template in this language"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "No pay rate is on file"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The PDF could not be made"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The file could not be saved"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letter for an employee"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "HR letters are off: employees cannot ask, and nothing is decided. The letters already issued can still be downloaded here."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Waiting for a file"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Ref"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Action"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "No letters yet."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "former"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "shows the salary"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "made by HR"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Note: %s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "uploaded"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "generated"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Downloaded by the employee"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Download"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Regenerate"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Replace"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Upload file"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Upload and tell the employee"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "PDF only, up to 10 MB. Private: only the employee and HR can open it."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Where to collect it (optional, the employee sees it)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Ready, tell the employee"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Reason (required, the employee sees it)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Cancel the letter, tell the employee"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Only while no file is attached. The cancel is in the Audit Log."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Templates"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "\"Other\" always goes to HR to upload. Types are never deleted, only switched off."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Add a type"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+#, php-format
+msgid "Edit: %s"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "A new type"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Name (Arabic · English)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Arabic template"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "English template"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Not in the list:"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "A blank line starts a paragraph. Words that depend on the employee's gender: {g:male words|female words}. A template that shows the salary needs \"Manage payroll\" to save. Left empty, a PDF type is not offered in that language."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Preview the saved template for an employee:"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Preview"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Company name"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Address"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Signatory"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Signatory's title"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Footer"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Images"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Logo"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Signature"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Stamp"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "JPEG or PNG up to 1 MB. The signature and stamp are kept private, never in the Media Library, and cannot be opened from a link."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Font"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Amiri (formal Arabic), bundled with the plugin"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "No request and no approval: the letter is issued at once and shows in the employee's My requests. It is in the Audit Log."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "— Pick —"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "For \"Other\": which letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "The letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Made from the type's template (PDF)"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "I upload a PDF"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "A letter that shows the salary also needs \"Manage payroll\" to preview and issue."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Issue the letter"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Once approved, the letter is made as a PDF and you download it from My requests."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Once approved, HR prepares the letter and attaches it here; you are told when it is ready."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Once approved, HR prepares the letter and tells you where to collect it."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "It shows your salary."
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letter type"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Which letter do you need?"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Letter language"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Note for HR"
+msgstr ""
+
+#: includes/trait-hr-letters.php
+msgid "Download the letter (PDF)"
+msgstr ""
