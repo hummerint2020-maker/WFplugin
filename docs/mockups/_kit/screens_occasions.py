@@ -85,25 +85,33 @@ def stylesheet():
            '   flashes; reduced motion = still. Logical properties: the -rtl copy is identical. */',
            '.wfo-occ{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1}',
            '.wfo-occ i{position:absolute;inset-block-start:-34px;inset-inline-start:var(--x);inline-size:var(--s);block-size:var(--s);'
-           'background:var(--m) center/contain no-repeat;opacity:.6;animation:wfo-occ-drift var(--t) ease-in-out var(--d) 1 both}',
+           'background:var(--m) center/contain no-repeat;opacity:.9;animation:wfo-occ-drift var(--t) ease-in-out var(--d) 1 both;filter:drop-shadow(0 2px 3px rgba(0,0,0,.18))}',
            '.wfo-occ i:nth-child(3n+1){--m:var(--wfo-occ-m1)}.wfo-occ i:nth-child(3n+2){--m:var(--wfo-occ-m2)}.wfo-occ i:nth-child(3n){--m:var(--wfo-occ-m3)}',
            '@keyframes wfo-occ-drift{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}20%{opacity:.7}'
-           '100%{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(20deg);opacity:.55}}',
+           '100%{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(20deg);opacity:.9}}',
            # the top bar: the layer behind its text and buttons, the motifs over the brand colours, a ribbon at its foot
-           '.wfo-occ-on .wfo-header{position:relative;isolation:isolate;overflow:hidden;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:110px,auto}',
+           '.wfo-occ-on .wfo-header{position:relative;isolation:isolate;overflow:hidden;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:96px,auto}',
            '.wfo-occ-on .wfo-header::after{content:"";position:absolute;inset-inline:0;inset-block-end:0;block-size:5px;z-index:-1;'
            'background:linear-gradient(90deg,var(--wfo-occ-a),var(--wfo-occ-b),var(--wfo-occ-c),var(--wfo-occ-a))}',
            # the page background: a faint pattern the cards sit on
-           '.wfo-occ-on .ews-main{background-image:var(--wfo-occ-tile-page);background-size:150px}',
+           '.ews-app.wfo-occ-on .ews-main{position:relative;isolation:isolate;background-image:var(--wfo-occ-tile-page);background-size:130px}',
+           # the page: big motifs drift down behind the cards and rest between them
+           '.wfo-occ.is-page i{--s:calc(var(--sz) * 1.9);opacity:.9;inset-block-start:60px;animation:wfo-occ-page calc(var(--t) * .8) ease-out var(--d) 1 both}',
+           '@keyframes wfo-occ-page{0%{transform:translate3d(0,-80px,0) rotate(-20deg) scale(.6);opacity:0}25%{opacity:.95}'
+           '100%{transform:translate3d(0,calc(var(--restp) * 1px),0) rotate(12deg) scale(1);opacity:.8}}',
+           # a ribbon over the tab bar too (above it, never on its buttons)
+           '.wfo-occ-on .wfo-tabbar{box-shadow:0 -4px 0 -1px var(--wfo-occ-a),0 -8px 0 -2px var(--wfo-occ-b),0 -12px 24px rgba(16,24,40,.08)}',
            # full screen: fixed, under the tab bar (9990), once, then gone
            '.wfo-occ.is-full{position:fixed;z-index:9980}',
            '.wfo-occ.is-full i{opacity:.95;animation:wfo-occ-fall var(--t) cubic-bezier(.3,.1,.6,1) var(--d) 1 both}',
            '@keyframes wfo-occ-fall{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}8%{opacity:.95}85%{opacity:.9}'
            '100%{transform:translate3d(30px,110vh,0) rotate(220deg);opacity:0}}',
            # the greeting at the top of the content
-           '.wfo-occ-greet{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:10px 16px;border-radius:999px;'
-           'background:#fff;color:var(--wfo-occ-ink);font-weight:700;font-size:14px;box-shadow:inset 0 0 0 2px var(--wfo-occ-c),0 6px 16px rgba(16,24,40,.06)}',
-           '.wfo-occ-greet::before{content:"";inline-size:28px;block-size:28px;flex:none;background:var(--wfo-occ-m1) center/contain no-repeat}',
+           '.wfo-occ-greet{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:16px 18px;border-radius:20px;'
+           'background:linear-gradient(135deg,var(--wfo-occ-c) 0%,#fff 62%);color:var(--wfo-occ-ink);font-weight:800;font-size:18px;'
+           'box-shadow:inset 0 0 0 2px var(--wfo-occ-a),0 10px 24px rgba(16,24,40,.10);animation:wfo-occ-pop .6s cubic-bezier(.2,1.4,.4,1) both}',
+           '@keyframes wfo-occ-pop{0%{transform:scale(.92);opacity:0}100%{transform:none;opacity:1}}',
+           '.wfo-occ-greet::before{content:"";inline-size:44px;block-size:44px;flex:none;background:var(--wfo-occ-m1) center/contain no-repeat}',
            '.wfo-occ-greet small{margin-inline-start:auto;font-weight:500;color:#667085;font-size:12px}',
            # the login page and the kiosk: the whole background, behind the card
            '.wfo-login.wfo-occ-on{position:relative;isolation:isolate;overflow:hidden;background-image:var(--wfo-occ-tile-page)}',
@@ -113,16 +121,17 @@ def stylesheet():
            # phones: half the particles
            '@media (max-width:600px){.wfo-occ i:nth-child(even){display:none}}',
            # reduced motion: still, and nothing falls over the screen
-           '@media (prefers-reduced-motion:reduce){.wfo-occ i{animation:none!important;transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(18deg);opacity:.55}'
+           '@media (prefers-reduced-motion:reduce){.wfo-occ i,.wfo-occ-greet{animation:none!important}.wfo-occ i{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(18deg)}'
+           '.wfo-occ.is-page i{transform:translate3d(0,calc(var(--restp) * 1px),0) rotate(12deg)}'
            '.wfo-occ.is-full{display:none}}',
            ]
     for n, (x, sz, d, t) in enumerate(SPOTS, 1):
-        out.append('.wfo-occ i:nth-child(%d){--x:%d%%;--s:%dpx;--d:%.1fs;--t:%.1fs;--rest:%d}' % (n, x, sz, d, t, 46 + (n * 37) % 70))
+        out.append('.wfo-occ i:nth-child(%d){--x:%d%%;--s:%dpx;--d:%.1fs;--t:%.1fs;--rest:%d;--restp:%d;--sz:%dpx}' % (n, x, sz, d, t, 46 + (n * 37) % 70, 120 + (n * 211) % 560, sz))
     out.append('.wfo-login .wfo-occ i,.k-occ .wfo-occ i{--rest:400}')
     out.append('/* the palettes and motifs (Step 2: printed inline by Occasions::cssVars() from the catalog, for the one occasion on) */')
     for k, (_, _, pal, mot, _) in OCCASIONS.items():
         out.append('.wfo-occ-%s{--wfo-occ-ink:%s;--wfo-occ-a:%s;--wfo-occ-b:%s;--wfo-occ-c:%s;--wfo-occ-m1:%s;--wfo-occ-m2:%s;--wfo-occ-m3:%s;'
-                   '--wfo-occ-tile-head:%s;--wfo-occ-tile-page:%s}' % (k, pal[0], pal[1], pal[2], pal[3], svg(mot[0]), svg(mot[1]), svg(mot[2]), tile(mot, .3), tile(mot, .1)))
+                   '--wfo-occ-tile-head:%s;--wfo-occ-tile-page:%s}' % (k, pal[0], pal[1], pal[2], pal[3], svg(mot[0]), svg(mot[1]), svg(mot[2]), tile(mot, .5), tile(mot, .28)))
     return '\n'.join(out) + '\n'
 
 
@@ -140,6 +149,7 @@ def decorate(html_, key, mode='bg'):
     html_ = html_.replace('<div class="ews-app wfo-app">', '<div class="ews-app wfo-app wfo-occ-on wfo-occ-%s">' % key, 1)
     if mode == 'full':
         return html_.replace('<nav class="wfo-tabbar">', layer('full') + '<nav class="wfo-tabbar">', 1)
+    html_ = html_.replace('<main class="ews-main">', '<main class="ews-main">' + layer('page'), 1)
     return html_.replace('<header class="wfo-header">', '<header class="wfo-header">' + layer('bg'), 1)
 
 
