@@ -178,15 +178,15 @@ check('...my words with my name', 'Go ' in dash and '{name}' not in dash)
 st, login, _ = anon('/app/')
 check('...never on the login page (the company occasion there)', 'wfo-occ-halloween' in login and 'Go ' not in login)
 khaled = Session('occkhaled', 'occkhaledpass')
-kd = khaled.req('/app/')[1]
+kd = khaled.req('/app/?ews_view=dashboard')[1]
 card = ''.join(re.findall(r'<div class="wfo-occ-greet".*?</div></div>', kd, re.S))
-check('a colleague does not see my birthday (theirs is today too: they see their own)', first not in card and 'Khaled' in card, card)
+check('a colleague does not see my birthday (theirs is today too: they see their own)', first not in card and 'Khaled' in card, (card, re.findall(r'ews-app wfo-app[^"]*', kd)[:1], kd[:200] if not card else ''))
 save({'occ_people[]': other, 'occ_cake_everyone': '1'})
 php("delete_user_meta((int)get_user_by('login','emp1')->ID,'ews_occasion_moment');")
 php("update_option('ews_employee_moments',[%s=>['birthday'=>'1970%s','join_date'=>'']],false);" % (other, TODAY[4:]))
 dash = emp.req('/app/')[1]
 check('a picked person\'s birthday: everyone sees it, with the name and the cake', 'wfo-occ-birthday' in dash and 'Khaled' in dash and 'class="wfo-bday"' in dash, re.findall(r'<div class="wfo-occ-greet".*?</div></div>', dash, re.S)[:1])
-kd = khaled.req('/app/')[1]
+kd = khaled.req('/app/?ews_view=dashboard')[1]
 check('...the person sees their own birthday', 'wfo-occ-birthday' in kd)
 check('...not on a kiosk', 'Khaled' not in kiosk()[1])
 
