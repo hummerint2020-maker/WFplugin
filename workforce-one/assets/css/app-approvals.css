@@ -140,6 +140,7 @@
 .wfo-app .wfo-apv-path small.wfo-apv-pwhy{display:block;color:var(--wfo-ink)}
 /* HR letters (HL3): the tone, the language choice, the download button, a language not offered for the type */
 .wfo-app .wfo-apv-item.tone-letter,.wfo-app .wfo-new-type.tone-letter{--tc:#2E6E8E}
+.wfo-app #wfo-new-letter .wfo-rq-field[hidden]{display:none}
 .wfo-app .wfo-hl-seg{display:flex;gap:16px;padding-block:6px}
 .wfo-app .wfo-hl-seg label{display:inline-flex;gap:6px;align-items:center;font-weight:500}
 .wfo-app .wfo-hl-seg label.is-off{opacity:.45}
