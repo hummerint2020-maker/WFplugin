@@ -67,6 +67,11 @@ use WorkforceOne\Schedule\Data\WordPressScheduleDayStore;
 use WorkforceOne\Schedule\ScheduleDayService;
 use WorkforceOne\Schedule\ScheduleNotifier;
 use WorkforceOne\Schedule\WeekLockService;
+use WorkforceOne\HrLetters\Data\LetterQuery;
+use WorkforceOne\HrLetters\Data\LetterSchema;
+use WorkforceOne\HrLetters\Data\LetterStore;
+use WorkforceOne\HrLetters\Data\WordPressLetterQuery;
+use WorkforceOne\HrLetters\Data\WordPressLetterStore;
 
 if (!defined('ABSPATH')) exit;
 
@@ -293,6 +298,25 @@ final class Services
     public function correctionQuery(): CorrectionQuery
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''), (string) ($this->tables['time_logs'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the table of this container's prefix (the upgrade step). */
+    public function letterSchema(): void
+    {
+        LetterSchema::create($this->db);
+    }
+
+    public function letterStore(): LetterStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The HR letters' reads with the employees (HL3). */
+    public function letterQuery(): LetterQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterQuery($this->db, (string) ($this->tables['employees'] ?? ''));
         return $this->made[__FUNCTION__];
     }
 

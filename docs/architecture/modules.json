@@ -224,7 +224,8 @@
       ],
       "exports": [
         "WorkforceOne\\People\\PeopleDirectory",
-        "WorkforceOne\\People\\OrgDirectory"
+        "WorkforceOne\\People\\OrgDirectory",
+        "WorkforceOne\\Employees\\EmployeeDetailsRules"
       ]
     },
     "schedule": {
@@ -747,7 +748,37 @@
         "hr_letter_types",
         "hr_letter_letterhead",
         "ensure_hr_letters_schema"
-      ]
+      ],
+      "layered": [
+        {
+          "slice": "letters",
+          "namespace": [
+            "HrLetters"
+          ],
+          "tables": [
+            "hr_letters"
+          ],
+          "store": [
+            "workforce-one/src/HrLetters/Data/WordPressLetterStore.php"
+          ],
+          "services": [],
+          "reads": [
+            {
+              "file": "workforce-one/src/HrLetters/Data/WordPressLetterQuery.php",
+              "tables": [
+                "hr_letters",
+                "employees",
+                "departments"
+              ]
+            }
+          ],
+          "moved": [],
+          "traits_clean": [
+            "hr-letters"
+          ]
+        }
+      ],
+      "exports": []
     },
     "daily_workers": {
       "label": "Daily Workers",

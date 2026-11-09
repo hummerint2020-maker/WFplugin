@@ -113,6 +113,8 @@ jobs:
         run: wp eval-file tests/e2e_schedule_store.php --path="$WP"
       - name: People storage contract
         run: wp eval-file tests/e2e_people_store.php --path="$WP"
+      - name: HR letters storage contract
+        run: wp eval-file tests/e2e_hr_letters_store.php --path="$WP"
       - name: Attendance storage contract
         run: wp eval-file tests/e2e_attendance_store.php --path="$WP"
       - name: Start PHP server

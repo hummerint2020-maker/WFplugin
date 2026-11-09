@@ -1,7 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-use WorkforceOne\HrLetters\Data\LetterSchema;
 use WorkforceOne\HrLetters\LetterSettings;
 
 /**
@@ -32,8 +31,6 @@ trait EWS_Hr_Letters_Trait {
     /** The letters table (an upgrade step; created while the feature is off too, so switching it on needs nothing more). */
     public function ensure_hr_letters_schema(){
         if($this->ews_schema_is_current())return;
-        global $wpdb;
-        require_once ABSPATH.'wp-admin/includes/upgrade.php';
-        dbDelta(LetterSchema::sql($wpdb->prefix.'ews_hr_letters',$wpdb->get_charset_collate()));
+        $this->services()->letterSchema();
     }
 }

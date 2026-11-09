@@ -10,6 +10,13 @@ if (!defined('ABSPATH')) exit;
  */
 final class LetterSchema
 {
+    /** Creates or updates the table of the container's prefix (the upgrade step). */
+    public static function create(\wpdb $db): void
+    {
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta(self::sql($db->prefix . 'ews_hr_letters', $db->get_charset_collate()));
+    }
+
     public static function sql(string $table, string $collate): string
     {
         return "CREATE TABLE {$table} (
