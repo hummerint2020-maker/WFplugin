@@ -63,6 +63,7 @@ $nudge_icons = ['attendance' => 'clock', 'tasks' => 'tasks', 'leave' => 'leave',
 ?>
 <?php if ($manager || $emp): ?>
 <div class="wfo-home<?php echo $manager ? ' is-manager' : ' is-employee'; ?>">
+    <?php /* The "+ New request" shortcut was here (3.31.105); removed in 3.31.146 (owner): New request is on My requests. */ ?>
     <?php if (!empty($approvals['waiting'])): ?>
     <a class="wfo-apv-cta" href="<?php echo esc_url($approvals['url']); ?>" data-home-approvals><span><?php echo esc_html(sprintf(/* translators: %d: number of requests */ _n('%d request waits for your decision', '%d requests wait for your decision', $approvals['waiting'], 'workforce-one'), $approvals['waiting']) . ($approvals['overdue'] ? ' · ' . sprintf(/* translators: %d: number of requests */ _n('%d overdue', '%d overdue', $approvals['overdue'], 'workforce-one'), $approvals['overdue']) : '')); ?></span><span aria-hidden="true">›</span></a>
     <?php endif; ?>
