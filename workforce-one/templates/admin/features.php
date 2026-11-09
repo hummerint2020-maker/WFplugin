@@ -70,6 +70,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="app_api_present" value="1">
 <input type="hidden" name="substitutes_present" value="1">
 <input type="hidden" name="advances_present" value="1">
+<input type="hidden" name="hr_letters_present" value="1">
 <input type="hidden" name="health_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
@@ -103,6 +104,23 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <label><span class="wfo-field-label"><?php esc_html_e('After how many months with the company', 'workforce-one'); ?></span><input type="number" name="advance_min_service" min="0" max="120" value="<?php echo (int) $advance['min_service_months']; ?>"></label>
     <label><span class="wfo-field-label"><?php esc_html_e('Times Finance may move an instalment to the end, per advance (0 = no limit)', 'workforce-one'); ?></span><input type="number" name="advance_max_moves" min="0" max="12" value="<?php echo (int) $advance['max_moves']; ?>"></label>
     <label><input type="checkbox" name="advance_one_open" value="1" <?php checked(!empty($advance['one_open'])); ?>> <?php esc_html_e('One open advance at a time', 'workforce-one'); ?></label>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-hr-letters"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('HR letters', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Employees ask HR for a letter from My requests; it goes through the "HR Letter" approval workflow (HR at one level by default). Each type is a PDF made from its template, a file HR uploads, or the request only.', 'workforce-one'); ?> <a href="<?php echo esc_url($hr_letters['page_url']); ?>"><?php esc_html_e('Types & templates', 'workforce-one'); ?></a> · <a href="<?php echo esc_url($hr_letters['workflow_url']); ?>"><?php esc_html_e('The "HR Letter" workflow', 'workforce-one'); ?></a></div></div>
+    <?php $switch('hr_letters_enabled', $on['hr_letters']); ?>
+</div>
+<?php if ($on['hr_letters'] && !$hr_letters['hr_set']): ?><div class="notice notice-warning inline"><p><?php esc_html_e('HR is not set in Approval Workflows: requests will go to the administrators.', 'workforce-one'); ?></p></div><?php endif; ?>
+<?php if ($on['hr_letters'] && !$on['my_approvals']): ?><div class="notice notice-warning inline"><p><?php esc_html_e('My approvals and My requests is off: employees will have nowhere to ask.', 'workforce-one'); ?></p></div><?php endif; ?>
+<div class="wfo-feature-fields">
+    <span class="wfo-field-label"><?php esc_html_e('Languages', 'workforce-one'); ?></span>
+    <label><input type="checkbox" name="hl_languages[]" value="ar" <?php checked(in_array('ar', $hr_letters['s']['languages'], true)); ?>> عربي</label>
+    <label><input type="checkbox" name="hl_languages[]" value="en" <?php checked(in_array('en', $hr_letters['s']['languages'], true)); ?>> English</label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Addressed to (default, Arabic)', 'workforce-one'); ?></span><input type="text" name="hl_addressee_ar" dir="rtl" value="<?php echo esc_attr($hr_letters['s']['addressee_ar']); ?>"></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Addressed to (default, English)', 'workforce-one'); ?></span><input type="text" name="hl_addressee_en" value="<?php echo esc_attr($hr_letters['s']['addressee_en']); ?>"></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('Currency in letters (Arabic · English; empty = the payroll currency code)', 'workforce-one'); ?></span><input type="text" name="hl_currency_ar" dir="rtl" value="<?php echo esc_attr($hr_letters['s']['currency_ar']); ?>"> <input type="text" name="hl_currency_en" value="<?php echo esc_attr($hr_letters['s']['currency_en']); ?>"></label>
+    <label><input type="checkbox" name="hl_other" value="1" <?php checked(!empty($hr_letters['s']['other'])); ?>> <?php esc_html_e('"Other": employees may ask for a letter not in the list', 'workforce-one'); ?></label>
+    <label><input type="checkbox" name="hl_one_open" value="1" <?php checked(!empty($hr_letters['s']['one_open'])); ?>> <?php esc_html_e('One open request per type and language', 'workforce-one'); ?></label>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-app-api"><div class="wfo-feature-head">

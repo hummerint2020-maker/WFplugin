@@ -15,7 +15,7 @@ interface LetterFiles
     /**
      * An uploaded PDF (an entry of $_FILES), checked: a real upload, at most $maxBytes, starting with %PDF-.
      * @param mixed $file
-     * @return array{key:string,name:string,size:int,error:string} error: file | size | type | write
+     * @return array{key:string,name:string,size:int,error:string} error: file | size | not_pdf | write
      */
     public function uploadPdf($file, int $maxBytes): array;
 

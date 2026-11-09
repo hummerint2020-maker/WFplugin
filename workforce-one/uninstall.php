@@ -25,7 +25,7 @@ function ews_uninstall_site() {
     $private_bases = [trailingslashit(wp_upload_dir()['basedir'])];
     $custom = (string) apply_filters('wfo_private_dir', defined('WFO_PRIVATE_DIR') ? (string) WFO_PRIVATE_DIR : '');
     if ($custom !== '') $private_bases[] = trailingslashit($custom);
-    foreach ($private_bases as $private_base) foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers', 'workforce-one-face-photos'] as $folder) {
+    foreach ($private_bases as $private_base) foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers', 'workforce-one-face-photos', 'workforce-one-letters'] as $folder) {
         $task_dir = $private_base . $folder;
         if (is_dir($task_dir) && !is_link($task_dir)) {
             foreach ((array) scandir($task_dir) as $name) if ($name !== '.' && $name !== '..' && is_file($task_dir . '/' . $name)) @unlink($task_dir . '/' . $name);

@@ -753,7 +753,14 @@
         "hr_letter_settings",
         "hr_letter_types",
         "hr_letter_letterhead",
-        "ensure_hr_letters_schema"
+        "ensure_hr_letters_schema",
+        "hr_letter_form",
+        "hr_letter_withdraw",
+        "hr_letter_my_requests",
+        "hr_letter_approval_card",
+        "hr_letter_error_text",
+        "hr_letter_hub_rows",
+        "hr_letter_hub_decide"
       ],
       "layered": [
         {

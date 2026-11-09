@@ -250,6 +250,16 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_advance_respond',[$this,'advance_respond']);
             add_action('admin_post_ews_advance_paid',[$this,'advance_paid']);
             add_action('admin_post_ews_advance_move',[$this,'advance_move']);
+            // HR letters (HL3, includes/trait-hr-letters.php): the request, a level's decision, the file; HR's actions on wp-admin → HR letters.
+            add_action('admin_post_ews_hr_letter_request',[$this,'hr_letter_request']);
+            add_action('admin_post_ews_hr_letter_respond',[$this,'hr_letter_respond']);
+            add_action('admin_post_ews_hr_letter_file',[$this,'hr_letter_file']);
+            add_action('admin_post_ews31_hr_letter_action',[$this,'hr_letter_admin_action']);
+            add_action('admin_post_ews31_hr_letter_create',[$this,'hr_letter_admin_create']);
+            add_action('admin_post_ews31_hr_letter_types_save',[$this,'hr_letter_types_save']);
+            add_action('admin_post_ews31_hr_letter_letterhead_save',[$this,'hr_letter_letterhead_save']);
+            add_action('admin_post_ews31_hr_letter_preview',[$this,'hr_letter_preview']);
+            add_action('admin_post_ews31_hr_letter_image',[$this,'hr_letter_image']);
             add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
             add_action('ews_week_lock_tick',[$this,'week_lock_tick']);   // Week lock: tell employees at the cutoff (3.31.121)
             // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).

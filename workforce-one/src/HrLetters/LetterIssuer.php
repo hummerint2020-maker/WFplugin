@@ -84,7 +84,7 @@ final class LetterIssuer
     /**
      * HR attaches a PDF to a decided letter, or replaces the one there (the latest file only).
      * @param mixed $upload an entry of $_FILES
-     * @return string '' | access | file | size | type | write | done
+     * @return string '' | access | file | size | not_pdf | write | done
      */
     public function upload(int $id, $upload, int $by): string
     {

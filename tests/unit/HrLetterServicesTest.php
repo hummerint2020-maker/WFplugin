@@ -251,8 +251,8 @@ final class HrLetterServicesTest extends TestCase
         $this->files->upload = ['key' => str_repeat('v', 32) . '.pdf', 'name' => 'y.pdf', 'size' => 10, 'error' => ''];
         $this->assertSame('done', $this->issuer->upload(2, ['tmp' => 1], 5));
         $this->assertArrayNotHasKey(str_repeat('v', 32) . '.pdf', $this->files->files);
-        $this->files->upload = ['key' => '', 'name' => '', 'size' => 0, 'error' => 'type'];
-        $this->assertSame('type', $this->issuer->upload(1, ['tmp' => 1], 5), 'not a PDF');
+        $this->files->upload = ['key' => '', 'name' => '', 'size' => 0, 'error' => 'not_pdf'];
+        $this->assertSame('not_pdf', $this->issuer->upload(1, ['tmp' => 1], 5), 'not a PDF');
         $this->assertSame('template_missing', $this->issuer->preview(7, 'x', 'en', '  ', '')['error']);
         $this->assertSame('employee', $this->issuer->preview(99, 'x', 'en', 'Hi', '')['error']);
         $this->assertStringStartsWith('%PDF-', $this->issuer->preview(8, 'Letter', 'en', 'Dear {title_mr_ms} {employee_name}, {g:he|she} works here since {hire_date}.', 'Bank')['pdf'], 'a former employee, nothing filled');

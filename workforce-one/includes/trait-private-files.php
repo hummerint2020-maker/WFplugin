@@ -65,7 +65,7 @@ trait EWS_Private_Files_Trait {
     private function private_files_move_legacy(){
         if($this->private_files_base()==='')return 0;
         $n=0;
-        foreach(['workforce-one-corrections','workforce-one-tasks','workforce-one-daily-workers','workforce-one-face-photos'] as $folder){
+        foreach(['workforce-one-corrections','workforce-one-tasks','workforce-one-daily-workers','workforce-one-face-photos','workforce-one-letters'] as $folder){
             $old=$this->private_files_legacy_dir($folder);
             if(!is_dir($old) || is_link($old))continue;
             $new=$this->private_files_dir($folder);
