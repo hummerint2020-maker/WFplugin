@@ -24,7 +24,7 @@ const B = 'http://127.0.0.1:8080';
 
   const browser = await chromium.launch();
   const errors = [], offsite = [];
-  const watch = (pg, who) => { pg.on('pageerror', e => errors.push(who + ': ' + e.message)); pg.on('request', r => { if (!r.url().startsWith(B) && !r.url().startsWith('data:')) offsite.push(r.url()); }); };
+  const watch = (pg, who) => { pg.on('pageerror', e => errors.push(who + ': ' + e.message)); pg.on('request', r => { if (!r.url().startsWith(B) && !r.url().startsWith('data:') && !r.url().startsWith('blob:' + B)) offsite.push(r.url()); }); };
 
   // A phone, the first page of the day: the moment and the falling decorations.
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -50,7 +50,6 @@ const B = 'http://127.0.0.1:8080';
   check('...the decorations never take a tap', layersIgnore.length > 0 && layersIgnore.every(p => p === 'none'), layersIgnore);
   check('no sideways scroll', await pg.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await pg.waitForTimeout(6000);
-  const card = await pg.evaluate(() => { const b = document.querySelector('.wfo-home .wfo-card, .wfo-home-today'); if (!b) return null; const r = b.getBoundingClientRect(); const el = document.elementFromPoint(r.left + 20, r.top + 20); return !!el && !el.closest('.wfo-occ,.wfo-rm'); });
   // The top bar's menu and the QR sign-in window open above the decorations.
   const above = await pg.evaluate(() => {
     const out = {};
@@ -64,6 +63,8 @@ const B = 'http://127.0.0.1:8080';
     return out;
   });
   await unprobe(pg);
+  // Without the probe: a tap on a card reaches the card (the falling layer draws over the page but never takes it).
+  const card = await pg.evaluate(() => { const b = document.querySelector('.wfo-home .wfo-card, .wfo-home-today'); if (!b) return null; const r = b.getBoundingClientRect(); const el = document.elementFromPoint(r.left + 20, r.top + 20); return !!el && !el.closest('.wfo-occ,.wfo-rm'); });
   check('...the QR window\'s button is above the decorations', above.qr === true, above);
   const gone = await pg.evaluate(() => { const m = document.querySelector('.wfo-rm'); return !m || getComputedStyle(m).visibility === 'hidden' || getComputedStyle(m).opacity === '0'; });
   check('the moment is gone after a few seconds', gone);
