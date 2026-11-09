@@ -153,3 +153,11 @@ Mockup `occasions/halloween-moment`: night with a full moon; a carved pumpkin ap
 bats fly out from it across the moon; "HAPPY HALLOWEEN" drops in letter by letter; "Happy Halloween from all of us at Nile" under it;
 about 5 seconds, once a day for each employee while Halloween is the occasion on; never a tap; reduced motion = the lit pumpkin and the
 words, still, for 3 seconds. Awaiting the owner's approval.
+
+Owner approved the cake and the Halloween moments (2026-11-09: "موافق") and asked for one for Ramadan ("واعمل واحده زيها لرمضان").
+
+## Addition asked by the owner (2026-11-09): the Ramadan moment
+Mockup `occasions/ramadan-moment`: a starry night (the stars twinkle), the crescent rises and glows, a golden lantern comes down on its
+chain and swings, its glass lights up; "رمضان كريم" is written in gold from right to left with a light sweep; "كل سنة وانتم طيبين · من
+أسرة شركة النيل" under it. About 6 seconds, once a day for each employee while Ramadan is the occasion on; never a tap; reduced motion =
+the lit lantern and the words, still, for 3 seconds. Awaiting the owner's approval.

@@ -178,6 +178,7 @@ def stylesheet():
            '.wfo-hw-bat{position:absolute;inset-block-start:46%;inset-inline-start:50%;inline-size:70px;block-size:70px;opacity:0;'
            'background:var(--wfo-hw-bat) center/contain no-repeat;filter:drop-shadow(0 0 5px rgba(245,231,168,.85));animation:wfo-hw-fly 2.2s ease-in var(--d) both}',
            '.wfo-hw{--wfo-hw-bat:%s}' % svg(BAT % '#140B1F'),
+           '.wfo-rm{--wfo-rm-crescent:%s}' % svg(CRESCENT % '#F5C451'),
            '@keyframes wfo-hw-fly{0%{opacity:0;transform:translate(-50%,0) scale(.3)}10%{opacity:1}'
            '50%{transform:translate(calc(-50% + var(--bx) * .5),calc(var(--by) * .5)) scale(.9,.6)}'
            '60%{transform:translate(calc(-50% + var(--bx) * .6),calc(var(--by) * .6)) scale(1,1.1)}'
@@ -190,6 +191,31 @@ def stylesheet():
            '.wfo-hw-name{margin:0;font-size:17px;font-weight:700;color:#F5E7A8;opacity:0;animation:wfo-bday-letter .5s ease-out 3.9s both}',
            '@media (prefers-reduced-motion:reduce){.wfo-hw{animation:wfo-bday-out .3s ease-in 3s both}.wfo-hw *{animation:none!important;opacity:1!important}'
            '.wfo-hw-face{fill:#FFD34D}.wfo-hw-bat{display:none}}',
+           # the Ramadan moment: a starry night, the crescent glows, a lantern comes down and lights up, "رمضان كريم" written in gold
+           '.wfo-rm{position:fixed;inset:0;z-index:9985;pointer-events:none;display:grid;place-items:center;align-content:center;gap:6px;overflow:hidden;'
+           'background:radial-gradient(circle at 50% 25%,#24407E 0%,#14244F 45%,#0A1430 100%);animation:wfo-bday-in .5s ease-out both,wfo-bday-out .7s ease-in 5.6s both}',
+           '.wfo-rm-stars i{position:absolute;inline-size:var(--s);block-size:var(--s);inset-block-start:var(--y);inset-inline-start:var(--x);'
+           'background:radial-gradient(circle,#FFF6D0 0%,rgba(255,246,208,0) 70%);border-radius:50%;opacity:0;animation:wfo-rm-twinkle 1.6s ease-in-out var(--d) infinite alternate}',
+           '@keyframes wfo-rm-twinkle{from{opacity:.15;transform:scale(.6)}to{opacity:1;transform:scale(1.2)}}',
+           '.wfo-rm-moon{position:absolute;inset-block-start:7%;inset-inline-start:12%;inline-size:96px;block-size:96px;'
+           'background:var(--wfo-rm-crescent) center/contain no-repeat;filter:drop-shadow(0 0 18px rgba(245,196,81,.75));'
+           'animation:wfo-rm-rise 1.4s cubic-bezier(.2,.9,.3,1) .2s both}',
+           '@keyframes wfo-rm-rise{from{opacity:0;transform:translateY(40px) rotate(-25deg)}to{opacity:1;transform:none}}',
+           '.wfo-rm-lantern{inline-size:min(40vw,150px);transform-origin:50% 0;animation:wfo-rm-drop 1.3s cubic-bezier(.3,1.25,.5,1) .4s both,wfo-rm-swing 2.6s ease-in-out 1.7s infinite alternate}',
+           '@keyframes wfo-rm-drop{from{transform:translateY(-75vh)}to{transform:none}}',
+           '@keyframes wfo-rm-swing{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}',
+           '.wfo-rm-glass{fill:#3a2a10;animation:wfo-rm-light .9s ease-in 1.9s forwards}',
+           '@keyframes wfo-rm-light{0%{fill:#3a2a10}45%{fill:#FFD86B}60%{fill:#8a6420}100%{fill:#FFE38A}}',
+           '.wfo-rm-halo{opacity:0;animation:wfo-hw-glow 1.2s ease-in-out 2.5s infinite alternate}',
+           '.wfo-rm-title{margin:8px 0 0;font-size:clamp(40px,13vw,58px);font-weight:800;line-height:1.2;direction:rtl;'
+           'background:linear-gradient(100deg,#C99A2E 0%,#FFE7A3 30%,#F5C451 50%,#FFF6D0 62%,#C99A2E 100%);background-size:220% 100%;'
+           '-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 10px rgba(245,196,81,.45));'
+           'clip-path:inset(0 0 0 100%);animation:wfo-rm-write 1.3s ease-out 2.9s forwards,wfo-rm-shine 2s linear 4.2s 1 both}',
+           '@keyframes wfo-rm-write{to{clip-path:inset(0 0 0 0)}}',
+           '@keyframes wfo-rm-shine{from{background-position:100% 0}to{background-position:0 0}}',
+           '.wfo-rm-sub{margin:0;font-size:16px;font-weight:600;color:#FFE7A3;letter-spacing:.04em;opacity:0;animation:wfo-bday-letter .5s ease-out 4.1s both}',
+           '@media (prefers-reduced-motion:reduce){.wfo-rm{animation:wfo-bday-out .3s ease-in 3s both}.wfo-rm *{animation:none!important;opacity:1!important}'
+           '.wfo-rm-glass{fill:#FFE38A}.wfo-rm-title{clip-path:none}}',
            # phones: half the particles
            '@media (max-width:600px){.wfo-occ i:nth-child(even){display:none}}',
            # reduced motion: still, and nothing falls over the screen
@@ -330,6 +356,35 @@ def halloween_scene():
 def halloween_moment():
     page = decorate(app_page(T('الرئيسية', 'Dashboard'), home_body('halloween'), active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=WHO), 'halloween')
     return page.replace('<nav class="wfo-tabbar">', halloween_scene() + '<nav class="wfo-tabbar">', 1)
+
+
+
+LANTERN_BIG = ('<svg class="wfo-rm-lantern" viewBox="0 0 120 300" aria-hidden="true">'
+               '<defs><radialGradient id="rmh" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFE38A" stop-opacity=".95"/><stop offset="1" stop-color="#FFE38A" stop-opacity="0"/></radialGradient>'
+               '<linearGradient id="rmg" x1="0" x2="1"><stop offset="0" stop-color="#A87A1E"/><stop offset=".5" stop-color="#F5C451"/><stop offset="1" stop-color="#A87A1E"/></linearGradient></defs>'
+               '<path d="M60 0v92" stroke="#C99A2E" stroke-width="2"/>'
+               '<circle class="wfo-rm-halo" cx="60" cy="190" r="75" fill="url(#rmh)"/>'
+               '<circle cx="60" cy="98" r="8" fill="none" stroke="url(#rmg)" stroke-width="4"/>'
+               '<path d="M40 128q20-26 40 0z" fill="url(#rmg)"/><rect x="34" y="126" width="52" height="8" rx="3" fill="url(#rmg)"/>'
+               '<path d="M36 134h48l14 30v60l-14 26H36l-14-26v-60z" fill="url(#rmg)"/>'
+               '<path class="wfo-rm-glass" d="M40 142h12v96H40l-10-18v-60zM56 142h8v96h-8zM68 142h12l10 18v60l-10 18H68z"/>'
+               '<path d="M30 192h60M33 166h54M33 216h54" stroke="#A87A1E" stroke-width="2.5"/>'
+               '<path d="M34 250h52l-8 14H42z" fill="url(#rmg)"/><path d="M50 264h20l-10 18z" fill="url(#rmg)"/><circle cx="60" cy="288" r="5" fill="#F5C451"/>'
+               '</svg>')
+
+
+def ramadan_scene():
+    import random
+    rnd = random.Random(7)
+    stars = ''.join('<i style="--x:%d%%;--y:%d%%;--s:%dpx;--d:%.2fs"></i>' % (rnd.randint(2, 97), rnd.randint(2, 70), rnd.choice([4, 6, 8, 10]), rnd.random() * 1.5) for _ in range(34))
+    return ('<div class="wfo-rm" role="status" aria-label="%s"><div class="wfo-rm-stars" aria-hidden="true">%s</div><span class="wfo-rm-moon" aria-hidden="true"></span>%s'
+            '<p class="wfo-rm-title">رمضان كريم</p><p class="wfo-rm-sub">%s</p></div>') % (
+                esc(T('رمضان كريم', 'Ramadan Kareem')), stars, LANTERN_BIG, esc(T('كل سنة وانتم طيبين · من أسرة شركة النيل', 'Ramadan Kareem from all of us at Nile')))
+
+
+def ramadan_moment():
+    page = decorate(app_page(T('الرئيسية', 'Dashboard'), home_body('ramadan'), active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=WHO), 'ramadan')
+    return page.replace('<nav class="wfo-tabbar">', ramadan_scene() + '<nav class="wfo-tabbar">', 1)
 
 
 def birthday_everyone():
@@ -476,6 +531,7 @@ def build():
     write(F, 'birthday-me', birthday_me)
     write(F, 'birthday-cake', birthday_cake)
     write(F, 'halloween-moment', halloween_moment)
+    write(F, 'ramadan-moment', ramadan_moment)
     write(F, 'birthday-everyone', birthday_everyone())
     write(F, 'time', time_view)
     write(F, 'menu', menu_view)
@@ -493,7 +549,7 @@ def build():
         ('2. Each occasion on a phone · كل مناسبة على الموبايل', 'Top bar and background: a few seconds of movement, then still. The Sign In / Out button in the tab bar is never covered.',
          [('dash-' + k, OCCASIONS[k][0][1] + ' · ' + OCCASIONS[k][0][0], 'phone') for k in COMPANY] + [('dash-off', 'Off (today) · من غير مناسبة', 'phone')]),
         ('3. Falling over the whole screen · تنزل على الشاشة كلها', 'Falls once for a few seconds under the tab bar, never takes a tap, then is gone (reload to replay).',
-         [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone'), ('halloween-moment', 'Halloween moment, once a day (reload to replay) · لحظة الهالوين', 'phone')]),
+         [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone'), ('halloween-moment', 'Halloween moment, once a day (reload to replay) · لحظة الهالوين', 'phone'), ('ramadan-moment', 'Ramadan moment, once a day · لحظة رمضان', 'phone')]),
         ('4. Birthdays · أعياد الميلاد', 'Omar on his birthday (only he sees it); Mona on the birthday of the General Manager, whom the administrator picked (everyone sees it).',
          [('birthday-cake', 'The cake, once a day (reload to replay) · التورتة، مرة في اليوم', 'phone'), ('birthday-me', 'My birthday · عيد ميلادي', 'phone'), ('birthday-everyone', 'A picked person · شخص مختار', 'phone')]),
         ('5. Sign In / Out, the menu, the login page · الحضور والقائمة وصفحة الدخول', '',
