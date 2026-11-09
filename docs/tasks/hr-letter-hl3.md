@@ -150,5 +150,8 @@ could not be made), hub (a waiting letter on the Requests Hub), notices (the not
   asks for one open letter, decision vs withdrawal both ways, two deciders, ready vs cancel; faults: the approval cannot be written, the letter
   decided meanwhile, the approval decided while withdrawing, the file claimed by another request; the upgrade from 3.31.144); uninstall
   checks in CI (the letters folder, the settings and the capability are removed). The schema target is `3.31.144.1` (CI reads digits only).
+- Bugs those tests found, fixed: a decision on a waiting letter was always refused as "moved" (the engine's open status is
+  WAITING_FOR_LEVEL_n, not PENDING; the unit fake now uses the real statuses); the deadlines tick read the letters switch on every run
+  while off (golden); the "Which letter?" field of "Other" showed for every type (CSS). Also fixed for CI: PHPStan (`$hr_letters`).
 - Not done (deviations, to be raised with the owner): no multisite suite; the Requests Hub keeps its standard Approve label; the letter's
   own page "Letter for an employee" is a tab, not a separate page.
