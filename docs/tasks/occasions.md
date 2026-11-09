@@ -161,3 +161,12 @@ Mockup `occasions/ramadan-moment`: a starry night (the stars twinkle), the cresc
 chain and swings, its glass lights up; "رمضان كريم" is written in gold from right to left with a light sweep; "كل سنة وانتم طيبين · من
 أسرة شركة النيل" under it. About 6 seconds, once a day for each employee while Ramadan is the occasion on; never a tap; reduced motion =
 the lit lantern and the words, still, for 3 seconds. Awaiting the owner's approval.
+
+Owner approved the Ramadan moment and asked for the rest ("موافق اعمل باقي المناسبات", 2026-11-09). Mockups
+`occasions/<key>-moment` (once a day, about 6 seconds, never a tap, reduced motion = the final picture still):
+- Valentine's Day: an empty heart fills with colour from the bottom and beats twice, small hearts rise, "HAPPY VALENTINE'S DAY" letter by letter.
+- Eid al-Fitr: a garland of crescents and stars comes down and swings, the big crescent glows and its star spins in, confetti, "عيد فطر مبارك" in gold.
+- Eid al-Adha: the same in warm brown and gold with small lanterns, "عيد أضحى مبارك".
+- New Year: 3, 2, 1, then the year in gold, soft fireworks (no strobe), "HAPPY NEW YEAR".
+- National day (Egypt): bands in the flag's colours wave across (no emblem), fireworks in red, white and gold, "كل سنة ومصر بخير".
+Not for the company's birthday (owner, on the cake). Awaiting the owner's approval.

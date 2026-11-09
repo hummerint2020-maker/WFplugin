@@ -522,6 +522,8 @@ def build():
     d = os.path.join(Build.out, F)
     os.makedirs(d, exist_ok=True)
     s = stylesheet()
+    import moments_more
+    s += moments_more.CSS
     for n in ('occasions.css', 'occasions-rtl.css'):
         open(os.path.join(d, n), 'w').write(s)
     for k in COMPANY:
@@ -532,6 +534,24 @@ def build():
     write(F, 'birthday-cake', birthday_cake)
     write(F, 'halloween-moment', halloween_moment)
     write(F, 'ramadan-moment', ramadan_moment)
+    import moments_more as mm
+    gold = 'linear-gradient(100deg,#C99A2E 0%,#FFE7A3 30%,#F5C451 50%,#FFF6D0 62%,#C99A2E 100%)'
+    scenes = {
+        'valentine': lambda: mm.valentine(svg, HEART),
+        'eid_fitr': lambda: mm.eid(svg, 'eid_fitr', CRESCENT % '#F5C451', STAR % '#FFF6D0', STAR % '#2BA36B',
+                                   ('radial-gradient(circle at 50% 35%,#1E8A5A 0%,#0F5132 55%,#07301D 100%)', gold, 'rgba(245,196,81,.55)', '#F5C451',
+                                    'عيد فطر مبارك', 'كل سنة وانتم طيبين · من أسرة شركة النيل', 'Eid Mubarak from all of us at Nile', ['#F5C451', '#2BA36B', '#FFF6D0', '#BFF0D4'])),
+        'eid_adha': lambda: mm.eid(svg, 'eid_adha', CRESCENT % '#F5C451', STAR % '#FFE7A3', LANTERN % ('#C99A2E', '#F5C451', '#F5C451', '#C99A2E'),
+                                   ('radial-gradient(circle at 50% 35%,#8A5420 0%,#5A3410 55%,#2E1A06 100%)', gold, 'rgba(245,196,81,.55)', '#F5C451',
+                                    'عيد أضحى مبارك', 'كل سنة وانتم طيبين · من أسرة شركة النيل', 'Eid al-Adha Mubarak from all of us at Nile', ['#F5C451', '#C8792A', '#FFF6D0', '#3C8D5A'])),
+        'new_year': mm.new_year,
+        'national': mm.national,
+    }
+    for k, fn in scenes.items():
+        def make(k=k, fn=fn):
+            page = decorate(app_page(T('الرئيسية', 'Dashboard'), home_body(k), active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=WHO), k)
+            return page.replace('<nav class="wfo-tabbar">', fn() + '<nav class="wfo-tabbar">', 1)
+        write(F, k + '-moment', make)
     write(F, 'birthday-everyone', birthday_everyone())
     write(F, 'time', time_view)
     write(F, 'menu', menu_view)
@@ -549,7 +569,7 @@ def build():
         ('2. Each occasion on a phone · كل مناسبة على الموبايل', 'Top bar and background: a few seconds of movement, then still. The Sign In / Out button in the tab bar is never covered.',
          [('dash-' + k, OCCASIONS[k][0][1] + ' · ' + OCCASIONS[k][0][0], 'phone') for k in COMPANY] + [('dash-off', 'Off (today) · من غير مناسبة', 'phone')]),
         ('3. Falling over the whole screen · تنزل على الشاشة كلها', 'Falls once for a few seconds under the tab bar, never takes a tap, then is gone (reload to replay).',
-         [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone'), ('halloween-moment', 'Halloween moment, once a day (reload to replay) · لحظة الهالوين', 'phone'), ('ramadan-moment', 'Ramadan moment, once a day · لحظة رمضان', 'phone')]),
+         [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone'), ('halloween-moment', 'Halloween moment, once a day (reload to replay) · لحظة الهالوين', 'phone'), ('ramadan-moment', 'Ramadan moment, once a day · لحظة رمضان', 'phone')] + [(k + '-moment', OCCASIONS[k][0][1] + ' moment · ' + OCCASIONS[k][0][0], 'phone') for k in ('valentine', 'eid_fitr', 'eid_adha', 'new_year', 'national')]),
         ('4. Birthdays · أعياد الميلاد', 'Omar on his birthday (only he sees it); Mona on the birthday of the General Manager, whom the administrator picked (everyone sees it).',
          [('birthday-cake', 'The cake, once a day (reload to replay) · التورتة، مرة في اليوم', 'phone'), ('birthday-me', 'My birthday · عيد ميلادي', 'phone'), ('birthday-everyone', 'A picked person · شخص مختار', 'phone')]),
         ('5. Sign In / Out, the menu, the login page · الحضور والقائمة وصفحة الدخول', '',
