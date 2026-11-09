@@ -31,6 +31,14 @@ final class WordPressLetterQuery implements LetterQuery
         return is_object($r) ? $r : null;
     }
 
+    public function employee(int $employeeId): ?object
+    {
+        $r = $this->db->get_row($this->db->prepare(
+            "SELECT e.id,e.name,e.name_ar,e.gender,e.hire_date,e.created_at,e.job_title,e.active,e.wp_user_id,d.name AS department_name
+             FROM {$this->e} e LEFT JOIN {$this->d} d ON d.id=e.department_id WHERE e.id=%d", $employeeId));
+        return is_object($r) ? $r : null;
+    }
+
     public function counts(): array
     {
         $out = [];

@@ -85,6 +85,7 @@ $check($S->markDecided($x, 'rejected', 'No', '2026-11-09 15:00:00') === 1 && $S-
 $f = $Q->facts($a);
 $check($f && $f->name === 'Ahmed Samir' && $f->name_ar === 'أحمد سمير' && $f->gender === 'male' && $f->hire_date === '2021-03-01' && $f->department_name === 'Accounts' && $f->wp_user_id === '11', 'facts: the letter with the employee and the department');
 $check($Q->facts(999999) === null, 'facts: none');
+$check($Q->employee($sara)->name === 'Sara 100%_old' && $Q->employee($ahmed)->department_name === 'Accounts' && $Q->employee(999999) === null, 'employee: former ones too, with the department');
 $counts = $Q->counts();
 $check(($counts['issued'] ?? 0) === 1 && ($counts['pending'] ?? 0) === 3 && $counts['waiting_file'] === 0, 'counts by status');
 $list = $Q->adminList('', '', 1, 3);

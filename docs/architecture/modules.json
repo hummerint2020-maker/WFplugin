@@ -19,6 +19,12 @@
       ],
       "api": [
         "services"
+      ],
+      "exports": [
+        "WorkforceOne\\Pdf\\Document",
+        "WorkforceOne\\Pdf\\TextBlock",
+        "WorkforceOne\\Pdf\\Image",
+        "WorkforceOne\\Pdf\\TrueTypeFont"
       ]
     },
     "shell": {
@@ -761,7 +767,12 @@
           "store": [
             "workforce-one/src/HrLetters/Data/WordPressLetterStore.php"
           ],
-          "services": [],
+          "services": [
+            "workforce-one/src/HrLetters/LetterRequests.php",
+            "workforce-one/src/HrLetters/LetterDecisions.php",
+            "workforce-one/src/HrLetters/LetterIssuer.php",
+            "workforce-one/src/HrLetters/LetterPdf.php"
+          ],
           "reads": [
             {
               "file": "workforce-one/src/HrLetters/Data/WordPressLetterQuery.php",

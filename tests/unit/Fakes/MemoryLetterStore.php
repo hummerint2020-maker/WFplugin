@@ -123,6 +123,11 @@ final class MemoryLetterStore implements LetterStore, LetterQuery
         return (object) ((array) $r + (array) $e);
     }
 
+    public function employee(int $employeeId): ?object
+    {
+        return isset($this->employees[$employeeId]) ? clone $this->employees[$employeeId] : null;
+    }
+
     public function counts(): array
     {
         $out = [];

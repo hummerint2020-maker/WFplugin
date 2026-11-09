@@ -113,7 +113,7 @@ final class LetterSettings
         foreach (['company', 'address', 'signatory_name', 'signatory_title', 'footer'] as $f) {
             foreach (['ar', 'en'] as $l) $out[$f . '_' . $l] = self::text($r[$f . '_' . $l] ?? '', 255);
         }
-        foreach (['logo_key', 'signature_key', 'stamp_key'] as $f) $out[$f] = preg_match('/^[a-f0-9]{32}\.(png|jpg)$/', (string) ($r[$f] ?? '')) ? (string) $r[$f] : '';
+        foreach (['logo_key', 'signature_key', 'stamp_key'] as $f) $out[$f] = preg_match('/^[A-Za-z0-9]{32}\.(png|jpg)$/', (string) ($r[$f] ?? '')) ? (string) $r[$f] : '';
         return $out;
     }
 

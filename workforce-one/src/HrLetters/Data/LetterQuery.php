@@ -9,6 +9,9 @@ interface LetterQuery
     /** The letter with its employee (name, name_ar, gender, hire_date, created_at, job_title, active, wp_user_id) and department_name. */
     public function facts(int $id): ?object;
 
+    /** An employee with what a letter shows (name, name_ar, gender, hire_date, created_at, job_title, active, wp_user_id, department_name), former ones too. */
+    public function employee(int $employeeId): ?object;
+
     /** @return array<string,int> status => how many */
     public function counts(): array;
 
