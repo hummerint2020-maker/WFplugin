@@ -115,3 +115,24 @@ Q1-B; cached login pages; natural Arabic greetings; contrast on the four presets
 15. Login page: ★A shows the company occasion · B unchanged.
 16. Native phone apps: ★A later · B this release.
 17. A notification when switched on: ★A no · B yes.
+
+## Owner decisions on the open questions (2026-11-09)
+1. (A) Birthdays from Employee Moments.
+2. (A) One standing switch "Celebrate each employee on their birthday".
+3. Only the birthday person sees the decorations, **plus** an option for the administrator to pick certain people whose birthday everyone
+   sees decorated (e.g. the manager). [Owner's own answer: "صاحب عيد الميلاد بس يشوف الزينه وفي اختيار اخلي الكل يشوف الزينه لاشخاص معينه"]
+4. (A) The year is stored, never shown.
+5. (A) One company occasion at a time.
+6. (A) On their birthday the person sees the birthday; others see the company occasion.
+7. (B) Switched off, or an optional last day.
+8. (A) A few seconds of movement, then quiet colours.
+9. **The administrator chooses** for each occasion: top bar and background only, or falling over the whole screen for a few seconds.
+   [Owner: "على حسب ما اختار"] Either way the layer never takes a tap (pointer-events none) and never stays over Sign In / Out or the QR.
+10. (A) Kiosks: the company occasion only, slow and continuous, no names.
+11. (A) "Hide decorations" until the next occasion.
+12. **Egypt only** for national days.
+13. (A) A built-in greeting per occasion, replaceable.
+14. (A) Company birthday with "N years together".
+15. (A) The login page shows the company occasion.
+16. (A) Native apps later. 17. (A) No notification.
+- **Added by the owner:** Halloween is one of the occasions ("عايزين نعمل الهالوين كمان ضيفها").
