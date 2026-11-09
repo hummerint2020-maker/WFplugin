@@ -22,7 +22,14 @@ final class EmployeeDetailsTest extends TestCase
         $this->assertSame('bad_date', R::clean(['hire_date' => '3/1/2021'], '2026-11-08')['error'], 'ambiguous forms are refused');
         $this->assertSame('future_date', R::clean(['hire_date' => '2026-11-09'], '2026-11-08')['error']);
         $this->assertNull(R::clean(['hire_date' => '2026-11-08'], '2026-11-08')['error'], 'today is allowed');
-        $this->assertSame('2021-03-01', R::date('44256'), 'the number Excel stores a date as');
+        $this->assertSame('2021-03-01', R::date('44256', true), 'the number Excel stores a date as (from a file)');
+        $this->assertSame('2021-03-01', R::date('44256.75', true), '...a time of day ignored');
+        $this->assertFalse(R::date('44256'), 'not typed on the profile');
+        $this->assertFalse(R::date('2019', true), 'a year alone is refused, not read as 1905');
+        $this->assertFalse(R::date('18263', true), 'serials before 1950 are refused');
+        $this->assertSame('1950-01-01', R::date('18264', true));
+        $this->assertSame('future_date', R::clean(['hire_date' => '46335'], '2026-11-08', true)['error'], 'a serial in the future');
+        $this->assertSame('bad_date', R::clean(['hire_date' => '46335'], '2026-11-08')['error']);
     }
 
     public function testSinceDiffAndAudit(): void
@@ -30,6 +37,8 @@ final class EmployeeDetailsTest extends TestCase
         $this->assertSame('2021-03-01', R::since('2021-03-01', '2023-01-12 08:00:00'));
         $this->assertSame('2023-01-12', R::since(null, '2023-01-12 08:00:00'), 'the day the employee was added while the hiring date is not set');
         $this->assertSame('', R::since(null, '0000-00-00 00:00:00'));
+        $this->assertNull(R::stored((object) ['hire_date' => '0000-00-00'], 'hire_date'), 'the zero date is "not set"');
+        $this->assertSame([], R::diff((object) ['hire_date' => '0000-00-00'], ['hire_date' => null]));
         $row = (object) ['name_ar' => null, 'gender' => 'male', 'hire_date' => '2021-03-01'];
         $d = R::diff($row, ['name_ar' => 'أحمد', 'gender' => 'male', 'hire_date' => null]);
         $this->assertSame([['field' => 'name_ar', 'from' => null, 'to' => 'أحمد'], ['field' => 'hire_date', 'from' => '2021-03-01', 'to' => null]], $d);
@@ -68,6 +77,9 @@ final class EmployeeDetailsTest extends TestCase
         $this->assertSame(0, $p['unchanged'], 'employee 3 was refused first, so its second row is a duplicate');
         $same = DetailsImportPlan::build([['Domain name', 'gender'], ['madel', 'female']], $this->people(), '2026-11-08');
         $this->assertSame([1, []], [$same['unchanged'], $same['changes']], 'a value equal to the saved one is no change');
+        $nbsp = DetailsImportPlan::build([['Domain name', 'name_ar', 'hire_date'], ['madel', "\u{00A0} ", '44571']], $this->people(), '2026-11-08');
+        $this->assertSame([], $nbsp['changes'], 'a cell of spaces (a no-break space too) leaves the name; the date serial equals the saved 2022-01-10');
+        $this->assertSame(1, $nbsp['unchanged']);
         $this->assertSame('columns', DetailsImportPlan::build([['Name', 'gender']], $this->people(), '2026-11-08')['error']);
         $this->assertSame('columns', DetailsImportPlan::build([['Employee ID', 'Name']], $this->people(), '2026-11-08')['error']);
         $this->assertSame('empty', DetailsImportPlan::build([], $this->people(), '2026-11-08')['error']);

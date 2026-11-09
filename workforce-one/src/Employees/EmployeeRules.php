@@ -57,8 +57,8 @@ final class EmployeeRules
             // The details for letters (HR letters HL2)
             'too_long' => 'The name in Arabic is too long (190 characters at most).',
             'bad_gender' => 'Gender must be male or female.',
-            'bad_date' => 'The hiring date must be a date written as YYYY-MM-DD.',
-            'future_date' => 'The hiring date cannot be in the future.',
+            'bad_date' => 'The hiring date must be written as YYYY-MM-DD.',
+            'future_date' => 'The hiring date is in the future.',
         ];
         return $messages[$code] ?? 'The employee could not be saved.';
     }

@@ -8065,9 +8065,6 @@ msgstr "اتقرّر قبل كده، فمفيش حاجة اتغيّرت."
 msgid "Details saved."
 msgstr "تم حفظ البيانات."
 
-msgid "The day the employee was added: hiring date not set"
-msgstr "يوم إضافة الموظف: تاريخ التعيين غير مسجل"
-
 msgid "Gender"
 msgstr "النوع"
 
@@ -8200,3 +8197,15 @@ msgstr "تطبيق %d تغيير"
 
 msgid "Every change is kept in the Audit Log under your name."
 msgstr "كل تغيير بيتسجل في سجل التدقيق باسمك."
+
+msgid "Added to the system: hiring date not set"
+msgstr "تاريخ إضافته للنظام: تاريخ التعيين مش متسجل"
+
+msgid "Download the employees file (CSV)"
+msgstr "تنزيل ملف الموظفين (CSV)"
+
+msgid "The employee is already in an earlier row; only the first row is looked at"
+msgstr "الموظف موجود في صف قبل كده؛ بيتاخد أول صف بس"
+
+msgid "The preview could not be kept on this site. Upload a smaller file (fewer rows)."
+msgstr "مقدرناش نحفظ المعاينة على الموقع ده. ارفع ملف أصغر (صفوف أقل)."

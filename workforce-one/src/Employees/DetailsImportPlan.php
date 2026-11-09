@@ -57,9 +57,10 @@ final class DetailsImportPlan
             $raw = [];
             foreach ($cols as $f => $c) {
                 $v = $cell($r, $c);
-                if ($c !== null && $v !== '') $raw[$f] = $v;   // an empty cell leaves the saved value as it is
+                // An empty cell leaves the saved value as it is; so does one holding only spaces (a no-break space too): the file never clears.
+                if ($c !== null && preg_replace('/[\p{Z}\s]+/u', '', $v) !== '') $raw[$f] = $v;
             }
-            $clean = EmployeeDetailsRules::clean($raw, $today);
+            $clean = EmployeeDetailsRules::clean($raw, $today, true);
             if ($clean['error'] !== null) {
                 $bad = ['too_long' => 'name_ar', 'bad_gender' => 'gender', 'bad_date' => 'hire_date', 'future_date' => 'hire_date'][$clean['error']];
                 $out['problems'][] = ['row' => $line, 'code' => $clean['error'], 'value' => (string) ($raw[$bad] ?? ''), 'employee' => $eid];
@@ -70,22 +71,5 @@ final class DetailsImportPlan
             foreach ($diff as $d) $out['changes'][] = ['row' => $line, 'employee' => $eid] + $d;
         }
         return $out;
-    }
-
-    /** English source text of a refusal or a file error (translated by the caller). */
-    public static function message(string $code): string
-    {
-        $m = [
-            'employee_unknown' => 'No employee with this ID or domain name',
-            'duplicate' => 'The employee is in the file twice; the first row is used',
-            'too_long' => 'The name in Arabic is too long (190 characters at most)',
-            'bad_gender' => 'Gender must be male or female',
-            'bad_date' => 'The hiring date must be written as YYYY-MM-DD',
-            'future_date' => 'The hiring date is in the future',
-            'empty' => 'The file is empty.',
-            'columns' => 'The file needs an "Employee ID" or "Domain name" column, and at least one of name_ar, gender, hire_date.',
-            'too_many' => 'The file has more than 5,000 rows.',
-        ];
-        return $m[$code] ?? $code;
     }
 }

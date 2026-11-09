@@ -19,7 +19,7 @@ final class EmployeeDetailsRules
      * @param string $today Y-m-d, the site's date
      * @return array{values:array<string,?string>,error:?string} error: too_long | bad_gender | bad_date | future_date
      */
-    public static function clean(array $raw, string $today): array
+    public static function clean(array $raw, string $today, bool $fromFile = false): array
     {
         $values = [];
         if (array_key_exists('name_ar', $raw)) {
@@ -33,7 +33,7 @@ final class EmployeeDetailsRules
             $values['gender'] = $g;
         }
         if (array_key_exists('hire_date', $raw)) {
-            $d = self::date((string) $raw['hire_date']);
+            $d = self::date((string) $raw['hire_date'], $fromFile);
             if ($d === false) return ['values' => [], 'error' => 'bad_date'];
             if ($d !== null && $d > $today) return ['values' => [], 'error' => 'future_date'];
             $values['hire_date'] = $d;
@@ -52,17 +52,25 @@ final class EmployeeDetailsRules
     }
 
     /**
-     * A date as Y-m-d, or null when empty, or false when it is not one. Accepts Y-m-d and the whole number Excel stores a date as
-     * (days since 1899-12-30), since a date typed into a sheet comes back as that number. Other forms (3/1/2021) are ambiguous and refused.
+     * A date as Y-m-d, or null when empty, or false when it is not one. Accepts Y-m-d; from a file also the number Excel stores a date as
+     * (days since 1899-12-30, a time of day ignored), since a date typed into a sheet comes back as that number. Only serials from
+     * 1950-01-01 (18264) are taken, so a year typed alone ("2019") is refused, not read as 1905. Other forms (3/1/2021) are ambiguous.
      * @return string|null|false
      */
-    public static function date(string $v)
+    public static function date(string $v, bool $serial = false)
     {
         $v = trim($v);
         if ($v === '') return null;
         if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $v, $m)) return checkdate((int) $m[2], (int) $m[3], (int) $m[1]) ? $v : false;
-        if (preg_match('/^\d{1,7}$/', $v) && (int) $v >= 1 && (int) $v <= 2958465) return gmdate('Y-m-d', (int) gmmktime(0, 0, 0, 12, 30, 1899) + (int) $v * 86400);
+        if ($serial && preg_match('/^(\d{5,7})(?:\.\d+)?$/', $v, $m) && (int) $m[1] >= 18264 && (int) $m[1] <= 2958465) return gmdate('Y-m-d', (int) gmmktime(0, 0, 0, 12, 30, 1899) + (int) $m[1] * 86400);
         return false;
+    }
+
+    /** A saved value as the rules compare it: null for empty and for MySQL's zero date. */
+    public static function stored(object $row, string $field): ?string
+    {
+        $v = isset($row->$field) ? (string) $row->$field : '';
+        return $v === '' || $v === '0000-00-00' ? null : $v;
     }
 
     /** "Employee since": the hiring date when it is set, else the day the employee was added. Y-m-d, or '' when neither is known. */
@@ -83,7 +91,7 @@ final class EmployeeDetailsRules
         $out = [];
         foreach (self::FIELDS as $f) {
             if (!array_key_exists($f, $values)) continue;
-            $from = isset($row->$f) && (string) $row->$f !== '' && (string) $row->$f !== '0000-00-00' ? (string) $row->$f : null;
+            $from = self::stored($row, $f);
             if ($from !== $values[$f]) $out[] = ['field' => $f, 'from' => $from, 'to' => $values[$f]];
         }
         return $out;
@@ -93,17 +101,5 @@ final class EmployeeDetailsRules
     public static function auditText(array $diff): string
     {
         return implode(' · ', array_map(static function ($d) { return $d['field'] . ': ' . ($d['from'] ?? '—') . ' → ' . ($d['to'] ?? '—'); }, $diff));
-    }
-
-    /** English source text of an error code (translated by the caller). */
-    public static function errorMessage(string $code): string
-    {
-        $m = [
-            'too_long' => 'The name in Arabic is too long (190 characters at most).',
-            'bad_gender' => 'Gender must be male or female.',
-            'bad_date' => 'The hiring date must be a date written as YYYY-MM-DD.',
-            'future_date' => 'The hiring date cannot be in the future.',
-        ];
-        return $m[$code] ?? 'The details could not be saved.';
     }
 }

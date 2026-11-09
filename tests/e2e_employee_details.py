@@ -39,6 +39,11 @@ def audits(action):
     return [r['details'] for r in q("SELECT details FROM {p}ews_audit_log WHERE action='%s' ORDER BY id" % action)]
 
 
+def preview_token(page):
+    m = re.search(r'name="preview" value="([^"]*)"', page)
+    return m.group(1) if m else ''
+
+
 def upload(sess, data, filename):
     st, page, _ = sess.req(IMPORT)
     fields = {'_wpnonce': form_nonce(page, 'ews31_employee_details_import'), 'action': 'ews31_employee_details_import'}
@@ -102,7 +107,7 @@ check('...empty for everyone after the upgrade', all(r['name_ar'] is None and r[
 # ---- nothing filled: Not set, and Employee Since is the day the employee was added
 st, page, _ = adm.req(profile_url(EID))
 check('the profile opens', st == 200 and 'Emp One' in page, st)
-check('Employee Since is the day the employee was added, with the note', 'January 12, 2023' in page and 'The day the employee was added: hiring date not set' in page, re.findall(r'Employee Since</div><div class="v">(.*?)</div>', page))
+check('Employee Since is the day the employee was added, with the note', 'January 12, 2023' in page and 'Added to the system: hiring date not set' in page, re.findall(r'Employee Since</div><div class="v">(.*?)</div>', page))
 check('Gender: Not set', re.search(r'Gender</div><div class="v ews-ef-empty">Not set<', page) is not None)
 check('one Edit button, and no form until it is pressed', 'Edit name in Arabic, gender, hiring date' in page and 'ews31_employee_details_save' not in page)
 st, page, _ = emp1.req('/app/?ews_view=profile')
@@ -171,6 +176,7 @@ nour = q("SELECT id,name_ar,gender,hire_date FROM {p}ews_employees WHERE domain_
 check('Add Employee without the details', qs.get('employee_notice') == 'added' and nour and nour[0]['gender'] is None and nour[0]['hire_date'] is None, qs)
 st, qs, _ = adm.post('ews31_employee_save', **dict(base, name='Hana Lotfy', domain_name='hlotfy', email='hlotfy@example.com', name_ar='هنا لطفي', gender='أنثى', hire_date='2019-07-15'))
 hana = q("SELECT id,name_ar,gender,hire_date FROM {p}ews_employees WHERE domain_name='hlotfy'")
+HANA = int(hana[0]['id']) if hana else 0
 check('Add Employee with the details (the Arabic word for the gender too)', qs.get('employee_notice') == 'added' and hana and hana[0]['name_ar'] == 'هنا لطفي' and hana[0]['gender'] == 'female' and hana[0]['hire_date'] == '2019-07-15', (qs, hana))
 check('...the add is audited with the details', any('gender: female' in d for d in audits('employee_create')), audits('employee_create'))
 st, qs, _ = adm.post('ews31_employee_save', **dict(base, name='Bad Date', domain_name='bdate', email='bdate@example.com', hire_date=TOMORROW))
@@ -202,31 +208,33 @@ csv = ('﻿Employee ID,Domain name,Name,name_ar,gender,hire_date\r\n'
        ',nobody,,,,\r\n'
        '%d,,,,m,\r\n'
        '%d,,,x,,\r\n'
-       '%d,,,,,%s\r\n' % (AHMED, EID, AHMED, hana[0]['id'], TOMORROW)).encode('utf-8')
+       '%d,,,,,%s\r\n' % (AHMED, EID, AHMED, HANA, TOMORROW)).encode('utf-8')
 qs = upload(adm, csv, 'details.csv')
 check('the upload goes to the preview', qs.get('view') == 'details-import' and 'details_error' not in qs, qs)
 st, page, _ = adm.req(IMPORT)
 check('the preview: the changes, the refused rows in red with their reason', 'Preview the update' in page and page.count('Will change') == 5 and page.count('ews-ef-refused') == 4
-      and 'No employee with this ID or domain name' in page and 'Gender must be male or female' in page and 'The employee is in the file twice' in page and 'The hiring date is in the future' in page, re.findall(r'<td>([^<]*)</td></tr>', page))
+      and 'No employee with this ID or domain name' in page and 'Gender must be male or female' in page and 'The employee is already in an earlier row' in page and 'The hiring date is in the future' in page, re.findall(r'<td>([^<]*)</td></tr>', page))
 check('...archived employees are importable, marked Former', 'Sara Old · Former' in page)
 check('...nothing saved yet', row(AHMED)['name_ar'] is None)
-apply_nonce = form_nonce(page, 'ews31_employee_details_import_apply')
+apply_nonce, token = form_nonce(page, 'ews31_employee_details_import_apply'), preview_token(page)
+st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=apply_nonce, preview='another-tab')
+check('Apply from a page showing another preview is refused, and the preview is kept', qs.get('details_error') == 'expired' and row(AHMED)['name_ar'] is None and 'Preview the update' in adm.req(IMPORT)[1], qs)
 # A stale preview: HR changes Ahmed's gender on the profile meanwhile.
 save(AHMED, gender='female')
-st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=apply_nonce)
+st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=apply_nonce, preview=token)
 a, s = row(AHMED), row(SARA)
 check('Apply saves what still holds the previewed value', qs.get('details_notice') == 'imported' and a['name_ar'] == 'أحمد سمير' and a['hire_date'] == '2022-02-01' and s['name_ar'] == 'سارة' and s['gender'] == 'female', (qs, a, s))
 check('...a field changed since the preview is kept, and counted as skipped', a['gender'] == 'female' and qs.get('skipped') == '1' and qs.get('changed') == '4' and qs.get('employees') == '2', qs)
 imp = [d for d in audits('employee_details') if d.endswith(' · import')]
 check('...one Audit Log row per employee, and one for the file', len(imp) == 2 and len(audits('employee_details_imported')) == 1 and 'details.csv: 4 change(s) for 2 employee(s), 1 skipped' in audits('employee_details_imported')[0], (imp, audits('employee_details_imported')))
-st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=apply_nonce)
+st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=apply_nonce, preview=token)
 check('applying twice: the preview is gone', qs.get('details_error') == 'expired', qs)
 
 # ---- an Excel file (numbers as numbers, a date as Excel stores it), then cancel
 qs = upload(adm, xlsx([['employee_id', 'hire_date', 'gender'], [AHMED, 44256, 'male']]), 'details.xlsx')
 st, page, _ = adm.req(IMPORT)
 check('an Excel file: the ID as a number and the date as a serial are read', 'details.xlsx' in page and '2021-03-01' in page and page.count('Will change') == 2, re.findall(r'<td dir="auto">([^<]*)</td>', page))
-st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=form_nonce(page, 'ews31_employee_details_import_apply'), cancel='1')
+st, qs, _ = adm.post('ews31_employee_details_import_apply', _wpnonce=form_nonce(page, 'ews31_employee_details_import_apply'), preview=preview_token(page), cancel='1')
 check('Cancel saves nothing', row(AHMED)['hire_date'] == '2022-02-01' and 'details_error' not in qs, qs)
 st, page, _ = adm.req(IMPORT)
 check('...and the upload is shown again', 'name="details_file"' in page and 'Preview the update' not in page)

@@ -3,10 +3,11 @@
  * wp-admin → Employees → Update details from a file (HR letters HL2): download the file, fill it, upload it; then the preview of what will
  * change and of every row that cannot be used, and Apply. Mockup: docs/mockups/employee-fields/ (import, import-preview).
  *
- * @var array{file:string,unchanged:int,employees:int,changes:list<array<string,string>>,problems:list<array<string,mixed>>}|null $preview
+ * @var array{file:string,token:string,unchanged:int,employees:int,changes:list<array<string,string>>,problems:list<array<string,mixed>>}|null $preview
  * @var string $post_url
  * @var string $employees_url
  * @var string $export_url
+ * @var string $export_label   Excel, or CSV where the server cannot write Excel files
  * @var string $error
  * @var string $notice
  */
@@ -27,7 +28,7 @@ if (!defined('ABSPATH')) exit;
             <li><?php esc_html_e('Fill the columns name_ar, gender (male or female) and hire_date (YYYY-MM-DD). Other columns are ignored.', 'workforce-one'); ?></li>
             <li><?php esc_html_e('Upload it here: you see the changes first; nothing is saved before you press Apply.', 'workforce-one'); ?></li>
         </ol>
-        <p><a href="<?php echo esc_url($export_url); ?>" class="button"><?php esc_html_e('Download the employees file (Excel)', 'workforce-one'); ?></a></p>
+        <p><a href="<?php echo esc_url($export_url); ?>" class="button"><?php echo esc_html($export_label); ?></a></p>
         <form method="post" action="<?php echo esc_url($post_url); ?>" enctype="multipart/form-data">
             <?php wp_nonce_field('ews31_employee_details_import'); ?><input type="hidden" name="action" value="ews31_employee_details_import">
             <p><input type="file" name="details_file" accept=".xlsx,.csv" required> <button class="button button-primary"><?php esc_html_e('Upload and preview', 'workforce-one'); ?></button></p>
@@ -50,7 +51,7 @@ if (!defined('ABSPATH')) exit;
         <?php if (!$n && !$preview['problems']): ?><tr><td colspan="6"><?php esc_html_e('Nothing to change: the file has the same details as the employees.', 'workforce-one'); ?></td></tr><?php endif; ?>
     </tbody></table>
     <form method="post" action="<?php echo esc_url($post_url); ?>" style="margin-top:14px">
-        <?php wp_nonce_field('ews31_employee_details_import_apply'); ?><input type="hidden" name="action" value="ews31_employee_details_import_apply">
+        <?php wp_nonce_field('ews31_employee_details_import_apply'); ?><input type="hidden" name="action" value="ews31_employee_details_import_apply"><input type="hidden" name="preview" value="<?php echo esc_attr($preview['token']); ?>">
         <?php if ($n): ?><button class="button button-primary"><?php echo esc_html(sprintf(/* translators: %d: number of changes */ __('Apply %d change(s)', 'workforce-one'), $n)); ?></button><?php endif; ?>
         <button class="button" name="cancel" value="1"><?php esc_html_e('Cancel', 'workforce-one'); ?></button>
     </form>

@@ -72,8 +72,7 @@ final class EmployeeDetailsService
             if (!$row) { $skipped += count($changes); continue; }
             $diff = [];
             foreach ($changes as $c) {
-                $now = isset($row->{$c['field']}) && (string) $row->{$c['field']} !== '' ? (string) $row->{$c['field']} : null;
-                if ($now !== $c['from']) { $skipped++; continue; }
+                if (EmployeeDetailsRules::stored($row, $c['field']) !== $c['from']) { $skipped++; continue; }
                 $diff[] = ['field' => $c['field'], 'from' => $c['from'], 'to' => $c['to']];
             }
             if (!$diff) continue;

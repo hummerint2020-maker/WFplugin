@@ -80,7 +80,9 @@ trait EWS_Employee_Details_Trait {
         if($rows===null)$this->employee_details_back($back+['details_error'=>'file']);
         $plan=DetailsImportPlan::build($rows,$this->services()->employeeDetails()->people(),current_time('Y-m-d'));
         if($plan['error'])$this->employee_details_back($back+['details_error'=>$plan['error']]);
-        set_transient($this->employee_details_key(),['plan'=>$plan,'file'=>$name],30*MINUTE_IN_SECONDS);
+        // The token ties Apply to this preview: a file uploaded later in another tab replaces the preview, and the older page's Apply is refused.
+        $kept=['plan'=>$plan,'file'=>$name,'token'=>wp_generate_password(20,false)];
+        if(!set_transient($this->employee_details_key(),$kept,30*MINUTE_IN_SECONDS) || !is_array(get_transient($this->employee_details_key())))$this->employee_details_back($back+['details_error'=>'preview']);
         $this->employee_details_back($back);
     }
 
@@ -90,9 +92,14 @@ trait EWS_Employee_Details_Trait {
         check_admin_referer('ews31_employee_details_import_apply');
         $back=['page'=>'ews31-employees','view'=>'details-import'];
         $saved=get_transient($this->employee_details_key());
+        $token=sanitize_text_field(wp_unslash($_POST['preview']??''));
+        // Only the preview this page showed: another one (a later upload in another tab) is neither applied nor removed.
+        if(!is_array($saved) || empty($saved['plan']) || !hash_equals((string)($saved['token']??''),$token)){
+            if(!empty($_POST['cancel']))$this->employee_details_back($back);
+            $this->employee_details_back($back+['details_error'=>'expired']);
+        }
         delete_transient($this->employee_details_key());
         if(!empty($_POST['cancel']))$this->employee_details_back($back);
-        if(!is_array($saved) || empty($saved['plan']))$this->employee_details_back($back+['details_error'=>'expired']);
         $r=$this->services()->employeeDetails()->apply($saved['plan'],(string)$saved['file']);
         $this->employee_details_back($back+['details_notice'=>'imported','changed'=>$r['changed'],'employees'=>$r['employees'],'skipped'=>$r['skipped']]);
     }
@@ -109,7 +116,7 @@ trait EWS_Employee_Details_Trait {
             $who=function($id)use($people){return isset($people[$id])?[(string)$people[$id]->domain_name,(string)$people[$id]->name.((int)$people[$id]->active===1?'':' · '.__('Former','workforce-one'))]:['',''];};
             $employees=[];foreach($p['changes'] as $c)$employees[(int)$c['employee']]=true;
             $preview=[
-                'file'=>(string)$saved['file'],'unchanged'=>(int)$p['unchanged'],'employees'=>count($employees),
+                'file'=>(string)$saved['file'],'token'=>(string)($saved['token']??''),'unchanged'=>(int)$p['unchanged'],'employees'=>count($employees),
                 'changes'=>array_map(function($c)use($label,$value,$who){[$d,$n]=$who((int)$c['employee']);return ['domain'=>$d,'name'=>$n,'field'=>$label[$c['field']],'from'=>$value($c['field'],$c['from']),'to'=>$value($c['field'],$c['to'])];},$p['changes']),
                 'problems'=>array_map(function($x)use($who){[$d,$n]=$who((int)$x['employee']);return ['row'=>(int)$x['row'],'domain'=>$d!==''?$d:(string)$x['value'],'name'=>$n,'value'=>(string)$x['value'],'why'=>$this->employee_details_message($x['code'])];},$p['problems']),
             ];
@@ -118,6 +125,7 @@ trait EWS_Employee_Details_Trait {
         $notice=sanitize_key($_GET['details_notice']??''); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
         echo $this->render_template('admin/employee-details-import',[ // phpcs:ignore WordPress.Security.EscapeOutput -- the template escapes
             'preview'=>$preview,'post_url'=>admin_url('admin-post.php'),'employees_url'=>admin_url('admin.php?page=ews31-employees'),
+            'export_label'=>Xlsx::available()?__('Download the employees file (Excel)','workforce-one'):__('Download the employees file (CSV)','workforce-one'),
             'export_url'=>wp_nonce_url(admin_url('admin-post.php?action=ews31_employee_details_export'),'ews31_employee_details_export'),
             'error'=>$error!==''?$this->employee_details_message($error):'',
             'notice'=>$notice==='imported'?sprintf(/* translators: 1: changes, 2: employees, 3: skipped */__('%1$d change(s) saved for %2$d employee(s). %3$d skipped because the employee changed since the preview.','workforce-one'),absint($_GET['changed']??0),absint($_GET['employees']??0),absint($_GET['skipped']??0)):'', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
@@ -135,7 +143,7 @@ trait EWS_Employee_Details_Trait {
     private function employee_details_message($code){
         $m=[
             'employee_unknown'=>__('No employee with this ID or domain name','workforce-one'),
-            'duplicate'=>__('The employee is in the file twice; the first row is used','workforce-one'),
+            'duplicate'=>__('The employee is already in an earlier row; only the first row is looked at','workforce-one'),
             'too_long'=>__('The name in Arabic is too long (190 characters at most)','workforce-one'),
             'bad_gender'=>__('Gender must be male or female','workforce-one'),
             'bad_date'=>__('The hiring date must be written as YYYY-MM-DD','workforce-one'),
@@ -146,6 +154,7 @@ trait EWS_Employee_Details_Trait {
             'file'=>__('Upload an Excel (.xlsx) or CSV file of 5 MB at most.','workforce-one'),
             'zip'=>__('This server cannot read Excel files. Save the file as CSV and upload it again.','workforce-one'),
             'expired'=>__('The preview expired. Upload the file again.','workforce-one'),
+            'preview'=>__('The preview could not be kept on this site. Upload a smaller file (fewer rows).','workforce-one'),
             'not_found'=>__('Employee not found.','workforce-one'),
             'save'=>__('The details could not be saved. Please try again.','workforce-one'),
         ];

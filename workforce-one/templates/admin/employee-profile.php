@@ -89,7 +89,7 @@ $money = static function ($n) { return number_format((float) $n, 2); };
             <div class="ews-profile-field"><div class="k"><?php echo esc_html($k); ?></div><div class="v"><?php echo esc_html($v); ?><?php
                 // HR letters HL2: the name in Arabic under the name; under Employee Since, a note while the hiring date is not set.
                 if ($k === 'Employee Name' && $details['name_ar'] !== '') echo '<span class="ews-ef-sub" dir="rtl" lang="ar">' . esc_html($details['name_ar']) . '</span>';
-                if ($k === 'Employee Since' && $details['hire_date'] === '') echo '<span class="ews-ef-sub">' . esc_html__('The day the employee was added: hiring date not set', 'workforce-one') . '</span>';
+                if ($k === 'Employee Since' && $details['hire_date'] === '') echo '<span class="ews-ef-sub">' . esc_html__('Added to the system: hiring date not set', 'workforce-one') . '</span>';
             ?></div></div>
         <?php endforeach; ?>
             <div class="ews-profile-field"><div class="k"><?php esc_html_e('Gender', 'workforce-one'); ?></div><div class="v<?php echo $details['gender'] === '' ? ' ews-ef-empty' : ''; ?>"><?php echo esc_html($details['gender_label']); ?></div></div>
