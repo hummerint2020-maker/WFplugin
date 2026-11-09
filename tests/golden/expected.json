@@ -82,6 +82,19 @@
         }
       },
       "user": "admin"
+    },
+    {
+      "url": "/wp-admin/admin.php?page=ews31-features",
+      "reason": "HR letters HL3 (docs/tasks/hr-letter-hl3.md): the HR letters card, off by default",
+      "user": "admin"
+    },
+    {
+      "url": "/wp-admin/admin.php?page=ews31-features",
+      "reason": "HR letters HL3 (docs/tasks/hr-letter-hl3.md): the HR letters card, off by default",
+      "options": {
+        "ews_feature_week_lock": 1
+      },
+      "user": "admin"
     }
   ],
   "actions": {},
@@ -89,6 +102,15 @@
     "admin_post_ews31_employee_details_save",
     "admin_post_ews31_employee_details_export",
     "admin_post_ews31_employee_details_import",
-    "admin_post_ews31_employee_details_import_apply"
+    "admin_post_ews31_employee_details_import_apply",
+    "admin_post_ews_hr_letter_request",
+    "admin_post_ews_hr_letter_respond",
+    "admin_post_ews_hr_letter_file",
+    "admin_post_ews31_hr_letter_action",
+    "admin_post_ews31_hr_letter_create",
+    "admin_post_ews31_hr_letter_types_save",
+    "admin_post_ews31_hr_letter_letterhead_save",
+    "admin_post_ews31_hr_letter_preview",
+    "admin_post_ews31_hr_letter_image"
   ]
 }
