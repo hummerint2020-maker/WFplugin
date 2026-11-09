@@ -97,3 +97,11 @@ Design by the read-only architect on branch `claude/hr-letters`; it is condensed
 ## 7. Open questions for the owner (asked 2026-11-08)
 Q1 who may edit · Q2 My Profile gets "Employee since" too (it is new there) · Q3 the sub-line under Employee Since in wp-admin ·
 Q4 archived employees in the file · Q5 never shown to managers, the directory or the API · Q6 gender spellings the file accepts.
+
+## Owner decisions (2026-11-08, "agreed to all")
+- **Q1:** "Manage Employees" (`ews_manage_employees`) edits them, the same as every other employee edit. There is no new capability.
+- **Q2:** My Profile shows Gender and "Employee since" for every employee, even when nothing is filled.
+- **Q3:** in wp-admin, the line under Employee Since stays while the hiring date is not set.
+- **Q4:** archived employees are in the file and can be updated (letters for former employees), marked as former.
+- **Q5:** never shown to managers, the directory, the organization chart or the API.
+- **Q6:** the file accepts male / female and ذكر / أنثى. Anything else is refused, with the reason in the preview.
