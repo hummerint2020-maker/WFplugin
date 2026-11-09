@@ -125,3 +125,10 @@ wording (OQ2); screens without a mockup (OQ9).
 11. Default types: (a) as the approved mockup (the salary certificate as an automatic PDF) — recommended; (b) all request-only until HR saves a template.
 12. Regenerate: tell the employee and count the next download as new — recommended.
 13. Letters in bulk approve in My approvals (each makes a PDF; capped at 20) — recommended.
+
+## Owner decisions on the open questions (2026-11-09)
+The owner agreed to every recommendation: 1 (a) letters on the Requests Hub · 2 (a) `{g:male|female}` · 3 (a) fall back, ✗ on the approver's card ·
+4 (a) currency names · 5 basic and allowances tokens, fractions as "and 50/100" · 6 preview and direct salary letters need Manage Payroll ·
+7 (a) no direct letter for one's own record · 8 Western digits in the reference · 9 a mockup addition first · 10 (b) open until issued / ready /
+rejected / withdrawn, Other exempt · 11 (a) default types as the mockup · 12 regenerate tells the employee and resets the first download ·
+13 letters in bulk approve (20 at most).
