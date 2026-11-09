@@ -54,6 +54,11 @@ final class EmployeeRules
             'not_found' => 'Employee not found.',
             'save' => 'The employee could not be saved. Please try again.',
             'teams' => 'Employee saved, but team membership could not be updated.',
+            // The details for letters (HR letters HL2)
+            'too_long' => 'The name in Arabic is too long (190 characters at most).',
+            'bad_gender' => 'Gender must be male or female.',
+            'bad_date' => 'The hiring date must be written as YYYY-MM-DD.',
+            'future_date' => 'The hiring date is in the future.',
         ];
         return $messages[$code] ?? 'The employee could not be saved.';
     }

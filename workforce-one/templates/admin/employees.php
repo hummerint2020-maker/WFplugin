@@ -52,7 +52,7 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
     echo '</span>';
 };
 ?>
-<div class="wrap"><h1>Employees</h1>
+<div class="wrap"><h1 class="wp-heading-inline">Employees</h1> <a href="<?php echo esc_url(add_query_arg('view', 'details-import', $page_url)); ?>" class="page-title-action"><?php esc_html_e('Update details from a file', 'workforce-one'); ?></a><hr class="wp-header-end">
 <datalist id="ews-pick-users"><?php foreach ($users as $uid => $label): ?><option value="<?php echo esc_attr(Picker::label($label, (int) $uid)); ?>"></option><?php endforeach; ?></datalist>
 <?php if ($org): ?><datalist id="ews-pick-titles"><?php foreach ($titles as $t): ?><option value="<?php echo esc_attr($t); ?>"></option><?php endforeach; ?></datalist><?php endif; ?>
 <datalist id="ews-pick-employees"><?php foreach ($people as $p): if (!(int) $p->active) continue; ?><option value="<?php echo esc_attr($person((int) $p->id)); ?>"></option><?php endforeach; ?></datalist>
@@ -72,6 +72,11 @@ $pager = static function () use ($paged, $pages, $total, $search, $page_url) {
     <p><input name="supervisor_employee_ref" list="ews-pick-employees" autocomplete="off" placeholder="Direct Supervisor (type to search)" style="width:100%"></p>
     <p><select name="default_shift_id" style="width:100%"><?php echo $options($shifts, 0, '-- Company Working Hours --'); ?></select></p>
     <p><label><input type="checkbox" name="attendance_enabled" value="1" checked> Attendance Tracking</label><br><small>Disable this for employees who should not have attendance tracking.</small></p>
+    <details class="ews-ef-details"><summary><?php esc_html_e('Details for letters (optional)', 'workforce-one'); ?></summary>
+        <p><input name="name_ar" dir="rtl" lang="ar" maxlength="190" placeholder="<?php esc_attr_e('Name in Arabic', 'workforce-one'); ?>" aria-label="<?php esc_attr_e('Name in Arabic', 'workforce-one'); ?>" style="width:100%"></p>
+        <p><select name="gender" aria-label="<?php esc_attr_e('Gender', 'workforce-one'); ?>"><option value=""><?php esc_html_e('Gender: not set', 'workforce-one'); ?></option><option value="male"><?php esc_html_e('Male', 'workforce-one'); ?></option><option value="female"><?php esc_html_e('Female', 'workforce-one'); ?></option></select>
+        <label><?php esc_html_e('Hiring date', 'workforce-one'); ?> <input type="date" name="hire_date" max="<?php echo esc_attr($today); ?>"></label></p>
+    </details>
     <p><button class="button button-primary">Add Employee</button></p>
 </form><br>
 

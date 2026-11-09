@@ -8061,3 +8061,151 @@ msgstr "من غير مسار موافقات"
 
 msgid "It was already decided, so nothing was changed."
 msgstr "اتقرّر قبل كده، فمفيش حاجة اتغيّرت."
+
+msgid "Details saved."
+msgstr "تم حفظ البيانات."
+
+msgid "Gender"
+msgstr "النوع"
+
+msgid "Edit name in Arabic, gender, hiring date"
+msgstr "تعديل الاسم بالعربي والنوع وتاريخ التعيين"
+
+msgid "Optional; HR letters use them when they are filled."
+msgstr "اختيارية؛ تستخدمها خطابات الموارد البشرية لو متسجلة."
+
+msgid "Name in Arabic"
+msgstr "الاسم بالعربي"
+
+msgid "— Not set —"
+msgstr "— غير مسجل —"
+
+msgid "Male"
+msgstr "ذكر"
+
+msgid "Female"
+msgstr "أنثى"
+
+msgid "Hiring date"
+msgstr "تاريخ التعيين"
+
+msgid "Left empty, a letter uses the employee name, wording that fits anyone (\"Mr./Ms.\"), and the day the employee was added. Changes are kept in the Audit Log."
+msgstr "لو فاضية، الخطاب بيستخدم اسم الموظف، وصيغة تناسب الكل (\"السيد/السيدة\")، ويوم إضافة الموظف. التعديلات بتتسجل في سجل التدقيق."
+
+msgid "Update details from a file"
+msgstr "تحديث البيانات من ملف"
+
+msgid "Details for letters (optional)"
+msgstr "بيانات الخطابات (اختيارية)"
+
+msgid "Gender: not set"
+msgstr "النوع: غير مسجل"
+
+msgid "Employee since"
+msgstr "موظف من"
+
+msgid "This is what appears on your HR letters. Something wrong? Ask HR to correct it."
+msgstr "دي البيانات اللي بتظهر في خطابات الموارد البشرية. فيها حاجة غلط؟ بلّغ الموارد البشرية وهي تصححها."
+
+msgid "Former"
+msgstr "سابق"
+
+#, php-format
+msgid "%1$d change(s) saved for %2$d employee(s). %3$d skipped because the employee changed since the preview."
+msgstr "تم حفظ %1$d تغيير لـ %2$d موظف. تم تخطي %3$d لأن بيانات الموظف اتغيرت بعد المعاينة."
+
+msgid "The name in Arabic is too long (190 characters at most)"
+msgstr "الاسم بالعربي طويل جدًا (190 حرف بحد أقصى)"
+
+msgid "Gender must be male or female"
+msgstr "النوع لازم يكون ذكر أو أنثى"
+
+msgid "The hiring date must be written as YYYY-MM-DD"
+msgstr "تاريخ التعيين لازم يتكتب بالشكل YYYY-MM-DD"
+
+msgid "The hiring date is in the future"
+msgstr "تاريخ التعيين في المستقبل"
+
+msgid "The file needs an \"Employee ID\" or \"Domain name\" column, and at least one of name_ar, gender, hire_date."
+msgstr "الملف محتاج عمود \"Employee ID\" أو \"Domain name\"، وعمود واحد على الأقل من name_ar و gender و hire_date."
+
+msgid "Upload an Excel (.xlsx) or CSV file of 5 MB at most."
+msgstr "ارفع ملف Excel ‏(.xlsx) أو CSV حجمه 5 ميجابايت بحد أقصى."
+
+msgid "This server cannot read Excel files. Save the file as CSV and upload it again."
+msgstr "السيرفر ده مش بيقرا ملفات Excel. احفظ الملف CSV وارفعه تاني."
+
+msgid "The preview expired. Upload the file again."
+msgstr "المعاينة انتهت. ارفع الملف تاني."
+
+msgid "Employee not found."
+msgstr "الموظف غير موجود."
+
+msgid "The details could not be saved. Please try again."
+msgstr "مقدرناش نحفظ البيانات. حاول تاني."
+
+msgid "Back to Employees"
+msgstr "رجوع للموظفين"
+
+msgid "Update name in Arabic, gender and hiring date from a file"
+msgstr "تحديث الاسم بالعربي والنوع وتاريخ التعيين من ملف"
+
+msgid "Download the file: every employee with their current details."
+msgstr "نزّل الملف: كل الموظفين ببياناتهم الحالية."
+
+msgid "Fill the columns name_ar, gender (male or female) and hire_date (YYYY-MM-DD). Other columns are ignored."
+msgstr "املا الأعمدة name_ar و gender ‏(male أو female) و hire_date ‏(YYYY-MM-DD). أي عمود تاني بيتجاهل."
+
+msgid "Upload it here: you see the changes first; nothing is saved before you press Apply."
+msgstr "ارفعه هنا: هتشوف التغييرات الأول، ومفيش حاجة بتتحفظ قبل ما تدوس تطبيق."
+
+msgid "Download the employees file (Excel)"
+msgstr "تنزيل ملف الموظفين (Excel)"
+
+msgid "Upload and preview"
+msgstr "رفع ومعاينة"
+
+msgid "Excel or CSV. An empty cell means \"leave it as it is\"."
+msgstr "Excel أو CSV. الخانة الفاضية معناها \"سيبها زي ما هي\"."
+
+msgid "Preview the update"
+msgstr "معاينة التحديث"
+
+#, php-format
+msgid "%1$d change(s) for %2$d employee(s) will be applied. %3$d row(s) are refused and will not be applied. %4$d employee(s) without a change."
+msgstr "هيتطبق %1$d تغيير لـ %2$d موظف. %3$d صف مرفوض ومش هيتطبق. %4$d موظف من غير تغيير."
+
+msgid "Domain name"
+msgstr "اسم الدومين"
+
+msgid "Field"
+msgstr "الحقل"
+
+msgid "Will change"
+msgstr "هيتغير"
+
+#, php-format
+msgid "Row %d"
+msgstr "الصف %d"
+
+msgid "Nothing to change: the file has the same details as the employees."
+msgstr "مفيش حاجة تتغير: الملف فيه نفس بيانات الموظفين."
+
+#, php-format
+msgid "Apply %d change(s)"
+msgstr "تطبيق %d تغيير"
+
+msgid "Every change is kept in the Audit Log under your name."
+msgstr "كل تغيير بيتسجل في سجل التدقيق باسمك."
+
+msgid "Added to the system: hiring date not set"
+msgstr "تاريخ إضافته للنظام: تاريخ التعيين مش متسجل"
+
+msgid "Download the employees file (CSV)"
+msgstr "تنزيل ملف الموظفين (CSV)"
+
+msgid "The employee is already in an earlier row; only the first row is looked at"
+msgstr "الموظف موجود في صف قبل كده؛ بيتاخد أول صف بس"
+
+msgid "The preview could not be kept on this site. Upload a smaller file (fewer rows)."
+msgstr "مقدرناش نحفظ المعاينة على الموقع ده. ارفع ملف أصغر (صفوف أقل)."

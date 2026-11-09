@@ -171,6 +171,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_dashboard_view.py "$S"
       - name: My Profile (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_my_profile.py "$S"
+      - name: Employee details for HR letters (profile, My Profile, update from a file)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_employee_details.py "$S"
       - name: People and colleague profiles (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
       - name: App frame, navigation and login (employee app)

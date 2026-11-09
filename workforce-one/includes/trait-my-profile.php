@@ -88,6 +88,9 @@ trait EWS_My_Profile_Trait {
         wp_enqueue_script('workforce-one-my-profile');
         wp_enqueue_style('workforce-one-profile-page');
         return $this->render_template('app/my-profile',[
+            // HR letters HL2: the details HR keeps for letters, read only here; "Employee since" is the hiring date, else the day the employee was added.
+            'details'=>['name_ar'=>(string)($emp->name_ar??''),'gender'=>(string)($emp->gender??''),'gender_label'=>$this->employee_gender_label((string)($emp->gender??'')),
+                'since'=>($since_day=\WorkforceOne\Employees\EmployeeDetailsRules::since(isset($emp->hire_date)?(string)$emp->hire_date:null,(string)($emp->created_at??'')))!==''?date_i18n('j M Y',strtotime($since_day)):'—'],
             'emp'=>$emp,'today'=>$today,'planned'=>$planned,'today_result'=>$today_result,'sign_in'=>$first_in?$first_in->event_at:'',
             'hours_label'=>$this->format_time_label($hours['start']).' – '.$this->format_time_label($hours['end']),
             'shift'=>$this->shift_for_employee($eid),'shift_next'=>$this->shift_upcoming($eid),'supervisor'=>$this->approval_related_employee($eid,'supervisor'),

@@ -165,3 +165,36 @@ request type layered from birth (review the port design against check_layers L2/
   sheet; HR may cancel an approved letter not yet issued; while the feature is off, issued letters stay downloadable by HR only;
   non-owner downloads and the owner's first download are audited; **EWS Administrator gets "Manage HR letters"** by default (a
   salary template still needs Manage Payroll); the HR user of Approval Workflows needs the capability like anyone else.
+
+## Mockup approved (owner, 2026-11-08)
+The ten screens of `docs/mockups/hr-letter/` and the sample letters were approved as they are.
+
+## 16. Delivery in parts (2026-11-08)
+One release for the HR letter type, built and reviewed in three pull requests so each stays reviewable. Nothing is visible until the third.
+- **HL1, PDF groundwork (pure, unused until HL3).**
+  - Amiri bundled in `assets/vendor/amiri/` with its OFL licence.
+  - `ArabicText::visual()` takes the paragraph direction from the caller: a line of an Arabic letter that starts with a number stays right-to-left (the trial's third line).
+  - A separator between digits (`٬` `٫` `,` `.` `:` `/`) stays inside the number, so `١٨٬٥٠٠` is not split into reversed groups.
+  - `Pdf/TextBlock`: word wrapping in logical order, each line put in visual order, right-aligned for Arabic.
+  - `Pdf/Image`: JPEG passed through; PNG with alpha written as an SMask. `Document::image()` draws it, which needs a font name per document.
+  - `Support/HijriDate`: Umm al-Qura through PHP intl when it is there, the tabular calendar otherwise.
+  - `Support/NumberWords`: Arabic and English amounts in words, and Arabic-Indic digits.
+  - Unit tests for all of it. No caller changes, so the payslip, schedule and payout PDFs stay the same (golden unchanged).
+- **HL2, People.** Optional employee fields: Arabic name, gender and hire date. These need a schema change, the employee form, the import and their own mockup first. Still off-by-default safe: the fields are optional and empty.
+- **HL3, the request type.** Covers §2–§13: the table, settings, the workflow, the employee sheet, My requests and My approvals, the Hub, the admin pages, files, generation and the e2e tests. It is the first request type layered from birth: the ports are reviewed against check_layers L2/L4 before coding.
+
+## Owner decisions on HL2, the employee details (2026-11-08)
+- Mockup `docs/mockups/employee-fields/` approved after two changes the owner asked for:
+  - The **employee sees the details on My Profile, read only**, with "Something wrong? Ask HR to correct it". Only HR edits them, in wp-admin.
+  - **Nothing is shown twice:**
+    - The Arabic name sits under the name.
+    - The hiring date is shown as "Employee since" (when it is not set, the day the employee was added, as today).
+    - Gender is the only new row.
+    - HR edits the three through one "Edit" button on the profile.
+- **The import also updates existing employees** (most are there already), so HR can fill the three details in one file.
+- "Employee since" changes only on screen. Rules that use the day the employee was added (e.g. no correction before it) are unchanged.
+- Gender is used only by letters ("Mr." / "Ms." and the matching wording). It is shown only on the profile.
+- **Update from a file** (owner choice 2026-11-08, option 1; mockup screens `import` and `import-preview` approved):
+  - On the Employees page: HR downloads a file with every employee and their current details, fills `name_ar`, `gender` and `hire_date`, uploads it, sees a preview, then applies it.
+  - In the preview, refused rows show with their reason and are not applied. An empty cell means "leave it as it is".
+  - Every change goes to the Audit Log. It is separate from the organization chart's managers import.

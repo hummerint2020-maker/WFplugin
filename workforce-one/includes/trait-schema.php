@@ -30,7 +30,11 @@ trait EWS_Schema_Trait {
                 'profile_image_type'=>"VARCHAR(20) NOT NULL DEFAULT 'initials'",
                 'profile_image_url'=>"TEXT NULL",
                 'avatar_key'=>"VARCHAR(80) NULL",
-                'job_title'=>"VARCHAR(120) NULL" // 3.31.97, organization chart
+                'job_title'=>"VARCHAR(120) NULL", // 3.31.97, organization chart
+                // HR letters (HL2): optional details for letters, filled by HR (docs/tasks/employee-details.md)
+                'name_ar'=>"VARCHAR(190) NULL",
+                'gender'=>"VARCHAR(10) NULL",
+                'hire_date'=>"DATE NULL",
             ];
             foreach($defs as $col=>$def){
                 if(!in_array($col,$cols,true))$wpdb->query("ALTER TABLE {$employees} ADD COLUMN `{$col}` {$def}");
@@ -329,7 +333,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.121'; }   // 3.31.121: roles get "Edit a locked week"
+        private function ews_schema_target(){ return '3.31.144'; }   // HR letters (HL2): employees get name_ar, gender, hire_date
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

@@ -8,6 +8,7 @@ stylesheets, fonts and icons from `workforce-one/assets/`.
 - `daily-workers/`: `docs/tasks/daily-workers.md`
 - `office-minimum/`: `docs/tasks/office-minimum.md` (its Attendance screens start from snapshots of the real page in `_kit/snap/`)
 - `hr-letter/`: `docs/tasks/hr-letter.md` (logical properties: the `-rtl` copy is identical)
+- `employee-fields/`: `docs/tasks/hr-letter.md` §16 HL2 (logical properties: the `-rtl` copy is identical)
 - `approval-reasons/`: `docs/tasks/admin-fallback-reason.md` and `docs/tasks/legacy-approval-cards.md` (logical properties: the `-rtl` copy is identical)
 - `week-lock/`: `docs/tasks/week-lock.md` (same Attendance snapshots; `week-lock.css` uses logical properties, so its `-rtl` copy is identical)
 

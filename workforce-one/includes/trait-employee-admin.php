@@ -64,6 +64,12 @@ trait EWS_Employee_Admin_Trait {
         check_admin_referer('ews31_employee_save');
         [$in,$error]=$this->employee_admin_input(0);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
+        // The optional details for letters (HR letters HL2); a form without them adds none.
+        $raw=[];
+        foreach(\WorkforceOne\Employees\EmployeeDetailsRules::FIELDS as $f)if(isset($_POST[$f]))$raw[$f]=sanitize_text_field(wp_unslash($_POST[$f]));
+        $details=\WorkforceOne\Employees\EmployeeDetailsRules::clean($raw,current_time('Y-m-d'));
+        if($details['error']!==null)$this->employee_admin_redirect(['employee_error'=>$details['error']]);
+        $in['details']=array_filter($details['values'],function($v){return $v!==null;});
         $error=$this->services()->employees()->create($in);
         if($error)$this->employee_admin_redirect(['employee_error'=>$error]);
         $this->employee_admin_redirect(['employee_notice'=>'added']);
@@ -98,6 +104,8 @@ trait EWS_Employee_Admin_Trait {
 
     public function admin_employees(){
         if(!$this->can('ews_manage_employees'))wp_die('Access denied');
+        // Employees → Update details from a file (HR letters HL2).
+        if(sanitize_key($_GET['view']??'')==='details-import'){$this->admin_employee_details_import();return;} // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a view, no change
         $this->ensure_departments_schema();$this->ensure_teams_schema();
         $svc=$this->services()->employees();
         // One page of the list at a time, with a search (3.31.71: the whole list did not fit in memory at 3,000).

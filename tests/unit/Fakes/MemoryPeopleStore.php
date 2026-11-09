@@ -140,6 +140,23 @@ final class MemoryPeopleStore implements PeopleStore
         return true;
     }
 
+    public function setDetails(int $id, array $fields, string $now)
+    {
+        $this->note('setDetails ' . $id);
+        if ($this->failWrite) return false;
+        if (!isset($this->rows[$id])) return 0;
+        foreach (array_intersect_key($fields, array_flip(['name_ar', 'gender', 'hire_date'])) as $k => $v) $this->rows[$id]->$k = $v;
+        $this->rows[$id]->updated_at = $now;
+        return 1;
+    }
+
+    public function detailsRows(): array
+    {
+        $out = array_values($this->rows);
+        usort($out, static function ($a, $b) { return [$a->name, (int) $a->id] <=> [$b->name, (int) $b->id]; });
+        return $out;
+    }
+
     public function allShiftIds(): array
     {
         $this->note('allShiftIds');

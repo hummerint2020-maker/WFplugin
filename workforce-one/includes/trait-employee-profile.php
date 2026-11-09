@@ -84,7 +84,13 @@ trait EWS_Employee_Profile_Trait {
             'active'=>(bool)(int)$emp->active,'teams'=>$team_labels,'manager_of'=>$manager_of,
             'supervisor'=>$supervisor?$supervisor->name.' ('.$supervisor->domain_name.')':'—',
             'user_login'=>$user?$user->user_login:'Not linked',
-            'since'=>$emp->created_at?date_i18n(get_option('date_format'),strtotime($emp->created_at)):'—',
+            // "Employee Since" is the hiring date when HR set it, else the day the employee was added, as before (HR letters HL2).
+            'since'=>($since_day=\WorkforceOne\Employees\EmployeeDetailsRules::since(isset($emp->hire_date)?(string)$emp->hire_date:null,(string)$emp->created_at))!==''?date_i18n(get_option('date_format'),strtotime($since_day)):'—',
+            'details'=>['name_ar'=>(string)($emp->name_ar??''),'gender'=>(string)($emp->gender??''),'hire_date'=>(string)($emp->hire_date??''),'gender_label'=>$this->employee_gender_label((string)($emp->gender??'')),
+                'edit'=>!empty($_GET['edit_details']),'notice'=>sanitize_key($_GET['details_notice']??'')==='saved'?__('Details saved.','workforce-one'):'', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+                'error'=>isset($_GET['details_error'])?$this->employee_details_message(sanitize_key($_GET['details_error'])):'', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+                'edit_url'=>add_query_arg(['page'=>'ews31-employee-profile','employee_id'=>$employee_id,'edit_details'=>1],admin_url('admin.php')).'#ews-details',
+                'cancel_url'=>add_query_arg(['page'=>'ews31-employee-profile','employee_id'=>$employee_id],admin_url('admin.php')),'today'=>current_time('Y-m-d')],
             'shift'=>$shift?$shift['name']:'Company Default',
             'hours'=>$this->format_time_label($hours['start']).' – '.$this->format_time_label($hours['end']),
             'today'=>['planned'=>$planned,'note'=>$schedule&&$schedule->note?$schedule->note:'Schedule status','result'=>$today_result,
