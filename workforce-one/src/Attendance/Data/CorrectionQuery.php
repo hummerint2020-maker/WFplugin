@@ -37,4 +37,10 @@ interface CorrectionQuery
 
     /** @return object[] every request for days between the two dates with the employee, department and decider names (department 0 = all) */
     public function export(string $from, string $to, int $department): array;
+
+    /**
+     * The end-of-day reminder's people (3.31.143): active employees with a WordPress user (0 included) who signed in on the day (the earliest
+     * Sign In no correction replaced) and have no Sign Out that day. @return object[] id, wp_user_id, signed_in
+     */
+    public function remindCandidates(string $date): array;
 }

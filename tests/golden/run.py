@@ -79,7 +79,8 @@ def start():
     if not port_free():
         sys.exit('the port 8080 is taken: the golden harness starts its own server (stop the other one)')
     # A fresh process for each side: no file or realpath cache of the other side's code.
-    server = subprocess.Popen(['php', '-d', 'realpath_cache_size=0', '-S', '127.0.0.1:8080', '-t', ABSPATH, os.path.join(TESTS, 'router.php')],
+    # Uploads up to 20 MB (3.31.143): run.py's correction photo of 8 MiB + 1 byte must reach the plugin's own size check.
+    server = subprocess.Popen(['php', '-d', 'realpath_cache_size=0', '-d', 'upload_max_filesize=20M', '-d', 'post_max_size=24M', '-S', '127.0.0.1:8080', '-t', ABSPATH, os.path.join(TESTS, 'router.php')],
                               stdout=subprocess.DEVNULL, stderr=open(os.path.join(S, 'golden-server.log'), 'a'))
     for _ in range(60):
         if server.poll() is not None:
@@ -147,6 +148,51 @@ def actions(ctx):
         t = json.loads(wp('eval-file', os.path.join(HERE, f), env={'GOLDEN_CTX': json.dumps(ctx), 'GOLDEN_DIR': HERE}).splitlines()[-1])
         prefix = '' if f == 'actions.php' else f[8:-4] + ':'
         out.update({prefix + k: v for k, v in t.items()})
+    return out
+
+
+PNG = bytes.fromhex('89504e470d0a1a0a0000000d4948445200000001000000010806000000'
+                    '1f15c4890000000d49444154789c6360000002000100e221bc330000000049454e44ae426082')
+
+
+def uploads():
+    """Correction photos sent as real multipart posts (is_uploaded_file() cannot pass in process; docs/tasks/attendance-corrections.md §11.5):
+    a valid PNG, a file that is not an image, 8 MiB + 1 byte. For each: where the form went back to, then cxq_a's requests and whether each
+    photo file is there with the bytes sent. On the side the link points at, from the snapshot, with the server running."""
+    import hashlib, urllib.request, uuid
+    php("update_option('ews_feature_corrections',1,false); update_option('ews_correction_settings',['photo'=>['out'=>'off','in'=>'optional','time'=>'optional','day'=>'required']],false);")
+    day = lambda back: php("echo gmdate('Y-m-d',strtotime(current_time('Y-m-d').' -%d days'));" % back).splitlines()[-1]
+    s = Session('cxq_a', 'cxq_a-pass')
+    _, pg, _ = s.req('/app/?ews_view=corrections')
+    nonce = ''
+    for f in re.findall(r'<form.*?</form>', pg, re.S):
+        m = re.search(r'name="_wpnonce" value="([^"]+)"', f)
+        if 'name="action" value="ews_correction_request"' in f and m:
+            nonce = m.group(1)
+            break
+    out = {'nonce_found': bool(nonce)}
+    def send(label, fields, name, ctype, data):
+        b = uuid.uuid4().hex
+        body = b''.join(('--%s\r\nContent-Disposition: form-data; name="%s"\r\n\r\n%s\r\n' % (b, k, v)).encode() for k, v in fields.items())
+        body += ('--%s\r\nContent-Disposition: form-data; name="photo"; filename="%s"\r\nContent-Type: %s\r\n\r\n' % (b, name, ctype)).encode() + data + ('\r\n--%s--\r\n' % b).encode()
+        req = urllib.request.Request('http://127.0.0.1:8080/wp-admin/admin-post.php', data=body, headers={'Content-Type': 'multipart/form-data; boundary=' + b})
+        try:
+            r = s.op.open(req)
+            st, loc = r.status, r.headers.get('Location', '')
+        except urllib.error.HTTPError as e:
+            st, loc = e.code, e.headers.get('Location', '')
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(loc).query)
+        out[label] = {'status': st, 'back': {k: v[0] for k, v in qs.items() if k.startswith('cx')}}
+    base = {'action': 'ews_correction_request', '_wpnonce': nonce, 'target': '', 'time_in': '', 'time_out': '', 'reason': 'photo attached'}
+    send('valid_png', {**base, 'date': day(4), 'type': 'in', 'time_in': '08:00'}, 'visit.png', 'image/png', PNG)
+    send('not_an_image', {**base, 'date': day(2), 'type': 'time', 'target': 'sign_out', 'time_out': '16:40'}, 'notes.png', 'image/png', b'this is not an image at all')
+    send('too_big', {**base, 'date': day(2), 'type': 'time', 'target': 'sign_out', 'time_out': '16:50'}, 'big.png', 'image/png', PNG + b'\0' * (8 * 1048576 + 1 - len(PNG)))
+    rows = json.loads(php("""global $wpdb; $p=$wpdb->prefix; $m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,'private_files_dir'); $r->setAccessible(true); $dir=$r->invoke($m,'workforce-one-corrections');
+        $out=[]; foreach((array)$wpdb->get_results($wpdb->prepare("SELECT type,target,status,reason,photo_key,photo_name FROM {$p}ews_attendance_corrections WHERE employee_id=%%d ORDER BY id",%d),ARRAY_A) as $x){
+            $k=(string)$x['photo_key']; $x['photo_key']=$k===''?'':(preg_match('/^[A-Za-z0-9]{32}\\.png$/',$k)?'KEY.png':'BAD '.$k); $x['file']=$k!==''&&is_file($dir.'/'.$k)?md5_file($dir.'/'.$k):''; $out[]=$x; }
+        echo wp_json_encode($out);""" % int(ctx['cxq_a'])).splitlines()[-1])
+    out['rows'] = rows
+    out['png_md5'] = hashlib.md5(PNG).hexdigest()
     return out
 
 
@@ -238,6 +284,20 @@ try:
     tb = actions(ctx)
     point(HEAD)
     th = actions(ctx)
+    up = {}
+    for side, target in (('base', BASE), ('head', HEAD)):
+        point(target)
+        restore()
+        start()
+        try:
+            up[side] = uploads()
+        finally:
+            stop()
+    check('the same correction photo uploads (real multipart posts)', up['base'] == up['head'], (up['base'], up['head']))
+    ub = up['base']
+    check('...the uploads really saved a photo and refused the others (else they prove nothing)',
+          ub.get('nonce_found') and ub['valid_png']['back'].get('cx_sent') and ub['not_an_image']['back'].get('cx_error') == 'photo_file' and ub['too_big']['back'].get('cx_error') == 'photo_size'
+          and [r['file'] for r in ub['rows'] if r['reason'] == 'photo attached'] == [ub['png_md5']] and [r['photo_name'] for r in ub['rows'] if r['reason'] == 'photo attached'] == ['visit.png'], ub)
     json.dump({k: v for k, v in th.items() if k.startswith(('org:', 'employees:'))}, open(os.path.join(S, 'golden-org-trace.json'), 'w'), indent=1)
     def first_difference(a, b):
         """Where two traces first differ, for the failure message: the first SQL statement that is not the same."""
@@ -441,6 +501,57 @@ try:
     ]
     cx_false = [label for label, fn in cx_conditions if not holds(fn)]
     check('...the corrections reads trace really read days, requests, who may decide, the lists, the pages and the export (else it proves nothing)', not cx_false, [cx_false, 'modes=' + repr((cxr('workflow_mode_none'), cxr('workflow_mode_levels'))), 'page_employee=' + repr((cxr('app_page_employee') or {}).get('len')), 'page_off=' + repr(str((cxr('app_page_off') or {}).get('body'))[:300]), 'csv_lines=' + str(cx_csv.count(chr(10)))])
+    cq = {k[21:]: v for k, v in tb.items() if k.startswith('corrections_requests:')}
+    def cqr(k):
+        return (cq.get(k) or {}).get('return')
+    def cqe(k):
+        r = cqr(k)
+        return r.get('error') if isinstance(r, dict) else None
+    def cqs(k):
+        r = cqr(k)
+        return r.get('status') if isinstance(r, dict) else None
+    def cqto(k):
+        r = cqr(k)
+        return r.get('to', '') if isinstance(r, dict) else ''
+    def cqsql(k):
+        return (cq.get(k) or {}).get('sql') or []
+    cq_audit = [r.get('action') for r in cq.get('_rows:audit', [])]
+    cq_codes = {'type_unknown': 'type', 'date_bad': 'date', 'future': 'future', 'deadline': 'deadline', 'pending': 'pending', 'reason': 'reason', 'photo_required': 'photo',
+                'time_missing': 'time', 'time_bad': 'time', 'time_target': 'time', 'no_in': 'no_in', 'has_out': 'has_out', 'has_in': 'has_in', 'has_events': 'has_events',
+                'no_event': 'no_event', 'same': 'same', 'order': 'order', 'future_time': 'future_time'}
+    cq_conditions = [('bool(cq)', lambda: bool(cq))]
+    cq_conditions += [('refused: ' + k, (lambda k=k, want=want: cqe('create_refused_' + k) == want)) for k, want in cq_codes.items()]
+    cq_conditions += [
+        ('before the start, no employee, off, a kind switched off', lambda: [cqe(k) for k in ('create_before_start', 'create_no_employee', 'create_feature_off', 'create_type_switched_off')] == ['before_start', 'employee', 'disabled', 'type']),
+        ('a fake upload and an upload error are refused; no file is no photo', lambda: [cqe(k) for k in ('create_fake_upload', 'create_upload_error', 'create_no_file_entry')] == ['photo_file', 'photo_file', 'photo']),
+        ('no workflow set: pending, the managers told, the photo of a Sign Out ignored', lambda: cqs('create_none_set_photo_off') == 'pending' and cqs('create_none_set_as_manager') == 'pending' and cqe('create_none_set_pending_again') == 'pending'
+            and any(r.get('type') == 'correction' for r in cq.get('_rows:notifications', [])) and any('ews_notifications' in q for q in cqsql('create_none_set_photo_off'))),
+        ('no workflow set: the INSERT fault is save', lambda: cqe('fault_none_set_insert') == 'save'),
+        ('NONE: approved at once, pending_hr for an earlier Sign In, a whole day approved', lambda: cqs('create_mode_none_out') == 'approved' and cqs('create_mode_none_time_earlier') == 'pending_hr' and cqs('create_mode_none_day') == 'approved'),
+        ('NONE: the finalize BEGIN fails: status save without error (CX-z)', lambda: cqs('fault_mode_none_first_begin') == 'save' and cqe('fault_mode_none_first_begin') is None),
+        ('NONE: the engine INSERT fault is approval; the second event rolls back', lambda: cqe('fault_mode_none_start_insert') == 'approval' and cqs('fault_mode_none_second_event') == 'save' and any(q.startswith('ROLLBACK') for q in cqsql('fault_mode_none_second_event'))),
+        ('LEVEL_1: pending, the approver told; the engine faults are approval', lambda: cqs('create_level1_out') == 'pending' and cqs('create_level1_in') == 'pending' and cqe('fault_level1_request_insert') == 'approval'
+            and any(q.startswith('INSERT INTO') and 'ews_notifications' in q for q in cqsql('create_level1_out'))),
+        ('HR: applied at once; refused; every fault is an error and the row goes', lambda: cqs('create_hr_day') == 'approved' and cqs('create_hr_old_day') == 'approved' and cqe('create_hr_refused_time') == 'time' and cqe('create_hr_refused_reason') == 'reason'
+            and all(cqe(k) for k in ('fault_hr_insert', 'fault_hr_begin', 'fault_hr_second_event', 'fault_hr_approved_update', 'fault_hr_commit'))
+            and any(q.startswith('DELETE FROM') and 'attendance_corrections' in q for q in cqsql('fault_hr_second_event'))),
+        ('the app form: sent, refused, bad nonce, logged out, no employee', lambda: 'cx_sent=' in cqto('form_request_sent') and 'cx_error=deadline' in cqto('form_request_refused') and cqr('form_request_bad_nonce')['exit'] == 'die'
+            and cqr('form_request_logged_out')['exit'] == 'die' and 'cx_error=employee' in cqto('form_request_no_employee')),
+        ('the direct form: done, no employee, refused, not HR', lambda: 'cx_done=direct' in cqto('form_direct_ok') and 'cx_error=employee' in cqto('form_direct_no_employee') and 'cx_error=time' in cqto('form_direct_refused') and cqr('form_direct_not_hr')['exit'] == 'die'),
+        ('the API: 201, VALIDATION_FAILED, not linked, off', lambda: cqr('api_created')['status'] == 201 and cqr('api_refused')['body']['error']['details']['reason'] == 'deadline' and cqr('api_not_linked')['body']['success'] is False and cqr('api_off')['body']['error']['details']['reason'] == 'disabled'),
+        ('withdraw: every state', lambda: [cqr(k) for k in ('withdraw_ok', 'withdraw_again', 'withdraw_other_employee', 'withdraw_approved', 'withdraw_rejected', 'withdraw_unknown', 'withdraw_pending_hr', 'withdraw_level1_open')] == [True, 'done', 'done', 'done', 'done', 'done', True, True]),
+        ('withdraw: every fault, rolled back', lambda: [cqr(k) for k in ('fault_withdraw_begin', 'fault_withdraw_update', 'fault_withdraw_update_zero', 'fault_withdraw_commit', 'fault_withdraw_engine')] == ['save', 'save', 'done', 'save', 'save']
+            and all(any(q.startswith('ROLLBACK') for q in cqsql(k)) for k in ('fault_withdraw_update', 'fault_withdraw_update_zero', 'fault_withdraw_commit', 'fault_withdraw_engine'))),
+        ('withdraw: the open approval request is cancelled first', lambda: any(r.get('status') == 'CANCELLED' for r in cq.get('_rows:approval_requests', []))),
+        ('the audits', lambda: all(a in cq_audit for a in ('correction_request', 'correction_direct', 'correction_withdrawn'))),
+        ('approved rows wrote correction events', lambda: any(r.get('source') == 'correction' and r.get('correction_id') for r in cq.get('_rows:time_logs', []))),
+        ('the reminder: off, before the time, feature off, then once', lambda: [cqr(k) for k in ('tick_reminder_off', 'tick_before_the_time', 'tick_feature_off')] == [False, False, False] and cqr('tick_first') == 'D0'
+            and any('ews_notifications' in q for q in cqsql('tick_first')) and not any('ews_notifications' in q for q in cqsql('tick_second')) and cqr('remind_today') >= 1),
+    ]
+    cq_false = [label for label, fn in cq_conditions if not holds(fn)]
+    check('...the corrections requests trace really refused, sent, approved, applied for HR, failed, withdrew and reminded (else it proves nothing)', not cq_false,
+          [cq_false] + ['%s=%s' % (k, json.dumps(cqr(k))[:200]) for k in ('create_mode_none_out', 'create_mode_none_time_earlier', 'create_mode_none_day', 'fault_mode_none_first_begin', 'fault_mode_none_start_insert', 'fault_mode_none_second_event', 'create_level1_out',
+                                                     'create_hr_day', 'api_created', 'api_refused', 'api_not_linked', 'api_off', 'form_request_sent', 'form_request_refused', 'form_request_bad_nonce', 'form_request_logged_out', 'form_request_no_employee', 'withdraw_ok', 'tick_first', 'remind_today')])
     ib, ih = inventory(BASE), inventory(HEAD)
     from collections import Counter
     removed, added = Counter(ib) - Counter(ih), Counter(ih) - Counter(ib)

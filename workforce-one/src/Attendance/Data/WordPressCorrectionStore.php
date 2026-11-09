@@ -52,4 +52,25 @@ final class WordPressCorrectionStore implements CorrectionStore
     {
         return (array) $this->db->get_results("SELECT c.* FROM {$this->t} c WHERE c.status IN ('pending','pending_hr') ORDER BY c.requested_at ASC");
     }
+
+    public function insert(array $row): int
+    {
+        if ($this->db->insert($this->t, $row) === false) return 0;
+        return (int) $this->db->insert_id;
+    }
+
+    public function delete(int $id): void
+    {
+        $this->db->delete($this->t, ['id' => $id], ['%d']);
+    }
+
+    public function ownOpen(int $id, int $employeeId): bool
+    {
+        return (bool) $this->db->get_var($this->db->prepare("SELECT id FROM {$this->t} WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')", $id, $employeeId));
+    }
+
+    public function withdraw(int $id, int $employeeId, int $userId, string $now)
+    {
+        return $this->db->query($this->db->prepare("UPDATE {$this->t} SET status='cancelled',decided_by=%d,decided_at=%s WHERE id=%d AND employee_id=%d AND status IN ('pending','pending_hr')", $userId, $now, $id, $employeeId));
+    }
 }

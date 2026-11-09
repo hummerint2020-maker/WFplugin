@@ -406,7 +406,8 @@
             "workforce-one/src/Attendance/BreakCronService.php",
             "workforce-one/src/Attendance/AutoAttendanceService.php",
             "workforce-one/src/Attendance/ManualRecordService.php",
-            "workforce-one/src/Attendance/EvidenceService.php"
+            "workforce-one/src/Attendance/EvidenceService.php",
+            "workforce-one/src/Attendance/CorrectionRequests.php"
           ],
           "moved": [
             "today_events",
@@ -448,7 +449,11 @@
             "corrections_export",
             "cx_hub_rows",
             "api_corrections_mine",
-            "cx_my_requests"
+            "cx_my_requests",
+            "cx_create",
+            "cx_withdraw",
+            "corrections_tick",
+            "corrections_remind"
           ],
           "traits_clean": [
             "breaks"
@@ -476,7 +481,8 @@
                 "employees",
                 "departments",
                 "approval_requests",
-                "approval_steps"
+                "approval_steps",
+                "time_logs"
               ]
             }
           ]
