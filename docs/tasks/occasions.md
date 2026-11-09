@@ -182,3 +182,4 @@ Owner (2026-11-09): "مين اسره النيل ده .. من فريق Work Force
 signature line is now "من فريق Workforce One" / "From the Workforce One team" everywhere (cards and moments); in the code it uses the
 app's name from Appearance (default "Workforce One"), so a site that renamed the app shows its own name. The administrator can still
 replace any line in "The words for each occasion".
+Owner approved "The words for each occasion" and the whole design ("موافق", 2026-11-09). Implementation starts after HL3 is merged.
