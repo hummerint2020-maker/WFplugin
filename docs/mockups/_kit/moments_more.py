@@ -91,7 +91,7 @@ def valentine(svg, heart_shape):
     style = ("--mo-bg:radial-gradient(circle at 50% 40%,#FFD6E2 0%,#FF8FAB 55%,#E8436A 100%);--mo-ink:#fff;--mo-shadow:0 3px 0 #B0124A,0 8px 22px rgba(122,16,48,.4);"
              "--mo-sub:#fff;--mo-glow:rgba(255,255,255,.6)")
     inner = '<div class="wfo-mo-rise" aria-hidden="true" style=\'--m:%s\'>%s</div><div class="wfo-mo-art">%s</div>' % (svg(heart_shape % '#fff'), rise, heart)
-    return frame('valentine', style, inner, 'عيد حب سعيد', "HAPPY VALENTINE'S DAY", T('عيد حب سعيد من أسرة شركة النيل', "Happy Valentine's Day from all of us at Nile"), en_first=True)
+    return frame('valentine', style, inner, 'عيد حب سعيد', "HAPPY VALENTINE'S DAY", T('عيد حب سعيد من فريق Workforce One', "Happy Valentine's Day from the Workforce One team"), en_first=True)
 
 
 def eid(svg, key, crescent, star, extra, palette):
@@ -117,7 +117,7 @@ def new_year():
     style = ("--mo-bg:radial-gradient(circle at 50% 30%,#3B1F5C 0%,#1E1035 55%,#0C0618 100%);--mo-ink:#FFE7A3;"
              "--mo-shadow:0 0 14px rgba(245,196,81,.6),0 3px 0 #6A2C91;--mo-sub:#E9DDF7")
     inner = fws + '<div class="wfo-mo-count" aria-hidden="true">%s</div>' % count + burst(['#F5C451', '#D6338A', '#C9D3E0', '#fff'])
-    return frame('new_year', style, inner, 'سنة سعيدة', 'HAPPY NEW YEAR', T('سنة سعيدة من أسرة شركة النيل', 'A happy new year from all of us at Nile'), en_first=True)
+    return frame('new_year', style, inner, 'سنة سعيدة', 'HAPPY NEW YEAR', T('سنة سعيدة من فريق Workforce One', 'A happy new year from the Workforce One team'), en_first=True)
 
 
 def national():
@@ -133,4 +133,4 @@ def national():
     style = ("--mo-bg:radial-gradient(circle at 50% 35%,#3a3a3a 0%,#1d1d1d 60%,#0d0d0d 100%);--mo-gold:linear-gradient(100deg,#CE1126 0%,#FF5A6E 35%,#FFFFFF 50%,#FF5A6E 65%,#CE1126 100%);"
              "--mo-glow:rgba(206,17,38,.55);--mo-sub:#F2F2F2")
     return frame('national', style, bands + fws + '<div style="block-size:150px"></div>', 'كل سنة ومصر بخير', 'Happy National Day',
-                 T('من أسرة شركة النيل', 'From all of us at Nile Contracting'))
+                 T('من فريق Workforce One', 'From the Workforce One team'))

@@ -240,8 +240,8 @@ def layer(mode='bg'):
 def greet(key, sub=None):
     g = T(*OCCASIONS[key][1])
     subs = {'birthday': ('يوم سعيد من كل الفريق', 'Have a great day, from all the team'),
-            'company_birthday': ('شركة النيل للمقاولات · من ٢٠١٤', 'Nile Contracting · since 2014')}
-    sub = sub or T(*subs.get(key, ('من أسرة شركة النيل', 'From all of us at Nile Contracting')))
+            'company_birthday': ('Workforce One · من ٢٠١٤', 'Workforce One · since 2014')}
+    sub = sub or T(*subs.get(key, ('من فريق Workforce One', 'From the Workforce One team')))
     return greet_html(g, sub)
 
 
@@ -350,7 +350,7 @@ def halloween_scene():
     bats = ''.join('<i class="wfo-hw-bat" style="--bx:%dpx;--by:%dpx;--d:%.2fs"></i>' % (bx, by, d) for bx, by, d in
                    [(-190, -330, 1.7), (170, -300, 1.85), (-120, -420, 2.0), (210, -180, 2.1), (-230, -150, 2.25), (60, -440, 2.35), (-40, -380, 2.5)])
     return ('<div class="wfo-hw" role="status" aria-label="%s"%s><span class="wfo-hw-moon" aria-hidden="true"></span>%s%s<p class="wfo-hw-title">%s</p><p class="wfo-hw-name">%s</p></div>') % (
-        esc(T('هالوين سعيد', 'Happy Halloween')), '', PUMPKIN_BIG, bats, '<span class="sp"></span>'.join(letters), esc(T('هالوين سعيد من أسرة شركة النيل', 'Happy Halloween from all of us at Nile')))
+        esc(T('هالوين سعيد', 'Happy Halloween')), '', PUMPKIN_BIG, bats, '<span class="sp"></span>'.join(letters), esc(T('هالوين سعيد من فريق Workforce One', 'Happy Halloween from the Workforce One team')))
 
 
 def halloween_moment():
@@ -379,7 +379,7 @@ def ramadan_scene():
     stars = ''.join('<i style="--x:%d%%;--y:%d%%;--s:%dpx;--d:%.2fs"></i>' % (rnd.randint(2, 97), rnd.randint(2, 70), rnd.choice([4, 6, 8, 10]), rnd.random() * 1.5) for _ in range(34))
     return ('<div class="wfo-rm" role="status" aria-label="%s"><div class="wfo-rm-stars" aria-hidden="true">%s</div><span class="wfo-rm-moon" aria-hidden="true"></span>%s'
             '<p class="wfo-rm-title">رمضان كريم</p><p class="wfo-rm-sub">%s</p></div>') % (
-                esc(T('رمضان كريم', 'Ramadan Kareem')), stars, LANTERN_BIG, esc(T('كل سنة وانتم طيبين · من أسرة شركة النيل', 'Ramadan Kareem from all of us at Nile')))
+                esc(T('رمضان كريم', 'Ramadan Kareem')), stars, LANTERN_BIG, esc(T('كل سنة وانتم طيبين · من فريق Workforce One', 'Ramadan Kareem from the Workforce One team')))
 
 
 def ramadan_moment():
@@ -454,7 +454,7 @@ ADMIN_SUB = [('dashboard', ('لوحة التحكم', 'Dashboard')), ('employees'
 
 
 TEXT_DEFAULTS = {   # key: card title, card line, moment title, moment line (ar, en)
-    'ramadan': (('رمضان كريم', 'Ramadan Kareem'), ('من أسرة شركة النيل', 'From all of us at Nile Contracting'), ('رمضان كريم', 'Ramadan Kareem'), ('كل سنة وانتم طيبين · من أسرة شركة النيل', 'Ramadan Kareem from all of us at Nile')),
+    'ramadan': (('رمضان كريم', 'Ramadan Kareem'), ('من فريق Workforce One', 'From the Workforce One team'), ('رمضان كريم', 'Ramadan Kareem'), ('كل سنة وانتم طيبين · من فريق Workforce One', 'Ramadan Kareem from the Workforce One team')),
 }
 
 
@@ -479,7 +479,7 @@ def texts_panel():
                 row(T('الكلام الكبير في لحظة المناسبة', "The big words in the occasion's moment"), T('٤٠ حرف بحد أقصى.', '40 characters at most.'), '', d[2][0], d[2][1], 40),
                 row(T('السطر اللي تحت اللحظة', 'The line under the moment'), T('١٢٠ حرف بحد أقصى.', '120 characters at most.'), '', d[3][0], d[3][1], 120),
                 esc(T('في عيد ميلاد الموظف تقدر تكتب {name} ويتحط مكانها اسمه الأول، وفي عيد ميلاد الشركة {years} لعدد السنين.', "In the employee's birthday you may write {name} for their first name, and {years} in the company's birthday for the number of years.")),
-                esc(T('معاينة', 'Preview')), esc(T('رمضان كريم يا أبطال', 'Ramadan Kareem')), esc(T('من أسرة شركة النيل', 'From all of us at Nile Contracting')))
+                esc(T('معاينة', 'Preview')), esc(T('رمضان كريم يا أبطال', 'Ramadan Kareem')), esc(T('من فريق Workforce One', 'From the Workforce One team')))
 
 
 def features(state='on'):
@@ -568,10 +568,10 @@ def build():
         'valentine': lambda: mm.valentine(svg, HEART),
         'eid_fitr': lambda: mm.eid(svg, 'eid_fitr', CRESCENT % '#F5C451', STAR % '#FFF6D0', STAR % '#2BA36B',
                                    ('radial-gradient(circle at 50% 35%,#1E8A5A 0%,#0F5132 55%,#07301D 100%)', gold, 'rgba(245,196,81,.55)', '#F5C451',
-                                    'عيد فطر مبارك', 'كل سنة وانتم طيبين · من أسرة شركة النيل', 'Eid Mubarak from all of us at Nile', ['#F5C451', '#2BA36B', '#FFF6D0', '#BFF0D4'])),
+                                    'عيد فطر مبارك', 'كل سنة وانتم طيبين · من فريق Workforce One', 'Eid Mubarak from the Workforce One team', ['#F5C451', '#2BA36B', '#FFF6D0', '#BFF0D4'])),
         'eid_adha': lambda: mm.eid(svg, 'eid_adha', CRESCENT % '#F5C451', STAR % '#FFE7A3', LANTERN % ('#C99A2E', '#F5C451', '#F5C451', '#C99A2E'),
                                    ('radial-gradient(circle at 50% 35%,#8A5420 0%,#5A3410 55%,#2E1A06 100%)', gold, 'rgba(245,196,81,.55)', '#F5C451',
-                                    'عيد أضحى مبارك', 'كل سنة وانتم طيبين · من أسرة شركة النيل', 'Eid al-Adha Mubarak from all of us at Nile', ['#F5C451', '#C8792A', '#FFF6D0', '#3C8D5A'])),
+                                    'عيد أضحى مبارك', 'كل سنة وانتم طيبين · من فريق Workforce One', 'Eid al-Adha Mubarak from the Workforce One team', ['#F5C451', '#C8792A', '#FFF6D0', '#3C8D5A'])),
         'new_year': mm.new_year,
         'national': mm.national,
     }

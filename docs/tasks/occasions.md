@@ -177,3 +177,8 @@ included), then four texts in Arabic and in English: the greeting card title (60
 (40), the line under the moment (120). An empty box uses the built-in words (shown as its placeholder); a live preview of the card.
 `{name}` = the employee's first name (birthday), `{years}` = the company's years. This replaces the single "Greeting" field. Stored in
 `ews_occasions['texts'][key][field][lang]`, plain text, escaped on output, never in CSS. Awaiting the owner's approval of the screen.
+
+Owner (2026-11-09): "مين اسره النيل ده .. من فريق Work Force One". "Nile Contracting" was only the mockups' sample company. The built-in
+signature line is now "من فريق Workforce One" / "From the Workforce One team" everywhere (cards and moments); in the code it uses the
+app's name from Appearance (default "Workforce One"), so a site that renamed the app shows its own name. The administrator can still
+replace any line in "The words for each occasion".
