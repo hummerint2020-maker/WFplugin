@@ -28,3 +28,11 @@
 .occ-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;padding-inline:10px 6px;border-radius:999px;background:#EBE8FA;color:#2d1f7a;font-size:12px;font-weight:600}
 .occ-chip button{border:0;background:none;cursor:pointer;color:#5B3FD9;font-size:14px;line-height:1}
 @media(max-width:782px){.occ-fields,.occ-modes{grid-template-columns:1fr}}
+.occ-texts{display:grid;gap:12px}
+.occ-text-pick select{min-width:240px}
+.occ-text-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.occ-text-pair label{display:grid;gap:3px}.occ-text-pair small{color:#667085;font-size:11px;font-weight:600}
+.occ-text-pair input{width:100%;min-height:38px;border:1px solid #cfd3d8;border-radius:8px;padding:6px 10px}
+.occ-text-preview{max-width:420px}
+.occ-text-preview .wfo-occ-greet{animation:none}
+@media(max-width:782px){.occ-text-pair{grid-template-columns:1fr}}

@@ -170,3 +170,10 @@ Owner approved the Ramadan moment and asked for the rest ("موافق اعمل �
 - New Year: 3, 2, 1, then the year in gold, soft fireworks (no strobe), "HAPPY NEW YEAR".
 - National day (Egypt): bands in the flag's colours wave across (no emblem), fireworks in red, white and gold, "كل سنة ومصر بخير".
 Not for the company's birthday (owner, on the cake). Awaiting the owner's approval.
+
+Owner approved all the moments ("تمام", 2026-11-09) and asked to write the words himself, per occasion ("اقدر اكتب الكلام اللي انا
+عايزه ك كونفيجرشن لكل مناسبة"). Features → Occasions → "The words for each occasion": pick an occasion (the employee's birthday
+included), then four texts in Arabic and in English: the greeting card title (60), the line under it (120), the big words of the moment
+(40), the line under the moment (120). An empty box uses the built-in words (shown as its placeholder); a live preview of the card.
+`{name}` = the employee's first name (birthday), `{years}` = the company's years. This replaces the single "Greeting" field. Stored in
+`ews_occasions['texts'][key][field][lang]`, plain text, escaped on output, never in CSS. Awaiting the owner's approval of the screen.

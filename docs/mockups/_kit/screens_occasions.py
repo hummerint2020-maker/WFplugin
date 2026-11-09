@@ -453,6 +453,35 @@ ADMIN_SUB = [('dashboard', ('لوحة التحكم', 'Dashboard')), ('employees'
              ('appearance', ('المظهر', 'Appearance')), ('moments', ('لحظات الموظفين', 'Employee Moments'))]
 
 
+TEXT_DEFAULTS = {   # key: card title, card line, moment title, moment line (ar, en)
+    'ramadan': (('رمضان كريم', 'Ramadan Kareem'), ('من أسرة شركة النيل', 'From all of us at Nile Contracting'), ('رمضان كريم', 'Ramadan Kareem'), ('كل سنة وانتم طيبين · من أسرة شركة النيل', 'Ramadan Kareem from all of us at Nile')),
+}
+
+
+def texts_panel():
+    occ_opts = ''.join('<option%s>%s</option>' % (' selected' if k == 'ramadan' else '', esc(T(*OCCASIONS[k][0]))) for k in COMPANY + ['birthday'])
+    d = TEXT_DEFAULTS['ramadan']
+    def row(label, help_, ar_val, ar_ph, en_ph, maxlen):
+        return ('<div class="occ-text-row"><span class="wfo-field-label">%s</span><div class="occ-text-pair">'
+                '<label><small>عربي</small><input type="text" dir="rtl" maxlength="%d" value="%s" placeholder="%s"></label>'
+                '<label><small>English</small><input type="text" dir="ltr" maxlength="%d" placeholder="%s"></label></div><small class="occ-help">%s</small></div>') % (
+                    esc(label), maxlen, esc(ar_val), esc(ar_ph), maxlen, esc(en_ph), esc(help_))
+    return ('<div class="wfo-subpanel occ-texts"><div class="wfo-subpanel-title">%s</div><p class="wfo-subpanel-desc">%s</p>'
+            '<label class="occ-text-pick"><span class="wfo-field-label">%s</span><select>%s</select></label>%s%s%s%s'
+            '<p class="occ-help">%s</p>'
+            '<div class="occ-text-preview wfo-occ-ramadan"><span class="wfo-field-label">%s</span>'
+            '<div class="wfo-occ-greet"><div class="wfo-occ-greet-text"><b>%s</b><small>%s</small></div><span class="wfo-occ-greet-art"></span></div></div></div>') % (
+                esc(T('الكلام لكل مناسبة', 'The words for each occasion')),
+                esc(T('اكتب الكلام اللي يظهر في كل مناسبة بالعربي والإنجليزي. الخانة الفاضية بتاخد الكلام الجاهز (اللي ظاهر باهت جواها).', 'Write the words each occasion shows, in Arabic and English. An empty box uses the built-in words (shown faded inside it).')),
+                esc(T('المناسبة', 'Occasion')), occ_opts,
+                row(T('عنوان كارت التهنئة', 'Greeting card title'), T('٦٠ حرف بحد أقصى.', '60 characters at most.'), 'رمضان كريم يا أبطال', d[0][0], d[0][1], 60),
+                row(T('السطر اللي تحت العنوان', 'The line under it'), T('١٢٠ حرف بحد أقصى.', '120 characters at most.'), '', d[1][0], d[1][1], 120),
+                row(T('الكلام الكبير في لحظة المناسبة', "The big words in the occasion's moment"), T('٤٠ حرف بحد أقصى.', '40 characters at most.'), '', d[2][0], d[2][1], 40),
+                row(T('السطر اللي تحت اللحظة', 'The line under the moment'), T('١٢٠ حرف بحد أقصى.', '120 characters at most.'), '', d[3][0], d[3][1], 120),
+                esc(T('في عيد ميلاد الموظف تقدر تكتب {name} ويتحط مكانها اسمه الأول، وفي عيد ميلاد الشركة {years} لعدد السنين.', "In the employee's birthday you may write {name} for their first name, and {years} in the company's birthday for the number of years.")),
+                esc(T('معاينة', 'Preview')), esc(T('رمضان كريم يا أبطال', 'Ramadan Kareem')), esc(T('من أسرة شركة النيل', 'From all of us at Nile Contracting')))
+
+
 def features(state='on'):
     def make():
         cards = ''
@@ -478,7 +507,6 @@ def features(state='on'):
                       '<label class="occ-mode is-on"><input type="radio" name="mode" checked><b>%s</b><small>%s</small><span class="occ-mini is-bg"></span></label>'
                       '<label class="occ-mode"><input type="radio" name="mode"><b>%s</b><small>%s</small><span class="occ-mini is-full"></span></label></div></div>'
                       '<label><span class="wfo-field-label">%s</span><input type="date" value="%s"><small class="occ-help">%s</small></label>'
-                      '<label><span class="wfo-field-label">%s</span><input type="text" value="%s" placeholder="%s"><small class="occ-help">%s</small></label>'
                       '<label><span class="wfo-field-label">%s</span><input type="date" value="2014-03-01"><small class="occ-help">%s</small></label>'
                       '<label class="occ-check"><input type="checkbox" checked> %s<small class="occ-help">%s</small></label>'
                       '</div>'
@@ -493,8 +521,6 @@ def features(state='on'):
                           esc(T('الشريط اللي فوق والخلفية', 'Top bar and background')), esc(T('ثواني حركة لما الصفحة تفتح، وبعدها الزينة تفضل هادية ورا المحتوى.', 'A few seconds of movement when a page opens, then the decorations stay quietly behind the content.')),
                           esc(T('تنزل على الشاشة كلها', 'Falling over the whole screen')), esc(T('تنزل على الشاشة مرة لثواني وتختفي. عمرها ما تمنع لمسة ولا تفضل على زرار الحضور.', 'Falls over the screen once for a few seconds, then is gone. It never blocks a tap or stays over Sign In / Out.')),
                           esc(T('آخر يوم (اختياري)', 'Last day (optional)')), '2027-03-10', esc(T('فاضي: لحد ما تقفلها.', 'Empty: until you switch it off.')),
-                          esc(T('رسالة التهنئة', 'Greeting')), esc(T('رمضان كريم من أسرة النيل', 'Ramadan Kareem from the Nile family')), esc(T(*OCCASIONS['ramadan'][1])),
-                          esc(T('فاضي: التهنئة الجاهزة. ١٢٠ حرف بحد أقصى.', 'Empty: the built-in greeting. 120 characters at most.')),
                           esc(T('تاريخ تأسيس الشركة', "The company's founding date")), esc(T('لـ "١٢ سنة مع بعض" في عيد ميلاد الشركة.', 'For "12 years together" on the company\'s birthday.')),
                           esc(T('تظهر على شاشات الكشك', 'Show on kiosk screens')), esc(T('مناسبة الشركة بس، من غير أسامي.', 'The company occasion only, never names.')),
                           esc(T('احتفل بكل موظف في عيد ميلاده', 'Celebrate each employee on their birthday')),
@@ -506,6 +532,8 @@ def features(state='on'):
                           esc(T('تورتة وشمعة بتطفي و"HAPPY BIRTHDAY"، مرة واحدة في اليوم أول ما يفتح التطبيق.', 'A cake, its candle blown out and "HAPPY BIRTHDAY", once a day when they open the app.')),
                           esc(T('مشهد التورتة لكل الموظفين في عيد ميلاد الأشخاص المختارين', 'The cake moment for everyone on the picked people\'s birthday')),
                           esc(T('مرة واحدة في اليوم لكل موظف.', 'Once a day for each employee.')))
+        if on:
+            fields += texts_panel()
         body = ('<h1 class="wp-heading-inline">%s</h1><div class="wfo-features-shell" style="margin-top:18px"><div class="wfo-feature-section" id="ews-occasions">'
                 '<div class="wfo-feature-head"><div><div class="wfo-feature-title">%s</div><div class="wfo-feature-desc">%s</div></div>'
                 '<label class="wfo-feature-status"><input type="checkbox"%s> %s</label></div>%s</div>'
