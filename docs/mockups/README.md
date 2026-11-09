@@ -10,6 +10,7 @@ stylesheets, fonts and icons from `workforce-one/assets/`.
 - `hr-letter/`: `docs/tasks/hr-letter.md` (logical properties: the `-rtl` copy is identical)
 - `employee-fields/`: `docs/tasks/hr-letter.md` §16 HL2 (logical properties: the `-rtl` copy is identical)
 - `approval-reasons/`: `docs/tasks/admin-fallback-reason.md` and `docs/tasks/legacy-approval-cards.md` (logical properties: the `-rtl` copy is identical)
+- `occasions/`: `docs/tasks/occasions.md` (`occasions.css` is written by `_kit/screens_occasions.py`; logical properties: the `-rtl` copy is identical)
 - `week-lock/`: `docs/tasks/week-lock.md` (same Attendance snapshots; `week-lock.css` uses logical properties, so its `-rtl` copy is identical)
 
 Every screen is written twice, `<screen>.ar.html` (RTL) and `<screen>.en.html`, by
