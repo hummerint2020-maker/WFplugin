@@ -333,7 +333,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.144-hl3'; }   // HR letters: employees get name_ar, gender, hire_date (HL2); the letters table (HL3)
+        private function ews_schema_target(){ return '3.31.144.1'; }   // HR letters: employees get name_ar, gender, hire_date (HL2); the letters table (HL3)
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

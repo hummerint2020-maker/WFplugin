@@ -41,6 +41,7 @@
  * @var string[] $om_statuses                  the schedule statuses that exist
  * @var string[] $weekday_names                 0 = Sunday
  * @var int[] $working_days
+ * @var array{page_url:string,workflow_url:string,hr_set:bool,s:array<string,mixed>} $hr_letters  HR letters (3.31.144)
  * @var bool $saved
  * @var string|null $error
  * @var string $post_url
