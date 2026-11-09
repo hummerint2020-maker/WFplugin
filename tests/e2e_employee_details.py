@@ -245,7 +245,7 @@ check('a file that is not Excel or CSV is refused', qs.get('details_error') == '
 qs = upload(adm, 'Name,Title\r\nx,y\r\n'.encode(), 'wrong.csv')
 check('a file without the columns is refused', qs.get('details_error') == 'columns', qs)
 st, page, _ = adm.req(IMPORT + '&details_error=columns')
-check('...with the reason', 'The file needs an "Employee ID" or "Domain name" column' in page)
+check('...with the reason', 'The file needs an "Employee ID" or "Domain name" column' in html.unescape(page))
 st, page, _ = emp1.req(IMPORT)
 check('an employee cannot open the import', 'name="details_file"' not in page)
 
