@@ -29,6 +29,7 @@ trait EWS_Features_Trait {
                 'substitutes'=>$this->substitutes_enabled(),
                 'advances'=>$this->advances_enabled(),
                 'hr_letters'=>$this->hr_letters_enabled(),
+                'occasions'=>$this->occasions_enabled(),
                 'health'=>$this->health_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
@@ -55,6 +56,7 @@ trait EWS_Features_Trait {
             'offline'=>$this->offline_settings(),'offline_texts'=>\WorkforceOne\Settings\OfflineScreen::TEXTS,'offline_sections'=>\WorkforceOne\Settings\OfflineScreen::SECTIONS,
             'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
+            'occasions'=>$this->occasion_admin_data(),
             'hr_letters'=>['s'=>$this->hr_letter_settings(),'hr_set'=>(int)($this->approval_settings()['hr_user']??0)>0,'page_url'=>admin_url('admin.php?page=ews31-hr-letters&tab=types'),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')],
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
             'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
@@ -91,6 +93,7 @@ trait EWS_Features_Trait {
             [$wl,$wl_error]=\WorkforceOne\Settings\WeekLockSettings::fromPost($post);
             if($wl_error!=='')$this->features_redirect(['features_error'=>'wl_'.$wl_error]);
         }
+        $occ=$this->occasions_validate($post);   // Occasions (3.31.145)
         [$early,$error]=FeatureSettings::earlyLeave($post['early_leave_max']??120,$post['early_leave_monthly']??240);
         if($error)$this->features_redirect(['features_error'=>$error]);
 
@@ -133,6 +136,7 @@ trait EWS_Features_Trait {
                 'other'=>$flag('hl_other'),'one_open'=>$flag('hl_one_open'),'new_type_delivery'=>$this->hr_letter_settings()['new_type_delivery'],'currency_ar'=>$post['hl_currency_ar']??'','currency_en'=>$post['hl_currency_en']??'']);
             if($hl!==$this->hr_letter_settings())update_option('ews_hr_letters',$hl,false);
         }
+        $this->occasions_store($occ);
         // System health (3.31.110): the switch, how many requests give query detail, how long the daily history is kept.
         if(isset($post['health_present'])){
             $was=$this->health_enabled();$now=$flag('health_enabled')?1:0;

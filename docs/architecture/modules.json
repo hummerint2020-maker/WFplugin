@@ -36,7 +36,8 @@
         "admin-nav",
         "admin-dashboard",
         "dashboard-view",
-        "frontend"
+        "frontend",
+        "occasions"
       ],
       "tables": [],
       "api": [
@@ -45,7 +46,12 @@
         "app_home_url",
         "admin_nav_tab_labels",
         "app_screens",
-        "app_view_allowed"
+        "app_view_allowed",
+        "occasion_kiosk",
+        "occasion_admin_data",
+        "occasions_validate",
+        "occasions_store",
+        "occasions_enabled"
       ]
     },
     "people": {

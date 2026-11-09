@@ -16,6 +16,7 @@
  * @var string $script
  * @var string $style
  * @var string $version
+ * @var array{instance:string,class:string,layer:string,css_url:string,css:string} $occasion  Occasions (3.31.145): all '' while off
  */
 if (!defined('ABSPATH')) exit;
 $initials = '';
@@ -23,9 +24,9 @@ foreach (array_slice(preg_split('/\s+/u', trim($app_name)) ?: [], 0, 2) as $w) $
 ?><!doctype html>
 <html <?php language_attributes(); ?>><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title><?php echo esc_html($app_name . ' · ' . $location_name); ?></title><link rel="stylesheet" href="<?php echo esc_url(add_query_arg('ver', $version, $style)); ?>">
-<style><?php echo wp_strip_all_tags($brand_css); // phpcs:ignore WordPress.Security.EscapeOutput -- CSS variables built from validated colours ?></style></head>
-<body><main class="k">
-    <section class="k-info">
+<style><?php echo wp_strip_all_tags($brand_css); // phpcs:ignore WordPress.Security.EscapeOutput -- CSS variables built from validated colours ?></style><?php if ($occasion['class'] !== ''): ?><link rel="stylesheet" href="<?php echo esc_url(add_query_arg('ver', $version, $occasion['css_url'])); ?>"><style><?php echo wp_strip_all_tags($occasion['css']); // phpcs:ignore WordPress.Security.EscapeOutput -- the catalog's colours and motifs ?></style><?php endif; ?></head>
+<body<?php if ($occasion['class'] !== ''): ?> class="<?php echo esc_attr($occasion['class']); ?>" data-occasion="<?php echo esc_attr(rawurlencode($occasion['instance'])); ?>"<?php endif; ?>><main class="k">
+    <?php echo $occasion['layer']; // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><section class="k-info">
         <div class="k-brand"><?php if ($logo !== ''): ?><img src="<?php echo esc_url($logo); ?>" alt=""><?php else: ?><span aria-hidden="true"><?php echo esc_html($initials ?: 'WO'); ?></span><?php endif; ?><div><small><?php echo esc_html($app_name); ?></small><strong><?php echo esc_html($location_name); ?></strong></div></div>
         <div class="k-clock"><b id="k-time"><?php echo esc_html(date_i18n('H:i')); ?></b><span id="k-date"><?php echo esc_html(date_i18n('l, j F')); ?></span></div>
         <ol class="k-steps">

@@ -370,6 +370,8 @@ trait EWS_Frontend_Trait {
             wp_add_inline_style('workforce-one-shell', $this->appearance_css());
             // Signed out, the app page is the login (templates/app/login.php): its styles in the <head>.
             if(!is_user_logged_in())$this->enqueue_login_assets();
+            // Occasions (3.31.145): the occasion's stylesheet in the <head> too (nothing while off: occasion_now() returns null first).
+            if(($occ=$this->occasion_now(is_user_logged_in()?'app':'login'))!==null)$this->occasion_assets($occ);
             // In the <head> on the Home page, so it does not flash unstyled (the view enqueues it too, for its shortcode).
             $view=sanitize_key($_GET['ews_view']??'dashboard');
             if($view==='dashboard')wp_enqueue_style('workforce-one-home');

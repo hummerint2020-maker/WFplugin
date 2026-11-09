@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.31.145
+### Occasions (off by default; owner decisions and approved mockups 2026-11-09)
+- **Feature Configuration → Occasions**: one company occasion at a time (Valentine's Day, Ramadan, Eid al-Fitr, Eid al-Adha, New Year, Halloween, National day · Egypt, the company's birthday), switched on and off by the administrator, with an optional last day. It shows in the top bar and the background, or falling over the whole screen for a few seconds; never over a button, never taking a tap.
+- **The employee app, the login page and kiosks** get the occasion's colours, motifs and a greeting card (Dashboard). Kiosks show the company occasion only and follow a switch within one code; the login page never shows a name.
+- **Birthdays**: each employee on their own birthday (from Employee Moments; only they see it; the year never shown), and the people the administrator picks (everyone sees theirs).
+- **Moments** once a day: the birthday cake (the candle blown out, "HAPPY BIRTHDAY"), the Halloween pumpkin and bats, the Ramadan lantern, and one for every other occasion (not the company's birthday). Reduced motion shows them still.
+- **The words** of each occasion in Arabic and English (the greeting card and the moment), written by the administrator; empty boxes use the built-in words; "From the Workforce One team" signs them by default.
+- "Hide decorations" for an employee until the next occasion; an administrator's Preview of each occasion (works while off).
+- Tests: unit tests for the rules; e2e and browser suites; golden declares the Features card and the one new action.
+
 ## 3.31.144
 ### HR letters (off by default; owner decisions 2026-11-07 to 11-09; PRs #43 and this one)
 - **Employees ask HR for a letter** from My requests → New request → HR letter: the type (or "Other" with free text), who it is addressed to ("To whom it may concern" by default), Arabic or English, an optional note. It goes through the new **HR Letter** approval workflow; the first request sets it to one level, HR (HR's own letter goes to the administrators; rejecting needs a reason). One open request per type and language.
