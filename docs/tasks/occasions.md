@@ -136,3 +136,7 @@ Q1-B; cached login pages; natural Arabic greetings; contrast on the four presets
 15. (A) The login page shows the company occasion.
 16. (A) Native apps later. 17. (A) No notification.
 - **Added by the owner:** Halloween is one of the occasions ("عايزين نعمل الهالوين كمان ضيفها").
+
+## Mockups approved (owner, 2026-11-09)
+`docs/mockups/occasions/` after two rounds: the decorations made stronger ("حاسس الزينه قليله") and a new greeting card ("الكارت … تصميمه
+وحش"). The owner said "موافق ابدا بعد دمج الخطابات": implementation starts after the HR letters release (HL3) is merged.
