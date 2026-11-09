@@ -17,7 +17,7 @@ use WorkforceOne\Ui\Icons;
 $kinds = $new['kinds'] ?? [];
 if (!$kinds) return;
 $groups = ['time' => __('Time off and hours', 'workforce-one'), 'attendance' => __('Attendance and schedule', 'workforce-one'), 'money' => __('Money and documents', 'workforce-one')];
-$icons = ['leave' => 'leave', 'early' => 'logout', 'overtime' => 'overtime', 'correction' => 'history', 'swap' => 'calendar', 'face' => 'user', 'advance' => 'cash'];
+$icons = ['leave' => 'leave', 'early' => 'logout', 'overtime' => 'overtime', 'correction' => 'history', 'swap' => 'calendar', 'face' => 'user', 'advance' => 'cash', 'letter' => 'file'];
 $back = '<input type="hidden" name="ews_return" value="requests">';
 $x = '<button type="button" class="wfo-sheet-x" data-wfo-sheet-close aria-label="' . esc_attr__('Close', 'workforce-one') . '">' . Icons::svg('close', 20, 2) . '</button>';
 $head = static function (string $id, string $title) use ($x): string {
@@ -140,6 +140,29 @@ $head = static function (string $id, string $title) use ($x): string {
         <p class="wfo-rq-total" data-new-advance-each role="status"></p>
         <p class="wfo-sheet-note"><?php esc_html_e('Once approved, Finance pays it, and the instalments come off your pay from the month after.', 'workforce-one'); ?></p>
         <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); ?><?php esc_html_e('Send request', 'workforce-one'); ?></button>
+    </form>
+</dialog>
+<?php endif; ?>
+<?php if (isset($kinds['letter'])): $hl = $new['letter']; $ui_ar = strpos((string) determine_locale(), 'ar') === 0; ?>
+<dialog class="wfo-sheet" id="wfo-new-letter" aria-labelledby="wfo-new-letter-title">
+    <form method="post" action="<?php echo esc_url($post_url); ?>" class="wfo-sheet-body" data-hr-letter="<?php echo esc_attr((string) wp_json_encode([
+        'languages' => $hl['languages'], 'addressee' => ['ar' => $hl['addressee_ar'], 'en' => $hl['addressee_en']],
+        'hints' => ['pdf' => __('Once approved, the letter is made as a PDF and you download it from My requests.', 'workforce-one'), 'upload' => __('Once approved, HR prepares the letter and attaches it here; you are told when it is ready.', 'workforce-one'),
+            'none' => __('Once approved, HR prepares the letter and tells you where to collect it.', 'workforce-one')],
+        'salary' => __('It shows your salary.', 'workforce-one'),
+    ])); ?>"><?php wp_nonce_field('ews_hr_letter_request'); ?><input type="hidden" name="action" value="ews_hr_letter_request"><?php echo $back; // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?>
+        <?php echo $head('wfo-new-letter-title', __('HR letter', 'workforce-one')); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?>
+        <div class="wfo-rq-field"><label for="wfo-new-letter-type"><?php esc_html_e('Letter type', 'workforce-one'); ?></label><select id="wfo-new-letter-type" name="type" required>
+            <?php foreach ($hl['types'] as $t): ?><option value="<?php echo esc_attr($t['key']); ?>" data-languages="<?php echo esc_attr(implode(',', $t['languages'])); ?>" data-delivery="<?php echo esc_attr($t['delivery']); ?>" data-salary="<?php echo $t['salary'] ? '1' : '0'; ?>"><?php echo esc_html($t['name']); ?></option><?php endforeach; ?>
+            <?php if ($hl['other']): ?><option value="other"><?php esc_html_e('Other', 'workforce-one'); ?></option><?php endif; ?>
+        </select></div>
+        <?php if ($hl['other']): ?><div class="wfo-rq-field" data-hl-other hidden><label for="wfo-new-letter-other"><?php esc_html_e('Which letter do you need?', 'workforce-one'); ?></label><input type="text" id="wfo-new-letter-other" name="other_text" maxlength="255"></div><?php endif; ?>
+        <div class="wfo-rq-field"><label for="wfo-new-letter-to"><?php esc_html_e('Addressed to', 'workforce-one'); ?></label><input type="text" id="wfo-new-letter-to" name="addressee" maxlength="190" placeholder="<?php echo esc_attr($ui_ar ? $hl['addressee_ar'] : $hl['addressee_en']); ?>"></div>
+        <div class="wfo-rq-field" role="radiogroup" aria-labelledby="wfo-new-letter-lang"><span class="wfo-rq-label" id="wfo-new-letter-lang"><?php esc_html_e('Letter language', 'workforce-one'); ?></span>
+            <div class="wfo-hl-seg"><?php foreach ($hl['languages'] as $i => $l): ?><label><input type="radio" name="language" value="<?php echo esc_attr($l); ?>"<?php checked($l === ($ui_ar && in_array('ar', $hl['languages'], true) ? 'ar' : $hl['languages'][0])); ?>> <?php echo $l === 'ar' ? 'عربي' : 'English'; ?></label><?php endforeach; ?></div></div>
+        <div class="wfo-rq-field"><label for="wfo-new-letter-note"><?php esc_html_e('Note for HR', 'workforce-one'); ?> <span class="wfo-optional"><?php esc_html_e('(optional)', 'workforce-one'); ?></span></label><textarea id="wfo-new-letter-note" name="note" rows="2" maxlength="500"></textarea></div>
+        <p class="wfo-sheet-note" data-hl-hint hidden></p>
+        <button class="wfo-sheet-submit" type="submit"><?php echo Icons::svg('arrow', 18, 2.2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><?php esc_html_e('Send request', 'workforce-one'); ?></button>
     </form>
 </dialog>
 <?php endif; ?>

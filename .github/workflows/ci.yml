@@ -113,6 +113,8 @@ jobs:
         run: wp eval-file tests/e2e_schedule_store.php --path="$WP"
       - name: People storage contract
         run: wp eval-file tests/e2e_people_store.php --path="$WP"
+      - name: HR letters storage contract
+        run: wp eval-file tests/e2e_hr_letters_store.php --path="$WP"
       - name: Attendance storage contract
         run: wp eval-file tests/e2e_attendance_store.php --path="$WP"
       - name: Start PHP server
@@ -173,6 +175,10 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_my_profile.py "$S"
       - name: Employee details for HR letters (profile, My Profile, update from a file)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_employee_details.py "$S"
+      - name: HR letters (off by default, request, approve and issue, upload, ready, reject, withdraw, cancel, downloads, the Hub, HR's letter)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_hr_letters.py "$S"
+      - name: HR letters at the same moment, injected faults and the upgrade from 3.31.144
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_hr_letters_more.py "$S"
       - name: People and colleague profiles (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
       - name: App frame, navigation and login (employee app)
@@ -318,6 +324,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" node tests/org_chart_browser.js
       - name: My approvals in a browser (approve several at once, a reason to reject, Arabic on a phone, My requests)
         run: WP_CLI="wp --path=$WP" node tests/my_approvals_browser.js
+      - name: HR letters in a browser (the request sheet, approve and download, template chips, a phone)
+        run: WP_CLI="wp --path=$WP" HL_SHOTS="$S" node tests/hr_letters_browser.js
       - name: Confirmations before a decision in a browser (a decision on the button or in a hidden field, switched off)
         run: node tests/confirmations_browser.js
       - name: Tasks search in a browser (the column counts follow it)
@@ -346,8 +354,13 @@ jobs:
           wp eval 'global $wpdb; if(!$wpdb->get_var("SHOW TABLES LIKE \"{$wpdb->prefix}ews_employees\"")) exit(1);' --path="$WP"
           wp plugin activate workforce-one --path="$WP"
           wp option update ews_delete_data_on_uninstall 1 --path="$WP"
+          # HR letters (HL3): a letter file, its settings and the capability are there before, gone after.
+          wp eval '$m=new EWS_Manager_V31_1(); $r=new ReflectionMethod($m,"private_files_dir"); $r->setAccessible(true); $d=$r->invoke($m,"workforce-one-letters"); file_put_contents($d."/".str_repeat("a",32).".pdf","%PDF-1.4"); update_option("ews_hr_letters",["other"=>1],false); update_option("ews_feature_hr_letters",1,false); echo $d,"\n"; if(!get_role("administrator")->has_cap("ews_manage_hr_letters")) exit(1);' --path="$WP" > "$S/letters_dir.txt"
+          test -f "$(tail -1 "$S/letters_dir.txt")/$(printf 'a%.0s' $(seq 1 32)).pdf"
           wp plugin uninstall workforce-one --deactivate --skip-delete --path="$WP"
           wp eval 'global $wpdb; $n=count($wpdb->get_col("SHOW TABLES LIKE \"{$wpdb->prefix}ews\\_%\"")); echo "ews tables after uninstall: $n\n"; if($n) exit(1);' --path="$WP"
+          test ! -e "$(tail -1 "$S/letters_dir.txt")"
+          wp eval 'global $wpdb; $o=$wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE \"ews\\_hr\\_%\" OR option_name=\"ews_feature_hr_letters\""); $cap=get_role("administrator")->has_cap("ews_manage_hr_letters"); echo "HR letters options: ".count($o).", capability: ".(int)$cap."\n"; if($o||$cap) exit(1);' --path="$WP"
       - name: Debug log
         if: always()
         run: |

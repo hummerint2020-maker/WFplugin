@@ -67,6 +67,15 @@ use WorkforceOne\Schedule\Data\WordPressScheduleDayStore;
 use WorkforceOne\Schedule\ScheduleDayService;
 use WorkforceOne\Schedule\ScheduleNotifier;
 use WorkforceOne\Schedule\WeekLockService;
+use WorkforceOne\HrLetters\Data\LetterQuery;
+use WorkforceOne\HrLetters\Data\LetterSchema;
+use WorkforceOne\HrLetters\Data\LetterStore;
+use WorkforceOne\HrLetters\Data\WordPressLetterQuery;
+use WorkforceOne\HrLetters\Data\WordPressLetterStore;
+use WorkforceOne\HrLetters\LetterDecisions;
+use WorkforceOne\HrLetters\LetterIssuer;
+use WorkforceOne\HrLetters\LetterPorts;
+use WorkforceOne\HrLetters\LetterRequests;
 
 if (!defined('ABSPATH')) exit;
 
@@ -99,6 +108,8 @@ final class Services
     private $substitutePorts;
     /** @var AttendancePorts */
     private $attendancePorts;
+    /** @var LetterPorts|null */
+    private $letterPorts;
     /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
     private $tables;
     /** @var array<string,object> */
@@ -106,8 +117,9 @@ final class Services
 
     /** @param array<string,string> $tables */
     public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
-        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts)
+        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts, ?LetterPorts $letterPorts = null)
     {
+        $this->letterPorts = $letterPorts;
         $this->attendancePorts = $attendancePorts;
         $this->substitutePorts = $substitutePorts;
         $this->db = $db;
@@ -293,6 +305,52 @@ final class Services
     public function correctionQuery(): CorrectionQuery
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''), (string) ($this->tables['time_logs'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the table of this container's prefix (the upgrade step). */
+    public function letterSchema(): void
+    {
+        LetterSchema::create($this->db);
+    }
+
+    public function letterStore(): LetterStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The HR letters' reads with the employees (HL3). */
+    public function letterQuery(): LetterQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterQuery($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    private function letterPorts(): LetterPorts
+    {
+        if (!$this->letterPorts) throw new \LogicException('HR letters: no ports were given');
+        return $this->letterPorts;
+    }
+
+    /** HR letters (HL3): making, uploading, regenerating, previewing and downloading a letter. */
+    public function letterIssuer(): LetterIssuer
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new LetterIssuer($this->letterStore(), $this->letterQuery(), $this->letterPorts(), $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the employee's request and withdrawal, HR's letter for an employee. */
+    public function letterRequests(): LetterRequests
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new LetterRequests($this->letterStore(), $this->letterIssuer(), $this->letterPorts(), $this->tx, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the decisions, ready to collect, cancel. */
+    public function letterDecisions(): LetterDecisions
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new LetterDecisions($this->letterStore(), $this->letterIssuer(), $this->letterPorts(), $this->tx, $this->audit, $this->clock);
         return $this->made[__FUNCTION__];
     }
 

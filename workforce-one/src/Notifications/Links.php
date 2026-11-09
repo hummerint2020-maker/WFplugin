@@ -29,6 +29,7 @@ final class Links
     public const ADMIN_PAGES = [
         'ews31-time-report' => 'ews_manage_time', 'ews31-requests' => 'manage_options',
         'ews31-daily-workers' => 'ews_manage_daily_workers', 'ews31-face-reset-requests' => 'ews_manage_employees',
+        'ews31-hr-letters' => 'ews_manage_hr_letters',   // HR letters (HL3)
     ];
 
     /** App pages that need a permission => that permission. */

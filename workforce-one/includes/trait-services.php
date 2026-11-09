@@ -160,7 +160,70 @@ trait EWS_Services_Trait {
             new class implements Permissions {
                 public function isAdmin(int $userId): bool { return (bool)user_can($userId,'manage_options'); }
             },
-            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports());
+            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports());
+    }
+
+    /** The HR letters' ports (HL3): the adapters through which its services reach the site, the approvals engine, notifications, files and Payroll. */
+    private function letter_ports(): \WorkforceOne\HrLetters\LetterPorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new \WorkforceOne\HrLetters\LetterPorts(
+            new class($call) implements \WorkforceOne\HrLetters\LetterSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function enabled(): bool { return (bool)($this->call)('hr_letters_enabled'); }
+                public function requestable(): bool { return (bool)($this->call)('hr_letters_requestable'); }
+                public function settings(): array { return (array)($this->call)('hr_letter_settings'); }
+                public function types(): array { return (array)($this->call)('hr_letter_types'); }
+                public function letterhead(): array { return (array)($this->call)('hr_letter_letterhead'); }
+                public function companyFallback(): string { return (string)get_bloginfo('name'); }
+                public function currencyCode(): string { return (string)get_option('ews_payroll_currency')?:'EGP'; }
+                public function today(): string { return current_time('Y-m-d'); }
+                public function markUsed(): void { if(!get_option('ews_hr_letters_ever'))update_option('ews_hr_letters_ever',1,false); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterApprovals {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function ensureReady(): bool { return (bool)($this->call)('hr_letter_workflow_ready'); }
+                public function start(int $letterId,int $employeeId): bool { return !is_wp_error(($this->call)('approval_start','hr_letter','hr_letter',$letterId,$employeeId,[],false)); }
+                public function find(int $letterId): ?object { $r=($this->call)('approval_find_request','hr_letter','hr_letter',$letterId); return is_object($r)?$r:null; }
+                public function currentStep(int $approvalRequestId): ?object { $r=($this->call)('approval_current_step',$approvalRequestId); return is_object($r)?$r:null; }
+                public function levelMoved(int $approvalRequestId,$posted): bool { return (bool)($this->call)('approval_level_moved',$approvalRequestId,$posted); }
+                public function canAct(int $approvalRequestId,bool $override): bool { return (bool)($this->call)('approval_can_act',$approvalRequestId) || ($override && current_user_can('manage_options')); }
+                public function act(int $approvalRequestId,string $decision,string $note,$posted,bool $override): string {
+                    $r=($this->call)('approval_act',$approvalRequestId,$decision,$note,false,$override,$posted);
+                    return is_wp_error($r)?(string)($this->call)('approval_error_code',$r):'';
+                }
+                public function closeOpen(int $letterId) { return ($this->call)('approval_close_open','hr_letter','hr_letter',$letterId); }
+                public function pathNote(int $letterId): string { return (string)(($this->call)('approval_path','hr_letter','hr_letter',$letterId)['note']??''); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterNotices {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function decider(object $letter): void { ($this->call)('hr_letter_notify_decider',$letter); }
+                public function employee(string $event,object $letter,string $reason=''): void { ($this->call)('hr_letter_notify_employee',$event,$letter,$reason); }
+                public function hr(string $event,object $letter): void { ($this->call)('hr_letter_notify_hr',$event,$letter); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterFiles {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function font(): string { return (string)($this->call)('hr_letter_font'); }
+                public function store(string $bytes,string $extension): string { return (string)($this->call)('hr_letter_store_file',$bytes,$extension); }
+                public function uploadPdf($file,int $maxBytes): array { return (array)($this->call)('hr_letter_upload_pdf',$file,$maxBytes); }
+                public function read(string $key): ?string { $r=($this->call)('hr_letter_read_file',$key); return is_string($r)?$r:null; }
+                public function delete(string $key): void { ($this->call)('hr_letter_delete_file',$key); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterSalary {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function on(int $employeeId,string $date): ?array {
+                    ($this->call)('ensure_payroll_schema');
+                    $r=((array)($this->call)('payroll_rates_on',$date))[$employeeId]??null;
+                    if(!$r)return null;
+                    $allow=0.0;
+                    foreach((array)$r['allowances'] as $a)$allow+=(float)($a['amount']??0);
+                    return ['basic'=>round((float)$r['basic'],2),'allowances'=>round($allow,2),'total'=>round((float)$r['basic']+$allow,2)];
+                }
+            });
     }
 
     /** The attendance services' ports (3.31.137): the idempotency keys of the app and the break notices, cron events and managers. */
