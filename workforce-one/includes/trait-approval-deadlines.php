@@ -16,7 +16,7 @@ trait EWS_Approval_Deadlines_Trait {
     public function approval_deadlines_tick($now=null){
         $done=['reminded'=>0,'moved'=>0];
         $keys=[];
-        foreach(array_keys(\WorkforceOne\Approvals\Workflows::IN_USE) as $key){if($key==='hr_letter' && !$this->hr_letters_enabled())continue;$d=$this->approval_deadlines($key);if($d['remind']||$d['escalate'])$keys[$key]=$d;}
+        foreach(array_keys(\WorkforceOne\Approvals\Workflows::IN_USE) as $key){$d=$this->approval_deadlines($key);if(($d['remind']||$d['escalate']) && ($key!=='hr_letter' || $this->hr_letters_enabled()))$keys[$key]=$d;}   // HR letters' switch is read only when it has deadlines (no query while off and unused)
         if(!$keys)return $done;
         $this->ensure_approval_schema();
         return $this->services()->approvalDeadlines()->tick($keys,is_string($now)?$now:null);
