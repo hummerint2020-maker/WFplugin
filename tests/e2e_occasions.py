@@ -180,7 +180,7 @@ check('...never on the login page (the company occasion there)', 'wfo-occ-hallow
 khaled = Session('occkhaled', 'occkhaledpass')
 kd = khaled.req('/app/?ews_view=dashboard')[1]
 card = ''.join(re.findall(r'<div class="wfo-occ-greet".*?</div></div>', kd, re.S))
-check('a colleague does not see my birthday (theirs is today too: they see their own)', first not in card and 'Khaled' in card, (card, re.findall(r'ews-app wfo-app[^"]*', kd)[:1], kd[:200] if not card else ''))
+check('a colleague does not see my birthday (theirs is today too: they see their own)', first not in card and 'Khaled' in card, (card, re.findall(r'<title>[^<]*', kd)[:1], 'wfo-occ-greet' in kd, kd[kd.find('wfo-content'):kd.find('wfo-content')+400] if not card else ''))
 save({'occ_people[]': other, 'occ_cake_everyone': '1'})
 php("delete_user_meta((int)get_user_by('login','emp1')->ID,'ews_occasion_moment');")
 php("update_option('ews_employee_moments',[%s=>['birthday'=>'1970%s','join_date'=>'']],false);" % (other, TODAY[4:]))
