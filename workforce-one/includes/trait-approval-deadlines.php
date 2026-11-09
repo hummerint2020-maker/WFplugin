@@ -16,7 +16,7 @@ trait EWS_Approval_Deadlines_Trait {
     public function approval_deadlines_tick($now=null){
         $done=['reminded'=>0,'moved'=>0];
         $keys=[];
-        foreach(array_keys(\WorkforceOne\Approvals\Workflows::IN_USE) as $key){$d=$this->approval_deadlines($key);if($d['remind']||$d['escalate'])$keys[$key]=$d;}
+        foreach(array_keys(\WorkforceOne\Approvals\Workflows::IN_USE) as $key){if($key==='hr_letter' && !$this->hr_letters_enabled())continue;$d=$this->approval_deadlines($key);if($d['remind']||$d['escalate'])$keys[$key]=$d;}
         if(!$keys)return $done;
         $this->ensure_approval_schema();
         return $this->services()->approvalDeadlines()->tick($keys,is_string($now)?$now:null);
@@ -48,7 +48,7 @@ trait EWS_Approval_Deadlines_Trait {
     /** What a request is, for messages. */
     private function approval_kind_label($entity_type){
         $labels=['leave'=>__('A leave request','workforce-one'),'leave_cancellation'=>__('A leave cancellation','workforce-one'),'overtime_request'=>__('An overtime request','workforce-one'),
-            'attendance_correction'=>__('An attendance correction','workforce-one'),'schedule_swap'=>__('A shift swap','workforce-one'),'face_reset_request'=>__('A face reset request','workforce-one'),'salary_advance'=>__('A salary advance','workforce-one')];
+            'attendance_correction'=>__('An attendance correction','workforce-one'),'schedule_swap'=>__('A shift swap','workforce-one'),'face_reset_request'=>__('A face reset request','workforce-one'),'salary_advance'=>__('A salary advance','workforce-one'),'hr_letter'=>__('An HR letter request','workforce-one')];
         return $labels[$entity_type]??__('A request','workforce-one');
     }
 }

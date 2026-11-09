@@ -132,3 +132,7 @@ The owner agreed to every recommendation: 1 (a) letters on the Requests Hub · 2
 7 (a) no direct letter for one's own record · 8 Western digits in the reference · 9 a mockup addition first · 10 (b) open until issued / ready /
 rejected / withdrawn, Other exempt · 11 (a) default types as the mockup · 12 regenerate tells the employee and resets the first download ·
 13 letters in bulk approve (20 at most).
+
+## Mockup addition approved (owner, 2026-11-09)
+`docs/mockups/hr-letter/`: admin-new (Letter for an employee), admin-ready (ready to collect with a note, cancel with a reason, a letter that
+could not be made), hub (a waiting letter on the Requests Hub), notices (the notification texts). The owner said "موافق ابدأ".

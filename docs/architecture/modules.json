@@ -732,6 +732,23 @@
         "advances_can_pay"
       ]
     },
+    "hr_letters": {
+      "label": "HR letters: requests, templates, letterhead, letter files",
+      "traits": [
+        "hr-letters"
+      ],
+      "tables": [
+        "hr_letters"
+      ],
+      "api": [
+        "hr_letters_enabled",
+        "hr_letters_requestable",
+        "hr_letter_settings",
+        "hr_letter_types",
+        "hr_letter_letterhead",
+        "ensure_hr_letters_schema"
+      ]
+    },
     "daily_workers": {
       "label": "Daily Workers",
       "traits": [
