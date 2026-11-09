@@ -107,12 +107,32 @@ def stylesheet():
            '@keyframes wfo-occ-fall{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}8%{opacity:.95}85%{opacity:.9}'
            '100%{transform:translate3d(30px,110vh,0) rotate(220deg);opacity:0}}',
            # the greeting at the top of the content
-           '.wfo-occ-greet{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:16px 18px;border-radius:20px;'
-           'background:linear-gradient(135deg,var(--wfo-occ-c) 0%,#fff 62%);color:var(--wfo-occ-ink);font-weight:800;font-size:18px;'
-           'box-shadow:inset 0 0 0 2px var(--wfo-occ-a),0 10px 24px rgba(16,24,40,.10);animation:wfo-occ-pop .6s cubic-bezier(.2,1.4,.4,1) both}',
-           '@keyframes wfo-occ-pop{0%{transform:scale(.92);opacity:0}100%{transform:none;opacity:1}}',
-           '.wfo-occ-greet::before{content:"";inline-size:44px;block-size:44px;flex:none;background:var(--wfo-occ-m1) center/contain no-repeat}',
-           '.wfo-occ-greet small{margin-inline-start:auto;font-weight:500;color:#667085;font-size:12px}',
+           '.wfo-occ-greet{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;gap:14px;margin:0 0 16px;'
+           'padding:18px 20px 22px;border-radius:24px;color:#fff;'
+           'background:var(--wfo-occ-tile-page) 0 0/96px,radial-gradient(120% 140% at 100% 0%,var(--wfo-occ-a) 0%,transparent 55%),'
+           'linear-gradient(135deg,var(--wfo-occ-ink) 0%,var(--wfo-occ-ink) 45%,var(--wfo-occ-a) 160%);'
+           'box-shadow:0 14px 30px -12px var(--wfo-occ-ink);animation:wfo-occ-pop .7s cubic-bezier(.2,1.3,.4,1) both}',
+           '[dir=rtl] .wfo-occ-greet{background:var(--wfo-occ-tile-page) 0 0/96px,radial-gradient(120% 140% at 0% 0%,var(--wfo-occ-a) 0%,transparent 55%),'
+           'linear-gradient(225deg,var(--wfo-occ-ink) 0%,var(--wfo-occ-ink) 45%,var(--wfo-occ-a) 160%)}',
+           '@keyframes wfo-occ-pop{0%{transform:translateY(8px) scale(.96);opacity:0}100%{transform:none;opacity:1}}',
+           # the ribbon at its foot
+           '.wfo-occ-greet::after{content:"";position:absolute;inset-inline:0;inset-block-end:0;block-size:6px;'
+           'background:linear-gradient(90deg,var(--wfo-occ-a),var(--wfo-occ-b),var(--wfo-occ-c),var(--wfo-occ-a))}',
+           # a light sweep across it once
+           '.wfo-occ-greet::before{content:"";position:absolute;inset-block:0;inset-inline-start:-40%;inline-size:30%;z-index:-1;'
+           'background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);animation:wfo-occ-shine 1.6s ease-out .5s 1 both}',
+           '@keyframes wfo-occ-shine{0%{transform:translateX(0)}100%{transform:translateX(480%)}}',
+           '[dir=rtl] .wfo-occ-greet::before{animation-name:wfo-occ-shine-rtl}@keyframes wfo-occ-shine-rtl{0%{transform:translateX(0)}100%{transform:translateX(-480%)}}',
+           '.wfo-occ-greet-text{display:grid;gap:4px;min-width:0;flex:1}',
+           '.wfo-occ-greet-text b{font-size:22px;line-height:1.25;font-weight:800;letter-spacing:-.01em;text-shadow:0 1px 2px rgba(0,0,0,.25)}',
+           '.wfo-occ-greet-text small{font-size:13px;font-weight:500;color:rgba(255,255,255,.85)}',
+           # the motif in a soft halo
+           '.wfo-occ-greet-art{position:relative;flex:none;inline-size:72px;block-size:72px;border-radius:50%;'
+           'background:var(--wfo-occ-m1) center/46px no-repeat,radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(255,255,255,.75) 55%,rgba(255,255,255,0) 72%);'
+           'animation:wfo-occ-bob 2.4s ease-in-out .7s 2 both}',
+           '.wfo-occ-greet-art::after{content:"";position:absolute;inline-size:22px;block-size:22px;inset-block-start:-4px;inset-inline-end:-6px;'
+           'background:var(--wfo-occ-m3) center/contain no-repeat}',
+           '@keyframes wfo-occ-bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-6deg)}}',
            # the login page and the kiosk: the whole background, behind the card
            '.wfo-login.wfo-occ-on{position:relative;isolation:isolate;overflow:hidden;background-image:var(--wfo-occ-tile-page)}',
            '.k-occ{isolation:isolate;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:130px,auto}.k-occ .wfo-occ{position:fixed}',
@@ -141,7 +161,14 @@ def layer(mode='bg'):
 
 def greet(key, sub=None):
     g = T(*OCCASIONS[key][1])
-    return '<p class="wfo-occ-greet" role="status">%s%s</p>' % (esc(g), ('<small>%s</small>' % esc(sub)) if sub else '')
+    subs = {'birthday': ('يوم سعيد من كل الفريق', 'Have a great day, from all the team'),
+            'company_birthday': ('شركة النيل للمقاولات · من ٢٠١٤', 'Nile Contracting · since 2014')}
+    sub = sub or T(*subs.get(key, ('من أسرة شركة النيل', 'From all of us at Nile Contracting')))
+    return greet_html(g, sub)
+
+
+def greet_html(title, sub):
+    return '<div class="wfo-occ-greet" role="status"><div class="wfo-occ-greet-text"><b>%s</b><small>%s</small></div><span class="wfo-occ-greet-art" aria-hidden="true"></span></div>' % (esc(title), esc(sub))
 
 
 def decorate(html_, key, mode='bg'):
@@ -186,8 +213,7 @@ def birthday_everyone():
     """A colleague on the day of someone the administrator picked: everyone sees it."""
     def make():
         body = home_body(None, [('cake', T('عيد ميلاد سعيد يا م. خالد!', 'Happy birthday, Eng. Khaled!'), T('المدير العام', 'General Manager'))])
-        body = ('<p class="wfo-occ-greet" role="status">%s<small>%s</small></p>' % (esc(T('كل سنة وانت طيب يا م. خالد!', 'Happy birthday, Eng. Khaled!')),
-                                                                                  esc(T('عيد ميلاد المدير العام', "Our General Manager's birthday")))) + body
+        body = greet_html(T('كل سنة وانت طيب يا م. خالد!', 'Happy birthday, Eng. Khaled!'), T('النهارده عيد ميلاد المدير العام', "It's our General Manager's birthday today")) + body
         return decorate(app_page(T('الرئيسية', 'Dashboard'), body, active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=('منى عادل', 'Mona Adel')), 'birthday')
     return make
 
