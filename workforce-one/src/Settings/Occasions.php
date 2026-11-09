@@ -57,7 +57,7 @@ final class Occasions
      * @param array<string,mixed> $before the saved settings (config())
      * @return array{0:array<string,mixed>,1:string} [settings, error: '' | bad_key | bad_mode | bad_date | until_past | founded_future | text_long]
      */
-    public static function fromPost(array $post, array $before, string $today, string $now): array
+    public static function fromPost(array $post, array $before, string $today, string $now, bool $wasOn = true): array
     {
         $active = (string) ($post['occ_active'] ?? '');
         if ($active !== '' && !in_array($active, self::COMPANY, true)) return [$before, 'bad_key'];
@@ -77,7 +77,10 @@ final class Occasions
         }
         $c = self::config([
             'active' => $active, 'mode' => $mode, 'until' => $until, 'founded' => $founded,
-            'started' => $active !== '' && ($active !== ($before['active'] ?? '') || ($before['started'] ?? '') === '') ? $now : ($active === '' ? '' : (string) ($before['started'] ?? '')),
+            // A new instance (so last time's "Hide decorations" no longer applies) when the occasion changes, when the feature is
+            // switched back on, or when an occasion that had ended gets a new last day.
+            'started' => $active === '' ? '' : (($active !== ($before['active'] ?? '') || ($before['started'] ?? '') === '' || (!$wasOn && !empty($post['occasions_enabled']))
+                || (self::ended(self::config($before), $today) && $until !== (string) ($before['until'] ?? ''))) ? $now : (string) ($before['started'] ?? '')),
             'kiosk' => !empty($post['occ_kiosk']), 'birthdays' => !empty($post['occ_birthdays']), 'people' => (array) ($post['occ_people'] ?? []),
             'cake_self' => !empty($post['occ_cake_self']), 'cake_everyone' => !empty($post['occ_cake_everyone']), 'texts' => $texts,
         ]);
@@ -102,7 +105,7 @@ final class Occasions
     /**
      * What shows for one viewer, or null.
      * @param array<string,mixed> $c config()
-     * @param array{where:string,birthday?:string,picked?:list<array{id:int,name:string,birthday:string}>,self_id?:int,hidden?:string,preview?:string} $ctx
+     * @param array{where:string,birthday?:string,picked?:list<array{id:int,name:string,birthday:string}>,self_id?:int,hidden?:string,hidden_birthday?:string,preview?:string} $ctx
      *   where: app | login | kiosk; birthday: the viewer's Y-m-d ('' = none); picked: the picked people with their birthday; hidden: the
      *   instance the viewer hid; preview: an occasion key an administrator previews (works while off, nothing saved)
      * @return array{key:string,instance:string,mode:string,name:string,moment:string}|null moment: '' | cake | occasion
@@ -117,22 +120,24 @@ final class Occasions
         }
         if (!$on) return null;
         $out = null;
-        if ($where === 'app' && $c['birthdays']) {
-            if (self::isBirthday((string) ($ctx['birthday'] ?? ''), $today)) {
+        if ($where === 'app') {
+            if ($c['birthdays'] && self::isBirthday((string) ($ctx['birthday'] ?? ''), $today)) {
                 $out = ['key' => 'birthday', 'instance' => 'birthday|' . substr($today, 0, 4), 'mode' => 'bg', 'name' => '', 'moment' => $c['cake_self'] ? 'cake' : ''];
             } else {
                 foreach ((array) ($ctx['picked'] ?? []) as $p) {
-                    if ((int) ($p['id'] ?? 0) === (int) ($ctx['self_id'] ?? 0) || !self::isBirthday((string) ($p['birthday'] ?? ''), $today)) continue;
+                    if ((int) ($p['id'] ?? 0) === (int) ($ctx['self_id'] ?? 0) || !in_array((int) ($p['id'] ?? 0), $c['people'], true) || !self::isBirthday((string) ($p['birthday'] ?? ''), $today)) continue;
                     $out = ['key' => 'birthday', 'instance' => 'picked|' . (int) $p['id'] . '|' . substr($today, 0, 4), 'mode' => 'bg', 'name' => (string) $p['name'], 'moment' => $c['cake_everyone'] ? 'cake' : ''];
                     break;
                 }
             }
+            // A hidden birthday gives way to the company occasion (each kind is hidden on its own).
+            if ($out !== null && (string) ($ctx['hidden_birthday'] ?? '') === $out['instance']) $out = null;
         }
         if ($out === null && $c['active'] !== '' && !self::ended($c, $today) && ($where !== 'kiosk' || $c['kiosk'])) {
             $out = ['key' => $c['active'], 'instance' => $c['active'] . '|' . $c['started'], 'mode' => $where === 'app' ? $c['mode'] : 'bg', 'name' => '',
                 'moment' => $where === 'app' && in_array($c['active'], self::MOMENTS, true) ? 'occasion' : ''];
+            if ((string) ($ctx['hidden'] ?? '') === $out['instance']) $out = null;
         }
-        if ($out !== null && (string) ($ctx['hidden'] ?? '') === $out['instance']) return null;
         return $out;
     }
 

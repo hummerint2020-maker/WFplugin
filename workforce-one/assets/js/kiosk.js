@@ -29,7 +29,15 @@
                 if (!r.ok) throw new Error();
                 // Occasions (3.31.145): the occasion switched on, off or changed: the kiosk reloads to show it.
                 var occ = r.headers.get('X-WFO-Occasion') || '';
-                if (occ !== (document.body.getAttribute('data-occasion') || '')) { location.reload(); }
+                // At most once every five minutes, so a page cached without the change never reloads in a loop.
+                if (occ !== (document.body.getAttribute('data-occasion') || '')) {
+                    var last = 0;
+                    try { last = +sessionStorage.getItem('wfoOccReload') || 0; } catch (e) {}
+                    if (Date.now() - last > 300000) {
+                        try { sessionStorage.setItem('wfoOccReload', String(Date.now())); } catch (e) {}
+                        location.reload();
+                    }
+                }
                 return r.text();
             })
             .then(function (v) { if (v.indexOf('wfo1|') !== 0) throw new Error(); draw(v); offline.style.display = 'none'; })

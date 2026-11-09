@@ -12275,3 +12275,7 @@ msgstr ""
 #: includes/trait-occasions.php
 msgid "Write the words each occasion shows, in Arabic and English. An empty box uses the built-in words."
 msgstr ""
+
+#: templates/admin/features.php
+msgid "This works on its own, with the switch above on or off."
+msgstr ""

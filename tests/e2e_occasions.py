@@ -7,7 +7,7 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_occasions.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import datetime, html, json, os, re, sys, urllib.error, urllib.parse, urllib.request
+import atexit, base64, datetime, html, json, os, re, sys, urllib.error, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
@@ -15,6 +15,17 @@ from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noq
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 I = ids()
 OPTS = ['ews_feature_occasions', 'ews_occasions', 'ews_employee_moments']
+MOMENTS_BEFORE = php("echo wp_json_encode(get_option('ews_employee_moments',null));").splitlines()[-1]
+
+
+@atexit.register
+def cleanup():
+    # whatever happens: the options, the meta and the extra employee go, and the moments come back as they were
+    php("foreach(%s as $o) delete_option($o); $wpdb->query(\"DELETE FROM {$p}usermeta WHERE meta_key LIKE 'ews_occasion%%'\"); $wpdb->query(\"DELETE FROM {$p}ews_employees WHERE domain_name='occkhaled'\"); if($u=username_exists('occkhaled')){require_once ABSPATH.'wp-admin/includes/user.php';wp_delete_user($u);}" % json.dumps(OPTS).replace('[', 'array(').replace(']', ')'))
+    if MOMENTS_BEFORE != 'null':
+        php("update_option('ews_employee_moments',json_decode(base64_decode('%s'),true),false);" % base64.b64encode(MOMENTS_BEFORE.encode()).decode())
+
+
 php("foreach(%s as $o) delete_option($o); $wpdb->query(\"DELETE FROM {$p}usermeta WHERE meta_key LIKE 'ews_occasion%%'\"); $wpdb->query(\"DELETE FROM {$p}ews_audit_log WHERE action='occasions_update'\");" % json.dumps(OPTS).replace('[', 'array(').replace(']', ')'))
 adm, emp = Session('admin', 'admin'), Session('emp1', 'emp1pass')
 FEAT = '/wp-admin/admin.php?page=ews31-features'
@@ -122,7 +133,7 @@ ap = adm.req('/wp-admin/admin.php?page=ews31-employees')[1]
 check('never in wp-admin', 'wfo-occ-on' not in ap)
 
 # ---- full screen, then the kiosk switch
-save({'occ_mode': 'full', 'occ_kiosk': None})
+save({'occ_mode': 'full'}, drop=('occ_kiosk',))
 dash = emp.req('/app/')[1]
 check('full screen: the falling layer, no layer in the top bar', 'wfo-occ is-full' in dash and 'wfo-occ is-bg' not in dash)
 st, kpage, _ = kiosk()
@@ -189,6 +200,5 @@ o_before = opt('ews_occasions')
 st, body, h = emp.req('/wp-admin/admin-post.php', urllib.parse.urlencode(form_fields(adm.req(FEAT)[1], 'ews31_features_save') + [('occ_active', 'valentine')]).encode())
 check('an employee cannot save the card', opt('ews_occasions') == o_before)
 
-php("foreach(%s as $o) delete_option($o); $wpdb->query(\"DELETE FROM {$p}usermeta WHERE meta_key LIKE 'ews_occasion%%'\"); $wpdb->query(\"DELETE FROM {$p}ews_employees WHERE domain_name='occkhaled'\");" % json.dumps(OPTS).replace('[', 'array(').replace(']', ')'))
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

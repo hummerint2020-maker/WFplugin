@@ -76,7 +76,7 @@ $tab = function ($x) use ($active, $count) {
                         </button>
                         <div id="ews-profile-menu-dropdown" class="ews-profile-menu-dropdown" hidden>
                             <a href="<?php echo esc_url($profile_url); ?>"><span class="ews-profile-menu-item-icon"><?php echo Icons::svg('user', 18); ?></span><span><?php esc_html_e('My Profile', 'workforce-one'); ?></span></a>
-                            <a href="<?php echo esc_url($logout_url); ?>"><span class="ews-profile-menu-item-icon"><?php echo Icons::svg('logout', 18); ?></span><span><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
+                            <?php if ($occasion['hide'] !== ''): ?><a href="<?php echo esc_url($occasion['hide']); ?>"><span class="ews-profile-menu-item-icon"><?php echo Icons::svg('close', 18); ?></span><span><?php esc_html_e('Hide decorations', 'workforce-one'); ?></span></a><?php endif; ?><a href="<?php echo esc_url($logout_url); ?>"><span class="ews-profile-menu-item-icon"><?php echo Icons::svg('logout', 18); ?></span><span><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
                         </div>
                     </div>
                 </div>

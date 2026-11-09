@@ -34,16 +34,37 @@ const B = 'http://127.0.0.1:8080';
   await pg.goto(B + '/app/');
   await pg.waitForTimeout(1500);
   check('the moment and the falling layer are there', await pg.locator('.wfo-rm').count() === 1 && await pg.locator('.wfo-occ.is-full').count() === 1);
+  // The probes below make the layers take taps for a moment: elementFromPoint skips pointer-events:none, so without this a layer
+  // drawn on top would never be seen. What is checked is that they sit under the controls, not only that they ignore taps.
+  const LAYERS = '.wfo-occ,.wfo-rm,.wfo-mo,.wfo-bday,.wfo-hw';
+  const probe = (p, sel) => p.evaluate(sel => { const s = document.createElement('style'); s.id = 'wfo-probe'; s.textContent = sel + '{pointer-events:auto!important}'; document.head.appendChild(s); }, sel);
+  const unprobe = p => p.evaluate(() => { const s = document.getElementById('wfo-probe'); if (s) s.remove(); });
+  const layersIgnore = await pg.evaluate(sel => [...document.querySelectorAll(sel)].map(x => getComputedStyle(x).pointerEvents), LAYERS);
+  await probe(pg, LAYERS);
   const tap = await pg.evaluate(() => {
     const btn = document.querySelector('.wfo-tab-clock'); if (!btn) return null;
     const r = btn.getBoundingClientRect(); const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-    return { onButton: !!el && btn.contains(el), layers: [...document.querySelectorAll('.wfo-occ,.wfo-rm,.wfo-mo,.wfo-bday,.wfo-hw')].map(x => getComputedStyle(x).pointerEvents) };
+    return { onButton: !!el && btn.contains(el), el: el && el.className };
   });
   check('during the moment a tap on Sign In / Out reaches the button', tap && tap.onButton, tap);
-  check('...the decorations never take a tap', tap && tap.layers.length > 0 && tap.layers.every(p => p === 'none'), tap);
+  check('...the decorations never take a tap', layersIgnore.length > 0 && layersIgnore.every(p => p === 'none'), layersIgnore);
   check('no sideways scroll', await pg.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
-  const card = await pg.evaluate(() => { const b = document.querySelector('.wfo-home .wfo-card, .wfo-home-today'); if (!b) return null; const r = b.getBoundingClientRect(); const el = document.elementFromPoint(r.left + 20, r.top + 20); return !!el && !el.closest('.wfo-occ,.wfo-rm'); });
   await pg.waitForTimeout(6000);
+  const card = await pg.evaluate(() => { const b = document.querySelector('.wfo-home .wfo-card, .wfo-home-today'); if (!b) return null; const r = b.getBoundingClientRect(); const el = document.elementFromPoint(r.left + 20, r.top + 20); return !!el && !el.closest('.wfo-occ,.wfo-rm'); });
+  // The top bar's menu and the QR sign-in window open above the decorations.
+  const above = await pg.evaluate(() => {
+    const out = {};
+    // A sign-in window like the QR one (time page, only with QR presence on), opened inside the page as it is there.
+    const main = document.querySelector('.ews-main'); if (!main) return out;
+    const m = document.createElement('div'); m.className = 'ews-face-modal is-open'; m.innerHTML = '<div class="ews-face-card"><button type="button" id="wfo-probe-btn">Sign In with QR</button></div>';
+    main.appendChild(m);
+    const b = document.getElementById('wfo-probe-btn'); const r = b.getBoundingClientRect();
+    const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); out.qr = !!el && b.contains(el); out.el = el && el.className;
+    m.remove();
+    return out;
+  });
+  await unprobe(pg);
+  check('...the QR window\'s button is above the decorations', above.qr === true, above);
   const gone = await pg.evaluate(() => { const m = document.querySelector('.wfo-rm'); return !m || getComputedStyle(m).visibility === 'hidden' || getComputedStyle(m).opacity === '0'; });
   check('the moment is gone after a few seconds', gone);
   check('...and the cards are reachable under the decorations', card !== false, card);
@@ -65,6 +86,7 @@ const B = 'http://127.0.0.1:8080';
   const kp = await kctx.newPage(); watch(kp, 'kiosk');
   await kp.goto(B + '/?ews_kiosk=' + ids.kid + '&kiosk_key=' + ids.secret);
   await kp.waitForTimeout(1200);
+  await probe(kp, '.wfo-occ');
   const qr = await kp.evaluate(() => { const q = document.getElementById('qr'); if (!q) return null; const r = q.getBoundingClientRect();
     return [[r.left + 4, r.top + 4], [r.right - 4, r.top + 4], [r.left + 4, r.bottom - 4], [r.right - 4, r.bottom - 4]].every(([x, y]) => { const el = document.elementFromPoint(x, y); return !!el && !el.closest('.wfo-occ'); }); });
   check('kiosk: the decorations are there and the code\'s corners are not covered', await kp.locator('body.k-occ .wfo-occ').count() === 1 && qr === true, qr);

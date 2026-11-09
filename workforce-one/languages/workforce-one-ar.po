@@ -8905,3 +8905,6 @@ msgstr "اتمنالهم يوم حلو"
 
 msgid "Write the words each occasion shows, in Arabic and English. An empty box uses the built-in words."
 msgstr "اكتب الكلام اللي يظهر في كل مناسبة بالعربي والإنجليزي. الخانة الفاضية بتاخد الكلام الجاهز."
+
+msgid "This works on its own, with the switch above on or off."
+msgstr "يعمل هذا وحده، سواء كان المفتاح أعلاه مفعّلًا أم لا."

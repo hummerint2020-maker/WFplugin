@@ -65,6 +65,10 @@ final class OccasionsTest extends TestCase
         $this->assertSame('', $e, 'a saved last day that has passed is kept (not refused)');
         $this->assertTrue(Occasions::ended($c3, '2027-04-01'));
         $this->assertStringContainsString('active=ramadan until 2027-03-30', Occasions::summary($c, true));
+        [$c4] = Occasions::fromPost(['occ_active' => 'ramadan', 'occ_until' => '2027-03-30', 'occasions_enabled' => 1], $c, '2028-02-01', '2028-02-01 08:00:00', false);
+        $this->assertSame('2028-02-01 08:00:00', $c4['started'], 'switched back on: a new instance');
+        [$c5] = Occasions::fromPost(['occ_active' => 'ramadan', 'occ_until' => '2028-03-30'], $c3, '2028-02-01', '2028-02-01 08:00:00', true);
+        $this->assertSame('2028-02-01 08:00:00', $c5['started'], 'an ended occasion with a new last day: a new instance');
     }
 
     public function testResolve(): void
@@ -102,6 +106,11 @@ final class OccasionsTest extends TestCase
         $own = Occasions::resolve($c, true, '2027-02-20', ['where' => 'app', 'birthday' => '1970-02-20', 'self_id' => 7, 'picked' => [['id' => 7, 'name' => 'K', 'birthday' => '1970-02-20']]]);
         $this->assertSame('', $own['name'], 'the picked person sees their own birthday');
         $this->assertSame('', Occasions::resolve($this->cfg(['birthdays' => 1, 'cake_self' => 0]), true, '2027-02-20', ['where' => 'app', 'birthday' => '1990-02-20'])['moment'], 'the cake switched off');
+        $onlyPicked = $this->cfg(['birthdays' => 0, 'people' => [7]]);
+        $this->assertSame('picked|7|2027', Occasions::resolve($onlyPicked, true, '2027-02-20', ['where' => 'app', 'birthday' => '1990-02-20', 'self_id' => 3, 'picked' => [['id' => 7, 'name' => 'K', 'birthday' => '1970-02-20']]])['instance'],
+            'picked people work with the employees\' birthdays off; one\'s own birthday then does not show');
+        $this->assertSame('ramadan', Occasions::resolve($c, true, '2027-02-20', ['where' => 'app', 'birthday' => '1990-02-20', 'hidden_birthday' => 'birthday|2027'])['key'], 'a hidden birthday gives way to the company occasion');
+        $this->assertSame('birthday', Occasions::resolve($c, true, '2027-02-20', ['where' => 'app', 'birthday' => '1990-02-20', 'hidden' => 'ramadan|2027-02-18 09:00:00'])['key'], 'hiding the company occasion leaves the birthday');
     }
 
     public function testPreview(): void

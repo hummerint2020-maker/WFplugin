@@ -90,11 +90,13 @@ def stylesheet():
            '@keyframes wfo-occ-drift{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}20%{opacity:.7}'
            '100%{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(20deg);opacity:.9}}',
            # the top bar: the layer behind its text and buttons, the motifs over the brand colours, a ribbon at its foot
-           '.wfo-occ-on .wfo-header{position:relative;isolation:isolate;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:96px,auto}',
-           '.wfo-occ-on .wfo-header::after{content:"";position:absolute;inset-inline:18px;inset-block-end:6px;block-size:5px;border-radius:3px;z-index:-1;'
+           '.wfo-occ-on .wfo-header{position:relative;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:96px,auto}',
+           # the top bar is no stacking context (its menu must stay above the page): its layer at 0, its own children above it
+           '.wfo-header>.wfo-occ{z-index:0}.wfo-occ-on .wfo-header>:not(.wfo-occ){position:relative}',
+           '.wfo-occ-on .wfo-header::after{content:"";position:absolute;inset-inline:18px;inset-block-end:6px;block-size:5px;border-radius:3px;'
            'background:linear-gradient(90deg,var(--wfo-occ-a),var(--wfo-occ-b),var(--wfo-occ-c),var(--wfo-occ-a))}',
            # the page background: a faint pattern the cards sit on
-           '.ews-app.wfo-occ-on .ews-main{position:relative;isolation:isolate;background-image:var(--wfo-occ-tile-page);background-size:130px}',
+           '.ews-app.wfo-occ-on{isolation:isolate}.ews-app.wfo-occ-on .ews-main{position:relative;background-image:var(--wfo-occ-tile-page);background-size:130px}',
            # the page: big motifs drift down behind the cards and rest between them
            '.wfo-occ.is-page i{--s:calc(var(--sz) * 1.9);opacity:.9;inset-block-start:60px;animation:wfo-occ-page calc(var(--t) * .8) ease-out var(--d) 1 both}',
            '@keyframes wfo-occ-page{0%{transform:translate3d(0,-80px,0) rotate(-20deg) scale(.6);opacity:0}25%{opacity:.95}'
@@ -219,7 +221,7 @@ def stylesheet():
            # phones: half the particles
            '@media (max-width:600px){.wfo-occ i:nth-child(even){display:none}}',
            # reduced motion: still, and nothing falls over the screen
-           '@media (prefers-reduced-motion:reduce){.wfo-occ i,.wfo-occ-greet{animation:none!important}.wfo-occ i{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(18deg)}'
+           '@media (prefers-reduced-motion:reduce){.wfo-occ i,.wfo-occ-greet,.wfo-occ-greet::before,.wfo-occ-greet-art{animation:none!important}.wfo-occ i{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(18deg)}'
            '.wfo-occ.is-page i{transform:translate3d(0,calc(var(--restp) * 1px),0) rotate(12deg)}'
            '.wfo-occ.is-full{display:none}}',
            ]

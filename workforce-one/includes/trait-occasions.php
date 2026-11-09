@@ -31,13 +31,13 @@ trait EWS_Occasions_Trait {
         $preview='';
         // An administrator's preview (Features → Occasions → Preview): works while off and saves nothing.
         if($where==='app'&&isset($_GET['wfo_occasion_preview'])&&is_user_logged_in()&&$this->can('ews_manage_settings'))$preview=sanitize_key(wp_unslash($_GET['wfo_occasion_preview']));
+        if(!in_array($preview,Occasions::TEXT_KEYS,true))$preview='';   // an unknown key is no preview
         if($preview===''&&!$this->occasions_enabled())return $memo[$where]=null;
-        if(is_admin()&&!wp_doing_ajax())return $memo[$where]=null;   // never in wp-admin
         $c=$this->occasion_settings();
         $today=current_time('Y-m-d');
         $ctx=['where'=>$where,'preview'=>$preview];
         $uid=(int)get_current_user_id();
-        if($where==='app'&&$c['birthdays']&&$preview===''){
+        if($where==='app'&&($c['birthdays']||$c['people'])&&$preview===''){
             $emp=$this->current_employee();
             $saved=$this->option('ews_employee_moments');
             $saved=is_array($saved)?$saved:[];
@@ -51,12 +51,16 @@ trait EWS_Occasions_Trait {
                     $ctx['picked'][]=['id'=>(int)$r->id,'name'=>(string)$r->name,'birthday'=>(string)($saved[(int)$r->id]['birthday']??'')];
             }
         }
-        if($uid&&$preview==='')$ctx['hidden']=(string)get_user_meta($uid,'ews_occasion_hidden',true);
+        // What the viewer hid (the app only: a kiosk or the login page opened by someone signed in is never affected).
+        if($where==='app'&&$uid&&$preview===''){$ctx['hidden']=(string)get_user_meta($uid,'ews_occasion_hidden',true);$ctx['hidden_birthday']=(string)get_user_meta($uid,'ews_occasion_hidden_birthday',true);}
         return $memo[$where]=Occasions::resolve($c,$this->occasions_enabled(),$today,$ctx);
     }
 
     /** The stylesheet and the one occasion's palette (only when something shows). */
     private function occasion_assets($o){
+        static $done=false;
+        if($done)return;
+        $done=true;
         $root=plugin_dir_url(dirname(__DIR__).'/employee-schedule-manager.php');
         wp_register_style('workforce-one-occasions',$root.'assets/css/occasions.css',[],defined('EWS_VERSION')?EWS_VERSION:'1');
         wp_style_add_data('workforce-one-occasions','rtl','replace');
@@ -161,6 +165,7 @@ trait EWS_Occasions_Trait {
      */
     private function occasion_frame($active){
         $none=['class'=>'','head'=>'','page'=>'','over'=>'','card'=>'','hide'=>''];
+        if(is_admin()&&!wp_doing_ajax())return $none;   // never in wp-admin
         $o=$this->occasion_now('app');
         if(!$o)return $none;
         $this->occasion_assets($o);
@@ -178,7 +183,7 @@ trait EWS_Occasions_Trait {
 
     /** The login page's pieces (the company occasion only, never a name). @return array{class:string,layer:string,card:string} */
     private function occasion_login(){
-        $o=$this->occasion_now('login');
+        $o=is_admin()&&!wp_doing_ajax()?null:$this->occasion_now('login');
         if(!$o)return ['class'=>'','layer'=>'','card'=>''];
         $this->occasion_assets($o);
         return ['class'=>' wfo-occ-on wfo-occ-'.$o['key'],'layer'=>$this->occasion_layer('bg'),'card'=>$this->occasion_card($o,false)];
@@ -205,7 +210,7 @@ trait EWS_Occasions_Trait {
         if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
         check_admin_referer('ews_occasion_hide');
         $o=$this->occasion_now('app');
-        if($o&&strpos($o['instance'],'preview|')!==0)update_user_meta((int)get_current_user_id(),'ews_occasion_hidden',$o['instance']);
+        if($o&&strpos($o['instance'],'preview|')!==0)update_user_meta((int)get_current_user_id(),$o['key']==='birthday'?'ews_occasion_hidden_birthday':'ews_occasion_hidden',$o['instance']);
         $back=wp_get_referer();
         if(!$back||strpos($back,'admin-post.php')!==false)$back=$this->app_home_url();
         wp_safe_redirect($back);exit;
@@ -227,7 +232,7 @@ trait EWS_Occasions_Trait {
      */
     private function occasions_validate($post){
         if(!isset($post['occasions_present']))return null;
-        [$c,$err]=Occasions::fromPost($post,$this->occasion_settings(),current_time('Y-m-d'),current_time('mysql'));
+        [$c,$err]=Occasions::fromPost($post,$this->occasion_settings(),current_time('Y-m-d'),current_time('mysql'),$this->occasions_enabled());
         if($err!=='')$this->features_redirect(['features_error'=>'occ_'.$err]);
         return [$c,!empty($post['occasions_enabled'])];
     }
