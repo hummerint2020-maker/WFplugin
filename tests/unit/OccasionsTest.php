@@ -133,6 +133,9 @@ final class OccasionsTest extends TestCase
         $this->assertSame(11, Occasions::years('2014-03-01', '2026-02-28'));
         $this->assertSame(0, Occasions::years('', '2026-02-28'));
         $this->assertSame(2027, Occasions::newYear('2026-12-31'));
+        $this->assertSame(2027, Occasions::newYear('2026-11-09'));
+        $this->assertSame(2027, Occasions::newYear('2026-07-01'));
+        $this->assertSame(2026, Occasions::newYear('2026-06-30'));
         $this->assertSame(2027, Occasions::newYear('2027-01-01'));
         $this->assertTrue(Occasions::isArabic('رمضان كريم'));
         $this->assertFalse(Occasions::isArabic('HAPPY NEW YEAR'));
