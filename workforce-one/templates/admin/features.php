@@ -42,6 +42,7 @@
  * @var string[] $weekday_names                 0 = Sunday
  * @var int[] $working_days
  * @var array{page_url:string,workflow_url:string,hr_set:bool,s:array<string,mixed>} $hr_letters  HR letters (3.31.144)
+ * @var array{s:array<string,mixed>,ended:bool,people:array<int,object>,with_birthday:int,total:int,moments_url:string,preview_url:string} $occasions  Occasions (3.31.145)
  * @var bool $saved
  * @var string|null $error
  * @var string $post_url
@@ -122,6 +123,62 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <label><span class="wfo-field-label"><?php esc_html_e('Currency in letters (Arabic · English; empty = the payroll currency code)', 'workforce-one'); ?></span><input type="text" name="hl_currency_ar" dir="rtl" value="<?php echo esc_attr($hr_letters['s']['currency_ar']); ?>"> <input type="text" name="hl_currency_en" value="<?php echo esc_attr($hr_letters['s']['currency_en']); ?>"></label>
     <label><input type="checkbox" name="hl_other" value="1" <?php checked(!empty($hr_letters['s']['other'])); ?>> <?php esc_html_e('"Other": employees may ask for a letter not in the list', 'workforce-one'); ?></label>
     <label><input type="checkbox" name="hl_one_open" value="1" <?php checked(!empty($hr_letters['s']['one_open'])); ?>> <?php esc_html_e('One open request per type and language', 'workforce-one'); ?></label>
+</div></div>
+
+<?php
+// Occasions (3.31.145, docs/tasks/occasions.md; mockup docs/mockups/occasions/features).
+$occ = $occasions['s'];
+$occ_labels = ['valentine' => __('Valentine\'s Day', 'workforce-one'), 'ramadan' => __('Ramadan', 'workforce-one'), 'eid_fitr' => __('Eid al-Fitr', 'workforce-one'),
+    'eid_adha' => __('Eid al-Adha', 'workforce-one'), 'new_year' => __('New Year', 'workforce-one'), 'halloween' => __('Halloween', 'workforce-one'),
+    'national' => __('National day · Egypt', 'workforce-one'), 'company_birthday' => __('The company\'s birthday', 'workforce-one'), 'birthday' => __('The employee\'s birthday', 'workforce-one')];
+$occ_fields = ['card_title' => [__('Greeting card title', 'workforce-one'), 60], 'card_line' => [__('The line under it', 'workforce-one'), 120],
+    'moment_title' => [__('The big words of the occasion\'s moment', 'workforce-one'), 40], 'moment_line' => [__('The line under the moment', 'workforce-one'), 120]];
+?>
+<div class="wfo-feature-section" id="ews-occasions"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Occasions', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Decorations and colours for an occasion on the employee app, the login page and kiosks. You switch it on and off; nothing starts by itself.', 'workforce-one'); ?></div></div>
+    <?php $switch('occasions_enabled', $on['occasions']); ?>
+</div>
+<input type="hidden" name="occasions_present" value="1">
+<?php if ($occasions['ended']): ?><div class="notice notice-info inline"><p><?php /* translators: %s: a date */ echo esc_html(sprintf(__('The occasion ended on %s. Choose another one or a new last day.', 'workforce-one'), $occ['until'])); ?></p></div><?php endif; ?>
+<div class="wfo-feature-fields occ-fields">
+    <div class="occ-wide"><span class="wfo-field-label"><?php esc_html_e('The occasion on now (one at a time)', 'workforce-one'); ?></span><div class="occ-grid">
+        <?php foreach (\WorkforceOne\Settings\Occasions::COMPANY as $k): ?>
+        <label class="occ-pick<?php echo $occ['active'] === $k ? ' is-on' : ''; ?>"><input type="radio" name="occ_active" value="<?php echo esc_attr($k); ?>" <?php checked($occ['active'], $k); ?>><span class="occ-sw wfo-occ-<?php echo esc_attr($k); ?>"><i></i><i></i><i></i></span><b><?php echo esc_html($occ_labels[$k]); ?></b><a href="<?php echo esc_url(str_replace('__key__', $k, $occasions['preview_url'])); ?>" class="occ-prev" target="_blank" rel="noopener"><?php esc_html_e('Preview', 'workforce-one'); ?></a></label>
+        <?php endforeach; ?>
+        <label class="occ-pick is-none<?php echo $occ['active'] === '' ? ' is-on' : ''; ?>"><input type="radio" name="occ_active" value="" <?php checked($occ['active'], ''); ?>><b><?php esc_html_e('No occasion', 'workforce-one'); ?></b><span class="occ-note"><?php esc_html_e('Birthdays only, if on', 'workforce-one'); ?></span></label>
+    </div></div>
+    <div class="occ-wide"><span class="wfo-field-label"><?php esc_html_e('How it shows', 'workforce-one'); ?></span><div class="occ-modes wfo-occ-ramadan">
+        <label class="occ-mode<?php echo $occ['mode'] === 'bg' ? ' is-on' : ''; ?>"><input type="radio" name="occ_mode" value="bg" <?php checked($occ['mode'], 'bg'); ?>><b><?php esc_html_e('Top bar and background', 'workforce-one'); ?></b><small><?php esc_html_e('A few seconds of movement when a page opens, then the decorations stay quietly behind the content.', 'workforce-one'); ?></small><span class="occ-mini is-bg"></span></label>
+        <label class="occ-mode<?php echo $occ['mode'] === 'full' ? ' is-on' : ''; ?>"><input type="radio" name="occ_mode" value="full" <?php checked($occ['mode'], 'full'); ?>><b><?php esc_html_e('Falling over the whole screen', 'workforce-one'); ?></b><small><?php esc_html_e('Falls over the screen once for a few seconds, then is gone. It never blocks a tap or stays over Sign In / Out.', 'workforce-one'); ?></small><span class="occ-mini is-full"></span></label>
+    </div></div>
+    <label><span class="wfo-field-label"><?php esc_html_e('Last day (optional)', 'workforce-one'); ?></span><input type="date" name="occ_until" value="<?php echo esc_attr($occ['until']); ?>"><small class="occ-help"><?php esc_html_e('Empty: until you switch it off.', 'workforce-one'); ?></small></label>
+    <label><span class="wfo-field-label"><?php esc_html_e('The company\'s founding date', 'workforce-one'); ?></span><input type="date" name="occ_founded" value="<?php echo esc_attr($occ['founded']); ?>"><small class="occ-help"><?php esc_html_e('For "N years together" on the company\'s birthday.', 'workforce-one'); ?></small></label>
+    <label class="occ-check"><input type="checkbox" name="occ_kiosk" value="1" <?php checked(!empty($occ['kiosk'])); ?>> <?php esc_html_e('Show on kiosk screens', 'workforce-one'); ?><small class="occ-help"><?php esc_html_e('The company occasion only, never names.', 'workforce-one'); ?></small></label>
+</div>
+<div class="wfo-subpanel"><div class="wfo-subpanel-title"><label><input type="checkbox" name="occ_birthdays" value="1" <?php checked(!empty($occ['birthdays'])); ?>> <?php esc_html_e('Celebrate each employee on their birthday', 'workforce-one'); ?></label></div>
+    <p class="wfo-subpanel-desc"><?php /* translators: 1: employees with a birthday saved, 2: active employees */ echo esc_html(sprintf(__('On their day only they see the decorations and "Happy birthday". The year is never shown. %1$d of %2$d employees have a birthday saved in', 'workforce-one'), $occasions['with_birthday'], $occasions['total'])); ?> <a href="<?php echo esc_url($occasions['moments_url']); ?>"><?php esc_html_e('Employee Moments', 'workforce-one'); ?></a></p>
+    <label><span class="wfo-field-label"><?php esc_html_e('Everyone sees the decorations on the birthday of:', 'workforce-one'); ?></span>
+    <select name="occ_people[]" multiple size="6" class="occ-people-select"><?php foreach ($occasions['people'] as $p): ?><option value="<?php echo (int) $p->id; ?>" <?php selected(in_array((int) $p->id, $occ['people'], true)); ?>><?php echo esc_html($p->name); ?></option><?php endforeach; ?></select></label>
+    <small class="occ-help"><?php /* translators: %d: the most people */ echo esc_html(sprintf(__('Hold Ctrl (⌘ on a Mac) to pick several, %d at most. On their day the decorations and a greeting with their name show to every employee (not on kiosks or the login page).', 'workforce-one'), \WorkforceOne\Settings\Occasions::PEOPLE_MAX)); ?></small>
+    <label class="occ-check"><input type="checkbox" name="occ_cake_self" value="1" <?php checked(!empty($occ['cake_self'])); ?>> <?php esc_html_e('The cake moment for the birthday person', 'workforce-one'); ?><small class="occ-help"><?php esc_html_e('A cake, its candle blown out and "HAPPY BIRTHDAY", once a day when they open the app.', 'workforce-one'); ?></small></label>
+    <label class="occ-check"><input type="checkbox" name="occ_cake_everyone" value="1" <?php checked(!empty($occ['cake_everyone'])); ?>> <?php esc_html_e('The cake moment for everyone on the picked people\'s birthday', 'workforce-one'); ?><small class="occ-help"><?php esc_html_e('Once a day for each employee.', 'workforce-one'); ?></small></label>
+</div>
+<div class="wfo-subpanel occ-texts" data-occ-texts><div class="wfo-subpanel-title"><?php esc_html_e('The words for each occasion', 'workforce-one'); ?></div>
+    <p class="wfo-subpanel-desc"><?php esc_html_e('Write the words each occasion shows, in Arabic and English. An empty box uses the built-in words.', 'workforce-one'); ?></p>
+    <label class="occ-text-pick"><span class="wfo-field-label"><?php esc_html_e('Occasion', 'workforce-one'); ?></span><select data-occ-text-pick><?php foreach (\WorkforceOne\Settings\Occasions::TEXT_KEYS as $k): ?><option value="<?php echo esc_attr($k); ?>" <?php selected($k, $occ['active'] !== '' ? $occ['active'] : 'ramadan'); ?>><?php echo esc_html($occ_labels[$k]); ?></option><?php endforeach; ?></select></label>
+    <?php foreach (\WorkforceOne\Settings\Occasions::TEXT_KEYS as $k): ?>
+    <div class="occ-text-set wfo-occ-<?php echo esc_attr($k); ?>" data-occ-text-set="<?php echo esc_attr($k); ?>"<?php echo $k === ($occ['active'] !== '' ? $occ['active'] : 'ramadan') ? '' : ' hidden'; ?>>
+        <?php foreach ($occ_fields as $f => [$flabel, $max]): ?>
+        <div class="occ-text-row"><span class="wfo-field-label"><?php echo esc_html($flabel); ?></span><div class="occ-text-pair">
+            <label><small>عربي</small><input type="text" dir="rtl" maxlength="<?php echo (int) $max; ?>" name="occ_text[<?php echo esc_attr($k); ?>][<?php echo esc_attr($f); ?>][ar]" value="<?php echo esc_attr(\WorkforceOne\Settings\Occasions::text($occ, $k, $f, 'ar')); ?>" data-occ-field="<?php echo esc_attr($f); ?>"></label>
+            <label><small>English</small><input type="text" dir="ltr" maxlength="<?php echo (int) $max; ?>" name="occ_text[<?php echo esc_attr($k); ?>][<?php echo esc_attr($f); ?>][en]" value="<?php echo esc_attr(\WorkforceOne\Settings\Occasions::text($occ, $k, $f, 'en')); ?>"></label>
+        </div><small class="occ-help"><?php /* translators: %d: characters */ echo esc_html(sprintf(__('%d characters at most.', 'workforce-one'), $max)); ?></small></div>
+        <?php endforeach; ?>
+        <div class="occ-text-preview"><span class="wfo-field-label"><?php esc_html_e('Preview', 'workforce-one'); ?></span>
+            <div class="wfo-occ-greet"><div class="wfo-occ-greet-text"><b data-occ-preview="card_title"><?php echo esc_html($occ_labels[$k]); ?></b><small data-occ-preview="card_line"></small></div><span class="wfo-occ-greet-art"></span></div></div>
+    </div>
+    <?php endforeach; ?>
+    <p class="occ-help"><?php esc_html_e('In the employee\'s birthday you may write {name} for their first name, and {years} in the company\'s birthday for the number of years.', 'workforce-one'); ?></p>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-app-api"><div class="wfo-feature-head">

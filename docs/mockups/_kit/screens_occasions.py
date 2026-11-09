@@ -83,15 +83,15 @@ def stylesheet():
            '   "bg": particles drift in the top bar for a few seconds then rest, the page background gets a faint pattern; "full": they fall once\n'
            '   over the screen under the tab bar, then are gone. Never a tap (pointer-events:none). Only transform and opacity move; nothing\n'
            '   flashes; reduced motion = still. Logical properties: the -rtl copy is identical. */',
-           '.wfo-occ{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1}',
+           '.wfo-occ{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;border-radius:inherit}',
            '.wfo-occ i{position:absolute;inset-block-start:-34px;inset-inline-start:var(--x);inline-size:var(--s);block-size:var(--s);'
            'background:var(--m) center/contain no-repeat;opacity:.9;animation:wfo-occ-drift var(--t) ease-in-out var(--d) 1 both;filter:drop-shadow(0 2px 3px rgba(0,0,0,.18))}',
            '.wfo-occ i:nth-child(3n+1){--m:var(--wfo-occ-m1)}.wfo-occ i:nth-child(3n+2){--m:var(--wfo-occ-m2)}.wfo-occ i:nth-child(3n){--m:var(--wfo-occ-m3)}',
            '@keyframes wfo-occ-drift{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}20%{opacity:.7}'
            '100%{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(20deg);opacity:.9}}',
            # the top bar: the layer behind its text and buttons, the motifs over the brand colours, a ribbon at its foot
-           '.wfo-occ-on .wfo-header{position:relative;isolation:isolate;overflow:hidden;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:96px,auto}',
-           '.wfo-occ-on .wfo-header::after{content:"";position:absolute;inset-inline:0;inset-block-end:0;block-size:5px;z-index:-1;'
+           '.wfo-occ-on .wfo-header{position:relative;isolation:isolate;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:96px,auto}',
+           '.wfo-occ-on .wfo-header::after{content:"";position:absolute;inset-inline:18px;inset-block-end:6px;block-size:5px;border-radius:3px;z-index:-1;'
            'background:linear-gradient(90deg,var(--wfo-occ-a),var(--wfo-occ-b),var(--wfo-occ-c),var(--wfo-occ-a))}',
            # the page background: a faint pattern the cards sit on
            '.ews-app.wfo-occ-on .ews-main{position:relative;isolation:isolate;background-image:var(--wfo-occ-tile-page);background-size:130px}',

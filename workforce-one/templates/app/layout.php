@@ -6,6 +6,7 @@
  * Script: assets/js/workforce-one.js (profile menu, More sheet, notices); styles: assets/css/app-shell.css.
  *
  * @var string $title
+ * @var array{class:string,head:string,page:string,over:string,card:string,hide:string} $occasion  Occasions (3.31.145): all '' while off
  * @var array{0:string,1:string}|null $greeting  a view's greeting and date line (Dashboard); replaces the brand line
  * @var string $body                 the view's HTML
  * @var string $active               menu key of the view shown
@@ -44,7 +45,7 @@ $tab = function ($x) use ($active, $count) {
     return '<a class="wfo-tab' . ($on ? ' active' : '') . '" href="' . esc_url($x['url']) . '"' . ($on ? ' aria-current="page"' : '') . '><span class="wfo-tab-icon">' . Icons::forView($x['key'], 22, $on ? 2.1 : 1.8) . '</span><span class="wfo-tab-label">' . esc_html($x['mobile_label']) . '</span>' . $count($x) . '</a>';
 };
 ?>
-<div class="ews-app wfo-app">
+<div class="ews-app wfo-app<?php echo esc_attr($occasion['class']); ?>">
     <div class="wfo-shell">
         <aside class="wfo-rail" aria-label="<?php esc_attr_e('Workforce One navigation', 'workforce-one'); ?>">
             <a class="wfo-rail-brand" href="<?php echo esc_url($home_url); ?>" title="<?php echo esc_attr($company_name . ' · ' . $app_name); ?>">
@@ -55,9 +56,9 @@ $tab = function ($x) use ($active, $count) {
             </nav>
             <a class="wfo-rail-logout" href="<?php echo esc_url($logout_url); ?>"><?php echo Icons::svg('logout', 20); ?><span class="wfo-rail-label"><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
         </aside>
-        <main class="ews-main"><?php echo $notice_html; ?>
+        <main class="ews-main"><?php echo $occasion['page'] . $notice_html; // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?>
             <header class="wfo-header<?php echo $greeting ? ' has-greeting' : ''; ?>">
-                <div class="wfo-header-text">
+                <?php echo $occasion['head']; // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><div class="wfo-header-text">
                     <?php if ($greeting): ?>
                     <div class="wfo-header-kicker"><h1 class="ews-title"><?php echo esc_html($title); ?></h1><span><?php echo esc_html($greeting[1]); ?></span></div>
                     <p class="wfo-header-greeting"><?php echo esc_html($greeting[0]); ?></p>
@@ -80,11 +81,11 @@ $tab = function ($x) use ($active, $count) {
                     </div>
                 </div>
             </header>
-            <div class="wfo-content"><?php echo $body; ?></div>
+            <div class="wfo-content"><?php echo $occasion['card'] . $body; ?></div>
         </main>
     </div>
 
-    <nav class="wfo-tabbar" aria-label="<?php esc_attr_e('Workforce One navigation', 'workforce-one'); ?>">
+    <?php echo $occasion['over']; // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><nav class="wfo-tabbar" aria-label="<?php esc_attr_e('Workforce One navigation', 'workforce-one'); ?>">
         <?php foreach ($bar['start'] as $x) echo $tab($x); ?>
         <?php if ($bar['center']): $x = $bar['center']; $on = $active === $x['key']; ?>
             <a class="wfo-tab wfo-tab-clock<?php echo $on ? ' active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $on ? ' aria-current="page"' : ''; ?>>
@@ -115,7 +116,7 @@ $tab = function ($x) use ($active, $count) {
             <?php endif; ?>
             <div class="wfo-more-rows">
                 <div class="wfo-more-row wfo-more-install"><?php echo Icons::svg('install', 20); ?><span><strong><?php esc_html_e('Mobile shortcut:', 'workforce-one'); ?></strong> <?php /* translators: %s: "Add to Home Screen" */ printf(esc_html__('Use your browser menu → %s to keep Workforce One one tap away.', 'workforce-one'), '<strong>' . esc_html__('Add to Home Screen', 'workforce-one') . '</strong>'); ?></span></div>
-                <a class="wfo-more-row wfo-more-logout" href="<?php echo esc_url($logout_url); ?>"><?php echo Icons::svg('logout', 20); ?><span><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
+                <?php if ($occasion['hide'] !== ''): ?><a class="wfo-more-row" href="<?php echo esc_url($occasion['hide']); ?>"><?php echo Icons::svg('close', 20); ?><span><?php esc_html_e('Hide decorations', 'workforce-one'); ?></span></a><?php endif; ?><a class="wfo-more-row wfo-more-logout" href="<?php echo esc_url($logout_url); ?>"><?php echo Icons::svg('logout', 20); ?><span><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
             </div>
         </div>
     </dialog>

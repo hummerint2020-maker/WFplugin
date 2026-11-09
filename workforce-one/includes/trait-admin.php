@@ -14,6 +14,14 @@ trait EWS_Admin_Trait {
         if(substr((string)$hook_suffix,-strlen('ews31-features'))==='ews31-features'||substr((string)$hook_suffix,-strlen('ews31-tasks'))==='ews31-tasks'){
             wp_enqueue_style('workforce-one-admin-features', $this->plugin_url('assets/css/admin-features.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-features', 'rtl', 'replace');
+            if(substr((string)$hook_suffix,-strlen('ews31-features'))==='ews31-features'){
+                // Occasions (3.31.145): the swatches and the card's preview use the occasions' art; the words' picker and preview.
+                wp_enqueue_style('workforce-one-occasions', $this->plugin_url('assets/css/occasions.css'), [], EWS_VERSION);
+                wp_style_add_data('workforce-one-occasions', 'rtl', 'replace');
+                $occ_css='';foreach(\WorkforceOne\Settings\OccasionArt::VARS as $k=>$v)$occ_css.='.wfo-occ-'.$k.'{'.$v.'}';
+                wp_add_inline_style('workforce-one-occasions', $occ_css);
+                wp_enqueue_script('workforce-one-admin-occasions', $this->plugin_url('assets/js/admin-occasions.js'), [], EWS_VERSION, true);
+            }
         }
         if(substr((string)$hook_suffix,-strlen('ews31-notifications'))==='ews31-notifications'){
             wp_enqueue_style('workforce-one-admin-notifications', $this->plugin_url('assets/css/admin-notifications.css'), ['workforce-one-ui'], EWS_VERSION);

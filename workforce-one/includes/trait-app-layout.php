@@ -144,7 +144,8 @@ trait EWS_App_Layout_Trait {
         $look=$this->appearance();
         $bar=\WorkforceOne\Ui\MobileBar::split($mobile);
         $clock=$bar['center']&&$emp?\WorkforceOne\Ui\MobileBar::clockState($this->today_events((int)$emp->id),true):'';
-        return $this->render_template('app/layout',[
+        $occ=$this->occasion_frame($active);   // Occasions (3.31.145): all '' while off
+        return $this->render_template('app/layout',['occasion'=>$occ,
             'title'=>$title,'body'=>$body,'active'=>$active,'greeting'=>$this->app_header_greeting,'desktop_items'=>$desktop,'mobile_items'=>$mobile,'bar'=>$bar,'clock_state'=>$clock,
             // The built-in tagline is translated; one typed in Appearance is shown as entered.
             'company_name'=>$look['company_name'],'app_name'=>$look['app_name'],'logo_url'=>$look['logo_url'],
@@ -177,9 +178,10 @@ trait EWS_App_Layout_Trait {
         $this->enqueue_login_assets();
         $cfg=$this->appearance();
         $brand=['app_name'=>$cfg['app_name'],'company_name'=>$cfg['company_name'],'tagline'=>$cfg['tagline'],'logo_url'=>$cfg['logo_url'],'show'=>$cfg['login_brand']==='1'];
+        $occ=$this->occasion_login();   // Occasions (3.31.145): all '' while off
         if(is_user_logged_in()){
             $url=remove_query_arg(['login','loggedout','login_error'])?:home_url('/');
-            return $this->render_template('app/login',['signed_in'=>true,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>$url,'logout_url'=>wp_logout_url(add_query_arg('loggedout','1',$url)),'form'=>'','lost_password_url'=>'','error'=>'','message'=>'','worker_url'=>'']);
+            return $this->render_template('app/login',['occasion'=>$occ,'signed_in'=>true,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>$url,'logout_url'=>wp_logout_url(add_query_arg('loggedout','1',$url)),'form'=>'','lost_password_url'=>'','error'=>'','message'=>'','worker_url'=>'']);
         }
         $redirect=esc_url_raw(remove_query_arg(['login_error','loggedout'],wp_unslash($_GET['redirect_to']??(get_permalink()?:home_url('/')))));
         // Mark this form so a failed login comes back here (app_login_failed) instead of wp-login.php.
@@ -203,7 +205,7 @@ trait EWS_App_Layout_Trait {
         // Logged out on purpose: a Sign In note and the schedule kept on this phone go too (3.31.118; the app page does it in its footer,
         // this login page may have none).
         $clear=isset($_GET['loggedout'])?"<script>try{localStorage.removeItem('ewsPendingAttempt');localStorage.removeItem('ewsOfflineSchedule');}catch(e){}</script>":'';
-        return $clear.$this->render_template('app/login',[
+        return $clear.$this->render_template('app/login',['occasion'=>$occ,
             'signed_in'=>false,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>'','logout_url'=>'',
             'form'=>$form,'lost_password_url'=>$lost,'worker_url'=>$this->dw_self_anywhere()?$this->dw_worker_url():'',
             'error'=>isset($_GET['login_error'])?__('The username or password is incorrect. Please try again.','workforce-one'):'',

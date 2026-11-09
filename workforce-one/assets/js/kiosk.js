@@ -25,7 +25,13 @@
         if (slot === lastSlot) return;
         lastSlot = slot;
         fetch(URL_ + '&t=' + slot, { cache: 'no-store', credentials: 'omit' })
-            .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })
+            .then(function (r) {
+                if (!r.ok) throw new Error();
+                // Occasions (3.31.145): the occasion switched on, off or changed: the kiosk reloads to show it.
+                var occ = r.headers.get('X-WFO-Occasion') || '';
+                if (occ !== (document.body.getAttribute('data-occasion') || '')) { location.reload(); }
+                return r.text();
+            })
             .then(function (v) { if (v.indexOf('wfo1|') !== 0) throw new Error(); draw(v); offline.style.display = 'none'; })
             .catch(function () { offline.style.display = 'block'; lastSlot = -1; });
     }
