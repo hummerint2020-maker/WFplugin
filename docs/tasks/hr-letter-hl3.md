@@ -145,5 +145,10 @@ could not be made), hub (a waiting letter on the Requests Hub), notices (the not
   are off, and Upload is hidden then; regenerating a salary letter needs Manage Payroll too (the spirit of decision 6: it reads today's
   salary); the preview's reference number used the employee's id; the e2e suite leaves nothing behind; inactive types are not offered in
   "Letter for an employee"; "I upload a PDF" without a file is refused; a docblock moved back.
-- Not done (deviations, to be raised with the owner): no browser test and no multisite suite yet; no e2e for upgrade, uninstall and races;
-  the Requests Hub keeps its standard Approve label; the letter's own page "Letter for an employee" is a tab, not a separate page.
+- Added at the owner's request before the PR ("عايز الاختبارات دي الاول"): `tests/hr_letters_browser.js` (the request sheet, approve and
+  download, template chips, a phone); `tests/e2e_hr_letters_more.py` with `tests/e2e_hr_letters_mu.php` (requests at the same moment: two
+  asks for one open letter, decision vs withdrawal both ways, two deciders, ready vs cancel; faults: the approval cannot be written, the letter
+  decided meanwhile, the approval decided while withdrawing, the file claimed by another request; the upgrade from 3.31.144); uninstall
+  checks in CI (the letters folder, the settings and the capability are removed). The schema target is `3.31.144.1` (CI reads digits only).
+- Not done (deviations, to be raised with the owner): no multisite suite; the Requests Hub keeps its standard Approve label; the letter's
+  own page "Letter for an employee" is a tab, not a separate page.
