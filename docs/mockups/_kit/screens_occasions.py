@@ -109,6 +109,8 @@ def stylesheet():
            '@keyframes wfo-occ-fall{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}8%{opacity:.95}85%{opacity:.9}'
            '100%{transform:translate3d(30px,110vh,0) rotate(220deg);opacity:0}}',
            # the greeting at the top of the content
+           # The Dashboard's content tucks under the top bar (app-home.css margin-top:-62px): after the card it sits below it (3.31.146)
+           '.wfo-header.has-greeting+.wfo-content .wfo-occ-greet+.wfo-home{margin-top:0}',
            '.wfo-occ-greet{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;gap:14px;margin:0 0 16px;'
            'padding:18px 20px 22px;border-radius:24px;color:#fff;'
            'background:var(--wfo-occ-tile-page) 0 0/96px,radial-gradient(120% 140% at 100% 0%,var(--wfo-occ-a) 0%,transparent 55%),'

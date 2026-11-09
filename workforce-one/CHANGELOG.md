@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.31.146
+### Dashboard (owner, 2026-11-09)
+- The Dashboard no longer has the "+ New request" shortcut. New request stays on My requests (and its link in the menu).
+- Occasions: the greeting card is no longer covered by the Dashboard's first row (the page's pull-up under the top bar now starts below the card).
+
 ## 3.31.145
 ### Occasions (off by default; owner decisions and approved mockups 2026-11-09)
 - **Feature Configuration → Occasions**: one company occasion at a time (Valentine's Day, Ramadan, Eid al-Fitr, Eid al-Adha, New Year, Halloween, National day · Egypt, the company's birthday), switched on and off by the administrator, with an optional last day. It shows in the top bar and the background, or falling over the whole screen for a few seconds; never over a button, never taking a tap.

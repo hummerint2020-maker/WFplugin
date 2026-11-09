@@ -17,6 +17,7 @@
 .wfo-occ.is-full{position:fixed;z-index:9980}
 .wfo-occ.is-full i{opacity:.95;animation:wfo-occ-fall var(--t) cubic-bezier(.3,.1,.6,1) var(--d) 1 both}
 @keyframes wfo-occ-fall{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}8%{opacity:.95}85%{opacity:.9}100%{transform:translate3d(30px,110vh,0) rotate(220deg);opacity:0}}
+.wfo-header.has-greeting+.wfo-content .wfo-occ-greet+.wfo-home{margin-top:0}
 .wfo-occ-greet{position:relative;overflow:hidden;isolation:isolate;display:flex;align-items:center;gap:14px;margin:0 0 16px;padding:18px 20px 22px;border-radius:24px;color:#fff;background:var(--wfo-occ-tile-page) 0 0/96px,radial-gradient(120% 140% at 100% 0%,var(--wfo-occ-a) 0%,transparent 55%),linear-gradient(135deg,var(--wfo-occ-ink) 0%,var(--wfo-occ-ink) 45%,var(--wfo-occ-a) 160%);box-shadow:0 14px 30px -12px var(--wfo-occ-ink);animation:wfo-occ-pop .7s cubic-bezier(.2,1.3,.4,1) both}
 [dir=rtl] .wfo-occ-greet{background:var(--wfo-occ-tile-page) 0 0/96px,radial-gradient(120% 140% at 0% 0%,var(--wfo-occ-a) 0%,transparent 55%),linear-gradient(225deg,var(--wfo-occ-ink) 0%,var(--wfo-occ-ink) 45%,var(--wfo-occ-a) 160%)}
 @keyframes wfo-occ-pop{0%{transform:translateY(8px) scale(.96);opacity:0}100%{transform:none;opacity:1}}

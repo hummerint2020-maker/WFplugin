@@ -183,9 +183,8 @@ trait EWS_My_Approvals_Trait {
     /** The home card: how many wait, how many are overdue. @return array{waiting:int,overdue:int,url:string} */
     private function my_approvals_home(){
         $items=$this->my_approvals_enabled() && is_user_logged_in()?$this->my_approvals_items():[];
-        return ['waiting'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'url'=>$this->app_view_url('approvals'),
-            // The New request shortcut (3.31.105): My requests with its sheet open.
-            'new_url'=>$this->my_requests_allowed()?add_query_arg('new','1',$this->my_approvals_clean_url('requests')):''];
+        return ['waiting'=>count($items),'overdue'=>count(array_filter($items,function($it){return $it['path']['overdue'];})),'url'=>$this->app_view_url('approvals')];
+        // The Dashboard's "+ New request" shortcut (3.31.105) was removed in 3.31.146 (owner, 2026-11-09): New request is on My requests.
     }
 
     /** The link above a page's own approval list: all of them in one place. '' while My approvals is off. */
