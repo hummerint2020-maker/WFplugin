@@ -32,6 +32,11 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-employee-profile', $this->plugin_url('assets/css/admin-employee-profile.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-employee-profile', 'rtl', 'replace');
         }
+        // The details for letters (HR letters HL2): the profile's Edit form, Add Employee's section, the file page.
+        if(substr((string)$hook_suffix,-strlen('ews31-employee-profile'))==='ews31-employee-profile' || substr((string)$hook_suffix,-strlen('ews31-employees'))==='ews31-employees'){
+            wp_enqueue_style('workforce-one-admin-employee-details', $this->plugin_url('assets/css/admin-employee-details.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-employee-details', 'rtl', 'replace');
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-polls'))==='ews31-polls'){
             wp_enqueue_style('workforce-one-admin-polls', $this->plugin_url('assets/css/admin-polls.css'), [], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-polls', 'rtl', 'replace');

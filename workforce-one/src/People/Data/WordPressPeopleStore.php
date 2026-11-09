@@ -221,6 +221,17 @@ final class WordPressPeopleStore implements PeopleStore
         return $this->db->update($this->t, $fields, ['id' => $id]);
     }
 
+    public function setDetails(int $id, array $fields, string $now)
+    {
+        $row = array_intersect_key($fields, array_flip(['name_ar', 'gender', 'hire_date'])) + ['updated_at' => $now];
+        return $this->db->update($this->t, $row, ['id' => $id], null, ['%d']);
+    }
+
+    public function detailsRows(): array
+    {
+        return array_values((array) $this->db->get_results("SELECT id,name,domain_name,active,name_ar,gender,hire_date,created_at FROM {$this->t} ORDER BY name ASC,id ASC"));
+    }
+
     public function archive(int $id, string $lastDay, string $now)
     {
         return $this->db->update($this->t, ['active' => 0, 'last_working_day' => $lastDay, 'updated_at' => $now], ['id' => $id]);

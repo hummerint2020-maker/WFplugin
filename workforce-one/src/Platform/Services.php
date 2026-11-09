@@ -52,6 +52,7 @@ use WorkforceOne\People\Data\WordPressPeopleStore;
 use WorkforceOne\People\Data\WordPressReportingStore;
 use WorkforceOne\People\Data\WordPressTeamStore;
 use WorkforceOne\People\DepartmentService;
+use WorkforceOne\People\EmployeeDetailsService;
 use WorkforceOne\People\EmployeeService;
 use WorkforceOne\People\OrgDirectory;
 use WorkforceOne\People\OrgImportService;
@@ -208,6 +209,13 @@ final class Services
         if (!isset($this->made[__FUNCTION__])) {
             $this->made[__FUNCTION__] = new EmployeeService($this->peopleStore(), $this->departmentStore(), $this->teamStore(), $this->people(), $this->org(), $this->orgMoves(), $this->teams(), $this->audit, $this->peoplePorts);
         }
+        return $this->made[__FUNCTION__];
+    }
+
+    /** An employee's details for letters (HR letters HL2): saved on the profile or from a previewed file. */
+    public function employeeDetails(): EmployeeDetailsService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new EmployeeDetailsService($this->peopleStore(), $this->audit, $this->peoplePorts);
         return $this->made[__FUNCTION__];
     }
 

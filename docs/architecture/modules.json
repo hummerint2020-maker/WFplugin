@@ -55,7 +55,8 @@
         "teams",
         "org-chart",
         "org-moves",
-        "org-import"
+        "org-import",
+        "employee-details"
       ],
       "tables": [
         "employees",
@@ -140,7 +141,8 @@
             "workforce-one/src/People/DepartmentService.php",
             "workforce-one/src/People/TeamService.php",
             "workforce-one/src/People/EmployeeService.php",
-            "workforce-one/src/People/ProfileService.php"
+            "workforce-one/src/People/ProfileService.php",
+            "workforce-one/src/People/EmployeeDetailsService.php"
           ],
           "moved": [
             "people_employee",
@@ -215,7 +217,8 @@
             "org-import",
             "employee-admin",
             "people-view",
-            "profile-account"
+            "profile-account",
+            "employee-details"
           ]
         }
       ],

@@ -11159,3 +11159,187 @@ msgstr ""
 #: includes/trait-frontend.php
 msgid "It was already decided, so nothing was changed."
 msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Details saved."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The day the employee was added: hiring date not set"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Gender"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Edit name in Arabic, gender, hiring date"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Optional; HR letters use them when they are filled."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Name in Arabic"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "— Not set —"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Male"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Female"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Hiring date"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Left empty, a letter uses the employee name, wording that fits anyone (\"Mr./Ms.\"), and the day the employee was added. Changes are kept in the Audit Log."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Update details from a file"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Details for letters (optional)"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Gender: not set"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Employee since"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "This is what appears on your HR letters. Something wrong? Ask HR to correct it."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Former"
+msgstr ""
+
+#: includes/trait-employee-details.php
+#, php-format
+msgid "%1$d change(s) saved for %2$d employee(s). %3$d skipped because the employee changed since the preview."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The name in Arabic is too long (190 characters at most)"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Gender must be male or female"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The hiring date must be written as YYYY-MM-DD"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The hiring date is in the future"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The file needs an \"Employee ID\" or \"Domain name\" column, and at least one of name_ar, gender, hire_date."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Upload an Excel (.xlsx) or CSV file of 5 MB at most."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "This server cannot read Excel files. Save the file as CSV and upload it again."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The preview expired. Upload the file again."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Employee not found."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "The details could not be saved. Please try again."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Back to Employees"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Update name in Arabic, gender and hiring date from a file"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Download the file: every employee with their current details."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Fill the columns name_ar, gender (male or female) and hire_date (YYYY-MM-DD). Other columns are ignored."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Upload it here: you see the changes first; nothing is saved before you press Apply."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Download the employees file (Excel)"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Upload and preview"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Excel or CSV. An empty cell means \"leave it as it is\"."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Preview the update"
+msgstr ""
+
+#: includes/trait-employee-details.php
+#, php-format
+msgid "%1$d change(s) for %2$d employee(s) will be applied. %3$d row(s) are refused and will not be applied. %4$d employee(s) without a change."
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Domain name"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Field"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Will change"
+msgstr ""
+
+#: includes/trait-employee-details.php
+#, php-format
+msgid "Row %d"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Nothing to change: the file has the same details as the employees."
+msgstr ""
+
+#: includes/trait-employee-details.php
+#, php-format
+msgid "Apply %d change(s)"
+msgstr ""
+
+#: includes/trait-employee-details.php
+msgid "Every change is kept in the Audit Log under your name."
+msgstr ""
