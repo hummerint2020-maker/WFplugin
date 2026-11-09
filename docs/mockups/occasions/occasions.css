@@ -52,6 +52,22 @@
 .wfo-bday-burst i{position:absolute;inset-block-start:46%;inset-inline-start:50%;inline-size:10px;block-size:16px;border-radius:3px;opacity:0;animation:wfo-bday-burst 1.6s cubic-bezier(.1,.7,.3,1) 2.7s both}
 @keyframes wfo-bday-burst{0%{opacity:0;transform:translate(0,0) rotate(0)}6%{opacity:1}100%{opacity:0;transform:translate(var(--bx),var(--by)) rotate(var(--br))}}
 @media (prefers-reduced-motion:reduce){.wfo-bday{animation:wfo-bday-out .3s ease-in 3s both}.wfo-bday *{animation:none!important;opacity:1!important}.wfo-bday-flame,.wfo-bday-glow,.wfo-bday-burst,.wfo-bday-smoke{display:none}}
+.wfo-hw{position:fixed;inset:0;z-index:9985;pointer-events:none;display:grid;place-items:center;align-content:center;gap:4px;overflow:hidden;background:radial-gradient(circle at 50% 30%,#4A2A6E 0%,#2B1B3D 45%,#140B1F 100%);animation:wfo-bday-in .5s ease-out both,wfo-bday-out .7s ease-in 5.3s both}
+.wfo-hw-moon{position:absolute;inset-block-start:9%;inset-inline-end:12%;inline-size:110px;block-size:110px;border-radius:50%;background:radial-gradient(circle at 38% 38%,#FFF8D6 0%,#F5E7A8 60%,#E0CC7E 100%);box-shadow:0 0 60px 18px rgba(245,231,168,.35);animation:wfo-bday-in 1s ease-out both}
+.wfo-hw-pumpkin{inline-size:min(60vw,230px);animation:wfo-bday-pop .8s cubic-bezier(.2,1.5,.4,1) .2s both}
+.wfo-hw-face{fill:#2B1B3D;animation:wfo-hw-light .9s ease-in 1.1s forwards}
+@keyframes wfo-hw-light{0%{fill:#2B1B3D}40%{fill:#FFB020}55%{fill:#7a3b00}100%{fill:#FFD34D}}
+.wfo-hw-glow{opacity:0;transform-box:fill-box;transform-origin:50% 50%;animation:wfo-hw-glow 1.1s ease-in-out 1.6s infinite alternate}
+@keyframes wfo-hw-glow{from{opacity:.35;transform:scale(.95)}to{opacity:.8;transform:scale(1.08)}}
+.wfo-hw-bat{position:absolute;inset-block-start:46%;inset-inline-start:50%;inline-size:70px;block-size:70px;opacity:0;background:var(--wfo-hw-bat) center/contain no-repeat;filter:drop-shadow(0 0 5px rgba(245,231,168,.85));animation:wfo-hw-fly 2.2s ease-in var(--d) both}
+.wfo-hw{--wfo-hw-bat:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23140B1F%22%20d%3D%22M12%209.5c.6-1.3%201.4-1.8%201.4-1.8l.2%201.4c1.6-.2%203.6.6%205.4%202.4-1.4-.2-2.2.4-2.4%201.6-.9-.9-2-1-2.6-.3-.4-.6-1.2-.8-2-.4-.8-.4-1.6-.2-2%20.4-.6-.7-1.7-.6-2.6.3-.2-1.2-1-1.8-2.4-1.6%201.8-1.8%203.8-2.6%205.4-2.4l.2-1.4s.8.5%201.4%201.8z%22%2F%3E%3C%2Fsvg%3E")}
+@keyframes wfo-hw-fly{0%{opacity:0;transform:translate(-50%,0) scale(.3)}10%{opacity:1}50%{transform:translate(calc(-50% + var(--bx) * .5),calc(var(--by) * .5)) scale(.9,.6)}60%{transform:translate(calc(-50% + var(--bx) * .6),calc(var(--by) * .6)) scale(1,1.1)}100%{opacity:0;transform:translate(calc(-50% + var(--bx)),var(--by)) scale(1.2,.7)}}
+.wfo-hw-title{display:flex;gap:.06em;justify-content:center;flex-wrap:wrap;direction:ltr;margin:4px 0 0;font-size:clamp(26px,8.6vw,42px);font-weight:900;letter-spacing:.03em;color:#FF8A1F;text-shadow:0 0 12px rgba(255,138,31,.75),0 3px 0 #6A2C91}
+.wfo-hw-title .w{display:inline-flex;white-space:nowrap}.wfo-hw-title .sp{inline-size:.35em}
+.wfo-hw-title span{display:inline-block;opacity:0;animation:wfo-hw-letter .6s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes wfo-hw-letter{0%{opacity:0;transform:translateY(-40px) rotate(14deg)}60%{opacity:1;transform:translateY(4px) rotate(-6deg)}100%{opacity:1;transform:none}}
+.wfo-hw-name{margin:0;font-size:17px;font-weight:700;color:#F5E7A8;opacity:0;animation:wfo-bday-letter .5s ease-out 3.9s both}
+@media (prefers-reduced-motion:reduce){.wfo-hw{animation:wfo-bday-out .3s ease-in 3s both}.wfo-hw *{animation:none!important;opacity:1!important}.wfo-hw-face{fill:#FFD34D}.wfo-hw-bat{display:none}}
 @media (max-width:600px){.wfo-occ i:nth-child(even){display:none}}
 @media (prefers-reduced-motion:reduce){.wfo-occ i,.wfo-occ-greet{animation:none!important}.wfo-occ i{transform:translate3d(0,calc(var(--rest) * 1px),0) rotate(18deg)}.wfo-occ.is-page i{transform:translate3d(0,calc(var(--restp) * 1px),0) rotate(12deg)}.wfo-occ.is-full{display:none}}
 .wfo-occ i:nth-child(1){--x:4%;--s:18px;--d:0.0s;--t:7.5s;--rest:83;--restp:331;--sz:18px}

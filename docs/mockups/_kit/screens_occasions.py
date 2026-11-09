@@ -164,6 +164,32 @@ def stylesheet():
            '@keyframes wfo-bday-burst{0%{opacity:0;transform:translate(0,0) rotate(0)}6%{opacity:1}100%{opacity:0;transform:translate(var(--bx),var(--by)) rotate(var(--br))}}',
            '@media (prefers-reduced-motion:reduce){.wfo-bday{animation:wfo-bday-out .3s ease-in 3s both}.wfo-bday *{animation:none!important;opacity:1!important}'
            '.wfo-bday-flame,.wfo-bday-glow,.wfo-bday-burst,.wfo-bday-smoke{display:none}}',
+           # the Halloween moment: night, a moon, the pumpkin lights up, bats fly out, "HAPPY HALLOWEEN" (once a day, ~5 s, never a tap)
+           '.wfo-hw{position:fixed;inset:0;z-index:9985;pointer-events:none;display:grid;place-items:center;align-content:center;gap:4px;overflow:hidden;'
+           'background:radial-gradient(circle at 50% 30%,#4A2A6E 0%,#2B1B3D 45%,#140B1F 100%);animation:wfo-bday-in .5s ease-out both,wfo-bday-out .7s ease-in 5.3s both}',
+           '.wfo-hw-moon{position:absolute;inset-block-start:9%;inset-inline-end:12%;inline-size:110px;block-size:110px;border-radius:50%;'
+           'background:radial-gradient(circle at 38% 38%,#FFF8D6 0%,#F5E7A8 60%,#E0CC7E 100%);box-shadow:0 0 60px 18px rgba(245,231,168,.35);'
+           'animation:wfo-bday-in 1s ease-out both}',
+           '.wfo-hw-pumpkin{inline-size:min(60vw,230px);animation:wfo-bday-pop .8s cubic-bezier(.2,1.5,.4,1) .2s both}',
+           '.wfo-hw-face{fill:#2B1B3D;animation:wfo-hw-light .9s ease-in 1.1s forwards}',
+           '@keyframes wfo-hw-light{0%{fill:#2B1B3D}40%{fill:#FFB020}55%{fill:#7a3b00}100%{fill:#FFD34D}}',
+           '.wfo-hw-glow{opacity:0;transform-box:fill-box;transform-origin:50% 50%;animation:wfo-hw-glow 1.1s ease-in-out 1.6s infinite alternate}',
+           '@keyframes wfo-hw-glow{from{opacity:.35;transform:scale(.95)}to{opacity:.8;transform:scale(1.08)}}',
+           '.wfo-hw-bat{position:absolute;inset-block-start:46%;inset-inline-start:50%;inline-size:70px;block-size:70px;opacity:0;'
+           'background:var(--wfo-hw-bat) center/contain no-repeat;filter:drop-shadow(0 0 5px rgba(245,231,168,.85));animation:wfo-hw-fly 2.2s ease-in var(--d) both}',
+           '.wfo-hw{--wfo-hw-bat:%s}' % svg(BAT % '#140B1F'),
+           '@keyframes wfo-hw-fly{0%{opacity:0;transform:translate(-50%,0) scale(.3)}10%{opacity:1}'
+           '50%{transform:translate(calc(-50% + var(--bx) * .5),calc(var(--by) * .5)) scale(.9,.6)}'
+           '60%{transform:translate(calc(-50% + var(--bx) * .6),calc(var(--by) * .6)) scale(1,1.1)}'
+           '100%{opacity:0;transform:translate(calc(-50% + var(--bx)),var(--by)) scale(1.2,.7)}}',
+           '.wfo-hw-title{display:flex;gap:.06em;justify-content:center;flex-wrap:wrap;direction:ltr;margin:4px 0 0;font-size:clamp(26px,8.6vw,42px);font-weight:900;'
+           'letter-spacing:.03em;color:#FF8A1F;text-shadow:0 0 12px rgba(255,138,31,.75),0 3px 0 #6A2C91}',
+           '.wfo-hw-title .w{display:inline-flex;white-space:nowrap}.wfo-hw-title .sp{inline-size:.35em}',
+           '.wfo-hw-title span{display:inline-block;opacity:0;animation:wfo-hw-letter .6s cubic-bezier(.3,1.6,.5,1) both}',
+           '@keyframes wfo-hw-letter{0%{opacity:0;transform:translateY(-40px) rotate(14deg)}60%{opacity:1;transform:translateY(4px) rotate(-6deg)}100%{opacity:1;transform:none}}',
+           '.wfo-hw-name{margin:0;font-size:17px;font-weight:700;color:#F5E7A8;opacity:0;animation:wfo-bday-letter .5s ease-out 3.9s both}',
+           '@media (prefers-reduced-motion:reduce){.wfo-hw{animation:wfo-bday-out .3s ease-in 3s both}.wfo-hw *{animation:none!important;opacity:1!important}'
+           '.wfo-hw-face{fill:#FFD34D}.wfo-hw-bat{display:none}}',
            # phones: half the particles
            '@media (max-width:600px){.wfo-occ i:nth-child(even){display:none}}',
            # reduced motion: still, and nothing falls over the screen
@@ -274,6 +300,38 @@ def birthday_cake():
     return page.replace('<nav class="wfo-tabbar">', bday_scene(T('كل سنة وانت طيب يا عمر!', 'Many happy returns, Omar!')) + '<nav class="wfo-tabbar">', 1)
 
 
+
+PUMPKIN_BIG = ('<svg class="wfo-hw-pumpkin" viewBox="0 0 220 200" aria-hidden="true">'
+               '<defs><radialGradient id="hwg" cx="50%" cy="55%" r="50%"><stop offset="0" stop-color="#FFD34D" stop-opacity=".9"/><stop offset="1" stop-color="#FF8A1F" stop-opacity="0"/></radialGradient></defs>'
+               '<ellipse cx="110" cy="190" rx="80" ry="8" fill="#000" opacity=".35"/>'
+               '<ellipse class="wfo-hw-glow" cx="110" cy="118" rx="110" ry="90" fill="url(#hwg)"/>'
+               '<path d="M104 38c-2-14 4-26 16-30l4 6c-8 4-10 12-8 24z" fill="#3C8D5A"/>'
+               '<ellipse cx="62" cy="118" rx="46" ry="66" fill="#E8661A"/><ellipse cx="158" cy="118" rx="46" ry="66" fill="#E8661A"/>'
+               '<ellipse cx="88" cy="116" rx="42" ry="72" fill="#F2761B"/><ellipse cx="132" cy="116" rx="42" ry="72" fill="#F2761B"/>'
+               '<ellipse cx="110" cy="116" rx="34" ry="74" fill="#FF8A2A"/>'
+               '<path class="wfo-hw-face" d="M62 92l22-14 10 24zM158 92l-22-14-10 24zM100 116h20l-10 16z'
+               'M56 136c18 22 90 22 108 0l-6 22-12-8-10 12-10-10-10 12-10-12-10 10-12-12-12 8z"/>'
+               '</svg>')
+BAT_URL = svg(BAT % '#140B1F')
+
+
+def halloween_scene():
+    word = 'HAPPY HALLOWEEN'
+    letters, i = [], 0
+    for w in word.split(' '):
+        letters.append('<b class="w">%s</b>' % ''.join('<span style="animation-delay:%.2fs">%s</span>' % (2.9 + (i + k) * .08, ch) for k, ch in enumerate(w)))
+        i += len(w) + 1
+    bats = ''.join('<i class="wfo-hw-bat" style="--bx:%dpx;--by:%dpx;--d:%.2fs"></i>' % (bx, by, d) for bx, by, d in
+                   [(-190, -330, 1.7), (170, -300, 1.85), (-120, -420, 2.0), (210, -180, 2.1), (-230, -150, 2.25), (60, -440, 2.35), (-40, -380, 2.5)])
+    return ('<div class="wfo-hw" role="status" aria-label="%s"%s><span class="wfo-hw-moon" aria-hidden="true"></span>%s%s<p class="wfo-hw-title">%s</p><p class="wfo-hw-name">%s</p></div>') % (
+        esc(T('هالوين سعيد', 'Happy Halloween')), '', PUMPKIN_BIG, bats, '<span class="sp"></span>'.join(letters), esc(T('هالوين سعيد من أسرة شركة النيل', 'Happy Halloween from all of us at Nile')))
+
+
+def halloween_moment():
+    page = decorate(app_page(T('الرئيسية', 'Dashboard'), home_body('halloween'), active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=WHO), 'halloween')
+    return page.replace('<nav class="wfo-tabbar">', halloween_scene() + '<nav class="wfo-tabbar">', 1)
+
+
 def birthday_everyone():
     """A colleague on the day of someone the administrator picked: everyone sees it."""
     def make():
@@ -372,7 +430,9 @@ def features(state='on'):
                       '<div class="wfo-subpanel"><div class="wfo-subpanel-title"><label><input type="checkbox" checked> %s</label></div>'
                       '<p class="wfo-subpanel-desc">%s <a href="#">%s</a></p>'
                       '<span class="wfo-field-label">%s</span><div class="occ-people">%s<input type="text" placeholder="%s"></div>'
-                      '<small class="occ-help">%s</small></div>') % (
+                      '<small class="occ-help">%s</small>'
+                      '<label class="occ-check" style="margin-top:12px"><input type="checkbox" checked> %s<small class="occ-help">%s</small></label>'
+                      '<label class="occ-check"><input type="checkbox"> %s<small class="occ-help">%s</small></label></div>') % (
                           err, esc(T('المناسبة الشغالة (واحدة بس في نفس الوقت)', 'The occasion on now (one at a time)')), cards,
                           esc(T('تظهر إزاي', 'How it shows')),
                           esc(T('الشريط اللي فوق والخلفية', 'Top bar and background')), esc(T('ثواني حركة لما الصفحة تفتح، وبعدها الزينة تفضل هادية ورا المحتوى.', 'A few seconds of movement when a page opens, then the decorations stay quietly behind the content.')),
@@ -386,7 +446,11 @@ def features(state='on'):
                           esc(T('في يوم ميلاده هو بس يشوف الزينة و"كل سنة وانت طيب". السنة مش بتظهر. ٤١ من ٥٨ موظف متسجل لهم تاريخ ميلاد في', 'On their day only they see the decorations and "Happy birthday". The year is never shown. 41 of 58 employees have a birthday saved in')),
                           esc(T('لحظات الموظفين', 'Employee Moments')),
                           esc(T('الكل يشوف زينة عيد ميلاد:', "Everyone sees the decorations on the birthday of:")), people, esc(T('ابحث عن موظف…', 'Search an employee…')),
-                          esc(T('في يوم ميلادهم الزينة والتهنئة باسمهم تظهر لكل الموظفين (مش في الكشك ولا صفحة الدخول).', 'On their day the decorations and a greeting with their name show to every employee (not on kiosks or the login page).')))
+                          esc(T('في يوم ميلادهم الزينة والتهنئة باسمهم تظهر لكل الموظفين (مش في الكشك ولا صفحة الدخول).', 'On their day the decorations and a greeting with their name show to every employee (not on kiosks or the login page).')),
+                          esc(T('مشهد التورتة لصاحب عيد الميلاد', 'The cake moment for the birthday person')),
+                          esc(T('تورتة وشمعة بتطفي و"HAPPY BIRTHDAY"، مرة واحدة في اليوم أول ما يفتح التطبيق.', 'A cake, its candle blown out and "HAPPY BIRTHDAY", once a day when they open the app.')),
+                          esc(T('مشهد التورتة لكل الموظفين في عيد ميلاد الأشخاص المختارين', 'The cake moment for everyone on the picked people\'s birthday')),
+                          esc(T('مرة واحدة في اليوم لكل موظف.', 'Once a day for each employee.')))
         body = ('<h1 class="wp-heading-inline">%s</h1><div class="wfo-features-shell" style="margin-top:18px"><div class="wfo-feature-section" id="ews-occasions">'
                 '<div class="wfo-feature-head"><div><div class="wfo-feature-title">%s</div><div class="wfo-feature-desc">%s</div></div>'
                 '<label class="wfo-feature-status"><input type="checkbox"%s> %s</label></div>%s</div>'
@@ -411,6 +475,7 @@ def build():
     write(F, 'dash-off', dash_off)
     write(F, 'birthday-me', birthday_me)
     write(F, 'birthday-cake', birthday_cake)
+    write(F, 'halloween-moment', halloween_moment)
     write(F, 'birthday-everyone', birthday_everyone())
     write(F, 'time', time_view)
     write(F, 'menu', menu_view)
@@ -428,7 +493,7 @@ def build():
         ('2. Each occasion on a phone · كل مناسبة على الموبايل', 'Top bar and background: a few seconds of movement, then still. The Sign In / Out button in the tab bar is never covered.',
          [('dash-' + k, OCCASIONS[k][0][1] + ' · ' + OCCASIONS[k][0][0], 'phone') for k in COMPANY] + [('dash-off', 'Off (today) · من غير مناسبة', 'phone')]),
         ('3. Falling over the whole screen · تنزل على الشاشة كلها', 'Falls once for a few seconds under the tab bar, never takes a tap, then is gone (reload to replay).',
-         [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone')]),
+         [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone'), ('halloween-moment', 'Halloween moment, once a day (reload to replay) · لحظة الهالوين', 'phone')]),
         ('4. Birthdays · أعياد الميلاد', 'Omar on his birthday (only he sees it); Mona on the birthday of the General Manager, whom the administrator picked (everyone sees it).',
          [('birthday-cake', 'The cake, once a day (reload to replay) · التورتة، مرة في اليوم', 'phone'), ('birthday-me', 'My birthday · عيد ميلادي', 'phone'), ('birthday-everyone', 'A picked person · شخص مختار', 'phone')]),
         ('5. Sign In / Out, the menu, the login page · الحضور والقائمة وصفحة الدخول', '',

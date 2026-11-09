@@ -147,3 +147,9 @@ shows, once, a cake with a lit candle (it flickers), the candle is blown out (sm
 "Happy birthday, Omar!" in the page's language; about 5 seconds, then it fades into the decorated page. It never takes a tap (a tap goes
 to the page under it) and stays under the tab bar; with reduced motion it shows the cake and the words still for 3 seconds. Pure CSS/SVG.
 Open: once a day (proposed) or on every page; also for the picked people's birthday (everyone sees it) and the company's birthday.
+
+## Addition asked by the owner (2026-11-09): a Halloween moment ("عايز فكره زيها للهالوين")
+Mockup `occasions/halloween-moment`: night with a full moon; a carved pumpkin appears, its face lights up and glows like a candle inside;
+bats fly out from it across the moon; "HAPPY HALLOWEEN" drops in letter by letter; "Happy Halloween from all of us at Nile" under it;
+about 5 seconds, once a day for each employee while Halloween is the occasion on; never a tap; reduced motion = the lit pumpkin and the
+words, still, for 3 seconds. Awaiting the owner's approval.
