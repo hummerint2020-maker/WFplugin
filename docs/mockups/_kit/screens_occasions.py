@@ -138,6 +138,32 @@ def stylesheet():
            '.k-occ{isolation:isolate;background-image:var(--wfo-occ-tile-head),var(--wfo-hero);background-size:130px,auto}.k-occ .wfo-occ{position:fixed}',
            '.k-occ .wfo-occ i{animation:wfo-occ-kiosk calc(var(--t) * 2.4) linear calc(var(--d) * -7) infinite;opacity:.6}',
            '@keyframes wfo-occ-kiosk{0%{transform:translate3d(0,0,0) rotate(0)}100%{transform:translate3d(24px,110vh,0) rotate(160deg)}}',
+           # the birthday moment: a cake, the candle blown out, "Happy Birthday" (once a day, ~5 s, never takes a tap)
+           '.wfo-bday{position:fixed;inset:0;z-index:9985;pointer-events:none;display:grid;place-items:center;align-content:center;gap:6px;'
+           'background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.96) 0%,rgba(255,244,236,.94) 45%,rgba(255,214,200,.9) 100%);'
+           'animation:wfo-bday-in .4s ease-out both,wfo-bday-out .6s ease-in 5.2s both}',
+           '@keyframes wfo-bday-in{from{opacity:0}to{opacity:1}}@keyframes wfo-bday-out{to{opacity:0;visibility:hidden}}',
+           '.wfo-bday-cake{inline-size:min(68vw,270px);animation:wfo-bday-pop .7s cubic-bezier(.2,1.5,.4,1) .1s both}',
+           '@keyframes wfo-bday-pop{from{transform:translateY(40px) scale(.6);opacity:0}to{transform:none;opacity:1}}',
+           '.wfo-bday-flame{transform-box:fill-box;transform-origin:50% 100%;animation:wfo-bday-flicker .18s ease-in-out infinite alternate,wfo-bday-blow .35s ease-in 2.3s forwards}',
+           '@keyframes wfo-bday-flicker{from{transform:scale(1,1) rotate(-3deg)}to{transform:scale(.92,1.08) rotate(3deg)}}',
+           '@keyframes wfo-bday-blow{0%{transform:scale(1.1,.8) skewX(-25deg);opacity:1}100%{transform:scale(0,0);opacity:0}}',
+           '.wfo-bday-glow{transform-box:fill-box;transform-origin:50% 50%;animation:wfo-bday-glow 1s ease-in-out infinite alternate,wfo-bday-blow .35s ease-in 2.3s forwards}',
+           '@keyframes wfo-bday-glow{from{opacity:.55}to{opacity:.9}}',
+           '.wfo-bday-smoke circle{opacity:0;transform-box:fill-box;transform-origin:50% 50%;animation:wfo-bday-smoke 1.6s ease-out 2.55s both}',
+           '.wfo-bday-smoke circle:nth-child(2){animation-delay:2.7s}.wfo-bday-smoke circle:nth-child(3){animation-delay:2.85s}',
+           '@keyframes wfo-bday-smoke{0%{opacity:.7;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(6px,-34px) scale(1.8)}}',
+           '.wfo-bday-title{display:flex;gap:.06em;justify-content:center;flex-wrap:wrap;direction:ltr;margin:6px 0 0;font-size:clamp(26px,8.6vw,42px);font-weight:900;'
+           'letter-spacing:.02em;color:#E8436A;text-shadow:0 3px 0 #FFC83D,0 6px 18px rgba(232,67,106,.35)}',
+           '.wfo-bday-title span{display:inline-block;opacity:0;animation:wfo-bday-letter .45s cubic-bezier(.2,1.6,.4,1) both}',
+           '.wfo-bday-title .sp{inline-size:.35em}.wfo-bday-title .w{display:inline-flex;white-space:nowrap}',
+           '@keyframes wfo-bday-letter{from{opacity:0;transform:translateY(24px) scale(.4) rotate(-12deg)}to{opacity:1;transform:none}}',
+           '.wfo-bday-name{margin:0;font-size:18px;font-weight:700;color:#7A2E00;opacity:0;animation:wfo-bday-letter .5s ease-out 3.6s both}',
+           '.wfo-bday-burst i{position:absolute;inset-block-start:46%;inset-inline-start:50%;inline-size:10px;block-size:16px;border-radius:3px;opacity:0;'
+           'animation:wfo-bday-burst 1.6s cubic-bezier(.1,.7,.3,1) 2.7s both}',
+           '@keyframes wfo-bday-burst{0%{opacity:0;transform:translate(0,0) rotate(0)}6%{opacity:1}100%{opacity:0;transform:translate(var(--bx),var(--by)) rotate(var(--br))}}',
+           '@media (prefers-reduced-motion:reduce){.wfo-bday{animation:wfo-bday-out .3s ease-in 3s both}.wfo-bday *{animation:none!important;opacity:1!important}'
+           '.wfo-bday-flame,.wfo-bday-glow,.wfo-bday-burst,.wfo-bday-smoke{display:none}}',
            # phones: half the particles
            '@media (max-width:600px){.wfo-occ i:nth-child(even){display:none}}',
            # reduced motion: still, and nothing falls over the screen
@@ -207,6 +233,45 @@ def dash_off():
 
 def birthday_me():
     return decorate(app_page(T('الرئيسية', 'Dashboard'), home_body('birthday'), active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=WHO), 'birthday')
+
+
+
+CAKE = ('<svg class="wfo-bday-cake" viewBox="0 0 200 210" aria-hidden="true">'
+        '<defs><radialGradient id="bf" cx="50%" cy="70%" r="60%"><stop offset="0" stop-color="#FFF6B0"/><stop offset=".55" stop-color="#FFC83D"/><stop offset="1" stop-color="#FF7A1A"/></radialGradient>'
+        '<radialGradient id="bg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFE38A" stop-opacity=".9"/><stop offset="1" stop-color="#FFE38A" stop-opacity="0"/></radialGradient></defs>'
+        '<ellipse cx="100" cy="196" rx="92" ry="10" fill="#E9D8CF"/><ellipse cx="100" cy="192" rx="86" ry="9" fill="#fff"/>'
+        '<rect x="22" y="124" width="156" height="66" rx="14" fill="#F59BB4"/>'
+        '<path d="M22 138c0-8 6-14 14-14h128c8 0 14 6 14 14v4c-8 0-8 12-16 12s-8-10-16-10-8 14-16 14-8-12-16-12-8 10-16 10-8-14-16-14-8 12-16 12-8-10-16-10-8 8-12 8z" fill="#FFF4F7"/>'
+        '<rect x="46" y="74" width="108" height="56" rx="12" fill="#8E6CF0"/>'
+        '<path d="M46 86c0-7 5-12 12-12h84c7 0 12 5 12 12v2c-6 0-6 10-12 10s-6-8-12-8-6 12-12 12-6-10-12-10-6 8-12 8-6-12-12-12-6 10-12 10-6-8-12-8z" fill="#FFF4F7"/>'
+        + ''.join('<rect x="%d" y="%d" width="7" height="3" rx="1.5" fill="%s" transform="rotate(%d %d %d)"/>' % (x, y, c, r, x, y) for x, y, c, r in
+                  [(40, 166, '#FFC83D', 20), (70, 176, '#4D96FF', -30), (102, 168, '#2BA36B', 40), (132, 178, '#FFC83D', -10), (156, 164, '#4D96FF', 25),
+                   (64, 108, '#FFC83D', -20), (96, 116, '#F59BB4', 30), (128, 106, '#2BA36B', -35)])
+        + '<rect x="94" y="34" width="12" height="42" rx="4" fill="#fff"/><path d="M94 42l12-6M94 54l12-6M94 66l12-6" stroke="#E8436A" stroke-width="4"/>'
+        '<rect x="99" y="28" width="2" height="8" fill="#5a4636"/>'
+        '<circle class="wfo-bday-glow" cx="100" cy="16" r="22" fill="url(#bg)"/>'
+        '<path class="wfo-bday-flame" d="M100 0c6 9 10 14 10 20a10 10 0 0 1-20 0c0-6 4-11 10-20z" fill="url(#bf)"/>'
+        '<g class="wfo-bday-smoke" fill="#B9B3AE"><circle cx="100" cy="24" r="5"/><circle cx="96" cy="22" r="4"/><circle cx="104" cy="23" r="3.5"/></g>'
+        '</svg>')
+
+
+def bday_scene(name):
+    word = 'HAPPY BIRTHDAY'
+    letters, i = [], 0
+    for w in word.split(' '):
+        letters.append('<b class="w">%s</b>' % ''.join('<span style="animation-delay:%.2fs">%s</span>' % (2.75 + (i + k) * .07, ch) for k, ch in enumerate(w)))
+        i += len(w) + 1
+    letters = '<span class="sp"></span>'.join(letters)
+    colors = ['#E8436A', '#FFC83D', '#4D96FF', '#2BA36B', '#8E6CF0']
+    burst = ''.join('<i style="background:%s;--bx:%dpx;--by:%dpx;--br:%ddeg"></i>' % (colors[i % 5], int(170 * __import__('math').cos(i * .52)), int(-60 - 150 * abs(__import__('math').sin(i * .52))) if i % 2 else int(120 * __import__('math').sin(i)), (i * 97) % 720)
+                    for i in range(24))
+    return ('<div class="wfo-bday" role="status" aria-label="%s">%s<p class="wfo-bday-title">%s</p><p class="wfo-bday-name">%s</p><div class="wfo-bday-burst">%s</div></div>') % (
+        esc(T('كل سنة وانت طيب', 'Happy birthday')), CAKE, letters, esc(name), burst)
+
+
+def birthday_cake():
+    page = decorate(app_page(T('الرئيسية', 'Dashboard'), home_body('birthday'), active='dashboard', css_files=['app-home.css'], feature_css=CSS, who=WHO), 'birthday')
+    return page.replace('<nav class="wfo-tabbar">', bday_scene(T('كل سنة وانت طيب يا عمر!', 'Many happy returns, Omar!')) + '<nav class="wfo-tabbar">', 1)
 
 
 def birthday_everyone():
@@ -345,6 +410,7 @@ def build():
     write(F, 'dash-ramadan-full', dash('ramadan', 'full'))
     write(F, 'dash-off', dash_off)
     write(F, 'birthday-me', birthday_me)
+    write(F, 'birthday-cake', birthday_cake)
     write(F, 'birthday-everyone', birthday_everyone())
     write(F, 'time', time_view)
     write(F, 'menu', menu_view)
@@ -364,7 +430,7 @@ def build():
         ('3. Falling over the whole screen · تنزل على الشاشة كلها', 'Falls once for a few seconds under the tab bar, never takes a tap, then is gone (reload to replay).',
          [('dash-ramadan-full', 'Ramadan, full screen · رمضان، الشاشة كلها', 'phone')]),
         ('4. Birthdays · أعياد الميلاد', 'Omar on his birthday (only he sees it); Mona on the birthday of the General Manager, whom the administrator picked (everyone sees it).',
-         [('birthday-me', 'My birthday · عيد ميلادي', 'phone'), ('birthday-everyone', 'A picked person · شخص مختار', 'phone')]),
+         [('birthday-cake', 'The cake, once a day (reload to replay) · التورتة، مرة في اليوم', 'phone'), ('birthday-me', 'My birthday · عيد ميلادي', 'phone'), ('birthday-everyone', 'A picked person · شخص مختار', 'phone')]),
         ('5. Sign In / Out, the menu, the login page · الحضور والقائمة وصفحة الدخول', '',
          [('time', 'Sign In / Out · الحضور', 'phone'), ('menu', 'Hide decorations · إخفاء الزينة', 'phone'), ('login', 'Login page · صفحة الدخول', 'phone')]),
         ('6. Kiosk · الكشك', 'The company occasion only, slow and continuous, behind the QR card; never names.', [('kiosk', 'Kiosk · الكشك', 'desk')]),

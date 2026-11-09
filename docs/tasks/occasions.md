@@ -140,3 +140,10 @@ Q1-B; cached login pages; natural Arabic greetings; contrast on the four presets
 ## Mockups approved (owner, 2026-11-09)
 `docs/mockups/occasions/` after two rounds: the decorations made stronger ("حاسس الزينه قليله") and a new greeting card ("الكارت … تصميمه
 وحش"). The owner said "موافق ابدا بعد دمج الخطابات": implementation starts after the HR letters release (HL3) is merged.
+
+## Addition asked by the owner (2026-11-09): the birthday cake moment
+"في عيد الميلاد تظهر تورته وشمعه و تطفي ويظهر HAPPY BIRTH DAY". Mockup `occasions/birthday-cake`: on the employee's birthday the app
+shows, once, a cake with a lit candle (it flickers), the candle is blown out (smoke, confetti), then "HAPPY BIRTHDAY" letter by letter and
+"Happy birthday, Omar!" in the page's language; about 5 seconds, then it fades into the decorated page. It never takes a tap (a tap goes
+to the page under it) and stays under the tab bar; with reduced motion it shows the cake and the words still for 3 seconds. Pure CSS/SVG.
+Open: once a day (proposed) or on every page; also for the picked people's birthday (everyone sees it) and the company's birthday.
