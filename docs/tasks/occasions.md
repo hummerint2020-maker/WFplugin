@@ -183,3 +183,30 @@ signature line is now "من فريق Workforce One" / "From the Workforce One te
 app's name from Appearance (default "Workforce One"), so a site that renamed the app shows its own name. The administrator can still
 replace any line in "The words for each occasion".
 Owner approved "The words for each occasion" and the whole design ("موافق", 2026-11-09). Implementation starts after HL3 is merged.
+
+## Implementation notes (where the code differs from the design)
+
+- The greeting card shows on the Dashboard only (the other pages keep the top-bar layer and the full-screen layer); the moment shows on the first page of the day.
+- Picked people work without the birthdays switch (that switch is about everyone's own birthday). The Features card says so.
+- "Hide decorations" is kept per kind: hiding a birthday leaves the company occasion, and the other way round. It never applies to kiosks.
+- The kiosk reloads when the code's `X-WFO-Occasion` header differs from the page, at most once every five minutes.
+
+## Review (independent, read-only)
+
+Fixed:
+1. Hide decorations never saved (the admin-post request is `is_admin()`). The guard moved to the frame and the login page.
+2. The layers covered the top bar's menu and the page's windows (`isolation` on the page and the bar). The app is now the stacking context; the bar's layer sits at 0 under its own children. The browser suite probes with the layers taking taps, and checks that a sign-in window is above them.
+3. The stylesheet was enqueued in the footer. It now loads in the head.
+4. Hidden applied to the kiosk. The kiosk ignores it; kiosk.js no longer reloads in a loop.
+5. The e2e "kiosks off" save sent `None`. It now drops the field.
+6. The occasion did not start again when switched back on or given a new last day.
+7. One hide for every kind. Now per kind.
+8. The browser probes could not see a layer on top (`pointer-events:none`). Fixed as in 2.
+9. The e2e left an extra user and the moments behind on failure. Cleanup now runs at exit and restores the moments.
+10. An unknown preview key was used. It is ignored.
+11. Picked people hung on the birthdays switch, and the desktop menu had no Hide. Both fixed.
+12. Reduced motion left the greeting's shine moving. Fixed.
+
+Not fixed:
+- The stylesheet is larger than the design's budget (about 23 KB): the owner approved the richer art. It loads only while an occasion shows.
+- The Features page lists every active employee for the picked people. The list is one query, only on that page.
