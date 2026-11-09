@@ -32,6 +32,7 @@ final class Workflows
         'shift_swap' => ['Shift Swap', ['PEER', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
         // 3.31.109 (approvals stage 5): by default the direct manager, then Finance.
         'salary_advance' => ['Salary Advance', ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
+        'hr_letter' => ['HR Letter', ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
     ];
 
     /** Mode names that read differently for one workflow. */
@@ -61,6 +62,7 @@ final class Workflows
         'attendance_correction' => 'Managers with Manage Time decide in the app. Saved as No approval, requests are approved at once, except the cases that go to HR.',
         'shift_swap' => 'The colleague decides: the two days are swapped as soon as they accept (the same as Colleague only).',
         'salary_advance' => 'The first request sets it to two levels: the direct manager, then Finance.',
+        'hr_letter' => 'The first request sets it to one level: HR.',
     ];
 
     /** What "No approval" does in each module (they differ). */
@@ -71,6 +73,7 @@ final class Workflows
         'attendance_correction' => 'No manager level: requests are approved at once, or go straight to HR when they need the second level (a Sign In moved earlier, above the monthly limit).',
         'shift_swap' => '',
         'salary_advance' => 'Requests are approved automatically and wait to be paid.',
+        'hr_letter' => 'Requests are approved automatically: a type with a template is issued at once (salary certificates included); the others wait for HR.',
     ];
 
     /** Workflows seeded in the database that no module uses yet. */

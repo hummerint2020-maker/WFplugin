@@ -25,7 +25,7 @@ function ews_uninstall_site() {
     $private_bases = [trailingslashit(wp_upload_dir()['basedir'])];
     $custom = (string) apply_filters('wfo_private_dir', defined('WFO_PRIVATE_DIR') ? (string) WFO_PRIVATE_DIR : '');
     if ($custom !== '') $private_bases[] = trailingslashit($custom);
-    foreach ($private_bases as $private_base) foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers', 'workforce-one-face-photos'] as $folder) {
+    foreach ($private_bases as $private_base) foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers', 'workforce-one-face-photos', 'workforce-one-letters'] as $folder) {
         $task_dir = $private_base . $folder;
         if (is_dir($task_dir) && !is_link($task_dir)) {
             foreach ((array) scandir($task_dir) as $name) if ($name !== '.' && $name !== '..' && is_file($task_dir . '/' . $name)) @unlink($task_dir . '/' . $name);
@@ -48,7 +48,7 @@ function ews_uninstall_site() {
     }
 
     $tables = [
-        'ews_achievements', 'ews_approval_requests', 'ews_approval_steps', 'ews_approval_substitutes', 'ews_employee_shift_periods', 'ews_shift_versions', 'ews_salary_advances', 'ews_advance_instalments', 'ews_health_hourly', 'ews_health_daily', 'ews_health_queries', 'ews_health_errors', 'ews_approval_workflow_steps',
+        'ews_achievements', 'ews_approval_requests', 'ews_approval_steps', 'ews_approval_substitutes', 'ews_employee_shift_periods', 'ews_shift_versions', 'ews_salary_advances', 'ews_advance_instalments', 'ews_hr_letters', 'ews_health_hourly', 'ews_health_daily', 'ews_health_queries', 'ews_health_errors', 'ews_approval_workflow_steps',
         'ews_api_devices', 'ews_api_idempotency', 'ews_api_rate_limits', 'ews_api_tokens', 'ews_approval_workflows', 'ews_audit_log', 'ews_auto_attendance_rules', 'ews_break_sessions',
         'ews_company_calendar', 'ews_departments', 'ews_early_leave_requests', 'ews_employee_achievements', 'ews_employee_branches',
         'ews_employee_locations_v321', 'ews_employee_relationships', 'ews_employees', 'ews_face_profiles',

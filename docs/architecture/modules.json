@@ -19,6 +19,12 @@
       ],
       "api": [
         "services"
+      ],
+      "exports": [
+        "WorkforceOne\\Pdf\\Document",
+        "WorkforceOne\\Pdf\\TextBlock",
+        "WorkforceOne\\Pdf\\Image",
+        "WorkforceOne\\Pdf\\TrueTypeFont"
       ]
     },
     "shell": {
@@ -224,7 +230,8 @@
       ],
       "exports": [
         "WorkforceOne\\People\\PeopleDirectory",
-        "WorkforceOne\\People\\OrgDirectory"
+        "WorkforceOne\\People\\OrgDirectory",
+        "WorkforceOne\\Employees\\EmployeeDetailsRules"
       ]
     },
     "schedule": {
@@ -731,6 +738,65 @@
         "advance_money",
         "advances_can_pay"
       ]
+    },
+    "hr_letters": {
+      "label": "HR letters: requests, templates, letterhead, letter files",
+      "traits": [
+        "hr-letters"
+      ],
+      "tables": [
+        "hr_letters"
+      ],
+      "api": [
+        "hr_letters_enabled",
+        "hr_letters_requestable",
+        "hr_letter_settings",
+        "hr_letter_types",
+        "hr_letter_letterhead",
+        "ensure_hr_letters_schema",
+        "hr_letter_form",
+        "hr_letter_withdraw",
+        "hr_letter_my_requests",
+        "hr_letter_approval_card",
+        "hr_letter_error_text",
+        "hr_letter_hub_rows",
+        "hr_letter_hub_decide"
+      ],
+      "layered": [
+        {
+          "slice": "letters",
+          "namespace": [
+            "HrLetters"
+          ],
+          "tables": [
+            "hr_letters"
+          ],
+          "store": [
+            "workforce-one/src/HrLetters/Data/WordPressLetterStore.php"
+          ],
+          "services": [
+            "workforce-one/src/HrLetters/LetterRequests.php",
+            "workforce-one/src/HrLetters/LetterDecisions.php",
+            "workforce-one/src/HrLetters/LetterIssuer.php",
+            "workforce-one/src/HrLetters/LetterPdf.php"
+          ],
+          "reads": [
+            {
+              "file": "workforce-one/src/HrLetters/Data/WordPressLetterQuery.php",
+              "tables": [
+                "hr_letters",
+                "employees",
+                "departments"
+              ]
+            }
+          ],
+          "moved": [],
+          "traits_clean": [
+            "hr-letters"
+          ]
+        }
+      ],
+      "exports": []
     },
     "daily_workers": {
       "label": "Daily Workers",

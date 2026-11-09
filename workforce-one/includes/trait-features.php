@@ -28,6 +28,7 @@ trait EWS_Features_Trait {
                 'api_refresh_safe'=>$this->api_refresh_safe_enabled(),
                 'substitutes'=>$this->substitutes_enabled(),
                 'advances'=>$this->advances_enabled(),
+                'hr_letters'=>$this->hr_letters_enabled(),
                 'health'=>$this->health_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
@@ -54,6 +55,7 @@ trait EWS_Features_Trait {
             'offline'=>$this->offline_settings(),'offline_texts'=>\WorkforceOne\Settings\OfflineScreen::TEXTS,'offline_sections'=>\WorkforceOne\Settings\OfflineScreen::SECTIONS,
             'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
+            'hr_letters'=>['s'=>$this->hr_letter_settings(),'hr_set'=>(int)($this->approval_settings()['hr_user']??0)>0,'page_url'=>admin_url('admin.php?page=ews31-hr-letters&tab=types'),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')],
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
             'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
             'substitute'=>$this->substitute_settings(),'substitutes_url'=>admin_url('admin.php?page=ews31-substitutes'),
@@ -123,6 +125,13 @@ trait EWS_Features_Trait {
             update_option('ews_feature_advances',$flag('advances_enabled')?1:0,false);
             update_option('ews_advance_settings',\WorkforceOne\Payroll\Advances::settings(['months_salary'=>$post['advance_months_salary']??null,'max_amount'=>$post['advance_max_amount']??null,
                 'max_instalments'=>$post['advance_max_instalments']??null,'one_open'=>$flag('advance_one_open')?1:0,'min_service_months'=>$post['advance_min_service']??null,'max_moves'=>$post['advance_max_moves']??null]),false);
+        }
+        // HR letters (HL3): written only when something changed, so a site that keeps them off stores nothing new.
+        if(isset($post['hr_letters_present'])){
+            if($this->hr_letters_enabled()!==$flag('hr_letters_enabled'))update_option('ews_feature_hr_letters',$flag('hr_letters_enabled')?1:0,false);
+            $hl=\WorkforceOne\HrLetters\LetterSettings::fromForm(['languages'=>(array)($post['hl_languages']??[]),'addressee_ar'=>$post['hl_addressee_ar']??'','addressee_en'=>$post['hl_addressee_en']??'',
+                'other'=>$flag('hl_other'),'one_open'=>$flag('hl_one_open'),'new_type_delivery'=>$this->hr_letter_settings()['new_type_delivery'],'currency_ar'=>$post['hl_currency_ar']??'','currency_en'=>$post['hl_currency_en']??'']);
+            if($hl!==$this->hr_letter_settings())update_option('ews_hr_letters',$hl,false);
         }
         // System health (3.31.110): the switch, how many requests give query detail, how long the daily history is kept.
         if(isset($post['health_present'])){

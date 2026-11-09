@@ -590,6 +590,7 @@ trait EWS_Approvals_Trait {
         $users=get_users(['fields'=>['ID','display_name','user_email'],'orderby'=>'display_name','order'=>'ASC']);
         $cards=[];$W=\WorkforceOne\Approvals\Workflows::class;
         foreach(\WorkforceOne\Approvals\Workflows::IN_USE as $key=>[$label,$supported]){
+            if($key==='hr_letter' && !$this->hr_letters_enabled())continue;   // HR letters (HL3): the card only while letters are on
             $workflow=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",$key));
             $levels=[];
             for($i=1;$i<=\WorkforceOne\Approvals\Workflows::MAX_LEVELS;$i++)$levels[$i]=['resolver_type'=>'SUPERVISOR','resolver_value'=>'','min_amount'=>null];
@@ -620,7 +621,7 @@ trait EWS_Approvals_Trait {
         if(!current_user_can('manage_options'))wp_die('Access denied');check_admin_referer('ews_approval_workflow_save');
         $workflow_key=sanitize_key($_POST['workflow_key']??'');
         $in_use=\WorkforceOne\Approvals\Workflows::IN_USE;
-        if(!isset($in_use[$workflow_key]))wp_die('Invalid workflow.');
+        if(!isset($in_use[$workflow_key]) || ($workflow_key==='hr_letter' && !$this->hr_letters_enabled()))wp_die('Invalid workflow.');
         $W=\WorkforceOne\Approvals\Workflows::class;
         $mode=strtoupper(sanitize_key($_POST['approval_mode']??'NONE'));$configs=[];$unit=$W::AMOUNT_UNITS[$workflow_key]??'';
         if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=$W::MAX_LEVELS;$i++){if(!isset($_POST['level_'.$i.'_type']))continue;$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=$this->approval_picked('level_'.$i.'_employee');elseif($type==='SPECIFIC_USER')$value=$this->approval_picked('level_'.$i.'_user');

@@ -37,6 +37,11 @@ trait EWS_Admin_Trait {
             wp_enqueue_style('workforce-one-admin-employee-details', $this->plugin_url('assets/css/admin-employee-details.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-employee-details', 'rtl', 'replace');
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-hr-letters'))==='ews31-hr-letters'){   // HR letters (HL3)
+            wp_enqueue_style('workforce-one-admin-hr-letters', $this->plugin_url('assets/css/admin-hr-letters.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-hr-letters', 'rtl', 'replace');
+            wp_enqueue_script('workforce-one-admin-hr-letters', $this->plugin_url('assets/js/admin-hr-letters.js'), [], EWS_VERSION, true);
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-polls'))==='ews31-polls'){
             wp_enqueue_style('workforce-one-admin-polls', $this->plugin_url('assets/css/admin-polls.css'), [], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-polls', 'rtl', 'replace');
@@ -106,6 +111,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Payroll','Payroll','ews_manage_payroll','ews31-payroll',[$this,'admin_payroll']);
             if($this->health_can_view())add_submenu_page('ews31',__('System health','workforce-one'),__('System health','workforce-one'),'read','ews31-system-health',[$this,'admin_system_health']);   // 3.31.110
             if($this->advances_can_pay())add_submenu_page('ews31','Advances','Advances','read','ews31-advances',[$this,'admin_advances']);   // 3.31.109: only who may pay them
+            if($this->hr_letters_enabled() || get_option('ews_hr_letters_ever'))add_submenu_page('ews31',__('HR letters','workforce-one'),__('HR letters','workforce-one'),'ews_manage_hr_letters','ews31-hr-letters',[$this,'admin_hr_letters']);   // HL3: while on, or once letters were made
             if($this->corrections_enabled())add_submenu_page('ews31',__('Attendance Corrections','workforce-one'),__('Attendance Corrections','workforce-one'),'ews_manage_corrections','ews31-corrections',[$this,'admin_corrections']);
             if($this->dw_enabled())add_submenu_page('ews31',__('Daily Workers','workforce-one'),__('Daily Workers','workforce-one'),'ews_manage_daily_workers','ews31-daily-workers',[$this,'admin_daily_workers']);
             add_submenu_page('ews31','Face Reset Requests','Face Reset Requests','ews_manage_employees','ews31-face-reset-requests',[$this,'admin_face_reset_requests']);

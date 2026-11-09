@@ -18,6 +18,7 @@ final class SchemaCheck
         'ews_approval_requests', 'ews_approval_steps', 'ews_leave_types', 'ews_leave_balances', 'ews_overtime_requests',
         'ews_early_leave_requests', 'ews_face_profiles', 'ews_push_subscriptions', 'ews_pay_rates', 'ews_payroll_runs',
         'ews_payslips', 'ews_pay_adjustments', 'ews_attendance_corrections', 'ews_employee_branches', 'ews_signin_attempts',
+        'ews_hr_letters',
     ];
 
     /** Columns added to a table after it was first created. */

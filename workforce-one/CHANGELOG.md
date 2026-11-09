@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.144
+### HR letters (off by default; owner decisions 2026-11-07 to 11-09; PRs #43 and this one)
+- **Employees ask HR for a letter** from My requests → New request → HR letter: the type (or "Other" with free text), who it is addressed to ("To whom it may concern" by default), Arabic or English, an optional note. It goes through the new **HR Letter** approval workflow; the first request sets it to one level, HR (HR's own letter goes to the administrators; rejecting needs a reason). One open request per type and language.
+- **Each type has its delivery**: a **PDF made at once** from the type's template on approval (Amiri, Arabic-Indic digits, Arabic month names, the Hijri date, amounts in words, the letterhead's logo, signature and stamp), a **file HR uploads**, or **request only** (HR marks it ready to collect, with where). "Other" is always uploaded by HR. Starting types: employment and salary certificates (PDF), experience and embassy letters (uploaded), bank letter (request only).
+- **My requests** shows where each letter is and **Download the letter (PDF)**; a waiting one can be withdrawn. **My approvals** shows HR's card ("Shows the salary"; the employee's Arabic name, gender and hiring date as ✓/✗); the **Requests Hub** lists waiting letters.
+- **wp-admin → HR letters** (Manage HR letters, given to EWS Administrator): the letters (upload / replace, regenerate, ready to collect, cancel with a reason), **Types & templates** (placeholders, {g:male|female} wording, a template showing the salary needs Manage Payroll), **Letterhead**, and **Letter for an employee** (no request; former employees too; not for oneself).
+- **The salary** is read from Payroll only while a letter is made: never stored, never in the Audit Log or a notification. Files are private: only the employee (while letters are on) and HR open them; HR's downloads and the employee's first download are audited.
+- **Employee details for letters** (PR #43): the name in Arabic, gender and hiring date on the profile, in Add Employee, from a file, and read only on My Profile; "Employee Since" uses the hiring date.
+- **PDF groundwork** (PR #43): Arabic shaping and direction, images, wrapping over pages, Hijri dates, numbers in words.
+- Tests: unit tests for the rules, templates, values and the services; storage contracts for the letters and the people; e2e suites for the letters and the employee details; golden declares the changed pages and the new actions (and restores the snapshot with each side's schema marked done).
+
 ## 3.31.143
 ### L5e2: attendance correction requests behind a service (a move only; PR #42)
 - A new correction request (the employee's, and HR's own correction applied at once), the employee's withdrawal and the end-of-day "you did not sign out" reminder now run in the `CorrectionRequests` service, with a store and a read model for their SQL. The same reads and writes in the same order, the same transactions, audits and notifications: nothing changes for anyone. Design `docs/tasks/attendance-corrections.md` §11.

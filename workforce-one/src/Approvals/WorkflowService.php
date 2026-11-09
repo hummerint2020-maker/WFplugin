@@ -48,6 +48,7 @@ final class WorkflowService
             'shift_swap' => ['Shift Swap', 'PEER'],
             'attendance_correction' => ['Attendance Correction', 'NONE'],
             'salary_advance' => ['Salary Advance', 'NONE'],
+            'hr_letter' => ['HR Letter', 'NONE'],
         ];
         foreach ($defaults as $key => $def) {
             if ($this->workflows->idByKey($key)) continue;
