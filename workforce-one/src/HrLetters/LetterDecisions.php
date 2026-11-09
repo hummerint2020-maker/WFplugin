@@ -51,7 +51,9 @@ final class LetterDecisions
         $approvals = $this->ports->approvals;
         $ar = $approvals->find($id);
         if (!$ar) return 'access';
-        if ($approvals->levelMoved((string) $ar->status === 'PENDING' ? (int) $ar->id : 0, $posted)) return 'moved';
+        // A request still open (WAITING_FOR_LEVEL_n / WAITING_FOR_PEER) is checked against its open level; a decided one has none.
+        $open = !in_array((string) $ar->status, ['APPROVED', 'REJECTED', 'CANCELLED'], true);
+        if ($approvals->levelMoved($open ? (int) $ar->id : 0, $posted)) return 'moved';
         if (!$approvals->canAct((int) $ar->id, $override)) return 'access';
         if (!$this->tx->begin()) return 'save';
         $res = $approvals->act((int) $ar->id, $decision, $note, $posted, $override);

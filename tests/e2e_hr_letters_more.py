@@ -158,13 +158,13 @@ try:
     fault('letter-decided')
     qs = send_decision(hr, form, 'approve')
     fault()
-    check('the letter changed while the decision was saved: refused, the approval step rolled back', qs.get('hl_error') == 'done' and letter(C['id'])['status'] == 'pending' and approval(C['id'])['status'] == 'PENDING', (qs, letter(C['id']), approval(C['id'])))
+    check('the letter changed while the decision was saved: refused, the approval step rolled back', qs.get('hl_error') == 'done' and letter(C['id'])['status'] == 'pending' and approval(C['id'])['status'] == 'WAITING_FOR_LEVEL_1', (qs, letter(C['id']), approval(C['id'])))
     check('...no decision in the Audit Log', len(audits('hr_letter_approve')) == decided)
     # (4) the employee withdraws while the approval is being decided → the withdrawal rolls back
     fault('engine-moved')
     qs = send_withdraw(int(C['id']), withdraw_form(int(C['id'])))
     fault()
-    check('the approval was decided while the employee withdrew: refused, the letter still waits', qs.get('req_error') == 'done' and letter(C['id'])['status'] == 'pending' and approval(C['id'])['status'] == 'PENDING', (qs, letter(C['id']), approval(C['id'])))
+    check('the approval was decided while the employee withdrew: refused, the letter still waits', qs.get('req_error') == 'done' and letter(C['id'])['status'] == 'pending' and approval(C['id'])['status'] == 'WAITING_FOR_LEVEL_1', (qs, letter(C['id']), approval(C['id'])))
 
     # ---- two deciders at the same moment: HR in My approvals, an administrator on the Requests Hub
     f_hr = decision_form(hr, int(C['id']))

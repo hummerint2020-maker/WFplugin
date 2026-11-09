@@ -67,10 +67,10 @@ final class HrLetterServicesTest extends TestCase
             public $j; public $mode = 'LEVEL_1'; public $requests = []; public $failStart = false; public $actResult = ''; public $close = true; public $can = true; public $moved = false; public $ready = true;
             public function __construct($j) { $this->j = $j; }
             public function ensureReady(): bool { $this->j[] = 'ensureReady'; return $this->ready; }
-            public function start(int $letterId, int $employeeId): bool { $this->j[] = 'start ' . $letterId; if ($this->failStart) return false; $this->requests[$letterId] = (object) ['id' => 100 + $letterId, 'status' => $this->mode === 'NONE' ? 'APPROVED' : 'PENDING', 'levels' => $this->mode === 'LEVEL_2' ? 2 : 1]; return true; }
+            public function start(int $letterId, int $employeeId): bool { $this->j[] = 'start ' . $letterId; if ($this->failStart) return false; $this->requests[$letterId] = (object) ['id' => 100 + $letterId, 'status' => $this->mode === 'NONE' ? 'APPROVED' : 'WAITING_FOR_LEVEL_1', 'levels' => $this->mode === 'LEVEL_2' ? 2 : 1]; return true; }
             public function find(int $letterId): ?object { return isset($this->requests[$letterId]) ? clone $this->requests[$letterId] : null; }
             public function currentStep(int $approvalRequestId): ?object { return (object) ['approver_wp_user_id' => 50]; }
-            public function levelMoved(int $approvalRequestId, $posted): bool { return $this->moved; }
+            public function levelMoved(int $approvalRequestId, $posted): bool { return $this->moved || ($posted !== null && $approvalRequestId === 0); }   // as ApprovalReads: no open request, a posted level has moved
             public function canAct(int $approvalRequestId, bool $override): bool { return $this->can; }
             public function act(int $approvalRequestId, string $decision, string $note, $posted, bool $override): string {
                 $this->j[] = 'act ' . $decision;
@@ -78,6 +78,7 @@ final class HrLetterServicesTest extends TestCase
                 foreach ($this->requests as $r) if ($r->id === $approvalRequestId) {
                     if ($decision === 'reject') $r->status = 'REJECTED';
                     elseif (--$r->levels <= 0) $r->status = 'APPROVED';
+                    else $r->status = 'WAITING_FOR_LEVEL_2';
                 }
                 return '';
             }
@@ -177,7 +178,7 @@ final class HrLetterServicesTest extends TestCase
     {
         $this->requests->request($this->emp(7), ['type' => 'experience', 'language' => 'ar'], 70);
         $this->j->exchangeArray([]);
-        $this->assertSame('', $this->decisions->decide(1, 'approve', '', null, false));
+        $this->assertSame('', $this->decisions->decide(1, 'approve', '', 7, false), 'the level the page showed (a waiting request is not "moved")');
         $this->assertSame(['BEGIN', 'act approve', 'markDecided:approved 1', 'COMMIT', 'notify hr waiting_file', 'notify employee preparing'], $this->j->getArrayCopy(), 'an upload type: HR is told to upload it');
         $this->assertSame('done', $this->decisions->decide(1, 'approve', '', null, false), 'decided already');
         $this->requests->request($this->emp(7), ['type' => 'bank', 'language' => 'ar'], 70);
