@@ -116,7 +116,7 @@ check('...saving again unchanged writes no audit row', len(audits()) == len(befo
 php("delete_user_meta((int)get_user_by('login','emp1')->ID,'ews_occasion_moment');")
 dash = emp.req('/app/')[1]
 check('on: the app carries the occasion and its stylesheet', 'wfo-occ-on wfo-occ-ramadan' in dash and 'occasions.css' in dash and '.wfo-occ-ramadan{--wfo-occ-ink' in dash)
-check('...the greeting card with the words written (escaped)', 'wfo-occ-greet' in dash and 'Ramadan Kareem alert(1) team' in html.unescape(dash) and '<script>alert(1)' not in dash, re.findall(r'<div class="wfo-occ-greet".*?</div></div>', dash, re.S)[:1])
+check('...the greeting card with the words written (escaped)', 'wfo-occ-greet' in dash and 'Ramadan Kareem alert(1) team' in html.unescape(dash) and '<script>alert(1)' not in dash, re.findall(r'<div class="wfo-occ-greet".*?wfo-occ-greet-art[^>]*></span></div>', dash, re.S)[:1])
 check('...the moment the first time today', 'class="wfo-rm"' in dash and 'رمضان كريم' in dash)
 dash2 = emp.req('/app/')[1]
 check('...not again today', 'class="wfo-rm"' not in dash2 and 'wfo-occ-ramadan' in dash2)
@@ -179,13 +179,13 @@ st, login, _ = anon('/app/')
 check('...never on the login page (the company occasion there)', 'wfo-occ-halloween' in login and 'Go ' not in login)
 khaled = Session('occkhaled', 'occkhaledpass')
 kd = khaled.req('/app/?ews_view=dashboard')[1]
-card = ''.join(re.findall(r'<div class="wfo-occ-greet".*?</div></div>', kd, re.S))
+card = ''.join(re.findall(r'<div class="wfo-occ-greet".*?wfo-occ-greet-art[^>]*></span></div>', kd, re.S))
 check('a colleague does not see my birthday (theirs is today too: they see their own)', first not in card and 'Khaled' in card, (card, re.findall(r'<title>[^<]*', kd)[:1], 'wfo-occ-greet' in kd, kd[kd.find('wfo-content'):kd.find('wfo-content')+400] if not card else ''))
 save({'occ_people[]': other, 'occ_cake_everyone': '1'})
 php("delete_user_meta((int)get_user_by('login','emp1')->ID,'ews_occasion_moment');")
 php("update_option('ews_employee_moments',[%s=>['birthday'=>'1970%s','join_date'=>'']],false);" % (other, TODAY[4:]))
 dash = emp.req('/app/')[1]
-check('a picked person\'s birthday: everyone sees it, with the name and the cake', 'wfo-occ-birthday' in dash and 'Khaled' in dash and 'class="wfo-bday"' in dash, re.findall(r'<div class="wfo-occ-greet".*?</div></div>', dash, re.S)[:1])
+check('a picked person\'s birthday: everyone sees it, with the name and the cake', 'wfo-occ-birthday' in dash and 'Khaled' in dash and 'class="wfo-bday"' in dash, re.findall(r'<div class="wfo-occ-greet".*?wfo-occ-greet-art[^>]*></span></div>', dash, re.S)[:1])
 kd = khaled.req('/app/?ews_view=dashboard')[1]
 check('...the person sees their own birthday', 'wfo-occ-birthday' in kd)
 check('...not on a kiosk', 'Khaled' not in kiosk()[1])
