@@ -162,11 +162,11 @@ final class Occasions
         return max(0, $y);
     }
 
-    /** The year New Year greets (December greets the coming one). */
+    /** The year New Year greets: the nearest one (July to December greet the coming year, January to June the current one; owner 2026-11-09). */
     public static function newYear(string $today): int
     {
         $y = (int) substr($today, 0, 4);
-        return substr($today, 5, 2) === '12' ? $y + 1 : $y;
+        return (int) substr($today, 5, 2) >= 7 ? $y + 1 : $y;
     }
 
     /** Words written in Arabic letters are written out right to left in a moment; others letter by letter. */
