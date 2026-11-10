@@ -63,3 +63,12 @@ A first pass over the code (2026-11-10, main at 3.31.145), by reading, not by ru
 ## 5. Next step proposed
 
 Phase 1 as its own release, off by nature (a single site sees no change): per-site private folders (1, 2), the membership check (3), per-site user options (4), the Nginx rule (5), then the two-company e2e for 6 to 9. Needs only question 1 answered.
+
+## 6. Owner decision (2026-11-10): the current company must not be affected
+
+"مش عايزه ياثر على الشركه اللي انا شغال معاها حاليا". This binds every phase:
+
+- The company running today on its own WordPress stays as it is. Nothing moves it to a network; that would be its own decision later (§4.7).
+- Every SaaS change is inert on a single site: the same pages, writes, file paths and user settings as before, proven by the golden comparison and the existing e2e suites on a single site, as for any feature that is off.
+- Where a fix changes where something is stored (private folders per site, user settings per site), a single site keeps today's paths and keys; only sites of a network get the new ones.
+- Platform features (console, plans, billing, sign-up) exist only on a network and load nothing on a single site.
