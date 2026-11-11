@@ -26,6 +26,10 @@ $settings = function (array $more = []) {
 };
 update_option('ews_feature_corrections', 1, false);
 update_option('ews_working_days', [0, 1, 2, 3, 4, 5, 6], false);   // every day a working day: a whole-day request does not depend on the weekday the harness runs
+// ...nor on the seed's company holiday (tests/e2e_attendance_cards.py puts one on last week's Thursday): on a Wednesday that is D-6, the day of the
+// whole-day requests, which were then refused as "no_work" on both sides (seen 2026-11-11). Set aside here, put back at the end.
+$seed_holidays = (array) $wpdb->get_results($wpdb->prepare("SELECT * FROM {$p}ews_company_calendar WHERE event_date BETWEEN %s AND %s", $D(8), $D0), ARRAY_A);
+foreach ($seed_holidays as $h) $wpdb->delete($p . 'ews_company_calendar', ['id' => (int) $h['id']]);
 $settings();
 delete_option('ews_corrections_reminded');
 $wf = function ($mode) use ($wpdb, $p) {
@@ -269,4 +273,5 @@ foreach ([
 ] as $name => $q) $trace['_rows:' . $name] = $rows($q);
 $wf('NONE');
 delete_option('ews_working_days');
+foreach ($seed_holidays as $h) $wpdb->insert($p . 'ews_company_calendar', $h);
 echo "\n" . wp_json_encode($trace);
