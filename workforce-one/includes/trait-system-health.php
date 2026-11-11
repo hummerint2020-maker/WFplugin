@@ -623,7 +623,7 @@ trait EWS_System_Health_Trait {
     private function health_open_alerts(){ $o=get_option('ews_health_alerts',[]);return is_array($o)?$o:[]; }
 
     /** @return array<string,int> */
-    private function health_hidden(){ $h=get_user_meta(get_current_user_id(),'ews_health_dismissed',true);return is_array($h)?$h:[]; }
+    private function health_hidden(){ $h=get_user_meta(get_current_user_id(),$this->site_user_key('ews_health_dismissed'),true);return is_array($h)?$h:[]; }
 
     /** admin_notices: one line on Workforce One pages and the Dashboard, for who may see the screen. */
     public function health_notice(){
@@ -649,7 +649,7 @@ trait EWS_System_Health_Trait {
         if(!$this->health_can_view())wp_die('Access denied');
         check_admin_referer('ews_health_dismiss');
         $keys=array_map(function($a){return $a['key'];},Alerts::visible($this->health_open_alerts(),$this->health_hidden(),time()));
-        update_user_meta(get_current_user_id(),'ews_health_dismissed',Alerts::hide($this->health_hidden(),$keys,time()));
+        update_user_meta(get_current_user_id(),$this->site_user_key('ews_health_dismissed'),Alerts::hide($this->health_hidden(),$keys,time()));
         wp_safe_redirect(wp_get_referer()?:admin_url('admin.php?page=ews31-system-health'));exit;
     }
 

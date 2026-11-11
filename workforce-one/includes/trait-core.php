@@ -21,10 +21,30 @@ trait EWS_Core_Trait {
     private static $ews_schedule_types_cache = null;
     private static $ews_schedule_type_by_name_cache = [];
     private static $ews_company_leave_cache = [];
+    /** @var array<int,array<int,bool>> network only: blog id => user id => may be used in this company (3.31.147) */
+    private static $ews_site_user_cache = [];
 
     private static function people_memo(){
             return self::$ews_people_memo ?? (self::$ews_people_memo = new \WorkforceOne\People\PeopleMemo());
         }
+
+    /**
+     * Whether a posted WordPress user may be used in this company (3.31.147): a single site asks nothing and says yes. On a network a member of this
+     * site, or a user an employee row of this site (active or not) is already linked to, so what is already there can still be saved. Kept per request.
+     */
+    private function site_has_user($user_id){
+        if(!is_multisite())return true;
+        $uid=(int)$user_id;$blog=(int)get_current_blog_id();
+        if($uid<=0)return false;
+        if(!isset(self::$ews_site_user_cache[$blog][$uid]))self::$ews_site_user_cache[$blog][$uid]=is_user_member_of_blog($uid,$blog) || (bool)$this->people_user_is_linked($uid);
+        return self::$ews_site_user_cache[$blog][$uid];
+    }
+
+    /** A user-meta key that belongs to one company (3.31.147): the key itself on a single site, the site's table prefix before it on a network (as get_user_option does). */
+    private function site_user_key($key){
+        global $wpdb;
+        return \WorkforceOne\Support\SiteScope::userKey((string)$key,is_multisite(),is_multisite()?$wpdb->get_blog_prefix():'');
+    }
 
     private function invalidate_employee_runtime_cache($employee_id=0,$wp_user_id=0){
             $employee_id=absint($employee_id); $wp_user_id=absint($wp_user_id);

@@ -187,7 +187,7 @@ trait EWS_Reports_Trait {
 
     /** @return array<int,array<string,string>> the current user's saved report views */
     private function report_saved_views(){
-        $v=get_user_meta(get_current_user_id(),'ews_report_views',true);
+        $v=get_user_meta(get_current_user_id(),$this->site_user_key('ews_report_views'),true);
         return is_array($v)?array_values(array_filter($v,'is_array')):[];
     }
 
@@ -203,7 +203,7 @@ trait EWS_Reports_Trait {
         foreach(['start','end'] as $k)if(!$this->valid_date($filters[$k]))$filters[$k]='';
         $range=sanitize_key($_POST['range']??'');
         $views=\WorkforceOne\Reports\SavedViews::add($this->report_saved_views(),sanitize_text_field(wp_unslash($_POST['view_name']??'')),$filters,$range);
-        update_user_meta(get_current_user_id(),'ews_report_views',$views);
+        update_user_meta(get_current_user_id(),$this->site_user_key('ews_report_views'),$views);
         wp_safe_redirect(add_query_arg(array_filter($filters,'strlen'),$this->app_return_url('reports',array_merge(array_keys($filters),['range']))));exit;
     }
 
@@ -211,7 +211,7 @@ trait EWS_Reports_Trait {
     public function report_view_delete(){
         if(!$this->can('ews_view_reports'))wp_die('Access denied',403);
         check_admin_referer('ews_report_view');
-        update_user_meta(get_current_user_id(),'ews_report_views',\WorkforceOne\Reports\SavedViews::remove($this->report_saved_views(),sanitize_key($_POST['view_id']??'')));
+        update_user_meta(get_current_user_id(),$this->site_user_key('ews_report_views'),\WorkforceOne\Reports\SavedViews::remove($this->report_saved_views(),sanitize_key($_POST['view_id']??'')));
         wp_safe_redirect($this->app_return_url('reports'));exit;
     }
 

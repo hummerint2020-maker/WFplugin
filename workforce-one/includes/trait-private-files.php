@@ -20,7 +20,10 @@ trait EWS_Private_Files_Trait {
     private function private_files_base(){
         $base=defined('WFO_PRIVATE_DIR')?(string)WFO_PRIVATE_DIR:'';
         $base=(string)apply_filters('wfo_private_dir',$base);
-        return $base!==''?untrailingslashit(wp_normalize_path($base)):'';
+        $base=$base!==''?untrailingslashit(wp_normalize_path($base)):'';
+        // One folder per site on a network, so a site's cleanup and uninstall cannot reach another's files; a single site and the main site keep the path (3.31.147).
+        $multisite=is_multisite();
+        return \WorkforceOne\Support\SiteScope::privateBase($base,$multisite,$multisite&&is_main_site(),$multisite?(int)get_current_blog_id():0);
     }
 
     /** The uploads folder used before 3.31.91 (and by default). */
@@ -149,7 +152,7 @@ trait EWS_Private_Files_Trait {
         }
         if(!is_array($last) || ($last['status']??'')!=='exposed')return;
         $again=wp_nonce_url(admin_url('admin-post.php?action=ews_private_files_check'),'ews_private_files_check');
-        $rule='location ~* ^/wp-content/uploads/workforce-one-(corrections|tasks|daily-workers|face-photos)/ { deny all; }';
+        $rule=\WorkforceOne\Support\SiteScope::nginxRule(is_multisite()); // a network's other sites have their folders under uploads/sites/{id}/ (3.31.147)
         echo '<div class="notice notice-error" data-private-files-exposed><p><strong>'.esc_html__('Private files can be opened by a direct link on this server.','workforce-one').'</strong> '
             .esc_html__('Correction photos, task files, daily workers\' photos and Face Sign In photos are protected by .htaccess, which this server ignores (Nginx, for example). Anyone with a file\'s link could open it.','workforce-one').'</p><p>'
             .esc_html__('Fix it in one of two ways, then press "Check again":','workforce-one').'</p><ol><li>'

@@ -12,6 +12,8 @@ if (!defined('WP_UNINSTALL_PLUGIN')) exit;
 if (!defined('ABSPATH')) exit;
 // The list of the plugin's scheduled events and roles (3.31.119); uninstall runs without the plugin's autoloader.
 require_once __DIR__ . '/src/Support/Lifecycle.php';
+// The per-site private folder and user-meta key of a network (3.31.147); the same logic the plugin uses.
+require_once __DIR__ . '/src/Support/SiteScope.php';
 
 function ews_uninstall_site() {
     global $wpdb;
@@ -24,6 +26,8 @@ function ews_uninstall_site() {
     // daily workers' photos (3.31.76); in uploads and, when set, in WFO_PRIVATE_DIR (3.31.91).
     $private_bases = [trailingslashit(wp_upload_dir()['basedir'])];
     $custom = (string) apply_filters('wfo_private_dir', defined('WFO_PRIVATE_DIR') ? (string) WFO_PRIVATE_DIR : '');
+    // On a network each site but the main one has its own folder under the base (3.31.147): only this site's files are removed. A single site and the main site are unchanged.
+    if ($custom !== '' && is_multisite() && !is_main_site()) $custom = \WorkforceOne\Support\SiteScope::privateBase(untrailingslashit(wp_normalize_path($custom)), true, false, (int) get_current_blog_id());
     if ($custom !== '') $private_bases[] = trailingslashit($custom);
     foreach ($private_bases as $private_base) foreach (['workforce-one-tasks', 'workforce-one-corrections', 'workforce-one-daily-workers', 'workforce-one-face-photos', 'workforce-one-letters'] as $folder) {
         $task_dir = $private_base . $folder;
@@ -71,9 +75,14 @@ function ews_uninstall_site() {
     foreach ($like as $pattern) {
         $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $pattern));
     }
-    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like('ews_') . '%'));
-    // Per-site user options (3.31.118: {blog prefix}ews_api_sessions_before).
-    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", '%' . $wpdb->esc_like('ews_api_sessions_before')));
+    if (is_multisite()) {
+        // A network (3.31.147): the user settings are kept per site as {blog prefix}ews_*, so only this site's go; other companies keep theirs.
+        $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like($wpdb->get_blog_prefix() . 'ews_') . '%'));
+    } else {
+        $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like('ews_') . '%'));
+        // Per-site user options (3.31.118: {blog prefix}ews_api_sessions_before).
+        $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", '%' . $wpdb->esc_like('ews_api_sessions_before')));
+    }
 
     // Custom roles and the ews_* capabilities granted to Administrator.
     \WorkforceOne\Support\Lifecycle::removeRoles();

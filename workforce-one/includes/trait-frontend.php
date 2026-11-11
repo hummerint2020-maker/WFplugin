@@ -35,7 +35,7 @@ trait EWS_Frontend_Trait {
 
     /** Descriptors accepted in the last 30 days (at most 10), encrypted like the enrolled one. @return array<int,array{at:int,d:array<int,float>}> */
     private function face_recent($uid){
-        $raw=get_user_meta($uid,'ews_face_recent',true);
+        $raw=get_user_meta($uid,$this->site_user_key('ews_face_recent'),true);
         $list=is_string($raw)&&$raw!==''?json_decode((string)$this->face_decrypt_json($raw),true):[];
         $list=is_array($list)?$list:[];
         return array_values(array_filter($list,function($x){return is_array($x)&&isset($x['at'],$x['d'])&&(int)$x['at']>time()-30*DAY_IN_SECONDS;}));
@@ -44,7 +44,7 @@ trait EWS_Frontend_Trait {
     private function face_remember($uid,array $tpl){
         $list=$this->face_recent($uid);
         $list[]=['at'=>time(),'d'=>array_map('floatval',array_values($tpl))];
-        update_user_meta($uid,'ews_face_recent',$this->face_encrypt_json((string)wp_json_encode(array_slice($list,-10))));
+        update_user_meta($uid,$this->site_user_key('ews_face_recent'),$this->face_encrypt_json((string)wp_json_encode(array_slice($list,-10))));
     }
 
     public function face_rest_verify($request){
@@ -61,7 +61,7 @@ trait EWS_Frontend_Trait {
         $stored=$this->face_template_for_employee($emp->id); if(!$stored){$keep('face_failed','face_not_enrolled');return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));}
         // Only the decision is returned (no distance or threshold: that was a similarity oracle), and
         // failed attempts are limited per user (src/Attendance/FaceMatch.php: 5 in 10 minutes).
-        $uid=get_current_user_id();$state=get_user_meta($uid,'ews_face_verify_failures',true);$state=is_array($state)?$state:null;
+        $uid=get_current_user_id();$state=get_user_meta($uid,$this->site_user_key('ews_face_verify_failures'),true);$state=is_array($state)?$state:null;
         if(FaceMatch::lockedOut($state,time())){$keep('face_failed','face_locked');return $this->face_rate_limited(FaceMatch::retryAfter($state,time()));}
         $ok=FaceMatch::matches($tpl,$stored,(float)$this->face_signin_setting('face_match_threshold',.60));
         $reason='face_mismatch';
@@ -75,13 +75,13 @@ trait EWS_Frontend_Trait {
             }
         }
         if($ok!==true){
-            $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,'ews_face_verify_failures',$state);
+            $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,$this->site_user_key('ews_face_verify_failures'),$state);
             if($state['failures']===FaceMatch::MAX_FAILURES)$this->audit('face_verify_locked','employee',(int)$emp->id,$emp->name.' / '.FaceMatch::MAX_FAILURES.' failed Face verifications in '.(FaceMatch::WINDOW_SECONDS/60).' minutes');
             $keep('face_failed',$ok===null?'invalid_template':$reason);
             if($ok===null)return new WP_Error('invalid_template',__('Template size mismatch','workforce-one'),array('status'=>400));
             return array('ok'=>false);
         }
-        delete_user_meta($uid,'ews_face_verify_failures');
+        delete_user_meta($uid,$this->site_user_key('ews_face_verify_failures'));
         $this->face_remember($uid,$tpl);
         $keep('face_ok','face_ok');
         // The photo goes with the Sign In / Out this check allows (face_photo_take in record_time_event).
@@ -404,11 +404,11 @@ trait EWS_Frontend_Trait {
     private function smart_nudge_dismissed($user_id=null){
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return [];
-        $raw=get_user_meta($user_id,'ews_smart_nudge_dismissed',true);
+        $raw=get_user_meta($user_id,$this->site_user_key('ews_smart_nudge_dismissed'),true);
         if(!is_array($raw))return [];
         $now=time();$clean=[];
         foreach($raw as $key=>$ts){if($key && (int)$ts>$now-30*DAY_IN_SECONDS)$clean[sanitize_key($key)]=(int)$ts;}
-        if($clean!==$raw)update_user_meta($user_id,'ews_smart_nudge_dismissed',$clean);
+        if($clean!==$raw)update_user_meta($user_id,$this->site_user_key('ews_smart_nudge_dismissed'),$clean);
         return $clean;
     }
 
@@ -500,7 +500,7 @@ trait EWS_Frontend_Trait {
             $uid=(int)$emp->wp_user_id;
             $nudges=$this->smart_nudge_for_employee($emp,$uid);
             if(!$nudges)continue;
-            $pushed=get_user_meta($uid,'ews_smart_nudge_pushed',true);
+            $pushed=get_user_meta($uid,$this->site_user_key('ews_smart_nudge_pushed'),true);
             if(!is_array($pushed))$pushed=[];
             $now=time();
             foreach($pushed as $key=>$ts){
@@ -535,7 +535,7 @@ trait EWS_Frontend_Trait {
                 $sent=$this->push_custom_notification($uid,'Workforce One · '.$n['title'],$n['message'],'smart_nudge',0,$n['url']);
                 if($sent>0){$pushed[$id]=$now;$result['sent']++;}else{$result['skipped']++;}
             }
-            update_user_meta($uid,'ews_smart_nudge_pushed',$pushed);
+            update_user_meta($uid,$this->site_user_key('ews_smart_nudge_pushed'),$pushed);
         }
         $result['reason']='Completed in '.number_format(microtime(true)-$started,3).'s';
         update_option('ews_smart_nudges_last_result',$result,false);
@@ -546,8 +546,8 @@ trait EWS_Frontend_Trait {
         $id=sanitize_key($_GET['nudge_id']??'');
         if(!$id)wp_die('Invalid nudge.');
         check_admin_referer('ews_smart_nudge_dismiss_'.$id);
-        $raw=get_user_meta(get_current_user_id(),'ews_smart_nudge_dismissed',true);if(!is_array($raw))$raw=[];
-        $raw[$id]=time();update_user_meta(get_current_user_id(),'ews_smart_nudge_dismissed',$raw);
+        $raw=get_user_meta(get_current_user_id(),$this->site_user_key('ews_smart_nudge_dismissed'),true);if(!is_array($raw))$raw=[];
+        $raw[$id]=time();update_user_meta(get_current_user_id(),$this->site_user_key('ews_smart_nudge_dismissed'),$raw);
         $ref=wp_get_referer();if(!$ref)$ref=$this->app_home_url();wp_safe_redirect($ref);exit;
     }
 

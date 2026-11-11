@@ -33,6 +33,20 @@ A first pass over the code (2026-11-10, main at 3.31.145), by reading, not by ru
 4. **CONFIRMED · nine user-meta keys are not per site**, so a person with an account in two companies carries state across: `ews_face_recent` and `ews_face_verify_failures` (Face Sign In lock-out and recent matches, `includes/trait-frontend.php:38-84`), `ews_report_views`, `ews_smart_nudge_dismissed`, `ews_smart_nudge_pushed`, `ews_occasion_moment`, `ews_occasion_hidden`, `ews_occasion_hidden_birthday`, `ews_health_dismissed`. Only `ews_api_sessions_before` is prefixed by site (`includes/trait-api-auth.php:753`). Fix: `get_user_option()` / `update_user_option()` (site-prefixed) with a one-time copy. Whether one person may be in two companies at all is the owner's (§4.6).
 5. **CONFIRMED · the Nginx rule the plugin tells the administrator to add does not cover a network's uploads.** It matches `/wp-content/uploads/workforce-one-…/` (`includes/trait-private-files.php:152`); on Multisite the folders are under `/wp-content/uploads/sites/{id}/`. On Nginx without `WFO_PRIVATE_DIR`, private files of every site but the main one stay open by direct link. Fix: the rule with `(sites/\d+/)?`; the platform should set `WFO_PRIVATE_DIR` anyway (after 1).
 
+### Fixed in 3.31.147
+
+All five are inert on a single site (same paths, keys, text and answers); only a network's sites change. Behaviour on a network is not run here: it needs the two-company e2e.
+
+1. **Private folders**: with `WFO_PRIVATE_DIR` set, every site but the main one uses `{base}/sites/{blog_id}/` (`SiteScope::privateBase()` in `private_files_base()`); the main site keeps its path.
+2. **Uninstall**: the private folders use the same per-site base, and user settings are deleted by the site's prefix (`{blog prefix}ews_%`, with `esc_like`) instead of every `ews_%` of the network. A site that did not opt in keeps its data.
+3. **Linking users**: `site_has_user()` (`includes/trait-core.php`) accepts a member of this site, or a user an employee row of this site (active or not) is already linked to. It is called by the employee save (the `WpUsers` port in `trait-services.php`, so add and update), the HR and Finance users and the "Specific User" approver level (`trait-approvals.php`), and answers with the errors those pages already had.
+4. **User settings**: the nine keys go through `site_user_key()` (`{blog prefix}` + key on a network, the plain key on a single site). No copy of old values: no network ran the plugin.
+5. **Nginx rule**: `SiteScope::nginxRule()` adds `(sites/\d+/)?` on a network.
+
+Found while doing it:
+- `approval_set_relationship()` and `ReportingService::setRelationship()` with a WordPress user id are dead code: nothing passes a user id (the first has no callers).
+- The Nginx rule has never listed `workforce-one-letters`, although that folder is private too. Left as it is, because a single site's text must not change; a separate decision for the owner.
+
 ### To settle with the two-company e2e
 
 6. **PLAUSIBLE · a user of company B signed in on company A's site.** WordPress accepts any network user's password on any site. The app looks the employee up in this site's table (`current_employee()`), and capabilities are per site, so they should get "no employee record" and nothing else. 78 `admin_post_` actions and the REST API need checking for ones that test only `is_user_logged_in()`. The API login (`includes/trait-api-auth.php:339`) authenticates network-wide: confirm it refuses a user with no employee here, with the same answer and timing as a wrong password.

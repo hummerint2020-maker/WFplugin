@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.31.147
+### Safe on a WordPress network (one site per company; docs/tasks/saas.md, phase 1)
+Only the sites of a network change. A single site is unchanged: the same pages, files, paths and user settings.
+- **Private files**: with `WFO_PRIVATE_DIR` set, each site except the main one keeps its files in its own folder (`{folder}/sites/{site id}/`), so one company's daily cleanup and uninstall can no longer reach another company's photos. The main site keeps its folder.
+- **Uninstall**: deleting the plugin walks every site and removes the data only of the sites that chose "Delete all data". A site that did not choose it keeps its private files and user settings when another site did.
+- **Linking users**: an employee, an HR or Finance user, or a "Specific User" approver can only be a user of this site, or one an employee of this site is already linked to (so an existing link can still be saved). A user of another company is refused with the messages the pages already have.
+- **User settings per site**: Face Sign In recent matches and lock-out, saved report views, Smart Nudge choices, occasion choices and dismissed health alerts are kept per site, so a person with accounts in two companies does not carry them across.
+- **Nginx rule** shown to the administrator also covers a network's `uploads/sites/{id}/` folders.
+
 ## 3.31.146
 ### Dashboard (owner, 2026-11-09)
 - The Dashboard no longer has the "+ New request" shortcut. New request stays on My requests (and its link in the menu).
