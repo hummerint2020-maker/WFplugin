@@ -121,6 +121,15 @@ $create('fault_mode_none_start_insert', $r13U, $r13, $in($D(5), 'time', ['target
 $settings(['photo' => ['day' => 'optional'], 'monthly_limit' => 0]);   // no limit: these two reach the finalize step, not HR
 $create('fault_mode_none_second_event', $BU, $B, $in($D(6), 'day', ['time_in' => '08:00', 'time_out' => '16:00']), 'employee', null, ['/^\s*INSERT INTO `' . $Lq . '`/i', 'SELECT broken_on_purpose FROM no_such_table_x', 2]);
 $create('create_mode_none_day', $DU, $Dd, $in($D(6), 'day', ['time_in' => '08:00', 'time_out' => '16:00']));
+// What that day is for the employee, so a refusal here ("no_work") explains itself in the log (3.31.147): the same on both sides.
+$run('diag_none_day', function () use ($call, $Dd, $D, $wpdb, $p) {
+    $d = $D(6);
+    $rows = (array) $call('cx_report_days', $Dd, $d, $d);
+    return ['weekday' => gmdate('w', strtotime($d)), 'working_days' => get_option('ews_working_days', 'unset'), 'is_working_day' => $call('is_working_day', $d),
+        'leave' => $call('schedule_leave_dates', (int) $Dd->id, $d, $d), 'overtime' => $call('overtime_approved_dates', (int) $Dd->id, $d, $d), 'holidays' => $call('company_leave_dates', $d, $d),
+        'result' => (string) ($rows[0]['result'] ?? '(no row)'), 'planned' => (string) ($rows[0]['planned'] ?? ''),
+        'schedule' => $wpdb->get_col($wpdb->prepare("SELECT status FROM {$p}ews_schedule WHERE employee_id=%d AND work_date=%s", (int) $Dd->id, $d)), 'no_work' => $call('cx_no_work_day', $Dd, $d)];
+});
 $settings();
 
 // ---------------------------------------------------------------- LEVEL_1: the supervisor is told (cxq_c), and its faults
