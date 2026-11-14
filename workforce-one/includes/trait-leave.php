@@ -541,11 +541,12 @@ trait EWS_Leave_Trait {
      * the facts the approver needs, and the form that decides it (the same as on the Leave page).
      * @return array<string,mixed>|null null when it no longer waits
      */
-    private function leave_approval_card($entity_type,$id,$row=null){
+    private function leave_approval_card($entity_type,$id,$row=null,$light=false){
             global $wpdb;
             $cancel=$entity_type==='leave_cancellation';
             $r=$row&&(int)$row->id===(int)$id?$row:$this->leave_request_row((int)$id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
             if(!$r)return null;
+            if($light)return ['employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at];   // the counts need no balance, no one away (3.31.148)
             $days=(float)$r->requested_days;
             $bal=$this->leave_request_balance($r);
             $left=$bal?Balance::remaining((float)$bal->entitlement,(float)$bal->used,(float)$bal->pending)+($cancel?$days:0):null;

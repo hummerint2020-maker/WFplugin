@@ -264,10 +264,11 @@ trait EWS_Hr_Letters_Trait {
     }
 
     /** The card in My approvals. @return array<string,mixed>|null */
-    public function hr_letter_approval_card($id){
+    public function hr_letter_approval_card($id,$light=false){
         if(!$this->hr_letters_enabled())return null;
         $f=$this->services()->letterQuery()->facts((int)$id);
         if(!$f || (string)$f->status!=='pending')return null;
+        if($light)return ['employee_id'=>(int)$f->employee_id,'tone'=>'letter','since'=>(string)$f->requested_at];   // (3.31.148)
         $hr=$this->can('ews_manage_hr_letters');
         $yes='✓';$no='✗';
         $data=[__('Arabic name','workforce-one').' '.(trim((string)$f->name_ar)!==''?$yes:$no),__('Gender','workforce-one').' '.((string)$f->gender!==''?$yes:$no),

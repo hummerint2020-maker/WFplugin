@@ -53,15 +53,16 @@ trait EWS_My_Approvals_Trait {
     }
 
     /** What decides a request of this kind, and how it reads (each module's own card). */
-    private function my_approvals_card($entity_type,$entity_id){
+    private function my_approvals_card($entity_type,$entity_id,$light=false){
+        // $light (3.31.148): the same guards, then only what the counts read (tone, employee, since); the detail queries run for the page.
         switch($entity_type){
-            case 'leave': case 'leave_cancellation': return $this->leave_approval_card($entity_type,(int)$entity_id);
-            case 'overtime_request': return $this->overtime_enabled()?$this->overtime_approval_card((int)$entity_id):null;
-            case 'attendance_correction': return $this->corrections_enabled()?$this->cx_approval_card((int)$entity_id):null;
-            case 'schedule_swap': return $this->swap_approval_card((int)$entity_id);
-            case 'face_reset_request': return $this->face_reset_approval_card((int)$entity_id);
-            case 'salary_advance': return $this->advance_approval_card((int)$entity_id);
-            case 'hr_letter': return $this->hr_letter_approval_card((int)$entity_id);
+            case 'leave': case 'leave_cancellation': return $this->leave_approval_card($entity_type,(int)$entity_id,null,$light);
+            case 'overtime_request': return $this->overtime_enabled()?$this->overtime_approval_card((int)$entity_id,null,$light):null;
+            case 'attendance_correction': return $this->corrections_enabled()?$this->cx_approval_card((int)$entity_id,null,$light):null;
+            case 'schedule_swap': return $this->swap_approval_card((int)$entity_id,$light);
+            case 'face_reset_request': return $this->face_reset_approval_card((int)$entity_id,$light);
+            case 'salary_advance': return $this->advance_approval_card((int)$entity_id,$light);
+            case 'hr_letter': return $this->hr_letter_approval_card((int)$entity_id,$light);
         }
         return null;
     }
@@ -84,10 +85,15 @@ trait EWS_My_Approvals_Trait {
         $rows=$this->services()->approvalReads()->inboxRows($uid,(bool)$admin,$away);
         $out=[];
         $cards=[];
+        // Off the My approvals page (the menu, Home, the Schedule page) only the counts are read: light cards, and the page rebuilds in full (3.31.148).
+        $light=!$this->my_approvals_full;
         foreach($rows as $i=>$row){
-            $card=$this->my_approvals_card((string)$row->entity_type,(int)$row->entity_id);
+            $card=$this->my_approvals_card((string)$row->entity_type,(int)$row->entity_id,$light);
             if($card)$cards[$i]=$card;
         }
+        if($light && $cards)$this->my_approvals_memo_full=false;
+        // One read for every card's employee, in full mode (was one per card).
+        $people=$light?[]:$this->people_by_ids(array_map(function($c){return (int)$c['employee_id'];},$cards));
         $paths=$this->approval_paths(array_map(function($i)use($rows){return [(string)$rows[$i]->workflow_key,(string)$rows[$i]->entity_type,(int)$rows[$i]->entity_id];},array_keys($cards)));
         // Swaps a colleague asked of this person (3.31.124): their answer is not an engine level, so they come from the swaps themselves.
         $peer=$me?$this->swap_peer_cards((int)$me->id):[];
@@ -105,18 +111,18 @@ trait EWS_My_Approvals_Trait {
             $path=$paths[$this->approval_request_key((string)$row->workflow_key,(string)$row->entity_type,(int)$row->entity_id)]??null;
             if(!$path)continue;
             if(!empty($card['path_before']))$path['steps']=array_merge($card['path_before'],$path['steps']);
-            $emp=$this->people_employee((int)$card['employee_id']);
+            $emp=$light?null:($people[(int)$card['employee_id']]??null);
             if(!empty($card['action']))$card['fields']=(array)($card['fields']??[])+['approval_step'=>(int)$row->step_id];   // the level shown (3.31.122)
             $mine=false;$why='';
             foreach($path['steps'] as $st)if($st['state']==='now' && $st['who']===__('Administrators','workforce-one')){$mine=true;$why=(string)($st['why_code']??'');}
             // Why it came to the administrators, with the setting to fix for the next ones (QA 8; the link only for those who can open it).
-            $hint=$mine?$this->approval_admin_reason_hint($why,$emp?(string)$emp->name:'',$path['moved_from']):null;
+            $hint=$mine && !$light?$this->approval_admin_reason_hint($why,$emp?(string)$emp->name:'',$path['moved_from']):null;
             $out[]=$card+['id'=>(int)$row->approval_request_id,'workflow'=>(string)$row->workflow_key,'entity_type'=>(string)$row->entity_type,'entity_id'=>(int)$row->entity_id,
                 'name'=>$emp?(string)$emp->name:__('Employee','workforce-one'),'title'=>$emp?trim((string)($emp->job_title??'')):'','employee_id'=>(int)$card['employee_id'],
                 'picture'=>$emp?$this->employee_picture_url($emp):'','path'=>$path,'admins'=>$mine,'admins_hint'=>$hint,'note_required'=>$this->approval_reject_note_required((string)$row->workflow_key),
                 // "For Mona" on the substitute's card; "With Sami" on the manager's (3.31.107).
-                'for'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id===$uid?$this->people_name((int)$row->for_employee_id):'',
-                'with'=>(int)$row->for_employee_id && (int)$row->approver_wp_user_id!==$uid?$this->approval_user_name((int)$row->approver_wp_user_id):''];
+                'for'=>!$light && (int)$row->for_employee_id && (int)$row->approver_wp_user_id===$uid?$this->people_name((int)$row->for_employee_id):'',
+                'with'=>!$light && (int)$row->for_employee_id && (int)$row->approver_wp_user_id!==$uid?$this->approval_user_name((int)$row->approver_wp_user_id):''];
         }
         foreach($this->my_approvals_legacy_items($s,$days,$now) as $it)$out[]=$it;
         usort($out,function($a,$b){

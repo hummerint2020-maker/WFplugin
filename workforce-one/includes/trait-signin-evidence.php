@@ -67,8 +67,14 @@ trait EWS_Signin_Evidence_Trait {
             PRIMARY KEY  (id),
             KEY employee_date (employee_id,work_date),
             KEY attempted_at (attempted_at),
-            KEY result (result)
+            KEY result (result),
+            KEY work_date (work_date)
         ) $c;");
+        // The report reads attempts by date alone (3.31.148); dbDelta adds it too, this checks it by name.
+        if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->attempts_table()))===$this->attempts_table()){
+            $index_names=(array)$wpdb->get_col("SHOW INDEX FROM {$this->attempts_table()}",2);
+            if(!in_array('work_date',$index_names,true))$wpdb->query("ALTER TABLE {$this->attempts_table()} ADD KEY work_date (work_date)");
+        }
         if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->time_logs))===$this->time_logs){
             $have=(array)$wpdb->get_col("SHOW COLUMNS FROM {$this->time_logs}",0);
             if(!in_array('photo_key',$have,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN photo_key VARCHAR(64) NULL");

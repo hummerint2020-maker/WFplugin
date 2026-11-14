@@ -50,6 +50,8 @@ trait EWS_App_Layout_Trait {
     private function render_app_view($view){
         // A swap notification opened after the swap moved on, or the answer to the last swap waiting (3.31.124):
         // My approvals says so instead of the Dashboard.
+        // The My approvals page reads every card in full, so the permission check below builds them once, in full, not light then full (3.31.148).
+        if($view==='approvals')$this->my_approvals_full=true;
         $swap_link=$view==='approvals' && (isset($_GET['apv_swap']) || isset($_GET['swap_done']) || isset($_GET['swap_error'])) && $this->my_approvals_enabled() && is_user_logged_in(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
         if(!$swap_link && !$this->app_view_allowed($view))$view='dashboard';
         switch($view){

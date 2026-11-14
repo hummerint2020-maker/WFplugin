@@ -316,10 +316,11 @@ trait EWS_Overtime_Trait {
     /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
 
     /** An overtime request waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
-    private function overtime_approval_card($id,$row=null){
+    private function overtime_approval_card($id,$row=null,$light=false){
             global $wpdb;
             $r=$row&&(int)$row->id===(int)$id&&$row->status==='Pending'?$row:$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_overtime_requests WHERE id=%d AND status='Pending' LIMIT 1",(int)$id));
             if(!$r)return null;
+            if($light)return ['employee_id'=>(int)$r->employee_id,'tone'=>'overtime','since'=>(string)$r->requested_at];   // (3.31.148)
             // Kept left to right inside Arabic text (18:00–21:00, not 21:00–18:00).
             $span="\u{2066}".substr((string)$r->start_time,0,5).'–'.substr((string)$r->end_time,0,5)."\u{2069}";
             $facts=[[__('Day','workforce-one'),date_i18n('D j M',strtotime((string)$r->overtime_date))],[__('Time','workforce-one'),$span],[__('Length','workforce-one'),$this->duration_label((int)$r->requested_minutes)]];

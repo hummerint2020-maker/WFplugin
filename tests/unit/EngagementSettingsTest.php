@@ -29,6 +29,18 @@ final class EngagementSettingsTest extends TestCase
         $this->assertSame([], Moments::merge([5 => ['birthday' => '', 'join_date' => '']], [5 => ['birthday' => '1990-01-01']], [5], '2026-10-01')[0]);
     }
 
+    public function testFirstPerEmployeeKeepsTheNewestRowsOfEachInTheGivenOrder(): void
+    {
+        $row = static function (int $id, int $emp): object { return (object) ['id' => $id, 'employee_id' => (string) $emp]; };
+        $rows = [$row(9, 2), $row(8, 1), $row(7, 2), $row(6, 1), $row(5, 1), $row(4, 1), $row(3, 2), $row(2, 2)];
+        $by = SmartNudges::firstPerEmployee($rows, 3);
+        $this->assertSame([2, 1], array_keys($by), 'by employee, in the order they first appear in the list');
+        $this->assertSame([8, 6, 5], array_map(static function ($r) { return $r->id; }, $by[1]), 'the three newest, newest first');
+        $this->assertSame([9, 7, 3], array_map(static function ($r) { return $r->id; }, $by[2]));
+        $this->assertSame([], SmartNudges::firstPerEmployee([], 3));
+        $this->assertEquals([5 => [$row(1, 5)]], SmartNudges::firstPerEmployee([$row(1, 5)], 3), 'fewer than the limit: all of them');
+    }
+
     public function testCelebrations(): void
     {
         $this->assertSame([['type' => 'birthday']], Moments::forDate('1990-10-01', '', '2026-10-01'));

@@ -22,6 +22,22 @@ final class SmartNudges
         return self::clamp($out, $saved);
     }
 
+    /**
+     * The first rows of each employee from a list already in the wanted order (3.31.148): the cron reads every employee's pending
+     * leave in one query and keeps, per employee, what the one-person query kept with its LIMIT (the newest three).
+     * @param list<object> $rows each has employee_id @return array<int, list<object>> employee id => at most $limit rows, in the given order
+     */
+    public static function firstPerEmployee(array $rows, int $limit): array
+    {
+        $out = [];
+        foreach ($rows as $r) {
+            $id = (int) $r->employee_id;
+            if (!isset($out[$id])) $out[$id] = [];
+            if (count($out[$id]) < $limit) $out[$id][] = $r;
+        }
+        return $out;
+    }
+
     /** @param array<string, mixed> $post the form (a missing checkbox means off) */
     public static function fromPost(array $post): array
     {
