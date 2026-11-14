@@ -624,7 +624,7 @@ trait EWS_Approvals_Trait {
         if(!isset($in_use[$workflow_key]) || ($workflow_key==='hr_letter' && !$this->hr_letters_enabled()))wp_die('Invalid workflow.');
         $W=\WorkforceOne\Approvals\Workflows::class;
         $mode=strtoupper(sanitize_key($_POST['approval_mode']??'NONE'));$configs=[];$unit=$W::AMOUNT_UNITS[$workflow_key]??'';
-        if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=$W::MAX_LEVELS;$i++){if(!isset($_POST['level_'.$i.'_type']))continue;$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=$this->approval_picked('level_'.$i.'_employee');elseif($type==='SPECIFIC_USER')$value=$this->approval_picked('level_'.$i.'_user');
+        if($mode==='PEER'){$configs[1]=['resolver_type'=>'TARGET_EMPLOYEE','resolver_value'=>0];}else{for($i=1;$i<=$W::MAX_LEVELS;$i++){if(!isset($_POST['level_'.$i.'_type']))continue;$type=strtoupper(sanitize_key($_POST['level_'.$i.'_type']));$value=0;if($type==='SPECIFIC_EMPLOYEE')$value=$this->approval_picked('level_'.$i.'_employee');elseif($type==='SPECIFIC_USER'){$value=$this->approval_picked('level_'.$i.'_user');if($value && !$this->site_has_user($value))$value=0;} /* a network: not this site's user = none picked (3.31.147) */
             // A level's condition (3.31.100): only for the workflows with an amount, and only when "If above" is chosen.
             $min=$unit!=='' && sanitize_key($_POST['level_'.$i.'_when']??'')==='above'?$W::minAmount(wp_unslash($_POST['level_'.$i.'_min']??'')):null;
             $configs[$i]=['resolver_type'=>$type,'resolver_value'=>$value,'min_amount'=>$min];}}
@@ -659,7 +659,7 @@ trait EWS_Approvals_Trait {
         $back=admin_url('admin.php?page=ews31-approvals');
         if($WH::minutes($start)===null || $WH::minutes($end)===null || $WH::minutes($end)<=$WH::minutes($start)){wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_message'=>rawurlencode('The working day must end after it starts.')],$back).'#ews-approval-settings');exit;}
         $hr=$this->approval_picked('hr_user');$fin=$this->approval_picked('finance_user');
-        foreach([$hr,$fin] as $uid)if($uid && !get_user_by('id',$uid)){wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_message'=>rawurlencode('Pick HR and Finance from the list.')],$back).'#ews-approval-settings');exit;}
+        foreach([$hr,$fin] as $uid)if($uid && (!get_user_by('id',$uid) || !$this->site_has_user($uid))){wp_safe_redirect(add_query_arg(['approval_error'=>1,'approval_error_message'=>rawurlencode('Pick HR and Finance from the list.')],$back).'#ews-approval-settings');exit;}
         $new=['hr_user'=>$hr,'finance_user'=>$fin,'day_start'=>$start,'day_end'=>$end];
         update_option('ews_approval_settings',$new,false);
         $this->audit('approval_settings','approval_workflow',0,'HR user #'.$hr.' · Finance user #'.$fin.' · '.$start.'–'.$end);

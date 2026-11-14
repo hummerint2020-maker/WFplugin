@@ -81,6 +81,7 @@
       "api": [
         "people_employee",
         "people_employee_by_user",
+        "people_user_is_linked",
         "people_names_by_user",
         "people_brief_by_ids",
         "people_by_ids",

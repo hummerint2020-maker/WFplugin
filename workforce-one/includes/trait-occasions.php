@@ -52,7 +52,7 @@ trait EWS_Occasions_Trait {
             }
         }
         // What the viewer hid (the app only: a kiosk or the login page opened by someone signed in is never affected).
-        if($where==='app'&&$uid&&$preview===''){$ctx['hidden']=(string)get_user_meta($uid,'ews_occasion_hidden',true);$ctx['hidden_birthday']=(string)get_user_meta($uid,'ews_occasion_hidden_birthday',true);}
+        if($where==='app'&&$uid&&$preview===''){$ctx['hidden']=(string)get_user_meta($uid,$this->site_user_key('ews_occasion_hidden'),true);$ctx['hidden_birthday']=(string)get_user_meta($uid,$this->site_user_key('ews_occasion_hidden_birthday'),true);}
         return $memo[$where]=Occasions::resolve($c,$this->occasions_enabled(),$today,$ctx);
     }
 
@@ -153,8 +153,8 @@ trait EWS_Occasions_Trait {
         $uid=(int)get_current_user_id();
         if(!$uid)return false;
         $mark=current_time('Y-m-d').'|'.$o['instance'];
-        if((string)get_user_meta($uid,'ews_occasion_moment',true)===$mark)return false;
-        update_user_meta($uid,'ews_occasion_moment',$mark);
+        if((string)get_user_meta($uid,$this->site_user_key('ews_occasion_moment'),true)===$mark)return false;
+        update_user_meta($uid,$this->site_user_key('ews_occasion_moment'),$mark);
         return true;
     }
 
@@ -210,7 +210,7 @@ trait EWS_Occasions_Trait {
         if(!is_user_logged_in())wp_die(esc_html__('You must be logged in.','workforce-one'));
         check_admin_referer('ews_occasion_hide');
         $o=$this->occasion_now('app');
-        if($o&&strpos($o['instance'],'preview|')!==0)update_user_meta((int)get_current_user_id(),$o['key']==='birthday'?'ews_occasion_hidden_birthday':'ews_occasion_hidden',$o['instance']);
+        if($o&&strpos($o['instance'],'preview|')!==0)update_user_meta((int)get_current_user_id(),$this->site_user_key($o['key']==='birthday'?'ews_occasion_hidden_birthday':'ews_occasion_hidden'),$o['instance']);
         $back=wp_get_referer();
         if(!$back||strpos($back,'admin-post.php')!==false)$back=$this->app_home_url();
         wp_safe_redirect($back);exit;

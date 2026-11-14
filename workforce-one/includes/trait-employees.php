@@ -16,6 +16,11 @@ trait EWS_Employees_Trait {
     }
 
     /** The active employee linked to a WordPress user, or null. */
+    /** Is any employee of this site, active or not, linked to this WordPress user (3.31.147)? */
+    private function people_user_is_linked($user_id){
+        return $this->services()->people()->userIsLinked((int)$user_id);
+    }
+
     private function people_employee_by_user($user_id){
         return $this->services()->people()->employeeByUser((int)$user_id);
     }

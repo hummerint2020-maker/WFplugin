@@ -26,6 +26,10 @@ $settings = function (array $more = []) {
 };
 update_option('ews_feature_corrections', 1, false);
 update_option('ews_working_days', [0, 1, 2, 3, 4, 5, 6], false);   // every day a working day: a whole-day request does not depend on the weekday the harness runs
+// ...nor on the seed's company holiday (tests/e2e_attendance_cards.py puts one on last week's Thursday): on a Wednesday that is D-6, the day of the
+// whole-day requests, which were then refused as "no_work" on both sides (seen 2026-11-11). Set aside here, put back at the end.
+$seed_holidays = (array) $wpdb->get_results($wpdb->prepare("SELECT * FROM {$p}ews_company_calendar WHERE event_date BETWEEN %s AND %s", $D(8), $D0), ARRAY_A);
+foreach ($seed_holidays as $h) $wpdb->delete($p . 'ews_company_calendar', ['id' => (int) $h['id']]);
 $settings();
 delete_option('ews_corrections_reminded');
 $wf = function ($mode) use ($wpdb, $p) {
@@ -121,6 +125,15 @@ $create('fault_mode_none_start_insert', $r13U, $r13, $in($D(5), 'time', ['target
 $settings(['photo' => ['day' => 'optional'], 'monthly_limit' => 0]);   // no limit: these two reach the finalize step, not HR
 $create('fault_mode_none_second_event', $BU, $B, $in($D(6), 'day', ['time_in' => '08:00', 'time_out' => '16:00']), 'employee', null, ['/^\s*INSERT INTO `' . $Lq . '`/i', 'SELECT broken_on_purpose FROM no_such_table_x', 2]);
 $create('create_mode_none_day', $DU, $Dd, $in($D(6), 'day', ['time_in' => '08:00', 'time_out' => '16:00']));
+// What that day is for the employee, so a refusal here ("no_work") explains itself in the log (3.31.147): the same on both sides.
+$run('diag_none_day', function () use ($call, $Dd, $D, $wpdb, $p) {
+    $d = $D(6);
+    $rows = (array) $call('cx_report_days', $Dd, $d, $d);
+    return ['weekday' => gmdate('w', strtotime($d)), 'working_days' => get_option('ews_working_days', 'unset'), 'is_working_day' => $call('is_working_day', $d),
+        'leave' => $call('schedule_leave_dates', (int) $Dd->id, $d, $d), 'overtime' => $call('overtime_approved_dates', (int) $Dd->id, $d, $d), 'holidays' => $call('company_leave_dates', $d, $d),
+        'result' => (string) ($rows[0]['result'] ?? '(no row)'), 'planned' => (string) ($rows[0]['planned'] ?? ''),
+        'schedule' => $wpdb->get_col($wpdb->prepare("SELECT status FROM {$p}ews_schedule WHERE employee_id=%d AND work_date=%s", (int) $Dd->id, $d)), 'no_work' => $call('cx_no_work_day', $Dd, $d)];
+});
 $settings();
 
 // ---------------------------------------------------------------- LEVEL_1: the supervisor is told (cxq_c), and its faults
@@ -260,4 +273,5 @@ foreach ([
 ] as $name => $q) $trace['_rows:' . $name] = $rows($q);
 $wf('NONE');
 delete_option('ews_working_days');
+foreach ($seed_holidays as $h) $wpdb->insert($p . 'ews_company_calendar', $h);
 echo "\n" . wp_json_encode($trace);
