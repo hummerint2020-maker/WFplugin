@@ -65,6 +65,18 @@ trait EWS_Leave_Trait {
             return $this->leave_overlap((int)$employee_id,(string)$from,(string)$to);
         }
 
+    /**
+     * The pending leave requests of these employees, newest first (the Smart Nudges cron, 3.31.148): one read for all of them, in the order the
+     * one-person reminder reads them (requested_at DESC). @param int[] $employee_ids @return object[] id, employee_id, start_date, end_date, requested_days
+     */
+    private function leave_pending_newest_first(array $employee_ids){
+            global $wpdb;$out=[];
+            foreach(array_chunk(array_values(array_unique(array_filter(array_map('intval',$employee_ids)))),500) as $chunk){
+                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,employee_id,start_date,end_date,requested_days FROM {$this->leaves} WHERE employee_id IN (".implode(',',array_fill(0,count($chunk),'%d')).") AND status='Pending' ORDER BY requested_at DESC",$chunk)) as $r)$out[]=$r;
+            }
+            return $out;
+        }
+
     /** A leave request's status ('' when there is none), for substitutes linked to a leave (3.31.107). */
     private function leave_status_of($leave_id){
             global $wpdb;

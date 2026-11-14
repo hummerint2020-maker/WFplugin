@@ -55,9 +55,8 @@ trait EWS_Schema_Trait {
                 if(!in_array('integrity_reason',$cols,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN integrity_reason VARCHAR(190) NULL AFTER integrity_status");
                 if(!in_array('distance_meters',$cols,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN distance_meters DECIMAL(12,2) NULL AFTER location_status");
                 $index_names=$wpdb->get_col("SHOW INDEX FROM {$this->time_logs}",2);
-                if(!in_array('employee_date_type_at',$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY employee_date_type_at (employee_id,work_date,event_type,event_at)");
-                // Reports, open sign-ins, reminders and Location Capacity ask by date alone (3.31.148).
-                if(!in_array('work_date_at',$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY work_date_at (work_date,event_at)");
+                // work_date_at (3.31.148): the reports, open sign-ins, reminders and Location Capacity ask by date alone. Added here by name: dbDelta cannot read the one-line base CREATE.
+                foreach(['employee_date_type_at'=>'employee_id,work_date,event_type,event_at','work_date_at'=>'work_date,event_at'] as $key=>$cols)if(!in_array($key,$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY {$key} ({$cols})");
             }
             $employees=$this->employees;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$employees))===$employees){

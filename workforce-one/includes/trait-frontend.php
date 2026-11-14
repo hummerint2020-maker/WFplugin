@@ -419,10 +419,8 @@ trait EWS_Frontend_Trait {
         [$h,$m]=array_map('intval',explode(':',$time));return ($h*60)+$m;
     }
 
-    /**
-     * @param array<string,mixed>|null $prefetch the cron's reads for all its employees at once (3.31.148): 'leave' => employee id => pending rows, 'schedule' => employee id => tomorrow's status with 'tomorrow' the day;
-     *        without it (the app's call for one person) each is read here, as before.
-     */
+    // $prefetch: the cron's reads for all its employees at once (3.31.148): 'leave' => employee id => pending rows, 'schedule' => employee id => tomorrow's
+    // status, with 'tomorrow' the day they are for; without it (the app's call for one person) each is read here, as before.
     private function smart_nudge_for_employee($emp,$user_id=null,$prefetch=null){
         global $wpdb;
         if(!$emp)return [];
@@ -496,20 +494,16 @@ trait EWS_Frontend_Trait {
      * @param list<object> $employees id, wp_user_id @param array<string,mixed> $cfg @return array<string,mixed>
      */
     private function smart_nudges_prefetch($employees,$cfg){
-        global $wpdb;
         $ids=array_values(array_unique(array_map(function($e){return (int)$e->id;},$employees)));
         $users=array_values(array_unique(array_map(function($e){return (int)$e->wp_user_id;},$employees)));
         foreach(array_chunk($users,500) as $chunk)update_meta_cache('user',$chunk);
         $out=[];
         if(!empty($cfg['enabled']) && !empty($cfg['items']['leave'])){
-            $rows=[];
-            foreach(array_chunk($ids,500) as $chunk)foreach((array)$wpdb->get_results("SELECT id,employee_id,start_date,end_date,requested_days FROM {$this->leaves} WHERE employee_id IN (".implode(',',array_map('intval',$chunk)).") AND status='Pending' ORDER BY requested_at DESC") as $r)$rows[]=$r;
-            $out['leave']=\WorkforceOne\Settings\SmartNudges::firstPerEmployee($rows,3);
+            $out['leave']=\WorkforceOne\Settings\SmartNudges::firstPerEmployee($this->leave_pending_newest_first($ids),3);
         }
         if(!empty($cfg['enabled']) && !empty($cfg['items']['schedule'])){
-            $tomorrow=date('Y-m-d',strtotime(current_time('Y-m-d').' +1 day'));$sched=[];
-            foreach(array_chunk($ids,500) as $chunk)foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,status FROM {$this->schedule} WHERE work_date=%s AND employee_id IN (".implode(',',array_map('intval',$chunk)).")",$tomorrow)) as $r)$sched[(int)$r->employee_id]=(string)$r->status;
-            $out['schedule']=$sched;$out['tomorrow']=$tomorrow;
+            $tomorrow=date('Y-m-d',strtotime(current_time('Y-m-d').' +1 day'));
+            $out['schedule']=$this->services()->scheduleDays()->statusesOn($tomorrow);$out['tomorrow']=$tomorrow;   // everyone's row that day; the loop reads only its employees
         }
         return $out;
     }
