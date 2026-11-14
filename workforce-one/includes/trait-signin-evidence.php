@@ -67,8 +67,7 @@ trait EWS_Signin_Evidence_Trait {
             PRIMARY KEY  (id),
             KEY employee_date (employee_id,work_date),
             KEY attempted_at (attempted_at),
-            KEY result (result),
-            KEY work_date (work_date)
+            KEY result (result)
         ) $c;");
         if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->time_logs))===$this->time_logs){
             $have=(array)$wpdb->get_col("SHOW COLUMNS FROM {$this->time_logs}",0);

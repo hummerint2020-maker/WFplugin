@@ -2,9 +2,6 @@
  "_about": "What this release changes on purpose (tests/golden/run.py; owner decision 2026-10-27): the pages (by their pages.json url and options) that may differ from the base, the action traces (by key, with the reason) whose SQL, return or rows may differ, and the hook / admin-post / shortcode / REST names it adds. Everything else must stay the same. Empty for a move-only release; emptied again by the next release.",
  "release": "3.31.148",
  "pages": [],
- "actions": {
-  "approvals:inbox_items_mgr": "Performance 1: away from the My approvals page the inbox builds light cards (the same cards exist, without their details), so the return holds fewer fields and the leave balance / people reads are gone",
-  "approvals:inbox_allowed_mgr": "Performance 1: My approvals' 'may open' check builds light cards first, and hasAnyStep is one UNION ALL of two indexed lookups instead of an OR; the answer is the same"
- },
+ "actions": {},
  "hooks_added": []
 }

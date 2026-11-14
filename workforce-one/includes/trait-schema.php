@@ -334,7 +334,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.148.1'; }   // Performance 1: indexes on the steps' acted_by, the time logs' work_date and the sign-in attempts' work_date
+        private function ews_schema_target(){ return '3.31.148.1'; }   // Performance 1: indexes on the steps' acted_by and the time logs' work_date
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

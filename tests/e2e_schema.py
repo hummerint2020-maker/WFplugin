@@ -17,8 +17,8 @@ OLD = {'ews_notifications': 'user_read_date', 'ews_leave_requests': 'employee_st
 for table, key in list(OLD.items()) + [('ews_leave_requests', 'type_year')]:
     php("$t=$p.'%s'; if($wpdb->get_var(\"SHOW INDEX FROM $t WHERE Key_name='%s'\"))$wpdb->query(\"ALTER TABLE $t DROP INDEX %s\");" % (table, key, key))
 
-# 3.31.148: the three indexes of Performance 1, dropped too (a 3.31.147 site has none of them); each comes back with its columns.
-PERF = [('ews_approval_steps', 'acted_by', ['acted_by_wp_user_id', 'acted_at']), ('ews_time_logs', 'work_date_at', ['work_date', 'event_at']), ('ews_signin_attempts', 'work_date', ['work_date'])]
+# 3.31.148: the two indexes of Performance 1, dropped too (a 3.31.147 site has neither); each comes back with its columns.
+PERF = [('ews_approval_steps', 'acted_by', ['acted_by_wp_user_id', 'acted_at']), ('ews_time_logs', 'work_date_at', ['work_date', 'event_at'])]
 for table, key, _cols in PERF:
     php("$t=$p.'%s'; if($wpdb->get_var(\"SHOW INDEX FROM $t WHERE Key_name='%s'\"))$wpdb->query(\"ALTER TABLE $t DROP INDEX %s\");" % (table, key, key))
 
@@ -53,7 +53,6 @@ pg = adm.req('/wp-admin/admin.php?page=ews31-features')[1]
 check('...and administrators see what failed on Workforce One pages', 'data-schema-failed' in pg and 'ews_signin_attempts' in pg)
 r = json.loads(php(RUN).splitlines()[-1])
 check('once it works, it is marked done and the warning goes', r['v'] == first['version'] and r['f'] is False and php("echo $wpdb->get_var(\"SHOW TABLES LIKE '{$p}ews_signin_attempts'\");").strip().endswith('ews_signin_attempts'), r)
-check('a table made from nothing has its work_date key (fresh install)', index_cols('ews_signin_attempts', 'work_date') == ['work_date'], index_cols('ews_signin_attempts', 'work_date'))
 check('...gone from the page too', 'data-schema-failed' not in adm.req('/wp-admin/admin.php?page=ews31-features')[1])
 
 print('%d / %d' % (sum(results), len(results)))
