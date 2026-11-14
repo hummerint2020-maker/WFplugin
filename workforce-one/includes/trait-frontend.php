@@ -419,7 +419,9 @@ trait EWS_Frontend_Trait {
         [$h,$m]=array_map('intval',explode(':',$time));return ($h*60)+$m;
     }
 
-    private function smart_nudge_for_employee($emp,$user_id=null){
+    // $prefetch: the cron's reads for all its employees at once (3.31.148): 'leave' => employee id => pending rows, 'schedule' => employee id => tomorrow's
+    // status, with 'tomorrow' the day they are for; without it (the app's call for one person) each is read here, as before.
+    private function smart_nudge_for_employee($emp,$user_id=null,$prefetch=null){
         global $wpdb;
         if(!$emp)return [];
         // Without attendance tracking there is no Sign In reminder, but the other reminders still apply.
@@ -466,7 +468,8 @@ trait EWS_Frontend_Trait {
         }
 
         if($smart_enabled && !empty($cfg['items']['leave'])){
-            $leave_table=$this->leaves;$pending=$wpdb->get_results($wpdb->prepare("SELECT id,start_date,end_date,requested_days FROM $leave_table WHERE employee_id=%d AND status='Pending' ORDER BY requested_at DESC LIMIT 3",(int)$emp->id));
+            $leave_table=$this->leaves;
+            $pending=is_array($prefetch) && isset($prefetch['leave'])?($prefetch['leave'][(int)$emp->id]??[]):$wpdb->get_results($wpdb->prepare("SELECT id,start_date,end_date,requested_days FROM $leave_table WHERE employee_id=%d AND status='Pending' ORDER BY requested_at DESC LIMIT 3",(int)$emp->id));
             foreach($pending as $r){
                 $range=$r->start_date===$r->end_date?date_i18n('D, d M',strtotime($r->start_date)):date_i18n('D, d M',strtotime($r->start_date)).' → '.date_i18n('D, d M',strtotime($r->end_date));
                 $add('leave-'.$r->id,'leave','🏖','Leave request waiting','Your leave request for '.$range.' is still pending.',add_query_arg('ews_view','vacation',$this->app_home_url()),'View Request');
@@ -474,13 +477,35 @@ trait EWS_Frontend_Trait {
         }
 
         if($smart_enabled && !empty($cfg['items']['schedule'])){
-            $tomorrow=date('Y-m-d',strtotime($today.' +1 day'));$next=$wpdb->get_row($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",(int)$emp->id,$tomorrow));
+            $tomorrow=date('Y-m-d',strtotime($today.' +1 day'));
+            if(is_array($prefetch) && isset($prefetch['schedule']) && ($prefetch['tomorrow']??'')===$tomorrow)$next=isset($prefetch['schedule'][(int)$emp->id])?(object)['status'=>$prefetch['schedule'][(int)$emp->id]]:null;   // the day moved on since the cron read it: read it here
+            else $next=$wpdb->get_row($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",(int)$emp->id,$tomorrow));
             if($next){
                 $status=(string)$next->status;$label=$status==='WFH'?'🏠 WFH':($status==='Office'?'🏢 Office':$status);
                 $add('schedule-'.$tomorrow,'schedule','📅','Tomorrow’s schedule','You are scheduled for '.$label.' tomorrow.', add_query_arg('ews_view','schedule',$this->app_home_url()),'View Schedule');
             }
         }
         return array_slice($nudges,0,6);
+    }
+
+    /**
+     * What the cron's employees need from the database, read once for all of them (3.31.148): their user meta into the cache (the dismissed and
+     * pushed lists), and, when those reminders are on, pending leave and tomorrow's schedule. The tasks, today's schedule and Sign In reads stay per person.
+     * @param list<object> $employees id, wp_user_id @param array<string,mixed> $cfg @return array<string,mixed>
+     */
+    private function smart_nudges_prefetch($employees,$cfg){
+        $ids=array_values(array_unique(array_map(function($e){return (int)$e->id;},$employees)));
+        $users=array_values(array_unique(array_map(function($e){return (int)$e->wp_user_id;},$employees)));
+        foreach(array_chunk($users,500) as $chunk)update_meta_cache('user',$chunk);
+        $out=[];
+        if(!empty($cfg['enabled']) && !empty($cfg['items']['leave'])){
+            $out['leave']=\WorkforceOne\Settings\SmartNudges::firstPerEmployee($this->leave_pending_newest_first($ids),3);
+        }
+        if(!empty($cfg['enabled']) && !empty($cfg['items']['schedule'])){
+            $tomorrow=date('Y-m-d',strtotime(current_time('Y-m-d').' +1 day'));
+            $out['schedule']=$this->services()->scheduleDays()->statusesOn($tomorrow);$out['tomorrow']=$tomorrow;   // everyone's row that day; the loop reads only its employees
+        }
+        return $out;
     }
 
     public function smart_nudges_cron(){
@@ -496,9 +521,10 @@ trait EWS_Frontend_Trait {
         $employees=$wpdb->get_results("SELECT id,name,wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0 AND attendance_enabled=1 ORDER BY id ASC");
         if(!$employees){$result['reason']='No active linked employees';update_option('ews_smart_nudges_last_result',$result,false);return;}
         $result['employees']=count($employees);
+        $prefetch=$this->smart_nudges_prefetch($employees,$cfg);
         foreach($employees as $emp){
             $uid=(int)$emp->wp_user_id;
-            $nudges=$this->smart_nudge_for_employee($emp,$uid);
+            $nudges=$this->smart_nudge_for_employee($emp,$uid,$prefetch);
             if(!$nudges)continue;
             $pushed=get_user_meta($uid,$this->site_user_key('ews_smart_nudge_pushed'),true);
             if(!is_array($pushed))$pushed=[];

@@ -127,6 +127,9 @@ trait EWS_Approvals_Trait {
         foreach(['for_employee_id'=>"BIGINT UNSIGNED NULL AFTER escalated_from_wp_user_id",'substitute_id'=>"BIGINT UNSIGNED NULL AFTER for_employee_id"] as $col=>$def){
             if(!$wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$t['instances']} LIKE %s",$col)))$wpdb->query("ALTER TABLE {$t['instances']} ADD COLUMN {$col} {$def}");
         }
+        // 3.31.148: "who decided" is asked by person (the menu's My approvals check, the week's count). The column is added just above, so the key is too, here and not in the CREATE TABLE.
+        $index_names=(array)$wpdb->get_col("SHOW INDEX FROM {$t['instances']}",2);
+        if(!in_array('acted_by',$index_names,true))$wpdb->query("ALTER TABLE {$t['instances']} ADD KEY acted_by (acted_by_wp_user_id,acted_at)");
         $this->approval_seed_workflows();
         return true;
     }

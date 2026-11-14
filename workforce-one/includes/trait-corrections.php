@@ -1072,9 +1072,10 @@ trait EWS_Corrections_Trait {
     /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
 
     /** A correction waiting for a decision, for the My approvals inbox. @return array<string,mixed>|null */
-    private function cx_approval_card($id,$row=null){
+    private function cx_approval_card($id,$row=null,$light=false){
         $c=$row&&(int)$row->id===(int)$id?$row:$this->cx_get((int)$id);
         if(!$c || $c->status!=='pending')return null;
+        if($light)return ['employee_id'=>(int)$c->employee_id,'tone'=>'correction','since'=>(string)$c->requested_at];   // (3.31.148)
         $facts=[[__('Day','workforce-one'),$this->cx_day_label((string)$c->work_date)],[__('Correction','workforce-one'),$this->cx_type_label((string)$c->type)],[__('Change','workforce-one'),$this->cx_change_text($c)]];
         if(trim((string)$c->reason)!=='')$facts[]=[__('Reason','workforce-one'),(string)$c->reason];
         return ['employee_id'=>(int)$c->employee_id,'tone'=>'correction','kind'=>__('Attendance correction','workforce-one'),

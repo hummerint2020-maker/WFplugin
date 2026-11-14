@@ -42,6 +42,14 @@ final class ScheduleDayService
         return $this->store->find($employeeId, $date);
     }
 
+    /** @return array<int,string> employee id => the day's status, for everyone with a row that day (the Smart Nudges cron, 3.31.148) */
+    public function statusesOn(string $date): array
+    {
+        $out = [];
+        foreach ($this->store->rowsOnDates([$date]) as $r) $out[(int) $r->employee_id] = (string) $r->status;
+        return $out;
+    }
+
     /** @return object[] the active company holidays between the two days */
     public function companyHolidays(string $start, string $end): array
     {

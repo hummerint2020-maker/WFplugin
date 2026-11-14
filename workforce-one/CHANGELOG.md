@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.31.148
+### Performance 1 (docs/tasks/performance-1.md): nothing visible changes, fewer and cheaper queries
+- **The My approvals count** (the menu, Home, the Schedule page) no longer builds every card in full to show a number: away from the My approvals page each waiting request is checked with the same rules but without its details (a leave's balance and who is away, an advance's salary and history, names). The My approvals page reads its people in one query instead of one per card.
+- **"Does this person approve anything?"** (asked on every app page for the My approvals menu item) no longer scans the approval steps of the whole history for an employee who never approved: two indexed lookups in one statement, and a new index on who decided a step.
+- **An index by date** on the time logs (work date and time): the Sign In / Out Report, the missing-sign-out reminder, the end-of-day sign-out and Location Capacity no longer read the whole table. Added once on upgrade.
+- **Smart Nudges** (every five minutes): each employee's dismissed and sent reminders, pending leave and tomorrow's schedule are read once for everyone instead of once per person.
+
 ## 3.31.147
 ### Safe on a WordPress network (one site per company; docs/tasks/saas.md, phase 1)
 Only the sites of a network change. A single site is unchanged: the same pages, files, paths and user settings.

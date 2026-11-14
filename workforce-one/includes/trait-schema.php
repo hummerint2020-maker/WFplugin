@@ -55,7 +55,8 @@ trait EWS_Schema_Trait {
                 if(!in_array('integrity_reason',$cols,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN integrity_reason VARCHAR(190) NULL AFTER integrity_status");
                 if(!in_array('distance_meters',$cols,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN distance_meters DECIMAL(12,2) NULL AFTER location_status");
                 $index_names=$wpdb->get_col("SHOW INDEX FROM {$this->time_logs}",2);
-                if(!in_array('employee_date_type_at',$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY employee_date_type_at (employee_id,work_date,event_type,event_at)");
+                // work_date_at (3.31.148): the reports, open sign-ins, reminders and Location Capacity ask by date alone. Added here by name: dbDelta cannot read the one-line base CREATE.
+                foreach(['employee_date_type_at'=>'employee_id,work_date,event_type,event_at','work_date_at'=>'work_date,event_at'] as $key=>$cols)if(!in_array($key,$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY {$key} ({$cols})");
             }
             $employees=$this->employees;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$employees))===$employees){
@@ -71,7 +72,7 @@ trait EWS_Schema_Trait {
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->time_logs))!==$this->time_logs){
                 require_once ABSPATH.'wp-admin/includes/upgrade.php';
                 $c=$wpdb->get_charset_collate();
-                dbDelta("CREATE TABLE {$this->time_logs} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,location_timestamp BIGINT NULL,integrity_status VARCHAR(30) NULL,integrity_reason VARCHAR(190) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at)) $c;");
+                dbDelta("CREATE TABLE {$this->time_logs} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,location_timestamp BIGINT NULL,integrity_status VARCHAR(30) NULL,integrity_reason VARCHAR(190) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at),KEY work_date_at(work_date,event_at)) $c;");
             }
         }
 
@@ -333,7 +334,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.144.1'; }   // HR letters: employees get name_ar, gender, hire_date (HL2); the letters table (HL3)
+        private function ews_schema_target(){ return '3.31.148.1'; }   // Performance 1: indexes on the steps' acted_by and the time logs' work_date
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

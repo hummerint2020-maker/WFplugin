@@ -532,7 +532,7 @@
         "leave_early_form",
         "leave_away_between",
         "leave_status_of",
-        "leave_legacy_approvals"
+        "leave_legacy_approvals", "leave_pending_newest_first"
       ]
     },
     "overtime": {
