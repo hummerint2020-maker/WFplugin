@@ -191,6 +191,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports.py "$S"
       - name: Reports phase 2 (overtime, leave, trend, saved views)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_reports_more.py "$S"
+      - name: Exports in batches (the same files as one read; a failed read sends no file; memory)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_export_batches.py "$S"
       - name: Location seats and the Location Capacity report
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_capacity.py "$S"
       - name: Approval workflows (settings and the two-level flow)

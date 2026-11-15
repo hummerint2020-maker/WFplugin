@@ -20,23 +20,59 @@ final class EmployeeSummary
      */
     public static function byEmployee(array $days): array
     {
-        $out = [];
-        foreach ($days as $d) {
-            $id = (int) $d['employee_id'];
-            if (!isset($out[$id])) $out[$id] = ['employee_id' => $id, 'employee' => (string) $d['employee'], 'domain' => (string) ($d['domain'] ?? ''), 'teams' => (array) ($d['teams'] ?? [])] + self::ZERO;
-            $out[$id] = self::add($out[$id], $d);
-        }
-        foreach ($out as $id => $row) $out[$id] = self::finish($row);
-        uasort($out, static function ($a, $b) { return strcasecmp($a['employee'], $b['employee']); });
-        return $out;
+        return self::finishByEmployee(self::accumulate(self::start(), $days));
     }
 
     /** @param array<int,array<string,mixed>> $days */
     public static function totals(array $days): array
     {
-        $t = self::ZERO;
-        foreach ($days as $d) $t = self::add($t, $d);
-        return self::finish($t);
+        return self::finishTotals(self::accumulate(self::start(), $days));
+    }
+
+    /**
+     * The same figures a part of the days at a time (3.31.149): start(), accumulate() for each part
+     * in order, then finishByEmployee() / finishTotals(). Over any split of the days the result is
+     * byEmployee() / totals() of all of them: the employees keep the order they first appear in and
+     * are sorted once, at the end.
+     * @return array{by:array<int,array<string,mixed>>,all:array<string,int>}
+     */
+    public static function start(): array
+    {
+        return ['by' => [], 'all' => self::ZERO];
+    }
+
+    /**
+     * @param array{by:array<int,array<string,mixed>>,all:array<string,int>} $acc
+     * @param iterable<array<string,mixed>> $days
+     * @return array{by:array<int,array<string,mixed>>,all:array<string,int>}
+     */
+    public static function accumulate(array $acc, iterable $days): array
+    {
+        foreach ($days as $d) {
+            $id = (int) $d['employee_id'];
+            if (!isset($acc['by'][$id])) $acc['by'][$id] = ['employee_id' => $id, 'employee' => (string) $d['employee'], 'domain' => (string) ($d['domain'] ?? ''), 'teams' => (array) ($d['teams'] ?? [])] + self::ZERO;
+            $acc['by'][$id] = self::add($acc['by'][$id], $d);
+            $acc['all'] = self::add($acc['all'], $d);
+        }
+        return $acc;
+    }
+
+    /**
+     * @param array{by:array<int,array<string,mixed>>,all:array<string,int>} $acc
+     * @return array<int,array<string,mixed>>
+     */
+    public static function finishByEmployee(array $acc): array
+    {
+        $out = $acc['by'];
+        foreach ($out as $id => $row) $out[$id] = self::finish($row);
+        uasort($out, static function ($a, $b) { return strcasecmp($a['employee'], $b['employee']); });
+        return $out;
+    }
+
+    /** @param array{by:array<int,array<string,mixed>>,all:array<string,int>} $acc */
+    public static function finishTotals(array $acc): array
+    {
+        return self::finish($acc['all']);
     }
 
     /** The period of the same length that ends the day before $start. */
