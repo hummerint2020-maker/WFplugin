@@ -383,6 +383,9 @@ check('...a fast page has no slow load and no outside call', pay['slow_n'] == 0 
 check('a load slow in PHP: 5 slow loads, little of it in the database', emps['slow_n'] == 5 and emps['slow_db_us_sum'] < emps['slow_ms_sum'] * 1000 * 0.4, emps)
 check('a load slow in the database (SELECT SLEEP): most of the slow time is database time', home['slow_n'] >= 5 and home['slow_db_us_sum'] >= home['slow_ms_sum'] * 1000 * 0.6, home)
 check('a load waiting for an outside service: 5 loads, 5 calls, at least 1.2 s each, on the split too', feat['ext_n'] == 5 and feat['ext_calls'] == 5 and feat['ext_us_sum'] >= 5 * 1150000 and feat['slow_ext_us_sum'] >= 5 * 1150000, feat)
+print('INFO split: payroll %d loads, database %.1f ms of %.1f ms on average; slow in PHP: database %.1f ms of %.1f ms; outside calls: %.1f ms of %.1f ms' % (
+    pay['db_n'], pay['db_us_sum'] / 1000 / max(1, pay['db_n']), pay['db_ms_sum'] / max(1, pay['db_n']), emps['slow_db_us_sum'] / 1000 / max(1, emps['slow_n']), emps['slow_ms_sum'] / max(1, emps['slow_n']),
+    feat['ext_us_sum'] / 1000 / max(1, feat['ext_n']), feat['ms_sum'] / max(1, feat['n'])))
 rollup()
 f = {x['key']: x for x in (opt('ews_health_findings') or [])}
 cause = lambda r: (f.get('slow:' + r) or {}).get('args', {}).get('cause')

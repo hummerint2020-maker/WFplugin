@@ -167,3 +167,26 @@ lines name the outside calls when there were any. Finding clause: "mostly waitin
 notifications)".
 
 **Off.** Feature off or schema not yet repaired: no hook is added; `health_external()` returns at once.
+
+## Where the code differs from the design, and the review (2026-11-15)
+- **Schema marked only when the columns are there** (review finding 1). `ensure_health_schema()` writes `ews_health_schema` = '2'
+  only after `SELECT <the 11 columns> … LIMIT 0` succeeds on both tables. A refused ALTER leaves the site on schema 1, still
+  collecting, and the rollup or the screen tries again. (The design wrote the option unconditionally, as schema 1 did.)
+- **No settings read on a fast load** (finding 2). The slow limit is read only for a load over 200 ms (the lowest limit allowed),
+  once per request; the design's "no extra query" now holds for every load under 200 ms.
+- **Non-blocking calls are not outside time** (finding 3): WordPress's cron spawn and other `blocking=>false` calls are skipped at
+  both ends.
+- **A cron job that never finished** carries no database time in the split (finding 4).
+- **The test push** (`send_push_payload()`) is timed too (finding 6).
+- **Help text** under the split (finding 7): only loads with query detail are split; what outside services are; the limit in force
+  when a load was measured decides "longer than the limit".
+- **Not done, on purpose** (finding 5): pushes queued by a scheduled job are sent by `push_flush` at shutdown, after the job's own
+  timing ends, so their wait is in no job's outside time (and not in the job's time either: the parts stay consistent). Only
+  `cron:ews_push_deliver` shows push time. Attributing the leftover to the last job would be a guess.
+- **Tests that differ:** SQLite is not covered by e2e (CI runs it on MySQL; the test uses SHOW COLUMNS and DROP COLUMN). The 1%
+  check proves `db_n == sampled`, not that the UPDATE text is byte-identical; the code path is `array_filter` on an empty set, read
+  in review. The INFO line for the split was added.
+- **Not run here:** phpunit, phpstan, phpcs and the WordPress e2e (this environment cannot download them or WordPress). The health
+  unit tests were run with a small stand-in harness and pass; the rest runs in CI.
+- **Language files:** `.po` has the 14 new strings in Arabic; `.mo`, `.l10n.php` and `.pot` are regenerated at release time, after
+  Performance 2 is merged (owner's answer 6). Until then the new strings show in English.

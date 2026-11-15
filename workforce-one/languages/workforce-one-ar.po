@@ -8956,3 +8956,6 @@ msgstr "التحميلات الأطول من %1$s: تم قياس %2$d، ويلز
 #. translators: 1: loads with a call, 2: all loads, 3: calls, 4: average time
 msgid "Outside services: %1$d of %2$d loads called one (%3$d calls), %4$s on average for those loads."
 msgstr "الخدمات الخارجية: %1$d من %2$d تحميل اتصلت بخدمة (%3$d اتصال)، بمتوسط %4$s لتلك التحميلات."
+
+msgid "Only loads with query detail are split. Outside services are calls to other servers (for example push notifications). A load counts as longer than the limit by the limit in force when it was measured."
+msgstr "يُقسَّم وقت التحميلات ذات تفاصيل الاستعلامات فقط. الخدمات الخارجية هي الاتصالات بخوادم أخرى (مثل الإشعارات الفورية). يُحسب التحميل أطول من الحد وفق الحد المعمول به وقت قياسه."

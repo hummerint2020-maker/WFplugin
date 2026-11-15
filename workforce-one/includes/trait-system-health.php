@@ -127,7 +127,17 @@ trait EWS_System_Health_Trait {
             UNIQUE KEY day_fp_route (day,fp,route),
             KEY day (day)
         ) {$c};");
-        update_option('ews_health_schema',HealthSettings::SCHEMA,false);
+        // Schema 2 (3.31.150) is the first that ALTERs existing tables: mark it only once both tables have the new columns, so a
+        // refused ALTER (no privilege, a lock timeout, a drop-in) leaves the site on schema 1, collecting, and is tried again.
+        $cols='`'.implode('`,`',$this->health_split_columns()).'`';
+        $quiet=$wpdb->suppress_errors(true);
+        $ok=true;
+        foreach(['hourly','daily'] as $k){
+            $wpdb->get_results("SELECT {$cols} FROM {$t[$k]} LIMIT 0");
+            if($wpdb->last_error!=='')$ok=false;
+        }
+        $wpdb->suppress_errors($quiet);
+        if($ok)update_option('ews_health_schema',HealthSettings::SCHEMA,false);
     }
 
     /** The Features switch changed: tables and the hourly rollup come with it; data is kept when it goes off. */
@@ -177,8 +187,8 @@ trait EWS_System_Health_Trait {
         $this->health['prev']=set_error_handler([$this,'health_on_php_error']);
         add_filter('rest_dispatch_request',[$this,'health_rest_route'],10,3);
         if($this->health['split']){   // outside calls through the WordPress HTTP API (push is timed where it is sent)
-            add_filter('pre_http_request',[$this,'health_http_start'],PHP_INT_MAX,1);
-            add_action('http_api_debug',[$this,'health_http_end'],PHP_INT_MAX,2);
+            add_filter('pre_http_request',[$this,'health_http_start'],PHP_INT_MAX,2);
+            add_action('http_api_debug',[$this,'health_http_end'],PHP_INT_MAX,4);
         }
         if(wp_doing_cron()){
             foreach(Routes::CRON_HOOKS as $hook){
@@ -213,16 +223,24 @@ trait EWS_System_Health_Trait {
         if($this->health['own_sq'])$wpdb->queries=[];
     }
 
-    /** Filter pre_http_request, last: a call no other filter answered is about to go out. */
-    public function health_http_start($pre){
-        if($pre===false && count($this->health['http'])<50)$this->health['http'][]=microtime(true);
+    /**
+     * Filter pre_http_request, last: a call no other filter answered is about to go out. A non-blocking call (WordPress's own
+     * cron spawn) is not waited for and is not counted. @param mixed $pre @param array<string,mixed> $args
+     */
+    public function health_http_start($pre,$args=[]){
+        if($pre===false && !$this->health_http_nonblocking($args) && count($this->health['http'])<50)$this->health['http'][]=microtime(true);
         return $pre;
     }
 
-    /** Action http_api_debug: the call came back (or failed). @param mixed $response */
-    public function health_http_end($response,$context=''){
-        if($context!=='response' || !$this->health['http'])return;
+    /** Action http_api_debug: the call came back (or failed). @param mixed $response @param array<string,mixed> $args */
+    public function health_http_end($response,$context='',$class='',$args=[]){
+        if($context!=='response' || !$this->health['http'] || $this->health_http_nonblocking($args))return;
         $this->health_external(microtime(true)-(float)array_pop($this->health['http']),1);
+    }
+
+    /** @param mixed $args */
+    private function health_http_nonblocking($args){
+        return is_array($args) && isset($args['blocking']) && !$args['blocking'];
     }
 
     /** Time spent waiting for outside services ($calls of them); nothing while the collector does not run. */
@@ -345,7 +363,7 @@ trait EWS_System_Health_Trait {
             $this->health['errors'][$fp]=['level'=>'error','file'=>$rel,'line'=>(int)$err['line'],'message'=>Messages::normalize((string)$err['message']),'n'=>1];
         }
         if(wp_doing_cron()){
-            foreach($this->health['cron'] as $hook=>$c)$this->health['cron_done'][]=['hook'=>$hook,'ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>false,'agg'=>[],'ext_calls'=>$this->health['ext_calls']-$c['ext_calls'],'ext_us'=>$this->health['ext_us']-$c['ext_us']];   // started, never finished
+            foreach($this->health['cron'] as $hook=>$c)$this->health['cron_done'][]=['hook'=>$hook,'ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>false,'agg'=>[],'unfinished'=>true,'ext_calls'=>$this->health['ext_calls']-$c['ext_calls'],'ext_us'=>$this->health['ext_us']-$c['ext_us']];   // started, never finished
             if(!$this->health['cron_done'])return;   // not one of the plugin's jobs: nothing to say, nothing written
             $last=get_option('ews_health_cron_last',[]);$last=is_array($last)?$last:[];
             $ok=[];
@@ -353,7 +371,7 @@ trait EWS_System_Health_Trait {
                 $pq=0;$pq_us=0;
                 foreach($d['agg'] as $a)if($a['caller']!==''){$pq+=$a['n'];$pq_us+=$a['us'];}
                 $this->health_record('cron:'.$d['hook'],$d['ms'],0,$mem,$mem_pct,!$d['ok'],false,$sampled,$pq,$pq_us,0,
-                    ['db_us'=>$sampled?$this->health_db_us($d['agg']):null,'ext_calls'=>(int)$d['ext_calls'],'ext_us'=>(int)$d['ext_us']]);
+                    ['db_us'=>$sampled && empty($d['unfinished'])?$this->health_db_us($d['agg']):null,'ext_calls'=>(int)$d['ext_calls'],'ext_us'=>(int)$d['ext_us']]);
                 if($sampled)$this->health_write_queries('cron:'.$d['hook'],$d['agg']);
                 $ok[$d['hook']]=($ok[$d['hook']]??true) && $d['ok'];
                 $last[$d['hook']]=['at'=>time(),'ms'=>$d['ms'],'ok'=>$ok[$d['hook']]];
@@ -380,8 +398,10 @@ trait EWS_System_Health_Trait {
         $this->health_write_errors($route,$at);
     }
 
-    /** Adds one request to its hourly row (a few slots, so a burst does not queue on one row). */
-    /** @param array{db_us:int|null,ext_calls:int,ext_us:int}|null $split where the time went (written with schema 2 only) */
+    /**
+     * Adds one request to its hourly row (a few slots, so a burst does not queue on one row).
+     * @param array{db_us:int|null,ext_calls:int,ext_us:int}|null $split where the time went (written with schema 2 only)
+     */
     private function health_record($route,$ms,$nq,$mem,$mem_pct,$failed,$fatal,$sampled,$pq,$pq_us,$errors,$split=null){
         $hour=gmdate('Y-m-d H:00:00');
         $inc=['n'=>1,'sampled'=>$sampled?1:0,'failed'=>$failed?1:0,'fatal'=>$fatal?1:0,'ms_sum'=>max(0,$ms),'b'.Stats::bucket(max(0,$ms))=>1,'q_sum'=>$nq,'pq_sum'=>$pq,'pq_us_sum'=>$pq_us,'pq_n'=>$sampled?1:0,'mem_sum'=>$mem,'mem_n'=>1,'err'=>$errors];
@@ -401,8 +421,14 @@ trait EWS_System_Health_Trait {
         if($split['db_us']!==null){
             $db_us=max(0,(int)$split['db_us']);
             $inc+=['db_n'=>1,'db_ms_sum'=>$ms,'db_us_sum'=>$db_us,'db_ext_us_sum'=>$ext_us];
-            $s=$this->health_settings();
-            if($ms>(Routes::heavy($route)?(int)$s['heavy_ms']:(int)$s['slow_ms']))$inc+=['slow_n'=>1,'slow_ms_sum'=>$ms,'slow_db_us_sum'=>$db_us,'slow_ext_us_sum'=>$ext_us];
+            // The lowest limit allowed is 200 ms (Settings::RANGES): a faster load is never slow, and needs no settings read.
+            if($ms>200){
+                if(!isset($this->health['limits'])){$s=$this->health_settings();$this->health['limits']=[(int)$s['slow_ms'],(int)$s['heavy_ms']];}
+                $limit=Routes::heavy($route)?$this->health['limits'][1]:$this->health['limits'][0];
+            }else{
+                $limit=PHP_INT_MAX;
+            }
+            if($ms>$limit)$inc+=['slow_n'=>1,'slow_ms_sum'=>$ms,'slow_db_us_sum'=>$db_us,'slow_ext_us_sum'=>$ext_us];
         }
         return array_filter($inc);
     }

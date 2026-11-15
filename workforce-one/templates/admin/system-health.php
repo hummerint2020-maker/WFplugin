@@ -129,6 +129,7 @@ $ago = static function (int $ts) { return $ts > 0 ? sprintf(/* translators: %s: 
                 <br><?php echo esc_html(sprintf(/* translators: 1: loads with a call, 2: all loads, 3: calls, 4: average time */ __('Outside services: %1$d of %2$d loads called one (%3$d calls), %4$s on average for those loads.', 'workforce-one'), (int) $st['ext_n'], (int) $st['n'], (int) $st['ext_calls'], $seconds((int) $st['ext_avg']))); ?>
             <?php endif; ?>
         </p>
+        <p class="description" style="max-width:1000px"><?php esc_html_e('Only loads with query detail are split. Outside services are calls to other servers (for example push notifications). A load counts as longer than the limit by the limit in force when it was measured.', 'workforce-one'); ?></p>
         <?php endif; ?>
     <?php endif; ?>
     <div style="display:flex;flex-wrap:wrap;gap:20px;max-width:1100px">

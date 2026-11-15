@@ -721,7 +721,9 @@ trait EWS_Notifications_Trait {
     private function send_push_payload($row,$payload){
         $job=$this->push_prepare($row,$payload);
         if(isset($job['result']))return $job['result'];
+        $t0=microtime(true);
         curl_exec($job['handle']);
+        $this->health_external(microtime(true)-$t0,1);   // System health (3.31.150)
         $out=$this->push_finish($job['handle'],curl_errno($job['handle']));
         curl_close($job['handle']);
         return $out;
