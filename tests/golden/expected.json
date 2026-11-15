@@ -3,5 +3,5 @@
  "release": "3.31.148",
  "pages": [],
  "actions": {},
- "hooks_added": []
+ "hooks_added": ["http_api_debug", "pre_http_request"]
 }

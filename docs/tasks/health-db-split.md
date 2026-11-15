@@ -190,3 +190,6 @@ notifications)".
   unit tests were run with a small stand-in harness and pass; the rest runs in CI.
 - **Language files:** `.po` has the 14 new strings in Arabic; `.mo`, `.l10n.php` and `.pot` are regenerated at release time, after
   Performance 2 is merged (owner's answer 6). Until then the new strings show in English.
+- **Golden:** the two WordPress hooks the collector now adds (`pre_http_request`, `http_api_debug`, only while System health is on
+  with schema 2) are declared in `tests/golden/expected.json` `hooks_added`. Its `release` is set at release time (3.31.150), after
+  Performance 2's own declarations are merged.
