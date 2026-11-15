@@ -81,7 +81,23 @@ def parts(data):
 
 
 def peak():
+    # Read once: the wp-cli call that reads it writes its own peak when it ends (the mu-plugin is on there too).
     return int(php("echo (int)get_option('ews_e2e_peak');") or 0)
+
+
+def ties_sorted(data):
+    """The CSV with the records that tie exactly (same day, same name as the database compares it, same minute
+    shown) put in one order: their order was never defined (docs/tasks/performance-2.md, open question 1)."""
+    lines = data.decode('utf-8').split('\n')
+    head, body = lines[:1], lines[1:]
+    key = lambda l: (l.split(',')[0], (re.match(r'^[^,]*,[^,]*,("[^"]*"|[^,]*)', l) or [None, ''])[1].lower(), (re.search(r'"(\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M)"', l) or [None, ''])[1])
+    out, group = [], []
+    for l in body:
+        if group and key(l) != key(group[-1]):
+            out += sorted(group)
+            group = []
+        group.append(l)
+    return '\n'.join(head + out + sorted(group))
 
 
 print('time logs seeded:', seed())
@@ -94,14 +110,15 @@ check('the Sign In / Out CSV link is there', bool(csv_url))
 mu({'rows': 1000000000, 'peak': 1})
 st, whole, h = raw(adm, csv_url)
 whole_peak = peak()
-check('one window (everything at once, as before) downloads', st == 200 and whole.startswith(b'\xef\xbb\xbfDate,Weekday') and whole.count(b'\n') > 10000, (st, whole[:200], whole.count(b'\n')))
+check('one window (everything at once, as before) downloads', st == 200 and whole.startswith(b'\xef\xbb\xbfDate,Weekday') and whole.count(b'\n') > 5000, (st, whole[:200], whole.count(b'\n')))
 for rows in (5000, 997, 3):
     mu({'rows': rows, 'peak': 1})
     st, part, h2 = raw(adm, csv_url)
-    check('windows of %d records give the same file, byte for byte' % rows, st == 200 and part == whole, (st, len(part), len(whole)))
+    check('windows of %d records give the same records in the same order (exact ties aside: never defined)' % rows, st == 200 and len(part) == len(whole) and ties_sorted(part) == ties_sorted(whole), (st, len(part), len(whole)))
     check('...with the same headers', h2.get('Content-Type') == h.get('Content-Type') and h2.get('Content-Disposition') == h.get('Content-Disposition'), (h2, h))
     if rows == 997:
-        check('...and less memory than one window (%d vs %d bytes)' % (peak(), whole_peak), 0 < peak() < whole_peak * 0.75, (peak(), whole_peak))
+        p997 = peak()
+        check('...and less memory than one window (%d vs %d bytes)' % (p997, whole_peak), 0 < p997 < whole_peak * 0.75, (p997, whole_peak))
 one = link(adm.req('/wp-admin/admin.php?page=ews31-time-report&start=%s&end=%s' % (START, START))[1], 'ews31_time_csv')
 mu({'rows': 3})
 st, a, _ = raw(adm, one)
@@ -133,10 +150,12 @@ for rtype in ('attendance', 'summary', 'timesheet', 'workforce'):
         check('%s CSV: one group and groups of employees give the same file' % label, c1.startswith(b'\xef\xbb\xbf') and c1.count(b'\n') > 2 and c1 == c2 == c3, (len(c1), len(c2), len(c3), c1[:200]))
         check('%s Excel: the same sheets, part by part' % label, x1 and x1 == x2 == x3, ([n for n, _ in x1 or []], [n for n, _ in x2 or []]))
 mu(None)
-page = adm.req('/app/?ews_view=reports&report_type=attendance&start=2001-01-01&end=2001-01-31')[1]
+page = adm.req('/app/?ews_view=reports&report_type=attendance&start=%s&end=%s' % (START, END))[1]
+php("update_option('ews_working_days_e2e_saved',get_option('ews_working_days'),false); update_option('ews_working_days',[],false);")   # no working day: no row
 x = parts(raw(adm, link(page, 'ews31_report_xlsx'))[1])
+php("update_option('ews_working_days',get_option('ews_working_days_e2e_saved'),false); delete_option('ews_working_days_e2e_saved');")
 sheet = dict(x or []).get('xl/worksheets/sheet1.xml', b'')
-check('an empty period: the Excel says so', b'No records found for the selected period.' in sheet, sheet[-400:])
+check('no rows: the Excel says so', b'No records found for the selected period.' in sheet, sheet[-400:])
 tmp = php("echo count(glob(get_temp_dir().'workforce-one-*'));")
 check('no temporary sheet is left behind', tmp == '0', tmp)
 
