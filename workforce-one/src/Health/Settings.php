@@ -10,7 +10,12 @@ if (!defined('ABSPATH')) exit;
 final class Settings
 {
     /** The health schema version (its own, so switching the feature on never needs the global target). */
-    public const SCHEMA = '1';
+    public const SCHEMA = '2';   // 2 (3.31.150): where the time went (database, outside calls)
+    /** Measured loads needed before a split is shown: all loads, and loads over the limit. */
+    public const SPLIT_MIN = 10;
+    public const SPLIT_MIN_SLOW = 5;
+    /** The share of the time (percent) at which one part is named the cause. */
+    public const SPLIT_MOSTLY = 60;
     /** Detailed query data is taken from this share of requests (percent). */
     public const RATES = [1, 5, 10, 25, 50, 100];
     public const RETENTION = [30, 90, 180];

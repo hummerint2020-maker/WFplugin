@@ -115,4 +115,16 @@ final class HealthFindingsTest extends TestCase
         $this->assertSame(['critical' => 1, 'warning' => 1, 'note' => 0], A::counts(A::visible($open, [], $t)));
         $this->assertArrayNotHasKey('old', A::hide(['old' => $t - 1], [], $t), 'ended hides are dropped');
     }
+    /** The slow finding says where the time of the slow loads went, only with enough of them measured (3.31.150). */
+    public function testSlowCarriesTheSplit(): void
+    {
+        $f = F::evaluate(['routes' => ['admin:ews31-x' => $this->route(9)]], $this->s())[0];
+        $this->assertSame('slow:admin:ews31-x', $f['key']);
+        $this->assertSame('', $f['args']['cause'], 'no measured slow loads');
+        $f2 = F::evaluate(['routes' => ['admin:ews31-x' => $this->route(9, ['slow_n' => 4, 'slow_ms_sum' => 12000, 'slow_db_us_sum' => 160000])]], $this->s())[0];
+        $this->assertSame('', $f2['args']['cause'], '4 is under the minimum of 5');
+        $f3 = F::evaluate(['routes' => ['admin:ews31-x' => $this->route(9, ['slow_n' => 5, 'slow_ms_sum' => 15000, 'slow_db_us_sum' => 200000])]], $this->s())[0];
+        $this->assertSame(['outside', 40, 2960, 5], [$f3['args']['cause'], $f3['args']['db_ms'], $f3['args']['out_ms'], $f3['args']['split_n']]);
+        $this->assertSame([$f['key'], $f['severity'], $f['impact']], [$f3['key'], $f3['severity'], $f3['impact']], 'key, severity and ranking unchanged');
+    }
 }

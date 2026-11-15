@@ -55,7 +55,17 @@ trait EWS_System_Health_Trait {
         $cols=['n INT UNSIGNED NOT NULL DEFAULT 0','sampled INT UNSIGNED NOT NULL DEFAULT 0','failed INT UNSIGNED NOT NULL DEFAULT 0','fatal INT UNSIGNED NOT NULL DEFAULT 0','ms_sum BIGINT UNSIGNED NOT NULL DEFAULT 0','ms_max INT UNSIGNED NOT NULL DEFAULT 0'];
         for($i=0;$i<Stats::BUCKETS;$i++)$cols[]='b'.$i.' INT UNSIGNED NOT NULL DEFAULT 0';
         return array_merge($cols,['q_sum BIGINT UNSIGNED NOT NULL DEFAULT 0','q_max INT UNSIGNED NOT NULL DEFAULT 0','pq_sum BIGINT UNSIGNED NOT NULL DEFAULT 0','pq_us_sum BIGINT UNSIGNED NOT NULL DEFAULT 0','pq_n INT UNSIGNED NOT NULL DEFAULT 0',
-            'mem_sum BIGINT UNSIGNED NOT NULL DEFAULT 0','mem_max INT UNSIGNED NOT NULL DEFAULT 0','mem_pct_max SMALLINT UNSIGNED NOT NULL DEFAULT 0','mem_n INT UNSIGNED NOT NULL DEFAULT 0','err INT UNSIGNED NOT NULL DEFAULT 0',"last_at DATETIME NOT NULL DEFAULT '2000-01-01 00:00:00'"]);
+            'mem_sum BIGINT UNSIGNED NOT NULL DEFAULT 0','mem_max INT UNSIGNED NOT NULL DEFAULT 0','mem_pct_max SMALLINT UNSIGNED NOT NULL DEFAULT 0','mem_n INT UNSIGNED NOT NULL DEFAULT 0','err INT UNSIGNED NOT NULL DEFAULT 0',"last_at DATETIME NOT NULL DEFAULT '2000-01-01 00:00:00'"],
+            array_map(function($c){return $c.' BIGINT UNSIGNED NOT NULL DEFAULT 0';},$this->health_split_columns()));
+    }
+
+    /**
+     * Where the time went (schema 2, 3.31.150): on loads with query detail, their time, database time and outside-call time, for all
+     * of them and for those over the route's limit; on every load, the outside calls. docs/tasks/health-db-split.md.
+     * @return list<string>
+     */
+    private function health_split_columns(){
+        return ['db_n','db_ms_sum','db_us_sum','db_ext_us_sum','slow_n','slow_ms_sum','slow_db_us_sum','slow_ext_us_sum','ext_n','ext_calls','ext_us_sum'];
     }
 
     /** Creates the four tables; only when the feature is first switched on (never in the global schema upgrade). */
@@ -144,9 +154,12 @@ trait EWS_System_Health_Trait {
         add_action('admin_post_ews_health_purge',[$this,'health_purge_now']);
         add_action('admin_post_ews_health_dismiss',[$this,'health_dismiss']);
         if(wp_next_scheduled('ews_health_rollup')===false)wp_schedule_event(time()+300,'hourly','ews_health_rollup');
-        if((string)get_option('ews_health_schema','')!==HealthSettings::SCHEMA)return;
+        // Schema 1 (before 3.31.150) keeps collecting what it has until the rollup or the screen adds the new columns.
+        $schema=(string)get_option('ews_health_schema','');
+        if($schema!==HealthSettings::SCHEMA && $schema!=='1')return;
         $rate=HealthSettings::rate($this->option('ews_health_sample_rate'));
-        $this->health=['t0'=>isset($_SERVER['REQUEST_TIME_FLOAT'])?(float)$_SERVER['REQUEST_TIME_FLOAT']:microtime(true),'sampled'=>false,'own_sq'=>false,'errors'=>[],'agg'=>[],'folded'=>0,'rest'=>null,'cron'=>[],'cron_done'=>[],'prev'=>null,'done'=>false,'broken'=>false];
+        $this->health=['t0'=>isset($_SERVER['REQUEST_TIME_FLOAT'])?(float)$_SERVER['REQUEST_TIME_FLOAT']:microtime(true),'sampled'=>false,'own_sq'=>false,'errors'=>[],'agg'=>[],'folded'=>0,'rest'=>null,'cron'=>[],'cron_done'=>[],'prev'=>null,'done'=>false,'broken'=>false,
+            'split'=>$schema===HealthSettings::SCHEMA,'ext_calls'=>0,'ext_us'=>0,'http'=>[]];
         // Sample: the share chosen; always a heavy operation asked by a signed-in person, and every cron request (queries are written
         // only for a plugin job that ran). Never because of what an anonymous request asks for.
         $script=isset($_SERVER['SCRIPT_NAME'])?basename((string)$_SERVER['SCRIPT_NAME']):'';
@@ -163,6 +176,10 @@ trait EWS_System_Health_Trait {
         add_filter('wp_should_handle_php_error',[$this,'health_on_fatal'],10,2);
         $this->health['prev']=set_error_handler([$this,'health_on_php_error']);
         add_filter('rest_dispatch_request',[$this,'health_rest_route'],10,3);
+        if($this->health['split']){   // outside calls through the WordPress HTTP API (push is timed where it is sent)
+            add_filter('pre_http_request',[$this,'health_http_start'],PHP_INT_MAX,1);
+            add_action('http_api_debug',[$this,'health_http_end'],PHP_INT_MAX,2);
+        }
         if(wp_doing_cron()){
             foreach(Routes::CRON_HOOKS as $hook){
                 add_action($hook,function()use($hook){$this->health_cron_start($hook);},PHP_INT_MIN);
@@ -196,6 +213,32 @@ trait EWS_System_Health_Trait {
         if($this->health['own_sq'])$wpdb->queries=[];
     }
 
+    /** Filter pre_http_request, last: a call no other filter answered is about to go out. */
+    public function health_http_start($pre){
+        if($pre===false && count($this->health['http'])<50)$this->health['http'][]=microtime(true);
+        return $pre;
+    }
+
+    /** Action http_api_debug: the call came back (or failed). @param mixed $response */
+    public function health_http_end($response,$context=''){
+        if($context!=='response' || !$this->health['http'])return;
+        $this->health_external(microtime(true)-(float)array_pop($this->health['http']),1);
+    }
+
+    /** Time spent waiting for outside services ($calls of them); nothing while the collector does not run. */
+    private function health_external($seconds,$calls=1){
+        if(empty($this->health['split']) || !empty($this->health['done']))return;
+        $this->health['ext_calls']+=max(0,(int)$calls);
+        $this->health['ext_us']+=max(0,(int)round((float)$seconds*1000000));
+    }
+
+    /** Total µs of the folded queries (all of them: WordPress's, other plugins' and ours). @param array<string,array<string,mixed>> $agg */
+    private function health_db_us(array $agg){
+        $us=0;
+        foreach($agg as $a)$us+=(int)$a['us'];
+        return $us;
+    }
+
     /** set_error_handler: counts PHP errors raised in this plugin's files; never changes what PHP does. */
     public function health_on_php_error($errno,$errstr,$errfile='',$errline=0){
         if((error_reporting() & $errno) && count($this->health['errors'])<20){
@@ -221,7 +264,7 @@ trait EWS_System_Health_Trait {
     private function health_cron_start($hook){
         if($this->health['sampled'])$this->health_fold();
         $this->health['agg']=[];
-        $this->health['cron'][$hook]=['t0'=>microtime(true),'errors'=>0];
+        $this->health['cron'][$hook]=['t0'=>microtime(true),'errors'=>0,'ext_calls'=>$this->health['ext_calls'],'ext_us'=>$this->health['ext_us']];
     }
 
     private function health_cron_end($hook){
@@ -229,7 +272,8 @@ trait EWS_System_Health_Trait {
         if(!$c)return;
         unset($this->health['cron'][$hook]);
         if($this->health['sampled'])$this->health_fold();
-        if(count($this->health['cron_done'])<200)$this->health['cron_done'][]=['hook'=>$hook,'ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>$c['errors']===0,'agg'=>$this->health['agg']];
+        if(count($this->health['cron_done'])<200)$this->health['cron_done'][]=['hook'=>$hook,'ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>$c['errors']===0,'agg'=>$this->health['agg'],
+            'ext_calls'=>$this->health['ext_calls']-$c['ext_calls'],'ext_us'=>$this->health['ext_us']-$c['ext_us']];
         $this->health['agg']=[];
     }
 
@@ -301,14 +345,15 @@ trait EWS_System_Health_Trait {
             $this->health['errors'][$fp]=['level'=>'error','file'=>$rel,'line'=>(int)$err['line'],'message'=>Messages::normalize((string)$err['message']),'n'=>1];
         }
         if(wp_doing_cron()){
-            foreach($this->health['cron'] as $hook=>$c)$this->health['cron_done'][]=['hook'=>$hook,'ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>false,'agg'=>[]];   // started, never finished
+            foreach($this->health['cron'] as $hook=>$c)$this->health['cron_done'][]=['hook'=>$hook,'ms'=>(int)round((microtime(true)-$c['t0'])*1000),'ok'=>false,'agg'=>[],'ext_calls'=>$this->health['ext_calls']-$c['ext_calls'],'ext_us'=>$this->health['ext_us']-$c['ext_us']];   // started, never finished
             if(!$this->health['cron_done'])return;   // not one of the plugin's jobs: nothing to say, nothing written
             $last=get_option('ews_health_cron_last',[]);$last=is_array($last)?$last:[];
             $ok=[];
             foreach($this->health['cron_done'] as $d){   // every run counts, also when one hook ran several times (a queue)
                 $pq=0;$pq_us=0;
                 foreach($d['agg'] as $a)if($a['caller']!==''){$pq+=$a['n'];$pq_us+=$a['us'];}
-                $this->health_record('cron:'.$d['hook'],$d['ms'],0,$mem,$mem_pct,!$d['ok'],false,$sampled,$pq,$pq_us,0);
+                $this->health_record('cron:'.$d['hook'],$d['ms'],0,$mem,$mem_pct,!$d['ok'],false,$sampled,$pq,$pq_us,0,
+                    ['db_us'=>$sampled?$this->health_db_us($d['agg']):null,'ext_calls'=>(int)$d['ext_calls'],'ext_us'=>(int)$d['ext_us']]);
                 if($sampled)$this->health_write_queries('cron:'.$d['hook'],$d['agg']);
                 $ok[$d['hook']]=($ok[$d['hook']]??true) && $d['ok'];
                 $last[$d['hook']]=['at'=>time(),'ms'=>$d['ms'],'ok'=>$ok[$d['hook']]];
@@ -329,17 +374,37 @@ trait EWS_System_Health_Trait {
             foreach($agg as $a)if($a['caller']!==''){$pq+=$a['n'];$pq_us+=$a['us'];}
         }
         $own=!in_array($route,['rest:other','post:other'],true) && strpos($route,'other:')!==0;
-        if($own || $sampled)$this->health_record($route,$ms,$nq,$mem,$mem_pct,$failed,$fatal,$sampled,$pq,$pq_us,count($this->health['errors']));
+        if($own || $sampled)$this->health_record($route,$ms,$nq,$mem,$mem_pct,$failed,$fatal,$sampled,$pq,$pq_us,count($this->health['errors']),
+            ['db_us'=>$sampled?$this->health_db_us($agg):null,'ext_calls'=>(int)$this->health['ext_calls'],'ext_us'=>(int)$this->health['ext_us']]);
         $this->health_write_queries($route,$agg);
         $this->health_write_errors($route,$at);
     }
 
     /** Adds one request to its hourly row (a few slots, so a burst does not queue on one row). */
-    private function health_record($route,$ms,$nq,$mem,$mem_pct,$failed,$fatal,$sampled,$pq,$pq_us,$errors){
+    /** @param array{db_us:int|null,ext_calls:int,ext_us:int}|null $split where the time went (written with schema 2 only) */
+    private function health_record($route,$ms,$nq,$mem,$mem_pct,$failed,$fatal,$sampled,$pq,$pq_us,$errors,$split=null){
         $hour=gmdate('Y-m-d H:00:00');
         $inc=['n'=>1,'sampled'=>$sampled?1:0,'failed'=>$failed?1:0,'fatal'=>$fatal?1:0,'ms_sum'=>max(0,$ms),'b'.Stats::bucket(max(0,$ms))=>1,'q_sum'=>$nq,'pq_sum'=>$pq,'pq_us_sum'=>$pq_us,'pq_n'=>$sampled?1:0,'mem_sum'=>$mem,'mem_n'=>1,'err'=>$errors];
+        if($split && !empty($this->health['split']))$inc+=$this->health_split_inc($route,max(0,$ms),$split);
         $max=['ms_max'=>max(0,$ms),'q_max'=>$nq,'mem_max'=>$mem,'mem_pct_max'=>$mem_pct];
         $this->health_upsert($this->health_tables()['hourly'],['route'=>substr($route,0,120),'hour'=>$hour,'slot'=>mt_rand(0,3),'version'=>substr((string)EWS_VERSION,0,20)],$inc,$max,['last_at'=>gmdate('Y-m-d H:i:s')]);
+    }
+
+    /**
+     * The split's counters for one load: only what is not zero, so a load with no query detail and no outside call writes today's SQL.
+     * @param array{db_us:int|null,ext_calls:int,ext_us:int} $split @return array<string,int>
+     */
+    private function health_split_inc($route,$ms,array $split){
+        $inc=[];
+        $ext_us=max(0,(int)$split['ext_us']);
+        if((int)$split['ext_calls']>0)$inc+=['ext_n'=>1,'ext_calls'=>(int)$split['ext_calls'],'ext_us_sum'=>$ext_us];
+        if($split['db_us']!==null){
+            $db_us=max(0,(int)$split['db_us']);
+            $inc+=['db_n'=>1,'db_ms_sum'=>$ms,'db_us_sum'=>$db_us,'db_ext_us_sum'=>$ext_us];
+            $s=$this->health_settings();
+            if($ms>(Routes::heavy($route)?(int)$s['heavy_ms']:(int)$s['slow_ms']))$inc+=['slow_n'=>1,'slow_ms_sum'=>$ms,'slow_db_us_sum'=>$db_us,'slow_ext_us_sum'=>$ext_us];
+        }
+        return array_filter($inc);
     }
 
     /**
@@ -398,7 +463,7 @@ trait EWS_System_Health_Trait {
     private function health_sum_columns(){
         $c=['n','sampled','failed','fatal','ms_sum','q_sum','pq_sum','pq_us_sum','pq_n','mem_sum','mem_n','err'];
         for($i=0;$i<Stats::BUCKETS;$i++)$c[]='b'.$i;
-        return $c;
+        return array_merge($c,$this->health_split_columns());
     }
 
     /** Cron ews_health_rollup (hourly, only while on): daily rows, purge, findings, alerts, email. */
@@ -534,10 +599,11 @@ trait EWS_System_Health_Trait {
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT route,day,version,{$cols},ms_max,mem_pct_max FROM {$t['daily']} WHERE day>=%s ORDER BY day,id",$day(9)),ARRAY_A) as $r){
             $route=(string)$r['route'];$recent=$r['day']>=$day(2);$week=$r['day']>=$day(6);
             $x=$routes[$route]??null;
-            if(!$x)$x=['n'=>0,'failed'=>0,'fatal'=>0,'hist'=>Stats::empty(),'ms_max'=>0,'pq_sum'=>0,'pq_n'=>0,'mem_pct'=>0,'max_repeat'=>0,'repeat_caller'=>'','rh'=>Stats::empty(),'rn'=>0,'bh'=>Stats::empty(),'bn'=>0,'rv'=>'','bv'=>''];
+            if(!$x)$x=['n'=>0,'failed'=>0,'fatal'=>0,'hist'=>Stats::empty(),'ms_max'=>0,'pq_sum'=>0,'pq_n'=>0,'mem_pct'=>0,'max_repeat'=>0,'repeat_caller'=>'','rh'=>Stats::empty(),'rn'=>0,'bh'=>Stats::empty(),'bn'=>0,'rv'=>'','bv'=>'']+array_fill_keys($this->health_split_columns(),0);
             if($week){
                 $x['n']+=(int)$r['n'];$x['failed']+=(int)$r['failed'];$x['fatal']+=(int)$r['fatal'];$x['hist']=Stats::merge($x['hist'],$hist($r));
                 $x['ms_max']=max($x['ms_max'],(int)$r['ms_max']);$x['pq_sum']+=(int)$r['pq_sum'];$x['pq_n']+=(int)$r['pq_n'];$x['mem_pct']=max($x['mem_pct'],(int)$r['mem_pct_max']);
+                foreach($this->health_split_columns() as $c)$x[$c]+=(int)$r[$c];
             }
             if($recent){$x['rh']=Stats::merge($x['rh'],$hist($r));$x['rn']+=(int)$r['n'];$x['rv']=(string)$r['version'];}
             else{$x['bh']=Stats::merge($x['bh'],$hist($r));$x['bn']+=(int)$r['n'];$x['bv']=(string)$r['version'];}
@@ -592,6 +658,21 @@ trait EWS_System_Health_Trait {
         return $ms>=1000?number_format_i18n($ms/1000,$ms>=10000?0:1).' s':number_format_i18n($ms).' ms';
     }
 
+    /**
+     * The slow finding's clause on where the time of the slow loads went (3.31.150); '' when there is no measure (thin data, or a
+     * finding saved before). @param array<string,mixed> $a
+     */
+    private function health_split_sentence(array $a){
+        $cause=(string)($a['cause']??'');
+        if($cause==='')return '';
+        $why=['db'=>__('mostly database queries.','workforce-one'),'external'=>__('mostly waiting for outside services (for example push notifications).','workforce-one'),
+            'outside'=>__('mostly outside the database (PHP or the server).','workforce-one'),'mixed'=>__('no single part takes most of it.','workforce-one')][$cause]??'';
+        if((int)($a['ext_ms']??0)>0)return sprintf(/* translators: 1: loads, 2: database time, 3: outside services time, 4: the rest, 5: the conclusion */__('Measured on %1$d slow loads: database %2$s, outside services %3$s, PHP and the server %4$s: %5$s','workforce-one'),
+            (int)$a['split_n'],$this->health_seconds((int)$a['db_ms']),$this->health_seconds((int)$a['ext_ms']),$this->health_seconds((int)$a['out_ms']),$why);
+        return sprintf(/* translators: 1: loads, 2: database time, 3: the rest, 4: the conclusion */__('Measured on %1$d slow loads: database %2$s, outside the database %3$s: %4$s','workforce-one'),
+            (int)$a['split_n'],$this->health_seconds((int)$a['db_ms']),$this->health_seconds((int)$a['out_ms']),$why);
+    }
+
     /** One finding in words: [title, sentence, numbers]. @param array<string,mixed> $f @return array{0:string,1:string,2:list<string>} */
     private function health_finding_text($f,$for_mail=false){
         $a=(array)($f['args']??[]);$r=$this->health_route_label((string)$f['route']);
@@ -600,7 +681,9 @@ trait EWS_System_Health_Trait {
             case 'cron_overdue': return [sprintf(/* translators: 1: job, 2: duration */__('%1$s has not run for %2$s','workforce-one'),$r,$this->health_duration((int)$a['minutes'])),__('WP-Cron may not be running on this site (for example DISABLE_WP_CRON is set and no server cron calls it).','workforce-one'),[]];
             case 'cron_failed': return [sprintf(/* translators: %s: job */__('%s failed on its last run','workforce-one'),$r),__('It stopped with a PHP error or did not finish.','workforce-one'),[]];
             case 'fail_rate': return [sprintf(/* translators: 1: page, 2: failed, 3: runs */__('%1$s ended with a server error %2$d times in %3$d','workforce-one'),$r,(int)$a['failed'],(int)$a['n']),__('A server error is a PHP fatal error or an HTTP 500.','workforce-one'),[]];
-            case 'slow': return [sprintf(/* translators: 1: page, 2: time */__('1 in 20 loads of %1$s takes longer than %2$s','workforce-one'),$r,$this->health_seconds((int)$a['p95'])),sprintf(/* translators: %s: limit */__('The limit for this page is %s.','workforce-one'),$this->health_seconds((int)$a['limit'])),[sprintf(/* translators: %s: time */__('Worst %s','workforce-one'),$this->health_seconds((int)$a['max']))]];
+            case 'slow': return [sprintf(/* translators: 1: page, 2: time */__('1 in 20 loads of %1$s takes longer than %2$s','workforce-one'),$r,$this->health_seconds((int)$a['p95'])),
+                trim(sprintf(/* translators: %s: limit */__('The limit for this page is %s.','workforce-one'),$this->health_seconds((int)$a['limit'])).' '.$this->health_split_sentence($a)),
+                [sprintf(/* translators: %s: time */__('Worst %s','workforce-one'),$this->health_seconds((int)$a['max']))]];
             case 'regression': return [sprintf(/* translators: %s: page */__('%s is slower than before','workforce-one'),$r),$a['version']!==''?sprintf(/* translators: %s: version */__('It started with version %s.','workforce-one'),$a['version']):__('Typical load time went up over the last days.','workforce-one'),[sprintf(/* translators: 1: before, 2: after */__('Typical %1$s → %2$s','workforce-one'),$this->health_seconds((int)$a['before']),$this->health_seconds((int)$a['after']))]];
             case 'repeat': return [sprintf(/* translators: 1: page, 2: times */__('%1$s runs the same query %2$d times in one load','workforce-one'),$r,(int)$a['times']),$a['caller']!==''?sprintf(/* translators: %s: function */__('It comes from %s, most likely inside a loop. One query for all rows would do.','workforce-one'),$a['caller'].'()'):__('Most likely inside a loop. One query for all rows would do.','workforce-one'),[]];
             case 'many_queries': return [sprintf(/* translators: 1: page, 2: queries */__('%1$s makes %2$d database queries per load','workforce-one'),$r,(int)$a['avg']),'',[]];
@@ -699,7 +782,12 @@ trait EWS_System_Health_Trait {
             $n=max(1,(int)$r['n']);$h=[];for($i=0;$i<Stats::BUCKETS;$i++)$h[]=(int)$r['b'.$i];
             $out[(string)$r['route']]=['route'=>(string)$r['route'],'n'=>(int)$r['n'],'failed'=>(int)$r['failed'],'fatal'=>(int)$r['fatal'],'err'=>(int)$r['err'],'ms_max'=>(int)$r['ms_max'],'cost'=>(int)$r['ms_sum'],
                 'p50'=>Stats::percentile($h,0.5,(int)$r['ms_max']),'p95'=>Stats::percentile($h,0.95,(int)$r['ms_max']),'q_avg'=>(int)round((int)$r['q_sum']/$n),
-                'pq_avg'=>(int)$r['pq_n']>0?(int)round((int)$r['pq_sum']/(int)$r['pq_n']):null,'mem_max'=>(int)$r['mem_max']];
+                'pq_avg'=>(int)$r['pq_n']>0?(int)round((int)$r['pq_sum']/(int)$r['pq_n']):null,'mem_max'=>(int)$r['mem_max'],
+                // Where the time went (3.31.150): null below the minimum of measured loads.
+                'split_n'=>(int)$r['db_n'],'slow_split_n'=>(int)$r['slow_n'],
+                'split'=>Stats::split((int)$r['db_n'],(int)$r['db_ms_sum'],(int)$r['db_us_sum'],(int)$r['db_ext_us_sum'],HealthSettings::SPLIT_MIN,HealthSettings::SPLIT_MOSTLY),
+                'slow_split'=>Stats::split((int)$r['slow_n'],(int)$r['slow_ms_sum'],(int)$r['slow_db_us_sum'],(int)$r['slow_ext_us_sum'],HealthSettings::SPLIT_MIN_SLOW,HealthSettings::SPLIT_MOSTLY),
+                'ext_n'=>(int)$r['ext_n'],'ext_calls'=>(int)$r['ext_calls'],'ext_avg'=>(int)$r['ext_n']>0?(int)round((int)$r['ext_us_sum']/1000/(int)$r['ext_n']):0];
         }
         return $out;
     }
@@ -810,6 +898,7 @@ trait EWS_System_Health_Trait {
             $marks=[];$prev=null;$i=0;
             foreach($d as $day=>$x){if($prev!==null && $x['version']!==$prev)$marks[]=$i;$prev=$x['version'];$i++;}
             $stat=$this->health_route_stats($days,$route)[$route]??null;
+            if($stat){$hs=$this->health_settings();$stat['slow_limit']=Routes::heavy($route)?(int)$hs['heavy_ms']:(int)$hs['slow_ms'];}
             $vars['detail']=['stat'=>$stat,'chart_time'=>$this->health_chart(['typical'=>array_column($d,'p50'),'slow (1 in 20)'=>array_column($d,'p95')],array_map(function($k){return date_i18n('j M',strtotime($k));},array_keys($d)),$marks,'ms'),
                 'chart_q'=>$this->health_chart([__('queries per load','workforce-one')=>array_column($d,'q')],array_map(function($k){return date_i18n('j M',strtotime($k));},array_keys($d)),$marks,'n')];
             $vars['queries']=(array)$wpdb->get_results($wpdb->prepare("SELECT caller,shape,SUM(n) n,SUM(requests) requests,SUM(us_sum) us_sum,MAX(us_max) us_max,MAX(max_repeat) max_repeat FROM {$t['queries']} WHERE route=%s AND day>=%s GROUP BY caller,shape ORDER BY SUM(us_sum) DESC LIMIT 30",$route,gmdate('Y-m-d',time()-29*86400)),ARRAY_A);

@@ -106,6 +106,30 @@ $ago = static function (int $ts) { return $ts > 0 ? sprintf(/* translators: %s: 
     <h2><?php echo esc_html($label($route)); ?> <code style="font-size:12px"><?php echo esc_html($route); ?></code></h2>
     <?php if (!empty($detail['stat'])): $st = $detail['stat']; ?>
         <p><?php echo esc_html(sprintf(/* translators: 1: runs, 2: typical, 3: slow, 4: worst, 5: queries */ __('%1$s runs · typical %2$s · slow %3$s · worst %4$s · %5$d queries per load', 'workforce-one'), number_format_i18n($st['n']), $seconds($st['p50']), $seconds($st['p95']), $seconds($st['ms_max']), $st['q_avg'])); ?></p>
+        <?php
+        // Where the time went (3.31.150): measured on the loads with query detail only, so the number of loads is always said.
+        $parts = function ($sp) use ($seconds) {
+            return $sp['ext_ms'] > 0
+                ? sprintf(/* translators: 1: database time, 2: outside services time, 3: the rest */ __('database %1$s, outside services %2$s, PHP and the server %3$s', 'workforce-one'), $seconds($sp['db_ms']), $seconds($sp['ext_ms']), $seconds($sp['out_ms']))
+                : sprintf(/* translators: 1: database time, 2: the rest */ __('database %1$s, outside the database %2$s', 'workforce-one'), $seconds($sp['db_ms']), $seconds($sp['out_ms']));
+        };
+        if (empty($facts['detail_off'])): ?>
+        <p data-health-split>
+            <?php if (!empty($st['split'])): ?>
+                <?php echo esc_html(sprintf(/* translators: 1: loads, 2: average time, 3: the parts */ __('Measured on %1$d loads with query detail: on average %2$s, of which %3$s.', 'workforce-one'), $st['split']['n'], $seconds($st['split']['total_ms']), $parts($st['split']))); ?>
+            <?php else: ?>
+                <?php echo esc_html(sprintf(/* translators: 1: loads measured, 2: loads needed */ __('Too few loads with query detail to split the time (%1$d of at least %2$d). Raise “Detailed query data from this share of requests” on Features to measure more.', 'workforce-one'), (int) $st['split_n'], \WorkforceOne\Health\Settings::SPLIT_MIN)); ?>
+            <?php endif; ?>
+            <?php if (!empty($st['slow_split'])): ?>
+                <br><?php echo esc_html(sprintf(/* translators: 1: the page's limit, 2: loads, 3: the parts */ __('Loads longer than %1$s (%2$d measured): %3$s.', 'workforce-one'), $seconds((int) $st['slow_limit']), $st['slow_split']['n'], $parts($st['slow_split']))); ?>
+            <?php elseif ((int) $st['slow_split_n'] > 0): ?>
+                <br><?php echo esc_html(sprintf(/* translators: 1: the page's limit, 2: loads measured, 3: loads needed */ __('Loads longer than %1$s: %2$d measured, at least %3$d are needed to split their time.', 'workforce-one'), $seconds((int) $st['slow_limit']), (int) $st['slow_split_n'], \WorkforceOne\Health\Settings::SPLIT_MIN_SLOW)); ?>
+            <?php endif; ?>
+            <?php if ((int) $st['ext_n'] > 0): ?>
+                <br><?php echo esc_html(sprintf(/* translators: 1: loads with a call, 2: all loads, 3: calls, 4: average time */ __('Outside services: %1$d of %2$d loads called one (%3$d calls), %4$s on average for those loads.', 'workforce-one'), (int) $st['ext_n'], (int) $st['n'], (int) $st['ext_calls'], $seconds((int) $st['ext_avg']))); ?>
+            <?php endif; ?>
+        </p>
+        <?php endif; ?>
     <?php endif; ?>
     <div style="display:flex;flex-wrap:wrap;gap:20px;max-width:1100px">
         <div style="flex:1 1 380px"><strong><?php esc_html_e('Load time per day', 'workforce-one'); ?></strong><?php echo $detail['chart_time']; // phpcs:ignore WordPress.Security.EscapeOutput -- inline SVG ?></div>

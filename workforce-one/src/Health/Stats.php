@@ -49,6 +49,28 @@ final class Stats
         return $max;
     }
 
+    /**
+     * Where the time of the measured loads went (3.31.150): the database, outside services (HTTP, push), and the rest (PHP and the
+     * server). Null when fewer than $min loads carried the measure. The part with at least $mostly percent of the time names the
+     * cause; otherwise 'mixed'. Database and outside time are clamped so the rest is never below 0.
+     * @return array{n:int,total_ms:int,db_ms:int,ext_ms:int,out_ms:int,cause:string}|null
+     */
+    public static function split(int $n, int $msSum, int $dbUsSum, int $extUsSum, int $min, int $mostly = 60): ?array
+    {
+        if ($n <= 0 || $n < $min) return null;
+        $total = max(0.0, $msSum / $n);
+        $db = min($total, max(0.0, $dbUsSum / 1000 / $n));
+        $ext = min($total - $db, max(0.0, $extUsSum / 1000 / $n));
+        $out = max(0.0, $total - $db - $ext);
+        $cause = 'mixed';
+        if ($total > 0) {
+            foreach (['db' => $db, 'external' => $ext, 'outside' => $out] as $k => $v) {
+                if ($v / $total * 100 >= $mostly) { $cause = $k; break; }
+            }
+        }
+        return ['n' => $n, 'total_ms' => (int) round($total), 'db_ms' => (int) round($db), 'ext_ms' => (int) round($ext), 'out_ms' => (int) round($out), 'cause' => $cause];
+    }
+
     /** True when $after is slower than $before by at least $pct percent and $ms milliseconds. */
     public static function slower(float $before, float $after, int $pct, int $ms): bool
     {

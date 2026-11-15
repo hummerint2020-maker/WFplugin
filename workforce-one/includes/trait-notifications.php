@@ -739,8 +739,10 @@ trait EWS_Notifications_Trait {
             if(isset($job['result']))$out[$k]=$job['result'];else $queue[$k]=$job['handle'];
         }
         if(!$queue)return $out;
+        $t0=microtime(true);   // System health (3.31.150): the time spent waiting for the push services
         if(count($queue)===1||!function_exists('curl_multi_init')){
             foreach($queue as $k=>$ch){curl_exec($ch);$out[$k]=$this->push_finish($ch,curl_errno($ch));curl_close($ch);}
+            $this->health_external(microtime(true)-$t0,count($queue));
             return $out;
         }
         foreach(array_chunk($queue,20,true) as $chunk){
@@ -755,6 +757,7 @@ trait EWS_Notifications_Trait {
             foreach($chunk as $k=>$ch){$out[$k]=$this->push_finish($ch,$errno[$k]??curl_errno($ch));curl_multi_remove_handle($mh,$ch);curl_close($ch);}
             curl_multi_close($mh);
         }
+        $this->health_external(microtime(true)-$t0,count($queue));
         return $out;
     }
 
