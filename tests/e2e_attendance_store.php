@@ -292,6 +292,8 @@ $Q->refusedTotal(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'both', tr
 $Q->refusedBy(new TimeReportFilter('2026-10-29', '2026-10-30', '', 'both', true, 5));
 $Q->employees(23, 5);
 $Q->csv('2026-10-29', '2026-10-30', null);
+$Q->csvDayCounts('2026-10-29', '2026-10-30', null);
+$Q->csvDayCounts('2026-10-29', '2026-10-30', 5);
 remove_filter('query', $capture, 1);
 $lj = "FROM {$tl} l LEFT JOIN {$em} e ON e.id=l.employee_id";
 $aj = "FROM {$at} a LEFT JOIN {$em} e ON e.id=a.employee_id";
@@ -303,6 +305,8 @@ $check($seen === [
     "SELECT a.employee_id,e.name,COUNT(*) n FROM {$at} a LEFT JOIN {$em} e ON e.id=a.employee_id WHERE a.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND a.result<>'face_ok' AND e.department_id=5 AND a.result IN ('refused','face_failed','not_reached') GROUP BY a.employee_id,e.name ORDER BY n DESC,e.name ASC LIMIT 6",
     "SELECT e.id,e.name,e.domain_name FROM {$em} e WHERE (e.active=1 OR e.id=23) AND e.department_id=5 ORDER BY e.name ASC",
     "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$tl} c WHERE c.corrects_id=l.id) replaced_by {$lj} WHERE l.work_date BETWEEN '2026-10-29' AND '2026-10-30' ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC",
+    "SELECT l.work_date d,COUNT(*) n FROM {$tl} l WHERE l.work_date BETWEEN '2026-10-29' AND '2026-10-30' GROUP BY l.work_date ORDER BY l.work_date ASC",
+    "SELECT l.work_date d,COUNT(*) n {$lj} WHERE l.work_date BETWEEN '2026-10-29' AND '2026-10-30' AND e.department_id=5 GROUP BY l.work_date ORDER BY l.work_date ASC",
 ], 'report read model: the exact text of the old inline SQL (union, scope, paging, summary, picker, CSV)');
 $day = '2026-11-02';
 $F = function ($show, $search = '', $scope = null, $attempts = true) use ($day) { return new TimeReportFilter($day, $day, $search, $show, $attempts, $scope); };
@@ -324,6 +328,7 @@ $check(in_array(21, $ids, true) && in_array(22, $ids, true) && !in_array(23, $id
 $check(array_map(function ($e) { return (int) $e->id; }, $Q->employees(23, 5)) === [23, 21] && array_map(function ($e) { return (int) $e->id; }, $Q->employees(0, 6)) === [22] && $Q->employees(0, 0) === [], 'employees: the one asked for too, by department, nobody');
 $csv = $Q->csv($day, $day, 5);
 $check(count($csv) === 1 && $csv[0]->name === 'Omar One' && count($Q->csv($day, $day, null)) === 3 && $Q->csv($day, $day, 0) === [], 'csv: the records of the period in scope with the employee');
+$check($Q->csvDayCounts($day, $day, null) === [$day => 3] && $Q->csvDayCounts($day, $day, 5) === [$day => 1] && $Q->csvDayCounts($day, $day, 0) === [] && $Q->csvDayCounts('2001-01-01', '2001-01-02', null) === [], 'csvDayCounts: per day, as many as csv() returns, in scope; nobody; an empty period (3.31.149)');
 
 // the rules page's list
 $rq = new WordPressAutoRuleQuery($db, $em);

@@ -272,11 +272,34 @@ trait EWS_Reports_Trait {
      * @return array<int,array<string,mixed>> one row per employee and working day (and day off worked)
      */
     private function report_days(array $emps,$s,$e,$off_days=false){
-        global $wpdb;
+        $rows=[];
+        foreach($this->report_days_each($emps,$s,$e,$off_days) as $batch)foreach($batch as $r)$rows[]=$r;
+        return $rows;
+    }
+
+    /**
+     * report_days() a group of employees at a time (3.31.149), so a long period never holds every
+     * time log of every employee at once: yields lists of rows, in the same order. Every read is
+     * by employee and every figure per employee and day, so the batches together are the whole.
+     * A month for 200 people is one batch: the same statements as before.
+     * @return \Generator<int,array<int,array<string,mixed>>>
+     */
+    private function report_days_each(array $emps,$s,$e,$off_days=false){
         $dates=[];$working=[];
         for($t=strtotime($s),$et=strtotime($e);$t!==false&&$t<=$et;$t=strtotime('+1 day',$t)){$d=date('Y-m-d',$t);$w=$this->is_working_day($d);if($w||$off_days)$dates[]=$d;if($w)$working[$d]=true;}
-        if(!$emps||!$working)return [];
+        if(!$emps||!$working)return;
         $this->ensure_break_schema();
+        $size=max(1,intdiv(max(1,(int)apply_filters('ews_export_batch_days',10000)),max(1,count($dates))));
+        $ctx=[];
+        foreach(array_chunk(array_values($emps),$size) as $i=>$part){
+            if($i>0){$this->working_hours_forget();@set_time_limit(120);}
+            yield $this->report_days_batch($part,$s,$e,$dates,$working,$ctx);
+        }
+    }
+
+    /** One batch of report_days_each(). $ctx keeps what is the same for every batch (holidays, today, now…), taken at the first batch, where it always was taken. */
+    private function report_days_batch(array $emps,$s,$e,array $dates,array $working,array &$ctx){
+        global $wpdb;
         $ids=array_map(function($x){return (int)$x->id;},$emps);
         $ph=implode(',',array_fill(0,count($ids),'%d'));
         $schedule=[];$first=[];$last=[];$breaks=[];
@@ -291,14 +314,18 @@ trait EWS_Reports_Trait {
             $breaks[(int)$r->employee_id][$r->work_date]=($breaks[(int)$r->employee_id][$r->work_date]??0)+$mins;
         }
         // Approved overtime windows (Overtime feature on): actual and unapproved overtime per day.
-        $ot_on=$this->overtime_enabled();$windows=[];
+        if(!array_key_exists('ot_on',$ctx))$ctx['ot_on']=$this->overtime_enabled();
+        $ot_on=$ctx['ot_on'];$windows=[];
         if($ot_on){
-            $this->ensure_overtime_schema();
+            if(empty($ctx['ot_schema'])){$this->ensure_overtime_schema();$ctx['ot_schema']=true;}
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,overtime_date,start_time,end_time FROM {$wpdb->prefix}ews_overtime_requests WHERE status='Approved' AND employee_id IN ($ph) AND overtime_date BETWEEN %s AND %s ORDER BY start_time ASC",array_merge($ids,[$s,$e]))) as $r)$windows[(int)$r->employee_id][$r->overtime_date][]=['start'=>$r->start_time,'end'=>$r->end_time];
         }
-        $holidays=$this->company_leave_dates($s,$e);
-        $today=current_time('Y-m-d');$now=current_time('mysql');
-        $allowance=$this->break_enabled()?$this->break_duration_minutes():0;
+        if(!array_key_exists('holidays',$ctx)){
+            $ctx['holidays']=$this->company_leave_dates($s,$e);
+            $ctx['today']=current_time('Y-m-d');$ctx['now']=current_time('mysql');
+            $ctx['allowance']=$this->break_enabled()?$this->break_duration_minutes():0;
+        }
+        $holidays=$ctx['holidays'];$today=$ctx['today'];$now=$ctx['now'];$allowance=$ctx['allowance'];
         $rows=[];
         $this->shift_prime_people($emps);   // past days use the shift history (3.31.108); today's shift and the employee's shift too (3.31.126)
         foreach($emps as $emp){
