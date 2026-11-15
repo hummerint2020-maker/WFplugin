@@ -130,3 +130,40 @@ hand-merged). Fetch and merge; never force-push.
 5. **Extras, not in this design:** time before the plugin starts (WordPress bootstrap, free on every request); outside HTTP time
    (`pre_http_request` / `http_api_debug`); peak memory on slow loads; wording DB time as "at least".
 6. **Version:** 3.31.150 after Performance 2 (3.31.149), or the other way round.
+
+## Owner's answers (2026-11-15)
+"Agreed to all, add the external calls too, and put it after the PR in progress."
+1. "Mostly": the part at 60% or more of the time names the cause; otherwise "both" (with two parts this is exactly 60% / 40%).
+2. Minimum measured loads: 5 for the slow split, 10 for the typical one. Below that the screen suggests raising "Detailed query
+   data" (no route is added to always-sampled).
+3. Overview: unchanged; the split is on the route's Details and in the slow finding.
+4. "Slow load" for the split: over the route's limit (2.0 s, or the heavy limit).
+5. Extras: **outside HTTP time is added** (below). Bootstrap time, peak memory on slow loads and "at least" are not in this release.
+6. Version: after Performance 2 (3.31.149), so 3.31.150. Built on its own branch now; the version, CHANGELOG and language files are
+   done last, after Performance 2 is merged into main.
+
+## Addition: time spent on outside calls (HTTP)
+**Today (VERIFIED).** The plugin reaches outside services two ways: the WordPress HTTP API (`wp_remote_get` in
+`includes/trait-private-files.php:106`, and WordPress itself: updates, cron spawn), and raw cURL for Web Push
+(`push_send_many()`, `includes/trait-notifications.php:735-759`: `curl_exec` or `curl_multi`, connect timeout 3 s, total 5 s). The
+WordPress hooks do not see the push calls.
+
+**Collect (every load while the collector runs, not only sampled ones: the hooks are cheap and calls are rare).**
+- `pre_http_request` at `PHP_INT_MAX`: when the value is still `false` (no other filter answered), push `microtime(true)` on a stack;
+  return the value unchanged. `http_api_debug`: pop and add the time. A start never popped (a transport that died) is dropped.
+- `push_send_many()`: the network part (from the first `curl_exec`/`curl_multi_exec` to the last handle closed) is timed and passed
+  to `health_external($seconds, $calls)`, which does nothing while the collector is not running (feature off, or old schema).
+- Per request: `ext_calls`, `ext_us`. Cron: per job, the difference over the job (as `agg` is per job).
+
+**Stored.** Six more columns (hourly and daily, summed): `ext_n` (loads with at least one call), `ext_calls`, `ext_us_sum`, and on
+sampled loads only `db_ext_us_sum` and `slow_ext_us_sum` (so the split's three parts come from the same loads). Written only when
+non-zero, so a load with no outside call and not sampled sends exactly today's SQL.
+
+**Split.** `Stats::split()` takes the external time too and returns `db_ms`, `ext_ms`, `out_ms` (the rest: PHP and the server),
+`cause` = `db` | `external` | `outside` | `mixed`.
+
+**Screen.** Details: "Outside services: %1$d of %2$d loads called one (%3$d calls), %4$s on average for those loads." The split
+lines name the outside calls when there were any. Finding clause: "mostly waiting for outside services (for example push
+notifications)".
+
+**Off.** Feature off or schema not yet repaired: no hook is added; `health_external()` returns at once.
