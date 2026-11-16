@@ -5,10 +5,15 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_app_insights.py <state-d
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import html, json, os, re, sys
+import datetime, html, json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, d, php, q, results, today, wp, HERE  # noqa: E402
+from e2e_support import Session, check, d, php, q, results, site_day, use_utc, wp, HERE  # noqa: E402
+
+# The site's day, kept for the run: rows are seeded for today (and d()) and the plugin works out
+# "today" again on each request; so do not start in the last five minutes before local midnight.
+use_utc()   # as the setup leaves it, so the day is the plugin's day
+today = datetime.date.fromisoformat(site_day(300))
 
 DAY = d(-1)  # a past day, so a missing Sign In is Absent rather than Pending
 PAGE = '/app/?ews_view=attendance-insights&focus_date=' + DAY

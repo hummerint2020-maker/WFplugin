@@ -17,11 +17,15 @@ Wipes Workforce One test data; never run against a real site.
 import datetime, json, os, re, sys, time, urllib.parse, urllib.request, uuid
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, break_writes, check, php, q, results, today, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, php, q, results, site_day, use_utc, wp, HERE  # noqa: E402
 
+use_utc()
+# The site's day, kept for the run: sheets, moves and payouts are seeded for it and the plugin works
+# out "today" on each request; so do not start in the last five minutes before local midnight.
+TODAY = site_day(300)
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 
-TODAY = today.isoformat()
+today = datetime.date.fromisoformat(TODAY)
 NID1, NID2, NID3 = '29001150101234', '28505010201457', '30503012101245'
 setup = json.loads(php("""
     foreach(['workers','sites','foremen','moves','days','sheets','advances','payouts','lines','changes'] as $t) $wpdb->query("DROP TABLE IF EXISTS {$p}ews_dw_$t");

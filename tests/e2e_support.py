@@ -3,7 +3,7 @@
 Environment: WP_CLI (command used to run wp-cli, default "wp"); argv[1] = state dir that
 receives ids.json from e2e_setup.php.
 """
-import datetime, http.cookiejar, json, os, re, shlex, subprocess, sys, urllib.parse, urllib.request
+import datetime, http.cookiejar, json, os, re, shlex, subprocess, sys, time, urllib.parse, urllib.request
 
 B = 'http://127.0.0.1:8080'
 S = sys.argv[1]
@@ -98,6 +98,34 @@ def next_weekday(wp_dow, after=3):
 
 def ids():
     return json.load(open(os.path.join(S, 'ids.json')))
+
+
+def use_utc():
+    """Put the site on UTC, as tests/e2e_setup.php does: for a suite that calls site_day() before its setup."""
+    php("update_option('timezone_string','UTC'); update_option('gmt_offset',0);")
+
+
+def site_day(span, earliest='00:00'):
+    """The site's local date (Y-m-d), once the site clock is at least `earliest` (HH:MM) and the
+    next `span` seconds stay on that same date; waits for that if needed. For a suite that seeds
+    rows for "today" and has the plugin work out "today" again later: started just before local
+    midnight, the two would disagree (CI run 43776208436). Reads the clock of the site's time zone.
+    Also resets `today` here (d(), next_weekday()); a suite that imported `today` by name keeps its own copy."""
+    eh, em = (int(x) for x in earliest.split(':'))
+    while True:
+        out = php("echo 'CLOCK '.current_time('Y-m-d H:i:s');")
+        now = datetime.datetime.strptime(re.search(r'CLOCK (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)', out).group(1), '%Y-%m-%d %H:%M:%S')
+        start = now.replace(hour=eh, minute=em, second=0)
+        if now < start:
+            wait = (start - now).total_seconds() + 1
+        elif (now.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1) - now).total_seconds() <= span:
+            wait = (start + datetime.timedelta(days=1) - now).total_seconds() + 1
+        else:
+            global today   # d() and next_weekday() count from the site's day from now on
+            today = now.date()
+            return today.isoformat()
+        print('(site time %s: waiting %ds so the run stays on one site day)' % (now, wait), flush=True)
+        time.sleep(wait)
 
 
 

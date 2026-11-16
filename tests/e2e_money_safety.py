@@ -13,11 +13,16 @@ Wipes Workforce One test data; never run against a real site.
 import json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, break_writes, check, d, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, d, php, q, results, site_day, use_utc, wp, HERE  # noqa: E402
 
 PAY = '/wp-admin/admin.php?page=ews31-payroll'
 TR = '/wp-admin/admin.php?page=ews31-time-report'
 
+# One site day (and month) for the run: last month's payroll and today's last working day are seeded
+# here and worked out again by the plugin; so do not start in the last five minutes before midnight.
+# Before the setup: it plans today and opens Sign In from the hour before.
+use_utc()   # as the setup leaves it, so the day is the plugin's day
+site_day(300)
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 break_writes('')
 seed = json.loads(php(r"""

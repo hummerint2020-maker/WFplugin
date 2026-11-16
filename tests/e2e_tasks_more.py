@@ -8,11 +8,13 @@ import html, os, re, sys, uuid, urllib.parse, urllib.request, urllib.error
 from datetime import date, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, ids, php, q, results  # noqa: E402
+from e2e_support import B, Session, check, ids, php, q, results, site_day  # noqa: E402
 
 I = ids()
 PAGE = '/app/?ews_view=tasks'
-today = date.today()
+# The site's day, kept for the run: a repeating task is made by the plugin for the latest of its days
+# that came, and checked against this; so do not start in the last five minutes before local midnight.
+today = date.fromisoformat(site_day(300))
 yesterday = (today - timedelta(days=1)).isoformat()
 php("""update_option('ews_feature_tasks',1,false); delete_option('ews_tasks_settings');
 foreach(['ews_tasks','ews_task_items','ews_task_comments','ews_task_activity'] as $t)$wpdb->query("DELETE FROM {$p}$t");

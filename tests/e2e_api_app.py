@@ -10,7 +10,7 @@ Wipes Workforce One test data and changes the site time zone (restored at the en
 import json, os, sys, time, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, check, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, check, php, q, results, site_day, wp, HERE  # noqa: E402
 import check_openapi  # noqa: E402
 
 API = B + '/wp-json/workforce-one/v1'
@@ -103,8 +103,13 @@ def count_queries(token, route, params=None):
     return int(last.split()[0][2:]), int(last.split()[1][2:])
 
 
+# Cairo's day, kept for the whole run: rows are seeded for it and the API works out "today" again on
+# every call, so do not start in the last five minutes before Cairo's midnight. Before reset(): its
+# setup plans today and opens Sign In from the hour before.
+php("update_option('timezone_string','Africa/Cairo'); update_option('gmt_offset','');")
+today = site_day(300)
 ids = reset()
-eid, e2, today = ids['eid'], ids['e2'], ids['today']
+eid, e2 = ids['eid'], ids['e2']
 ADM = login('admin', 'admin', 9)
 EMP = login('emp1', 'emp1pass', 1)
 ROUTES = [('/me/bootstrap', 'get'), ('/me/schedule', 'get'), ('/attendance/today', 'get')]

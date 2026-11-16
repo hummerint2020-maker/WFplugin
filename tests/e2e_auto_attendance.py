@@ -8,7 +8,7 @@ Wipes Workforce One test data and changes the site time zone (restored); never r
 import html, json, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, break_writes, check, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import Session, break_writes, check, php, q, results, site_day, wp, HERE  # noqa: E402
 
 PAGE = '/wp-admin/admin.php?page=ews31-auto-attendance'
 
@@ -64,7 +64,12 @@ def save(**fields):
     return adm.req('/wp-admin/admin-post.php', data)
 
 
-TODAY, YESTERDAY = day(0), day(-1)
+# One site day for the whole run: the rules seeded below for TODAY are run, listed and signed out
+# by the plugin, which works out its own "today" each time. So start no closer than five minutes to
+# local midnight (the run takes under a minute), and after 00:03, when the 00:01 / 00:02 rule times
+# are already due.
+TODAY = site_day(300, '00:03')
+YESTERDAY = day(-1)
 
 # ---------------------------------------------------------------- saving rules
 st, body, _ = save(employee_id=ids['emp'], run_date=TODAY)
@@ -107,7 +112,7 @@ check('...and then switches off', str(q("SELECT enabled FROM {p}ews_auto_attenda
 
 # ---------------------------------------------------------------- a site west of UTC
 php("update_option('timezone_string','America/New_York'); update_option('gmt_offset','');")
-wtoday = day(0)
+wtoday = site_day(60, '00:03')   # New York's own day, which turns at 04:00 or 05:00 UTC
 wdow = php("echo (int)date('w',strtotime('%s 12:00:00'));" % wtoday).strip()
 plan(ids['wes'], wtoday)
 save(employee_id=ids['wes'], recurrence='weekly', sign_in_time='00:01', **{'weekdays[]': [wdow]})
@@ -135,7 +140,7 @@ bulk = re.search(r'<a [^>]*href="([^"]*action=ews_auto_attendance_bulk_sign_out[
 OPEN = "SELECT DISTINCT s.employee_id FROM {p}ews_time_logs s WHERE s.work_date='%s' AND s.event_type IN ('sign_in','late_sign_in') AND NOT EXISTS (SELECT 1 FROM {p}ews_time_logs o WHERE o.employee_id=s.employee_id AND o.work_date=s.work_date AND o.event_type='sign_out')" % TODAY
 expected = len(q(OPEN))
 st, _, h = adm.req(html.unescape(bulk.group(1)).split('127.0.0.1:8080')[-1]) if bulk else (0, '', {})
-check('bulk Sign Out signs out everyone still signed in today (%d)' % expected, expected >= 2 and 'bulk_sign_out=%d&' % expected in h.get('Location', '') + '&' and not q(OPEN), (expected, h.get('Location'), logs(ids['emp'])))
+check('bulk Sign Out signs out everyone still signed in today (%d)' % expected, expected >= 2 and 'bulk_sign_out=%d&' % expected in h.get('Location', '') + '&' and not q(OPEN), (expected, h.get('Location'), logs(ids['emp']), 'site day now ' + day(0)))
 check('...and closes their open break', q("SELECT status FROM {p}ews_break_sessions WHERE employee_id=%d" % ids['emp'])[0]['status'] == 'Completed')
 check('...after asking for confirmation (no inline script)', bulk and 'data-ews-confirm=' in bulk.group(0) and 'onclick' not in bulk.group(0))
 
