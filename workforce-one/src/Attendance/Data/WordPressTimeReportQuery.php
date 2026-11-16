@@ -112,10 +112,26 @@ final class WordPressTimeReportQuery implements TimeReportQuery
 
     public function csv(string $start, string $end, ?int $scope): array
     {
-        return (array) $this->db->get_results($this->db->prepare(
+        $rows = $this->db->get_results($this->db->prepare(
             "SELECT l.*,e.name,e.domain_name,(SELECT MIN(c.correction_id) FROM {$this->logs} c WHERE c.corrects_id=l.id) replaced_by FROM {$this->logs} l LEFT JOIN {$this->emps} e ON e.id=l.employee_id WHERE l.work_date BETWEEN %s AND %s" . $this->scope($scope) . ' ORDER BY l.work_date ASC,e.name ASC,l.event_at ASC',
             $start,
             $end
         ));
+        if ($this->db->last_error !== '') throw new \RuntimeException('csv: ' . $this->db->last_error);
+        return (array) $rows;
+    }
+
+    public function csvDayCounts(string $start, string $end, ?int $scope): array
+    {
+        $join = $scope === null ? '' : " LEFT JOIN {$this->emps} e ON e.id=l.employee_id";
+        $out = [];
+        $rows = $this->db->get_results($this->db->prepare(
+            "SELECT l.work_date d,COUNT(*) n FROM {$this->logs} l{$join} WHERE l.work_date BETWEEN %s AND %s" . $this->scope($scope) . ' GROUP BY l.work_date ORDER BY l.work_date ASC',
+            $start,
+            $end
+        ));
+        if ($this->db->last_error !== '') throw new \RuntimeException('csvDayCounts: ' . $this->db->last_error);
+        foreach ((array) $rows as $r) $out[(string) $r->d] = (int) $r->n;
+        return $out;
     }
 }

@@ -1,5 +1,60 @@
 # Changelog
 
+## 3.31.149
+### Performance 2 (docs/tasks/performance-2.md): long exports no longer load the whole period into memory
+The files are the same, byte for byte (an Excel file differs only by the minute it was generated, as before). One exception, above 25,000 records in the Sign In / Out CSV (a month for about 500 employees): two records that tie exactly (same day, same name, same second) may come out in the other order; their order was never fixed.
+- **Sign In / Out CSV**: read up to 25,000 records at a time (whole days), written to a temporary file and sent once every part was read. A year of records costs about the memory of a month. If the database fails part way, an error page is shown instead of a short file.
+- **Report Center exports** (Attendance, Summary, Timesheet, Workforce; CSV and Excel): the employees are read a group at a time, the long tables are kept on a temporary file instead of in memory, and the Excel sheets are written to temporary files (removed even if the request is cut off). A group that cannot be read stops the export with an error page instead of showing those employees as absent.
+- The Report Center screen, payroll, the employee profile and corrections read exactly as before (one group). Between the parts of a long export the time limit is raised to two minutes where it is shorter, and never where the host has turned that off.
+
+## 3.31.148
+### Performance 1 (docs/tasks/performance-1.md): nothing visible changes, fewer and cheaper queries
+- **The My approvals count** (the menu, Home, the Schedule page) no longer builds every card in full to show a number: away from the My approvals page each waiting request is checked with the same rules but without its details (a leave's balance and who is away, an advance's salary and history, names). The My approvals page reads its people in one query instead of one per card.
+- **"Does this person approve anything?"** (asked on every app page for the My approvals menu item) no longer scans the approval steps of the whole history for an employee who never approved: two indexed lookups in one statement, and a new index on who decided a step.
+- **An index by date** on the time logs (work date and time): the Sign In / Out Report, the missing-sign-out reminder, the end-of-day sign-out and Location Capacity no longer read the whole table. Added once on upgrade.
+- **Smart Nudges** (every five minutes): each employee's dismissed and sent reminders, pending leave and tomorrow's schedule are read once for everyone instead of once per person.
+
+## 3.31.147
+### Safe on a WordPress network (one site per company; docs/tasks/saas.md, phase 1)
+Only the sites of a network change. A single site is unchanged: the same pages, files, paths and user settings.
+- **Private files**: with `WFO_PRIVATE_DIR` set, each site except the main one keeps its files in its own folder (`{folder}/sites/{site id}/`), so one company's daily cleanup and uninstall can no longer reach another company's photos. The main site keeps its folder.
+- **Uninstall**: deleting the plugin walks every site and removes the data only of the sites that chose "Delete all data". A site that did not choose it keeps its private files and user settings when another site did.
+- **Linking users**: an employee, an HR or Finance user, or a "Specific User" approver can only be a user of this site, or one an employee of this site is already linked to (so an existing link can still be saved). A user of another company is refused with the messages the pages already have.
+- **User settings per site**: Face Sign In recent matches and lock-out, saved report views, Smart Nudge choices, occasion choices and dismissed health alerts are kept per site, so a person with accounts in two companies does not carry them across.
+- **Nginx rule** shown to the administrator also covers a network's `uploads/sites/{id}/` folders.
+
+## 3.31.146
+### Dashboard (owner, 2026-11-09)
+- The Dashboard no longer has the "+ New request" shortcut. New request stays on My requests (and its link in the menu).
+- Occasions: the greeting card is no longer covered by the Dashboard's first row (the page's pull-up under the top bar now starts below the card).
+- Occasions: New Year greets the nearest New Year: from July to December the coming year (in November 2026 it reads 2027), from January to June the current one. It was December only.
+
+## 3.31.145
+### Occasions (off by default; owner decisions and approved mockups 2026-11-09)
+- **Feature Configuration → Occasions**: one company occasion at a time (Valentine's Day, Ramadan, Eid al-Fitr, Eid al-Adha, New Year, Halloween, National day · Egypt, the company's birthday), switched on and off by the administrator, with an optional last day. It shows in the top bar and the background, or falling over the whole screen for a few seconds; never over a button, never taking a tap.
+- **The employee app, the login page and kiosks** get the occasion's colours, motifs and a greeting card (Dashboard). Kiosks show the company occasion only and follow a switch within one code; the login page never shows a name.
+- **Birthdays**: each employee on their own birthday (from Employee Moments; only they see it; the year never shown), and the people the administrator picks (everyone sees theirs).
+- **Moments** once a day: the birthday cake (the candle blown out, "HAPPY BIRTHDAY"), the Halloween pumpkin and bats, the Ramadan lantern, and one for every other occasion (not the company's birthday). Reduced motion shows them still.
+- **The words** of each occasion in Arabic and English (the greeting card and the moment), written by the administrator; empty boxes use the built-in words; "From the Workforce One team" signs them by default.
+- "Hide decorations" for an employee until the next occasion; an administrator's Preview of each occasion (works while off).
+- Tests: unit tests for the rules; e2e and browser suites; golden declares the Features card and the one new action.
+
+## 3.31.144
+### HR letters (off by default; owner decisions 2026-11-07 to 11-09; PRs #43 and this one)
+- **Employees ask HR for a letter** from My requests → New request → HR letter: the type (or "Other" with free text), who it is addressed to ("To whom it may concern" by default), Arabic or English, an optional note. It goes through the new **HR Letter** approval workflow; the first request sets it to one level, HR (HR's own letter goes to the administrators; rejecting needs a reason). One open request per type and language.
+- **Each type has its delivery**: a **PDF made at once** from the type's template on approval (Amiri, Arabic-Indic digits, Arabic month names, the Hijri date, amounts in words, the letterhead's logo, signature and stamp), a **file HR uploads**, or **request only** (HR marks it ready to collect, with where). "Other" is always uploaded by HR. Starting types: employment and salary certificates (PDF), experience and embassy letters (uploaded), bank letter (request only).
+- **My requests** shows where each letter is and **Download the letter (PDF)**; a waiting one can be withdrawn. **My approvals** shows HR's card ("Shows the salary"; the employee's Arabic name, gender and hiring date as ✓/✗); the **Requests Hub** lists waiting letters.
+- **wp-admin → HR letters** (Manage HR letters, given to EWS Administrator): the letters (upload / replace, regenerate, ready to collect, cancel with a reason), **Types & templates** (placeholders, {g:male|female} wording, a template showing the salary needs Manage Payroll), **Letterhead**, and **Letter for an employee** (no request; former employees too; not for oneself).
+- **The salary** is read from Payroll only while a letter is made: never stored, never in the Audit Log or a notification. Files are private: only the employee (while letters are on) and HR open them; HR's downloads and the employee's first download are audited.
+- **Employee details for letters** (PR #43): the name in Arabic, gender and hiring date on the profile, in Add Employee, from a file, and read only on My Profile; "Employee Since" uses the hiring date.
+- **PDF groundwork** (PR #43): Arabic shaping and direction, images, wrapping over pages, Hijri dates, numbers in words.
+- Tests: unit tests for the rules, templates, values and the services; storage contracts for the letters and the people; e2e suites for the letters and the employee details; golden declares the changed pages and the new actions (and restores the snapshot with each side's schema marked done).
+
+## 3.31.143
+### L5e2: attendance correction requests behind a service (a move only; PR #42)
+- A new correction request (the employee's, and HR's own correction applied at once), the employee's withdrawal and the end-of-day "you did not sign out" reminder now run in the `CorrectionRequests` service, with a store and a read model for their SQL. The same reads and writes in the same order, the same transactions, audits and notifications: nothing changes for anyone. Design `docs/tasks/attendance-corrections.md` §11.
+- Tests: a new golden trace compares the old and the new code on every refusal, each workflow mode, HR's direct correction, faults on every write, the app form, HR's form and the API, withdrawals and the reminder, plus real photo uploads; unit tests for the service; the storage contract pins the SQL text.
+
 ## 3.31.142
 ### The rest of the QA report on 3.31.138 (owner decisions 2026-11-06; PRs #37–#40)
 - **Early leave in My requests** with its state; one still waiting can be withdrawn there (it no longer counts against the month, and the Audit Log has it). A new early leave keeps the site's time. A manager deciding one that was withdrawn meanwhile is told so (not a schedule conflict or a blank page).

@@ -119,6 +119,27 @@ final class CorrectionRules
     }
 
     /**
+     * The new request's row (3.31.143, as cx_create built it): the key order is the INSERT's column order. Always written as pending: HR's own
+     * correction is approved by the finalize step that follows. $plan is plan($f), $times times($f).
+     * @param array<string,mixed> $f
+     * @param array<string,mixed> $plan
+     * @param array{in:?string,out:?string} $times
+     * @return array<string,mixed>
+     */
+    public static function requestRow(int $employeeId, array $f, array $plan, array $times, ?string $photoKey, ?string $photoName, string $source, int $userId, string $now): array
+    {
+        $type = (string) $f['type'];
+        $kinds = array_column($plan['events'], 'type');
+        $old = $type === 'time' ? ($f['target'] === 'sign_in' ? $f['in'] : $f['out']) : null;
+        return ['employee_id' => $employeeId, 'work_date' => $f['date'], 'type' => $f['type'], 'target' => $type === 'time' ? $f['target'] : null,
+            'sign_in_at' => in_array('sign_in', $kinds, true) ? $times['in'] : null,
+            'sign_out_at' => in_array('sign_out', $kinds, true) ? $times['out'] : null, 'old_at' => $old,
+            'reason' => mb_substr($f['reason'], 0, 1000), 'photo_key' => $photoKey, 'photo_name' => $photoName, 'status' => 'pending', 'source' => $source,
+            'needs_hr' => $plan['needs_hr'] ? 1 : 0, 'above_limit' => $plan['above_limit'] ? 1 : 0, 'earlier' => $plan['earlier'] ? 1 : 0,
+            'requested_by' => $userId, 'requested_at' => $now];
+    }
+
+    /**
      * The Sign In and Sign Out of the day after the correction (Y-m-d H:i:s), with a Sign Out before
      * the Sign In moved to the next day on an overnight shift.
      * @param array<string,mixed> $f

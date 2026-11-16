@@ -29,3 +29,12 @@ Used for payslip PDFs (`src/Payroll/PayslipPdf.php`): it has Latin and Arabic (i
 presentation forms used to join letters), so names and reasons in Arabic print correctly. Only the
 glyphs a payslip uses are embedded in each PDF (`src/Pdf/TrueTypeFont.php`); the font is not
 renamed or changed.
+
+## Amiri
+
+| Path | Font | Version | License |
+|------|------|---------|---------|
+| `amiri/Amiri-Regular.ttf` | [Amiri](https://github.com/aliftype/amiri) | 1.002 | SIL Open Font License 1.1 (`amiri/OFL.txt`) |
+
+A formal Naskh face for HR letters in Arabic (owner's choice, docs/tasks/hr-letter.md Q14). TrueType outlines with the
+Arabic presentation forms (U+FE70–FEFF) that `src/Pdf/ArabicText.php` draws; only the glyphs a letter uses are embedded.

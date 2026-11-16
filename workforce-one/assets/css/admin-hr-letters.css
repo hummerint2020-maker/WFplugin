@@ -1,0 +1,14 @@
+/* wp-admin → HR letters (HL3; mockup docs/mockups/hr-letter/admin-*). Logical properties: the -rtl copy is the same file. */
+.ews-hl-box{max-width:900px;margin-block:16px;padding:16px 20px;background:#fff;border:1px solid #dcdcde;border-radius:6px}
+.ews-hl-box h2{margin-block-start:0}
+.ews-hl-err{color:#b32d2e}
+.ews-hl-imgs{display:flex;flex-wrap:wrap;gap:12px}
+.ews-hl-img{display:grid;place-items:center;gap:6px;width:150px;min-height:96px;padding:6px;border:1px dashed #c3c4c7;border-radius:6px;color:#50575e;text-align:center}
+.ews-hl-img img{max-width:130px;max-height:60px}
+.ews-hl-imgs .description{flex-basis:100%}
+.ews-hl-chips{display:flex;flex-wrap:wrap;gap:4px;margin-block:6px}
+.ews-hl-tpl{font-family:inherit;line-height:1.7}
+.ews-hl-actions form{display:inline}
+.ews-hl-actions details{display:inline-block}
+.ews-hl-actions details[open]{display:block;margin-block-start:8px}
+.ews-hl-ok{color:#007017}

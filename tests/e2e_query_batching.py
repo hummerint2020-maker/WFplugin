@@ -130,8 +130,15 @@ pages = php("""
         $c=0; $rows=$h->invoke($o); $hub=$c;
         wp_set_current_user((int)get_user_by('login','emp1')->ID); $o=new EWS_Manager_V31_1(); $r=new ReflectionMethod($o,'requests_content');$r->setAccessible(true);
         $c=0; $html=$r->invoke($o); $mine=$c;
+        // The My approvals count the menu shows on every app page (3.31.148): light cards, at most the request's own row each; the same number as the page's cards.
+        update_option('ews_feature_my_approvals',1,false);
+        wp_set_current_user((int)get_user_by('login','admin')->ID); $o=new EWS_Manager_V31_1(); $n=new ReflectionMethod($o,'my_approvals_count');$n->setAccessible(true);
+        $c=0; $count=$n->invoke($o); $menu=$c;
+        $o=new EWS_Manager_V31_1(); $pf=new ReflectionProperty($o,'my_approvals_full');$pf->setAccessible(true);$pf->setValue($o,true);
+        $it=new ReflectionMethod($o,'my_approvals_items');$it->setAccessible(true); $full=count($it->invoke($o));
+        delete_option('ews_feature_my_approvals');
         remove_filter('query',$f);
-        return ['hub'=>$hub,'mine'=>$mine,'rows'=>count(array_filter($rows,function($x){return $x['type']==='leave';}))];
+        return ['hub'=>$hub,'mine'=>$mine,'rows'=>count(array_filter($rows,function($x){return $x['type']==='leave';})),'menu'=>$menu,'count'=>$count,'full'=>$full];
     };
     $add(5); $five=$measure(); $add(25); $thirty=$measure();
     echo wp_json_encode(['five'=>$five,'thirty'=>$thirty]);
@@ -140,6 +147,9 @@ pg = json.loads(pages.splitlines()[-1])
 check('wp-admin Requests: 30 leave requests cost about what 5 do (the levels and names are read for the list)',
       pg['thirty']['rows'] - pg['five']['rows'] == 25 and pg['thirty']['hub'] - pg['five']['hub'] <= 5, pg)
 check('My requests: 30 leave requests cost about what 5 do (the paths are read for the list)', pg['thirty']['mine'] - pg['five']['mine'] < 25, pg)
+check('My approvals in the menu: the count is the number of cards on the page (5 and 30 waiting)', pg['five']['count'] == pg['five']['full'] and pg['thirty']['count'] == pg['thirty']['full']
+      and pg['thirty']['count'] - pg['five']['count'] == 25, pg)
+check('...and 25 more leave requests cost at most one query each (the request itself; no balance, no one away: 3.31.148)', pg['thirty']['menu'] - pg['five']['menu'] <= 25 + 3, pg)
 php("""foreach(['ews_approval_requests','ews_approval_steps'] as $t) $wpdb->query("DELETE FROM {$p}$t"); $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name LIKE 'qb_%'"); $wpdb->query("DELETE FROM {$p}ews_leave_requests WHERE reason='qb'"); require_once ABSPATH.'wp-admin/includes/user.php';
     foreach(['qb_sami','qb_mona','qb_two','qb_plain'] as $l){ $id=username_exists($l); if($id)wp_delete_user($id); }""")

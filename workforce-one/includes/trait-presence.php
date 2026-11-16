@@ -154,6 +154,7 @@ trait EWS_Presence_Trait {
             'payload_url'=>add_query_arg(['ews_kiosk'=>$id,'kiosk_key'=>$secret,'kiosk_payload'=>1],home_url('/')),
             'brand_css'=>\WorkforceOne\Settings\Appearance::cssVars($this->appearance(),'body'),'app_name'=>(string)$this->appearance()['app_name'],'logo'=>(string)$this->appearance()['logo_url'],
             'qr_lib'=>$this->plugin_url('assets/vendor/qrcode-generator-1.4.4.js'),'script'=>$this->plugin_url('assets/js/kiosk.js'),'style'=>$this->plugin_url('assets/css/kiosk.css'),'version'=>EWS_VERSION,
+            'occasion'=>$this->occasion_kiosk(),   // Occasions (3.31.145): all '' while off
         ]);
         exit;
     }
@@ -163,7 +164,10 @@ trait EWS_Presence_Trait {
         global $wpdb;list($kt)=$this->presence_tables();
         // Throttle the heartbeat write to once a minute per kiosk.
         if(!get_transient('ews_kiosk_seen_'.$id)){set_transient('ews_kiosk_seen_'.$id,1,60);$wpdb->update($kt,['last_seen_at'=>current_time('mysql')],['id'=>$id],['%s'],['%d']);}
-        nocache_headers();header('Content-Type:text/plain; charset=utf-8');header('X-Robots-Tag: noindex, nofollow');echo $this->presence_qr_payload($id,$secret);exit;
+        nocache_headers();header('Content-Type:text/plain; charset=utf-8');header('X-Robots-Tag: noindex, nofollow');
+        // Occasions (3.31.145): the occasion on now, so a kiosk follows a switch within one code (only when one shows).
+        $occ=$this->occasion_kiosk();if($occ['instance']!=='')header('X-WFO-Occasion: '.rawurlencode($occ['instance']));
+        echo $this->presence_qr_payload($id,$secret);exit;
     }
     /** Employee app → Presence Verification: scan the kiosk QR of the requested work location. */
     private function presence_content(){

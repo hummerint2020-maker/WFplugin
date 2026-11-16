@@ -101,6 +101,16 @@ interface PeopleStore
     /** Changes the given fields of one employee. @param array<string,mixed> $fields @return int|false rows changed */
     public function updateFields(int $id, array $fields);
 
+    /**
+     * The details for letters (HL2): only the given keys of name_ar, gender, hire_date (null writes NULL), and updated_at.
+     * @param array<string,?string> $fields
+     * @return int|false rows changed, false on a database error
+     */
+    public function setDetails(int $id, array $fields, string $now);
+
+    /** Every employee with their details for letters, by name (the file and the import). @return object[] id, name, domain_name, active, name_ar, gender, hire_date, created_at */
+    public function detailsRows(): array;
+
     /** Archives: inactive, with the last working day. @return int|false */
     public function archive(int $id, string $lastDay, string $now);
 

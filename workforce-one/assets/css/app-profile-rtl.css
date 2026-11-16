@@ -183,3 +183,9 @@
     .wfo-app .wfo-profile .ews-password-requirements ul{grid-template-columns:minmax(0,1fr)}
     .wfo-app .wfo-profile .ews-password-submit .wfo-profile-btn{flex:1 1 0}
 }
+
+/* HR letters HL2: the details HR keeps for letters, read only (the Arabic name under the name, "Not set", the note). */
+.wfo-profile-fields .ews-ef-sub{font-size:13px;font-weight:500;color:var(--wfo-muted)}
+.wfo-app .wfo-profile .wfo-profile-fields dd.ews-ef-empty{color:var(--wfo-muted);font-weight:500;font-style:italic}
+.ews-ef-note{display:flex;align-items:flex-start;gap:6px;line-height:1.6;margin:12px 0 0;font-size:13px;color:var(--wfo-muted)}
+.ews-ef-note svg{flex:none;margin-block-start:4px}

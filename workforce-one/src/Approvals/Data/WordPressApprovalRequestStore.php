@@ -199,7 +199,8 @@ final class WordPressApprovalRequestStore implements ApprovalRequestStore
 
     public function hasAnyStep(int $userId): bool
     {
-        return (bool) $this->db->get_var($this->db->prepare("SELECT id FROM {$this->steps} WHERE approver_wp_user_id=%d OR acted_by_wp_user_id=%d LIMIT 1", $userId, $userId));
+        // Two indexed halves instead of an OR that scanned the table for a person who never approved (3.31.148); still one statement.
+        return (bool) $this->db->get_var($this->db->prepare("(SELECT id FROM {$this->steps} WHERE approver_wp_user_id=%d LIMIT 1) UNION ALL (SELECT id FROM {$this->steps} WHERE acted_by_wp_user_id=%d LIMIT 1) LIMIT 1", $userId, $userId));
     }
 
     public function decidedSince(int $userId, string $since): int

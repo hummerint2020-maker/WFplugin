@@ -32,6 +32,7 @@ trait EWS_Permissions_Trait {
                 'ews_view_national_ids'=>'View national IDs',
                 'ews_view_system_health'=>'View System Health',   // 3.31.110: code paths, query shapes and slow endpoints
                 'ews_week_lock_override'=>'Edit a locked week',   // 3.31.121: change the schedule of a final week (audited)
+                'ews_manage_hr_letters'=>'Manage HR letters',   // HR letters (HL3): the HR letters page, files, direct letters, types and letterhead
             ];
         }
 

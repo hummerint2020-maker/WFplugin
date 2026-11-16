@@ -1,0 +1,16 @@
+/* The details for letters (HR letters HL2): the profile's Gender row, the Edit form, Add Employee's optional section and the file page.
+   Logical properties: the -rtl copy is identical. */
+.ews-ef-sub{display:block;font-size:13px;color:#667085;margin-block-start:2px}
+.ews-ef-empty{color:#98a2b3!important;font-style:italic}
+.ews-ef-actions{margin-block-start:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ews-ef-form{margin-block-start:16px;padding-block-start:16px;border-block-start:1px dashed #d0d5dd}
+.ews-ef-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:#344054;margin-block-end:12px;max-width:360px}
+.ews-ef-form input,.ews-ef-form select{font-weight:400}
+.ews-ef-add{background:#fff;padding:18px;max-width:760px;margin-block:14px}
+.ews-ef-add h2{margin-block-start:0}
+.ews-ef-steps{margin-inline-start:20px}
+.ews-ef-details{border:1px solid #e4e7ec;border-radius:8px;padding:10px 14px;margin-block:10px}
+.ews-ef-details summary{cursor:pointer;font-weight:600;color:#344054}
+.ews-ef-details p{margin-block:10px 0}
+.ews-ef-preview{margin-block-start:10px}
+.ews-ef-refused td{color:#b42318}

@@ -56,6 +56,9 @@ trait EWS_Admin_Requests_Trait {
         foreach($this->cx_hub_rows() as $r){
             $add('correction',$r->id,$r->employee_id,'Attendance Correction',$r->requested_at,Hub::details($r->work_date,$this->cx_type_label((string)$r->type),$this->cx_change_text($r,'en'),(string)$r->reason,$r->status==='pending_hr'?'Second level (HR)':''),['attendance_correction','attendance_correction',(int)$r->id],(string)$r->status);
         }
+        foreach($this->hr_letter_hub_rows() as $r){   // HR letters (HL3, owner decision 1): waiting for a decision; no salary amount
+            $add('hr_letter',$r->id,$r->employee_id,'HR Letter',$r->requested_at,Hub::details((string)$r->type_label.((string)$r->type_key==='other'?': '.(string)$r->other_text:'').' · '.((string)$r->language==='ar'?'Arabic':'English'),'to '.(string)$r->addressee,(int)$r->with_salary?'shows the salary':''),['hr_letter','hr_letter',(int)$r->id]);
+        }
         foreach($this->face_reset_requests() as $employee_id=>$r){
             if(!is_array($r)||($r['status']??'')!=='pending')continue;
             $add('face_reset',$employee_id,$employee_id,'Face Reset',$r['requested_at']??'',$r['current_note']??'Reset requested',['face_reset','face_reset_request',(int)$employee_id]);
@@ -113,6 +116,7 @@ trait EWS_Admin_Requests_Trait {
             case 'shift_swap':         $outcome=$this->swap_admin_decide($id,$decision);break;
             case 'legacy_vacation':    $outcome=$this->legacy_vacation_admin_decide($id,$decision);break;
             case 'correction':         $outcome=$this->cx_hub_decide($id,$decision);break;
+            case 'hr_letter':          $outcome=$this->hr_letter_hub_decide($id,$decision);break;
             default:                   $outcome=$this->face_reset_decide($id,$decision,true);
         }
         wp_safe_redirect(add_query_arg('request_notice',$outcome,admin_url('admin.php?page=ews31-requests')));

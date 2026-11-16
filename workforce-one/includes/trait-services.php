@@ -5,6 +5,12 @@ use WorkforceOne\Approvals\AfterRequest;
 use WorkforceOne\Attendance\AttendancePorts;
 use WorkforceOne\Attendance\AttendanceSite;
 use WorkforceOne\Attendance\Idempotency;
+use WorkforceOne\Attendance\CorrectionApprovals;
+use WorkforceOne\Attendance\CorrectionDecider;
+use WorkforceOne\Attendance\CorrectionFiles;
+use WorkforceOne\Attendance\CorrectionNotices;
+use WorkforceOne\Attendance\CorrectionPorts;
+use WorkforceOne\Attendance\CorrectionSite;
 use WorkforceOne\Attendance\EvidenceSite;
 use WorkforceOne\Attendance\ManualRecordSite;
 use WorkforceOne\Approvals\ApprovalDirectory;
@@ -68,6 +74,7 @@ trait EWS_Services_Trait {
         $employee_changed=function($employee,$wp_user){$this->invalidate_employee_runtime_cache($employee,$wp_user);};
         $shift_add=function($employee,$shift,$date){return $this->shift_period_add($employee,$shift,$date,'',false);};
         $revoke_sessions=function($wp_user,$reason){$this->api_revoke_user_sessions($wp_user,$reason);};
+        $site_has_user=function($wp_user){return $this->site_has_user($wp_user);};   // a network: only this site's users (3.31.147)
         $advances_on=function(){return $this->advances_enabled();};
         $advance_left=function($employee){return $this->advance_left_for($employee);};
         $org_on=function(){return $this->org_enabled();};
@@ -118,8 +125,10 @@ trait EWS_Services_Trait {
                     public function enabled(): bool { return (bool)($this->on)(); }
                     public function leftFor(int $employeeId): float { return (float)($this->left)($employeeId); }
                 },
-                new class implements WpUsers {
-                    public function exists(int $userId): bool { return get_userdata($userId)!==false; }
+                new class($site_has_user) implements WpUsers {
+                    private $f;
+                    public function __construct(callable $f){ $this->f=$f; }
+                    public function exists(int $userId): bool { return get_userdata($userId)!==false && (bool)($this->f)($userId); }
                 },
                 new class($org_on,$title_required) implements OrgFeature {
                     private $on; private $title;
@@ -154,7 +163,70 @@ trait EWS_Services_Trait {
             new class implements Permissions {
                 public function isAdmin(int $userId): bool { return (bool)user_can($userId,'manage_options'); }
             },
-            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports());
+            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports());
+    }
+
+    /** The HR letters' ports (HL3): the adapters through which its services reach the site, the approvals engine, notifications, files and Payroll. */
+    private function letter_ports(): \WorkforceOne\HrLetters\LetterPorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new \WorkforceOne\HrLetters\LetterPorts(
+            new class($call) implements \WorkforceOne\HrLetters\LetterSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function enabled(): bool { return (bool)($this->call)('hr_letters_enabled'); }
+                public function requestable(): bool { return (bool)($this->call)('hr_letters_requestable'); }
+                public function settings(): array { return (array)($this->call)('hr_letter_settings'); }
+                public function types(): array { return (array)($this->call)('hr_letter_types'); }
+                public function letterhead(): array { return (array)($this->call)('hr_letter_letterhead'); }
+                public function companyFallback(): string { return (string)get_bloginfo('name'); }
+                public function currencyCode(): string { return (string)get_option('ews_payroll_currency')?:'EGP'; }
+                public function today(): string { return current_time('Y-m-d'); }
+                public function markUsed(): void { if(!get_option('ews_hr_letters_ever'))update_option('ews_hr_letters_ever',1,false); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterApprovals {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function ensureReady(): bool { return (bool)($this->call)('hr_letter_workflow_ready'); }
+                public function start(int $letterId,int $employeeId): bool { return !is_wp_error(($this->call)('approval_start','hr_letter','hr_letter',$letterId,$employeeId,[],false)); }
+                public function find(int $letterId): ?object { $r=($this->call)('approval_find_request','hr_letter','hr_letter',$letterId); return is_object($r)?$r:null; }
+                public function currentStep(int $approvalRequestId): ?object { $r=($this->call)('approval_current_step',$approvalRequestId); return is_object($r)?$r:null; }
+                public function levelMoved(int $approvalRequestId,$posted): bool { return (bool)($this->call)('approval_level_moved',$approvalRequestId,$posted); }
+                public function canAct(int $approvalRequestId,bool $override): bool { return (bool)($this->call)('approval_can_act',$approvalRequestId) || ($override && current_user_can('manage_options')); }
+                public function act(int $approvalRequestId,string $decision,string $note,$posted,bool $override): string {
+                    $r=($this->call)('approval_act',$approvalRequestId,$decision,$note,false,$override,$posted);
+                    return is_wp_error($r)?(string)($this->call)('approval_error_code',$r):'';
+                }
+                public function closeOpen(int $letterId) { return ($this->call)('approval_close_open','hr_letter','hr_letter',$letterId); }
+                public function pathNote(int $letterId): string { return (string)(($this->call)('approval_path','hr_letter','hr_letter',$letterId)['note']??''); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterNotices {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function decider(object $letter): void { ($this->call)('hr_letter_notify_decider',$letter); }
+                public function employee(string $event,object $letter,string $reason=''): void { ($this->call)('hr_letter_notify_employee',$event,$letter,$reason); }
+                public function hr(string $event,object $letter): void { ($this->call)('hr_letter_notify_hr',$event,$letter); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterFiles {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function font(): string { return (string)($this->call)('hr_letter_font'); }
+                public function store(string $bytes,string $extension): string { return (string)($this->call)('hr_letter_store_file',$bytes,$extension); }
+                public function uploadPdf($file,int $maxBytes): array { return (array)($this->call)('hr_letter_upload_pdf',$file,$maxBytes); }
+                public function read(string $key): ?string { $r=($this->call)('hr_letter_read_file',$key); return is_string($r)?$r:null; }
+                public function delete(string $key): void { ($this->call)('hr_letter_delete_file',$key); }
+            },
+            new class($call) implements \WorkforceOne\HrLetters\LetterSalary {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function on(int $employeeId,string $date): ?array {
+                    ($this->call)('ensure_payroll_schema');
+                    $r=((array)($this->call)('payroll_rates_on',$date))[$employeeId]??null;
+                    if(!$r)return null;
+                    $allow=0.0;
+                    foreach((array)$r['allowances'] as $a)$allow+=(float)($a['amount']??0);
+                    return ['basic'=>round((float)$r['basic'],2),'allowances'=>round($allow,2),'total'=>round((float)$r['basic']+$allow,2)];
+                }
+            });
     }
 
     /** The attendance services' ports (3.31.137): the idempotency keys of the app and the break notices, cron events and managers. */
@@ -201,6 +273,62 @@ trait EWS_Services_Trait {
                 public function alert(object $employee,string $day,int $n): void { ($this->call)('evidence_alert_send',$employee,$day,$n); }
                 public function deletePhoto(string $key): void { ($this->call)('private_files_delete','workforce-one-face-photos',$key); }
                 public function sweepPhotos(int $olderThan): void { ($this->call)('evidence_sweep_orphans',$olderThan); }
+            },
+            $this->correction_ports($call));
+    }
+
+    /** The correction requests' ports (3.31.143): the plugin functions they reach by name until L5e3 moves the decisions. */
+    private function correction_ports(callable $call): CorrectionPorts {
+        return new CorrectionPorts(
+            new class($call) implements CorrectionSite {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function enabled(): bool { return (bool)($this->call)('corrections_enabled'); }
+                public function settings(): array { return (array)($this->call)('correction_settings'); }
+                public function ensureSchema(): void { ($this->call)('ensure_corrections_schema'); }
+                public function ensureSchemaOnce(): void { ($this->call)('ensure_corrections_schema_once'); }
+                public function facts(object $employee,array $in,string $source,bool $hasPhoto): array { return (array)($this->call)('cx_facts',$employee,$in,$source,$hasPhoto); }
+                public function changeText(?object $request,string $lang=''): string { return (string)($this->call)('cx_change_text',$request,$lang); }
+                public function timeManagerIds(): array { return array_map(function($u){return (int)$u->ID;},(array)get_users(['capability'=>'ews_manage_time','fields'=>['ID']])); }
+                public function today(): string { return current_time('Y-m-d'); }
+                public function hm(): string { return current_time('H:i'); }
+                public function remindedOn(): string { return (string)get_option('ews_corrections_reminded'); }
+                public function markReminded(string $day): void { update_option('ews_corrections_reminded',$day,false); }
+                public function workingHoursToday(int $employeeId): array { return (array)($this->call)('working_hours',$employeeId); }
+            },
+            new class($call) implements CorrectionNotices {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function decider(int $userId,?object $request): void { ($this->call)('cx_notify_decider',$userId,$request); }
+                public function signOutReminder(int $userId,string $date,string $signedIn): void {
+                    $url=add_query_arg(['ews_view'=>'time','cx'=>'out','cx_date'=>$date],($this->call)('app_home_url'));
+                    ($this->call)('notify',$userId,'signout_reminder',__('You did not sign out today','workforce-one'),
+                        /* translators: %s: time */
+                        sprintf(__('You signed in at %s. If you have left, request a correction with the time you left.','workforce-one'),substr($signedIn,11,5)),['url'=>$url]);
+                }
+            },
+            new class($call) implements CorrectionFiles {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function hasUpload($file): bool { return (bool)($this->call)('cx_has_upload',$file); }
+                public function save($file): array { return (array)($this->call)('cx_save_photo',$file); }
+                public function delete(string $key): void { ($this->call)('private_files_delete','workforce-one-corrections',$key); }
+            },
+            new class($call) implements CorrectionApprovals {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function mode(): string { return (string)($this->call)('cx_workflow_mode'); }
+                public function isLevels(string $mode): bool { return \WorkforceOne\Approvals\Workflows::isLevels($mode); }
+                public function start(int $requestId,int $employeeId): bool { return !is_wp_error(($this->call)('approval_start','attendance_correction','attendance_correction',$requestId,$employeeId)); }
+                public function find(int $requestId): ?object { $r=($this->call)('approval_find_request','attendance_correction','attendance_correction',$requestId); return is_object($r)?$r:null; }
+                public function currentStep(int $approvalRequestId): ?object { $r=($this->call)('approval_current_step',$approvalRequestId); return is_object($r)?$r:null; }
+                public function closeOpen(int $requestId) { return ($this->call)('approval_close_open','attendance_correction','attendance_correction',$requestId); }
+            },
+            new class($call) implements CorrectionDecider {
+                private $call;
+                public function __construct(callable $call){ $this->call=$call; }
+                public function afterManager(int $requestId): string { return (string)($this->call)('cx_after_manager',$requestId); }
+                public function finalizeDirect(int $requestId,string $reason): string { return (string)($this->call)('cx_finalize',$requestId,true,$reason,true); }
             });
     }
 

@@ -65,6 +65,18 @@ trait EWS_Leave_Trait {
             return $this->leave_overlap((int)$employee_id,(string)$from,(string)$to);
         }
 
+    /**
+     * The pending leave requests of these employees, newest first (the Smart Nudges cron, 3.31.148): one read for all of them, in the order the
+     * one-person reminder reads them (requested_at DESC). @param int[] $employee_ids @return object[] id, employee_id, start_date, end_date, requested_days
+     */
+    private function leave_pending_newest_first(array $employee_ids){
+            global $wpdb;$out=[];
+            foreach(array_chunk(array_values(array_unique(array_filter(array_map('intval',$employee_ids)))),500) as $chunk){
+                foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,employee_id,start_date,end_date,requested_days FROM {$this->leaves} WHERE employee_id IN (".implode(',',array_fill(0,count($chunk),'%d')).") AND status='Pending' ORDER BY requested_at DESC",$chunk)) as $r)$out[]=$r;
+            }
+            return $out;
+        }
+
     /** A leave request's status ('' when there is none), for substitutes linked to a leave (3.31.107). */
     private function leave_status_of($leave_id){
             global $wpdb;
@@ -541,11 +553,12 @@ trait EWS_Leave_Trait {
      * the facts the approver needs, and the form that decides it (the same as on the Leave page).
      * @return array<string,mixed>|null null when it no longer waits
      */
-    private function leave_approval_card($entity_type,$id,$row=null){
+    private function leave_approval_card($entity_type,$id,$row=null,$light=false){
             global $wpdb;
             $cancel=$entity_type==='leave_cancellation';
             $r=$row&&(int)$row->id===(int)$id?$row:$this->leave_request_row((int)$id,$cancel?"AND r.status='Approved' AND r.cancellation_status='Pending'":"AND r.status='Pending'");
             if(!$r)return null;
+            if($light)return ['employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at];   // the counts need no balance, no one away (3.31.148)
             $days=(float)$r->requested_days;
             $bal=$this->leave_request_balance($r);
             $left=$bal?Balance::remaining((float)$bal->entitlement,(float)$bal->used,(float)$bal->pending)+($cancel?$days:0):null;

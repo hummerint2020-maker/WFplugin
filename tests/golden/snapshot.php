@@ -24,6 +24,12 @@ if ($mode === 'save') {
     }
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE $optWhere");
     foreach ($in['options'] as $o) $wpdb->insert($wpdb->options, $o);
+    // The snapshot is taken with the new code's schema (a superset of the old one). Mark the schema of the code now linked as done, so
+    // neither side runs its schema upgrade (and the defaults it writes) on its first request when a release bumps ews_schema_target().
+    $schema = (string) @file_get_contents(WP_PLUGIN_DIR . '/workforce-one/includes/trait-schema.php');
+    if (preg_match("/function ews_schema_target\\(\\)\\{\\s*return '([^']+)';/", $schema, $m)) {
+        $wpdb->update($wpdb->options, ['option_value' => $m[1]], ['option_name' => 'ews_schema_version']);
+    }
     wp_cache_flush();
     echo "restored\n";
 }

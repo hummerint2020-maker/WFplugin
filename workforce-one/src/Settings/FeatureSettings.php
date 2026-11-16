@@ -146,6 +146,12 @@ final class FeatureSettings
             'om_time' => 'Office Minimum: the reminder time is not valid. Nothing was saved.',
             'wl_day' => 'Week lock: choose the cutoff day. Nothing was saved.',
             'wl_time' => 'Week lock: the cutoff time is not valid. Nothing was saved.',
+            'occ_bad_key' => 'Occasions: choose an occasion from the list. Nothing was saved.',
+            'occ_bad_mode' => 'Occasions: choose how it shows. Nothing was saved.',
+            'occ_bad_date' => 'Occasions: a date is not valid. Nothing was saved.',
+            'occ_until_past' => 'Occasions: the last day must be today or later. Nothing was saved.',
+            'occ_founded_future' => 'Occasions: the founding date cannot be in the future. Nothing was saved.',
+            'occ_text_long' => 'Occasions: one of the words is longer than its box allows. Nothing was saved.',
         ];
         if (isset($om[$code])) return $om[$code];
         return $code === 'early_leave_monthly'

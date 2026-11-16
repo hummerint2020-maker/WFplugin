@@ -22,6 +22,10 @@ final class Document
     private $used = [];
     /** @var array<string,string> */
     private $info;
+    /** @var Image[] images drawn, in order (Im1, Im2, …) */
+    private $images = [];
+    /** @var string the font's name in the file (a label: the font itself is embedded) */
+    private $fontName = 'DejaVuSans';
 
     /** @param array<string,string> $info Title, Author… */
     public function __construct(TrueTypeFont $font, array $info = [])
@@ -40,6 +44,13 @@ final class Document
         return count($this->pages);
     }
 
+    /** The font's name written in the file (HR letters: Amiri). Letters and digits only. */
+    public function setFontName(string $name): void
+    {
+        $name = preg_replace('/[^A-Za-z0-9-]/', '', $name);
+        if ($name !== '') $this->fontName = $name;
+    }
+
     /** Width of a text in points at a size. */
     public function textWidth(string $text, float $size): float
     {
@@ -51,15 +62,16 @@ final class Document
     /**
      * @param string $align left | right | center (x is the left edge, the right edge or the centre)
      * @param float[] $rgb 0–1
+     * @param string $base the paragraph's direction ('R' in an Arabic document, '' from the text; ArabicText::visual())
      */
-    public function text(float $x, float $y, string $text, float $size, string $align = 'left', array $rgb = [0.06, 0.09, 0.16], bool $bold = false): void
+    public function text(float $x, float $y, string $text, float $size, string $align = 'left', array $rgb = [0.06, 0.09, 0.16], bool $bold = false, string $base = ''): void
     {
         if ($text === '') return;
         $width = $this->textWidth($text, $size);
         if ($align === 'right') $x -= $width;
         elseif ($align === 'center') $x -= $width / 2;
         $hex = '';
-        foreach (ArabicText::visual($text) as $c) {
+        foreach (ArabicText::visual($text, $base) as $c) {
             $g = $this->font->glyphId($c);
             if ($g === 0 && $c === 0x2212) { $c = 0x2D; $g = $this->font->glyphId($c); }
             $this->used[$g] = $this->used[$g] ?? $c;
@@ -82,6 +94,17 @@ final class Document
         $this->add(sprintf('%s RG %.2F w %.2F %.2F m %.2F %.2F l S', vsprintf('%.3F %.3F %.3F', $rgb), $width, $x1, self::HEIGHT - $y1, $x2, self::HEIGHT - $y2));
     }
 
+    /** Draws an image in the box (x, y: its top-left corner, points from the top-left of the page). */
+    public function image(Image $image, float $x, float $y, float $w, float $h): void
+    {
+        $i = array_search($image, $this->images, true);
+        if ($i === false) {
+            $this->images[] = $image;
+            $i = count($this->images) - 1;
+        }
+        $this->add(sprintf('q %.2F 0 0 %.2F %.2F %.2F cm /Im%d Do Q', $w, $h, $x, self::HEIGHT - $y - $h, $i + 1));
+    }
+
     private function add(string $op): void
     {
         if (!$this->pages) $this->addPage();
@@ -99,7 +122,7 @@ final class Document
         for ($i = 0; $i < $n; $i++) $kids[] = (9 + $i * 2) . ' 0 R';
         $objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
         $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', $kids) . '] /Count ' . $n . ' >>';
-        $name = 'WFOAAA+DejaVuSans';
+        $name = 'WFOAAA+' . $this->fontName;
         $objects[3] = '<< /Type /Font /Subtype /Type0 /BaseFont /' . $name . ' /Encoding /Identity-H /DescendantFonts [4 0 R] /ToUnicode 7 0 R >>';
         ksort($this->used);
         $w = '';
@@ -114,8 +137,23 @@ final class Document
         $info = '';
         foreach ($this->info as $k => $v) $info .= '/' . $k . ' ' . self::utf16($v) . ' ';
         $objects[8] = '<< ' . $info . '/Producer (Workforce One) >>';
+        // Images after the pages: each one object, plus one for its alpha (SMask) when it has one.
+        $next = 9 + $n * 2;
+        $xobjects = '';
+        foreach ($this->images as $k => $img) {
+            $id = $next++;
+            $smask = '';
+            if ($img->alpha !== '') {
+                $mask = $next++;
+                $objects[$mask] = self::raw($img->alpha, sprintf('/Type /XObject /Subtype /Image /Width %d /Height %d /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode', $img->width, $img->height));
+                $smask = ' /SMask ' . $mask . ' 0 R';
+            }
+            $objects[$id] = self::raw($img->data, sprintf('/Type /XObject /Subtype /Image /Width %d /Height %d /ColorSpace /%s /BitsPerComponent 8%s /Filter /%s%s', $img->width, $img->height, $img->colorSpace, $img->decode, $img->filter, $smask));
+            $xobjects .= sprintf('/Im%d %d 0 R ', $k + 1, $id);
+        }
+        $resources = '/Font << /F1 3 0 R >>' . ($xobjects !== '' ? ' /XObject << ' . trim($xobjects) . ' >>' : '');
         foreach ($this->pages as $i => $content) {
-            $objects[9 + $i * 2] = sprintf('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2F %.2F] /Resources << /Font << /F1 3 0 R >> >> /Contents %d 0 R >>', self::WIDTH, self::HEIGHT, 10 + $i * 2);
+            $objects[9 + $i * 2] = sprintf('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2F %.2F] /Resources << %s >> /Contents %d 0 R >>', self::WIDTH, self::HEIGHT, $resources, 10 + $i * 2);
             $objects[10 + $i * 2] = self::stream($content);
         }
         ksort($objects);
@@ -136,6 +174,12 @@ final class Document
         $filter = '';
         if (function_exists('gzcompress')) { $data = (string) gzcompress($data, 6); $filter = ' /Filter /FlateDecode'; }
         return '<< /Length ' . strlen($data) . $filter . ($extra !== '' ? ' ' . $extra : '') . " >>\nstream\n" . $data . "\nendstream";
+    }
+
+    /** A stream already in its final encoding (an image's DCT or Flate data). */
+    private static function raw(string $data, string $dict): string
+    {
+        return '<< ' . $dict . ' /Length ' . strlen($data) . " >>\nstream\n" . $data . "\nendstream";
     }
 
     /** Glyph → character map, so text can be found and copied. */

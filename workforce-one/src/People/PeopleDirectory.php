@@ -38,6 +38,12 @@ final class PeopleDirectory implements People
         return $this->store->activeByUser($userId);
     }
 
+    /** Is any employee row of this site, active or not, linked to this WordPress user (3.31.147)? One read, the one the "already linked" check of a save uses. */
+    public function userIsLinked(int $userId): bool
+    {
+        return $userId > 0 && (bool) $this->store->userOwner($userId, 0);
+    }
+
     public function activeBrief(int $employeeId): ?object
     {
         return $this->store->activeBrief($employeeId);

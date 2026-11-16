@@ -35,7 +35,7 @@ trait EWS_Frontend_Trait {
 
     /** Descriptors accepted in the last 30 days (at most 10), encrypted like the enrolled one. @return array<int,array{at:int,d:array<int,float>}> */
     private function face_recent($uid){
-        $raw=get_user_meta($uid,'ews_face_recent',true);
+        $raw=get_user_meta($uid,$this->site_user_key('ews_face_recent'),true);
         $list=is_string($raw)&&$raw!==''?json_decode((string)$this->face_decrypt_json($raw),true):[];
         $list=is_array($list)?$list:[];
         return array_values(array_filter($list,function($x){return is_array($x)&&isset($x['at'],$x['d'])&&(int)$x['at']>time()-30*DAY_IN_SECONDS;}));
@@ -44,7 +44,7 @@ trait EWS_Frontend_Trait {
     private function face_remember($uid,array $tpl){
         $list=$this->face_recent($uid);
         $list[]=['at'=>time(),'d'=>array_map('floatval',array_values($tpl))];
-        update_user_meta($uid,'ews_face_recent',$this->face_encrypt_json((string)wp_json_encode(array_slice($list,-10))));
+        update_user_meta($uid,$this->site_user_key('ews_face_recent'),$this->face_encrypt_json((string)wp_json_encode(array_slice($list,-10))));
     }
 
     public function face_rest_verify($request){
@@ -61,7 +61,7 @@ trait EWS_Frontend_Trait {
         $stored=$this->face_template_for_employee($emp->id); if(!$stored){$keep('face_failed','face_not_enrolled');return new WP_Error('not_enrolled',__('No face enrolled for this employee','workforce-one'),array('status'=>404));}
         // Only the decision is returned (no distance or threshold: that was a similarity oracle), and
         // failed attempts are limited per user (src/Attendance/FaceMatch.php: 5 in 10 minutes).
-        $uid=get_current_user_id();$state=get_user_meta($uid,'ews_face_verify_failures',true);$state=is_array($state)?$state:null;
+        $uid=get_current_user_id();$state=get_user_meta($uid,$this->site_user_key('ews_face_verify_failures'),true);$state=is_array($state)?$state:null;
         if(FaceMatch::lockedOut($state,time())){$keep('face_failed','face_locked');return $this->face_rate_limited(FaceMatch::retryAfter($state,time()));}
         $ok=FaceMatch::matches($tpl,$stored,(float)$this->face_signin_setting('face_match_threshold',.60));
         $reason='face_mismatch';
@@ -75,13 +75,13 @@ trait EWS_Frontend_Trait {
             }
         }
         if($ok!==true){
-            $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,'ews_face_verify_failures',$state);
+            $state=FaceMatch::afterFailure($state,time());update_user_meta($uid,$this->site_user_key('ews_face_verify_failures'),$state);
             if($state['failures']===FaceMatch::MAX_FAILURES)$this->audit('face_verify_locked','employee',(int)$emp->id,$emp->name.' / '.FaceMatch::MAX_FAILURES.' failed Face verifications in '.(FaceMatch::WINDOW_SECONDS/60).' minutes');
             $keep('face_failed',$ok===null?'invalid_template':$reason);
             if($ok===null)return new WP_Error('invalid_template',__('Template size mismatch','workforce-one'),array('status'=>400));
             return array('ok'=>false);
         }
-        delete_user_meta($uid,'ews_face_verify_failures');
+        delete_user_meta($uid,$this->site_user_key('ews_face_verify_failures'));
         $this->face_remember($uid,$tpl);
         $keep('face_ok','face_ok');
         // The photo goes with the Sign In / Out this check allows (face_photo_take in record_time_event).
@@ -349,6 +349,7 @@ trait EWS_Frontend_Trait {
             wp_style_add_data('workforce-one-approvals-page', 'rtl', 'replace');
             wp_register_script('workforce-one-approvals', $root.'assets/js/approvals.js', [], $ver, true);
             wp_register_script('workforce-one-my-requests', $root.'assets/js/my-requests.js', ['workforce-one-sheet'], $ver, true);
+            wp_register_script('workforce-one-hr-letters', $root.'assets/js/hr-letters.js', ['workforce-one-my-requests'], $ver, true);   // HL3: the HR letter form
             wp_style_add_data('workforce-one-team-page', 'rtl', 'replace');
             wp_register_style('workforce-one-attendance-page', $root.'assets/css/app-attendance.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-attendance-page', 'rtl', 'replace');
@@ -369,6 +370,8 @@ trait EWS_Frontend_Trait {
             wp_add_inline_style('workforce-one-shell', $this->appearance_css());
             // Signed out, the app page is the login (templates/app/login.php): its styles in the <head>.
             if(!is_user_logged_in())$this->enqueue_login_assets();
+            // Occasions (3.31.145): the occasion's stylesheet in the <head> too (nothing while off: occasion_now() returns null first).
+            if(($occ=$this->occasion_now(is_user_logged_in()?'app':'login'))!==null)$this->occasion_assets($occ);
             // In the <head> on the Home page, so it does not flash unstyled (the view enqueues it too, for its shortcode).
             $view=sanitize_key($_GET['ews_view']??'dashboard');
             if($view==='dashboard')wp_enqueue_style('workforce-one-home');
@@ -401,11 +404,11 @@ trait EWS_Frontend_Trait {
     private function smart_nudge_dismissed($user_id=null){
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return [];
-        $raw=get_user_meta($user_id,'ews_smart_nudge_dismissed',true);
+        $raw=get_user_meta($user_id,$this->site_user_key('ews_smart_nudge_dismissed'),true);
         if(!is_array($raw))return [];
         $now=time();$clean=[];
         foreach($raw as $key=>$ts){if($key && (int)$ts>$now-30*DAY_IN_SECONDS)$clean[sanitize_key($key)]=(int)$ts;}
-        if($clean!==$raw)update_user_meta($user_id,'ews_smart_nudge_dismissed',$clean);
+        if($clean!==$raw)update_user_meta($user_id,$this->site_user_key('ews_smart_nudge_dismissed'),$clean);
         return $clean;
     }
 
@@ -416,7 +419,9 @@ trait EWS_Frontend_Trait {
         [$h,$m]=array_map('intval',explode(':',$time));return ($h*60)+$m;
     }
 
-    private function smart_nudge_for_employee($emp,$user_id=null){
+    // $prefetch: the cron's reads for all its employees at once (3.31.148): 'leave' => employee id => pending rows, 'schedule' => employee id => tomorrow's
+    // status, with 'tomorrow' the day they are for; without it (the app's call for one person) each is read here, as before.
+    private function smart_nudge_for_employee($emp,$user_id=null,$prefetch=null){
         global $wpdb;
         if(!$emp)return [];
         // Without attendance tracking there is no Sign In reminder, but the other reminders still apply.
@@ -463,7 +468,8 @@ trait EWS_Frontend_Trait {
         }
 
         if($smart_enabled && !empty($cfg['items']['leave'])){
-            $leave_table=$this->leaves;$pending=$wpdb->get_results($wpdb->prepare("SELECT id,start_date,end_date,requested_days FROM $leave_table WHERE employee_id=%d AND status='Pending' ORDER BY requested_at DESC LIMIT 3",(int)$emp->id));
+            $leave_table=$this->leaves;
+            $pending=is_array($prefetch) && isset($prefetch['leave'])?($prefetch['leave'][(int)$emp->id]??[]):$wpdb->get_results($wpdb->prepare("SELECT id,start_date,end_date,requested_days FROM $leave_table WHERE employee_id=%d AND status='Pending' ORDER BY requested_at DESC LIMIT 3",(int)$emp->id));
             foreach($pending as $r){
                 $range=$r->start_date===$r->end_date?date_i18n('D, d M',strtotime($r->start_date)):date_i18n('D, d M',strtotime($r->start_date)).' → '.date_i18n('D, d M',strtotime($r->end_date));
                 $add('leave-'.$r->id,'leave','🏖','Leave request waiting','Your leave request for '.$range.' is still pending.',add_query_arg('ews_view','vacation',$this->app_home_url()),'View Request');
@@ -471,13 +477,35 @@ trait EWS_Frontend_Trait {
         }
 
         if($smart_enabled && !empty($cfg['items']['schedule'])){
-            $tomorrow=date('Y-m-d',strtotime($today.' +1 day'));$next=$wpdb->get_row($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",(int)$emp->id,$tomorrow));
+            $tomorrow=date('Y-m-d',strtotime($today.' +1 day'));
+            if(is_array($prefetch) && isset($prefetch['schedule']) && ($prefetch['tomorrow']??'')===$tomorrow)$next=isset($prefetch['schedule'][(int)$emp->id])?(object)['status'=>$prefetch['schedule'][(int)$emp->id]]:null;   // the day moved on since the cron read it: read it here
+            else $next=$wpdb->get_row($wpdb->prepare("SELECT status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",(int)$emp->id,$tomorrow));
             if($next){
                 $status=(string)$next->status;$label=$status==='WFH'?'🏠 WFH':($status==='Office'?'🏢 Office':$status);
                 $add('schedule-'.$tomorrow,'schedule','📅','Tomorrow’s schedule','You are scheduled for '.$label.' tomorrow.', add_query_arg('ews_view','schedule',$this->app_home_url()),'View Schedule');
             }
         }
         return array_slice($nudges,0,6);
+    }
+
+    /**
+     * What the cron's employees need from the database, read once for all of them (3.31.148): their user meta into the cache (the dismissed and
+     * pushed lists), and, when those reminders are on, pending leave and tomorrow's schedule. The tasks, today's schedule and Sign In reads stay per person.
+     * @param list<object> $employees id, wp_user_id @param array<string,mixed> $cfg @return array<string,mixed>
+     */
+    private function smart_nudges_prefetch($employees,$cfg){
+        $ids=array_values(array_unique(array_map(function($e){return (int)$e->id;},$employees)));
+        $users=array_values(array_unique(array_map(function($e){return (int)$e->wp_user_id;},$employees)));
+        foreach(array_chunk($users,500) as $chunk)update_meta_cache('user',$chunk);
+        $out=[];
+        if(!empty($cfg['enabled']) && !empty($cfg['items']['leave'])){
+            $out['leave']=\WorkforceOne\Settings\SmartNudges::firstPerEmployee($this->leave_pending_newest_first($ids),3);
+        }
+        if(!empty($cfg['enabled']) && !empty($cfg['items']['schedule'])){
+            $tomorrow=date('Y-m-d',strtotime(current_time('Y-m-d').' +1 day'));
+            $out['schedule']=$this->services()->scheduleDays()->statusesOn($tomorrow);$out['tomorrow']=$tomorrow;   // everyone's row that day; the loop reads only its employees
+        }
+        return $out;
     }
 
     public function smart_nudges_cron(){
@@ -493,11 +521,12 @@ trait EWS_Frontend_Trait {
         $employees=$wpdb->get_results("SELECT id,name,wp_user_id FROM {$this->employees} WHERE active=1 AND wp_user_id>0 AND attendance_enabled=1 ORDER BY id ASC");
         if(!$employees){$result['reason']='No active linked employees';update_option('ews_smart_nudges_last_result',$result,false);return;}
         $result['employees']=count($employees);
+        $prefetch=$this->smart_nudges_prefetch($employees,$cfg);
         foreach($employees as $emp){
             $uid=(int)$emp->wp_user_id;
-            $nudges=$this->smart_nudge_for_employee($emp,$uid);
+            $nudges=$this->smart_nudge_for_employee($emp,$uid,$prefetch);
             if(!$nudges)continue;
-            $pushed=get_user_meta($uid,'ews_smart_nudge_pushed',true);
+            $pushed=get_user_meta($uid,$this->site_user_key('ews_smart_nudge_pushed'),true);
             if(!is_array($pushed))$pushed=[];
             $now=time();
             foreach($pushed as $key=>$ts){
@@ -532,7 +561,7 @@ trait EWS_Frontend_Trait {
                 $sent=$this->push_custom_notification($uid,'Workforce One · '.$n['title'],$n['message'],'smart_nudge',0,$n['url']);
                 if($sent>0){$pushed[$id]=$now;$result['sent']++;}else{$result['skipped']++;}
             }
-            update_user_meta($uid,'ews_smart_nudge_pushed',$pushed);
+            update_user_meta($uid,$this->site_user_key('ews_smart_nudge_pushed'),$pushed);
         }
         $result['reason']='Completed in '.number_format(microtime(true)-$started,3).'s';
         update_option('ews_smart_nudges_last_result',$result,false);
@@ -543,8 +572,8 @@ trait EWS_Frontend_Trait {
         $id=sanitize_key($_GET['nudge_id']??'');
         if(!$id)wp_die('Invalid nudge.');
         check_admin_referer('ews_smart_nudge_dismiss_'.$id);
-        $raw=get_user_meta(get_current_user_id(),'ews_smart_nudge_dismissed',true);if(!is_array($raw))$raw=[];
-        $raw[$id]=time();update_user_meta(get_current_user_id(),'ews_smart_nudge_dismissed',$raw);
+        $raw=get_user_meta(get_current_user_id(),$this->site_user_key('ews_smart_nudge_dismissed'),true);if(!is_array($raw))$raw=[];
+        $raw[$id]=time();update_user_meta(get_current_user_id(),$this->site_user_key('ews_smart_nudge_dismissed'),$raw);
         $ref=wp_get_referer();if(!$ref)$ref=$this->app_home_url();wp_safe_redirect($ref);exit;
     }
 

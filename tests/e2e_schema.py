@@ -17,6 +17,11 @@ OLD = {'ews_notifications': 'user_read_date', 'ews_leave_requests': 'employee_st
 for table, key in list(OLD.items()) + [('ews_leave_requests', 'type_year')]:
     php("$t=$p.'%s'; if($wpdb->get_var(\"SHOW INDEX FROM $t WHERE Key_name='%s'\"))$wpdb->query(\"ALTER TABLE $t DROP INDEX %s\");" % (table, key, key))
 
+# 3.31.148: the two indexes of Performance 1, dropped too (a 3.31.147 site has neither); each comes back with its columns.
+PERF = [('ews_approval_steps', 'acted_by', ['acted_by_wp_user_id', 'acted_at']), ('ews_time_logs', 'work_date_at', ['work_date', 'event_at'])]
+for table, key, _cols in PERF:
+    php("$t=$p.'%s'; if($wpdb->get_var(\"SHOW INDEX FROM $t WHERE Key_name='%s'\"))$wpdb->query(\"ALTER TABLE $t DROP INDEX %s\");" % (table, key, key))
+
 out = json.loads(wp('eval-file', os.path.join(HERE, 'schema_check.php')).splitlines()[-1])
 first, second = out['runs']
 
@@ -25,6 +30,12 @@ check('no broken ALTER (an index without a name or columns)', not [a for a in fi
 check('the missed indexes are added', sum(' ADD KEY ' in a or ' ADD INDEX ' in a for a in first['alters']) >= 4, first['alters'][:8])
 check('the upgrade adds the indexes older versions missed', not out['missing'], out['missing'][:10])
 check('every plugin table and index was checked', out['tables'] >= 45 and out['indexes'] >= 150, (out['tables'], out['indexes']))
+def index_cols(table, key):
+    return php("echo implode(',',$wpdb->get_col(\"SELECT Column_name FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='{$p}%s' AND INDEX_NAME='%s' ORDER BY SEQ_IN_INDEX\"));" % (table, key)).strip().splitlines()[-1:]
+
+
+for table, key, cols in PERF:
+    check('the upgrade adds %s.%s (%s)' % (table, key, ','.join(cols)), index_cols(table, key) == [','.join(cols)], index_cols(table, key))
 check('a second upgrade changes nothing', not second['alters'], second['alters'][:8])
 check('a second upgrade logs no database errors', not second['errors'], second['errors'][:8])
 check('the schema version is recorded', first['version'] == second['version'] == php("$m=new ReflectionMethod('EWS_Manager_V31_1','ews_schema_target'); $m->setAccessible(true); echo $m->invoke(new EWS_Manager_V31_1());"), (first['version'], second['version']))

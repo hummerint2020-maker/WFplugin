@@ -1,0 +1,38 @@
+/* wp-admin → Feature Configuration → Occasions (mockup; Step 2: additions to assets/css/admin-features.css). Logical properties. */
+@import url(occasions.css);
+.occ-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+.occ-wide{grid-column:1/-1}
+.occ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.occ-pick{position:relative;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:6px 10px;align-items:center;padding:12px;border:1.5px solid #e2e5ea;border-radius:12px;background:#fff;cursor:pointer}
+.occ-pick input{position:absolute;inset-block-start:10px;inset-inline-end:10px;margin:0}
+.occ-pick.is-on{border-color:#5B3FD9;box-shadow:0 0 0 3px #EBE8FA}
+.occ-pick b{font-size:13px;color:#1d2939}
+.occ-sw{grid-row:1/3;display:flex;gap:2px;inline-size:52px;block-size:40px;border-radius:9px;background:var(--wfo-occ-ink);align-items:center;justify-content:center;padding:4px}
+.occ-sw i{inline-size:15px;block-size:15px;background:var(--wfo-occ-m1) center/contain no-repeat}
+.occ-sw i:nth-child(2){background-image:var(--wfo-occ-m2)}.occ-sw i:nth-child(3){background-image:var(--wfo-occ-m3)}
+.occ-dots{display:flex;gap:4px}.occ-dots em{inline-size:12px;block-size:12px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.occ-prev{grid-column:1/-1;font-size:12px;text-decoration:none}
+.occ-pick.is-none{grid-template-columns:1fr;background:#fafbfc}.occ-note{font-size:12px;color:#667085}
+.occ-modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.occ-mode{position:relative;display:grid;gap:4px;padding:12px 12px 12px 12px;padding-inline-end:120px;border:1.5px solid #e2e5ea;border-radius:12px;min-height:84px;cursor:pointer}
+.occ-mode.is-on{border-color:#5B3FD9;box-shadow:0 0 0 3px #EBE8FA}
+.occ-mode input{margin:0}.occ-mode b{font-size:13px}.occ-mode small{color:#667085;font-size:12px;line-height:1.5}
+.occ-mini{position:absolute;inset-block:10px;inset-inline-end:10px;inline-size:96px;border-radius:10px;background:#f2f4f7;overflow:hidden;box-shadow:inset 0 0 0 1px #e2e5ea}
+.occ-mini::before{content:"";position:absolute;inset:0 0 auto;block-size:24px;background:linear-gradient(135deg,#13235B,#5B3FD9)}
+.occ-mini.is-bg::after{content:"";position:absolute;inset:0 0 auto;block-size:24px;background:var(--wfo-occ-tile-head) 0 0/40px;opacity:1}
+.occ-mini.is-full::after{content:"";position:absolute;inset:0;background:var(--wfo-occ-tile-head) 0 0/36px}
+.occ-help{display:block;margin-top:4px;color:#667085;font-size:12px}
+.occ-check{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-weight:600;color:#344054}
+.occ-people{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px;border:1px solid #cfd3d8;border-radius:8px;background:#fff}
+.occ-people input{flex:1;min-width:160px;border:0!important;box-shadow:none!important}
+.occ-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;padding-inline:10px 6px;border-radius:999px;background:#EBE8FA;color:#2d1f7a;font-size:12px;font-weight:600}
+.occ-chip button{border:0;background:none;cursor:pointer;color:#5B3FD9;font-size:14px;line-height:1}
+@media(max-width:782px){.occ-fields,.occ-modes{grid-template-columns:1fr}}
+.occ-texts{display:grid;gap:12px}
+.occ-text-pick select{min-width:240px}
+.occ-text-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.occ-text-pair label{display:grid;gap:3px}.occ-text-pair small{color:#667085;font-size:11px;font-weight:600}
+.occ-text-pair input{width:100%;min-height:38px;border:1px solid #cfd3d8;border-radius:8px;padding:6px 10px}
+.occ-text-preview{max-width:420px}
+.occ-text-preview .wfo-occ-greet{animation:none}
+@media(max-width:782px){.occ-text-pair{grid-template-columns:1fr}}

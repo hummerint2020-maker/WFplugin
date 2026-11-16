@@ -30,7 +30,11 @@ trait EWS_Schema_Trait {
                 'profile_image_type'=>"VARCHAR(20) NOT NULL DEFAULT 'initials'",
                 'profile_image_url'=>"TEXT NULL",
                 'avatar_key'=>"VARCHAR(80) NULL",
-                'job_title'=>"VARCHAR(120) NULL" // 3.31.97, organization chart
+                'job_title'=>"VARCHAR(120) NULL", // 3.31.97, organization chart
+                // HR letters (HL2): optional details for letters, filled by HR (docs/tasks/employee-details.md)
+                'name_ar'=>"VARCHAR(190) NULL",
+                'gender'=>"VARCHAR(10) NULL",
+                'hire_date'=>"DATE NULL",
             ];
             foreach($defs as $col=>$def){
                 if(!in_array($col,$cols,true))$wpdb->query("ALTER TABLE {$employees} ADD COLUMN `{$col}` {$def}");
@@ -51,7 +55,8 @@ trait EWS_Schema_Trait {
                 if(!in_array('integrity_reason',$cols,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN integrity_reason VARCHAR(190) NULL AFTER integrity_status");
                 if(!in_array('distance_meters',$cols,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD COLUMN distance_meters DECIMAL(12,2) NULL AFTER location_status");
                 $index_names=$wpdb->get_col("SHOW INDEX FROM {$this->time_logs}",2);
-                if(!in_array('employee_date_type_at',$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY employee_date_type_at (employee_id,work_date,event_type,event_at)");
+                // work_date_at (3.31.148): the reports, open sign-ins, reminders and Location Capacity ask by date alone. Added here by name: dbDelta cannot read the one-line base CREATE.
+                foreach(['employee_date_type_at'=>'employee_id,work_date,event_type,event_at','work_date_at'=>'work_date,event_at'] as $key=>$cols)if(!in_array($key,$index_names,true))$wpdb->query("ALTER TABLE {$this->time_logs} ADD KEY {$key} ({$cols})");
             }
             $employees=$this->employees;
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$employees))===$employees){
@@ -67,7 +72,7 @@ trait EWS_Schema_Trait {
             if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$this->time_logs))!==$this->time_logs){
                 require_once ABSPATH.'wp-admin/includes/upgrade.php';
                 $c=$wpdb->get_charset_collate();
-                dbDelta("CREATE TABLE {$this->time_logs} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,location_timestamp BIGINT NULL,integrity_status VARCHAR(30) NULL,integrity_reason VARCHAR(190) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at)) $c;");
+                dbDelta("CREATE TABLE {$this->time_logs} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,location_timestamp BIGINT NULL,integrity_status VARCHAR(30) NULL,integrity_reason VARCHAR(190) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at),KEY work_date_at(work_date,event_at)) $c;");
             }
         }
 
@@ -329,7 +334,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.121'; }   // 3.31.121: roles get "Edit a locked week"
+        private function ews_schema_target(){ return '3.31.148.1'; }   // Performance 1: indexes on the steps' acted_by and the time logs' work_date
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema
@@ -370,7 +375,8 @@ private function ensure_break_schema(){
                 'ensure_auto_attendance_schema','ensure_achievements_schema','ensure_polls_schema','ensure_swap_schema','ensure_leave_schema',
                 'ensure_push_schema','ensure_recognition_schema','ensure_payroll_schema','ensure_api_idempotency_schema','ensure_api_auth_schema',
                 'ews_v321_ensure_locations_table','ews_v321_ensure_employee_map','ensure_branches_schema','ensure_corrections_schema','ensure_dw_schema',
-                'ensure_evidence_schema','ensure_org_moves_schema','ensure_substitutes_schema','ensure_shift_history_schema','ensure_advances_schema'] as $m){
+                'ensure_evidence_schema','ensure_org_moves_schema','ensure_substitutes_schema','ensure_shift_history_schema','ensure_advances_schema',
+                'ensure_hr_letters_schema'] as $m){
                 $step($m,$m==='ensure_notifications_schema'?function(){$this->ensure_notifications_schema(true);}:function()use($m){$this->$m();});
             }
             if(get_option('ews_feature_tasks',null)===null)update_option('ews_feature_tasks',false,false);

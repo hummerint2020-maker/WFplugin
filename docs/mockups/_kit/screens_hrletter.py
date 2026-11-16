@@ -215,9 +215,103 @@ def letter_page():
     return make
 
 
+def admin_new():
+    """HL3 addition (owner decision 9, 2026-11-09): HR makes a letter for an employee, without a request."""
+    def make():
+        opts = ''.join('<option>%s</option>' % esc(T(*t)) for t, _ in TYPES)
+        body = ('<div class="ews-hl-box"><h2>%s</h2><p>%s</p><table class="form-table">'
+                '<tr><th>%s</th><td><input class="regular-text" list="ews-hl-emp" value="%s"> <label><input type="checkbox" checked> %s</label><p class="description">%s</p></td></tr>'
+                '<tr><th>%s</th><td><select>%s<option>%s</option></select></td></tr>'
+                '<tr><th>%s</th><td><label><input type="radio" name="l" checked> عربي</label> <label><input type="radio" name="l"> English</label></td></tr>'
+                '<tr><th>%s</th><td><input class="regular-text" value="%s"></td></tr>'
+                '<tr><th>%s</th><td><p><label><input type="radio" name="d" checked> %s</label><br><label><input type="radio" name="d"> %s</label> <input type="file" accept="application/pdf"></p></td></tr>'
+                '</table><div class="notice notice-info inline"><p>%s</p></div>'
+                '<p><button class="button">%s</button> <button class="button button-primary">%s</button></p></div>') % (
+                    esc(T('خطاب لموظف', 'Letter for an employee')),
+                    esc(T('من غير طلب ولا موافقة: الخطاب بيصدر على طول ويظهر للموظف في "طلباتي". بيتسجل في سجل التدقيق.', 'No request and no approval: the letter is issued at once and shows in the employee\'s My requests. It is in the Audit Log.')),
+                    esc(T('الموظف', 'Employee')), esc(T('سلمى عاطف (سابقة) · #57', 'Salma Atef (former) · #57')), esc(T('اعرض الموظفين السابقين', 'Show former employees')),
+                    esc(T('مش ممكن تعمل خطاب لنفسك من هنا: اطلبه من التطبيق، والمسؤولين يقرّروا.', 'You cannot make a letter for yourself here: ask in the app and the administrators decide.')),
+                    esc(T('النوع', 'Type')), opts, esc(T('أخرى', 'Other')),
+                    esc(T('اللغة', 'Language')),
+                    esc(T('موجّه إلى', 'Addressed to')), esc(T('إلى من يهمه الأمر', 'To whom it may concern')),
+                    esc(T('الخطاب', 'The letter')), esc(T('يتعمل من قالب النوع (PDF)', 'Made from the type\'s template (PDF)')), esc(T('أرفع ملف PDF', 'I upload a PDF')),
+                    esc(T('شهادة المرتب فيها المرتب: المعاينة والإصدار محتاجين كمان صلاحية "إدارة المرتبات".', 'The salary certificate shows the salary: preview and issue also need "Manage payroll".')),
+                    esc(T('معاينة', 'Preview')), esc(T('إصدار الخطاب', 'Issue the letter')))
+        return admin_page(T('خطابات HR', 'HR letters'), head() + body, SUB, 'letters', feature_css=CSS)
+    return make
+
+
+def admin_ready():
+    """HL3 addition: Mark ready to collect (with a note) and Cancel (with a reason) on an approved letter."""
+    def make():
+        rows = [('HR-2026-000125', T('كريم ناجي', 'Karim Nagi'), T('خطاب بنك · عربي', 'Bank letter · Arabic'), T('اتوافق · طلب فقط', 'Approved · request only'),
+                 '<a href="#">%s</a> · <a href="#">%s</a>' % (esc(T('جاهز للاستلام', 'Ready to collect')), esc(T('إلغاء', 'Cancel')))),
+                ('HR-2026-000122', T('منى عادل', 'Mona Adel'), T('شهادة مرتب · عربي', 'Salary certificate · Arabic'), T('اتوافق · مقدرش يتعمل', 'Approved · could not be made'),
+                 '<span class="ews-hl-err">%s</span><br><a href="#">%s</a> · <a href="#">%s</a> · <a href="#">%s</a>' % (esc(T('مفيش مرتب مسجل للموظفة', 'No pay rate for her')), esc(T('إعادة إصدار', 'Regenerate')), esc(T('رفع ملف', 'Upload file')), esc(T('إلغاء', 'Cancel'))))]
+        tr = ''.join('<tr><td><strong>%s</strong></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (esc(a), esc(b), esc(c), esc(d), e) for a, b, c, d, e in rows)
+        table = ('<table class="wp-list-table widefat striped"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>') % (
+            esc(T('الرقم', 'Ref')), esc(T('الموظف', 'Employee')), esc(T('الخطاب', 'Letter')), esc(T('الحالة', 'Status')), esc(T('إجراء', 'Action')), tr)
+        ready = ('<div class="ews-hl-box"><h2>%s</h2><p>%s</p><p><label>%s<br><input class="regular-text" value="%s"></label></p><p><button class="button button-primary">%s</button> <button class="button">%s</button></p></div>') % (
+            esc(T('جاهز للاستلام: HR-2026-000125', 'Ready to collect: HR-2026-000125')), esc(T('كريم ناجي · خطاب بنك · عربي · إلى البنك الأهلي', 'Karim Nagi · Bank letter · Arabic · to National Bank of Egypt')),
+            esc(T('فين يستلمه؟ (اختياري، بيظهر له)', 'Where to collect it (optional, he sees it)')), esc(T('مكتب ٢٠٤، الدور التاني', 'Office 204, 2nd floor')),
+            esc(T('جاهز وإبلاغه', 'Ready, tell him')), esc(T('رجوع', 'Back')))
+        cancel = ('<div class="ews-hl-box"><h2>%s</h2><p>%s</p><p><label>%s<br><textarea rows="2" class="large-text">%s</textarea></label></p><p><button class="button button-primary">%s</button> <button class="button">%s</button></p><p class="description">%s</p></div>') % (
+            esc(T('إلغاء خطاب اتوافق عليه: HR-2026-000122', 'Cancel an approved letter: HR-2026-000122')), esc(T('منى عادل · شهادة مرتب · عربي', 'Mona Adel · Salary certificate · Arabic')),
+            esc(T('السبب (لازم، بيظهر للموظفة)', 'Reason (required, she sees it)')), esc(T('المرتب الجديد لسه ماتسجلش. اطلبيها تاني أول الشهر.', 'The new salary is not recorded yet. Please ask again at the start of the month.')),
+            esc(T('إلغاء الخطاب وإبلاغها', 'Cancel the letter, tell her')), esc(T('رجوع', 'Back')),
+            esc(T('بيتلغي بس لو لسه مفيش ملف. الإلغاء في سجل التدقيق.', 'Only while no file is attached. The cancel is in the Audit Log.')))
+        return admin_page(T('خطابات HR', 'HR letters'), head() + tabs('list') + table + ready + cancel, SUB, 'letters', feature_css=CSS)
+    return make
+
+
+def hub():
+    """HL3 addition (owner decision 1): a waiting letter on the Requests Hub, decided there like the other requests."""
+    def make():
+        rows = [(T('إجازة سنوية', 'Annual leave'), T('كريم ناجي', 'Karim Nagi'), T('١٢–١٤ نوفمبر · ٣ أيام', '12–14 Nov · 3 days'), T('المستوى ١ من ٢ · أحمد سمير', 'Level 1 of 2 · Ahmed Samir'), T('١٠ نوفمبر', '10 Nov'), ''),
+                (T('خطاب HR', 'HR letter'), T('منى عادل', 'Mona Adel'), T('شهادة مرتب · عربي · إلى بنك مصر · فيه المرتب', 'Salary certificate · Arabic · to Banque Misr · shows the salary'),
+                 T('المستوى ١ من ١ · مع المسؤولين: الموارد البشرية مش متحددة', 'Level 1 of 1 · with the administrators: HR is not set'), T('٩ نوفمبر', '9 Nov'), 'hl')]
+        def acts(kind):
+            a = '<button class="button button-primary">%s</button> <button class="button">%s</button>' % (
+                esc(T('موافقة وإصدار', 'Approve and issue') if kind == 'hl' else T('موافقة', 'Approve')), esc(T('رفض', 'Reject')))
+            return a
+        tr = ''.join('<tr><td><strong>%s</strong></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (esc(a), esc(b), esc(c), esc(d), esc(e), acts(k)) for a, b, c, d, e, k in rows)
+        body = ('<h1>%s</h1><table class="wp-list-table widefat striped"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>'
+                '<p class="description">%s</p>') % (
+                    esc(T('مركز الطلبات', 'Requests Hub')), esc(T('الطلب', 'Request')), esc(T('الموظف', 'Employee')), esc(T('التفاصيل', 'Details')),
+                    esc(T('الموافقة', 'Approval')), esc(T('اتطلب', 'Requested')), esc(T('إجراء', 'Action')), tr,
+                    esc(T('الخطاب بيظهر هنا وهو مستني قرار بس. الرفض محتاج سبب (من صفحة الخطاب أو موافقاتي). مفيش مبلغ مرتب في أي مكان هنا.', 'A letter shows here only while it waits for a decision. Rejecting needs a reason (from My approvals or the letter page). No salary amount appears here.')))
+        return admin_page(T('مركز الطلبات', 'Requests Hub'), body, SUB, 'req', feature_css=CSS)
+    return make
+
+
+def notices():
+    """HL3 addition: the notification texts (who gets them and the words)."""
+    def make():
+        rows = [
+            (T('الموظف', 'Employee'), T('الخطاب جاهز', 'Letter ready'), T('خطابك "شهادة مرتب" جاهز. افتح طلباتي لتحميله.', 'Your "Salary certificate" letter is ready. Open My requests to download it.')),
+            (T('الموظف', 'Employee'), T('HR بتجهّزه', 'HR is preparing it'), T('اتوافق على طلب "خطاب سفارة". HR بتجهّز الخطاب، وهيوصلك إشعار لما يبقى جاهز.', 'Your "Embassy letter" request was approved. HR is preparing it; you will be told when it is ready.')),
+            (T('الموظف', 'Employee'), T('جاهز للاستلام', 'Ready to collect'), T('خطابك "خطاب بنك" جاهز للاستلام من HR: مكتب ٢٠٤، الدور التاني.', 'Your "Bank letter" is ready to collect from HR: Office 204, 2nd floor.')),
+            (T('الموظف', 'Employee'), T('اترفض', 'Rejected'), T('اترفض طلب "شهادة خبرة". السبب: شهادة الخبرة بتطلع عند ترك العمل.', 'Your "Experience letter" request was rejected. Reason: experience letters are issued on leaving.')),
+            (T('الموظف', 'Employee'), T('اتلغى', 'Cancelled'), T('HR لغت خطاب "شهادة مرتب". السبب: المرتب الجديد لسه ماتسجلش.', 'HR cancelled your "Salary certificate" letter. Reason: the new salary is not recorded yet.')),
+            (T('الموظف', 'Employee'), T('اتحدّث', 'Updated'), T('HR حدّثت خطابك "شهادة عمل". حمّل النسخة الجديدة من طلباتي.', 'HR updated your "Employment certificate" letter. Download the new copy from My requests.')),
+            (T('اللي بيقرّر', 'The approver'), T('طلب جديد', 'New request'), T('منى عادل طلبت "شهادة مرتب" (عربي). افتح موافقاتي.', 'Mona Adel asked for a "Salary certificate" (Arabic). Open My approvals.')),
+            (T('HR', 'HR'), T('مستني ملف', 'Waiting for a file'), T('اتوافق على "خطاب سفارة" لمنى عادل. ارفع الخطاب من خطابات HR.', '"Embassy letter" for Mona Adel was approved. Upload it from HR letters.')),
+            (T('HR', 'HR'), T('طلب فقط', 'Request only'), T('اتوافق على "خطاب بنك" لكريم ناجي. جهّزه وعلّمه جاهز للاستلام.', '"Bank letter" for Karim Nagi was approved. Prepare it and mark it ready to collect.')),
+            (T('HR', 'HR'), T('مقدرش يتعمل', 'Could not be made'), T('مقدرناش نعمل "شهادة مرتب" لمنى عادل: مفيش مرتب مسجل. أعد الإصدار أو ارفع ملف.', 'Could not make "Salary certificate" for Mona Adel: no pay rate. Regenerate it or upload a file.')),
+        ]
+        tr = ''.join('<tr><td>%s</td><td><strong>%s</strong></td><td>%s</td></tr>' % (esc(a), esc(b), esc(c)) for a, b, c in rows)
+        body = ('<h1>%s</h1><p>%s</p><table class="wp-list-table widefat striped"><thead><tr><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>') % (
+            esc(T('إشعارات خطابات HR', 'HR letter notifications')),
+            esc(T('في التطبيق وعلى الموبايل لو الإشعارات شغالة. مفيش مبلغ مرتب في أي إشعار. HR = مستخدم الموارد البشرية في مسارات الموافقات، أو اللي معاهم صلاحية "إدارة خطابات HR".', 'In the app, and on the phone when notifications are on. No salary amount in any notification. HR = the HR user of Approval Workflows, else whoever has "Manage HR letters".')),
+            esc(T('لمين', 'To')), esc(T('الحدث', 'Event')), esc(T('النص', 'Text')), tr)
+        return admin_page(T('خطابات HR', 'HR letters'), body, SUB, 'letters', feature_css=CSS)
+    return make
+
+
 def build():
     for slug, make in [('new', new_sheet()), ('sheet', letter_sheet()), ('sheet-other', letter_sheet(True)), ('mine', mine()), ('approve', approve()),
-                       ('admin-list', admin_list()), ('admin-types', admin_types()), ('admin-letterhead', admin_head()), ('features', features()), ('letter', letter_page())]:
+                       ('admin-list', admin_list()), ('admin-types', admin_types()), ('admin-letterhead', admin_head()), ('features', features()), ('letter', letter_page()),
+                       ('admin-new', admin_new()), ('admin-ready', admin_ready()), ('hub', hub()), ('notices', notices())]:
         write(F, slug, make)
     P, D = 'phone', 'desk'
     gallery(F, 'HR letters — mockups', (
@@ -232,4 +326,7 @@ def build():
         ('HR admin', '', [('admin-list', 'Letters: statuses, upload a file', D), ('admin-types', 'Types & templates: delivery per type, placeholders, salary rule', D),
                           ('admin-letterhead', 'Letterhead: logo, signature, stamp (private)', D), ('features', 'Features: the switch (off) and its warnings', D)]),
         ('The letter', '', [('letter', 'Arabic and English, from the built-in generator', D)]),
+        ('Added for HL3 (owner decision 9, 2026-11-09)', '', [('admin-new', 'Letter for an employee (no request, former employees too)', D),
+                          ('admin-ready', 'Ready to collect with a note; Cancel with a reason; a letter that could not be made', D),
+                          ('hub', 'Requests Hub: a waiting letter', D), ('notices', 'The notification texts', D)]),
     ])

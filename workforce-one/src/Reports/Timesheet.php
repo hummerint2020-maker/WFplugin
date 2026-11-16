@@ -15,7 +15,18 @@ final class Timesheet
      */
     public static function byEmployee(array $days): array
     {
-        $out = [];
+        return self::finish(self::accumulate([], $days));
+    }
+
+    /**
+     * byEmployee() a part of the days at a time (3.31.149): accumulate() from [] for each part in
+     * order, then finish(). Over any split of the days the result is byEmployee() of all of them.
+     * @param array<int,array<string,mixed>> $out what accumulate() returned so far ([] at first)
+     * @param iterable<array<string,mixed>> $days
+     * @return array<int,array<string,mixed>>
+     */
+    public static function accumulate(array $out, iterable $days): array
+    {
         foreach ($days as $d) {
             $id = (int) $d['employee_id'];
             if (!isset($out[$id])) {
@@ -36,6 +47,15 @@ final class Timesheet
             }
             unset($t);
         }
+        return $out;
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $out
+     * @return array<int,array<string,mixed>>
+     */
+    public static function finish(array $out): array
+    {
         foreach ($out as $id => $t) {
             ksort($t['leave']);
             $out[$id]['leave_breakdown'] = implode('; ', array_map(static function ($type, $n) { return $type . ' ' . $n; }, array_keys($t['leave']), $t['leave']));

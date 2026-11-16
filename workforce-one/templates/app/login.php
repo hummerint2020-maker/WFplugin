@@ -13,6 +13,7 @@
  * @var string $message
  * @var string $open_url
  * @var string $logout_url
+ * @var array{class:string,layer:string,card:string} $occasion  Occasions (3.31.145): all '' while off
  * @var string $worker_url                 daily workers' own sign-in ('' = hidden)
  */
 if (!defined('ABSPATH')) exit;
@@ -24,8 +25,8 @@ $title = $cfg['login_title'] !== '' ? $cfg['login_title'] : __('Welcome back', '
 $subtitle = $cfg['login_subtitle'] !== '' ? $cfg['login_subtitle'] : __('Sign in with your work account', 'workforce-one');
 $line = implode(' · ', array_filter([$brand['company_name'], $brand['tagline']]));
 ?>
-<div class="ews-login-wrap wfo-login is-bg-<?php echo esc_attr($cfg['login_bg']); ?>">
-    <div class="wfo-login-inner">
+<div class="ews-login-wrap wfo-login is-bg-<?php echo esc_attr($cfg['login_bg'] . $occasion['class']); ?>">
+    <?php echo $occasion['layer']; // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><div class="wfo-login-inner">
         <?php if ($brand['show']): ?>
         <div class="wfo-login-brand">
             <span class="wfo-login-mark"><?php if ($brand['logo_url'] !== ''): ?><img src="<?php echo esc_url($brand['logo_url']); ?>" alt=""><?php else: ?><?php echo esc_html($mark ?: 'W1'); ?><?php endif; ?></span>
@@ -35,7 +36,7 @@ $line = implode(' · ', array_filter([$brand['company_name'], $brand['tagline']]
         <?php endif; ?>
 
         <div class="ews-login-card wfo-login-card<?php echo $cfg['login_eye'] === '1' ? ' has-eye' : ''; ?>"<?php echo $cfg['login_eye'] === '1' ? ' data-show-label="' . esc_attr__('Show password', 'workforce-one') . '" data-hide-label="' . esc_attr__('Hide password', 'workforce-one') . '"' : ''; ?>>
-            <?php if ($signed_in): ?>
+            <?php echo $occasion['card']; // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><?php if ($signed_in): ?>
                 <h1><?php esc_html_e('You are already signed in', 'workforce-one'); ?></h1>
                 <a class="ews-login-btn wfo-login-submit" href="<?php echo esc_url($open_url); ?>"><?php echo esc_html(sprintf(/* translators: %s: app name */ __('Open %s', 'workforce-one'), $brand['app_name'])); ?></a>
                 <a class="ews-login-link wfo-login-alt" href="<?php echo esc_url($logout_url); ?>"><?php esc_html_e('Log out', 'workforce-one'); ?></a>

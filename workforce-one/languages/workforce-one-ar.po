@@ -8061,3 +8061,853 @@ msgstr "من غير مسار موافقات"
 
 msgid "It was already decided, so nothing was changed."
 msgstr "اتقرّر قبل كده، فمفيش حاجة اتغيّرت."
+
+msgid "Details saved."
+msgstr "تم حفظ البيانات."
+
+msgid "Gender"
+msgstr "النوع"
+
+msgid "Edit name in Arabic, gender, hiring date"
+msgstr "تعديل الاسم بالعربي والنوع وتاريخ التعيين"
+
+msgid "Optional; HR letters use them when they are filled."
+msgstr "اختيارية؛ تستخدمها خطابات الموارد البشرية لو متسجلة."
+
+msgid "Name in Arabic"
+msgstr "الاسم بالعربي"
+
+msgid "— Not set —"
+msgstr "— غير مسجل —"
+
+msgid "Male"
+msgstr "ذكر"
+
+msgid "Female"
+msgstr "أنثى"
+
+msgid "Hiring date"
+msgstr "تاريخ التعيين"
+
+msgid "Left empty, a letter uses the employee name, wording that fits anyone (\"Mr./Ms.\"), and the day the employee was added. Changes are kept in the Audit Log."
+msgstr "لو فاضية، الخطاب بيستخدم اسم الموظف، وصيغة تناسب الكل (\"السيد/السيدة\")، ويوم إضافة الموظف. التعديلات بتتسجل في سجل التدقيق."
+
+msgid "Update details from a file"
+msgstr "تحديث البيانات من ملف"
+
+msgid "Details for letters (optional)"
+msgstr "بيانات الخطابات (اختيارية)"
+
+msgid "Gender: not set"
+msgstr "النوع: غير مسجل"
+
+msgid "Employee since"
+msgstr "موظف من"
+
+msgid "This is what appears on your HR letters. Something wrong? Ask HR to correct it."
+msgstr "دي البيانات اللي بتظهر في خطابات الموارد البشرية. فيها حاجة غلط؟ بلّغ الموارد البشرية وهي تصححها."
+
+msgid "Former"
+msgstr "سابق"
+
+#, php-format
+msgid "%1$d change(s) saved for %2$d employee(s). %3$d skipped because the employee changed since the preview."
+msgstr "تم حفظ %1$d تغيير لـ %2$d موظف. تم تخطي %3$d لأن بيانات الموظف اتغيرت بعد المعاينة."
+
+msgid "The name in Arabic is too long (190 characters at most)"
+msgstr "الاسم بالعربي طويل جدًا (190 حرف بحد أقصى)"
+
+msgid "Gender must be male or female"
+msgstr "النوع لازم يكون ذكر أو أنثى"
+
+msgid "The hiring date must be written as YYYY-MM-DD"
+msgstr "تاريخ التعيين لازم يتكتب بالشكل YYYY-MM-DD"
+
+msgid "The hiring date is in the future"
+msgstr "تاريخ التعيين في المستقبل"
+
+msgid "The file needs an \"Employee ID\" or \"Domain name\" column, and at least one of name_ar, gender, hire_date."
+msgstr "الملف محتاج عمود \"Employee ID\" أو \"Domain name\"، وعمود واحد على الأقل من name_ar و gender و hire_date."
+
+msgid "Upload an Excel (.xlsx) or CSV file of 5 MB at most."
+msgstr "ارفع ملف Excel ‏(.xlsx) أو CSV حجمه 5 ميجابايت بحد أقصى."
+
+msgid "This server cannot read Excel files. Save the file as CSV and upload it again."
+msgstr "السيرفر ده مش بيقرا ملفات Excel. احفظ الملف CSV وارفعه تاني."
+
+msgid "The preview expired. Upload the file again."
+msgstr "المعاينة انتهت. ارفع الملف تاني."
+
+msgid "Employee not found."
+msgstr "الموظف غير موجود."
+
+msgid "The details could not be saved. Please try again."
+msgstr "مقدرناش نحفظ البيانات. حاول تاني."
+
+msgid "Back to Employees"
+msgstr "رجوع للموظفين"
+
+msgid "Update name in Arabic, gender and hiring date from a file"
+msgstr "تحديث الاسم بالعربي والنوع وتاريخ التعيين من ملف"
+
+msgid "Download the file: every employee with their current details."
+msgstr "نزّل الملف: كل الموظفين ببياناتهم الحالية."
+
+msgid "Fill the columns name_ar, gender (male or female) and hire_date (YYYY-MM-DD). Other columns are ignored."
+msgstr "املا الأعمدة name_ar و gender ‏(male أو female) و hire_date ‏(YYYY-MM-DD). أي عمود تاني بيتجاهل."
+
+msgid "Upload it here: you see the changes first; nothing is saved before you press Apply."
+msgstr "ارفعه هنا: هتشوف التغييرات الأول، ومفيش حاجة بتتحفظ قبل ما تدوس تطبيق."
+
+msgid "Download the employees file (Excel)"
+msgstr "تنزيل ملف الموظفين (Excel)"
+
+msgid "Upload and preview"
+msgstr "رفع ومعاينة"
+
+msgid "Excel or CSV. An empty cell means \"leave it as it is\"."
+msgstr "Excel أو CSV. الخانة الفاضية معناها \"سيبها زي ما هي\"."
+
+msgid "Preview the update"
+msgstr "معاينة التحديث"
+
+#, php-format
+msgid "%1$d change(s) for %2$d employee(s) will be applied. %3$d row(s) are refused and will not be applied. %4$d employee(s) without a change."
+msgstr "هيتطبق %1$d تغيير لـ %2$d موظف. %3$d صف مرفوض ومش هيتطبق. %4$d موظف من غير تغيير."
+
+msgid "Domain name"
+msgstr "اسم الدومين"
+
+msgid "Field"
+msgstr "الحقل"
+
+msgid "Will change"
+msgstr "هيتغير"
+
+#, php-format
+msgid "Row %d"
+msgstr "الصف %d"
+
+msgid "Nothing to change: the file has the same details as the employees."
+msgstr "مفيش حاجة تتغير: الملف فيه نفس بيانات الموظفين."
+
+#, php-format
+msgid "Apply %d change(s)"
+msgstr "تطبيق %d تغيير"
+
+msgid "Every change is kept in the Audit Log under your name."
+msgstr "كل تغيير بيتسجل في سجل التدقيق باسمك."
+
+msgid "Added to the system: hiring date not set"
+msgstr "تاريخ إضافته للنظام: تاريخ التعيين مش متسجل"
+
+msgid "Download the employees file (CSV)"
+msgstr "تنزيل ملف الموظفين (CSV)"
+
+msgid "The employee is already in an earlier row; only the first row is looked at"
+msgstr "الموظف موجود في صف قبل كده؛ بيتاخد أول صف بس"
+
+msgid "The preview could not be kept on this site. Upload a smaller file (fewer rows)."
+msgstr "مقدرناش نحفظ المعاينة على الموقع ده. ارفع ملف أصغر (صفوف أقل)."
+
+msgid "HR letters"
+msgstr "خطابات HR"
+
+msgid "An HR letter request"
+msgstr "طلب خطاب HR"
+
+msgid "An HR letter request waits for you"
+msgstr "طلب خطاب HR مستنيك"
+
+#, php-format
+msgid "%1$s asked for \"%2$s\" (%3$s). Open My approvals."
+msgstr "%1$s طلب \"%2$s\" (%3$s). افتح موافقاتي."
+
+msgid "Arabic"
+msgstr "عربي"
+
+msgid "English"
+msgstr "إنجليزي"
+
+msgid "Your HR letter is ready"
+msgstr "خطابك جاهز"
+
+#, php-format
+msgid "Your \"%s\" letter is ready. Open My requests to download it."
+msgstr "خطابك \"%s\" جاهز. افتح طلباتي لتحميله."
+
+msgid "Your HR letter request was approved"
+msgstr "اتوافق على طلب الخطاب"
+
+#, php-format
+msgid "Your \"%s\" request was approved. HR is preparing it; you will be told when it is ready."
+msgstr "اتوافق على طلب \"%s\". HR بتجهّز الخطاب، وهيوصلك إشعار لما يبقى جاهز."
+
+msgid "Your HR letter is ready to collect"
+msgstr "خطابك جاهز للاستلام"
+
+#, php-format
+msgid "Your \"%1$s\" letter is ready to collect from HR: %2$s."
+msgstr "خطابك \"%1$s\" جاهز للاستلام من HR: %2$s."
+
+#, php-format
+msgid "Your \"%s\" letter is ready to collect from HR."
+msgstr "خطابك \"%s\" جاهز للاستلام من HR."
+
+msgid "Your HR letter request was rejected"
+msgstr "اترفض طلب الخطاب"
+
+#, php-format
+msgid "Your \"%1$s\" request was rejected. Reason: %2$s"
+msgstr "اترفض طلب \"%1$s\". السبب: %2$s"
+
+#, php-format
+msgid "Your \"%s\" request was rejected."
+msgstr "اترفض طلب \"%s\"."
+
+msgid "HR cancelled your letter"
+msgstr "HR لغت خطابك"
+
+#, php-format
+msgid "HR cancelled your \"%1$s\" letter. Reason: %2$s"
+msgstr "HR لغت خطاب \"%1$s\". السبب: %2$s"
+
+msgid "Your HR letter was updated"
+msgstr "خطابك اتحدّث"
+
+#, php-format
+msgid "HR updated your \"%s\" letter. Download the new copy from My requests."
+msgstr "HR حدّثت خطابك \"%s\". حمّل النسخة الجديدة من طلباتي."
+
+msgid "the type has no template in this language"
+msgstr "النوع ملوش قالب باللغة دي"
+
+msgid "no pay rate is on file"
+msgstr "مفيش مرتب مسجل"
+
+msgid "the PDF could not be made"
+msgstr "ملف PDF مقدرش يتعمل"
+
+msgid "the file could not be saved"
+msgstr "الملف مقدرش يتحفظ"
+
+msgid "An HR letter waits for its file"
+msgstr "خطاب HR مستني الملف"
+
+#, php-format
+msgid "\"%1$s\" for %2$s was approved. Upload it from HR letters."
+msgstr "اتوافق على \"%1$s\" لـ %2$s. ارفع الخطاب من خطابات HR."
+
+msgid "An HR letter to prepare"
+msgstr "خطاب HR محتاج يتجهّز"
+
+#, php-format
+msgid "\"%1$s\" for %2$s was approved. Prepare it and mark it ready to collect."
+msgstr "اتوافق على \"%1$s\" لـ %2$s. جهّزه وعلّمه جاهز للاستلام."
+
+msgid "An HR letter could not be made"
+msgstr "خطاب HR مقدرش يتعمل"
+
+#, php-format
+msgid "Could not make \"%1$s\" for %2$s: %3$s. Regenerate it or upload a file."
+msgstr "مقدرناش نعمل \"%1$s\" لـ %2$s: %3$s. أعد الإصدار أو ارفع ملف."
+
+msgid "Pick a letter type."
+msgstr "اختار نوع الخطاب."
+
+msgid "Only the letters in the list can be asked for."
+msgstr "تقدر تطلب الخطابات اللي في القايمة بس."
+
+msgid "Write which letter you need."
+msgstr "اكتب الخطاب اللي محتاجه."
+
+msgid "This letter is not available in that language."
+msgstr "الخطاب ده مش متاح باللغة دي."
+
+msgid "The note is too long (500 characters at most)."
+msgstr "الملاحظة طويلة جدًا (500 حرف بحد أقصى)."
+
+msgid "You already asked for this letter in this language and it is not ready yet."
+msgstr "إنت طلبت الخطاب ده بنفس اللغة ولسه ماجهزش."
+
+msgid "Your salary is not on file yet, so this letter cannot be made. Ask HR."
+msgstr "مرتبك لسه مش متسجل، فالخطاب ده مايتعملش. كلّم HR."
+
+msgid "This letter is no longer waiting for that: it was already decided or changed."
+msgstr "الخطاب ده مبقاش مستني ده: اتقرر أو اتغير خلاص."
+
+msgid "You cannot make a letter for yourself here: ask in the app and the administrators decide."
+msgstr "مينفعش تعمل خطاب لنفسك من هنا: اطلبه من التطبيق، والمسؤولين يقرّروا."
+
+msgid "This letter shows the salary: it needs \"Manage payroll\" too."
+msgstr "الخطاب ده فيه المرتب: محتاج صلاحية \"إدارة المرتبات\" كمان."
+
+msgid "The type has no template in this language."
+msgstr "النوع ملوش قالب باللغة دي."
+
+msgid "The PDF could not be made."
+msgstr "ملف PDF مقدرش يتعمل."
+
+msgid "The file could not be saved."
+msgstr "الملف مقدرش يتحفظ."
+
+msgid "Choose a PDF file."
+msgstr "اختار ملف PDF."
+
+msgid "The file is larger than 10 MB."
+msgstr "الملف أكبر من 10 ميجا."
+
+msgid "Only PDF files can be attached."
+msgstr "ملفات PDF بس اللي تترفع."
+
+msgid "The file is not there any more."
+msgstr "الملف مبقاش موجود."
+
+msgid "Pick an employee."
+msgstr "اختار موظف."
+
+msgid "Upload a JPEG or PNG image of 1 MB at most."
+msgstr "ارفع صورة JPEG أو PNG حجمها 1 ميجا بحد أقصى."
+
+msgid "Give the type a name."
+msgstr "اكتب اسم للنوع."
+
+msgid "The template has a placeholder that is not in the list."
+msgstr "القالب فيه خانة مش من القايمة."
+
+msgid "Ready"
+msgstr "جاهز"
+
+msgid "Ready to collect"
+msgstr "جاهز للاستلام"
+
+msgid "Approved · being made"
+msgstr "اتوافق · بيتعمل"
+
+msgid "Approved · HR is preparing it"
+msgstr "اتوافق · HR بتجهّزه"
+
+#, php-format
+msgid "To %s"
+msgstr "إلى %s"
+
+msgid "you will be told when HR attaches it"
+msgstr "هيوصلك إشعار لما HR ترفعه"
+
+#, php-format
+msgid "Collect it from HR · %s"
+msgstr "استلمه من HR · %s"
+
+msgid "Collect it from HR"
+msgstr "استلمه من HR"
+
+msgid "Arabic name"
+msgstr "الاسم بالعربي"
+
+msgid "Automatic PDF once approved"
+msgstr "PDF تلقائي بعد الموافقة"
+
+msgid "HR uploads the file"
+msgstr "HR ترفع الملف"
+
+msgid "Request only (ready to collect)"
+msgstr "طلب فقط (جاهز للاستلام)"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "Addressed to"
+msgstr "موجّه إلى"
+
+msgid "Delivery"
+msgstr "التسليم"
+
+msgid "Employee data"
+msgstr "بيانات الموظف"
+
+msgid "HR letter"
+msgstr "خطاب HR"
+
+#, php-format
+msgid "to %s"
+msgstr "إلى %s"
+
+msgid "Shows the salary"
+msgstr "فيه المرتب"
+
+msgid "Approve and issue the letter"
+msgstr "موافقة وإصدار الخطاب"
+
+msgid "The file is attached and the employee was told."
+msgstr "الملف اترفع والموظف اتبلّغ."
+
+msgid "The letter was made again and the employee was told."
+msgstr "الخطاب اتعمل تاني والموظف اتبلّغ."
+
+msgid "Marked ready to collect; the employee was told."
+msgstr "اتعلّم جاهز للاستلام، والموظف اتبلّغ."
+
+msgid "The letter was cancelled; the employee was told."
+msgstr "الخطاب اتلغى، والموظف اتبلّغ."
+
+msgid "The letter was made for the employee."
+msgstr "الخطاب اتعمل للموظف."
+
+msgid "The letter request was decided."
+msgstr "طلب الخطاب اتقرر."
+
+msgid "Your letter is ready. Download it below."
+msgstr "خطابك جاهز. حمّله من تحت."
+
+msgid "Letter asked. You will be told when it is decided."
+msgstr "طلبت الخطاب. هيوصلك إشعار لما يتقرر."
+
+msgid "Employees ask HR for a letter from My requests; it goes through the \"HR Letter\" approval workflow (HR at one level by default). Each type is a PDF made from its template, a file HR uploads, or the request only."
+msgstr "الموظف يطلب خطاب من HR من \"طلباتي\"، والطلب يمشي في مسار موافقات \"خطاب HR\" (HR في مستوى واحد افتراضيًا). كل نوع إما PDF بيتعمل من قالبه، أو ملف HR ترفعه، أو طلب فقط."
+
+msgid "Types & templates"
+msgstr "الأنواع والقوالب"
+
+msgid "The \"HR Letter\" workflow"
+msgstr "مسار \"خطاب HR\""
+
+msgid "HR is not set in Approval Workflows: requests will go to the administrators."
+msgstr "الموارد البشرية مش متحدّدة في مسارات الموافقات: الطلبات هتروح للمسؤولين."
+
+msgid "My approvals and My requests is off: employees will have nowhere to ask."
+msgstr "\"موافقاتي وطلباتي\" مقفولة: الموظفين مش هيلاقوا مكان يطلبوا منه."
+
+msgid "Languages"
+msgstr "اللغات"
+
+msgid "Addressed to (default, Arabic)"
+msgstr "موجّه إلى (افتراضي، عربي)"
+
+msgid "Addressed to (default, English)"
+msgstr "موجّه إلى (افتراضي، إنجليزي)"
+
+msgid "Currency in letters (Arabic · English; empty = the payroll currency code)"
+msgstr "العملة في الخطابات (عربي · إنجليزي؛ فاضية = كود عملة المرتبات)"
+
+msgid "\"Other\": employees may ask for a letter not in the list"
+msgstr "\"أخرى\": الموظف يقدر يطلب خطاب مش في القايمة"
+
+msgid "One open request per type and language"
+msgstr "طلب مفتوح واحد لكل نوع ولغة"
+
+msgid "Letters"
+msgstr "الخطابات"
+
+msgid "Letterhead"
+msgstr "الترويسة"
+
+msgid "Automatic PDF"
+msgstr "PDF تلقائي"
+
+msgid "Request only"
+msgstr "طلب فقط"
+
+msgid "Issued"
+msgstr "صدر"
+
+msgid "The type has no template in this language"
+msgstr "النوع ملوش قالب باللغة دي"
+
+msgid "No pay rate is on file"
+msgstr "مفيش مرتب مسجل"
+
+msgid "The PDF could not be made"
+msgstr "ملف PDF مقدرش يتعمل"
+
+msgid "The file could not be saved"
+msgstr "الملف مقدرش يتحفظ"
+
+msgid "Letter for an employee"
+msgstr "خطاب لموظف"
+
+msgid "HR letters are off: employees cannot ask, and nothing is decided. The letters already issued can still be downloaded here."
+msgstr "خطابات HR مقفولة: الموظفين مش هيقدروا يطلبوا، ومفيش حاجة بتتقرر. الخطابات اللي صدرت لسه تقدر تحمّلها من هنا."
+
+msgid "Waiting for a file"
+msgstr "مستني ملف"
+
+msgid "Ref"
+msgstr "الرقم"
+
+msgid "Letter"
+msgstr "الخطاب"
+
+msgid "Action"
+msgstr "إجراء"
+
+msgid "No letters yet."
+msgstr "مفيش خطابات لسه."
+
+msgid "former"
+msgstr "سابق"
+
+msgid "shows the salary"
+msgstr "فيه المرتب"
+
+msgid "made by HR"
+msgstr "عملته HR"
+
+#, php-format
+msgid "Note: %s"
+msgstr "ملاحظة: %s"
+
+msgid "uploaded"
+msgstr "مرفوع"
+
+msgid "generated"
+msgstr "اتعمل تلقائي"
+
+msgid "Downloaded by the employee"
+msgstr "الموظف حمّله"
+
+msgid "Download"
+msgstr "تحميل"
+
+msgid "Regenerate"
+msgstr "إعادة إصدار"
+
+msgid "Replace"
+msgstr "استبدال"
+
+msgid "Upload file"
+msgstr "رفع ملف"
+
+msgid "Upload and tell the employee"
+msgstr "رفع وإبلاغ الموظف"
+
+msgid "PDF only, up to 10 MB. Private: only the employee and HR can open it."
+msgstr "PDF بس، لحد 10 ميجا. الملف خاص: الموظف وHR بس يشوفوه."
+
+msgid "Where to collect it (optional, the employee sees it)"
+msgstr "فين يستلمه؟ (اختياري، بيظهر للموظف)"
+
+msgid "Ready, tell the employee"
+msgstr "جاهز وإبلاغ الموظف"
+
+msgid "Reason (required, the employee sees it)"
+msgstr "السبب (لازم، بيظهر للموظف)"
+
+msgid "Cancel the letter, tell the employee"
+msgstr "إلغاء الخطاب وإبلاغ الموظف"
+
+msgid "Only while no file is attached. The cancel is in the Audit Log."
+msgstr "بيتلغي بس لو لسه مفيش ملف. الإلغاء في سجل التدقيق."
+
+msgid "Templates"
+msgstr "القوالب"
+
+msgid "\"Other\" always goes to HR to upload. Types are never deleted, only switched off."
+msgstr "\"أخرى\" دايمًا بتروح لـ HR ترفع الخطاب. الأنواع ماتتمسحش، بتتوقف بس."
+
+msgid "Add a type"
+msgstr "إضافة نوع"
+
+#, php-format
+msgid "Edit: %s"
+msgstr "تعديل: %s"
+
+msgid "A new type"
+msgstr "نوع جديد"
+
+msgid "Name (Arabic · English)"
+msgstr "الاسم (عربي · إنجليزي)"
+
+msgid "Arabic template"
+msgstr "القالب العربي"
+
+msgid "English template"
+msgstr "القالب الإنجليزي"
+
+msgid "Not in the list:"
+msgstr "مش من القايمة:"
+
+msgid "A blank line starts a paragraph. Words that depend on the employee's gender: {g:male words|female words}. A template that shows the salary needs \"Manage payroll\" to save. Left empty, a PDF type is not offered in that language."
+msgstr "سطر فاضي = فقرة جديدة. الكلام اللي بيتغير حسب نوع الموظف: {g:كلام المذكر|كلام المؤنث}. القالب اللي فيه المرتب محتاج صلاحية \"إدارة المرتبات\" عشان يتحفظ. لو فاضي، النوع (PDF) مش هيتعرض باللغة دي."
+
+msgid "Preview the saved template for an employee:"
+msgstr "معاينة القالب المحفوظ لموظف:"
+
+msgid "Preview"
+msgstr "معاينة"
+
+msgid "Company name"
+msgstr "اسم الشركة"
+
+msgid "Address"
+msgstr "العنوان"
+
+msgid "Signatory"
+msgstr "اللي بيمضي"
+
+msgid "Signatory's title"
+msgstr "وظيفة اللي بيمضي"
+
+msgid "Footer"
+msgstr "التذييل"
+
+msgid "Images"
+msgstr "الصور"
+
+msgid "Logo"
+msgstr "اللوجو"
+
+msgid "Signature"
+msgstr "الإمضاء"
+
+msgid "Stamp"
+msgstr "الختم"
+
+msgid "JPEG or PNG up to 1 MB. The signature and stamp are kept private, never in the Media Library, and cannot be opened from a link."
+msgstr "JPEG أو PNG لحد 1 ميجا. الإمضاء والختم بيتحفظوا في مكان خاص، مش في مكتبة الوسائط، ومحدش يقدر يفتحهم من لينك."
+
+msgid "Font"
+msgstr "الخط"
+
+msgid "Amiri (formal Arabic), bundled with the plugin"
+msgstr "Amiri (عربي رسمي)، مدمج في البلجن"
+
+msgid "No request and no approval: the letter is issued at once and shows in the employee's My requests. It is in the Audit Log."
+msgstr "من غير طلب ولا موافقة: الخطاب بيصدر على طول ويظهر للموظف في \"طلباتي\". بيتسجل في سجل التدقيق."
+
+msgid "— Pick —"
+msgstr "— اختار —"
+
+msgid "For \"Other\": which letter"
+msgstr "لـ\"أخرى\": أنهي خطاب"
+
+msgid "The letter"
+msgstr "الخطاب"
+
+msgid "Made from the type's template (PDF)"
+msgstr "يتعمل من قالب النوع (PDF)"
+
+msgid "I upload a PDF"
+msgstr "أرفع ملف PDF"
+
+msgid "A letter that shows the salary also needs \"Manage payroll\" to preview and issue."
+msgstr "الخطاب اللي فيه المرتب محتاج كمان صلاحية \"إدارة المرتبات\" للمعاينة والإصدار."
+
+msgid "Issue the letter"
+msgstr "إصدار الخطاب"
+
+msgid "Once approved, the letter is made as a PDF and you download it from My requests."
+msgstr "بعد الموافقة الخطاب بيتعمل PDF تلقائي وتحمّله من طلباتي."
+
+msgid "Once approved, HR prepares the letter and attaches it here; you are told when it is ready."
+msgstr "بعد الموافقة HR بتجهّز الخطاب وترفعه هنا، وهيوصلك إشعار لما يبقى جاهز."
+
+msgid "Once approved, HR prepares the letter and tells you where to collect it."
+msgstr "بعد الموافقة HR بتجهّز الخطاب وتقولك تستلمه منين."
+
+msgid "It shows your salary."
+msgstr "فيه مرتبك."
+
+msgid "Letter type"
+msgstr "نوع الخطاب"
+
+msgid "Which letter do you need?"
+msgstr "محتاج أنهي خطاب؟"
+
+msgid "Letter language"
+msgstr "لغة الخطاب"
+
+msgid "Note for HR"
+msgstr "ملاحظة لـ HR"
+
+msgid "Download the letter (PDF)"
+msgstr "تحميل الخطاب (PDF)"
+
+#, php-format
+msgid "%d characters at most."
+msgstr "%d حرف بحد أقصى."
+
+#, php-format
+msgid "%d years together"
+msgstr "%d سنة مع بعض"
+
+msgid "A cake, its candle blown out and \"HAPPY BIRTHDAY\", once a day when they open the app."
+msgstr "تورتة وشمعة بتطفي و\"HAPPY BIRTHDAY\"، مرة واحدة في اليوم أول ما يفتح التطبيق."
+
+msgid "A few seconds of movement when a page opens, then the decorations stay quietly behind the content."
+msgstr "ثواني حركة لما الصفحة تفتح، وبعدها الزينة تفضل هادية ورا المحتوى."
+
+msgid "Birthdays only, if on"
+msgstr "أعياد الميلاد بس، لو شغالة"
+
+msgid "Celebrate each employee on their birthday"
+msgstr "احتفل بكل موظف في عيد ميلاده"
+
+msgid "Decorations and colours for an occasion on the employee app, the login page and kiosks. You switch it on and off; nothing starts by itself."
+msgstr "زينة وألوان للمناسبة على تطبيق الموظفين وصفحة الدخول والكشك. إنت اللي بتشغّلها وبتقفلها؛ مافيش حاجة بتشتغل لوحدها."
+
+msgid "Eid Mubarak"
+msgstr "عيد فطر مبارك"
+
+msgid "Eid al-Adha"
+msgstr "عيد الأضحى"
+
+msgid "Eid al-Adha Mubarak"
+msgstr "عيد أضحى مبارك"
+
+msgid "Eid al-Fitr"
+msgstr "عيد الفطر"
+
+msgid "Employee Moments"
+msgstr "لحظات الموظفين"
+
+msgid "Empty: until you switch it off."
+msgstr "فاضي: لحد ما تقفلها."
+
+msgid "Everyone sees the decorations on the birthday of:"
+msgstr "الكل يشوف زينة عيد ميلاد:"
+
+msgid "Falling over the whole screen"
+msgstr "تنزل على الشاشة كلها"
+
+msgid "Falls over the screen once for a few seconds, then is gone. It never blocks a tap or stays over Sign In / Out."
+msgstr "تنزل على الشاشة مرة لثواني وتختفي. عمرها ما تمنع لمسة ولا تفضل على زرار الحضور."
+
+msgid "For \"N years together\" on the company's birthday."
+msgstr "لـ \"N سنة مع بعض\" في عيد ميلاد الشركة."
+
+#, php-format
+msgid "From the %s team"
+msgstr "من فريق %s"
+
+msgid "Greeting card title"
+msgstr "عنوان كارت التهنئة"
+
+msgid "Halloween"
+msgstr "الهالوين"
+
+msgid "Happy Halloween"
+msgstr "هالوين سعيد"
+
+msgid "Happy National Day"
+msgstr "كل سنة ومصر بخير"
+
+msgid "Happy New Year"
+msgstr "سنة سعيدة"
+
+msgid "Happy Valentine's Day"
+msgstr "عيد حب سعيد"
+
+msgid "Happy birthday to us"
+msgstr "عيد ميلاد سعيد لينا"
+
+msgid "Happy birthday!"
+msgstr "كل سنة وانت طيب!"
+
+#, php-format
+msgid "Happy birthday, %s!"
+msgstr "كل سنة وانت طيب يا %s!"
+
+msgid "Have a great day, from all the team"
+msgstr "يوم سعيد من كل الفريق"
+
+msgid "Hide decorations"
+msgstr "إخفاء الزينة"
+
+#, php-format
+msgid "Hold Ctrl (⌘ on a Mac) to pick several, %d at most. On their day the decorations and a greeting with their name show to every employee (not on kiosks or the login page)."
+msgstr "دوس Ctrl (أو ⌘ على الماك) عشان تختار أكتر من واحد، %d بحد أقصى. في يوم ميلادهم الزينة والتهنئة باسمهم تظهر لكل الموظفين (مش في الكشك ولا صفحة الدخول)."
+
+msgid "How it shows"
+msgstr "تظهر إزاي"
+
+msgid "In the employee's birthday you may write {name} for their first name, and {years} in the company's birthday for the number of years."
+msgstr "في عيد ميلاد الموظف تقدر تكتب {name} ويتحط مكانها اسمه الأول، وفي عيد ميلاد الشركة {years} لعدد السنين."
+
+msgid "Last day (optional)"
+msgstr "آخر يوم (اختياري)"
+
+msgid "National day · Egypt"
+msgstr "عيد وطني · مصر"
+
+msgid "New Year"
+msgstr "رأس السنة"
+
+msgid "No occasion"
+msgstr "ولا مناسبة"
+
+msgid "Occasion"
+msgstr "المناسبة"
+
+msgid "Occasions"
+msgstr "المناسبات"
+
+#, php-format
+msgid "On their day only they see the decorations and \"Happy birthday\". The year is never shown. %1$d of %2$d employees have a birthday saved in"
+msgstr "في يوم ميلاده هو بس يشوف الزينة و\"كل سنة وانت طيب\". السنة مش بتظهر. %1$d من %2$d موظف متسجل لهم تاريخ ميلاد في"
+
+msgid "Once a day for each employee."
+msgstr "مرة واحدة في اليوم لكل موظف."
+
+msgid "Ramadan"
+msgstr "رمضان"
+
+msgid "Ramadan Kareem"
+msgstr "رمضان كريم"
+
+msgid "Show on kiosk screens"
+msgstr "تظهر على شاشات الكشك"
+
+msgid "The big words of the occasion's moment"
+msgstr "الكلام الكبير في لحظة المناسبة"
+
+msgid "The cake moment for everyone on the picked people's birthday"
+msgstr "مشهد التورتة لكل الموظفين في عيد ميلاد الأشخاص المختارين"
+
+msgid "The cake moment for the birthday person"
+msgstr "مشهد التورتة لصاحب عيد الميلاد"
+
+msgid "The company occasion only, never names."
+msgstr "مناسبة الشركة بس، من غير أسامي."
+
+msgid "The company's birthday"
+msgstr "عيد ميلاد الشركة"
+
+msgid "The company's founding date"
+msgstr "تاريخ تأسيس الشركة"
+
+msgid "The employee's birthday"
+msgstr "عيد ميلاد الموظف"
+
+msgid "The line under it"
+msgstr "السطر اللي تحت العنوان"
+
+msgid "The line under the moment"
+msgstr "السطر اللي تحت اللحظة"
+
+#, php-format
+msgid "The occasion ended on %s. Choose another one or a new last day."
+msgstr "المناسبة خلصت يوم %s. اختار مناسبة تانية أو آخر يوم جديد."
+
+msgid "The occasion on now (one at a time)"
+msgstr "المناسبة الشغالة (واحدة بس في نفس الوقت)"
+
+msgid "The words for each occasion"
+msgstr "الكلام لكل مناسبة"
+
+msgid "Top bar and background"
+msgstr "الشريط اللي فوق والخلفية"
+
+msgid "Valentine's Day"
+msgstr "عيد الحب"
+
+msgid "Wish them a great day"
+msgstr "اتمنالهم يوم حلو"
+
+msgid "Write the words each occasion shows, in Arabic and English. An empty box uses the built-in words."
+msgstr "اكتب الكلام اللي يظهر في كل مناسبة بالعربي والإنجليزي. الخانة الفاضية بتاخد الكلام الجاهز."
+
+msgid "This works on its own, with the switch above on or off."
+msgstr "يعمل هذا وحده، سواء كان المفتاح أعلاه مفعّلًا أم لا."
+
+msgid "The export could not be completed. Please try again."
+msgstr "تعذّر إكمال التصدير. يُرجى المحاولة مرة أخرى."

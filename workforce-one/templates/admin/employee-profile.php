@@ -26,6 +26,7 @@
  * @var string $post_url
  * @var array<string,mixed> $shift_history  EWS_Shift_History_Trait::shift_history_view() (3.31.108)
  * @var bool $can_change_shift
+ * @var array{name_ar:string,gender:string,hire_date:string,gender_label:string,edit:bool,notice:string,error:string,edit_url:string,cancel_url:string,today:string} $details  HR letters HL2
  */
 if (!defined('ABSPATH')) exit;
 $status = $active ? 'Active' : 'Inactive';
@@ -80,11 +81,32 @@ $money = static function ($n) { return number_format((float) $n, 2); };
 <?php endif; ?>
 
 <div class="ews-profile-layout"><div>
-    <section class="ews-profile-panel"><h2>Employee Information</h2><div class="ews-profile-body"><div class="ews-profile-fields">
+    <section class="ews-profile-panel" id="ews-details"><h2>Employee Information</h2><div class="ews-profile-body">
+        <?php if ($details['notice'] !== ''): ?><div class="notice notice-success inline"><p><?php echo esc_html($details['notice']); ?></p></div><?php endif; ?>
+        <?php if ($details['error'] !== ''): ?><div class="notice notice-error inline"><p><?php echo esc_html($details['error']); ?></p></div><?php endif; ?>
+        <div class="ews-profile-fields">
         <?php foreach (['Employee Name' => $emp->name, 'Domain Name' => $emp->domain_name, 'Email' => $emp->email ?: '—', 'WordPress User' => $user_login, 'Status' => $status, 'Employee Since' => $since] as $k => $v): ?>
-            <div class="ews-profile-field"><div class="k"><?php echo esc_html($k); ?></div><div class="v"><?php echo esc_html($v); ?></div></div>
+            <div class="ews-profile-field"><div class="k"><?php echo esc_html($k); ?></div><div class="v"><?php echo esc_html($v); ?><?php
+                // HR letters HL2: the name in Arabic under the name; under Employee Since, a note while the hiring date is not set.
+                if ($k === 'Employee Name' && $details['name_ar'] !== '') echo '<span class="ews-ef-sub" dir="rtl" lang="ar">' . esc_html($details['name_ar']) . '</span>';
+                if ($k === 'Employee Since' && $details['hire_date'] === '') echo '<span class="ews-ef-sub">' . esc_html__('Added to the system: hiring date not set', 'workforce-one') . '</span>';
+            ?></div></div>
         <?php endforeach; ?>
-    </div></div></section>
+            <div class="ews-profile-field"><div class="k"><?php esc_html_e('Gender', 'workforce-one'); ?></div><div class="v<?php echo $details['gender'] === '' ? ' ews-ef-empty' : ''; ?>"><?php echo esc_html($details['gender_label']); ?></div></div>
+        </div>
+        <?php if (!$details['edit']): ?>
+        <p class="ews-ef-actions"><a href="<?php echo esc_url($details['edit_url']); ?>" class="button button-small"><?php esc_html_e('Edit name in Arabic, gender, hiring date', 'workforce-one'); ?></a> <span class="description"><?php esc_html_e('Optional; HR letters use them when they are filled.', 'workforce-one'); ?></span></p>
+        <?php else: ?>
+        <form method="post" action="<?php echo esc_url($post_url); ?>" class="ews-ef-form">
+            <?php wp_nonce_field('ews31_employee_details_' . (int) $employee_id); ?><input type="hidden" name="action" value="ews31_employee_details_save"><input type="hidden" name="employee_id" value="<?php echo (int) $employee_id; ?>">
+            <label><?php esc_html_e('Name in Arabic', 'workforce-one'); ?><input type="text" name="name_ar" dir="rtl" lang="ar" maxlength="190" value="<?php echo esc_attr($details['name_ar']); ?>"></label>
+            <label><?php esc_html_e('Gender', 'workforce-one'); ?><select name="gender"><option value=""><?php esc_html_e('— Not set —', 'workforce-one'); ?></option><option value="male"<?php selected($details['gender'], 'male'); ?>><?php esc_html_e('Male', 'workforce-one'); ?></option><option value="female"<?php selected($details['gender'], 'female'); ?>><?php esc_html_e('Female', 'workforce-one'); ?></option></select></label>
+            <label><?php esc_html_e('Hiring date', 'workforce-one'); ?><input type="date" name="hire_date" max="<?php echo esc_attr($details['today']); ?>" value="<?php echo esc_attr($details['hire_date']); ?>"></label>
+            <p class="description"><?php esc_html_e('Left empty, a letter uses the employee name, wording that fits anyone ("Mr./Ms."), and the day the employee was added. Changes are kept in the Audit Log.', 'workforce-one'); ?></p>
+            <p><button class="button button-primary"><?php esc_html_e('Save', 'workforce-one'); ?></button> <a href="<?php echo esc_url($details['cancel_url']); ?>" class="button"><?php esc_html_e('Cancel', 'workforce-one'); ?></a></p>
+        </form>
+        <?php endif; ?>
+    </div></section>
     <section class="ews-profile-panel"><h2>Organization &amp; Work Setup</h2><div class="ews-profile-body"><div class="ews-profile-fields">
         <?php foreach (['Direct Supervisor' => $supervisor, 'Teams' => $teams ? implode(', ', array_map(static function ($t) { return preg_replace('/ · Manager$/', '', $t); }, $teams)) : '—', 'Default Shift' => $shift, 'Working Hours' => $hours] as $k => $v): ?>
             <div class="ews-profile-field"><div class="k"><?php echo esc_html($k); ?></div><div class="v"><?php echo esc_html($v); ?></div></div>

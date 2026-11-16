@@ -43,6 +43,41 @@ $ids['photo'] = $row(['employee_id' => (int) $c['omar'], 'work_date' => $day(1),
 // HR for the corrections pages: a user with the capability (user meta is in the snapshot, so the other traces see it too; none of them asks)
 $hr = (int) (username_exists('cxhr') ?: wp_create_user('cxhr', 'cxhr-pass', 'cxhr@example.com'));
 (new WP_User($hr))->add_cap('ews_manage_corrections');
+// ---- the requests trace (actions_corrections_requests.php, L5e2): four employees of department A with a user, added two months ago, each with
+// a Sign In only (D-1), a whole day (D-2) and a Sign Out only (D-4); cxq_c reports to the department manager (the LEVEL_1 approver). For the
+// end-of-day reminder, today: an open Sign In of an employee whose user is 0, of an inactive one, and cxq_a's Sign In superseded by a correction row.
+$long = gmdate('Y-m-d H:i:s', strtotime($today . ' -60 days'));
+$cxq = [];
+$mkq = function ($key, $withUser = true, $active = 1) use ($wpdb, $p, $c, $long) {
+    $uid = $withUser ? (int) (username_exists($key) ?: wp_create_user($key, $key . '-pass', $key . '@example.com')) : 0;
+    $have = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE domain_name=%s ORDER BY id LIMIT 1", $key));
+    if (!$have) {
+        $wpdb->insert($p . 'ews_employees', ['name' => 'Cx ' . $key, 'domain_name' => $key, 'email' => $key . '@example.com', 'wp_user_id' => $uid, 'active' => $active, 'attendance_enabled' => 1, 'department_id' => (int) $c['atr_deptA'] ?: null, 'created_at' => $long]);
+        $have = (int) $wpdb->insert_id;
+    }
+    return [$have, $uid];
+};
+foreach (['cxq_a', 'cxq_b', 'cxq_c', 'cxq_d'] as $k) {
+    $cxq[$k] = $mkq($k);
+    $e = $cxq[$k][0];
+    $wpdb->query($wpdb->prepare("DELETE FROM {$p}ews_time_logs WHERE employee_id=%d", $e));
+    $ev($e, 1, 'sign_in', '08:00');
+    $ev($e, 2, 'sign_in', '08:00');
+    $ev($e, 2, 'sign_out', '16:00');
+    $ev($e, 4, 'sign_out', '16:00');
+}
+$mgrEmp = (int) $c['atr_mgr'];
+$wpdb->delete($p . 'ews_employee_relationships', ['employee_id' => $cxq['cxq_c'][0], 'relationship_type' => 'supervisor']);
+$wpdb->insert($p . 'ews_employee_relationships', ['employee_id' => $cxq['cxq_c'][0], 'relationship_type' => 'supervisor', 'related_employee_id' => $mgrEmp, 'active' => 1]);
+$cxq['cxq_nouser'] = $mkq('cxq_nouser', false);
+$cxq['cxq_inactive'] = $mkq('cxq_inactive', true, 0);
+foreach (['cxq_nouser', 'cxq_inactive'] as $k) {
+    $wpdb->query($wpdb->prepare("DELETE FROM {$p}ews_time_logs WHERE employee_id=%d", $cxq[$k][0]));
+    $ev($cxq[$k][0], 0, 'sign_in', '08:10');
+}
+$early = $ev($cxq['cxq_a'][0], 0, 'sign_in', '07:00');
+$wpdb->insert($p . 'ews_time_logs', ['employee_id' => $cxq['cxq_a'][0], 'user_id' => 0, 'work_date' => $today, 'event_type' => 'sign_in', 'event_at' => $at(0, '08:20'), 'scheduled_status' => 'Office', 'ip_address' => '', 'source' => 'correction', 'corrects_id' => $early]);
 $out = ['cx_hr_user' => $hr, 'cx_gdreq' => $gdreq];
+foreach ($cxq as $k => $v) { $out[$k] = $v[0]; $out[$k . '_user'] = $v[1]; }
 foreach ($ids as $k => $v) $out['cx_' . $k] = $v;
 echo wp_json_encode($out);

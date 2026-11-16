@@ -35,7 +35,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
         <article class="wfo-apv-item tone-<?php echo esc_attr($it['tone']); ?>" data-req="<?php echo esc_attr($it['key']); ?>">
             <div class="wfo-apv-who">
                 <div class="wfo-apv-t"><b><?php echo esc_html($it['title']); ?></b><small><?php echo esc_html(implode(' · ', array_filter([$it['sub'], date_i18n('D j M, H:i', strtotime((string) $it['when']))]))); ?></small></div>
-                <span class="wfo-apv-state is-<?php echo esc_attr($it['state']); ?>"><?php echo esc_html($labels[$it['state']] . ($it['state'] === 'waiting' && $p && $p['level'] ? ' · ' . sprintf(/* translators: 1: level, 2: number of levels */ __('level %1$s of %2$s', 'workforce-one'), $num($p['level']), $num($p['levels'])) : '')); ?></span>
+                <span class="wfo-apv-state is-<?php echo esc_attr($it['state']); ?>"><?php echo esc_html((($it['state_label'] ?? '') !== '' ? $it['state_label'] : $labels[$it['state']]) . ($it['state'] === 'waiting' && $p && $p['level'] ? ' · ' . sprintf(/* translators: 1: level, 2: number of levels */ __('level %1$s of %2$s', 'workforce-one'), $num($p['level']), $num($p['levels'])) : '')); ?></span>
             </div>
             <?php if (($it['note'] ?? '') !== ''): ?><p class="wfo-apv-why"><?php echo esc_html($it['note']); ?></p><?php endif; ?>
             <?php if ($p && $p['steps']): ?>
@@ -46,6 +46,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                 </ol>
             </details>
             <?php endif; ?>
+            <?php if (($it['download'] ?? '') !== ''): /* HR letters (HL3): the letter's PDF */ ?><a class="wfo-apv-btn is-ok is-sm wfo-hl-dl" href="<?php echo esc_url($it['download']); ?>" target="_blank" rel="noopener"><?php echo \WorkforceOne\Ui\Icons::svg('download', 16, 2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><?php esc_html_e('Download the letter (PDF)', 'workforce-one'); ?></a><?php endif; ?>
             <?php if ($it['withdraw'] !== ''): ?>
             <details class="wfo-apv-withdraw">
                 <summary class="wfo-apv-btn is-bad is-sm"><?php esc_html_e('Withdraw', 'workforce-one'); ?></summary>

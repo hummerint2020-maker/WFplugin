@@ -104,13 +104,16 @@ final class EmployeeService
     public function create(array $in): ?string
     {
         $row = ['name' => $in['name'], 'domain_name' => $in['domain_name'], 'email' => $in['email'], 'wp_user_id' => $in['wp_user_id'], 'default_shift_id' => $in['default_shift_id'],
-            'attendance_enabled' => $in['attendance_enabled'], 'department_id' => $in['department_id']] + ($in['job_title'] !== null && $in['job_title'] !== '' ? ['job_title' => $in['job_title']] : []);
+            'attendance_enabled' => $in['attendance_enabled'], 'department_id' => $in['department_id']] + ($in['job_title'] !== null && $in['job_title'] !== '' ? ['job_title' => $in['job_title']] : [])
+            + (array) ($in['details'] ?? []);   // name_ar, gender, hire_date when filled (HR letters HL2)
         if ($this->store->insert($row) === false) return 'save';
         $id = $this->store->insertId();
         $this->ports->changed->changed($id, (int) $in['wp_user_id']);
         $this->ports->shifts->fromBeginning($id, (int) $in['default_shift_id']);
         if (!$this->moves->setSupervisorOnly($id, (int) $in['supervisor_id'])) return 'save';
-        $this->audit->record('employee_create', 'employee', $id, $in['name'] . ' / ' . $in['domain_name']);
+        $details = (array) ($in['details'] ?? []);
+        $this->audit->record('employee_create', 'employee', $id, $in['name'] . ' / ' . $in['domain_name']
+            . ($details ? ' · ' . implode(' · ', array_map(static function ($k, $v) { return $k . ': ' . $v; }, array_keys($details), $details)) : ''));
         return null;
     }
 

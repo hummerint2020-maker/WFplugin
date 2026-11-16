@@ -38,6 +38,23 @@ final class Workforce
         return $out;
     }
 
+    /**
+     * Two byDay() results added together (3.31.149: the export reads the employees a group at a
+     * time). byDay() of all the days is merge() of byDay() of each group.
+     * @param array<string,array<string,int>> $a
+     * @param array<string,array<string,int>> $b
+     * @return array<string,array<string,int>>
+     */
+    public static function merge(array $a, array $b): array
+    {
+        foreach ($b as $date => $row) {
+            if (!isset($a[$date])) { $a[$date] = $row; continue; }
+            foreach ($row as $k => $n) $a[$date][$k] += $n;
+        }
+        ksort($a);
+        return $a;
+    }
+
     /** @param array<string,array<string,int>> $byDay */
     public static function totals(array $byDay): array
     {

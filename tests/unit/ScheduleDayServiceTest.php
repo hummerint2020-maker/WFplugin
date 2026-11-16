@@ -64,6 +64,15 @@ final class ScheduleDayServiceTest extends TestCase
         };
     }
 
+    public function testStatusesOnGivesEachEmployeesStatusThatDayOnly(): void
+    {
+        $this->store->add(7, '2026-10-27', 'WFH');
+        $this->store->add(8, '2026-10-27', 'Office');
+        $this->store->add(7, '2026-10-28', 'Leave');
+        $this->assertSame([7 => 'WFH', 8 => 'Office'], $this->service()->statusesOn('2026-10-27'));
+        $this->assertSame([], $this->service()->statusesOn('2026-10-30'));
+    }
+
     public function testGridInsertsAnEmptyDayAndTellsThePerson(): void
     {
         $r = $this->service()->saveIfUnchanged(7, '2026-10-27', 'WFH', null, 3);

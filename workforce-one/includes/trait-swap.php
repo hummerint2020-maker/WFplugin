@@ -407,10 +407,11 @@ trait EWS_Swap_Trait {
     /* ------------------------------------------------------------------ My approvals / My requests (3.31.103) */
 
     /** A swap waiting for an approver (after the colleague accepted), for the My approvals inbox. @return array<string,mixed>|null */
-    private function swap_approval_card($id){
+    private function swap_approval_card($id,$light=false){
             global $wpdb;$table=$this->ensure_swap_schema();
             $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Awaiting' LIMIT 1",(int)$id));
             if(!$r)return null;
+            if($light)return ['employee_id'=>(int)$r->requester_employee_id,'tone'=>'swap','since'=>(string)$r->created_at,'anchor'=>'apv-swap-'.(int)$id];   // no names for the counts (3.31.148)
             $r->requester_name=$this->people_name((int)$r->requester_employee_id);$r->target_name=$this->people_name((int)$r->target_employee_id);
             $day=date_i18n('D j M',strtotime((string)$r->work_date));
             return ['employee_id'=>(int)$r->requester_employee_id,'tone'=>'swap','kind'=>__('Shift swap','workforce-one'),

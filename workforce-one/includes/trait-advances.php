@@ -242,11 +242,12 @@ trait EWS_Advances_Trait {
     }
 
     /** The card in My approvals. @return array<string,mixed>|null */
-    private function advance_approval_card($id){
+    private function advance_approval_card($id,$light=false){
         if(!$this->advances_enabled())return null;
         global $wpdb;$t=$this->advances_tables();
         $a=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['advances']} WHERE id=%d AND status='Pending'",(int)$id));
         if(!$a)return null;
+        if($light)return ['employee_id'=>(int)$a->employee_id,'tone'=>'advance','since'=>(string)$a->requested_at];   // no salary, no instalments, no name for the counts (3.31.148)
         $salary=$this->advance_salary((int)$a->employee_id);$limit=Advances::limit($salary,$this->advance_settings());
         $each=Advances::split((float)$a->amount,(int)$a->instalments)[0];
         $last=null;

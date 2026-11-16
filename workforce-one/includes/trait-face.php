@@ -125,7 +125,7 @@ private function face_signin_enabled(){ return (bool)$this->option('ews_feature_
         if(!$employee_id) return false;
         // The recent descriptors kept against replays go with the face (3.31.91).
         $uid=(int)$this->people_user_id($employee_id);
-        if($uid)delete_user_meta($uid,'ews_face_recent');
+        if($uid)delete_user_meta($uid,$this->site_user_key('ews_face_recent'));
         return $wpdb->delete(
             $wpdb->prefix.'ews_face_profiles',
             array('employee_id'=>$employee_id),

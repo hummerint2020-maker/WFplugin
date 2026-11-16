@@ -279,7 +279,7 @@ check('My requests has "+ New request" and its sheet with the types this person 
 check('...with a useful line: what is left of the leave', re.search(r'data-new-kind="leave".*?<small>[^<]*Annual Leave left</small>', mine, re.S) is not None)
 check('...face reset is not offered without a registered face', 'face' not in kinds)
 check('...no department: the swap is shown but cannot be picked, and says why', re.search(r'disabled aria-disabled="true" data-new-kind="swap".*?You are not in a department yet', mine, re.S) is not None)
-check('the home page has the "New request" shortcut that opens the sheet', 'data-home-new-request' in emp.req('/app/')[1] and 'data-wfo-sheet-start' in emp.req('/app/?ews_view=requests&new=1')[1])
+check('the home page has no "New request" shortcut (3.31.146); My requests still opens the sheet', 'data-home-new-request' not in emp.req('/app/')[1] and 'data-wfo-sheet-start' in emp.req('/app/?ews_view=requests&new=1')[1])
 
 # 3.31.106 (owner report): on the phone My requests was in no menu (desktop only by default).
 more = lambda h: (re.search(r'class="wfo-more-grid">(.*?)</div>', h, re.S) or re.search('()', '')).group(1)

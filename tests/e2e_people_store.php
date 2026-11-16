@@ -19,7 +19,7 @@ $prefix = 'ppl_contract_';
 $tables = ['ews_employees', 'ews_employee_relationships', 'ews_departments', 'ews_teams', 'ews_team_members', 'ews_org_moves'];
 foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$prefix}{$t}");
 register_shutdown_function(function () use ($wpdb, $prefix, $tables) { foreach ($tables as $t) $wpdb->query("DROP TABLE IF EXISTS {$prefix}{$t}"); });
-$wpdb->query("CREATE TABLE {$prefix}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, domain_name VARCHAR(190) NOT NULL, email VARCHAR(190) NULL, wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, default_shift_id BIGINT UNSIGNED NULL, attendance_enabled TINYINT NULL DEFAULT 1, job_title VARCHAR(120) NULL, profile_image_type VARCHAR(20) NULL, profile_image_url TEXT NULL, avatar_key VARCHAR(80) NULL, last_working_day DATE NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
+$wpdb->query("CREATE TABLE {$prefix}ews_employees (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, domain_name VARCHAR(190) NOT NULL, email VARCHAR(190) NULL, wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, department_id BIGINT UNSIGNED NULL, default_shift_id BIGINT UNSIGNED NULL, attendance_enabled TINYINT NULL DEFAULT 1, job_title VARCHAR(120) NULL, profile_image_type VARCHAR(20) NULL, profile_image_url TEXT NULL, avatar_key VARCHAR(80) NULL, last_working_day DATE NULL, name_ar VARCHAR(190) NULL, gender VARCHAR(10) NULL, hire_date DATE NULL, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
 $wpdb->query("CREATE TABLE {$prefix}ews_employee_relationships (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, relationship_type VARCHAR(40) NOT NULL, related_employee_id BIGINT UNSIGNED NULL, related_wp_user_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id))");
 $wpdb->query("CREATE TABLE {$prefix}ews_departments (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, code VARCHAR(80) NOT NULL DEFAULT '', description TEXT NULL, manager_employee_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY department_name (name))");
 $wpdb->query("CREATE TABLE {$prefix}ews_teams (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, name VARCHAR(190) NOT NULL, description TEXT NULL, manager_employee_id BIGINT UNSIGNED NULL, department_id BIGINT UNSIGNED NULL, active TINYINT NOT NULL DEFAULT 1, created_at DATETIME NULL, updated_at DATETIME NULL, PRIMARY KEY (id), UNIQUE KEY team_name (name))");
@@ -79,8 +79,18 @@ $check(array_map(function ($r) { return $r->name; }, $S->activeNamesByUsers($use
 // ---- the shift write
 $check($S->setShiftId($omar, 300) === true && $S->shiftIdOf($omar) === '300' && $S->setShiftId($omar, 300) === true && $S->setShiftId($omar, 0) === true && $S->shiftIdOf($omar) === null && $S->setShiftId($omar, 0) === true, 'setShiftId: set, the same again, cleared, cleared again (all true: no database error)');
 
+// ---- the details for letters (HR letters HL2)
+$check($S->setDetails($omar, ['name_ar' => 'عمر', 'gender' => 'male', 'hire_date' => '2021-03-01', 'name' => 'Hacked'], '2026-11-09 10:00:00') === 1, 'setDetails: one row changed');
+$o = $db->get_row("SELECT name,name_ar,gender,hire_date,updated_at FROM {$emp} WHERE id={$omar}");
+$check($o->name === 'Omar' && $o->name_ar === 'عمر' && $o->gender === 'male' && $o->hire_date === '2021-03-01' && $o->updated_at === '2026-11-09 10:00:00', 'setDetails: the three fields and updated_at, nothing else (not the name)');
+$check($S->setDetails($omar, ['gender' => null], '2026-11-09 11:00:00') === 1 && $db->get_var("SELECT gender FROM {$emp} WHERE id={$omar}") === null && $db->get_var("SELECT name_ar FROM {$emp} WHERE id={$omar}") === 'عمر', 'setDetails: one field cleared to NULL, the others kept');
+$rows = $S->detailsRows();
+$check(array_map(function ($r) { return $r->name; }, $rows) === ['Late', 'Mona', 'Old', 'Omar', 'Twin'], 'detailsRows: every employee, archived too, by name');
+$check(array_keys(get_object_vars($rows[0])) === ['id', 'name', 'domain_name', 'active', 'name_ar', 'gender', 'hire_date', 'created_at'], 'detailsRows: only the columns the file needs (no email, no user)');
+
 $quiet = $db->suppress_errors(true);
 $broken = new WordPressPeopleStore($db, $prefix . 'ews_no_such_employees');
+$check($broken->setDetails($omar, ['gender' => 'male'], '2026-11-09 10:00:00') === false, 'setDetails: false on a database error');
 $check($broken->setShiftId($omar, 5) === false && $broken->setShiftId($omar, 0) === false, 'setShiftId: false on a database error, for both statements');
 $check($broken->activeAll() === [], 'activeAll: wpdb gives an empty list when the query fails (as the old emps() got), which the memo then remembers');
 $db->suppress_errors($quiet);

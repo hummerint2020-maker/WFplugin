@@ -5,6 +5,7 @@
  * and the .ews-avatar-filter / .ews-avatar-choice classes below).
  *
  * @var object $emp
+ * @var array{name_ar:string,gender:string,gender_label:string,since:string} $details  HR letters HL2, read only
  * @var string $planned                today's schedule (General Leave on a company holiday)
  * @var string $today_result
  * @var string $sign_in                raw event time ('' = none)
@@ -88,13 +89,16 @@ $filters = ['all' => __('All', 'workforce-one'), 'Men' => __('Men', 'workforce-o
             <section class="wfo-profile-card" aria-labelledby="wfo-info-title">
                 <div class="wfo-profile-card-head"><span class="wfo-profile-card-icon"><?php echo Icons::svg('user', 20); ?></span><div><h3 id="wfo-info-title"><?php esc_html_e('My Information', 'workforce-one'); ?></h3><p><?php esc_html_e('Your personal and work information', 'workforce-one'); ?></p></div></div>
                 <dl class="wfo-profile-fields">
-                    <div><dt><?php esc_html_e('Name', 'workforce-one'); ?></dt><dd dir="auto"><?php echo esc_html($emp->name); ?></dd></div>
+                    <div><dt><?php esc_html_e('Name', 'workforce-one'); ?></dt><dd dir="auto"><?php echo esc_html($emp->name); ?><?php if ($details['name_ar'] !== ''): ?><br><span class="ews-ef-sub" dir="rtl" lang="ar"><?php echo esc_html($details['name_ar']); ?></span><?php endif; ?></dd></div>
+                    <div><dt><?php esc_html_e('Gender', 'workforce-one'); ?></dt><dd<?php echo $details['gender'] === '' ? ' class="ews-ef-empty"' : ''; ?>><?php echo esc_html($details['gender_label']); ?></dd></div>
+                    <div><dt><?php esc_html_e('Employee since', 'workforce-one'); ?></dt><dd><?php echo esc_html($details['since']); ?></dd></div>
                     <div><dt><?php esc_html_e('Domain', 'workforce-one'); ?></dt><dd dir="ltr"><?php echo esc_html($emp->domain_name); ?></dd></div>
                     <div><dt><?php esc_html_e('Email', 'workforce-one'); ?></dt><dd dir="ltr"><?php echo esc_html($emp->email ?: '—'); ?></dd></div>
                     <div><dt><?php esc_html_e('Team', 'workforce-one'); ?></dt><dd><?php echo esc_html($team_label); ?></dd></div>
                     <div><dt><?php esc_html_e('Supervisor', 'workforce-one'); ?></dt><dd><?php echo $supervisor ? esc_html($supervisor->name) : '—'; ?></dd></div>
                     <div><dt><?php esc_html_e('Shift', 'workforce-one'); ?></dt><dd><?php echo esc_html($shift_name); ?><?php if (!empty($shift_next)): ?><br><small data-shift-next><?php echo esc_html(sprintf(/* translators: 1: date, 2: shift name */ __('From %1$s: %2$s', 'workforce-one'), date_i18n('j M Y', strtotime($shift_next['from'])), $shift_next['name'])); ?></small><?php endif; ?></dd></div>
                 </dl>
+                <p class="ews-ef-note"><?php echo Icons::svg('info', 15); ?><?php esc_html_e('This is what appears on your HR letters. Something wrong? Ask HR to correct it.', 'workforce-one'); ?></p>
             </section>
 
             <section class="wfo-profile-card wfo-profile-security" aria-labelledby="wfo-sec-title">

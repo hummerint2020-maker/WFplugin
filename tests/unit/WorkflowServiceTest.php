@@ -31,11 +31,11 @@ final class WorkflowServiceTest extends TestCase
         $keys = array_map(function ($x) {
             return $x->workflow_key;
         }, array_values($this->w->workflows->workflows));
-        $this->assertSame(['overtime', 'vacation', 'early_leave', 'face_reset', 'shift_swap', 'attendance_correction', 'salary_advance'], $keys);
+        $this->assertSame(['overtime', 'vacation', 'early_leave', 'face_reset', 'shift_swap', 'attendance_correction', 'salary_advance', 'hr_letter'], $keys);
         $this->assertSame(0, (int) $this->w->workflows->workflows[2]->active);
         $this->assertSame('PEER', $this->w->workflows->workflows[5]->approval_mode);
         $this->w->workflowService()->seedDefaults();
-        $this->assertCount(7, $this->w->workflows->workflows, 'a second run adds nothing');
+        $this->assertCount(8, $this->w->workflows->workflows, 'a second run adds nothing');
     }
 
     public function testConfigureSavesTheModeAndTheLevelsInOneTransaction(): void

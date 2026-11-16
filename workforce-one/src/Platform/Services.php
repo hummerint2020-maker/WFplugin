@@ -18,6 +18,7 @@ use WorkforceOne\Attendance\Data\WordPressAutoRuleStore;
 use WorkforceOne\Attendance\Data\WordPressCorrectionQuery;
 use WorkforceOne\Attendance\Data\WordPressCorrectionStore;
 use WorkforceOne\Attendance\Data\WordPressTimeReportQuery;
+use WorkforceOne\Attendance\CorrectionRequests;
 use WorkforceOne\Attendance\EvidenceService;
 use WorkforceOne\Attendance\ManualRecordService;
 use WorkforceOne\Attendance\AttendanceService;
@@ -51,6 +52,7 @@ use WorkforceOne\People\Data\WordPressPeopleStore;
 use WorkforceOne\People\Data\WordPressReportingStore;
 use WorkforceOne\People\Data\WordPressTeamStore;
 use WorkforceOne\People\DepartmentService;
+use WorkforceOne\People\EmployeeDetailsService;
 use WorkforceOne\People\EmployeeService;
 use WorkforceOne\People\OrgDirectory;
 use WorkforceOne\People\OrgImportService;
@@ -65,6 +67,15 @@ use WorkforceOne\Schedule\Data\WordPressScheduleDayStore;
 use WorkforceOne\Schedule\ScheduleDayService;
 use WorkforceOne\Schedule\ScheduleNotifier;
 use WorkforceOne\Schedule\WeekLockService;
+use WorkforceOne\HrLetters\Data\LetterQuery;
+use WorkforceOne\HrLetters\Data\LetterSchema;
+use WorkforceOne\HrLetters\Data\LetterStore;
+use WorkforceOne\HrLetters\Data\WordPressLetterQuery;
+use WorkforceOne\HrLetters\Data\WordPressLetterStore;
+use WorkforceOne\HrLetters\LetterDecisions;
+use WorkforceOne\HrLetters\LetterIssuer;
+use WorkforceOne\HrLetters\LetterPorts;
+use WorkforceOne\HrLetters\LetterRequests;
 
 if (!defined('ABSPATH')) exit;
 
@@ -97,6 +108,8 @@ final class Services
     private $substitutePorts;
     /** @var AttendancePorts */
     private $attendancePorts;
+    /** @var LetterPorts|null */
+    private $letterPorts;
     /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
     private $tables;
     /** @var array<string,object> */
@@ -104,8 +117,9 @@ final class Services
 
     /** @param array<string,string> $tables */
     public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
-        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts)
+        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts, ?LetterPorts $letterPorts = null)
     {
+        $this->letterPorts = $letterPorts;
         $this->attendancePorts = $attendancePorts;
         $this->substitutePorts = $substitutePorts;
         $this->db = $db;
@@ -210,6 +224,13 @@ final class Services
         return $this->made[__FUNCTION__];
     }
 
+    /** An employee's details for letters (HR letters HL2): saved on the profile or from a previewed file. */
+    public function employeeDetails(): EmployeeDetailsService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new EmployeeDetailsService($this->peopleStore(), $this->audit, $this->peoplePorts);
+        return $this->made[__FUNCTION__];
+    }
+
     /** The signed-in employee's profile picture (3.31.135). */
     public function profiles(): ProfileService
     {
@@ -283,7 +304,60 @@ final class Services
     /** The correction pages' reads (3.31.140). */
     public function correctionQuery(): CorrectionQuery
     {
-        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''));
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressCorrectionQuery($this->db, (string) ($this->tables['employees'] ?? ''), (string) ($this->tables['time_logs'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the table of this container's prefix (the upgrade step). */
+    public function letterSchema(): void
+    {
+        LetterSchema::create($this->db);
+    }
+
+    public function letterStore(): LetterStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The HR letters' reads with the employees (HL3). */
+    public function letterQuery(): LetterQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterQuery($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    private function letterPorts(): LetterPorts
+    {
+        if (!$this->letterPorts) throw new \LogicException('HR letters: no ports were given');
+        return $this->letterPorts;
+    }
+
+    /** HR letters (HL3): making, uploading, regenerating, previewing and downloading a letter. */
+    public function letterIssuer(): LetterIssuer
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new LetterIssuer($this->letterStore(), $this->letterQuery(), $this->letterPorts(), $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the employee's request and withdrawal, HR's letter for an employee. */
+    public function letterRequests(): LetterRequests
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new LetterRequests($this->letterStore(), $this->letterIssuer(), $this->letterPorts(), $this->tx, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** HR letters (HL3): the decisions, ready to collect, cancel. */
+    public function letterDecisions(): LetterDecisions
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new LetterDecisions($this->letterStore(), $this->letterIssuer(), $this->letterPorts(), $this->tx, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Attendance correction requests (3.31.143): a new request, HR's own correction, the employee's withdrawal and the end-of-day reminder. */
+    public function correctionRequests(): CorrectionRequests
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new CorrectionRequests($this->correctionStore(), $this->correctionQuery(), $this->attendancePorts->corrections, $this->tx, $this->audit, $this->clock);
         return $this->made[__FUNCTION__];
     }
 

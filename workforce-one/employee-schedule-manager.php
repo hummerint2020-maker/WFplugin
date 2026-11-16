@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.142
+ * Version: 3.31.149
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.142');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.149');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -50,9 +50,12 @@ require_once __DIR__ . '/includes/trait-approval-deadlines.php';
 require_once __DIR__ . '/includes/trait-substitutes.php';
 require_once __DIR__ . '/includes/trait-shift-history.php';
 require_once __DIR__ . '/includes/trait-advances.php';
+require_once __DIR__ . '/includes/trait-hr-letters.php';
+require_once __DIR__ . '/includes/trait-occasions.php';
 require_once __DIR__ . '/includes/trait-system-health.php';
 require_once __DIR__ . '/includes/trait-my-approvals.php';
 require_once __DIR__ . '/includes/trait-org-import.php';
+require_once __DIR__ . '/includes/trait-employee-details.php';
 require_once __DIR__ . '/includes/trait-time-report.php';
 require_once __DIR__ . '/includes/trait-settings-pages.php';
 require_once __DIR__ . '/includes/trait-achievements-admin.php';
@@ -101,7 +104,7 @@ require_once __DIR__ . '/includes/trait-settings-overview.php';
 require_once __DIR__ . '/includes/trait-payroll.php';
 
 class EWS_Manager_V31_1 {
-    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Api_Me_Trait, EWS_Schedule_Api_Trait, EWS_Attendance_Api_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Attendance_Cards_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Private_Files_Trait, EWS_Signin_Evidence_Trait, EWS_Offline_Screen_Trait, EWS_Office_Minimum_Trait, EWS_Week_Lock_Trait, EWS_Services_Trait, EWS_Admin_Nav_Trait, EWS_Org_Chart_Trait, EWS_Org_Moves_Trait, EWS_Org_Import_Trait, EWS_Approval_Deadlines_Trait, EWS_My_Approvals_Trait, EWS_Substitutes_Trait, EWS_Shift_History_Trait, EWS_Advances_Trait, EWS_System_Health_Trait;
+    use EWS_Core_Trait, EWS_Schema_Trait, EWS_Work_Time_Trait, EWS_Schedule_Types_Trait, EWS_Breaks_Trait, EWS_Face_Trait, EWS_Permissions_Trait, EWS_Profile_Account_Trait, EWS_Attendance_Trait, EWS_Api_Auth_Trait, EWS_Api_Me_Trait, EWS_Schedule_Api_Trait, EWS_Attendance_Api_Trait, EWS_Leave_Trait, EWS_Leave_Admin_Trait, EWS_Overtime_Trait, EWS_Swap_Trait, EWS_Schedule_Config_Trait, EWS_Features_Trait, EWS_Employee_Admin_Trait, EWS_Time_Report_Trait, EWS_Settings_Pages_Trait, EWS_Achievements_Admin_Trait, EWS_Engagement_Admin_Trait, EWS_Appearance_Trait, EWS_Employee_Profile_Trait, EWS_Admin_Dashboard_Trait, EWS_Attendance_Insights_Trait, EWS_Schedule_View_Trait, EWS_Attendance_Grid_Trait, EWS_Attendance_Cards_Trait, EWS_Leave_View_Trait, EWS_Dashboard_View_Trait, EWS_My_Profile_Trait, EWS_People_View_Trait, EWS_App_Layout_Trait, EWS_Face_Reset_Trait, EWS_Admin_Requests_Trait, EWS_Frontend_Trait, EWS_PWA_Trait, EWS_Reports_Trait, EWS_Employees_Trait, EWS_Locations_Trait, EWS_Branches_Trait, EWS_Admin_Trait, EWS_Notifications_Trait, EWS_Tasks_Trait, EWS_Task_Extras_Trait, EWS_Approvals_Trait, EWS_Teams_Trait, EWS_Auto_Attendance_Trait, EWS_Achievements_Trait, EWS_Polls_Trait, EWS_Recognition_Trait, EWS_Departments_Trait, EWS_Presence_Trait, EWS_Privacy_Trait, EWS_Settings_Overview_Trait, EWS_Payroll_Trait, EWS_Corrections_Trait, EWS_Daily_Workers_Trait, EWS_Private_Files_Trait, EWS_Signin_Evidence_Trait, EWS_Offline_Screen_Trait, EWS_Office_Minimum_Trait, EWS_Week_Lock_Trait, EWS_Services_Trait, EWS_Admin_Nav_Trait, EWS_Org_Chart_Trait, EWS_Org_Moves_Trait, EWS_Org_Import_Trait, EWS_Employee_Details_Trait, EWS_Approval_Deadlines_Trait, EWS_My_Approvals_Trait, EWS_Substitutes_Trait, EWS_Shift_History_Trait, EWS_Advances_Trait, EWS_Hr_Letters_Trait, EWS_Occasions_Trait, EWS_System_Health_Trait;
 
     private $employees,$schedule,$leaves,$audit,$time_logs,$locations,$company_calendar;
 
@@ -155,6 +158,11 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews31_employee_save',[$this,'employee_save']);
             add_action('admin_post_ews_kudos_submit',[$this,'recognition_submit']);
             add_action('admin_post_ews31_employee_update',[$this,'employee_update']);
+            // An employee's details for letters (HR letters HL2, includes/trait-employee-details.php): the profile's form and the file.
+            add_action('admin_post_ews31_employee_details_save',[$this,'employee_details_save']);
+            add_action('admin_post_ews31_employee_details_export',[$this,'employee_details_export']);
+            add_action('admin_post_ews31_employee_details_import',[$this,'employee_details_import']);
+            add_action('admin_post_ews31_employee_details_import_apply',[$this,'employee_details_import_apply']);
             // Organization chart (3.31.98, includes/trait-org-moves.php and trait-org-import.php): moves, scheduled moves, the managers file.
             add_action('admin_post_ews_org_move',[$this,'org_move_submit']);
             add_action('admin_post_ews_org_move_cancel',[$this,'org_move_cancel']);
@@ -243,6 +251,18 @@ class EWS_Manager_V31_1 {
             add_action('admin_post_ews_advance_respond',[$this,'advance_respond']);
             add_action('admin_post_ews_advance_paid',[$this,'advance_paid']);
             add_action('admin_post_ews_advance_move',[$this,'advance_move']);
+            // HR letters (HL3, includes/trait-hr-letters.php): the request, a level's decision, the file; HR's actions on wp-admin → HR letters.
+            add_action('admin_post_ews_hr_letter_request',[$this,'hr_letter_request']);
+            add_action('admin_post_ews_hr_letter_respond',[$this,'hr_letter_respond']);
+            add_action('admin_post_ews_hr_letter_file',[$this,'hr_letter_file']);
+            add_action('admin_post_ews31_hr_letter_action',[$this,'hr_letter_admin_action']);
+            add_action('admin_post_ews31_hr_letter_create',[$this,'hr_letter_admin_create']);
+            add_action('admin_post_ews31_hr_letter_types_save',[$this,'hr_letter_types_save']);
+            add_action('admin_post_ews31_hr_letter_letterhead_save',[$this,'hr_letter_letterhead_save']);
+            add_action('admin_post_ews31_hr_letter_preview',[$this,'hr_letter_preview']);
+            add_action('admin_post_ews31_hr_letter_image',[$this,'hr_letter_image']);
+            // Occasions (3.31.145, includes/trait-occasions.php): an employee hides the decorations until the next occasion.
+            add_action('admin_post_ews31_occasion_hide',[$this,'occasion_hide']);
             add_action('ews_office_minimum_tick',[$this,'om_tick']);   // Office minimum weekly reminder (3.31.77)
             add_action('ews_week_lock_tick',[$this,'week_lock_tick']);   // Week lock: tell employees at the cutoff (3.31.121)
             // Daily workers (3.31.76); a worker's own sign-in has no WordPress account (nopriv).
@@ -277,9 +297,9 @@ class EWS_Manager_V31_1 {
     static function base_tables(){
             global $wpdb; require_once ABSPATH.'wp-admin/includes/upgrade.php'; $c=$wpdb->get_charset_collate();
             $e=$wpdb->prefix.'ews_employees';$s=$wpdb->prefix.'ews_schedule';$l=$wpdb->prefix.'ews_leave_requests';$a=$wpdb->prefix.'ews_audit_log';
-            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,last_working_day DATE NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id),KEY default_shift_id(default_shift_id)) $c;");
+            dbDelta("CREATE TABLE $e (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(190) NOT NULL,domain_name VARCHAR(190) NOT NULL,email VARCHAR(190) NULL,wp_user_id BIGINT UNSIGNED NULL,default_shift_id BIGINT UNSIGNED NULL,attendance_enabled TINYINT(1) NOT NULL DEFAULT 1,active TINYINT(1) NOT NULL DEFAULT 1,last_working_day DATE NULL,name_ar VARCHAR(190) NULL,gender VARCHAR(10) NULL,hire_date DATE NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY domain_name(domain_name),KEY active(active),KEY email(email),KEY wp_user_id(wp_user_id),KEY default_shift_id(default_shift_id)) $c;");
             dbDelta("CREATE TABLE $s (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,status VARCHAR(40) NOT NULL DEFAULT 'Office',note TEXT NULL,updated_by BIGINT UNSIGNED NULL,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY employee_date(employee_id,work_date),KEY work_date(work_date),KEY employee_id(employee_id)) $c;");
-            dbDelta("CREATE TABLE {$wpdb->prefix}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,source VARCHAR(20) NULL,corrects_id BIGINT UNSIGNED NULL,correction_id BIGINT UNSIGNED NULL,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at),KEY corrects_id(corrects_id)) $c;");
+            dbDelta("CREATE TABLE {$wpdb->prefix}ews_time_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,user_id BIGINT UNSIGNED NOT NULL,work_date DATE NOT NULL,event_type VARCHAR(30) NOT NULL,event_at DATETIME NOT NULL,scheduled_status VARCHAR(40) NOT NULL,ip_address VARCHAR(64) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,accuracy DECIMAL(10,2) NULL,location_status VARCHAR(30) NULL,distance_meters DECIMAL(12,2) NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,source VARCHAR(20) NULL,corrects_id BIGINT UNSIGNED NULL,correction_id BIGINT UNSIGNED NULL,PRIMARY KEY(id),KEY employee_date(employee_id,work_date),KEY event_type(event_type),KEY event_at(event_at),KEY corrects_id(corrects_id),KEY work_date_at(work_date,event_at)) $c;");
             dbDelta("CREATE TABLE $l (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,employee_id BIGINT UNSIGNED NOT NULL,leave_type VARCHAR(40) NOT NULL DEFAULT 'Vacation',start_date DATE NOT NULL,end_date DATE NOT NULL,reason TEXT NULL,status VARCHAR(30) NOT NULL DEFAULT 'Pending',requested_by BIGINT UNSIGNED NULL,approved_by BIGINT UNSIGNED NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY employee_id(employee_id),KEY dates(start_date,end_date),KEY status(status)) $c;");
             dbDelta("CREATE TABLE $a (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,user_id BIGINT UNSIGNED NULL,action VARCHAR(80) NOT NULL,entity VARCHAR(80) NOT NULL,entity_id BIGINT UNSIGNED NULL,details TEXT NULL,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id),KEY user_id(user_id),KEY entity(entity,entity_id),KEY created_at(created_at)) $c;");
             dbDelta("CREATE TABLE {$wpdb->prefix}ews_tasks (

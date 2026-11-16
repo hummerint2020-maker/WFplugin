@@ -19,6 +19,12 @@
       ],
       "api": [
         "services"
+      ],
+      "exports": [
+        "WorkforceOne\\Pdf\\Document",
+        "WorkforceOne\\Pdf\\TextBlock",
+        "WorkforceOne\\Pdf\\Image",
+        "WorkforceOne\\Pdf\\TrueTypeFont"
       ]
     },
     "shell": {
@@ -30,7 +36,8 @@
         "admin-nav",
         "admin-dashboard",
         "dashboard-view",
-        "frontend"
+        "frontend",
+        "occasions"
       ],
       "tables": [],
       "api": [
@@ -39,7 +46,12 @@
         "app_home_url",
         "admin_nav_tab_labels",
         "app_screens",
-        "app_view_allowed"
+        "app_view_allowed",
+        "occasion_kiosk",
+        "occasion_admin_data",
+        "occasions_validate",
+        "occasions_store",
+        "occasions_enabled"
       ]
     },
     "people": {
@@ -55,7 +67,8 @@
         "teams",
         "org-chart",
         "org-moves",
-        "org-import"
+        "org-import",
+        "employee-details"
       ],
       "tables": [
         "employees",
@@ -68,6 +81,7 @@
       "api": [
         "people_employee",
         "people_employee_by_user",
+        "people_user_is_linked",
         "people_names_by_user",
         "people_brief_by_ids",
         "people_by_ids",
@@ -140,7 +154,8 @@
             "workforce-one/src/People/DepartmentService.php",
             "workforce-one/src/People/TeamService.php",
             "workforce-one/src/People/EmployeeService.php",
-            "workforce-one/src/People/ProfileService.php"
+            "workforce-one/src/People/ProfileService.php",
+            "workforce-one/src/People/EmployeeDetailsService.php"
           ],
           "moved": [
             "people_employee",
@@ -215,13 +230,15 @@
             "org-import",
             "employee-admin",
             "people-view",
-            "profile-account"
+            "profile-account",
+            "employee-details"
           ]
         }
       ],
       "exports": [
         "WorkforceOne\\People\\PeopleDirectory",
-        "WorkforceOne\\People\\OrgDirectory"
+        "WorkforceOne\\People\\OrgDirectory",
+        "WorkforceOne\\Employees\\EmployeeDetailsRules"
       ]
     },
     "schedule": {
@@ -269,6 +286,7 @@
         "shift_for_employee_on",
         "api_status_labels",
         "working_hours",
+        "working_hours_forget",
         "week_lock_enabled",
         "week_lock_settings",
         "week_lock_refusal",
@@ -406,7 +424,8 @@
             "workforce-one/src/Attendance/BreakCronService.php",
             "workforce-one/src/Attendance/AutoAttendanceService.php",
             "workforce-one/src/Attendance/ManualRecordService.php",
-            "workforce-one/src/Attendance/EvidenceService.php"
+            "workforce-one/src/Attendance/EvidenceService.php",
+            "workforce-one/src/Attendance/CorrectionRequests.php"
           ],
           "moved": [
             "today_events",
@@ -448,7 +467,11 @@
             "corrections_export",
             "cx_hub_rows",
             "api_corrections_mine",
-            "cx_my_requests"
+            "cx_my_requests",
+            "cx_create",
+            "cx_withdraw",
+            "corrections_tick",
+            "corrections_remind"
           ],
           "traits_clean": [
             "breaks"
@@ -476,7 +499,8 @@
                 "employees",
                 "departments",
                 "approval_requests",
-                "approval_steps"
+                "approval_steps",
+                "time_logs"
               ]
             }
           ]
@@ -509,7 +533,7 @@
         "leave_early_form",
         "leave_away_between",
         "leave_status_of",
-        "leave_legacy_approvals"
+        "leave_legacy_approvals", "leave_pending_newest_first"
       ]
     },
     "overtime": {
@@ -722,6 +746,65 @@
         "advance_money",
         "advances_can_pay"
       ]
+    },
+    "hr_letters": {
+      "label": "HR letters: requests, templates, letterhead, letter files",
+      "traits": [
+        "hr-letters"
+      ],
+      "tables": [
+        "hr_letters"
+      ],
+      "api": [
+        "hr_letters_enabled",
+        "hr_letters_requestable",
+        "hr_letter_settings",
+        "hr_letter_types",
+        "hr_letter_letterhead",
+        "ensure_hr_letters_schema",
+        "hr_letter_form",
+        "hr_letter_withdraw",
+        "hr_letter_my_requests",
+        "hr_letter_approval_card",
+        "hr_letter_error_text",
+        "hr_letter_hub_rows",
+        "hr_letter_hub_decide"
+      ],
+      "layered": [
+        {
+          "slice": "letters",
+          "namespace": [
+            "HrLetters"
+          ],
+          "tables": [
+            "hr_letters"
+          ],
+          "store": [
+            "workforce-one/src/HrLetters/Data/WordPressLetterStore.php"
+          ],
+          "services": [
+            "workforce-one/src/HrLetters/LetterRequests.php",
+            "workforce-one/src/HrLetters/LetterDecisions.php",
+            "workforce-one/src/HrLetters/LetterIssuer.php",
+            "workforce-one/src/HrLetters/LetterPdf.php"
+          ],
+          "reads": [
+            {
+              "file": "workforce-one/src/HrLetters/Data/WordPressLetterQuery.php",
+              "tables": [
+                "hr_letters",
+                "employees",
+                "departments"
+              ]
+            }
+          ],
+          "moved": [],
+          "traits_clean": [
+            "hr-letters"
+          ]
+        }
+      ],
+      "exports": []
     },
     "daily_workers": {
       "label": "Daily Workers",
