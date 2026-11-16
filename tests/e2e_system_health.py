@@ -408,6 +408,13 @@ php("""foreach(['hourly','daily'] as $t){ $wpdb->query("ALTER TABLE {$p}ews_heal
 before = sum(int(x['n']) for x in rows('hourly'))
 st, body, _ = adm.req('/wp-admin/admin.php?page=ews31-payroll&e2e_sleep=1100')
 check('with schema 1 (before the upgrade) the collector keeps counting loads, with no database error', st == 200 and 'WordPress database error' not in body and sum(int(x['n']) for x in rows('hourly')) == before + 1)
+# A database that refuses the ALTER (no privilege, a lock timeout): the site stays on schema 1 and its rollup still works.
+php("$wpdb->query(\"DELETE FROM {$p}ews_health_daily\");")
+out = php("""add_filter('query',function($q){return preg_match('/^\\s*ALTER\\s+TABLE\\s+\\S*ews_health_/i',$q)?'SELECT 1':$q;});
+    delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup(); echo 'SCHEMA '.get_option('ews_health_schema');""")
+check('...a refused ALTER keeps schema 1, and its rollup still writes the daily rows (no query on the missing columns)', 'SCHEMA 1' in out and 'WordPress database error' not in out and len(rows('daily')) > 0, (out[-400:], len(rows('daily'))))
+st, body, _ = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-payroll'))
+check('...and the screen opens on schema 1 without a database error', st == 200 and 'WordPress database error' not in body, st)
 rollup()
 cols = [c['Field'] for c in q("SHOW COLUMNS FROM {p}ews_health_daily")]
 check('...and the rollup upgrades it to schema 2 with the new columns in both tables', opt('ews_health_schema') == '2' and all(c in cols for c in SPLIT) and all(c in [x['Field'] for x in q("SHOW COLUMNS FROM {p}ews_health_hourly")] for c in SPLIT), cols[-12:])

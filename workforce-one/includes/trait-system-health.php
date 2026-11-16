@@ -187,8 +187,8 @@ trait EWS_System_Health_Trait {
         $this->health['prev']=set_error_handler([$this,'health_on_php_error']);
         add_filter('rest_dispatch_request',[$this,'health_rest_route'],10,3);
         if($this->health['split']){   // outside calls through the WordPress HTTP API (push is timed where it is sent)
-            add_filter('pre_http_request',[$this,'health_http_start'],PHP_INT_MAX,2);
-            add_action('http_api_debug',[$this,'health_http_end'],PHP_INT_MAX,4);
+            add_filter('pre_http_request',[$this,'health_http_start'],PHP_INT_MAX,3);
+            add_action('http_api_debug',[$this,'health_http_end'],PHP_INT_MAX,5);
         }
         if(wp_doing_cron()){
             foreach(Routes::CRON_HOOKS as $hook){
@@ -227,15 +227,23 @@ trait EWS_System_Health_Trait {
      * Filter pre_http_request, last: a call no other filter answered is about to go out. A non-blocking call (WordPress's own
      * cron spawn) is not waited for and is not counted. @param mixed $pre @param array<string,mixed> $args
      */
-    public function health_http_start($pre,$args=[]){
-        if($pre===false && !$this->health_http_nonblocking($args) && count($this->health['http'])<50)$this->health['http'][]=microtime(true);
+    public function health_http_start($pre,$args=[],$url=''){
+        if($pre===false && !$this->health_http_nonblocking($args) && count($this->health['http'])<50)$this->health['http'][]=[(string)$url,microtime(true)];
         return $pre;
     }
 
     /** Action http_api_debug: the call came back (or failed). @param mixed $response @param array<string,mixed> $args */
-    public function health_http_end($response,$context='',$class='',$args=[]){
+    public function health_http_end($response,$context='',$class='',$args=[],$url=''){
         if($context!=='response' || !$this->health['http'] || $this->health_http_nonblocking($args))return;
-        $this->health_external(microtime(true)-(float)array_pop($this->health['http']),1);
+        // The latest start for this URL: a call WordPress refused after pre_http_request (a blocked host, an unsafe URL) never
+        // reaches this action, and its start must not be taken for another call's.
+        for($i=count($this->health['http'])-1;$i>=0;$i--){
+            if($this->health['http'][$i][0]!==(string)$url)continue;
+            $t0=(float)$this->health['http'][$i][1];
+            array_splice($this->health['http'],$i,1);
+            $this->health_external(microtime(true)-$t0,1);
+            return;
+        }
     }
 
     /** @param mixed $args */
@@ -489,7 +497,9 @@ trait EWS_System_Health_Trait {
     private function health_sum_columns(){
         $c=['n','sampled','failed','fatal','ms_sum','q_sum','pq_sum','pq_us_sum','pq_n','mem_sum','mem_n','err'];
         for($i=0;$i<Stats::BUCKETS;$i++)$c[]='b'.$i;
-        return array_merge($c,$this->health_split_columns());
+        // The split's columns only once the tables have them (schema 2): a site whose ALTER was refused stays on schema 1 and
+        // must keep its rollup, findings and screen working on the columns it has.
+        return (string)get_option('ews_health_schema','')===HealthSettings::SCHEMA?array_merge($c,$this->health_split_columns()):$c;
     }
 
     /** Cron ews_health_rollup (hourly, only while on): daily rows, purge, findings, alerts, email. */
@@ -629,7 +639,7 @@ trait EWS_System_Health_Trait {
             if($week){
                 $x['n']+=(int)$r['n'];$x['failed']+=(int)$r['failed'];$x['fatal']+=(int)$r['fatal'];$x['hist']=Stats::merge($x['hist'],$hist($r));
                 $x['ms_max']=max($x['ms_max'],(int)$r['ms_max']);$x['pq_sum']+=(int)$r['pq_sum'];$x['pq_n']+=(int)$r['pq_n'];$x['mem_pct']=max($x['mem_pct'],(int)$r['mem_pct_max']);
-                foreach($this->health_split_columns() as $c)$x[$c]+=(int)$r[$c];
+                foreach($this->health_split_columns() as $c)$x[$c]+=(int)($r[$c]??0);
             }
             if($recent){$x['rh']=Stats::merge($x['rh'],$hist($r));$x['rn']+=(int)$r['n'];$x['rv']=(string)$r['version'];}
             else{$x['bh']=Stats::merge($x['bh'],$hist($r));$x['bn']+=(int)$r['n'];$x['bv']=(string)$r['version'];}
@@ -810,10 +820,10 @@ trait EWS_System_Health_Trait {
                 'p50'=>Stats::percentile($h,0.5,(int)$r['ms_max']),'p95'=>Stats::percentile($h,0.95,(int)$r['ms_max']),'q_avg'=>(int)round((int)$r['q_sum']/$n),
                 'pq_avg'=>(int)$r['pq_n']>0?(int)round((int)$r['pq_sum']/(int)$r['pq_n']):null,'mem_max'=>(int)$r['mem_max'],
                 // Where the time went (3.31.150): null below the minimum of measured loads.
-                'split_n'=>(int)$r['db_n'],'slow_split_n'=>(int)$r['slow_n'],
-                'split'=>Stats::split((int)$r['db_n'],(int)$r['db_ms_sum'],(int)$r['db_us_sum'],(int)$r['db_ext_us_sum'],HealthSettings::SPLIT_MIN,HealthSettings::SPLIT_MOSTLY),
-                'slow_split'=>Stats::split((int)$r['slow_n'],(int)$r['slow_ms_sum'],(int)$r['slow_db_us_sum'],(int)$r['slow_ext_us_sum'],HealthSettings::SPLIT_MIN_SLOW,HealthSettings::SPLIT_MOSTLY),
-                'ext_n'=>(int)$r['ext_n'],'ext_calls'=>(int)$r['ext_calls'],'ext_avg'=>(int)$r['ext_n']>0?(int)round((int)$r['ext_us_sum']/1000/(int)$r['ext_n']):0];
+                'split_n'=>(int)($r['db_n']??0),'slow_split_n'=>(int)($r['slow_n']??0),
+                'split'=>Stats::split((int)($r['db_n']??0),(int)($r['db_ms_sum']??0),(int)($r['db_us_sum']??0),(int)($r['db_ext_us_sum']??0),HealthSettings::SPLIT_MIN,HealthSettings::SPLIT_MOSTLY),
+                'slow_split'=>Stats::split((int)($r['slow_n']??0),(int)($r['slow_ms_sum']??0),(int)($r['slow_db_us_sum']??0),(int)($r['slow_ext_us_sum']??0),HealthSettings::SPLIT_MIN_SLOW,HealthSettings::SPLIT_MOSTLY),
+                'ext_n'=>(int)($r['ext_n']??0),'ext_calls'=>(int)($r['ext_calls']??0),'ext_avg'=>(int)($r['ext_n']??0)>0?(int)round((int)($r['ext_us_sum']??0)/1000/(int)($r['ext_n']??0)):0];
         }
         return $out;
     }

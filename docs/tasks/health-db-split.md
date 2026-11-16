@@ -197,3 +197,8 @@ notifications)".
   (3.31.149's two export traces are now in the base) and keeps only the two hooks. Language files: `.mo` and `.l10n.php` were built
   by a small script that rebuilds main's files byte for byte from main's `.po` (checked before use), since WP-CLI could not be run
   here; the 14 new strings were added to the `.pot` by hand, as 3.31.149 did for its string.
+
+## Second review (2026-11-16, PR #51)
+
+1. **CONFIRMED, fixed.** `health_sum_columns()` always listed the split's columns, so a site whose ALTER was refused (the case "the schema is marked only once the columns are there" was written for) stayed on schema 1 but its rollup, findings and screen selected columns its tables did not have: no daily rows, no findings, a broken Details view. The split's columns are now listed only on schema 2; reads of them default to 0. e2e: a refused ALTER keeps schema 1, the rollup still writes the daily rows and the screen opens.
+2. **PLAUSIBLE, fixed.** A request WordPress refuses after `pre_http_request` (a blocked host, `reject_unsafe_urls`) never reaches `http_api_debug`, so its start stayed on the stack and was taken for the next call's. The start is now kept with its URL and the end takes the latest start for the same URL.
