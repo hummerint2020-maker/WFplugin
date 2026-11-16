@@ -10,7 +10,7 @@ Wipes Workforce One test data; never run against a real site.
 import base64, html, json, os, random, re, sys, time, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, ids, php, q, results, site_day, wp, HERE  # noqa: E402
+from e2e_support import B, Session, check, ids, php, q, results, site_day, use_utc, wp, HERE  # noqa: E402
 
 TR = '/wp-admin/admin.php?page=ews31-time-report'
 CAIRO = {'latitude': '30.0445', 'longitude': '31.2358'}
@@ -24,10 +24,11 @@ def evidence(**over):
     php("update_option('ews_signin_evidence',json_decode('%s',true),false);" % json.dumps(cfg))
 
 
-wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
+use_utc()
 # One site day for the run, and not the last minutes of it: the Sign In window set below ends at
 # 23:59, and the report and timeline are read for TODAY after the Sign Ins.
 TODAY = site_day(300)
+wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))   # after the wait: it plans today's schedule
 I = ids()
 php("""foreach(['ews_signin_attempts','ews_notifications','ews_audit_log','ews_departments','ews_face_profiles','ews_break_sessions','ews_company_calendar'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     update_option('ews_working_hours',['start'=>date('H:i',max(strtotime('today',current_time('timestamp')),current_time('timestamp')-3600)),'end'=>'23:59'],false); update_option('ews_working_days',[0,1,2,3,4,5,6],false);

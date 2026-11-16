@@ -10,10 +10,11 @@ Wipes Workforce One test data; never run against a real site.
 import json, os, re, sys, time, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import Session, check, php, q, results, site_day, wp, HERE  # noqa: E402
+from e2e_support import Session, check, php, q, results, site_day, use_utc, wp, HERE  # noqa: E402
 
 # The site's day, kept for the run: today's plan is seeded for it and Sign In, Home and the grid work
 # out "today" on each request; so do not start in the last five minutes before local midnight.
+use_utc()   # as seed() leaves it, so the day below is the plugin's day
 TODAY = site_day(300)
 AT = {'maadi': ('29.9600', '31.2500'), 'cairo': ('30.0300', '31.4700'), 'nasr': ('30.0600', '31.3300'), 'zamalek': ('30.0600', '31.2200')}
 

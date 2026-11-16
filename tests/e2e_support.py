@@ -100,6 +100,11 @@ def ids():
     return json.load(open(os.path.join(S, 'ids.json')))
 
 
+def use_utc():
+    """Put the site on UTC, as tests/e2e_setup.php does: for a suite that calls site_day() before its setup."""
+    php("update_option('timezone_string','UTC'); update_option('gmt_offset',0);")
+
+
 def site_day(span, earliest='00:00'):
     """The site's local date (Y-m-d), once the site clock is at least `earliest` (HH:MM) and the
     next `span` seconds stay on that same date; waits for that if needed. For a suite that seeds
@@ -108,7 +113,8 @@ def site_day(span, earliest='00:00'):
     Also resets `today` here (d(), next_weekday()); a suite that imported `today` by name keeps its own copy."""
     eh, em = (int(x) for x in earliest.split(':'))
     while True:
-        now = datetime.datetime.strptime(php("echo current_time('Y-m-d H:i:s');").splitlines()[-1].strip(), '%Y-%m-%d %H:%M:%S')
+        out = php("echo 'CLOCK '.current_time('Y-m-d H:i:s');")
+        now = datetime.datetime.strptime(re.search(r'CLOCK (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)', out).group(1), '%Y-%m-%d %H:%M:%S')
         start = now.replace(hour=eh, minute=em, second=0)
         if now < start:
             wait = (start - now).total_seconds() + 1
