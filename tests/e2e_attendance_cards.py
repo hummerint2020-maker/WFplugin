@@ -16,7 +16,7 @@ Wipes Workforce One test data; never run against a real site.
 import html, json, os, re, sys, urllib.error, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, d, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, check, d, php, q, results, site_day, use_utc, wp, HERE  # noqa: E402
 
 MODE = sys.argv[2] if len(sys.argv) > 2 else ''
 GOLDEN = sys.argv[3] if len(sys.argv) > 3 else ''
@@ -128,6 +128,10 @@ def golden(ctx, sessions, mode, where):
     return ok
 
 
+# One site day for the run: last week, this week and today's "No sign-out" are worked out from it here
+# (d()) and again by the plugin on each request; so do not start in the last five minutes before midnight.
+use_utc()   # as seed() leaves it (and for --compare, which does not seed)
+site_day(300)
 if MODE == '--compare' and os.path.exists(os.path.join(GOLDEN, 'ctx.json')):
     ctx = json.load(open(os.path.join(GOLDEN, 'ctx.json')))   # the same people as --record (ids are in the page)
 else:

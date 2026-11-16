@@ -114,6 +114,13 @@ def log_count():
     return int(php("global $wpdb; echo (int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$wpdb->prefix}ews_time_logs\");"))
 
 
+# One site day for the run, and not its last minutes: each seed() plans today and opens Sign In until
+# 23:59, and the plugin works out "today" on every request.
+sys.path.insert(0, HERE)
+from e2e_support import site_day  # noqa: E402
+wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))   # the site's time zone (UTC), as seed() leaves it
+site_day(300)
+
 # --- login and collect the (session-bound) nonces once -------------------------------------
 seed()
 req('/wp-login.php')
