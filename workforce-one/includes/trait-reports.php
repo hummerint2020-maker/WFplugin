@@ -273,7 +273,7 @@ trait EWS_Reports_Trait {
      */
     private function report_days(array $emps,$s,$e,$off_days=false){
         $rows=[];
-        foreach($this->report_days_each($emps,$s,$e,$off_days) as $batch)foreach($batch as $r)$rows[]=$r;
+        foreach($this->report_days_each($emps,$s,$e,$off_days) as $batch)foreach($batch as $r)$rows[]=$r;   // one group: pages, payroll and corrections read as before
         return $rows;
     }
 
@@ -281,18 +281,20 @@ trait EWS_Reports_Trait {
      * report_days() a group of employees at a time (3.31.149), so a long period never holds every
      * time log of every employee at once: yields lists of rows, in the same order. Every read is
      * by employee and every figure per employee and day, so the batches together are the whole.
-     * A month for 200 people is one batch: the same statements as before.
+     * $budget (employee-days a group) is given by the exports only; without it everything is one group,
+     * the statements of before. With it a failed read stops the export (a RuntimeException) instead of
+     * showing those employees as absent.
      * @return \Generator<int,array<int,array<string,mixed>>>
      */
-    private function report_days_each(array $emps,$s,$e,$off_days=false){
+    private function report_days_each(array $emps,$s,$e,$off_days=false,$budget=null){
         $dates=[];$working=[];
         for($t=strtotime($s),$et=strtotime($e);$t!==false&&$t<=$et;$t=strtotime('+1 day',$t)){$d=date('Y-m-d',$t);$w=$this->is_working_day($d);if($w||$off_days)$dates[]=$d;if($w)$working[$d]=true;}
         if(!$emps||!$working)return;
         $this->ensure_break_schema();
-        $size=max(1,intdiv(max(1,(int)apply_filters('ews_export_batch_days',10000)),max(1,count($dates))));
-        $ctx=[];
+        $size=$budget===null?count($emps):max(1,intdiv(max(1,(int)$budget),max(1,count($dates))));
+        $ctx=['strict'=>$budget!==null];
         foreach(array_chunk(array_values($emps),$size) as $i=>$part){
-            if($i>0){$this->working_hours_forget();@set_time_limit(120);}
+            if($i>0){$this->working_hours_forget();\WorkforceOne\Support\ExportTime::extend();}
             yield $this->report_days_batch($part,$s,$e,$dates,$working,$ctx);
         }
     }
@@ -302,23 +304,28 @@ trait EWS_Reports_Trait {
         global $wpdb;
         $ids=array_map(function($x){return (int)$x->id;},$emps);
         $ph=implode(',',array_fill(0,count($ids),'%d'));
+        $failed=function()use($wpdb,$ctx){if(!empty($ctx['strict'])&&$wpdb->last_error!=='')throw new \RuntimeException('report_days: '.$wpdb->last_error);};
         $schedule=[];$first=[];$last=[];$breaks=[];
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s",array_merge($ids,[$s,$e]))) as $r)$schedule[(int)$r->employee_id][$r->work_date]=trim((string)$r->status);
+        $failed();
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,event_type,event_at,branch_flag,correction_id FROM {$this->time_logs} WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s".$this->tl_live()." ORDER BY event_at ASC",array_merge($ids,[$s,$e]))) as $r){
             $k=(int)$r->employee_id;
             if($r->event_type==='sign_out')$last[$k][$r->work_date]=$r;
             elseif(in_array($r->event_type,['sign_in','late_sign_in'],true) && !isset($first[$k][$r->work_date]))$first[$k][$r->work_date]=$r;
         }
+        $failed();
         foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,start_at,end_at,actual_minutes FROM {$wpdb->prefix}ews_break_sessions WHERE employee_id IN ($ph) AND work_date BETWEEN %s AND %s AND end_at IS NOT NULL",array_merge($ids,[$s,$e]))) as $r){
             $mins=$r->actual_minutes!==null?(int)$r->actual_minutes:max(0,intdiv((int)strtotime($r->end_at)-(int)strtotime($r->start_at),60));
             $breaks[(int)$r->employee_id][$r->work_date]=($breaks[(int)$r->employee_id][$r->work_date]??0)+$mins;
         }
+        $failed();
         // Approved overtime windows (Overtime feature on): actual and unapproved overtime per day.
         if(!array_key_exists('ot_on',$ctx))$ctx['ot_on']=$this->overtime_enabled();
         $ot_on=$ctx['ot_on'];$windows=[];
         if($ot_on){
             if(empty($ctx['ot_schema'])){$this->ensure_overtime_schema();$ctx['ot_schema']=true;}
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,overtime_date,start_time,end_time FROM {$wpdb->prefix}ews_overtime_requests WHERE status='Approved' AND employee_id IN ($ph) AND overtime_date BETWEEN %s AND %s ORDER BY start_time ASC",array_merge($ids,[$s,$e]))) as $r)$windows[(int)$r->employee_id][$r->overtime_date][]=['start'=>$r->start_time,'end'=>$r->end_time];
+            $failed();
         }
         if(!array_key_exists('holidays',$ctx)){
             $ctx['holidays']=$this->company_leave_dates($s,$e);
@@ -373,19 +380,19 @@ trait EWS_Reports_Trait {
     private function report_attendance_data($s,$e,$selected_team='all',$employee_id=0,$status_filter='all',$employee_status='active',$off_days=false){
         [$emps,$team_options,$team_names_by_emp]=$this->report_employee_scope($selected_team,$employee_id,$employee_status);
         $rows=[];$summary=null;
-        foreach($this->report_attendance_each($emps,$team_names_by_emp,$s,$e,$status_filter,$off_days,$summary) as $batch)foreach($batch as $r)$rows[]=$r;
+        foreach($this->report_attendance_each($emps,$team_names_by_emp,$s,$e,$status_filter,$off_days,$summary,null) as $batch)foreach($batch as $r)$rows[]=$r;
         return [$rows,$summary,$team_options,$emps];
     }
 
     /**
      * report_attendance_data()'s rows a group of employees at a time (3.31.149, see report_days_each()):
-     * yields lists of rows, in the same order; $summary holds the counts of every day read so far
+     * yields lists of rows, in the same order ($budget: see report_days_each(); null = one group); $summary holds the counts of every day read so far
      * (before the status filter, as always), complete once every group was read.
      * @return \Generator<int,array<int,array<string,mixed>>>
      */
-    private function report_attendance_each(array $emps,array $team_names_by_emp,$s,$e,$status_filter,$off_days,&$summary){
+    private function report_attendance_each(array $emps,array $team_names_by_emp,$s,$e,$status_filter,$off_days,&$summary,$budget){
         $summary=array_fill_keys(\WorkforceOne\Reports\Summary::BUCKETS,0)+['records'=>0];
-        foreach($this->report_days_each($emps,$s,$e,$off_days) as $days){
+        foreach($this->report_days_each($emps,$s,$e,$off_days,$budget) as $days){
             $rows=[];
             foreach($days as $day){
                 $flags=$day['missing_sign_out']?['Missing Sign-out']:[];
@@ -572,7 +579,7 @@ trait EWS_Reports_Trait {
     /** The export's rows a group of employees at a time: report_attendance_each() over the report's employees (3.31.149). */
     private function report_export_batches($team,$employee_id,$status,$employee_status,$s,$e,$off_days,&$summary){
         [$emps,,$team_names_by_emp]=$this->report_employee_scope($team,$employee_id,$employee_status);
-        return $this->report_attendance_each($emps,$team_names_by_emp,$s,$e,$status,$off_days,$summary);
+        return $this->report_attendance_each($emps,$team_names_by_emp,$s,$e,$status,$off_days,$summary,(int)apply_filters('ews_export_batch_days',10000));
     }
 
     /** The report as CSV on a temporary stream (3.31.149: no longer one string), rewound; false when it could not be written. @return resource|false */
@@ -580,8 +587,9 @@ trait EWS_Reports_Trait {
         try{$table=$this->report_export_table($s,$e,$type);}catch(\RuntimeException $x){return false;}
         $f=fopen('php://temp/maxmemory:2097152','w+');
         if($f===false)return false;
-        if(fputcsv($f,\WorkforceOne\Support\Csv::row($table['headers']))===false){fclose($f);return false;}
-        try{foreach($table['rows'] as $r)if(fputcsv($f,\WorkforceOne\Support\Csv::row($r))===false){fclose($f);return false;}}
+        // A row is never 0 bytes: 0 (a temporary file that could not be created) is a failure as much as false.
+        if(!fputcsv($f,\WorkforceOne\Support\Csv::row($table['headers']))){fclose($f);return false;}
+        try{foreach($table['rows'] as $r)if(!fputcsv($f,\WorkforceOne\Support\Csv::row($r))){fclose($f);return false;}}
         catch(\RuntimeException $x){fclose($f);return false;}
         rewind($f);return $f;
     }
@@ -781,13 +789,13 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
     }
 
     /**
-     * A temporary file for one sheet, remembered in $temps (path by handle id) so the export can
-     * delete it whatever happens (3.31.149). @return resource
+     * A temporary file for one sheet, remembered in $temps (3.31.149). tmpfile(): PHP removes it
+     * when the request ends in any way, a time-out or a memory error included. @return resource
      */
     private function report_xlsx_temp(array &$temps,$name){
-        $path=wp_tempnam('workforce-one-'.$name.'.xml');
-        $f=$path?fopen($path,'w'):false;
-        if($f===false){if($path)@unlink($path);throw new \RuntimeException('xlsx: no temporary file');}
+        $f=tmpfile();
+        $path=$f!==false?(string)(stream_get_meta_data($f)['uri']??''):'';
+        if($f===false||$path===''){if($f!==false)fclose($f);throw new \RuntimeException('xlsx: no temporary file for '.$name);}
         $temps['h'.(int)$f]=['path'=>$path,'h'=>$f];
         return $f;
     }

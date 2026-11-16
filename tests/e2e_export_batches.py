@@ -81,13 +81,13 @@ def parts(data):
 
 
 def peak():
-    # Read once: the wp-cli call that reads it writes its own peak when it ends (the mu-plugin is on there too).
     return int(php("echo (int)get_option('ews_e2e_peak');") or 0)
 
 
 def ties_sorted(data):
-    """The CSV with the records that tie exactly (same day, same name as the database compares it, same minute
-    shown) put in one order: their order was never defined (docs/tasks/performance-2.md, open question 1)."""
+    """The CSV with the records that tie exactly (same day, same name as the database compares it, same second)
+    put in one order: their order was never defined (docs/tasks/performance-2.md, open question 1). Every seeded
+    time is on :00 seconds, so the minute the file shows is the second the database sorts by."""
     lines = data.decode('utf-8').split('\n')
     head, body = lines[:1], lines[1:]
     key = lambda l: (l.split(',')[0], (re.match(r'^[^,]*,[^,]*,("[^"]*"|[^,]*)', l) or [None, ''])[1].lower(), (re.search(r'"(\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M)"', l) or [None, ''])[1])
@@ -142,7 +142,7 @@ for rtype in ('attendance', 'summary', 'timesheet', 'workforce'):
         c_url, x_url = link(page, 'ews31_report_download'), link(page, 'ews31_report_xlsx')
         mu({'days': 1000000000})
         c1, x1 = raw(adm, c_url)[1] if c_url else b'', parts(raw(adm, x_url)[1]) if x_url else None
-        mu({'days': 150})
+        mu({'days': 1000})   # about 9 employees a group
         c2, x2 = raw(adm, c_url)[1] if c_url else b'', parts(raw(adm, x_url)[1]) if x_url else None
         mu({'days': 1})
         c3, x3 = raw(adm, c_url)[1] if c_url else b'', parts(raw(adm, x_url)[1]) if x_url else None
@@ -152,10 +152,20 @@ for rtype in ('attendance', 'summary', 'timesheet', 'workforce'):
 mu(None)
 page = adm.req('/app/?ews_view=reports&report_type=attendance&start=%s&end=%s' % (START, END))[1]
 php("update_option('ews_working_days_e2e_saved',get_option('ews_working_days'),false); update_option('ews_working_days',[],false);")   # no working day: no row
-x = parts(raw(adm, link(page, 'ews31_report_xlsx'))[1])
-php("update_option('ews_working_days',get_option('ews_working_days_e2e_saved'),false); delete_option('ews_working_days_e2e_saved');")
+try:
+    x = parts(raw(adm, link(page, 'ews31_report_xlsx'))[1])
+finally:
+    php("update_option('ews_working_days',get_option('ews_working_days_e2e_saved'),false); delete_option('ews_working_days_e2e_saved');")
 sheet = dict(x or []).get('xl/worksheets/sheet1.xml', b'')
 check('no rows: the Excel says so', b'No records found for the selected period.' in sheet, sheet[-400:])
+# A group of employees that cannot be read stops the export: no file, no audit entry, no temporary file.
+audits = int(php("echo (int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$p}ews_audit_log WHERE action='report_export'\");"))
+mu({'days': 1000, 'rfail': 1})
+for action in ('ews31_report_download', 'ews31_report_xlsx'):
+    st, body, hh = raw(adm, link(page, action))
+    check('a group that cannot be read (%s): an error page, not a file with those employees absent' % action, st != 200 and 'attachment' not in hh.get('Content-Disposition', ''), (st, body[:300], hh))
+mu(None)
+check('...and no export in the audit log', int(php("echo (int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$p}ews_audit_log WHERE action='report_export'\");")) == audits)
 tmp = php("echo count(glob(get_temp_dir().'workforce-one-*'));")
 check('no temporary sheet is left behind', tmp == '0', tmp)
 
