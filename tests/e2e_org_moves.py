@@ -11,10 +11,12 @@ Wipes Workforce One test data; never run against a real site.
 import datetime, html, io, json, os, re, sys, urllib.parse, urllib.request, uuid, zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, break_writes, check, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, break_writes, check, ids, php, q, results, site_day, wp, HERE  # noqa: E402
 
 CHART = '/wp-admin/admin.php?page=ews31-org-chart'
-TODAY = php("echo current_time('Y-m-d');").splitlines()[-1]
+# One site day for the run: moves dated TODAY apply now and TOMORROW's are scheduled, as the plugin
+# works out "today" on each request; so do not start in the last five minutes before local midnight.
+TODAY = site_day(300)
 TOMORROW = (datetime.date.fromisoformat(TODAY) + datetime.timedelta(days=1)).isoformat()
 
 
