@@ -3,7 +3,7 @@
 Environment: WP_CLI (command used to run wp-cli, default "wp"); argv[1] = state dir that
 receives ids.json from e2e_setup.php.
 """
-import datetime, http.cookiejar, json, os, re, shlex, subprocess, sys, urllib.parse, urllib.request
+import datetime, http.cookiejar, json, os, re, shlex, subprocess, sys, time, urllib.parse, urllib.request
 
 B = 'http://127.0.0.1:8080'
 S = sys.argv[1]
@@ -98,6 +98,25 @@ def next_weekday(wp_dow, after=3):
 
 def ids():
     return json.load(open(os.path.join(S, 'ids.json')))
+
+
+def site_day(span, earliest='00:00'):
+    """The site's local date (Y-m-d), once the site clock is at least `earliest` (HH:MM) and the
+    next `span` seconds stay on that same date; waits for that if needed. For a suite that seeds
+    rows for "today" and has the plugin work out "today" again later: started just before local
+    midnight, the two would disagree (CI run 43776208436). Reads the clock of the site's time zone."""
+    eh, em = (int(x) for x in earliest.split(':'))
+    while True:
+        now = datetime.datetime.strptime(php("echo current_time('Y-m-d H:i:s');").splitlines()[-1].strip(), '%Y-%m-%d %H:%M:%S')
+        start = now.replace(hour=eh, minute=em, second=0)
+        if now < start:
+            wait = (start - now).total_seconds() + 1
+        elif (now.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1) - now).total_seconds() <= span:
+            wait = (start + datetime.timedelta(days=1) - now).total_seconds() + 1
+        else:
+            return now.date().isoformat()
+        print('(site time %s: waiting %ds so the run stays on one site day)' % (now, wait), flush=True)
+        time.sleep(wait)
 
 
 

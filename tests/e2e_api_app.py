@@ -10,7 +10,7 @@ Wipes Workforce One test data and changes the site time zone (restored at the en
 import json, os, sys, time, urllib.parse, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, check, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, check, php, q, results, site_day, wp, HERE  # noqa: E402
 import check_openapi  # noqa: E402
 
 API = B + '/wp-json/workforce-one/v1'
@@ -104,7 +104,11 @@ def count_queries(token, route, params=None):
 
 
 ids = reset()
-eid, e2, today = ids['eid'], ids['e2'], ids['today']
+# Cairo's day, kept for the whole run: rows are seeded for it and the API works out "today" again on
+# every call, so do not start in the last five minutes before Cairo's midnight.
+today = site_day(300)
+ids['h'] = int(php("echo (int)current_time('G');").splitlines()[-1])
+eid, e2 = ids['eid'], ids['e2']
 ADM = login('admin', 'admin', 9)
 EMP = login('emp1', 'emp1pass', 1)
 ROUTES = [('/me/bootstrap', 'get'), ('/me/schedule', 'get'), ('/attendance/today', 'get')]
