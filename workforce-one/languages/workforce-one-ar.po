@@ -8908,3 +8908,6 @@ msgstr "اكتب الكلام اللي يظهر في كل مناسبة بالع�
 
 msgid "This works on its own, with the switch above on or off."
 msgstr "يعمل هذا وحده، سواء كان المفتاح أعلاه مفعّلًا أم لا."
+
+msgid "The export could not be completed. Please try again."
+msgstr "تعذّر إكمال التصدير. يُرجى المحاولة مرة أخرى."

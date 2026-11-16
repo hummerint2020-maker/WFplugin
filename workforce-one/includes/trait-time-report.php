@@ -180,32 +180,50 @@ trait EWS_Time_Report_Trait {
         $start=sanitize_text_field(wp_unslash($_GET['start']??''));
         $end=sanitize_text_field(wp_unslash($_GET['end']??''));
         if(!$this->valid_date($start)||!$this->valid_date($end)||$end<$start)wp_die('Invalid date range.');
-        $rows=$this->services()->timeReport()->csv($start,$end,$this->time_report_scope());
+        // Whole days at a time (3.31.149): a long period never holds every record in memory. Up to
+        // 25,000 records (a month for about 500 people) is one window: the statement of before. The file
+        // is written to a temporary stream first and sent only when every window was read, so the
+        // headers still go out after the reads, as before, and a failed read never sends half a file.
+        $scope=$this->time_report_scope();$reads=$this->services()->timeReport();
+        try{$windows=\WorkforceOne\Attendance\TimeCsvWindows::pack($reads->csvDayCounts($start,$end,$scope),$start,$end,(int)apply_filters('ews_export_batch_rows',25000));}
+        catch(\RuntimeException $x){$windows=[];}
+        $f=fopen('php://temp/maxmemory:2097152','w+');
+        $ok=$f!==false&&$windows;
+        if($ok)fprintf($f,"\xEF\xBB\xBF");
+        if($ok)$ok=(bool)fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason','IP address','Source','Correction','Replaced by correction']);
+        $radius=[];
+        foreach($windows as [$from,$to]){
+            if(!$ok)break;
+            try{$rows=$reads->csv($from,$to,$scope);}catch(\RuntimeException $x){$ok=false;break;}
+            $this->shift_prime_people(array_map(function($r){return (int)$r->employee_id;},(array)$rows));   // the shift history too (3.31.126)
+            $this->ews_v321_employee_locations_prime(array_map(function($r){return (int)$r->employee_id;},(array)$rows));   // 3.31.126
+            $weekday=[];
+            foreach((array)$rows as $r){
+                $eid=(int)$r->employee_id;
+                if(!isset($radius[$eid]))$radius[$eid]=(int)$this->time_report_site($eid)[2].' m';
+                if(!isset($weekday[$r->work_date]))$weekday[$r->work_date]=date_i18n('l',strtotime($r->work_date));
+                if(!fputcsv($f,Csv::row([
+                    $r->work_date,$weekday[$r->work_date],$r->name,$r->domain_name,$r->scheduled_status,
+                    $this->time_event_label($r->event_type),
+                    $r->event_type==='sign_in'?$this->sign_in_classification($r->event_at,(int)$r->employee_id):($r->event_type==='late_sign_in'?'Late Arrival':''),
+                    date_i18n('Y-m-d h:i A',strtotime($r->event_at)),
+                    $r->latitude!==null?$r->latitude:'',$r->longitude!==null?$r->longitude:'',
+                    $r->distance_meters!==null?$this->format_distance((float)$r->distance_meters):'',
+                    $radius[$eid],$r->location_status?:'Not available',
+                    $r->accuracy!==null?round((float)$r->accuracy,1).' m':'',
+                    $r->integrity_status?:'not_evaluated',$r->integrity_reason?:'',(string)($r->ip_address??''),
+                    $this->time_source_label((string)($r->source??'')),(int)($r->correction_id??0)?'#'.(int)$r->correction_id:'',(int)($r->replaced_by??0)?'#'.(int)$r->replaced_by:'',
+                ]))){$ok=false;break;}
+            }
+            unset($rows);
+            if(count($windows)>1){$this->working_hours_forget();\WorkforceOne\Support\ExportTime::extend();}
+        }
+        if(!$ok){if($f!==false)fclose($f);wp_die(esc_html__('The export could not be completed. Please try again.','workforce-one'));}
         nocache_headers();
         header('Content-Type:text/csv; charset=utf-8');
         header('Content-Disposition:attachment; filename=sign_in_out_'.$start.'_to_'.$end.'.csv');
-        $f=fopen('php://output','w');
-        fprintf($f,"\xEF\xBB\xBF");
-        fputcsv($f,['Date','Weekday','Employee','Domain','Scheduled Status','Event','Attendance Status','Time','Latitude','Longitude','Distance','Radius','Location Result','GPS Accuracy','Integrity','Integrity Reason','IP address','Source','Correction','Replaced by correction']);
-        $radius=[];
-        $this->shift_prime_people(array_map(function($r){return (int)$r->employee_id;},(array)$rows));   // the shift history too (3.31.126)
-        $this->ews_v321_employee_locations_prime(array_map(function($r){return (int)$r->employee_id;},(array)$rows));   // 3.31.126
-        foreach((array)$rows as $r){
-            $eid=(int)$r->employee_id;
-            if(!isset($radius[$eid]))$radius[$eid]=(int)$this->time_report_site($eid)[2].' m';
-            fputcsv($f,Csv::row([
-                $r->work_date,date_i18n('l',strtotime($r->work_date)),$r->name,$r->domain_name,$r->scheduled_status,
-                $this->time_event_label($r->event_type),
-                $r->event_type==='sign_in'?$this->sign_in_classification($r->event_at,(int)$r->employee_id):($r->event_type==='late_sign_in'?'Late Arrival':''),
-                date_i18n('Y-m-d h:i A',strtotime($r->event_at)),
-                $r->latitude!==null?$r->latitude:'',$r->longitude!==null?$r->longitude:'',
-                $r->distance_meters!==null?$this->format_distance((float)$r->distance_meters):'',
-                $radius[$eid],$r->location_status?:'Not available',
-                $r->accuracy!==null?round((float)$r->accuracy,1).' m':'',
-                $r->integrity_status?:'not_evaluated',$r->integrity_reason?:'',(string)($r->ip_address??''),
-                $this->time_source_label((string)($r->source??'')),(int)($r->correction_id??0)?'#'.(int)$r->correction_id:'',(int)($r->replaced_by??0)?'#'.(int)$r->replaced_by:'',
-            ]));
-        }
+        rewind($f);
+        fpassthru($f);
         fclose($f);
         exit;
     }

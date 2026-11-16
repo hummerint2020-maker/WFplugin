@@ -198,6 +198,9 @@ trait EWS_Work_Time_Trait {
             return $now>=$b['start'] && $now<=$b['cutoff'];
         }
 
+    /** Drop the working hours remembered in this request (3.31.149): a long export forgets them between windows, so memory does not grow with the period. */
+    private function working_hours_forget(){self::$ews_working_hours_cache=[];}
+
     private function sign_in_classification($event_at=null,$employee_id=0){
             // The one "late" rule (src/Attendance/Lateness.php), shared with the reports and payroll.
             // The shift and times of that day (3.31.108), not of today.

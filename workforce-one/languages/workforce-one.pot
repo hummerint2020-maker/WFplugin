@@ -12279,3 +12279,7 @@ msgstr ""
 #: templates/admin/features.php
 msgid "This works on its own, with the switch above on or off."
 msgstr ""
+
+#: includes/trait-reports.php
+msgid "The export could not be completed. Please try again."
+msgstr ""
