@@ -193,3 +193,7 @@ notifications)".
 - **Golden:** the two WordPress hooks the collector now adds (`pre_http_request`, `http_api_debug`, only while System health is on
   with schema 2) are declared in `tests/golden/expected.json` `hooks_added`. Its `release` is set at release time (3.31.150), after
   Performance 2's own declarations are merged.
+- **Release (3.31.150, after Performance 2 was merged):** version and CHANGELOG; Golden `expected.json` emptied for the new release
+  (3.31.149's two export traces are now in the base) and keeps only the two hooks. Language files: `.mo` and `.l10n.php` were built
+  by a small script that rebuilds main's files byte for byte from main's `.po` (checked before use), since WP-CLI could not be run
+  here; the 14 new strings were added to the `.pot` by hand, as 3.31.149 did for its string.
