@@ -286,6 +286,7 @@
         "shift_for_employee_on",
         "api_status_labels",
         "working_hours",
+        "working_hours_forget",
         "week_lock_enabled",
         "week_lock_settings",
         "week_lock_refusal",

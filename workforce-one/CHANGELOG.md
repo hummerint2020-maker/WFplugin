@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.31.149
+### Performance 2 (docs/tasks/performance-2.md): long exports no longer load the whole period into memory
+The files are the same, byte for byte (an Excel file differs only by the minute it was generated, as before). One exception, above 25,000 records in the Sign In / Out CSV (a month for about 500 employees): two records that tie exactly (same day, same name, same second) may come out in the other order; their order was never fixed.
+- **Sign In / Out CSV**: read up to 25,000 records at a time (whole days), written to a temporary file and sent once every part was read. A year of records costs about the memory of a month. If the database fails part way, an error page is shown instead of a short file.
+- **Report Center exports** (Attendance, Summary, Timesheet, Workforce; CSV and Excel): the employees are read a group at a time, the long tables are kept on a temporary file instead of in memory, and the Excel sheets are written to temporary files (removed even if the request is cut off). A group that cannot be read stops the export with an error page instead of showing those employees as absent.
+- The Report Center screen, payroll, the employee profile and corrections read exactly as before (one group). Between the parts of a long export the time limit is raised to two minutes where it is shorter, and never where the host has turned that off.
+
 ## 3.31.148
 ### Performance 1 (docs/tasks/performance-1.md): nothing visible changes, fewer and cheaper queries
 - **The My approvals count** (the menu, Home, the Schedule page) no longer builds every card in full to show a number: away from the My approvals page each waiting request is checked with the same rules but without its details (a leave's balance and who is away, an advance's salary and history, names). The My approvals page reads its people in one query instead of one per card.

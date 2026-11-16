@@ -29,6 +29,12 @@ interface TimeReportQuery
     /** @return object[] the employees the report's form may pick: the active ones in scope, and $includeId (0 = none) */
     public function employees(int $includeId, ?int $scope): array;
 
-    /** @return object[] the CSV's rows: every record of the period in scope, with the employee and the correction that replaced it */
+    /**
+     * @return object[] the CSV's rows: every record of the period in scope, with the employee and the correction that replaced it
+     * @throws \RuntimeException when the database reports an error (3.31.149: the export stops instead of sending a part)
+     */
     public function csv(string $start, string $end, ?int $scope): array;
+
+    /** @return array<string,int> how many records csv() would return on each day of the period, by day, ascending (days with none are left out) (3.31.149) @throws \RuntimeException on a database error */
+    public function csvDayCounts(string $start, string $end, ?int $scope): array;
 }

@@ -8959,3 +8959,6 @@ msgstr "الخدمات الخارجية: %1$d من %2$d تحميل اتصلت ب
 
 msgid "Only loads with query detail are split. Outside services are calls to other servers (for example push notifications). A load counts as longer than the limit by the limit in force when it was measured."
 msgstr "يُقسَّم وقت التحميلات ذات تفاصيل الاستعلامات فقط. الخدمات الخارجية هي الاتصالات بخوادم أخرى (مثل الإشعارات الفورية). يُحسب التحميل أطول من الحد وفق الحد المعمول به وقت قياسه."
+
+msgid "The export could not be completed. Please try again."
+msgstr "تعذّر إكمال التصدير. يُرجى المحاولة مرة أخرى."
