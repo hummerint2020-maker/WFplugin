@@ -26,8 +26,9 @@ def evidence(**over):
 
 use_utc()
 # One site day for the run, and not the last minutes of it: the Sign In window set below ends at
-# 23:59, and the report and timeline are read for TODAY after the Sign Ins.
-TODAY = site_day(300)
+# 23:59, the report and timeline are read for TODAY after the Sign Ins, and the offline Sign Out below
+# is timed 6 minutes in the past, so it is on TODAY only from 00:06.
+TODAY = site_day(300, '00:10')
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))   # after the wait: it plans today's schedule
 I = ids()
 php("""foreach(['ews_signin_attempts','ews_notifications','ews_audit_log','ews_departments','ews_face_profiles','ews_break_sessions','ews_company_calendar'] as $t) $wpdb->query("DELETE FROM {$p}$t");
