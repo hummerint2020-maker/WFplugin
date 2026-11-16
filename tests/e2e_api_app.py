@@ -103,11 +103,12 @@ def count_queries(token, route, params=None):
     return int(last.split()[0][2:]), int(last.split()[1][2:])
 
 
-ids = reset()
 # Cairo's day, kept for the whole run: rows are seeded for it and the API works out "today" again on
-# every call, so do not start in the last five minutes before Cairo's midnight.
+# every call, so do not start in the last five minutes before Cairo's midnight. Before reset(): its
+# setup plans today and opens Sign In from the hour before.
+php("update_option('timezone_string','Africa/Cairo'); update_option('gmt_offset','');")
 today = site_day(300)
-ids['h'] = int(php("echo (int)current_time('G');").splitlines()[-1])
+ids = reset()
 eid, e2 = ids['eid'], ids['e2']
 ADM = login('admin', 'admin', 9)
 EMP = login('emp1', 'emp1pass', 1)
