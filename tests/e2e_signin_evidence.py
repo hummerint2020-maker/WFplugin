@@ -10,7 +10,7 @@ Wipes Workforce One test data; never run against a real site.
 import base64, html, json, os, random, re, sys, time, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from e2e_support import B, Session, check, ids, php, q, results, wp, HERE  # noqa: E402
+from e2e_support import B, Session, check, ids, php, q, results, site_day, wp, HERE  # noqa: E402
 
 TR = '/wp-admin/admin.php?page=ews31-time-report'
 CAIRO = {'latitude': '30.0445', 'longitude': '31.2358'}
@@ -25,6 +25,9 @@ def evidence(**over):
 
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
+# One site day for the run, and not the last minutes of it: the Sign In window set below ends at
+# 23:59, and the report and timeline are read for TODAY after the Sign Ins.
+TODAY = site_day(300)
 I = ids()
 php("""foreach(['ews_signin_attempts','ews_notifications','ews_audit_log','ews_departments','ews_face_profiles','ews_break_sessions','ews_company_calendar'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     update_option('ews_working_hours',['start'=>date('H:i',max(strtotime('today',current_time('timestamp')),current_time('timestamp')-3600)),'end'=>'23:59'],false); update_option('ews_working_days',[0,1,2,3,4,5,6],false);
@@ -32,7 +35,6 @@ php("""foreach(['ews_signin_attempts','ews_notifications','ews_audit_log','ews_d
     $wpdb->update($p.'ews_locations',['enforcement'=>1],['id'=>%d]);
     $u=get_user_by('login','evmgr'); if($u){require_once ABSPATH.'wp-admin/includes/user.php'; wp_delete_user($u->ID);}
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name='evmgr'");""" % I['lid'])
-TODAY = php("echo current_time('Y-m-d');").strip()
 evidence()
 
 
