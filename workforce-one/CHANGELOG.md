@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.150
+### System health: where a slow page's time goes (docs/tasks/health-db-split.md)
+Owner request 2026-11-15 (the Sign In / Out page: 1 in 20 loads near 3 s, with about 40 ms of queries on the screen). Rides on the System health switch: with it off nothing changes.
+- **Database, outside services, PHP and the server.** On the loads with query detail ("Detailed query data from this share of requests"), System health now keeps each page's load time, its database time (every query: WordPress's, other plugins' and ours) and the time spent waiting for outside services, for all loads and for those longer than the page's limit.
+- **Outside services are timed on every load:** calls through the WordPress HTTP API and the Web Push sends (they use cURL directly). A call that is not waited for (WordPress's cron spawn) is not counted.
+- **The slow warning names the cause** once at least 5 slow loads were measured: "mostly database queries", "mostly waiting for outside services", "mostly outside the database (PHP or the server)", or that no single part takes most of it (one part at 60% or more of the time). The warning's title, its email and its ranking are unchanged.
+- **A page's Details** say how its time splits and on how many loads; below 10 loads (5 slow ones) they say so and suggest a higher share of detailed query data. The overview is unchanged.
+- **Upgrade:** System health's own tables get 11 columns (its schema 2), added by the hourly summary or by opening the screen; until then it keeps collecting as before. The schema is marked only once the columns are there, so a database that refuses the change keeps working on the old one and the change is tried again.
+- Tests: unit tests for the split and the warning; System health e2e: a page slow in PHP, one slow in the database, one waiting for a slow outside service, 1% sampling, the upgrade from schema 1. Golden declares the two WordPress hooks it adds (`pre_http_request`, `http_api_debug`).
+
+Not in this release: pushes that a scheduled job asks for are sent after the job ends and are not counted in its time; the e2e covers MySQL, not SQLite.
+
 ## 3.31.149
 ### Performance 2 (docs/tasks/performance-2.md): long exports no longer load the whole period into memory
 The files are the same, byte for byte (an Excel file differs only by the minute it was generated, as before). One exception, above 25,000 records in the Sign In / Out CSV (a month for about 500 employees): two records that tie exactly (same day, same name, same second) may come out in the other order; their order was never fixed.

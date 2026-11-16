@@ -12283,3 +12283,77 @@ msgstr ""
 #: includes/trait-reports.php
 msgid "The export could not be completed. Please try again."
 msgstr ""
+
+#: includes/trait-system-health.php
+msgid "mostly database queries."
+msgstr ""
+
+#: includes/trait-system-health.php
+msgid "mostly waiting for outside services (for example push notifications)."
+msgstr ""
+
+#: includes/trait-system-health.php
+msgid "mostly outside the database (PHP or the server)."
+msgstr ""
+
+#: includes/trait-system-health.php
+msgid "no single part takes most of it."
+msgstr ""
+
+#. translators: 1: loads, 2: database time, 3: outside services time, 4: the rest, 5: the conclusion
+#: includes/trait-system-health.php
+#, php-format
+msgid "Measured on %1$d slow loads: database %2$s, outside services %3$s, PHP and the server %4$s: %5$s"
+msgstr ""
+
+#. translators: 1: loads, 2: database time, 3: the rest, 4: the conclusion
+#: includes/trait-system-health.php
+#, php-format
+msgid "Measured on %1$d slow loads: database %2$s, outside the database %3$s: %4$s"
+msgstr ""
+
+#. translators: 1: database time, 2: outside services time, 3: the rest
+#: templates/admin/system-health.php
+#, php-format
+msgid "database %1$s, outside services %2$s, PHP and the server %3$s"
+msgstr ""
+
+#. translators: 1: database time, 2: the rest
+#: templates/admin/system-health.php
+#, php-format
+msgid "database %1$s, outside the database %2$s"
+msgstr ""
+
+#. translators: 1: loads, 2: average time, 3: the parts
+#: templates/admin/system-health.php
+#, php-format
+msgid "Measured on %1$d loads with query detail: on average %2$s, of which %3$s."
+msgstr ""
+
+#. translators: 1: loads measured, 2: loads needed
+#: templates/admin/system-health.php
+#, php-format
+msgid "Too few loads with query detail to split the time (%1$d of at least %2$d). Raise “Detailed query data from this share of requests” on Features to measure more."
+msgstr ""
+
+#. translators: 1: the page's limit, 2: loads, 3: the parts
+#: templates/admin/system-health.php
+#, php-format
+msgid "Loads longer than %1$s (%2$d measured): %3$s."
+msgstr ""
+
+#. translators: 1: the page's limit, 2: loads measured, 3: loads needed
+#: templates/admin/system-health.php
+#, php-format
+msgid "Loads longer than %1$s: %2$d measured, at least %3$d are needed to split their time."
+msgstr ""
+
+#. translators: 1: loads with a call, 2: all loads, 3: calls, 4: average time
+#: templates/admin/system-health.php
+#, php-format
+msgid "Outside services: %1$d of %2$d loads called one (%3$d calls), %4$s on average for those loads."
+msgstr ""
+
+#: templates/admin/system-health.php
+msgid "Only loads with query detail are split. Outside services are calls to other servers (for example push notifications). A load counts as longer than the limit by the limit in force when it was measured."
+msgstr ""

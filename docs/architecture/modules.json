@@ -897,7 +897,8 @@
         "health_settings",
         "health_can_view",
         "health_switch_changed",
-        "health_boot"
+        "health_boot",
+        "health_external"
       ]
     }
   }

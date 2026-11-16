@@ -8909,5 +8909,56 @@ msgstr "اكتب الكلام اللي يظهر في كل مناسبة بالع�
 msgid "This works on its own, with the switch above on or off."
 msgstr "يعمل هذا وحده، سواء كان المفتاح أعلاه مفعّلًا أم لا."
 
+msgid "mostly database queries."
+msgstr "معظمه في استعلامات قاعدة البيانات."
+
+msgid "mostly waiting for outside services (for example push notifications)."
+msgstr "معظمه في انتظار خدمات خارجية (مثل الإشعارات الفورية)."
+
+msgid "mostly outside the database (PHP or the server)."
+msgstr "معظمه خارج قاعدة البيانات (PHP أو الخادم)."
+
+msgid "no single part takes most of it."
+msgstr "لا يستحوذ جزء واحد على معظمه."
+
+#. translators: 1: loads, 2: database time, 3: outside services time, 4: the rest, 5: the conclusion
+msgid "Measured on %1$d slow loads: database %2$s, outside services %3$s, PHP and the server %4$s: %5$s"
+msgstr "تم القياس على %1$d من التحميلات البطيئة: قاعدة البيانات %2$s، والخدمات الخارجية %3$s، وPHP والخادم %4$s: %5$s"
+
+#. translators: 1: loads, 2: database time, 3: the rest, 4: the conclusion
+msgid "Measured on %1$d slow loads: database %2$s, outside the database %3$s: %4$s"
+msgstr "تم القياس على %1$d من التحميلات البطيئة: قاعدة البيانات %2$s، وخارج قاعدة البيانات %3$s: %4$s"
+
+#. translators: 1: database time, 2: outside services time, 3: the rest
+msgid "database %1$s, outside services %2$s, PHP and the server %3$s"
+msgstr "قاعدة البيانات %1$s، والخدمات الخارجية %2$s، وPHP والخادم %3$s"
+
+#. translators: 1: database time, 2: the rest
+msgid "database %1$s, outside the database %2$s"
+msgstr "قاعدة البيانات %1$s، وخارج قاعدة البيانات %2$s"
+
+#. translators: 1: loads, 2: average time, 3: the parts
+msgid "Measured on %1$d loads with query detail: on average %2$s, of which %3$s."
+msgstr "تم القياس على %1$d من التحميلات ذات تفاصيل الاستعلامات: في المتوسط %2$s، منها %3$s."
+
+#. translators: 1: loads measured, 2: loads needed
+msgid "Too few loads with query detail to split the time (%1$d of at least %2$d). Raise “Detailed query data from this share of requests” on Features to measure more."
+msgstr "عدد التحميلات ذات تفاصيل الاستعلامات قليل جدًا لتقسيم الوقت (%1$d من %2$d على الأقل). ارفع «بيانات الاستعلامات التفصيلية من هذه النسبة من الطلبات» في المميزات لقياس المزيد."
+
+#. translators: 1: the page's limit, 2: loads, 3: the parts
+msgid "Loads longer than %1$s (%2$d measured): %3$s."
+msgstr "التحميلات الأطول من %1$s (تم قياس %2$d): %3$s."
+
+#. translators: 1: the page's limit, 2: loads measured, 3: loads needed
+msgid "Loads longer than %1$s: %2$d measured, at least %3$d are needed to split their time."
+msgstr "التحميلات الأطول من %1$s: تم قياس %2$d، ويلزم %3$d على الأقل لتقسيم وقتها."
+
+#. translators: 1: loads with a call, 2: all loads, 3: calls, 4: average time
+msgid "Outside services: %1$d of %2$d loads called one (%3$d calls), %4$s on average for those loads."
+msgstr "الخدمات الخارجية: %1$d من %2$d تحميل اتصلت بخدمة (%3$d اتصال)، بمتوسط %4$s لتلك التحميلات."
+
+msgid "Only loads with query detail are split. Outside services are calls to other servers (for example push notifications). A load counts as longer than the limit by the limit in force when it was measured."
+msgstr "يُقسَّم وقت التحميلات ذات تفاصيل الاستعلامات فقط. الخدمات الخارجية هي الاتصالات بخوادم أخرى (مثل الإشعارات الفورية). يُحسب التحميل أطول من الحد وفق الحد المعمول به وقت قياسه."
+
 msgid "The export could not be completed. Please try again."
 msgstr "تعذّر إكمال التصدير. يُرجى المحاولة مرة أخرى."

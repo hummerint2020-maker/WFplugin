@@ -94,4 +94,22 @@ final class HealthStatsTest extends TestCase
         $this->assertSame(7, St::retention(1));
         $this->assertSame(365, St::retention(9999));
     }
+    /** Where the time went (3.31.150): database, outside services, the rest. */
+    public function testSplit(): void
+    {
+        $this->assertNull(S::split(0, 0, 0, 0, 1), 'nothing measured');
+        $this->assertNull(S::split(4, 12000, 0, 0, 5), 'below the minimum');
+        // 5 loads of 3 s, 40 ms database each: mostly outside the database
+        $sp = S::split(5, 15000, 200000, 0, 5);
+        $this->assertSame(['n' => 5, 'total_ms' => 3000, 'db_ms' => 40, 'ext_ms' => 0, 'out_ms' => 2960, 'cause' => 'outside'], $sp);
+        $this->assertSame('db', S::split(10, 10000, 6000000, 0, 10)['cause'], '60% database is "mostly database"');
+        $this->assertSame('mixed', S::split(10, 10000, 5900000, 0, 10)['cause'], '59% / 41%: both');
+        $this->assertSame('outside', S::split(10, 10000, 4000000, 0, 10)['cause'], '40% database: the rest is 60%');
+        $this->assertSame('external', S::split(10, 10000, 1000000, 7000000, 10)['cause'], 'waiting for push');
+        $this->assertSame('mixed', S::split(10, 10000, 3000000, 3000000, 10)['cause'], '30 / 30 / 40');
+        $c = S::split(1, 100, 500000, 500000, 1);   // the database said more than the load took: clamped
+        $this->assertSame([100, 100, 0, 0], [$c['total_ms'], $c['db_ms'], $c['ext_ms'], $c['out_ms']]);
+        $this->assertSame('mixed', S::split(1, 0, 0, 0, 1)['cause'], 'no time at all: no division by zero');
+        $this->assertSame('2', St::SCHEMA);
+    }
 }

@@ -9,7 +9,8 @@ if (!defined('ABSPATH')) exit;
  *
  * Input:
  *  - routes: route => [n, failed, fatal, hist (20), ms_max, pq_sum, pq_n, mem_pct (highest share of the request's own memory limit), max_repeat, repeat_caller,
- *            recent_p50, recent_n, before_p50, before_n, version (the release the slowdown started with, or '')]
+ *            recent_p50, recent_n, before_p50, before_n, version (the release the slowdown started with, or ''),
+ *            slow_n, slow_ms_sum, slow_db_us_sum, slow_ext_us_sum (loads over the limit with query detail, 3.31.150)]
  *  - queries: list of [route, caller, ms_max]            (single slow queries)
  *  - errors: list of [file, line, message, n]            (PHP errors first seen in the last 24 hours)
  *  - cron: hook => [overdue_min (0 when not late), failed (bool)]
@@ -42,7 +43,13 @@ final class Findings
                 if ($failed > 0 && $failed / $n * 100 >= $s['fail_pct']) $add('fail_rate:' . $route, 'critical', 'fail_rate', $route, ['failed' => $failed, 'n' => $n], 500000 + $failed);
                 $limit = Routes::heavy($route) ? (int) $s['heavy_ms'] : (int) $s['slow_ms'];
                 $p95 = Stats::percentile((array) ($r['hist'] ?? []), 0.95, (int) ($r['ms_max'] ?? 0));
-                if ($p95 > $limit) $add('slow:' . $route, 'warning', 'slow', $route, ['p95' => $p95, 'limit' => $limit, 'max' => (int) ($r['ms_max'] ?? 0), 'n' => $n], (float) $n * ($p95 - $limit));
+                if ($p95 > $limit) {
+                    // Where the slow loads' time went (3.31.150): only with enough measured slow loads; '' otherwise.
+                    $split = Stats::split((int) ($r['slow_n'] ?? 0), (int) ($r['slow_ms_sum'] ?? 0), (int) ($r['slow_db_us_sum'] ?? 0), (int) ($r['slow_ext_us_sum'] ?? 0), Settings::SPLIT_MIN_SLOW, Settings::SPLIT_MOSTLY);
+                    $add('slow:' . $route, 'warning', 'slow', $route, ['p95' => $p95, 'limit' => $limit, 'max' => (int) ($r['ms_max'] ?? 0), 'n' => $n,
+                        'cause' => $split ? $split['cause'] : '', 'db_ms' => $split ? $split['db_ms'] : 0, 'ext_ms' => $split ? $split['ext_ms'] : 0, 'out_ms' => $split ? $split['out_ms'] : 0, 'split_n' => $split ? $split['n'] : 0],
+                        (float) $n * ($p95 - $limit));
+                }
             }
             if ($own && (int) ($r['recent_n'] ?? 0) >= $s['min_runs'] && (int) ($r['before_n'] ?? 0) >= $s['min_runs']
                 && Stats::slower((float) $r['before_p50'], (float) $r['recent_p50'], (int) $s['regression_pct'], (int) $s['regression_ms'])) {

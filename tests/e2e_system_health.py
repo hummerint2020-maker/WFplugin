@@ -8,7 +8,8 @@ Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_system_health.py <state-
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080.
 Wipes Workforce One test data; never run against a real site.
 """
-import json, os, re, sys, time, urllib.parse
+import json, os, re, sys, threading, time, urllib.parse
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, php, q, results, wp, HERE  # noqa: E402
@@ -103,7 +104,7 @@ off = take('off')
 
 # ---------------------------------------------------------------- switching on
 loc = features(adm, True, 100, 90)
-check('the Features switch creates the four tables, the schema version and the hourly rollup', all(exists(t) for t in TABLES) and opt('ews_health_schema') == '1' and php("echo wp_next_scheduled('ews_health_rollup')?1:0;").strip().splitlines()[-1] == '1', loc)
+check('the Features switch creates the four tables, the schema version and the hourly rollup', all(exists(t) for t in TABLES) and opt('ews_health_schema') == '2' and php("echo wp_next_scheduled('ews_health_rollup')?1:0;").strip().splitlines()[-1] == '1', loc)
 check('...is audited', q("SELECT id FROM {p}ews_audit_log WHERE action='health_enabled'"))
 check('...and the screen is open for the administrator, empty before the first rollup', 'The first summary is made within the hour' in adm.req(SCREEN)[1])
 check('...but not for an employee', 'Look at this first' not in emp.req(SCREEN)[1])
@@ -244,7 +245,7 @@ php("update_option('ews_health_schema','0',false);")
 page = adm.req('/wp-admin/admin.php?page=ews31')
 check('with the schema version behind, nothing is collected and the page still opens', page[0] == 200 and 'WordPress database error' not in page[1])
 rollup()
-check('...and the rollup repairs it', opt('ews_health_schema') == '1' and all(exists(t) for t in TABLES))
+check('...and the rollup repairs it', opt('ews_health_schema') == '2' and all(exists(t) for t in TABLES))
 php("$wpdb->query(\"DROP TABLE {$p}ews_health_hourly\");")
 st, body, _ = adm.req('/wp-admin/admin.php?page=ews31')
 check('a missing table does not break a request or print a database error', st == 200 and 'WordPress database error' not in body)
@@ -337,6 +338,87 @@ lab = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'health_rout
     echo wp_json_encode(array_map(function($r)use($m,$o){return $m->invoke($o,$r);},['app:default','rest:other','post:other','cron:other','other:admin','other:front','app:attendance']));""").strip().splitlines()[-1]
 lab = json.loads(lab)
 check('route names: app:default is the Dashboard, rest:other is WordPress and other plugins (3.31.126)', lab[0] == 'App: Dashboard' and lab[1] == 'API: WordPress and other plugins' and lab[4] == 'Other wp-admin pages' and lab[6] == 'App: Attendance', lab)
+
+# ---------------------------------------------------------------- where the time went (3.31.150, docs/tasks/health-db-split.md)
+SPLIT = ['db_n', 'db_ms_sum', 'db_us_sum', 'db_ext_us_sum', 'slow_n', 'slow_ms_sum', 'slow_db_us_sum', 'slow_ext_us_sum', 'ext_n', 'ext_calls', 'ext_us_sum']
+
+
+class SlowService(BaseHTTPRequestHandler):   # an outside service that takes 1.2 s to answer
+    def do_GET(self):
+        time.sleep(1.2)
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'ok')
+
+    def log_message(self, *a):
+        pass
+
+
+svc = ThreadingHTTPServer(('127.0.0.1', 0), SlowService)
+threading.Thread(target=svc.serve_forever, daemon=True).start()
+PORT = svc.server_address[1]
+
+
+def sums(route):
+    r = rows('hourly', "WHERE route='%s'" % route)
+    return {c: sum(int(x[c]) for x in r) for c in ['n', 'sampled', 'ms_sum'] + SPLIT}
+
+
+def clear():
+    php("""$wpdb->query("DELETE FROM {$p}ews_health_hourly"); $wpdb->query("DELETE FROM {$p}ews_health_daily"); $wpdb->query("DELETE FROM {$p}ews_health_queries");""")
+
+
+features(adm, True, 100, 90)
+php("update_option('ews_health_settings',['slow_ms'=>1000,'min_runs'=>5,'repeat'=>1000,'queries'=>5000,'email'=>0],false);")
+clear()
+for i in range(12):
+    adm.req('/wp-admin/admin.php?page=ews31-payroll')
+for i in range(5):
+    adm.req('/wp-admin/admin.php?page=ews31-employees&e2e_sleep=1300')
+    adm.req('/wp-admin/admin.php?page=ews31&e2e_dbsleep=1300')
+    adm.req('/wp-admin/admin.php?page=ews31-features&e2e_http=%d' % PORT)
+pay, emps, home, feat = sums('admin:ews31-payroll'), sums('admin:ews31-employees'), sums('admin:ews31'), sums('admin:ews31-features')
+check('every load with query detail carries its database time (100%%: all 12 loads)', pay['db_n'] == pay['sampled'] == pay['n'] == 12 and pay['db_ms_sum'] == pay['ms_sum'] and 0 < pay['db_us_sum'] < pay['ms_sum'] * 1000, pay)
+check('...a fast page has no slow load and no outside call', pay['slow_n'] == 0 and pay['ext_n'] == 0, pay)
+check('a load slow in PHP: 5 slow loads, little of it in the database', emps['slow_n'] == 5 and emps['slow_db_us_sum'] < emps['slow_ms_sum'] * 1000 * 0.4, emps)
+check('a load slow in the database (SELECT SLEEP): most of the slow time is database time', home['slow_n'] >= 5 and home['slow_db_us_sum'] >= home['slow_ms_sum'] * 1000 * 0.6, home)
+check('a load waiting for an outside service: 5 loads, 5 calls, at least 1.2 s each, on the split too', feat['ext_n'] == 5 and feat['ext_calls'] == 5 and feat['ext_us_sum'] >= 5 * 1150000 and feat['slow_ext_us_sum'] >= 5 * 1150000, feat)
+print('INFO split: payroll %d loads, database %.1f ms of %.1f ms on average; slow in PHP: database %.1f ms of %.1f ms; outside calls: %.1f ms of %.1f ms' % (
+    pay['db_n'], pay['db_us_sum'] / 1000 / max(1, pay['db_n']), pay['db_ms_sum'] / max(1, pay['db_n']), emps['slow_db_us_sum'] / 1000 / max(1, emps['slow_n']), emps['slow_ms_sum'] / max(1, emps['slow_n']),
+    feat['ext_us_sum'] / 1000 / max(1, feat['ext_n']), feat['ms_sum'] / max(1, feat['n'])))
+rollup()
+f = {x['key']: x for x in (opt('ews_health_findings') or [])}
+cause = lambda r: (f.get('slow:' + r) or {}).get('args', {}).get('cause')
+check('the slow finding names the cause: PHP or the server, the database, an outside service', (cause('admin:ews31-employees'), cause('admin:ews31'), cause('admin:ews31-features')) == ('outside', 'db', 'external'), {k: v.get('args') for k, v in f.items() if k.startswith('slow:')})
+page = adm.req(SCREEN)[1]
+check('...and says so on the screen', 'mostly outside the database (PHP or the server)' in page and 'mostly database queries' in page and 'mostly waiting for outside services' in page)
+det = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-payroll'))[1]
+check('a page in detail: the split of its loads, with how many were measured', 'data-health-split' in det and 'Measured on 12 loads with query detail' in det, re.findall(r'data-health-split>(.*?)</p>', det, re.S)[:1])
+det = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-features'))[1]
+check('...too few loads for the typical split (5 of 10), the slow ones split (5), and the outside calls', 'Too few loads with query detail to split the time (5 of at least 10)' in det and 'Loads longer than 1.0 s (5 measured)' in det and 'Outside services: 5 of 5 loads called one (5 calls)' in det, re.findall(r'data-health-split>(.*?)</p>', det, re.S)[:1])
+# Not sampled: the split columns stay 0 (the load's SQL is the one it was before).
+features(adm, True, 1, 90)
+clear()
+for i in range(15):
+    adm.req('/wp-admin/admin.php?page=ews31-payroll')
+pay1 = sums('admin:ews31-payroll')
+check('at 1%%, only the sampled loads carry the split (%d of %d)' % (pay1['db_n'], pay1['n']), pay1['n'] == 15 and pay1['db_n'] == pay1['sampled'] and pay1['ext_n'] == 0, pay1)
+# Upgrade: schema 1 keeps collecting what it has; the rollup adds the columns.
+php("""foreach(['hourly','daily'] as $t){ $wpdb->query("ALTER TABLE {$p}ews_health_$t DROP COLUMN ".implode(', DROP COLUMN ',%s)); } update_option('ews_health_schema','1',false);""" % json.dumps(SPLIT).replace('"', "'").replace('[', 'array(').replace(']', ')'))
+before = sum(int(x['n']) for x in rows('hourly'))
+st, body, _ = adm.req('/wp-admin/admin.php?page=ews31-payroll&e2e_sleep=1100')
+check('with schema 1 (before the upgrade) the collector keeps counting loads, with no database error', st == 200 and 'WordPress database error' not in body and sum(int(x['n']) for x in rows('hourly')) == before + 1)
+# A database that refuses the ALTER (no privilege, a lock timeout): the site stays on schema 1 and its rollup still works.
+php("$wpdb->query(\"DELETE FROM {$p}ews_health_daily\");")
+out = php("""add_filter('query',function($q){return preg_match('/^\\s*ALTER\\s+TABLE\\s+\\S*ews_health_/i',$q)?'SELECT 1':$q;});
+    delete_option('ews_health_purged'); $o=new EWS_Manager_V31_1(); $o->health_rollup(); echo 'SCHEMA '.get_option('ews_health_schema');""")
+check('...a refused ALTER keeps schema 1, and its rollup still writes the daily rows (no query on the missing columns)', 'SCHEMA 1' in out and 'WordPress database error' not in out and len(rows('daily')) > 0, (out[-400:], len(rows('daily'))))
+st, body, _ = adm.req(SCREEN + '&tab=route&route=' + urllib.parse.quote('admin:ews31-payroll'))
+check('...and the screen opens on schema 1 without a database error', st == 200 and 'WordPress database error' not in body, st)
+rollup()
+cols = [c['Field'] for c in q("SHOW COLUMNS FROM {p}ews_health_daily")]
+check('...and the rollup upgrades it to schema 2 with the new columns in both tables', opt('ews_health_schema') == '2' and all(c in cols for c in SPLIT) and all(c in [x['Field'] for x in q("SHOW COLUMNS FROM {p}ews_health_hourly")] for c in SPLIT), cols[-12:])
+svc.shutdown()
 
 # ---------------------------------------------------------------- switching off
 features(adm, False, 1, 90)
