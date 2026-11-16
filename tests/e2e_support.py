@@ -104,7 +104,8 @@ def site_day(span, earliest='00:00'):
     """The site's local date (Y-m-d), once the site clock is at least `earliest` (HH:MM) and the
     next `span` seconds stay on that same date; waits for that if needed. For a suite that seeds
     rows for "today" and has the plugin work out "today" again later: started just before local
-    midnight, the two would disagree (CI run 43776208436). Reads the clock of the site's time zone."""
+    midnight, the two would disagree (CI run 43776208436). Reads the clock of the site's time zone.
+    Also resets `today` here (d(), next_weekday()); a suite that imported `today` by name keeps its own copy."""
     eh, em = (int(x) for x in earliest.split(':'))
     while True:
         now = datetime.datetime.strptime(php("echo current_time('Y-m-d H:i:s');").splitlines()[-1].strip(), '%Y-%m-%d %H:%M:%S')
@@ -114,7 +115,9 @@ def site_day(span, earliest='00:00'):
         elif (now.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1) - now).total_seconds() <= span:
             wait = (start + datetime.timedelta(days=1) - now).total_seconds() + 1
         else:
-            return now.date().isoformat()
+            global today   # d() and next_weekday() count from the site's day from now on
+            today = now.date()
+            return today.isoformat()
         print('(site time %s: waiting %ds so the run stays on one site day)' % (now, wait), flush=True)
         time.sleep(wait)
 
