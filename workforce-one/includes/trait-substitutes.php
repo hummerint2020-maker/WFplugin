@@ -88,7 +88,7 @@ trait EWS_Substitutes_Trait {
      */
     public function substitutes_maybe_sync(){
         if(!$this->substitutes_enabled())return;
-        $due=get_option('ews_substitutes_due_at',null);
+        $due=$this->substitutes_due_at();
         if($due===null){
             if((int)get_option('ews_substitutes_next_sync',0)>time())return;
         }elseif($due===''||(string)$due>current_time('mysql')){
@@ -99,7 +99,13 @@ trait EWS_Substitutes_Trait {
 
     /** Something a sync depends on changed outside it (the switch, an employee's account or status): the next page load syncs. */
     private function substitutes_due_now(){
-        if(get_option('ews_substitutes_due_at',null)!==null)delete_option('ews_substitutes_due_at');
+        if($this->substitutes_due_at()!==null)delete_option('ews_substitutes_due_at');
+    }
+
+    /** ews_substitutes_due_at, or null when there is none. It is always autoloaded, so this costs no query, there or not. */
+    private function substitutes_due_at(){
+        $all=wp_load_alloptions();
+        return isset($all['ews_substitutes_due_at'])?(string)$all['ews_substitutes_due_at']:null;
     }
 
     /**
