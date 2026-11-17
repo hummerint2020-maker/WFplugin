@@ -240,4 +240,17 @@ final class SubstituteServiceTest extends TestCase
         $this->assertSame('', \WorkforceOne\Approvals\Substitutes::nextChange(['', '']));
         $this->assertSame('2026-01-02 09:00:00', \WorkforceOne\Approvals\Substitutes::nextChange(['2026-01-03 08:00:00', '', '2026-01-02 09:00:00']));
     }
+
+    public function testAChangeThatDoesNotGoThroughIsTriedAgainInAMinute(): void
+    {
+        $this->cover('scheduled');   // due to start at 2026-10-26 08:00 (now is 09:00)
+        $this->leaves[5] = 'Approved';
+        $this->cover('pending', '2026-11-10 08:00:00', '2026-11-12 18:00:00', ['manager_employee_id' => 3, 'leave_request_id' => 5]);
+        $this->subs->failTransition = true;
+        $this->service()->sync(null);
+        $this->assertSame('2026-10-26 09:01:00', end($this->dueAt), 'now + 60 s, the earliest');
+        $this->subs->failTransition = false;
+        $this->service()->sync(null);
+        $this->assertSame('2026-10-30 18:00:00', end($this->dueAt), 'through: the started cover\'s end is next');
+    }
 }

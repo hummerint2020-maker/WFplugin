@@ -60,14 +60,21 @@ import subprocess, time
 from e2e_support import WP, S
 LOCK = "global $wpdb; $n='wfo_'.substr(md5((defined('DB_NAME')?DB_NAME:'').'|'.$wpdb->prefix),0,12).'_schema';"
 env = {**os.environ, 'S': S}
-holder = subprocess.Popen(WP + ['eval', LOCK + " $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,0)',$n)); echo 'HELD'; sleep(8);"], stdout=subprocess.PIPE, text=True, env=env)
-time.sleep(3)
+holder = subprocess.Popen(WP + ['eval', LOCK + " $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,0)',$n)); echo 'HELD'; sleep(30);"], stdout=subprocess.PIPE, text=True, env=env)
+for _ in range(100):   # until the holder really has it (a slow runner)
+    if php(LOCK + " echo 'FREE'.$wpdb->get_var($wpdb->prepare('SELECT IS_FREE_LOCK(%s)',$n));").strip().endswith('FREE0'):
+        break
+    time.sleep(0.2)
 r = json.loads(php("add_filter('ews_schema_lock_wait',function(){return 1;}); " + RUN).splitlines()[-1])
 check('while another request holds the upgrade, this one waits, then carries on: no upgrade, no failure, no retry', r['v'] in (False, None, '') and r['f'] is False and r['retry'] is False, r)
+holder.kill()
 holder.wait()
 r = json.loads(php(RUN).splitlines()[-1])
 check('...once it is free the next request upgrades', r['v'] == first['version'] and r['f'] is False, r)
 check('...and gives the lock back', php(LOCK + " echo 'FREE'.$wpdb->get_var($wpdb->prepare('SELECT IS_FREE_LOCK(%s)',$n));").strip().endswith('FREE1'))
+# The Annual Leave type missing too (removed before the version: every wp-cli call is a request that upgrades when it loads), which two upgrades at the same moment could add twice
+saved_al = php("$r=$wpdb->get_row(\"SELECT * FROM {$p}ews_leave_types WHERE name='Annual Leave'\",ARRAY_A); echo 'ROW'.wp_json_encode($r);").split('ROW')[-1]
+php("$wpdb->query(\"DELETE FROM {$p}ews_leave_types WHERE name='Annual Leave'\");")
 # Two requests at once on an old site: one upgrades, the other waits and finds it done; no false failure, the index there once.
 table, key, cols = PERF[1]
 php("$t=$p.'%s'; if($wpdb->get_var(\"SHOW INDEX FROM $t WHERE Key_name='%s'\"))$wpdb->query(\"ALTER TABLE $t DROP INDEX %s\"); delete_option('ews_schema_version'); delete_option('ews_schema_failed'); delete_transient('ews_schema_retry');" % (table, key, key))
@@ -77,6 +84,18 @@ st = json.loads(php("echo wp_json_encode(['v'=>get_option('ews_schema_version'),
 check('three requests at once: the version is set, nothing marked failed, no retry', st['v'] == first['version'] and st['f'] is False and st['retry'] is False, (st, [o[1][-300:] for o in outs]))
 check('...no database error in any of them', not any('Duplicate' in o[0] + o[1] or 'database error' in o[0] + o[1] for o in outs), [o[1][-300:] for o in outs])
 check('...and the index is there', index_cols(table, key) == [','.join(cols)], index_cols(table, key))
+al = php("echo 'N'.(int)$wpdb->get_var(\"SELECT COUNT(*) FROM {$p}ews_leave_types WHERE name='Annual Leave'\");").split('N')[-1]
+check('...and the Annual Leave type added once, not once per request', al == '1', al)
+if saved_al and saved_al != 'null':   # the original row back (its id is what the rest of the data points to)
+    php("$wpdb->query(\"DELETE FROM {$p}ews_leave_types WHERE name='Annual Leave'\"); $wpdb->insert($p.'ews_leave_types',json_decode(base64_decode('%s'),true));" % __import__('base64').b64encode(saved_al.encode()).decode())
+# a failed upgrade gives the lock back too
+php("$wpdb->query(\"DROP TABLE IF EXISTS {$p}ews_signin_attempts\");")
+break_writes('ews_signin_attempts')
+r = json.loads(php("$wpdb->suppress_errors(true); " + RUN).splitlines()[-1])
+break_writes('')
+check('a failed upgrade (marked failed) gives the lock back', r['f'] and php(LOCK + " echo 'FREE'.$wpdb->get_var($wpdb->prepare('SELECT IS_FREE_LOCK(%s)',$n));").strip().endswith('FREE1'), r)
+r = json.loads(php(RUN).splitlines()[-1])
+check('...and the next upgrade finishes it', r['v'] == first['version'] and r['f'] is False, r)
 
 print('%d / %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

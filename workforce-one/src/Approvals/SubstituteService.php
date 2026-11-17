@@ -101,11 +101,15 @@ final class SubstituteService implements SubstituteRouting
         $next = [];
         foreach ($this->substitutes->linkedToLeave() as $row) {
             $do = Substitutes::forLeave((string) $row->status, $this->leave->statusOf((int) $row->leave_request_id));
-            if ($do === 'schedule' && $this->substitutes->transition((int) $row->id, 'pending', ['status' => 'scheduled']) === 1) {
-                $row->status = 'scheduled';
-                $this->notifier->picked($row);
-            } elseif ($do === 'cancel' && $this->finish($row, 'cancelled', $now)) {
-                $done['cancelled']++;
+            if ($do === 'schedule') {
+                if ($this->substitutes->transition((int) $row->id, 'pending', ['status' => 'scheduled']) === 1) {
+                    $row->status = 'scheduled';
+                    $this->notifier->picked($row);
+                } else {
+                    $next[] = $retry;   // 3.31.151: not through: tried again in a minute, as before
+                }
+            } elseif ($do === 'cancel') {
+                if ($this->finish($row, 'cancelled', $now)) $done['cancelled']++; else $next[] = $retry;
             }
         }
         foreach ($this->substitutes->current() as $row) {

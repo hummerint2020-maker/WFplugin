@@ -277,3 +277,16 @@ No switch is recommended. All three changes are internal, have no UI, and each f
 3. Schema wait: 10 seconds, accepted.
 4–5. Not asked now (later releases).
 6. One release, 3.31.151.
+
+## Review (2026-11-17, PR #52) and what was done
+
+Reviewer: read-only, on Opus (Fable needed credits).
+
+1. **CONFIRMED, fixed.** Golden: 53 traces changed. 44 (employees, org) were unintended: `substitutes_due_now()` read an absent, non-autoloaded option, one query on every employee save. Now read from `wp_load_alloptions()` (the option is always autoloaded): no query. The 9 intended ones are declared (4 ticks, 5 substitute syncs).
+2. **PLAUSIBLE, not changed; said in the changelog.** The overwrite race is wider than milliseconds (the whole `current()` loop, notifications included): a cover created meanwhile can wait for the next sync of any origin, at the latest the hourly job. A compare-and-set would add a query to every syncing page (golden refuses more queries) and a claim-before-sync would never settle with "keep the earliest"; the case needs a cover saved during another request's sync.
+3. **PLAUSIBLE, fixed.** A failed leave-linked transition (pending → scheduled, or the cancel) now asks for a retry in a minute, as before. Unit test.
+4. **PLAUSIBLE, not changed.** Roll back to 3.31.150, create a cover there, upgrade again: the stale stored time can be later than that cover's start, which then waits for the next sync of any origin (the hourly job at worst). Handling it would add writes to pages with the feature on.
+5. **PLAUSIBLE (load only), not changed.** No claim before the sync, so requests arriving together at a start or end all sync (each result is still right: transitions are compare-and-swap). A claim would conflict with remembering the earliest change (2).
+6. **CONFIRMED, partly.** The Settings overview lists internal options: the new row is shown (admin-only bookkeeping); the old row's label is left as it was.
+7. **Tests, fixed:** the lock test waits until the holder really holds the lock (no sleep guess) and kills it after; three upgrades at once add the Annual Leave type once; a failed upgrade gives the lock back; saving an employee on the Employees page drops the stored time (end to end); the retry unit test.
+8. Residual, as accepted: waiters during a long ALTER; read/write-splitting database layers and persistent connections apply to every `ews_with_lock` user alike.

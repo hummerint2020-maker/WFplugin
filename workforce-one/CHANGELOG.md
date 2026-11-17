@@ -4,7 +4,7 @@
 ### Performance 3 (docs/tasks/performance-3.md): nothing visible changes
 - **The database update after a plugin update runs once.** Right after an update several requests could each start changing the tables at the same moment, and the one that lost showed a false red "the update did not finish" notice (and could add the Annual Leave type twice). Now one request per site does it; another waits up to 10 seconds, sees it done and carries on, or carries on as before if it is still running.
 - **Auto Attendance's five-minute run** reads what is already recorded once, for everyone with something due, instead of checking each finished Sign In and Sign Out again under its lock (about 4 queries each, every five minutes, all evening). Everything not yet recorded is decided exactly as before.
-- **Substitutes** (when switched on): pages no longer check every minute whether a substitute starts or ends. Each check remembers when the next start or end is due, and the first page after that time does it, up to a minute sooner than before, never later. Saving an employee or the Substitutes settings makes the next page check again.
+- **Substitutes** (when switched on): pages no longer check every minute whether a substitute starts or ends. Each check remembers when the next start or end is due, and the first page after that time does it, up to a minute sooner than before. Saving an employee or the Substitutes settings makes the next page check again. In a rare race (a substitute added while another check is still running) the start waits for the next check of any kind, at the latest the hourly job.
 
 ## 3.31.150
 ### System health: where a slow page's time goes (docs/tasks/health-db-split.md)

@@ -290,6 +290,19 @@ gone = php("update_option('ews_substitutes_due_at','',true); $o=new EWS_Manager_
 check('something a sync depends on changed (an employee saved, the switch): what was remembered is dropped', gone.endswith('GONE'), gone)
 emp.req('/app/')
 check('...so the next page load syncs and remembers again', due() == next_change())
+# The same through the real screens: saving an employee (owner's answer 2, 3.31.151). The old once-a-minute rule is set ahead
+# here so no wp-cli call of the test syncs on its own and hides the result.
+php("update_option('ews_substitutes_next_sync',time()+600,true); update_option('ews_substitutes_due_at','2099-01-01 00:00:00',true);")
+st, epage, _ = adm.req('/wp-admin/admin.php?page=ews31-employees')
+en = ''
+for form in re.findall(r'<form.*?</form>', epage, re.S):
+    m = re.search(r'name="_wpnonce" value="([^"]+)"', form)
+    if 'value="ews31_employee_save"' in form and 'name="id"' not in form and m:
+        en = m.group(1)
+        break
+adm.post('ews31_employee_save', _wpnonce=en, name='Sub Saved', domain_name='subsaved', email='subsaved@example.com', wp_user_id=0, supervisor_employee_id=0, default_shift_id=0, department_id=0, attendance_enabled=1)
+check('saving an employee on the Employees page drops what was remembered, so the next page syncs', php("echo get_option('ews_substitutes_due_at',null)===null?'GONE':'KEPT';").strip().endswith('GONE') and q("SELECT id FROM {p}ews_employees WHERE domain_name='subsaved'"), en != '')
+php("$wpdb->query(\"DELETE FROM {$p}ews_employees WHERE domain_name='subsaved'\");")
 php("delete_option('ews_substitutes_due_at'); update_option('ews_substitutes_next_sync',time()+600,true);")
 emp.req('/app/')
 check('after the update, a page within the old minute does not sync (the old rule, until the first sync)', php("echo get_option('ews_substitutes_due_at',null)===null?'NONE':'SET';").strip().endswith('NONE'))
