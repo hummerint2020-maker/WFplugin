@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>iReport Wireframe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;700&display=swap">
+<style>
+/* Layout: app shell — process sidebar grouped by business area, worklist in the middle, record drawer on the right. */
+:root{--bg:#F3F4FA;--card:#FFFFFF;--ink:#141A33;--muted:#5F6584;--line:#E1E3EE;--soft:#EEF0F8;--pri:#5B3FD9;--pri-ink:#FFFFFF;--hl:#FFC83D;
+  --ok:#147a4b;--ok-bg:#E3F5EC;--warn:#8a5a00;--warn-bg:#FFF2D6;--bad:#B3261E;--bad-bg:#FCE4E2;--info-bg:#ECE8FD;
+  --display:'Alexandria',system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;--body:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121528;--card:#1B1F38;--ink:#E8EAF6;--muted:#A3A8C6;--line:#2C3150;--soft:#232846;--pri:#A996EE;--pri-ink:#121528;--ok:#6fd3a0;--ok-bg:#16332a;--warn:#f3c56b;--warn-bg:#3a2f14;--bad:#f2a19b;--bad-bg:#3d1d1c;--info-bg:#2a2650;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121528;--card:#1B1F38;--ink:#E8EAF6;--muted:#A3A8C6;--line:#2C3150;--soft:#232846;--pri:#A996EE;--pri-ink:#121528;--ok:#6fd3a0;--ok-bg:#16332a;--warn:#f3c56b;--warn-bg:#3a2f14;--bad:#f2a19b;--bad-bg:#3d1d1c;--info-bg:#2a2650;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--pri)}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.app{display:grid;grid-template-columns:268px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100%}
+.top{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--card);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:8px;font:700 18px/1 var(--display)}
+.brand small{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--hl);padding:3px 7px;border-radius:99px}
+.top .sp{flex:1}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.who select{max-width:260px}
+.menu{display:none}
+.side{overflow:auto;border-right:1px solid var(--line);background:var(--card);padding:12px 10px 40px}
+.side h4{margin:14px 8px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.nav{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:8px;cursor:pointer;color:var(--ink)}
+.nav:hover{background:var(--soft)}
+.nav.on{background:var(--info-bg);color:var(--pri);font-weight:600}
+.nav .code{font:600 11px/1 var(--mono);color:var(--muted);min-width:30px}
+.nav.on .code{color:var(--pri)}
+.nav .n{margin-left:auto;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+main{overflow:auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.eyebrow{margin:0;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pri)}
+h1{margin:2px 0 0;font:700 24px/1.25 var(--display);text-wrap:balance}
+h2{margin:0;font:700 17px/1.3 var(--display)}
+h3{margin:0;font:700 14.5px/1.3 var(--display)}
+.lead{margin:4px 0 0;color:var(--muted);max-width:75ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:9px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{border-color:var(--pri)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn.ghost{background:none;border-color:transparent;color:var(--pri)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:none;padding:9px 12px;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--pri);border-bottom-color:var(--pri)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);padding:4px 10px;border-radius:99px;cursor:pointer;font-size:12.5px;color:var(--muted)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip b{font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+th{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--soft);font-weight:700}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.ref{font:600 12px/1 var(--mono);color:var(--pri)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--soft);color:var(--muted)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.info{background:var(--info-bg);color:var(--pri)}
+.tag{font:600 10.5px/1 var(--body);letter-spacing:.05em;text-transform:uppercase;padding:3px 6px;border-radius:5px;background:var(--warn-bg);color:var(--warn)}
+.tag.conf{background:var(--ok-bg);color:var(--ok)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.search{flex:1;min-width:160px;max-width:320px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.kpi{display:flex;flex-direction:column;gap:2px;cursor:pointer}
+.kpi .v{font:700 26px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--muted);font-size:12.5px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.list{display:flex;flex-direction:column}
+.list .it{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);align-items:baseline;font-size:13px}
+.list .it:last-child{border-bottom:0}
+.list .it .t{color:var(--muted);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.callout{border-radius:12px;padding:10px 14px;background:var(--info-bg);font-size:13px}
+.callout.warn{background:var(--warn-bg)}.callout.bad{background:var(--bad-bg);color:var(--bad)}.callout.ok{background:var(--ok-bg);color:var(--ok)}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,12,30,.35);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--bg);z-index:21;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(10,12,30,.18);padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.dh{display:flex;gap:10px;align-items:flex-start;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--line)}
+.dh .x{margin-left:auto}
+.db{overflow:auto;padding:16px 18px 40px;display:flex;flex-direction:column;gap:14px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld.w{grid-column:1/-1}
+.fld label{font-size:12px;font-weight:600;color:var(--muted)}
+.fld label .rq{color:var(--bad)}
+.fld input,.fld select,.fld textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.fld textarea{min-height:64px;resize:vertical}
+.fld select[multiple]{min-height:84px}
+.fld .ro{padding:7px 9px;border:1px dashed var(--line);border-radius:8px;color:var(--ink);background:var(--soft);min-height:35px;overflow-wrap:anywhere}
+.fld .help{font-size:11.5px;color:var(--muted)}
+.fld .err{font-size:12px;color:var(--bad);font-weight:600}
+.fld.bad input,.fld.bad select,.fld.bad textarea{border-color:var(--bad)}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec>h3{display:flex;gap:8px;align-items:center}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;font-size:12.5px}
+.meta div span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.hist{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.hist .h{position:relative;padding:0 0 12px 14px;font-size:12.5px}
+.hist .h::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--pri)}
+.hist .h .t{color:var(--muted);font-size:11.5px}
+.hist .ch{font-family:var(--mono);font-size:11.5px;color:var(--muted);overflow-wrap:anywhere}
+.hist .ch b{color:var(--ink);font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;flex-direction:column;gap:6px;align-items:center;width:min(560px,calc(100% - 32px))}
+.toast div{background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast div.bad{background:var(--bad);color:#fff}
+.reqs{display:flex;flex-direction:column;gap:10px}
+.req{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card);display:flex;flex-direction:column;gap:4px}
+.req .id{font:600 12px/1 var(--mono);color:var(--pri)}
+.req .ac{font-size:12.5px;color:var(--muted)}
+.req .try{font-size:12.5px;background:var(--soft);padding:6px 9px;border-radius:8px}
+ol.flow{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.qs{display:flex;flex-direction:column;gap:6px}
+.q{background:var(--warn-bg);color:var(--ink);padding:8px 12px;border-radius:10px;font-size:13px}
+.q b{color:var(--warn)}
+.bar{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.bar .tr{flex:1;height:10px;background:var(--soft);border-radius:5px;overflow:hidden}
+.bar .tr i{display:block;height:100%;background:var(--pri);border-radius:5px}
+.bar .lb{width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .vv{width:40px;text-align:right;font-variant-numeric:tabular-nums}
+.inline{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;padding:10px;border:1px dashed var(--line);border-radius:10px}
+.inline .fld{flex:1;min-width:150px}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:min(300px,86%);z-index:30;transform:translateX(-105%);transition:transform .2s;box-shadow:8px 0 30px rgba(0,0,0,.2);padding-top:calc(12px + env(safe-area-inset-top,0px))}
+  .side.open{transform:none}
+  .menu{display:inline-block}
+  .two{grid-template-columns:1fr}
+  .who .lbl{display:none}
+}
+@media (max-width:560px){.form{grid-template-columns:1fr}.brand small{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head><body>
+<div class="app">
+  <header class="top">
+    <button class="btn sm menu" id="menuBtn" aria-label="Show processes">☰ Processes</button>
+    <div class="brand">iReport <small>Wireframe · FRS 0.2</small></div>
+    <div class="sp"></div>
+    <label class="who" for="userSel"><span class="lbl">Signed in as</span>
+      <select id="userSel"></select></label>
+  </header>
+  <nav class="side" id="side"></nav>
+  <main id="main"></main>
+</div>
+<div id="drawerHost"></div>
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script>
+const FRS = [{"id": "WLG", "name": "Team work recording", "area": "Shared work records", "outcome": "A saved work record available to the authorized manager", "flow": ["Select the work type", "Record the activity and its outcome", "Save and expose it to authorized team managers"], "reqs": [["FRS-WLG-01", "The system shall save a record classified as a work log without creating an approval task solely because it was recorded.", "Saving a work log creates no approval task or pending-approval state.", "U"], ["FRS-WLG-02", "The system shall restrict visibility of internal team work logs to the team’s approved manager scope.", "A different team manager cannot retrieve the record through search, a direct link or export.", "U"], ["FRS-WLG-03", "The system shall record the performer and performance date separately from the creator and entry time when proxy recording is permitted.", "A proxy recorder captures another person’s work without becoming its performer.", "P"]], "qs": ["Q-WLG-01: Which forms are work logs, and is the unit an activity, case or daily summary?", "Q-WLG-02: Can the employee view the record, and which managers may view/export it?"], "src": "USER-WORKLOG — إفادات المستخدم عن تسجيل أعمال الفريق ونطاق المديرين / User clarification on team work logs and manager scope", "actors": "Work recorder; team manager", "trigger": "Work has been performed and needs a team record"}, {"id": "DAY", "name": "Daily Status recording", "area": "Operational records", "outcome": "A traceable issue record without re-entry for every view", "flow": ["Identify account, location and problem type", "Record line details, comment and status", "Follow the record through the relevant view"], "reqs": [["FRS-DAY-01", "The system shall allow a Daily Status issue to be recorded with Account, Location, Problem Type, Exchange, Area Code, Phone, Comment and Status.", "A test record returns the same account, line and issue details.", "D"], ["FRS-DAY-02", "The system shall retain the original Added By and Added On of a Daily Status record when its Comment or Status is edited.", "Changing Status leaves the original Added On unchanged.", "D"], ["FRS-DAY-03", "The system shall present qualifying Daily Status records in Physical Delay without creating a new copy of each record.", "Both views open the same reference; a non-qualifying record is absent from Physical Delay.", "P"]], "qs": ["Q-DAY-01: Does the record document completed work or an issue requiring processing?", "Q-DAY-02: Which statuses and problem types qualify for Physical Delay?"], "src": "daily-status.html / daily_status ; daily-status.html / Physical_Delay", "actors": "Case recorder; authorized case updater", "trigger": "A service issue is recorded or updated"}, {"id": "CCT", "name": "Commercial activity tracking", "area": "Sales and commercial activity", "outcome": "A categorized activity with a responsible team and follow-up result", "flow": ["Choose category and subcategory", "Record quantity, dates and responsible team", "Update feedback, status and reason"], "reqs": [["FRS-CCT-01", "The system shall link an activity’s Category and Sub Category to their Activity Category definition.", "Selecting a subcategory does not use another category’s definition.", "D"], ["FRS-CCT-02", "The system shall display the Expected Sl associated with the selected activity classification.", "Two categories with different reference values display their respective Expected Sl.", "D"], ["FRS-CCT-03", "The system shall retain Quantification, Start Date, End Date and Responsible Team according to the activity type’s entry model.", "The saved activity returns its entered dates, quantity and team.", "D"], ["FRS-CCT-04", "The system shall retain Feedback, Status and Status Reason as updates to the same commercial activity.", "Updating feedback does not create a second commercial activity.", "D"]], "qs": ["Q-CCT-01: What are the Quantification unit and Expected Sl meaning, and is End Date actual or planned?"], "src": "cct.html / activity ; cct.html / activity_category", "actors": "Activity recorder; responsible team; activity category owner", "trigger": "A commercial activity starts or is recorded"}, {"id": "HRG", "name": "General HR request", "area": "HR and workforce", "outcome": "An employee-linked HR request with its processing result", "flow": ["Identify employee and problem type", "Describe the need and route it for support", "Record the processing response and status"], "reqs": [["FRS-HRG-01", "The system shall allow a general HR request to be created with Employee ID, Problem type, Items, Location, Extension, Priority and Description.", "Reopening the request shows its saved employee, problem type and description.", "D"], ["FRS-HRG-02", "The system shall associate Supporter Group and Supporter Name with the HR request being processed.", "Assigning a supporter to one request leaves another employee’s request unchanged.", "D"], ["FRS-HRG-03", "The system shall retain the processor’s Update without overwriting the HR request’s original Description.", "Original description and processing update remain distinct after the update.", "D"]], "qs": ["Q-HRG-01: Which request types belong to HR and who receives each type?", "Q-HRG-02: Who is the beneficiary for proxy requests, and which types require approval?"], "src": "direct-support.html / hrrequest", "actors": "Requester; receiving HR party; supporter", "trigger": "An employee-related need is raised"}, {"id": "HRA", "name": "Annual leave request", "area": "HR and workforce", "outcome": "A leave request with retained dates and processing outcome", "flow": ["Record employee, From/To and location", "Expose it to the processing party and record Update", "Display the outcome and include closed requests in their view"], "reqs": [["FRS-HRA-01", "The system shall allow an Annual Leave request to be submitted with Employee ID, From, To, My Location, Description and Attach.", "A test request retains its From/To, location and linked attachment.", "D"], ["FRS-HRA-02", "The system shall allow the Annual Leave processor to update Supporter Group, Supporter Name, Status and Update on a submitted request.", "Processing updates appear on the employee’s submitted request reference.", "D"], ["FRS-HRA-03", "The system shall present an Annual Leave request through submission, processing and closed views using the same request reference.", "Moving a request to a configured closed state makes it appear in Closed Annual Leave without copying it.", "P"], ["FRS-HRA-04", "The system shall reject submission of an Annual Leave request when To is earlier than From.", "To earlier than From produces a date-range error and no submitted request.", "P"]], "qs": ["Q-HRA-01: Is manager approval required, and how are days, balance and holidays calculated?", "Q-HRA-02: What defines Closed, and when may a request be edited or cancelled?"], "src": "direct-support.html / annual_leave ; direct-support.html / admin_annual_leave ; direct-support.html / closed_annual_leave", "actors": "Requester; leave processor; decision authority if required by policy", "trigger": "An employee requests leave"}, {"id": "HRS", "name": "Swap request", "area": "HR and workforce", "outcome": "A swap request identifying parties, date and result", "flow": ["Identify employee and swap counterpart", "Record swap date, new location and description", "Record processing party, response and status"], "reqs": [["FRS-HRS-01", "The system shall retain Employee ID and Swap With as separate parties on a Swap request.", "The request distinguishes its employee from its swap counterpart.", "D"], ["FRS-HRS-02", "The system shall retain Request Date, Swap Date, Location and New location without conflating request and swap dates or current and new locations.", "A request with different dates and locations returns all four distinct values.", "D"], ["FRS-HRS-03", "The system shall allow the Swap processor to record Update, Status and Supporter Name on the swap request.", "The processing result belongs to the correct swap request and does not change Swap With.", "D"]], "qs": ["Q-HRS-01: Must the counterpart accept, and what are the eligibility, conflict and coverage rules?"], "src": "direct-support.html / swap", "actors": "Requester; swap processor", "trigger": "A shift or location swap is requested"}, {"id": "HRE", "name": "Extra needs request", "area": "HR and workforce", "outcome": "A typed request with a processing response", "flow": ["Identify employee and need", "Record description and location", "Process the request and record the outcome"], "reqs": [["FRS-HRE-01", "The system shall allow a Extra needs request to be recorded with Employee ID, Location, Extension, Items and Description.", "Employee and need details appear in a request of the correct type.", "D"], ["FRS-HRE-02", "The system shall retain Supporter Group, Supporter Name, Update and Status on a Extra needs request without converting it into an Annual Leave request.", "Updating the request retains its original type and specialized details.", "D"]], "qs": ["Q-HRE-01: What are the approved types and receiving parties, and do they include purchasing or asset handover?"], "src": "direct-support.html / extraneeds", "actors": "Requester; relevant support team", "trigger": "An employee requires an item or support"}, {"id": "HRT", "name": "Tools request", "area": "HR and workforce", "outcome": "A typed request with a processing response", "flow": ["Identify employee and need", "Record description and location", "Process the request and record the outcome"], "reqs": [["FRS-HRT-01", "The system shall allow a Tools request to be recorded with Employee ID, Location, Extension, Problem Type and Description.", "Employee and need details appear in a request of the correct type.", "D"], ["FRS-HRT-02", "The system shall retain Supporter Group, Supporter Name, Update and Status on a Tools request without converting it into an Annual Leave request.", "Updating the request retains its original type and specialized details.", "D"]], "qs": ["Q-HRT-01: What are the approved types and receiving parties, and do they include purchasing or asset handover?"], "src": "direct-support.html / tools", "actors": "Requester; relevant support team", "trigger": "An employee requires an item or support"}, {"id": "SD", "name": "SMC support ticket", "area": "Service Desk", "outcome": "A support ticket linked to its tool, user and assignee", "flow": ["Identify product, request, tool and user", "Record description/contact and assign the ticket", "Update status, reasons and technical outcome"], "reqs": [["FRS-SD-01", "The system shall validate the selected SMC Tool against an existing tool definition before accepting the ticket.", "An undefined tool does not produce a valid ticket until corrected.", "D"], ["FRS-SD-02", "The system shall retain Product, Request, Tool, Description, Contact and the affected user identity on an SMC ticket.", "The ticket identifies the correct issue, tool, affected user and contact.", "D"], ["FRS-SD-03", "The system shall retain Assigned To, Status, Status Reason, Technical Status and Technical Status Reason separately from the original SMC ticket description.", "A new technical status does not erase the original description or prior status reason from history.", "D"], ["FRS-SD-04", "The system shall retain the sequence of status and comment changes for each SMC ticket.", "Two successive updates appear in sequence under the same ticket reference.", "D"], ["FRS-SD-05", "The system shall notify the approved SMC recipients when a LOB All My Tickets ticket is created or updated.", "Creating a test ticket produces one notification to the configured recipient; delivery failure does not delete the ticket.", "D"]], "qs": ["Q-SD-01: Which SMC functions belong to Service Desk and which are separate specialist processes?", "Q-SD-02: What does Critical Case change, who closes a ticket, and which events require email?"], "src": "smc.html / ccss ; smc.html / LOB_All_My_Tickets", "actors": "Requester; SMC team; assignee", "trigger": "A tool problem or user service request occurs"}, {"id": "ACT", "name": "Activation task processing", "area": "Technical activation and visits", "outcome": "An activation task with an owner, outcome and applicable follow-up", "flow": ["Record service order and task type", "Assign the task or release its assignment", "Record action, outcome and follow-up"], "reqs": [["FRS-ACT-01", "The system shall record an Activation task linked to Service Order ID with Task, Category, Sub Category, Service Name, Exchange, Zone and Sector.", "Two tasks for different service orders retain their respective references and technical details.", "D"], ["FRS-ACT-02", "The system shall retain Case Action, Case Result and Follow Datetime when an activation task is updated.", "The task returns its recorded action, result and follow-up time.", "D"], ["FRS-ACT-03", "The system shall allow activation tasks to be selected for assignment or release using Ticket Type, Status, Added On More Than Or Equal, User Group and Number Of Records.", "A sample allocation does not change ownership of tasks outside its criteria.", "D"], ["FRS-ACT-04", "The system shall display the actual Result Count of an executed activation allocation.", "If only three records qualify, the result shows three even when a larger count was requested.", "D"]], "qs": ["Q-ACT-01: How are Case Period and Follow Datetime derived, and when may a task be released or ignored?"], "src": "activation.html / activation_tasks ; activation.html / activation_assign", "actors": "Activation agent; task allocator", "trigger": "A service activation task arrives"}, {"id": "CAS", "name": "Complaint intake and processing", "area": "Customer cases", "outcome": "One complaint linked to its processing actions and external references", "flow": ["Identify customer, complaint source and reason", "Assign and record specialist processing", "Track status, delay and outcome"], "reqs": [["FRS-CAS-01", "The system shall retain Account, Complaint Soruce, Customer Type, Reason, Sub Reason and customer contact details on the complaint record.", "A test complaint returns its correct source, reason and customer account.", "D"], ["FRS-CAS-02", "The system shall retain NTRA ID, TTS Ticket and FCC Number separately from the internal complaint reference.", "Similar external references neither replace the complaint reference nor merge two complaints.", "D"], ["FRS-CAS-03", "The system shall route complaints assigned to MCR to the MCR worklist and complaints assigned to I Care or ICare - Followup to the I Care worklist using the approved naming map.", "Reassignment changes the applicable worklist while retaining the complaint reference.", "D"], ["FRS-CAS-04", "The system shall retain Technical Comment, Quality Comment and Comment as separate complaint entries.", "Editing Quality Comment does not overwrite Technical Comment.", "D"], ["FRS-CAS-05", "The system shall list delayed complaints using the approved statuses and delay threshold and allow the original complaint to be opened for processing.", "A qualifying sample appears in Delayed Tickets and a non-qualifying sample does not; opening it creates no new complaint.", "D"]], "qs": ["Q-CAS-01: What routes a complaint between MCR and I Care, and who edits each comment?", "Q-CAS-02: Is the documented five-day delay threshold still required, and when does SLA timing start/stop?"], "src": "complaint.html / complaint ; complaint.html / complaint_mcr ; complaint.html / complaint_icare ; complaint.html / complaint_sla", "actors": "Recorder; processing party; MCR; I Care; authorized quality reviewer", "trigger": "A customer complaint is received"}, {"id": "VIS", "name": "Vendor visit and follow-up", "area": "Technical activation and visits", "outcome": "A vendor case with technical outcomes and follow-up sequence", "flow": ["Record ticket, vendor and line", "Document contact, diagnosis and visit outcome", "Set follow-up time/assignee and record results"], "reqs": [["FRS-VIS-01", "The system shall retain Ticket Number, Ticket Source, Vendor Name, Exchange, Area Code and Landline on a vendor visit case.", "The case links the correct vendor and line to the ticket.", "D"], ["FRS-VIS-02", "The system shall record Called Vendor, Cst Reached, Problem Solved, Speed Before, Speed After and Diagnostics as distinct technical outcomes.", "Failure to reach the customer does not automatically become Problem Solved or erase measurements.", "D"], ["FRS-VIS-03", "The system shall retain Follow Up Date, Follow Up Time, Follow Assigned To and Follow Assigned Datetime when vendor follow-up is scheduled.", "The follow-up has a due time and assignee, with allocation time distinct from execution time.", "D"], ["FRS-VIS-04", "The system shall retain each vendor follow-up outcome without erasing previous follow-up outcomes.", "Recording a second follow-up leaves the first outcome available.", "P"]], "qs": ["Q-VIS-01: May one ticket have multiple visits, and what are the Own The Case transitions?"], "src": "sls_vendor_visit.html / new_vendor_visit ; sls_vendor_visit.html / sls_vendor_visit ; sls_vendor_visit.html / vendor_visit_follow_up", "actors": "Vendor-case processor; follow-up assignee", "trigger": "A ticket requires vendor intervention or follow-up"}, {"id": "CTE", "name": "Technical concession", "area": "Compensation", "outcome": "A concession with reason, period, value and processing decision", "flow": ["Identify account, ticket and reason", "Record period, value and offer", "Check agent limits and record authorized response"], "reqs": [["FRS-CTE-01", "The system shall link a technical concession to BSS ticket, Account and Service Number while retaining Reason and Concession Type.", "The concession identifies its service account, supporting ticket and type.", "D"], ["FRS-CTE-02", "The system shall retain Concession Period From, Concession Period To, Number Of Days, Compensation Value and Compensation Offer as distinct values.", "Saving a concession does not substitute its monetary value for days or offer.", "D"], ["FRS-CTE-03", "The system shall refer a concession to the team leader when Compensation Value or Satisfaction Value exceeds the agent’s approved limits.", "A sample above the approved limit goes to team-leader review rather than automatic agent approval.", "D"], ["FRS-CTE-04", "The system shall retain Evalidation Status, Revalidation Status, Rejected Reason and Clm Reply Date as concession review details.", "A rejected concession shows its reason; revalidation does not erase the previous reply from history.", "D"]], "qs": ["Q-CTE-01: What formulas, units and limits apply, and does the system record or externally execute the decision?"], "src": "agent_clm.html / bss_technical_concession", "actors": "Concession agent; team leader; CLM as authorized", "trigger": "A service case requires concession assessment"}, {"id": "CNO", "name": "Non-technical concession", "area": "Compensation", "outcome": "A typed non-technical concession with value and applicable review", "flow": ["Identify service number and reason", "Record concession type and value", "Record decision status and creation errors where applicable"], "reqs": [["FRS-CNO-01", "The system shall retain Service Number, Reason, Sub Reason, Concession Type and Concession Date for a non-technical concession.", "A non-technical concession returns its service number, reason, type and date.", "D"], ["FRS-CNO-02", "The system shall retain Cost, Total Approved Amount, Free Giga and Percentage Discount as distinct values.", "Entering a discount percentage does not replace Free Giga or the approved amount.", "D"], ["FRS-CNO-03", "The system shall flag a concession marked Created By Mistake for its approved review path rather than erase its creation history.", "Marking a record as created by mistake leaves its reference and review reason traceable.", "D"]], "qs": ["Q-CNO-01: How do Cost and Total Approved Amount differ, and what does Created By Mistake trigger?"], "src": "agent_clm.html / bss_non_technical", "actors": "Concession agent; concession reviewer", "trigger": "A non-technical concession is requested"}, {"id": "VAL", "name": "Complaint validation and review rounds", "area": "Quality and validation", "outcome": "A validation decision traceable to ticket, evidence and responses", "flow": ["Identify ticket, employee and alleged error", "Record party responses and validation decision", "Expose returned review or escalation as applicable"], "reqs": [["FRS-VAL-01", "The system shall record Ticket ID, Mistaken CCA, CCA Leader and Error Comment in Complaint Validation.", "The validation links the ticket, implicated employee and alleged error.", "D"], ["FRS-VAL-02", "The system shall retain Operation Feedback, Complaint Feedback, Validation Level, Validation Status and Validated By separately.", "Operations feedback does not overwrite complaint feedback, and the decision maker is visible.", "D"], ["FRS-VAL-03", "The system shall reject a duplicate Complaint Validation for the same Ticket ID within this process’s approved uniqueness scope.", "Recreating validation for the same ticket is rejected; a different external-system key is not automatically merged.", "D"], ["FRS-VAL-04", "The system shall present Validation records with Error Not Valid in Returned Tickets and Escalate in Validation Escalation under the approved state map.", "A returned record appears in its list; changing state updates list membership without copying it.", "D"]], "qs": ["Q-VAL-01: Are Complaint Validation and Validation separate processes, and what duplicate keys and challenge rounds apply?"], "src": "complaint_validation.html / complain_validation ; validation.html / new_validation ; validation.html / validation ; validation.html / Returned_Tickets ; validation.html / Validation_Escalation", "actors": "Validation recorder; reviewer; response or escalation party", "trigger": "A complaint or action requires review of an alleged error"}, {"id": "QUA", "name": "Call quality audit", "area": "Quality and validation", "outcome": "A call audit linked to call reference and outcome", "flow": ["Identify login, LOB and site", "Display selected call details", "Record status, reason and evidence"], "reqs": [["FRS-QUA-01", "The system shall display Call ID, Call Datetime and Queue for the call selected for the specified Login audit.", "The reviewer sees the retrieved call details for the selected employee.", "D"], ["FRS-QUA-02", "The system shall retain Status, Status Reason and Attach as the call audit outcome without changing the original call identity.", "Saving the result preserves the original Call ID and Call Datetime.", "D"], ["FRS-QUA-03", "The system shall apply the approved monthly audit quota by LOB and Site before accepting an additional audit.", "A boundary sample is accepted up to its configured quota and rejects an excess audit.", "D"], ["FRS-QUA-04", "The system shall retain the replaced call reference and replacement reason when Replace is used.", "History identifies previous and replacement calls and the replacement reason.", "P"]], "qs": ["Q-QUA-01: What monthly quotas apply by LOB/site, and when is Replace permitted?"], "src": "quality.html / tl_auidt_inbound", "actors": "Authorized leader/reviewer; sampling-policy owner", "trigger": "An employee and call are selected for audit"}, {"id": "CSI", "name": "CSI survey and VOC follow-up", "area": "CSI and VOC", "outcome": "A CSI case linked to ticket, follow-up and outcome", "flow": ["Identify ticket, account and survey details", "Assign follow-up and record cause/contact", "Record resolution outcome and survey status"], "reqs": [["FRS-CSI-01", "The system shall retain Ticket Number, Account Number, Voc Import Date and Closing Reason on a CSI record.", "An imported record retains its import date, closing reason and ticket references.", "D"], ["FRS-CSI-02", "The system shall retain Root Cause, Has Another Issue, Solved By Cc and Survey Status as distinct follow-up outcomes.", "Another issue does not erase the original issue’s recorded resolution.", "D"], ["FRS-CSI-03", "The system shall retain Follow Back Date Time, Handling Ticket Manager and Voc Ticket Manager to distinguish follow-up time and processing responsibilities.", "Follow-up time and both processing roles remain three distinct values.", "D"]], "qs": ["Q-CSI-01: How do Survey Status and Case Status differ, and what KPIs belong on Dashboard?"], "src": "csi.html / csi_survey ; csi.html / Dashboard", "actors": "CSI processor; ticket manager; report user", "trigger": "A survey or VOC case arrives for follow-up"}, {"id": "SAL", "name": "Sales leads and allocation", "area": "Sales and commercial activity", "outcome": "A lead linked to a task, agent and call outcome", "flow": ["Define task, active status and target", "Link lead to task and allocate it", "Record call outcome, customer response and callback"], "reqs": [["FRS-SAL-01", "The system shall retain Task Name, Task Type, Task Category, Task Sub Category, Target, Reachability and Active in a sales task definition.", "Changing one task’s target leaves another task’s name and target unchanged.", "D"], ["FRS-SAL-02", "The system shall link a sales lead to Task Id while retaining Mobile, Landline, Tariff and Rate Plan.", "Opening the lead displays its correct task, contact details and offer.", "D"], ["FRS-SAL-03", "The system shall allow the specified number of leads for a Task Id to be assigned or released for For User without changing another task’s leads.", "Allocating task A leaves task B lead assignments unchanged.", "D"], ["FRS-SAL-04", "The system shall retain Call Feedback, Customer Feedback, Call Result and Callback Time as distinct lead values.", "Customer response, call outcome and callback time remain distinct after saving.", "D"]], "qs": ["Q-SAL-01: Where do leads originate, and how do Active, Target and allocation Number operate?"], "src": "sales_tasks.html / sales_leads_tasks ; sales_tasks.html / sales_task_other ; sales_tasks.html / sales_task_assign", "actors": "Sales task owner; allocator; sales agent", "trigger": "A sales task is defined or a lead arrives"}, {"id": "RET", "name": "Retention case processing", "area": "Retention", "outcome": "A retention case with reason, offer and outcome", "flow": ["Identify account and cancellation reason", "Assign case and record offer/follow-up", "Record retention result and applicable MCR status"], "reqs": [["FRS-RET-01", "The system shall retain Account, Subscription Date, Cancellation Date, Reason, Sub Reason and Sub Sub Reason on a retention case.", "Cancellation date does not replace subscription date, and all three reason levels remain distinct.", "D"], ["FRS-RET-02", "The system shall allow Number Of Tickets retention cases of Cst Type to be allocated to the specified Username.", "Allocating one customer type does not consume other customer types in the requested count.", "D"], ["FRS-RET-03", "The system shall retain Retention Offers, Retention Status, Call Back, MCR Status and MCR Ticket Manager without treating an offered incentive as automatic customer acceptance.", "Recording an offer does not change retention status to success without the required result.", "P"]], "qs": ["Q-RET-01: What do Revenue and Cash Lost mean and measure, and which offers are approved?"], "src": "retention.html / retention ; retention.html / assign_retention", "actors": "Retention allocator; retention agent", "trigger": "A cancellation request or at-risk case arrives"}, {"id": "MOB", "name": "BSS trouble ticket and follow-up", "area": "Mobile and Wallet", "outcome": "A ticket with state, reasons and linked follow-ups", "flow": ["Identify ticket and Level 1/2/3", "Record pending state, adjustment or outcome", "Schedule follow-up or close activity"], "reqs": [["FRS-MOB-01", "The system shall retain Bss ticket, Level 1, Level 2, Level 3 and Responsibility on a trouble ticket.", "The three-level classification and responsibility return with the correct ticket.", "D"], ["FRS-MOB-02", "The system shall retain Pending By, Pending Datetime and Pending Reason when ticket processing is marked pending.", "The ticket identifies who recorded pending, when and why.", "D"], ["FRS-MOB-03", "The system shall prevent ordinary edits to a closed or rejected trouble ticket under the approved state classification.", "An attempted ordinary edit to a closed record leaves values unchanged and explains the restriction.", "D"], ["FRS-MOB-04", "The system shall link a Follow Up Activity to its Bss ticket and require a future Wake Up Time when scheduling an open follow-up activity.", "A past time is rejected; a future time is accepted and linked to the selected ticket.", "D"]], "qs": ["Q-MOB-01: Who may close/reject, and is post-closure correction allowed?"], "src": "wbo.html / bss_tt ; wbo.html / follow_up_activity", "actors": "Back-office processor; follow-up owner", "trigger": "A BSS ticket requires back-office processing"}, {"id": "WAL", "name": "Suspended wallet recording", "area": "Mobile and Wallet", "outcome": "A documented wallet state without assuming an external suspension command", "flow": ["Identify wallet number", "Record suspension reason and comment", "Retain recorder and entry time"], "reqs": [["FRS-WAL-01", "The system shall retain Wallet Number, Suspension Reason and Comment on a Suspended Wallet record.", "The record returns the correct wallet number, reason and comment.", "D"], ["FRS-WAL-02", "The system shall automatically record Added By and Added On for each Suspended Wallet record.", "Creator and time derive from the recording session and system time rather than free text.", "D"]], "qs": ["Q-WAL-01: Does the tool record suspension or execute it, and who may view the wallet number?"], "src": "wbo.html / suspended_wallet", "actors": "Wallet recorder; authorized reviewer", "trigger": "A wallet suspension needs to be documented"}, {"id": "KM", "name": "Knowledge user feedback", "area": "Knowledge and learning", "outcome": "Feedback linked to original content and KM response", "flow": ["Identify article or item", "Record rating, reason and comment", "Record KM response and status"], "reqs": [["FRS-KM-01", "The system shall link User Feedback to Article Id or Item Link while retaining Article Title and Article Path or Item Title as applicable.", "Opening feedback identifies the article or item it concerns.", "D"], ["FRS-KM-02", "The system shall retain original Rating, Feedback Reason and Comment separately from Km Comment, Status and Status Reason.", "A KM response does not erase the user’s original rating or comment.", "D"]], "qs": ["Q-KM-01: What rating scale applies, and who changes feedback status or content?"], "src": "km.html / user_feedback", "actors": "Knowledge user; KM processor", "trigger": "A user raises feedback about knowledge content"}, {"id": "QUI", "name": "Quiz answers and editing window", "area": "Knowledge and learning", "outcome": "Answers linked to their quiz and respondent", "flow": ["Display quiz identified by Quiz Id", "Record user answers", "Limit editing to answer owner and allowed time"], "reqs": [["FRS-QUI-01", "The system shall retain a user’s quiz answers with Quiz Id and the answer owner identity.", "Two users’ answers to the same Quiz Id remain associated with their respective owners.", "D"], ["FRS-QUI-02", "The system shall allow quiz answers to be edited only by their owner within the quiz’s approved validity and duration limits.", "Another user is rejected, the owner is rejected after expiry, and an in-window owner edit is accepted.", "D"]], "qs": ["Q-QUI-01: Are Q1–Q20 a real limit or a legacy template, and what duration, attempts and scoring apply?"], "src": "quiz.html / sls_quiz_answer", "actors": "Respondent; quiz owner", "trigger": "A quiz is made available to the user"}, {"id": "OUT", "name": "Network outage and affected components", "area": "Outages", "outcome": "An outage with scope, times, updates and linked components", "flow": ["Identify outage type, impact scope and times", "Link affected components and record updates", "Record actual end and retain history"], "reqs": [["FRS-OUT-01", "The system shall retain Problem In, Problem Type, Outage Type, Effect On, Severity, From, Actual To, Planned From and Planned To as distinct outage details.", "Updating the planned time does not overwrite the actual end time.", "D"], ["FRS-OUT-02", "The system shall link each BRAS record to an outage through Outage Id while retaining Bras, Start Time, End Time and Status.", "An outage with two components displays both and preserves their respective times.", "D"], ["FRS-OUT-03", "The system shall reject an invalid BRAS address and prevent a duplicate open BRAS record within the approved uniqueness scope.", "An invalid address and duplicate open BRAS are rejected; reopening after a previous end follows the approved policy.", "D"], ["FRS-OUT-04", "The system shall show a qualifying outage in Current General Outage and retain it in history after it ceases to be current.", "Ending an outage removes it from the current list while retaining historical access.", "D"]], "qs": ["Q-OUT-01: What defines Current, and what does outage closure do to linked BRAS records?"], "src": "outage.html / current_general_outage ; outage.html / general_outage ; outage.html / outage_bras", "actors": "Outage recorder; follow-up team; state updater", "trigger": "An outage or service-impacting planned activity is detected"}, {"id": "TOL", "name": "Work-tool outage recording", "area": "Outages", "outcome": "A tool outage documented with impact, interval and closure context", "flow": ["Identify tool, problem and impact", "Record times, affected locations and confirming party", "Record outage end"], "reqs": [["FRS-TOL-01", "The system shall retain Tool, Problem, Impact Troubleshooting, Affected Locations, Other Impacted Tools and Severity on a tool outage.", "The outage distinguishes the primary tool from other impacted tools.", "D"], ["FRS-TOL-02", "The system shall require To when a tool outage is marked no longer Current.", "Ending Current without To is rejected; supplying To permits completion.", "D"], ["FRS-TOL-03", "The system shall retain RC/RFO, Confirmed By Responsible Team and Confirmation Receive Date as outage cause and confirmation details.", "The outage identifies its cause, confirming party and confirmation receipt date.", "D"]], "qs": ["Q-TOL-01: Who confirms recovery, and when and to whom is Send Mail sent?"], "src": "outage.html / Current_tools_outage ; outage.html / tools_outage", "actors": "Tool-outage recorder; responsible confirmation party", "trigger": "A tool outage affects operations"}, {"id": "ORG", "name": "Employee and organization directory", "area": "Shared organization", "outcome": "People and organization reference supporting business processes", "flow": ["Identify person and account names", "Associate LOB, site, TL and SPV", "Enable scoped search"], "reqs": [["FRS-ORG-01", "The system shall retain Full Name, Login Id, Wiki Username and Bss Username as distinct attributes of the same employee.", "Wiki and BSS accounts do not create two people for the same employee.", "D"], ["FRS-ORG-02", "The system shall retain Lob, Product, Site, Tl and Spv in the employee directory to identify employee affiliation.", "Employee search returns the recorded site, LOB, leader and supervisor.", "D"]], "qs": ["Q-ORG-01: What is the authoritative identity source, and how do transfers affect historical visibility?"], "src": "cc_str.html / cc_str", "actors": "Employee-data owner; authorized directory user", "trigger": "An employee is added or changes organization/account"}];
+const FRSMAP = Object.fromEntries(FRS.map(p=>[p.id,p]));
+
+/* ---------- utilities ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n=>String(n).padStart(2,'0');
+const dt = (d=new Date())=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+const dd = (d=new Date())=>dt(d).slice(0,10);
+const ago = (days,hours=0)=>{const d=new Date();d.setDate(d.getDate()-days);d.setHours(d.getHours()-hours);return d};
+const ahead = (days,hours=0)=>ago(-days,-hours);
+const parse = s=>s?new Date(s.length===10?s+'T00:00':s):null;
+const ageDays = s=>Math.floor((Date.now()-parse(s))/864e5);
+const empty = v=>v==null||v===''||(Array.isArray(v)&&!v.length);
+const clone = o=>JSON.parse(JSON.stringify(o));
+const F = (k,l,t='text',o={})=>Object.assign({k,l,t},o);
+const BOOL=['Yes','No'];
+
+/* ---------- people & users ---------- */
+const PEOPLE = [
+  // login, name, wiki, bss, lob, product, site, tl, spv
+  ['10001','Youssef Ali','youssef.ali','bss_yali','Operations','All','Smart Village','',''],
+  ['10050','Sara Nabil','sara.nabil','bss_snabil','ADSL','Inbound','Smart Village','',''],
+  ['10051','Omar Hany','omar.hany','bss_ohany','Mobile','Inbound','Maadi','',''],
+  ['10101','Karim Fathy','karim.fathy','bss_kfathy','ADSL','Inbound','Smart Village','','10050'],
+  ['10102','Dina Kamal','dina.kamal','bss_dkamal','Mobile','Inbound','Maadi','','10051'],
+  ['10231','Mona Adel','mona.adel','bss_madel','ADSL','Inbound','Smart Village','10101','10050'],
+  ['10233','Nour Ehab','nour.ehab','bss_nehab','ADSL','Inbound','Smart Village','10101','10050'],
+  ['10232','Hassan Reda','hassan.reda','bss_hreda','Mobile','Inbound','Maadi','10102','10051'],
+  ['10234','Tarek Mostafa','tarek.mostafa','bss_tmostafa','Mobile','Outbound','Maadi','10102','10051'],
+  ['10300','Laila Samir','laila.samir','bss_lsamir','HR','Support','Smart Village','','10001'],
+];
+const USERS = [
+  ['10231','agent','Agent'],['10232','agent','Agent'],['10101','leader','Team leader'],
+  ['10050','manager','Team manager'],['10051','manager','Team manager'],['10300','processor','HR & support processor'],['10001','admin','Admin / process owner']
+];
+const ROLE = Object.fromEntries(USERS.map(u=>[u[0],{id:u[0],role:u[1],roleName:u[2]}]));
+
+/* ---------- store ---------- */
+const KEY='ireport-wireframe-v1';
+let DB;
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+function load(){try{const s=localStorage.getItem(KEY);if(s){DB=JSON.parse(s);return true}}catch(e){}return false}
+const rows=(pid,ek)=>DB.r[pid+'.'+ek]||(DB.r[pid+'.'+ek]=[]);
+const org=()=>rows('ORG','main');
+const person=id=>org().find(p=>p.login_id===id);
+const pn=id=>{const p=person(id);return p?p.full_name:(id||'—')};
+const tlOf=id=>person(id)?.tl||'';
+const spvOf=id=>person(id)?.spv||'';
+const teamOf=id=>{const p=person(id);if(!p)return '';const tl=p.tl||(org().some(x=>x.tl===id)?id:'');return tl?'Team '+pn(tl).split(' ')[0]:p.lob}
+const me=()=>{const u=ROLE[DB.user];return Object.assign({},u,{name:pn(u.id)})};
+const isProc=u=>u.role!=='agent';
+const peopleOpts=()=>org().map(p=>[p.login_id,p.full_name+' · '+p.login_id]);
+
+/* ---------- process registry ---------- */
+const P={};
+function def(id,o){
+  const base=FRSMAP[id];
+  o.ents=(o.ents||[o.ent]).map(e=>Object.assign({key:'main',views:[{id:'all',name:'All'}],cols:[],fields:[]},e));
+  P[id]=Object.assign({},base,o);
+}
+const closedHR=['Closed','Rejected'];
+const HR_STATUS=['New','In Progress','Approved','Rejected','Closed'];
+function hrFields(extra){return [
+  F('employee','Employee ID','user',{req:1,help:'The employee the request is for.'}),
+  ...extra,
+  F('extension','Extension'),
+  F('priority','Priority','sel',{o:['Normal','High','Urgent']}),
+  F('description','Description','ta',{req:1,w:1,ro:1,help:'Kept as written. Processing notes go in Update.'}),
+  F('attach','Attach','file'),
+  F('supporter_group','Supporter Group','sel',{s:'proc',o:['HR Operations','WFM','Facilities','IT Support']}),
+  F('supporter_name','Supporter Name','user',{s:'proc'}),
+  F('status','Status','sel',{s:'proc',o:HR_STATUS,dflt:'New'}),
+  F('update','Update','ta',{s:'proc',w:1}),
+]}
+function hrEnt(name,prefix,extra,cols,more={}){return Object.assign({name,prefix,fields:hrFields(extra),cols:['employee',...cols,'supporter_name','status'],statusKey:'status',
+  defaults:u=>({employee:u.id,status:'New'}),
+  visible:(r,u)=>isProc(u)||r.employee===u.id||r.created_by===u.id,
+  views:[{id:'mine',name:'My requests',f:(r,u)=>r.employee===u.id||r.created_by===u.id},
+         {id:'proc',name:'Processing queue',f:r=>!closedHR.includes(r.status),proc:1},
+         {id:'closed',name:'Closed',f:r=>closedHR.includes(r.status),note:'Closed = Closed or Rejected. Assumption until Q-HRA-02 is answered.'}],
+},more)}
+
+/* WLG */
+def('WLG',{ent:{name:'Work log',prefix:'WLG',noStatus:1,
+  fields:[F('work_type','Work type','sel',{req:1,o:['Floor support','Coaching session','Side-by-side','Report preparation','Training delivery']}),
+    F('performer','Performer','user',{req:1,help:'Who did the work. Change it to record on someone else\'s behalf; you stay the recorder.'}),
+    F('perf_date','Performance date','date',{req:1}),
+    F('team','Team','auto',{calc:r=>teamOf(r.performer)}),
+    F('activity','Activity','ta',{req:1,w:1}),F('outcome','Outcome','ta',{w:1})],
+  cols:['work_type','performer','perf_date','team','created_by'],
+  defaults:u=>({performer:u.id,perf_date:dd()}),
+  visible:(r,u)=>u.role==='admin'||r.created_by===u.id||r.performer===u.id||spvOf(r.performer)===u.id||tlOf(r.performer)===u.id,
+  scopeNote:'You see work logs you recorded or performed, plus your own team if you manage it. Another team\'s manager cannot open them by search, link or export.',
+  saveNote:'Saved as a work log. No approval task was created.',
+}});
+
+/* DAY */
+def('DAY',{ent:{name:'Daily Status issue',prefix:'DAY',statusKey:'status',
+  fields:[F('account','Account',undefined,{req:1}),F('location','Location','sel',{o:['Cairo','Giza','Alexandria','Mansoura']}),
+    F('problem_type','Problem Type','sel',{req:1,o:['Physical Delay','No Sync','Slow Speed','Noise','Disconnection']}),
+    F('exchange','Exchange','sel',{o:['Ramses','Dokki','Maadi','Heliopolis','Smouha']}),F('area_code','Area Code'),F('phone','Phone'),
+    F('status','Status','sel',{o:['Open','In Progress','Resolved'],dflt:'Open'}),F('comment','Comment','ta',{w:1})],
+  cols:['account','problem_type','exchange','phone','status','created_by'],defaults:()=>({status:'Open'}),
+  views:[{id:'all',name:'Daily Status'},{id:'pd',name:'Physical Delay',f:r=>r.problem_type==='Physical Delay'&&r.status!=='Resolved',note:'Same records, filtered: Problem Type = Physical Delay and not Resolved. Rule pending Q-DAY-02.'}],
+}});
+
+/* CCT */
+def('CCT',{ents:[{key:'main',tabName:'Activities',name:'Commercial activity',prefix:'CCT',statusKey:'status',
+  fields:[F('lob','Lob','sel',{o:['ADSL','Mobile','Corporate']}),
+    F('category','Category','sel',{req:1,o:()=>[...new Set(rows('CCT','cat').map(c=>c.category))]}),
+    F('sub_category','Sub Category','sel',{req:1,dep:'category',o:r=>rows('CCT','cat').filter(c=>c.category===r.category).map(c=>c.sub_category)}),
+    F('expected_sl','Expected Sl (hours)','auto',{calc:r=>{const c=rows('CCT','cat').find(c=>c.category===r.category&&c.sub_category===r.sub_category);return c?c.expected_sl:''},help:'Taken from the Activity Category definition.'}),
+    F('priority','Priority','sel',{o:['Low','Normal','High']}),F('quantification','Quantification','num',{help:'Unit pending Q-CCT-01.'}),
+    F('start','Start Date','dt',{req:1}),F('end','End Date','dt'),
+    F('responsible_team','Responsible Team','sel',{req:1,o:['Back office','Billing','Corporate care','Sales support']}),
+    F('mail_subject','Mail Subject',undefined,{w:1}),
+    F('feedback','Feedback','ta',{s:'proc',w:1}),F('status','Status','sel',{s:'proc',o:['Open','In Progress','Done','Cancelled'],dflt:'Open'}),
+    F('status_reason','Status Reason',undefined,{s:'proc'}),
+    F('passed_sl','Passed Sl','auto',{calc:r=>{if(!r.start||!r.expected_sl)return '';const end=r.end?parse(r.end):new Date();return (end-parse(r.start))/36e5>Number(r.expected_sl)?'Yes':'No'}})],
+  cols:['category','sub_category','expected_sl','responsible_team','quantification','status','passed_sl'],defaults:()=>({status:'Open',start:dt()}),
+  validate:r=>r.end&&r.start&&r.end<r.start?{end:'End Date cannot be before Start Date.'}:null,
+  views:[{id:'all',name:'All activities'},{id:'open',name:'Open',f:r=>!['Done','Cancelled'].includes(r.status)},{id:'sl',name:'Passed SL',f:r=>r.passed_sl==='Yes'}]},
+ {key:'cat',tabName:'Activity categories',name:'Activity category',prefix:'CAT',noStatus:1,canCreate:u=>isProc(u),editRole:u=>isProc(u),
+  fields:[F('category','Category',undefined,{req:1}),F('sub_category','Sub Category',undefined,{req:1}),F('expected_sl','Expected Sl (hours)','num',{req:1})],
+  cols:['category','sub_category','expected_sl'],
+  validate:(r,old)=>rows('CCT','cat').some(c=>c.id!==r.id&&c.category===r.category&&c.sub_category===r.sub_category)?'This category and sub category already exist.':null,
+  views:[{id:'all',name:'Category definitions'}]}]});
+
+/* HR */
+def('HRG',{ent:hrEnt('HR request','HRG',[F('problem_type','Problem type','sel',{req:1,o:['HR letter','Payroll query','Insurance','Attendance correction','Other']}),F('items','Items'),F('location','Location','sel',{o:['Smart Village','Maadi','Alexandria']})],['problem_type'])});
+def('HRA',{ent:hrEnt('Annual leave request','HRA',[F('ticket_source','Ticket Source','sel',{o:['Portal','Phone','Email']}),F('from','From','date',{req:1}),F('to','To','date',{req:1}),
+  F('days','Calendar days','auto',{calc:r=>r.from&&r.to&&r.to>=r.from?Math.round((parse(r.to)-parse(r.from))/864e5)+1:'',help:'Calendar count only. Balance and holiday rules pending Q-HRA-01.'}),
+  F('my_location','My Location','sel',{o:['Smart Village','Maadi','Alexandria']})],['from','to','days'],
+  {validate:r=>r.from&&r.to&&r.to<r.from?{to:'To is earlier than From. Pick a To date on or after From.'}:null,
+   viewNames:['Annual Leave','Admin Annual Leave','Closed Annual Leave']})});
+P.HRA.ents[0].views.forEach((v,i)=>v.name=P.HRA.ents[0].viewNames[i]);
+def('HRS',{ent:hrEnt('Swap request','HRS',[F('ticket_source','Ticket Source','sel',{o:['Portal','Phone']}),F('request_date','Request Date','auto',{calc:r=>r.request_date||dd()}),
+  F('location','Location','sel',{req:1,o:['Smart Village','Maadi','Alexandria']}),F('swap_with','Swap With','user',{req:1}),F('swap_date','Swap Date','date',{req:1}),
+  F('new_location','New location','sel',{o:['Smart Village','Maadi','Alexandria']}),F('problem_type','Problem type','sel',{o:['Shift swap','Day off swap','Location swap']})],['swap_with','swap_date','location','new_location'],
+  {validate:r=>r.swap_with&&r.swap_with===r.employee?{swap_with:'Swap With must be a different employee.'}:null})});
+P.HRS.ents[0].fields.find(f=>f.k==='swap_with').ro=1;
+def('HRE',{ent:hrEnt('Extra needs request','HRE',[F('problem_type','Problem type','sel',{req:1,o:['Equipment','Facility','Transport']}),F('items','Items','sel',{req:1,o:['Headset','Chair','Locker','Parking pass','Footrest']}),F('location','Location','sel',{req:1,o:['Smart Village','Maadi','Alexandria']})],['problem_type','items'])});
+def('HRT',{ent:hrEnt('Tools request','HRT',[F('problem_type','Problem Type','sel',{req:1,o:['Laptop','Software access','Desk phone','Badge']}),F('location','Location','sel',{req:1,o:['Smart Village','Maadi','Alexandria']})],['problem_type','location'])});
+
+/* SD */
+const SMC_TOOLS=['Agento','BSS','Xceed CRM','Wiki','Genesys softphone','TTS','NTRA portal'];
+def('SD',{ent:{name:'SMC ticket',prefix:'SMC',statusKey:'status',
+  fields:[F('lob','Lob','sel',{o:['ADSL','Mobile','Corporate']}),F('product','Product','sel',{req:1,o:['Access','Account','Permissions','Hardware']}),
+    F('request','Request','sel',{req:1,o:['Password reset','New user','Permission change','Tool error','Profile update']}),
+    F('tool','Tool','list',{req:1,o:()=>SMC_TOOLS,help:'Type or pick. Only defined tools are accepted.'}),
+    F('affected_user','Affected user (wiki username)',undefined,{req:1}),F('bss_username','Bss Username'),F('contact','Contact',undefined,{req:1}),
+    F('critical','Critical Case','sel',{o:BOOL,dflt:'No'}),F('description','Description','ta',{req:1,w:1,ro:1}),F('attachment','Attachment','file'),
+    F('assigned_to','Assigned To','user',{s:'proc'}),F('status','Status','sel',{s:'proc',o:['New','Assigned','In Progress','Pending User','Closed'],dflt:'New'}),
+    F('status_reason','Status Reason',undefined,{s:'proc'}),F('technical_status','Technical Status','sel',{s:'proc',o:['','Investigating','Vendor escalation','Fixed','Not reproducible']}),
+    F('technical_status_reason','Technical Status Reason',undefined,{s:'proc'}),F('comment','Comment','ta',{s:'proc',w:1}),
+    F('closed_time','Closed Time','auto',{calc:(r)=>r.status==='Closed'?(r.closed_time||dt()):''})],
+  cols:['tool','request','affected_user','assigned_to','status','critical'],defaults:u=>({status:'New',critical:'No',affected_user:person(u.id)?.wiki_username||''}),
+  validate:r=>!SMC_TOOLS.includes(r.tool)?{tool:'"'+(r.tool||'')+'" is not a defined SMC tool. Pick one from the list.'}:null,
+  after:(r,old,u,notes)=>{notify('SMC queue (smc-team)',(old?'Updated: ':'New ticket: ')+r.id+' · '+r.tool+' · '+r.status,r.id,notes)},
+  views:[{id:'all',name:'All tickets',proc:1},{id:'mine',name:'LOB All My Tickets',f:(r,u)=>r.created_by===u.id},{id:'asg',name:'Assigned to me',f:(r,u)=>r.assigned_to===u.id,proc:1}],
+}});
+
+/* ACT */
+def('ACT',{ent:{name:'Activation task',prefix:'ACT',statusKey:'status',
+  fields:[F('service_order','Service Order ID',undefined,{req:1,ro:1}),F('task','Task','sel',{req:1,o:['New line','Speed upgrade','Relocation','Reconnection']}),
+    F('category','Category','sel',{o:['Consumer','Corporate']}),F('sub_category','Sub Category','sel',{o:['Copper','Fiber','VDSL']}),F('service_name','Service Name'),
+    F('exchange','Exchange','sel',{o:['Ramses','Dokki','Maadi','Heliopolis','Smouha']}),F('zone','Zone'),F('sector','Sector','sel',{o:['Cairo','Giza','Delta','Alex']}),
+    F('user_group','User Group','sel',{o:['Activation L1','Activation L2'],dflt:'Activation L1'}),F('call_type','Call Type','sel',{o:['Outbound','Inbound']}),
+    F('assigned_to','Assigned To','auto',{calc:r=>r.assigned_to||'',fmt:'user',help:'Set by allocation.'}),
+    F('status','Status','sel',{o:['Open','Follow-up','Completed'],dflt:'Open'}),
+    F('case_action','Case Action','sel',{o:['','Called customer','Sent technician','Escalated to OSS']}),F('case_result','Case Result','sel',{o:['','Activated','Customer not reached','Pending line','Cancelled']}),
+    F('follow_dt','Follow Datetime','dt',{req:r=>r.status==='Follow-up',help:'Required when Status is Follow-up.'}),
+    F('case_period','Case Period (hours open)','auto',{calc:r=>r.created_on?Math.round((Date.now()-parse(r.created_on))/36e5):0,help:'Derivation pending Q-ACT-01.'}),
+    F('comment','Comment','ta',{w:1})],
+  cols:['service_order','task','user_group','assigned_to','status','case_result'],defaults:()=>({status:'Open',user_group:'Activation L1'}),
+  views:[{id:'mine',name:'My tasks',f:(r,u)=>r.assigned_to===u.id},{id:'un',name:'Unassigned',f:r=>!r.assigned_to&&r.status!=='Completed',proc:1},{id:'all',name:'All tasks',proc:1}],
+  tools:[{id:'alloc',name:'Allocation',proc:1}],
+}});
+
+/* CAS */
+const CAS_REASONS={'Technical':['Slow speed','Frequent disconnection','No service'],'Billing':['Wrong charge','Refund delay'],'Sales':['Mis-selling','Delivery delay']};
+def('CAS',{ent:{name:'Complaint',prefix:'CMP',statusKey:'complaint_status',
+  fields:[F('complaint_source','Complaint Soruce','sel',{req:1,o:['Call center','NTRA','Branch','Social media','Email']}),F('account','Account',undefined,{req:1}),
+    F('customer_type','Customer Type','sel',{o:['Consumer','Corporate','VIP']}),F('contact_name','Contact Name'),F('mobile','Mobile'),F('area_code','Area Code'),F('adsl_phone','Adsl Phone Number'),
+    F('reason','Reason','sel',{req:1,o:Object.keys(CAS_REASONS)}),F('sub_reason','Sub Reason','sel',{req:1,dep:'reason',o:r=>CAS_REASONS[r.reason]||[]}),
+    F('ntra_id','NTRA ID'),F('tts_ticket','TTS Ticket'),F('fcc_number','FCC Number'),
+    F('assigned_to','Assigned To','sel',{req:1,o:['MCR','I Care','ICare - Followup','Technical support','Billing team']}),
+    F('priority','Priority','sel',{o:['Normal','High','Critical']}),
+    F('complaint_status','Complaint Status','sel',{o:['New','In Progress','Pending Customer','Escalated','Closed'],dflt:'New'}),
+    F('technical_comment','Technical Comment','ta',{s:'proc',w:1}),F('quality_comment','Quality Comment','ta',{s:'proc',w:1}),F('comment','Comment','ta',{w:1}),
+    F('sla','Days open','auto',{calc:r=>r.created_on?ageDays(r.created_on):0}),F('closing_time','Closing Time','auto',{calc:r=>r.complaint_status==='Closed'?(r.closing_time||dt()):''})],
+  cols:['account','complaint_source','reason','sub_reason','assigned_to','complaint_status','sla'],defaults:()=>({complaint_status:'New',assigned_to:'MCR'}),
+  after:(r,old,u,notes)=>{if(old&&old.assigned_to!==r.assigned_to)notes.push('Moved from the '+wl(old.assigned_to)+' worklist to the '+wl(r.assigned_to)+' worklist. Same reference '+r.id+'.')},
+  views:[{id:'all',name:'All complaints'},{id:'mcr',name:'MCR worklist',f:r=>r.assigned_to==='MCR'},{id:'icare',name:'I Care worklist',f:r=>['I Care','ICare - Followup'].includes(r.assigned_to)},
+    {id:'delay',name:'Delayed Tickets',f:r=>r.complaint_status!=='Closed'&&ageDays(r.created_on)>DB.cfg.delayDays,note:()=>'Open complaints older than '+DB.cfg.delayDays+' days. Threshold set in Rules, pending Q-CAS-02.'}],
+}});
+const wl=a=>a==='MCR'?'MCR':['I Care','ICare - Followup'].includes(a)?'I Care':a;
+
+/* VIS */
+def('VIS',{ent:{name:'Vendor visit',prefix:'VIS',statusKey:'status',
+  fields:[F('ticket_number','Ticket Number',undefined,{req:1,ro:1}),F('ticket_source','Ticket Source','sel',{o:['TTS','BSS','Call center']}),
+    F('vendor_name','Vendor Name','sel',{req:1,o:['Raya','Orange Business','TE Data Field','Vodafone Fixed']}),F('exchange','Exchange','sel',{o:['Ramses','Dokki','Maadi','Heliopolis','Smouha']}),
+    F('area_code','Area Code',undefined,{req:1}),F('landline','Landline',undefined,{req:1}),F('contracted_speed','Contracted Speed','sel',{o:['30 Mb','70 Mb','100 Mb','200 Mb']}),
+    F('status','Status','sel',{o:['Open','Visit scheduled','Visited','Closed'],dflt:'Open'}),F('status_reason','Status Reason'),
+    F('called_vendor','Called Vendor','sel',{o:['','Yes','No']}),F('cst_reached','Cst Reached','sel',{o:['','Yes','No']}),F('problem_solved','Problem Solved','sel',{o:['','Yes','No']}),
+    F('speed_before','Speed Before (Mb)','num'),F('speed_after','Speed After (Mb)','num'),F('diagnostics','Diagnostics','ta',{w:1}),
+    F('follow_date','Follow Up Date','date'),F('follow_time','Follow Up Time','time'),F('follow_assigned_to','Follow Assigned To','user',{s:'proc'}),
+    F('follow_assigned_dt','Follow Assigned Datetime','auto',{help:'Stamped when the follow-up is assigned.'}),F('comment','Comment','ta',{w:1})],
+  cols:['ticket_number','vendor_name','landline','cst_reached','problem_solved','follow_date','follow_assigned_to','status'],defaults:()=>({status:'Open'}),
+  validate:r=>(r.follow_date&&!r.follow_time)?{follow_time:'Set a follow-up time with the date.'}:(r.follow_assigned_to&&!r.follow_date)?{follow_date:'Set the follow-up due date before assigning it.'}:null,
+  before:(r,old)=>{if(r.follow_assigned_to&&(!old||old.follow_assigned_to!==r.follow_assigned_to))r.follow_assigned_dt=dt()},
+  children:[{key:'followups',name:'Follow-up rounds',add:'Record follow-up outcome',fields:[F('at','Follow Up Datetime','dt',{req:1}),F('status','Follow Up Status','sel',{req:1,o:['Reached - solved','Reached - not solved','Not reached','Rescheduled']}),F('reason','Follow Up Status Reason')],cols:['at','status','reason','by'],defaults:()=>({at:dt()})}],
+  views:[{id:'all',name:'All vendor visits'},{id:'due',name:'Follow-up due',f:r=>r.follow_date&&r.follow_date<=dd()&&r.status!=='Closed'},{id:'mine',name:'My follow-ups',f:(r,u)=>r.follow_assigned_to===u.id}],
+}});
+
+/* CTE */
+def('CTE',{ent:{name:'Technical concession',prefix:'CTE',statusKey:'concession_status',
+  fields:[F('bss_ticket','BSS ticket',undefined,{req:1}),F('account','Account',undefined,{req:1}),F('service_number','Service Number',undefined,{req:1}),F('caller_id','Caller ID'),
+    F('concession_type','Concession Type','sel',{req:1,o:['Days','Monetary','Bundle']}),F('reason','Reason','sel',{req:1,o:['Outage','Slow speed','Late repair','Wrong disconnection']}),
+    F('due_to','Due To','sel',{o:['Network','Vendor','Billing']}),F('exchange','Exchange'),
+    F('period_from','Concession Period From','date'),F('period_to','Concession Period To','date'),F('num_days','Number Of Days','num'),
+    F('compensation_value','Compensation Value (EGP)','num',{help:'Above your limit the concession goes to your team leader.'}),F('compensation_offer','Compensation Offer','sel',{o:['','Credit note','Free days','Speed upgrade']}),
+    F('satisfaction_needed','Satisfaction Needed','sel',{o:BOOL,dflt:'No'}),F('satisfaction_value','Satisfaction Value (EGP)','num',{when:r=>r.satisfaction_needed==='Yes'}),
+    F('comment','Comment','ta',{w:1}),
+    F('concession_status','Concession Status','sel',{s:'proc',o:['Approved within agent limit','Pending TL review','Approved by TL','Rejected','Revalidation'],help:'Set automatically on submit; leaders decide referred cases.'}),
+    F('rejected_reason','Rejected Reason',undefined,{s:'proc',req:r=>r.concession_status==='Rejected'}),F('revalidation_status','Revalidation Status','sel',{s:'proc',o:['','Requested','Confirmed','Reversed']}),
+    F('clm_reply_date','Clm Reply Date','date',{s:'proc'}),F('leader_username','Leader Username','auto',{fmt:'user'})],
+  cols:['bss_ticket','service_number','concession_type','num_days','compensation_value','concession_status','leader_username'],defaults:()=>({satisfaction_needed:'No'}),
+  validate:(r,old,u)=>{if(r.period_from&&r.period_to&&r.period_to<r.period_from)return{period_to:'Period To cannot be before Period From.'};
+    if(old&&old.concession_status==='Pending TL review'&&['Approved by TL'].includes(r.concession_status)&&!['leader','admin'].includes(u.role))return{concession_status:'Only the team leader can approve a referred concession.'};return null},
+  before:(r,old,u,notes)=>{if(!old){const over=Number(r.compensation_value||0)>DB.cfg.compLimit||Number(r.satisfaction_value||0)>DB.cfg.satLimit;
+      r.leader_username=tlOf(u.id)||'';
+      if(over){r.concession_status='Pending TL review';notes.push('Above your limit (EGP '+DB.cfg.compLimit+' compensation / EGP '+DB.cfg.satLimit+' satisfaction). Sent to '+pn(r.leader_username)+' for review.')}
+      else r.concession_status='Approved within agent limit';}},
+  after:(r,old,u,notes)=>{if(!old&&r.concession_status==='Pending TL review')notify(pn(r.leader_username)+' (team leader)','Concession '+r.id+' awaiting your review',r.id,notes)},
+  views:[{id:'all',name:'All concessions'},{id:'tl',name:'Pending TL review',f:(r,u)=>r.concession_status==='Pending TL review'&&(u.role==='admin'||r.leader_username===u.id||u.role==='manager')},{id:'rej',name:'Rejected',f:r=>r.concession_status==='Rejected'}],
+}});
+
+/* CNO */
+def('CNO',{ent:{name:'Non-technical concession',prefix:'CNO',statusKey:'concession_status',
+  fields:[F('service_number','Service Number',undefined,{req:1}),F('serial','Serial'),F('ticket_source','Ticket Source','sel',{o:['Call center','Branch','Social']}),
+    F('reason','Reason','sel',{req:1,o:['Billing error','Goodwill','Promotion not applied']}),F('sub_reason','Sub Reason'),
+    F('concession_type','Concession Type','sel',{req:1,o:['Free Giga','Percentage discount','Monetary','Days']}),F('concession_date','Concession Date','date',{req:1}),
+    F('num_days','Number Of Days','num'),F('cost','Cost (EGP)','num'),F('total_approved','Total Approved Amount (EGP)','num',{s:'proc'}),
+    F('free_giga','Free Giga (GB)','num'),F('pct_discount','Percentage Discount (%)','num'),F('cst_package','Cst Package'),
+    F('call_status','Call Status','sel',{o:['','Reached','Not reached']}),F('reached_number','Reached Number'),F('comment','Comment','ta',{w:1}),
+    F('concession_status','Concession Status','sel',{s:'proc',o:['Pending review','Approved','Rejected','Mistake review'],dflt:'Pending review'}),
+    F('rejected_reason','Rejected Reason',undefined,{s:'proc',req:r=>r.concession_status==='Rejected'}),
+    F('created_by_mistake','Created By Mistake','sel',{o:BOOL,dflt:'No',help:'Flags the record for review. Nothing is erased.'}),
+    F('mistake_reason','Mistake review reason',undefined,{when:r=>r.created_by_mistake==='Yes',req:r=>r.created_by_mistake==='Yes'}),
+    F('mistaken_cca','Mistaken Cca','user',{when:r=>r.created_by_mistake==='Yes'})],
+  cols:['service_number','concession_type','cost','total_approved','free_giga','pct_discount','concession_status'],defaults:()=>({concession_status:'Pending review',created_by_mistake:'No',concession_date:dd()}),
+  validate:r=>r.pct_discount!==''&&r.pct_discount!=null&&(r.pct_discount<0||r.pct_discount>100)?{pct_discount:'Enter a percentage from 0 to 100.'}:null,
+  before:(r,old,u,notes)=>{if(r.created_by_mistake==='Yes'&&(!old||old.created_by_mistake!=='Yes')){r.concession_status='Mistake review';notes.push('Flagged for mistake review. The record and its history stay traceable.')}},
+  views:[{id:'all',name:'All'},{id:'rev',name:'Mistake review',f:r=>r.concession_status==='Mistake review'}],
+}});
+
+/* VAL */
+def('VAL',{ent:{name:'Complaint validation',prefix:'VAL',statusKey:'validation_status',
+  fields:[F('ticket_id','Ticket ID',undefined,{req:1,ro:1}),F('ticket_type','Ticket Type','sel',{o:['Complaint','Trouble ticket','Concession']}),F('account','Account'),
+    F('complaint_reason','Complaint Reason','sel',{o:Object.keys(CAS_REASONS)}),F('sub_reason','Sub Reason'),F('reference','Reference'),
+    F('mistaken_cca','Mistaken CCA','user',{req:1}),F('cca_leader','CCA Leader','auto',{fmt:'user',calc:r=>tlOf(r.mistaken_cca)}),F('cca_spv','Cca Spv','auto',{fmt:'user',calc:r=>spvOf(r.mistaken_cca)}),
+    F('cca_group','CCA Group','auto',{calc:r=>teamOf(r.mistaken_cca)}),F('error_comment','Error Comment','ta',{req:1,w:1,ro:1}),
+    F('operation_feedback','Operation Feedback','ta',{w:1,who:u=>['leader','manager','admin'].includes(u.role),help:'Operations (leader / manager) side.'}),
+    F('complaint_feedback','Complaint Feedback','ta',{w:1,who:u=>['processor','admin'].includes(u.role),help:'Complaint / quality side.'}),
+    F('validation_level','Validation Level','sel',{s:'proc',o:['Level 1','Level 2','Level 3'],dflt:'Level 1'}),
+    F('validation_status','Validation Status','sel',{s:'proc',o:['Pending','Error Valid','Error Not Valid','Escalate','Closed'],dflt:'Pending'}),
+    F('validated_by','Validated By','auto',{fmt:'user'})],
+  cols:['ticket_id','mistaken_cca','cca_leader','validation_level','validation_status','validated_by'],defaults:()=>({validation_status:'Pending',validation_level:'Level 1'}),
+  validate:r=>rows('VAL','main').some(v=>v.id!==r.id&&String(v.ticket_id).trim().toLowerCase()===String(r.ticket_id).trim().toLowerCase())?{ticket_id:'A validation already exists for ticket '+r.ticket_id+'. Open that one instead.'}:null,
+  before:(r,old,u)=>{if(old&&old.validation_status!==r.validation_status)r.validated_by=u.id},
+  views:[{id:'all',name:'Validation'},{id:'ret',name:'Returned Tickets',f:r=>r.validation_status==='Error Not Valid'},{id:'esc',name:'Validation Escalation',f:r=>r.validation_status==='Escalate'}],
+}});
+
+/* QUA */
+const QUEUES=['ADSL_Tech_AR','ADSL_Billing','Mobile_General','VIP_Line'];
+function fakeCall(seed){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;const d=ago(1+h%20,h%9);return{call_id:'C'+(700000+h%299999),call_dt:dt(d),duration:(60+h%900)+' s',direction:h%2?'Inbound':'Outbound',queue:QUEUES[h%QUEUES.length]}}
+def('QUA',{ent:{name:'Call audit',prefix:'AUD',statusKey:'status',
+  fields:[F('login','Login','user',{req:1,ro:1}),F('tl_lob','Tl Lob','auto',{calc:r=>person(r.login)?.lob||''}),F('tl_site','Tl Site','auto',{calc:r=>person(r.login)?.site||''}),
+    F('call_id','Call ID','auto',{help:'Retrieved for the selected login when you save.'}),F('call_dt','Call Datetime','auto'),F('duration','Duration','auto'),F('direction','Direction','auto'),F('queue','Queue','auto'),
+    F('status','Status','sel',{req:1,o:['Pass','Fail','Needs coaching']}),F('status_reason','Status Reason'),F('attach','Attach','file'),F('comment','Comment','ta',{w:1})],
+  cols:['login','tl_lob','tl_site','call_id','call_dt','queue','status'],canCreate:u=>isProc(u),
+  validate:(r,old)=>{if(old)return null;const m=dd().slice(0,7);const n=rows('QUA','main').filter(a=>a.tl_lob===r.tl_lob&&a.tl_site===r.tl_site&&a.created_on.slice(0,7)===m).length;
+    return n>=DB.cfg.quaQuota?'Monthly audit quota reached for '+r.tl_lob+' / '+r.tl_site+' ('+n+' of '+DB.cfg.quaQuota+'). Quota pending Q-QUA-01; change it in Rules.':null},
+  before:(r,old)=>{if(!old)Object.assign(r,fakeCall(r.login+Date.now()))},
+  actions:[{id:'replace',label:'Replace call',reason:'Replacement reason',show:(r,u)=>isProc(u),run:(r,u,reason,notes)=>{const prev=r.call_id;Object.assign(r,fakeCall(r.call_id+reason+Date.now()));notes.push('Call '+prev+' replaced by '+r.call_id+'.');return 'Replaced call '+prev+' → '+r.call_id+'. Reason: '+reason}}],
+  views:[{id:'all',name:'TL audit inbound'}],quotaPanel:1,
+}});
+
+/* CSI */
+def('CSI',{ent:{name:'CSI case',prefix:'CSI',statusKey:'survey_status',
+  fields:[F('ticket_number','Ticket Number',undefined,{req:1,ro:1}),F('account_number','Account Number',undefined,{req:1,ro:1}),F('voc_import_date','Voc Import Date','date',{req:1,ro:1}),
+    F('closing_reason','Closing Reason',undefined,{ro:1}),F('survey_date','Survey Date','date',{ro:1}),F('agent_id','Agent ID','user'),
+    F('nps','NPS Rating (0–10)','num',{ro:1}),F('cs_overall','CS overall Satisfaction rating (1–5)','num',{ro:1}),F('problem_type','Problem Type'),
+    F('root_cause','Root Cause','sel',{s:'proc',o:['','Network','Agent handling','Billing','Customer side']}),F('has_another_issue','Has Another Issue','sel',{s:'proc',o:['','Yes','No']}),
+    F('solved_by_cc','Solved By Cc','sel',{s:'proc',o:['','Yes','No']}),
+    F('survey_status','Survey Status','sel',{s:'proc',o:['Pending follow-up','Contacted','Closed - solved','Closed - not reached'],dflt:'Pending follow-up'}),
+    F('case_status','Case Status','sel',{s:'proc',o:['Open','Closed'],dflt:'Open',help:'Different from Survey Status? Pending Q-CSI-01.'}),
+    F('follow_back','Follow Back Date Time','dt',{s:'proc'}),F('handling_tm','Handling Ticket Manager','user',{s:'proc'}),F('voc_tm','Voc Ticket Manager','user',{s:'proc'}),F('note','Note','ta',{s:'proc',w:1})],
+  cols:['ticket_number','account_number','voc_import_date','cs_overall','root_cause','handling_tm','survey_status'],canCreate:u=>isProc(u),defaults:()=>({voc_import_date:dd(),survey_status:'Pending follow-up',case_status:'Open'}),
+  views:[{id:'all',name:'CSI survey'},{id:'pend',name:'Pending follow-up',f:r=>r.survey_status==='Pending follow-up'}],
+  tools:[{id:'dash',name:'Dashboard'}],
+}});
+
+/* SAL */
+def('SAL',{ents:[{key:'main',tabName:'Leads',name:'Lead',prefix:'LEAD',statusKey:'call_result',
+  fields:[F('task_id','Task Id','ref',{req:1,ro:1,ref:['SAL','tasks'],refLabel:t=>t.id+' · '+t.task_name,refFilter:t=>t.active==='Yes'}),
+    F('mobile','Mobile'),F('landline','Landline'),F('tariff','Tariff','sel',{o:['Super Kix','Flex 45','Business 100']}),F('rate_plan','Rate Plan','sel',{o:['Monthly','Quarterly','Annual']}),
+    F('assigned_to','Assigned To','auto',{fmt:'user',calc:r=>r.assigned_to||''}),
+    F('call_result','Call Result','sel',{o:['Not called','Reached','Not reached','Wrong number'],dflt:'Not called'}),
+    F('call_feedback','Call Feedback','sel',{o:['','Interested','Not interested','Callback requested']}),F('customer_feedback','Customer Feedback','sel',{o:['','Accepted offer','Declined offer','Needs time']}),
+    F('cst_feedback_reason','Cst Feedback Reason'),F('callback_time','Callback Time','dt',{req:r=>r.call_feedback==='Callback requested'}),F('comment','Comment','ta',{w:1})],
+  cols:['task_id','mobile','tariff','assigned_to','call_result','customer_feedback','callback_time'],defaults:()=>({call_result:'Not called'}),canCreate:u=>isProc(u),
+  views:[{id:'mine',name:'My leads',f:(r,u)=>r.assigned_to===u.id},{id:'un',name:'Unassigned',f:r=>!r.assigned_to,proc:1},{id:'all',name:'All leads',proc:1}],
+  tools:[{id:'alloc',name:'Allocation',proc:1}]},
+ {key:'tasks',tabName:'Sales tasks',name:'Sales task',prefix:'TASK',noStatus:1,canCreate:u=>isProc(u),editRole:u=>isProc(u),
+  fields:[F('task_name','Task Name',undefined,{req:1}),F('task_type','Task Type','sel',{o:['Upsell','Cross-sell','Win-back']}),F('task_category','Task Category','sel',{o:['ADSL','Mobile']}),
+    F('task_sub_category','Task Sub Category'),F('target','Target (accepted leads)','num',{req:1}),F('reachability','Reachability','sel',{o:['Any','Reached before','Never reached']}),F('active','Active','sel',{o:BOOL,dflt:'Yes'}),
+    F('leads','Leads linked','auto',{calc:r=>rows('SAL','main').filter(l=>l.task_id===r.id).length}),F('won','Accepted offers','auto',{calc:r=>rows('SAL','main').filter(l=>l.task_id===r.id&&l.customer_feedback==='Accepted offer').length})],
+  cols:['task_name','task_type','target','active','leads','won'],views:[{id:'all',name:'Sales tasks'}]}]});
+
+/* RET */
+const RET_R={'Price':{'Competitor offer':['Cheaper ISP','Mobile data'],'Cannot afford':['Job loss','Price increase']},'Service':{'Slow speed':['Peak hours','Always'],'Frequent cuts':['Weather','Unknown']},'Relocation':{'Moving abroad':['Permanent'],'Moving area':['No coverage']}};
+def('RET',{ent:{name:'Retention case',prefix:'RET',statusKey:'retention_status',
+  fields:[F('account','Account',undefined,{req:1,ro:1}),F('cst_type','Cst Type','sel',{req:1,o:['Consumer','Corporate','VIP']}),F('subscription_date','Subscription Date','date',{req:1}),F('cancellation_date','Cancellation Date','date'),
+    F('exchange','Exchange'),F('speed','Speed','sel',{o:['30 Mb','70 Mb','100 Mb']}),
+    F('reason','Reason','sel',{req:1,o:Object.keys(RET_R)}),F('sub_reason','Sub Reason','sel',{dep:'reason',o:r=>Object.keys(RET_R[r.reason]||{})}),F('sub_sub_reason','Sub Sub Reason','sel',{dep:'sub_reason',o:r=>(RET_R[r.reason]||{})[r.sub_reason]||[]}),
+    F('assigned_to','Assigned To','auto',{fmt:'user',calc:r=>r.assigned_to||''}),
+    F('retention_offers','Retention Offers','sel',{o:['None','50% discount for 3 months','Speed upgrade','Free month','Router replacement']}),
+    F('customer_accepted','Customer accepted the offer','sel',{o:['Not yet','Yes','No'],dflt:'Not yet',help:'An offer alone does not make the case Retained.'}),
+    F('retention_status','Retention Status','sel',{o:['New','Offer made','Callback','Retained','Cancelled'],dflt:'New'}),F('call_back','Call Back','dt',{req:r=>r.retention_status==='Callback'}),
+    F('revenue','Revenue (EGP/month)','num',{help:'Meaning pending Q-RET-01.'}),F('cash_lost','Cash Lost (EGP)','num'),F('mcr_status','MCR Status','sel',{o:['','Open','Closed']}),F('mcr_tm','MCR Ticket Manager','user'),F('comment','Comment','ta',{w:1})],
+  cols:['account','cst_type','reason','retention_offers','customer_accepted','retention_status','assigned_to'],defaults:()=>({retention_status:'New',customer_accepted:'Not yet'}),
+  validate:r=>{if(r.retention_status==='Retained'&&r.customer_accepted!=='Yes')return{retention_status:'Retained needs the customer to accept the offer. Set "Customer accepted the offer" to Yes first.'};
+    if(r.cancellation_date&&r.subscription_date&&r.cancellation_date<r.subscription_date)return{cancellation_date:'Cancellation Date cannot be before Subscription Date.'};return null},
+  views:[{id:'mine',name:'My cases',f:(r,u)=>r.assigned_to===u.id},{id:'un',name:'Unassigned',f:r=>!r.assigned_to,proc:1},{id:'all',name:'All cases',proc:1}],
+  tools:[{id:'alloc',name:'Allocation',proc:1}],
+}});
+
+/* MOB */
+const LV={'Billing':{'Wrong charge':['Roaming','Data bundle'],'Refund':['Recharge','Wallet']},'Network':{'No coverage':['Indoor','Outdoor'],'Data issue':['3G','4G']},'Wallet':{'Transfer failed':['P2P','Merchant'],'PIN issue':['Locked','Reset']}};
+def('MOB',{ent:{name:'BSS trouble ticket',prefix:'BTT',statusKey:'status',
+  fields:[F('bss_ticket','Bss ticket',undefined,{req:1,ro:1}),F('level1','Level 1','sel',{req:1,o:Object.keys(LV)}),F('level2','Level 2','sel',{req:1,dep:'level1',o:r=>Object.keys(LV[r.level1]||{})}),
+    F('level3','Level 3','sel',{req:1,dep:'level2',o:r=>(LV[r.level1]||{})[r.level2]||[]}),F('responsibility','Responsibility','sel',{req:1,o:['Back office','Network ops','Billing ops','Wallet ops']}),
+    F('status','Status','sel',{o:['Open','Pending','Closed','Rejected'],dflt:'Open'}),
+    F('pending_reason','Pending Reason',undefined,{when:r=>r.status==='Pending',req:r=>r.status==='Pending'}),
+    F('closed_rejected_reason','Closed Rejected Reason',undefined,{when:r=>['Closed','Rejected'].includes(r.status),req:r=>['Closed','Rejected'].includes(r.status)}),
+    F('reachability','Reachability','sel',{o:['','Reached','Not reached']}),F('adjustment','Adjustment','sel',{o:BOOL,dflt:'No'}),
+    F('adjustment_type','Adjustment Type','sel',{when:r=>r.adjustment==='Yes',o:['Credit','Debit']}),F('adjustment_amount','Adjustment Amount (EGP)','num',{when:r=>r.adjustment==='Yes',req:r=>r.adjustment==='Yes'}),
+    F('cost_center','Cost Center',undefined,{when:r=>r.adjustment==='Yes'}),
+    F('pending_by','Pending By','auto',{fmt:'user'}),F('pending_dt','Pending Datetime','auto'),F('closed_rejected_by','Closed Rejected By','auto',{fmt:'user'}),F('closed_rejected_dt','Closed Rejected Datetime','auto')],
+  cols:['bss_ticket','level1','level2','level3','responsibility','status'],defaults:()=>({status:'Open',adjustment:'No'}),
+  locked:r=>['Closed','Rejected'].includes(r.status)?'This ticket is '+r.status.toLowerCase()+'. Ordinary edits are blocked; values stay as recorded. Who may correct it is pending Q-MOB-01.':null,
+  before:(r,old,u)=>{if(r.status==='Pending'&&(!old||old.status!=='Pending')){r.pending_by=u.id;r.pending_dt=dt()}
+    if(['Closed','Rejected'].includes(r.status)&&(!old||old.status!==r.status)){r.closed_rejected_by=u.id;r.closed_rejected_dt=dt()}},
+  actions:[{id:'reopen',label:'Reopen ticket',reason:'Reopen reason',show:(r,u)=>u.role==='admin'&&['Closed','Rejected'].includes(r.status),run:(r,u,reason)=>{const s=r.status;r.status='Open';return 'Reopened from '+s+'. Reason: '+reason}}],
+  children:[{key:'followups',name:'Follow Up Activity',add:'Schedule follow-up',fields:[F('reason','Follow Up Reason','sel',{req:1,o:['Customer callback','Await network fix','Await refund']}),F('wake','Wake Up Time','dt',{req:1}),F('status','Status','auto')],
+    cols:['reason','wake','status','closed_by','closed_dt','by'],defaults:()=>({wake:dt(ahead(1))}),validate:c=>parse(c.wake)<=new Date()?{wake:'Wake Up Time must be in the future.'}:null,
+    onAdd:c=>{c.status='Open'},close:{label:'Close',show:c=>c.status==='Open',run:(c,u)=>{c.status='Closed';c.closed_by=u.id;c.closed_dt=dt()}},allowLocked:1}],
+  views:[{id:'all',name:'BSS TT'},{id:'pend',name:'Pending',f:r=>r.status==='Pending'},{id:'fu',name:'Open follow-ups',f:r=>(r.followups||[]).some(c=>c.status==='Open')}],
+}});
+
+/* WAL */
+def('WAL',{ent:{name:'Suspended wallet',prefix:'WAL',noStatus:1,
+  fields:[F('wallet_number','Wallet Number',undefined,{req:1,ro:1,mask:(u,r)=>!(isProc(u)||r.created_by===u.id),help:'11 digits starting with 01.'}),
+    F('suspension_reason','Suspension Reason','sel',{req:1,o:['Fraud suspicion','Customer request','Lost phone','KYC incomplete']}),F('comment','Comment','ta',{w:1})],
+  cols:['wallet_number','suspension_reason','created_by'],
+  validate:r=>/^01\d{9}$/.test(r.wallet_number||'')?null:{wallet_number:'Enter 11 digits starting with 01.'},
+  banner:'This screen records a suspension. It does not send a suspension command to the wallet platform (Q-WAL-01).',
+  views:[{id:'all',name:'Suspended wallets'}],
+}});
+
+/* KM */
+def('KM',{ent:{name:'User feedback',prefix:'KMF',statusKey:'status',
+  fields:[F('level1','Level One','sel',{o:['ADSL','Mobile','Wallet']}),F('level2','Level Two','sel',{o:['Billing','Technical','Offers']}),F('level3','Level Three'),
+    F('article_id','Article Id',undefined,{ro:1}),F('article_title','Article Title',undefined,{ro:1}),F('article_path','Article Path',undefined,{ro:1}),
+    F('item_title','Item Title',undefined,{ro:1}),F('item_link','Item Link',undefined,{ro:1}),
+    F('rating','Rating (1–5)','sel',{req:1,ro:1,o:['1','2','3','4','5'],help:'Scale pending Q-KM-01.'}),F('feedback_reason','Feedback Reason','sel',{req:1,ro:1,o:['Outdated','Incorrect','Missing steps','Hard to find','Helpful']}),
+    F('comment','Comment','ta',{ro:1,w:1}),F('km_comment','Km Comment','ta',{s:'proc',w:1}),
+    F('status','Status','sel',{s:'proc',o:['New','Under review','Content updated','Rejected'],dflt:'New'}),F('status_reason','Status Reason',undefined,{s:'proc'})],
+  cols:['article_id','article_title','item_title','rating','feedback_reason','status'],defaults:()=>({status:'New'}),
+  validate:r=>!r.article_id&&!r.item_link?{article_id:'Enter an Article Id or an Item Link so the feedback points to its content.'}:null,
+  views:[{id:'all',name:'User feedback'},{id:'new',name:'New',f:r=>r.status==='New'}],
+}});
+
+/* QUI */
+def('QUI',{ents:[{key:'main',tabName:'Answers',name:'Quiz answer',colLabels:{window:'Editing window'},prefix:'ANS',noStatus:1,
+  fields:[F('quiz_id','Quiz Id','ref',{req:1,ro:1,ref:['QUI','quizzes'],refLabel:q=>q.id+' · '+q.title,refFilter:q=>parse(q.valid_until)>new Date()})],
+  dyn:r=>{const q=rows('QUI','quizzes').find(q=>q.id===r.quiz_id);if(!q)return[];return Array.from({length:Number(q.questions)},(_,i)=>F('q'+(i+1),'Q'+(i+1),'sel',{o:['','A','B','C','D']}))},
+  cols:['quiz_id','created_by','window'],
+  colCalc:{window:r=>{const w=quizWindow(r);return w.open?'Open until '+w.until.replace('T',' '):'Closed'}},
+  visible:(r,u)=>isProc(u)||r.created_by===u.id,
+  locked:(r,u)=>{if(r.created_by!==u.id)return 'Only the answer owner ('+pn(r.created_by)+') can edit these answers.';const w=quizWindow(r);return w.open?null:'The editing window closed at '+w.until.replace('T',' ')+'.'},
+  validate:(r,old,u)=>!old&&rows('QUI','main').some(a=>a.quiz_id===r.quiz_id&&a.created_by===u.id)?{quiz_id:'You already answered this quiz. Open your answer to edit it.'}:null,
+  views:[{id:'mine',name:'My answers',f:(r,u)=>r.created_by===u.id},{id:'all',name:'All answers',proc:1}]},
+ {key:'quizzes',tabName:'Quizzes',name:'Quiz',prefix:'QZ',noStatus:1,canCreate:u=>isProc(u),editRole:u=>isProc(u),
+  fields:[F('title','Quiz title',undefined,{req:1}),F('questions','Questions (1–20)','num',{req:1}),F('valid_until','Valid until','dt',{req:1}),F('duration_min','Edit duration (minutes after first answer)','num',{req:1})],
+  cols:['title','questions','valid_until','duration_min'],validate:r=>(r.questions<1||r.questions>20)?{questions:'Enter 1 to 20 questions.'}:null,views:[{id:'all',name:'Quizzes'}]}]});
+function quizWindow(a){const q=rows('QUI','quizzes').find(q=>q.id===a.quiz_id);if(!q)return{open:false,until:''};const byDur=new Date(parse(a.created_on).getTime()+q.duration_min*6e4);const v=parse(q.valid_until);const until=byDur<v?byDur:v;return{open:until>new Date(),until:dt(until)}}
+
+/* OUT */
+const ipOk=s=>/^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/.test(s||'');
+def('OUT',{ent:{name:'Network outage',prefix:'OUT',statusKey:'current',
+  fields:[F('problem_in','Problem In','sel',{req:1,o:['Data','Voice','GSM']}),F('problem_type','Problem Type','sel',{req:1,o:['Fiber cut','Power','Equipment failure','Planned maintenance']}),
+    F('outage_type','Outage Type','sel',{req:1,o:['Unplanned','Planned activity']}),F('effect_on','Effect On','sel',{o:['Exchange','Cabinet','DSLAM','BRAS','Region']}),
+    F('severity','Severity','sel',{req:1,o:['Minor','Major','Critical']}),F('current','Current','sel',{o:BOOL,dflt:'Yes'}),
+    F('from','From','dt',{req:1}),F('actual_to','Actual To','dt',{req:r=>r.current==='No',help:'Required when Current is No.'}),
+    F('planned_from','Planned From','dt',{when:r=>r.outage_type==='Planned activity'}),F('planned_to','Planned To','dt',{when:r=>r.outage_type==='Planned activity'}),
+    F('affected','Number Of Affected Customers','num'),F('lob','Lob','sel',{o:['ADSL','Mobile','All']}),F('zone','Zone Code (Data) / Node (GSM)'),F('sectors','Sectors','multi',{o:['Cairo','Giza','Delta','Alex','Upper Egypt']}),
+    F('detected_by','Detected By','sel',{o:['NOC','Call center spike','Field team']}),F('mail_subject','OTS/Mail Subject',undefined,{w:1}),F('comment','Comment','ta',{w:1})],
+  cols:['problem_in','problem_type','outage_type','severity','from','actual_to','current','bras_n'],colCalc:{bras_n:r=>(r.children_bras||[]).length+' BRAS'},colLabels:{bras_n:'Components'},
+  defaults:()=>({current:'Yes',from:dt()}),
+  validate:r=>{if(r.actual_to&&r.from&&r.actual_to<r.from)return{actual_to:'Actual To cannot be before From.'};if(r.planned_to&&r.planned_from&&r.planned_to<r.planned_from)return{planned_to:'Planned To cannot be before Planned From.'};return null},
+  pillFmt:v=>v==='Yes'?['Current','bad']:['Ended','ok'],
+  children:[{key:'children_bras',name:'Affected BRAS (outage_bras)',add:'Link BRAS',fields:[F('bras','Bras (IPv4)',undefined,{req:1}),F('start','Start Time','dt',{req:1}),F('status','Status','auto')],cols:['bras','start','end','status','by'],
+     defaults:p=>({start:p.from||dt()}),onAdd:c=>{c.status='Open'},
+     validate:(c)=>{if(!ipOk(c.bras))return{bras:'"'+c.bras+'" is not a valid IPv4 address.'};const dup=rows('OUT','main').find(o=>(o.children_bras||[]).some(b=>b.bras===c.bras&&b.status==='Open'));return dup?{bras:'BRAS '+c.bras+' is already open on '+dup.id+'. Close it there first.'}:null},
+     close:{label:'End',show:c=>c.status==='Open',run:c=>{c.status='Closed';c.end=dt()}}},
+    {key:'updates',name:'Updates',add:'Post update',fields:[F('text','Update','ta',{req:1,w:1})],cols:['at','text','by'],onAdd:c=>{c.at=dt()}}],
+  views:[{id:'cur',name:'Current General Outage',f:r=>r.current==='Yes'},{id:'all',name:'General Outage (history)'}],
+}});
+
+/* TOL */
+def('TOL',{ent:{name:'Tool outage',prefix:'TOL',statusKey:'current',
+  fields:[F('tool','Tool','sel',{req:1,o:SMC_TOOLS}),F('problem','Problem',undefined,{req:1}),F('outage_type','Outage Type','sel',{o:['Full down','Degraded','Intermittent']}),
+    F('severity','Severity','sel',{req:1,o:['Minor','Major','Critical']}),F('impact','Impact Troubleshooting','ta',{w:1}),
+    F('affected_locations','Affected Locations','multi',{o:['Smart Village','Maadi','Alexandria','Home agents']}),F('other_tools','Other Impacted Tools','multi',{o:SMC_TOOLS}),
+    F('current','Current','sel',{o:BOOL,dflt:'Yes'}),F('from','From','dt',{req:1}),F('to','To','dt',{req:r=>r.current==='No',help:'Required to end the outage.'}),
+    F('lob','LOB','sel',{o:['ADSL','Mobile','All']}),F('ticket_id','Ticket Id'),F('problem_side','Problem Side','sel',{o:['','Vendor','Internal IT','Network']}),
+    F('rc_rfo','RC/RFO','ta',{s:'proc',w:1}),F('confirmed_by','Confirmed By Responsible Team','sel',{s:'proc',o:['','IT Ops','Vendor NOC','Network NOC']}),F('confirmation_date','Confirmation Receive Date','dt',{s:'proc'}),
+    F('send_mail','Send Mail','sel',{o:BOOL,dflt:'No',help:'Recipients pending Q-TOL-01.'}),F('note','Note','ta',{w:1})],
+  cols:['tool','problem','severity','from','to','current','other_tools'],defaults:()=>({current:'Yes',from:dt(),send_mail:'No'}),
+  validate:r=>{if(r.to&&r.from&&r.to<r.from)return{to:'To cannot be before From.'};if((r.other_tools||[]).includes(r.tool))return{other_tools:'List only tools other than the primary tool ('+r.tool+').'};return null},
+  after:(r,old,u,notes)=>{if(r.send_mail==='Yes')notify('Operations distribution list','Tool outage '+r.id+': '+r.tool+' · '+(r.current==='Yes'?'ongoing':'ended'),r.id,notes)},
+  pillFmt:v=>v==='Yes'?['Current','bad']:['Ended','ok'],
+  views:[{id:'cur',name:'Current tools outage',f:r=>r.current==='Yes'},{id:'all',name:'Tools outage (history)'}],
+}});
+
+/* ORG */
+def('ORG',{ent:{name:'Employee',prefix:'EMP',noStatus:1,canCreate:u=>['admin','processor'].includes(u.role),
+  fields:[F('full_name','Full Name',undefined,{req:1}),F('login_id','Login Id',undefined,{req:1,ro:1}),F('wiki_username','Wiki Username'),F('bss_username','Bss Username'),
+    F('lob','Lob','sel',{o:['ADSL','Mobile','Corporate','HR','Operations']}),F('product','Product','sel',{o:['Inbound','Outbound','Support','All']}),F('site','Site','sel',{o:['Smart Village','Maadi','Alexandria']}),
+    F('tl','Tl','user'),F('spv','Spv','user')],
+  cols:['full_name','login_id','wiki_username','bss_username','lob','site','tl','spv'],
+  editRole:u=>['admin','processor'].includes(u.role),
+  validate:r=>{const o=org().filter(p=>p.id!==r.id);for(const k of ['login_id','wiki_username','bss_username']){if(r[k]&&o.some(p=>p[k]===r[k]))return{[k]:'Already used by '+o.find(p=>p[k]===r[k]).full_name+'. One employee, one record.'}}return null},
+  views:[{id:'all',name:'CC structure'}],
+}});
+
+/* ---------- notifications ---------- */
+function notify(to,subject,ref,notes){const fail=DB.cfg.mailFail;DB.notes.unshift({at:dt(),to,subject,ref,status:fail?'Failed':'Sent'});if(notes)notes.push(fail?'Notification to '+to+' failed. The record is saved.':'Notification sent to '+to+'.')}
+
+/* ---------- seed ---------- */
+function mk(pid,ek,data,by,daysAgo=0,hours=0){
+  const e=entOf(pid,ek);const r=Object.assign({},(e.defaults&&e.defaults(ROLE[by]||{id:by,role:'agent'}))||{},data);
+  r.created_on=dt(ago(daysAgo,hours));r.created_by=by;DB.seq[e.prefix]=(DB.seq[e.prefix]||0)+1;r.id=e.prefix+'-'+String(DB.seq[e.prefix]).padStart(4,'0');
+  fieldsOf(e,r).forEach(f=>{if(f.calc)r[f.k]=f.calc(r)});
+  r.history=[{at:r.created_on,by,note:'Created'}];rows(pid,ek).push(r);return r}
+function seed(){
+  DB={r:{},seq:{},notes:[],cfg:{delayDays:5,compLimit:150,satLimit:100,quaQuota:3,mailFail:false},user:'10231',allocLog:[]};
+  PEOPLE.forEach(p=>mk('ORG','main',{login_id:p[0],full_name:p[1],wiki_username:p[2],bss_username:p[3],lob:p[4],product:p[5],site:p[6],tl:p[7],spv:p[8]},'10001',200));
+  mk('WLG','main',{work_type:'Floor support',performer:'10231',perf_date:dd(ago(1)),activity:'Covered the ADSL tech queue during the 14:00 spike.',outcome:'Queue under 30 s by 15:10'},'10231',1);
+  mk('WLG','main',{work_type:'Coaching session',performer:'10101',perf_date:dd(ago(2)),activity:'Coached Nour on concession limits.',outcome:'Agreed action plan'},'10101',2);
+  mk('WLG','main',{work_type:'Side-by-side',performer:'10233',perf_date:dd(ago(3)),activity:'Side-by-side on 6 calls, recorded by TL on Nour\'s behalf.',outcome:'2 coaching points'},'10101',3);
+  mk('WLG','main',{work_type:'Report preparation',performer:'10232',perf_date:dd(ago(1)),activity:'Prepared Mobile daily KPI pack.',outcome:'Sent to Omar'},'10232',1);
+  mk('DAY','main',{account:'ACC-552910',location:'Cairo',problem_type:'Physical Delay',exchange:'Ramses',area_code:'02',phone:'25748110',status:'Open',comment:'Cabinet works delayed, customer waiting 4 days'},'10231',4);
+  mk('DAY','main',{account:'ACC-310044',location:'Giza',problem_type:'No Sync',exchange:'Dokki',area_code:'02',phone:'33361277',status:'In Progress',comment:'Line test failed at MDF'},'10233',1);
+  mk('DAY','main',{account:'ACC-118833',location:'Alexandria',problem_type:'Physical Delay',exchange:'Smouha',area_code:'03',phone:'4245901',status:'Resolved',comment:'Jumper fixed'},'10231',6);
+  [['Mail handling','Corporate request',8],['Mail handling','Billing dispute',24],['Campaign','Outbound campaign',72],['Campaign','Retention campaign',48],['Data request','Report extraction',24],['Data request','Data correction',12]].forEach(c=>mk('CCT','cat',{category:c[0],sub_category:c[1],expected_sl:c[2]},'10001',90));
+  mk('CCT','main',{lob:'Corporate',category:'Mail handling',sub_category:'Corporate request',priority:'High',quantification:14,start:dt(ago(2)),responsible_team:'Corporate care',mail_subject:'RE: Bulk line upgrade – Nile Foods',status:'In Progress'},'10101',2);
+  mk('CCT','main',{lob:'ADSL',category:'Campaign',sub_category:'Retention campaign',priority:'Normal',quantification:1200,start:dt(ago(5)),end:dt(ago(1)),responsible_team:'Sales support',status:'Done',feedback:'1,140 calls completed'},'10050',5);
+  mk('CCT','main',{lob:'Mobile',category:'Data request',sub_category:'Data correction',priority:'Low',quantification:3,start:dt(ago(0,5)),responsible_team:'Back office',status:'Open'},'10232',0,5);
+  mk('HRG','main',{employee:'10231',problem_type:'HR letter',items:'Salary certificate',location:'Smart Village',priority:'Normal',description:'Need a salary certificate for embassy visa.',status:'In Progress',supporter_group:'HR Operations',supporter_name:'10300'},'10231',2);
+  mk('HRG','main',{employee:'10232',problem_type:'Payroll query',location:'Maadi',description:'Overtime from last month missing.',status:'New'},'10232',1);
+  mk('HRA','main',{employee:'10231',ticket_source:'Portal',from:dd(ahead(10)),to:dd(ahead(14)),my_location:'Smart Village',description:'Family trip',status:'New'},'10231',1);
+  mk('HRA','main',{employee:'10233',ticket_source:'Portal',from:dd(ago(20)),to:dd(ago(18)),my_location:'Smart Village',description:'Personal',status:'Closed',supporter_group:'WFM',supporter_name:'10300',update:'Approved and taken'},'10233',30);
+  mk('HRA','main',{employee:'10232',ticket_source:'Phone',from:dd(ahead(3)),to:dd(ahead(3)),my_location:'Maadi',description:'Medical appointment',status:'In Progress',supporter_group:'WFM',supporter_name:'10300'},'10232',2);
+  mk('HRS','main',{employee:'10231',ticket_source:'Portal',location:'Smart Village',swap_with:'10233',swap_date:dd(ahead(5)),new_location:'Smart Village',problem_type:'Shift swap',description:'Swap Thursday morning with Nour',status:'New',request_date:dd(ago(1))},'10231',1);
+  mk('HRE','main',{employee:'10231',problem_type:'Equipment',items:'Headset',location:'Smart Village',description:'Headset microphone broken',status:'In Progress',supporter_group:'Facilities',supporter_name:'10300'},'10231',3);
+  mk('HRT','main',{employee:'10232',problem_type:'Software access',location:'Maadi',description:'Need BSS read-only access',status:'New'},'10232',1);
+  mk('SD','main',{lob:'ADSL',product:'Access',request:'Password reset',tool:'BSS',affected_user:'mona.adel',bss_username:'bss_madel',contact:'0100 555 2210',description:'Locked out after 3 attempts',status:'Assigned',assigned_to:'10300',critical:'No'},'10231',1);
+  mk('SD','main',{lob:'Mobile',product:'Permissions',request:'Permission change',tool:'Agento',affected_user:'hassan.reda',contact:'Ext 4410',description:'Needs wallet refund screen',status:'New',critical:'Yes'},'10232',0,3);
+  mk('SD','main',{lob:'ADSL',product:'Access',request:'Tool error',tool:'Xceed CRM',affected_user:'nour.ehab',contact:'Ext 3321',description:'CRM freezes on customer search',status:'Closed',assigned_to:'10300',technical_status:'Fixed',technical_status_reason:'Cache cleared'},'10233',6);
+  [['SO-884120','New line','Ramses','10231','Open'],['SO-884133','Speed upgrade','Dokki','10231','Follow-up'],['SO-884141','Relocation','Maadi','',''],['SO-884150','New line','Heliopolis','',''],['SO-884162','Reconnection','Smouha','',''],['SO-884170','New line','Ramses','10233','Completed']].forEach((a,i)=>mk('ACT','main',{service_order:a[0],task:a[1],exchange:a[2],assigned_to:a[3],status:a[4]||'Open',user_group:'Activation L1',category:'Consumer',sub_category:'Copper',follow_dt:a[4]==='Follow-up'?dt(ahead(1)):'',case_result:a[4]==='Completed'?'Activated':''},'10001',i+1));
+  mk('CAS','main',{complaint_source:'NTRA',account:'ACC-552910',customer_type:'Consumer',contact_name:'Ahmed Samy',mobile:'01001234567',reason:'Technical',sub_reason:'Slow speed',ntra_id:'NTRA-2026-11870',tts_ticket:'TTS-998812',assigned_to:'MCR',priority:'High',complaint_status:'In Progress',technical_comment:'Line attenuation high'},'10231',8);
+  mk('CAS','main',{complaint_source:'Call center',account:'ACC-772001',customer_type:'VIP',contact_name:'Rania Fouad',mobile:'01224567890',reason:'Billing',sub_reason:'Wrong charge',fcc_number:'FCC-55120',assigned_to:'I Care',priority:'Normal',complaint_status:'New'},'10233',2);
+  mk('CAS','main',{complaint_source:'Social media',account:'ACC-310044',customer_type:'Consumer',reason:'Technical',sub_reason:'Frequent disconnection',assigned_to:'ICare - Followup',complaint_status:'Pending Customer'},'10232',6);
+  mk('CAS','main',{complaint_source:'Branch',account:'ACC-901122',customer_type:'Corporate',reason:'Sales',sub_reason:'Delivery delay',assigned_to:'Billing team',complaint_status:'Closed'},'10231',10);
+  mk('VIS','main',{ticket_number:'TTS-998812',ticket_source:'TTS',vendor_name:'Raya',exchange:'Ramses',area_code:'02',landline:'25748110',contracted_speed:'70 Mb',status:'Visited',called_vendor:'Yes',cst_reached:'Yes',problem_solved:'No',speed_before:12,speed_after:28,diagnostics:'Corroded drop wire replaced; still below contract',follow_date:dd(),follow_time:'16:00',follow_assigned_to:'10231',follow_assigned_dt:dt(ago(1)),
+    followups:[{id:1,at:dt(ago(1,2)),status:'Reached - not solved',reason:'Speed 28 of 70',by:'10231'}]},'10101',3);
+  mk('VIS','main',{ticket_number:'TTS-998901',ticket_source:'BSS',vendor_name:'TE Data Field',exchange:'Dokki',area_code:'02',landline:'33361277',status:'Visit scheduled',called_vendor:'Yes',cst_reached:'No'},'10233',1);
+  mk('CTE','main',{bss_ticket:'BSS-4410221',account:'ACC-552910',service_number:'0225748110',concession_type:'Days',reason:'Outage',due_to:'Network',period_from:dd(ago(9)),period_to:dd(ago(5)),num_days:5,compensation_value:90,compensation_offer:'Free days',concession_status:'Approved within agent limit',leader_username:'10101'},'10231',4);
+  mk('CTE','main',{bss_ticket:'BSS-4410290',account:'ACC-772001',service_number:'0233361277',concession_type:'Monetary',reason:'Late repair',due_to:'Vendor',compensation_value:400,compensation_offer:'Credit note',concession_status:'Pending TL review',leader_username:'10101',comment:'Customer without service 9 days'},'10231',1);
+  mk('CNO','main',{service_number:'01001234567',reason:'Promotion not applied',concession_type:'Free Giga',free_giga:10,cost:0,concession_status:'Approved',total_approved:0},'10232',3);
+  mk('CNO','main',{service_number:'01224567890',reason:'Billing error',concession_type:'Monetary',cost:120,total_approved:100,concession_status:'Pending review'},'10231',1);
+  mk('VAL','main',{ticket_id:'CMP-0001',ticket_type:'Complaint',account:'ACC-552910',complaint_reason:'Technical',mistaken_cca:'10233',error_comment:'Ticket opened without line test',validation_status:'Error Not Valid',validation_level:'Level 1',operation_feedback:'Line test was done, see notes',validated_by:'10300'},'10300',5);
+  mk('VAL','main',{ticket_id:'BSS-4410290',ticket_type:'Concession',mistaken_cca:'10231',error_comment:'Concession above limit without TL',validation_status:'Escalate',validation_level:'Level 2',validated_by:'10300'},'10300',2);
+  mk('VAL','main',{ticket_id:'TTS-998901',ticket_type:'Trouble ticket',mistaken_cca:'10232',error_comment:'Wrong vendor selected',validation_status:'Pending'},'10300',1);
+  ['10231','10233'].forEach((l,i)=>{const r=mk('QUA','main',{login:l,status:i?'Needs coaching':'Pass',status_reason:i?'Hold time too long':''},'10101',i+1);Object.assign(r,fakeCall(l+'seed'))});
+  [['TT-55001','ACC-552910',2,'Pending follow-up',''],['TT-55002','ACC-310044',4,'Contacted','Network'],['TT-55003','ACC-772001',5,'Closed - solved','Agent handling'],['TT-55004','ACC-118833',1,'Pending follow-up',''],['TT-55005','ACC-901122',3,'Closed - not reached','Billing']].forEach((c,i)=>mk('CSI','main',{ticket_number:c[0],account_number:c[1],voc_import_date:dd(ago(3)),closing_reason:'Resolved by technician',survey_date:dd(ago(4)),agent_id:i%2?'10233':'10231',nps:c[2]*2,cs_overall:c[2],survey_status:c[3],root_cause:c[4],case_status:c[3].startsWith('Closed')?'Closed':'Open',handling_tm:c[3]==='Pending follow-up'?'':'10300'},'10001',3));
+  const t1=mk('SAL','tasks',{task_name:'ADSL to 100 Mb upsell',task_type:'Upsell',task_category:'ADSL',target:20,reachability:'Reached before',active:'Yes'},'10050',10);
+  const t2=mk('SAL','tasks',{task_name:'Mobile win-back Q4',task_type:'Win-back',task_category:'Mobile',target:15,reachability:'Any',active:'Yes'},'10051',8);
+  [['01001110001',t1.id,'10231','Reached','Accepted offer'],['01001110002',t1.id,'10231','Not called',''],['01001110003',t1.id,'',''],['01001110004',t1.id,'',''],['01001110005',t2.id,'10232','Reached','Declined offer'],['01001110006',t2.id,'',''],['01001110007',t2.id,'','']].forEach((l,i)=>mk('SAL','main',{mobile:l[0],task_id:l[1],assigned_to:l[2],call_result:l[3]||'Not called',customer_feedback:l[4]||'',tariff:'Super Kix',rate_plan:'Monthly'},'10050',i%3));
+  [['ACC-660101','Consumer','Price','Competitor offer','10231','Offer made','50% discount for 3 months','Not yet'],['ACC-660102','VIP','Service','Slow speed','',''],['ACC-660103','Consumer','Relocation','Moving area','',''],['ACC-660104','Corporate','Price','Cannot afford','',''],['ACC-660105','Consumer','Service','Frequent cuts','10231','Retained','Speed upgrade','Yes']].forEach((c,i)=>mk('RET','main',{account:c[0],cst_type:c[1],reason:c[2],sub_reason:c[3],subscription_date:dd(ago(400+i*30)),assigned_to:c[4],retention_status:c[5]||'New',retention_offers:c[6]||'None',customer_accepted:c[7]||'Not yet',revenue:250},'10001',i));
+  mk('MOB','main',{bss_ticket:'BSS-7700121',level1:'Wallet',level2:'Transfer failed',level3:'P2P',responsibility:'Wallet ops',status:'Pending',pending_reason:'Awaiting wallet platform logs',pending_by:'10232',pending_dt:dt(ago(1)),followups:[{id:1,reason:'Await refund',wake:dt(ahead(1)),status:'Open',by:'10232',at:dt(ago(1))}]},'10232',2);
+  mk('MOB','main',{bss_ticket:'BSS-7700188',level1:'Billing',level2:'Wrong charge',level3:'Roaming',responsibility:'Billing ops',status:'Closed',closed_rejected_reason:'Adjustment applied',adjustment:'Yes',adjustment_type:'Credit',adjustment_amount:75,closed_rejected_by:'10102',closed_rejected_dt:dt(ago(1))},'10232',4);
+  mk('MOB','main',{bss_ticket:'BSS-7700203',level1:'Network',level2:'Data issue',level3:'4G',responsibility:'Network ops',status:'Open'},'10234',0,6);
+  mk('WAL','main',{wallet_number:'01012345678',suspension_reason:'Fraud suspicion',comment:'Multiple failed PIN attempts from new device'},'10232',2);
+  mk('KM','main',{level1:'ADSL',level2:'Technical',article_id:'KB-1042',article_title:'Router reset steps',article_path:'ADSL / Technical / Routers',rating:'2',feedback_reason:'Outdated',comment:'Steps refer to the old ZTE firmware.',status:'New'},'10231',2);
+  mk('KM','main',{level1:'Mobile',level2:'Offers',item_title:'Q4 bundle sheet',item_link:'wiki/offers/q4-bundles',rating:'4',feedback_reason:'Helpful',comment:'Add the roaming add-on prices.',status:'Under review',km_comment:'Pricing team asked'},'10232',5);
+  const q1=mk('QUI','quizzes',{title:'Concession limits refresher',questions:5,valid_until:dt(ahead(5)),duration_min:4320},'10050',2);
+  const q2=mk('QUI','quizzes',{title:'October product quiz',questions:4,valid_until:dt(ago(3)),duration_min:60},'10050',20);
+  mk('QUI','main',{quiz_id:q1.id,q1:'A',q2:'C',q3:'B'},'10231',0,2);
+  mk('QUI','main',{quiz_id:q2.id,q1:'B',q2:'B',q3:'A',q4:'D'},'10231',12);
+  mk('QUI','main',{quiz_id:q1.id,q1:'B',q2:'C',q3:'D',q4:'A',q5:'A'},'10233',1);
+  mk('OUT','main',{problem_in:'Data',problem_type:'Fiber cut',outage_type:'Unplanned',effect_on:'BRAS',severity:'Critical',current:'Yes',from:dt(ago(0,3)),affected:18400,lob:'ADSL',sectors:['Cairo','Giza'],detected_by:'NOC',mail_subject:'Major: fiber cut Ramses ring',
+    children_bras:[{id:1,bras:'10.20.1.14',start:dt(ago(0,3)),status:'Open',by:'10001',at:dt(ago(0,3))},{id:2,bras:'10.20.1.15',start:dt(ago(0,3)),end:dt(ago(0,1)),status:'Closed',by:'10001',at:dt(ago(0,3))}],
+    updates:[{id:1,text:'Field team on site, splicing started.',at:dt(ago(0,1)),by:'10001'}]},'10001',0,3);
+  mk('OUT','main',{problem_in:'Data',problem_type:'Planned maintenance',outage_type:'Planned activity',effect_on:'Exchange',severity:'Minor',current:'No',from:dt(ago(4)),actual_to:dt(ago(4,-3)),planned_from:dt(ago(4)),planned_to:dt(ago(4,-2)),affected:900,lob:'ADSL',sectors:['Alex']},'10001',5);
+  mk('TOL','main',{tool:'Xceed CRM',problem:'Search returns timeout',outage_type:'Degraded',severity:'Major',affected_locations:['Smart Village','Maadi'],other_tools:['Agento'],current:'Yes',from:dt(ago(0,1)),lob:'All',ticket_id:'INC-30211',problem_side:'Internal IT'},'10101',0,1);
+  mk('TOL','main',{tool:'Genesys softphone',problem:'Calls dropping on login',outage_type:'Full down',severity:'Critical',affected_locations:['Alexandria'],current:'No',from:dt(ago(2,3)),to:dt(ago(2,2)),rc_rfo:'Certificate expiry on SIP proxy',confirmed_by:'IT Ops',confirmation_date:dt(ago(2,1))},'10102',2);
+  DB.notes.push({at:dt(ago(1)),to:'SMC queue (smc-team)',subject:'New ticket: SMC-0001 · BSS · New',ref:'SMC-0001',status:'Sent'});
+}
+
+/* ---------- entity helpers ---------- */
+const entOf=(pid,ek)=>P[pid].ents.find(e=>e.key===ek);
+const fieldsOf=(e,r)=>e.dyn?e.fields.concat(e.dyn(r||{})):e.fields;
+const META={created_by:{k:'created_by',l:'Added By',t:'user'},created_on:{k:'created_on',l:'Added On',t:'dt'},last_edit_by:{k:'last_edit_by',l:'Last Edit By',t:'user'},last_edit_on:{k:'last_edit_on',l:'Last Edit On',t:'dt'},by:{k:'by',l:'By',t:'user'},at:{k:'at',l:'At',t:'dt'},end:{k:'end',l:'End Time',t:'dt'},closed_by:{k:'closed_by',l:'Closed By',t:'user'},closed_dt:{k:'closed_dt',l:'Closed Datetime',t:'dt'}};
+function fdef(e,k,fs){return (fs||e.fields).find(f=>f.k===k)||META[k]||{k,l:(e.colLabels||{})[k]||k,t:'text'}}
+function optsOf(f,r){let o=typeof f.o==='function'?f.o(r||{}):(f.o||[]);if(f.t==='user')o=peopleOpts();if(f.t==='ref'){const[pid,ek]=f.ref;o=rows(pid,ek).filter(x=>!f.refFilter||f.refFilter(x)||x.id===r?.[f.k]).map(x=>[x.id,f.refLabel(x)])}return o.map(x=>Array.isArray(x)?x:[x,x])}
+function fmtVal(f,v,r,u){
+  if(f.mask&&u&&f.mask(u,r)&&v)return '•••••••'+String(v).slice(-4);
+  if(empty(v))return '—';
+  const t=f.fmt||f.t;
+  if(t==='user')return pn(v);
+  if(t==='ref'){const[pid,ek]=f.ref;const x=rows(pid,ek).find(x=>x.id===v);return x?f.refLabel(x):v}
+  if(t==='dt')return String(v).replace('T',' ');
+  if(Array.isArray(v))return v.join(', ');
+  return String(v)}
+function statusPill(e,r){
+  if(e.noStatus)return '';const v=r[e.statusKey];if(empty(v))return '';
+  if(e.pillFmt){const[l,c]=e.pillFmt(v);return `<span class="pill ${c}">${esc(l)}</span>`}
+  const s=String(v).toLowerCase();let c='';
+  if(/rejected|fail|cancel|not valid|not reached|critical/.test(s))c='bad';
+  else if(/closed|resolved|approved|retained|pass|done|completed|solved|activated|accepted|valid|updated/.test(s))c='ok';
+  else if(/pending|escalat|review|follow|callback|revalid|coaching/.test(s))c='warn';
+  else if(/new|open|progress|assigned|scheduled|contacted|offer|visited|reached/.test(s))c='info';
+  return `<span class="pill ${c}">${esc(v)}</span>`}
+function visibleRows(pid,ek,u){const e=entOf(pid,ek);return rows(pid,ek).filter(r=>!e.visible||e.visible(r,u))}
+function viewsFor(e,u){return e.views.filter(v=>!v.proc||isProc(u))}
+function canCreate(e,u){return e.canCreate?e.canCreate(u):true}
+
+/* ---------- ui state ---------- */
+const S={page:'home',pid:null,ek:'main',view:null,tab:'records',q:'',drawer:null};
+function go(hash){location.hash=hash}
+function route(){
+  const h=location.hash.slice(1)||'home';
+  if(h.startsWith('p-')){const pid=h.slice(2).toUpperCase();if(P[pid]){if(S.pid!==pid){S.pid=pid;S.ek='main';S.view=null;S.tab='records';S.q=''}S.page='proc'}}
+  else if(['home','reports','rules'].includes(h)){S.page=h;S.pid=null}
+  S.drawer=null;$('#side').classList.remove('open');render()}
+
+/* ---------- rendering ---------- */
+function renderUsers(){$('#userSel').innerHTML=USERS.map(u=>`<option value="${u[0]}" ${DB.user===u[0]?'selected':''}>${esc(pn(u[0]))} — ${esc(u[2])}${person(u[0])?.tl||u[1]==='leader'?', '+esc(teamOf(u[0])):''}</option>`).join('')}
+function renderSide(){
+  const u=me();const areas=[];FRS.forEach(p=>{if(!areas.includes(p.area))areas.push(p.area)});
+  let h=`<button class="nav ${S.page==='home'?'on':''}" data-go="home"><span class="code">⌂</span>Home</button>
+  <button class="nav ${S.page==='reports'?'on':''}" data-go="reports"><span class="code">▤</span>Reports</button>
+  <button class="nav ${S.page==='rules'?'on':''}" data-go="rules"><span class="code">⚙</span>Settings &amp; rules</button>`;
+  areas.forEach(a=>{h+=`<h4>${esc(a)}</h4>`;FRS.filter(p=>p.area===a).forEach(p=>{const n=visibleRows(p.id,'main',u).length;
+    h+=`<button class="nav ${S.pid===p.id?'on':''}" data-go="p-${p.id.toLowerCase()}"><span class="code">${p.id}</span>${esc(p.name)}<span class="n">${n}</span></button>`})});
+  $('#side').innerHTML=h}
+function render(){renderUsers();renderSide();
+  const m=$('#main');
+  if(S.page==='home')m.innerHTML=homeHTML();
+  else if(S.page==='reports')m.innerHTML=reportsHTML();
+  else if(S.page==='rules')m.innerHTML=settingsHTML();
+  else m.innerHTML=procHTML();
+  renderDrawer()}
+
+function homeHTML(){
+  const u=me();const k=[];
+  const add=(v,l,h)=>k.push(`<div class="card kpi" data-go="${h}" role="button" tabindex="0"><span class="v">${v}</span><span class="l">${esc(l)}</span></div>`);
+  const hr=['HRG','HRA','HRS','HRE','HRT'].reduce((n,p)=>n+visibleRows(p,'main',u).filter(r=>!closedHR.includes(r.status)).length,0);
+  add(hr,'Open employee requests','p-hra');
+  add(visibleRows('SD','main',u).filter(r=>r.status!=='Closed').length,'Open SMC tickets','p-sd');
+  add(rows('CAS','main').filter(r=>r.complaint_status!=='Closed'&&ageDays(r.created_on)>DB.cfg.delayDays).length,'Delayed complaints','p-cas');
+  add(rows('CTE','main').filter(r=>r.concession_status==='Pending TL review').length,'Concessions awaiting TL','p-cte');
+  add(rows('OUT','main').filter(r=>r.current==='Yes').length+rows('TOL','main').filter(r=>r.current==='Yes').length,'Current outages (network + tools)','p-out');
+  // my queue
+  const q=[];
+  [['ACT','assigned_to','status',r=>r.status!=='Completed'],['SAL','assigned_to','call_result',r=>r.call_result==='Not called'],['RET','assigned_to','retention_status',r=>!['Retained','Cancelled'].includes(r.retention_status)],['SD','assigned_to','status',r=>r.status!=='Closed'],['VIS','follow_assigned_to','status',r=>r.status!=='Closed'],['HRG','supporter_name','status',r=>!closedHR.includes(r.status)],['HRA','supporter_name','status',r=>!closedHR.includes(r.status)],['HRE','supporter_name','status',r=>!closedHR.includes(r.status)]].forEach(([pid,k2,sk,f])=>rows(pid,'main').filter(r=>r[k2]===u.id&&f(r)).forEach(r=>q.push([pid,r,sk])));
+  rows('CTE','main').filter(r=>r.concession_status==='Pending TL review'&&r.leader_username===u.id).forEach(r=>q.push(['CTE',r,'concession_status']));
+  const qh=q.length?q.slice(0,12).map(([pid,r,sk])=>`<div class="it" data-open="${pid}|main|${r.id}" role="button" tabindex="0"><span class="ref">${r.id}</span><span style="flex:1">${esc(P[pid].name)}</span>${statusPill(entOf(pid,'main'),r)}</div>`).join(''):'<div class="empty">Nothing assigned to you. Switch user at the top to see another person\'s queue.</div>';
+  const nh=DB.notes.slice(0,8).map(n=>`<div class="it"><span class="t">${esc(n.at.replace('T',' '))}</span><span style="flex:1">${esc(n.subject)} <span style="color:var(--muted)">→ ${esc(n.to)}</span></span><span class="pill ${n.status==='Sent'?'ok':'bad'}">${n.status}</span></div>`).join('')||'<div class="empty">No notifications yet.</div>';
+  return `<div class="wrap">
+  <div><p class="eyebrow">Working wireframe · sample data · saved only in this browser</p><h1>Good day, ${esc(u.name.split(' ')[0])}</h1>
+  <p class="lead">This prototype runs the 26 process packages and 86 draft requirements of iReport FRS 0.2. Switch the signed-in person at the top to see how scope and permissions change. Every rule marked as an assumption is listed with its open question.</p></div>
+  <div class="grid">${k.join('')}</div>
+  <div class="two"><div class="card sec"><h3>My queue <span class="pill">${q.length}</span></h3><div class="list">${qh}</div></div>
+  <div class="card sec"><h3>Notifications log</h3><div class="list">${nh}</div><p class="lead" style="font-size:12px">Simulated email. Turn on “Simulate mail failure” under Rules to test FRS-SD-05.</p></div></div>
+  <div class="card sec"><h3>Process map</h3><div class="tbl"><table><thead><tr><th>ID</th><th>Process</th><th>Business area</th><th>Outcome</th><th>Reqs</th></tr></thead><tbody>
+  ${FRS.map(p=>`<tr data-go="p-${p.id.toLowerCase()}"><td class="ref">${p.id}</td><td>${esc(p.name)}</td><td>${esc(p.area)}</td><td style="white-space:normal;max-width:420px">${esc(p.outcome)}</td><td class="num">${p.reqs.length}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>`}
+
+function procHTML(){
+  const p=P[S.pid],u=me();const e=entOf(S.pid,S.ek);
+  const entTabs=p.ents.length>1?p.ents.map(x=>`<button class="tab ${S.tab==='records'&&S.ek===x.key?'on':''}" data-ent="${x.key}">${esc(x.tabName||x.name)}</button>`).join(''):`<button class="tab ${S.tab==='records'?'on':''}" data-tab="records">Records</button>`;
+  const toolTabs=(e.tools||p.ents[0].tools||[]).filter(t=>!t.proc||isProc(u)).map(t=>`<button class="tab ${S.tab==='tool-'+t.id?'on':''}" data-tab="tool-${t.id}">${esc(t.name)}</button>`).join('');
+  let body='';
+  if(S.tab==='records')body=listHTML(p,e,u);
+  else if(S.tab==='about')body=aboutHTML(p);
+  else if(S.tab.startsWith('tool-'))body=toolHTML(p,S.tab.slice(5),u);
+  return `<div class="wrap">
+  <div class="row" style="align-items:flex-start;justify-content:space-between"><div><p class="eyebrow">${esc(p.id)} · ${esc(p.area)}</p><h1>${esc(p.name)}</h1><p class="lead">${esc(p.outcome)}. Trigger: ${esc(p.trigger)}.</p></div></div>
+  <div class="tabs">${entTabs}${toolTabs}<button class="tab ${S.tab==='about'?'on':''}" data-tab="about">Process &amp; requirements <span class="pill warn">${p.qs.length} open</span></button></div>
+  ${body}</div>`}
+
+function listHTML(p,e,u){
+  const views=viewsFor(e,u);if(!S.view||!views.find(v=>v.id===S.view))S.view=views[0].id;
+  const v=views.find(v=>v.id===S.view);
+  const base=visibleRows(S.pid,e.key,u);
+  const counts=views.map(x=>base.filter(r=>!x.f||x.f(r,u)).length);
+  let list=base.filter(r=>!v.f||v.f(r,u));
+  const q=S.q.trim().toLowerCase();
+  if(q)list=list.filter(r=>[r.id,...e.cols.map(k=>fmtVal(fdef(e,k),r[k],r,u))].join(' ').toLowerCase().includes(q));
+  list=list.slice().sort((a,b)=>b.created_on.localeCompare(a.created_on));
+  const cols=e.cols;
+  const th=`<th>Ref</th>${cols.map(k=>`<th>${esc(fdef(e,k).l||(e.colLabels||{})[k]||k)}</th>`).join('')}<th>Added On</th>`;
+  const tr=list.map(r=>`<tr data-open="${S.pid}|${e.key}|${r.id}" tabindex="0"><td class="ref">${r.id}</td>${cols.map(k=>{const f=fdef(e,k);let val=e.colCalc&&e.colCalc[k]?e.colCalc[k](r):fmtVal(f,f.t==='auto'&&f.calc?f.calc(r,u):r[k],r,u);
+     if(k===e.statusKey)return `<td>${statusPill(e,r)}</td>`;return `<td class="${f.t==='num'?'num':''}" title="${esc(val)}">${esc(val)}</td>`}).join('')}<td class="t">${esc(r.created_on.replace('T',' '))}</td></tr>`).join('');
+  const note=typeof v.note==='function'?v.note():v.note;
+  return `${e.banner?`<div class="callout warn">${esc(e.banner)}</div>`:''}
+  ${e.scopeNote?`<div class="callout">${esc(e.scopeNote)}</div>`:''}
+  <div class="row"><div class="chips">${views.map((x,i)=>`<button class="chip ${x.id===S.view?'on':''}" data-view="${x.id}">${esc(x.name)} <b>${counts[i]}</b></button>`).join('')}</div>
+  <div class="sp" style="flex:1"></div><input class="search" id="q" type="search" placeholder="Search this list" value="${esc(S.q)}" aria-label="Search this list">
+  ${canCreate(e,u)?`<button class="btn pri" data-new="${e.key}">New ${esc(e.name.toLowerCase())}</button>`:`<span class="pill" title="Your role cannot create these">Read only for ${esc(u.roleName)}</span>`}</div>
+  ${note?`<div class="callout">${esc(note)}</div>`:''}
+  ${e.quotaPanel?quotaHTML():''}
+  <div class="tbl">${list.length?`<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`:`<div class="empty">No records in this view${q?' match “'+esc(S.q)+'”':''}.</div>`}</div>`}
+
+function quotaHTML(){const m=dd().slice(0,7);const g={};rows('QUA','main').filter(a=>a.created_on.slice(0,7)===m).forEach(a=>{const k=a.tl_lob+' / '+a.tl_site;g[k]=(g[k]||0)+1});
+  const all=[...new Set(org().map(p=>p.lob+' / '+p.site))].filter(k=>!/HR|Operations/.test(k));
+  return `<div class="card sec"><h3>Monthly audit quota · ${m}</h3>${all.map(k=>`<div class="bar"><span class="lb">${esc(k)}</span><span class="tr"><i style="width:${Math.min(100,(g[k]||0)/DB.cfg.quaQuota*100)}%"></i></span><span class="vv">${g[k]||0}/${DB.cfg.quaQuota}</span></div>`).join('')}</div>`}
+
+const TRY={
+ 'FRS-WLG-01':'Save a work log: the toast confirms no approval task. There is no status or approval queue for work logs.',
+ 'FRS-WLG-02':'Sign in as Omar Hany (Team B manager): Team A work logs disappear. Sara Nabil sees Team A.',
+ 'FRS-WLG-03':'As Karim, record a log with Performer = Nour. Added By stays Karim.',
+ 'FRS-DAY-02':'Edit Status on an issue and check that Added On and Added By are unchanged in the record footer.',
+ 'FRS-DAY-03':'Open the Physical Delay view, then resolve an issue: it leaves the view with the same reference.',
+ 'FRS-CCT-02':'Pick different sub categories in a new activity: Expected Sl changes with the definition.',
+ 'FRS-HRA-03':'As Laila, set a leave request to Closed: it moves to Closed Annual Leave with the same reference.',
+ 'FRS-HRA-04':'New leave request with To before From: Save is refused with a date-range error.',
+ 'FRS-HRS-01':'Try picking yourself in Swap With: rejected.',
+ 'FRS-SD-01':'Type a tool name that is not in the list, e.g. "Excel": the ticket is refused.',
+ 'FRS-SD-05':'Create a ticket and check the notifications log on Home. Turn on mail failure in Rules: the ticket still saves.',
+ 'FRS-ACT-03':'Allocation tab: assign 10 Relocation tasks; only matching tasks change owner.',
+ 'FRS-ACT-04':'Request more records than qualify: Result Count shows the actual number.',
+ 'FRS-CAS-03':'Change Assigned To from MCR to I Care: the complaint moves worklist, same reference.',
+ 'FRS-CAS-05':'Delayed Tickets lists open complaints older than the threshold in Rules.',
+ 'FRS-VIS-04':'Add two follow-up outcomes: both stay listed in order.',
+ 'FRS-CTE-03':'As Mona, submit a concession over EGP 150: it goes to Karim for review.',
+ 'FRS-CNO-03':'Set Created By Mistake = Yes: the record moves to Mistake review and keeps its history.',
+ 'FRS-VAL-03':'Create a validation for ticket CMP-0001 again: rejected as a duplicate.',
+ 'FRS-VAL-04':'Set a validation to Escalate: it appears under Validation Escalation.',
+ 'FRS-QUA-03':'Create audits until the LOB/site quota bar is full: the next one is refused.',
+ 'FRS-QUA-04':'Open an audit and use Replace call: history keeps the old call and the reason.',
+ 'FRS-SAL-03':'Allocation tab: assign 2 leads of one task to Hassan; other tasks keep their leads.',
+ 'FRS-RET-03':'Record an offer, then try Retained without customer acceptance: refused.',
+ 'FRS-MOB-03':'Open closed ticket BSS-7700188: the form is locked and explains why.',
+ 'FRS-MOB-04':'Schedule a follow-up with a past Wake Up Time: rejected.',
+ 'FRS-WAL-02':'Added By and Added On are stamped from the session; there is no field to type them.',
+ 'FRS-KM-02':'As Laila, add a Km Comment: the user\'s rating and comment stay read only.',
+ 'FRS-QUI-02':'As Mona, open your October quiz answer (window closed) and your current one (open). As Nour, Mona\'s answers are read only.',
+ 'FRS-OUT-03':'Link BRAS 10.20.1.14 to another outage while it is open: rejected. Try 999.1.1.1: invalid.',
+ 'FRS-OUT-04':'Set Current = No with an Actual To: the outage leaves the current list and stays in history.',
+ 'FRS-TOL-02':'Set Current = No without To: rejected.',
+ 'FRS-ORG-01':'Add an employee with a Wiki Username already in use: rejected.',
+};
+function aboutHTML(p){
+  return `<div class="two"><div class="card sec"><h3>Process</h3>
+   <div class="meta"><div><span>Candidate actors</span>${esc(p.actors)}</div><div><span>Trigger</span>${esc(p.trigger)}</div><div><span>End outcome</span>${esc(p.outcome)}</div></div>
+   <h3>Proposed flow <span class="tag">Assumption</span></h3><ol class="flow">${p.flow.map(f=>`<li>${esc(f)}</li>`).join('')}</ol>
+   <p class="lead" style="font-size:12.5px">Source: ${esc(p.src)}</p></div>
+   <div class="card sec"><h3>Decisions the owner must make</h3><div class="qs">${p.qs.map(q=>{const i=q.indexOf(':');return `<div class="q"><b>${esc(q.slice(0,i))}</b>${esc(q.slice(i))}</div>`}).join('')}</div>
+   <p class="lead" style="font-size:12.5px">Where the wireframe needed an answer to work, it uses a placeholder rule and says so on screen. Nothing here settles these questions.</p></div></div>
+   <div class="sec"><h3>Requirements · Draft</h3><div class="reqs">${p.reqs.map(r=>`<div class="req"><div class="row"><span class="id">${r[0]}</span><span class="tag">Draft · basis ${esc(r[3])}</span></div><div>${esc(r[1])}</div><div class="ac"><b>Acceptance:</b> ${esc(r[2])}</div>${TRY[r[0]]?`<div class="try"><b>Try it:</b> ${esc(TRY[r[0]])}</div>`:''}</div>`).join('')}</div></div>`}
+
+/* tools */
+function toolHTML(p,id,u){
+  if(id==='dash')return csiDash();
+  const cfg={ACT:{ek:'main',type:'task',filters:[F('a_task','Ticket Type','sel',{o:['Any','New line','Speed upgrade','Relocation','Reconnection']}),F('a_status','Status','sel',{o:['Any','Open','Follow-up']}),F('a_since','Added On More Than Or Equal','date'),F('a_group','User Group','sel',{o:['Any','Activation L1','Activation L2']})]},
+    SAL:{ek:'main',type:'lead',filters:[F('a_task','Task Id','sel',{o:()=>rows('SAL','tasks').map(t=>[t.id,t.id+' · '+t.task_name])})]},
+    RET:{ek:'main',type:'case',filters:[F('a_cst','Cst Type','sel',{o:['Consumer','Corporate','VIP']})]}}[p.id];
+  const fs=[F('a_action','Action','sel',{o:['Assign','Release']}),...cfg.filters,F('a_user','For User','user'),F('a_n','Number Of Records','num')];
+  const d=S.alloc||(S.alloc={a_action:'Assign',a_n:3,a_user:'10231'});
+  const log=DB.allocLog.filter(l=>l.pid===p.id).slice(0,8);
+  return `<div class="card sec"><h3>Allocate ${cfg.type}s</h3><p class="lead">Assign picks unassigned ${cfg.type}s that match. Release returns the person's ${cfg.type}s to the unassigned pool. ${cfg.type[0].toUpperCase()+cfg.type.slice(1)}s outside the criteria never change owner.</p>
+   <div class="form" id="allocForm">${fs.map(f=>fieldHTML(f,d,true,{})).join('')}</div>
+   <div class="row"><button class="btn pri" data-alloc="${p.id}">Run allocation</button></div></div>
+   <div class="card sec"><h3>Allocation runs</h3>${log.length?`<div class="tbl"><table><thead><tr><th>At</th><th>By</th><th>Action</th><th>For user</th><th>Criteria</th><th class="num">Requested</th><th class="num">Result Count</th></tr></thead><tbody>${log.map(l=>`<tr><td>${esc(l.at.replace('T',' '))}</td><td>${esc(pn(l.by))}</td><td>${l.action}</td><td>${esc(pn(l.user))}</td><td>${esc(l.crit)}</td><td class="num">${l.n}</td><td class="num"><b>${l.count}</b></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No runs yet.</div>'}</div>`}
+function runAlloc(pid){
+  const d=collect($('#allocForm'));S.alloc=d;const n=Number(d.a_n||0);
+  if(!d.a_user||n<1){toast(['Pick a user and a number of records of 1 or more.'],1);return}
+  let pool=rows(pid,'main');const crit=[];
+  if(pid==='ACT'){if(d.a_task&&d.a_task!=='Any'){pool=pool.filter(r=>r.task===d.a_task);crit.push(d.a_task)}if(d.a_status&&d.a_status!=='Any'){pool=pool.filter(r=>r.status===d.a_status);crit.push(d.a_status)}else pool=pool.filter(r=>r.status!=='Completed');
+    if(d.a_since){pool=pool.filter(r=>r.created_on.slice(0,10)>=d.a_since);crit.push('since '+d.a_since)}if(d.a_group&&d.a_group!=='Any'){pool=pool.filter(r=>r.user_group===d.a_group);crit.push(d.a_group)}}
+  if(pid==='SAL'){if(!d.a_task){toast(['Pick a Task Id.'],1);return}pool=pool.filter(r=>r.task_id===d.a_task);crit.push(d.a_task)}
+  if(pid==='RET'){if(!d.a_cst){toast(['Pick a Cst Type.'],1);return}pool=pool.filter(r=>r.cst_type===d.a_cst&&!['Retained','Cancelled'].includes(r.retention_status));crit.push(d.a_cst)}
+  pool=d.a_action==='Assign'?pool.filter(r=>!r.assigned_to):pool.filter(r=>r.assigned_to===d.a_user);
+  const pick=pool.slice(0,n);const u=me();
+  pick.forEach(r=>{const old=r.assigned_to||'';r.assigned_to=d.a_action==='Assign'?d.a_user:'';r.history.push({at:dt(),by:u.id,note:(d.a_action==='Assign'?'Assigned to '+pn(d.a_user):'Released from '+pn(d.a_user))+' by allocation',changes:{assigned_to:[old,r.assigned_to]}});r.last_edit_by=u.id;r.last_edit_on=dt()});
+  DB.allocLog.unshift({pid,at:dt(),by:u.id,action:d.a_action,user:d.a_user,n,count:pick.length,crit:crit.join(' · ')||'—'});persist();
+  toast([d.a_action+': '+pick.length+' of '+n+' requested'+(pick.length<n?' (only '+pick.length+' qualified)':'')+'.']);render()}
+function csiDash(){const rs=rows('CSI','main');const avg=rs.length?(rs.reduce((s,r)=>s+Number(r.cs_overall||0),0)/rs.length).toFixed(2):'—';
+  const by=k=>{const g={};rs.forEach(r=>{const v=r[k]||'(not set)';g[v]=(g[v]||0)+1});const mx=Math.max(1,...Object.values(g));return Object.entries(g).map(([l,v])=>`<div class="bar"><span class="lb">${esc(l)}</span><span class="tr"><i style="width:${v/mx*100}%"></i></span><span class="vv">${v}</span></div>`).join('')};
+  return `<div class="grid"><div class="card kpi"><span class="v">${rs.length}</span><span class="l">Number Of Tickets</span></div><div class="card kpi"><span class="v">${avg}</span><span class="l">CS Overall Satisfaction Rating (avg, 1–5)</span></div></div>
+  <div class="two"><div class="card sec"><h3>By survey status</h3>${by('survey_status')}</div><div class="card sec"><h3>By root cause</h3>${by('root_cause')}</div></div>
+  <div class="callout warn">Which KPIs belong on this dashboard is open (Q-CSI-01). These two are the ones the documentation shows.</div>`}
+
+/* reports */
+function reportsHTML(){
+  const tbl=(head,body)=>`<div class="tbl"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr style="cursor:default">${r.map((c,i)=>`<td class="${i&&typeof c==='number'?'num':''}">${esc(c)}</td>`).join('')}</tr>`).join('')||'<tr><td>No data</td></tr>'}</tbody></table></div>`;
+  const hrT=['HRG','HRA','HRS','HRE','HRT'].map(p=>{const rs=rows(p,'main');return [P[p].name,...HR_STATUS.map(s=>rs.filter(r=>r.status===s).length)]});
+  const sdT=SMC_TOOLS.map(t=>{const rs=rows('SD','main').filter(r=>r.tool===t);return [t,rs.filter(r=>r.status!=='Closed').length,rs.filter(r=>r.status==='Closed').length]}).filter(r=>r[1]+r[2]);
+  const del=rows('CAS','main').filter(r=>r.complaint_status!=='Closed'&&ageDays(r.created_on)>DB.cfg.delayDays).map(r=>[r.id,r.account,wl(r.assigned_to),r.complaint_status,ageDays(r.created_on)]);
+  const cte=rows('CTE','main'),cno=rows('CNO','main');
+  const sumN=(a,k,f=()=>1)=>a.filter(f).reduce((s,r)=>s+Number(r[k]||0),0);
+  const conc=[['Technical · compensation (EGP)',sumN(cte,'compensation_value'),sumN(cte,'compensation_value',r=>/Approved/.test(r.concession_status))],['Technical · days',sumN(cte,'num_days'),sumN(cte,'num_days',r=>/Approved/.test(r.concession_status))],['Non-technical · cost (EGP)',sumN(cno,'cost'),sumN(cno,'total_approved',r=>r.concession_status==='Approved')],['Non-technical · Free Giga (GB)',sumN(cno,'free_giga'),sumN(cno,'free_giga',r=>r.concession_status==='Approved')]];
+  const qv=[...['Pass','Fail','Needs coaching'].map(s=>['Call audit · '+s,rows('QUA','main').filter(r=>r.status===s).length]),...['Pending','Error Valid','Error Not Valid','Escalate','Closed'].map(s=>['Validation · '+s,rows('VAL','main').filter(r=>r.validation_status===s).length])];
+  const sal=rows('SAL','tasks').map(t=>{const l=rows('SAL','main').filter(x=>x.task_id===t.id);return [t.task_name,t.target,l.length,l.filter(x=>x.call_result==='Reached').length,l.filter(x=>x.customer_feedback==='Accepted offer').length]});
+  const ret=['New','Offer made','Callback','Retained','Cancelled'].map(s=>['Retention · '+s,rows('RET','main').filter(r=>r.retention_status===s).length]);
+  const out=[...rows('OUT','main').map(r=>[r.id,'Network · '+r.outage_type,r.from.replace('T',' '),(r.actual_to||'ongoing').replace('T',' '),r.planned_to?r.planned_to.replace('T',' '):'—']),...rows('TOL','main').map(r=>[r.id,'Tool · '+r.tool,r.from.replace('T',' '),(r.to||'ongoing').replace('T',' '),'—'])];
+  const wlg=Object.entries(rows('WLG','main').reduce((g,r)=>{const k=pn(r.performer)+'|'+r.team;g[k]=(g[k]||0)+1;return g},{})).map(([k,v])=>[...k.split('|'),v]);
+  const card=(t,src,defn,html)=>`<div class="card sec"><div class="row" style="justify-content:space-between"><h3>${esc(t)}</h3><span class="pill">${esc(src)}</span></div>${html}<p class="lead" style="font-size:12.5px"><span class="tag">Definition needed</span> ${esc(defn)}</p></div>`;
+  return `<div class="wrap"><div><p class="eyebrow">Candidate business reports · Assumption</p><h1>Reports</h1><p class="lead">Live counts from the wireframe's sample data. Each report shows what its owner still has to define. Money, days and Free Giga are never added together.</p></div>
+  ${card('Team work','WLG','Work unit, performer, execution period and manager scope; not edit count.',tbl(['Performer','Team','Work logs'],wlg))}
+  ${card('Employee requests','HRG / HRA / HRS / HRE / HRT','Type, state, employee, support party and period; request types kept apart.',tbl(['Type',...HR_STATUS],hrT))}
+  ${card('Support tickets','SD','Tool, request, assignee, state, Closed Time and elapsed-time definition.',tbl(['Tool','Open','Closed'],sdT))}
+  ${card('Delayed complaints','CAS','Eligible states, delay threshold, clock start/stop and current owner.',tbl(['Ref','Account','Worklist','Status','Days open'],del))}
+  ${card('Concessions','CTE / CNO','Requested / approved / executed distinction, units and period.',tbl(['Measure (own unit)','Requested','Approved'],conc))}
+  ${card('Quality and validation outcomes','QUA / VAL','Call or ticket, review round, reviewer and final decision.',tbl(['Outcome','Count'],qv))}
+  ${card('Sales and retention results','SAL / RET','Task, assignee and call result; what counts as success.',tbl(['Task','Target','Leads','Reached','Accepted'],sal)+tbl(['Retention state','Cases'],ret))}
+  ${card('Outages','OUT / TOL','Actual vs planned, start/end, impact scope and Ignore treatment.',tbl(['Ref','Type','From','Actual end','Planned end'],out))}
+  </div>`}
+
+function settingsHTML(){
+  const c=DB.cfg;
+  return `<div class="wrap"><div><p class="eyebrow">Placeholder rules</p><h1>Settings &amp; rules</h1><p class="lead">These values stand in for decisions the FRS leaves to process owners. Change them to see the behaviour move. They are not proposals.</p></div>
+  <div class="card sec"><div class="form" id="cfgForm">
+   ${fieldHTML(F('delayDays','Complaint delay threshold (days) · Q-CAS-02','num'),c,true,{})}
+   ${fieldHTML(F('quaQuota','Monthly call-audit quota per LOB and site · Q-QUA-01','num'),c,true,{})}
+   ${fieldHTML(F('compLimit','Agent compensation limit (EGP) · Q-CTE-01','num'),c,true,{})}
+   ${fieldHTML(F('satLimit','Agent satisfaction limit (EGP) · Q-CTE-01','num'),c,true,{})}
+   ${fieldHTML(F('mailFail','Simulate mail failure (FRS-SD-05)','sel',{o:[['0','No'],['1','Yes']]}),{mailFail:c.mailFail?'1':'0'},true,{})}
+  </div><div class="row"><button class="btn pri" data-savecfg="1">Save rules</button></div></div>
+  <div class="card sec"><h3>Roles in this wireframe</h3><div class="tbl"><table><thead><tr><th>Person</th><th>Role</th><th>Team</th><th>Can do here</th></tr></thead><tbody>
+  ${USERS.map(u=>`<tr style="cursor:default"><td>${esc(pn(u[0]))}</td><td>${esc(u[2])}</td><td>${esc(teamOf(u[0]))}</td><td style="white-space:normal">${esc({agent:'Create requests and records; sees own HR requests and work logs; processing fields read only.',leader:'Processing fields; approves referred concessions for own team; sees own team work logs.',manager:'Processing fields; sees own team work logs only.',processor:'HR and SMC processing; complaint feedback in validation.',admin:'Everything, including reopening a closed BSS ticket.'}[u[1]])}</td></tr>`).join('')}
+  </tbody></table></div><p class="lead" style="font-size:12.5px">Action permissions are not decided in the FRS. This split is the minimum needed to demonstrate the scope and limit rules.</p></div>
+  <div class="card sec"><h3>Sample data</h3><p class="lead">Everything you enter stays in this browser only.</p><div class="row"><button class="btn" id="resetBtn">Reset sample data</button><span id="resetConfirm" hidden><b>Erase your changes?</b> <button class="btn sm pri" data-reset="1">Yes, reset</button> <button class="btn sm" data-reset="0">Keep</button></span></div></div>
+  </div>`}
+
+/* ---------- fields & forms ---------- */
+function fieldHTML(f,r,editable,errs,u){
+  const v=r[f.k];const id='f_'+f.k;const req=(f.req===1||(typeof f.req==='function'&&f.req(r)));
+  const lab=`<label for="${id}">${esc(f.l)}${req&&editable?' <span class="rq">*</span>':''}</label>`;
+  let inp;
+  if(!editable||f.t==='auto'){inp=`<div class="ro" id="${id}">${esc(fmtVal(f,f.t==='auto'&&f.calc?f.calc(r,u):v,r,u))}</div>`}
+  else if(f.t==='sel'||f.t==='user'||f.t==='ref'){const o=optsOf(f,r);inp=`<select id="${id}" data-k="${f.k}"><option value="">Select…</option>${o.map(([a,b])=>`<option value="${esc(a)}" ${String(v??'')===String(a)?'selected':''}>${esc(b||'(none)')}</option>`).join('')}</select>`}
+  else if(f.t==='multi'){const o=optsOf(f,r);const vs=v||[];inp=`<select id="${id}" data-k="${f.k}" multiple>${o.map(([a,b])=>`<option value="${esc(a)}" ${vs.includes(a)?'selected':''}>${esc(b)}</option>`).join('')}</select>`}
+  else if(f.t==='ta')inp=`<textarea id="${id}" data-k="${f.k}">${esc(v)}</textarea>`;
+  else if(f.t==='list'){inp=`<input id="${id}" data-k="${f.k}" list="${id}_l" value="${esc(v)}" autocomplete="off"><datalist id="${id}_l">${optsOf(f,r).map(([a])=>`<option value="${esc(a)}">`).join('')}</datalist>`}
+  else if(f.t==='file')inp=`<input id="${id}" data-k="${f.k}" type="file" data-cur="${esc(v)}">${v?`<span class="help">Attached: ${esc(v)}</span>`:''}`;
+  else{const t={num:'number',date:'date',dt:'datetime-local',time:'time'}[f.t]||'text';inp=`<input id="${id}" data-k="${f.k}" type="${t}" value="${esc(v)}">`}
+  const err=errs&&errs[f.k];
+  return `<div class="fld ${f.w||f.t==='ta'?'w':''} ${err?'bad':''}">${lab}${inp}${err?`<span class="err">${esc(err)}</span>`:''}${f.help&&(editable||f.t==='auto')?`<span class="help">${esc(f.help)}</span>`:''}</div>`}
+function collect(root){const o={};root.querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;
+  if(el.multiple)o[k]=[...el.selectedOptions].map(x=>x.value);
+  else if(el.type==='file')o[k]=el.files&&el.files[0]?el.files[0].name:(el.dataset.cur||'');
+  else if(el.type==='number')o[k]=el.value===''?'':Number(el.value);
+  else o[k]=el.value});return o}
+function canEditField(e,f,r,mode,u,locked){
+  if(f.t==='auto')return false;if(locked)return false;if(f.ro&&mode!=='new')return false;
+  if(e.editRole&&!e.editRole(u))return false;
+  if(f.s==='proc'&&!isProc(u))return false;if(f.who&&!f.who(u,r))return false;return true}
+
+/* ---------- drawer ---------- */
+function openRec(pid,ek,id){S.drawer={pid,ek,id,errs:{},draft:null,act:null};renderDrawer()}
+function openNew(ek){const e=entOf(S.pid,ek),u=me();const d=Object.assign({},e.defaults?e.defaults(u):{});fieldsOf(e,d).forEach(f=>{if(d[f.k]==null&&f.dflt)d[f.k]=f.dflt});S.drawer={pid:S.pid,ek,id:null,errs:{},draft:d};renderDrawer()}
+function closeDrawer(){S.drawer=null;renderDrawer()}
+function renderDrawer(){
+  const host=$('#drawerHost');if(!S.drawer){host.innerHTML='';return}
+  const {pid,ek,id,errs}=S.drawer;const e=entOf(pid,ek),u=me();
+  const rec=id?rows(pid,ek).find(r=>r.id===id):null;
+  if(id&&(!rec||(e.visible&&!e.visible(rec,u)))){host.innerHTML=`<div class="scrim" data-close="1"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Record"><div class="dh"><h2>Not available</h2><button class="btn sm x" data-close="1">Close</button></div><div class="db"><div class="callout bad">You do not have access to this record as ${esc(u.name)} (${esc(u.roleName)}).</div></div></aside>`;return}
+  const mode=id?'edit':'new';
+  const r=S.drawer.draft||clone(rec);
+  const locked=mode==='edit'&&e.locked?e.locked(rec,u):null;
+  const fs=fieldsOf(e,r).filter(f=>!f.when||f.when(r));
+  const visibleFs=fs.filter(f=>!(mode==='new'&&(f.s==='proc'||(f.t==='auto'&&!f.calc))));
+  const anyEditable=visibleFs.some(f=>canEditField(e,f,r,mode,u,locked));
+  const form=`<div class="form" id="recForm">${visibleFs.map(f=>fieldHTML(f,r,canEditField(e,f,r,mode,u,locked),errs,u)).join('')}</div>`;
+  let extra='';
+  if(mode==='edit'){
+    const acts=(e.actions||[]).filter(a=>a.show(rec,u));
+    if(acts.length)extra+=`<div class="sec"><div class="row">${acts.map(a=>`<button class="btn" data-act="${a.id}">${esc(a.label)}</button>`).join('')}</div>${S.drawer.act?`<div class="inline">${fieldHTML(F('act_reason',(e.actions.find(a=>a.id===S.drawer.act)||{}).reason||'Reason','text'),{},true,S.drawer.actErr?{act_reason:S.drawer.actErr}:{})}<button class="btn pri" data-actrun="${S.drawer.act}">Confirm</button><button class="btn" data-actcancel="1">Cancel</button></div>`:''}</div>`;
+    (e.children||[]).forEach(c=>{const list=rec[c.key]||[];const cd=(S.drawer.child&&S.drawer.child.key===c.key)?S.drawer.child:null;const canAdd=!locked||c.allowLocked;
+      extra+=`<div class="sec card"><h3>${esc(c.name)} <span class="pill">${list.length}</span></h3>
+      ${list.length?`<div class="tbl"><table><thead><tr>${c.cols.map(k=>`<th>${esc(fdef(c,k,c.fields).l)}</th>`).join('')}${c.close?'<th></th>':''}</tr></thead><tbody>${list.map(x=>`<tr style="cursor:default">${c.cols.map(k=>{const f=fdef(c,k,c.fields);return k==='status'?`<td>${statusPill({statusKey:'status'},x)}</td>`:`<td style="white-space:normal">${esc(fmtVal(f,x[k],x,u))}</td>`}).join('')}${c.close?`<td>${c.close.show(x)&&canAdd?`<button class="btn sm" data-cclose="${c.key}|${x.id}">${c.close.label}</button>`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">None yet.</div>'}
+      ${canAdd?(cd?`<div class="inline" id="childForm">${c.fields.filter(f=>f.t!=='auto').map(f=>fieldHTML(f,cd.d,true,cd.errs)).join('')}<button class="btn pri" data-csave="${c.key}">Add</button><button class="btn" data-ccancel="1">Cancel</button></div>`:`<div><button class="btn" data-cadd="${c.key}">${esc(c.add)}</button></div>`):''}
+      <p class="lead" style="font-size:12px">Entries are added, never overwritten.</p></div>`});
+    extra+=`<div class="sec card"><h3>Record</h3><div class="meta">${['created_by','created_on','last_edit_by','last_edit_on'].map(k=>`<div><span>${META[k].l}</span>${esc(fmtVal(META[k],rec[k],rec,u))}</div>`).join('')}</div></div>
+     <div class="sec"><h3>History</h3><div class="hist">${rec.history.slice().reverse().map(h=>`<div class="h"><div><b>${esc(pn(h.by))}</b> · ${esc(h.note||'Edited')}</div><div class="t">${esc(h.at.replace('T',' '))}</div>${h.changes?`<div class="ch">${Object.entries(h.changes).map(([k,[a,b]])=>{const f=fdef(e,k,fieldsOf(e,rec));return `${esc(f.l)}: ${esc(fmtVal(f,a,rec,u))} → <b>${esc(fmtVal(f,b,rec,u))}</b>`}).join('<br>')}</div>`:''}</div>`).join('')}</div></div>`}
+  const general=errs&&errs._?`<div class="callout bad">${esc(errs._)}</div>`:'';
+  host.innerHTML=`<div class="scrim" data-close="1"></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(e.name)}">
+   <div class="dh"><div><p class="eyebrow">${esc(P[pid].id)} · ${esc(e.name)}</p><h2>${mode==='new'?'New '+esc(e.name.toLowerCase()):`<span class="ref" style="font-size:16px">${rec.id}</span>`} ${mode==='edit'?statusPill(e,rec):''}</h2></div><button class="btn sm x" data-close="1" aria-label="Close">Close</button></div>
+   <div class="db">
+    ${e.banner?`<div class="callout warn">${esc(e.banner)}</div>`:''}
+    ${locked?`<div class="callout warn">${esc(locked)}</div>`:''}
+    ${!isProc(u)&&fs.some(f=>f.s==='proc')&&mode==='edit'?`<div class="callout">Processing fields are read only for your role.</div>`:''}
+    ${general}${form}
+    ${anyEditable?`<div class="row"><button class="btn pri" data-save="1">${mode==='new'?'Submit':'Save changes'}</button><button class="btn" data-close="1">Cancel</button></div>`:''}
+    ${extra}
+   </div></aside>`;
+  const first=host.querySelector('#recForm [data-k]');if(first&&mode==='new'&&!S.drawer.focused){S.drawer.focused=1;first.focus()}}
+
+function saveRec(){
+  const {pid,ek,id}=S.drawer;const e=entOf(pid,ek),u=me();const rec=id?rows(pid,ek).find(r=>r.id===id):null;const mode=id?'edit':'new';
+  const old=rec?clone(rec):null;const r=Object.assign({},S.drawer.draft||clone(rec||{}),collect($('#recForm')));
+  const locked=mode==='edit'&&e.locked?e.locked(rec,u):null;if(locked){toast([locked],1);return}
+  const errs={};const fs=fieldsOf(e,r).filter(f=>!f.when||f.when(r));
+  fs.forEach(f=>{if(f.calc)r[f.k]=f.calc(r,u)});
+  fs.forEach(f=>{const vis=!(mode==='new'&&f.s==='proc');const req=f.req===1||(typeof f.req==='function'&&f.req(r));if(vis&&req&&canEditField(e,f,r,mode,u,null)&&empty(r[f.k]))errs[f.k]='Required.'});
+  if(!Object.keys(errs).length&&e.validate){const v=e.validate(r,old,u);if(typeof v==='string')errs._=v;else if(v)Object.assign(errs,v)}
+  if(Object.keys(errs).length){S.drawer.errs=errs;S.drawer.draft=r;renderDrawer();toast(['Check the highlighted fields.'],1);return}
+  const notes=[];
+  if(e.before)e.before(r,old,u,notes);
+  fieldsOf(e,r).forEach(f=>{if(f.calc)r[f.k]=f.calc(r,u)});
+  if(mode==='new'){DB.seq[e.prefix]=(DB.seq[e.prefix]||0)+1;r.id=e.prefix+'-'+String(DB.seq[e.prefix]).padStart(4,'0');r.created_by=u.id;r.created_on=dt();r.history=[{at:r.created_on,by:u.id,note:'Created'}];rows(pid,ek).push(r);notes.unshift('Created '+r.id+'.')}
+  else{const ch={};const keys=new Set([...Object.keys(r),...Object.keys(old)]);['history','id','created_by','created_on','last_edit_by','last_edit_on',...(e.children||[]).map(c=>c.key)].forEach(k=>keys.delete(k));
+    keys.forEach(k=>{const a=old[k],b=r[k];if(JSON.stringify(empty(a)?'':a)!==JSON.stringify(empty(b)?'':b))ch[k]=[a??'',b??'']});
+    if(!Object.keys(ch).length){toast(['No changes to save.']);return}
+    r.last_edit_by=u.id;r.last_edit_on=dt();r.history=old.history.concat([{at:r.last_edit_on,by:u.id,note:'Edited',changes:ch}]);
+    Object.assign(rec,r);notes.unshift('Saved '+r.id+'.')}
+  if(e.after)e.after(mode==='new'?r:rec,old,u,notes);
+  if(e.saveNote&&mode==='new')notes.push(e.saveNote);
+  persist();S.drawer={pid,ek,id:r.id,errs:{},draft:null};toast(notes);render()}
+
+function runAction(aid){const {pid,ek,id}=S.drawer;const e=entOf(pid,ek),u=me();const rec=rows(pid,ek).find(r=>r.id===id);const a=e.actions.find(a=>a.id===aid);
+  const reason=($('#f_act_reason')||{}).value||'';if(a.reason&&!reason.trim()){S.drawer.actErr='Give a reason.';renderDrawer();return}
+  const old=clone(rec);const notes=[];const note=a.run(rec,u,reason.trim(),notes);const ch={};Object.keys(rec).forEach(k=>{if(!['history'].includes(k)&&JSON.stringify(old[k])!==JSON.stringify(rec[k]))ch[k]=[old[k]??'',rec[k]]});
+  rec.history.push({at:dt(),by:u.id,note,changes:Object.keys(ch).length?ch:undefined});rec.last_edit_by=u.id;rec.last_edit_on=dt();persist();S.drawer.act=null;S.drawer.actErr=null;toast(notes.length?notes:[note]);render()}
+
+function childSave(key){const {pid,ek,id}=S.drawer;const e=entOf(pid,ek),u=me();const rec=rows(pid,ek).find(r=>r.id===id);const c=e.children.find(c=>c.key===key);
+  const d=Object.assign({},S.drawer.child.d,collect($('#childForm')));const errs={};
+  c.fields.forEach(f=>{if(f.req===1&&f.t!=='auto'&&empty(d[f.k]))errs[f.k]='Required.'});
+  if(!Object.keys(errs).length&&c.validate){const v=c.validate(d,rec);if(v)Object.assign(errs,v)}
+  if(Object.keys(errs).length){S.drawer.child={key,d,errs};renderDrawer();return}
+  d.id=(rec[key]||[]).reduce((m,x)=>Math.max(m,x.id),0)+1;d.by=u.id;d.at=d.at||dt();if(c.onAdd)c.onAdd(d);
+  rec[key]=(rec[key]||[]).concat([d]);rec.history.push({at:dt(),by:u.id,note:'Added to '+c.name+': '+c.fields.filter(f=>f.t!=='auto').map(f=>fmtVal(f,d[f.k],d,u)).join(' · ')});rec.last_edit_by=u.id;rec.last_edit_on=dt();
+  persist();S.drawer.child=null;toast(['Added to '+c.name+'. Earlier entries are unchanged.']);render()}
+function childClose(key,cid){const {pid,ek,id}=S.drawer;const e=entOf(pid,ek),u=me();const rec=rows(pid,ek).find(r=>r.id===id);const c=e.children.find(c=>c.key===key);const x=rec[key].find(x=>x.id===Number(cid));
+  c.close.run(x,u);rec.history.push({at:dt(),by:u.id,note:c.close.label+' in '+c.name+': '+(x.bras||x.reason||'#'+x.id)});persist();toast([c.name+' entry updated.']);render()}
+
+/* ---------- toast ---------- */
+let tt;function toast(msgs,bad){const t=$('#toast');t.innerHTML=msgs.map(m=>`<div class="${bad?'bad':''}">${esc(m)}</div>`).join('');clearTimeout(tt);tt=setTimeout(()=>t.innerHTML='',4800)}
+
+/* ---------- events ---------- */
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('[data-go],[data-open],[data-new],[data-view],[data-tab],[data-ent],[data-close],[data-save],[data-act],[data-actrun],[data-actcancel],[data-cadd],[data-csave],[data-ccancel],[data-cclose],[data-alloc],[data-savecfg],[data-reset],#resetBtn,#menuBtn');
+  if(!t)return;const d=t.dataset;
+  if(t.id==='menuBtn'){$('#side').classList.toggle('open');return}
+  if(t.id==='resetBtn'){$('#resetConfirm').hidden=false;return}
+  if(d.go!=null){if(location.hash==='#'+d.go)route();else go(d.go);return}
+  if(d.open){const[pid,ek,id]=d.open.split('|');openRec(pid,ek,id);return}
+  if(d.new){openNew(d.new);return}
+  if(d.view){S.view=d.view;render();return}
+  if(d.ent){S.ek=d.ent;S.tab='records';S.view=null;S.q='';render();return}
+  if(d.tab){S.tab=d.tab;if(d.tab==='records')S.ek='main';render();return}
+  if(d.close){closeDrawer();return}
+  if(d.save){saveRec();return}
+  if(d.act){S.drawer.act=d.act;S.drawer.actErr=null;renderDrawer();return}
+  if(d.actrun){runAction(d.actrun);return}
+  if(d.actcancel){S.drawer.act=null;renderDrawer();return}
+  if(d.cadd){const c=entOf(S.drawer.pid,S.drawer.ek).children.find(c=>c.key===d.cadd);const rec=rows(S.drawer.pid,S.drawer.ek).find(r=>r.id===S.drawer.id);S.drawer.child={key:d.cadd,d:c.defaults?c.defaults(rec):{},errs:{}};renderDrawer();return}
+  if(d.csave){childSave(d.csave);return}
+  if(d.ccancel){S.drawer.child=null;renderDrawer();return}
+  if(d.cclose){const[k,i]=d.cclose.split('|');childClose(k,i);return}
+  if(d.alloc){runAlloc(d.alloc);return}
+  if(d.savecfg){const v=collect($('#cfgForm'));['delayDays','quaQuota','compLimit','satLimit'].forEach(k=>{if(v[k]!==''&&v[k]>=0)DB.cfg[k]=Number(v[k])});DB.cfg.mailFail=v.mailFail==='1';persist();toast(['Rules saved.']);render();return}
+  if(d.reset!=null){if(d.reset==='1'){const user=DB.user;seed();DB.user=user;persist();toast(['Sample data reset.'])}render();return}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&S.drawer){closeDrawer();return}
+  if((ev.key==='Enter'||ev.key===' ')&&ev.target.matches('tr[data-open],[role=button]')){ev.preventDefault();ev.target.click()}});
+document.addEventListener('input',ev=>{if(ev.target.id==='q'){S.q=ev.target.value;const pos=ev.target.selectionStart;render();const q=$('#q');if(q){q.focus();q.setSelectionRange(pos,pos)}}});
+document.addEventListener('change',ev=>{
+  if(ev.target.id==='userSel'){DB.user=ev.target.value;persist();S.drawer=null;S.alloc=null;render();toast(['Signed in as '+me().name+' ('+me().roleName+').']);return}
+  const form=ev.target.closest('#recForm');
+  if(form&&S.drawer&&ev.target.tagName!=='SELECT'){const e=entOf(S.drawer.pid,S.drawer.ek);S.drawer.draft=Object.assign({},S.drawer.draft||clone(rows(S.drawer.pid,S.drawer.ek).find(r=>r.id===S.drawer.id)||{}),collect(form));
+    fieldsOf(e,S.drawer.draft).forEach(f=>{if(f.t==='auto'&&f.calc){const el=document.getElementById('f_'+f.k);if(el)el.textContent=fmtVal(f,f.calc(S.drawer.draft,me()),S.drawer.draft,me())}});return}
+  if(form&&S.drawer){S.drawer.draft=Object.assign({},S.drawer.draft||clone(rows(S.drawer.pid,S.drawer.ek).find(r=>r.id===S.drawer.id)||{}),collect(form));
+    const e=entOf(S.drawer.pid,S.drawer.ek);const k=ev.target.dataset.k;
+    fieldsOf(e,S.drawer.draft).forEach(f=>{if(f.dep===k)S.drawer.draft[f.k]=''});
+    const sc=$('.db')?.scrollTop;renderDrawer();const db=$('.db');if(db)db.scrollTop=sc;const el=document.getElementById('f_'+k);if(el)el.focus()}
+});
+window.addEventListener('hashchange',route);
+
+/* ---------- boot ---------- */
+if(!load()||!DB.r||!DB.cfg){seed();persist()}
+route();
+</script>
+
+</body></html>
