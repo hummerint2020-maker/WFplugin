@@ -21,6 +21,13 @@ interface TimeLogStore
     /** @return object[] event_type and event_at of the live Sign In / Late Sign In / Sign Out rows of one day, oldest first */
     public function liveInOut(int $employeeId, string $day): array;
 
+    /**
+     * employee_id, work_date and event_type of the live Sign In / Late Sign In / Sign Out rows of these employees on these work days, in no
+     * particular order (3.31.151: the auto-attendance tick reads once what its finished actions would each read again).
+     * @param string[] $days @param int[] $employeeIds @return object[]
+     */
+    public function liveInOutOn(array $days, array $employeeIds): array;
+
     /** @param array<string,mixed> $row inserted as given (no formats) @return int the new id, 0 on failure */
     public function insert(array $row): int;
 

@@ -81,13 +81,25 @@ trait EWS_Substitutes_Trait {
     /** The hourly job (ews_approvals_tick). */
     public function substitutes_tick(){ $this->substitutes_sync(); }
 
-    /** At most once a minute on page loads (the hourly job is too coarse for a start at 14:30). */
+    /**
+     * On page loads, when a start or end is due (the hourly job is too coarse for a start at 14:30). Each sync remembers when the next
+     * one is (ews_substitutes_due_at, 3.31.151), so the loads in between check nothing; until the first sync of this version, the
+     * once-a-minute rule of before (ews_substitutes_next_sync, no longer written).
+     */
     public function substitutes_maybe_sync(){
         if(!$this->substitutes_enabled())return;
-        $next=(int)get_option('ews_substitutes_next_sync',0);
-        if($next>time())return;
-        update_option('ews_substitutes_next_sync',time()+60,true);
+        $due=get_option('ews_substitutes_due_at',null);
+        if($due===null){
+            if((int)get_option('ews_substitutes_next_sync',0)>time())return;
+        }elseif($due===''||(string)$due>current_time('mysql')){
+            return;
+        }
         $this->substitutes_sync();
+    }
+
+    /** Something a sync depends on changed outside it (the switch, an employee's account or status): the next page load syncs. */
+    private function substitutes_due_now(){
+        if(get_option('ews_substitutes_due_at',null)!==null)delete_option('ews_substitutes_due_at');
     }
 
     /**

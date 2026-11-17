@@ -20,7 +20,7 @@ ids = json.loads(php("""
     $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
     foreach(['ews_leave_requests','ews_leave_balances','ews_overtime_requests','ews_approval_requests','ews_approval_steps','ews_approval_workflow_steps','ews_employee_relationships','ews_approval_substitutes','ews_notifications','ews_audit_log'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0");
-    foreach(['ews_feature_substitutes','ews_substitute_settings','ews_substitutes_next_sync','ews_approval_settings','ews_approval_deadlines','ews_approval_self_rule','ews_approval_reject_note'] as $o) delete_option($o);
+    foreach(['ews_feature_substitutes','ews_substitute_settings','ews_substitutes_next_sync','ews_substitutes_due_at','ews_approval_settings','ews_approval_deadlines','ews_approval_self_rule','ews_approval_reject_note'] as $o) delete_option($o);
     update_option('ews_feature_my_approvals',1,false); update_option('ews_working_days',[0,1,2,3,4,5,6],false); update_option('ews_feature_overtime',1,false);
     $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('mona','big','nour','sami')");
     $wpdb->query("DELETE FROM {$p}ews_departments WHERE code IN ('sb-a','sb-b')");
@@ -263,8 +263,42 @@ st, qs, _ = adm.post('ews_substitute_end', _wpnonce=m.group(1) if m else 'x', id
 check('HR ends it from the Substitutes page', qs.get('sub_done') == 'ended' and sub_row(int(s5['id']))['status'] == 'ended', qs)
 check('the Audit Log has them', len(q("SELECT id FROM {p}ews_audit_log WHERE action LIKE 'substitute_%'")) >= 6)
 
+# ---------------------------------------------------------------- pages check only when a start or end is due (3.31.151)
+def due():
+    # Note: every wp-cli call is a request too, and may itself sync (on init) before it reads.
+    return php("$v=get_option('ews_substitutes_due_at',null); echo 'DUE['.($v===null?'null':$v).']';").strip().split('DUE[')[-1].rstrip(']')
+
+
+def next_change():
+    """What the next start or end is, from the rows themselves ('' = none)."""
+    r = q("SELECT MIN(CASE WHEN status='scheduled' THEN starts_at ELSE ends_at END) m FROM {p}ews_approval_substitutes WHERE status IN ('scheduled','active')")
+    return (r[0]['m'] or '') if r else ''
+qs = hr_set(ids['mona'], ids['nour'], at(3), at(600), 'Later today')
+s4 = last_sub()
+check('HR sets one starting in a few minutes: scheduled, and pages remember its start as the next change', qs.get('sub_done') == 'saved' and s4.get('status') == 'scheduled' and due() == s4['starts_at'], (qs, s4, due()))
+emp.req('/app/')
+check('...a page load before then changes nothing', sub_row(int(s4['id']))['status'] == 'scheduled' and due() == s4['starts_at'])
+past = php("echo wp_date('Y-m-d H:i:s',time()-30);").splitlines()[-1]
+php("$wpdb->update($p.'ews_approval_substitutes',['starts_at'=>'%s'],['id'=>%d]); update_option('ews_substitutes_due_at','%s',true);" % (past, int(s4['id']), past))
+emp.req('/app/')
+check('...its time come, the next ordinary page load starts it, and remembers its end', sub_row(int(s4['id']))['status'] == 'active' and due() == s4['ends_at'], (sub_row(int(s4['id']))['status'], due()))
+check('...the substitute was told it started', any('You decide for Mona Adel' in n for n in notes(ids['nour_uid'])[-2:]), notes(ids['nour_uid'])[-2:])
+php("$wpdb->update($p.'ews_approval_substitutes',['ends_at'=>'%s'],['id'=>%d]); update_option('ews_substitutes_due_at','%s',true);" % (past, int(s4['id']), past))
+emp.req('/app/')
+check('...and its end: ended at the next page load; the next change remembered is the next one of the others', sub_row(int(s4['id']))['status'] == 'ended' and due() == next_change() and next_change() != past, (sub_row(int(s4['id']))['status'], due(), next_change()))
+gone = php("update_option('ews_substitutes_due_at','',true); $o=new EWS_Manager_V31_1(); $f=(new ReflectionClass($o))->getMethod('substitutes_due_now'); $f->setAccessible(true); $f->invoke($o); echo get_option('ews_substitutes_due_at',null)===null?'GONE':'KEPT';").strip()
+check('something a sync depends on changed (an employee saved, the switch): what was remembered is dropped', gone.endswith('GONE'), gone)
+emp.req('/app/')
+check('...so the next page load syncs and remembers again', due() == next_change())
+php("delete_option('ews_substitutes_due_at'); update_option('ews_substitutes_next_sync',time()+600,true);")
+emp.req('/app/')
+check('after the update, a page within the old minute does not sync (the old rule, until the first sync)', php("echo get_option('ews_substitutes_due_at',null)===null?'NONE':'SET';").strip().endswith('NONE'))
+php("update_option('ews_substitutes_next_sync',time()-1,true);")
+emp.req('/app/')
+check('...past it, a page syncs and remembers from then on', due() == next_change())
+
 php("""foreach(['ews_approval_substitutes','ews_leave_requests','ews_leave_balances','ews_approval_requests','ews_approval_steps','ews_employee_relationships'] as $t) $wpdb->query("DELETE FROM {$p}$t");
     $wpdb->query("UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0"); $wpdb->query("DELETE FROM {$p}ews_employees WHERE domain_name IN ('mona','big','nour','sami')");
-    foreach(['ews_feature_substitutes','ews_substitute_settings','ews_feature_my_approvals'] as $o) delete_option($o); update_option('ews_feature_overtime',0,false);""")
+    foreach(['ews_feature_substitutes','ews_substitute_settings','ews_feature_my_approvals','ews_substitutes_due_at','ews_substitutes_next_sync'] as $o) delete_option($o); update_option('ews_feature_overtime',0,false);""")
 print('%d / %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

@@ -602,6 +602,7 @@
         "substitute_leave_check",
         "substitute_leave_saved",
         "substitutes_sync_at_shutdown",
+        "substitutes_due_now",
         "substitute_settings",
         "substitute_app_data",
         "substitute_notice",

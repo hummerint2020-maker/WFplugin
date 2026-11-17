@@ -28,6 +28,8 @@ final class SubstituteServiceTest extends TestCase
     public $away = [];
     /** @var array<int,array<int,mixed>> */
     public $told = [];
+    /** @var string[] what the service remembered as the next change, in order (3.31.151) */
+    public $dueAt = [];
 
     protected function setUp(): void
     {
@@ -48,6 +50,7 @@ final class SubstituteServiceTest extends TestCase
             public function __construct($t) { $this->t = $t; }
             public function enabled(): bool { return $this->t->enabled; }
             public function settings(): array { return $this->t->settings; }
+            public function nextChangeAt(string $at): void { $this->t->dueAt[] = $at; }
         };
         $leave = new class($t) implements LeaveFacts {
             private $t;
@@ -209,5 +212,32 @@ final class SubstituteServiceTest extends TestCase
         });
         $this->assertSame([[2, 1]], $rows);
         $this->assertSame([], $this->service()->decidingFor(2, function () { return 1; }));
+    }
+
+    /** 3.31.151: each sync remembers when the next start or end is due, so the page loads in between check nothing. */
+    public function testASyncRemembersTheNextStartOrEnd(): void
+    {
+        $this->service()->sync(null);
+        $this->assertSame([''], $this->dueAt, 'no cover: nothing due');
+        $id = $this->cover('scheduled', '2026-11-02 08:00:00', '2026-11-05 18:00:00');
+        $this->cover('scheduled', '2026-11-01 08:00:00', '2026-11-01 18:00:00', ['manager_employee_id' => 3]);
+        $this->service()->sync(null);
+        $this->assertSame('2026-11-01 08:00:00', end($this->dueAt), 'the earliest start');
+        $this->subs->rows[$id]->starts_at = '2026-10-26 08:00:00';
+        $this->service()->sync(null);
+        $this->assertSame('2026-11-01 08:00:00', end($this->dueAt), 'started now: its end (11-05) is later than the other start');
+        $n = count($this->dueAt);
+        $this->service()->sync('2026-10-27 09:00:00');
+        $this->assertCount($n, $this->dueAt, 'a sync at a given time remembers nothing');
+        $this->enabled = false;
+        $this->service()->sync(null);
+        $this->assertCount($n, $this->dueAt, 'off: nothing');
+    }
+
+    public function testNextChangeIsTheEarliestTime(): void
+    {
+        $this->assertSame('', \WorkforceOne\Approvals\Substitutes::nextChange([]));
+        $this->assertSame('', \WorkforceOne\Approvals\Substitutes::nextChange(['', '']));
+        $this->assertSame('2026-01-02 09:00:00', \WorkforceOne\Approvals\Substitutes::nextChange(['2026-01-03 08:00:00', '', '2026-01-02 09:00:00']));
     }
 }

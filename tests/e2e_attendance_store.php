@@ -61,6 +61,12 @@ $check($S->liveDay(99, '2026-10-29') === [] && $S->liveDay(7, '2026-01-01') === 
 $check($S->typesOn(7, '2026-10-29') == (array) $db->get_col($db->prepare("SELECT event_type FROM {$tl} WHERE employee_id=%d AND work_date=%s" . $live, 7, '2026-10-29')) && $S->typesOn(7, '2026-10-28') === ['late_sign_in'], 'typesOn: the live event types');
 $io = $S->liveInOut(7, '2026-10-29');
 $check(count($io) === 2 && $io[0]->event_type === 'sign_in' && $io[1]->event_type === 'sign_out' && !property_exists($io[0], 'id'), 'liveInOut: event type and time only, oldest first');
+// 3.31.151: the auto-attendance tick's one read: what liveDay gives for each employee and day, for the three kinds
+$key = function ($rows) { $k = array_map(function ($r) { return (int) $r->employee_id . '|' . $r->work_date . '|' . $r->event_type; }, $rows); sort($k); return $k; };
+$exp = [];
+foreach ([7, 8, 99] as $emp) foreach (['2026-10-29', '2026-10-28'] as $day) foreach ($S->liveDay($emp, $day) as $r) if (in_array($r->event_type, ['sign_in', 'late_sign_in', 'sign_out'], true)) $exp[] = (object) ['employee_id' => $emp, 'work_date' => $day, 'event_type' => $r->event_type];
+$check($key($S->liveInOutOn(['2026-10-29', '2026-10-28'], [7, 8, 99])) === $key($exp) && count($exp) === 4, 'liveInOutOn: the live Sign In / Late Sign In / Sign Out of each employee and day, the corrected one hidden');
+$check($S->liveInOutOn([], [7]) === [] && $S->liveInOutOn(['2026-10-29'], []) === [] && $S->liveInOutOn(['2026-01-01'], [7]) === [], 'liveInOutOn: nothing asked, nothing found');
 
 // ---- the last device location: newest event with coordinates, raw strings, null when none
 $loc = $S->lastDeviceLocation(7);

@@ -55,5 +55,28 @@ r = json.loads(php(RUN).splitlines()[-1])
 check('once it works, it is marked done and the warning goes', r['v'] == first['version'] and r['f'] is False and php("echo $wpdb->get_var(\"SHOW TABLES LIKE '{$p}ews_signin_attempts'\");").strip().endswith('ews_signin_attempts'), r)
 check('...gone from the page too', 'data-schema-failed' not in adm.req('/wp-admin/admin.php?page=ews31-features')[1])
 
+# ---------------------------------------------------------------- one request per site runs the upgrade (3.31.151)
+import subprocess, time
+from e2e_support import WP, S
+LOCK = "global $wpdb; $n='wfo_'.substr(md5((defined('DB_NAME')?DB_NAME:'').'|'.$wpdb->prefix),0,12).'_schema';"
+env = {**os.environ, 'S': S}
+holder = subprocess.Popen(WP + ['eval', LOCK + " $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,0)',$n)); echo 'HELD'; sleep(8);"], stdout=subprocess.PIPE, text=True, env=env)
+time.sleep(3)
+r = json.loads(php("add_filter('ews_schema_lock_wait',function(){return 1;}); " + RUN).splitlines()[-1])
+check('while another request holds the upgrade, this one waits, then carries on: no upgrade, no failure, no retry', r['v'] in (False, None, '') and r['f'] is False and r['retry'] is False, r)
+holder.wait()
+r = json.loads(php(RUN).splitlines()[-1])
+check('...once it is free the next request upgrades', r['v'] == first['version'] and r['f'] is False, r)
+check('...and gives the lock back', php(LOCK + " echo 'FREE'.$wpdb->get_var($wpdb->prepare('SELECT IS_FREE_LOCK(%s)',$n));").strip().endswith('FREE1'))
+# Two requests at once on an old site: one upgrades, the other waits and finds it done; no false failure, the index there once.
+table, key, cols = PERF[1]
+php("$t=$p.'%s'; if($wpdb->get_var(\"SHOW INDEX FROM $t WHERE Key_name='%s'\"))$wpdb->query(\"ALTER TABLE $t DROP INDEX %s\"); delete_option('ews_schema_version'); delete_option('ews_schema_failed'); delete_transient('ews_schema_retry');" % (table, key, key))
+both = [subprocess.Popen(WP + ['eval', "new EWS_Manager_V31_1(); echo 'DONE';"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env) for _ in range(3)]
+outs = [p.communicate() for p in both]
+st = json.loads(php("echo wp_json_encode(['v'=>get_option('ews_schema_version'),'f'=>get_option('ews_schema_failed'),'retry'=>(bool)get_transient('ews_schema_retry')]);").splitlines()[-1])
+check('three requests at once: the version is set, nothing marked failed, no retry', st['v'] == first['version'] and st['f'] is False and st['retry'] is False, (st, [o[1][-300:] for o in outs]))
+check('...no database error in any of them', not any('Duplicate' in o[0] + o[1] or 'database error' in o[0] + o[1] for o in outs), [o[1][-300:] for o in outs])
+check('...and the index is there', index_cols(table, key) == [','.join(cols)], index_cols(table, key))
+
 print('%d / %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

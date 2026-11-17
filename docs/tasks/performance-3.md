@@ -269,3 +269,11 @@ No switch is recommended. All three changes are internal, have no UI, and each f
 4. **Auto-attendance quirks found, not changed.** A one-time rule that never completes (a Sign Out with no Sign In, or an overnight rule on a day off) stays "enabled" on the rules page forever after its day. Leave it, or fix it in a later release? Fixing it changes what the page shows.
 5. **Auto-attendance, day off.** The remaining per-tick read for a weekly rule on a day off (one query per rule per tick) could be batched later. Wanted?
 6. **Release shape.** One release, 3.31.151, for the three, or three small ones so each can be rolled back alone?
+
+## Owner's answers (2026-11-16)
+
+1. Substitutes timing: accepted (a start or end up to 59 seconds earlier, never later).
+2. Safety net: make it exact: saving an employee's WordPress user link or active flag deletes `ews_substitutes_due_at`, so the next page syncs.
+3. Schema wait: 10 seconds, accepted.
+4–5. Not asked now (later releases).
+6. One release, 3.31.151.
