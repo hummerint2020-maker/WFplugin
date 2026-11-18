@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
  */
 final class CardLists
 {
-    public const KINDS = ['people', 'present', 'late', 'absent', 'rate'];
+    public const KINDS = ['people', 'present', 'late', 'absent', 'rate', 'leave'];   // leave: with Leave type on (3.31.152)
     public const PER = 20;
     public const LOWEST = 10;
 
@@ -21,6 +21,12 @@ final class CardLists
     public static function accepts(string $kind, string $actual): bool
     {
         return isset(self::ACTUAL[$kind]) && self::ACTUAL[$kind] === $actual;
+    }
+
+    /** Whether a day belongs in the Leave days list (3.31.152): a Leave result that is not a company holiday, the days its card counts. */
+    public static function acceptsLeave(string $actual, bool $holiday): bool
+    {
+        return $actual === 'Leave' && !$holiday;
     }
 
     /**

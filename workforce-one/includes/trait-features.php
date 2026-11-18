@@ -35,6 +35,7 @@ trait EWS_Features_Trait {
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
                 'attendance_cards'=>$this->attendance_cards_enabled(),
+                'leave_type'=>$this->leave_type_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
                 'presence_verification'=>(bool)(int)$this->option('ews_presence_verification'),
                 'breaks'=>$this->break_enabled(),
@@ -57,6 +58,7 @@ trait EWS_Features_Trait {
             'offline_preview'=>add_query_arg('ews_pwa','offline',home_url('/')),
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
             'occasions'=>$this->occasion_admin_data(),
+            'att_page_cards'=>$this->attendance_page_cards(),
             'hr_letters'=>['s'=>$this->hr_letter_settings(),'hr_set'=>(int)($this->approval_settings()['hr_user']??0)>0,'page_url'=>admin_url('admin.php?page=ews31-hr-letters&tab=types'),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')],
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
             'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
@@ -121,6 +123,18 @@ trait EWS_Features_Trait {
         if(isset($post['my_approvals_present']))update_option('ews_feature_my_approvals',$flag('my_approvals_enabled')?1:0,false);
         // The Attendance page's cards open who and when (3.31.125).
         if(isset($post['attendance_cards_present']))update_option('ews_feature_attendance_cards',$flag('attendance_cards_enabled')?1:0,false);
+        // Leave type and the Attendance page's cards (3.31.152): written and audited only when they change, so a save that leaves them stores nothing.
+        if(isset($post['leave_type_present'])&&$this->leave_type_enabled()!==$flag('leave_type_enabled')){
+            update_option('ews_feature_leave_type',$flag('leave_type_enabled')?1:0,false);
+            $this->audit('leave_type_update','settings',0,$flag('leave_type_enabled')?'enabled':'disabled');
+        }
+        if(isset($post['att_page_cards_present'])){
+            $apc=\WorkforceOne\Settings\AttendancePageCards::fromPost((array)($post['att_page_cards']??[]));
+            if($apc!==$this->attendance_page_cards()){
+                if($apc['hidden'])update_option('ews_attendance_page_cards',$apc,false);else delete_option('ews_attendance_page_cards');
+                $this->audit('attendance_page_cards_update','settings',0,'hidden='.($apc['hidden']?implode(',',$apc['hidden']):'none'));
+            }
+        }
         if(isset($post['app_api_present']) && (bool)(int)$this->option('ews_feature_app_api')!==$flag('app_api_enabled'))update_option('ews_feature_app_api',$flag('app_api_enabled')?1:0,false);   // nothing is written while it stays off
         if(isset($post['app_api_present']) && $this->api_refresh_safe_enabled()!==$flag('api_refresh_safe'))update_option('ews_feature_api_refresh_safe',$flag('api_refresh_safe')?1:0,false);   // the refresh fix (3.31.114), same rule
         // Salary advances (3.31.109).

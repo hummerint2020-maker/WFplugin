@@ -66,6 +66,15 @@ trait EWS_Leave_Trait {
         }
 
     /**
+     * The type of each day of approved leave of these employees between $from and $to (3.31.152, the Attendance page's
+     * Leave type): employee id => Y-m-d => the type's name ('' when the type is gone). One read; [] when it fails.
+     * @param int[] $employee_ids @return array<int,array<string,string>>
+     */
+    private function leave_types_by_day(array $employee_ids,$from,$to){
+            return $this->services()->leaveDays()->typesByDay($employee_ids,(string)$from,(string)$to);
+        }
+
+    /**
      * The pending leave requests of these employees, newest first (the Smart Nudges cron, 3.31.148): one read for all of them, in the order the
      * one-person reminder reads them (requested_at DESC). @param int[] $employee_ids @return object[] id, employee_id, start_date, end_date, requested_days
      */

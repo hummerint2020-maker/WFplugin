@@ -16,10 +16,12 @@ final class GridRules
      * Badge of one day's result.
      * @param string $actual Insights::actual() result
      * @param string $time   Sign In time (Present / Late) or holiday name (Leave)
-     * @return array{class:string,label:string,detail:string}
+     * @param string|null $leaveType the approved leave's type (leaveType()); null: as before
+     * @return array{class:string,label:string,detail:string,type?:string}
      */
-    public static function badge(string $actual, string $time = ''): array
+    public static function badge(string $actual, string $time = '', ?string $leaveType = null): array
     {
+        if ($actual === 'Leave' && $leaveType !== null && $leaveType !== '') return ['class' => 'leave', 'label' => '▣ ' . $leaveType, 'detail' => $time, 'type' => $leaveType];
         switch ($actual) {
             case 'Present': return ['class' => 'present', 'label' => '✓ Present', 'detail' => $time];
             case 'Late': return ['class' => 'late', 'label' => '◷ Late', 'detail' => $time];
@@ -30,6 +32,40 @@ final class GridRules
         }
         // Insights::actual() returns the type name itself for business-trip types (Business Trip, Training Course…).
         return ['class' => 'trip', 'label' => '✈ ' . $actual, 'detail' => ''];
+    }
+
+    /**
+     * The type a Leave day shows (3.31.152, docs/tasks/leave-type-attendance.md §1): only a day of approved leave, that is a
+     * Leave result, not a company holiday (the holiday wins, owner decision 4), still planned Vacation (the status the
+     * approval writes; a day changed by hand shows "Leave", owner answer 6), with a type name. Otherwise null: as before.
+     */
+    public static function leaveType(string $actual, bool $holiday, string $planned, ?string $name): ?string
+    {
+        if ($actual !== 'Leave' || $holiday || $planned !== 'Vacation' || $name === null) return null;
+        $name = trim($name);
+        return $name === '' ? null : $name;
+    }
+
+    /**
+     * The Leave days card: the total and the line under it, most days first, then by name; the days without a type
+     * ("Other leave", owner answer 1) last.
+     * @param array<string,int> $byType type name => days
+     * @return array{total:int,split:list<array{0:string,1:int}>,other:int}
+     */
+    public static function leaveSummary(array $byType, int $other): array
+    {
+        $split = [];
+        foreach ($byType as $name => $n) if ((int) $n > 0) $split[] = [(string) $name, (int) $n];
+        usort($split, static function ($a, $b) { return [$b[1], $a[0]] <=> [$a[1], $b[0]]; });
+        return ['total' => array_sum(array_column($split, 1)) + max(0, $other), 'split' => $split, 'other' => max(0, $other)];
+    }
+
+    /** A type's short name for the card's line (owner answer 2): "Annual Leave" → "Annual", "إجازة مرضية" → "مرضية"; never empty. */
+    public static function shortType(string $name): string
+    {
+        $name = trim($name);
+        $short = trim((string) preg_replace(['/\s+leave$/iu', '/^إجازة\s+/u'], '', $name));
+        return $short !== '' ? $short : $name;
     }
 
     /**

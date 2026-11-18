@@ -35,6 +35,11 @@ final class AttendanceCardsTest extends TestCase
         $this->assertTrue(C::accepts('late', 'Late'));
         $this->assertTrue(C::accepts('absent', 'Absent'));
         foreach (['Pending', 'Leave', 'Not Scheduled', 'Business Trip'] as $other) foreach (['present', 'late', 'absent'] as $k) $this->assertFalse(C::accepts($k, $other));
+        // The Leave days list (3.31.152): the Leave days its card counts, without company holidays.
+        $this->assertTrue(C::acceptsLeave('Leave', false));
+        $this->assertFalse(C::acceptsLeave('Leave', true));
+        $this->assertFalse(C::acceptsLeave('Absent', false));
+        $this->assertFalse(C::accepts('leave', 'Leave'), 'the leave list has its own rule');
         $this->assertFalse(C::accepts('people', 'Present'));
         $this->assertFalse(C::accepts('rate', 'Present'));
     }

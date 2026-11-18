@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    var ICON = { people: 'people', present: 'check', late: 'overtime', absent: 'alert', rate: 'insights' };
+    var ICON = { people: 'people', present: 'check', late: 'overtime', absent: 'alert', rate: 'insights', leave: 'leave' };
 
     function init() {
         var dialog = document.getElementById('wfo-ac-sheet');
@@ -71,6 +71,7 @@
                 plan.appendChild(document.createTextNode(fmt(T.planned, r.plan || '—') + (r.branch ? ' · ' + r.branch : '')));
                 return [plan];
             }
+            if (state.kind === 'leave') return [pill('is-leave', r.type || T.leave)];   // the approved leave's type, or "Leave" (3.31.152)
             out.push(time(r['in'], r.next_day));
             if (r.out) { var sep = el('span', 'wfo-ac-sep', '→'); sep.setAttribute('aria-hidden', 'true'); out.push(sep); out.push(time(r.out, false)); }
             if (r.missing_out) out.push(pill('is-warn', T.no_out));

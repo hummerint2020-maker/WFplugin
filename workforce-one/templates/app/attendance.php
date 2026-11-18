@@ -41,6 +41,8 @@
  * @var array{locked:bool,since:string,override:bool,soon:string}|null $week_lock  Week lock (3.31.121); null when off
  * @var callable $week_lock_when     "Thu 8 Oct, 5:00 PM"
  * @var array<string,mixed>|null $cards  the cards' lists (3.31.125, attendance_cards_view()); null when off
+ * @var string[] $cards_shown  the cards to print, in order (3.31.152, AttendancePageCards::shown(); all five by default)
+ * @var array{total:int,split:list<array{0:string,1:int}>,other:int}|null $leave_card  the Leave days card (3.31.152); null when Leave type is off
  */
 if (!defined('ABSPATH')) exit;
 $om_counter = static function (string $d) use ($office_min): string {
@@ -49,6 +51,7 @@ $om_counter = static function (string $d) use ($office_min): string {
     if (!$day) return '<span class="wfo-om-day is-off" data-om-day="' . esc_attr($d) . '">' . esc_html__('No minimum', 'workforce-one') . '</span>';
     return '<span class="wfo-om-day ' . ($day['short'] > 0 ? 'is-short' : 'is-ok') . '" data-om-day="' . esc_attr($d) . '" data-om-base="' . (int) $day['office'] . '" data-om-min="' . (int) $day['min'] . '" title="' . esc_attr__('In the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('office', 13, 2.2) . '<b>' . (int) $day['office'] . '</b><span>/ ' . (int) $day['min'] . '</span></span>';
 };
+use WorkforceOne\Attendance\GridRules;
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; the helpers below escape their output.
 $badges = static function (object $e) use ($current_emp_id): string {
@@ -74,11 +77,24 @@ $result_icons = ['present' => 'check', 'late' => 'overtime', 'absent' => 'alert'
 $result_words = ['Present' => __('Present', 'workforce-one'), 'Late' => __('Late', 'workforce-one'), 'Absent' => __('Absent', 'workforce-one'), 'Leave' => __('Leave', 'workforce-one'),
     'Awaiting sign in' => __('Awaiting sign in', 'workforce-one'), 'Not scheduled' => __('Not scheduled', 'workforce-one')];
 $result = static function (array $badge, string $detail_sep) use ($result_icons, $result_words): string {
-    $word = trim((string) preg_replace('/^[^\p{L}\p{N}]+/u', '', $badge['label']));
-    $html = Icons::svg($result_icons[$badge['class']] ?? 'calendar', 13, 2.2) . '<span>' . esc_html($result_words[$word] ?? $word) . '</span>';
+    // An approved leave's type (3.31.152) is the administrator's text, shown as entered and never looked up.
+    if (isset($badge['type'])) $html = Icons::svg('leave', 13, 2.2) . '<span title="' . esc_attr($badge['type']) . '">' . esc_html($badge['type']) . '</span>';
+    else {
+        $word = trim((string) preg_replace('/^[^\p{L}\p{N}]+/u', '', $badge['label']));
+        $html = Icons::svg($result_icons[$badge['class']] ?? 'calendar', 13, 2.2) . '<span>' . esc_html($result_words[$word] ?? $word) . '</span>';
+    }
     if ($badge['detail'] !== '') $html .= $detail_sep === 'small' ? '<small>' . esc_html($badge['detail']) . '</small>' : ' · ' . esc_html($badge['detail']);
     return $html;
 };
+// The cards shown (3.31.152): the default (five, no Leave days) adds no class, so the page is as before.
+$stats_cls = (in_array('leave', $cards_shown, true) ? ' has-leave' : '') . (count($cards_shown) !== 5 ? ' is-' . count($cards_shown) : '');
+$leave_split = '';
+if ($leave_card) {
+    $parts = [];
+    foreach ($leave_card['split'] as [$lt_name, $lt_n]) $parts[] = GridRules::shortType($lt_name) . ' ' . (int) $lt_n;
+    if ($leave_card['other']) $parts[] = __('Other leave', 'workforce-one') . ' ' . (int) $leave_card['other'];
+    $leave_split = implode(' · ', $parts);
+}
 $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'workforce-one'), 'leave' => __('Leave', 'workforce-one'), 'trip' => __('Business Trip', 'workforce-one')];
 $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
 ?>
@@ -103,18 +119,28 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
         </div>
     </section>
 
-<?php if (!$cards): ?>
-    <div class="ews-att-summary wfo-att-stats">
-        <div class="ews-att-stat people"><span><?php echo Icons::svg('people', 20); ?></span><div><b><?php echo (int) $list['total']; ?></b><small><?php esc_html_e('Employees', 'workforce-one'); ?></small></div></div>
-        <div class="ews-att-stat present"><span><?php echo Icons::svg('check', 20, 2.4); ?></span><div><b><?php echo (int) $summary['Present']; ?></b><small><?php esc_html_e('Present days', 'workforce-one'); ?></small></div></div>
-        <div class="ews-att-stat late"><span><?php echo Icons::svg('overtime', 20); ?></span><div><b><?php echo (int) $summary['Late']; ?></b><small><?php esc_html_e('Late days', 'workforce-one'); ?></small></div></div>
-        <div class="ews-att-stat absent"><span><?php echo Icons::svg('alert', 20); ?></span><div><b><?php echo (int) $summary['Absent']; ?></b><small><?php esc_html_e('Absent days', 'workforce-one'); ?></small></div></div>
-        <div class="ews-att-stat rate"><span><?php echo Icons::svg('insights', 20); ?></span><div><b><?php echo (int) $rate; ?>%</b><small><?php esc_html_e('Attendance rate', 'workforce-one'); ?></small></div></div>
+<?php if (!$cards): /* each card on its own line, as before (3.31.152: the ones the administrator shows) */
+    $plain = [
+        'people' => '<div class="ews-att-stat people"><span>' . Icons::svg('people', 20) . '</span><div><b>' . (int) $list['total'] . '</b><small>' . esc_html__('Employees', 'workforce-one') . '</small></div></div>',
+        'present' => '<div class="ews-att-stat present"><span>' . Icons::svg('check', 20, 2.4) . '</span><div><b>' . (int) $summary['Present'] . '</b><small>' . esc_html__('Present days', 'workforce-one') . '</small></div></div>',
+        'late' => '<div class="ews-att-stat late"><span>' . Icons::svg('overtime', 20) . '</span><div><b>' . (int) $summary['Late'] . '</b><small>' . esc_html__('Late days', 'workforce-one') . '</small></div></div>',
+        'absent' => '<div class="ews-att-stat absent"><span>' . Icons::svg('alert', 20) . '</span><div><b>' . (int) $summary['Absent'] . '</b><small>' . esc_html__('Absent days', 'workforce-one') . '</small></div></div>',
+        'leave' => $leave_card ? '<div class="ews-att-stat leave"><span>' . Icons::svg('leave', 20) . '</span><div><b>' . (int) $leave_card['total'] . '</b><small>' . esc_html__('Leave days', 'workforce-one') . '</small>'
+            . ($leave_split !== '' ? '<small class="wfo-lt-split">' . esc_html($leave_split) . '</small>' : '') . '</div></div>' : '',
+        'rate' => '<div class="ews-att-stat rate"><span>' . Icons::svg('insights', 20) . '</span><div><b>' . (int) $rate . '%</b><small>' . esc_html__('Attendance rate', 'workforce-one') . '</small></div></div>',
+    ];
+    if ($cards_shown): ?>
+    <div class="ews-att-summary wfo-att-stats<?php echo esc_attr($stats_cls); ?>">
+<?php foreach ($cards_shown as $ck) echo '        ', $plain[$ck], "\n"; ?>
     </div>
+<?php endif; ?>
 <?php else: /* the cards open who and when (3.31.125, assets/js/attendance-cards.js) */
     $ac = [['people', 'people', 20, 2, (int) $list['total'], __('Employees', 'workforce-one')], ['present', 'check', 20, 2.4, (int) $summary['Present'], __('Present days', 'workforce-one')],
         ['late', 'overtime', 20, 2, (int) $summary['Late'], __('Late days', 'workforce-one')], ['absent', 'alert', 20, 2, (int) $summary['Absent'], __('Absent days', 'workforce-one')],
         ['rate', 'insights', 20, 2, (int) $rate, __('Attendance rate', 'workforce-one')]];
+    // 3.31.152: Leave days (opens its list, owner answer 3) and only the cards the administrator shows, in their order.
+    if ($leave_card) array_splice($ac, 4, 0, [['leave', 'leave', 20, 2, (int) $leave_card['total'], __('Leave days', 'workforce-one'), $leave_split]]);
+    $ac = array_values(array_filter($ac, static function ($c) use ($cards_shown) { return in_array($c[0], $cards_shown, true); }));
     $ac_text = [
         'title' => ['people' => __('Employees', 'workforce-one'), 'present' => __('Present days', 'workforce-one'), 'late' => __('Late days', 'workforce-one'), 'absent' => __('Absent days', 'workforce-one'), 'rate' => __('Attendance rate', 'workforce-one')],
         'sub' => ['people' => __('Each person and their week', 'workforce-one'), 'present' => __('Who signed in on time, with sign-in and sign-out', 'workforce-one'),
@@ -139,11 +165,18 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
         'of_days' => __('%1$d of %2$d days', 'workforce-one'),
         'loading' => __('Loading…', 'workforce-one'), 'error' => __('Could not load the list.', 'workforce-one'), 'retry' => __('Try again', 'workforce-one'),
         'expired' => __('This page has expired. Reload it.', 'workforce-one'), 'unavailable' => __('Not available.', 'workforce-one'),
-    ]; ?>
-    <div class="ews-att-summary wfo-att-stats">
-        <?php foreach ($ac as [$k, $ic, $sz, $st, $n, $label]): ?><button type="button" class="ews-att-stat <?php echo esc_attr($k); ?> wfo-ac-card" data-wfo-sheet="wfo-ac-sheet" data-ews-card="<?php echo esc_attr($k); ?>" aria-haspopup="dialog" aria-controls="wfo-ac-sheet" aria-expanded="false"><span><?php echo Icons::svg($ic, $sz, $st); ?></span><span class="wfo-ac-txt"><b data-ac-card-n><?php echo (int) $n; ?><?php echo $k === 'rate' ? '%' : ''; ?></b><small><?php echo esc_html($label); ?></small></span><i class="wfo-ac-card-go" aria-hidden="true"><?php echo Icons::svg('chevron', 16, 2.2); ?></i></button>
+    ];
+    if ($leave_card) {   // 3.31.152, only with Leave type on: off, the page is as before
+        $ac_text['title']['leave'] = __('Leave days', 'workforce-one');
+        $ac_text['sub']['leave'] = __('Who was on leave, which day, and which type', 'workforce-one');
+        $ac_text['note']['leave'] = __('Leave days with their type. Company holidays are left out; a day set to leave by hand shows "Leave".', 'workforce-one');
+        $ac_text['empty']['leave'] = __('No leave days this week.', 'workforce-one');
+    } ?>
+    <?php if ($ac): ?><div class="ews-att-summary wfo-att-stats<?php echo esc_attr($stats_cls); ?>">
+        <?php foreach ($ac as $acard): [$k, $ic, $sz, $st, $n, $label] = $acard; ?><button type="button" class="ews-att-stat <?php echo esc_attr($k); ?> wfo-ac-card" data-wfo-sheet="wfo-ac-sheet" data-ews-card="<?php echo esc_attr($k); ?>" aria-haspopup="dialog" aria-controls="wfo-ac-sheet" aria-expanded="false"><span><?php echo Icons::svg($ic, $sz, $st); ?></span><span class="wfo-ac-txt"><b data-ac-card-n><?php echo (int) $n; ?><?php echo $k === 'rate' ? '%' : ''; ?></b><small><?php echo esc_html($label); ?></small><?php if (($acard[6] ?? '') !== ''): ?><small class="wfo-lt-split"><?php echo esc_html($acard[6]); ?></small><?php endif; ?></span><i class="wfo-ac-card-go" aria-hidden="true"><?php echo Icons::svg('chevron', 16, 2.2); ?></i></button>
         <?php endforeach; ?>
     </div>
+<?php endif; ?>
     <dialog class="wfo-sheet wfo-ac-sheet" id="wfo-ac-sheet" aria-labelledby="wfo-ac-title" data-url="<?php echo esc_url($cards['url']); ?>" data-nonce="<?php echo esc_attr($cards['nonce']); ?>"
         data-params="<?php echo esc_attr((string) wp_json_encode($cards['params'])); ?>" data-days="<?php echo esc_attr((string) wp_json_encode($cards['days'])); ?>"
         data-profile="<?php echo esc_url($cards['profile_url']); ?>" data-reports="<?php echo esc_attr((string) wp_json_encode(array_map('esc_url_raw', $cards['reports_by']))); ?>" data-text="<?php echo esc_attr((string) wp_json_encode($ac_text)); ?>">
