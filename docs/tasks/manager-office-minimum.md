@@ -33,3 +33,11 @@ Everything works like the Office minimum (`docs/tasks/office-minimum.md`): a war
 2. **Does the managers' minimum need the Office minimum on,** as in the mockup (a sub-section)? Or is it its own feature that can be on alone?
 3. **A manager of two teams:** counted once (★).
 4. **The reminder:** the same one as the Office minimum (★), or a separate one only to managers.
+
+## Owner answers (2026-11-18)
+
+1. **Who counts as a manager:** the team managers (from Teams). ★
+2. **Where it lives:** inside the Office minimum, as a sub-section that needs the Office minimum on. It uses the same statuses and the same reminder. ★
+3. **The reminder:** the same weekly reminder as the Office minimum. ★
+
+Not asked; the recommended default applies: a manager of two teams counts once.
