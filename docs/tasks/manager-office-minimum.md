@@ -340,3 +340,18 @@ Optional: a browser check of the live managers counter (`tests/browser_smoke.js`
 8. Should only working-from-home managers be "Could come in" (as for people), or also "Not set"? (Recommended: WFH only, same as today.)
 9. Should the managers counter also appear on the phone card layout in the same place? (The mockup says yes; it is the same markup.)
 10. Should the Settings overview label in Options.php mention managers? It changes that page's HTML. (Recommended: no.)
+
+## Owner answers to the design's questions (2026-11-18)
+
+- **Q3, approval notes:** leave only for now (★). Swap notes, for people and managers, come later.
+- **Q4, the "Days below minimum" report:** a separate task, not in this release (★).
+- **Q2, a managers' minimum above the number of team managers:** warn only; saving still works (★).
+- **Q7, a team manager with attendance off:** not counted and not listed (★).
+
+The other questions take the recommended answers:
+- Q1: a weekday with a people minimum of 0 is not checked for managers either.
+- Q5: the banner uses the generic "only a warning" sub-line.
+- Q6: the reminder keeps its title.
+- Q8: only managers working from home show as "Could come in".
+- Q9: the same counter on the phone layout.
+- Q10: the Settings overview label is unchanged.
