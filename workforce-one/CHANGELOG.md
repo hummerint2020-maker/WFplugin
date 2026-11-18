@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.31.152
+### Leave type on the Attendance page, and the cards it shows (docs/tasks/leave-type-attendance.md, mockups docs/mockups/leave-type/)
+Owner request 2026-11-18. Off by default (Feature Configuration → Leave type on the Attendance page); off, the page is as before.
+- **The type of each leave day.** On the manager Attendance page, a day of approved leave shows its type (Annual Leave, Sick Leave, Casual Leave, or any type added in Leave Types) instead of "Leave", in the same colour. A company holiday, a day set to leave by hand, an approved day later changed by hand, and leave with no type still show "Leave". A renamed type shows its new name.
+- **Leave days card.** Counts the week's leave days without company holidays, with the types under it ("Annual 3 · Casual 1 · Sick 1 · Other leave 3"). With Attendance card details on, it opens its list: who was on leave, which day and which type, by day or by employee.
+- **The cards shown** (not behind the switch): the administrator chooses, for the whole company, which cards appear above the grid (Employees, Present days, Late days, Absent days, Leave days, Attendance rate). All shown by default; a hidden card is only taken off the page. Saving with every card ticked stores nothing.
+- One extra read on the Attendance page with Leave type on; none with it off.
+- Tests: unit tests for the rules and the card setting; a new e2e (tests/e2e_leave_type.py: real leave records, a cancellation, a holiday, hand-set and untyped days, renamed and deactivated types, the card, the list, the settings). Golden declares only the two Feature Configuration pages.
+
 ## 3.31.150
 ### System health: where a slow page's time goes (docs/tasks/health-db-split.md)
 Owner request 2026-11-15 (the Sign In / Out page: 1 in 20 loads near 3 s, with about 40 ms of queries on the screen). Rides on the System health switch: with it off nothing changes.
