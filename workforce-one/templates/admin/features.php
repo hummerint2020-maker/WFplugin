@@ -3,6 +3,7 @@
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
  * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, week_lock, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global, app_api, api_refresh_safe)
+ * @var list<string> $om_managers  the team managers the managers' minimum counts (3.31.153)
  * @var array{hidden:list<string>} $att_page_cards  the Attendance page cards hidden by the administrator (3.31.152)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
@@ -263,7 +264,22 @@ $occ_fields = ['card_title' => [__('Greeting card title', 'workforce-one'), 60],
     <tr><th scope="row"><?php esc_html_e('Reminder', 'workforce-one'); ?></th><td><label><input type="checkbox" name="om_reminder" value="1" <?php checked((int) $office_minimum['reminder'], 1); ?>> <?php esc_html_e('Every week, send schedule managers the days below the minimum next week', 'workforce-one'); ?></label><br>
         <label><?php esc_html_e('Reminder day', 'workforce-one'); ?> <select name="om_reminder_day"><?php foreach ($weekday_names as $w => $n): ?><option value="<?php echo (int) $w; ?>" <?php selected((int) $office_minimum['reminder_day'], (int) $w); ?>><?php echo esc_html($n); ?></option><?php endforeach; ?></select></label>
         <input type="time" name="om_reminder_time" value="<?php echo esc_attr($office_minimum['reminder_time']); ?>"></td></tr>
-</table></div></div>
+</table>
+<div class="wfo-mom-admin"><input type="hidden" name="om_mgr_present" value="1"><h3><?php esc_html_e('Managers in the office', 'workforce-one'); ?></h3>
+<p class="description"><?php esc_html_e('A minimum number of team managers in the office every working day too. Works only while the Office minimum is on.', 'workforce-one'); ?></p>
+<table class="form-table" role="presentation">
+    <tr><th scope="row"><?php esc_html_e('Turn on', 'workforce-one'); ?></th><td><label><input type="checkbox" name="om_mgr" value="1" <?php checked((int) $office_minimum['mgr'], 1); ?>> <?php esc_html_e('A minimum for managers too', 'workforce-one'); ?></label></td></tr>
+    <tr><th scope="row"><label for="ews-om-mgr-min"><?php esc_html_e('Managers each day', 'workforce-one'); ?></label></th><td><input id="ews-om-mgr-min" type="number" min="1" name="om_mgr_min" class="small-text" value="<?php echo (int) $office_minimum['mgr_min']; ?>"> <?php esc_html_e('managers in the office', 'workforce-one'); ?>
+        <p class="description"><?php esc_html_e('Managers also count in the minimum above.', 'workforce-one'); ?></p>
+        <?php if ((int) $office_minimum['mgr_min'] > count($om_managers)): ?><p class="description wfo-mom-warn"><?php echo esc_html(sprintf(/* translators: %d: number of team managers */ _n('Only %d team manager is counted: every working day will be below this number.', 'Only %d team managers are counted: every working day will be below this number.', count($om_managers), 'workforce-one'), count($om_managers))); ?></p><?php endif; ?></td></tr>
+    <tr><th scope="row"><?php esc_html_e('A different day (optional)', 'workforce-one'); ?></th><td><div class="wfo-om-wds">
+        <?php foreach ($working_days as $w): ?><label class="wfo-om-wd"><span><?php echo esc_html($weekday_names[$w] ?? (string) $w); ?></span><input type="number" min="0" name="om_mgr_days[<?php echo (int) $w; ?>]" class="small-text" placeholder="<?php echo (int) $office_minimum['mgr_min']; ?>" value="<?php echo isset($office_minimum['mgr_days'][$w]) ? (int) $office_minimum['mgr_days'][$w] : ''; ?>"></label><?php endforeach; ?>
+        </div><p class="description"><?php esc_html_e('Empty = the managers\' minimum. 0 = no managers\' minimum that day.', 'workforce-one'); ?></p></td></tr>
+    <tr><th scope="row"><?php esc_html_e('Who the managers are', 'workforce-one'); ?></th><td>
+        <?php if ($om_managers): ?><p><?php echo esc_html(sprintf(/* translators: 1: number of team managers, 2: their names */ __('The team managers (%1$d): %2$s', 'workforce-one'), count($om_managers), implode(is_rtl() ? '، ' : ', ', $om_managers))); ?></p>
+        <?php else: ?><p><?php esc_html_e('No team has a manager yet: set them on the Teams page.', 'workforce-one'); ?></p><?php endif; ?>
+        <p class="description"><?php esc_html_e('From the Teams page; a manager of two teams counts once, and people without attendance tracking are not counted. Uses the same "in the office" statuses and reminder as the minimum above.', 'workforce-one'); ?></p></td></tr>
+</table></div></div></div>
 
 <div class="wfo-feature-section" id="ews-week-lock"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Week lock', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('From a fixed time every week, next week\'s schedule is final and stays final: managers can no longer change it. Leave and swaps are still applied, and attendance is still fixed through corrections. Off by default.', 'workforce-one'); ?></div></div>

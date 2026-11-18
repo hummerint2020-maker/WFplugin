@@ -300,6 +300,7 @@
         "attendance_scope",
         "attendance_walk",
         "attendance_cards_enabled",
+        "om_admin_managers",
         "leave_type_enabled",
         "attendance_page_cards",
         "shift_prime_people",

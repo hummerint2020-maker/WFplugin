@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.31.153
+### Manager office minimum (docs/tasks/manager-office-minimum.md, mockups docs/mockups/manager-office-minimum/)
+Owner request 2026-11-18. A sub-section of the Office minimum (Feature Configuration → Office Minimum → Managers in the office), off by default and only working with the Office minimum on; off, every page is as before.
+- **A minimum of managers in the office every working day** (2 by default), with an optional number per weekday (0 = none that day). Managers are the team managers from the Teams page; a manager of two teams counts once, the manager of an inactive team and people without attendance tracking are not counted. They count in the people's minimum too. Same "in the office" statuses, working days, holidays and weekly reminder as the Office minimum. A warning only: saving is never blocked.
+- **Attendance page:** a second counter under each day ("managers in the office / minimum"), red when short, following unsaved changes; one card for the days below either minimum (people, managers or both) with a Teams and/or Managers button; the Managers sheet of a day: each manager's plan, those working from home marked "Could come in".
+- **Approving a manager's leave** (App → Leave) says what it does to the managers in the office that day, and who could come in.
+- **Weekly reminder:** the days short of managers are in the same reminder ("Mon 23 Nov 1 of 2 managers").
+- The managers' settings are stored only when used, so a site that does not use them saves what it saved before. No new table, option, hook or query.
+- Tests: unit tests (ManagerMinimum, the settings); a new e2e (tests/e2e_manager_office_minimum.py). Golden now also renders the Attendance page with the Office minimum on (twice) and the Leave page, unchanged; it declares only the two Feature Configuration pages.
+
+Not in this release (owner, 2026-11-18): notes when approving swaps; the "Days below minimum" report.
+
 ## 3.31.152
 ### Leave type on the Attendance page, and the cards it shows (docs/tasks/leave-type-attendance.md, mockups docs/mockups/leave-type/)
 Owner request 2026-11-18. Off by default (Feature Configuration → Leave type on the Attendance page); off, the page is as before.

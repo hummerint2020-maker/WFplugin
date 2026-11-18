@@ -144,6 +144,8 @@ final class FeatureSettings
             'om_team' => 'Office Minimum: a team\'s fixed number must be 0 or more. Nothing was saved.',
             'om_statuses' => 'Office Minimum: tick at least one status that counts as in the office. Nothing was saved.',
             'om_time' => 'Office Minimum: the reminder time is not valid. Nothing was saved.',
+            'om_mgr_min' => 'Office Minimum: enter a managers\' minimum of 1 or more. Nothing was saved.',
+            'om_mgr_day' => 'Office Minimum: a weekday\'s number of managers must be 0 or more. Nothing was saved.',
             'wl_day' => 'Week lock: choose the cutoff day. Nothing was saved.',
             'wl_time' => 'Week lock: the cutoff time is not valid. Nothing was saved.',
             'occ_bad_key' => 'Occasions: choose an occasion from the list. Nothing was saved.',

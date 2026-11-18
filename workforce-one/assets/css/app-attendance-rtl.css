@@ -438,3 +438,30 @@ a.wfo-ac-row:focus-visible{outline:2px solid var(--wfo-pri,#5B3FD9);outline-offs
 }
 .wfo-ac-sheet.is-leave .wfo-ac-ico{background:#F1EAFF;color:#5B34B5}
 .wfo-ac-pill.is-leave{display:inline-block;max-inline-size:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#F1EAFF;color:#5B34B5}
+
+/* Manager office minimum (3.31.153, docs/tasks/manager-office-minimum.md): the managers' counter next to the people's, the card's
+   parts and the Managers sheet. Only markup printed with it on matches. */
+.wfo-mom-day{display:inline-flex;align-items:center;justify-content:center;gap:4px;margin:4px auto 2px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:#E7EEFF;color:#1F4FB8;white-space:nowrap}
+.wfo-mom-day b{font-size:13px}
+.wfo-mom-day span{font-weight:600;opacity:.8}
+.wfo-mom-day.is-short{background:#FFE8EC;color:#A51D3E}
+.wfo-mom-day.is-changed{box-shadow:0 0 0 2px currentColor inset}
+.ews-day-quick .wfo-mom-day,.ews-att-table th .wfo-mom-day{display:flex;width:max-content}
+.ews-day-quick .wfo-mom-day{margin:4px 0 0}
+.ews-att-table th:has(.wfo-mom-day.is-short){background:#FFF5F7;box-shadow:inset 0 -3px 0 #E5486B}
+.wfo-mom-parts{display:flex;flex-wrap:wrap;gap:6px}
+.wfo-mom-what{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#FFE8EC;color:#A51D3E}
+.wfo-mom-btns{display:flex;gap:6px;margin-inline-start:auto;flex-wrap:wrap}
+.wfo-mom-btns .wfo-om-link{margin-inline-start:0}
+.wfo-om-link.is-mgr{background:#E7EEFF;color:#1F4FB8}
+.wfo-mom-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.wfo-mom-list li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#F7F8FC}
+.wfo-mom-list li.is-office{background:#EFFAF4}
+.wfo-mom-who{flex:1 1 auto;min-width:0}
+.wfo-mom-who b{display:block;font-size:13.5px;color:#13235B}
+.wfo-mom-who small{display:block;font-size:11.5px;color:#6A7090}
+.wfo-mom-plan{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#EEF0F5;color:#3B4466;white-space:nowrap}
+.wfo-mom-plan.is-office{background:#E6F7EF;color:#0F6B43}
+.wfo-mom-plan.is-wfh{background:#E7EEFF;color:#1F4FB8}
+.wfo-mom-can{font-size:11.5px;font-weight:700;color:#1F4FB8;white-space:nowrap}
+@media (max-width:700px){.wfo-mom-btns{margin-inline-start:0}}

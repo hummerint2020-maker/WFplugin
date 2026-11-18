@@ -13,13 +13,29 @@
         var cells = Array.prototype.slice.call(table.querySelectorAll('td[data-day]'));
         cells.forEach(function (td) { td.setAttribute('data-om-orig', td.getAttribute('data-planned') || ''); });
         function counts(v) { return statuses.indexOf(v) !== -1 ? 1 : 0; }
+        // Manager office minimum (3.31.153): the team managers' ids, only with it on; their cells also move the managers' counter.
+        var managers = JSON.parse(table.getAttribute('data-om-managers') || 'null');
+        var isManager = {};
+        (managers || []).forEach(function (id) { isManager[String(id)] = true; });
 
         function update() {
-            var delta = {};
+            var delta = {}, mdelta = {};
             cells.forEach(function (td) {
                 var d = dates[parseInt(td.getAttribute('data-day'), 10)];
                 if (!d) return;
-                delta[d] = (delta[d] || 0) + counts(td.getAttribute('data-planned') || '') - counts(td.getAttribute('data-om-orig'));
+                var change = counts(td.getAttribute('data-planned') || '') - counts(td.getAttribute('data-om-orig'));
+                delta[d] = (delta[d] || 0) + change;
+                if (managers && isManager[td.getAttribute('data-employee')]) mdelta[d] = (mdelta[d] || 0) + change;
+            });
+            if (managers) document.querySelectorAll('[data-mom-base]').forEach(function (el) {
+                var d = el.getAttribute('data-mom-day');
+                var n = parseInt(el.getAttribute('data-mom-base'), 10) + (mdelta[d] || 0);
+                var min = parseInt(el.getAttribute('data-mom-min'), 10);
+                var b = el.querySelector('b');
+                if (b) b.textContent = n;
+                el.classList.toggle('is-short', n < min);
+                el.classList.toggle('is-ok', n >= min);
+                el.classList.toggle('is-changed', !!mdelta[d]);
             });
             document.querySelectorAll('[data-om-base]').forEach(function (el) {
                 var d = el.getAttribute('data-om-day');
