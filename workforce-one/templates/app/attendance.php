@@ -42,7 +42,7 @@
  * @var callable $week_lock_when     "Thu 8 Oct, 5:00 PM"
  * @var array<string,mixed>|null $cards  the cards' lists (3.31.125, attendance_cards_view()); null when off
  * @var string[] $cards_shown  the cards to print, in order (3.31.152, AttendancePageCards::shown(); all five by default)
- * @var array{total:int,split:list<array{0:string,1:int}>,other:int}|null $leave_card  the Leave days card (3.31.152); null when Leave type is off
+ * @var array{total:int,split:list<array{0:string,1:int}>,other:int,line:string}|null $leave_card  the Leave days card (3.31.152); null when Leave type is off
  */
 if (!defined('ABSPATH')) exit;
 $om_counter = static function (string $d) use ($office_min): string {
@@ -51,7 +51,6 @@ $om_counter = static function (string $d) use ($office_min): string {
     if (!$day) return '<span class="wfo-om-day is-off" data-om-day="' . esc_attr($d) . '">' . esc_html__('No minimum', 'workforce-one') . '</span>';
     return '<span class="wfo-om-day ' . ($day['short'] > 0 ? 'is-short' : 'is-ok') . '" data-om-day="' . esc_attr($d) . '" data-om-base="' . (int) $day['office'] . '" data-om-min="' . (int) $day['min'] . '" title="' . esc_attr__('In the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('office', 13, 2.2) . '<b>' . (int) $day['office'] . '</b><span>/ ' . (int) $day['min'] . '</span></span>';
 };
-use WorkforceOne\Attendance\GridRules;
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; the helpers below escape their output.
 $badges = static function (object $e) use ($current_emp_id): string {
@@ -88,13 +87,7 @@ $result = static function (array $badge, string $detail_sep) use ($result_icons,
 };
 // The cards shown (3.31.152): the default (five, no Leave days) adds no class, so the page is as before.
 $stats_cls = (in_array('leave', $cards_shown, true) ? ' has-leave' : '') . (count($cards_shown) !== 5 ? ' is-' . count($cards_shown) : '');
-$leave_split = '';
-if ($leave_card) {
-    $parts = [];
-    foreach ($leave_card['split'] as [$lt_name, $lt_n]) $parts[] = GridRules::shortType($lt_name) . ' ' . (int) $lt_n;
-    if ($leave_card['other']) $parts[] = __('Other leave', 'workforce-one') . ' ' . (int) $leave_card['other'];
-    $leave_split = implode(' · ', $parts);
-}
+$leave_split = $leave_card ? (string) $leave_card['line'] : '';
 $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'workforce-one'), 'leave' => __('Leave', 'workforce-one'), 'trip' => __('Business Trip', 'workforce-one')];
 $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
 ?>
@@ -171,8 +164,9 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
         $ac_text['sub']['leave'] = __('Who was on leave, which day, and which type', 'workforce-one');
         $ac_text['note']['leave'] = __('Leave days with their type. Company holidays are left out; a day set to leave by hand shows "Leave".', 'workforce-one');
         $ac_text['empty']['leave'] = __('No leave days this week.', 'workforce-one');
-    } ?>
-    <?php if ($ac): ?><div class="ews-att-summary wfo-att-stats<?php echo esc_attr($stats_cls); ?>">
+    }
+    if ($ac): ?>
+    <div class="ews-att-summary wfo-att-stats<?php echo esc_attr($stats_cls); ?>">
         <?php foreach ($ac as $acard): [$k, $ic, $sz, $st, $n, $label] = $acard; ?><button type="button" class="ews-att-stat <?php echo esc_attr($k); ?> wfo-ac-card" data-wfo-sheet="wfo-ac-sheet" data-ews-card="<?php echo esc_attr($k); ?>" aria-haspopup="dialog" aria-controls="wfo-ac-sheet" aria-expanded="false"><span><?php echo Icons::svg($ic, $sz, $st); ?></span><span class="wfo-ac-txt"><b data-ac-card-n><?php echo (int) $n; ?><?php echo $k === 'rate' ? '%' : ''; ?></b><small><?php echo esc_html($label); ?></small><?php if (($acard[6] ?? '') !== ''): ?><small class="wfo-lt-split"><?php echo esc_html($acard[6]); ?></small><?php endif; ?></span><i class="wfo-ac-card-go" aria-hidden="true"><?php echo Icons::svg('chevron', 16, 2.2); ?></i></button>
         <?php endforeach; ?>
     </div>

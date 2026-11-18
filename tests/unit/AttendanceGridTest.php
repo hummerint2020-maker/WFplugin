@@ -52,7 +52,8 @@ final class AttendanceGridTest extends TestCase
     {
         $s = GridRules::leaveSummary(['Sick Leave' => 2, 'Annual Leave' => 5, 'Casual Leave' => 2, 'Unpaid' => 0], 1);
         $this->assertSame(10, $s['total']);
-        $this->assertSame([['Annual Leave', 5], ['Casual Leave', 2], ['Sick Leave', 2]], $s['split']);
+        $this->assertSame([['Annual', 5], ['Casual', 2], ['Sick', 2]], $s['split']);
+        $this->assertSame([['Annual', 5], ['Sick', 1]], GridRules::leaveSummary(['Annual' => 3, 'Sick Leave' => 1, 'Annual Leave' => 2], 0)['split'], 'the same short name is one entry');
         $this->assertSame(1, $s['other']);
         $this->assertSame(['total' => 0, 'split' => [], 'other' => 0], GridRules::leaveSummary([], 0));
     }

@@ -126,7 +126,7 @@ trait EWS_Features_Trait {
         // Leave type and the Attendance page's cards (3.31.152): written and audited only when they change, so a save that leaves them stores nothing.
         if(isset($post['leave_type_present'])&&$this->leave_type_enabled()!==$flag('leave_type_enabled')){
             update_option('ews_feature_leave_type',$flag('leave_type_enabled')?1:0,false);
-            $this->audit('leave_type_update','settings',0,$flag('leave_type_enabled')?'enabled':'disabled');
+            $this->audit('leave_type_feature_update','settings',0,$flag('leave_type_enabled')?'enabled':'disabled');
         }
         if(isset($post['att_page_cards_present'])){
             $apc=\WorkforceOne\Settings\AttendancePageCards::fromPost((array)($post['att_page_cards']??[]));

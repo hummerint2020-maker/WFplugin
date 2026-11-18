@@ -317,3 +317,19 @@ Mockup: `docs/mockups/leave-type/sheet.{en,ar}.html`. It is the same sheet as th
 - With it on, it gives the rows with types, leaves out the holiday, and its total equals the card.
 - Paging and order by employee work.
 - In the browser, the Leave card opens the sheet with the pills.
+
+## 11. Review (2026-11-18) and what was done
+
+Reviewer: read-only, on Opus. No money, permission, SQL or off-by-default defect was found. Byte identity of both card branches was traced by hand.
+
+1. **CONFIRMED, fixed.** The version was not bumped; scripts and styles would be served from the browser cache. It is now 3.31.152.
+2. **CONFIRMED, fixed.** The audit action `leave_type_update` already means "a leave type was edited". The switch is audited as `leave_type_feature_update`.
+3. **PLAUSIBLE, fixed.** With Leave type switched off while a page is open, the Leave days list answered `kind` (400), and the page offered "Try again" for ever. It now answers `off` (404), so the page says "Not available".
+4. **PLAUSIBLE, fixed.** The line under Leave days did not follow the list when a leave changed since the page was opened. The list now returns the line, and the card updates it with the number.
+5. **PLAUSIBLE, fixed.** Two types with the same short name ("Annual", "Annual Leave") are now one entry in the line.
+6. **CONFIRMED, fixed.** Four stray spaces were printed when every card is hidden with the card lists on.
+
+**Differences from the design, kept:**
+- The switch and the card setting each have their own audit, written only on change, instead of a `leave_type=` field in the `feature_update` line. That line is unchanged, so a save that changes nothing writes nothing new.
+- Six cards sit in one row only from 1,500 px wide. From 1,101 to 1,499 px they are two rows of three, because six with the open-list chevron broke words ("Employee s") at 1,300 px. The `has-leave` class is printed but has no rule of its own.
+- `badge()` with a type still returns its label, which the template does not use.

@@ -47,15 +47,17 @@ final class GridRules
     }
 
     /**
-     * The Leave days card: the total and the line under it, most days first, then by name; the days without a type
-     * ("Other leave", owner answer 1) last.
+     * The Leave days card: the total and the line under it by short name (shortType()), most days first, then by name; the
+     * days without a type ("Other leave", owner answer 1) last.
      * @param array<string,int> $byType type name => days
      * @return array{total:int,split:list<array{0:string,1:int}>,other:int}
      */
     public static function leaveSummary(array $byType, int $other): array
     {
         $split = [];
-        foreach ($byType as $name => $n) if ((int) $n > 0) $split[] = [(string) $name, (int) $n];
+        $short = [];   // two types with the same short name ("Annual", "Annual Leave") are one entry
+        foreach ($byType as $name => $n) if ((int) $n > 0) { $k = self::shortType((string) $name); $short[$k] = ($short[$k] ?? 0) + (int) $n; }
+        foreach ($short as $name => $n) $split[] = [(string) $name, $n];
         usort($split, static function ($a, $b) { return [$b[1], $a[0]] <=> [$a[1], $b[0]]; });
         return ['total' => array_sum(array_column($split, 1)) + max(0, $other), 'split' => $split, 'other' => max(0, $other)];
     }

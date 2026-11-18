@@ -168,6 +168,8 @@
             var n = state.opener && state.opener.querySelector('[data-ac-card-n]');
             var v = state.kind === 'rate' ? d.card + '%' : String(d.card);
             if (n && n.textContent !== v) n.textContent = v;
+            var line = state.kind === 'leave' && state.opener && state.opener.querySelector('.wfo-lt-split');   // the types under Leave days (3.31.152)
+            if (line && typeof d.line === 'string' && line.textContent !== d.line) line.textContent = d.line;
             q('[data-ac-count]').textContent = v;
         }
         function load(offset) {

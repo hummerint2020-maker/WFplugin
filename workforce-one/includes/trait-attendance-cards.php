@@ -70,7 +70,8 @@ trait EWS_Attendance_Cards_Trait {
         if(!is_user_logged_in()||!wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce']??'')),'ews_att_cards'))wp_send_json_error(['reason'=>'nonce'],403);
         if(!$this->can('ews_manage_attendance'))wp_send_json_error(['reason'=>'access'],403);
         $kind=sanitize_key($_GET['kind']??'');
-        if(!in_array($kind,CardLists::KINDS,true)||($kind==='leave'&&!$this->leave_type_enabled()))wp_send_json_error(['reason'=>'kind'],400);
+        if(!in_array($kind,CardLists::KINDS,true))wp_send_json_error(['reason'=>'kind'],400);
+        if($kind==='leave'&&!$this->leave_type_enabled())wp_send_json_error(['reason'=>'off'],404);   // switched off since the page was opened: "Not available", no retry
         $order=sanitize_key($_GET['order']??'day')==='employee'?'employee':'day';
         $offset=max(0,(int)($_GET['offset']??0));
         $sc=$this->attendance_scope(wp_unslash($_GET));
@@ -116,8 +117,10 @@ trait EWS_Attendance_Cards_Trait {
         $page=CardLists::page(CardLists::order($keys,$order),$offset);
         if($kind==='leave'){
             $rows=[];
+            $by=[];$other=0;
+            foreach($keys as $k){$t=$evs[$k['pos']][$k['date']]['type'];if($t!=='')$by[$t]=($by[$t]??0)+1;else $other++;}
             foreach($page['rows'] as $k)$rows[]=$this->att_cards_person($emps[$k['pos']])+['date'=>$k['date'],'type'=>$evs[$k['pos']][$k['date']]['type']];
-            wp_send_json_success($out+['card'=>count($keys),'total'=>$page['total'],'offset'=>$page['offset'],'next'=>$page['next'],'rows'=>$rows,'note'=>null]);
+            wp_send_json_success($out+['card'=>count($keys),'line'=>$this->attendance_leave_card($by,$other)['line'],'total'=>$page['total'],'offset'=>$page['offset'],'next'=>$page['next'],'rows'=>$rows,'note'=>null]);
         }
         $branch=null;
         if($kind==='absent'&&$this->branch_settings()['mode']==='schedule'&&count($this->branch_locations())>1){

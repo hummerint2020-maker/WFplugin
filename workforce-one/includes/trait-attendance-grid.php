@@ -20,6 +20,17 @@ trait EWS_Attendance_Grid_Trait {
     private function attendance_page_cards(){ return AttendancePageCards::config($this->option('ews_attendance_page_cards')); }
 
     /**
+     * The Leave days card (3.31.152): GridRules::leaveSummary() and its line ("Annual 3 · Sick 1 · Other leave 2"), for the page and its list.
+     * @param array<string,int> $by_type @return array{total:int,split:list<array{0:string,1:int}>,other:int,line:string}
+     */
+    private function attendance_leave_card(array $by_type,$other){
+        $s=GridRules::leaveSummary($by_type,(int)$other);$parts=[];
+        foreach($s['split'] as [$name,$n])$parts[]=$name.' '.(int)$n;
+        if($s['other'])$parts[]=__('Other leave','workforce-one').' '.(int)$s['other'];
+        return $s+['line'=>implode(' · ',$parts)];
+    }
+
+    /**
      * The type of each day of approved leave for these people and days (one read), only with Leave type on; [] when off.
      * @param object[] $emps @param string[] $dates @return array<int,array<string,string>>
      */
@@ -142,7 +153,7 @@ trait EWS_Attendance_Grid_Trait {
         return $this->render_template('app/attendance',[
             'cards'=>$cards,
             'cards_shown'=>AttendancePageCards::shown($this->attendance_page_cards(),$lt_on),
-            'leave_card'=>$lt_on?GridRules::leaveSummary($leave_by,$leave_other):null,
+            'leave_card'=>$lt_on?$this->attendance_leave_card($leave_by,$leave_other):null,
             'week_lock'=>$this->week_lock_view($dates[0]),'week_lock_when'=>function($at){return $this->week_lock_when($at);},
             'office_min'=>$office_min,'office_min_html'=>$office_min?$this->render_template('app/office-minimum',['om'=>$office_min]):'',
             'people'=>$people,
