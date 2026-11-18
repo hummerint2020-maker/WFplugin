@@ -276,3 +276,44 @@ Extend `tests/e2e_attendance_grid.py`. It already has `cell()`, `stat()` and a h
 6. **A day of approved leave that a manager later changed by hand to another leave status:**
    - ★ It shows "Leave", as a hand-set day (decision 4).
    - Or it still shows the approved leave's type.
+
+## 9. Owner answers (2026-11-18)
+
+1. Leave days counts days of leave per person without company holidays: approved leave by type, plus "Other leave N" for hand-set or old leave, so the line adds up to the number. (★ a)
+2. Short names ("Annual 5"), as recommended and as decided earlier.
+3. **Yes: Leave days opens a list** when the cards open lists (who was on leave, which day, which type). This changes the design; see section 10.
+4. The administrator may hide all six cards; the row of cards then disappears.
+5. The icon is the purple Leave already has in the grid.
+6. An approved day changed by hand to another leave status shows "Leave", as a hand-set day (decision 4).
+
+## 10. The Leave days list (owner answer 3, replaces "the Leave card does not open")
+
+Mockup: `docs/mockups/leave-type/sheet.{en,ar}.html`. It is the same sheet as the other cards (`docs/tasks/attendance-cards.md`).
+
+**When it exists:** only with both Attendance cards (`ews_feature_attendance_cards`) and Leave type (`ews_feature_leave_type`) on. With cards off, the Leave days card is the plain `div` from §4.
+
+**Card:** `button.ews-att-stat.leave.wfo-ac-card[data-ews-card=leave]`. It looks like the other card buttons, with the split line under the label.
+
+**Endpoint** `att_cards_data` with `kind=leave`:
+- Refused with `reason=kind` (400) unless Leave type is on. `CardLists::KINDS` gains `leave`.
+- One extra query: `leave_types_by_day()` for the matched ids and the week, made only for this kind.
+- A row is a day with `actual === 'Leave'` that is not a company holiday. These are the same days the card counts (§4).
+- Each row gives the person, `date` and `type`: the approved type's name, or `''` for a hand-set or untyped day.
+- Order: by day (grid order within a day) or by employee, the same segmented control as Late, Present and Absent. 20 per page.
+- `card` is the count, so the card follows the list as the others do.
+
+**Sheet:**
+- The icon is `leave`, in purple.
+- Title "Leave days". Subtitle "Who was on leave, which day, and which type".
+- Note: "Leave days with their type. Company holidays are left out; a day set to leave by hand shows "Leave"."
+- Each row has a purple pill with the type name, or "Leave" when the type is `''`.
+- There is no Open in Reports link, since the Reports have no leave-type view.
+- Empty: "No leave days this week."
+
+**Texts:** these keys are added to `data-text` only when Leave type is on, so the Attendance page with cards on and Leave type off stays byte-identical.
+
+**Tests** (`tests/e2e_attendance_cards.py`):
+- `kind=leave` is refused when Leave type is off.
+- With it on, it gives the rows with types, leaves out the holiday, and its total equals the card.
+- Paging and order by employee work.
+- In the browser, the Leave card opens the sheet with the pills.

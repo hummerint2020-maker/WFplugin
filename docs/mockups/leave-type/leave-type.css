@@ -1,5 +1,5 @@
 /* Leave type on the Attendance page (docs/tasks/leave-type-attendance.md): the Leave days card's breakdown. Logical properties: the -rtl copy is identical. */
-.ews-att-stat.leave span:first-child{background:var(--ews-leave-soft,#FFF3D6);color:var(--ews-leave,#B7791F)}
+.ews-att-stat.leave span:first-child{background:#F1EAFF;color:#5B34B5}
 .ews-att-stat .wfo-lt-split{display:block;margin-block-start:2px;font-size:11px;line-height:1.35;color:#5B6B84;font-weight:500;white-space:normal}
 .ews-att-result.leave span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-inline-size:110px;display:inline-block;vertical-align:bottom}
 /* Six cards in a row where there were five; the narrower layouts already wrap. */
@@ -7,3 +7,6 @@
 @media (min-width:1101px){.wfo-app .wfo-att .wfo-att-stats.has-leave.is-4{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .wfo-lt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,max-content));gap:10px 28px;margin-block:12px 4px;border:0;padding:0}
 .wfo-lt-card{display:flex;align-items:center;gap:6px}
+/* The Leave days list (with Attendance cards on): the type of each day, in Leave's purple. */
+.wfo-ac-sheet.is-leave .wfo-ac-ico{background:#F1EAFF;color:#5B34B5}
+.wfo-ac-pill.is-leave{background:#F1EAFF;color:#5B34B5;max-inline-size:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
