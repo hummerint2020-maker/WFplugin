@@ -101,6 +101,11 @@ check('a company holiday is skipped', logs(ids['vera']) == [], logs(ids['vera'])
 php("$wpdb->query(\"DELETE FROM {$p}ews_company_calendar\");")
 tick()
 check('a weekly rule signs in on its days', [l[1] for l in logs(ids['vera'])] == ['sign_in'], logs(ids['vera']))
+# 3.31.151: what is already recorded is read once a tick; a finished action takes no lock and no read of its own.
+n1 = int(php("$n=$wpdb->num_queries; do_action('ews_auto_attendance_tick'); echo 'Q'.($wpdb->num_queries-$n);").strip().split('Q')[-1])
+n2 = int(php("$n=$wpdb->num_queries; do_action('ews_auto_attendance_tick'); echo 'Q'.($wpdb->num_queries-$n);").strip().split('Q')[-1])
+check('ticks after the rules are done record nothing more', [l[1] for l in logs(ids['vera'])] == ['sign_in'] and len(logs(ids['emp'])) == 2, (logs(ids['vera']), logs(ids['emp'])))
+check('...and cost the same few queries each (%d, %d): no lock, schedule or day read per finished action' % (n1, n2), n1 == n2 and n1 <= 4, (n1, n2))
 
 # ---------------------------------------------------------------- overnight rule (22:00 → 00:01 next day)
 plan(ids['nina'], YESTERDAY)

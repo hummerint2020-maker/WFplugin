@@ -38,6 +38,20 @@ final class WordPressTimeLogStore implements TimeLogStore
         return (array) $this->db->get_results($this->db->prepare("SELECT * FROM {$this->t} WHERE employee_id=%d AND work_date=%s" . $this->live() . ' ORDER BY event_at ASC', $employeeId, $day));
     }
 
+    public function liveInOutOn(array $days, array $employeeIds): array
+    {
+        $days = array_values(array_unique(array_map('strval', $days)));
+        $ids = array_values(array_unique(array_filter(array_map('intval', $employeeIds))));
+        if (!$days || !$ids) return [];
+        $out = [];
+        $dph = implode(',', array_fill(0, count($days), '%s'));
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $iph = implode(',', array_fill(0, count($chunk), '%d'));
+            foreach ((array) $this->db->get_results($this->db->prepare("SELECT employee_id,work_date,event_type FROM {$this->t} WHERE employee_id IN ($iph) AND work_date IN ($dph) AND event_type IN ('sign_in','late_sign_in','sign_out')" . $this->live(), array_merge($chunk, $days))) as $r) $out[] = $r;
+        }
+        return $out;
+    }
+
     public function typesOn(int $employeeId, string $day): array
     {
         return (array) $this->db->get_col($this->db->prepare("SELECT event_type FROM {$this->t} WHERE employee_id=%d AND work_date=%s" . $this->live(), $employeeId, $day));

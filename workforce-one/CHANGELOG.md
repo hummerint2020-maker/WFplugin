@@ -8,6 +8,11 @@ Owner request 2026-11-18. Off by default (Feature Configuration → Leave type o
 - **The cards shown** (not behind the switch): the administrator chooses, for the whole company, which cards appear above the grid (Employees, Present days, Late days, Absent days, Leave days, Attendance rate). All shown by default; a hidden card is only taken off the page. Saving with every card ticked stores nothing.
 - One extra read on the Attendance page with Leave type on; none with it off.
 - Tests: unit tests for the rules and the card setting; a new e2e (tests/e2e_leave_type.py: real leave records, a cancellation, a holiday, hand-set and untyped days, renamed and deactivated types, the card, the list, the settings). Golden declares only the two Feature Configuration pages.
+## 3.31.151
+### Performance 3 (docs/tasks/performance-3.md): nothing visible changes
+- **The database update after a plugin update runs once.** Right after an update several requests could each start changing the tables at the same moment, and the one that lost showed a false red "the update did not finish" notice (and could add the Annual Leave type twice). Now one request per site does it; another waits up to 10 seconds, sees it done and carries on, or carries on as before if it is still running.
+- **Auto Attendance's five-minute run** reads what is already recorded once, for everyone with something due, instead of checking each finished Sign In and Sign Out again under its lock (about 4 queries each, every five minutes, all evening). Everything not yet recorded is decided exactly as before.
+- **Substitutes** (when switched on): pages no longer check every minute whether a substitute starts or ends. Each check remembers when the next start or end is due, and the first page after that time does it, up to a minute sooner than before. Saving an employee or the Substitutes settings makes the next page check again. In a rare race (a substitute added while another check is still running) the start waits for the next check of any kind, at the latest the hourly job.
 
 ## 3.31.150
 ### System health: where a slow page's time goes (docs/tasks/health-db-split.md)

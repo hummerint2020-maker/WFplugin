@@ -198,4 +198,68 @@ final class AutoAttendanceServiceTest extends TestCase
         $actions = array_map(function ($a) { return $a[0] . ' ' . $a[3]; }, $this->w->audits);
         $this->assertSame(['auto_attendance_rule_toggle Enabled=no', 'auto_attendance_rule_toggle Enabled=yes', 'auto_attendance_rule_delete Rule deleted'], $actions);
     }
+
+    /** 3.31.151: what is already recorded is read once a tick; a finished action takes no lock and reads nothing more. */
+    public function testAFinishedActionIsNotReadAgainOnTheNextTick(): void
+    {
+        $this->w->rules->add(7, 'weekly', null, '09:00', '17:00');
+        $this->svc()->tick(self::DAY, '2026-10-29', '17:30');
+        $this->assertSame(['sign_in', 'sign_out'], array_map(function ($r) { return $r->event_type; }, $this->w->logs->rows));
+        $this->w->logs->calls = [];
+        $this->w->log = [];
+        $this->svc()->tick(self::DAY, '2026-10-29', '17:35');
+        $this->assertCount(2, $this->w->logs->rows, 'nothing new');
+        $this->assertSame(['liveInOutOn 2026-10-30,2026-10-29 7'], $this->w->logs->calls, 'one read, no liveDay');
+        $this->assertSame([], $this->w->log, 'no lock taken');
+    }
+
+    public function testNothingDueReadsNothingMore(): void
+    {
+        $this->w->rules->add(7, 'weekly', null, '23:00', null);
+        $this->svc()->tick(self::DAY, '2026-10-29', '10:00');
+        $this->assertSame([], $this->w->logs->calls);
+    }
+
+    public function testASignInAndSignOutDueInOneLateTickAreBothRecorded(): void
+    {
+        $this->w->rules->add(7, 'weekly', null, '09:00', '17:00');
+        $this->svc()->tick(self::DAY, '2026-10-29', '23:55');
+        $this->assertSame(['sign_in', 'sign_out'], array_map(function ($r) { return $r->event_type; }, $this->w->logs->rows));
+    }
+
+    public function testALateSignInCountsAsSignedInAndASignOutWithNoSignInStillGoesTheOldWay(): void
+    {
+        $this->w->logs->add(1, 7, self::DAY, 'late_sign_in', self::DAY . ' 09:20:00');
+        $this->w->rules->add(7, 'weekly', null, '09:00', null);
+        $this->w->employee(8, 'NoIn', 80);
+        $this->w->days->add(8, self::DAY, 'Office');
+        $this->w->rules->add(8, 'weekly', null, null, '17:00');
+        $this->svc()->tick(self::DAY, '2026-10-29', '17:30');
+        $this->assertCount(1, $this->w->logs->rows, 'no Sign In for 7 (late), no Sign Out for 8 (no Sign In)');
+        $this->assertNotContains('lock 7 5', $this->w->log);
+        $this->assertContains('lock 8 5', $this->w->log, 'refused under the lock, as before');
+    }
+
+    public function testASupersededSignInIsRecordedAgain(): void
+    {
+        $this->w->logs->add(1, 7, self::DAY, 'sign_in', self::DAY . ' 09:00:00');
+        $this->w->logs->add(2, 7, self::DAY, 'sign_in', self::DAY . ' 09:30:00', ['corrects_id' => '1']);
+        $this->w->logs->add(3, 7, self::DAY, 'sign_out', self::DAY . ' 10:00:00', ['corrects_id' => '2']);
+        $this->w->rules->add(7, 'weekly', null, '09:00', null);
+        $this->w->log = [];
+        $this->svc()->tick(self::DAY, '2026-10-29', '10:30');
+        $this->assertContains('lock 7 5', $this->w->log, 'not live: decided under the lock, the way it always was');
+    }
+
+    public function testAnOvernightSignOutOfYesterdayIsSkippedWhenItIsThere(): void
+    {
+        $this->w->days->add(7, '2026-10-29', 'Office');
+        $this->w->logs->add(1, 7, '2026-10-29', 'sign_in', '2026-10-29 22:00:00');
+        $this->w->logs->add(2, 7, '2026-10-29', 'sign_out', self::DAY . ' 06:00:00');
+        $this->w->rules->add(7, 'weekly', null, '22:00', '06:00');
+        $this->w->log = [];
+        $this->svc()->tick(self::DAY, '2026-10-29', '07:00');
+        $this->assertCount(2, $this->w->logs->rows);
+        $this->assertNotContains('lock 7 5', $this->w->log);
+    }
 }

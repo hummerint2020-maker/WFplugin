@@ -95,26 +95,37 @@ final class SubstituteService implements SubstituteRouting
     {
         $done = ['started' => 0, 'ended' => 0, 'cancelled' => 0, 'moved' => 0];
         if (!$this->policy->enabled()) return $done;
-        $now = is_string($now) && $now !== '' ? $now : $this->clock->now();
+        $given = is_string($now) && $now !== '';
+        $now = $given ? $now : $this->clock->now();
+        $retry = gmdate('Y-m-d H:i:s', (int) strtotime($now . ' UTC') + 60);   // a change that did not go through is tried again in a minute, as before
+        $next = [];
         foreach ($this->substitutes->linkedToLeave() as $row) {
             $do = Substitutes::forLeave((string) $row->status, $this->leave->statusOf((int) $row->leave_request_id));
-            if ($do === 'schedule' && $this->substitutes->transition((int) $row->id, 'pending', ['status' => 'scheduled']) === 1) {
-                $row->status = 'scheduled';
-                $this->notifier->picked($row);
-            } elseif ($do === 'cancel' && $this->finish($row, 'cancelled', $now)) {
-                $done['cancelled']++;
+            if ($do === 'schedule') {
+                if ($this->substitutes->transition((int) $row->id, 'pending', ['status' => 'scheduled']) === 1) {
+                    $row->status = 'scheduled';
+                    $this->notifier->picked($row);
+                } else {
+                    $next[] = $retry;   // 3.31.151: not through: tried again in a minute, as before
+                }
+            } elseif ($do === 'cancel') {
+                if ($this->finish($row, 'cancelled', $now)) $done['cancelled']++; else $next[] = $retry;
             }
         }
         foreach ($this->substitutes->current() as $row) {
             $do = Substitutes::transition((string) $row->status, (string) $row->starts_at, (string) $row->ends_at, $now);
             if ($do === 'start') {
-                if ($this->begin($row, $now)) $done['started']++;
+                if ($this->begin($row, $now)) { $done['started']++; $next[] = (string) $row->ends_at; } else $next[] = $retry;
             } elseif ($do === 'end') {
-                if ($this->finish($row, 'ended', $now)) $done['ended']++;
+                if ($this->finish($row, 'ended', $now)) $done['ended']++; else $next[] = $retry;
             } elseif ($do === 'expire') {
-                $this->substitutes->transition((int) $row->id, 'scheduled', ['status' => 'ended', 'ended_at' => $now]);
+                if ($this->substitutes->transition((int) $row->id, 'scheduled', ['status' => 'ended', 'ended_at' => $now]) !== 1) $next[] = $retry;
+            } else {
+                $next[] = (string) ($row->status === 'scheduled' ? $row->starts_at : $row->ends_at);
             }
         }
+        // When the next start or end is due (3.31.151), so the page loads between two changes skip the check. Not for a sync at a given time.
+        if (!$given) $this->policy->nextChangeAt(Substitutes::nextChange($next));
         foreach ($this->substitutes->active() as $row) $done['moved'] += $this->takeWaiting($row);
         return $done;
     }

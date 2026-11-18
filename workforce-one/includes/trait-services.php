@@ -71,7 +71,8 @@ trait EWS_Services_Trait {
         };
         $reassign=function($employee,$from,$to,&$pending){return $this->approval_reassign_supervisor($employee,$from,$to,$pending);};
         $tell_manager=function($employee,$to,$pending){$this->approval_reassign_notify($employee,$to,$pending);};
-        $employee_changed=function($employee,$wp_user){$this->invalidate_employee_runtime_cache($employee,$wp_user);};
+        // An employee's account or status may make a waiting substitute able to take what waits (3.31.151): the next page load syncs.
+        $employee_changed=function($employee,$wp_user){$this->invalidate_employee_runtime_cache($employee,$wp_user);$this->substitutes_due_now();};
         $shift_add=function($employee,$shift,$date){return $this->shift_period_add($employee,$shift,$date,'',false);};
         $revoke_sessions=function($wp_user,$reason){$this->api_revoke_user_sessions($wp_user,$reason);};
         $site_has_user=function($wp_user){return $this->site_has_user($wp_user);};   // a network: only this site's users (3.31.147)
@@ -391,6 +392,7 @@ trait EWS_Services_Trait {
                 public function __construct(callable $call){ $this->call=$call; }
                 public function enabled(): bool { return (bool)($this->call)('substitutes_enabled'); }
                 public function settings(): array { return ($this->call)('substitute_settings'); }
+                public function nextChangeAt(string $at): void { update_option('ews_substitutes_due_at',$at,true); }
             },
             new class($call) implements LeaveFacts {
                 private $call;

@@ -54,6 +54,16 @@ final class MemoryTimeLogStore implements TimeLogStore
         return array_map(function ($r) { return $r->event_type; }, $this->live($employeeId, $day));
     }
 
+    public function liveInOutOn(array $days, array $employeeIds): array
+    {
+        $this->calls[] = 'liveInOutOn ' . implode(',', $days) . ' ' . implode(',', $employeeIds);
+        $out = [];
+        foreach ($employeeIds as $e) foreach ($days as $d) foreach ($this->live((int) $e, (string) $d) as $r) {
+            if (in_array($r->event_type, ['sign_in', 'late_sign_in', 'sign_out'], true)) $out[] = (object) ['employee_id' => (string) $e, 'work_date' => (string) $d, 'event_type' => $r->event_type];
+        }
+        return $out;
+    }
+
     public function liveInOut(int $employeeId, string $day): array
     {
         $this->calls[] = 'liveInOut ' . $employeeId . ' ' . $day;

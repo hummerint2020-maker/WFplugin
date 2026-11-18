@@ -96,6 +96,18 @@ final class Substitutes
         return '';
     }
 
+    /**
+     * The earliest of the times when something is due again (3.31.151): '' when nothing is. Times are local 'Y-m-d H:i:s' strings,
+     * compared as transition() compares them. @param string[] $times
+     */
+    public static function nextChange(array $times): string
+    {
+        $times = array_values(array_filter(array_map('strval', $times), function ($t) { return $t !== ''; }));
+        if (!$times) return '';
+        sort($times, SORT_STRING);
+        return $times[0];
+    }
+
     /** What a substitute linked to a leave becomes when that leave's status is $leave_status: 'schedule', 'cancel' or ''. */
     public static function forLeave(string $status, string $leave_status): string
     {
