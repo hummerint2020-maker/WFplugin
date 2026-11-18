@@ -1,0 +1,6 @@
+/* Leave type on the Attendance page (docs/tasks/leave-type-attendance.md): the Leave days card's breakdown. Logical properties: the -rtl copy is identical. */
+.ews-att-stat.leave span:first-child{background:var(--ews-leave-soft,#FFF3D6);color:var(--ews-leave,#B7791F)}
+.ews-att-stat .wfo-lt-split{display:block;margin-block-start:2px;font-size:11px;line-height:1.35;color:#5B6B84;font-weight:500;white-space:normal}
+.ews-att-result.leave span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-inline-size:110px;display:inline-block;vertical-align:bottom}
+/* Six cards in a row where there were five; the narrower layouts already wrap. */
+@media (min-width:1101px){.wfo-app .wfo-att .wfo-att-stats.has-leave{grid-template-columns:repeat(6,minmax(0,1fr))}}
