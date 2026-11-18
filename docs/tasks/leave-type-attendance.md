@@ -9,6 +9,7 @@ Owner request 2026-11-18: "بدل ما يظهر Leave بس يظهر نوع ال�
 3. **Colour:** the same as Leave today for every type; only the word changes.
 4. **Without an approved leave request:** as today. A day set by hand to a leave status in the schedule shows that status as now; a company holiday shows "Leave" with the holiday's name, as now.
 5. **Off by default** (project convention): a switch in Features. Off, the page is exactly as today.
+6. **Which cards are shown is a setting** (2026-11-18, "خلي ظهور الكروت بكونفيجريشن، خصوصاً employees and present days"): the administrator chooses, for the whole company, which cards appear above the Attendance grid (Employees, Present days, Late days, Absent days, Leave days, Attendance rate), on Feature Configuration. All shown by default, as today; Leave days only when the leave type is on. A hidden card is only taken off the page; the reports keep every number. This setting is not behind the leave-type switch.
 
 ## Where the type comes from (first reading of the code, to be confirmed by the design)
 
@@ -17,4 +18,4 @@ Owner request 2026-11-18: "بدل ما يظهر Leave بس يظهر نوع ال�
 
 ## Mockups
 
-`docs/mockups/leave-type/` (`on`, `off`; Arabic and English; `index.html`).
+`docs/mockups/leave-type/` (`on`, `hidden` (Employees and Present days hidden), `off`, `settings`; Arabic and English; `index.html`).

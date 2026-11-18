@@ -4,3 +4,6 @@
 .ews-att-result.leave span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-inline-size:110px;display:inline-block;vertical-align:bottom}
 /* Six cards in a row where there were five; the narrower layouts already wrap. */
 @media (min-width:1101px){.wfo-app .wfo-att .wfo-att-stats.has-leave{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (min-width:1101px){.wfo-app .wfo-att .wfo-att-stats.has-leave.is-4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.wfo-lt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,max-content));gap:10px 28px;margin-block:12px 4px;border:0;padding:0}
+.wfo-lt-card{display:flex;align-items:center;gap:6px}
