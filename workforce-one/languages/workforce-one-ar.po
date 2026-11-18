@@ -9105,3 +9105,9 @@ msgstr "الحد الأدنى في المكتب: اكتب حد أدنى للمد
 
 msgid "Office Minimum: a weekday's number of managers must be 0 or more. Nothing was saved."
 msgstr "الحد الأدنى في المكتب: عدد المديرين في يوم لازم يبقى 0 أو أكتر. متحفظش حاجة."
+
+msgid "In the office"
+msgstr "في المكتب"
+
+msgid "Not in the office"
+msgstr "مش في المكتب"

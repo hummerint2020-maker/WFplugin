@@ -44,7 +44,8 @@ $plan_icon = static function (string $kind, string $status): string {
         <?php foreach ($m['rows'] as $r): $cls = 'is-' . ($r['kind'] === 'office' ? 'office' : ($r['kind'] === 'wfh' ? 'wfh' : 'other')); ?>
             <li class="<?php echo esc_attr($cls); ?>"><span class="ews-att-avatar wfo-att-avatar tone-<?php echo (int) $r['id'] % 5; ?>" aria-hidden="true"><?php echo esc_html(\WorkforceOne\Employees\ProfileSummary::initials($r['name']) ?: '·'); ?></span>
                 <span class="wfo-mom-who"><b><?php echo esc_html($r['name']); ?></b><small><?php echo esc_html(sprintf(/* translators: %s: team names */ __('%s manager', 'workforce-one'), implode(is_rtl() ? '، ' : ', ', $om['mgr']['teams'][$r['id']] ?? []))); ?></small></span>
-                <span class="wfo-mom-plan <?php echo esc_attr($cls); ?>"><?php echo Icons::svg($plan_icon($r['kind'], $r['status']), 13, 2.2); ?><?php echo esc_html($r['status'] !== '' ? $r['status'] : __('Not Set', 'workforce-one')); ?></span>
+                <?php if (!empty($r['masked'])): /* outside the viewer's department: in or not in the office, never why */ ?><span class="wfo-mom-plan <?php echo esc_attr($cls); ?>"><?php echo Icons::svg($r['kind'] === 'office' ? 'office' : 'close', 13, 2.2); ?><?php echo $r['kind'] === 'office' ? esc_html__('In the office', 'workforce-one') : esc_html__('Not in the office', 'workforce-one'); ?></span>
+                <?php else: ?><span class="wfo-mom-plan <?php echo esc_attr($cls); ?>"><?php echo Icons::svg($plan_icon($r['kind'], $r['status']), 13, 2.2); ?><?php echo esc_html($r['status'] !== '' ? $r['status'] : __('Not Set', 'workforce-one')); ?></span><?php endif; ?>
                 <?php if ($r['kind'] === 'wfh'): ?><span class="wfo-mom-can"><?php esc_html_e('Could come in', 'workforce-one'); ?></span><?php endif; ?></li>
         <?php endforeach; ?>
         </ul><?php endif; ?>

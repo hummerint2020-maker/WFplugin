@@ -162,6 +162,18 @@ check('...1 manager below the minimum', '1 manager below the minimum' in thu)
 check('no Managers sheet for a day with enough managers', mgr_sheet(pg, DATES[2]) == '' and 'id="wfo-om-%s"' % DATES[2] in pg)
 check('the people\'s teams sheets are still there (Tuesday, Thursday)', 'id="wfo-om-%s"' % DATES[2] in pg and 'id="wfo-om-%s"' % DATES[4] in pg)
 
+# ---------------------------------------------------------------- a department-scoped editor (owner, 2026-11-18)
+out = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'om_mgr_for_viewer'); $m->setAccessible(true);
+$day=WorkforceOne\\Schedule\\ManagerMinimum::day(2,[1=>['kind'=>'office','status'=>'Office'],2=>['kind'=>'wfh','status'=>'WFH'],3=>['kind'=>'other','status'=>'Sick Leave'],4=>['kind'=>'wfh','status'=>'WFH']],[1=>'Out Office',2=>'Out Home',3=>'Out Sick',4=>'In Home']);
+echo wp_json_encode([$m->invoke($o,$day,[4=>true]),$m->invoke($o,$day,null)===$day]);""")
+v, same = json.loads(out.splitlines()[-1])
+rows = {r['name']: r for r in v['rows']}
+check('scoped viewer: managers outside the department show only in / not in the office, never why',
+      rows['Out Office']['kind'] == 'office' and rows['Out Home']['kind'] == 'other' and rows['Out Home']['status'] == '' and rows['Out Sick']['status'] == '' and rows['Out Sick'].get('masked')
+      and rows['In Home']['status'] == 'WFH' and not rows['In Home'].get('masked'), v['rows'])
+check('..."could come in" only for managers in the department; the counts unchanged; an administrator sees all', v['can'] == [4] and v['office'] == 1 and v['short'] == 1 and same, v)
+check('...the order does not tell who works from home', [r['name'] for r in v['rows']] == ['Out Office', 'In Home', 'Out Home', 'Out Sick'], [r['name'] for r in v['rows']])
+
 # ---------------------------------------------------------------- weekday number, 0 = none
 save_features({'office_minimum_enabled': '1', 'om_min': '5', 'om_mgr': '1', 'om_mgr_min': '2', 'om_mgr_days[1]': '0', 'om_mgr_days[4]': '1'})
 pg = att()

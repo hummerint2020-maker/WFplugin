@@ -106,6 +106,7 @@
         "people_department_manager",
         "people_has_reports",
         "people_department_member_ids",
+        "department_employee_ids",
         "team_member_ids",
         "team_ids_for_employee",
         "people_shift_id",

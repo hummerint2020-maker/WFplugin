@@ -12526,3 +12526,11 @@ msgstr ""
 #: templates/app/office-minimum-managers.php
 msgid "Office Minimum: a weekday's number of managers must be 0 or more. Nothing was saved."
 msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "In the office"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Not in the office"
+msgstr ""

@@ -119,6 +119,9 @@ trait EWS_Office_Minimum_Trait {
         wp_enqueue_script('workforce-one-office-minimum');
         $out=['days'=>$days,'short'=>$short,'statuses'=>$this->om_settings()['statuses'],'total'=>count($this->om_people()['people'])];
         if($this->om_mgr_on()){
+            $visible=$this->om_mgr_visible();
+            if($visible!==null)foreach($days as $d=>$day)if($day&&!empty($day['mgr']))$days[$d]['mgr']=$this->om_mgr_for_viewer($day['mgr'],$visible);
+            $out['days']=$days;
             $mshort=array_keys(array_filter($days,function($d){return $d && !empty($d['mgr']) && $d['mgr']['short']>0;}));
             $out['mgr']=['ids'=>array_keys($this->om_people()['managers']),'teams'=>$this->om_people()['managers'],'short'=>$mshort,
                 'any'=>array_values(array_filter(array_keys($days),function($d)use($short,$mshort){return in_array($d,$short,true)||in_array($d,$mshort,true);}))];
@@ -152,7 +155,7 @@ trait EWS_Office_Minimum_Trait {
             $m=function($days){return array_map(function($x){return $x['mgr']??null;},$days);};
             $md=ManagerMinimum::worstDrop($m($before),$m($after),$dates);
             if($md!==null){
-                $a=$after[$md]['mgr'];
+                $a=$this->om_mgr_for_viewer($after[$md]['mgr'],$this->om_mgr_visible());   // who could come in: only those the approver may see
                 $can=[];foreach($a['can'] as $id)$can[]=(string)($p['people'][$id]['name']??'');
                 $mgr=['date'=>$md,'office'=>$a['office'],'min'=>$a['min'],'can'=>$can];
             }
@@ -175,6 +178,34 @@ trait EWS_Office_Minimum_Trait {
         $out=[];
         foreach($p['sizes'] as $tid=>$n)$out[$tid]=['name'=>$p['teams'][$tid]??'','size'=>$n,'share'=>$auto[$tid]??0];
         return $out;
+    }
+
+    /**
+     * The managers whose plan the viewer may see (owner, 2026-11-18): those in the viewer's department scope; null = all
+     * (an administrator). The others show only "in the office" or "not in the office", never why.
+     * @return array<int,true>|null
+     */
+    private function om_mgr_visible(){
+        if(current_user_can('manage_options'))return null;
+        return array_fill_keys($this->department_employee_ids(),true);
+    }
+
+    /**
+     * A day's managers as the viewer may see them: outside their scope, the plan is only in / not in the office (no status, not
+     * "could come in"), in the same order as if they were away. @param array<string,mixed> $m ManagerMinimum::day() @return array<string,mixed>
+     */
+    private function om_mgr_for_viewer(array $m,$visible){
+        if($visible===null)return $m;
+        foreach($m['rows'] as &$r){
+            if(isset($visible[$r['id']]))continue;
+            $r['masked']=true;$r['status']='';
+            if($r['kind']!=='office')$r['kind']='other';
+        }
+        unset($r);
+        $order=['office'=>0,'wfh'=>1];
+        usort($m['rows'],function($a,$b)use($order){return [$order[$a['kind']]??2,$a['name'],$a['id']]<=>[$order[$b['kind']]??2,$b['name'],$b['id']];});
+        $m['can']=array_values(array_filter($m['can'],function($id)use($visible){return isset($visible[$id]);}));
+        return $m;
     }
 
     /** The team managers the managers' minimum counts, for Feature Configuration (3.31.153). @return list<string> names */

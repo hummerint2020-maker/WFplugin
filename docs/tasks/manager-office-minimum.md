@@ -376,6 +376,6 @@ The Arabic list of names in the leave note is now joined with "، ", as elsewher
 - The combined card drops the old "%d short" text when the managers' part is on.
 - No golden reminder action; the e2e covers the reminder.
 
-## Open question (from the review)
+## Owner answer to the review's question (2026-11-18)
 
-- Should a department-scoped editor see the plan (Office, WFH, Leave…) of managers outside their department on the Managers sheet, or only their name and whether they are in the office?
+A department-scoped editor sees the managers in their department in full. Managers outside it show only "In the office" or "Not in the office", never why. They are not listed as "could come in", including in the leave note, and their order does not tell who works from home. An administrator sees all. The counts are the same for everyone.
