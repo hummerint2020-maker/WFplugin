@@ -221,7 +221,9 @@ trait EWS_Features_Trait {
             update_option('ews_feature_office_minimum',$flag('office_minimum_enabled')?1:0,false);
             $om_after=\WorkforceOne\Settings\OfficeMinimumSettings::config($om);
             // The managers' part (3.31.153) is added to the line only when it is used or was used, so the line is as before otherwise.
-            $om_mgr=!empty($om_after['mgr'])||!empty($om_before['mgr'])?'; managers='.(!empty($om_after['mgr'])?'on':'off').' min='.(int)$om_after['mgr_min']:'';
+            $mk=['mgr'=>1,'mgr_min'=>1,'mgr_days'=>1];
+            $om_mgr=array_intersect_key($om_before,$mk)!==array_intersect_key($om_after,$mk)||!empty($om_after['mgr'])
+                ?'; managers='.(!empty($om_after['mgr'])?'on':'off').' min='.(int)$om_after['mgr_min'].($om_after['mgr_days']?' days='.implode(',',array_map(function($w,$n){return $w.':'.$n;},array_keys($om_after['mgr_days']),$om_after['mgr_days'])):''):'';
             if($om_before!==$om_after||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om['min'].'; statuses='.implode(',',$om['statuses']).'; reminder='.($om['reminder']?'on':'off').$om_mgr);
         }
         if($wl!==null){

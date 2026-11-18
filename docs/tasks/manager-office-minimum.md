@@ -355,3 +355,27 @@ The other questions take the recommended answers:
 - Q8: only managers working from home show as "Could come in".
 - Q9: the same counter on the phone layout.
 - Q10: the Settings overview label is unchanged.
+
+## Review (2026-11-18) and what was done
+
+Reviewer: read-only, on Opus.
+
+1. **CONFIRMED, fixed.** App → Leave printed 12 extra spaces in every pending row, even with the Office minimum off. The managers' note started on its own indented line. It now follows the people's note on the same line. Checked locally: a pending row rendered by the old and the new code is byte for byte the same. (Golden's Leave page has no pending row, so it could not see this.)
+2. **CONFIRMED, fixed.** The "Only %d team managers are counted" warning showed while the managers' part was off. It now shows only with the managers' part on.
+3. **CONFIRMED, fixed.** The audit line now has the managers' part whenever it changed, including the weekday numbers, or while it is on.
+4. **CONFIRMED, fixed.** With the managers' part off, a bad weekday number keeps the saved numbers, as the minimum does, instead of refusing the whole save.
+5. **PLAUSIBLE, for the owner.** The Managers sheet lists every team manager in the company with their plan, while a department-scoped editor sees only their department's grid. The existing teams sheet names only the people working from home. This is an open question below; the code shows all managers until the owner decides.
+6. **PLAUSIBLE, noted.** Going back to an older version keeps working; the first Feature Configuration save there drops the managers' settings. This is in the CHANGELOG.
+
+The Arabic list of names in the leave note is now joined with "، ", as elsewhere.
+
+**Differences from the design, kept:**
+- Plan kinds are office / wfh / other.
+- The leave note is a second box with its own day, as in the mockup.
+- The teams dialogs moved to `office-minimum-teams.php`, and the managers-on card is its own template. The output is the same bytes with managers off.
+- The combined card drops the old "%d short" text when the managers' part is on.
+- No golden reminder action; the e2e covers the reminder.
+
+## Open question (from the review)
+
+- Should a department-scoped editor see the plan (Office, WFH, Leave…) of managers outside their department on the Managers sheet, or only their name and whether they are in the office?

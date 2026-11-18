@@ -11,6 +11,7 @@ Owner request 2026-11-18. A sub-section of the Office minimum (Feature Configura
 - Tests: unit tests (ManagerMinimum, the settings); a new e2e (tests/e2e_manager_office_minimum.py). Golden now also renders the Attendance page with the Office minimum on (twice) and the Leave page, unchanged; it declares only the two Feature Configuration pages.
 
 Not in this release (owner, 2026-11-18): notes when approving swaps; the "Days below minimum" report.
+Going back to an older version: the managers' settings are ignored there, and the first Feature Configuration save on it drops them.
 
 ## 3.31.152
 ### Leave type on the Attendance page, and the cards it shows (docs/tasks/leave-type-attendance.md, mockups docs/mockups/leave-type/)

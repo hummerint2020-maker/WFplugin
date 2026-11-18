@@ -112,7 +112,11 @@ final class OfficeMinimumSettings
         foreach ((array) ($post['om_mgr_days'] ?? []) as $w => $n) {
             $n = trim((string) $n);
             if ($n === '') continue;
-            if (!is_numeric($w) || (int) $w < 0 || (int) $w > 6 || !ctype_digit($n) || (int) $n > 100000) return [[], 'mgr_day'];
+            if (!is_numeric($w) || (int) $w < 0 || (int) $w > 6 || !ctype_digit($n) || (int) $n > 100000) {
+                if ($on) return [[], 'mgr_day'];
+                $days = self::config($saved)['mgr_days'];   // switched off: bad numbers keep the saved ones, as the minimum does
+                break;
+            }
             $days[(int) $w] = (int) $n;
         }
         $out = [];
