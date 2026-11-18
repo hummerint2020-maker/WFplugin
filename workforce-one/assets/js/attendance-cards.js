@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    var ICON = { people: 'people', present: 'check', late: 'overtime', absent: 'alert', rate: 'insights' };
+    var ICON = { people: 'people', present: 'check', late: 'overtime', absent: 'alert', rate: 'insights', leave: 'leave' };
 
     function init() {
         var dialog = document.getElementById('wfo-ac-sheet');
@@ -71,6 +71,7 @@
                 plan.appendChild(document.createTextNode(fmt(T.planned, r.plan || '—') + (r.branch ? ' · ' + r.branch : '')));
                 return [plan];
             }
+            if (state.kind === 'leave') return [pill('is-leave', r.type || T.leave)];   // the approved leave's type, or "Leave" (3.31.152)
             out.push(time(r['in'], r.next_day));
             if (r.out) { var sep = el('span', 'wfo-ac-sep', '→'); sep.setAttribute('aria-hidden', 'true'); out.push(sep); out.push(time(r.out, false)); }
             if (r.missing_out) out.push(pill('is-warn', T.no_out));
@@ -167,6 +168,8 @@
             var n = state.opener && state.opener.querySelector('[data-ac-card-n]');
             var v = state.kind === 'rate' ? d.card + '%' : String(d.card);
             if (n && n.textContent !== v) n.textContent = v;
+            var line = state.kind === 'leave' && state.opener && state.opener.querySelector('.wfo-lt-split');   // the types under Leave days (3.31.152)
+            if (line && typeof d.line === 'string' && line.textContent !== d.line) line.textContent = d.line;
             q('[data-ac-count]').textContent = v;
         }
         function load(offset) {

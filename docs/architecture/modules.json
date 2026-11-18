@@ -300,6 +300,8 @@
         "attendance_scope",
         "attendance_walk",
         "attendance_cards_enabled",
+        "leave_type_enabled",
+        "attendance_page_cards",
         "shift_prime_people",
         "schedule_table_name"
       ],
@@ -526,6 +528,7 @@
       ],
       "api": [
         "leave_approval_card",
+        "leave_types_by_day",
         "leave_my_requests",
         "leave_withdraw",
         "duration_label",

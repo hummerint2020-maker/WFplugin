@@ -8962,3 +8962,36 @@ msgstr "يُقسَّم وقت التحميلات ذات تفاصيل الاست�
 
 msgid "The export could not be completed. Please try again."
 msgstr "تعذّر إكمال التصدير. يُرجى المحاولة مرة أخرى."
+
+msgid "Leave days"
+msgstr "أيام الإجازة"
+
+msgid "Other leave"
+msgstr "إجازات أخرى"
+
+msgid "Who was on leave, which day, and which type"
+msgstr "مين كان في إجازة، وإمتى، ونوعها إيه"
+
+msgid "Leave days with their type. Company holidays are left out; a day set to leave by hand shows \"Leave\"."
+msgstr "أيام الإجازة بنوعها. العطلات الرسمية مش محسوبة؛ اليوم اللي اتحط إجازة باليد بيظهر «إجازة»."
+
+msgid "No leave days this week."
+msgstr "مفيش أيام إجازة الأسبوع ده."
+
+msgid "Leave type on the Attendance page"
+msgstr "نوع الإجازة في صفحة الحضور"
+
+msgid "A day of approved leave shows its type (Annual, Sick, Casual, or any type in Leave Types) instead of \"Leave\", with a Leave days card. A day set to leave by hand and a company holiday show as before. Off by default."
+msgstr "يوم الإجازة المتوافق عليها يظهر بنوعها (اعتيادية، مرضية، عارضة، أو أي نوع في أنواع الإجازات) بدل «إجازة»، ومعاها كارت «أيام الإجازة». اليوم اللي اتحط إجازة باليد والعطلة الرسمية بيظهروا زي الأول. مقفولة افتراضيًا."
+
+msgid "Attendance page cards"
+msgstr "كروت صفحة الحضور"
+
+msgid "The cards shown above the Attendance grid, for every manager."
+msgstr "الكروت اللي تظهر فوق جدول الحضور لكل المديرين."
+
+msgid "(with Leave type)"
+msgstr "(مع نوع الإجازة)"
+
+msgid "All shown by default, as today. A hidden card is only taken off the page; the numbers stay in the reports."
+msgstr "كلها ظاهرة افتراضيًا، زي دلوقتي. الكارت المخفي بيتشال من الصفحة بس، والأرقام زي ما هي في التقارير."

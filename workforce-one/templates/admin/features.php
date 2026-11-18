@@ -3,6 +3,7 @@
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
  * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, week_lock, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global, app_api, api_refresh_safe)
+ * @var array{hidden:list<string>} $att_page_cards  the Attendance page cards hidden by the administrator (3.31.152)
  * @var array{per_day:int,duration:int,escalation:int} $breaks
  * @var array{max:int,monthly:int} $early_leave
  * @var array<string,int|float> $face           face tuning values
@@ -65,6 +66,8 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="office_minimum_present" value="1">
 <input type="hidden" name="week_lock_present" value="1">
 <input type="hidden" name="attendance_cards_present" value="1">
+<input type="hidden" name="leave_type_present" value="1">
+<input type="hidden" name="att_page_cards_present" value="1">
 <input type="hidden" name="evidence_present" value="1">
 <input type="hidden" name="offline_present" value="1">
 <input type="hidden" name="org_present" value="1">
@@ -89,6 +92,23 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <div><div class="wfo-feature-title"><?php esc_html_e('Attendance card details', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('On the Attendance page, each card (Employees, Present, Late, Absent, Attendance rate) opens a list with the person, the day and the time: sign-in and sign-out, the minutes late against the person\'s shift, or where an absent person was planned. It shows the same people the manager sees on the page, with the page\'s own filters. Off by default.', 'workforce-one'); ?></div></div>
     <?php $switch('attendance_cards_enabled', $on['attendance_cards']); ?>
 </div></div>
+
+<div class="wfo-feature-section" id="ews-leave-type"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Leave type on the Attendance page', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('A day of approved leave shows its type (Annual, Sick, Casual, or any type in Leave Types) instead of "Leave", with a Leave days card. A day set to leave by hand and a company holiday show as before. Off by default.', 'workforce-one'); ?></div></div>
+    <?php $switch('leave_type_enabled', $on['leave_type']); ?>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-attendance-page-cards"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Attendance page cards', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('The cards shown above the Attendance grid, for every manager.', 'workforce-one'); ?></div></div>
+</div>
+    <fieldset class="wfo-lt-cards"><legend class="screen-reader-text"><?php esc_html_e('Attendance page cards', 'workforce-one'); ?></legend>
+    <?php foreach (['people' => __('Employees', 'workforce-one'), 'present' => __('Present days', 'workforce-one'), 'late' => __('Late days', 'workforce-one'), 'absent' => __('Absent days', 'workforce-one'),
+        'leave' => __('Leave days', 'workforce-one'), 'rate' => __('Attendance rate', 'workforce-one')] as $apc_key => $apc_label): ?>
+        <label class="wfo-lt-card"><input type="checkbox" name="att_page_cards[]" value="<?php echo esc_attr($apc_key); ?>" <?php checked(!in_array($apc_key, $att_page_cards['hidden'], true)); ?>> <?php echo esc_html($apc_label); ?><?php if ($apc_key === 'leave'): ?> <span class="description"><?php esc_html_e('(with Leave type)', 'workforce-one'); ?></span><?php endif; ?></label>
+    <?php endforeach; ?>
+    </fieldset>
+    <p class="description"><?php esc_html_e('All shown by default, as today. A hidden card is only taken off the page; the numbers stay in the reports.', 'workforce-one'); ?></p>
+</div>
 
 <div class="wfo-feature-section" id="ews-my-approvals"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">My approvals and My requests</div><div class="wfo-feature-desc">One inbox in the app for every request waiting for a person's decision (leave, overtime, corrections, swaps, face reset), with its level, how long it has waited and the path, and approving several at once. Each employee also gets My requests, to follow their requests level by level and withdraw one still waiting. The approval lists inside each page stay. Who decides, the reason to reject and when a request is overdue: <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-approvals')); ?>">Approval Workflows</a>.</div></div>

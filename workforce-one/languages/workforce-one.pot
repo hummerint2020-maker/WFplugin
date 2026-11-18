@@ -12357,3 +12357,47 @@ msgstr ""
 #: templates/admin/system-health.php
 msgid "Only loads with query detail are split. Outside services are calls to other servers (for example push notifications). A load counts as longer than the limit by the limit in force when it was measured."
 msgstr ""
+
+#: templates/app/attendance.php
+msgid "Leave days"
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "Other leave"
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "Who was on leave, which day, and which type"
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "Leave days with their type. Company holidays are left out; a day set to leave by hand shows \"Leave\"."
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "No leave days this week."
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "Leave type on the Attendance page"
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "A day of approved leave shows its type (Annual, Sick, Casual, or any type in Leave Types) instead of \"Leave\", with a Leave days card. A day set to leave by hand and a company holiday show as before. Off by default."
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "Attendance page cards"
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "The cards shown above the Attendance grid, for every manager."
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "(with Leave type)"
+msgstr ""
+
+#: templates/app/attendance.php
+msgid "All shown by default, as today. A hidden card is only taken off the page; the numbers stay in the reports."
+msgstr ""

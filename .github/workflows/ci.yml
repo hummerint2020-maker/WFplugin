@@ -163,6 +163,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_grid.py "$S"
       - name: Attendance cards you can open behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_attendance_cards.py "$S"
+      - name: Leave type and the cards shown on the Attendance page behaviour tests
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_type.py "$S"
       - name: Speed (the same queries for 8 people as for 78)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_speed.py "$S"
       - name: Attendance Insights (employee app)

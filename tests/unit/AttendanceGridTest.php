@@ -29,4 +29,42 @@ final class AttendanceGridTest extends TestCase
         $this->assertStringNotContainsString('someone else', $m['text']);
         $this->assertSame('Imported 3 row(s); rejected 0.', GridRules::message(['imported' => '3'])['text']);
     }
+
+    public function testLeaveTypeOnlyOnAnApprovedLeaveDay(): void
+    {
+        $this->assertSame('Sick Leave', GridRules::leaveType('Leave', false, 'Vacation', '  Sick Leave '));
+        $this->assertNull(GridRules::leaveType('Leave', true, 'Vacation', 'Sick Leave'), 'a company holiday wins');
+        $this->assertNull(GridRules::leaveType('Leave', false, 'Sick Leave', 'Sick Leave'), 'a day changed by hand shows Leave');
+        $this->assertNull(GridRules::leaveType('Present', false, 'Vacation', 'Sick Leave'));
+        $this->assertNull(GridRules::leaveType('Leave', false, 'Vacation', '   '));
+        $this->assertNull(GridRules::leaveType('Leave', false, 'Vacation', null));
+    }
+
+    public function testATypedBadgeAndTheUntypedOneAsBefore(): void
+    {
+        $this->assertSame(['class' => 'leave', 'label' => '▣ Casual Leave', 'detail' => '', 'type' => 'Casual Leave'], GridRules::badge('Leave', '', 'Casual Leave'));
+        $this->assertSame(GridRules::badge('Leave', 'National Day'), GridRules::badge('Leave', 'National Day', null));
+        $this->assertSame(['class' => 'leave', 'label' => '▣ Leave', 'detail' => ''], GridRules::badge('Leave', '', ''));
+        $this->assertSame(GridRules::badge('Present', '08:00'), GridRules::badge('Present', '08:00', 'Sick Leave'), 'a type only on a Leave day');
+    }
+
+    public function testLeaveSummaryMostDaysFirstAndOtherLast(): void
+    {
+        $s = GridRules::leaveSummary(['Sick Leave' => 2, 'Annual Leave' => 5, 'Casual Leave' => 2, 'Unpaid' => 0], 1);
+        $this->assertSame(10, $s['total']);
+        $this->assertSame([['Annual', 5], ['Casual', 2], ['Sick', 2]], $s['split']);
+        $this->assertSame([['Annual', 5], ['Sick', 1]], GridRules::leaveSummary(['Annual' => 3, 'Sick Leave' => 1, 'Annual Leave' => 2], 0)['split'], 'the same short name is one entry');
+        $this->assertSame(1, $s['other']);
+        $this->assertSame(['total' => 0, 'split' => [], 'other' => 0], GridRules::leaveSummary([], 0));
+    }
+
+    public function testShortTypeNeverEmpty(): void
+    {
+        $this->assertSame('Annual', GridRules::shortType('Annual Leave'));
+        $this->assertSame('Sick', GridRules::shortType('Sick leave'));
+        $this->assertSame('مرضية', GridRules::shortType('إجازة مرضية'));
+        $this->assertSame('Leave', GridRules::shortType('Leave'));
+        $this->assertSame('إجازة', GridRules::shortType('إجازة'));
+        $this->assertSame('Maternity', GridRules::shortType('Maternity'));
+    }
 }

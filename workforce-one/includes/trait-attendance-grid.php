@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Attendance\GridRules;
 use WorkforceOne\Attendance\Insights;
+use WorkforceOne\Settings\AttendancePageCards;
 
 /**
  * The manager Attendance grid in the employee app (?ews_view=attendance): plan the week's schedule
@@ -11,6 +12,32 @@ use WorkforceOne\Attendance\Insights;
  * View: templates/app/attendance.php; script: assets/js/attendance-grid.js. Behaviour: tests/e2e_attendance_grid.py.
  */
 trait EWS_Attendance_Grid_Trait {
+
+    /** Leave type on the Attendance page (3.31.152, docs/tasks/leave-type-attendance.md): off by default. */
+    private function leave_type_enabled(){ return (bool)$this->option('ews_feature_leave_type'); }
+
+    /** The cards the administrator shows above the Attendance grid (3.31.152): all by default. @return array{hidden:list<string>} */
+    private function attendance_page_cards(){ return AttendancePageCards::config($this->option('ews_attendance_page_cards')); }
+
+    /**
+     * The Leave days card (3.31.152): GridRules::leaveSummary() and its line ("Annual 3 · Sick 1 · Other leave 2"), for the page and its list.
+     * @param array<string,int> $by_type @return array{total:int,split:list<array{0:string,1:int}>,other:int,line:string}
+     */
+    private function attendance_leave_card(array $by_type,$other){
+        $s=GridRules::leaveSummary($by_type,(int)$other);$parts=[];
+        foreach($s['split'] as [$name,$n])$parts[]=$name.' '.(int)$n;
+        if($s['other'])$parts[]=__('Other leave','workforce-one').' '.(int)$s['other'];
+        return $s+['line'=>implode(' · ',$parts)];
+    }
+
+    /**
+     * The type of each day of approved leave for these people and days (one read), only with Leave type on; [] when off.
+     * @param object[] $emps @param string[] $dates @return array<int,array<string,string>>
+     */
+    private function attendance_leave_types(array $emps,array $dates){
+        if(!$this->leave_type_enabled()||!$emps||!$dates)return [];
+        return $this->leave_types_by_day(array_map(function($e){return (int)$e->id;},$emps),$dates[0],$dates[count($dates)-1]);
+    }
 
     /**
      * Who and which days the page (and its cards' lists, 3.31.125) show: the people in the viewer's scope with attendance on,
@@ -76,12 +103,19 @@ trait EWS_Attendance_Grid_Trait {
         $summary=array_fill_keys(GridRules::SUMMARY,0);
         $day_summary=[];$days=[];
         foreach($dates as $d)$day_summary[$d]=['recorded'=>0,'absent'=>0];
-        $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day)use(&$summary,&$day_summary,&$days,$on_page,$holidays){
+        // Leave type (3.31.152): off, no read and the badges as before.
+        $lt_on=$this->leave_type_enabled();$lt=$this->attendance_leave_types($emps,$dates);$leave_by=[];$leave_other=0;
+        $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day)use(&$summary,&$day_summary,&$days,$on_page,$holidays,$lt_on,$lt,&$leave_by,&$leave_other){
             $eid=(int)$e->id;
             if(isset($summary[$day['actual']]))$summary[$day['actual']]++;
             if(in_array($day['actual'],['Present','Late'],true))$day_summary[$d]['recorded']++;
             if($day['actual']==='Absent')$day_summary[$d]['absent']++;
-            if(isset($on_page[$eid]))$days[$eid][$d]=['planned'=>$planned,'actual'=>$day['actual'],'badge'=>GridRules::badge($day['actual'],isset($holidays[$d])?(string)$holidays[$d]:$day['time'])];
+            $type=null;
+            if($lt_on&&$day['actual']==='Leave'&&!isset($holidays[$d])){
+                $type=GridRules::leaveType($day['actual'],false,(string)$planned,$lt[$eid][$d]??null);
+                if($type!==null)$leave_by[$type]=($leave_by[$type]??0)+1;else $leave_other++;
+            }
+            if(isset($on_page[$eid]))$days[$eid][$d]=['planned'=>$planned,'actual'=>$day['actual'],'badge'=>GridRules::badge($day['actual'],isset($holidays[$d])?(string)$holidays[$d]:$day['time'],$type)];
         });
         $emps=$list['rows'];
         $team_options=[];
@@ -118,6 +152,8 @@ trait EWS_Attendance_Grid_Trait {
         }
         return $this->render_template('app/attendance',[
             'cards'=>$cards,
+            'cards_shown'=>AttendancePageCards::shown($this->attendance_page_cards(),$lt_on),
+            'leave_card'=>$lt_on?$this->attendance_leave_card($leave_by,$leave_other):null,
             'week_lock'=>$this->week_lock_view($dates[0]),'week_lock_when'=>function($at){return $this->week_lock_when($at);},
             'office_min'=>$office_min,'office_min_html'=>$office_min?$this->render_template('app/office-minimum',['om'=>$office_min]):'',
             'people'=>$people,

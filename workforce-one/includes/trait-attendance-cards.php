@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 use WorkforceOne\Attendance\CardLists;
+use WorkforceOne\Attendance\GridRules;
 use WorkforceOne\Attendance\Insights;
 use WorkforceOne\Attendance\Lateness;
 
@@ -70,6 +71,7 @@ trait EWS_Attendance_Cards_Trait {
         if(!$this->can('ews_manage_attendance'))wp_send_json_error(['reason'=>'access'],403);
         $kind=sanitize_key($_GET['kind']??'');
         if(!in_array($kind,CardLists::KINDS,true))wp_send_json_error(['reason'=>'kind'],400);
+        if($kind==='leave'&&!$this->leave_type_enabled())wp_send_json_error(['reason'=>'off'],404);   // switched off since the page was opened: "Not available", no retry
         $order=sanitize_key($_GET['order']??'day')==='employee'?'employee':'day';
         $offset=max(0,(int)($_GET['offset']??0));
         $sc=$this->attendance_scope(wp_unslash($_GET));
@@ -77,10 +79,18 @@ trait EWS_Attendance_Cards_Trait {
         // Shift times by day for everyone at once (late minutes, the end of today's shift): attendance_walk() primes them.
         $keys=[];$evs=[];$weeks=[];$day_counts=[];$card=['Present'=>0,'Late'=>0,'Absent'=>0];
         foreach($dates as $d)$day_counts[$d]=['present'=>0,'late'=>0,'absent'=>0];
-        $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day,$ev)use($kind,&$keys,&$evs,&$weeks,&$day_counts,&$card,$holidays){
+        // The Leave days list (3.31.152): the type of each day, one read for everyone, only for this list.
+        $lt=$kind==='leave'?$this->attendance_leave_types($emps,$dates):[];
+        $this->attendance_walk($emps,$dates,$today,$holidays,function($pos,$e,$d,$planned,$day,$ev)use($kind,&$keys,&$evs,&$weeks,&$day_counts,&$card,$holidays,$lt){
             $a=$day['actual'];$eid=(int)$e->id;
             if(isset($card[$a])){$card[$a]++;$day_counts[$d][strtolower($a)]++;}
             if($kind==='people'||$kind==='rate'){$weeks[$eid]=CardLists::count($weeks[$eid]??CardLists::emptyWeek()+['pos'=>$pos],$a,isset($holidays[$d]));return;}
+            if($kind==='leave'){
+                if(!CardLists::acceptsLeave($a,isset($holidays[$d])))return;
+                $keys[]=['pos'=>$pos,'date'=>$d,'sort'=>0];
+                $evs[$pos][$d]=['type'=>(string)GridRules::leaveType($a,false,(string)$planned,$lt[$eid][$d]??null)];
+                return;
+            }
             if(!CardLists::accepts($kind,$a))return;
             $in=$ev['sign_in']??null;
             $sort=0;
@@ -105,6 +115,13 @@ trait EWS_Attendance_Cards_Trait {
             wp_send_json_success($out+['card'=>count($emps),'total'=>$page['total'],'offset'=>$page['offset'],'next'=>$page['next']]);
         }
         $page=CardLists::page(CardLists::order($keys,$order),$offset);
+        if($kind==='leave'){
+            $rows=[];
+            $by=[];$other=0;
+            foreach($keys as $k){$t=$evs[$k['pos']][$k['date']]['type'];if($t!=='')$by[$t]=($by[$t]??0)+1;else $other++;}
+            foreach($page['rows'] as $k)$rows[]=$this->att_cards_person($emps[$k['pos']])+['date'=>$k['date'],'type'=>$evs[$k['pos']][$k['date']]['type']];
+            wp_send_json_success($out+['card'=>count($keys),'line'=>$this->attendance_leave_card($by,$other)['line'],'total'=>$page['total'],'offset'=>$page['offset'],'next'=>$page['next'],'rows'=>$rows,'note'=>null]);
+        }
         $branch=null;
         if($kind==='absent'&&$this->branch_settings()['mode']==='schedule'&&count($this->branch_locations())>1){
             $ids=array_map(function($k)use($emps){return (int)$emps[$k['pos']]->id;},$page['rows']);

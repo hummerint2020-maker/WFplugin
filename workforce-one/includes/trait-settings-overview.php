@@ -182,6 +182,7 @@ trait EWS_Settings_Overview_Trait {
                 'ews_dw_settings'=>[\WorkforceOne\Settings\DailyWorkerSettings::class,'config'],
                 'ews_office_minimum'=>[\WorkforceOne\Settings\OfficeMinimumSettings::class,'config'],
                 'ews_week_lock'=>[\WorkforceOne\Settings\WeekLockSettings::class,'config'],
+                'ews_attendance_page_cards'=>[\WorkforceOne\Settings\AttendancePageCards::class,'config'],
                 'ews_advance_settings'=>[\WorkforceOne\Payroll\Advances::class,'settings'],
                 'ews_substitute_settings'=>[\WorkforceOne\Approvals\Substitutes::class,'settings'],
                 'ews_health_settings'=>[\WorkforceOne\Health\Settings::class,'settings'],

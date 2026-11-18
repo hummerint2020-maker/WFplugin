@@ -68,6 +68,8 @@ use WorkforceOne\Schedule\ScheduleDayService;
 use WorkforceOne\Schedule\ScheduleNotifier;
 use WorkforceOne\Schedule\WeekLockService;
 use WorkforceOne\HrLetters\Data\LetterQuery;
+use WorkforceOne\Leave\Data\LeaveDayQuery;
+use WorkforceOne\Leave\Data\WordPressLeaveDayQuery;
 use WorkforceOne\HrLetters\Data\LetterSchema;
 use WorkforceOne\HrLetters\Data\LetterStore;
 use WorkforceOne\HrLetters\Data\WordPressLetterQuery;
@@ -324,6 +326,13 @@ final class Services
     public function letterQuery(): LetterQuery
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterQuery($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The type of each day of approved leave (3.31.152, the Attendance page's Leave type). */
+    public function leaveDays(): LeaveDayQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLeaveDayQuery($this->db);
         return $this->made[__FUNCTION__];
     }
 
