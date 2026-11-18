@@ -64,9 +64,24 @@ final class AutoAttendanceService
     /** The five-minute cron: record what each enabled rule has due (AutoRules::due). */
     public function tick(string $today, string $yesterday, string $nowHm): void
     {
-        foreach ($this->rules->dueRules($today, $yesterday) as $rule) {
+        $rules = $this->rules->dueRules($today, $yesterday);
+        $due = [];
+        foreach ($rules as $i => $rule) $due[$i] = AutoRules::due((array) $rule, $today, $yesterday, $nowHm);
+        // What is already recorded, read once for every employee with something due (3.31.151): an action whose event is there would only
+        // read the schedule and the day again under the lock and stop without writing (already signed in / out). Anything else goes
+        // the way it always went, and is decided there, under the lock, on a fresh read.
+        $have = [];
+        $ids = [];
+        foreach ($rules as $i => $rule) if ($due[$i]) $ids[] = (int) $rule->employee_id;
+        if ($ids) {
+            foreach ($this->logs->liveInOutOn([$today, $yesterday], $ids) as $r) {
+                $have[(int) $r->employee_id . '|' . $r->work_date . '|' . ($r->event_type === 'sign_out' ? 'out' : 'in')] = true;
+            }
+        }
+        foreach ($rules as $i => $rule) {
             $eid = (int) $rule->employee_id;
-            foreach (AutoRules::due((array) $rule, $today, $yesterday, $nowHm) as $a) {
+            foreach ($due[$i] as $a) {
+                if (isset($have[$eid . '|' . $a['work_date'] . '|' . ($a['type'] === 'sign_out' ? 'out' : 'in')])) continue;
                 $sch = $this->workingDay($eid, $a['work_date']);
                 if ($sch) $this->event($eid, $a['work_date'], $a['type'], $a['time'], $sch, (int) $rule->id, $a['event_date']);
             }

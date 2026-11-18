@@ -353,6 +353,20 @@ private function ensure_break_schema(){
             if($done===$target)return;
             // A failed update is tried again after 10 minutes, not on every request (3.31.92).
             if(get_transient('ews_schema_retry'))return;
+            // One request per site runs the upgrade (3.31.151): right after an update several requests arrive together, and
+            // two running the same ALTERs at once fail each other (a false "failed" notice, a duplicate Annual Leave type).
+            // One that waited reads the version again and stops if the other finished or failed; one that could not get the
+            // lock in time carries on as before, on the old schema, and tries on its next request. Unlocked where GET_LOCK is
+            // not there (SQLite), as before.
+            $this->ews_with_lock('schema',function()use($target){
+                foreach(['ews_schema_version','alloptions','notoptions','_transient_ews_schema_retry','_transient_timeout_ews_schema_retry'] as $k)wp_cache_delete($k,'options');
+                if($this->option('ews_schema_version')===$target || get_transient('ews_schema_retry'))return;
+                $this->upgrade_schema_locked($target);
+            },'busy',max(0,(int)apply_filters('ews_schema_lock_wait',10)));
+        }
+
+        /** maybe_upgrade_schema()'s work, run by the request that holds the 'schema' lock. */
+        private function upgrade_schema_locked($target){
             // The base tables come from activate(). If this runs before activation has
             // created them (e.g. WP-CLI loads the plugin before the activation hook), create
             // them now; otherwise the column upgrades below would be skipped yet marked done.

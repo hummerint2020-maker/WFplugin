@@ -155,6 +155,7 @@ trait EWS_Features_Trait {
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){
             update_option('ews_feature_substitutes',$flag('substitutes_enabled')?1:0,false);
+            $this->substitutes_due_now();   // the next page load syncs, as it did within a minute before (3.31.151)
             update_option('ews_substitute_settings',\WorkforceOne\Approvals\Substitutes::settings(['manager_decides'=>$flag('substitute_manager_decides')?1:0,
                 'on_return'=>sanitize_key($post['substitute_on_return']??''),'who'=>sanitize_key($post['substitute_who']??''),'ask_on_leave'=>sanitize_key($post['substitute_ask']??'')]),false);
         }

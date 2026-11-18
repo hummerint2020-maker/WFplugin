@@ -60,8 +60,12 @@ final class MemorySubstituteStore implements SubstituteStore
         return isset($this->rows[$id]) ? clone $this->rows[$id] : null;
     }
 
+    /** @var bool every transition fails (a database error, or another request got there first) */
+    public $failTransition = false;
+
     public function transition(int $id, string $from, array $set)
     {
+        if ($this->failTransition) return 0;
         if (!isset($this->rows[$id]) || $this->rows[$id]->status !== $from) return 0;
         foreach ($set as $k => $v) $this->rows[$id]->$k = $v;
         return 1;
