@@ -9185,3 +9185,20 @@ msgstr "الحد الأدنى في المكتب: الإدارة دي مبقتش 
 
 msgid "A minimum of 0 means no check for this department."
 msgstr "الحد الأدنى 0 معناه إن الإدارة دي مش بتتشيك."
+
+msgid "Which managers are in the office"
+msgstr "مين من المديرين في المكتب"
+
+msgid "Working from home"
+msgstr "من البيت"
+
+#, php-format
+msgid "Enough: %1$d in the office, the minimum is %2$d"
+msgstr "كفاية: %1$d في المكتب، والحد الأدنى %2$d"
+
+#, php-format
+msgid "Managers in the office on %1$s: %2$d of %3$d"
+msgstr "المديرين في المكتب يوم %1$s: %2$d من %3$d"
+
+msgid "Changes not saved yet are not shown here."
+msgstr "التغييرات اللي لسه ما اتحفظتش مش ظاهرة هنا."
