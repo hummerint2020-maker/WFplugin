@@ -18,3 +18,10 @@ Mockups: `docs/mockups/office-minimum-departments/` (dept, phone, admin, company
   - A bar above the day counters says whose minimum the page shows.
   - The counters, the card and the sheets use the department's numbers and people.
 - **Attendance page, the administrator:** the same bar, with "Minimum for: The whole company / Sales / …". The whole company shows exactly what it does today.
+
+## Owner answers on the design (2026-11-18)
+
+5. **A department's number is the same every working day** (★); no per-weekday number for departments for now.
+6. **Teams' shares inside a department:** the department's number is shared among its teams by size, as the company's is. The administrator can also **fix a team's share inside its department** (a fixed number per team, per department), like the fixed team numbers of the company.
+7. **The weekly reminder:** a department with its own number goes to the schedule managers of that department (★). The administrator keeps the company's reminder as today.
+8. **A department manager whose department has its own number sees only their department's numbers** (★), not the company's warning.

@@ -61,6 +61,14 @@ def admin_settings():
         rows = ''.join(('<tr><td>%s</td><td>%d</td><td><input type="number" min="0" class="small-text" placeholder="%s" value="%s"></td>'
                         '<td><input type="number" min="0" class="small-text" placeholder="%s" value="%s"></td></tr>') % (
             esc(T(*n)), size, esc(T('—', '—')), p, esc(T('—', '—')), m) for n, size, p, m in DEPTS)
+        teams = [(('مبيعات القاهرة', 'Sales Cairo'), 14, 3, ''), (('مبيعات إسكندرية', 'Sales Alex'), 8, 1, '2')]
+        sub = ''.join('<tr><td>%s</td><td>%d</td><td>%d</td><td><input type="number" min="0" class="small-text" placeholder="%s" value="%s"></td></tr>' % (
+            esc(T(*n)), size, auto, esc(T('تلقائي', 'Auto')), fixed) for n, size, auto, fixed in teams)
+        rows = rows.replace('</tr>', ('</tr><tr class="wfo-omd-teams-row"><td colspan="4"><details open><summary>%s</summary>'
+                                      '<table class="wfo-om-share wfo-omd-sub"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>'
+                                      '<p class="description">%s</p></details></td></tr>') % (
+            esc(T('نصيب فرق المبيعات من الـ 4', 'Sales teams\' share of the 4')), esc(T('الفريق', 'Team')), esc(T('العدد', 'People')), esc(T('النصيب التلقائي', 'Automatic share')),
+            esc(T('رقم ثابت', 'Fixed number')), sub, esc(T('تلقائي بالنسبة لعدد الفريق جوه الإدارة؛ الرقم الثابت هنا للإدارة دي بس.', 'Automatic by team size inside the department; a fixed number here is for this department only.'))), 1)
         block = ('<div class="wfo-omd-admin"><h3>%s</h3><p class="description">%s</p>'
                  '<table class="widefat striped wfo-omd-table"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>'
                  '<p class="description">%s</p></div>') % (
