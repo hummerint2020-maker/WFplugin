@@ -25,3 +25,26 @@ Mockups: `docs/mockups/office-minimum-departments/` (dept, phone, admin, company
 6. **Teams' shares inside a department:** the department's number is shared among its teams by size, as the company's is. The administrator can also **fix a team's share inside its department** (a fixed number per team, per department), like the fixed team numbers of the company.
 7. **The weekly reminder:** a department with its own number goes to the schedule managers of that department (★). The administrator keeps the company's reminder as today.
 8. **A department manager whose department has its own number sees only their department's numbers** (★), not the company's warning.
+
+## Correction (owner, 2026-11-18): a full copy of the settings per department
+
+"انت فاهمني غلط، أنا عايز الموضوع زي ما هو شغال في الأصل، بس أضيف لكل إدارة طريقة شغلها وتنظيمها لجدولها."
+
+This replaces answers 1, 5 and 6 above:
+
+- **Each department can have its own full Office minimum settings,** exactly the form there is today:
+  - on / off;
+  - the minimum, and a number per weekday;
+  - which statuses count as in the office;
+  - the teams' shares, with fixed numbers for its own teams;
+  - the managers' minimum;
+  - the reminder.
+- **Feature Configuration → Office Minimum** has a tab per department. A department tab has "<Department> has its own settings". Ticked, the form below is that department's: its people, its teams, its managers.
+- **A department without its own settings works with the company's,** exactly as today. So nothing changes for the current company.
+- **Answers 2, 3, 7 and 8 still hold:**
+  - A department's managers are the team managers in it.
+  - A department manager sees their department's numbers, and only those, when it has its own settings.
+  - The administrator sees the company and can pick a department.
+  - The reminder goes to that department's schedule managers.
+
+Mockups: `settings` (the Sales tab, with its own settings) and `settings-company` (the company tab, as today), next to the Attendance screens.

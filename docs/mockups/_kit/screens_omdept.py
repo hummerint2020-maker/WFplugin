@@ -1,6 +1,6 @@
-"""Office minimum by department (owner request 2026-11-18): "each department has its own nature". Owner answers: the company's
-minimum stays as it is, and a department may have its own minimum (people and managers), checked on its own; a department
-without a number has no check of its own. Its managers are the team managers in that department. Each person sees their own
+"""Office minimum by department (owner request 2026-11-18): "each department has its own nature". Owner answer: each department
+can have a full copy of the Office minimum settings (on/off, minimum, days, statuses, team shares, managers, reminder); a
+department without its own settings works with the company's, as today. Its managers are the team managers in that department. Each person sees their own
 department; the administrator sees the company and can pick a department. A release after 3.31.153.
 
 The screens start from the Manager office minimum mockups (screens_mgrmin.py), on the real Attendance page."""
@@ -53,38 +53,39 @@ def attendance(variant):
     return make
 
 
-def admin_settings():
+def admin_settings(dept=True):
+    """dept=True: the Sales tab (its own settings); False: the company tab, as today."""
     def make():
         h = MM.admin_settings()()
         for c in ('manager-office-minimum.css', 'manager-office-minimum-rtl.css'):
             h = h.replace('href="%s"' % c, 'href="../manager-office-minimum/%s"' % c)
-        rows = ''.join(('<tr><td>%s</td><td>%d</td><td><input type="number" min="0" class="small-text" placeholder="%s" value="%s"></td>'
-                        '<td><input type="number" min="0" class="small-text" placeholder="%s" value="%s"></td></tr>') % (
-            esc(T(*n)), size, esc(T('—', '—')), p, esc(T('—', '—')), m) for n, size, p, m in DEPTS)
-        teams = [(('مبيعات القاهرة', 'Sales Cairo'), 14, 3, ''), (('مبيعات إسكندرية', 'Sales Alex'), 8, 1, '2')]
-        sub = ''.join('<tr><td>%s</td><td>%d</td><td>%d</td><td><input type="number" min="0" class="small-text" placeholder="%s" value="%s"></td></tr>' % (
-            esc(T(*n)), size, auto, esc(T('تلقائي', 'Auto')), fixed) for n, size, auto, fixed in teams)
-        rows = rows.replace('</tr>', ('</tr><tr class="wfo-omd-teams-row"><td colspan="4"><details open><summary>%s</summary>'
-                                      '<table class="wfo-om-share wfo-omd-sub"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>'
-                                      '<p class="description">%s</p></details></td></tr>') % (
-            esc(T('نصيب فرق المبيعات من الـ 4', 'Sales teams\' share of the 4')), esc(T('الفريق', 'Team')), esc(T('العدد', 'People')), esc(T('النصيب التلقائي', 'Automatic share')),
-            esc(T('رقم ثابت', 'Fixed number')), sub, esc(T('تلقائي بالنسبة لعدد الفريق جوه الإدارة؛ الرقم الثابت هنا للإدارة دي بس.', 'Automatic by team size inside the department; a fixed number here is for this department only.'))), 1)
-        block = ('<div class="wfo-omd-admin"><h3>%s</h3><p class="description">%s</p>'
-                 '<table class="widefat striped wfo-omd-table"><thead><tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr></thead><tbody>%s</tbody></table>'
-                 '<p class="description">%s</p></div>') % (
-            esc(T('لكل إدارة حدها', 'Each department\'s own minimum')),
-            esc(T('اختياري. الإدارة اللي ليها رقم بتتشيك لوحدها، بنفس الحالات والتذكير. الحد الأدنى للشركة فوق زي ما هو.',
-                  'Optional. A department with a number is checked on its own, with the same statuses and reminder. The company\'s minimum above stays as it is.')),
-            esc(T('الإدارة', 'Department')), esc(T('الموظفين', 'People')), esc(T('في المكتب كل يوم', 'In the office each day')), esc(T('مديرين كل يوم', 'Managers each day')), rows,
-            esc(T('فاضي = مفيش حد أدنى خاص بالإدارة. المديرين = مديرين الفرق اللي في الإدارة. مدير الإدارة بيشوف أرقام إدارته بس في صفحة الحضور.',
-                  'Empty = no minimum of its own. Its managers = the team managers in the department. A department manager sees only their department\'s numbers on the Attendance page.')))
-        return h.replace('</table></div></div><p class="submit">', '</table></div>' + block + '</div><p class="submit">', 1).replace(
-            '</head>', '<link rel="stylesheet" href="../office-minimum-departments/%s"></head>' % (CSS.replace('.css', '-rtl.css') if Lang.rtl() else CSS), 1)
+        tabs = [(('الشركة كلها', 'The whole company'), ''), (('المبيعات', 'Sales'), T('إعداداتها', 'own settings')), (('العمليات', 'Operations'), T('إعداداتها', 'own settings')),
+                (('الحسابات', 'Finance'), T('زي الشركة', 'as the company')), (('الموارد البشرية', 'HR'), T('زي الشركة', 'as the company'))]
+        sel = 1 if dept else 0
+        bar = '<nav class="wfo-omd-tabs" aria-label="%s">%s</nav>' % (esc(T('الإدارات', 'Departments')), ''.join(
+            '<a href="#" class="%s">%s%s</a>' % ('is-on' if k == sel else '', esc(T(*n)), ('<small>%s</small>' % esc(t)) if t else '') for k, (n, t) in enumerate(tabs)))
+        h = h.replace('<div class="wfo-om-admin">', bar + '<div class="wfo-om-admin">', 1)
+        if dept:
+            own = ('<div class="wfo-omd-own"><label><input type="checkbox" checked> <b>%s</b></label><p class="description">%s</p></div>') % (
+                esc(T('المبيعات ليها إعداداتها الخاصة', 'Sales has its own settings')),
+                esc(T('مقفولة = المبيعات بتشتغل بإعدادات الشركة. مفتوحة = الإعدادات اللي تحت للمبيعات بس: موظفيها وفرقها ومديرينها، ومدير المبيعات بيشوف أرقامها.',
+                      'Off = Sales works with the company\'s settings. On = the settings below are for Sales only: its people, its teams and its managers; the Sales manager sees its numbers.')))
+            h = h.replace('<div class="wfo-om-admin">', own + '<div class="wfo-om-admin">', 1)
+            h = h.replace('value="12"', 'value="4"').replace('placeholder="12"', 'placeholder="4"').replace(' value="8"', '')
+            for a, b in [(('المبيعات', 'Sales'), ('مبيعات القاهرة', 'Sales Cairo')), (('خدمة العملاء', 'Customer Service'), ('مبيعات إسكندرية', 'Sales Alex'))]:
+                h = h.replace('<td>%s</td>' % esc(T(*a)), '<td>%s</td>' % esc(T(*b)))
+            h = re.sub(r'<tr><td>%s</td>.*?</tr>' % re.escape(esc(T('الحسابات', 'Accounts'))), '', h, count=1, flags=re.S)
+            h = re.sub(r'<tr><td>%s</td>.*?</tr>' % re.escape(esc(T('تكنولوجيا المعلومات', 'IT'))), '', h, count=1, flags=re.S)
+            h = h.replace('<td>12</td><td>4</td>', '<td>14</td><td>3</td>', 1).replace('<td>10</td><td>3</td>', '<td>8</td><td>1</td>', 1)
+            h = h.replace(esc(T('مديرين الفرق (4): عادل حمدي، هشام فتحي، ريم نبيل، عمرو فتحي', 'The team managers (4): Adel Hamdy, Hesham Fathy, Reem Nabil, Amr Fathy')),
+                          esc(T('مديرين فرق المبيعات (2): عادل حمدي، هشام فتحي', 'Sales\'s team managers (2): Adel Hamdy, Hesham Fathy')))
+            h = h.replace('value="2">', 'value="1">', 1).replace('placeholder="2"', 'placeholder="1"')
+        return h.replace('</head>', '<link rel="stylesheet" href="../office-minimum-departments/%s"></head>' % (CSS.replace('.css', '-rtl.css') if Lang.rtl() else CSS), 1)
     return make
 
 
 def build():
-    for slug, make in [('dept', attendance('dept')), ('admin', attendance('admin')), ('company', attendance('company')), ('phone', attendance('dept')), ('settings', admin_settings())]:
+    for slug, make in [('dept', attendance('dept')), ('admin', attendance('admin')), ('company', attendance('company')), ('phone', attendance('dept')), ('settings', admin_settings(True)), ('settings-company', admin_settings(False))]:
         write(F, slug, make)
     P, D = 'phone', 'desk'
     gallery(F, 'Office minimum by department — mockups (Step 1)', (
@@ -94,5 +95,7 @@ def build():
         ('App → Attendance', 'Sales: 4 people and 1 manager in the office each day.', [
             ('dept', 'The Sales manager: the counters and the card are Sales\'s', D), ('phone', 'The same on a phone', P),
             ('admin', 'The administrator picked Sales', D), ('company', 'The administrator: the whole company (as today)', D)]),
-        ('wp-admin', '', [('settings', 'Feature Configuration → Office Minimum: each department\'s own minimum', D)]),
+        ('wp-admin', 'Feature Configuration → Office Minimum: a tab per department. A department with its own settings has the whole form for itself; the others use the company\'s.', [
+            ('settings', 'The Sales tab: Sales has its own settings (its minimum, days, statuses, teams, managers, reminder)', D),
+            ('settings-company', 'The company tab: as today', D)]),
     ])
