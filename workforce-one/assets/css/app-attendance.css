@@ -473,3 +473,14 @@ a.wfo-ac-row:focus-visible{outline:2px solid var(--wfo-pri,#5B3FD9);outline-offs
 .wfo-omd-pick{display:flex;align-items:center;gap:6px;margin:0;margin-inline-start:auto;font-weight:600}
 .wfo-omd-pick select{min-height:32px;border-radius:10px;border:1px solid #D6D9E6;padding:0 8px;font:inherit;background:#fff}
 @media (max-width:700px){.wfo-omd-pick{margin-inline-start:0}}
+/* 3.31.155 the managers' counter opens the day's Managers sheet */
+button.wfo-mom-day.is-btn{border:0;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 0 0 1px rgba(31,79,184,.18)}
+button.wfo-mom-day.is-btn.is-short{box-shadow:inset 0 0 0 1px rgba(165,29,62,.2)}
+button.wfo-mom-day.is-btn.is-changed{box-shadow:0 0 0 2px currentColor inset}
+button.wfo-mom-day.is-btn .wfo-icon:last-child{opacity:.7;transform:rotate(90deg)}
+button.wfo-mom-day.is-btn:hover{filter:brightness(.97)}
+button.wfo-mom-day.is-btn:focus-visible{outline:2px solid #4F46E5;outline-offset:2px}
+.wfo-mom-list li.wfo-mom-head{justify-content:space-between;padding:8px 2px 0;background:none;font-size:12px;font-weight:700;color:#5B6478}
+.wfo-mom-list li.wfo-mom-head b{color:#1F2A44}
+.wfo-om-sheet-sum.is-ok{background:#EEF8F1}
+.wfo-om-sheet-sum.is-ok>div>span{color:#17703F}

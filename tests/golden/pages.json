@@ -399,6 +399,18 @@
     },
     {
       "user": "admin",
+      "url": "/app/?ews_view=attendance&week={week}",
+      "options": {
+        "ews_feature_office_minimum": 1,
+        "ews_office_minimum": {
+          "min": 3,
+          "mgr": 1
+        }
+      },
+      "expect": "data-mom-day"
+    },
+    {
+      "user": "admin",
       "url": "/app/?ews_view=attendance&week={week}&om_dept=1",
       "options": {
         "ews_feature_office_minimum": 1

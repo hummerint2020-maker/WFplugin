@@ -12612,3 +12612,16 @@ msgstr ""
 #: includes/trait-features.php
 msgid "A minimum of 0 means no check for this department."
 msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Which managers are in the office"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Working from home"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "Enough: %1$d in the office, the minimum is %2$d"
+msgstr ""

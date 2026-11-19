@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.31.155
+### The managers' counter opens the day's managers (docs/tasks/manager-counter-list.md, mockups docs/mockups/manager-counter-list/)
+Owner request 2026-11-19: "the managers' part (2/1): I tap it and see who is coming in". Only with the managers' minimum on (owner: no separate switch); a site without it sees no change.
+- **The managers' counter under each day is a button** (a small arrow on it). It opens that day's Managers sheet, on every checked day, short or not.
+- **The sheet** lists the managers under three headings with their count: in the office, working from home ("Could come in"), not in the office. A day with enough managers says so in green ("Enough: 3 in the office, the minimum is 2"); a short day is as before.
+- A department-scoped viewer still sees managers outside their department only as "In the office" or "Not in the office".
+- The card at the top still offers "Managers" only for a day short of managers. Nothing new is read: the day's managers were already worked out for the counter.
+- Tests: tests/e2e_manager_office_minimum.py (the button on every checked day, the sheet of a day with enough managers, the headings). Golden also renders the Attendance page with the managers' minimum on; it is the only page declared.
+
 ## 3.31.154
 ### Office minimum by department (docs/tasks/office-minimum-departments.md, mockups docs/mockups/office-minimum-departments/)
 Owner request 2026-11-18: "each department has its own way of working and organising its schedule". Off by default: until a department is given its own settings, nothing changes.

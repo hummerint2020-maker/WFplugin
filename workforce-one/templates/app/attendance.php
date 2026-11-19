@@ -50,8 +50,9 @@ $om_counter = static function (string $d) use ($office_min): string {
     $day = $office_min['days'][$d] ?? null;
     if (!$day) return '<span class="wfo-om-day is-off" data-om-day="' . esc_attr($d) . '">' . esc_html__('No minimum', 'workforce-one') . '</span>';
     $html = '<span class="wfo-om-day ' . ($day['short'] > 0 ? 'is-short' : 'is-ok') . '" data-om-day="' . esc_attr($d) . '" data-om-base="' . (int) $day['office'] . '" data-om-min="' . (int) $day['min'] . '" title="' . esc_attr__('In the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('office', 13, 2.2) . '<b>' . (int) $day['office'] . '</b><span>/ ' . (int) $day['min'] . '</span></span>';
-    // Manager office minimum (3.31.153): the managers' counter next to it, only with it on.
-    if (!empty($day['mgr'])) $html .= '<span class="wfo-mom-day ' . ($day['mgr']['short'] > 0 ? 'is-short' : 'is-ok') . '" data-mom-day="' . esc_attr($d) . '" data-mom-base="' . (int) $day['mgr']['office'] . '" data-mom-min="' . (int) $day['mgr']['min'] . '" title="' . esc_attr__('Managers in the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('people', 13, 2.2) . '<b>' . (int) $day['mgr']['office'] . '</b><span>/ ' . (int) $day['mgr']['min'] . '</span></span>';
+    // Manager office minimum (3.31.153): the managers' counter next to it, only with it on; a button that opens the day's
+    // Managers sheet (3.31.155, templates/app/office-minimum-managers.php).
+    if (!empty($day['mgr'])) $html .= '<button type="button" class="wfo-mom-day ' . ($day['mgr']['short'] > 0 ? 'is-short' : 'is-ok') . ' is-btn" data-wfo-sheet="wfo-mom-' . esc_attr($d) . '" data-mom-day="' . esc_attr($d) . '" data-mom-base="' . (int) $day['mgr']['office'] . '" data-mom-min="' . (int) $day['mgr']['min'] . '" title="' . esc_attr__('Which managers are in the office', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('people', 13, 2.2) . '<b>' . (int) $day['mgr']['office'] . '</b><span>/ ' . (int) $day['mgr']['min'] . '</span>' . \WorkforceOne\Ui\Icons::svg('chevron', 11, 2.4) . '</button>';
     return $html;
 };
 use WorkforceOne\Ui\Icons;
