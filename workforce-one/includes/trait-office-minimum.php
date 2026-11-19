@@ -302,13 +302,22 @@ trait EWS_Office_Minimum_Trait {
         $now=current_time('timestamp');
         $week=date('o-W',$now);
         $due=function($cfg)use($now){return $cfg['reminder'] && (int)date('w',$now)===(int)$cfg['reminder_day'] && date('H:i',$now)>=$cfg['reminder_time'];};
-        // By department (3.31.154): with departments of their own, each person gets one reminder, their department's or the company's.
+        $next=date('Y-m-d',strtotime('+7 days',$now));
+        // By department (3.31.154): with departments of their own, each person gets one reminder, their department's or the
+        // company's. Who gets which, and next week's schedule, are read only once something is due (review 5).
         $own=$this->om_own_depts();
-        $groups=$own?$this->om_reminder_groups(array_keys($own)):null;
+        $groups=null;$map=null;
+        $ready=function()use(&$groups,&$map,$own,$next){
+            if($groups!==null)return;
+            $groups=$this->om_reminder_groups(array_keys($own));
+            [$dates]=$this->week_dates_configured($next);
+            $map=$this->om_schedule_map($dates);
+        };
         $cfg=$this->om_settings();
         if($due($cfg) && (string)get_option('ews_office_minimum_reminded','')!==$week){
             update_option('ews_office_minimum_reminded',$week,false);
-            $this->om_remind(date('Y-m-d',strtotime('+7 days',$now)),0,$groups===null?null:($groups[0]??[]));
+            if(!$own)$this->om_remind($next);
+            else{ $ready(); if(!empty($groups[0]))$this->om_remind($next,0,$groups[0],$map); }   // nobody in the group: nothing sent, nothing audited (review 6)
         }
         if(!$own)return;
         $done=(array)get_option('ews_office_minimum_reminded_depts',[]);
@@ -316,7 +325,8 @@ trait EWS_Office_Minimum_Trait {
             if(!$due($this->om_cfg($d)) || (string)($done[$d]??'')===$week)continue;
             $done[$d]=$week;
             update_option('ews_office_minimum_reminded_depts',$done,false);
-            $this->om_remind(date('Y-m-d',strtotime('+7 days',$now)),$d,$groups[$d]??[]);
+            $ready();
+            if(!empty($groups[$d]))$this->om_remind($next,$d,$groups[$d],$map);
         }
     }
 
@@ -336,9 +346,9 @@ trait EWS_Office_Minimum_Trait {
     }
 
     /** Sends next week's short days to the schedule managers. @return int people notified */
-    private function om_remind($any_day_next_week,$dept=0,$user_ids=null){
+    private function om_remind($any_day_next_week,$dept=0,$user_ids=null,$map=null){
         [$dates]=$this->week_dates_configured($any_day_next_week);
-        $short=array_filter($this->om_days($dates,[],$dept),function($d){return $d && ($d['short']>0 || (!empty($d['mgr']) && $d['mgr']['short']>0));});
+        $short=array_filter($this->om_days($dates,[],$dept,$map),function($d){return $d && ($d['short']>0 || (!empty($d['mgr']) && $d['mgr']['short']>0));});
         if(!$short)return 0;
         $parts=[];
         foreach($short as $d=>$day){

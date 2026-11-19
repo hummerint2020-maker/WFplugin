@@ -9179,3 +9179,9 @@ msgstr "مقفولة = %1$s بتشتغل بإعدادات الشركة. مفتو
 
 msgid "This department has no people counted yet."
 msgstr "الإدارة دي مفيهاش موظفين بيتحسبوا لسه."
+
+msgid "Office Minimum: that department is no longer active. Nothing was saved."
+msgstr "الحد الأدنى في المكتب: الإدارة دي مبقتش شغالة. متحفظش حاجة."
+
+msgid "A minimum of 0 means no check for this department."
+msgstr "الحد الأدنى 0 معناه إن الإدارة دي مش بتتشيك."

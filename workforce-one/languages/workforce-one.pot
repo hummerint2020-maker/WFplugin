@@ -12604,3 +12604,11 @@ msgstr ""
 #: templates/app/office-minimum-scope.php
 msgid "This department has no people counted yet."
 msgstr ""
+
+#: includes/trait-features.php
+msgid "Office Minimum: that department is no longer active. Nothing was saved."
+msgstr ""
+
+#: includes/trait-features.php
+msgid "A minimum of 0 means no check for this department."
+msgstr ""

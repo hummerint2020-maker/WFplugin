@@ -349,3 +349,21 @@ Not asked; the recommended answers apply:
 - Q7: the list offers only departments with their own settings.
 - Q8: a department with its reminder off gets no reminder.
 - Q9: the first tick starts from a copy of the company's settings, without the team fixed numbers.
+
+## Review (2026-11-19) and what was done
+
+Reviewer: read-only, on Opus.
+
+1. **CONFIRMED, fixed.** On a site that never saved the company's Office minimum, saving a department's tab crashed with a fatal error after the options were already written. The company audit line read keys that were not there. It is now built from the settings as read. e2e: a department tab saved first.
+2. **CONFIRMED, fixed.** Owner answer 1 ("a minimum of 0 means no check") was refused on save. A department's minimum may now be 0; the company's still needs 1 or more. Unit test and e2e.
+3. **CONFIRMED, fixed before the review:** golden caught it too. `?om_dept` added a hidden field to the search form even with no department settings. The pick is now kept only when an administrator has picked a department.
+4. **PLAUSIBLE, fixed.** A tab whose department was archived while it was open was saved as the company's. It is now refused ("that department is no longer active"). e2e.
+5. **CONFIRMED, fixed.** The 5-minute tick looked up the reminder's recipients even when nothing was due. They are now looked up only once a reminder is due. The schedule is read once for the company and every department (this was the design; the first build read it per department).
+6. **CONFIRMED, fixed.** A reminder group with nobody in it wrote a weekly audit line. It is now skipped (the week is still marked).
+7. **CONFIRMED, fixed.** Picking a department dropped the search and team filter. They are now kept.
+8. **CONFIRMED, fixed.**
+   - The new internal option gets `'builtin' => 'empty'`.
+   - A translators comment is corrected.
+   - The department audit line now has the weekday numbers, the team fixed numbers and "managers=off".
+
+**Not changed:** the Settings overview still reads only the company's Office minimum, so a site customised only per department shows "Default" there (optional in the design).

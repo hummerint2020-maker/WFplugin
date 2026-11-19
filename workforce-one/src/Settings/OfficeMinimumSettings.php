@@ -27,11 +27,12 @@ final class OfficeMinimumSettings
     private const MGR_KEYS = ['mgr', 'mgr_min', 'mgr_days'];
 
     /** @param mixed $saved @return array{min:int,days:array<int,int>,statuses:list<string>,teams:array<int,int>,reminder:int,reminder_day:int,reminder_time:string,mgr:int,mgr_min:int,mgr_days:array<int,int>} */
-    public static function config($saved): array
+    public static function config($saved, bool $zero = false): array
     {
         $s = is_array($saved) ? $saved : [];
         $c = self::DEFAULTS;
-        if (isset($s['min']) && is_numeric($s['min']) && (int) $s['min'] >= 1) $c['min'] = (int) $s['min'];
+        // $zero: a department's settings (3.31.154), where a minimum of 0 means no check (owner answer 1)
+        if (isset($s['min']) && is_numeric($s['min']) && (int) $s['min'] >= ($zero ? 0 : 1)) $c['min'] = (int) $s['min'];
         foreach ((array) ($s['days'] ?? []) as $w => $n) {
             if (is_numeric($w) && (int) $w >= 0 && (int) $w <= 6 && is_numeric($n) && (int) $n >= 0) $c['days'][(int) $w] = (int) $n;
         }
@@ -59,10 +60,10 @@ final class OfficeMinimumSettings
      * @param mixed $saved what is stored now: without om_mgr_present (an older form) its manager keys are kept
      * @return array{0:array<string,mixed>,1:string} [settings, error: '' | min | day | team | statuses | time | mgr_min | mgr_day]
      */
-    public static function fromPost(array $post, array $known, $saved = []): array
+    public static function fromPost(array $post, array $known, $saved = [], bool $zero = false): array
     {
         $min = trim((string) ($post['om_min'] ?? ''));
-        if (!ctype_digit($min) || (int) $min < 1 || (int) $min > 100000) return [[], 'min'];
+        if (!ctype_digit($min) || (int) $min < ($zero ? 0 : 1) || (int) $min > 100000) return [[], 'min'];
         $days = [];
         foreach ((array) ($post['om_days'] ?? []) as $w => $n) {
             $n = trim((string) $n);
@@ -103,7 +104,7 @@ final class OfficeMinimumSettings
         if (!is_array($saved) || !isset($saved['depts']) || !is_array($saved['depts'])) return $out;
         foreach ($saved['depts'] as $id => $part) {
             if (!is_numeric($id) || (int) $id <= 0 || !is_array($part)) continue;
-            $out[(int) $id] = self::config($part);
+            $out[(int) $id] = self::config($part, true);
         }
         return $out;
     }
@@ -124,7 +125,7 @@ final class OfficeMinimumSettings
             unset($depts[$dept]);
         } else {
             $mine = isset($depts[$dept]) && is_array($depts[$dept]) ? $depts[$dept] : [];
-            [$part, $error] = self::fromPost($post, $known, $mine);
+            [$part, $error] = self::fromPost($post, $known, $mine, true);
             if ($error !== '') return [[], $error];
             unset($part['depts']);
             $depts[$dept] = $part;

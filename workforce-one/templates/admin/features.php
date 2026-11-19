@@ -253,12 +253,13 @@ $occ_fields = ['card_title' => [__('Greeting card title', 'workforce-one'), 60],
 <?php if ($om_dept): $dname = $om_departments[$om_dept]['name']; ?>
 <input type="hidden" name="om_dept_present" value="1"><input type="hidden" name="om_dept" value="<?php echo (int) $om_dept; ?>">
 <div class="wfo-omd-own"><label><input type="checkbox" name="om_dept_own" value="1" <?php checked($om_dept_own); ?>> <b><?php echo esc_html(sprintf(/* translators: %s: department */ __('%s has its own settings', 'workforce-one'), $dname)); ?></b></label>
-<p class="description"><?php echo esc_html(sprintf(/* translators: %s: department */ __('Off = %1$s works with the company\'s settings. On = the settings below are for %1$s only: its people, its teams and its managers; its schedule managers see its numbers and get its reminder.', 'workforce-one'), $dname)); ?></p>
+<p class="description"><?php echo esc_html(sprintf(/* translators: %1$s: department */ __('Off = %1$s works with the company\'s settings. On = the settings below are for %1$s only: its people, its teams and its managers; its schedule managers see its numbers and get its reminder.', 'workforce-one'), $dname)); ?></p>
+<p class="description"><?php esc_html_e('A minimum of 0 means no check for this department.', 'workforce-one'); ?></p>
 <?php if (!$om_departments[$om_dept]['people']): ?><p class="description wfo-mom-warn"><?php esc_html_e('This department has no people counted yet.', 'workforce-one'); ?></p><?php endif; ?></div>
 <?php endif; ?>
 <?php endif; ?>
 <div class="wfo-om-admin"><table class="form-table" role="presentation">
-    <tr><th scope="row"><label for="ews-om-min"><?php esc_html_e('Minimum each day', 'workforce-one'); ?></label></th><td><input id="ews-om-min" type="number" min="1" name="om_min" class="small-text" value="<?php echo (int) $office_minimum['min']; ?>"> <?php esc_html_e('people in the office', 'workforce-one'); ?>
+    <tr><th scope="row"><label for="ews-om-min"><?php esc_html_e('Minimum each day', 'workforce-one'); ?></label></th><td><input id="ews-om-min" type="number" min="<?php echo $om_dept ? 0 : 1; ?>" name="om_min" class="small-text" value="<?php echo (int) $office_minimum['min']; ?>"> <?php esc_html_e('people in the office', 'workforce-one'); ?>
         <p class="description"><?php esc_html_e('Working days only; company holidays and days off are not checked.', 'workforce-one'); ?></p></td></tr>
     <tr><th scope="row"><?php esc_html_e('A different day (optional)', 'workforce-one'); ?></th><td><div class="wfo-om-wds">
         <?php foreach ($working_days as $w): ?><label class="wfo-om-wd"><span><?php echo esc_html($weekday_names[$w] ?? (string) $w); ?></span><input type="number" min="0" name="om_days[<?php echo (int) $w; ?>]" class="small-text" placeholder="<?php echo (int) $office_minimum['min']; ?>" value="<?php echo isset($office_minimum['days'][$w]) ? (int) $office_minimum['days'][$w] : ''; ?>"></label><?php endforeach; ?>

@@ -106,7 +106,8 @@ trait EWS_Features_Trait {
         if(isset($post['office_minimum_present'])){
             // A department's tab (3.31.154) saves that department's settings only; the company's stay as they are.
             $om_dept=isset($post['om_dept_present'])?absint($post['om_dept']??0):0;
-            if($om_dept&&!isset($this->people_department_names()[$om_dept]))$om_dept=0;
+            // A department tab whose department is gone (archived meanwhile): never saved as the company's (review 4).
+            if(isset($post['om_dept_present'])&&!isset($this->people_department_names()[$om_dept]))$this->features_redirect(['features_error'=>'om_dept']);
             [$om,$om_error]=$om_dept
                 ?\WorkforceOne\Settings\OfficeMinimumSettings::departmentFromPost($post,$this->schedule_type_names(true),get_option('ews_office_minimum',[]),$om_dept)
                 :\WorkforceOne\Settings\OfficeMinimumSettings::fromPost($post,$this->schedule_type_names(true),get_option('ews_office_minimum',[]));
@@ -248,11 +249,14 @@ trait EWS_Features_Trait {
             $mk=['mgr'=>1,'mgr_min'=>1,'mgr_days'=>1];
             $om_mgr=array_intersect_key($om_before,$mk)!==array_intersect_key($om_after,$mk)||!empty($om_after['mgr'])
                 ?'; managers='.(!empty($om_after['mgr'])?'on':'off').' min='.(int)$om_after['mgr_min'].($om_after['mgr_days']?' days='.implode(',',array_map(function($w,$n){return $w.':'.$n;},array_keys($om_after['mgr_days']),$om_after['mgr_days'])):''):'';
-            if($om_before!==$om_after||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om['min'].'; statuses='.implode(',',$om['statuses']).'; reminder='.($om['reminder']?'on':'off').$om_mgr);
+            if($om_before!==$om_after||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om_after['min'].'; statuses='.implode(',',$om_after['statuses']).'; reminder='.($om_after['reminder']?'on':'off').$om_mgr);
             if($om_dept){   // a department's tab (3.31.154): its own audit line, only when it changed
                 $om_dept_after=\WorkforceOne\Settings\OfficeMinimumSettings::departments($om)[$om_dept]??null;
+                $pairs=function($a){return implode(',',array_map(function($k,$v){return $k.':'.$v;},array_keys($a),$a));};
                 if($om_dept_before!==$om_dept_after)$this->audit('office_minimum_department_update','department',$om_dept,$om_dept_after===null?'own=off':
-                    'own=on; min='.$om_dept_after['min'].'; statuses='.implode(',',$om_dept_after['statuses']).'; reminder='.($om_dept_after['reminder']?'on':'off').(!empty($om_dept_after['mgr'])?'; managers=on min='.(int)$om_dept_after['mgr_min']:''));
+                    'own=on; min='.$om_dept_after['min'].($om_dept_after['days']?' days='.$pairs($om_dept_after['days']):'').'; statuses='.implode(',',$om_dept_after['statuses'])
+                    .($om_dept_after['teams']?'; teams='.$pairs($om_dept_after['teams']):'').'; reminder='.($om_dept_after['reminder']?'on':'off')
+                    .'; managers='.(!empty($om_dept_after['mgr'])?'on':'off').' min='.(int)$om_dept_after['mgr_min'].($om_dept_after['mgr_days']?' days='.$pairs($om_dept_after['mgr_days']):''));
             }
         }
         if($wl!==null){

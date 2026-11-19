@@ -103,7 +103,10 @@ final class OfficeMinimumTest extends TestCase
         [$again] = OfficeMinimumSettings::fromPost(array_merge($base, ['om_min' => '10']), $known, $withDept);
         $this->assertSame($withDept['depts'], $again['depts'], 'a company save keeps the departments');
         $this->assertSame(10, $again['min']);
-        $this->assertSame('min', OfficeMinimumSettings::departmentFromPost(['om_dept_own' => '1', 'om_min' => '0'], $known, $withDept, 5)[1]);
+        [$zero, $e0] = OfficeMinimumSettings::departmentFromPost(['om_dept_own' => '1', 'om_min' => '0', 'om_statuses' => ['Office']], $known, $withDept, 5);
+        $this->assertSame(['', 0], [$e0, OfficeMinimumSettings::departments($zero)[5]['min']], 'a department\'s minimum of 0 means no check (owner answer 1)');
+        $this->assertSame('min', OfficeMinimumSettings::fromPost(['om_min' => '0', 'om_statuses' => ['Office']], $known)[1], '...the company\'s still needs 1 or more');
+        $this->assertSame('min', OfficeMinimumSettings::departmentFromPost(['om_dept_own' => '1', 'om_min' => 'x'], $known, $withDept, 5)[1]);
         [$off] = OfficeMinimumSettings::departmentFromPost([], $known, $withDept, 5);
         $this->assertSame($company, $off, 'unticked: the department goes back to the company\'s, and nothing more is stored');
         $this->assertSame([], OfficeMinimumSettings::departments(['depts' => ['x' => [], 0 => [], 3 => 'bad']]));

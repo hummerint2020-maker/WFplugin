@@ -110,6 +110,13 @@ def opt(name):
 
 audits = lambda a: [r['details'] for r in q("SELECT details FROM {p}ews_audit_log WHERE action='%s' ORDER BY id" % a)]
 
+# ---------------------------------------------------------------- a department's tab on a site that never saved the company's (review 1)
+qs = save({'office_minimum_enabled': '1', 'om_dept_own': '1', 'om_min': '0', 'om_statuses[]': ['Office']}, tab=SALES)
+o = opt('ews_office_minimum')
+check('a department tab saved first (the company\'s never saved): saved, no error; a minimum of 0 is kept', qs.get('features_saved') == '1' and (o.get('depts') or {}).get(str(SALES), {}).get('min') == 0, (qs, o))
+check('...and with 0, Sales has no check: the Sales manager sees no counters', 'data-om-day="%s" data-om-base' % DATES[0] not in emp.req(ATT)[1])
+php("delete_option('ews_office_minimum'); update_option('ews_feature_office_minimum',0,false); $wpdb->query(\"DELETE FROM {$p}ews_audit_log\");")
+
 # ---------------------------------------------------------------- the company's minimum only (as before)
 qs = save({'office_minimum_enabled': '1', 'om_min': '5'})
 check('Office minimum on (5 people), no department settings', qs.get('features_saved') == '1' and 'depts' not in opt('ews_office_minimum'), qs)
@@ -131,8 +138,15 @@ check('...with Sales\'s teams (Alex, Cairo) and sizes counted in Sales; its mana
       and re.search(r'The team managers \(1\): Samy<', fs) is not None, re.findall(r'<td>(\w+)</td><td>(\d+)</td>', fs))
 
 # ---------------------------------------------------------------- saving a department's tab
-qs = save({'om_dept_own': '1', 'om_min': '0'}, tab=SALES)
+qs = save({'om_dept_own': '1', 'om_min': 'x'}, tab=SALES)
 check('validation on a department tab: refused, back on that tab, nothing saved', qs.get('features_error') == 'om_min' and qs.get('om_dept') == str(SALES) and 'depts' not in opt('ews_office_minimum'), qs)
+page = adm.req(FEAT + '&om_dept=%d' % OPS)[1]
+fields = form_fields(page, 'ews31_features_save') + [('om_dept_own', '1')]
+php("$wpdb->update($p.'ews_departments',['active'=>0],['id'=>%d]);" % OPS)
+st, body, h = adm.req('/wp-admin/admin-post.php', urllib.parse.urlencode(fields).encode())
+qs2 = {k: v[0] for k, v in urllib.parse.parse_qs(urllib.parse.urlparse(h.get('Location', '')).query).items()}
+php("$wpdb->update($p.'ews_departments',['active'=>1],['id'=>%d]);" % OPS)
+check('a tab whose department was archived meanwhile: refused, never saved as the company\'s', qs2.get('features_error') == 'om_dept' and opt('ews_office_minimum').get('min') == 5 and 'depts' not in opt('ews_office_minimum'), (qs2, opt('ews_office_minimum')))
 company_before = {k: v for k, v in opt('ews_office_minimum').items()}
 qs = save({'om_dept_own': '1', 'om_min': '3', 'om_statuses[]': ['Office'], 'om_mgr': '1', 'om_mgr_min': '1', 'om_teams[%d]' % IDS['team_Cairo']: '2'}, tab=SALES)
 o = opt('ews_office_minimum')
@@ -165,7 +179,9 @@ opts = re.findall(r'<option value="(\d+)"[^>]*>([^<]+)</option>', re.search(r'da
 check('...the choice lists the company and the departments with their own settings', opts == [('0', 'The whole company'), (str(SALES), 'Sales')], opts)
 pg = adm.req(ATT + '&om_dept=%d' % SALES)[1]
 check('...picking Sales: Sales\'s numbers, the whole grid', counters(pg) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)} and 'Nabil' in pg and 'Osman' in pg, counters(pg))
-check('...the pick is kept by the search and team filter', 'name="om_dept" value="%d"' % SALES in pg.split('ews-att-tools')[1][:600] if 'ews-att-tools' in pg else 'ews-att-search' in pg)
+big = adm.req(ATT + '&om_dept=%d&q=Sa' % SALES)[1]   # a search on the server keeps the pick (a short list is searched in the browser)
+form = re.search(r'<form method="get" class="ews-att-tools" data-ews-server-list>(.*?)</form>', big, re.S)
+check('...the pick is kept by the search and team filter (when they run on the server)', form is None or 'name="om_dept" value="%d"' % SALES in form.group(1))
 ops_pg = adm.req(ATT + '&om_dept=%d' % OPS)[1]
 check('...picking Ops (no settings of its own): the company\'s, nothing kept', counters(ops_pg) == counters(base_adm) and 'type="hidden" name="om_dept"' not in ops_pg)
 check('...a department manager cannot pick another department', counters(emp.req(ATT + '&om_dept=0')[1]) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)})
