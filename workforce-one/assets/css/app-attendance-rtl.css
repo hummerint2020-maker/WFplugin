@@ -465,3 +465,11 @@ a.wfo-ac-row:focus-visible{outline:2px solid var(--wfo-pri,#5B3FD9);outline-offs
 .wfo-mom-plan.is-wfh{background:#E7EEFF;color:#1F4FB8}
 .wfo-mom-can{font-size:11.5px;font-weight:700;color:#1F4FB8;white-space:nowrap}
 @media (max-width:700px){.wfo-mom-btns{margin-inline-start:0}}
+
+/* Office minimum by department (3.31.154, docs/tasks/office-minimum-departments.md): whose minimum the page shows. */
+.wfo-omd-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:10px 0 12px;padding:10px 14px;border-radius:14px;background:#F1F0FA;color:#13235B;font-size:13px}
+.wfo-omd-bar .wfo-icon{color:#5B3FD9}
+.wfo-omd-what b{font-weight:700}
+.wfo-omd-pick{display:flex;align-items:center;gap:6px;margin:0;margin-inline-start:auto;font-weight:600}
+.wfo-omd-pick select{min-height:32px;border-radius:10px;border:1px solid #D6D9E6;padding:0 8px;font:inherit;background:#fff}
+@media (max-width:700px){.wfo-omd-pick{margin-inline-start:0}}

@@ -20,6 +20,15 @@ trait EWS_Departments_Trait {
         return $this->services()->org()->departmentManager((int)$employee_id);
     }
 
+    /** The active departments: id => name, in name order (one read per request; 3.31.154, Office minimum by department). @return array<int,string> */
+    private function people_department_names(){
+        static $cache=null;
+        if($cache!==null)return $cache;
+        $out=[];
+        foreach($this->services()->teams()->pageDepartments() as $d)$out[(int)$d->id]=(string)$d->name;
+        return $cache=$out;
+    }
+
     private function ensure_departments_schema(){
         if($this->ews_schema_is_current())return;
         global $wpdb;

@@ -15,6 +15,10 @@
         function counts(v) { return statuses.indexOf(v) !== -1 ? 1 : 0; }
         // Manager office minimum (3.31.153): the team managers' ids, only with it on; their cells also move the managers' counter.
         var managers = JSON.parse(table.getAttribute('data-om-managers') || 'null');
+        // By department (3.31.154): only that department's people move its counters (an administrator's grid shows everyone).
+        var only = JSON.parse(table.getAttribute('data-om-people') || 'null');
+        var inScope = {};
+        (only || []).forEach(function (id) { inScope[String(id)] = true; });
         var isManager = {};
         (managers || []).forEach(function (id) { isManager[String(id)] = true; });
 
@@ -23,6 +27,7 @@
             cells.forEach(function (td) {
                 var d = dates[parseInt(td.getAttribute('data-day'), 10)];
                 if (!d) return;
+                if (only && !inScope[td.getAttribute('data-employee')]) return;
                 var change = counts(td.getAttribute('data-planned') || '') - counts(td.getAttribute('data-om-orig'));
                 delta[d] = (delta[d] || 0) + change;
                 if (managers && isManager[td.getAttribute('data-employee')]) mdelta[d] = (mdelta[d] || 0) + change;
@@ -49,6 +54,7 @@
             });
         }
 
+        document.querySelectorAll('[data-omd-pick]').forEach(function (sel) { sel.addEventListener('change', function () { sel.form.submit(); }); });
         new MutationObserver(update).observe(table, { subtree: true, attributes: true, attributeFilter: ['data-planned'] });
     }
 

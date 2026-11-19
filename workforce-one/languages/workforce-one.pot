@@ -12534,3 +12534,73 @@ msgstr ""
 #: templates/app/office-minimum-managers.php
 msgid "Not in the office"
 msgstr ""
+
+#: templates/app/office-minimum-scope.php
+msgid "The whole company"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "%s department"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "%d in the office"
+msgid_plural "%d in the office"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "%d manager"
+msgid_plural "%d managers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum-scope.php
+msgid "Minimum for"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "%1$s: %2$d day below its minimum"
+msgid_plural "%1$s: %2$d days below its minimum"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "Each team's share = minimum × team size ÷ the department's employees (%1$d), rounded so the shares add up to exactly %2$d."
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "%1$s: %2$s"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+msgid "own settings"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+msgid "as the company"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+msgid "Save before switching tabs: a tab shows its saved settings."
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "%s has its own settings"
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+#, php-format
+msgid "Off = %1$s works with the company's settings. On = the settings below are for %1$s only: its people, its teams and its managers; its schedule managers see its numbers and get its reminder."
+msgstr ""
+
+#: templates/app/office-minimum-scope.php
+msgid "This department has no people counted yet."
+msgstr ""

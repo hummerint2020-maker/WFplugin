@@ -7,7 +7,7 @@
  * With the managers' minimum on (3.31.153, $om['mgr']), the card lists the days below either minimum and a day short of managers
  * opens the Managers sheet (templates/app/office-minimum-managers.php); off, this file prints what it printed before.
  *
- * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int,mgr?:array<string,mixed>} $om
+ * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int,mgr?:array<string,mixed>,scope?:array<string,mixed>} $om
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
@@ -18,7 +18,9 @@ $label = static function (string $d): string { return date_i18n('D j M', strtoti
 ?>
 <section class="wfo-om-banner" role="status" data-om-banner>
     <div class="wfo-om-banner-head"><span class="wfo-om-ico"><?php echo Icons::svg('alert', 20, 2.2); ?></span><div>
-        <h3><?php echo esc_html(sprintf(/* translators: %d: number of days */ _n('%d day below the office minimum', '%d days below the office minimum', count($om['short']), 'workforce-one'), count($om['short']))); ?></h3>
+        <h3><?php echo esc_html(!empty($om['scope']['dept'])
+            ? sprintf(/* translators: 1: department, 2: number of days */ _n('%1$s: %2$d day below its minimum', '%1$s: %2$d days below its minimum', count($om['short']), 'workforce-one'), $om['scope']['name'], count($om['short']))
+            : sprintf(/* translators: %d: number of days */ _n('%d day below the office minimum', '%d days below the office minimum', count($om['short']), 'workforce-one'), count($om['short']))); ?></h3>
         <p><?php esc_html_e('This is only a warning: the schedule still saves.', 'workforce-one'); ?></p></div></div>
     <ul>
     <?php foreach ($om['short'] as $d): $day = $om['days'][$d]; ?>

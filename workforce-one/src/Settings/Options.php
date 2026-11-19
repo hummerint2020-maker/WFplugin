@@ -199,6 +199,7 @@ final class Options
         'ews_schema_version' => ['group' => 'system', 'label' => 'Database version', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_week_lock_notified' => ['group' => 'system', 'label' => 'Week lock: last week employees were told about', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_office_minimum_reminded' => ['group' => 'system', 'label' => 'Office minimum: last weekly reminder', 'kind' => 'text', 'default' => '', 'internal' => true],
+        'ews_office_minimum_reminded_depts' => ['group' => 'system', 'label' => 'Office minimum: last weekly reminder of each department with its own settings', 'kind' => 'grouped', 'default' => [], 'internal' => true],
         'ews_corrections_reminded' => ['group' => 'system', 'label' => 'Attendance corrections: last end-of-day reminder', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_schedule_config_schema' => ['group' => 'system', 'label' => 'Schedule settings format', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_integrity_repair_done' => ['group' => 'system', 'label' => 'One-time data repair done', 'kind' => 'bool', 'default' => false, 'internal' => true],

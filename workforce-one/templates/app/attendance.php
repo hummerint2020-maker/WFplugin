@@ -36,7 +36,7 @@
  * @var string $preview_cancel_url
  * @var string $sample_url
  * @var string $post_url
- * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int,mgr?:array{ids:int[],teams:array<int,list<string>>,short:string[],any:string[]}}|null $office_min  Office minimum (3.31.77); null when off; mgr: the managers (3.31.153), only with them on
+ * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int,mgr?:array{ids:int[],teams:array<int,list<string>>,short:string[],any:string[]},scope?:array<string,mixed>,people?:int[]}|null $office_min  Office minimum (3.31.77); null when off; mgr: the managers (3.31.153), only with them on
  * @var string $office_min_html     its warning card and teams sheets (templates/app/office-minimum.php)
  * @var array{locked:bool,since:string,override:bool,soon:string}|null $week_lock  Week lock (3.31.121); null when off
  * @var callable $week_lock_when     "Thu 8 Oct, 5:00 PM"
@@ -236,7 +236,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
             </form>
             <?php endif; ?>
         </div>
-        <div class="ews-day-quick-actions">
+        <?php if (!empty($office_min['scope'])) include __DIR__ . '/office-minimum-scope.php'; /* by department (3.31.154) */ ?><div class="ews-day-quick-actions">
             <?php foreach ($dates as $i => $d): ?>
                 <div class="ews-day-quick <?php echo $d === $today ? 'is-today' : ''; ?>">
                     <label for="wfo-fill-<?php echo (int) $i; ?>"><?php echo esc_html(date_i18n('D', strtotime($d))); ?><small><?php echo esc_html(date_i18n('d M', strtotime($d))); ?></small></label>
@@ -266,7 +266,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
         <?php wp_nonce_field('ews31_att_grid_save'); ?>
 
         <div class="ews-att-table-wrap wfo-att-card" tabindex="0" role="region" aria-label="<?php esc_attr_e('Attendance', 'workforce-one'); ?>">
-            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>"<?php if ($office_min): ?> data-om-statuses="<?php echo esc_attr(wp_json_encode($office_min['statuses'])); ?>" data-om-dates="<?php echo esc_attr(wp_json_encode(array_values($dates))); ?>"<?php if (!empty($office_min['mgr'])): ?> data-om-managers="<?php echo esc_attr(wp_json_encode($office_min['mgr']['ids'])); ?>"<?php endif; ?><?php endif; ?>>
+            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>"<?php if ($office_min): ?> data-om-statuses="<?php echo esc_attr(wp_json_encode($office_min['statuses'])); ?>" data-om-dates="<?php echo esc_attr(wp_json_encode(array_values($dates))); ?>"<?php if (!empty($office_min['mgr'])): ?> data-om-managers="<?php echo esc_attr(wp_json_encode($office_min['mgr']['ids'])); ?>"<?php endif; ?><?php if (isset($office_min['people'])): ?> data-om-people="<?php echo esc_attr(wp_json_encode($office_min['people'])); ?>"<?php endif; ?><?php endif; ?>>
                 <thead><tr>
                     <th class="employee-col" scope="col"><?php esc_html_e('Employee', 'workforce-one'); ?></th>
                     <?php foreach ($dates as $d): ?>

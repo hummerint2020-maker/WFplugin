@@ -9111,3 +9111,71 @@ msgstr "في المكتب"
 
 msgid "Not in the office"
 msgstr "مش في المكتب"
+
+msgid "The whole company"
+msgstr "الشركة كلها"
+
+#, php-format
+msgid "%s department"
+msgstr "إدارة %s"
+
+#, php-format
+msgid "%d in the office"
+msgid_plural "%d in the office"
+msgstr[0] "%d في المكتب"
+msgstr[1] "%d في المكتب"
+msgstr[2] "%d في المكتب"
+msgstr[3] "%d في المكتب"
+msgstr[4] "%d في المكتب"
+msgstr[5] "%d في المكتب"
+
+#, php-format
+msgid "%d manager"
+msgid_plural "%d managers"
+msgstr[0] "%d مديرين"
+msgstr[1] "%d مدير"
+msgstr[2] "%d مدير"
+msgstr[3] "%d مديرين"
+msgstr[4] "%d مديرًا"
+msgstr[5] "%d مدير"
+
+msgid "Minimum for"
+msgstr "الحد الأدنى لـ"
+
+#, php-format
+msgid "%1$s: %2$d day below its minimum"
+msgid_plural "%1$s: %2$d days below its minimum"
+msgstr[0] "%1$s: %2$d أيام تحت الحد الأدنى بتاعها"
+msgstr[1] "%1$s: %2$d يوم تحت الحد الأدنى بتاعها"
+msgstr[2] "%1$s: %2$d يوم تحت الحد الأدنى بتاعها"
+msgstr[3] "%1$s: %2$d أيام تحت الحد الأدنى بتاعها"
+msgstr[4] "%1$s: %2$d يومًا تحت الحد الأدنى بتاعها"
+msgstr[5] "%1$s: %2$d يوم تحت الحد الأدنى بتاعها"
+
+#, php-format
+msgid "Each team's share = minimum × team size ÷ the department's employees (%1$d), rounded so the shares add up to exactly %2$d."
+msgstr "نصيب كل فريق = الحد الأدنى × عدد الفريق ÷ موظفين الإدارة (%1$d)، متقرّب بحيث المجموع يطلع %2$d بالظبط."
+
+#, php-format
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+msgid "own settings"
+msgstr "إعداداتها"
+
+msgid "as the company"
+msgstr "زي الشركة"
+
+msgid "Save before switching tabs: a tab shows its saved settings."
+msgstr "احفظ قبل ما تنقل بين التابات: كل تاب بيعرض إعداداته المحفوظة."
+
+#, php-format
+msgid "%s has its own settings"
+msgstr "%s ليها إعداداتها الخاصة"
+
+#, php-format
+msgid "Off = %1$s works with the company's settings. On = the settings below are for %1$s only: its people, its teams and its managers; its schedule managers see its numbers and get its reminder."
+msgstr "مقفولة = %1$s بتشتغل بإعدادات الشركة. مفتوحة = الإعدادات اللي تحت لـ %1$s بس: موظفيها وفرقها ومديرينها، ومديرين الجدول فيها بيشوفوا أرقامها ويوصلهم تذكيرها."
+
+msgid "This department has no people counted yet."
+msgstr "الإدارة دي مفيهاش موظفين بيتحسبوا لسه."

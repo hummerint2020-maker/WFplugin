@@ -18,7 +18,9 @@ $plan_icon = static function (string $kind, string $status): string {
 ?>
 <section class="wfo-om-banner" role="status" data-om-banner>
     <div class="wfo-om-banner-head"><span class="wfo-om-ico"><?php echo Icons::svg('alert', 20, 2.2); ?></span><div>
-        <h3><?php echo esc_html(sprintf(/* translators: %d: number of days */ _n('%d day below a minimum', '%d days below a minimum', count($om['mgr']['any']), 'workforce-one'), count($om['mgr']['any']))); ?></h3>
+        <h3><?php echo esc_html(!empty($om['scope']['dept'])
+            ? sprintf(/* translators: 1: department, 2: number of days */ _n('%1$s: %2$d day below its minimum', '%1$s: %2$d days below its minimum', count($om['mgr']['any']), 'workforce-one'), $om['scope']['name'], count($om['mgr']['any']))
+            : sprintf(/* translators: %d: number of days */ _n('%d day below a minimum', '%d days below a minimum', count($om['mgr']['any']), 'workforce-one'), count($om['mgr']['any']))); ?></h3>
         <p><?php esc_html_e('This is only a warning: the schedule still saves.', 'workforce-one'); ?></p></div></div>
     <ul>
     <?php foreach ($om['mgr']['any'] as $d): $day = $om['days'][$d]; $people = $day['short'] > 0; $mgr = !empty($day['mgr']) && $day['mgr']['short'] > 0; ?>

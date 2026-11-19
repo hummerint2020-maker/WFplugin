@@ -84,10 +84,54 @@ final class OfficeMinimumSettings
         $day = (int) ($post['om_reminder_day'] ?? 4);
         [$mgr, $error] = self::managersFromPost($post, $saved);
         if ($error !== '') return [[], $error];
-        return [[
+        $out = [
             'min' => (int) $min, 'days' => $days, 'statuses' => $statuses, 'teams' => $teams,
             'reminder' => empty($post['om_reminder']) ? 0 : 1, 'reminder_day' => ($day >= 0 && $day <= 6) ? $day : 4, 'reminder_time' => $time,
-        ] + $mgr, ''];
+        ] + $mgr;
+        // Departments with their own settings (3.31.154) are saved from their own tab: a company save keeps them as they are.
+        if (is_array($saved) && !empty($saved['depts']) && is_array($saved['depts'])) $out['depts'] = $saved['depts'];
+        return [$out, ''];
+    }
+
+    /**
+     * Departments with their own settings (3.31.154, docs/tasks/office-minimum-departments.md): department id => its settings,
+     * each read like the company's (defaults for what is missing). @param mixed $saved @return array<int,array<string,mixed>>
+     */
+    public static function departments($saved): array
+    {
+        $out = [];
+        if (!is_array($saved) || !isset($saved['depts']) || !is_array($saved['depts'])) return $out;
+        foreach ($saved['depts'] as $id => $part) {
+            if (!is_numeric($id) || (int) $id <= 0 || !is_array($part)) continue;
+            $out[(int) $id] = self::config($part);
+        }
+        return $out;
+    }
+
+    /**
+     * A department's tab of Feature Configuration: the whole option to store. The company's settings are kept as they are;
+     * without om_dept_own the department goes back to the company's (its part is removed, and 'depts' when it was the last).
+     * @param array<string,mixed> $post
+     * @param list<string> $known
+     * @param mixed $saved
+     * @return array{0:array<string,mixed>,1:string}
+     */
+    public static function departmentFromPost(array $post, array $known, $saved, int $dept): array
+    {
+        $all = is_array($saved) ? $saved : [];
+        $depts = isset($all['depts']) && is_array($all['depts']) ? $all['depts'] : [];
+        if (empty($post['om_dept_own'])) {
+            unset($depts[$dept]);
+        } else {
+            $mine = isset($depts[$dept]) && is_array($depts[$dept]) ? $depts[$dept] : [];
+            [$part, $error] = self::fromPost($post, $known, $mine);
+            if ($error !== '') return [[], $error];
+            unset($part['depts']);
+            $depts[$dept] = $part;
+        }
+        unset($all['depts']);
+        if ($depts) { ksort($depts); $all['depts'] = $depts; }
+        return [$all, ''];
     }
 
     /**

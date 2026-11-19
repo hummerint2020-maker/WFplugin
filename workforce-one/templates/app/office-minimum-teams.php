@@ -30,7 +30,9 @@ use WorkforceOne\Ui\Icons;
             </tbody>
             <tfoot><tr><th scope="row"><?php esc_html_e('Total', 'workforce-one'); ?></th><td><?php echo (int) $day['min']; ?></td><td><b><?php echo (int) $day['office']; ?></b></td><td><span class="wfo-om-gap is-short"><?php echo esc_html(sprintf(/* translators: %d: people missing */ __('%d short', 'workforce-one'), $day['short'])); ?></span></td></tr></tfoot>
         </table>
-        <p class="wfo-om-how"><?php echo esc_html(sprintf(/* translators: 1: number of employees, 2: minimum */ __('Each team\'s share = minimum × team size ÷ all employees (%1$d), rounded so the shares add up to exactly %2$d.', 'workforce-one'), $om['total'], $day['min'])); ?></p>
+        <p class="wfo-om-how"><?php echo esc_html(!empty($om['scope']['dept'])
+            ? sprintf(/* translators: 1: number of the department's employees, 2: minimum */ __('Each team\'s share = minimum × team size ÷ the department\'s employees (%1$d), rounded so the shares add up to exactly %2$d.', 'workforce-one'), $om['total'], $day['min'])
+            : sprintf(/* translators: 1: number of employees, 2: minimum */ __('Each team\'s share = minimum × team size ÷ all employees (%1$d), rounded so the shares add up to exactly %2$d.', 'workforce-one'), $om['total'], $day['min'])); ?></p>
         <button class="wfo-sheet-submit" type="button" data-wfo-sheet-close><?php echo Icons::svg('check', 18, 2.2); ?><?php esc_html_e('OK', 'workforce-one'); ?></button>
     </div>
 </dialog>
