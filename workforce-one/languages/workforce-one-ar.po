@@ -9195,3 +9195,7 @@ msgstr "من البيت"
 #, php-format
 msgid "Enough: %1$d in the office, the minimum is %2$d"
 msgstr "كفاية: %1$d في المكتب، والحد الأدنى %2$d"
+
+#, php-format
+msgid "Managers in the office on %1$s: %2$d of %3$d"
+msgstr "المديرين في المكتب يوم %1$s: %2$d من %3$d"

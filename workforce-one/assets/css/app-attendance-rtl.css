@@ -484,3 +484,4 @@ button.wfo-mom-day.is-btn:focus-visible{outline:2px solid #4F46E5;outline-offset
 .wfo-mom-list li.wfo-mom-head b{color:#1F2A44}
 .wfo-om-sheet-sum.is-ok{background:#EEF8F1}
 .wfo-om-sheet-sum.is-ok>div>span{color:#17703F}
+.wfo-om-sheet-sum .wfo-mom-day span{color:inherit;font-size:inherit}

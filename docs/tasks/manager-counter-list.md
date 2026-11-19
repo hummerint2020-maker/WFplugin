@@ -32,5 +32,18 @@ small arrow; Sunday tapped (enough managers, green); Thursday tapped (short, as 
 - Golden: a new page, the Attendance page with the managers' minimum on (min 3), declared in expected.json; every other
   page identical.
 
-## Review
-(below, after the read-only review)
+## Review (read-only, on Opus): nothing serious
+Checked clean: the department masking (headings, counts and order leak neither why nor working from home), byte-identical
+with the managers' minimum or the Office minimum off, the card and teams sheets unchanged, skipped days (holiday, minimum 0),
+a day with no managers, ids, the live counter, escaping, translations, tests.
+
+Fixed
+1. CONFIRMED (cosmetic). On a day with enough managers, the "/ 2" inside the summary pill was red under a green line
+   (`.wfo-om-sheet-sum span` matched it). The pill now keeps its own colour.
+2. CONFIRMED (accessibility). The button's name was only "2 / 1": it now has aria-haspopup="dialog" and an aria-label
+   "Managers in the office on Sunday 15 November: 2 of 1".
+
+Not changed
+3. PLAUSIBLE (UX, an owner call). The counter follows unsaved changes but the sheet shows the saved schedule, as the teams
+   sheets always have. Asked the owner.
+4. Nit. The headings are list items, not headings, for screen readers. Left as they are.
