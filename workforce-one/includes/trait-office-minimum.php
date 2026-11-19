@@ -1,6 +1,7 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+use WorkforceOne\Schedule\ManagerMinimum;
 use WorkforceOne\Schedule\OfficeMinimum;
 use WorkforceOne\Settings\OfficeMinimumSettings;
 
@@ -23,6 +24,9 @@ trait EWS_Office_Minimum_Trait {
 
     private function om_settings(){ return OfficeMinimumSettings::config(get_option('ews_office_minimum',[])); }
 
+    /** Manager office minimum (3.31.153): a minimum of team managers in the office too; only with the Office minimum on. */
+    private function om_mgr_on(){ return $this->om_enabled() && !empty($this->om_settings()['mgr']); }
+
     /** Does a planned status count as in the office? */
     private function om_counts($status){ return in_array((string)$status,$this->om_settings()['statuses'],true); }
 
@@ -34,7 +38,8 @@ trait EWS_Office_Minimum_Trait {
 
     /**
      * Everyone the minimum counts (active, attendance on) with their primary team, as the Attendance
-     * page groups them. @return array{people:array<int,array{name:string,team:int}>,teams:array<int,string>,sizes:array<int,int>}
+     * page groups them, and the team managers among them (a manager of two teams once).
+     * @return array{people:array<int,array{name:string,team:int}>,teams:array<int,string>,sizes:array<int,int>,managers:array<int,list<string>>}
      */
     private function om_people(){
         static $cache=null;
@@ -45,8 +50,9 @@ trait EWS_Office_Minimum_Trait {
         $t=$this->team_tables();
         $ids=[];
         foreach((array)$wpdb->get_results("SELECT id,name FROM {$t['teams']} WHERE active=1") as $r)$ids[(string)$r->name]=(int)$r->id;
-        $people=[];$teams=[0=>__('No team','workforce-one')];$sizes=[];
+        $people=[];$teams=[0=>__('No team','workforce-one')];$sizes=[];$managed=[];
         foreach($emps as $e){
+            if(!empty($e->_schedule_manager_teams))$managed[(int)$e->id]=(array)$e->_schedule_manager_teams;
             $name=(string)($e->_schedule_primary_team??'');
             $tid=$name!==''&&isset($ids[$name])?$ids[$name]:0;
             if($tid)$teams[$tid]=$name;
@@ -57,7 +63,7 @@ trait EWS_Office_Minimum_Trait {
         $named=array_diff_key($teams,[0=>1]);natcasesort($named);
         $teams=$named+(isset($sizes[0])?[0=>$teams[0]]:[]);
         $sorted=[];foreach($teams as $k=>$n)if(isset($sizes[$k]))$sorted[$k]=$sizes[$k];
-        return $cache=['people'=>$people,'teams'=>$teams,'sizes'=>$sorted];
+        return $cache=['people'=>$people,'teams'=>$teams,'sizes'=>$sorted,'managers'=>ManagerMinimum::managers($managed)];
     }
 
     /**
@@ -72,6 +78,7 @@ trait EWS_Office_Minimum_Trait {
         global $wpdb;
         $cfg=$this->om_settings();
         $p=$this->om_people();
+        $mgr_on=!empty($cfg['mgr']);
         $holidays=$this->company_leave_dates(min($dates),max($dates));
         $map=[];
         $ph=implode(',',array_fill(0,count($dates),'%s'));
@@ -81,15 +88,22 @@ trait EWS_Office_Minimum_Trait {
             if(isset($holidays[$d])||!$this->is_working_day($d)){$out[$d]=null;continue;}
             $min=OfficeMinimum::minimumFor($cfg,$d);
             if($min<=0){$out[$d]=null;continue;}
-            $office=array_fill_keys(array_keys($p['sizes']),0);$can=[];
+            $office=array_fill_keys(array_keys($p['sizes']),0);$can=[];$plans=[];
             foreach($p['people'] as $eid=>$who){
                 $st=$map[$eid][$d]??'';
-                if($this->om_counts($st))$office[$who['team']]++;
+                $in=$this->om_counts($st);
+                if($in)$office[$who['team']]++;
                 elseif($this->om_could_come($st))$can[$who['team']][]=$who['name'];
+                if($mgr_on&&isset($p['managers'][$eid]))$plans[$eid]=['kind'=>$in?'office':($this->om_could_come($st)?'wfh':'other'),'status'=>$st];
             }
             $day=OfficeMinimum::day($min,OfficeMinimum::shares($min,$p['sizes'],array_intersect_key($cfg['teams'],$p['sizes'])),$office);
             foreach($day['teams'] as &$row){$row['name']=$p['teams'][$row['team']]??'';$row['size']=$p['sizes'][$row['team']]??0;$row['can']=$row['gap']<0?($can[$row['team']]??[]):[];}
             unset($row);
+            // The managers (3.31.153): only with them on, so the day is as before otherwise.
+            if($mgr_on){
+                $mm=ManagerMinimum::minimumFor($cfg,$d);
+                $day['mgr']=$mm>0?ManagerMinimum::day($mm,$plans,array_map(function($w){return $w['name'];},array_intersect_key($p['people'],$p['managers']))):null;
+            }
             $out[$d]=$day;
         }
         return $out;
@@ -103,7 +117,16 @@ trait EWS_Office_Minimum_Trait {
         wp_enqueue_style('workforce-one-requests');
         wp_enqueue_script('workforce-one-sheet');
         wp_enqueue_script('workforce-one-office-minimum');
-        return ['days'=>$days,'short'=>$short,'statuses'=>$this->om_settings()['statuses'],'total'=>count($this->om_people()['people'])];
+        $out=['days'=>$days,'short'=>$short,'statuses'=>$this->om_settings()['statuses'],'total'=>count($this->om_people()['people'])];
+        if($this->om_mgr_on()){
+            $visible=$this->om_mgr_visible();
+            if($visible!==null)foreach($days as $d=>$day)if($day&&!empty($day['mgr']))$days[$d]['mgr']=$this->om_mgr_for_viewer($day['mgr'],$visible);
+            $out['days']=$days;
+            $mshort=array_keys(array_filter($days,function($d){return $d && !empty($d['mgr']) && $d['mgr']['short']>0;}));
+            $out['mgr']=['ids'=>array_keys($this->om_people()['managers']),'teams'=>$this->om_people()['managers'],'short'=>$mshort,
+                'any'=>array_values(array_filter(array_keys($days),function($d)use($short,$mshort){return in_array($d,$short,true)||in_array($d,$mshort,true);}))];
+        }
+        return $out;
     }
 
     /**
@@ -126,10 +149,24 @@ trait EWS_Office_Minimum_Trait {
             if($after[$d]['short']<=0)continue;
             if($worst===null||$after[$d]['short']>$after[$worst]['short'])$worst=$d;
         }
-        if($worst===null)return null;
+        // A manager's leave (3.31.153): the day it leaves furthest below the managers' minimum, from the same two reads.
+        $mgr=null;
+        if(!empty($this->om_settings()['mgr'])&&isset($p['managers'][(int)$employee_id])){
+            $m=function($days){return array_map(function($x){return $x['mgr']??null;},$days);};
+            $md=ManagerMinimum::worstDrop($m($before),$m($after),$dates);
+            if($md!==null){
+                $a=$this->om_mgr_for_viewer($after[$md]['mgr'],$this->om_mgr_visible());   // who could come in: only those the approver may see
+                $can=[];foreach($a['can'] as $id)$can[]=(string)($p['people'][$id]['name']??'');
+                $mgr=['date'=>$md,'office'=>$a['office'],'min'=>$a['min'],'can'=>$can];
+            }
+        }
+        if($worst===null&&$mgr===null)return null;
+        if($worst===null)return ['mgr'=>$mgr];
         $team=(int)$p['people'][(int)$employee_id]['team'];
         $row=null;foreach($after[$worst]['teams'] as $r)if($r['team']===$team)$row=$r;
-        return ['date'=>$worst,'office'=>$after[$worst]['office'],'min'=>$after[$worst]['min'],'team'=>$row?$row['name']:'','team_office'=>$row?$row['office']:0,'share'=>$row?$row['share']:0];
+        $out=['date'=>$worst,'office'=>$after[$worst]['office'],'min'=>$after[$worst]['min'],'team'=>$row?$row['name']:'','team_office'=>$row?$row['office']:0,'share'=>$row?$row['share']:0];
+        if($mgr!==null)$out['mgr']=$mgr;
+        return $out;
     }
 
     /** The teams for the settings table: size and automatic share. @return array<int,array{name:string,size:int,share:int}> */
@@ -141,6 +178,42 @@ trait EWS_Office_Minimum_Trait {
         $out=[];
         foreach($p['sizes'] as $tid=>$n)$out[$tid]=['name'=>$p['teams'][$tid]??'','size'=>$n,'share'=>$auto[$tid]??0];
         return $out;
+    }
+
+    /**
+     * The managers whose plan the viewer may see (owner, 2026-11-18): those in the viewer's department scope; null = all
+     * (an administrator). The others show only "in the office" or "not in the office", never why.
+     * @return array<int,true>|null
+     */
+    private function om_mgr_visible(){
+        if(current_user_can('manage_options'))return null;
+        return array_fill_keys($this->department_employee_ids(),true);
+    }
+
+    /**
+     * A day's managers as the viewer may see them: outside their scope, the plan is only in / not in the office (no status, not
+     * "could come in"), in the same order as if they were away. @param array<string,mixed> $m ManagerMinimum::day() @return array<string,mixed>
+     */
+    private function om_mgr_for_viewer(array $m,$visible){
+        if($visible===null)return $m;
+        foreach($m['rows'] as &$r){
+            if(isset($visible[$r['id']]))continue;
+            $r['masked']=true;$r['status']='';
+            if($r['kind']!=='office')$r['kind']='other';
+        }
+        unset($r);
+        $order=['office'=>0,'wfh'=>1];
+        usort($m['rows'],function($a,$b)use($order){return [$order[$a['kind']]??2,$a['name'],$a['id']]<=>[$order[$b['kind']]??2,$b['name'],$b['id']];});
+        $m['can']=array_values(array_filter($m['can'],function($id)use($visible){return isset($visible[$id]);}));
+        return $m;
+    }
+
+    /** The team managers the managers' minimum counts, for Feature Configuration (3.31.153). @return list<string> names */
+    private function om_admin_managers(){
+        $p=$this->om_people();$out=[];
+        foreach($p['managers'] as $eid=>$teams)$out[]=(string)($p['people'][$eid]['name']??'');
+        natcasesort($out);
+        return array_values($out);
     }
 
     /** "Thursday 15 October" */
@@ -163,10 +236,22 @@ trait EWS_Office_Minimum_Trait {
     /** Sends next week's short days to the schedule managers. @return int people notified */
     private function om_remind($any_day_next_week){
         [$dates]=$this->week_dates_configured($any_day_next_week);
-        $short=array_filter($this->om_days($dates),function($d){return $d && $d['short']>0;});
+        $short=array_filter($this->om_days($dates),function($d){return $d && ($d['short']>0 || (!empty($d['mgr']) && $d['mgr']['short']>0));});
         if(!$short)return 0;
         $parts=[];
-        foreach($short as $d=>$day)/* translators: 1: day, 2: in the office, 3: minimum */$parts[]=sprintf(__('%1$s %2$d of %3$d','workforce-one'),date_i18n('D j M',strtotime($d)),$day['office'],$day['min']);
+        foreach($short as $d=>$day){
+            $mg=!empty($day['mgr'])&&$day['mgr']['short']>0?$day['mgr']:null;   // managers short (3.31.153); never set with them off
+            if($day['short']>0){
+                /* translators: 1: day, 2: in the office, 3: minimum */
+                $part=sprintf(__('%1$s %2$d of %3$d','workforce-one'),date_i18n('D j M',strtotime($d)),$day['office'],$day['min']);
+                /* translators: 1: managers in the office, 2: managers' minimum */
+                if($mg)$part.=sprintf(__(', %1$d of %2$d managers','workforce-one'),$mg['office'],$mg['min']);
+            }else{
+                /* translators: 1: day, 2: managers in the office, 3: managers' minimum */
+                $part=sprintf(__('%1$s %2$d of %3$d managers','workforce-one'),date_i18n('D j M',strtotime($d)),$mg['office'],$mg['min']);
+            }
+            $parts[]=$part;
+        }
         $users=get_users(['capability'=>'ews_manage_attendance','fields'=>['ID']]);
         if(!$users)$users=get_users(['role'=>'administrator','fields'=>['ID']]);
         $url=add_query_arg(['ews_view'=>'attendance','week'=>$dates[0]],$this->app_home_url());

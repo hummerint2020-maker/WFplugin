@@ -93,3 +93,8 @@
 .wfo-om-note strong{display:block;color:#5C3A00;font-size:13px}
 .wfo-om-note .wfo-icon{flex:0 0 auto;color:#B07400;margin-top:1px}
 
+
+/* Manager office minimum (3.31.153): approving a manager's leave. */
+.wfo-om-note.is-mgr{background:#FFF0F3;color:#7A2A3E}
+.wfo-om-note.is-mgr strong{color:#A51D3E}
+.wfo-om-note.is-mgr .wfo-icon{color:#C2264B}

@@ -12401,3 +12401,136 @@ msgstr ""
 #: templates/app/attendance.php
 msgid "All shown by default, as today. A hidden card is only taken off the page; the numbers stay in the reports."
 msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Managers in the office / minimum"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid ", %1$d of %2$d managers"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "%1$s %2$d of %3$d managers"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "Approving makes %1$s %2$d of %3$d managers in the office"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "Could come in (working from home): %s."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "%d day below a minimum"
+msgid_plural "%d days below a minimum"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "%1$d of %2$d managers"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Managers"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "Managers on %s"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "%d manager below the minimum"
+msgid_plural "%d managers below the minimum"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum-managers.php
+msgid "No team has a manager yet: set them on the Teams page."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "%s manager"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Could come in"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Managers = the team managers (marked \"Manager\" on the grid). Those working from home could come in; leave and trips never count."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Managers in the office"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "A minimum number of team managers in the office every working day too. Works only while the Office minimum is on."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "A minimum for managers too"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Managers each day"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "managers in the office"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Managers also count in the minimum above."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "Only %d team manager is counted: every working day will be below this number."
+msgid_plural "Only %d team managers are counted: every working day will be below this number."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Empty = the managers' minimum. 0 = no managers' minimum that day."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Who the managers are"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+#, php-format
+msgid "The team managers (%1$d): %2$s"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "From the Teams page; a manager of two teams counts once, and people without attendance tracking are not counted. Uses the same \"in the office\" statuses and reminder as the minimum above."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Office Minimum: enter a managers' minimum of 1 or more. Nothing was saved."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Office Minimum: a weekday's number of managers must be 0 or more. Nothing was saved."
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "In the office"
+msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Not in the office"
+msgstr ""

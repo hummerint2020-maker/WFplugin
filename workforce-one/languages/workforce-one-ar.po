@@ -8995,3 +8995,119 @@ msgstr "(مع نوع الإجازة)"
 
 msgid "All shown by default, as today. A hidden card is only taken off the page; the numbers stay in the reports."
 msgstr "كلها ظاهرة افتراضيًا، زي دلوقتي. الكارت المخفي بيتشال من الصفحة بس، والأرقام زي ما هي في التقارير."
+
+msgid "Managers in the office / minimum"
+msgstr "مديرين في المكتب / الحد الأدنى"
+
+#, php-format
+msgid ", %1$d of %2$d managers"
+msgstr "، %1$d من %2$d مديرين"
+
+#, php-format
+msgid "%1$s %2$d of %3$d managers"
+msgstr "%1$s %2$d من %3$d مديرين"
+
+#, php-format
+msgid "Approving makes %1$s %2$d of %3$d managers in the office"
+msgstr "الموافقة هتخلّي %1$s %2$d من %3$d مديرين في المكتب"
+
+#, php-format
+msgid "Could come in (working from home): %s."
+msgstr "ممكن ييجوا (من البيت): %s."
+
+#, php-format
+msgid "%d day below a minimum"
+msgid_plural "%d days below a minimum"
+msgstr[0] "%d أيام تحت الحد الأدنى"
+msgstr[1] "%d يوم تحت الحد الأدنى"
+msgstr[2] "%d يوم تحت الحد الأدنى"
+msgstr[3] "%d أيام تحت الحد الأدنى"
+msgstr[4] "%d يومًا تحت الحد الأدنى"
+msgstr[5] "%d يوم تحت الحد الأدنى"
+
+#, php-format
+msgid "%1$d of %2$d managers"
+msgstr "%1$d من %2$d مديرين"
+
+msgid "Managers"
+msgstr "المديرين"
+
+#, php-format
+msgid "Managers on %s"
+msgstr "المديرين يوم %s"
+
+#, php-format
+msgid "%d manager below the minimum"
+msgid_plural "%d managers below the minimum"
+msgstr[0] "%d مديرين ناقصين عن الحد الأدنى"
+msgstr[1] "%d مدير ناقص عن الحد الأدنى"
+msgstr[2] "%d مدير ناقصين عن الحد الأدنى"
+msgstr[3] "%d مديرين ناقصين عن الحد الأدنى"
+msgstr[4] "%d مديرًا ناقصين عن الحد الأدنى"
+msgstr[5] "%d مدير ناقصين عن الحد الأدنى"
+
+msgid "No team has a manager yet: set them on the Teams page."
+msgstr "مفيش فريق ليه مدير لسه: حدّدهم من صفحة الفرق."
+
+#, php-format
+msgid "%s manager"
+msgstr "مدير %s"
+
+msgid "Could come in"
+msgstr "ممكن ييجي"
+
+msgid "Managers = the team managers (marked \"Manager\" on the grid). Those working from home could come in; leave and trips never count."
+msgstr "المديرين = مديرين الفرق (اللي عليهم علامة «مدير» في الجدول). اللي من البيت ممكن ييجوا؛ الإجازة والمأمورية مش بتتحسب."
+
+msgid "Managers in the office"
+msgstr "المديرين في المكتب"
+
+msgid "A minimum number of team managers in the office every working day too. Works only while the Office minimum is on."
+msgstr "حد أدنى لعدد مديرين الفرق في المكتب كل يوم عمل كمان. بيشتغل بس والحد الأدنى في المكتب شغال."
+
+msgid "A minimum for managers too"
+msgstr "حد أدنى للمديرين كمان"
+
+msgid "Managers each day"
+msgstr "المديرين كل يوم"
+
+msgid "managers in the office"
+msgstr "مديرين في المكتب"
+
+msgid "Managers also count in the minimum above."
+msgstr "المديرين بيتحسبوا في الحد الأدنى اللي فوق كمان."
+
+#, php-format
+msgid "Only %d team manager is counted: every working day will be below this number."
+msgid_plural "Only %d team managers are counted: every working day will be below this number."
+msgstr[0] "فيه %d مديرين فرق بس: كل أيام العمل هتبقى تحت الرقم ده."
+msgstr[1] "فيه %d مدير فريق بس: كل أيام العمل هتبقى تحت الرقم ده."
+msgstr[2] "فيه %d مدير فريق بس: كل أيام العمل هتبقى تحت الرقم ده."
+msgstr[3] "فيه %d مديرين فرق بس: كل أيام العمل هتبقى تحت الرقم ده."
+msgstr[4] "فيه %d مدير فريق بس: كل أيام العمل هتبقى تحت الرقم ده."
+msgstr[5] "فيه %d مدير فريق بس: كل أيام العمل هتبقى تحت الرقم ده."
+
+msgid "Empty = the managers' minimum. 0 = no managers' minimum that day."
+msgstr "فاضي = الحد الأدنى للمديرين. 0 = مفيش حد أدنى للمديرين اليوم ده."
+
+msgid "Who the managers are"
+msgstr "مين المديرين"
+
+#, php-format
+msgid "The team managers (%1$d): %2$s"
+msgstr "مديرين الفرق (%1$d): %2$s"
+
+msgid "From the Teams page; a manager of two teams counts once, and people without attendance tracking are not counted. Uses the same \"in the office\" statuses and reminder as the minimum above."
+msgstr "من صفحة الفرق؛ مدير فريقين بيتحسب مرة واحدة، واللي مش بيسجّل حضور مش بيتحسب. بيستخدم نفس حالات «في المكتب» والتذكير بتوع الحد الأدنى اللي فوق."
+
+msgid "Office Minimum: enter a managers' minimum of 1 or more. Nothing was saved."
+msgstr "الحد الأدنى في المكتب: اكتب حد أدنى للمديرين 1 أو أكتر. متحفظش حاجة."
+
+msgid "Office Minimum: a weekday's number of managers must be 0 or more. Nothing was saved."
+msgstr "الحد الأدنى في المكتب: عدد المديرين في يوم لازم يبقى 0 أو أكتر. متحفظش حاجة."
+
+msgid "In the office"
+msgstr "في المكتب"
+
+msgid "Not in the office"
+msgstr "مش في المكتب"

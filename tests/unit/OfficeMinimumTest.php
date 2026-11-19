@@ -65,4 +65,27 @@ final class OfficeMinimumTest extends TestCase
         $this->assertSame('time', OfficeMinimumSettings::fromPost(['om_min' => '5', 'om_statuses' => ['Office'], 'om_reminder_time' => '25:00'], $known)[1]);
         $this->assertSame(['min' => 7, 'days' => [2 => 3]], array_intersect_key(OfficeMinimumSettings::config(['min' => '7', 'days' => ['2' => '3', '9' => '1']]), ['min' => 1, 'days' => 1]));
     }
+
+    public function testManagerSettingsAreStoredOnlyWhenUsed(): void
+    {
+        $known = ['Office', 'WFH'];
+        $base = ['om_min' => '12', 'om_statuses' => ['Office'], 'om_reminder_time' => '12:00'];
+        [$old] = OfficeMinimumSettings::fromPost($base, $known);
+        $this->assertSame(['min', 'days', 'statuses', 'teams', 'reminder', 'reminder_day', 'reminder_time'], array_keys($old), 'an older form: as before');
+        [$same] = OfficeMinimumSettings::fromPost($base + ['om_mgr_present' => '1', 'om_mgr_min' => '2', 'om_mgr_days' => ['1' => '']], $known);
+        $this->assertSame($old, $same, 'the managers\' part untouched: nothing more is stored');
+        [$on, $e] = OfficeMinimumSettings::fromPost($base + ['om_mgr_present' => '1', 'om_mgr' => '1', 'om_mgr_min' => '3', 'om_mgr_days' => ['4' => '0']], $known);
+        $this->assertSame('', $e);
+        $this->assertSame(['mgr' => 1, 'mgr_min' => 3, 'mgr_days' => [4 => 0]], array_intersect_key($on, ['mgr' => 1, 'mgr_min' => 1, 'mgr_days' => 1]));
+        $this->assertSame('mgr_min', OfficeMinimumSettings::fromPost($base + ['om_mgr_present' => '1', 'om_mgr' => '1', 'om_mgr_min' => '0'], $known)[1]);
+        $this->assertSame('mgr_day', OfficeMinimumSettings::fromPost($base + ['om_mgr_present' => '1', 'om_mgr' => '1', 'om_mgr_min' => '2', 'om_mgr_days' => ['2' => '-1']], $known)[1]);
+        [$off] = OfficeMinimumSettings::fromPost($base + ['om_mgr_present' => '1', 'om_mgr_min' => ''], $known, ['mgr' => 1, 'mgr_min' => 4]);
+        $this->assertSame(4, $off['mgr_min'], 'switched off with a blank number: the saved number stays');
+        $this->assertArrayNotHasKey('mgr', $off);
+        [$kept] = OfficeMinimumSettings::fromPost($base, $known, ['min' => 9, 'mgr' => 1, 'mgr_min' => 3]);
+        $this->assertSame(1, $kept['mgr'], 'an older form keeps the managers\' part');
+        $c = OfficeMinimumSettings::config(['mgr' => '1', 'mgr_min' => '0', 'mgr_days' => ['2' => '1', '9' => '1']]);
+        $this->assertSame([1, 2, [2 => 1]], [$c['mgr'], $c['mgr_min'], $c['mgr_days']]);
+        $this->assertSame([0, 2, []], [OfficeMinimumSettings::config([])['mgr'], OfficeMinimumSettings::config(null)['mgr_min'], OfficeMinimumSettings::config([])['mgr_days']]);
+    }
 }

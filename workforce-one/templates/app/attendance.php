@@ -36,7 +36,7 @@
  * @var string $preview_cancel_url
  * @var string $sample_url
  * @var string $post_url
- * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int}|null $office_min  Office minimum (3.31.77); null when off
+ * @var array{days:array<string,array<string,mixed>|null>,short:string[],statuses:string[],total:int,mgr?:array{ids:int[],teams:array<int,list<string>>,short:string[],any:string[]}}|null $office_min  Office minimum (3.31.77); null when off; mgr: the managers (3.31.153), only with them on
  * @var string $office_min_html     its warning card and teams sheets (templates/app/office-minimum.php)
  * @var array{locked:bool,since:string,override:bool,soon:string}|null $week_lock  Week lock (3.31.121); null when off
  * @var callable $week_lock_when     "Thu 8 Oct, 5:00 PM"
@@ -49,7 +49,10 @@ $om_counter = static function (string $d) use ($office_min): string {
     if (!$office_min) return '';
     $day = $office_min['days'][$d] ?? null;
     if (!$day) return '<span class="wfo-om-day is-off" data-om-day="' . esc_attr($d) . '">' . esc_html__('No minimum', 'workforce-one') . '</span>';
-    return '<span class="wfo-om-day ' . ($day['short'] > 0 ? 'is-short' : 'is-ok') . '" data-om-day="' . esc_attr($d) . '" data-om-base="' . (int) $day['office'] . '" data-om-min="' . (int) $day['min'] . '" title="' . esc_attr__('In the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('office', 13, 2.2) . '<b>' . (int) $day['office'] . '</b><span>/ ' . (int) $day['min'] . '</span></span>';
+    $html = '<span class="wfo-om-day ' . ($day['short'] > 0 ? 'is-short' : 'is-ok') . '" data-om-day="' . esc_attr($d) . '" data-om-base="' . (int) $day['office'] . '" data-om-min="' . (int) $day['min'] . '" title="' . esc_attr__('In the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('office', 13, 2.2) . '<b>' . (int) $day['office'] . '</b><span>/ ' . (int) $day['min'] . '</span></span>';
+    // Manager office minimum (3.31.153): the managers' counter next to it, only with it on.
+    if (!empty($day['mgr'])) $html .= '<span class="wfo-mom-day ' . ($day['mgr']['short'] > 0 ? 'is-short' : 'is-ok') . '" data-mom-day="' . esc_attr($d) . '" data-mom-base="' . (int) $day['mgr']['office'] . '" data-mom-min="' . (int) $day['mgr']['min'] . '" title="' . esc_attr__('Managers in the office / minimum', 'workforce-one') . '">' . \WorkforceOne\Ui\Icons::svg('people', 13, 2.2) . '<b>' . (int) $day['mgr']['office'] . '</b><span>/ ' . (int) $day['mgr']['min'] . '</span></span>';
+    return $html;
 };
 use WorkforceOne\Ui\Icons;
 // phpcs:disable WordPress.Security.EscapeOutput -- Icons::svg() is static markup; the helpers below escape their output.
@@ -263,7 +266,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
         <?php wp_nonce_field('ews31_att_grid_save'); ?>
 
         <div class="ews-att-table-wrap wfo-att-card" tabindex="0" role="region" aria-label="<?php esc_attr_e('Attendance', 'workforce-one'); ?>">
-            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>"<?php if ($office_min): ?> data-om-statuses="<?php echo esc_attr(wp_json_encode($office_min['statuses'])); ?>" data-om-dates="<?php echo esc_attr(wp_json_encode(array_values($dates))); ?>"<?php endif; ?>>
+            <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>"<?php if ($office_min): ?> data-om-statuses="<?php echo esc_attr(wp_json_encode($office_min['statuses'])); ?>" data-om-dates="<?php echo esc_attr(wp_json_encode(array_values($dates))); ?>"<?php if (!empty($office_min['mgr'])): ?> data-om-managers="<?php echo esc_attr(wp_json_encode($office_min['mgr']['ids'])); ?>"<?php endif; ?><?php endif; ?>>
                 <thead><tr>
                     <th class="employee-col" scope="col"><?php esc_html_e('Employee', 'workforce-one'); ?></th>
                     <?php foreach ($dates as $d): ?>

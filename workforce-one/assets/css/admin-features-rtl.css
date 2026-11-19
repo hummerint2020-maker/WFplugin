@@ -79,3 +79,8 @@
 .wfo-lt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,max-content));gap:10px 28px;margin:12px 0 4px;border:0;padding:0}
 .wfo-lt-card{display:flex;align-items:center;gap:6px}
 @media (max-width:600px){.wfo-lt-cards{grid-template-columns:minmax(0,1fr)}}
+
+/* Manager office minimum (3.31.153): the managers' part under Office Minimum. */
+.wfo-mom-admin{margin-top:18px;padding-top:6px;border-top:1px dashed #c3c4c7}
+.wfo-mom-admin h3{margin:12px 0 4px;font-size:14px}
+.wfo-mom-warn{color:#b32d2e}
