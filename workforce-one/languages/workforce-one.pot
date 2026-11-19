@@ -12630,3 +12630,7 @@ msgstr ""
 #, php-format
 msgid "Managers in the office on %1$s: %2$d of %3$d"
 msgstr ""
+
+#: templates/app/office-minimum-managers.php
+msgid "Changes not saved yet are not shown here."
+msgstr ""

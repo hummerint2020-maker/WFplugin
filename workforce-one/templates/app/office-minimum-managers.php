@@ -48,6 +48,7 @@ $groups = ['office' => __('In the office', 'workforce-one'), 'wfh' => __('Workin
             <div><strong><?php echo esc_html(date_i18n('l j F', strtotime($d))); ?></strong><span><?php echo esc_html($ok
                 ? sprintf(/* translators: 1: managers in the office, 2: managers' minimum */ __('Enough: %1$d in the office, the minimum is %2$d', 'workforce-one'), $m['office'], $m['min'])
                 : sprintf(/* translators: %d: managers missing */ _n('%d manager below the minimum', '%d managers below the minimum', $m['short'], 'workforce-one'), $m['short'])); ?></span></div></div>
+        <p class="wfo-mom-unsaved" data-mom-unsaved hidden><?php echo Icons::svg('alert', 14, 2.2); ?><?php esc_html_e('Changes not saved yet are not shown here.', 'workforce-one'); ?></p>
         <?php if (!$m['rows']): ?><p class="wfo-om-how"><?php esc_html_e('No team has a manager yet: set them on the Teams page.', 'workforce-one'); ?></p><?php else: ?>
         <ul class="wfo-mom-list">
         <?php foreach ($m['rows'] as $r): $g = $r['kind'] === 'office' || $r['kind'] === 'wfh' ? $r['kind'] : 'other'; $cls = 'is-' . $g; ?>

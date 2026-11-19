@@ -167,6 +167,7 @@ check('the managers\' counter is a button opening that day\'s Managers sheet (10
 tue = mgr_sheet(pg, DATES[2])
 check('a day with enough managers has its sheet too: "Enough: 2 in the office, the minimum is 2", green', 'Enough: 2 in the office, the minimum is 2' in tue and 'wfo-om-sheet-sum is-ok' in tue and 'below the minimum' not in tue, tue[:300])
 check('...with each manager\'s plan', sheet_rows(tue) == [('Adel Hamdy', 'Office', False), ('Hesham Fathy', 'Office', False), ('Ahmed Samir', 'WFH', True)], sheet_rows(tue))
+check('...each sheet carries the "not saved yet" line, hidden until a manager\'s cell that day changes (assets/js/office-minimum.js)', all(re.search(r'<p class="wfo-mom-unsaved" data-mom-unsaved hidden>', mgr_sheet(pg, d)) for d in DATES[:5]) and 'data-mom-unsaved' not in re.sub(r'<dialog.*?</dialog>', '', pg, flags=re.S))
 check('...the warning still offers Managers only for a day short of managers', b[DATES[2]][3] is False and b[DATES[1]][3] is True)
 check('the people\'s teams sheets are still there (Tuesday, Thursday)', 'id="wfo-om-%s"' % DATES[2] in pg and 'id="wfo-om-%s"' % DATES[4] in pg)
 

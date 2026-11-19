@@ -45,5 +45,6 @@ Fixed
 
 Not changed
 3. PLAUSIBLE (UX, an owner call). The counter follows unsaved changes but the sheet shows the saved schedule, as the teams
-   sheets always have. Asked the owner.
+   sheets always have. Owner (2026-11-19): add a line. Each sheet has a hidden "Changes not saved yet are not shown here."
+   that assets/js/office-minimum.js shows while a manager's cell that day differs from the saved plan.
 4. Nit. The headings are list items, not headings, for screen readers. Left as they are.

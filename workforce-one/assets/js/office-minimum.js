@@ -1,7 +1,8 @@
 /* Office minimum on the Attendance page (3.31.77, templates/app/attendance.php): while days are
    changed in the grid, each day's "in the office / minimum" counter follows the unsaved changes.
    The server's count covers the whole company (data-om-base); this adds what the changed cells on
-   this page add or remove. The warning card and the teams sheets show the saved schedule. */
+   this page add or remove. The warning card and the teams sheets show the saved schedule; a day's
+   Managers sheet (3.31.155) says so while a manager's cell that day has an unsaved change. */
 (function () {
     'use strict';
 
@@ -23,14 +24,17 @@
         (managers || []).forEach(function (id) { isManager[String(id)] = true; });
 
         function update() {
-            var delta = {}, mdelta = {};
+            var delta = {}, mdelta = {}, mchanged = {};
             cells.forEach(function (td) {
                 var d = dates[parseInt(td.getAttribute('data-day'), 10)];
                 if (!d) return;
                 if (only && !inScope[td.getAttribute('data-employee')]) return;
                 var change = counts(td.getAttribute('data-planned') || '') - counts(td.getAttribute('data-om-orig'));
                 delta[d] = (delta[d] || 0) + change;
-                if (managers && isManager[td.getAttribute('data-employee')]) mdelta[d] = (mdelta[d] || 0) + change;
+                if (managers && isManager[td.getAttribute('data-employee')]) {
+                    mdelta[d] = (mdelta[d] || 0) + change;
+                    if ((td.getAttribute('data-planned') || '') !== td.getAttribute('data-om-orig')) mchanged[d] = true;
+                }
             });
             if (managers) document.querySelectorAll('[data-mom-base]').forEach(function (el) {
                 var d = el.getAttribute('data-mom-day');
@@ -41,6 +45,8 @@
                 el.classList.toggle('is-short', n < min);
                 el.classList.toggle('is-ok', n >= min);
                 el.classList.toggle('is-changed', !!mdelta[d]);
+                var note = document.querySelector('#wfo-mom-' + d + ' [data-mom-unsaved]');
+                if (note) note.hidden = !mchanged[d];
             });
             document.querySelectorAll('[data-om-base]').forEach(function (el) {
                 var d = el.getAttribute('data-om-day');

@@ -9199,3 +9199,6 @@ msgstr "كفاية: %1$d في المكتب، والحد الأدنى %2$d"
 #, php-format
 msgid "Managers in the office on %1$s: %2$d of %3$d"
 msgstr "المديرين في المكتب يوم %1$s: %2$d من %3$d"
+
+msgid "Changes not saved yet are not shown here."
+msgstr "التغييرات اللي لسه ما اتحفظتش مش ظاهرة هنا."
