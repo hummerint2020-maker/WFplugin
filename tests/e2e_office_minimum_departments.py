@@ -27,7 +27,7 @@ DATES = [(datetime.date.fromisoformat(SUN) + datetime.timedelta(days=i)).isoform
 # Samy works from home on Wednesday: Sales's managers' minimum (1) is short that day.
 setup = json.loads(php("""
     foreach(['ews_schedule','ews_team_members','ews_teams','ews_leave_requests','ews_notifications','ews_audit_log','ews_company_calendar'] as $t) $wpdb->query("DELETE FROM {$p}$t");
-    $wpdb->query("DELETE FROM {$p}ews_departments WHERE code LIKE 'omd-%'");
+    $wpdb->query("DELETE FROM {$p}ews_departments WHERE code LIKE 'omd-%' OR name IN ('Sales','Ops','Gone')");
     delete_option('ews_office_minimum'); delete_option('ews_office_minimum_reminded'); delete_option('ews_office_minimum_reminded_depts'); update_option('ews_feature_office_minimum',0,false);
     update_option('ews_working_days',[0,1,2,3,4],false);
     $wpdb->update($p.'ews_approval_workflows',['active'=>0],['workflow_key'=>'vacation']);
@@ -117,7 +117,7 @@ php("$wpdb->query(\"DELETE FROM {$p}ews_audit_log\");")
 base_adm, base_emp, base_leave = adm.req(ATT)[1], emp.req(ATT)[1], adm.req('/app/?ews_view=vacation')[1]
 check('no department settings: no bar, no department attributes', 'wfo-omd-bar' not in base_adm and 'wfo-omd-bar' not in base_emp and 'data-om-people' not in base_adm)
 c = counters(base_adm)
-check('the company counts everyone: 9,8,5,8,4 of 5', c == {DATES[0]: (9, 5), DATES[1]: (8, 5), DATES[2]: (5, 5), DATES[3]: (8, 5), DATES[4]: (4, 5)}, c)
+check('the company counts everyone: 9,8,5,7,4 of 5', c == {DATES[0]: (9, 5), DATES[1]: (8, 5), DATES[2]: (5, 5), DATES[3]: (7, 5), DATES[4]: (4, 5)}, c)
 
 # ---------------------------------------------------------------- Feature Configuration: the tabs
 fp = adm.req(FEAT)[1]
@@ -151,7 +151,7 @@ check('an older form (no department fields) keeps them too', opt('ews_office_min
 # ---------------------------------------------------------------- the Attendance page per viewer
 pg = emp.req(ATT)[1]
 c, m = counters(pg), mgr_counters(pg)
-check('the Sales manager: Sales\'s people, 5,4,1,4,3 of 3', c == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (4, 3), DATES[4]: (3, 3)}, c)
+check('the Sales manager: Sales\'s people, 5,4,1,3,3 of 3', c == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)}, c)
 check('...Sales\'s managers (Samy): 1,1,1,0,1 of 1', m == {DATES[0]: (1, 1), DATES[1]: (1, 1), DATES[2]: (1, 1), DATES[3]: (0, 1), DATES[4]: (1, 1)}, m)
 check('...the bar says whose minimum it is, no choice', 'wfo-omd-bar' in pg and 'Sales department' in pg and 'data-omd-pick' not in pg)
 check('...the card is Sales\'s: Tuesday people, Wednesday managers', 'Sales: 2 days below its minimum' in pg and 'id="wfo-om-%s"' % DATES[2] in pg and 'id="wfo-mom-%s"' % DATES[3] in pg
@@ -164,9 +164,9 @@ check('the administrator: the company\'s numbers as before, and a choice', count
 opts = re.findall(r'<option value="(\d+)"[^>]*>([^<]+)</option>', re.search(r'data-omd-pick>(.*?)</select>', pg, re.S).group(1))
 check('...the choice lists the company and the departments with their own settings', opts == [('0', 'The whole company'), (str(SALES), 'Sales')], opts)
 pg = adm.req(ATT + '&om_dept=%d' % SALES)[1]
-check('...picking Sales: Sales\'s numbers, the whole grid', counters(pg) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (4, 3), DATES[4]: (3, 3)} and 'Nabil' in pg and 'Osman' in pg, counters(pg))
+check('...picking Sales: Sales\'s numbers, the whole grid', counters(pg) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)} and 'Nabil' in pg and 'Osman' in pg, counters(pg))
 check('...picking Ops (no settings of its own): the company\'s', counters(adm.req(ATT + '&om_dept=%d' % OPS)[1]) == counters(base_adm))
-check('...a department manager cannot pick another department', counters(emp.req(ATT + '&om_dept=0')[1]) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (4, 3), DATES[4]: (3, 3)})
+check('...a department manager cannot pick another department', counters(emp.req(ATT + '&om_dept=0')[1]) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)})
 
 # ---------------------------------------------------------------- leave notes
 php("""$lt=(int)$wpdb->get_var("SELECT id FROM {$p}ews_leave_types ORDER BY id ASC LIMIT 1");

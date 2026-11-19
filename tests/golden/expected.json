@@ -1,15 +1,15 @@
 {
  "_about": "What this release changes on purpose (tests/golden/run.py; owner decision 2026-10-27): the pages (by their pages.json url and options) that may differ from the base, the action traces (by key, with the reason) whose SQL, return or rows may differ, and the hook / admin-post / shortcode / REST names it adds. Everything else must stay the same. Empty for a move-only release; emptied again by the next release.",
- "release": "3.31.153",
+ "release": "3.31.154",
  "pages": [
   {
    "url": "/wp-admin/admin.php?page=ews31-features",
-   "reason": "Manager office minimum (docs/tasks/manager-office-minimum.md): a new sub-section under Office Minimum, off by default",
+   "reason": "Office minimum by department (docs/tasks/office-minimum-departments.md): a tab per department in the Office Minimum section",
    "user": "admin"
   },
   {
    "url": "/wp-admin/admin.php?page=ews31-features",
-   "reason": "Manager office minimum (docs/tasks/manager-office-minimum.md): a new sub-section under Office Minimum, off by default",
+   "reason": "Office minimum by department (docs/tasks/office-minimum-departments.md): a tab per department in the Office Minimum section",
    "user": "admin",
    "options": {
     "ews_feature_week_lock": 1
