@@ -405,9 +405,11 @@ pay1 = sums('admin:ews31-payroll')
 check('at 1%%, only the sampled loads carry the split (%d of %d)' % (pay1['db_n'], pay1['n']), pay1['n'] == 15 and pay1['db_n'] == pay1['sampled'] and pay1['ext_n'] == 0, pay1)
 # Upgrade: schema 1 keeps collecting what it has; the rollup adds the columns.
 php("""foreach(['hourly','daily'] as $t){ $wpdb->query("ALTER TABLE {$p}ews_health_$t DROP COLUMN ".implode(', DROP COLUMN ',%s)); } update_option('ews_health_schema','1',false);""" % json.dumps(SPLIT).replace('"', "'").replace('[', 'array(').replace(']', ')'))
-before = sum(int(x['n']) for x in rows('hourly'))
+# Counted on the page's own route: the wp-cli call that reads the rows is itself a load, sampled (and so written) 1 time in 100.
+payroll = lambda: sum(int(x['n']) for x in rows('hourly') if x['route'] == 'admin:ews31-payroll')
+before = payroll()
 st, body, _ = adm.req('/wp-admin/admin.php?page=ews31-payroll&e2e_sleep=1100')
-check('with schema 1 (before the upgrade) the collector keeps counting loads, with no database error', st == 200 and 'WordPress database error' not in body and sum(int(x['n']) for x in rows('hourly')) == before + 1)
+check('with schema 1 (before the upgrade) the collector keeps counting loads, with no database error', st == 200 and 'WordPress database error' not in body and payroll() == before + 1)
 # A database that refuses the ALTER (no privilege, a lock timeout): the site stays on schema 1 and its rollup still works.
 php("$wpdb->query(\"DELETE FROM {$p}ews_health_daily\");")
 out = php("""add_filter('query',function($q){return preg_match('/^\\s*ALTER\\s+TABLE\\s+\\S*ews_health_/i',$q)?'SELECT 1':$q;});
