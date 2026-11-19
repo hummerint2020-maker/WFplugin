@@ -335,3 +335,17 @@ Checks:
 7. **The "Minimum for" list.** Only departments with their own settings (★, as in the mockup), or all departments, with "as the company" for the others?
 8. **A department with own settings and its reminder off.** Its schedule managers get no reminder (★, they see only their department), or the company's?
 9. **First tick of "own settings".** Start from a copy of the company's settings without team fixed numbers (★), or from the plugin defaults?
+
+## Owner answers to the design's questions (2026-11-19)
+
+1. **No separate on/off for a department** (★). "Has its own settings" is the switch; a minimum of 0 means no check.
+2. **The company check keeps counting everyone** (★), as today.
+5. **Leave note:** an employee in a department with its own settings gets the department's note only (★).
+6. **An administrator picking a department:** only the numbers change; the grid stays the whole company (★).
+
+Not asked; the recommended answers apply:
+- Q3: a manager counts in their own department.
+- Q4: teams' sizes are counted among the department's people.
+- Q7: the list offers only departments with their own settings.
+- Q8: a department with its reminder off gets no reminder.
+- Q9: the first tick starts from a copy of the company's settings, without the team fixed numbers.
