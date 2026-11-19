@@ -14,8 +14,24 @@ trait EWS_Features_Trait {
         exit;
     }
 
+    /**
+     * The Office Minimum section's tab (3.31.154): the company's (0), or a department's own settings; a department without
+     * its own starts from a copy of the company's, without the teams' fixed numbers (owner answer 9).
+     * @return array{dept:int,own:bool,settings:array<string,mixed>,departments:array<int,array{name:string,own:bool,people:int}>}
+     */
+    private function features_om_tab(){
+        $departments=$this->om_admin_departments();
+        $dept=absint(wp_unslash($_GET['om_dept']??0));
+        if(!isset($departments[$dept]))$dept=0;
+        $own=$dept&&!empty($departments[$dept]['own']);
+        $settings=$own?$this->om_cfg($dept):$this->om_settings();
+        if($dept&&!$own)$settings['teams']=[];
+        return ['dept'=>$dept,'own'=>$own,'settings'=>$settings,'departments'=>$departments];
+    }
+
     public function admin_features(){
         if(!$this->can('ews_manage_settings'))wp_die('Access denied');
+        $om_tab=$this->features_om_tab();
         $error=sanitize_key($_GET['features_error']??'');
         echo $this->render_template('admin/features',[
             'branch'=>$this->branch_settings(),'branch_count'=>count($this->branch_locations()),'locations_url'=>admin_url('admin.php?page=ews31-multi-locations'),
@@ -67,7 +83,8 @@ trait EWS_Features_Trait {
             'confirm_labels'=>FeatureSettings::CONFIRM_ACTIONS,
             'confirm'=>FeatureSettings::confirmState($this->option('ews_confirmation_actions')),
             'privacy_html'=>$this->privacy_settings_section(),
-            'office_minimum'=>$this->om_settings(),'om_teams'=>$this->om_admin_teams(),'om_managers'=>$this->om_admin_managers(),'om_statuses'=>$this->schedule_type_names(true),
+            'office_minimum'=>$om_tab['settings'],'om_teams'=>$this->om_admin_teams($om_tab['dept']),'om_managers'=>$this->om_admin_managers($om_tab['dept']),'om_statuses'=>$this->schedule_type_names(true),
+            'om_departments'=>$om_tab['departments'],'om_dept'=>$om_tab['dept'],'om_dept_own'=>$om_tab['own'],
             'week_lock'=>$this->week_lock_settings(),'week_lock_next'=>$this->week_lock_next(),'timezone'=>wp_timezone_string(),'week_lock_can'=>$this->week_lock_can_override(),
             'roles_url'=>admin_url('admin.php?page=ews31-roles'),
             'weekday_names'=>$this->working_day_names(),'working_days'=>$this->working_days(),
@@ -85,9 +102,16 @@ trait EWS_Features_Trait {
 
         // Validate everything before saving anything.
         $om=null;
+        $om_dept=0;
         if(isset($post['office_minimum_present'])){
-            [$om,$om_error]=\WorkforceOne\Settings\OfficeMinimumSettings::fromPost($post,$this->schedule_type_names(true),get_option('ews_office_minimum',[]));
-            if($om_error!=='')$this->features_redirect(['features_error'=>'om_'.$om_error]);
+            // A department's tab (3.31.154) saves that department's settings only; the company's stay as they are.
+            $om_dept=isset($post['om_dept_present'])?absint($post['om_dept']??0):0;
+            // A department tab whose department is gone (archived meanwhile): never saved as the company's (review 4).
+            if(isset($post['om_dept_present'])&&!isset($this->people_department_names()[$om_dept]))$this->features_redirect(['features_error'=>'om_dept']);
+            [$om,$om_error]=$om_dept
+                ?\WorkforceOne\Settings\OfficeMinimumSettings::departmentFromPost($post,$this->schedule_type_names(true),get_option('ews_office_minimum',[]),$om_dept)
+                :\WorkforceOne\Settings\OfficeMinimumSettings::fromPost($post,$this->schedule_type_names(true),get_option('ews_office_minimum',[]));
+            if($om_error!=='')$this->features_redirect(['features_error'=>'om_'.$om_error]+($om_dept?['om_dept'=>$om_dept]:[]));
         }
         $wl=null;
         // Only someone who may edit a final week may move the cutoff or switch the lock off, or a week could be reopened unaudited.
@@ -217,6 +241,7 @@ trait EWS_Features_Trait {
         }
         if($om!==null){
             $om_before=$this->om_settings();$om_was=$this->om_enabled();
+            $om_dept_before=$om_dept?(\WorkforceOne\Settings\OfficeMinimumSettings::departments(get_option('ews_office_minimum',[]))[$om_dept]??null):null;
             update_option('ews_office_minimum',$om,false);
             update_option('ews_feature_office_minimum',$flag('office_minimum_enabled')?1:0,false);
             $om_after=\WorkforceOne\Settings\OfficeMinimumSettings::config($om);
@@ -224,7 +249,15 @@ trait EWS_Features_Trait {
             $mk=['mgr'=>1,'mgr_min'=>1,'mgr_days'=>1];
             $om_mgr=array_intersect_key($om_before,$mk)!==array_intersect_key($om_after,$mk)||!empty($om_after['mgr'])
                 ?'; managers='.(!empty($om_after['mgr'])?'on':'off').' min='.(int)$om_after['mgr_min'].($om_after['mgr_days']?' days='.implode(',',array_map(function($w,$n){return $w.':'.$n;},array_keys($om_after['mgr_days']),$om_after['mgr_days'])):''):'';
-            if($om_before!==$om_after||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om['min'].'; statuses='.implode(',',$om['statuses']).'; reminder='.($om['reminder']?'on':'off').$om_mgr);
+            if($om_before!==$om_after||$om_was!==$this->om_enabled())$this->audit('office_minimum_update','settings',0,($this->om_enabled()?'enabled':'disabled').'; min='.$om_after['min'].'; statuses='.implode(',',$om_after['statuses']).'; reminder='.($om_after['reminder']?'on':'off').$om_mgr);
+            if($om_dept){   // a department's tab (3.31.154): its own audit line, only when it changed
+                $om_dept_after=\WorkforceOne\Settings\OfficeMinimumSettings::departments($om)[$om_dept]??null;
+                $pairs=function($a){return implode(',',array_map(function($k,$v){return $k.':'.$v;},array_keys($a),$a));};
+                if($om_dept_before!==$om_dept_after)$this->audit('office_minimum_department_update','department',$om_dept,$om_dept_after===null?'own=off':
+                    'own=on; min='.$om_dept_after['min'].($om_dept_after['days']?' days='.$pairs($om_dept_after['days']):'').'; statuses='.implode(',',$om_dept_after['statuses'])
+                    .($om_dept_after['teams']?'; teams='.$pairs($om_dept_after['teams']):'').'; reminder='.($om_dept_after['reminder']?'on':'off')
+                    .'; managers='.(!empty($om_dept_after['mgr'])?'on':'off').' min='.(int)$om_dept_after['mgr_min'].($om_dept_after['mgr_days']?' days='.$pairs($om_dept_after['mgr_days']):''));
+            }
         }
         if($wl!==null){
             $wl_before=$this->week_lock_settings();$wl_was=$this->week_lock_enabled();
@@ -246,6 +279,6 @@ trait EWS_Features_Trait {
             'recognition='.$state($flag('recognition_enabled')),'kudos='.($flag('recognition_allow_kudos')?'allowed':'blocked'),
             'kudos_weekly='.($recognition['mode']==='unlimited'?'unlimited':$recognition['limit']),
         ]));
-        $this->features_redirect(['features_saved'=>1]);
+        $this->features_redirect(['features_saved'=>1]+($om_dept?['om_dept'=>$om_dept]:[]));
     }
 }

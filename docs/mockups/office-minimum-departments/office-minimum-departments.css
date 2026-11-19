@@ -1,0 +1,21 @@
+/* Office minimum by department (mockup). Logical properties: the -rtl copy is identical. */
+.wfo-omd-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:10px 0 12px;padding:10px 14px;border-radius:14px;background:#F1F0FA;color:#13235B;font-size:13px}
+.wfo-omd-bar .wfo-icon{color:#5B3FD9}
+.wfo-omd-what b{font-weight:700}
+.wfo-omd-pick{display:flex;align-items:center;gap:6px;margin-inline-start:auto;font-weight:600}
+.wfo-omd-pick select{min-height:32px;border-radius:10px;border:1px solid #D6D9E6;padding:0 8px;font:inherit}
+.wfo-omd-admin{margin-top:18px;padding-top:6px;border-top:1px dashed #c3c4c7}
+.wfo-omd-admin h3{margin:12px 0 4px;font-size:14px}
+.wfo-omd-table{max-width:640px;margin-top:8px}
+.wfo-omd-table td{vertical-align:middle}
+@media (max-width:700px){.wfo-omd-pick{margin-inline-start:0}}
+.wfo-omd-teams-row td{background:#fafafa}
+.wfo-omd-teams-row summary{cursor:pointer;font-weight:600;margin:4px 0}
+.wfo-omd-sub{margin:8px 0 4px;border-collapse:collapse}
+.wfo-omd-sub th,.wfo-omd-sub td{padding:6px 10px;text-align:start}
+.wfo-omd-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 6px;border-bottom:1px solid #dcdcde}
+.wfo-omd-tabs a{display:flex;flex-direction:column;padding:8px 14px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;text-decoration:none;color:#1d2327;font-weight:600}
+.wfo-omd-tabs a small{font-weight:400;color:#646970;font-size:11px}
+.wfo-omd-tabs a.is-on{background:#fff;border-color:#dcdcde;margin-bottom:-1px}
+.wfo-omd-own{margin:12px 0;padding:12px 14px;border-radius:8px;background:#f0f6fc;border:1px solid #c5d9ed}
+.wfo-omd-own p{margin:4px 0 0}

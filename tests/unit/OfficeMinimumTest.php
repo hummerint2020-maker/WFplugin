@@ -88,4 +88,28 @@ final class OfficeMinimumTest extends TestCase
         $this->assertSame([1, 2, [2 => 1]], [$c['mgr'], $c['mgr_min'], $c['mgr_days']]);
         $this->assertSame([0, 2, []], [OfficeMinimumSettings::config([])['mgr'], OfficeMinimumSettings::config(null)['mgr_min'], OfficeMinimumSettings::config([])['mgr_days']]);
     }
+
+    public function testDepartmentsHaveTheirOwnSettings(): void
+    {
+        $known = ['Office', 'WFH'];
+        $base = ['om_min' => '12', 'om_statuses' => ['Office'], 'om_reminder_time' => '12:00'];
+        [$company] = OfficeMinimumSettings::fromPost($base, $known);
+        $this->assertArrayNotHasKey('depts', $company, 'no departments: as before');
+        [$withDept, $e] = OfficeMinimumSettings::departmentFromPost(['om_dept_own' => '1', 'om_min' => '4', 'om_statuses' => ['Office', 'WFH'], 'om_teams' => ['7' => '2'], 'om_mgr_present' => '1', 'om_mgr' => '1', 'om_mgr_min' => '1'], $known, $company, 5);
+        $this->assertSame('', $e);
+        $this->assertSame($company, array_diff_key($withDept, ['depts' => 1]), 'the company\'s settings stay as they are');
+        $d = OfficeMinimumSettings::departments($withDept)[5];
+        $this->assertSame([4, ['Office', 'WFH'], [7 => 2], 1, 1], [$d['min'], $d['statuses'], $d['teams'], $d['mgr'], $d['mgr_min']]);
+        [$again] = OfficeMinimumSettings::fromPost(array_merge($base, ['om_min' => '10']), $known, $withDept);
+        $this->assertSame($withDept['depts'], $again['depts'], 'a company save keeps the departments');
+        $this->assertSame(10, $again['min']);
+        [$zero, $e0] = OfficeMinimumSettings::departmentFromPost(['om_dept_own' => '1', 'om_min' => '0', 'om_statuses' => ['Office']], $known, $withDept, 5);
+        $this->assertSame(['', 0], [$e0, OfficeMinimumSettings::departments($zero)[5]['min']], 'a department\'s minimum of 0 means no check (owner answer 1)');
+        $this->assertSame('min', OfficeMinimumSettings::fromPost(['om_min' => '0', 'om_statuses' => ['Office']], $known)[1], '...the company\'s still needs 1 or more');
+        $this->assertSame('min', OfficeMinimumSettings::departmentFromPost(['om_dept_own' => '1', 'om_min' => 'x'], $known, $withDept, 5)[1]);
+        [$off] = OfficeMinimumSettings::departmentFromPost([], $known, $withDept, 5);
+        $this->assertSame($company, $off, 'unticked: the department goes back to the company\'s, and nothing more is stored');
+        $this->assertSame([], OfficeMinimumSettings::departments(['depts' => ['x' => [], 0 => [], 3 => 'bad']]));
+        $this->assertArrayNotHasKey('depts', OfficeMinimumSettings::config($withDept), 'the company\'s reading ignores them');
+    }
 }

@@ -98,3 +98,6 @@
 .wfo-om-note.is-mgr{background:#FFF0F3;color:#7A2A3E}
 .wfo-om-note.is-mgr strong{color:#A51D3E}
 .wfo-om-note.is-mgr .wfo-icon{color:#C2264B}
+
+/* Office minimum by department (3.31.154): which department's minimum a leave note is about. */
+.wfo-omd-for{display:inline-block;margin-inline-end:6px;padding:1px 8px;border-radius:999px;background:#13235B;color:#fff;font-size:11px;font-weight:700;vertical-align:1px}

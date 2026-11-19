@@ -33,7 +33,10 @@
  * @var string $locations_url
  * @var string $privacy_html                    section rendered by the Privacy module
  * @var int $presence_minutes                   time an employee has to answer a presence request
- * @var array<string,mixed> $office_minimum   Settings\OfficeMinimumSettings (3.31.77)
+ * @var array<string,mixed> $office_minimum   Settings\OfficeMinimumSettings (3.31.77): the tab's settings (3.31.154)
+ * @var array<int,array{name:string,own:bool,people:int}> $om_departments  the active departments, for the tabs (3.31.154)
+ * @var int $om_dept                          the department tab shown (0 = the company)
+ * @var bool $om_dept_own                     whether that department has its own settings
  * @var array<string,mixed> $week_lock        Settings\WeekLockSettings (3.31.121)
  * @var array{week:string,at:string} $week_lock_next   the next cutoff
  * @var string $timezone                       the site's time zone
@@ -244,8 +247,19 @@ $occ_fields = ['card_title' => [__('Greeting card title', 'workforce-one'), 60],
     <div><div class="wfo-feature-title"><?php esc_html_e('Office Minimum', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('A fixed number of people in the office every working day. Whoever sets the schedule sees a warning and the teams under their share; saving is never blocked.', 'workforce-one'); ?></div></div>
     <?php $switch('office_minimum_enabled', $on['office_minimum'], __('Enabled', 'workforce-one')); ?>
 </div>
+<?php if ($om_departments): /* by department (3.31.154): a tab per active department; each tab saves its own settings */ ?>
+<nav class="wfo-omd-tabs" aria-label="<?php esc_attr_e('Departments', 'workforce-one'); ?>"><a href="<?php echo esc_url(admin_url('admin.php?page=ews31-features#ews-office-minimum')); ?>"<?php echo $om_dept ? '' : ' class="is-on" aria-current="page"'; ?>><?php esc_html_e('The whole company', 'workforce-one'); ?></a><?php foreach ($om_departments as $did => $dinfo): ?><a href="<?php echo esc_url(admin_url('admin.php?page=ews31-features&om_dept=' . (int) $did . '#ews-office-minimum')); ?>"<?php echo $om_dept === (int) $did ? ' class="is-on" aria-current="page"' : ''; ?>><?php echo esc_html($dinfo['name']); ?><small><?php echo $dinfo['own'] ? esc_html__('own settings', 'workforce-one') : esc_html__('as the company', 'workforce-one'); ?></small></a><?php endforeach; ?></nav>
+<p class="description wfo-omd-note"><?php esc_html_e('Save before switching tabs: a tab shows its saved settings.', 'workforce-one'); ?></p>
+<?php if ($om_dept): $dname = $om_departments[$om_dept]['name']; ?>
+<input type="hidden" name="om_dept_present" value="1"><input type="hidden" name="om_dept" value="<?php echo (int) $om_dept; ?>">
+<div class="wfo-omd-own"><label><input type="checkbox" name="om_dept_own" value="1" <?php checked($om_dept_own); ?>> <b><?php echo esc_html(sprintf(/* translators: %s: department */ __('%s has its own settings', 'workforce-one'), $dname)); ?></b></label>
+<p class="description"><?php echo esc_html(sprintf(/* translators: %1$s: department */ __('Off = %1$s works with the company\'s settings. On = the settings below are for %1$s only: its people, its teams and its managers; its schedule managers see its numbers and get its reminder.', 'workforce-one'), $dname)); ?></p>
+<p class="description"><?php esc_html_e('A minimum of 0 means no check for this department.', 'workforce-one'); ?></p>
+<?php if (!$om_departments[$om_dept]['people']): ?><p class="description wfo-mom-warn"><?php esc_html_e('This department has no people counted yet.', 'workforce-one'); ?></p><?php endif; ?></div>
+<?php endif; ?>
+<?php endif; ?>
 <div class="wfo-om-admin"><table class="form-table" role="presentation">
-    <tr><th scope="row"><label for="ews-om-min"><?php esc_html_e('Minimum each day', 'workforce-one'); ?></label></th><td><input id="ews-om-min" type="number" min="1" name="om_min" class="small-text" value="<?php echo (int) $office_minimum['min']; ?>"> <?php esc_html_e('people in the office', 'workforce-one'); ?>
+    <tr><th scope="row"><label for="ews-om-min"><?php esc_html_e('Minimum each day', 'workforce-one'); ?></label></th><td><input id="ews-om-min" type="number" min="<?php echo $om_dept ? 0 : 1; ?>" name="om_min" class="small-text" value="<?php echo (int) $office_minimum['min']; ?>"> <?php esc_html_e('people in the office', 'workforce-one'); ?>
         <p class="description"><?php esc_html_e('Working days only; company holidays and days off are not checked.', 'workforce-one'); ?></p></td></tr>
     <tr><th scope="row"><?php esc_html_e('A different day (optional)', 'workforce-one'); ?></th><td><div class="wfo-om-wds">
         <?php foreach ($working_days as $w): ?><label class="wfo-om-wd"><span><?php echo esc_html($weekday_names[$w] ?? (string) $w); ?></span><input type="number" min="0" name="om_days[<?php echo (int) $w; ?>]" class="small-text" placeholder="<?php echo (int) $office_minimum['min']; ?>" value="<?php echo isset($office_minimum['days'][$w]) ? (int) $office_minimum['days'][$w] : ''; ?>"></label><?php endforeach; ?>

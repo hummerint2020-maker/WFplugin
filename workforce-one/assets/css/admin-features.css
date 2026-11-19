@@ -84,3 +84,12 @@
 .wfo-mom-admin{margin-top:18px;padding-top:6px;border-top:1px dashed #c3c4c7}
 .wfo-mom-admin h3{margin:12px 0 4px;font-size:14px}
 .wfo-mom-warn{color:#b32d2e}
+
+/* Office minimum by department (3.31.154): a tab per department, and its own settings. */
+.wfo-omd-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px;border-bottom:1px solid #dcdcde}
+.wfo-omd-tabs a{display:flex;flex-direction:column;padding:8px 14px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;text-decoration:none;color:#1d2327;font-weight:600}
+.wfo-omd-tabs a small{font-weight:400;color:#646970;font-size:11px}
+.wfo-omd-tabs a.is-on{background:#fff;border-color:#dcdcde;margin-bottom:-1px}
+.wfo-omd-note{margin:4px 0 0}
+.wfo-omd-own{margin:12px 0;padding:12px 14px;border-radius:8px;background:#f0f6fc;border:1px solid #c5d9ed}
+.wfo-omd-own p{margin:4px 0 0}

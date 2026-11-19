@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.154
+### Office minimum by department (docs/tasks/office-minimum-departments.md, mockups docs/mockups/office-minimum-departments/)
+Owner request 2026-11-18: "each department has its own way of working and organising its schedule". Off by default: until a department is given its own settings, nothing changes.
+- **Each department can have its own Office minimum settings,** the same form as the company's: the minimum, a number per weekday, which statuses count, the teams' shares with fixed numbers, the managers' minimum and the reminder. Feature Configuration → Office Minimum has a tab per active department; ticking "<Department> has its own settings" makes the form that department's. A department without them works with the company's, as before.
+- **Who is counted:** a department's people; its teams sized among them; its managers are the team managers in that department (a manager counts in their own department).
+- **Attendance page:**
+  - A department manager whose department has its own settings sees only that department's counters, card and sheets, under a bar "Sales department · 3 in the office · 1 manager".
+  - The administrator sees the company, as before, and can pick a department ("Minimum for"): only the numbers change, the grid stays whole.
+  - The company's check still counts everyone.
+- **Approving leave:** for an employee of a department with its own settings, the note is that department's, labelled with its name.
+- **Weekly reminder:** each person gets one. A department with its own settings sends its own reminder to its schedule managers; the administrator and everyone else get the company's.
+- Saving a department's tab keeps the company's settings as they are and writes its own audit line; a company save keeps the departments. No new table or hook; one more read (the active departments) only when a department has its own settings.
+- Tests: unit tests (OfficeMinimumScope, the settings); a new e2e (tests/e2e_office_minimum_departments.py). Golden also renders the Attendance page with the Office minimum on for a department manager, and with a department picked that has no settings of its own; it declares only the two Feature Configuration pages.
+
+Going back to an older version: the departments' settings are ignored there, and the first Feature Configuration save on it drops them.
+
 ## 3.31.153
 ### Manager office minimum (docs/tasks/manager-office-minimum.md, mockups docs/mockups/manager-office-minimum/)
 Owner request 2026-11-18. A sub-section of the Office minimum (Feature Configuration → Office Minimum → Managers in the office), off by default and only working with the Office minimum on; off, every page is as before.
