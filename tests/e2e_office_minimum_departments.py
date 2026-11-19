@@ -165,7 +165,9 @@ opts = re.findall(r'<option value="(\d+)"[^>]*>([^<]+)</option>', re.search(r'da
 check('...the choice lists the company and the departments with their own settings', opts == [('0', 'The whole company'), (str(SALES), 'Sales')], opts)
 pg = adm.req(ATT + '&om_dept=%d' % SALES)[1]
 check('...picking Sales: Sales\'s numbers, the whole grid', counters(pg) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)} and 'Nabil' in pg and 'Osman' in pg, counters(pg))
-check('...picking Ops (no settings of its own): the company\'s', counters(adm.req(ATT + '&om_dept=%d' % OPS)[1]) == counters(base_adm))
+check('...the pick is kept by the search and team filter', 'name="om_dept" value="%d"' % SALES in pg.split('ews-att-tools')[1][:600] if 'ews-att-tools' in pg else 'ews-att-search' in pg)
+ops_pg = adm.req(ATT + '&om_dept=%d' % OPS)[1]
+check('...picking Ops (no settings of its own): the company\'s, nothing kept', counters(ops_pg) == counters(base_adm) and 'type="hidden" name="om_dept"' not in ops_pg)
 check('...a department manager cannot pick another department', counters(emp.req(ATT + '&om_dept=0')[1]) == {DATES[0]: (5, 3), DATES[1]: (4, 3), DATES[2]: (1, 3), DATES[3]: (3, 3), DATES[4]: (3, 3)})
 
 # ---------------------------------------------------------------- leave notes
