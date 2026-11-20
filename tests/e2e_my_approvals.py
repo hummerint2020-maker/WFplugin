@@ -317,8 +317,9 @@ check('...with Sami\'s day and that he can swap (Office ↔ WFH)', people.get(id
 n = re.search(r'id="wfo-new-swap".*?name="_wpnonce" value="([^"]+)"', mine, re.S).group(1)
 st, body, h = emp.req('/wp-admin/admin-post.php', {'action': 'ews_swap_create', '_wpnonce': n, 'ews_return': 'requests', 'work_date': d(3), 'target_employee_id': ids['sami']})
 check('...asking the swap from the sheet: saved, back on My requests', 'ews_view=requests' in h.get('Location', '') and q("SELECT id FROM {p}ews_schedule_swaps WHERE requester_employee_id=%d AND target_employee_id=%d AND work_date='%s' AND status='Pending'" % (ids['emp'], ids['sami'], d(3))), h.get('Location'))
-cfg = json.loads(html.unescape(re.search(r'data-new-swap="([^"]+)"', emp.req('/app/?ews_view=requests')[1]).group(1)))
-check('...then Sami shows as "already waiting" that day', {p_['id']: p_ for p_ in cfg['people']}[ids['sami']]['days'][d(3)]['busy'] is True)
+m = re.search(r'data-new-swap="([^"]+)"', emp.req('/app/?ews_view=requests')[1])
+cfg = json.loads(html.unescape(m.group(1))) if m else {}
+check('...then that day is no longer offered: one swap per person and day (3.31.156, owner 2026-11-20)', d(3) not in (cfg.get('days') or {}), cfg.get('days'))
 php("$wpdb->query(\"UPDATE {$p}ews_employees SET department_id=NULL WHERE id IN (%d,%d,%d)\"); $wpdb->query(\"DELETE FROM {$p}ews_departments WHERE code IN ('nr-a','nr-b')\");" % (ids['emp'], ids['sami'], ids['mona']))
 
 php("""foreach(['ews_feature_my_approvals','ews_approval_reject_note','ews_approval_overdue'] as $o) delete_option($o); update_option('ews_feature_overtime',0,false); update_option('ews_feature_corrections',0,false);

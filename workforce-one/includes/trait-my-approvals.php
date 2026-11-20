@@ -86,6 +86,7 @@ trait EWS_My_Approvals_Trait {
         $uid=(int)get_current_user_id();
         $admin=user_can($uid,'manage_options');
         // A manager away still sees what waits for their substitute, when they may decide it (3.31.107).
+        $me=$this->current_employee();
         $away=$this->approval_inbox_away();
         $rows=$this->services()->approvalReads()->inboxRows($uid,(bool)$admin,$away);
         $out=[];

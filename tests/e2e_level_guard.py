@@ -260,7 +260,7 @@ check('...sent twice: "moved", the days not exchanged', qs.get('swap_error') == 
 f = hub('shift_swap', W1)
 send(adm, f, 'approve')
 qs = send(adm, f, 'approve')
-check('...the Requests page decides level 2 once; sent again the swap is already done (error, as before)', swap_status(W1) == 'Accepted' and qs.get('request_notice') == 'error', (qs, swap_status(W1)))
+check('...the Requests page decides level 2 once; sent again the swap is already done (error, as before)', swap_status(W1) == 'Approved' and qs.get('request_notice') == 'error', (qs, swap_status(W1)))
 
 # ---------------------------------------------------------------- attendance corrections
 def new_cx():
