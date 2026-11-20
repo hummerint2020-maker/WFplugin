@@ -257,3 +257,11 @@ Traces run with `wp_cache_flush()` before each call, so option reads show as SQL
 5. **Audit and notification text stay in the trait** for swaps (Service = transactional core, Stores = SQL). *Default: keep them in the trait.*
 6. **L3c money:** a payslip-amount trace in the golden job (about +1–2 min CI). *Default: yes, when L3c is designed.*
 7. **`schedule_table_name()`** (`twt:37`) keeps one baseline reference. *Default: keep it counted.*
+
+---
+
+## 9. Owner's answers (2026-11-20)
+1. **First slice:** L3a Swaps.
+2. **Race tests:** yes, added first on the unchanged code (double accept; two swaps on one day sharing a person).
+3. **Quirks SW-a…SW-n:** fix them **first**, in a fix release before the move (so the move carries the fixed code). The fixes
+   are designed separately (`docs/tasks/swap-fixes.md`); the product direction of each is asked below.
