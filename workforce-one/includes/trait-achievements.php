@@ -208,7 +208,7 @@ trait EWS_Achievements_Trait {
         $this->ensure_achievements_schema();
         $table=$wpdb->prefix.'ews_schedule_swaps';
         $count=(int)$wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table} WHERE target_employee_id=%d AND status='Accepted'",$employee_id
+            "SELECT COUNT(*) FROM {$table} WHERE target_employee_id=%d AND status IN ('Accepted','Approved')",$employee_id
         ));
         if($count<=0)return 0;
         $achievements=$this->achievement_definitions('collaboration');
@@ -288,7 +288,7 @@ trait EWS_Achievements_Trait {
 
         $swap_counts=[];
         if($ids){
-            $rows=$wpdb->get_results("SELECT target_employee_id AS employee_id,COUNT(*) AS total FROM {$wpdb->prefix}ews_schedule_swaps WHERE status='Accepted' AND target_employee_id IN (".implode(',',array_map('absint',$ids)).") GROUP BY target_employee_id");
+            $rows=$wpdb->get_results("SELECT target_employee_id AS employee_id,COUNT(*) AS total FROM {$wpdb->prefix}ews_schedule_swaps WHERE status IN ('Accepted','Approved') AND target_employee_id IN (".implode(',',array_map('absint',$ids)).") GROUP BY target_employee_id");
             foreach((array)$rows as $r)$swap_counts[(int)$r->employee_id]=(int)$r->total;
         }
 

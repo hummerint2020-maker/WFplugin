@@ -43,11 +43,16 @@ trait EWS_Swap_Trait {
             return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id=%d AND status='Pending' {$extra_where} LIMIT 1",$id,...$extra_args));
         }
 
-    /** Moves a swap from $from (Pending, or Awaiting the approvers) to $status. Returns 1 on success, 0 if it had moved on, false on a DB error. */
-    private function swap_close($id,$status,$from='Pending'){
+    /**
+     * Moves a swap from $from (Pending, or Awaiting the approvers) to $status. Returns 1 on success, 0 if it had moved on, false on a DB error.
+     * $by: 'responded' writes who answered as the colleague (or the requester who cancelled); 'decided' writes the approver's or the
+     * administrator's decision apart from it, so the colleague's answer is kept (3.31.156, SW-e).
+     */
+    private function swap_close($id,$status,$from='Pending',$by='responded'){
             // The callers read the swap first (schema ensured); it also runs inside transactions, where a dbDelta would commit (3.31.120).
             global $wpdb;$table=$wpdb->prefix.'ews_schedule_swaps';
-            return $wpdb->update($table,['status'=>$status,'responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>$id,'status'=>$from],['%s','%d','%s'],['%d','%s']);
+            $col=$by==='decided'?'decided':'responded';
+            return $wpdb->update($table,['status'=>$status,$col.'_by'=>get_current_user_id(),$col.'_at'=>current_time('mysql')],['id'=>$id,'status'=>$from],['%s','%d','%s'],['%d','%s']);
         }
 
     /** The Shift Swap workflow's levels after the colleague: LEVEL_1 … LEVEL_4, or '' (the colleague alone decides). */
@@ -59,14 +64,14 @@ trait EWS_Swap_Trait {
         }
 
     /**
-     * Exchanges the two schedule days and marks the swap Accepted, atomically.
-     * Returns true, or a ?swap_error= code: 'changed' (a schedule was edited since the request),
-     * 'expired' (no longer Pending) or 'save'.
+     * Exchanges the two schedule days and marks the swap Accepted (the colleague accepted) or, with $approved, Approved (an approver or
+     * an administrator decided, 3.31.156), atomically. Returns true, or a ?swap_error= code: 'changed' (a schedule was edited since the
+     * request), 'expired' (no longer Pending) or 'save'.
      */
-    private function swap_apply($r){
+    private function swap_apply($r,$approved=false){
             global $wpdb;$this->ensure_swap_schema();
             if($wpdb->query('START TRANSACTION')===false)return 'save';
-            $out=$this->swap_apply_rows($r);
+            $out=$this->swap_apply_rows($r,$approved);
             if($out!==true){$wpdb->query('ROLLBACK');return $out;}
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
             return true;
@@ -76,7 +81,7 @@ trait EWS_Swap_Trait {
      * swap_apply() inside a transaction the caller owns (3.31.120): never starts, commits or rolls back; on anything but true the
      * caller rolls back. Lets the administrator's last approval and the exchange be one transaction.
      */
-    private function swap_apply_rows($r){
+    private function swap_apply_rows($r,$approved=false){
             global $wpdb;
             $a=$this->schedule_for_employee_date($r->requester_employee_id,$r->work_date);
             $b=$this->schedule_for_employee_date($r->target_employee_id,$r->work_date);
@@ -85,7 +90,7 @@ trait EWS_Swap_Trait {
             $now=current_time('mysql');$uid=get_current_user_id();
             // Claimed first, then each day written only if it is still as read (3.31.117): a schedule saved at the same moment (a leave
             // approved, the grid, another swap) is never overwritten, and of two accepts at once the second is "expired".
-            $updated=$this->swap_close((int)$r->id,'Accepted',(string)$r->status);
+            $updated=$this->swap_close((int)$r->id,$approved?'Approved':'Accepted',(string)$r->status,$approved?'decided':'responded');
             if($updated!==1)return $updated===false?'save':'expired';
             $writes=[[$a,(int)$r->requester_employee_id,(string)$r->target_status],[$b,(int)$r->target_employee_id,(string)$r->requester_status]];
             usort($writes,function($x,$y){return (int)$x[0]->id<=>(int)$y[0]->id;});   // the same order in every swap: no deadlock
@@ -123,6 +128,23 @@ trait EWS_Swap_Trait {
             return add_query_arg(['ews_view'=>'approvals','apv_swap'=>(int)$id],$this->app_home_url()).'#apv-swap-'.(int)$id;
         }
 
+    /**
+     * The Schedule page's text for a ?swap_error= / ?swap_done= code (3.31.156: also shown on My requests, where the New request sheet
+     * sends a swap). $kind: 'error' | 'done'.
+     */
+    private function swap_notice_text($kind,$code){
+            if($kind==='done'){
+                $m=['accepted'=>__('The shift swap was accepted and both schedules were updated.','workforce-one'),'rejected'=>__('The shift swap request was rejected.','workforce-one'),'cancelled'=>__('The shift swap request was cancelled.','workforce-one'),'awaiting'=>__('You accepted the swap. It is applied once it is approved.','workforce-one'),'approved'=>__('The swap was approved and both schedules were updated.','workforce-one'),'advanced'=>__('Approved. The swap now waits for the next approver.','workforce-one')];
+                return $m[$code]??__('The shift swap has been updated.','workforce-one');
+            }
+            $m=['note'=>__('Write why you reject it, then reject it again.','workforce-one'),'invalid_request'=>__('Please select a valid employee and work date for the shift swap.','workforce-one'),'employee'=>__('The selected employee could not be found.','workforce-one'),'not_swappable'=>__('These schedules cannot be swapped. Both employees must have different Office/WFH schedules on this day.','workforce-one'),'pending'=>__('A pending swap request already exists for this day.','workforce-one'),'save'=>__('The shift swap could not be saved. Please try again.','workforce-one'),'not_found'=>__('The shift swap request could not be found.','workforce-one'),'changed'=>__('The schedule changed after the swap request was created, so it can no longer be accepted.','workforce-one'),'expired'=>__('The swap request has already been processed or expired.','workforce-one'),'past_date'=>__('This day has already passed, so it can no longer be swapped.','workforce-one'),'access'=>__('This swap is not waiting for your approval.','workforce-one'),'approval'=>__('The approval could not be recorded. Please try again.','workforce-one'),'moved'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one'),
+                'department'=>__('You can swap only with a colleague in your own department.','workforce-one'),
+                'one_per_day'=>__('You already have a swap waiting for this day. You can ask again once it is answered or withdrawn.','workforce-one'),
+                'one_per_day_accept'=>__('You already have another swap waiting for this day. Withdraw it before accepting this one.','workforce-one'),
+                'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one')];
+            return $m[$code]??__('Please review the shift swap and try again.','workforce-one');
+        }
+
     private function swap_audit($action,$r,$detail){
             $this->audit($action,'schedule_swap',(int)$r->id,sprintf('%s for %s: %s ↔ %s',$detail,date_i18n('l, d M Y',strtotime($r->work_date)),$r->requester_status,$r->target_status));
         }
@@ -138,22 +160,21 @@ trait EWS_Swap_Trait {
             $date=sanitize_text_field(wp_unslash($_POST['work_date']??''));
             $error=SwapRules::checkRequest((int)$requester->id,$target,$date)??SwapRules::checkNotPast($date,current_time('Y-m-d'));
             if($error)$this->swap_redirect(['swap_error'=>$error]);
-            global $wpdb;$table=$this->ensure_swap_schema();
+            $this->ensure_swap_schema();
             $target_emp=$this->people_employee($target,true);
-            if(!$target_emp || !$this->department_scope_allows_employee($target))$this->swap_redirect(['swap_error'=>'employee']);
+            if(!$target_emp)$this->swap_redirect(['swap_error'=>'employee']);
+            // Only a colleague of one's own department, administrators included (3.31.156, SW-a; owner 2026-11-20).
+            $error=SwapRules::checkSameDepartment((int)($requester->department_id??0),(int)($target_emp->department_id??0));
+            if($error)$this->swap_redirect(['swap_error'=>$error]);
             $a=$this->schedule_for_employee_date($requester->id,$date);
             $b=$this->schedule_for_employee_date($target,$date);
             $error=SwapRules::checkSwappable($a?$a->status:null,$b?$b->status:null);
             if($error)$this->swap_redirect(['swap_error'=>$error]);
-            $exists=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE work_date=%s AND status IN ('Pending','Awaiting') AND ((requester_employee_id=%d AND target_employee_id=%d) OR (requester_employee_id=%d AND target_employee_id=%d))",$date,$requester->id,$target,$target,$requester->id));
-            if($exists)$this->swap_redirect(['swap_error'=>'pending']);
-            $ok=$wpdb->insert($table,[
-                'requester_employee_id'=>(int)$requester->id,'target_employee_id'=>$target,'work_date'=>$date,
-                'requester_status'=>$a->status,'target_status'=>$b->status,'status'=>'Pending',
-                'requested_by'=>get_current_user_id(),'created_at'=>current_time('mysql')
-            ],['%d','%d','%s','%s','%s','%s','%d','%s']);
-            if(!$ok)$this->swap_redirect(['swap_error'=>'save']);
-            $id=(int)$wpdb->insert_id;
+            // One commitment per person and day (3.31.156, SW-b): checked and saved under the person's lock, so a double click or two
+            // requests at once never make two.
+            $made=$this->ews_with_lock('swap_emp_'.(int)$requester->id,function()use($requester,$target,$date,$a,$b){return $this->swap_create_locked($requester,(int)$target,(string)$date,$a,$b);},['error'=>'busy']);
+            if(isset($made['error']))$this->swap_redirect(['swap_error'=>$made['error']]);
+            $id=(int)$made['id'];
             $this->audit('SCHEDULE_SWAP_REQUESTED','schedule_swap',$id,sprintf('%s requested a swap with %s for %s: %s -> %s; %s -> %s',$requester->name,$target_emp->name,date_i18n('l, d M Y',strtotime($date)),$requester->name,$b->status,$target_emp->name,$a->status));
             if($this->my_approvals_enabled()){
                 /* translators: 1: colleague, 2: day, 3: the colleague's day after the swap, 4: the requester's day after it */
@@ -165,6 +186,29 @@ trait EWS_Swap_Trait {
                 $this->swap_notify($this->swap_employee_user_id($target),'Schedule Swap Request',$msg,'info',$id);
             }
             $this->swap_redirect(['swap_sent'=>1]);
+        }
+
+    /** The day's open swaps that involve this employee, as [requester, target, status, id] (3.31.156). @return list<array{0:int,1:int,2:string,3:int}> */
+    private function swap_open_on_day($date,$employee_id){
+            global $wpdb;$table=$wpdb->prefix.'ews_schedule_swaps';   // the callers ensured the schema, outside any transaction
+            $out=[];
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT id,requester_employee_id,target_employee_id,status FROM {$table} WHERE work_date=%s AND status IN ('Pending','Awaiting') AND (requester_employee_id=%d OR target_employee_id=%d)",(string)$date,(int)$employee_id,(int)$employee_id)) as $r)
+                $out[]=[(int)$r->requester_employee_id,(int)$r->target_employee_id,(string)$r->status,(int)$r->id];
+            return $out;
+        }
+
+    /** The rule and the INSERT of a new swap, under the requester's lock (3.31.156). @return array{error?:string,id?:int} */
+    private function swap_create_locked($requester,$target,$date,$a,$b){
+            global $wpdb;$table=$wpdb->prefix.'ews_schedule_swaps';
+            $error=SwapRules::checkCanAsk($this->swap_open_on_day($date,(int)$requester->id),(int)$requester->id,(int)$target);
+            if($error)return ['error'=>$error];
+            $ok=$wpdb->insert($table,[
+                'requester_employee_id'=>(int)$requester->id,'target_employee_id'=>(int)$target,'work_date'=>$date,
+                'requester_status'=>$a->status,'target_status'=>$b->status,'status'=>'Pending',
+                'requested_by'=>get_current_user_id(),'created_at'=>current_time('mysql')
+            ],['%d','%d','%s','%s','%s','%s','%d','%s']);
+            if(!$ok)return ['error'=>'save'];
+            return ['id'=>(int)$wpdb->insert_id];
         }
 
     public function swap_request_respond(){
@@ -184,16 +228,23 @@ trait EWS_Swap_Trait {
             }
             $past=SwapRules::checkNotPast((string)$r->work_date,current_time('Y-m-d'));
             if($past)$this->swap_redirect(['swap_error'=>$past]);
-            if($this->swap_manager_mode()!==''){
-                // A day changed since the request cannot go to the approvers either (as swap_apply refuses it without levels).
-                $a=$this->schedule_for_employee_date($r->requester_employee_id,$r->work_date);$b=$this->schedule_for_employee_date($r->target_employee_id,$r->work_date);
-                if(SwapRules::checkStillCurrent((string)$r->requester_status,(string)$r->target_status,$a?(string)$a->status:null,$b?(string)$b->status:null)!==null)$this->swap_redirect(['swap_error'=>'changed']);
-                $out=$this->swap_to_approvers($r,$emp);
-                if($out!==true)$this->swap_redirect(['swap_error'=>$out]);
-                $this->swap_redirect(['swap_done'=>'awaiting']);
-            }
-            $applied=$this->swap_apply($r);
-            if($applied!==true)$this->swap_redirect(['swap_error'=>$applied]);
+            // One commitment per person and day (3.31.156, SW-b): accepting is refused while this employee has another swap that day
+            // (one they asked for, or one they accepted that waits for the approvers); checked and saved under their lock.
+            $out=$this->ews_with_lock('swap_emp_'.(int)$emp->id,function()use($r,$emp){
+                $error=SwapRules::checkCanAccept(array_values(array_filter($this->swap_open_on_day((string)$r->work_date,(int)$emp->id),function($x)use($r){return $x[3]!==(int)$r->id;})),(int)$emp->id);
+                if($error)return $error;
+                if($this->swap_manager_mode()!==''){
+                    // A day changed since the request cannot go to the approvers either (as swap_apply refuses it without levels).
+                    $a=$this->schedule_for_employee_date($r->requester_employee_id,$r->work_date);$b=$this->schedule_for_employee_date($r->target_employee_id,$r->work_date);
+                    if(SwapRules::checkStillCurrent((string)$r->requester_status,(string)$r->target_status,$a?(string)$a->status:null,$b?(string)$b->status:null)!==null)return 'changed';
+                    $sent=$this->swap_to_approvers($r,$emp);
+                    return $sent===true?'awaiting':($sent==='approved'?'approved':['error'=>$sent]);
+                }
+                $applied=$this->swap_apply($r);
+                return $applied===true?true:['error'=>$applied];
+            },'busy');
+            if($out==='awaiting'||$out==='approved')$this->swap_redirect(['swap_done'=>$out]);
+            if($out!==true)$this->swap_redirect(['swap_error'=>is_array($out)?$out['error']:$out]);
             $this->achievement_evaluate_swap_acceptance((int)$r->target_employee_id,(int)$r->requester_employee_id,(int)$id);
             $this->audit('SCHEDULE_SWAP_ACCEPTED','schedule_swap',$id,sprintf('Swap accepted by %s for %s: requester %s %s -> %s; target %s %s -> %s', $emp->name,date_i18n('l, d M Y',strtotime($r->work_date)),$r->requester_employee_id,$r->requester_status,$r->target_status,$r->target_employee_id,$r->target_status,$r->requester_status));
             $this->swap_notify($req_uid,'Schedule Swap Completed',sprintf('Your schedule swap for %s with %s is complete: %s ↔ %s.',date_i18n('l, d M',strtotime($r->work_date)),$emp->name,$r->requester_status,$r->target_status),'success',$id,true,$this->swap_requester_url());
@@ -206,11 +257,12 @@ trait EWS_Swap_Trait {
             $id=absint($_POST['swap_id']??0);check_admin_referer('ews_swap_cancel_'.$id);
             $emp=$this->current_employee();if(!$emp)$this->swap_redirect(['swap_error'=>'employee']);
             $r=$this->swap_pending_row($id,'AND requester_employee_id=%d',(int)$emp->id);
-            if($r){
-                $ok=$this->swap_close($id,'Cancelled');
-                if($ok!==1)$this->swap_redirect(['swap_error'=>$ok===false?'save':'expired']);
-                $this->swap_audit('SCHEDULE_SWAP_CANCELLED',$r,'Swap cancelled by '.$emp->name);
-            }
+            // Not found or not theirs says so; a day that has passed can no longer be cancelled, as in My requests (3.31.156, SW-f).
+            if(!$r)$this->swap_redirect(['swap_error'=>'not_found']);
+            if(!SwapInbox::canWithdraw('Pending',(string)$r->work_date,current_time('Y-m-d')))$this->swap_redirect(['swap_error'=>'past_date']);
+            $ok=$this->swap_close($id,'Cancelled');
+            if($ok!==1)$this->swap_redirect(['swap_error'=>$ok===false?'save':'expired']);
+            $this->swap_audit('SCHEDULE_SWAP_CANCELLED',$r,'Swap cancelled by '.$emp->name);
             $this->swap_redirect(['swap_done'=>'cancelled']);
         }
 
@@ -234,8 +286,8 @@ trait EWS_Swap_Trait {
                 if(!$fresh){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 $outcome=Hub::workflowOutcome((string)$fresh->status);
                 $done=true;
-                if($outcome===Hub::APPROVED)$done=$this->swap_apply_rows($r);
-                elseif($outcome===Hub::REJECTED)$done=$this->swap_close((int)$id,'Rejected','Awaiting')===1?true:'save';
+                if($outcome===Hub::APPROVED)$done=$this->swap_apply_rows($r,true);
+                elseif($outcome===Hub::REJECTED)$done=$this->swap_close((int)$id,'Rejected','Awaiting','decided')===1?true:'save';
                 if($done!==true){$wpdb->query('ROLLBACK');return $done==='changed'?Hub::CHANGED:Hub::ERROR;}
                 if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
                 if($outcome===Hub::ADVANCED){$this->swap_notify_approver($fresh,$r);return Hub::ADVANCED;}
@@ -245,9 +297,9 @@ trait EWS_Swap_Trait {
             // Pending (the colleague has not answered), or the approval already decided: the administrator decides the swap itself.
             if((int)$this->approval_posted_step()>0)return Hub::MOVED;   // the page showed a level that is no longer open (3.31.122)
             if($approve){
-                $applied=$this->swap_apply($r);
+                $applied=$this->swap_apply($r,true);
                 if($applied!==true)return $applied==='changed'?Hub::CHANGED:Hub::ERROR;
-            }elseif($this->swap_close($id,'Rejected',(string)$r->status)!==1)return Hub::ERROR;
+            }elseif($this->swap_close($id,'Rejected',(string)$r->status,'decided')!==1)return Hub::ERROR;
             $this->swap_admin_done($r,$approve);
             return Hub::outcome($decision);
         }
@@ -259,8 +311,8 @@ trait EWS_Swap_Trait {
             $this->swap_audit($approve?'SCHEDULE_SWAP_ACCEPTED':'SCHEDULE_SWAP_REJECTED',$r,($approve?'Swap approved by administrator ':'Swap rejected by administrator ').$actor);
             $title=$approve?'Schedule Swap Completed':'Schedule Swap Rejected';
             $type=$approve?'success':'warning';
-            $this->swap_notify($this->swap_employee_user_id($r->requester_employee_id),$title,$approve?'Your schedule swap was completed by an administrator.':'Your schedule swap request was rejected by an administrator.',$type,$id,false,$this->swap_requester_url());
-            $this->swap_notify($this->swap_employee_user_id($r->target_employee_id),$title,$approve?'Your schedule has been updated after an administrator approved a swap.':'A schedule swap offered to you was rejected by an administrator.',$type,$id,false);
+            $this->swap_notify($this->swap_employee_user_id($r->requester_employee_id),$title,$approve?'Your schedule swap was completed by an administrator.':'Your schedule swap request was rejected by an administrator.',$type,$id,true,$this->swap_requester_url());   // pushed like every other decision (3.31.156, SW-m)
+            $this->swap_notify($this->swap_employee_user_id($r->target_employee_id),$title,$approve?'Your schedule has been updated after an administrator approved a swap.':'A schedule swap offered to you was rejected by an administrator.',$type,$id,true);
         }
 
     /** Pending swaps for the wp-admin Requests page. */
@@ -270,8 +322,10 @@ trait EWS_Swap_Trait {
         }
 
     /**
-     * The colleague accepted and the workflow has levels: the swap waits for the approvers. Returns
-     * true or an error code. An approval request that is approved at once (no approver) swaps now.
+     * The colleague accepted and the workflow has levels: the swap waits for the approvers. Returns true, 'approved' (the approval was
+     * approved at once and the days exchanged) or an error code. An approval approved at once and the exchange are one transaction
+     * (3.31.156, SW-d): a day changed since the request rolls both back, and the swap still waits for the colleague, as without levels.
+     * Before, the approval was committed first and a changed day left it approved with the swap waiting for ever.
      */
     private function swap_to_approvers($r,$emp){
             global $wpdb;$table=$this->ensure_swap_schema();
@@ -279,11 +333,17 @@ trait EWS_Swap_Trait {
             $ok=$wpdb->update($table,['status'=>'Awaiting','responded_by'=>get_current_user_id(),'responded_at'=>current_time('mysql')],['id'=>(int)$r->id,'status'=>'Pending'],['%s','%d','%s'],['%d','%s']);
             if($ok!==1){$wpdb->query('ROLLBACK');return $ok===false?'save':'expired';}
             if(is_wp_error($this->approval_start('shift_swap','schedule_swap',(int)$r->id,(int)$r->requester_employee_id,[],false))){$wpdb->query('ROLLBACK');return 'approval';}
-            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+            $ar=$this->approval_find_request('shift_swap','schedule_swap',(int)$r->id);
+            $approved=$ar && Hub::workflowOutcome((string)$ar->status)===Hub::APPROVED;
+            if($approved){
+                $r->status='Awaiting';
+                $done=$this->swap_apply_rows($r,true);
+                if($done!==true){$wpdb->query('ROLLBACK');$r->status='Pending';return $done;}
+            }
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$r->status='Pending';return 'save';}
             $r->status='Awaiting';
             $this->swap_audit('SCHEDULE_SWAP_ACCEPTED',$r,'Swap accepted by '.$emp->name.', waiting for approval');
-            $ar=$this->approval_find_request('shift_swap','schedule_swap',(int)$r->id);
-            if($ar&&$ar->status==='APPROVED')return $this->swap_finish_approved($r);
+            if($approved){$this->swap_approved_after($r);return 'approved';}
             $this->swap_notify_approver($ar,$r);
             $this->swap_notify($this->swap_employee_user_id($r->requester_employee_id),__('Swap accepted, waiting for approval','workforce-one'),
                 /* translators: 1: colleague, 2: day */
@@ -301,14 +361,6 @@ trait EWS_Swap_Trait {
                 /* translators: 1: employee, 2: colleague, 3: day, 4: status, 5: status */
                 sprintf(__('%1$s and %2$s agreed to swap %3$s: %4$s ↔ %5$s.','workforce-one'),(string)$a,(string)$b,date_i18n('l, d M',strtotime($r->work_date)),$r->requester_status,$r->target_status),
                 ['type'=>'info','entity_id'=>(int)$r->id,'url'=>$this->swap_inbox_url((int)$r->id)]);
-        }
-
-    /** The last approver approved: the days are exchanged (if the schedules have not changed since). */
-    private function swap_finish_approved($r){
-            $applied=$this->swap_apply($r);
-            if($applied!==true)return $applied;
-            $this->swap_approved_after($r);
-            return true;
         }
 
     /** Audit row and the two participants' notes after the days were exchanged and committed (3.31.130). */
@@ -341,12 +393,13 @@ trait EWS_Swap_Trait {
             $fresh=$this->approval_find_request('shift_swap','schedule_swap',$id);
             if(!$fresh){$wpdb->query('ROLLBACK');return 'save';}
             $outcome='advanced';
-            if($fresh->status==='APPROVED'){
+            $state=Hub::workflowOutcome((string)$fresh->status);   // as the Hub reads it (3.31.156, SW-g)
+            if($state===Hub::APPROVED){
                 $outcome='approved';
-                $done=$this->swap_apply_rows($r);
-            }elseif($fresh->status==='REJECTED'){
+                $done=$this->swap_apply_rows($r,true);
+            }elseif($state===Hub::REJECTED){
                 $outcome='rejected';
-                $done=$this->swap_close($id,'Rejected','Awaiting')===1?true:'save';
+                $done=$this->swap_close($id,'Rejected','Awaiting','decided')===1?true:'save';
             }else $done=true;
             if($done!==true){$wpdb->query('ROLLBACK');return $done;}
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
@@ -375,15 +428,19 @@ trait EWS_Swap_Trait {
             $this->swap_redirect(['swap_done'=>'advanced']);
         }
 
-    /** Swaps waiting for the signed-in user's approval. @return object[] */
+    /**
+     * Swaps waiting for the signed-in user's approval: as its approver (a substitute included), or as the manager away who may still
+     * decide what waits for their substitute, as in My approvals (3.31.156, SW-h). @return object[]
+     */
     private function swap_awaiting_my_approval(){
             if($this->swap_manager_mode()==='')return [];
             global $wpdb;$table=$this->ensure_swap_schema();$at=$this->approval_tables();
+            $away=$this->approval_inbox_away();
             return (array)$wpdb->get_results($wpdb->prepare("SELECT s.*,a.name requester_name,b.name target_name,st.id approval_step FROM {$table} s
                 INNER JOIN {$at['requests']} ar ON ar.entity_type='schedule_swap' AND ar.entity_id=s.id AND ar.status LIKE 'WAITING%%'
-                INNER JOIN {$at['instances']} st ON st.approval_request_id=ar.id AND st.status='PENDING' AND st.approver_wp_user_id=%d
+                INNER JOIN {$at['instances']} st ON st.approval_request_id=ar.id AND st.status='PENDING' AND (st.approver_wp_user_id=%d OR (%d>0 AND st.for_employee_id=%d))
                 LEFT JOIN {$this->employees} a ON a.id=s.requester_employee_id LEFT JOIN {$this->employees} b ON b.id=s.target_employee_id
-                WHERE s.status='Awaiting' ORDER BY s.work_date ASC LIMIT 50",get_current_user_id()));
+                WHERE s.status='Awaiting' ORDER BY s.work_date ASC LIMIT 50",get_current_user_id(),$away,$away));
         }
 
     private function swap_requests_for_user($emp_id,$week_start=null,$week_end=null){
@@ -443,7 +500,7 @@ trait EWS_Swap_Trait {
                 elseif($r->status==='Awaiting')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · they accepted','workforce-one'),$name);
                 elseif($state==='approved')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · the days were exchanged','workforce-one'),$name);
                 elseif($state==='withdrawn')$sub=sprintf(/* translators: %s: colleague's name */__('With %s · withdrawn','workforce-one'),$name);
-                elseif($state==='rejected')$sub=!isset($engine[(int)$r->id])
+                elseif($state==='rejected')$sub=!isset($engine[(int)$r->id]) && !(int)($r->decided_by??0)
                     ?sprintf(/* translators: %s: colleague's name */__('With %s · they declined','workforce-one'),$name):sprintf(/* translators: %s: colleague's name */__('With %s · not approved','workforce-one'),$name);
                 else $sub=sprintf(/* translators: %s: colleague's name */__('With %s','workforce-one'),$name);
                 $colleague=['order'=>0,'mark'=>'↔','label'=>$name!==''?$name:__('Colleague','workforce-one'),'who'=>'',
@@ -574,8 +631,12 @@ trait EWS_Swap_Trait {
             $st=[];
             foreach((array)$wpdb->get_results($wpdb->prepare("SELECT employee_id,work_date,status FROM {$this->schedule} WHERE employee_id IN ($ph) AND work_date IN ($dph)",array_merge($ids,$dates))) as $r)$st[(int)$r->employee_id][(string)$r->work_date]=(string)$r->status;
             $busy=[];
-            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT requester_employee_id a,target_employee_id b,work_date FROM {$table} WHERE status IN ('Pending','Awaiting') AND work_date IN ($dph) AND (requester_employee_id=%d OR target_employee_id=%d)",array_merge($dates,[(int)$emp->id,(int)$emp->id]))) as $r)
+            foreach((array)$wpdb->get_results($wpdb->prepare("SELECT requester_employee_id a,target_employee_id b,work_date,status FROM {$table} WHERE status IN ('Pending','Awaiting') AND work_date IN ($dph) AND (requester_employee_id=%d OR target_employee_id=%d)",array_merge($dates,[(int)$emp->id,(int)$emp->id]))) as $r){
                 $busy[((int)$r->a===(int)$emp->id?(int)$r->b:(int)$r->a)][(string)$r->work_date]=true;
+                // A day this employee already has a swap on (asked, or accepted and waiting) is not offered (3.31.156, SW-b).
+                if(SwapRules::isCommitment((int)$emp->id,(int)$r->a,(int)$r->b,(string)$r->status))unset($out['days'][(string)$r->work_date]);
+            }
+            if(!$out['days']){$out['reason']='days';return $out;}
             $names=$this->people_brief_by_ids($ids);   // one query, not one per colleague (3.31.126)
             foreach($ids as $id){
                 $days=[];

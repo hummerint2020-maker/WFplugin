@@ -12634,3 +12634,15 @@ msgstr ""
 #: templates/app/office-minimum-managers.php
 msgid "Changes not saved yet are not shown here."
 msgstr ""
+
+#: includes/trait-swap.php
+msgid "You can swap only with a colleague in your own department."
+msgstr ""
+
+#: includes/trait-swap.php
+msgid "You already have a swap waiting for this day. You can ask again once it is answered or withdrawn."
+msgstr ""
+
+#: includes/trait-swap.php
+msgid "You already have another swap waiting for this day. Withdraw it before accepting this one."
+msgstr ""

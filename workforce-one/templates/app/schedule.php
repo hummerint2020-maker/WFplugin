@@ -50,7 +50,7 @@ $avatar = static function (int $id, string $name) use ($people): string {
 };
 $week_labels = ['This week' => __('This week', 'workforce-one'), 'Next week' => __('Next week', 'workforce-one'), 'Previous week' => __('Previous week', 'workforce-one')];
 $week_text = $week_labels[$week_label] ?? $week_label;
-$swap_states = ['awaiting' => ['overtime', __('Waiting for approval', 'workforce-one')], 'pending' => ['overtime', __('Pending', 'workforce-one')], 'accepted' => ['check', __('Accepted', 'workforce-one')], 'rejected' => ['close', __('Rejected', 'workforce-one')], 'cancelled' => ['close', __('Cancelled', 'workforce-one')]];
+$swap_states = ['awaiting' => ['overtime', __('Waiting for approval', 'workforce-one')], 'pending' => ['overtime', __('Pending', 'workforce-one')], 'accepted' => ['check', __('Accepted', 'workforce-one')], 'approved' => ['check', __('Approved', 'workforce-one')], 'rejected' => ['close', __('Rejected', 'workforce-one')], 'cancelled' => ['close', __('Cancelled', 'workforce-one')]];
 $by_id = [];
 foreach ($emps as $e) $by_id[(int) $e->id] = $e;
 ?>
@@ -249,7 +249,7 @@ foreach ($emps as $e) $by_id[(int) $e->id] = $e;
         <?php endif; ?>
         <?php if ($outgoing): ?>
             <h4 class="wfo-rq-group"><?php esc_html_e('Sent by you', 'workforce-one'); ?></h4>
-            <div class="wfo-rq-card"><?php foreach ($outgoing as $sr) echo $swap_row($sr, $form_open('ews_swap_cancel', 'ews_swap_cancel_' . (int) $sr->id, (int) $sr->id)
+            <div class="wfo-rq-card"><?php foreach ($outgoing as $sr) echo $swap_row($sr, (string) $sr->work_date < $today ? '' /* a past day can no longer be cancelled (3.31.156) */ : $form_open('ews_swap_cancel', 'ews_swap_cancel_' . (int) $sr->id, (int) $sr->id)
                 . '<button class="wfo-rq-btn is-no" type="submit">' . Icons::svg('close', 16, 2.2) . esc_html__('Cancel', 'workforce-one') . '</button></form>'); ?></div>
         <?php endif; ?>
         <?php if ($awaiting): ?>
