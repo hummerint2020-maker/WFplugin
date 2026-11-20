@@ -223,4 +223,7 @@ $trace['rows_schedule'] = $rows("SELECT employee_id,work_date,status FROM {$p}ew
 $trace['rows_approvals'] = $rows("SELECT ar.entity_id,ar.status,st.step_order,st.status step_status FROM {$p}ews_approval_requests ar LEFT JOIN {$p}ews_approval_steps st ON st.approval_request_id=ar.id WHERE ar.entity_type='schedule_swap' ORDER BY ar.id,st.step_order");
 $trace['rows_notifications'] = $rows("SELECT user_id,type,entity,entity_id,title,message,link FROM {$p}ews_notifications WHERE entity='swap' ORDER BY id");
 $trace['rows_audit'] = $rows("SELECT action,entity,entity_id,details FROM {$p}ews_audit_log WHERE entity='schedule_swap' ORDER BY id");
+// The snapshot does not hold wp_users: this script's people keep their login (so the ids stay the same on both sides) but lose
+// their role, else swadm is one more administrator told by the traces run after this one on the other side.
+foreach ($P as $x) (new WP_User($x['uid']))->set_role('');
 echo wp_json_encode(json_decode($fix(wp_json_encode($trace)), true));
