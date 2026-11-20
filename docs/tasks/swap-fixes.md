@@ -201,3 +201,23 @@ again once it is answered or withdrawn." All other texts are existing msgids.
 6. SW-h scope: parity with My approvals (the away manager); administrators' rerouted levels not added to the Schedule list (default).
 7. Approved at once: the colleague sees "approved"; the audit keeps "accepted, waiting" then APPROVED (default yes).
 8. Existing duplicate open swaps: left; no automatic cancel (default).
+
+## Owner's answers to §14 (2026-11-20)
+1. A day the person already has a commitment on is **removed** from the New request sheet and the legacy form.
+2. (default) Swap results are shown on My requests.
+3. **One commitment per person per day** (the owner asked for every edge case to be thought through; this rule was chosen):
+   - a commitment = a swap the person **asked** for that is still open (Pending or Awaiting), or a swap they were asked in and
+     **accepted** that is still waiting for the approvers (Awaiting, target = them);
+   - a swap they were asked in and have **not answered** does not count;
+   - **asking**: refused when the person already has a commitment that day (`one_per_day`); the reverse pair stays `pending`;
+   - **accepting**: refused when the person already has another commitment that day (`one_per_day_accept`: "You already have
+     another swap waiting for this day. Withdraw it before accepting this one."); declining is always allowed;
+   - both checks run under the same per-person lock (`swap_emp_<id>`), so a create and an accept by the same person cannot race.
+   Edge cases weighed: a request sent and then an incoming one accepted (the sent one would go stale and block the day); two
+   approvals racing for one day (the approver of the second would get "changed"); a colleague's unanswered request blocking
+   someone (rejected: an unanswered request is not a commitment).
+4. (default) Wording as written.
+5. **No backfill.**
+6. **No**: administrators' rerouted levels are not added to the Schedule list.
+7. (default) Approved at once: "approved".
+8. (default) Existing duplicates left; no automatic cancel.
