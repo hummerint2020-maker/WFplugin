@@ -23,6 +23,10 @@ delete_option('ews_feature_my_approvals');
 delete_option('ews_feature_week_lock');
 
 // ---------------------------------------------------------------- the people (direct SQL: no swap code)
+// A snapshot taken after an earlier run of this script holds its people already: they are removed first, so each login is one employee.
+$old = array_map('intval', (array) $wpdb->get_col("SELECT id FROM {$p}ews_employees WHERE domain_name IN ('swreq','swpeer','swpeer2','swother','swappr','swmgr','swsub','swadm')"));
+if ($old) $wpdb->query("DELETE FROM {$p}ews_employees WHERE id IN (" . implode(',', $old) . ")");
+$wpdb->query("DELETE FROM {$p}ews_departments WHERE code IN ('swops','swsales')");
 $wpdb->insert($p . 'ews_departments', ['name' => 'Swap Ops', 'code' => 'swops', 'active' => 1]); $dOps = (int) $wpdb->insert_id;
 $wpdb->insert($p . 'ews_departments', ['name' => 'Swap Sales', 'code' => 'swsales', 'active' => 1]); $dSales = (int) $wpdb->insert_id;
 $user = function ($login, $role = 'subscriber') {
@@ -47,8 +51,8 @@ $day = function ($who, $n, $status) use ($wpdb, $p, $P, $D) {
     $wpdb->delete($p . 'ews_schedule', ['employee_id' => $P[$who]['id'], 'work_date' => $D($n)]);
     $wpdb->insert($p . 'ews_schedule', ['employee_id' => $P[$who]['id'], 'work_date' => $D($n), 'status' => $status]);
 };
-// Every swap gets a fixed id, so a swap one side refuses (the fixes) does not renumber the later ones (3.31.156).
-$nextId = 50000;
+// Every swap gets a fixed id above what the snapshot holds, so a swap one side refuses (the fixes) does not renumber the later ones (3.31.156).
+$nextId = (int) $wpdb->get_var("SELECT COALESCE(MAX(id),0) FROM {$T}") + 1000;
 $seedSwap = function ($a, $b, $n, $sa, $sb, $status = 'Pending') use ($wpdb, $T, $P, $D, &$nextId) {
     $wpdb->insert($T, ['id' => $nextId++, 'requester_employee_id' => $P[$a]['id'], 'target_employee_id' => $P[$b]['id'], 'work_date' => $D($n), 'requester_status' => $sa, 'target_status' => $sb,
         'status' => $status, 'requested_by' => $P[$a]['uid'], 'created_at' => current_time('mysql')]);
