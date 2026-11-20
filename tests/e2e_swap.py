@@ -413,5 +413,40 @@ app_decide(sid, 'reject')
 set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
 configure_swap('PEER')
 
+# 3.31.156 (owner, 2026-11-20): two races pinned on the code before the swap fixes.
+def stale_many(pairs):
+    php("file_put_contents(WPMU_PLUGIN_DIR.'/ews-e2e-swap.txt','%s');" % '|'.join('stale %d %s %s' % (eid, DAY, st) for eid, st in pairs))
+
+
+# (a) Two accepts of the same swap: the second sees the days as they were (a request that read them a moment before) and is refused.
+set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')
+create(e2)
+ra = last()
+row = php("echo wp_json_encode($wpdb->get_row(\"SELECT * FROM {$p}ews_schedule_swaps WHERE id=%d\"));" % ra).splitlines()[-1]
+before_notes = notes()
+qs = accept(ra)
+stale_many([(e1, 'Office'), (e2, 'WFH')])
+second = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'swap_apply'); $m->setAccessible(true);
+    echo wp_json_encode($m->invoke($o,(object)json_decode('%s',true)));""" % row.replace("'", "\\'")).splitlines()[-1]
+stale()
+check('race: two accepts of the same swap at once: the second is refused (expired), the days are exchanged once, told once',
+      qs.get('swap_done') == 'accepted' and second == '"expired"' and swap(ra)['status'] == 'Accepted' and sched(e1) == 'WFH' and sched(e2) == 'Office'
+      and audits(ra) == 1 and notes() == before_notes + 2, (qs, second, swap(ra), sched(e1), sched(e2), audits(ra), notes() - before_notes))
+
+# (b) Two Pending swaps on one day sharing the requester (seeded directly: the rules may refuse to create the second). The colleague's
+# row comes first in the write order; the requester's day was exchanged by the first swap, so the second must change nothing at all.
+set_schedule(e4, 'WFH'); set_schedule(e1, 'Office'); set_schedule(e2, 'WFH')   # e4's row id is lower than e1's
+pair = php("""foreach([%d,%d] as $t){ $wpdb->insert($p.'ews_schedule_swaps',['requester_employee_id'=>%d,'target_employee_id'=>$t,'work_date'=>'%s','requester_status'=>'Office','target_status'=>'WFH','status'=>'Pending','requested_by'=>1,'created_at'=>current_time('mysql')]); $ids[]=$wpdb->insert_id; } echo wp_json_encode($ids);""" % (e2, e4, e1, DAY)).splitlines()[-1]
+rb, rc = __import__('json').loads(pair)
+qs = accept(rb)
+stale_many([(e1, 'Office')])   # the second accept read the requester's day before the first was saved
+n4 = swap_form_nonce(emp4, 'ews_swap_respond', rc)
+qs2 = emp4.post('ews_swap_respond', _wpnonce=n4, swap_id=rc, decision='accept')[1]
+stale()
+check('race: two swaps on one day sharing the requester, both accepted: the first exchanges, the second is refused (changed) with no partial write',
+      qs.get('swap_done') == 'accepted' and qs2.get('swap_error') == 'changed' and swap(rb)['status'] == 'Accepted' and swap(rc)['status'] == 'Pending'
+      and sched(e1) == 'WFH' and sched(e2) == 'Office' and sched(e4) == 'WFH', (qs, qs2, swap(rb), swap(rc), sched(e1), sched(e2), sched(e4)))
+php("$wpdb->update($p.'ews_schedule_swaps',['status'=>'Cancelled'],['id'=>%d]);" % rc)
+
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
