@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.31.156
+### Shift swap fixes (docs/tasks/swap-fixes.md; found by the L3 design, docs/tasks/schedule-rest.md §5)
+Owner decisions 2026-11-20. **No switch: on as soon as the release is installed** (owner's choice for this release).
+- **One swap per person and day.** A person cannot ask for a second swap for a day while one they asked for is still open, or while
+  one they were asked in and accepted waits for the approvers ("You already have a swap waiting for this day…"). A swap asked of them
+  and not answered does not count. Accepting is refused while they have another swap that day ("Withdraw it before accepting this
+  one"); declining is always allowed. A double click never makes two requests. The New request sheet and the Schedule page's form no
+  longer offer a day that already has one.
+- **Own department only, administrators included.** An administrator who is also an employee swaps only with a colleague of their own
+  department, like everyone; the Schedule page's form lists only that department.
+- **The colleague's answer and the approver's decision are both kept** (two new columns, `decided_by` and `decided_at`). A swap exchanged
+  on an approver's or an administrator's decision shows as **Approved**; one the colleague alone accepted stays Accepted. Older swaps
+  stay as they were (no backfill). Achievements count both.
+- **An administrator's decision is pushed** to both people, like every other decision.
+- **Cancel on the Schedule page:** a day that has passed can no longer be cancelled (as in My requests), and a swap that is not found
+  says so instead of "cancelled".
+- **A manager away** who may still decide (Substitutes, "managers away may decide") sees on the Schedule page the swaps waiting for their
+  substitute, as in My approvals.
+- **Approved at start:** if the approval is approved as soon as it starts, the approval and the exchange are saved together; a day changed
+  in between leaves nothing approved (before, the swap stayed waiting for ever). This cannot happen with today's swap workflows (it needs
+  every level skipped by an amount condition, and swaps have no amount); it is protection only.
+- Swap messages are shown on My requests too (the New request sheet's swaps were silent).
+- Tests: two race tests first on the unchanged code (two accepts at once; two swaps on one day sharing a person); e2e for every fix and
+  the upgrade; unit tests for the rules; a new golden swap trace (`tests/golden/actions_swap.php`), whose changed cases are declared.
+
+Going back to 3.31.155: the two columns stay and are ignored; swaps shown as Approved read "Approved" with a plain icon on the Schedule
+page and are left out of new achievement counts.
+
 ## 3.31.155
 ### The managers' counter opens the day's managers (docs/tasks/manager-counter-list.md, mockups docs/mockups/manager-counter-list/)
 Owner request 2026-11-19: "the managers' part (2/1): I tap it and see who is coming in". Only with the managers' minimum on (owner: no separate switch); a site without it sees no change.

@@ -10,6 +10,10 @@
 require_once rtrim((string) getenv('GOLDEN_DIR'), '/') . '/evidence_lib.php';
 
 $admin = (int) get_user_by('login', 'admin')->ID;
+// The schema as a site has it once upgraded (3.31.156 adds two swap columns): without this, the new code would check the table on every
+// call of the trace while the snapshot is on the old version. On the old code it changes nothing.
+delete_transient('ews_schema_retry');
+$call('maybe_upgrade_schema');
 $T = $p . 'ews_schedule_swaps';
 $D = function ($n) use ($D0) { return gmdate('Y-m-d', strtotime($D0 . ($n < 0 ? ' ' : ' +') . $n . ' days')); };
 for ($i = -2; $i <= 20; $i++) $dates[$D($i)] = 'D' . ($i < 0 ? '' : '+') . $i;
@@ -43,8 +47,10 @@ $day = function ($who, $n, $status) use ($wpdb, $p, $P, $D) {
     $wpdb->delete($p . 'ews_schedule', ['employee_id' => $P[$who]['id'], 'work_date' => $D($n)]);
     $wpdb->insert($p . 'ews_schedule', ['employee_id' => $P[$who]['id'], 'work_date' => $D($n), 'status' => $status]);
 };
-$seedSwap = function ($a, $b, $n, $sa, $sb, $status = 'Pending') use ($wpdb, $T, $P, $D) {
-    $wpdb->insert($T, ['requester_employee_id' => $P[$a]['id'], 'target_employee_id' => $P[$b]['id'], 'work_date' => $D($n), 'requester_status' => $sa, 'target_status' => $sb,
+// Every swap gets a fixed id, so a swap one side refuses (the fixes) does not renumber the later ones (3.31.156).
+$nextId = 50000;
+$seedSwap = function ($a, $b, $n, $sa, $sb, $status = 'Pending') use ($wpdb, $T, $P, $D, &$nextId) {
+    $wpdb->insert($T, ['id' => $nextId++, 'requester_employee_id' => $P[$a]['id'], 'target_employee_id' => $P[$b]['id'], 'work_date' => $D($n), 'requester_status' => $sa, 'target_status' => $sb,
         'status' => $status, 'requested_by' => $P[$a]['uid'], 'created_at' => current_time('mysql')]);
     return (int) $wpdb->insert_id;
 };
@@ -76,7 +82,8 @@ $sw = function ($label, $id, callable $fn, $fault = null) use (&$trace, $run, $f
     $trace[$label]['swap'] = $id ? $row(is_callable($id) ? $id() : $id) : null;
     foreach ($trace[$label]['sql'] as &$s) $s = preg_replace(array_map(function ($k) { return '/' . $k . '/'; }, array_keys($names)), array_values($names), $s);
 };
-$create = function ($as, $target, $n) use ($post, $P, $D) {
+$create = function ($as, $target, $n) use ($post, $P, $D, $wpdb, $T, &$nextId) {
+    $wpdb->query("ALTER TABLE {$T} AUTO_INCREMENT=" . ($nextId++));   // recorded with the call, the same statement on both sides
     wp_set_current_user($P[$as]['uid']);
     return $post('swap_request_create', ['target_employee_id' => is_int($target) ? $target : $P[$target]['id'], 'work_date' => is_int($n) ? $D($n) : $n], 'ews_swap_create');
 };

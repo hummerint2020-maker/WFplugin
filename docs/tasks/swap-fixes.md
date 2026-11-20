@@ -221,3 +221,17 @@ again once it is answered or withdrawn." All other texts are existing msgids.
 6. **No**: administrators' rerouted levels are not added to the Schedule list.
 7. (default) Approved at once: "approved".
 8. (default) Existing duplicates left; no automatic cancel.
+
+## As built (3.31.156): where the code differs from the design
+- **SW-b, the rule** follows the owner's answer, wider than the design: one **commitment** per person and day (asked and open, or accepted
+  and waiting for the approvers), checked when asking (`one_per_day`) and when accepting (`one_per_day_accept`), both under the person's
+  lock `swap_emp_<id>`. Pure rules `SwapRules::isCommitment`, `checkCanAsk`, `checkCanAccept`; one read `swap_open_on_day()` (the day's
+  open swaps that involve the person) replaces the COUNT.
+- **SW-d is unreachable today.** The engine approves at start only when every level is skipped by an amount condition, and a swap has
+  no amount; a level with no approver goes to the administrators. The design's "levels with no active rows" is refused by the engine
+  (`approval_steps_missing`). The atomic path is kept as protection and exercised in golden by making the engine record the request as
+  approved (a query filter in `actions_swap.php`).
+- **SW-a** also covers non-administrators (the rule is about the two employees); the scope read is gone.
+- `approval_inbox_away()` lives in `trait-my-approvals.php` (approvals api); `swap_notice_text()` in `trait-swap.php` (schedule api).
+- **Golden:** `actions_swap.php` runs `maybe_upgrade_schema` first (the snapshot is on the old schema) and gives every swap a fixed id,
+  so a swap one side refuses does not renumber the others. 41 swap traces are declared; the pages and every other trace are identical.

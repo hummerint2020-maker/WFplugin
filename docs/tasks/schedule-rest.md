@@ -265,3 +265,11 @@ Traces run with `wp_cache_flush()` before each call, so option reads show as SQL
 2. **Race tests:** yes, added first on the unchanged code (double accept; two swaps on one day sharing a person).
 3. **Quirks SW-a…SW-n:** fix them **first**, in a fix release before the move (so the move carries the fixed code). The fixes
    are designed separately (`docs/tasks/swap-fixes.md`); the product direction of each is asked below.
+
+## Notes after the swap fixes (3.31.156, before L3a)
+The swap code changed before the move (`docs/tasks/swap-fixes.md`); update §2.2 when L3a is built:
+- `countOpenBetween` → `openOnDay($date, $employeeId)` (`swap_open_on_day`), read under the person's lock (`swap_create_locked` becomes
+  `SwapService::create`; accepting takes the same lock).
+- `close(..., $by)`: `responded` or `decided` columns; `applyRows($r, $approved)` ends `Approved` on an approver's decision.
+- `toApprovers` now holds `find` and, when approved at start, `applyRows` inside its transaction; `swap_finish_approved` is gone.
+- `awaitingApprover($uid, $away)` (the manager away, `approval_inbox_away()`).
