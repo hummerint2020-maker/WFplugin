@@ -235,3 +235,22 @@ again once it is answered or withdrawn." All other texts are existing msgids.
 - `approval_inbox_away()` lives in `trait-my-approvals.php` (approvals api); `swap_notice_text()` in `trait-swap.php` (schedule api).
 - **Golden:** `actions_swap.php` runs `maybe_upgrade_schema` first (the snapshot is on the old schema) and gives every swap a fixed id,
   so a swap one side refuses does not renumber the others. 41 swap traces are declared; the pages and every other trace are identical.
+
+## Review (read-only, on Opus): nothing serious
+Checked clean: money (no payroll, report, privacy or API reader of swap statuses), permissions (same department; the away manager's
+list matches what `approval_can_act` lets them decide), concurrency (lock names, release in `finally`, START TRANSACTION only inside the
+lock, the schema ensured before every write of `decided_*`), upgrade and downgrade, the closures' return values, every old message kept.
+
+Fixed
+1. CONFIRMED (medium). With My approvals on, the Schedule page's swap sheet (opened from My week) still offered a day the person
+   already had a swap on: the week's swaps were read only with My approvals off. They are now read for the filter either way (one read
+   on the Schedule page with My approvals on); e2e checks both.
+2. CONFIRMED (low; cannot happen today). An approval approved at start wrote the colleague into `decided_by`. It now writes the status
+   only (`swap_close(..., 'none')`).
+3. PLAUSIBLE (low). The "double click" e2e called the locked function twice in a row; four requests are now sent at the same moment
+   (the local server run with several workers) and make exactly one swap.
+
+Not changed
+4. LOW. When every offered day already has the person's swap, the New request sheet says it has no Office/WFH days ("days"); a distinct
+   message would be new text. Left as is.
+5. INFO. `module-baseline.json` also lowered three counts unrelated to swaps (stale, written by `check_modules --update`).

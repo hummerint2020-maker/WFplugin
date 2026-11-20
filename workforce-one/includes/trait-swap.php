@@ -46,11 +46,13 @@ trait EWS_Swap_Trait {
     /**
      * Moves a swap from $from (Pending, or Awaiting the approvers) to $status. Returns 1 on success, 0 if it had moved on, false on a DB error.
      * $by: 'responded' writes who answered as the colleague (or the requester who cancelled); 'decided' writes the approver's or the
-     * administrator's decision apart from it, so the colleague's answer is kept (3.31.156, SW-e).
+     * administrator's decision apart from it, so the colleague's answer is kept (3.31.156, SW-e); 'none' writes the status only (an
+     * approval approved at its start: nobody decided).
      */
     private function swap_close($id,$status,$from='Pending',$by='responded'){
             // The callers read the swap first (schema ensured); it also runs inside transactions, where a dbDelta would commit (3.31.120).
             global $wpdb;$table=$wpdb->prefix.'ews_schedule_swaps';
+            if($by==='none')return $wpdb->update($table,['status'=>$status],['id'=>$id,'status'=>$from],['%s'],['%d','%s']);   // approved at start: nobody decided
             $col=$by==='decided'?'decided':'responded';
             return $wpdb->update($table,['status'=>$status,$col.'_by'=>get_current_user_id(),$col.'_at'=>current_time('mysql')],['id'=>$id,'status'=>$from],['%s','%d','%s'],['%d','%s']);
         }
@@ -90,7 +92,7 @@ trait EWS_Swap_Trait {
             $now=current_time('mysql');$uid=get_current_user_id();
             // Claimed first, then each day written only if it is still as read (3.31.117): a schedule saved at the same moment (a leave
             // approved, the grid, another swap) is never overwritten, and of two accepts at once the second is "expired".
-            $updated=$this->swap_close((int)$r->id,$approved?'Approved':'Accepted',(string)$r->status,$approved?'decided':'responded');
+            $updated=$this->swap_close((int)$r->id,$approved?'Approved':'Accepted',(string)$r->status,$approved==='start'?'none':($approved?'decided':'responded'));
             if($updated!==1)return $updated===false?'save':'expired';
             $writes=[[$a,(int)$r->requester_employee_id,(string)$r->target_status],[$b,(int)$r->target_employee_id,(string)$r->requester_status]];
             usort($writes,function($x,$y){return (int)$x[0]->id<=>(int)$y[0]->id;});   // the same order in every swap: no deadlock
@@ -337,7 +339,7 @@ trait EWS_Swap_Trait {
             $approved=$ar && Hub::workflowOutcome((string)$ar->status)===Hub::APPROVED;
             if($approved){
                 $r->status='Awaiting';
-                $done=$this->swap_apply_rows($r,true);
+                $done=$this->swap_apply_rows($r,'start');   // Approved; nobody decided, so decided_by/decided_at stay empty
                 if($done!==true){$wpdb->query('ROLLBACK');$r->status='Pending';return $done;}
             }
             if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$r->status='Pending';return 'save';}

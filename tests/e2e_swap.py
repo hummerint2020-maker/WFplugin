@@ -468,6 +468,12 @@ first = last()
 check('SW-b: the first swap of the day is sent', qs.get('swap_sent') == '1', qs)
 _, qs, _ = create(e5, D2)
 check('SW-b: a second swap for the same day with another colleague is refused (one_per_day), nothing saved', qs.get('swap_error') == 'one_per_day' and last() == first, (qs, last(), first))
+for inbox in (0, 1):   # the Schedule page's swap sheet (opened from My week) no longer offers that day, My approvals off or on
+    php("update_option('ews_feature_my_approvals',%d,false);" % inbox)
+    sheet = re.search(r'id="wfo-swap-sheet".*?</dialog>', emp1.req('/app/?ews_view=schedule')[1], re.S)
+    if sheet:
+        check('SW-b: the Schedule page\'s swap sheet no longer offers that day (My approvals %s)' % ('on' if inbox else 'off'), 'value="%s"' % D2 not in sheet.group(0))
+php("delete_option('ews_feature_my_approvals');")
 check('...the New request sheet no longer offers that day', D2 not in php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'swap_new_choices'); $m->setAccessible(true); wp_set_current_user((int)get_user_by('login','emp1')->ID);
     $e=(new ReflectionMethod($o,'people_employee')); $e->setAccessible(true); echo wp_json_encode(array_keys($m->invoke($o,$e->invoke($o,%d))['days']));""" % e1).splitlines()[-1])
 _, qs, _ = emp2.post('ews_swap_create', _wpnonce=emp2.nonce('ews_swap_create', view='schedule'), target_employee_id=e1, work_date=D2)
@@ -495,6 +501,17 @@ busy = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'swap_creat
     echo wp_json_encode([$m->invoke($o,$r,%d,'%s',$a,$b),$m->invoke($o,$r,%d,'%s',$a,$b)]);""" % (e1, D2, e2, D2, e1, e2, D2, e2, D2)).splitlines()[-1]
 two = __import__('json').loads(busy)
 check('SW-b: the same swap saved twice (a double click) makes one row: the second is refused', 'id' in two[0] and two[1].get('error') == 'pending', two)
+cancel_all()
+# The same request sent four times at the same moment (a double click on a slow line): the person's lock makes exactly one row.
+import threading
+before_rows = int(q("SELECT COUNT(*) c FROM {p}ews_schedule_swaps WHERE requester_employee_id=%d AND work_date='%s'" % (e1, D2))[0]['c'])
+outs = []
+def fire():
+    outs.append(emp1.post('ews_swap_create', _wpnonce=n_create, target_employee_id=e2, work_date=D2)[1])
+ths = [threading.Thread(target=fire) for _ in range(4)]
+[t.start() for t in ths]; [t.join() for t in ths]
+made = int(q("SELECT COUNT(*) c FROM {p}ews_schedule_swaps WHERE requester_employee_id=%d AND work_date='%s'" % (e1, D2))[0]['c']) - before_rows
+check('SW-b: four requests at the same moment make one swap; the others are refused', made == 1 and sum(1 for o in outs if o.get('swap_sent') == '1') == 1, (made, outs))
 cancel_all()
 
 # SW-a: an administrator who is also an employee swaps within their own department, like anyone.

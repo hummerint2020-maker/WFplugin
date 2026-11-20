@@ -117,9 +117,11 @@ trait EWS_Schedule_View_Trait {
         [,$this_week]=$this->week_dates_configured($today);
         $inbox=$current_emp_id && $this->my_approvals_enabled()?['answer'=>$this->my_approvals_swap_count(),'answer_url'=>add_query_arg('apv_kind','swap',$this->my_approvals_clean_url('approvals')),
             'mine'=>$this->swap_waiting_mine_count((int)$current_emp_id),'mine_url'=>add_query_arg('req_state','waiting',$this->my_approvals_clean_url('requests'))]:null;
-        $swap_requests=$current_emp_id && !$inbox?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[];
-        // A day this employee already has a swap on (asked, or accepted and waiting) is not offered (3.31.156, SW-b).
-        foreach($swap_requests as $sr)if(SwapRules::isCommitment((int)$current_emp_id,(int)$sr->requester_employee_id,(int)$sr->target_employee_id,(string)$sr->status))unset($swap_days[(string)$sr->work_date]);
+        // The week's swaps: listed with My approvals off; with it on, read only to keep the swap sheet (opened from My week) from
+        // offering a day this employee already has a swap on (asked, or accepted and waiting; 3.31.156, SW-b).
+        $week_swaps=$current_emp_id?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[];
+        $swap_requests=$inbox?[]:$week_swaps;
+        foreach($week_swaps as $sr)if(SwapRules::isCommitment((int)$current_emp_id,(int)$sr->requester_employee_id,(int)$sr->target_employee_id,(string)$sr->status))unset($swap_days[(string)$sr->work_date]);
         $range=date('d M',strtotime($dates[0])).' – '.date('d M Y',strtotime($week_end));
         $email=null;
         if(isset($_GET['email_sent'])||isset($_GET['email_skipped'])||isset($_GET['email_failed']))$email=['sent'=>absint($_GET['email_sent']??0),'skipped'=>absint($_GET['email_skipped']??0),'failed'=>absint($_GET['email_failed']??0)];
