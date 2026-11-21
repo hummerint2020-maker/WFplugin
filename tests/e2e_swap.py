@@ -53,7 +53,8 @@ def last():
 
 
 def swap_form_nonce(sess, action, sid):
-    st, page, _ = sess.req('/app/?ews_view=schedule')
+    # This week, then D2's week (tomorrow is next week's page when today is the week's last day).
+    page = ''.join(sess.req('/app/?ews_view=schedule' + w)[1] for w in ([''] + (['&week=' + globals()['D2']] if 'D2' in globals() else [])))
     for form in re.findall(r'<form.*?</form>', page, re.S):
         if 'value="%s"' % action in form and 'name="swap_id" value="%d"' % sid in form:
             m = re.search(r'name="_wpnonce" value="([^"]+)"', form)
@@ -450,7 +451,8 @@ php("$wpdb->update($p.'ews_schedule_swaps',['status'=>'Cancelled'],['id'=>%d]);"
 
 # ---------------------------------------------------------------- 3.31.156 swap fixes (docs/tasks/swap-fixes.md; owner 2026-11-20)
 configure_swap('PEER')
-D2 = (today + __import__('datetime').timedelta(days=1)).isoformat()   # tomorrow: shown on the page's week except on its last day
+D2 = (today + __import__('datetime').timedelta(days=1)).isoformat()   # tomorrow: on next week's page when today is the week's last day
+SV2 = 'schedule&week=' + D2   # the Schedule page on D2's week, whatever today is
 dept_ops = int(q("SELECT department_id d FROM {p}ews_employees WHERE id=%d" % e1)[0]['d'])
 e5 = int(php("""$u=username_exists('emp5')?:wp_create_user('emp5','emp5pass','emp5@example.com');
     $e=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$p}ews_employees WHERE wp_user_id=%%d",$u));
@@ -470,16 +472,16 @@ _, qs, _ = create(e5, D2)
 check('SW-b: a second swap for the same day with another colleague is refused (one_per_day), nothing saved', qs.get('swap_error') == 'one_per_day' and last() == first, (qs, last(), first))
 for inbox in (0, 1):   # the Schedule page's swap sheet (opened from My week) no longer offers that day, My approvals off or on
     php("update_option('ews_feature_my_approvals',%d,false);" % inbox)
-    sheet = re.search(r'id="wfo-swap-sheet".*?</dialog>', emp1.req('/app/?ews_view=schedule')[1], re.S)
+    sheet = re.search(r'id="wfo-swap-sheet".*?</dialog>', emp1.req('/app/?ews_view=' + SV2)[1], re.S)
     if sheet:
         check('SW-b: the Schedule page\'s swap sheet no longer offers that day (My approvals %s)' % ('on' if inbox else 'off'), 'value="%s"' % D2 not in sheet.group(0))
 php("delete_option('ews_feature_my_approvals');")
 check('...the New request sheet no longer offers that day', D2 not in php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'swap_new_choices'); $m->setAccessible(true); wp_set_current_user((int)get_user_by('login','emp1')->ID);
     $e=(new ReflectionMethod($o,'people_employee')); $e->setAccessible(true); echo wp_json_encode(array_keys($m->invoke($o,$e->invoke($o,%d))['days']));""" % e1).splitlines()[-1])
-_, qs, _ = emp2.post('ews_swap_create', _wpnonce=emp2.nonce('ews_swap_create', view='schedule'), target_employee_id=e1, work_date=D2)
+_, qs, _ = emp2.post('ews_swap_create', _wpnonce=emp2.nonce('ews_swap_create', view=SV2), target_employee_id=e1, work_date=D2)
 check('SW-b: the colleague asked cannot ask the same day back (pending, as before)', qs.get('swap_error') == 'pending', qs)
 set_schedule(e5, 'Office', D2)   # e5 asks e2 (WFH) for that day
-_, qs, _ = emp5.post('ews_swap_create', _wpnonce=emp5.nonce('ews_swap_create', view='schedule'), target_employee_id=e2, work_date=D2)
+_, qs, _ = emp5.post('ews_swap_create', _wpnonce=emp5.nonce('ews_swap_create', view=SV2), target_employee_id=e2, work_date=D2)
 check('SW-b: a request asked of someone and not answered is not their commitment: they may ask another colleague', qs.get('swap_sent') == '1', qs)
 set_schedule(e5, 'WFH', D2)
 # Accepting while one's own request for that day is open is refused: e5 asked e2, so e5 cannot accept a swap asked of e5 that day.
@@ -519,9 +521,9 @@ adm_eid = int(php("""$u=(int)get_user_by('login','admin')->ID; $e=$wpdb->get_var
     if(!$e){$wpdb->insert($p.'ews_employees',['name'=>'Admin Employee','domain_name'=>'adminemp','email'=>'adminemp@example.com','wp_user_id'=>$u,'active'=>1,'attendance_enabled'=>1,'department_id'=>%d]);$e=$wpdb->insert_id;}
     else $wpdb->update($p.'ews_employees',['department_id'=>%d],['id'=>$e]); echo $e;""" % (dept_ops, dept_ops)).splitlines()[-1])
 set_schedule(adm_eid, 'Office', D2); set_schedule(e3, 'WFH', D2)
-st, page, _ = adm.req('/app/?ews_view=schedule')
+st, page, _ = adm.req('/app/?ews_view=' + SV2)
 check('SW-a: the swap form lists only their department', 'value="%d">Emp Three<' % e3 not in page and 'value="%d">Emp Two<' % e2 in page)
-n_adm = adm.nonce('ews_swap_create', view='schedule')
+n_adm = adm.nonce('ews_swap_create', view=SV2)
 _, qs, _ = adm.post('ews_swap_create', _wpnonce=n_adm, target_employee_id=e3, work_date=D2)
 check('SW-a: an administrator-employee cannot swap with another department', qs.get('swap_error') == 'department', qs)
 _, qs, _ = adm.post('ews_swap_create', _wpnonce=n_adm, target_employee_id=e2, work_date=D2)
