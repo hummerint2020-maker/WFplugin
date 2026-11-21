@@ -137,6 +137,8 @@ document.addEventListener("keydown",function(e){if(e.key==="Escape"){var m=docum
 function ewsConsumeGlobalFlash(){try{var u=new URL(window.location.href),keys=ewsOnceKeys(u);if(!keys.length)return;keys.forEach(function(k){u.searchParams.delete(k)});window.history.replaceState({},document.title,u.toString());var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}catch(e){var m=document.querySelector(".ews-ux-modal");if(m){var b=m.querySelector(".ews-ux-ok,.ews-ux-confirm");if(b)b.focus();}}}
 document.addEventListener("DOMContentLoaded",ewsConsumeGlobalFlash);
 window.addEventListener("pageshow",function(){ewsConsumeGlobalFlash();});
+/* Sign-in helpers (3.31.157, assets/js/login.js): signed in, the username kept after a wrong password is forgotten. */
+document.addEventListener("DOMContentLoaded",function(){if(document.querySelector(".wfo-login-card"))return;try{sessionStorage.removeItem("ewsLoginUser")}catch(e){}});
 })();
 
 

@@ -38,3 +38,15 @@ Harmless, and removing it would change the page while the switch is off; left as
 - Differs from the mockup: the field and Caps Lock lines carry no icon (text only).
 - Tests: tests/login_assist_browser.js (18, in CI), tests/e2e_layout.py (the fix, 5), tests/e2e_appearance.py (2),
   tests/unit/AppearanceTest.php. With the switch off the app's login page is byte-identical to 3.31.156 (checked locally).
+
+## Review (read-only, on Opus): nothing serious
+Fixed:
+1. PLAUSIBLE: the "Signing in..." button could stay stuck when another script stopped the sending (a captcha, a second step) or a
+   request was lost. It is now set after every other submit listener, only if the sending was not stopped, and the form works
+   again after 20 seconds. Tested (another script's preventDefault).
+2. CONFIRMED: the kept username outlived a good sign-in. The app's pages (workforce-one.js, any page without the login card) now
+   remove it. Tested.
+3. PLAUSIBLE: "Signing in..." was not announced to screen readers. A role=status line now says it. Tested.
+5. Nit: a lockout plugin's error carrying empty_password too showed "enter your username and password". The fix now reads the
+   first error code only, as core's own wp_login_failed gate does.
+Not changed: 4 (a password of only spaces passes the browser check; the server then says "empty", which is fine).

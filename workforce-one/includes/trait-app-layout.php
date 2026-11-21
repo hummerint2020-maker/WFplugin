@@ -221,7 +221,7 @@ trait EWS_App_Layout_Trait {
      */
     public function app_login_empty($user){
         if(empty($_POST['ews_app_login'])||!is_wp_error($user))return $user;
-        if(!array_intersect($user->get_error_codes(),['empty_username','empty_password']))return $user;
+        if(!in_array($user->get_error_code(),['empty_username','empty_password'],true))return $user;   // the first code, as core's own wp_login_failed gate
         $back=wp_validate_redirect(esc_url_raw(wp_unslash($_POST['redirect_to']??'')),home_url('/'));
         wp_safe_redirect(add_query_arg('login_error','empty',remove_query_arg(['login_error','loggedout'],$back)));
         exit;

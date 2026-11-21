@@ -64,6 +64,7 @@
 .ews-login-wrap.wfo-login .ews-login-card input.is-invalid:focus{border-color:#D23A5C;box-shadow:0 0 0 4px #FFE0E7}
 .wfo-login-field-msg,.wfo-login-caps{display:flex;align-items:center;gap:6px;margin:6px 2px 0;font-size:12.5px;line-height:1.4}
 .wfo-login-field-msg[hidden],.wfo-login-caps[hidden]{display:none}
+.wfo-login-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
 .wfo-login-field-msg{color:#A51D3E}
 .wfo-login-caps{color:#8A5A00}
 .ews-login-wrap.wfo-login .wfo-login-submit.is-busy{display:flex;align-items:center;justify-content:center;gap:10px;opacity:.85;cursor:default}

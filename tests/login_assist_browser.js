@@ -80,19 +80,31 @@ const B = 'http://127.0.0.1:8080';
   posts.length = 0;
   await pg.fill('#ews_login_password', 'emp1pass');
   // What the page looks like the moment the form goes (a listener after the helpers' own), and a second tap right then.
-  await pg.evaluate(() => document.addEventListener('submit', () => {
+  await pg.evaluate(() => document.addEventListener('submit', () => setTimeout(() => {
     const btn = document.querySelector('.wfo-login-submit.is-busy');
-    sessionStorage.setItem('t_busy', JSON.stringify({ btn: !!btn && btn.disabled, text: btn ? btn.textContent : '', hidden: document.getElementById('ews_login_submit').hidden }));
-    if (!sessionStorage.getItem('t_second')) { sessionStorage.setItem('t_second', '1'); setTimeout(() => document.getElementById('loginform').requestSubmit(), 0); }
-  }));
+    sessionStorage.setItem('t_busy', JSON.stringify({ btn: !!btn && btn.disabled, text: btn ? btn.textContent : '', hidden: document.getElementById('ews_login_submit').hidden,
+      said: (document.querySelector('.wfo-login-sr[role=status]') || {}).textContent || '' }));
+    if (!sessionStorage.getItem('t_second')) { sessionStorage.setItem('t_second', '1'); document.getElementById('loginform').requestSubmit(); }
+  }, 0)));
   await Promise.all([pg.waitForNavigation(), pg.click('#ews_login_submit')]);
   await pg.waitForLoadState('load');
   const snap = JSON.parse(await pg.evaluate(() => sessionStorage.getItem('t_busy')) || '{}');
-  const busy = snap.btn && snap.text.includes('Signing in...') && snap.hidden;
+  const busy = snap.btn && snap.text.includes('Signing in...') && snap.hidden && snap.said.includes('Signing in...');
   const second = snap;
   check('after tapping Sign In the button says "Signing in..." and waits', busy);
   check('...a second tap sends nothing more', posts.length === 1, [posts, second]);
   check('a good sign-in opens the app', !(await pg.content()).includes('id="ews_login_username"') && pg.url().startsWith(B + app), pg.url());
+  check('...which forgets the username kept for the login', await pg.evaluate(() => sessionStorage.getItem('ewsLoginUser')) === null);
+  await ctx.close();
+
+  // Another script stops the sending (a captcha, a second step): the button does not wait, and the form still works.
+  [ctx, pg] = await fresh();
+  await pg.goto(B + app);
+  await pg.evaluate(() => document.getElementById('loginform').addEventListener('submit', e => e.preventDefault()));
+  await pg.fill('#ews_login_username', 'emp1'); await pg.fill('#ews_login_password', 'x');
+  await pg.click('#ews_login_submit'); await pg.waitForTimeout(200);
+  check('a sending stopped by another script leaves the Sign In button as it was', await pg.locator('.wfo-login-submit.is-busy').count() === 0 && await pg.isVisible('#ews_login_submit')
+    && await pg.getAttribute('#loginform', 'data-busy') === null);
   await ctx.close();
 
   // A fresh tab after a wrong password elsewhere: nothing to bring back.

@@ -31,6 +31,11 @@
         }
         var msgs = { log: line(user, 'wfo-login-field-msg', 'ews_login_user_msg'), pwd: line(pass, 'wfo-login-field-msg', 'ews_login_pass_msg') };
         var caps = line(pass, 'wfo-login-caps', 'ews_login_caps');
+        // "Signing in..." for screen readers: the button that had the cursor is swapped for a disabled one.
+        var said = document.createElement('span');
+        said.className = 'wfo-login-sr';
+        said.setAttribute('role', 'status');
+        submit.parentNode.appendChild(said);
         caps.textContent = card.getAttribute('data-caps') || 'Caps Lock is on';
 
         function describe(field) {
@@ -63,9 +68,11 @@
         pass.addEventListener('keyup', capsState);
         pass.addEventListener('blur', function () { caps.hidden = true; describe(pass); });
 
-        var busyBtn = null;
+        var busyBtn = null, safety = 0;
         function idle() {
             if (busyBtn) { busyBtn.remove(); busyBtn = null; }
+            clearTimeout(safety);
+            said.textContent = '';
             submit.hidden = false;
             form.removeAttribute('data-busy');
         }
@@ -74,16 +81,24 @@
             if (user.value.trim() === '') { e.preventDefault(); mark(user, card.getAttribute('data-need-user') || ''); return; }
             if (pass.value === '') { e.preventDefault(); mark(pass, card.getAttribute('data-need-pass') || ''); return; }
             var name = user.value.trim();
-            store(function (s) { s.setItem(KEY, name); });
-            form.setAttribute('data-busy', '1');
-            busyBtn = document.createElement('button');
-            busyBtn.type = 'button';
-            busyBtn.className = 'wfo-login-submit is-busy';
-            busyBtn.disabled = true;
-            busyBtn.innerHTML = '<span class="wfo-login-spin" aria-hidden="true"></span>';
-            busyBtn.appendChild(document.createTextNode(card.getAttribute('data-busy') || 'Signing in...'));
-            submit.parentNode.insertBefore(busyBtn, submit);
-            submit.hidden = true;
+            // After every other submit listener: when another script (a captcha, a second step) stops the sending, nothing waits.
+            setTimeout(function () {
+                if (e.defaultPrevented || form.getAttribute('data-busy')) return;
+                store(function (s) { s.setItem(KEY, name); });
+                form.setAttribute('data-busy', '1');
+                var label = card.getAttribute('data-busy') || 'Signing in...';
+                busyBtn = document.createElement('button');
+                busyBtn.type = 'button';
+                busyBtn.className = 'wfo-login-submit is-busy';
+                busyBtn.disabled = true;
+                busyBtn.innerHTML = '<span class="wfo-login-spin" aria-hidden="true"></span>';
+                busyBtn.appendChild(document.createTextNode(label));
+                submit.parentNode.insertBefore(busyBtn, submit);
+                submit.hidden = true;
+                said.textContent = label;
+                // A request stopped or lost on a bad connection: the form works again after a while.
+                safety = setTimeout(idle, 20000);
+            }, 0);
         });
         // Back from the next page (the browser's page cache): the form works again.
         window.addEventListener('pageshow', function (e) { if (e.persisted) idle(); });
