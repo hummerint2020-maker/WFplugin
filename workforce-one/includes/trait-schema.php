@@ -94,6 +94,8 @@ trait EWS_Schema_Trait {
                 responded_by BIGINT UNSIGNED NULL,
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 responded_at DATETIME NULL,
+                decided_by BIGINT UNSIGNED NULL,
+                decided_at DATETIME NULL,
                 PRIMARY KEY(id),
                 KEY requester_status(requester_employee_id,status),
                 KEY target_status(target_employee_id,status),
@@ -334,7 +336,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.148.1'; }   // Performance 1: indexes on the steps' acted_by and the time logs' work_date
+        private function ews_schema_target(){ return '3.31.156'; }   // Swap fixes: the approvers' decision kept apart from the colleague's answer (decided_by, decided_at)
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

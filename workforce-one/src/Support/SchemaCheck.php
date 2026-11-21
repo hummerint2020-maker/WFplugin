@@ -28,6 +28,7 @@ final class SchemaCheck
         'ews_schedule' => ['location_id'],
         'ews_notifications' => ['link'],
         'ews_api_tokens' => ['grace_uses'],
+        'ews_schedule_swaps' => ['decided_by', 'decided_at'],
     ];
 
     /**

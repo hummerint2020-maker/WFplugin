@@ -310,7 +310,8 @@
         "leave_type_enabled",
         "attendance_page_cards",
         "shift_prime_people",
-        "schedule_table_name"
+        "schedule_table_name",
+        "swap_notice_text"
       ],
       "layered": [
         {
@@ -543,7 +544,8 @@
         "leave_early_form",
         "leave_away_between",
         "leave_status_of",
-        "leave_legacy_approvals", "leave_pending_newest_first"
+        "leave_legacy_approvals",
+        "leave_pending_newest_first"
       ]
     },
     "overtime": {
@@ -625,7 +627,8 @@
         "approval_settings",
         "approval_workflow",
         "approval_notify_administrators",
-        "approval_self_rule"
+        "approval_self_rule",
+        "approval_inbox_away"
       ],
       "layered": [
         {

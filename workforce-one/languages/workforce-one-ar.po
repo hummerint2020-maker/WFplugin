@@ -9202,3 +9202,12 @@ msgstr "المديرين في المكتب يوم %1$s: %2$d من %3$d"
 
 msgid "Changes not saved yet are not shown here."
 msgstr "التغييرات اللي لسه ما اتحفظتش مش ظاهرة هنا."
+
+msgid "You can swap only with a colleague in your own department."
+msgstr "تقدر تبدل بس مع زميل في نفس إدارتك."
+
+msgid "You already have a swap waiting for this day. You can ask again once it is answered or withdrawn."
+msgstr "عندك طلب تبديل مستني لليوم ده. تقدر تطلب تاني لما يترد عليه أو تسحبه."
+
+msgid "You already have another swap waiting for this day. Withdraw it before accepting this one."
+msgstr "عندك طلب تبديل تاني مستني لليوم ده. اسحبه الأول قبل ما تقبل الطلب ده."

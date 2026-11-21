@@ -94,8 +94,10 @@ trait EWS_Schedule_View_Trait {
 
     private function schedule_content(){
         $g=$this->schedule_week_grid();
-        // A long list is searched and paged on the server (Ui\ListPage, 3.31.71); the swap form still offers everyone.
-        $swap_people=$g['dept_emps'];
+        // A long list is searched and paged on the server (Ui\ListPage, 3.31.71); the swap form still offers everyone of one's own
+        // department, administrators included (3.31.156, SW-a).
+        $me_dept=(int)($this->current_employee()->department_id??0);
+        $swap_people=array_values(array_filter($g['dept_emps'],function($e)use($me_dept){return $me_dept>0 && (int)($e->department_id??0)===$me_dept;}));
         $list=\WorkforceOne\Ui\ListPage::apply($g['emps'],wp_unslash($_GET));
         $g['emps']=$list['rows'];
         ['current_emp_id'=>$current_emp_id,'emps'=>$emps,'dates'=>$dates,'sun'=>$sun,'today'=>$today,'week_end'=>$week_end,'map'=>$map,'company_leave'=>$company_leave,'cells'=>$cells]=$g;
@@ -115,6 +117,11 @@ trait EWS_Schedule_View_Trait {
         [,$this_week]=$this->week_dates_configured($today);
         $inbox=$current_emp_id && $this->my_approvals_enabled()?['answer'=>$this->my_approvals_swap_count(),'answer_url'=>add_query_arg('apv_kind','swap',$this->my_approvals_clean_url('approvals')),
             'mine'=>$this->swap_waiting_mine_count((int)$current_emp_id),'mine_url'=>add_query_arg('req_state','waiting',$this->my_approvals_clean_url('requests'))]:null;
+        // The week's swaps: listed with My approvals off; with it on, read only to keep the swap sheet (opened from My week) from
+        // offering a day this employee already has a swap on (asked, or accepted and waiting; 3.31.156, SW-b).
+        $week_swaps=$current_emp_id?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[];
+        $swap_requests=$inbox?[]:$week_swaps;
+        foreach($week_swaps as $sr)if(SwapRules::isCommitment((int)$current_emp_id,(int)$sr->requester_employee_id,(int)$sr->target_employee_id,(string)$sr->status))unset($swap_days[(string)$sr->work_date]);
         $range=date('d M',strtotime($dates[0])).' – '.date('d M Y',strtotime($week_end));
         $email=null;
         if(isset($_GET['email_sent'])||isset($_GET['email_skipped'])||isset($_GET['email_failed']))$email=['sent'=>absint($_GET['email_sent']??0),'skipped'=>absint($_GET['email_skipped']??0),'failed'=>absint($_GET['email_failed']??0)];
@@ -135,7 +142,7 @@ trait EWS_Schedule_View_Trait {
             'email'=>$email,'swap_days'=>$swap_days,
             // With My approvals on (3.31.124, owner decision) the page lists no requests: one line to My approvals, one to My requests.
             'swap_inbox'=>$inbox,
-            'swap_requests'=>$current_emp_id && !$inbox?$this->swap_requests_for_user($current_emp_id,$dates[0],$week_end):[],
+            'swap_requests'=>$swap_requests,
             'swap_approvals'=>$inbox?[]:$this->swap_awaiting_my_approval(),
             'post_url'=>admin_url('admin-post.php'),
         ]);

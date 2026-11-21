@@ -67,6 +67,12 @@ trait EWS_My_Approvals_Trait {
         return null;
     }
 
+    /** The employee id of a manager away who may decide what waits for their substitute (3.31.107), else 0: My approvals and the Schedule page (3.31.156). */
+    private function approval_inbox_away(){
+        $me=$this->current_employee();
+        return $me && $this->substitutes_enabled() && $this->substitute_settings()['manager_decides']?(int)$me->id:0;
+    }
+
     /**
      * Everything waiting for the signed-in person, overdue first, then the longest waiting.
      * @return list<array<string,mixed>>
@@ -81,7 +87,7 @@ trait EWS_My_Approvals_Trait {
         $admin=user_can($uid,'manage_options');
         // A manager away still sees what waits for their substitute, when they may decide it (3.31.107).
         $me=$this->current_employee();
-        $away=$me && $this->substitutes_enabled() && $this->substitute_settings()['manager_decides']?(int)$me->id:0;
+        $away=$this->approval_inbox_away();
         $rows=$this->services()->approvalReads()->inboxRows($uid,(bool)$admin,$away);
         $out=[];
         $cards=[];
@@ -244,6 +250,7 @@ trait EWS_My_Approvals_Trait {
         if(isset($_GET['leave_rejected']))return ['type'=>'success','text'=>__('The leave request was rejected, and the employee was told.','workforce-one')];
         if(isset($_GET['swap_done'])){
             $done=['accepted'=>__('You accepted: both schedules are updated.','workforce-one'),'awaiting'=>__('You accepted. It now goes to the approver.','workforce-one'),
+                'approved'=>__('The swap was approved and both schedules were updated.','workforce-one'),
                 'rejected'=>__('Rejected, and they were told.','workforce-one')];
             return ['type'=>'success','text'=>$done[sanitize_key($_GET['swap_done'])]??__('The shift swap was updated.','workforce-one')];
         }
@@ -254,7 +261,8 @@ trait EWS_My_Approvals_Trait {
                 'not_found'=>__('This swap is no longer waiting: it was withdrawn or already answered.','workforce-one'),
                 'expired'=>__('This swap is no longer waiting: it was withdrawn or already answered.','workforce-one'),
                 'changed'=>__('The schedule changed after the swap request was created, so it can no longer be accepted.','workforce-one'),
-                'past_date'=>__('This day has already passed, so it can no longer be swapped.','workforce-one')];
+                'past_date'=>__('This day has already passed, so it can no longer be swapped.','workforce-one'),
+                'one_per_day_accept'=>$this->swap_notice_text('error','one_per_day_accept'),'busy'=>$this->swap_notice_text('error','busy')];
             return ['type'=>'error','text'=>$err[$code]??__('The shift swap could not be decided. Try again.','workforce-one')];
         }
         // A notification's link to a swap that no longer waits for this person (3.31.124).
@@ -297,6 +305,8 @@ trait EWS_My_Approvals_Trait {
         elseif(isset($_GET['adv_error']))$notice=['type'=>'error','text'=>$this->advance_error_text(sanitize_key($_GET['adv_error']))];
         elseif(isset($_GET['hl_sent']))$notice=['type'=>'success','text'=>sanitize_key($_GET['hl_sent'])==='issued'?__('Your letter is ready. Download it below.','workforce-one'):__('Letter asked. You will be told when it is decided.','workforce-one')];
         elseif(isset($_GET['hl_error']))$notice=['type'=>'error','text'=>$this->hr_letter_error_text(sanitize_key($_GET['hl_error']))];
+        elseif(isset($_GET['swap_sent']))$notice=['type'=>'success','text'=>__('Your shift swap request has been submitted.','workforce-one')];
+        elseif(isset($_GET['swap_error']))$notice=['type'=>'error','text'=>$this->swap_notice_text('error',sanitize_key($_GET['swap_error']))];
         elseif(isset($_GET['req_done']))$notice=['type'=>'success','text'=>sanitize_key($_GET['req_done'])==='face'?__('Face reset asked. Your current face is used until it is approved.','workforce-one'):__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
         elseif(isset($_GET['req_error']))$notice=['type'=>'error','text'=>sanitize_key($_GET['req_error'])==='face'?__('The face reset could not be asked. Register your face first on the Sign In page.','workforce-one'):(sanitize_key($_GET['req_error'])==='done'?__('It was already decided, so it can no longer be withdrawn.','workforce-one'):__('It could not be withdrawn. Try again.','workforce-one'))];
         // phpcs:enable
