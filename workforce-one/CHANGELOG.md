@@ -12,6 +12,14 @@ Owner's request (2026-11-21): "the Leave page has no use any more". **Two new sw
   - a **Leave** filter: leave and early leave, the whole history in pages of 50;
   - the **office minimum warning** on a leave card in My approvals, as on the Leave page;
   - with leave approvals off, the administrators are told of a cancellation asked.
+- **The cancellation's edge cases** (owner, 2026-11-21; with Leave in My requests on):
+  - a cancellation approved after the leave started cancels the days from that day on only (the leave then ends the day
+    before; the days taken stay leave and charged); approved after the leave ended, nothing changes (closed as Ended);
+  - the employee can **withdraw a cancellation** still waiting (the leave stays; a leave has one cancellation);
+  - **"I'm back early"** on a leave that has started and has days left: the days from tomorrow on, with the same approval as
+    a cancellation (a new column, `ews_leave_requests.cancel_from`, schema 3.31.158);
+  - a leave or cancellation asked while leave approvals were off stays with the administrators after they are turned on
+    (until now it could not be decided).
 - **Leave page in the app** (on by default = as today): can be turned off only while Leave in My requests is on. Off: the menu item
   and the home tile go; its address and every link to it (notifications saved before included, still marked read) open My requests,
   or My approvals for a decision or without an employee record; "View all leave requests" opens the Leave filter.

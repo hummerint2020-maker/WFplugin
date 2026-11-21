@@ -14,6 +14,24 @@ final class CancellationRules
     /** A cancellation withdrawn or closed once the leave had ended (3.31.158): a leave has one cancellation. */
     public const CLOSED = 'closed';
 
+    /** "I'm back early" (3.31.158): the leave has started and has days after today; no cancellation asked before. */
+    public const NOT_STARTED = 'not_started';
+    public const ENDING = 'ending';
+
+    /** @return string|null null when the days after today may be asked to be cancelled. */
+    public static function checkBackEarly(string $status, ?string $cancellationStatus, ?string $startDate, ?string $endDate, string $today): ?string
+    {
+        if ($status !== 'Approved') return self::NOT_APPROVED;
+        $c = strtolower(trim((string) $cancellationStatus));
+        if ($c === 'pending') return self::ALREADY_PENDING;
+        if ($c === 'rejected') return self::ALREADY_REJECTED;
+        if ($c === 'approved') return self::ALREADY_CANCELLED;
+        if ($c === 'withdrawn' || $c === 'ended') return self::CLOSED;
+        if (empty($startDate) || $today < $startDate) return self::NOT_STARTED;
+        if (empty($endDate) || $today >= $endDate) return self::ENDING;
+        return null;
+    }
+
     /** @return string|null null when a cancellation may be requested. */
     public static function check(string $status, ?string $cancellationStatus, ?string $startDate, string $today): ?string
     {

@@ -103,3 +103,16 @@ These fixes act only while Leave in My requests is on, so nothing changes at the
 4. PLAUSIBLE: usort on 'when' has no tie-break (PHP 7.4 not stable): items could repeat or be skipped across pages.
 5. CONFIRMED: the Newer/Older links drop req_state.
 6. CONFIRMED: new methods inserted between leave_form_types' docblock and the function.
+
+## As built (3.31.158)
+- Options: ews_feature_my_requests_leave (off), ews_feature_leave_page (on); the page can be hidden only with the first on.
+- Schema 3.31.158: ews_leave_requests.cancel_from DATE NULL ("I'm back early": the first day it cancels).
+- CancellationRules: CLOSED (Withdrawn / Ended: a leave has one cancellation, its approval exists once), checkBackEarly()
+  (NOT_STARTED, ENDING). Cancellation statuses added: Withdrawn, Ended; a shortened leave stays Approved with
+  cancellation_status Approved and an earlier end_date.
+- leave_apply_cancellation(): with the switch on, from = later of today and cancel_from; after the start day it calls
+  leave_apply_cancellation_from() (only the snapshot days from then on are restored and given back).
+- leave_without_levels(): with approvals on, a leave / cancellation without an approval request is decided as before by the
+  administrators (respond handlers and leave_legacy_approvals).
+- The generic "Cancel Leave Request" confirm is skipped for the back-early form (it has its own confirmation step).
+- Differs from the mockup: the field notes are text only.

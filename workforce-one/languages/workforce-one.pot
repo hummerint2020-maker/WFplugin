@@ -12799,3 +12799,43 @@ msgstr ""
 #: includes/trait-leave.php
 msgid "Asked while leave approvals were off, so it has no levels: the administrators decide it"
 msgstr ""
+
+#: includes/trait-leave.php
+msgid "This leave has not started yet; ask to cancel all of it instead."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "This leave ends today, so there are no days left to cancel."
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "Back early: the days from %s on are cancelled once it is approved; until then the leave stands."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "It ends today, so it can no longer be cancelled."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Back early: cancel from"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "I'm back early"
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "The days from tomorrow, %1$s, to %2$s are cancelled (%3$s day). Your manager decides; once approved they go back to your balance and the schedule is as before."
+msgid_plural "The days from tomorrow, %1$s, to %2$s are cancelled (%3$s days). Your manager decides; once approved they go back to your balance and the schedule is as before."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-leave.php
+msgid "The days up to today stay leave. This is the one cancellation this leave can have."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Yes, I'm back early"
+msgstr ""

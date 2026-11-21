@@ -57,7 +57,7 @@ var __=function(s,d){return ewsI18n.__(s,d);}, ewsSprintf=ewsI18n.sprintf;
         function enabled(key){return cfg.actions&&Object.prototype.hasOwnProperty.call(cfg.actions,key)?!!cfg.actions[key]:true;}
         if(action==="ews_swap_cancel" && enabled("swap_cancel")) return ["Cancel Shift Swap","Are you sure you want to cancel this shift swap request?","Cancel Swap"];
         if(action==="ews_swap_respond" && decision==="reject" && enabled("swap_reject")) return ["Reject Shift Swap","Are you sure you want to reject this shift swap request?","Reject"];
-        if(action==="ews_leave_cancel" && enabled("leave_cancel")) return ["Cancel Leave Request","Are you sure you want to cancel this leave request?","Cancel Leave"];
+        if(action==="ews_leave_cancel" && !form.querySelector("input[name=\"back_early\"]") && enabled("leave_cancel")) return ["Cancel Leave Request","Are you sure you want to cancel this leave request?","Cancel Leave"];
         if(action==="ews_leave_cancel_respond" && decision==="reject" && enabled("leave_cancel_reject")) return ["Reject Cancellation","Are you sure you want to reject this leave cancellation request?","Reject"];
         if(action==="ews_overtime_request_respond" && decision==="reject" && enabled("overtime_reject")) return ["Reject Overtime Request","Are you sure you want to reject this overtime request?","Reject"];
         if(action==="ews_early_leave_respond" && decision==="reject" && enabled("early_leave_reject")) return ["Reject Early Leave Request","Are you sure you want to reject this early leave request?","Reject"];

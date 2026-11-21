@@ -39,6 +39,19 @@ final class MyRequestsLeaveTest extends TestCase
         $this->assertTrue(M::itemState('Approved', null, '2026-11-22', '2026-11-22', self::T)['cancellable'], 'tomorrow: still');
     }
 
+    public function testBackEarly(): void
+    {
+        $r = \WorkforceOne\Leave\CancellationRules::class;
+        $this->assertNull($r::checkBackEarly('Approved', null, '2026-11-20', '2026-11-24', self::T), 'started, days after today: may');
+        $this->assertNull($r::checkBackEarly('Approved', 'Not Requested', self::T, '2026-11-22', self::T), 'starting today with tomorrow left: may');
+        $this->assertSame($r::NOT_STARTED, $r::checkBackEarly('Approved', null, '2026-11-22', '2026-11-24', self::T), 'not started: cancel all of it instead');
+        $this->assertSame($r::ENDING, $r::checkBackEarly('Approved', null, '2026-11-19', self::T, self::T), 'ends today: nothing left');
+        $this->assertSame($r::ALREADY_PENDING, $r::checkBackEarly('Approved', 'Pending', '2026-11-20', '2026-11-24', self::T));
+        $this->assertSame($r::CLOSED, $r::checkBackEarly('Approved', 'Withdrawn', '2026-11-20', '2026-11-24', self::T), 'one cancellation per leave');
+        $this->assertSame($r::ALREADY_REJECTED, $r::checkBackEarly('Approved', 'Rejected', '2026-11-20', '2026-11-24', self::T));
+        $this->assertSame($r::NOT_APPROVED, $r::checkBackEarly('Pending', null, '2026-11-20', '2026-11-24', self::T));
+    }
+
     public function testPageTarget(): void
     {
         $this->assertSame('vacation', M::pageTarget(true, true, true, true), 'shown: the page itself');

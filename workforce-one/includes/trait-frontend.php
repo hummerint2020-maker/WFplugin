@@ -258,7 +258,8 @@ trait EWS_Frontend_Trait {
             if(isset($_GET['leave_cancel_error'])){   // asked from My requests (3.31.158); the Leave page keeps its own page
                 $m=['not_approved'=>__('Only an approved leave can be cancelled.','workforce-one'),'already_pending'=>__('You already asked to cancel this leave. It is waiting for a decision.','workforce-one'),
                     'already_rejected'=>__('Cancelling this leave was refused, so it cannot be asked again.','workforce-one'),'already_cancelled'=>__('This leave is already cancelled.','workforce-one'),
-                    'started'=>__('This leave has started or starts today, so it can no longer be cancelled.','workforce-one'),'closed'=>__('A cancellation was already asked for this leave and closed, so it cannot be asked again.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
+                    'started'=>__('This leave has started or starts today, so it can no longer be cancelled.','workforce-one'),'closed'=>__('A cancellation was already asked for this leave and closed, so it cannot be asked again.','workforce-one'),
+                    'not_started'=>__('This leave has not started yet; ask to cancel all of it instead.','workforce-one'),'ending'=>__('This leave ends today, so there are no days left to cancel.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
                 return $this->ux_modal(__('Cancellation Not Submitted','workforce-one'),$m[sanitize_key($_GET['leave_cancel_error'])]??$m['save'],'error');
             }
             if(isset($_GET['leave_error'])){

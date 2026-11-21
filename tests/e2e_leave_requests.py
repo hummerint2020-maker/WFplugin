@@ -193,6 +193,32 @@ check('...no cancel button any more, and it says why', 'value="ews_leave_cancel"
 st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nonce, request_id=W, ews_return='requests')
 check('...asking again: "closed" (a leave has one cancellation)', qs.get('leave_cancel_error') == 'closed', qs)
 
+# "I'm back early": a started leave's days from tomorrow on, the same approval as a cancellation.
+BK = with_days(-1, 3)
+it = item(page(), BK)
+check('"I\'m back early" on a started leave with days left (no cancel button)', 'name="back_early" value="1"' in it and 'value="ews_leave_cancel"' in it and 'Request cancellation' not in it, it[-500:])
+check('...it says which days and how many', '(3 days)' in it)
+nb = re.search(r'name="_wpnonce" value="([^"]+)"', it).group(1)
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=BK, ews_return='requests', back_early='1')
+row = q("SELECT status,cancellation_status,cancel_from FROM {p}ews_leave_requests WHERE id=%d" % BK)[0]
+check('...asked: the cancellation waits, from tomorrow', qs.get('leave_cancel_sent') == '1' and row == {'status': 'Approved', 'cancellation_status': 'Pending', 'cancel_from': d(1)}, (qs, row))
+check('...My requests says from when, and it can be withdrawn', 'Back early: the days from' in item(page(), BK) and 'name="kind" value="leave_cancel"' in item(page(), BK))
+card = adm.req('/app/?ews_view=approvals')[1]
+check('...the approver sees from when and how many days', 'Back early: cancel from' in card and '3 days' in card)
+php("$wpdb->update($p.'ews_leave_balances',['used'=>10],['id'=>%d]);" % ids['bal'])
+decide(BK)
+row = q("SELECT status,cancellation_status,end_date,requested_days FROM {p}ews_leave_requests WHERE id=%d" % BK)[0]
+sched = {r['work_date']: r['status'] for r in q("SELECT work_date,status FROM {p}ews_schedule WHERE employee_id=%d AND work_date BETWEEN '%s' AND '%s'" % (E, d(-1), d(3)))}
+check('...approved today: the leave ends today, the 3 days after go back', row['status'] == 'Approved' and row['cancellation_status'] == 'Approved' and row['end_date'] == d(0)
+      and float(row['requested_days']) == 2.0 and float(q("SELECT used FROM {p}ews_leave_balances WHERE id=%d" % ids['bal'])[0]['used']) == 7.0, row)
+check('...today and yesterday stay leave, tomorrow on as before', sched.get(d(-1)) == 'Vacation' and sched.get(d(0)) == 'Vacation' and all(d(o) not in sched for o in (1, 2, 3)), sched)
+LE = with_days(-2, 0, cancel='Not Requested')
+check('a leave ending today: no "back early"', 'name="back_early"' not in item(page(), LE))
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=LE, ews_return='requests', back_early='1')
+check('...asked anyway: "ends today"', qs.get('leave_cancel_error') == 'ending', qs)
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=W, ews_return='requests', back_early='1')
+check('...on a leave already cancelled once (withdrawn): "closed"', qs.get('leave_cancel_error') == 'closed', qs)
+
 # Asked while leave approvals were off, then approvals turned on: it stays with the administrators.
 O = leave(d(25), d(25), cancel='Pending')
 php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'approval_configure_workflow'); $m->setAccessible(true);

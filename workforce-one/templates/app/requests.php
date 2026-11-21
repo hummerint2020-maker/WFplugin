@@ -82,6 +82,17 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                 <button type="submit" class="wfo-apv-btn is-bad is-sm"><?php esc_html_e('Request cancellation', 'workforce-one'); ?></button>
                 <small><?php esc_html_e('Once only, until the day before it starts. Your manager decides; the days come back to your balance once approved.', 'workforce-one'); ?></small>
             </form>
+            <?php elseif (!empty($it['back'])): /* "I'm back early" (3.31.158): the days from tomorrow on, the same approval as a cancellation */ ?>
+            <details class="wfo-apv-withdraw wfo-lr-cancel">
+                <summary class="wfo-apv-btn is-sm wfo-lr-back"><?php esc_html_e("I'm back early", 'workforce-one'); ?></summary>
+                <form method="post" action="<?php echo esc_url($post_url); ?>">
+                    <?php wp_nonce_field('ews_leave_cancel'); ?>
+                    <input type="hidden" name="action" value="ews_leave_cancel"><input type="hidden" name="request_id" value="<?php echo (int) $it['id']; ?>"><input type="hidden" name="ews_return" value="requests"><input type="hidden" name="back_early" value="1">
+                    <p><?php echo esc_html(sprintf(/* translators: 1: first day, 2: last day, 3: number of days */ _n('The days from tomorrow, %1$s, to %2$s are cancelled (%3$s day). Your manager decides; once approved they go back to your balance and the schedule is as before.', 'The days from tomorrow, %1$s, to %2$s are cancelled (%3$s days). Your manager decides; once approved they go back to your balance and the schedule is as before.', (int) $it['back']['days'], 'workforce-one'), $it['back']['from'], $it['back']['to'], $num($it['back']['days']))); ?></p>
+                    <p class="wfo-lr-note"><?php esc_html_e('The days up to today stay leave. This is the one cancellation this leave can have.', 'workforce-one'); ?></p>
+                    <button type="submit" class="wfo-apv-btn is-ok"><?php esc_html_e("Yes, I'm back early", 'workforce-one'); ?></button>
+                </form>
+            </details>
             <?php elseif (!empty($it['link']) && $it['state'] === 'waiting'): ?>
             <p class="wfo-apv-link"><a href="<?php echo esc_url($it['link']); ?>"><?php esc_html_e('Open it on the Schedule page', 'workforce-one'); ?></a></p>
             <?php endif; ?>

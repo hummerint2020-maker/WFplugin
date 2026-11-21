@@ -169,3 +169,5 @@
 .wfo-apv .wfo-om-note.is-mgr strong{color:#A51D3E}
 .wfo-apv .wfo-om-note.is-mgr .wfo-icon{color:#C2264B}
 .wfo-apv .wfo-omd-for{display:inline-block;margin-inline-end:6px;padding:1px 8px;border-radius:999px;background:#13235B;color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
+.wfo-lr-back{color:var(--wfo-pri,#5B3FD9)}
+.wfo-lr-cancel .wfo-lr-note{font-size:12px;color:#6A7090}
