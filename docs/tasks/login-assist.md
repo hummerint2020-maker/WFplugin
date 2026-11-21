@@ -23,6 +23,18 @@ Mockups: docs/mockups/login-assist/ (Step 1, waiting for the owner).
 "Forgot password?" opens WordPress's own pages (lost password, new password, then wp-login.php). App-styled pages need
 their own mockups and design.
 
-## Also noticed
+## Also noticed (not changed)
 The username and password fields print `autocomplete` twice (WordPress now adds it; our str_replace adds it again).
-Harmless; dropped with the helpers.
+Harmless, and removing it would change the page while the switch is off; left as is.
+
+## As built (3.31.157)
+- `Appearance::DEFAULTS['login_assist']='0'`; only '1' turns it on. Saved by the Login screen box (trait-appearance.php).
+- templates/app/login.php prints `data-assist` and the four labels on the card only while it is on (and not signed in);
+  `data-failed` says the page came back from a failed sign-in.
+- assets/js/login.js: the helpers run after the eye button (wrapping the password field moves it, which drops the cursor).
+  The username is kept in sessionStorage (`ewsLoginUser`) on sending, brought back only when `data-failed=1`, removed on any
+  other load of the login. The busy button is a separate disabled button; the real submit is hidden, and the page cache
+  ("back") restores it.
+- Differs from the mockup: the field and Caps Lock lines carry no icon (text only).
+- Tests: tests/login_assist_browser.js (18, in CI), tests/e2e_layout.py (the fix, 5), tests/e2e_appearance.py (2),
+  tests/unit/AppearanceTest.php. With the switch off the app's login page is byte-identical to 3.31.156 (checked locally).

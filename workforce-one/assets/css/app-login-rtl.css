@@ -59,6 +59,18 @@
 .ews-login-wrap.wfo-login .ews-login-card input[type=submit]:focus-visible,.ews-login-wrap.wfo-login .wfo-login-submit:focus-visible{outline:3px solid var(--wfo-hero-start);outline-offset:2px}
 .ews-login-wrap.wfo-login .wfo-login-alt{display:block;text-align:center;font-size:14px;font-weight:600;color:var(--wfo-pri);text-decoration:none}
 
+/* sign-in helpers (3.31.157; assets/js/login.js, only with data-assist on the card): an empty field, Caps Lock, Signing in... */
+.ews-login-wrap.wfo-login .ews-login-card input.is-invalid{border-color:#D23A5C;background-color:#FFF5F7}
+.ews-login-wrap.wfo-login .ews-login-card input.is-invalid:focus{border-color:#D23A5C;box-shadow:0 0 0 4px #FFE0E7}
+.wfo-login-field-msg,.wfo-login-caps{display:flex;align-items:center;gap:6px;margin:6px 2px 0;font-size:12.5px;line-height:1.4}
+.wfo-login-field-msg[hidden],.wfo-login-caps[hidden]{display:none}
+.wfo-login-field-msg{color:#A51D3E}
+.wfo-login-caps{color:#8A5A00}
+.ews-login-wrap.wfo-login .wfo-login-submit.is-busy{display:flex;align-items:center;justify-content:center;gap:10px;opacity:.85;cursor:default}
+.wfo-login-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-left-color:transparent;animation:wfo-login-spin .8s linear infinite}
+@keyframes wfo-login-spin{to{transform:rotate(-360deg)}}
+@media (prefers-reduced-motion:reduce){.wfo-login-spin{animation:none;border-left-color:currentColor;opacity:.5}}
+
 /* the help line under the card */
 .wfo-login-help{margin:0;font-size:13px;line-height:1.5;color:rgba(255,255,255,.86);text-align:center}
 

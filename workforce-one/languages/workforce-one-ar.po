@@ -9214,3 +9214,15 @@ msgstr "عندك طلب تبديل تاني مستني لليوم ده. اسحب
 
 msgid "Please enter your username and password."
 msgstr "من فضلك اكتب اسم المستخدم وكلمة المرور."
+
+msgid "Enter your username or email"
+msgstr "اكتب اسم المستخدم أو الإيميل"
+
+msgid "Enter your password"
+msgstr "اكتب كلمة المرور"
+
+msgid "Caps Lock is on"
+msgstr "زرار Caps Lock شغال"
+
+msgid "Signing in..."
+msgstr "جاري الدخول..."
