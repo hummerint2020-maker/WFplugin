@@ -68,3 +68,15 @@ covers them; without a gate the My requests additions would show at the owner's 
 7. Open questions: listed for the owner (gate for the additions; card note; early leave in the filter; history paging;
    balances detail; the confirm dialog; landing without My requests; notifying managers with approvals off; renaming
    "Leave" in Notification Settings / View Navigation).
+
+## Owner's answers on the design (2026-11-21, after the mockups)
+1. The My requests additions (balances strip, "Request cancellation", the cancellation's states, the Leave filter) are behind
+   **their own switch, off by default** (`ews_feature_my_requests_leave`). The Leave page can be hidden only while that switch is
+   on (so cancelling never disappears everywhere).
+2. The office-minimum warning on the My approvals leave card: **yes, with the same switch**.
+3. The Leave filter shows **leave and early leave**, the whole history in pages of 50.
+4. With leave approvals off, a cancellation request **tells the administrators** (as a leave request does). Built behind the same
+   switch so nothing changes at the current company until it is turned on.
+Remaining open questions answered by the design's defaults: the existing confirm dialog is kept (Features → confirmations); the
+strip shows this year's available days like the Leave page; someone without My requests or My approvals lands on the dashboard;
+the "Leave" labels in Notification Settings / View Navigation stay.
