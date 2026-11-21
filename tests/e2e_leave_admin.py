@@ -165,9 +165,12 @@ if year_of_start == YEAR:
             break
     qs = record(start, end)
     check('recording more days than the balance has left is refused', 'leave_record_error' in qs and 'balance' in qs['leave_record_error'].lower(), qs)
-before_m = bal(YEAR, 'Mission')
-qs = record(d(40), d(41), t=mission)
-check('a non-deducting leave type records without touching balances', 'leave_recorded' in qs and (bal(YEAR, 'Mission') or {}).get('used', 0.0) == 0.0, (qs, bal(YEAR, 'Mission')))
+# Two days in one calendar year (d(40) and d(41) are 31 Dec and 1 Jan when the run is on 21 Nov).
+m0 = next(n for n in (40, 42, 44) if d(n)[:4] == d(n + 1)[:4])
+MY = int(d(m0)[:4])
+before_m = bal(MY, 'Mission')
+qs = record(d(m0), d(m0 + 1), t=mission)
+check('a non-deducting leave type records without touching balances', 'leave_recorded' in qs and (bal(MY, 'Mission') or {}).get('used', 0.0) == 0.0, (qs, bal(MY, 'Mission')))
 emp.post('ews_admin_leave_record', _wpnonce=n_rec, employee_id=eid, leave_type_id=annual, start_date=d(50), end_date=d(50))
 check('employee cannot record leave', last_leave()['requested_days'] != '1' or sched(d(50)) != 'Vacation')
 

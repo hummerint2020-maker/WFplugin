@@ -68,6 +68,7 @@ final class Appearance
         'login_forgot' => '1',
         'login_brand' => '1',
         'login_eye' => '1',
+        'login_assist' => '0',          // Sign-in helpers (3.31.157, docs/tasks/login-assist.md): off by default
     ];
     public const LOGIN_BACKGROUNDS = ['theme' => 'Theme colours', 'color' => 'One colour', 'picture' => 'Picture'];
 
@@ -110,6 +111,7 @@ final class Appearance
         foreach (['login_remember', 'login_forgot', 'login_brand', 'login_eye'] as $f) {
             if (array_key_exists($f, $saved)) $out[$f] = (string) $saved[$f] === '0' ? '0' : '1';
         }
+        if (array_key_exists('login_assist', $saved)) $out['login_assist'] = (string) $saved['login_assist'] === '1' ? '1' : '0';
         return $out;
     }
 

@@ -115,7 +115,7 @@ $color_help = ['header_start' => 'Top of the header', 'header_end' => 'Bottom of
             <label><span>Help line</span><input type="text" name="login_help" value="<?php echo esc_attr($cfg['login_help']); ?>" maxlength="160" placeholder="Need help signing in? Contact HR"></label>
         </div>
         <p class="wfo-ap-help">Leave the title and subtitle empty to use the built-in text, shown in English or Arabic with the site language. The help line appears under the form only when filled in.</p>
-        <?php foreach (['login_remember' => 'Show "Remember me"', 'login_forgot' => 'Show the "Forgot password?" link', 'login_brand' => 'Show the app name, company name and tagline', 'login_eye' => 'Show the "show password" eye button'] as $key => $label): ?>
+        <?php foreach (['login_remember' => 'Show "Remember me"', 'login_forgot' => 'Show the "Forgot password?" link', 'login_brand' => 'Show the app name, company name and tagline', 'login_eye' => 'Show the "show password" eye button', 'login_assist' => 'Sign-in helpers: check the fields before sending, keep the username after a wrong password, warn about Caps Lock and show "Signing in..."'] as $key => $label): ?>
         <input type="hidden" name="<?php echo esc_attr($key); ?>" value="0">
         <label class="wfo-ap-check"><input type="checkbox" name="<?php echo esc_attr($key); ?>" value="1" <?php checked($cfg[$key], '1'); ?>> <?php echo esc_html($label); ?></label>
         <?php endforeach; ?>
