@@ -210,9 +210,21 @@ trait EWS_App_Layout_Trait {
         return $clear.$this->render_template('app/login',['occasion'=>$occ,
             'signed_in'=>false,'brand'=>$brand,'cfg'=>$cfg,'open_url'=>'','logout_url'=>'',
             'form'=>$form,'lost_password_url'=>$lost,'worker_url'=>$this->dw_self_anywhere()?$this->dw_worker_url():'',
-            'error'=>isset($_GET['login_error'])?__('The username or password is incorrect. Please try again.','workforce-one'):'',
+            'error'=>!isset($_GET['login_error'])?'':($_GET['login_error']==='empty'?__('Please enter your username and password.','workforce-one'):__('The username or password is incorrect. Please try again.','workforce-one')),
             'message'=>isset($_GET['loggedout'])?__('You have been logged out successfully.','workforce-one'):'',
         ]);
+    }
+
+    /**
+     * authenticate (last): an empty username or password from the app's form goes back to the app too. WordPress does not fire
+     * wp_login_failed for those two errors, so without this the person landed on wp-login.php.
+     */
+    public function app_login_empty($user){
+        if(empty($_POST['ews_app_login'])||!is_wp_error($user))return $user;
+        if(!array_intersect($user->get_error_codes(),['empty_username','empty_password']))return $user;
+        $back=wp_validate_redirect(esc_url_raw(wp_unslash($_POST['redirect_to']??'')),home_url('/'));
+        wp_safe_redirect(add_query_arg('login_error','empty',remove_query_arg(['login_error','loggedout'],$back)));
+        exit;
     }
 
     /** wp_login_failed: a failed login from the app's form goes back to the app with an error. */

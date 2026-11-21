@@ -9211,3 +9211,6 @@ msgstr "عندك طلب تبديل مستني لليوم ده. تقدر تطلب
 
 msgid "You already have another swap waiting for this day. Withdraw it before accepting this one."
 msgstr "عندك طلب تبديل تاني مستني لليوم ده. اسحبه الأول قبل ما تقبل الطلب ده."
+
+msgid "Please enter your username and password."
+msgstr "من فضلك اكتب اسم المستخدم وكلمة المرور."

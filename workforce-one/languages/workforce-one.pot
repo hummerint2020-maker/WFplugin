@@ -12646,3 +12646,7 @@ msgstr ""
 #: includes/trait-swap.php
 msgid "You already have another swap waiting for this day. Withdraw it before accepting this one."
 msgstr ""
+
+#: includes/trait-app-layout.php
+msgid "Please enter your username and password."
+msgstr ""

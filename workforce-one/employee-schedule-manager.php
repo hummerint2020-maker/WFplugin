@@ -132,6 +132,7 @@ class EWS_Manager_V31_1 {
             add_shortcode('employee_login',[$this,'login_page']);
             add_action('wp_logout',[$this,'after_logout']);
             add_action('wp_login_failed',[$this,'app_login_failed']);
+            add_filter('authenticate',[$this,'app_login_empty'],PHP_INT_MAX);
             add_action('init',[$this,'prevent_dynamic_page_cache'],0);
             add_action('template_redirect',[$this,'prevent_dynamic_page_cache'],0);
             add_action('send_headers',[$this,'send_dynamic_no_cache_headers'],0);
