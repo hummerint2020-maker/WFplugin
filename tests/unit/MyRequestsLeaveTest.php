@@ -20,6 +20,12 @@ final class MyRequestsLeaveTest extends TestCase
         $this->assertSame('withdrawn', M::itemState('Cancelled', 'Not Requested', '2026-12-01', '2026-12-03', self::T)['state'], 'cancelled before a decision = withdrawn');
         $this->assertSame('waiting', M::itemState('Pending', null, '2026-12-01', '2026-12-03', self::T)['state']);
         $this->assertSame('rejected', M::itemState('Rejected', null, '2026-12-01', '2026-12-03', self::T)['state']);
+        $s = M::itemState('Approved', 'Approved', '2026-11-18', '2026-11-20', self::T);
+        $this->assertSame(['approved', 'approved', false], [$s['state'], $s['cancel_decided'], $s['cancellable']], 'cancelled from a day on: the leave stands, shortened');
+        foreach (['Withdrawn' => 'withdrawn', 'Ended' => 'ended'] as $c => $want) {
+            $s = M::itemState('Approved', $c, '2026-12-01', '2026-12-03', self::T);
+            $this->assertSame([$want, false], [$s['cancel_decided'], $s['cancellable']], "$c: a leave has one cancellation");
+        }
     }
 
     public function testStartedAndToday(): void

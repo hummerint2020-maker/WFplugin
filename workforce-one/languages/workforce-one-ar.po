@@ -9310,3 +9310,24 @@ msgstr "الأقدم"
 #, php-format
 msgid "Page %s"
 msgstr "صفحة %s"
+
+msgid "A cancellation was already asked for this leave and closed, so it cannot be asked again."
+msgstr "الإجازة دي اتطلب إلغاؤها قبل كده والطلب اتقفل، فمينفعش يتطلب تاني."
+
+msgid "Shortened at your request"
+msgstr "اتقصّرت بطلب منك"
+
+msgid "You withdrew the cancellation, so the leave stands."
+msgstr "انت سحبت طلب الإلغاء، فالإجازة زي ما هي."
+
+msgid "It was decided after the leave had ended, so nothing was cancelled."
+msgstr "اتقرر بعد ما الإجازة خلصت، فمفيش حاجة اتلغت."
+
+msgid "The cancellation was approved after the leave started: the days from that day on were cancelled and went back to your balance."
+msgstr "الإلغاء اتوافق عليه بعد ما الإجازة بدأت: الأيام من يوم الموافقة ورايح اتلغت ورجعت لرصيدك."
+
+msgid "Withdraw the cancellation? The leave stays as it is, and a leave can be cancelled only once."
+msgstr "تسحب طلب الإلغاء؟ الإجازة هتفضل زي ما هي، والإجازة ينفع يتطلب إلغاؤها مرة واحدة بس."
+
+msgid "Asked while leave approvals were off, so it has no levels: the administrators decide it"
+msgstr "اتطلب وموافقات الإجازة كانت مقفولة، فمالوش مستويات: الأدمن هو اللي بيقرر."

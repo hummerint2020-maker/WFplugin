@@ -80,3 +80,26 @@ covers them; without a gate the My requests additions would show at the owner's 
 Remaining open questions answered by the design's defaults: the existing confirm dialog is kept (Features → confirmations); the
 strip shows this year's available days like the Leave page; someone without My requests or My approvals lands on the dashboard;
 the "Leave" labels in Notification Settings / View Navigation stay.
+
+## Owner's answers on the cancellation's edge cases (2026-11-21)
+Reviewed together: asking (approved, before the start day, once), deciding (levels or the administrators), applying (days
+back to the charged year's balance, the schedule snapshot restored, a manager's substitute ended, a locked week recorded).
+- The Leave filter shows **20 a page** (50 was long on a phone).
+- **A cancellation approved after the leave started cancels the days from today on only**: the days already taken stay leave
+  and stay charged; a leave that has ended is not changed (the cancellation closes with nothing to give back).
+- **A cancellation asked while leave approvals were off stays with the administrators** after approvals are turned on (it has
+  no approval levels; until now it disappeared and could not be decided). The same for a leave request asked then.
+- **New in this release** (all with Leave in My requests on): the employee can **withdraw a cancellation still waiting** (the
+  leave stays as it is); **"I'm back early"** on a leave that has started: the days from tomorrow on are cancelled, with the
+  same approval as a cancellation (mockup first).
+- Not changed: a refused cancellation cannot be asked again; the schedule snapshot is restored as it was before the leave;
+  an archived employee's cancellation (the decision page says "Employee not found").
+These fixes act only while Leave in My requests is on, so nothing changes at the current company until it is turned on.
+
+## Review 1 (read-only, on Opus): nothing serious; to fix
+1. CONFIRMED (Leave page hidden): an approver's leave notification (?ews_view=vacation) lands on My requests instead of My approvals.
+2. CONFIRMED: from My requests with leave approvals on, a transaction failure ('done') shows the leave request's pop-up.
+3. CONFIRMED: request_withdraw keeps leave_cancel_error / leave_cancel_sent in the address, so the old pop-up comes back.
+4. PLAUSIBLE: usort on 'when' has no tie-break (PHP 7.4 not stable): items could repeat or be skipped across pages.
+5. CONFIRMED: the Newer/Older links drop req_state.
+6. CONFIRMED: new methods inserted between leave_form_types' docblock and the function.

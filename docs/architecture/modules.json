@@ -547,6 +547,7 @@
         "leave_page_shown",
         "leave_page_view",
         "my_requests_leave_on",
+        "leave_cancel_withdraw",
         "leave_status_of",
         "leave_legacy_approvals",
         "leave_pending_newest_first"

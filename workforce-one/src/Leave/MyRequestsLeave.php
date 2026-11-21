@@ -12,7 +12,7 @@ final class MyRequestsLeave
 {
     /**
      * @return array{state:string,cancel_asked:bool,cancel_decided:string,cancellable:bool,started:bool}
-     *   state: waiting | approved | rejected | withdrawn | cancelled; cancel_decided: '' | 'approved' | 'rejected'
+     *   state: waiting | approved | rejected | withdrawn | cancelled; cancel_decided: '' | 'approved' | 'rejected' | 'withdrawn' | 'ended'
      */
     public static function itemState(string $status, ?string $cancellation, ?string $start, ?string $end, string $today): array
     {
@@ -24,7 +24,11 @@ final class MyRequestsLeave
         elseif ($status === 'Rejected') $state = 'rejected';
         elseif ($status === 'Cancelled') $state = $c === 'approved' ? 'cancelled' : 'withdrawn';
         else $state = 'cancelled';
-        $decided = $status === 'Cancelled' && $c === 'approved' ? 'approved' : ($status === 'Approved' && $c === 'rejected' ? 'rejected' : '');
+        // approved: cancelled (all of it, or from a day on: the leave then ends earlier and stays Approved); rejected; withdrawn by
+        // the employee; ended: decided once the leave had ended, nothing changed.
+        $decided = '';
+        if ($c === 'approved' && ($status === 'Cancelled' || $status === 'Approved')) $decided = 'approved';
+        elseif ($status === 'Approved' && in_array($c, ['rejected', 'withdrawn', 'ended'], true)) $decided = $c;
         $started = $status === 'Approved' && !empty($start) && $today >= (string) $start && (empty($end) || $today <= (string) $end);
         return ['state' => $state, 'cancel_asked' => $asked, 'cancel_decided' => $decided,
             'cancellable' => CancellationRules::check($status, $cancellation, $start, $today) === null, 'started' => $started];

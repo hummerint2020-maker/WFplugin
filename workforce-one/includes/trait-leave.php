@@ -105,6 +105,14 @@ trait EWS_Leave_Trait {
             $url=add_query_arg('ews_view',$this->approvals_return_view($this->leave_page_view($decision)),$url); if($args)$url=add_query_arg($args,$url); wp_safe_redirect($url); exit;
         }
 
+    /**
+     * A leave or cancellation asked while leave approvals were off has no approval levels; after they are turned on it stays with
+     * the administrators, decided as before (3.31.158, with Leave in My requests on; until then it could not be decided).
+     */
+    private function leave_without_levels($type,$id){
+            return $this->my_requests_leave_on() && !$this->approval_find_request('vacation',(string)$type,(int)$id);
+        }
+
     private function leave_approval_active(){
             $w=$this->approval_workflow('vacation');
             if(!$w || (int)$w->active!==1)return false;
@@ -142,12 +150,14 @@ trait EWS_Leave_Trait {
         }
 
     /** Run $fn inside a transaction; any non-true result rolls back and redirects with that leave_error code. */
-    private function leave_transaction(callable $fn){
+    /** @param array<string,string>|null $codes From My requests (3.31.158): leave_cancel_error with these codes (others: save) instead of leave_error. */
+    private function leave_transaction(callable $fn,$codes=null){
             global $wpdb;
-            if($wpdb->query('START TRANSACTION')===false)$this->leave_redirect(['leave_error'=>'save']);
+            $back=function($code)use($codes){return $codes===null?['leave_error'=>$code]:['leave_cancel_error'=>$codes[$code]??'save'];};
+            if($wpdb->query('START TRANSACTION')===false)$this->leave_redirect($back('save'));
             $result=$fn();
-            if($result!==true){$wpdb->query('ROLLBACK');$this->leave_redirect(['leave_error'=>is_string($result)?$result:'save']);}
-            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->leave_redirect(['leave_error'=>'save']);}
+            if($result!==true){$wpdb->query('ROLLBACK');$this->leave_redirect($back(is_string($result)?$result:'save'));}
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');$this->leave_redirect($back('save'));}
         }
 
     /* ------------------------------------------------------------------ state changes (caller owns the transaction) */
@@ -222,20 +232,60 @@ trait EWS_Leave_Trait {
     private function leave_apply_cancellation($r,$emp,$bal,$now){
             $this->substitutes_sync_at_shutdown();   // a manager's substitute follows the leave (3.31.107)
             global $wpdb;
+            // With Leave in My requests on (3.31.158, owner): a cancellation decided once the leave has started cancels the days from
+            // today on only; the days taken stay leave. Once it has ended, nothing is left to cancel.
+            $today=current_time('Y-m-d');
+            if($this->my_requests_leave_on() && $today>(string)$r->start_date)return $this->leave_apply_cancellation_from($r,$emp,$bal,$now,$today);
             if((int)$r->deduct_balance){
                 $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$r->requested_days,$now,$bal->id));
                 if($q===false)return 'save';
             }
             $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE leave_request_id=%d ORDER BY work_date ASC",(int)$r->id));
             if($rows===null)return 'save';
-            foreach($rows as $x){
-                if((int)$x->had_schedule&&$x->schedule_id)$q=$wpdb->update($this->schedule,['status'=>$x->status,'note'=>$x->note,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>$x->schedule_id]);
-                else $q=$wpdb->delete($this->schedule,['employee_id'=>$emp->id,'work_date'=>$x->work_date]);
-                if($q===false)return 'save';
-            }
+            if(!$this->leave_restore_days($rows,$emp,$now))return 'save';
             $q=$wpdb->update($wpdb->prefix.'ews_leave_requests',['status'=>'Cancelled','cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],['id'=>(int)$r->id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s','%s','%d','%s'],['%d','%s','%s']);
             if($q!==1)return $q===false?'save':'done';
             $this->week_lock_record_request((int)$emp->id,array_map(function($x){return (string)$x->work_date;},$rows),'leave_cancel','leave #'.(int)$r->id);
+            return true;
+        }
+
+    /** The schedule of these snapshot days back as before the leave (and, $drop, the snapshots gone: 3.31.158). */
+    private function leave_restore_days($rows,$emp,$now,$drop=false){
+            global $wpdb;
+            foreach($rows as $x){
+                if((int)$x->had_schedule&&$x->schedule_id)$q=$wpdb->update($this->schedule,['status'=>$x->status,'note'=>$x->note,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>$x->schedule_id]);
+                else $q=$wpdb->delete($this->schedule,['employee_id'=>$emp->id,'work_date'=>$x->work_date]);
+                if($q===false)return false;
+                if($drop && $wpdb->delete($wpdb->prefix.'ews_leave_schedule_snapshots',['id'=>(int)$x->id])===false)return false;
+            }
+            return true;
+        }
+
+    /**
+     * A started leave's cancellation (3.31.158): the days from $from on go back to the balance and to the schedule as before the
+     * leave; the leave now ends the day before. Past its end, the cancellation is closed as Ended with nothing changed.
+     * @return true|string leave_error
+     */
+    private function leave_apply_cancellation_from($r,$emp,$bal,$now,$from){
+            global $wpdb;
+            $t=$wpdb->prefix.'ews_leave_requests';$cond=['id'=>(int)$r->id,'status'=>'Approved','cancellation_status'=>'Pending'];
+            if($from>(string)$r->end_date){
+                $q=$wpdb->update($t,['cancellation_status'=>'Ended','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],$cond,['%s','%d','%s'],['%d','%s','%s']);
+                return $q===1?true:($q===false?'save':'done');
+            }
+            $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE leave_request_id=%d AND work_date>=%s ORDER BY work_date ASC",(int)$r->id,$from));
+            if($rows===null)return 'save';
+            $back=min((float)$r->requested_days,(float)count($rows));
+            if(!$this->leave_restore_days($rows,$emp,$now,true))return 'save';
+            if((int)$r->deduct_balance && $back>0){
+                $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$back,$now,$bal->id));
+                if($q===false)return 'save';
+            }
+            $end=gmdate('Y-m-d',strtotime($from.' -1 day'));
+            $q=$wpdb->update($t,['end_date'=>$end,'requested_days'=>max(0,(float)$r->requested_days-$back),'cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],$cond,['%s','%f','%s','%d','%s'],['%d','%s','%s']);
+            if($q!==1)return $q===false?'save':'done';
+            $this->week_lock_record_request((int)$emp->id,array_map(function($x){return (string)$x->work_date;},$rows),'leave_cancel','leave #'.(int)$r->id.' from '.$from);
+            $this->audit('leave_cancelled_from','leave_request',(int)$r->id,$r->type_name.' '.$r->start_date.' – '.$r->end_date.': cancelled from '.$from.', '.$back.' day(s) back');
             return true;
         }
 
@@ -357,7 +407,7 @@ trait EWS_Leave_Trait {
             $this->ensure_leave_schema();
 
             $ar=null;$posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
-            if($this->leave_approval_active()){
+            if($this->leave_approval_active() && !$this->leave_without_levels('leave',$id)){
                 $ar=$this->approval_find_request('vacation','leave',$id);
                 if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
                 if($this->approval_level_moved((int)$ar->id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
@@ -425,6 +475,7 @@ trait EWS_Leave_Trait {
                 CancellationRules::ALREADY_REJECTED=>'Cancellation request was already rejected and cannot be submitted again.',
                 CancellationRules::ALREADY_CANCELLED=>'This leave has already been cancelled.',
                 CancellationRules::STARTED=>'Cancellation is no longer available because this leave has already started or is starting today.',
+                CancellationRules::CLOSED=>'A cancellation was already asked for this leave and closed, so it cannot be asked again.',
             ];
             $rule=CancellationRules::check((string)$r->status,$r->cancellation_status,$r->start_date,current_time('Y-m-d'));
             // From My requests (3.31.158) a refusal comes back there with its message; the Leave page keeps its page as before.
@@ -442,7 +493,7 @@ trait EWS_Leave_Trait {
                     $ar=$this->approval_find_request('vacation','leave_cancellation',$id);
                     if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))return 'approval';
                     return true;
-                });
+                },$from_requests?['done'=>CancellationRules::ALREADY_PENDING]:null);
                 $this->leave_notify_pending_approvers($approval,'Vacation Cancellation Request',$emp->name.' requested cancellation of '.$r->start_date.' to '.$r->end_date.'. Approval is required.',$id);
                 $this->leave_redirect(['leave_cancel_sent'=>1]);
             }
@@ -466,7 +517,7 @@ trait EWS_Leave_Trait {
             $decision=sanitize_key($_POST['decision']??'');
 
             $ar=null;$posted=$this->approval_posted_step();   // the level the page showed (3.31.122)
-            if($this->leave_approval_active()){
+            if($this->leave_approval_active() && !$this->leave_without_levels('leave_cancellation',$id)){
                 $ar=$this->approval_find_request('vacation','leave_cancellation',$id);
                 if(!$ar||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))$this->leave_redirect(['leave_done'=>1]);
                 if($this->approval_level_moved((int)$ar->id,$posted))$this->leave_redirect(['leave_error'=>'moved']);
@@ -610,17 +661,20 @@ trait EWS_Leave_Trait {
      * no "asked on" time, so its card shows no waiting time. @return list<array<string,mixed>>
      */
     private function leave_legacy_approvals(){
-            if(!$this->can('ews_manage_settings') || $this->leave_approval_active())return [];
+            $active=$this->leave_approval_active();
+            // With approvals on, only what was asked while they were off (no levels: 3.31.158, with Leave in My requests on).
+            if(!$this->can('ews_manage_settings') || ($active && !$this->my_requests_leave_on()))return [];
             global $wpdb;$this->ensure_leave_schema();
             $allow=$this->approval_self_rule('vacation')==='allow';
             $out=[];
             foreach((array)$wpdb->get_results("SELECT r.*,lt.name type_name,lt.deduct_balance FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.status='Pending' OR (r.status='Approved' AND r.cancellation_status='Pending') ORDER BY r.requested_at ASC,r.id ASC LIMIT 200") as $r){
                 $cancel=$r->status!=='Pending';$type=$cancel?'leave_cancellation':'leave';
+                if($active && $this->approval_find_request('vacation',$type,(int)$r->id))continue;   // it has its levels
                 // The card (balance, others away) is built only where it is shown; the counts need the row alone.
                 $out[]=['key'=>['vacation',$type,(int)$r->id],'employee_id'=>(int)$r->employee_id,'tone'=>'leave','since'=>(string)$r->requested_at,'wait'=>!$cancel,
                     'make'=>function()use($type,$r,$cancel){$c=$this->leave_approval_card($type,(int)$r->id,$r);if($c && $cancel)$c['wait']=false;return $c;},
                     'allow'=>$allow,'active'=>true,'who'=>__('Anyone who can manage settings','workforce-one'),
-                    'why'=>$cancel?__('Leave approvals are off, so the cancellation is decided as before','workforce-one'):__('Leave approvals are off, so it is decided as before','workforce-one')];
+                    'why'=>$active?__('Asked while leave approvals were off, so it has no levels: the administrators decide it','workforce-one'):($cancel?__('Leave approvals are off, so the cancellation is decided as before','workforce-one'):__('Leave approvals are off, so it is decided as before','workforce-one'))];
             }
             return $out;
         }
@@ -651,18 +705,38 @@ trait EWS_Leave_Trait {
     private function leave_my_request_item($r,$today){
             $s=\WorkforceOne\Leave\MyRequestsLeave::itemState((string)$r->status,$r->cancellation_status??null,$r->start_date??null,$r->end_date??null,$today);
             $cancel_path=$s['cancel_asked'] || $s['cancel_decided']!=='';
-            $sub=$s['cancel_asked']?__('Cancellation asked','workforce-one'):($s['cancel_decided']==='approved'?__('Cancelled at your request','workforce-one'):'');
+            $partly=$s['cancel_decided']==='approved' && (string)$r->status==='Approved';   // cancelled from a day on: it ends earlier
+            $sub=$s['cancel_asked']?__('Cancellation asked','workforce-one'):($partly?__('Shortened at your request','workforce-one'):($s['cancel_decided']==='approved'?__('Cancelled at your request','workforce-one'):''));
             $note='';
             if($s['cancel_asked'])$note=__('The leave stands until the cancellation is approved.','workforce-one');
             elseif($s['cancel_decided']==='rejected')$note=__('Cancelling it was refused, so it cannot be asked again.','workforce-one');
+            elseif($s['cancel_decided']==='withdrawn')$note=__('You withdrew the cancellation, so the leave stands.','workforce-one');
+            elseif($s['cancel_decided']==='ended')$note=__('It was decided after the leave had ended, so nothing was cancelled.','workforce-one');
+            elseif($partly)$note=__('The cancellation was approved after the leave started: the days from that day on were cancelled and went back to your balance.','workforce-one');
             elseif($s['started'])$note=__('It has started, so it can no longer be cancelled.','workforce-one');
             elseif($s['cancel_decided']==='approved')$note=sprintf(/* translators: %s: number of days */_n('%s day went back to your balance.','%s days went back to your balance.',(int)ceil((float)$r->requested_days),'workforce-one'),\WorkforceOne\Support\Format::number((float)$r->requested_days));
             return ['key'=>'leave-'.(int)$r->id,'tone'=>'leave','title'=>$r->type_name.' · '.$this->leave_day_range($r->start_date,$r->end_date),
                 'sub'=>$sub,'state'=>$s['state'],'state_label'=>$s['cancel_asked']?__('Cancellation waiting','workforce-one'):'','note'=>$note,'when'=>(string)$r->requested_at,
-                'approval'=>['vacation',$cancel_path?'leave_cancellation':'leave',(int)$r->id],'withdraw'=>$r->status==='Pending'?'leave':'','cancel'=>$s['cancellable'],'id'=>(int)$r->id];
+                'approval'=>['vacation',$cancel_path?'leave_cancellation':'leave',(int)$r->id],'withdraw'=>$r->status==='Pending'?'leave':($s['cancel_asked']?'leave_cancel':''),'cancel'=>$s['cancellable'],'id'=>(int)$r->id];
         }
 
     /** The employee withdraws a leave still waiting (My requests): its days are no longer reserved. @return true|string */
+    /**
+     * The employee withdraws a cancellation still waiting (My requests, 3.31.158): the leave stays as it was. A leave has one
+     * cancellation (its approval exists once), so it cannot be asked again. @return true|string
+     */
+    private function leave_cancel_withdraw($id,$employee_id){
+            global $wpdb;
+            if($wpdb->query('START TRANSACTION')===false)return 'save';
+            $ok=$wpdb->update($wpdb->prefix.'ews_leave_requests',['cancellation_status'=>'Withdrawn'],['id'=>(int)$id,'employee_id'=>(int)$employee_id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s'],['%d','%d','%s','%s']);
+            if($ok!==1){$wpdb->query('ROLLBACK');return $ok===false?'save':'done';}
+            $closed=$this->approval_close('vacation','leave_cancellation',(int)$id);
+            if($closed!==true){$wpdb->query('ROLLBACK');return $closed===false?'save':'done';}   // 'moved': decided meanwhile
+            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
+            $this->audit('leave_cancellation_withdrawn','leave_request',(int)$id,'cancellation withdrawn');
+            return true;
+        }
+
     private function leave_withdraw($id,$employee_id){
             global $wpdb;
             $r=$this->leave_request_row((int)$id,$wpdb->prepare("AND r.status='Pending' AND r.employee_id=%d",(int)$employee_id));

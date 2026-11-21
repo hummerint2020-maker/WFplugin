@@ -131,10 +131,77 @@ php("""$wpdb->insert($p.'ews_early_leave_requests',['employee_id'=>%d,'work_date
 pg = page()
 check('My requests (All) as before: each kind\'s last 20 (20 leave, 1 early leave), with an All and a Leave chip', pg.count('<article class="wfo-apv-item') == 21 and re.search(r'<a href="[^"]*req_kind=leave[^"]*">Leave</a>', pg) is not None, (pg.count('<article class="wfo-apv-item'), re.findall(r'tone-[a-z]+', pg)[:30]))
 p1 = page('/app/?ews_view=requests&req_kind=leave')
-check('the Leave filter: 50 on a page, leave and early leave only, an "Older" link', p1.count('<article class="wfo-apv-item') == 50 and 'tone-early' in p1 and 'req_page=2' in p1, p1.count('<article class="wfo-apv-item'))
-p2 = page('/app/?ews_view=requests&req_kind=leave&req_page=2')
-check('...page 2 has the rest (5 + 56 + 1 = 62 in all) and a "Newer" link', p2.count('<article class="wfo-apv-item') == 12 and 'Newer' in p2 and 'Older' not in p2, p2.count('<article class="wfo-apv-item'))
+check('the Leave filter: 20 on a page, leave and early leave only, an "Older" link', p1.count('<article class="wfo-apv-item') == 20 and 'tone-early' in p1 and 'req_page=2' in p1, p1.count('<article class="wfo-apv-item'))
+keys = []
+for n in (1, 2, 3, 4):
+    pn = page('/app/?ews_view=requests&req_kind=leave&req_page=%d' % n)
+    keys += re.findall(r'data-req="([^"]+)"', pn)
+check('...pages 2-4 have the rest (5 + 56 + 1 = 62 in all, 20 + 20 + 20 + 2), each once', len(keys) == 62 and len(set(keys)) == 62 and 'Newer' in pn and 'Older' not in pn, (len(keys), len(set(keys))))
+p2 = page('/app/?ews_view=requests&req_kind=leave&req_page=2&req_state=rejected')
+check('...the page links keep the state chip', re.search(r'href="[^"]*req_page=(1|3)[^"]*req_state=rejected|href="[^"]*req_state=rejected[^"]*req_page=(1|3)', p2) is not None)
 check('...the state chips keep the Leave filter', re.search(r'href="[^"]*req_kind=leave[^"]*req_state=rejected|href="[^"]*req_state=rejected[^"]*req_kind=leave', p1) is not None)
+
+# ---------------------------------------------------------------- the cancellation's edge cases (owner 2026-11-21)
+def decide(rid, decision='approve'):
+    apv = adm.req('/app/?ews_view=approvals')[1]
+    f = re.search(r'<form[^>]*>(?:(?!</form>).)*ews_leave_cancel_respond(?:(?!</form>).)*name="request_id" value="%d"(?:(?!</form>).)*</form>' % rid, apv, re.S) \
+        or re.search(r'<form[^>]*>(?:(?!</form>).)*name="request_id" value="%d"(?:(?!</form>).)*ews_leave_cancel_respond(?:(?!</form>).)*</form>' % rid, apv, re.S)
+    if not f:
+        return None
+    n2 = re.search(r'name="_wpnonce" value="([^"]+)"', f.group(0)).group(1)
+    return adm.post('ews_leave_cancel_respond', _wpnonce=n2, request_id=rid, decision=decision, ews_return='approvals')
+
+
+def with_days(start_off, end_off, cancel='Pending'):
+    rid = leave(d(start_off), d(end_off), cancel=cancel, days=end_off - start_off + 1)
+    for o in range(start_off, end_off + 1):
+        php("$wpdb->insert($p.'ews_leave_schedule_snapshots',['leave_request_id'=>%d,'employee_id'=>%d,'work_date'=>'%s','had_schedule'=>0]);"
+            " $wpdb->delete($p.'ews_schedule',['employee_id'=>%d,'work_date'=>'%s']); $wpdb->insert($p.'ews_schedule',['employee_id'=>%d,'work_date'=>'%s','status'=>'Vacation']);" % (rid, E, d(o), E, d(o), E, d(o)))
+    return rid
+
+
+php("$wpdb->update($p.'ews_leave_balances',['used'=>10],['id'=>%d]);" % ids['bal'])   # the seeded leaves were never charged
+used0 = 10.0
+L1 = with_days(-2, 2)   # asked before it started, decided on its third day
+decide(L1)
+row = q("SELECT status,cancellation_status,end_date,requested_days FROM {p}ews_leave_requests WHERE id=%d" % L1)[0]
+check('approved after the leave started: only the days from today on are cancelled; it now ends yesterday', row['status'] == 'Approved' and row['cancellation_status'] == 'Approved'
+      and row['end_date'] == d(-1) and float(row['requested_days']) == 2.0, row)
+sched = {r['work_date']: r['status'] for r in q("SELECT work_date,status FROM {p}ews_schedule WHERE employee_id=%d AND work_date BETWEEN '%s' AND '%s'" % (E, d(-2), d(2)))}
+check('...the days taken stay leave, today and after are back as before', sched.get(d(-2)) == 'Vacation' and sched.get(d(-1)) == 'Vacation' and all(d(o) not in sched for o in (0, 1, 2)), sched)
+check('...3 days back to the balance', float(q("SELECT used FROM {p}ews_leave_balances WHERE id=%d" % ids['bal'])[0]['used']) == used0 - 3)
+check('...My requests says it was shortened', 'Shortened at your request' in item(page(), L1))
+L2 = with_days(-6, -5)   # decided once it had ended
+decide(L2)
+row = q("SELECT status,cancellation_status,end_date FROM {p}ews_leave_requests WHERE id=%d" % L2)[0]
+check('decided after the leave ended: nothing cancelled, the cancellation closed as Ended', row == {'status': 'Approved', 'cancellation_status': 'Ended', 'end_date': d(-5)}, row)
+check('...My requests says so', 'nothing was cancelled' in item(page(), L2))
+
+W = leave(d(15), d(16), days=2)
+pg = page()
+nonce = re.search(r'name="_wpnonce" value="([^"]+)"', item(pg, W)).group(1)
+emp.post('ews_leave_cancel', _wpnonce=nonce, request_id=W, ews_return='requests')
+it = item(page(), W)
+m = re.search(r'name="_wpnonce" value="([^"]+)"(?:(?!</form>).)*name="kind" value="leave_cancel"', it, re.S)
+check('a cancellation waiting can be withdrawn', m is not None, it[-600:])
+if m:
+    st, qs, _ = emp.post('ews_request_withdraw', _wpnonce=m.group(1), kind='leave_cancel', id=W)
+row = q("SELECT status,cancellation_status FROM {p}ews_leave_requests WHERE id=%d" % W)[0]
+check('...withdrawn: the leave stands', row == {'status': 'Approved', 'cancellation_status': 'Withdrawn'}, row)
+it = item(page(), W)
+check('...no cancel button any more, and it says why', 'value="ews_leave_cancel"' not in it and 'You withdrew the cancellation' in it)
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nonce, request_id=W, ews_return='requests')
+check('...asking again: "closed" (a leave has one cancellation)', qs.get('leave_cancel_error') == 'closed', qs)
+
+# Asked while leave approvals were off, then approvals turned on: it stays with the administrators.
+O = leave(d(25), d(25), cancel='Pending')
+php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'approval_configure_workflow'); $m->setAccessible(true);
+    $m->invoke($o,'vacation','LEVEL_1',[1=>['resolver_type'=>'SUPERVISOR','resolver_value'=>0]],\\WorkforceOne\\Approvals\\Workflows::IN_USE['vacation'][1]);""")
+active = php("$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'leave_approval_active'); $m->setAccessible(true); echo $m->invoke($o)?1:0;").splitlines()[-1]
+r = decide(O)
+row = q("SELECT status,cancellation_status FROM {p}ews_leave_requests WHERE id=%d" % O)[0]
+check('approvals turned on after a cancellation was asked: it stays with the administrators, who decide it', active == '1' and r is not None and row == {'status': 'Cancelled', 'cancellation_status': 'Approved'}, (active, r, row))
+php("$wpdb->query(\"UPDATE {$p}ews_approval_workflows SET approval_mode='NONE',active=0\");")
 
 # ---------------------------------------------------------------- the Leave page switched off
 features(my_requests_leave_enabled=True, leave_page_enabled=False)

@@ -288,18 +288,19 @@ trait EWS_My_Approvals_Trait {
     /** App → My requests. */
     private function requests_content(){
         $emp=$this->current_employee();
-        // Leave in My requests (3.31.158): ?req_kind=leave lists leave and early leave only, the whole history in pages of 50.
+        // Leave in My requests (3.31.158): ?req_kind=leave lists leave and early leave only, the whole history in pages of 20 (owner).
         $lr=$this->my_requests_leave_on();
         $kind=$lr && $emp && sanitize_key($_GET['req_kind']??'')==='leave'?'leave':''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
         $page=$kind?max(1,absint($_GET['req_page']??1)):1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
         $more_pages=false;
         if($kind){
             // One more than a page from each, from the start of the page: merged, the page is cut from the newest of both.
-            $n=50*$page+1;
+            $per=20;$n=$per*$page+1;
             $items=array_merge($this->leave_my_requests((int)$emp->id,$n),$this->early_leave_my_requests((int)$emp->id,$n));
-            usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when']);});
-            $more_pages=count($items)>50*$page;
-            $items=array_slice($items,50*($page-1),50);
+            // Newest first; the same order on every page (ties by key), so nothing repeats or is skipped from one page to the next.
+            usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when'])?:strcmp((string)$b['key'],(string)$a['key']);});
+            $more_pages=count($items)>$per*$page;
+            $items=array_slice($items,$per*($page-1),$per);
         }else{
         $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->early_leave_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id),$this->advance_my_requests((int)$emp->id),$this->hr_letter_my_requests((int)$emp->id)):[];
         usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when']);});
@@ -380,11 +381,12 @@ trait EWS_My_Approvals_Trait {
         // Back to the page the person came from (app_view_url() would build on admin-post.php here).
         $back=wp_get_referer();
         if(!$back || strpos($back,'admin-post.php')!==false)$back=$this->app_home_url();
-        $back=add_query_arg('ews_view','requests',remove_query_arg(['req_done','req_error','req_state'],$back));
+        $back=add_query_arg('ews_view','requests',remove_query_arg(['req_done','req_error','req_state','leave_cancel_error','leave_cancel_sent'],$back));
         $emp=$this->current_employee();
         if(!$this->my_requests_allowed() || !$emp){wp_safe_redirect(add_query_arg('req_error','access',$back));exit;}
         switch($kind){
             case 'leave': $r=$this->leave_withdraw($id,(int)$emp->id);break;
+            case 'leave_cancel': $r=$this->my_requests_leave_on()?$this->leave_cancel_withdraw($id,(int)$emp->id):'access';break;   // 3.31.158
             case 'overtime': $r=$this->overtime_withdraw($id,(int)$emp->id);break;
             case 'early': $r=$this->early_leave_withdraw($id,(int)$emp->id);break;
             case 'correction': $r=$this->corrections_enabled()?$this->cx_withdraw($id,(int)$emp->id):'access';break;

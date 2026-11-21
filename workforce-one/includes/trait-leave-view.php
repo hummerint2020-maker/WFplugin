@@ -90,11 +90,6 @@ trait EWS_Leave_View_Trait {
         ]);
     }
 
-    /**
-     * The leave types of the request form, with what is left of each and the first day each allows
-     * (the Leave page and the New request sheet of My requests, 3.31.105).
-     * @return list<array{id:int,name:string,deducts:bool,available:string,unplanned:bool,after:int,earliest:string}>
-     */
     /** Leave in My requests (3.31.158): balances, asking to cancel, the leave history; only while My approvals is on. */
     private function my_requests_leave_on(){
         return $this->my_approvals_enabled() && (bool)$this->option('ews_feature_my_requests_leave');
@@ -121,7 +116,14 @@ trait EWS_Leave_View_Trait {
         if(!function_exists('is_singular') || !is_singular())return;
         global $post;
         if(!$post || empty($post->post_content) || !has_shortcode($post->post_content,'employee_app'))return;
-        $to=$this->leave_page_view();
+        // A leave or early leave waiting for this person's decision: My approvals (the decision notifications link here too).
+        $decides=false;
+        if($this->my_approvals_allowed()){
+            foreach($this->my_approvals_items() as $it){
+                if(in_array((string)($it['tone']??''),['leave','early'],true)){$decides=true;break;}
+            }
+        }
+        $to=$this->leave_page_view($decides);
         $url=remove_query_arg(['ews_nid','leave_history']);
         if(isset($_GET['leave_history']) && $to==='requests')$url=add_query_arg('req_kind','leave',$url);
         // phpcs:enable
@@ -129,6 +131,11 @@ trait EWS_Leave_View_Trait {
         exit;
     }
 
+    /**
+     * The leave types of the request form, with what is left of each and the first day each allows
+     * (the Leave page and the New request sheet of My requests, 3.31.105; of = the year's days, 3.31.158).
+     * @return list<array{id:int,name:string,deducts:bool,available:string,of:string,unplanned:bool,after:int,earliest:string}>
+     */
     private function leave_form_types($emp){
         global $wpdb;$this->ensure_leave_schema();$today=current_time('Y-m-d');
         $types=[];

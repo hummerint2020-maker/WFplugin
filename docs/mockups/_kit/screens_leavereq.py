@@ -53,22 +53,36 @@ def cancel_box(open_=False):
         esc(T('أيوه، اطلب الإلغاء', 'Yes, ask to cancel it')))
 
 
+def back_box(open_=False):
+    return ('<details class="wfo-apv-withdraw wfo-lr-cancel"%s><summary class="wfo-apv-btn is-sm wfo-lr-back">%s</summary><form><p>%s</p><p class="wfo-lr-note">%s</p>'
+            '<button type="button" class="wfo-apv-btn is-ok">%s</button></form></details>') % (
+        ' open' if open_ else '', esc(T('رجعت بدري', "I'm back early")),
+        esc(T('هتلغي الأيام من بكرة الأربعاء 25 نوفمبر لحد 27 نوفمبر (3 أيام). مديرك هو اللي يوافق، ولما يوافق الأيام دي ترجع لرصيدك والجدول يرجع زي ما كان.',
+              'The days from tomorrow, Wed 25 Nov, to 27 Nov are cancelled (3 days). Your manager decides; once approved they go back to your balance and the schedule is as before.')),
+        esc(T('الأيام اللي فاتت لحد النهارده تفضل إجازة. ده بيتحسب طلب الإلغاء الوحيد للإجازة دي.', 'The days up to today stay leave. This is the one cancellation this leave can have.')),
+        esc(T('أيوه، رجعت بدري', "Yes, I'm back early")))
+
+
+def withdraw_box():
+    return '<details class="wfo-apv-withdraw"><summary class="wfo-apv-btn is-bad is-sm">%s</summary></details>' % esc(T('اسحب طلب الإلغاء', 'Withdraw the cancellation'))
+
+
 def note(text, cls=''):
     return '<p class="wfo-lr-meta%s">%s%s</p>' % (cls, icon('alert', 14, 2), esc(T(*text)))
 
 
-def items(only_leave=False, open_cancel=False):
+def items(only_leave=False, open_cancel=False, open_back=False):
     path2 = [('done', ('المدير المباشر · أحمد سمير', 'Line manager · Ahmed Samir'), ('وافق الأحد 15 نوفمبر', 'Approved Sun 15 Nov')), ('done', ('الموارد البشرية', 'HR'), ('وافقت الاثنين 16 نوفمبر', 'Approved Mon 16 Nov'))]
     pathc = [('done', ('المدير المباشر · أحمد سمير', 'Line manager · Ahmed Samir'), ('وافق على الإلغاء', 'Approved the cancellation')), ('waiting', ('الموارد البشرية', 'HR'), ('مستنية قرارها', 'Waiting for their decision'))]
     out = [
         item(('إجازة سنوية · 6–10 ديسمبر', 'Annual Leave · 6–10 Dec'), ('5 أيام', '5 days'), ('طلبتها الخميس 12 نوفمبر', 'Asked Thu 12 Nov'), 'approved', ('اتوافق عليها', 'Approved'), cancel_box(open_cancel), path=path2),
         item(('إجازة عارضة · 24 نوفمبر', 'Casual Leave · 24 Nov'), ('طلب إلغاء', 'Cancellation asked'), ('طلبت الإلغاء النهارده', 'Cancellation asked today'), 'waiting', ('الإلغاء مستني · المستوى 2 من 2', 'Cancellation waiting · level 2 of 2'),
-             note(('الإجازة لسه قايمة لحد ما الإلغاء يتوافق عليه.', 'The leave stands until the cancellation is approved.')), path=pathc),
+             note(('الإجازة لسه قايمة لحد ما الإلغاء يتوافق عليه.', 'The leave stands until the cancellation is approved.')) + withdraw_box(), path=pathc),
     ]
     if not only_leave:
         out.append(item(('عمل إضافي · ساعتين', 'Overtime · 2 h'), ('بعد الشغل', 'After work'), ('الأربعاء 18 نوفمبر', 'Wed 18 Nov'), 'waiting', ('مستني · المستوى 1 من 1', 'Waiting · level 1 of 1'), tone='overtime'))
     out += [
-        item(('إجازة مرضية · 16–17 نوفمبر', 'Sick Leave · 16–17 Nov'), ('يومين', '2 days'), ('السبت 14 نوفمبر', 'Sat 14 Nov'), 'approved', ('اتوافق عليها', 'Approved'), note(('بدأت، الإلغاء مش متاح.', 'It has started; it can no longer be cancelled.'))),
+        item(('إجازة مرضية · 22–27 نوفمبر', 'Sick Leave · 22–27 Nov'), ('6 أيام · بدأت', '6 days · started'), ('السبت 21 نوفمبر', 'Sat 21 Nov'), 'approved', ('اتوافق عليها', 'Approved'), back_box(open_back)),
         item(('إجازة سنوية · 2 نوفمبر', 'Annual Leave · 2 Nov'), ('', ''), ('الأحد 25 أكتوبر', 'Sun 25 Oct'), 'approved', ('اتوافق عليها', 'Approved'), note(('اترفض طلب الإلغاء، ومينفعش يتبعت تاني.', 'The cancellation was refused; it cannot be asked again.'))),
         item(('إجازة سنوية · 20–21 أكتوبر', 'Annual Leave · 20–21 Oct'), ('يومين رجعوا لرصيدك', '2 days back to your balance'), ('الخميس 8 أكتوبر', 'Thu 8 Oct'), 'cancelled', ('اتلغت', 'Cancelled')),
     ]
@@ -80,12 +94,12 @@ def filters(active):
     return '<nav class="wfo-apv-filters">%s</nav>' % ''.join('<a href="#"%s>%s</a>' % (' aria-current="true"' if k == active else '', esc(T(*l))) for k, l in chips)
 
 
-def page(only_leave=False, open_cancel=False, toast=None):
+def page(only_leave=False, open_cancel=False, toast=None, open_back=False):
     def make():
         t = '<div class="wfo-apv-toast is-ok" role="status">%s</div>' % esc(T(*toast)) if toast else ''
         more = ('<a class="wfo-lr-all" href="#">%s</a>' % esc(T('كل تاريخ الإجازات (34 طلب) ←', 'All leave history (34 requests) →'))) if only_leave else ''
         body = ('<div class="wfo-apv is-mine">%s<div class="wfo-apv-bar"><span class="wfo-apv-bar-gap"></span><button type="button" class="wfo-apv-btn is-new">+ %s</button></div>%s%s<div class="wfo-apv-list">%s</div>%s</div>') % (
-            t, esc(T('طلب جديد', 'New request')), balances(), filters('leave' if only_leave else ''), items(only_leave, open_cancel), more)
+            t, esc(T('طلب جديد', 'New request')), balances(), filters('leave' if only_leave else ''), items(only_leave, open_cancel, open_back), more)
         return shell(body)
     return make
 
@@ -95,6 +109,7 @@ def build():
     write(F, 'cancel', page(open_cancel=True))
     write(F, 'sent', page(toast=('اتبعت طلب الإلغاء. هنبلغك لما يتقرر.', 'Cancellation asked. You will be told once it is decided.')))
     write(F, 'leave', page(only_leave=True))
+    write(F, 'back', page(open_back=True))
     gallery(F, 'Leave in My requests — mockups (Step 1)',
             '<p>The owner\'s idea (2026-11-21): the Leave page is no longer needed. What only it does moves to <b>My requests</b>: '
             'a <b>balances strip</b> (every leave type), <b>"Request cancellation"</b> on an approved leave that has not started, the cancellation\'s '
@@ -104,7 +119,8 @@ def build():
             [('My requests', None, [('list', 'Balances on top; an approved leave can be cancelled; a cancellation waiting; one started; one refused; one cancelled', 'desk'),
                                     ('cancel', '"Request cancellation" opened: what happens, once only', 'phone'),
                                     ('sent', 'After asking: the message', 'phone'),
-                                    ('leave', 'The Leave filter: leave only, and the whole history', 'desk')])])
+                                    ('leave', 'The Leave filter: leave only, and the whole history', 'desk'),
+                                    ('back', '"I\'m back early" on a leave that has started: the days from tomorrow on, with the same approval', 'phone')])])
 
 
 if __name__ == '__main__':

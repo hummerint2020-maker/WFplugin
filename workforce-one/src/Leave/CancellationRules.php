@@ -11,6 +11,8 @@ final class CancellationRules
     public const ALREADY_REJECTED = 'already_rejected';
     public const ALREADY_CANCELLED = 'already_cancelled';
     public const STARTED = 'started';
+    /** A cancellation withdrawn or closed once the leave had ended (3.31.158): a leave has one cancellation. */
+    public const CLOSED = 'closed';
 
     /** @return string|null null when a cancellation may be requested. */
     public static function check(string $status, ?string $cancellationStatus, ?string $startDate, string $today): ?string
@@ -20,6 +22,7 @@ final class CancellationRules
         if ($c === 'pending') return self::ALREADY_PENDING;
         if ($c === 'rejected') return self::ALREADY_REJECTED;
         if ($c === 'approved') return self::ALREADY_CANCELLED;
+        if ($c === 'withdrawn' || $c === 'ended') return self::CLOSED;
         if (empty($startDate) || $today >= $startDate) return self::STARTED;
         return null;
     }

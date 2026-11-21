@@ -71,7 +71,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                 <form method="post" action="<?php echo esc_url($post_url); ?>">
                     <?php wp_nonce_field('ews_request_withdraw_' . $it['withdraw'] . '_' . (int) $it['id']); ?>
                     <input type="hidden" name="action" value="ews_request_withdraw"><input type="hidden" name="kind" value="<?php echo esc_attr($it['withdraw']); ?>"><input type="hidden" name="id" value="<?php echo (int) $it['id']; ?>">
-                    <p><?php echo $it['withdraw'] === 'leave' ? esc_html__('Withdraw it? The days go back to your balance.', 'workforce-one') : ($it['withdraw'] === 'swap' ? esc_html__('Withdraw it? Your colleague will no longer be asked, and is told.', 'workforce-one') : esc_html__('Withdraw it? Nobody will need to decide it.', 'workforce-one')); ?></p>
+                    <p><?php echo $it['withdraw'] === 'leave_cancel' ? esc_html__('Withdraw the cancellation? The leave stays as it is, and a leave can be cancelled only once.', 'workforce-one') : ($it['withdraw'] === 'leave' ? esc_html__('Withdraw it? The days go back to your balance.', 'workforce-one') : ($it['withdraw'] === 'swap' ? esc_html__('Withdraw it? Your colleague will no longer be asked, and is told.', 'workforce-one') : esc_html__('Withdraw it? Nobody will need to decide it.', 'workforce-one'))); ?></p>
                     <button type="submit" class="wfo-apv-btn is-bad"><?php esc_html_e('Yes, withdraw it', 'workforce-one'); ?></button>
                 </form>
             </details>
@@ -90,9 +90,10 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
     </div>
     <?php if ($leave && $leave['kind'] === 'leave' && ($leave['page'] > 1 || $leave['more'])): ?>
     <nav class="wfo-lr-pages" aria-label="<?php esc_attr_e('Pages', 'workforce-one'); ?>">
-        <?php if ($leave['page'] > 1): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] - 1, $base_url)); ?>"><?php esc_html_e('Newer', 'workforce-one'); ?></a><?php endif; ?>
+        <?php $page_base = $filter !== '' ? add_query_arg('req_state', $filter, $base_url) : $base_url; ?>
+        <?php if ($leave['page'] > 1): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] - 1, $page_base)); ?>"><?php esc_html_e('Newer', 'workforce-one'); ?></a><?php endif; ?>
         <span><?php echo esc_html(sprintf(/* translators: %s: page number */ __('Page %s', 'workforce-one'), $num($leave['page']))); ?></span>
-        <?php if ($leave['more']): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] + 1, $base_url)); ?>"><?php esc_html_e('Older', 'workforce-one'); ?></a><?php endif; ?>
+        <?php if ($leave['more']): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] + 1, $page_base)); ?>"><?php esc_html_e('Older', 'workforce-one'); ?></a><?php endif; ?>
     </nav>
     <?php endif; ?>
 </div>
