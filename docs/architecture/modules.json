@@ -275,6 +275,7 @@
         "swap_waiting_mine_count",
         "swap_state_for",
         "swap_my_requests",
+        "om_leave_impact",
         "swap_new_choices",
         "shift_period_add",
         "shift_prime_periods",
@@ -543,6 +544,9 @@
         "leave_form_types",
         "leave_early_form",
         "leave_away_between",
+        "leave_page_shown",
+        "leave_page_view",
+        "my_requests_leave_on",
         "leave_status_of",
         "leave_legacy_approvals",
         "leave_pending_newest_first"

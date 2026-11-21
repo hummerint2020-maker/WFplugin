@@ -12666,3 +12666,108 @@ msgstr ""
 #: templates/app/login.php
 msgid "Signing in..."
 msgstr ""
+
+#: includes/trait-leave.php
+msgid "Leave in My requests"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "My requests also shows every leave balance, lets an employee ask to cancel an approved leave that has not started, and keeps the whole leave and early leave history. The office minimum warning also shows on leave in My approvals. With leave approvals off, the administrators are told of a cancellation asked. Only while My approvals is on."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Leave page in the app"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Cancellation Not Submitted"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Only an approved leave can be cancelled."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "You already asked to cancel this leave. It is waiting for a decision."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Cancelling this leave was refused, so it cannot be asked again."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "This leave is already cancelled."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "This leave has started or starts today, so it can no longer be cancelled."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "The cancellation could not be asked. Please try again."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Cancelled at your request"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "The leave stands until the cancellation is approved."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Cancelling it was refused, so it cannot be asked again."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "It has started, so it can no longer be cancelled."
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "%s day went back to your balance."
+msgid_plural "%s days went back to your balance."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-leave.php
+msgid "Cancellation waiting"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Your balance"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "This year · after requests waiting"
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "of %s days"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Request cancellation"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Once only, until the day before it starts. Your manager decides; the days come back to your balance once approved."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Newer"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Older"
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "Page %s"
+msgstr ""

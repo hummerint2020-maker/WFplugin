@@ -11,8 +11,11 @@
  * @var string $base_url
  * @var array<string,mixed> $new     the New request sheet (3.31.105, templates/app/new-request.php)
  * @var bool $open_new                ?new=1 opens it (the home page's shortcut)
+ * @var array{balances:list<array<string,mixed>>,kind:string,page:int,more:bool,all_url:string,leave_url:string,shown:bool}|null $leave
+ *      Leave in My requests (3.31.158, docs/tasks/leave-in-requests.md): null while it is off.
  */
 if (!defined('ABSPATH')) exit;
+$leave = $leave ?? null;
 $num = static function ($n): string { return number_format_i18n((float) $n); };
 $labels = ['waiting' => __('Waiting', 'workforce-one'), 'approved' => __('Approved', 'workforce-one'), 'rejected' => __('Rejected', 'workforce-one'), 'withdrawn' => __('Withdrawn', 'workforce-one'), 'cancelled' => __('Cancelled', 'workforce-one'), 'expired' => __('Expired', 'workforce-one')];
 $counts = array_count_values(array_map(static function ($it) { return $it['state']; }, $items));
@@ -20,10 +23,25 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
 ?>
 <div class="wfo-apv is-mine">
     <?php if ($notice): ?><div class="wfo-apv-toast is-<?php echo esc_attr($notice['type']); ?>" role="status"><?php echo esc_html($notice['text']); ?></div><?php endif; ?>
+    <?php if ($leave && $leave['balances']): ?>
+    <section class="wfo-lr-bals" aria-labelledby="wfo-lr-bals-h">
+        <div class="wfo-lr-bals-h"><?php echo \WorkforceOne\Ui\Icons::svg('leave', 16, 2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><b id="wfo-lr-bals-h"><?php esc_html_e('Your balance', 'workforce-one'); ?></b><small><?php esc_html_e('This year · after requests waiting', 'workforce-one'); ?></small></div>
+        <div class="wfo-lr-bals-row">
+        <?php foreach ($leave['balances'] as $i => $t): ?>
+            <div class="wfo-lr-bal tone-<?php echo (int) ($i % 4); ?>"><span dir="auto"><?php echo esc_html($t['name']); ?></span><?php if ($t['deducts'] && $t['available'] !== ''): ?><b><?php echo esc_html($t['available']); ?></b><small><?php echo esc_html(sprintf(/* translators: %s: days a year */ __('of %s days', 'workforce-one'), $t['of'] ?? '')); ?></small><?php else: ?><b>—</b><small><?php esc_html_e('No balance deduction', 'workforce-one'); ?></small><?php endif; ?></div>
+        <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
     <?php if (!empty($new['kinds'])): ?><div class="wfo-apv-bar"><span class="wfo-apv-bar-gap"></span><button type="button" class="wfo-apv-btn is-new" data-wfo-sheet="wfo-new-sheet">+ <?php esc_html_e('New request', 'workforce-one'); ?></button></div><?php endif; ?>
-    <?php if ($items): ?>
+    <?php if ($items || ($leave && $leave['kind'] !== '')): ?>
     <nav class="wfo-apv-filters" aria-label="<?php esc_attr_e('Show', 'workforce-one'); ?>">
+        <?php if ($leave): ?>
+        <a href="<?php echo esc_url($leave['all_url']); ?>"<?php echo $filter === '' && $leave['kind'] === '' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('All', 'workforce-one'); ?></a>
+        <a href="<?php echo esc_url($leave['leave_url']); ?>"<?php echo $filter === '' && $leave['kind'] === 'leave' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('Leave', 'workforce-one'); ?></a>
+        <?php else: ?>
         <a href="<?php echo esc_url($base_url); ?>"<?php echo $filter === '' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('All', 'workforce-one'); ?></a>
+        <?php endif; ?>
         <?php foreach ($labels as $k => $l): if (empty($counts[$k])) continue; ?><a href="<?php echo esc_url(add_query_arg('req_state', $k, $base_url)); ?>"<?php echo $filter === $k ? ' aria-current="true"' : ''; ?>><?php echo esc_html($l . ' · ' . $num($counts[$k])); ?></a><?php endforeach; ?>
     </nav>
     <?php else: ?>
@@ -57,11 +75,25 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                     <button type="submit" class="wfo-apv-btn is-bad"><?php esc_html_e('Yes, withdraw it', 'workforce-one'); ?></button>
                 </form>
             </details>
+            <?php elseif (!empty($it['cancel'])): /* Leave in My requests (3.31.158): an approved leave not started; the same handler and rules as the Leave page */ ?>
+            <form class="wfo-lr-cancel" method="post" action="<?php echo esc_url($post_url); ?>">
+                <?php wp_nonce_field('ews_leave_cancel'); ?>
+                <input type="hidden" name="action" value="ews_leave_cancel"><input type="hidden" name="request_id" value="<?php echo (int) $it['id']; ?>"><input type="hidden" name="ews_return" value="requests">
+                <button type="submit" class="wfo-apv-btn is-bad is-sm"><?php esc_html_e('Request cancellation', 'workforce-one'); ?></button>
+                <small><?php esc_html_e('Once only, until the day before it starts. Your manager decides; the days come back to your balance once approved.', 'workforce-one'); ?></small>
+            </form>
             <?php elseif (!empty($it['link']) && $it['state'] === 'waiting'): ?>
             <p class="wfo-apv-link"><a href="<?php echo esc_url($it['link']); ?>"><?php esc_html_e('Open it on the Schedule page', 'workforce-one'); ?></a></p>
             <?php endif; ?>
         </article>
     <?php endforeach; ?>
     </div>
+    <?php if ($leave && $leave['kind'] === 'leave' && ($leave['page'] > 1 || $leave['more'])): ?>
+    <nav class="wfo-lr-pages" aria-label="<?php esc_attr_e('Pages', 'workforce-one'); ?>">
+        <?php if ($leave['page'] > 1): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] - 1, $base_url)); ?>"><?php esc_html_e('Newer', 'workforce-one'); ?></a><?php endif; ?>
+        <span><?php echo esc_html(sprintf(/* translators: %s: page number */ __('Page %s', 'workforce-one'), $num($leave['page']))); ?></span>
+        <?php if ($leave['more']): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] + 1, $base_url)); ?>"><?php esc_html_e('Older', 'workforce-one'); ?></a><?php endif; ?>
+    </nav>
+    <?php endif; ?>
 </div>
 <?php include __DIR__ . '/new-request.php'; ?>

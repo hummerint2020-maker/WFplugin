@@ -9226,3 +9226,87 @@ msgstr "زرار Caps Lock شغال"
 
 msgid "Signing in..."
 msgstr "جاري الدخول..."
+
+msgid "Leave in My requests"
+msgstr "الإجازات في طلباتي"
+
+msgid "My requests also shows every leave balance, lets an employee ask to cancel an approved leave that has not started, and keeps the whole leave and early leave history. The office minimum warning also shows on leave in My approvals. With leave approvals off, the administrators are told of a cancellation asked. Only while My approvals is on."
+msgstr "طلباتي بتعرض كمان رصيد كل أنواع الإجازات، وبتخلّي الموظف يطلب إلغاء إجازة متوافق عليها لسه مبدأتش، وفيها تاريخ الإجازات والانصراف المبكر كله. وتحذير الحد الأدنى للمكتب بيظهر كمان على الإجازة في موافقاتي. ولو موافقات الإجازة مقفولة، الأدمن بيتبلّغ بطلب الإلغاء. ده بس طول ما موافقاتي شغالة."
+
+msgid "Leave page in the app"
+msgstr "صفحة الإجازات في الأبلكيشن"
+
+msgid "On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on."
+msgstr "شغال: بتظهر زي النهارده. مقفول: بتختفي من القايمة، ولينكاتها بتفتح طلباتي (أو موافقاتي لو قرار). مينفعش تتقفل غير لو \"الإجازات في طلباتي\" شغالة."
+
+msgid "Cancellation Not Submitted"
+msgstr "طلب الإلغاء متبعتش"
+
+msgid "Only an approved leave can be cancelled."
+msgstr "الإجازة المتوافق عليها بس هي اللي تتلغي."
+
+msgid "You already asked to cancel this leave. It is waiting for a decision."
+msgstr "انت طلبت إلغاء الإجازة دي قبل كده، والطلب مستني قرار."
+
+msgid "Cancelling this leave was refused, so it cannot be asked again."
+msgstr "إلغاء الإجازة دي اترفض، فمينفعش يتطلب تاني."
+
+msgid "This leave is already cancelled."
+msgstr "الإجازة دي اتلغت خلاص."
+
+msgid "This leave has started or starts today, so it can no longer be cancelled."
+msgstr "الإجازة دي بدأت أو بتبدأ النهارده، فمبقاش ينفع تتلغي."
+
+msgid "The cancellation could not be asked. Please try again."
+msgstr "مقدرناش نبعت طلب الإلغاء. جرب تاني."
+
+msgid "Cancelled at your request"
+msgstr "اتلغت بطلب منك"
+
+msgid "The leave stands until the cancellation is approved."
+msgstr "الإجازة قايمة لحد ما الإلغاء يتوافق عليه."
+
+msgid "Cancelling it was refused, so it cannot be asked again."
+msgstr "الإلغاء اترفض، فمينفعش يتطلب تاني."
+
+msgid "It has started, so it can no longer be cancelled."
+msgstr "الإجازة بدأت، فمبقاش ينفع تتلغي."
+
+#, php-format
+msgid "%s day went back to your balance."
+msgid_plural "%s days went back to your balance."
+msgstr[0] "%s يوم رجعوا لرصيدك."
+msgstr[1] "%s يوم رجع لرصيدك."
+msgstr[2] "%s يوم رجعوا لرصيدك."
+msgstr[3] "%s أيام رجعوا لرصيدك."
+msgstr[4] "%s يوم رجعوا لرصيدك."
+msgstr[5] "%s يوم رجعوا لرصيدك."
+
+msgid "Cancellation waiting"
+msgstr "الإلغاء مستني"
+
+msgid "Your balance"
+msgstr "رصيدك"
+
+msgid "This year · after requests waiting"
+msgstr "السنة دي · بعد الطلبات المستنية"
+
+#, php-format
+msgid "of %s days"
+msgstr "من %s يوم"
+
+msgid "Request cancellation"
+msgstr "اطلب إلغاء"
+
+msgid "Once only, until the day before it starts. Your manager decides; the days come back to your balance once approved."
+msgstr "مرة واحدة بس، ولحد اليوم اللي قبل الإجازة. مديرك هو اللي بيقرر، ولما يوافق الأيام بترجع لرصيدك."
+
+msgid "Newer"
+msgstr "الأحدث"
+
+msgid "Older"
+msgstr "الأقدم"
+
+#, php-format
+msgid "Page %s"
+msgstr "صفحة %s"

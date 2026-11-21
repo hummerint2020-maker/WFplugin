@@ -157,7 +157,7 @@ trait EWS_Frontend_Trait {
             /** The address keys a link to $view never keeps: results of forms, sheets to open, and another module's state. @return string[] */
             private function app_view_dropped_keys($view){
             $keys=[
-                'leave_error','leave_sent','leave_done','leave_cancel_sent',
+                'leave_error','leave_sent','leave_done','leave_cancel_sent','leave_cancel_error',
                 'early_error','time_success','time_error','break_success','break_error','overtime_sent','overtime_error','saved','imported','grid_saved',
                 'time_reset','time_saved','swap_error','swap_sent','swap_done','vacation_sent','vacation_error','vacation_done','vacation_rejected','profile_updated','profile_error','password_updated','password_error',
                 'cx','cx_date','dw_open'
@@ -255,6 +255,12 @@ trait EWS_Frontend_Trait {
             if($ews_view==='schedule' && isset($_GET['swap_error']))return $this->ux_modal(__('Shift Swap Not Completed','workforce-one'),$this->swap_notice_text('error',sanitize_key($_GET['swap_error'])),'error');
             if($ews_view==='schedule' && isset($_GET['swap_sent']))return $this->ux_modal(__('Shift Swap Submitted','workforce-one'),__('Your shift swap request has been submitted.','workforce-one'),'success');
             if($ews_view==='schedule' && isset($_GET['swap_done']))return $this->ux_modal(__('Shift Swap Updated','workforce-one'),$this->swap_notice_text('done',sanitize_key($_GET['swap_done'])),'success');
+            if(isset($_GET['leave_cancel_error'])){   // asked from My requests (3.31.158); the Leave page keeps its own page
+                $m=['not_approved'=>__('Only an approved leave can be cancelled.','workforce-one'),'already_pending'=>__('You already asked to cancel this leave. It is waiting for a decision.','workforce-one'),
+                    'already_rejected'=>__('Cancelling this leave was refused, so it cannot be asked again.','workforce-one'),'already_cancelled'=>__('This leave is already cancelled.','workforce-one'),
+                    'started'=>__('This leave has started or starts today, so it can no longer be cancelled.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
+                return $this->ux_modal(__('Cancellation Not Submitted','workforce-one'),$m[sanitize_key($_GET['leave_cancel_error'])]??$m['save'],'error');
+            }
             if(isset($_GET['leave_error'])){
                 $m=['self'=>__('You cannot decide your own request. Another approver must.','workforce-one'),'date'=>__('Please select a valid future date range.','workforce-one'),'no_working_days'=>__('The selected range contains no working days.','workforce-one'),'overlap'=>__('You already have a pending or approved leave overlapping this period.','workforce-one'),'balance'=>__('Insufficient available balance for this Leave Type.','workforce-one'),'cross_year'=>__('A leave cannot span two calendar years. Please submit one request for each year.','workforce-one'),'too_late'=>__('This leave can no longer be asked for those days: it is too long after them.','workforce-one'),'employee'=>__('Your account is not linked to an active employee.','workforce-one'),'save'=>__('We could not save the leave request. Please try again.','workforce-one'),'busy'=>__('Another request of yours is being saved. Try again in a moment.','workforce-one'),'note'=>__('Write why you reject it, then reject it again.','workforce-one'),'substitute'=>__('Pick who decides for you while you are away.','workforce-one'),'substitute_bad'=>__('That person cannot decide for you on these days (away themselves, or not allowed). Pick someone else.','workforce-one'),'moved'=>__('This request moved to another approval level since you opened the page, so nothing was changed. Open it again to see where it is.','workforce-one'),'decided'=>__('It was already decided, so nothing was changed.','workforce-one')];
                 return $this->ux_modal(__('Leave Request Not Submitted','workforce-one'),$m[sanitize_key($_GET['leave_error'])]??__('Please review the leave details and try again.','workforce-one'),'error');
@@ -466,7 +472,7 @@ trait EWS_Frontend_Trait {
             $pending=is_array($prefetch) && isset($prefetch['leave'])?($prefetch['leave'][(int)$emp->id]??[]):$wpdb->get_results($wpdb->prepare("SELECT id,start_date,end_date,requested_days FROM $leave_table WHERE employee_id=%d AND status='Pending' ORDER BY requested_at DESC LIMIT 3",(int)$emp->id));
             foreach($pending as $r){
                 $range=$r->start_date===$r->end_date?date_i18n('D, d M',strtotime($r->start_date)):date_i18n('D, d M',strtotime($r->start_date)).' → '.date_i18n('D, d M',strtotime($r->end_date));
-                $add('leave-'.$r->id,'leave','🏖','Leave request waiting','Your leave request for '.$range.' is still pending.',add_query_arg('ews_view','vacation',$this->app_home_url()),'View Request');
+                $add('leave-'.$r->id,'leave','🏖','Leave request waiting','Your leave request for '.$range.' is still pending.',add_query_arg('ews_view',$this->leave_page_view(),$this->app_home_url()),'View Request');
             }
         }
 

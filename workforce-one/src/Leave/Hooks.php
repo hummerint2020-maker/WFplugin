@@ -16,5 +16,7 @@ final class Hooks
         add_action('admin_post_ews_vacation_request_respond', [$plugin, 'leave_request_respond']);
         add_action('admin_post_ews_leave_cancel', [$plugin, 'leave_cancel_request']);
         add_action('admin_post_ews_leave_cancel_respond', [$plugin, 'leave_cancel_respond']);
+        // The Leave page switched off (3.31.158): after notification_mark_landed (priority 1), so an opened notification is still marked read.
+        add_action('template_redirect', [$plugin, 'leave_page_redirect'], 5);
     }
 }

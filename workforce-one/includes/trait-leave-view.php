@@ -95,6 +95,40 @@ trait EWS_Leave_View_Trait {
      * (the Leave page and the New request sheet of My requests, 3.31.105).
      * @return list<array{id:int,name:string,deducts:bool,available:string,unplanned:bool,after:int,earliest:string}>
      */
+    /** Leave in My requests (3.31.158): balances, asking to cancel, the leave history; only while My approvals is on. */
+    private function my_requests_leave_on(){
+        return $this->my_approvals_enabled() && (bool)$this->option('ews_feature_my_requests_leave');
+    }
+
+    /** The Leave page is shown unless leave is in My requests and the page is switched off (3.31.158). */
+    private function leave_page_shown(){
+        return !$this->my_requests_leave_on() || (bool)$this->option('ews_feature_leave_page');
+    }
+
+    /** The view the Leave page's links open: the page itself while shown, else My requests / My approvals / the dashboard. */
+    private function leave_page_view($decision=false){
+        if($this->leave_page_shown())return 'vacation';
+        return \WorkforceOne\Leave\MyRequestsLeave::pageTarget(false,$this->my_requests_allowed(),$this->my_approvals_allowed(),(bool)$decision);
+    }
+
+    /**
+     * template_redirect: the Leave page's address while the page is switched off (3.31.158) goes to My requests (or My approvals,
+     * or the dashboard), with its one-time keys; "View all" becomes the Leave filter. Notification links saved before are covered too.
+     */
+    public function leave_page_redirect(){
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- a page address, nothing is changed
+        if(is_admin() || !is_user_logged_in() || sanitize_key($_GET['ews_view']??'')!=='vacation' || $this->leave_page_shown())return;
+        if(!function_exists('is_singular') || !is_singular())return;
+        global $post;
+        if(!$post || empty($post->post_content) || !has_shortcode($post->post_content,'employee_app'))return;
+        $to=$this->leave_page_view();
+        $url=remove_query_arg(['ews_nid','leave_history']);
+        if(isset($_GET['leave_history']) && $to==='requests')$url=add_query_arg('req_kind','leave',$url);
+        // phpcs:enable
+        wp_safe_redirect(add_query_arg('ews_view',$to,$url));
+        exit;
+    }
+
     private function leave_form_types($emp){
         global $wpdb;$this->ensure_leave_schema();$today=current_time('Y-m-d');
         $types=[];
@@ -102,7 +136,7 @@ trait EWS_Leave_View_Trait {
             $available=null;
             if($emp){$b=$this->ensure_leave_balance($emp->id,$lt->id);$available=max(0,(float)$b->entitlement-(float)$b->used-(float)$b->pending);}
             $tc=\WorkforceOne\Leave\TypeRules::config($lt);
-            $types[]=['id'=>(int)$lt->id,'name'=>(string)$lt->name,'deducts'=>(bool)$lt->deduct_balance,'available'=>$available===null?'':Format::number($available),
+            $types[]=['id'=>(int)$lt->id,'name'=>(string)$lt->name,'deducts'=>(bool)$lt->deduct_balance,'available'=>$available===null?'':Format::number($available),'of'=>$emp?Format::number((float)$b->entitlement):'',
                 'unplanned'=>$tc['kind']==='unplanned','after'=>$tc['after_days'],'earliest'=>\WorkforceOne\Leave\TypeRules::earliestStart($tc,$today)];
         }
         return $types;

@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.31.158
+### Leave in My requests, and the Leave page behind a switch (docs/tasks/leave-in-requests.md, mockups docs/mockups/leave-in-requests/)
+Owner's request (2026-11-21): "the Leave page has no use any more". **Two new switches** (wp-admin → Features, My approvals section);
+**nothing changes until they are turned on**, and both act only while My approvals is on.
+- **Leave in My requests** (off by default):
+  - every leave balance on top of My requests (deducting types: available of the year's days; others: no deduction);
+  - **"Request cancellation"** on an approved leave that has not started: the Leave page's own handler, rules and approval path
+    (once only, until the day before), back to My requests with a message; the cancellation's states and notes in the list
+    (waiting, refused, cancelled at your request with the days back, started);
+  - a **Leave** filter: leave and early leave, the whole history in pages of 50;
+  - the **office minimum warning** on a leave card in My approvals, as on the Leave page;
+  - with leave approvals off, the administrators are told of a cancellation asked.
+- **Leave page in the app** (on by default = as today): can be turned off only while Leave in My requests is on. Off: the menu item
+  and the home tile go; its address and every link to it (notifications saved before included, still marked read) open My requests,
+  or My approvals for a decision or without an employee record; "View all leave requests" opens the Leave filter.
+
 ## 3.31.157
 ### Login page: the empty form, and sign-in helpers (docs/tasks/login-assist.md)
 - **Fix (always on).** Tapping Sign In on the app's login page with the username or the password empty went to WordPress's own

@@ -193,6 +193,13 @@ check('approving leave: the manager sees what it does to Thursday', 'Approving m
 check('...and the team: Sales would have 1 of their share of 4', 'Sales would have 1 of their share of 4' in lv)
 check('...no note for someone working from home that day', lv.count('wfo-om-note') == 1)
 check('...approving is not blocked (the buttons are there)', 'wfo-btn-approve' in lv)
+# My approvals (3.31.158): the same note on the leave card, only with Leave in My requests on.
+php("update_option('ews_feature_my_approvals',1,false); delete_option('ews_feature_my_requests_leave');")
+check('My approvals, Leave in My requests off: no note on the leave card (as before)', 'wfo-om-note' not in adm.req('/app/?ews_view=approvals')[1])
+php("update_option('ews_feature_my_requests_leave',1,false);")
+ap = adm.req('/app/?ews_view=approvals')[1]
+check('...on: the leave card says what approving does to Thursday', ap.count('wfo-om-note') == 1 and '9 of 12 in the office' in ap and 'Sales would have 1 of their share of 4' in ap, ap.count('wfo-om-note'))
+php("delete_option('ews_feature_my_requests_leave'); delete_option('ews_feature_my_approvals');")
 
 # ---------------------------------------------------------------- weekly reminder
 now = php("echo date('w',current_time('timestamp')).'|'.date('H:i',current_time('timestamp'));").strip().split('|')

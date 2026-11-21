@@ -185,6 +185,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_occasions.py "$S"
       - name: People and colleague profiles (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
+      - name: Leave in My requests (off by default, balances, asking to cancel, the Leave filter, the Leave page switch)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_requests.py "$S"
       - name: App frame, navigation and login (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_layout.py "$S"
       - name: Appearance (theme) and the app frame's phone bar

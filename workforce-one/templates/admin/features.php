@@ -117,6 +117,14 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-section" id="ews-my-approvals"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">My approvals and My requests</div><div class="wfo-feature-desc">One inbox in the app for every request waiting for a person's decision (leave, overtime, corrections, swaps, face reset), with its level, how long it has waited and the path, and approving several at once. Each employee also gets My requests, to follow their requests level by level and withdraw one still waiting. The approval lists inside each page stay. Who decides, the reason to reject and when a request is overdue: <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-approvals')); ?>">Approval Workflows</a>.</div></div>
     <?php $switch('my_approvals_enabled', $on['my_approvals']); ?>
+</div>
+<div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Leave in My requests', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('My requests also shows every leave balance, lets an employee ask to cancel an approved leave that has not started, and keeps the whole leave and early leave history. The office minimum warning also shows on leave in My approvals. With leave approvals off, the administrators are told of a cancellation asked. Only while My approvals is on.', 'workforce-one'); ?></div></div>
+    <input type="hidden" name="my_requests_leave_present" value="1"><?php $switch('my_requests_leave_enabled', $on['my_requests_leave']); ?>
+</div>
+<div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Leave page in the app', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on.', 'workforce-one'); ?></div></div>
+    <?php $switch('leave_page_enabled', $on['leave_page']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-advances"><div class="wfo-feature-head">

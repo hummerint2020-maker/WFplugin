@@ -53,6 +53,7 @@ trait EWS_App_Layout_Trait {
         // The My approvals page reads every card in full, so the permission check below builds them once, in full, not light then full (3.31.148).
         if($view==='approvals')$this->my_approvals_full=true;
         $swap_link=$view==='approvals' && (isset($_GET['apv_swap']) || isset($_GET['swap_done']) || isset($_GET['swap_error'])) && $this->my_approvals_enabled() && is_user_logged_in(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+        if($view==='vacation' && !$this->leave_page_shown())$view=$this->leave_page_view();   // the Leave page switched off (3.31.158; the address itself is redirected first)
         if(!$swap_link && !$this->app_view_allowed($view))$view='dashboard';
         switch($view){
             case 'schedule': $content=$this->schedule_content(); break;
@@ -105,6 +106,7 @@ trait EWS_App_Layout_Trait {
         foreach(\WorkforceOne\Settings\Navigation::DEFAULTS as $key=>$def){
             if(!$this->app_view_allowed($key))continue;
             if($key==='overtime' && !$this->overtime_enabled())continue;
+            if($key==='vacation' && !$this->leave_page_shown())continue;   // the Leave page switched off (3.31.158)
             if($key==='tasks' && !$this->tasks_enabled())continue;
             if($key==='corrections' && !$this->corrections_enabled())continue;
             $item=array_merge($def,(isset($cfg[$key])&&is_array($cfg[$key]))?$cfg[$key]:[]);
