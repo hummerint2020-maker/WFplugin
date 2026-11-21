@@ -13,3 +13,17 @@
 .wfo-lr-cancel .wfo-lr-note{font-size:12px;color:#6A7090}
 .wfo-lr-all{display:block;margin:12px 0 0;text-align:center;font-weight:600;color:var(--wfo-pri,#5B3FD9);text-decoration:none}
 .wfo-lr-back{color:var(--wfo-pri,#5B3FD9)}
+.wfo-lr-change{display:flex;flex-direction:column;gap:8px}
+.wfo-lr-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid #E4E6F0;border-radius:14px;background:#fff;cursor:pointer}
+.wfo-lr-opt.is-on{border-color:var(--wfo-pri,#5B3FD9);background:#F7F5FF}
+.wfo-lr-opt input[type=radio]{margin-top:3px;accent-color:var(--wfo-pri,#5B3FD9)}
+.wfo-lr-opt>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wfo-lr-opt b{font-size:14px;color:#141A33}.wfo-lr-opt small{font-size:12px;color:#6A7090}
+.wfo-lr-date{display:flex;align-items:center;gap:8px;margin-top:6px}
+.wfo-lr-date input{height:40px;padding:0 10px;border:1.5px solid #E4E6F0;border-radius:10px;font:inherit;font-size:14px}
+.wfo-lr-date em{font-style:normal;font-size:12.5px;color:#3B4466}
+.wfo-lr-sum{display:flex;align-items:center;gap:6px;margin:0;padding:8px 10px;border-radius:10px;background:#E6F7EF;color:#0F6B43;font-size:12.5px}
+.wfo-app .wfo-apv-withdraw form.wfo-lr-change{flex-direction:column;flex-wrap:nowrap;align-items:stretch}
+.wfo-app .wfo-apv-withdraw form.wfo-lr-change p{flex-basis:auto}
+.wfo-app .wfo-apv-withdraw form.wfo-lr-change button{align-self:flex-start}
+.wfo-app .wfo-lr-opt>span>*{flex:0 0 auto}
