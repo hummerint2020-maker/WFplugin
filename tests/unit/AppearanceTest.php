@@ -35,6 +35,10 @@ final class AppearanceTest extends TestCase
         $this->assertSame('', A::config(['login_bg_image' => 'https://x.test/a.jpg") ; } body{display:none'])['login_bg_image'], 'a picture URL cannot break out of the CSS');
         $this->assertSame('picture', A::config(['login_bg' => 'picture', 'login_bg_image' => 'https://x.test/a.jpg'])['login_bg']);
         $this->assertSame('0', A::config(['login_remember' => '0'])['login_remember']);
+        $this->assertSame('0', A::config([])['login_assist'], 'the sign-in helpers are off by default (3.31.157)');
+        $this->assertSame('1', A::config(['login_assist' => '1'])['login_assist']);
+        $this->assertSame('0', A::config(['login_assist' => 'yes'])['login_assist'], 'only 1 turns them on');
+        $this->assertSame('1', A::fromPost(['login_assist' => '1'], null)['config']['login_assist']);
         $this->assertSame(80, mb_strlen(A::config(['login_title' => str_repeat('a', 200)])['login_title']), 'titles are cut');
         $this->assertSame('#13235B', A::fromPost(['login_bg_color' => '#F5F5F5'], null)['config']['login_bg_color'], 'a login colour too light for white text is refused');
     }

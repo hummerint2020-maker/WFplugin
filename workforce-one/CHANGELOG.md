@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.31.157
+### Login page: the empty form, and sign-in helpers (docs/tasks/login-assist.md)
+- **Fix (always on).** Tapping Sign In on the app's login page with the username or the password empty went to WordPress's own
+  login page (wp-login.php). WordPress does not report those two errors as a failed login, so the app never brought the person back.
+  It now comes back to the app's login with "Please enter your username and password." wp-login.php's own form is unchanged.
+- **Sign-in helpers (new switch, off by default):** wp-admin → Appearance → Login screen → "Sign-in helpers". While it is off the
+  page is exactly as before. On:
+  - an empty field is pointed at before sending (a red border, a line under it and the cursor), with no page reload;
+  - after a wrong password the username stays typed and the cursor is in the password. The username is kept in this browser tab
+    only (sessionStorage); the password is never kept;
+  - a line under the password while Caps Lock is on;
+  - after the first tap the button says "Signing in..." and waits, so a second tap on a slow connection sends nothing more.
+
 ## 3.31.156
 ### Shift swap fixes (docs/tasks/swap-fixes.md; found by the L3 design, docs/tasks/schedule-rest.md §5)
 Owner decisions 2026-11-20. **No switch: on as soon as the release is installed** (owner's choice for this release).

@@ -36,6 +36,7 @@ ICONS.update({
     'wifi-off': '<path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/><path d="M14 10.2a10 10 0 0 1 5 2.7"/><path d="M12 20h.01"/>',
     'hat': '<path d="M2 18h20"/><path d="M4 18v-3a8 8 0 0 1 16 0v3"/><path d="M10 7V5h4v2"/>',
     'site': '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01"/>',
+    'capslock': '<path d="M12 4l7 8h-4v5H9v-5H5z"/><path d="M9 21h6"/>',
     'id': '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2.5"/><path d="M14 10h5M14 14h3"/>',
 })
 

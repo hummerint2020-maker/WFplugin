@@ -15,6 +15,7 @@
  * @var string $logout_url
  * @var array{class:string,layer:string,card:string} $occasion  Occasions (3.31.145): all '' while off
  * @var string $worker_url                 daily workers' own sign-in ('' = hidden)
+ * Sign-in helpers (cfg login_assist, off by default): data-assist and its labels on the card; assets/js/login.js does the rest.
  */
 if (!defined('ABSPATH')) exit;
 use WorkforceOne\Ui\Icons;
@@ -35,7 +36,9 @@ $line = implode(' · ', array_filter([$brand['company_name'], $brand['tagline']]
         </div>
         <?php endif; ?>
 
-        <div class="ews-login-card wfo-login-card<?php echo $cfg['login_eye'] === '1' ? ' has-eye' : ''; ?>"<?php echo $cfg['login_eye'] === '1' ? ' data-show-label="' . esc_attr__('Show password', 'workforce-one') . '" data-hide-label="' . esc_attr__('Hide password', 'workforce-one') . '"' : ''; ?>>
+        <div class="ews-login-card wfo-login-card<?php echo $cfg['login_eye'] === '1' ? ' has-eye' : ''; ?>"<?php echo $cfg['login_eye'] === '1' ? ' data-show-label="' . esc_attr__('Show password', 'workforce-one') . '" data-hide-label="' . esc_attr__('Hide password', 'workforce-one') . '"' : ''; ?><?php
+            // Sign-in helpers (3.31.157): only while the switch is on, so the page is unchanged while it is off.
+            if (($cfg['login_assist'] ?? '0') === '1' && !$signed_in) echo ' data-assist="1" data-need-user="' . esc_attr__('Enter your username or email', 'workforce-one') . '" data-need-pass="' . esc_attr__('Enter your password', 'workforce-one') . '" data-caps="' . esc_attr__('Caps Lock is on', 'workforce-one') . '" data-busy="' . esc_attr__('Signing in...', 'workforce-one') . '" data-failed="' . ($error !== '' ? '1' : '0') . '"'; ?>>
             <?php echo $occasion['card']; // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><?php if ($signed_in): ?>
                 <h1><?php esc_html_e('You are already signed in', 'workforce-one'); ?></h1>
                 <a class="ews-login-btn wfo-login-submit" href="<?php echo esc_url($open_url); ?>"><?php echo esc_html(sprintf(/* translators: %s: app name */ __('Open %s', 'workforce-one'), $brand['app_name'])); ?></a>

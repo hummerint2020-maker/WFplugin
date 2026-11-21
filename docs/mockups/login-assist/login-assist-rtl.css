@@ -1,0 +1,12 @@
+/* Login page helpers (docs/tasks/login-assist.md): a field that is empty, Caps Lock, Signing in... Ships as part of assets/css/app-login.css. */
+.ews-login-wrap.wfo-login .ews-login-card input.is-invalid{border-color:#D23A5C;background-color:#FFF5F7}
+.ews-login-wrap.wfo-login .ews-login-card input.is-focus{border-color:var(--wfo-pri);background-color:#fff;box-shadow:0 0 0 4px var(--wfo-pri-soft)}
+.ews-login-wrap.wfo-login .ews-login-card input.is-invalid.is-focus{border-color:#D23A5C;box-shadow:0 0 0 4px #FFE0E7}
+.wfo-login-field-msg,.wfo-login-caps{display:flex;align-items:center;gap:6px;margin:6px 2px 0;font-size:12.5px;line-height:1.4}
+.wfo-login-field-msg{color:#A51D3E}
+.wfo-login-caps{color:#8A5A00}
+.wfo-login-field-msg .wfo-icon,.wfo-login-caps .wfo-icon{flex:0 0 auto}
+.ews-login-wrap.wfo-login .wfo-login-submit.is-busy{display:flex;align-items:center;justify-content:center;gap:10px;opacity:.85;cursor:default}
+.wfo-login-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:wfo-login-spin .8s linear infinite}
+@keyframes wfo-login-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.wfo-login-spin{animation:none;border-right-color:currentColor;opacity:.5}}
