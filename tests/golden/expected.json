@@ -1,9 +1,23 @@
 {
  "_about": "What this release changes on purpose (tests/golden/run.py; owner decision 2026-10-27): the pages (by their pages.json url and options) that may differ from the base, the action traces (by key, with the reason) whose SQL, return or rows may differ, and the hook / admin-post / shortcode / REST names it adds. Everything else must stay the same. Empty for a move-only release; emptied again by the next release.",
- "release": "3.31.157",
- "pages": [],
+ "release": "3.31.158",
+ "pages": [
+  {
+   "url": "/wp-admin/admin.php?page=ews31-features",
+   "reason": "Leave in My requests (docs/tasks/leave-in-requests.md): two new switches in the My approvals section of Feature Configuration, Leave in My requests off and the Leave page shown by default",
+   "user": "admin"
+  },
+  {
+   "url": "/wp-admin/admin.php?page=ews31-features",
+   "reason": "Leave in My requests (docs/tasks/leave-in-requests.md): two new switches in the My approvals section of Feature Configuration, Leave in My requests off and the Leave page shown by default",
+   "user": "admin",
+   "options": {
+    "ews_feature_week_lock": 1
+   }
+  }
+ ],
  "actions": {},
  "hooks_added": [
-  "authenticate"
+  "template_redirect"
  ]
 }

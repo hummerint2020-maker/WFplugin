@@ -9226,3 +9226,214 @@ msgstr "زرار Caps Lock شغال"
 
 msgid "Signing in..."
 msgstr "جاري الدخول..."
+
+msgid "Leave in My requests"
+msgstr "الإجازات في طلباتي"
+
+msgid "My requests also shows every leave balance, lets an employee ask to cancel an approved leave that has not started, and keeps the whole leave and early leave history. The office minimum warning also shows on leave in My approvals. With leave approvals off, the administrators are told of a cancellation asked. Only while My approvals is on."
+msgstr "طلباتي بتعرض كمان رصيد كل أنواع الإجازات، وبتخلّي الموظف يطلب إلغاء إجازة متوافق عليها لسه مبدأتش، وفيها تاريخ الإجازات والانصراف المبكر كله. وتحذير الحد الأدنى للمكتب بيظهر كمان على الإجازة في موافقاتي. ولو موافقات الإجازة مقفولة، الأدمن بيتبلّغ بطلب الإلغاء. ده بس طول ما موافقاتي شغالة."
+
+msgid "Leave page in the app"
+msgstr "صفحة الإجازات في الأبلكيشن"
+
+msgid "On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on."
+msgstr "شغال: بتظهر زي النهارده. مقفول: بتختفي من القايمة، ولينكاتها بتفتح طلباتي (أو موافقاتي لو قرار). مينفعش تتقفل غير لو \"الإجازات في طلباتي\" شغالة."
+
+msgid "Cancellation Not Submitted"
+msgstr "طلب الإلغاء متبعتش"
+
+msgid "Only an approved leave can be cancelled."
+msgstr "الإجازة المتوافق عليها بس هي اللي تتلغي."
+
+msgid "You already asked to cancel this leave. It is waiting for a decision."
+msgstr "انت طلبت إلغاء الإجازة دي قبل كده، والطلب مستني قرار."
+
+msgid "Cancelling this leave was refused, so it cannot be asked again."
+msgstr "إلغاء الإجازة دي اترفض، فمينفعش يتطلب تاني."
+
+msgid "This leave is already cancelled."
+msgstr "الإجازة دي اتلغت خلاص."
+
+msgid "This leave has started or starts today, so it can no longer be cancelled."
+msgstr "الإجازة دي بدأت أو بتبدأ النهارده، فمبقاش ينفع تتلغي."
+
+msgid "The cancellation could not be asked. Please try again."
+msgstr "مقدرناش نبعت طلب الإلغاء. جرب تاني."
+
+msgid "Cancelled at your request"
+msgstr "اتلغت بطلب منك"
+
+msgid "The leave stands until the cancellation is approved."
+msgstr "الإجازة قايمة لحد ما الإلغاء يتوافق عليه."
+
+msgid "Cancelling it was refused, so it cannot be asked again."
+msgstr "الإلغاء اترفض، فمينفعش يتطلب تاني."
+
+msgid "It has started, so it can no longer be cancelled."
+msgstr "الإجازة بدأت، فمبقاش ينفع تتلغي."
+
+#, php-format
+msgid "%s day went back to your balance."
+msgid_plural "%s days went back to your balance."
+msgstr[0] "%s يوم رجعوا لرصيدك."
+msgstr[1] "%s يوم رجع لرصيدك."
+msgstr[2] "%s يوم رجعوا لرصيدك."
+msgstr[3] "%s أيام رجعوا لرصيدك."
+msgstr[4] "%s يوم رجعوا لرصيدك."
+msgstr[5] "%s يوم رجعوا لرصيدك."
+
+msgid "Cancellation waiting"
+msgstr "الإلغاء مستني"
+
+msgid "Your balance"
+msgstr "رصيدك"
+
+msgid "This year · after requests waiting"
+msgstr "السنة دي · بعد الطلبات المستنية"
+
+#, php-format
+msgid "of %s days"
+msgstr "من %s يوم"
+
+msgid "Request cancellation"
+msgstr "اطلب إلغاء"
+
+msgid "Once only, until the day before it starts. Your manager decides; the days come back to your balance once approved."
+msgstr "مرة واحدة بس، ولحد اليوم اللي قبل الإجازة. مديرك هو اللي بيقرر، ولما يوافق الأيام بترجع لرصيدك."
+
+msgid "Newer"
+msgstr "الأحدث"
+
+msgid "Older"
+msgstr "الأقدم"
+
+#, php-format
+msgid "Page %s"
+msgstr "صفحة %s"
+
+msgid "A cancellation was already asked for this leave and closed, so it cannot be asked again."
+msgstr "الإجازة دي اتطلب إلغاؤها قبل كده والطلب اتقفل، فمينفعش يتطلب تاني."
+
+msgid "Shortened at your request"
+msgstr "اتقصّرت بطلب منك"
+
+msgid "You withdrew the cancellation, so the leave stands."
+msgstr "انت سحبت طلب الإلغاء، فالإجازة زي ما هي."
+
+msgid "It was decided after the leave had ended, so nothing was cancelled."
+msgstr "اتقرر بعد ما الإجازة خلصت، فمفيش حاجة اتلغت."
+
+msgid "The cancellation was approved after the leave started: the days from that day on were cancelled and went back to your balance."
+msgstr "الإلغاء اتوافق عليه بعد ما الإجازة بدأت: الأيام من يوم الموافقة ورايح اتلغت ورجعت لرصيدك."
+
+msgid "Withdraw the cancellation? The leave stays as it is, and a leave can be cancelled only once."
+msgstr "تسحب طلب الإلغاء؟ الإجازة هتفضل زي ما هي، والإجازة ينفع يتطلب إلغاؤها مرة واحدة بس."
+
+msgid "Asked while leave approvals were off, so it has no levels: the administrators decide it"
+msgstr "اتطلب وموافقات الإجازة كانت مقفولة، فمالوش مستويات: الأدمن هو اللي بيقرر."
+
+msgid "This leave has not started yet; ask to cancel all of it instead."
+msgstr "الإجازة دي لسه مبدأتش، اطلب إلغاءها كلها بدل كده."
+
+msgid "This leave ends today, so there are no days left to cancel."
+msgstr "الإجازة دي بتخلص النهارده، فمفيش أيام فاضلة تتلغي."
+
+#, php-format
+msgid "Back early: the days from %s on are cancelled once it is approved; until then the leave stands."
+msgstr "رجعت بدري: الأيام من %s ورايح هتتلغي لما الطلب يتوافق عليه، ولحد ده الإجازة قايمة."
+
+msgid "It ends today, so it can no longer be cancelled."
+msgstr "الإجازة بتخلص النهارده، فمبقاش ينفع تتلغي."
+
+msgid "Back early: cancel from"
+msgstr "رجع بدري: الإلغاء من"
+
+msgid "I'm back early"
+msgstr "رجعت بدري"
+
+#, php-format
+msgid "The days from tomorrow, %1$s, to %2$s are cancelled (%3$s day). Your manager decides; once approved they go back to your balance and the schedule is as before."
+msgid_plural "The days from tomorrow, %1$s, to %2$s are cancelled (%3$s days). Your manager decides; once approved they go back to your balance and the schedule is as before."
+msgstr[0] "هتتلغي الأيام من بكرة %1$s لحد %2$s (%3$s يوم). مديرك هو اللي بيقرر، ولما يوافق الأيام دي بترجع لرصيدك والجدول بيرجع زي ما كان."
+msgstr[1] "هتتلغي الأيام من بكرة %1$s لحد %2$s (%3$s يوم). مديرك هو اللي بيقرر، ولما يوافق الأيام دي بترجع لرصيدك والجدول بيرجع زي ما كان."
+msgstr[2] "هتتلغي الأيام من بكرة %1$s لحد %2$s (%3$s يوم). مديرك هو اللي بيقرر، ولما يوافق الأيام دي بترجع لرصيدك والجدول بيرجع زي ما كان."
+msgstr[3] "هتتلغي الأيام من بكرة %1$s لحد %2$s (%3$s أيام). مديرك هو اللي بيقرر، ولما يوافق الأيام دي بترجع لرصيدك والجدول بيرجع زي ما كان."
+msgstr[4] "هتتلغي الأيام من بكرة %1$s لحد %2$s (%3$s يوم). مديرك هو اللي بيقرر، ولما يوافق الأيام دي بترجع لرصيدك والجدول بيرجع زي ما كان."
+msgstr[5] "هتتلغي الأيام من بكرة %1$s لحد %2$s (%3$s يوم). مديرك هو اللي بيقرر، ولما يوافق الأيام دي بترجع لرصيدك والجدول بيرجع زي ما كان."
+
+msgid "The days up to today stay leave. This is the one cancellation this leave can have."
+msgstr "الأيام لحد النهارده بتفضل إجازة. وده طلب الإلغاء الوحيد اللي الإجازة دي ينفع يكون ليها."
+
+msgid "Yes, I'm back early"
+msgstr "أيوه، رجعت بدري"
+
+msgid "Pick the day you are back at work: after the first day of the leave, from today on, up to its last day."
+msgstr "اختار اليوم اللي هترجع فيه الشغل: بعد أول يوم في الإجازة، من النهارده أو بعده، لحد آخر يوم فيها."
+
+#, php-format
+msgid "Back at work on %s: the days from then on are cancelled once it is approved; until then the leave stands."
+msgstr "راجع الشغل يوم %s: الأيام من اليوم ده ورايح هتتلغي لما الطلب يتوافق عليه، ولحد ده الإجازة قايمة."
+
+msgid "Back at work on"
+msgstr "راجع الشغل يوم"
+
+msgid "Cancelled from"
+msgstr "اتلغت من"
+
+#, php-format
+msgid "%s day back"
+msgid_plural "%s days back"
+msgstr[0] "%s يوم راجع"
+msgstr[1] "%s يوم راجع"
+msgstr[2] "%s يوم راجعين"
+msgstr[3] "%s أيام راجعين"
+msgstr[4] "%s يوم راجعين"
+msgstr[5] "%s يوم راجعين"
+
+msgid "Change the leave"
+msgstr "عدّل الإجازة"
+
+#, php-format
+msgid "The whole leave is cancelled; %s days go back to your balance."
+msgstr "الإجازة هتتلغي كلها، و%s يوم يرجعوا لرصيدك."
+
+#, php-format
+msgid "The leave becomes %1$s – %2$s (%3$s days). %4$s days go back to your balance."
+msgstr "الإجازة هتبقى %1$s – %2$s (%3$s يوم). %4$s يوم يرجعوا لرصيدك."
+
+msgid "Pick the day you are back at work."
+msgstr "اختار اليوم اللي هترجع فيه الشغل."
+
+msgid "Cancel all of it"
+msgstr "ألغي الإجازة كلها"
+
+#, php-format
+msgid "The %s day goes back to your balance."
+msgid_plural "The %s days go back to your balance."
+msgstr[0] "الـ %s يوم يرجعوا لرصيدك."
+msgstr[1] "الـ %s يوم يرجع لرصيدك."
+msgstr[2] "الـ %s يوم يرجعوا لرصيدك."
+msgstr[3] "الـ %s أيام يرجعوا لرصيدك."
+msgstr[4] "الـ %s يوم يرجعوا لرصيدك."
+msgstr[5] "الـ %s يوم يرجعوا لرصيدك."
+
+msgid "I'll be back at work on"
+msgstr "هرجع الشغل يوم"
+
+msgid "I'm back at work on"
+msgstr "رجعت الشغل يوم"
+
+msgid "After its first day, up to its last."
+msgstr "بعد أول يوم في الإجازة، لحد آخرها."
+
+msgid "Today or later, up to the last day of the leave."
+msgstr "النهارده أو بعده، لحد آخر يوم في الإجازة."
+
+msgid "The day you are back at work"
+msgstr "اليوم اللي هترجع فيه الشغل"
+
+msgid "Your manager decides; until then the leave stands as it is. This is the one change this leave can have."
+msgstr "مديرك هو اللي بيقرر، ولحد ما يوافق الإجازة زي ما هي. ده التعديل الوحيد اللي الإجازة دي ينفع يكون ليها."
+
+msgid "Send the change"
+msgstr "ابعت التعديل"

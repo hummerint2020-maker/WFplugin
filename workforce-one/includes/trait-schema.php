@@ -129,7 +129,7 @@ trait EWS_Schema_Trait {
                 start_date DATE NOT NULL, end_date DATE NOT NULL, requested_days DECIMAL(8,2) NOT NULL DEFAULT 0,
                 reason TEXT NULL, status VARCHAR(30) NOT NULL DEFAULT 'Pending', cancellation_status VARCHAR(30) NULL,
                 requested_by BIGINT UNSIGNED NOT NULL, reviewed_by BIGINT UNSIGNED NULL, requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                reviewed_at DATETIME NULL, cancelled_by BIGINT UNSIGNED NULL, cancelled_at DATETIME NULL, balance_id BIGINT UNSIGNED NULL,
+                reviewed_at DATETIME NULL, cancelled_by BIGINT UNSIGNED NULL, cancelled_at DATETIME NULL, balance_id BIGINT UNSIGNED NULL, cancel_from DATE NULL,
                 PRIMARY KEY(id), KEY employee_status(employee_id,status), KEY dates(start_date,end_date), KEY type_year(leave_type_id,start_date)) {$c};");
             dbDelta("CREATE TABLE {$snap} (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, leave_request_id BIGINT UNSIGNED NOT NULL, employee_id BIGINT UNSIGNED NOT NULL,
@@ -167,7 +167,9 @@ trait EWS_Schema_Trait {
                 'cancelled_by'=>"BIGINT UNSIGNED NULL",
                 'cancelled_at'=>"DATETIME NULL",
                 // Balance row the request was charged to (NULL for requests created before 3.31.1).
-                'balance_id'=>"BIGINT UNSIGNED NULL"
+                'balance_id'=>"BIGINT UNSIGNED NULL",
+                // "I'm back early" (3.31.158): the first day a cancellation asked during the leave cancels; NULL = the whole leave.
+                'cancel_from'=>"DATE NULL"
             ];
             foreach($req_defs as $col=>$def){
                 if(!in_array($col,$req_cols,true))$wpdb->query("ALTER TABLE {$req} ADD COLUMN `{$col}` {$def}");
@@ -336,7 +338,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.156'; }   // Swap fixes: the approvers' decision kept apart from the colleague's answer (decided_by, decided_at)
+        private function ews_schema_target(){ return '3.31.158'; }   // Leave in My requests: "I'm back early" keeps the first day it cancels (ews_leave_requests.cancel_from)
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

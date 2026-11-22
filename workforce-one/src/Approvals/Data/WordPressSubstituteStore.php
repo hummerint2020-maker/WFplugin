@@ -28,6 +28,11 @@ final class WordPressSubstituteStore implements SubstituteStore
         return (array) $this->db->get_results("SELECT * FROM {$this->table} WHERE leave_request_id IS NOT NULL AND status IN ('pending','scheduled','active')");
     }
 
+    public function endLeaveEarlier(int $leaveRequestId, string $endsAt)
+    {
+        return $this->db->query($this->db->prepare("UPDATE {$this->table} SET ends_at=%s WHERE leave_request_id=%d AND status IN ('pending','scheduled','active') AND ends_at>%s", $endsAt, $leaveRequestId, $endsAt));
+    }
+
     public function current(): array
     {
         return (array) $this->db->get_results("SELECT * FROM {$this->table} WHERE status IN ('scheduled','active') ORDER BY starts_at ASC");

@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.31.158
+### Leave in My requests, and the Leave page behind a switch (docs/tasks/leave-in-requests.md, mockups docs/mockups/leave-in-requests/)
+Owner's request (2026-11-21): "the Leave page has no use any more". **Two new switches** (wp-admin → Features, My approvals section);
+**nothing changes until they are turned on**, and both act only while My approvals is on.
+- **Leave in My requests** (off by default):
+  - every leave balance on top of My requests (deducting types: available of the year's days; others: no deduction);
+  - **"Request cancellation"** on an approved leave that has not started: the Leave page's own handler, rules and approval path
+    (once only, until the day before), back to My requests with a message; the cancellation's states and notes in the list
+    (waiting, refused, cancelled at your request with the days back, started);
+  - a **Leave** filter: leave and early leave, the whole history in pages of 50;
+  - the **office minimum warning** on a leave card in My approvals, as on the Leave page;
+  - with leave approvals off, the administrators are told of a cancellation asked.
+- **The cancellation's edge cases** (owner, 2026-11-21; with Leave in My requests on):
+  - a cancellation approved after the leave started cancels the days from that day on only (the leave then ends the day
+    before; the days taken stay leave and charged); approved after the leave ended, nothing changes (closed as Ended);
+  - the employee can **withdraw a cancellation** still waiting (the leave stays; a leave has one cancellation);
+  - **"Change the leave"** (one button, owner 2026-11-21): before it starts, cancel all of it or pick the day back at work
+    (it is shortened); once started, the day back at work, today or later. The days from that day on go back to the balance
+    and the schedule, with the same approval as a cancellation, from that day even if approved later; a line says what the
+    leave becomes and how many days come back (a new column, `ews_leave_requests.cancel_from`, schema 3.31.158);
+  - a manager's substitute ends when a shortened leave now ends; the employee is told it was shortened (or, decided after
+    its end, that nothing changed);
+  - a leave or cancellation asked while leave approvals were off stays with the administrators after they are turned on
+    (until now it could not be decided).
+- **Leave page in the app** (on by default = as today): can be turned off only while Leave in My requests is on. Off: the menu item
+  and the home tile go; its address and every link to it (notifications saved before included, still marked read) open My requests,
+  or My approvals for a decision or without an employee record; "View all leave requests" opens the Leave filter.
+
 ## 3.31.157
 ### Login page: the empty form, and sign-in helpers (docs/tasks/login-assist.md)
 - **Fix (always on).** Tapping Sign In on the app's login page with the username or the password empty went to WordPress's own

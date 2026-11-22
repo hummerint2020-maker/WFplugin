@@ -102,7 +102,7 @@ trait EWS_My_Profile_Trait {
             'catalog'=>$catalog,'avatar_urls'=>$avatar_urls,'avatar_key'=>$avatar_key,
             'profile_updated'=>sanitize_key($_GET['profile_updated']??''),'profile_error'=>sanitize_key($_GET['profile_error']??''),
             'password_updated'=>sanitize_key($_GET['password_updated']??''),'password_error'=>sanitize_key($_GET['password_error']??''),
-            'urls'=>['schedule'=>$this->app_view_url('schedule'),'vacation'=>$this->app_view_url('vacation'),'time'=>$this->app_view_url('time')],
+            'urls'=>['schedule'=>$this->app_view_url('schedule'),'vacation'=>$this->app_view_url($this->leave_page_view()),'time'=>$this->app_view_url('time')],
         ]);
     }
 }

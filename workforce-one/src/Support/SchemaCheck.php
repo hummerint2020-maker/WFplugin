@@ -29,6 +29,7 @@ final class SchemaCheck
         'ews_notifications' => ['link'],
         'ews_api_tokens' => ['grace_uses'],
         'ews_schedule_swaps' => ['decided_by', 'decided_at'],
+        'ews_leave_requests' => ['cancel_from'],
     ];
 
     /**

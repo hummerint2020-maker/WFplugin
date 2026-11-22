@@ -282,21 +282,37 @@ trait EWS_My_Approvals_Trait {
 
     /** A view's address without this page's own filters and results, for "All" and the filter chips. */
     private function my_approvals_clean_url($view){
-        return remove_query_arg(['apv_kind','apv_swap','apv_bulk','apv_asked','req_state','req_done','req_error','leave_rejected','swap_done','swap_error','hl_sent','hl_error','hl_done'],$this->app_view_url($view));
+        return remove_query_arg(['apv_kind','apv_swap','apv_bulk','apv_asked','req_state','req_done','req_error','req_kind','req_page','leave_rejected','swap_done','swap_error','hl_sent','hl_error','hl_done'],$this->app_view_url($view));
     }
 
     /** App → My requests. */
     private function requests_content(){
         $emp=$this->current_employee();
+        // Leave in My requests (3.31.158): ?req_kind=leave lists leave and early leave only, the whole history in pages of 20 (owner).
+        $lr=$this->my_requests_leave_on();
+        $kind=$lr && $emp && sanitize_key($_GET['req_kind']??'')==='leave'?'leave':''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+        $page=$kind?max(1,absint($_GET['req_page']??1)):1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+        $more_pages=false;
+        if($kind){
+            // One more than a page from each, from the start of the page: merged, the page is cut from the newest of both.
+            $per=20;$n=$per*$page+1;
+            $items=array_merge($this->leave_my_requests((int)$emp->id,$n),$this->early_leave_my_requests((int)$emp->id,$n));
+            // Newest first; the same order on every page (ties by key), so nothing repeats or is skipped from one page to the next.
+            usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when'])?:(strcmp((string)$a['tone'],(string)$b['tone'])?:((int)$b['id']<=>(int)$a['id']));});
+            $more_pages=count($items)>$per*$page;
+            $items=array_slice($items,$per*($page-1),$per);
+        }else{
         $items=$emp?array_merge($this->leave_my_requests((int)$emp->id),$this->overtime_my_requests((int)$emp->id),$this->early_leave_my_requests((int)$emp->id),$this->cx_my_requests((int)$emp->id),$this->swap_my_requests((int)$emp->id),$this->advance_my_requests((int)$emp->id),$this->hr_letter_my_requests((int)$emp->id)):[];
         usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when']);});
         $items=array_slice($items,0,40);
+        }
         $paths=$this->approval_paths(array_map(function($it){return $it['approval'];},$items));   // one batch, not several queries per request
         foreach($items as &$it){
             [$wk,$et,$eid]=$it['approval'];
             $it['path']=$paths[$this->approval_request_key($wk,$et,$eid)]??($it['path']??null);
             if($it['path'] && !empty($it['path_before']) && (int)$it['path']['id'])$it['path']['steps']=array_merge($it['path_before'],$it['path']['steps']);
             if(($it['note']??'')==='' && $it['path'] && $it['path']['note']!=='')$it['note']=$it['path']['note'];
+            elseif(isset($it['cancel']) && $it['path'] && $it['path']['note']!=='' && $it['path']['note']!==$it['note'])$it['note'].=' '.$it['path']['note'];   // a leave's note and the decider's reason (3.31.158)
         }
         unset($it);
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display only
@@ -310,8 +326,12 @@ trait EWS_My_Approvals_Trait {
         elseif(isset($_GET['req_done']))$notice=['type'=>'success','text'=>sanitize_key($_GET['req_done'])==='face'?__('Face reset asked. Your current face is used until it is approved.','workforce-one'):__('Withdrawn. Nobody needs to decide it any more.','workforce-one')];
         elseif(isset($_GET['req_error']))$notice=['type'=>'error','text'=>sanitize_key($_GET['req_error'])==='face'?__('The face reset could not be asked. Register your face first on the Sign In page.','workforce-one'):(sanitize_key($_GET['req_error'])==='done'?__('It was already decided, so it can no longer be withdrawn.','workforce-one'):__('It could not be withdrawn. Try again.','workforce-one'))];
         // phpcs:enable
-        return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$this->my_approvals_clean_url('requests'),
-            'new'=>$this->my_requests_new($emp),'open_new'=>!empty($_GET['new'])]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $new=$this->my_requests_new($emp);
+        $base=$this->my_approvals_clean_url('requests');
+        $leave=$lr && $emp?['balances'=>array_values((array)($new['types']??[])),'kind'=>$kind,'page'=>$page,'more'=>$more_pages,
+            'all_url'=>$base,'leave_url'=>add_query_arg('req_kind','leave',$base),'shown'=>$this->leave_page_shown()]:null;
+        return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$kind?add_query_arg('req_kind','leave',$base):$base, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
+            'new'=>$new,'open_new'=>!empty($_GET['new']),'leave'=>$leave]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
     /**
@@ -361,11 +381,12 @@ trait EWS_My_Approvals_Trait {
         // Back to the page the person came from (app_view_url() would build on admin-post.php here).
         $back=wp_get_referer();
         if(!$back || strpos($back,'admin-post.php')!==false)$back=$this->app_home_url();
-        $back=add_query_arg('ews_view','requests',remove_query_arg(['req_done','req_error','req_state'],$back));
+        $back=add_query_arg('ews_view','requests',remove_query_arg(['req_done','req_error','req_state','leave_cancel_error','leave_cancel_sent'],$back));
         $emp=$this->current_employee();
         if(!$this->my_requests_allowed() || !$emp){wp_safe_redirect(add_query_arg('req_error','access',$back));exit;}
         switch($kind){
             case 'leave': $r=$this->leave_withdraw($id,(int)$emp->id);break;
+            case 'leave_cancel': $r=$this->my_requests_leave_on()?$this->leave_cancel_withdraw($id,(int)$emp->id):'access';break;   // 3.31.158
             case 'overtime': $r=$this->overtime_withdraw($id,(int)$emp->id);break;
             case 'early': $r=$this->early_leave_withdraw($id,(int)$emp->id);break;
             case 'correction': $r=$this->corrections_enabled()?$this->cx_withdraw($id,(int)$emp->id):'access';break;
