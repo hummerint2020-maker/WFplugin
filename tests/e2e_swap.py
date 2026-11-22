@@ -578,8 +578,8 @@ out = php("""$t=$p.'ews_schedule_swaps'; $wpdb->query("ALTER TABLE {$t} DROP COL
     $cols=$wpdb->get_col("SHOW COLUMNS FROM {$t}"); $r=$wpdb->get_row("SELECT status,responded_by,decided_by FROM {$t} WHERE id=".$old,ARRAY_A);
     echo wp_json_encode(['cols'=>array_values(array_intersect(['decided_by','decided_at'],$cols)),'version'=>get_option('ews_schema_version'),'failed'=>get_option('ews_schema_failed'),'row'=>$r]);""" % (e1, e2)).splitlines()[-1]
 up = __import__('json').loads(out)
-check('upgrade: the two columns are added, the schema is 3.31.156, an old row is unchanged',
-      up['cols'] == ['decided_by', 'decided_at'] and up['version'] == '3.31.156' and not up['failed'] and up['row'] == {'status': 'Accepted', 'responded_by': '7', 'decided_by': None}, up)
+check('upgrade: the two columns are added, the schema is 3.31.156 or later, an old row is unchanged',
+      up['cols'] == ['decided_by', 'decided_at'] and tuple(int(x) for x in str(up['version']).split('.')) >= (3, 31, 156) and not up['failed'] and up['row'] == {'status': 'Accepted', 'responded_by': '7', 'decided_by': None}, up)
 
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

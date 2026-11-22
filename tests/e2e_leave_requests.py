@@ -251,7 +251,9 @@ up = php("""$t=$wpdb->prefix.'ews_leave_requests'; $wpdb->query("ALTER TABLE $t 
     $o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'maybe_upgrade_schema'); $m->setAccessible(true); $m->invoke($o);
     $cols=$wpdb->get_col("SHOW COLUMNS FROM $t",0);
     echo wp_json_encode([in_array('cancel_from',$cols,true),get_option('ews_schema_version'),$before===$wpdb->get_var("SELECT COUNT(*) FROM $t WHERE status='Approved'")]);""").splitlines()[-1]
-check('upgrade: the cancel_from column is added, the schema is 3.31.158, the leaves unchanged', json.loads(up) == [True, '3.31.158', True], up)
+upv = json.loads(up)
+check('upgrade: the cancel_from column is added, the schema is 3.31.158 or later, the leaves unchanged',
+      upv[0] is True and upv[2] is True and tuple(int(x) for x in str(upv[1]).split('.')) >= (3, 31, 158), up)
 
 # Asked while leave approvals were off, then approvals turned on: it stays with the administrators.
 O = leave(d(25), d(25), cancel='Pending')
