@@ -85,10 +85,12 @@ strip = strip.group(0) if strip else ''
 check('on: the balances strip lists every leave type', 'Annual Leave' in strip and 'Casual Leave' in strip, strip[:400])
 check('...Annual Leave: 21 - 3 used = 18 of 21 days', re.search(r'Annual Leave</span><b>18</b><small>of 21 days', strip) is not None, strip[:600])
 check('...a type without deduction says so', re.search(r'Casual Leave</span><b>—</b><small>No balance deduction', strip) is not None)
-check('the cancel button only on the approved leave that has not started', 'Request cancellation' in item(pg, A)
-      and all('Request cancellation' not in item(pg, x) for x in (B, C, D, P)) and pg.count('Request cancellation') == 1)
+ALL = 'name="lr_mode" value="all"'
+check('"Change the leave" with "cancel all of it" only on the approved leave that has not started', ALL in item(pg, A) and 'Change the leave' in item(pg, A)
+      and all(ALL not in item(pg, x) for x in (B, C, D, P)) and pg.count(ALL) == 1)
+check('...and the day back at work, from the day after it starts, up to its last', 'name="back_on" value="%s" min="%s" max="%s"' % (d(11), d(11), d(12)) in item(pg, A))
 check('...it posts back to My requests', 'name="ews_return" value="requests"' in item(pg, A))
-check('a started leave with days left offers "I\'m back early" instead', 'name="back_early" value="1"' in item(pg, B) and 'Request cancellation' not in item(pg, B))
+check('a started leave offers the day back at work only (today or later), not "all of it"', 'name="back_on" value="%s" min="%s"' % (d(0), d(0)) in item(pg, B) and ALL not in item(pg, B))
 check('a refused cancellation says it cannot be asked again', 'Cancelling it was refused, so it cannot be asked again.' in item(pg, C))
 check('a cancelled leave says it was at the employee\'s request, and the days came back', 'Cancelled at your request' in item(pg, D) and '2 days went back to your balance.' in item(pg, D))
 check('a waiting leave can still be withdrawn', 'value="ews_request_withdraw"' in item(pg, P))
@@ -193,31 +195,63 @@ check('...no cancel button any more, and it says why', 'value="ews_leave_cancel"
 st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nonce, request_id=W, ews_return='requests')
 check('...asking again: "closed" (a leave has one cancellation)', qs.get('leave_cancel_error') == 'closed', qs)
 
-# "I'm back early": a started leave's days from tomorrow on, the same approval as a cancellation.
+# "Change the leave", the day back at work (owner): from that day on, the same approval as a cancellation; honoured even when approved later.
 BK = with_days(-1, 3, cancel='Not Requested')
+sub_ok = php("""$o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'ensure_substitutes_schema'); $m->setAccessible(true); $m->invoke($o);
+    $wpdb->insert($p.'ews_approval_substitutes',['manager_employee_id'=>%d,'substitute_employee_id'=>%d,'starts_at'=>'%s 00:00:00','ends_at'=>'%s 00:00:00','status'=>'active','source'=>'leave','reason'=>'','leave_request_id'=>%d,'decided'=>0,'created_by'=>1,'created_at'=>current_time('mysql')]);
+    echo (int)$wpdb->insert_id;""" % (E, E + 1, d(-1), d(4), BK)).splitlines()[-1]
 it = item(page(), BK)
-check('"I\'m back early" on a started leave with days left (no cancel button)', 'name="back_early" value="1"' in it and 'Request cancellation' not in it, it[-500:])
-check('...it says which days and how many', '(3 days)' in it)
+check('the day back at work on a started leave', 'name="back_on"' in it and ALL not in it, it[-500:])
 nb = re.search(r'name="_wpnonce" value="([^"]+)"', it).group(1)
-st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=BK, ews_return='requests', back_early='1')
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=BK, ews_return='requests', back_on=d(1))
 row = q("SELECT status,cancellation_status,cancel_from FROM {p}ews_leave_requests WHERE id=%d" % BK)[0]
-check('...asked: the cancellation waits, from tomorrow', qs.get('leave_cancel_sent') == '1' and row == {'status': 'Approved', 'cancellation_status': 'Pending', 'cancel_from': d(1)}, (qs, row))
-check('...My requests says from when, and it can be withdrawn', 'Back early: the days from' in item(page(), BK) and 'name="kind" value="leave_cancel"' in item(page(), BK))
+check('...asked: the change waits, from that day', qs.get('leave_cancel_sent') == '1' and row == {'status': 'Approved', 'cancellation_status': 'Pending', 'cancel_from': d(1)}, (qs, row))
+check('...My requests says from when, and it can be withdrawn', 'Back at work on' in item(page(), BK) and 'name="kind" value="leave_cancel"' in item(page(), BK))
 card = adm.req('/app/?ews_view=approvals')[1]
-check('...the approver sees from when and how many days', 'Back early: cancel from' in card and '3 days' in card)
+check('...the approver sees the day and how many days come back', 'Back at work on' in card and '3 days back' in card)
 php("$wpdb->update($p.'ews_leave_balances',['used'=>10],['id'=>%d]);" % ids['bal'])
 decide(BK)
 row = q("SELECT status,cancellation_status,end_date,requested_days FROM {p}ews_leave_requests WHERE id=%d" % BK)[0]
 sched = {r['work_date']: r['status'] for r in q("SELECT work_date,status FROM {p}ews_schedule WHERE employee_id=%d AND work_date BETWEEN '%s' AND '%s'" % (E, d(-1), d(3)))}
-check('...approved today: the leave ends today, the 3 days after go back', row['status'] == 'Approved' and row['cancellation_status'] == 'Approved' and row['end_date'] == d(0)
+check('...approved: the leave ends the day before, the 3 days from then go back', row['status'] == 'Approved' and row['cancellation_status'] == 'Approved' and row['end_date'] == d(0)
       and float(row['requested_days']) == 2.0 and float(q("SELECT used FROM {p}ews_leave_balances WHERE id=%d" % ids['bal'])[0]['used']) == 7.0, row)
-check('...today and yesterday stay leave, tomorrow on as before', sched.get(d(-1)) == 'Vacation' and sched.get(d(0)) == 'Vacation' and all(d(o) not in sched for o in (1, 2, 3)), sched)
-LE = with_days(-2, 0, cancel='Not Requested')
-check('a leave ending today: no "back early"', 'name="back_early"' not in item(page(), LE))
-st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=LE, ews_return='requests', back_early='1')
-check('...asked anyway: "ends today"', qs.get('leave_cancel_error') == 'ending', qs)
-st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=W, ews_return='requests', back_early='1')
-check('...on a leave already cancelled once (withdrawn): "closed"', qs.get('leave_cancel_error') == 'closed', qs)
+check('...yesterday and today stay leave, the day back on as before', sched.get(d(-1)) == 'Vacation' and sched.get(d(0)) == 'Vacation' and all(d(o) not in sched for o in (1, 2, 3)), sched)
+if sub_ok and sub_ok != '0':
+    check('...a manager\'s substitute ends when the leave now ends', q("SELECT ends_at FROM {p}ews_approval_substitutes WHERE id=%s" % sub_ok)[0]['ends_at'] == d(1) + ' 00:00:00')
+    php("$wpdb->delete($p.'ews_approval_substitutes',['id'=>%s]);" % sub_ok)
+ms = [x['message'] for x in q("SELECT message FROM {p}ews_notifications WHERE user_id=%d AND title='Leave Cancelled' ORDER BY id DESC LIMIT 1" % ids['emp_uid'])]
+check('...the employee is told it now ends earlier (not "cancelled")', ms and 'now ends on %s' % d(0) in ms[0], ms)
+
+# Before it starts: shortened, with "back on" a day inside it.
+SH = with_days(30, 34, cancel='Not Requested')
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=SH, ews_return='requests', back_on=d(32))
+decide(SH)
+row = q("SELECT status,cancellation_status,end_date,requested_days FROM {p}ews_leave_requests WHERE id=%d" % SH)[0]
+check('shortened before it starts: back on its third day, it now ends the day before', row == {'status': 'Approved', 'cancellation_status': 'Approved', 'end_date': d(31), 'requested_days': '2.00'}, row)
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=leave(d(50), d(52), days=3), ews_return='requests', back_on=d(50))
+check('a day back on its first day is refused ("day": cancel all of it instead)', qs.get('leave_cancel_error') == 'day', qs)
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=leave(d(55), d(57), days=3), ews_return='requests', back_on=d(58))
+check('...and a day after its end', qs.get('leave_cancel_error') == 'day', qs)
+st, qs, _ = emp.post('ews_leave_cancel', _wpnonce=nb, request_id=W, ews_return='requests', back_on=d(16))
+check('a leave whose cancellation was withdrawn cannot be changed ("closed")', qs.get('leave_cancel_error') == 'closed', qs)
+check('a one-day leave of today: nothing to change', 'Change the leave' not in item(page(), with_days(0, 0, cancel='Not Requested')))
+
+# The switch turned off while a change waits: the day asked is still the first day cancelled (review 2).
+SW = with_days(-1, 2, cancel='Not Requested')
+emp.post('ews_leave_cancel', _wpnonce=nb, request_id=SW, ews_return='requests', back_on=d(1))
+php("update_option('ews_feature_my_requests_leave',0,false);")
+decide(SW)
+row = q("SELECT status,cancellation_status,end_date FROM {p}ews_leave_requests WHERE id=%d" % SW)[0]
+check('switched off meanwhile: still only the days from the day back at work', row == {'status': 'Approved', 'cancellation_status': 'Approved', 'end_date': d(0)}, row)
+php("update_option('ews_feature_my_requests_leave',1,false);")
+
+# The upgrade: an install from before 3.31.158 gets the column, old rows unchanged.
+up = php("""$t=$wpdb->prefix.'ews_leave_requests'; $wpdb->query("ALTER TABLE $t DROP COLUMN cancel_from"); update_option('ews_schema_version','3.31.157');
+    $before=$wpdb->get_var("SELECT COUNT(*) FROM $t WHERE status='Approved'");
+    $o=new EWS_Manager_V31_1(); $m=new ReflectionMethod($o,'maybe_upgrade_schema'); $m->setAccessible(true); $m->invoke($o);
+    $cols=$wpdb->get_col("SHOW COLUMNS FROM $t",0);
+    echo wp_json_encode([in_array('cancel_from',$cols,true),get_option('ews_schema_version'),$before===$wpdb->get_var("SELECT COUNT(*) FROM $t WHERE status='Approved'")]);""").splitlines()[-1]
+check('upgrade: the cancel_from column is added, the schema is 3.31.158, the leaves unchanged', json.loads(up) == [True, '3.31.158', True], up)
 
 # Asked while leave approvals were off, then approvals turned on: it stays with the administrators.
 O = leave(d(25), d(25), cancel='Pending')

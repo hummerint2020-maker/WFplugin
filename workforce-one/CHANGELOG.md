@@ -16,8 +16,12 @@ Owner's request (2026-11-21): "the Leave page has no use any more". **Two new sw
   - a cancellation approved after the leave started cancels the days from that day on only (the leave then ends the day
     before; the days taken stay leave and charged); approved after the leave ended, nothing changes (closed as Ended);
   - the employee can **withdraw a cancellation** still waiting (the leave stays; a leave has one cancellation);
-  - **"I'm back early"** on a leave that has started and has days left: the days from tomorrow on, with the same approval as
-    a cancellation (a new column, `ews_leave_requests.cancel_from`, schema 3.31.158);
+  - **"Change the leave"** (one button, owner 2026-11-21): before it starts, cancel all of it or pick the day back at work
+    (it is shortened); once started, the day back at work, today or later. The days from that day on go back to the balance
+    and the schedule, with the same approval as a cancellation, from that day even if approved later; a line says what the
+    leave becomes and how many days come back (a new column, `ews_leave_requests.cancel_from`, schema 3.31.158);
+  - a manager's substitute ends when a shortened leave now ends; the employee is told it was shortened (or, decided after
+    its end, that nothing changed);
   - a leave or cancellation asked while leave approvals were off stays with the administrators after they are turned on
     (until now it could not be decided).
 - **Leave page in the app** (on by default = as today): can be turned off only while Leave in My requests is on. Off: the menu item

@@ -39,17 +39,25 @@ final class MyRequestsLeaveTest extends TestCase
         $this->assertTrue(M::itemState('Approved', null, '2026-11-22', '2026-11-22', self::T)['cancellable'], 'tomorrow: still');
     }
 
-    public function testBackEarly(): void
+    public function testChange(): void
     {
         $r = \WorkforceOne\Leave\CancellationRules::class;
-        $this->assertNull($r::checkBackEarly('Approved', null, '2026-11-20', '2026-11-24', self::T), 'started, days after today: may');
-        $this->assertNull($r::checkBackEarly('Approved', 'Not Requested', self::T, '2026-11-22', self::T), 'starting today with tomorrow left: may');
-        $this->assertSame($r::NOT_STARTED, $r::checkBackEarly('Approved', null, '2026-11-22', '2026-11-24', self::T), 'not started: cancel all of it instead');
-        $this->assertSame($r::ENDING, $r::checkBackEarly('Approved', null, '2026-11-19', self::T, self::T), 'ends today: nothing left');
-        $this->assertSame($r::ALREADY_PENDING, $r::checkBackEarly('Approved', 'Pending', '2026-11-20', '2026-11-24', self::T));
-        $this->assertSame($r::CLOSED, $r::checkBackEarly('Approved', 'Withdrawn', '2026-11-20', '2026-11-24', self::T), 'one cancellation per leave');
-        $this->assertSame($r::ALREADY_REJECTED, $r::checkBackEarly('Approved', 'Rejected', '2026-11-20', '2026-11-24', self::T));
-        $this->assertSame($r::NOT_APPROVED, $r::checkBackEarly('Pending', null, '2026-11-20', '2026-11-24', self::T));
+        $this->assertNull($r::checkChange('Approved', null, '2026-11-20', '2026-11-24', self::T, self::T), 'started: back today');
+        $this->assertNull($r::checkChange('Approved', null, '2026-11-20', '2026-11-24', self::T, '2026-11-24'), '...or on its last day');
+        $this->assertSame($r::DAY, $r::checkChange('Approved', null, '2026-11-20', '2026-11-24', self::T, '2026-11-20'), 'not before or on its first day');
+        $this->assertSame($r::DAY, $r::checkChange('Approved', null, '2026-11-18', '2026-11-24', self::T, '2026-11-20'), 'not a past day');
+        $this->assertSame($r::DAY, $r::checkChange('Approved', null, '2026-11-20', '2026-11-24', self::T, '2026-11-25'), 'not after its end');
+        $this->assertNull($r::checkChange('Approved', null, '2026-12-06', '2026-12-10', self::T, '2026-12-08'), 'not started: shortened');
+        $this->assertNull($r::checkChange('Approved', null, '2026-12-06', '2026-12-10', self::T, null), 'not started: all of it');
+        $this->assertSame($r::STARTED, $r::checkChange('Approved', null, '2026-11-20', '2026-11-24', self::T, null), 'started: not all of it');
+        $this->assertSame($r::ALREADY_PENDING, $r::checkChange('Approved', 'Pending', '2026-11-20', '2026-11-24', self::T, self::T));
+        $this->assertSame($r::CLOSED, $r::checkChange('Approved', 'Withdrawn', '2026-11-20', '2026-11-24', self::T, self::T), 'one change per leave');
+        $this->assertSame($r::ALREADY_REJECTED, $r::checkChange('Approved', 'Rejected', '2026-11-20', '2026-11-24', self::T, self::T));
+        $this->assertSame($r::NOT_APPROVED, $r::checkChange('Pending', null, '2026-11-20', '2026-11-24', self::T, self::T));
+        $this->assertSame(self::T, $r::firstBackDay('2026-11-20', '2026-11-24', self::T), 'started: today');
+        $this->assertSame('2026-12-07', $r::firstBackDay('2026-12-06', '2026-12-10', self::T), 'not started: the day after its first');
+        $this->assertNull($r::firstBackDay(self::T, self::T, self::T), 'a one-day leave of today: none');
+        $this->assertNull($r::firstBackDay('2026-11-10', '2026-11-12', self::T), 'ended: none');
     }
 
     public function testPageTarget(): void

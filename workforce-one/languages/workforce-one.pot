@@ -12839,3 +12839,84 @@ msgstr ""
 #: includes/trait-leave.php
 msgid "Yes, I'm back early"
 msgstr ""
+
+#: includes/trait-leave.php
+msgid "Pick the day you are back at work: after the first day of the leave, from today on, up to its last day."
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "Back at work on %s: the days from then on are cancelled once it is approved; until then the leave stands."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Back at work on"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Cancelled from"
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "%s day back"
+msgid_plural "%s days back"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-leave.php
+msgid "Change the leave"
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "The whole leave is cancelled; %s days go back to your balance."
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "The leave becomes %1$s – %2$s (%3$s days). %4$s days go back to your balance."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Pick the day you are back at work."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Cancel all of it"
+msgstr ""
+
+#: includes/trait-leave.php
+#, php-format
+msgid "The %s day goes back to your balance."
+msgid_plural "The %s days go back to your balance."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-leave.php
+msgid "I'll be back at work on"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "I'm back at work on"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "After its first day, up to its last."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Today or later, up to the last day of the leave."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "The day you are back at work"
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Your manager decides; until then the leave stands as it is. This is the one change this leave can have."
+msgstr ""
+
+#: includes/trait-leave.php
+msgid "Send the change"
+msgstr ""

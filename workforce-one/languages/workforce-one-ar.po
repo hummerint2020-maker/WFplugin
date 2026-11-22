@@ -9366,3 +9366,74 @@ msgstr "الأيام لحد النهارده بتفضل إجازة. وده طل�
 
 msgid "Yes, I'm back early"
 msgstr "أيوه، رجعت بدري"
+
+msgid "Pick the day you are back at work: after the first day of the leave, from today on, up to its last day."
+msgstr "اختار اليوم اللي هترجع فيه الشغل: بعد أول يوم في الإجازة، من النهارده أو بعده، لحد آخر يوم فيها."
+
+#, php-format
+msgid "Back at work on %s: the days from then on are cancelled once it is approved; until then the leave stands."
+msgstr "راجع الشغل يوم %s: الأيام من اليوم ده ورايح هتتلغي لما الطلب يتوافق عليه، ولحد ده الإجازة قايمة."
+
+msgid "Back at work on"
+msgstr "راجع الشغل يوم"
+
+msgid "Cancelled from"
+msgstr "اتلغت من"
+
+#, php-format
+msgid "%s day back"
+msgid_plural "%s days back"
+msgstr[0] "%s يوم راجع"
+msgstr[1] "%s يوم راجع"
+msgstr[2] "%s يوم راجعين"
+msgstr[3] "%s أيام راجعين"
+msgstr[4] "%s يوم راجعين"
+msgstr[5] "%s يوم راجعين"
+
+msgid "Change the leave"
+msgstr "عدّل الإجازة"
+
+#, php-format
+msgid "The whole leave is cancelled; %s days go back to your balance."
+msgstr "الإجازة هتتلغي كلها، و%s يوم يرجعوا لرصيدك."
+
+#, php-format
+msgid "The leave becomes %1$s – %2$s (%3$s days). %4$s days go back to your balance."
+msgstr "الإجازة هتبقى %1$s – %2$s (%3$s يوم). %4$s يوم يرجعوا لرصيدك."
+
+msgid "Pick the day you are back at work."
+msgstr "اختار اليوم اللي هترجع فيه الشغل."
+
+msgid "Cancel all of it"
+msgstr "ألغي الإجازة كلها"
+
+#, php-format
+msgid "The %s day goes back to your balance."
+msgid_plural "The %s days go back to your balance."
+msgstr[0] "الـ %s يوم يرجعوا لرصيدك."
+msgstr[1] "الـ %s يوم يرجع لرصيدك."
+msgstr[2] "الـ %s يوم يرجعوا لرصيدك."
+msgstr[3] "الـ %s أيام يرجعوا لرصيدك."
+msgstr[4] "الـ %s يوم يرجعوا لرصيدك."
+msgstr[5] "الـ %s يوم يرجعوا لرصيدك."
+
+msgid "I'll be back at work on"
+msgstr "هرجع الشغل يوم"
+
+msgid "I'm back at work on"
+msgstr "رجعت الشغل يوم"
+
+msgid "After its first day, up to its last."
+msgstr "بعد أول يوم في الإجازة، لحد آخرها."
+
+msgid "Today or later, up to the last day of the leave."
+msgstr "النهارده أو بعده، لحد آخر يوم في الإجازة."
+
+msgid "The day you are back at work"
+msgstr "اليوم اللي هترجع فيه الشغل"
+
+msgid "Your manager decides; until then the leave stands as it is. This is the one change this leave can have."
+msgstr "مديرك هو اللي بيقرر، ولحد ما يوافق الإجازة زي ما هي. ده التعديل الوحيد اللي الإجازة دي ينفع يكون ليها."
+
+msgid "Send the change"
+msgstr "ابعت التعديل"

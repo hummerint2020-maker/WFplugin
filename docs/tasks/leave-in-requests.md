@@ -116,3 +116,22 @@ These fixes act only while Leave in My requests is on, so nothing changes at the
   administrators (respond handlers and leave_legacy_approvals).
 - The generic "Cancel Leave Request" confirm is skipped for the back-early form (it has its own confirmation step).
 - Differs from the mockup: the field notes are text only.
+
+## "Change the leave" (owner, 2026-11-21: "think about it more, it can be better")
+Owner chose: the employee picks the day back at work, and can shorten a leave before it starts; one button; the same release.
+Mockups: docs/mockups/leave-in-requests/change*.html (approved). A day back at work asked is honoured even when approved later
+(owner). Replaces "I'm back early" (from tomorrow only).
+- CancellationRules::checkChange() (DAY: after the first day, today or later, up to the last) and firstBackDay().
+- leave_cancel_request(): back_on (lr_mode=all = the whole leave); leave_cancel_from_day(): the day asked, else today once started.
+- requests.php: one "Change the leave" form; my-requests.js draws what the leave becomes; the generic confirm skips it.
+
+## Review 2 (read-only, on Opus): fixed
+1. CONFIRMED: a manager's substitute kept the old end: SubstituteService::followLeaveEnd() (store endLeaveEarlier()).
+2. PLAUSIBLE: a change waiting while the switch is turned off became a whole cancellation: the day asked is kept.
+3. CONFIRMED: "Balance after cancelling" on a cancellation decided after the start: the card uses the same first day.
+4. CONFIRMED: the employee was told "cancelled" when it was shortened or ended: the message says what happened.
+5. PLAUSIBLE: one query per pending row for orphans: one approval_find_requests() read.
+6. PLAUSIBLE: a leave without snapshots gave nothing back: its working days are counted instead.
+7. CONFIRMED: a withdraw decided at the same moment said "try again": it says it was decided.
+8. PLAUSIBLE: the page tie-break compared keys as strings: by kind then numeric id.
+Tests added: the upgrade of the column, the substitute, the switch-off case, the change form in a browser.
