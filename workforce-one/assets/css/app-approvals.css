@@ -171,3 +171,18 @@
 .wfo-apv .wfo-omd-for{display:inline-block;margin-inline-end:6px;padding:1px 8px;border-radius:999px;background:#13235B;color:#fff;font-size:11px;font-weight:700;vertical-align:1px}
 .wfo-lr-back{color:var(--wfo-pri,#5B3FD9)}
 .wfo-lr-cancel .wfo-lr-note{font-size:12px;color:#6A7090}
+/* "Change the leave" (3.31.158): all of it, or the day back at work, and what the leave becomes */
+.wfo-app .wfo-apv-withdraw form.wfo-lr-change{flex-direction:column;flex-wrap:nowrap;align-items:stretch}
+.wfo-app .wfo-apv-withdraw form.wfo-lr-change p{flex-basis:auto}
+.wfo-app .wfo-apv-withdraw form.wfo-lr-change button{align-self:flex-start}
+.wfo-lr-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid #E4E6F0;border-radius:14px;background:#fff;cursor:pointer}
+.wfo-lr-opt.is-on{border-color:var(--wfo-pri,#5B3FD9);background:#F7F5FF}
+.wfo-lr-opt input[type=radio]{margin-top:3px;accent-color:var(--wfo-pri,#5B3FD9)}
+.wfo-lr-opt>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wfo-app .wfo-lr-opt>span>*{flex:0 0 auto}
+.wfo-lr-opt b{font-size:14px;color:#141A33}.wfo-lr-opt small{font-size:12px;color:#6A7090}
+.wfo-lr-date{display:flex;align-items:center;gap:8px;margin-top:6px}
+.wfo-lr-date input{height:40px;max-width:100%;padding:0 10px;border:1.5px solid #E4E6F0;border-radius:10px;font:inherit;font-size:14px}
+.wfo-lr-date input:disabled{opacity:.5}
+.wfo-lr-sum{display:flex;align-items:center;gap:6px;margin:0;padding:8px 10px;border-radius:10px;background:#E6F7EF;color:#0F6B43;font-size:12.5px}
+.wfo-lr-sum:empty{display:none}

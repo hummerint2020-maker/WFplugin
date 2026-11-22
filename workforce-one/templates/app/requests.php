@@ -75,22 +75,26 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                     <button type="submit" class="wfo-apv-btn is-bad"><?php esc_html_e('Yes, withdraw it', 'workforce-one'); ?></button>
                 </form>
             </details>
-            <?php elseif (!empty($it['cancel'])): /* Leave in My requests (3.31.158): an approved leave not started; the same handler and rules as the Leave page */ ?>
-            <form class="wfo-lr-cancel" method="post" action="<?php echo esc_url($post_url); ?>">
-                <?php wp_nonce_field('ews_leave_cancel'); ?>
-                <input type="hidden" name="action" value="ews_leave_cancel"><input type="hidden" name="request_id" value="<?php echo (int) $it['id']; ?>"><input type="hidden" name="ews_return" value="requests">
-                <button type="submit" class="wfo-apv-btn is-bad is-sm"><?php esc_html_e('Request cancellation', 'workforce-one'); ?></button>
-                <small><?php esc_html_e('Once only, until the day before it starts. Your manager decides; the days come back to your balance once approved.', 'workforce-one'); ?></small>
-            </form>
-            <?php elseif (!empty($it['back'])): /* "I'm back early" (3.31.158): the days from tomorrow on, the same approval as a cancellation */ ?>
+            <?php elseif (!empty($it['change'])): $ch = $it['change']; /* "Change the leave" (3.31.158, owner): all of it before it starts, or the day back at work */ ?>
             <details class="wfo-apv-withdraw wfo-lr-cancel">
-                <summary class="wfo-apv-btn is-sm wfo-lr-back"><?php esc_html_e("I'm back early", 'workforce-one'); ?></summary>
-                <form method="post" action="<?php echo esc_url($post_url); ?>">
+                <summary class="wfo-apv-btn is-sm wfo-lr-back"><?php esc_html_e('Change the leave', 'workforce-one'); ?></summary>
+                <form class="wfo-lr-change" method="post" action="<?php echo esc_url($post_url); ?>" data-lr-change data-start="<?php echo esc_attr($ch['start']); ?>" data-end="<?php echo esc_attr($ch['max']); ?>" data-days="<?php echo esc_attr((string) $ch['days']); ?>"
+                    data-wd="<?php echo esc_attr(wp_json_encode(array_values((array) ($new['working_days'] ?? [])))); ?>"
+                    data-t-all="<?php /* translators: %s: number of days */ esc_attr_e('The whole leave is cancelled; %s days go back to your balance.', 'workforce-one'); ?>"
+                    data-t-back="<?php /* translators: 1: first day, 2: last day, 3: days left, 4: days back */ esc_attr_e('The leave becomes %1$s – %2$s (%3$s days). %4$s days go back to your balance.', 'workforce-one'); ?>"
+                    data-t-pick="<?php esc_attr_e('Pick the day you are back at work.', 'workforce-one'); ?>">
                     <?php wp_nonce_field('ews_leave_cancel'); ?>
-                    <input type="hidden" name="action" value="ews_leave_cancel"><input type="hidden" name="request_id" value="<?php echo (int) $it['id']; ?>"><input type="hidden" name="ews_return" value="requests"><input type="hidden" name="back_early" value="1">
-                    <p><?php echo esc_html(sprintf(/* translators: 1: first day, 2: last day, 3: number of days */ _n('The days from tomorrow, %1$s, to %2$s are cancelled (%3$s day). Your manager decides; once approved they go back to your balance and the schedule is as before.', 'The days from tomorrow, %1$s, to %2$s are cancelled (%3$s days). Your manager decides; once approved they go back to your balance and the schedule is as before.', (int) $it['back']['days'], 'workforce-one'), $it['back']['from'], $it['back']['to'], $num($it['back']['days']))); ?></p>
-                    <p class="wfo-lr-note"><?php esc_html_e('The days up to today stay leave. This is the one cancellation this leave can have.', 'workforce-one'); ?></p>
-                    <button type="submit" class="wfo-apv-btn is-ok"><?php esc_html_e("Yes, I'm back early", 'workforce-one'); ?></button>
+                    <input type="hidden" name="action" value="ews_leave_cancel"><input type="hidden" name="request_id" value="<?php echo (int) $it['id']; ?>"><input type="hidden" name="ews_return" value="requests">
+                    <?php if ($ch['whole']): ?>
+                    <label class="wfo-lr-opt"><input type="radio" name="lr_mode" value="all"<?php echo $ch['min'] === '' ? ' checked' : ''; ?>><span><b><?php esc_html_e('Cancel all of it', 'workforce-one'); ?></b><small><?php echo esc_html(sprintf(/* translators: %s: number of days */ _n('The %s day goes back to your balance.', 'The %s days go back to your balance.', (int) ceil($ch['days']), 'workforce-one'), $num($ch['days']))); ?></small></span></label>
+                    <?php endif; ?>
+                    <?php if ($ch['min'] !== ''): ?>
+                    <label class="wfo-lr-opt"><input type="radio" name="lr_mode" value="back" checked><span><b><?php echo $ch['whole'] ? esc_html__("I'll be back at work on", 'workforce-one') : esc_html__("I'm back at work on", 'workforce-one'); ?></b><small><?php echo $ch['whole'] ? esc_html__('After its first day, up to its last.', 'workforce-one') : esc_html__('Today or later, up to the last day of the leave.', 'workforce-one'); ?></small>
+                        <span class="wfo-lr-date"><input type="date" name="back_on" value="<?php echo esc_attr($ch['min']); ?>" min="<?php echo esc_attr($ch['min']); ?>" max="<?php echo esc_attr($ch['max']); ?>" required aria-label="<?php esc_attr_e('The day you are back at work', 'workforce-one'); ?>"></span></span></label>
+                    <?php endif; ?>
+                    <p class="wfo-lr-sum" data-lr-sum aria-live="polite"></p>
+                    <p class="wfo-lr-note"><?php esc_html_e('Your manager decides; until then the leave stands as it is. This is the one change this leave can have.', 'workforce-one'); ?></p>
+                    <button type="submit" class="wfo-apv-btn is-ok"><?php esc_html_e('Send the change', 'workforce-one'); ?></button>
                 </form>
             </details>
             <?php elseif (!empty($it['link']) && $it['state'] === 'waiting'): ?>

@@ -37,6 +37,15 @@ final class MemorySubstituteStore implements SubstituteStore
         }));
     }
 
+    public function endLeaveEarlier(int $leaveRequestId, string $endsAt)
+    {
+        $n = 0;
+        foreach ($this->rows as $r) {
+            if ((int) $r->leave_request_id === $leaveRequestId && in_array($r->status, ['pending', 'scheduled', 'active'], true) && (string) $r->ends_at > $endsAt) { $r->ends_at = $endsAt; $n++; }
+        }
+        return $n;
+    }
+
     public function current(): array
     {
         $out = array_values(array_filter($this->rows, function ($r) {

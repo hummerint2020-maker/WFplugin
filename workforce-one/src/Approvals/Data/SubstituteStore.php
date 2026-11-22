@@ -12,6 +12,12 @@ interface SubstituteStore
     /** Substitutes tied to a leave request that are not over. @return array<int,object> */
     public function linkedToLeave(): array;
 
+    /**
+     * A leave that now ends earlier (3.31.158): its substitutes not over end at $endsAt instead, when that is earlier.
+     * @return int|false rows changed, false on a database error
+     */
+    public function endLeaveEarlier(int $leaveRequestId, string $endsAt);
+
     /** Scheduled and active substitutes, earliest start first. @return array<int,object> */
     public function current(): array;
 

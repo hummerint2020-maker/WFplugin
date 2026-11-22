@@ -91,6 +91,16 @@ final class SubstituteService implements SubstituteRouting
      * active substitute go to the substitute.
      * @return array{started:int,ended:int,cancelled:int,moved:int}
      */
+    /**
+     * A leave shortened (3.31.158, "Change the leave"): its substitutes end when the leave now ends, the same period as
+     * Substitutes::leavePeriod() gives. The next sync ends an active one at that time. @return bool false on a database error
+     */
+    public function followLeaveEnd(int $leaveRequestId, string $startDate, string $endDate): bool
+    {
+        [, $ends] = Substitutes::leavePeriod($startDate, $endDate);
+        return $this->substitutes->endLeaveEarlier($leaveRequestId, $ends) !== false;
+    }
+
     public function sync(?string $now): array
     {
         $done = ['started' => 0, 'ended' => 0, 'cancelled' => 0, 'moved' => 0];

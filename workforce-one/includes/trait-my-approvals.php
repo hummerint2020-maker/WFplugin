@@ -298,7 +298,7 @@ trait EWS_My_Approvals_Trait {
             $per=20;$n=$per*$page+1;
             $items=array_merge($this->leave_my_requests((int)$emp->id,$n),$this->early_leave_my_requests((int)$emp->id,$n));
             // Newest first; the same order on every page (ties by key), so nothing repeats or is skipped from one page to the next.
-            usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when'])?:strcmp((string)$b['key'],(string)$a['key']);});
+            usort($items,function($a,$b){return strcmp((string)$b['when'],(string)$a['when'])?:(strcmp((string)$a['tone'],(string)$b['tone'])?:((int)$b['id']<=>(int)$a['id']));});
             $more_pages=count($items)>$per*$page;
             $items=array_slice($items,$per*($page-1),$per);
         }else{

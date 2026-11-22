@@ -67,3 +67,41 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();
+/* Leave in My requests → "Change the leave" (3.31.158, templates/app/requests.php): the day back at work or all of it,
+   and a line saying what the leave becomes and how many days go back (counted on the working days, as the server does). */
+(function () {
+    'use strict';
+    function ymd(s) { var p = String(s || '').split('-'); return p.length === 3 ? new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])) : null; }
+    function workdays(from, to, wd) {
+        var n = 0, d = ymd(from), e = ymd(to);
+        if (!d || !e) return 0;
+        for (; d <= e; d.setUTCDate(d.getUTCDate() + 1)) if (!wd.length || wd.indexOf(d.getUTCDay()) !== -1) n++;
+        return n;
+    }
+    function label(s) {
+        var d = ymd(s); if (!d) return s;
+        try { return d.toLocaleDateString(document.documentElement.lang || undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }); } catch (e) { return s; }
+    }
+    function fill(t, a) { var i = 0; return String(t).replace(/%(\d)\$s|%s/g, function (m, k) { return String(a[k ? k - 1 : i++]); }); }
+    function setup(form) {
+        var wd = []; try { wd = JSON.parse(form.getAttribute('data-wd') || '[]').map(Number); } catch (e) { wd = []; }
+        var start = form.getAttribute('data-start'), end = form.getAttribute('data-end'), total = parseFloat(form.getAttribute('data-days')) || 0;
+        var date = form.querySelector('input[name="back_on"]'), sum = form.querySelector('[data-lr-sum]');
+        function draw() {
+            var mode = form.querySelector('input[name="lr_mode"]:checked'); var all = mode ? mode.value === 'all' : !date;
+            form.querySelectorAll('.wfo-lr-opt').forEach(function (o) { var r = o.querySelector('input[type=radio]'); o.classList.toggle('is-on', !r || r.checked); });
+            if (date) date.disabled = all;
+            if (all) { sum.textContent = fill(form.getAttribute('data-t-all'), [total]); return; }
+            var v = date ? date.value : '';
+            if (!v || v <= start || v > end) { sum.textContent = form.getAttribute('data-t-pick'); return; }
+            var last = new Date(ymd(v).getTime() - 864e5).toISOString().slice(0, 10);
+            var back = Math.min(total, workdays(v, end, wd));
+            sum.textContent = fill(form.getAttribute('data-t-back'), [label(start), label(last), total - back, back]);
+        }
+        form.addEventListener('change', draw); form.addEventListener('input', draw);
+        draw();
+    }
+    function init() { document.querySelectorAll('form[data-lr-change]').forEach(setup); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
