@@ -14,10 +14,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, d, php, q, results, wp, HERE  # noqa: E402
 
 wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
-# What this suite changes is put back at the end, so the suites after it start from the same state.
-KEPT = ['ews_feature_my_approvals', 'ews_working_days', 'ews_feature_my_requests_leave', 'ews_feature_leave_page', 'ews_approval_settings']
-saved = php("""$o=[]; foreach(%s as $k){$v=get_option($k,null); $o[$k]=($v===null)?null:serialize($v);}
-    echo base64_encode(serialize(['o'=>$o,'w'=>$wpdb->get_results("SELECT id,approval_mode,active FROM {$p}ews_approval_workflows",ARRAY_A)]));""" % json.dumps(KEPT).replace('"', "'")).splitlines()[-1]
+# What this suite changes is put back at the end, so the suites after it start from the same state:
+# every plugin option (the Features form saves the other switches too) and the workflow rows.
+php("""file_put_contents(getenv('S').'/leave_requests_saved.ser',serialize(['o'=>$wpdb->get_results("SELECT option_name,option_value,autoload FROM {$wpdb->options} WHERE option_name LIKE 'ews\\\\_%' AND option_name NOT LIKE '%transient%'",ARRAY_A),
+    'w'=>$wpdb->get_results("SELECT id,approval_mode,active FROM {$p}ews_approval_workflows",ARRAY_A)]));""")
 ids = json.loads(php("""
     $eid=(int)json_decode(file_get_contents(getenv('S').'/ids.json'))->eid;
     foreach(['ews_leave_requests','ews_leave_balances','ews_early_leave_requests','ews_approval_requests','ews_notifications'] as $t) $wpdb->query("DELETE FROM {$p}$t");
@@ -293,8 +293,11 @@ features(my_requests_leave_enabled=False)
 st, lp, _ = emp.req('/app/?ews_view=vacation')
 check('Leave in My requests off: the Leave page is back, My requests as before', st == 200 and 'ews-vac-' in lp and 'wfo-lr-bals' not in page()
       and php("echo (int)get_option('ews_feature_leave_page',1);").splitlines()[-1] == '1')
-php("""$s=unserialize(base64_decode('%s'));
-    foreach($s['o'] as $k=>$v){ if($v===null) delete_option($k); else update_option($k,unserialize($v),false); }
-    foreach($s['w'] as $w) $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>$w['approval_mode'],'active'=>$w['active']],['id'=>$w['id']]);""" % saved)
+php("""$s=unserialize(file_get_contents(getenv('S').'/leave_requests_saved.ser')); $keep=[];
+    foreach($s['o'] as $o){ $keep[]=$o['option_name']; $wpdb->replace($wpdb->options,$o); }
+    foreach($wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'ews\\\\_%' AND option_name NOT LIKE '%transient%'") as $n) if(!in_array($n,$keep,true)) $wpdb->delete($wpdb->options,['option_name'=>$n]);
+    wp_cache_flush();
+    foreach(['ews_leave_requests','ews_leave_balances','ews_early_leave_requests','ews_approval_requests','ews_notifications'] as $t) $wpdb->query("DELETE FROM {$p}$t");   // nothing left waiting for anyone
+    foreach($s['w'] as $w) $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>$w['approval_mode'],'active'=>$w['active']],['id'=>$w['id']]);""")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)
