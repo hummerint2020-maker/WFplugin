@@ -2,7 +2,7 @@
 
 **Owner request (2026-11-22):** "We want every request, even the approved ones, to show in the Requests Hub, under a new tab called Reports. Think about it with me."
 
-**Status:** decisions taken, mockup waiting for the owner's approval. No design or code yet.
+**Status:** decisions taken (two rounds); the mockup matches them and is waiting for the owner's approval. Design next.
 
 ## Today
 
@@ -38,12 +38,12 @@
 - **Empty period.**
 - **Features:** the switch, off.
 
-## Open questions for the owner
+## Owner's answers (2026-11-22, second round)
 
-1. **Default period:** the current month (as in the mockup), or the last 30 days?
-2. **Which date the period filters on:** the date the request was made (as in the mockup), or the day it is about (the leave's days, the overtime's date)?
-3. **A leave cancellation:** its own row (as in the mockup, since it has its own decision), or only a status on the leave's row?
-4. **Who sees the tab:** administrators only, like the Requests Hub today?
+5. **Default period:** the current month.
+6. **The period filters on:** the date the request was made.
+7. **A leave cancellation:** its own row, with its own decision.
+8. **Who sees the tab:** administrators only, the same as the Requests Hub today.
 
 ## Known limits (to settle in the design)
 
