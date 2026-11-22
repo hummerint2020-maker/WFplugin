@@ -732,6 +732,7 @@
                 "attendance_corrections",
                 "hr_letters",
                 "approval_requests",
+                "approval_workflows",
                 "employees"
               ]
             }

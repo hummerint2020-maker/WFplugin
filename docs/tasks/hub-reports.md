@@ -407,3 +407,32 @@ Where the code differs from the design above:
 - **Export batches** (`ews_hub_export_batch`, default 2000, minimum 1) read keys after the last row of the previous batch. Face resets go in between batches in order. The e2e checks that batches of 3 give the same file.
 - **Department** goes in the export only, as the owner decided for Excel; the screen shows the employee.
 - **Not in the e2e:** a seeded 50k-row timing, and a Cairo time zone run. The page always reads 20 rows by key, and the query count does not grow with the rows.
+
+## Review (read-only, Opus, 2026-11-22)
+
+No permission, data-exposure or SQL-injection bug was found, and the off path was checked to be byte-identical. All ten findings were fixed:
+
+1. **The e2e "export refused while off" passed for the wrong reason:** its nonce came from WP-CLI. It now reuses a real export link from while the switch was on and checks the "switched off" refusal.
+2. **A face reset closed by its workflow (no level)** showed the employee as the decider. It now says "Automatically".
+3. **A face reset's rejection reason** now shows when its approval's deciding level was taken by the same person.
+4. **A withdrawn swap** now shows the requester and the time (kept in `responded_by` / `responded_at`).
+5. **The cancellation's approval request date** is now one subquery: the newest under the leave workflow. A second stored request can no longer double a row. `approval_workflows` was added to the slice's reads.
+6. **The engine's outcome** is used only when it matches the approval request's own final status, else "Automatically".
+7. **A correction HR decided at both levels at once** now shows "(HR)".
+8. **Golden** now covers `?tab=reports` with and without filters, with the switch off. Both pages are identical to main.
+9. **The e2e** fixes a precedence bug. New checks cover:
+   - a settings manager who is not an administrator, on the page and the export;
+   - a `=` cell kept as text, and Arabic text, in the CSV;
+   - the Excel cards equal to the tiles (in the screen's order);
+   - a decision on the first tab coming back to it.
+10. **Housekeeping:**
+    - The module baseline is lowered.
+    - An export is audited only once its file is made.
+    - "Cancelled by HR" is shown without an empty reason.
+
+**Not done, as noted in "As built":**
+- a query-count check;
+- a run with a missing overtime table;
+- a large timing run.
+
+The page reads 20 keyed rows whatever the size.

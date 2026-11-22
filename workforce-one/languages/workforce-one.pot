@@ -13099,3 +13099,7 @@ msgstr ""
 #: includes/trait-admin-requests.php
 msgid "A Reports tab on the Requests Hub: every request in every status, who decided it and when, with a CSV and Excel export. View only: requests are still decided on the first tab and in My approvals. Off, the Requests Hub is exactly as today."
 msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Cancelled by HR"
+msgstr ""

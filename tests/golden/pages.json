@@ -68,6 +68,14 @@
     },
     {
       "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-requests&tab=reports"
+    },
+    {
+      "user": "admin",
+      "url": "/wp-admin/admin.php?page=ews31-requests&tab=reports&type=leave&status=rejected&from=2026-01-01&who=dept:1&paged=2"
+    },
+    {
+      "user": "admin",
       "url": "/wp-admin/admin.php?page=ews31-schedule-config"
     },
     {

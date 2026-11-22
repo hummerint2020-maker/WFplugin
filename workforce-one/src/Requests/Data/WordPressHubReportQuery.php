@@ -31,9 +31,10 @@ final class WordPressHubReportQuery implements HubReportQuery
         $p = $this->db->prefix;
         return [
             'leave' => [$p . 'ews_leave_requests', 'r.requested_at', 'r.employee_id', '', '', ''],
-            'leave_cancellation' => [$p . 'ews_leave_requests', 'COALESCE(ar.created_at,r.cancelled_at,r.requested_at)', 'r.employee_id', '',
-                "r.cancellation_status IN ('Pending','Approved','Rejected','Withdrawn','Ended')",
-                "LEFT JOIN {$p}ews_approval_requests ar ON ar.entity_type='leave_cancellation' AND ar.entity_id=r.id"],
+            // The cancellation's approval request: the newest under the leave workflow (one row per cancellation, whatever is stored).
+            'leave_cancellation' => [$p . 'ews_leave_requests', "COALESCE((SELECT ar.created_at FROM {$p}ews_approval_requests ar WHERE ar.entity_type='leave_cancellation' AND ar.entity_id=r.id"
+                . " AND ar.workflow_id=(SELECT w.id FROM {$p}ews_approval_workflows w WHERE w.workflow_key='vacation') ORDER BY ar.id DESC LIMIT 1),r.cancelled_at,r.requested_at)", 'r.employee_id', '',
+                "r.cancellation_status IN ('Pending','Approved','Rejected','Withdrawn','Ended')", ''],
             'overtime' => [$p . 'ews_overtime_requests', 'r.requested_at', 'r.employee_id', '', '', ''],
             'early_leave' => [$p . 'ews_early_leave_requests', 'r.requested_at', 'r.employee_id', '', '', ''],
             'shift_swap' => [$p . 'ews_schedule_swaps', 'r.created_at', 'r.requester_employee_id', 'r.target_employee_id', '', ''],
@@ -108,8 +109,7 @@ final class WordPressHubReportQuery implements HubReportQuery
             $in = implode(',', $chunk);
             if ($type === 'leave' || $type === 'leave_cancellation') {
                 $p = $this->db->prefix;
-                $sql = "SELECT r.*,lt.name AS type_name,ar.created_at AS cancel_asked_at FROM {$p}ews_leave_requests r LEFT JOIN {$p}ews_leave_types lt ON lt.id=r.leave_type_id"
-                    . " LEFT JOIN {$p}ews_approval_requests ar ON ar.entity_type='leave_cancellation' AND ar.entity_id=r.id WHERE r.id IN ({$in})";
+                $sql = "SELECT r.*,lt.name AS type_name FROM {$p}ews_leave_requests r LEFT JOIN {$p}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.id IN ({$in})";
             } else {
                 $sql = "SELECT r.* FROM {$parts[$type][0]} r WHERE r.id IN ({$in})";
             }

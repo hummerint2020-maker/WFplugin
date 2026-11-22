@@ -264,7 +264,8 @@ trait EWS_Admin_Requests_Trait {
         $by='';$at='';$note='';
         // The engine's decision when there is one; "Automatically" when the request was closed with no level decided by hand.
         $engine=function()use($o,$ar,$user_name,$time,&$by,&$at,&$note){
-            if($o['decision']!==''){
+            $final=$ar?strtoupper((string)$ar->status):'';
+            if($o['decision']!==''&&(!$ar||$final===$o['decision'])){
                 $by=$user_name($o['by']);
                 if($by!==''&&$o['for']&&$user_name($o['for'])!=='')$by=sprintf(__('%1$s for %2$s','workforce-one'),$by,$user_name($o['for']));
                 if($by!==''&&$o['levels']>1)$by.=' '.sprintf(__('(level %d)','workforce-one'),$o['level']);
@@ -272,7 +273,7 @@ trait EWS_Admin_Requests_Trait {
                 if($o['decision']==='REJECTED'&&$o['comment']!=='')$note=$o['comment'];
                 return true;
             }
-            if($ar&&in_array(strtoupper((string)$ar->status),['APPROVED','REJECTED'],true)){$by=__('Automatically','workforce-one');$at=$time($ar->completed_at??'');return true;}
+            if($ar&&in_array($final,['APPROVED','REJECTED'],true)){$by=__('Automatically','workforce-one');$at=$time($ar->completed_at??'');return true;}
             return false;
         };
         $level=function()use($o,$ar){
@@ -322,7 +323,7 @@ trait EWS_Admin_Requests_Trait {
                 $detail=Hub::details((string)$r->work_date,$r->requester_status.' ↔ '.$r->target_status,sprintf(__('with %s','workforce-one'),$emp_name($r->target_employee_id)));
                 $st=(string)$r->status;
                 if($status===$R::WAITING)$note=$st==='Pending'?__('Waiting for the colleague','workforce-one'):$level();
-                elseif($status===$R::WITHDRAWN)$note=__('Withdrawn by the employee','workforce-one');
+                elseif($status===$R::WITHDRAWN){$direct($r->responded_by??0,$r->responded_at??'');if($by==='')$by=$employee;$note=__('Withdrawn by the employee','workforce-one');}
                 elseif($status===$R::CANCELLED)$note=__('The day passed','workforce-one');
                 elseif($status===$R::REJECTED&&empty($r->decided_by)&&!$o['decision']){$direct($r->responded_by??0,$r->responded_at??'');$note=__('Declined by the colleague','workforce-one');}
                 elseif(!$engine()){if(!empty($r->decided_by))$direct($r->decided_by,$r->decided_at??'');else $direct($r->responded_by??0,$r->responded_at??'');}
@@ -333,7 +334,7 @@ trait EWS_Admin_Requests_Trait {
                 if($status===$R::WAITING)$note=(string)$r->status==='pending_hr'?__('Second level (HR)','workforce-one'):$level();
                 elseif($status===$R::WITHDRAWN){$by=$employee;$at=$time($r->decided_at??'');$note=__('Withdrawn by the employee','workforce-one');}
                 else{
-                    if(!empty($r->decided_by)){$direct($r->decided_by,$r->decided_at??'');if($by!==''&&!empty($r->manager_by)&&(int)$r->manager_by!==(int)$r->decided_by)$by.=' '.__('(HR)','workforce-one');}
+                    if(!empty($r->decided_by)){$direct($r->decided_by,$r->decided_at??'');if($by!==''&&!empty($r->manager_by)&&((int)$r->manager_by!==(int)$r->decided_by||(int)($r->needs_hr??0)))$by.=' '.__('(HR)','workforce-one');}
                     elseif(!$engine()){$by=__('Automatically','workforce-one');$at=$time($r->decided_at??'');}
                     $note=trim((string)($r->decision_note??''));
                 }
@@ -348,14 +349,20 @@ trait EWS_Admin_Requests_Trait {
                 if($st==='approved')$note=__('Approved, not issued yet','workforce-one');
                 elseif($st==='issued')$note=sprintf(__('Issued %s','workforce-one'),$time($r->issued_at??''));
                 elseif($st==='ready')$note=__('Ready to collect','workforce-one');
-                elseif($st==='cancelled')$note=sprintf(__('Cancelled by HR: %s','workforce-one'),(string)$r->decision_note);
+                elseif($st==='cancelled')$note=trim((string)$r->decision_note)!==''?sprintf(__('Cancelled by HR: %s','workforce-one'),trim((string)$r->decision_note)):__('Cancelled by HR','workforce-one');
                 elseif($st==='rejected'&&trim((string)$r->decision_note)!=='')$note=trim((string)$r->decision_note);
                 break;
             default: // face_reset
                 $title=__('Face reset','workforce-one');
                 $detail=(string)($r->current_note??'')!==''?(string)$r->current_note:__('Reset requested','workforce-one');
                 if($status===$R::WAITING)$note=$level();
-                else{$direct($r->handled_by??0,$r->handled_at??'');if($by==='')$engine();}
+                elseif($ar&&$o['decision']===''&&in_array(strtoupper((string)$ar->status),['APPROVED','REJECTED'],true))$engine();   // closed by the workflow itself
+                else{
+                    $direct($r->handled_by??0,$r->handled_at??'');
+                    if($by==='')$engine();
+                    // The approval is this request's when its deciding level was taken by the same person.
+                    if($status===$R::REJECTED&&$o['decision']==='REJECTED'&&$o['comment']!==''&&(int)$o['by']===(int)($r->handled_by??0))$note=$o['comment'];
+                }
         }
         if($by===''&&$status!==$R::WAITING&&$at!=='')$by='—';
         return ['type'=>$type,'title'=>$title,'employee'=>$employee,'detail'=>$detail,'status'=>(int)$status,'by'=>$by,'at'=>$at,'note'=>$note];
@@ -396,20 +403,22 @@ trait EWS_Admin_Requests_Trait {
         }catch(\RuntimeException $x){wp_die(esc_html__('The export could not be completed. Please try again.','workforce-one'));}
         $type_label=$f['type']!==''?($this->admin_requests_report_types()[$f['type']]??$f['type']):__('All types','workforce-one');
         $status_label=$f['status']?$statuses[$R::STATUSES[$f['status']]]:__('All statuses','workforce-one');
-        $this->audit('requests_report_export','report',0,sprintf('%s · %s to %s · type: %s · status: %s · who: %s · rows: %d',$fmt==='xlsx'?'Excel':'CSV',$f['from'],$f['to'],$type_label,$status_label,$f['who']!==''?$f['who']:'all',$spool->count()));
+        $audit=function()use($fmt,$f,$type_label,$status_label,$spool){$this->audit('requests_report_export','report',0,sprintf('%s · %s to %s · type: %s · status: %s · who: %s · rows: %d',$fmt==='xlsx'?'Excel':'CSV',$f['from'],$f['to'],$type_label,$status_label,$f['who']!==''?$f['who']:'all',$spool->count()));};
         $name='requests_'.$f['from'].'_to_'.$f['to'];
         if($fmt==='xlsx'){
             $kpis=[__('Requests','workforce-one')=>$tiles['all']];
-            foreach($statuses as $k=>$l)$kpis[$l]=$tiles[$k];
+            foreach(['approved','rejected','withdrawn','cancelled','waiting'] as $k)$kpis[$statuses[$k]]=$tiles[$k];   // the screen's order
             $xlsx=$this->report_xlsx_from_table(['headers'=>$headers,'rows'=>$spool,'kpis'=>$kpis,'title'=>__('Requests','workforce-one'),
                 'subtitle'=>$type_label.' · '.$status_label,'widths'=>[26,22,18,40,12,17,24,17,40],'definitions'=>false],'requests',$f['from'],$f['to']);
             if(is_wp_error($xlsx))wp_die(esc_html($xlsx->get_error_message()));
+            $audit();
             \WorkforceOne\Support\Download::send($xlsx,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',$name.'.xlsx');exit;
         }
         $out=fopen('php://temp/maxmemory:2097152','w+');
         if($out===false||!fputcsv($out,\WorkforceOne\Support\Csv::row($headers)))wp_die(esc_html__('The export could not be completed. Please try again.','workforce-one'));
         foreach($spool as $r)if(!fputcsv($out,\WorkforceOne\Support\Csv::row($r)))wp_die(esc_html__('The export could not be completed. Please try again.','workforce-one'));
         rewind($out);
+        $audit();
         nocache_headers();header('Content-Type:text/csv; charset=utf-8');header('Content-Disposition:attachment; filename='.$name.'.csv');echo "\xEF\xBB\xBF";fpassthru($out);fclose($out);exit;
     }
 

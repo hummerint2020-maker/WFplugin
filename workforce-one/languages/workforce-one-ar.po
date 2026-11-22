@@ -9579,3 +9579,6 @@ msgstr "تقارير مركز الطلبات"
 
 msgid "A Reports tab on the Requests Hub: every request in every status, who decided it and when, with a CSV and Excel export. View only: requests are still decided on the first tab and in My approvals. Off, the Requests Hub is exactly as today."
 msgstr "تاب \"تقارير\" في مركز الطلبات: كل الطلبات بكل حالاتها، مين قرّر وإمتى، مع تصدير CSV وExcel. للعرض بس: القرار لسه بيتاخد من التاب الأول ومن موافقاتي. وهو مقفول، مركز الطلبات زي ما هو النهارده بالظبط."
+
+msgid "Cancelled by HR"
+msgstr "الموارد البشرية لغته"

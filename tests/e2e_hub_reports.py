@@ -35,6 +35,7 @@ seed = json.loads(php("""
     $ids=json_decode(file_get_contents(getenv('S').'/ids.json'));$e1=(int)$ids->eid;$u1=(int)$ids->uid;
     $admin=(int)get_user_by('login','admin')->ID;
     $wpdb->query("DELETE FROM {$p}ews_departments WHERE name IN ('HR Sales','HR Ops')");
+    if($u=username_exists('hubset')){require_once ABSPATH.'wp-admin/includes/user.php';wp_delete_user($u);}
     $wpdb->insert($p.'ews_departments',['name'=>'HR Sales','code'=>'HRS','active'=>1,'created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);$sales=(int)$wpdb->insert_id;
     $wpdb->insert($p.'ews_departments',['name'=>'HR Ops','code'=>'HRO','active'=>1,'created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql')]);$ops=(int)$wpdb->insert_id;
     $wpdb->update($p.'ews_employees',['department_id'=>$sales],['id'=>$e1]);
@@ -71,20 +72,27 @@ seed = json.loads(php("""
     $out['sw_dec']=$sw($e1,$e2,'2030-01-10','Rejected',"$M-08 13:20:00",['responded_by'=>$u1,'responded_at'=>"$M-08 14:00:00"]);
     $out['sw_exp']=$sw($e2,$e1,'2020-01-01','Pending',"$M-08 13:21:00");
     $out['sw_peer']=$sw($e2,$e1,'2030-01-11','Pending',"$M-08 13:22:00");
+    $out['sw_wd']=$sw($e1,$e2,'2030-01-12','Cancelled',"$M-08 13:23:00",['responded_by'=>$u1,'responded_at'=>"$M-08 13:30:00"]);
+    $wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>$e1,'work_date'=>"$M-03",'type'=>'in','sign_in_at'=>"$M-03 09:05:00",'status'=>'approved','needs_hr'=>1,'requested_by'=>$u1,'requested_at'=>"$M-03 10:12:00",'manager_by'=>$admin,'manager_at'=>"$M-03 11:00:00",'decided_by'=>$admin,'decided_at'=>"$M-03 11:00:00"]);$out['cx_both']=(int)$wpdb->insert_id;
     // Corrections: waiting for HR, closed automatically.
     $wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>$e1,'work_date'=>"$M-05",'type'=>'in','sign_in_at'=>"$M-05 09:05:00",'status'=>'pending_hr','requested_by'=>$u1,'requested_at'=>"$M-05 10:12:00"]);$out['cx_hr']=(int)$wpdb->insert_id;
-    $wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>$e1,'work_date'=>"$M-04",'type'=>'out','sign_out_at'=>"$M-04 17:30:00",'status'=>'rejected','requested_by'=>$u1,'requested_at'=>"$M-04 10:12:00",'decided_by'=>0,'decided_at'=>"$M-06 00:00:00",'decision_note'=>'Closed: the payroll month ended']);$out['cx_auto']=(int)$wpdb->insert_id;
+    $wpdb->insert($p.'ews_attendance_corrections',['employee_id'=>$e1,'work_date'=>"$M-04",'type'=>'out','sign_out_at'=>"$M-04 17:30:00",'status'=>'rejected','requested_by'=>$u1,'requested_at'=>"$M-04 10:12:00",'decided_by'=>0,'decided_at'=>"$M-06 00:00:00",'decision_note'=>'=Closed: the payroll month ended']);$out['cx_auto']=(int)$wpdb->insert_id;
     // HR letters: issued, cancelled by HR.
-    $wpdb->insert($p.'ews_hr_letters',['employee_id'=>$e2,'requested_by'=>$u1,'type_key'=>'salary','type_label'=>'Salary certificate','addressee'=>'Banque Misr','language'=>'ar','status'=>'issued','requested_at'=>"$M-04 11:00:00",'decided_at'=>"$M-04 12:15:00",'issued_at'=>"$M-04 12:16:00"]);$out['hl_iss']=(int)$wpdb->insert_id;
+    $wpdb->insert($p.'ews_hr_letters',['employee_id'=>$e2,'requested_by'=>$u1,'type_key'=>'salary','type_label'=>'شهادة مرتب','addressee'=>'Banque Misr','language'=>'ar','status'=>'issued','requested_at'=>"$M-04 11:00:00",'decided_at'=>"$M-04 12:15:00",'issued_at'=>"$M-04 12:16:00"]);$out['hl_iss']=(int)$wpdb->insert_id;
     $wpdb->insert($p.'ews_hr_letters',['employee_id'=>$e1,'requested_by'=>$u1,'type_key'=>'work','type_label'=>'Employment certificate','addressee'=>'Embassy','language'=>'en','status'=>'cancelled','decision_note'=>'Wrong addressee','requested_at'=>"$M-03 11:00:00",'decided_at'=>"$M-03 12:00:00"]);$out['hl_cx']=(int)$wpdb->insert_id;
     // The old vacation table and a face reset.
     $wpdb->insert($p.'ews_vacation_requests',['employee_id'=>$e1,'start_date'=>'2030-02-01','end_date'=>'2030-02-02','requested_days'=>2,'status'=>'Approved','requested_by'=>$u1,'requested_at'=>"$M-02 10:00:00"]);$out['lv']=(int)$wpdb->insert_id;
-    update_option('ews_face_reset_requests',[$e2=>['status'=>'rejected','requested_by'=>$u1,'requested_at'=>"$M-16 08:15:00",'handled_by'=>$admin,'handled_at'=>"$M-16 09:00:00"]],false);
+    update_option('ews_face_reset_requests',[$e2=>['status'=>'rejected','requested_by'=>$u1,'requested_at'=>"$M-16 08:15:00",'handled_by'=>$admin,'handled_at'=>"$M-16 09:00:00"],
+        $e1=>['status'=>'approved','requested_by'=>$u1,'requested_at'=>"$M-17 08:15:00",'handled_by'=>$u1,'handled_at'=>"$M-17 08:15:00"]],false);
+    // The rejected one through its workflow, with a reason; the approved one closed by the workflow itself (no level).
+    $wpdb->insert($p.'ews_approval_requests',['workflow_id'=>$wf('face_reset'),'entity_type'=>'face_reset_request','entity_id'=>$e2,'requester_employee_id'=>$e2,'status'=>'REJECTED','current_step'=>1,'created_at'=>"$M-16 08:15:00",'completed_at'=>"$M-16 09:00:00"]);$far=(int)$wpdb->insert_id;
+    $wpdb->insert($p.'ews_approval_steps',['approval_request_id'=>$far,'step_order'=>1,'approver_wp_user_id'=>$admin,'acted_by_wp_user_id'=>$admin,'resolver_type'=>'SPECIFIC_USER','status'=>'REJECTED','decision'=>'REJECTED','comment'=>'The current photo is fine','acted_at'=>"$M-16 09:00:00"]);
+    $wpdb->insert($p.'ews_approval_requests',['workflow_id'=>$wf('face_reset'),'entity_type'=>'face_reset_request','entity_id'=>$e1,'requester_employee_id'=>$e1,'status'=>'APPROVED','current_step'=>null,'created_at'=>"$M-17 08:15:00",'completed_at'=>"$M-17 08:15:00"]);
     echo wp_json_encode($out+['e1'=>$e1,'e2'=>$e2,'e3'=>$e3,'sales'=>$sales,'ops'=>$ops]);
 """ % (json.dumps(TABLES).replace('"', "'"), M, LAST, PREV)).splitlines()[-1])
 
 adm, emp = Session('admin', 'admin'), Session('emp1', 'emp1pass')
-SEEDED = 22   # every row above in this month (the month before: one leave, out)
+SEEDED = 25   # every row above in this month (the month before: one leave, out)
 
 
 def rows(page):
@@ -108,13 +116,11 @@ def find(rs, text):
 st, off, _ = adm.req(HUB)
 check('off: the Requests Hub has no tabs', st == 200 and 'ews-hr-tabs' not in off and 'nav-tab' not in off.split('<h1>Requests Hub</h1>')[-1][:2000])
 st, off2, _ = adm.req(REP)
-check('off: ?tab=reports shows the same page, not the report', 'ews-hr-sum' not in off2 and 'No pending requests' in off2 or '<table class="widefat striped">' in off2)
+check('off: ?tab=reports shows the same page, not the report', 'ews-hr-sum' not in off2 and ('No pending requests' in off2 or '<table class="widefat striped">' in off2))
 check('off: the stylesheet is not loaded', 'admin-requests.css' not in off)
 st, feat, _ = adm.req('/wp-admin/admin.php?page=ews31-features')
 check('off: the Features page has the switch, off', 'id="ews-hub-reports"' in feat and re.search(r'name="hub_reports_enabled"[^>]*checked', feat) is None)
 check('off: nothing stored', php("var_export(get_option('ews_feature_hub_reports',null));").splitlines()[-1] == 'NULL')
-st, body, _ = adm.req('/wp-admin/admin-post.php?action=ews31_requests_export&format=csv&_wpnonce=' + php("wp_set_current_user(get_user_by('login','admin')->ID);echo wp_create_nonce('ews31_requests_export');").splitlines()[-1])
-check('off: the export is refused', 'Request,Employee' not in body and 'text/csv' not in str(_), body[:200])
 pending_off = re.search(r'<table class="widefat striped">.*?</table>', off, re.S)
 
 # ---------------------------------------------------------------- the switch
@@ -152,7 +158,7 @@ rs = rows(rep)
 t = tiles(rep)
 check('Reports: the current month by default', 'value="%s-01"' % M in rep and 'value="%s"' % LAST in rep, (M, LAST))
 check('...every type and status of the month, the first and last second in, the month before out', t.get('all') == SEEDED, t)
-check('...the totals by status', (t['approved'], t['rejected'], t['withdrawn'], t['cancelled'], t['waiting']) == (9, 5, 2, 3, 3), t)
+check('...the totals by status', (t['approved'], t['rejected'], t['withdrawn'], t['cancelled'], t['waiting']) == (11, 5, 3, 3, 3), t)
 check('...20 on a page, newest first', len(rs) == 20 and rs[0][2][4].startswith(LAST), [r[2][4] for r in rs[:2]])
 check('...view only: no decision form', 'ews31_requests_decision' not in rep)
 st, rep2, _ = adm.req(REP + '&paged=2')
@@ -190,7 +196,14 @@ check('an HR letter cancelled by HR: Cancelled with the reason', r and r[1] == '
 r = next((x for x in allrows if x[0] == 'legacy_vacation'), None)
 check('the old vacation table is listed as "Leave (old)"', r and r[2][0] == 'Leave (old)', r)
 r = next((x for x in allrows if x[0] == 'face_reset'), None)
-check('a face reset (from the option) is in the list, in order', r and r[1] == 'rejected' and r[2][4].startswith('%s-16 08:15' % M), r)
+check('a face reset (from the option) is in the list, in order', r and r[2][4].startswith('%s-17 08:15' % M), r)
+faces = [x for x in allrows if x[0] == 'face_reset']
+check('a face reset rejected through its workflow shows the reason', any(x[1] == 'rejected' and 'The current photo is fine' in x[2][6] for x in faces), faces)
+check('a face reset closed by its workflow itself: "Automatically", not the employee', any(x[1] == 'approved' and 'Automatically' in x[2][5] for x in faces), faces)
+r = next((x for x in allrows if x[0] == 'shift_swap' and x[1] == 'withdrawn'), None)
+check('a withdrawn swap: by the requester', r and 'Emp One' in r[2][5] and 'Withdrawn by the employee' in r[2][6], r)
+r = next((x for x in allrows if x[0] == 'correction' and x[1] == 'approved'), None)
+check('a correction HR decided at both levels at once: "(HR)"', r and '(HR)' in r[2][5], r)
 r = next((x for x in allrows if x[0] == 'early_leave'), None)
 check('withdrawn early leave', r and r[1] == 'withdrawn', r)
 
@@ -220,12 +233,20 @@ check('...nor export it', 'Request,Employee' not in p)
 st, p, _ = adm.req(re.sub(r'_wpnonce=[^&]+', '_wpnonce=bad', export['csv']))
 check('an export without a valid nonce is refused', 'Request,Employee' not in p)
 
+php("$u=username_exists('hubset')?:wp_create_user('hubset','hubsetpass','hubset@example.com');$w=new WP_User($u);$w->set_role('subscriber');$w->add_cap('ews_manage_settings');$w->add_cap('ews_view_reports');")
+hs = Session('hubset', 'hubsetpass')
+st, p, _ = hs.req(REP)
+check('a user who manages settings but is not an administrator cannot open it', 'ews-hr-sum' not in p)
+st, p, _ = hs.req(export['csv'])
+check('...nor export it', 'Request,Employee' not in p)
+
 # ---------------------------------------------------------------- export
 st, body, h = adm.req(export['csv'])
 check('CSV: a file with a BOM', body.startswith('﻿') and 'text/csv' in h.get('Content-Type', ''), h.get('Content-Type'))
 lines = list(csv.reader(io.StringIO(body.lstrip('﻿'))))
 check('...every page: one line per request, in the screen\'s order', len(lines) - 1 == SEEDED and [l[0] for l in lines[1:21]] == [x[2][0] for x in rs], len(lines))
 check('...with a Department column', lines[0][2] == 'Department' and 'HR Sales' in {l[2] for l in lines[1:]})
+check('...a cell starting with "=" is kept as text, Arabic survives', any(l[8] == "'=Closed: the payroll month ended" for l in lines) and any('شهادة مرتب' in l[3] for l in lines))
 # Batches of 3 (a test mu-plugin): the face reset falls between two batches; the file is the same.
 php("$d=WPMU_PLUGIN_DIR; if(!is_dir($d)) wp_mkdir_p($d); file_put_contents($d.'/ews-e2e-hub-batch.php','<?php add_filter(\\'ews_hub_export_batch\\',function(){return 3;});');")
 st, small, _ = adm.req(export['csv'])
@@ -235,17 +256,26 @@ xl = adm.op.open('http://127.0.0.1:8080' + export['xlsx']).read()
 try:
     z = zipfile.ZipFile(io.BytesIO(xl))
     sheet = z.read('xl/worksheets/sheet1.xml').decode()
-    ok = 'Half the department is off' in sheet and 'Definitions' not in z.read('xl/workbook.xml').decode() and sheet.count('<row ') == 9 + SEEDED
+    kpi = re.search(r'<row r="7".*?</row>', sheet).group(0)
+    ok = ('Half the department is off' in sheet and 'Definitions' not in z.read('xl/workbook.xml').decode() and sheet.count('<row ') == 9 + SEEDED
+          and re.findall(r'<v>(\d+)</v>', kpi) == [str(SEEDED), '11', '5', '3', '3', '3'])
 except Exception as e:
     ok, sheet = False, str(e)
 check('Excel: the Report Center\'s workbook, every row, the totals as cards, no Definitions sheet', ok, sheet[:300])
 au = q("SELECT details FROM {p}ews_audit_log WHERE action='requests_report_export' ORDER BY id")
 check('each export is in the Audit Log with its filters and rows', len(au) >= 2 and 'CSV' in au[0]['details'] and 'rows: %d' % SEEDED in au[0]['details'], au)
 
+# ---------------------------------------------------------------- a decision on the first tab
+nonce = adm.admin_request_nonce('leave', seed['l_wait'])
+st, qs, _ = adm.post('ews31_requests_decision', request_type='leave', request_id=str(seed['l_wait']), decision='reject', approval_step='0', _wpnonce=nonce or '')
+check('a decision on the first tab still comes back to it', 'page=ews31-requests' in adm.last_location and 'tab=reports' not in adm.last_location and qs.get('request_notice') == 'rejected', adm.last_location)
+
 # ---------------------------------------------------------------- off again
 save_features(False)
 st, p, _ = adm.req(REP)
 check('switched off again: no tabs, audited "disabled"', 'ews-hr-tabs' not in p and [a['details'] for a in audit()] == ['enabled', 'disabled'])
+st, p, _ = adm.req(export['csv'])
+check('...the export (a valid link from before) is refused', 'switched off' in p and 'Request,Employee' not in p, p[:200])
 
 php("""$s=unserialize(file_get_contents(getenv('S').'/hub_reports_saved.ser'));$keep=[];
     foreach($s as $o){$keep[]=$o['option_name'];$wpdb->replace($wpdb->options,$o);}
