@@ -12920,3 +12920,186 @@ msgstr ""
 #: includes/trait-leave.php
 msgid "Send the change"
 msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Employee #%d"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "%s (archived)"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "(level %d)"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Automatically"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Level %1$d of %2$d"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Leave / %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Leave (old)"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Cancelled at the employee's request"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Shortened: now ends on %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "A cancellation is waiting"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Leave cancellation / %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "From %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "All of it"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Decided after the leave had ended: nothing changed"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Date not recorded"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "with %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Waiting for the colleague"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "The day passed"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Declined by the colleague"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Second level (HR)"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "(HR)"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Approved, not issued yet"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Issued %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "Cancelled by HR: %s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Reset requested"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Requests Hub reports are switched off."
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Request"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Decided by"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Decided at"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "withdrawn"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "cancelled"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Every Workforce One request in every status: who decided it and when. View only: requests are decided on the first tab and in My approvals."
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Employee or department"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Everyone"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "No requests in this period"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Change the period or the filters."
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "%1$s of %2$s"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Newest first, by the date the request was made. The export has every page of what the filters show."
+msgstr ""
+
+#: includes/trait-admin-requests.php
+#, php-format
+msgid "%s request"
+msgid_plural "%s requests"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/trait-admin-requests.php
+msgid "Requests Hub reports"
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "A Reports tab on the Requests Hub: every request in every status, who decided it and when, with a CSV and Excel export. View only: requests are still decided on the first tab and in My approvals. Off, the Requests Hub is exactly as today."
+msgstr ""
+
+#: includes/trait-admin-requests.php
+msgid "Cancelled by HR"
+msgstr ""

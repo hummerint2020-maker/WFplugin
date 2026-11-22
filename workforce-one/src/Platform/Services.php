@@ -68,6 +68,8 @@ use WorkforceOne\Schedule\ScheduleDayService;
 use WorkforceOne\Schedule\ScheduleNotifier;
 use WorkforceOne\Schedule\WeekLockService;
 use WorkforceOne\HrLetters\Data\LetterQuery;
+use WorkforceOne\Requests\Data\HubReportQuery;
+use WorkforceOne\Requests\Data\WordPressHubReportQuery;
 use WorkforceOne\Leave\Data\LeaveDayQuery;
 use WorkforceOne\Leave\Data\WordPressLeaveDayQuery;
 use WorkforceOne\HrLetters\Data\LetterSchema;
@@ -326,6 +328,13 @@ final class Services
     public function letterQuery(): LetterQuery
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLetterQuery($this->db, (string) ($this->tables['employees'] ?? ''));
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The Requests Hub's Reports tab (3.31.159): every request in every status. */
+    public function hubReportQuery(): HubReportQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressHubReportQuery($this->db, (string) ($this->tables['employees'] ?? ''));
         return $this->made[__FUNCTION__];
     }
 

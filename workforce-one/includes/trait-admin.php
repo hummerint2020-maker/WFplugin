@@ -23,6 +23,10 @@ trait EWS_Admin_Trait {
                 wp_enqueue_script('workforce-one-admin-occasions', $this->plugin_url('assets/js/admin-occasions.js'), [], EWS_VERSION, true);
             }
         }
+        if(substr((string)$hook_suffix,-strlen('ews31-requests'))==='ews31-requests'&&$this->hub_reports_enabled()){   // Requests Hub reports (3.31.159); off: nothing more loads
+            wp_enqueue_style('workforce-one-admin-requests', $this->plugin_url('assets/css/admin-requests.css'), ['workforce-one-ui'], EWS_VERSION);
+            wp_style_add_data('workforce-one-admin-requests', 'rtl', 'replace');
+        }
         if(substr((string)$hook_suffix,-strlen('ews31-notifications'))==='ews31-notifications'){
             wp_enqueue_style('workforce-one-admin-notifications', $this->plugin_url('assets/css/admin-notifications.css'), ['workforce-one-ui'], EWS_VERSION);
             wp_style_add_data('workforce-one-admin-notifications', 'rtl', 'replace');

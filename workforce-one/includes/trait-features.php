@@ -40,7 +40,7 @@ trait EWS_Features_Trait {
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
                 'my_approvals'=>$this->my_approvals_enabled(),
-                'my_requests_leave'=>(bool)$this->option('ews_feature_my_requests_leave'),'leave_page'=>(bool)$this->option('ews_feature_leave_page'),
+                'hub_reports'=>$this->hub_reports_enabled(),'my_requests_leave'=>(bool)$this->option('ews_feature_my_requests_leave'),'leave_page'=>(bool)$this->option('ews_feature_leave_page'),
                 'app_api'=>$this->app_api_enabled(),
                 'api_refresh_safe'=>$this->api_refresh_safe_enabled(),
                 'substitutes'=>$this->substitutes_enabled(),
@@ -151,6 +151,11 @@ trait EWS_Features_Trait {
             $mrl=$flag('my_requests_leave_enabled');$page=$mrl?$flag('leave_page_enabled'):true;
             if((bool)$this->option('ews_feature_my_requests_leave')!==$mrl){update_option('ews_feature_my_requests_leave',$mrl?1:0,false);$this->audit('my_requests_leave_feature_update','settings',0,$mrl?'enabled':'disabled');}
             if((bool)$this->option('ews_feature_leave_page')!==$page){update_option('ews_feature_leave_page',$page?1:0,false);$this->audit('leave_page_feature_update','settings',0,$page?'shown':'hidden');}
+        }
+        // Requests Hub reports (3.31.159): written and audited only when it changes.
+        if(isset($post['hub_reports_present'])&&$this->hub_reports_enabled()!==$flag('hub_reports_enabled')){
+            update_option('ews_feature_hub_reports',$flag('hub_reports_enabled')?1:0,false);
+            $this->audit('hub_reports_feature_update','settings',0,$flag('hub_reports_enabled')?'enabled':'disabled');
         }
         // The Attendance page's cards open who and when (3.31.125).
         if(isset($post['attendance_cards_present']))update_option('ews_feature_attendance_cards',$flag('attendance_cards_enabled')?1:0,false);

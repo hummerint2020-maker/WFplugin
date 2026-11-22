@@ -9437,3 +9437,148 @@ msgstr "مديرك هو اللي بيقرر، ولحد ما يوافق الإج�
 
 msgid "Send the change"
 msgstr "ابعت التعديل"
+
+#, php-format
+msgid "Employee #%d"
+msgstr "موظف رقم %d"
+
+#, php-format
+msgid "%s (archived)"
+msgstr "%s (مؤرشف)"
+
+#, php-format
+msgid "(level %d)"
+msgstr "(المستوى %d)"
+
+msgid "Automatically"
+msgstr "تلقائيًا"
+
+#, php-format
+msgid "Level %1$d of %2$d"
+msgstr "المستوى %1$d من %2$d"
+
+#, php-format
+msgid "Leave / %s"
+msgstr "إجازة / %s"
+
+msgid "Leave (old)"
+msgstr "إجازة (قديمة)"
+
+msgid "Cancelled at the employee's request"
+msgstr "اتلغت بطلب الموظف"
+
+#, php-format
+msgid "Shortened: now ends on %s"
+msgstr "اتقصّرت: بقت تخلص يوم %s"
+
+msgid "A cancellation is waiting"
+msgstr "فيه طلب إلغاء مستني"
+
+#, php-format
+msgid "Leave cancellation / %s"
+msgstr "إلغاء إجازة / %s"
+
+#, php-format
+msgid "From %s"
+msgstr "من %s"
+
+msgid "All of it"
+msgstr "كلها"
+
+msgid "Decided after the leave had ended: nothing changed"
+msgstr "اتقرر بعد ما الإجازة خلصت: مفيش حاجة اتغيرت"
+
+msgid "Date not recorded"
+msgstr "التاريخ مش متسجل"
+
+#, php-format
+msgid "with %s"
+msgstr "مع %s"
+
+msgid "Waiting for the colleague"
+msgstr "مستني الزميل"
+
+msgid "The day passed"
+msgstr "اليوم عدّى"
+
+msgid "Declined by the colleague"
+msgstr "الزميل رفض"
+
+msgid "Second level (HR)"
+msgstr "المستوى التاني (الموارد البشرية)"
+
+msgid "(HR)"
+msgstr "(الموارد البشرية)"
+
+msgid "Approved, not issued yet"
+msgstr "اتوافق، لسه ماتصدرش"
+
+#, php-format
+msgid "Issued %s"
+msgstr "اتصدر %s"
+
+#, php-format
+msgid "Cancelled by HR: %s"
+msgstr "الموارد البشرية لغته: %s"
+
+msgid "Reset requested"
+msgstr "طلب إعادة"
+
+msgid "Requests Hub reports are switched off."
+msgstr "تقارير مركز الطلبات مقفولة."
+
+msgid "Request"
+msgstr "الطلب"
+
+msgid "Decided by"
+msgstr "قرّر"
+
+msgid "Decided at"
+msgstr "وقت القرار"
+
+msgid "withdrawn"
+msgstr "اتسحب"
+
+msgid "cancelled"
+msgstr "اتلغى"
+
+msgid "Every Workforce One request in every status: who decided it and when. View only: requests are decided on the first tab and in My approvals."
+msgstr "كل طلبات Workforce One بكل حالاتها: مين قرّر وإمتى. للعرض بس: القرار بيتاخد من التاب الأول أو من موافقاتي."
+
+msgid "Employee or department"
+msgstr "الموظف أو القسم"
+
+msgid "Everyone"
+msgstr "كل الموظفين"
+
+msgid "No requests in this period"
+msgstr "مفيش طلبات في الفترة دي"
+
+msgid "Change the period or the filters."
+msgstr "غيّر الفترة أو الفلاتر."
+
+#, php-format
+msgid "%1$s of %2$s"
+msgstr "%1$s من %2$s"
+
+msgid "Newest first, by the date the request was made. The export has every page of what the filters show."
+msgstr "الأحدث الأول، حسب تاريخ تقديم الطلب. التصدير فيه كل صفحات اللي الفلاتر بتعرضه."
+
+#, php-format
+msgid "%s request"
+msgid_plural "%s requests"
+msgstr[0] "%s طلب"
+msgstr[1] "طلب واحد (%s)"
+msgstr[2] "طلبين (%s)"
+msgstr[3] "%s طلبات"
+msgstr[4] "%s طلب"
+msgstr[5] "%s طلب"
+
+msgid "Requests Hub reports"
+msgstr "تقارير مركز الطلبات"
+
+msgid "A Reports tab on the Requests Hub: every request in every status, who decided it and when, with a CSV and Excel export. View only: requests are still decided on the first tab and in My approvals. Off, the Requests Hub is exactly as today."
+msgstr "تاب \"تقارير\" في مركز الطلبات: كل الطلبات بكل حالاتها، مين قرّر وإمتى، مع تصدير CSV وExcel. للعرض بس: القرار لسه بيتاخد من التاب الأول ومن موافقاتي. وهو مقفول، مركز الطلبات زي ما هو النهارده بالظبط."
+
+msgid "Cancelled by HR"
+msgstr "الموارد البشرية لغته"

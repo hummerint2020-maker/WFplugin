@@ -3,7 +3,7 @@
   "app->attendance": 3,
   "app->notifications": 3,
   "app->schedule": 3,
-  "approvals->attendance": 7,
+  "approvals->attendance": 4,
   "approvals->leave": 2,
   "approvals->overtime": 2,
   "approvals->schedule": 4,
