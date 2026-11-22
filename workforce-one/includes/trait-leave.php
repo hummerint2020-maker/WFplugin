@@ -701,9 +701,10 @@ trait EWS_Leave_Trait {
      * no "asked on" time, so its card shows no waiting time. @return list<array<string,mixed>>
      */
     private function leave_legacy_approvals(){
+            if(!$this->can('ews_manage_settings'))return [];
             $active=$this->leave_approval_active();
             // With approvals on, only what was asked while they were off (no levels: 3.31.158, with Leave in My requests on).
-            if(!$this->can('ews_manage_settings') || ($active && !$this->my_requests_leave_on()))return [];
+            if($active && !$this->my_requests_leave_on())return [];
             global $wpdb;$this->ensure_leave_schema();
             $allow=$this->approval_self_rule('vacation')==='allow';
             $out=[];

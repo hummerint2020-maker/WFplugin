@@ -23,7 +23,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
 ?>
 <div class="wfo-apv is-mine">
     <?php if ($notice): ?><div class="wfo-apv-toast is-<?php echo esc_attr($notice['type']); ?>" role="status"><?php echo esc_html($notice['text']); ?></div><?php endif; ?>
-    <?php if ($leave && $leave['balances']): ?>
+<?php if ($leave && $leave['balances']): /* no indent: nothing printed while it is off (golden) */ ?>
     <section class="wfo-lr-bals" aria-labelledby="wfo-lr-bals-h">
         <div class="wfo-lr-bals-h"><?php echo \WorkforceOne\Ui\Icons::svg('leave', 16, 2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><b id="wfo-lr-bals-h"><?php esc_html_e('Your balance', 'workforce-one'); ?></b><small><?php esc_html_e('This year · after requests waiting', 'workforce-one'); ?></small></div>
         <div class="wfo-lr-bals-row">
@@ -36,12 +36,8 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
     <?php if (!empty($new['kinds'])): ?><div class="wfo-apv-bar"><span class="wfo-apv-bar-gap"></span><button type="button" class="wfo-apv-btn is-new" data-wfo-sheet="wfo-new-sheet">+ <?php esc_html_e('New request', 'workforce-one'); ?></button></div><?php endif; ?>
     <?php if ($items || ($leave && $leave['kind'] !== '')): ?>
     <nav class="wfo-apv-filters" aria-label="<?php esc_attr_e('Show', 'workforce-one'); ?>">
-        <?php if ($leave): ?>
-        <a href="<?php echo esc_url($leave['all_url']); ?>"<?php echo $filter === '' && $leave['kind'] === '' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('All', 'workforce-one'); ?></a>
-        <a href="<?php echo esc_url($leave['leave_url']); ?>"<?php echo $filter === '' && $leave['kind'] === 'leave' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('Leave', 'workforce-one'); ?></a>
-        <?php else: ?>
-        <a href="<?php echo esc_url($base_url); ?>"<?php echo $filter === '' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('All', 'workforce-one'); ?></a>
-        <?php endif; ?>
+        <a href="<?php echo esc_url($leave ? $leave['all_url'] : $base_url); ?>"<?php echo $filter === '' && (!$leave || $leave['kind'] === '') ? ' aria-current="true"' : ''; ?>><?php esc_html_e('All', 'workforce-one'); ?></a><?php if ($leave): ?><a href="<?php echo esc_url($leave['leave_url']); ?>"<?php echo $filter === '' && $leave['kind'] === 'leave' ? ' aria-current="true"' : ''; ?>><?php esc_html_e('Leave', 'workforce-one'); ?></a><?php endif; ?>
+
         <?php foreach ($labels as $k => $l): if (empty($counts[$k])) continue; ?><a href="<?php echo esc_url(add_query_arg('req_state', $k, $base_url)); ?>"<?php echo $filter === $k ? ' aria-current="true"' : ''; ?>><?php echo esc_html($l . ' · ' . $num($counts[$k])); ?></a><?php endforeach; ?>
     </nav>
     <?php else: ?>
@@ -103,7 +99,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
         </article>
     <?php endforeach; ?>
     </div>
-    <?php if ($leave && $leave['kind'] === 'leave' && ($leave['page'] > 1 || $leave['more'])): ?>
+<?php if ($leave && $leave['kind'] === 'leave' && ($leave['page'] > 1 || $leave['more'])): ?>
     <nav class="wfo-lr-pages" aria-label="<?php esc_attr_e('Pages', 'workforce-one'); ?>">
         <?php $page_base = $filter !== '' ? add_query_arg('req_state', $filter, $base_url) : $base_url; ?>
         <?php if ($leave['page'] > 1): ?><a href="<?php echo esc_url(add_query_arg('req_page', $leave['page'] - 1, $page_base)); ?>"><?php esc_html_e('Newer', 'workforce-one'); ?></a><?php endif; ?>
