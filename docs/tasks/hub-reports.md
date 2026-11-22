@@ -2,7 +2,7 @@
 
 **Owner request (2026-11-22):** "We want every request, even the approved ones, to show in the Requests Hub, under a new tab called Reports. Think about it with me."
 
-**Status:** decisions taken (two rounds); the mockup matches them and is waiting for the owner's approval. Design next.
+**Status:** decisions taken (three rounds), design done; the mockup matches them and waits for the owner's approval before implementation.
 
 ## Today
 
@@ -44,6 +44,27 @@
 6. **The period filters on:** the date the request was made.
 7. **A leave cancellation:** its own row, with its own decision.
 8. **Who sees the tab:** administrators only, the same as the Requests Hub today.
+
+## Owner's answers to the design's questions (2026-11-22, third round)
+
+9. **A swap whose day passed before the colleague answered:** Cancelled, note "The day passed". The Waiting tab stays as today.
+10. **Corrections and HR letters while their feature is off:** their history still shows in Reports.
+11. **Legacy vacation:** inside the "Leave" type, titled "Leave (old)".
+12. **Nobody decided by hand** (every level skipped, closed automatically): "Decided" says "Automatically".
+13. **A leave cancelled after approval:** its row is Cancelled, "Decided" shows who approved the leave. The cancellation has its own row with its own decider.
+14. **HR letters:** approved, issued and ready are Approved with a note ("Issued 4 Nov", "Ready to collect"). A letter HR cancelled after approval is Cancelled with HR's reason.
+15. **Employee filter on swaps:** the requester and the colleague.
+16. **Archived employees:** shown, marked "(archived)", and can be picked in the filter.
+17. **A cancellation with no recorded request date** (approvals were off): fall back to its decision date, else the leave's request date, marked "date not recorded". No schema change.
+18. **Face resets:** the latest per employee only.
+19. **Excel:** the Report Center layout, with the totals as cards and a Department column.
+20. **Totals:** six tiles (requests, approved, rejected, withdrawn, cancelled, waiting), matching the filter. The mockup is updated.
+21. **A cancellation approved after the leave ended:** Approved, note "Decided after the leave had ended: nothing changed".
+22. **Department filter:** the employee's department now, archived employees included.
+23. **Indexes on the request dates:** allowed in a later release if needed; none now.
+24. **Times on the database clock:** shown as stored, like every other page.
+
+The design's open question 16 (the intro sentence): today's wording stays on the Waiting tab; the Reports tab says "every request" (as in the mockup). The design's question 2 is answered by 17, 3 by 21, 4 by 9, 5 by 14, 6 by 10, 7 by 11, 8 by 15, 9 by 22, 10 by 16, 11 by 18, 12 by 12, 13 by 19, 14 by 20, 15 by 23, 17 by 24, 1 by 13.
 
 ## Known limits (to settle in the design)
 

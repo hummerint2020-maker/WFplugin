@@ -106,7 +106,7 @@ def reports(variant='all'):
         if variant == 'all':
             f = filters()
             s = summary([('all', T('٣١٢', '312'), ('طلب', 'requests')), ('ok', T('٢٦٠', '260'), ('اتوافق', 'approved')),
-                         ('no', T('٢٩', '29'), ('اترفض', 'rejected')), ('wd', T('١٤', '14'), ('اتسحب أو اتلغى', 'withdrawn or cancelled')),
+                         ('no', T('٢٩', '29'), ('اترفض', 'rejected')), ('wd', T('٨', '8'), ('اتسحب', 'withdrawn')), ('cx', T('٦', '6'), ('اتلغى', 'cancelled')),
                          ('wait', T('٩', '9'), ('مستني قرار', 'waiting'))])
             body = f + s + table(ROWS) + pager(T('٣١٢ طلب · ٢٠ في الصفحة', '312 requests · 20 a page'))
         elif variant == 'rejected':
