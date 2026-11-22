@@ -8,8 +8,8 @@ sees or how anything works; fewer queries:
   enabled" and today's Sign Ins one by one (about four queries a person, ~100 a run for 25 people). They are now read for everyone
   at once (three queries). A night shift's day other than today is still read as before. The reminders are the same
   (tests/e2e_smart_nudges_reads.py compares them person by person).
-- **My approvals, My requests, Leave**: "does this employee manage anyone?" and "is the managers table there?" were asked up to
-  26 times each while one page was built; now once a page.
+- **My approvals, My requests, Leave** (the "I'll be away" substitutes list): "does this colleague manage anyone?" was asked once
+  per colleague (25-29 queries a page); now one read for all of them, with the same rule.
 - **Every request of the site**: the hourly check for transfers due read a transient (one query on every page, API call and
   public page); its next time is now an autoloaded option, read with the other options at no cost.
 
