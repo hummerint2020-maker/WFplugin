@@ -648,8 +648,25 @@ trait EWS_Reports_Trait {
     private function report_xlsx_build_parts($type,$start,$end,array &$temps){
 
         $table=$this->report_export_table($start,$end,$type);
+        return $this->report_xlsx_workbook($type,$start,$end,$table,$temps);
+    }
+
+    /**
+     * The Requests Hub's Reports tab (3.31.159): a table built elsewhere in the Report Center's workbook. $table has headers,
+     * rows (an iterable), kpis, and may set title, subtitle, widths and definitions=false. @return string|WP_Error
+     */
+    private function report_xlsx_from_table(array $table,$name,$start,$end){
+        if(!class_exists('ZipArchive')) return new WP_Error('xlsx_zip','The PHP ZipArchive extension is required for Excel export.');
+        $temps=[];
+        try{return $this->report_xlsx_workbook($name,$start,$end,$table,$temps);}
+        catch(\RuntimeException $x){return new WP_Error('xlsx_write',__('The export could not be completed. Please try again.','workforce-one'));}
+        finally{foreach($temps as $t){if($t['h'])@fclose($t['h']);@unlink($t['path']);}}
+    }
+
+    /** The workbook of one table (report_xlsx_build_parts()'s body before 3.31.159, unchanged for the Report Center's tables). */
+    private function report_xlsx_workbook($type,$start,$end,array $table,array &$temps){
         $titles=['workforce'=>'Workforce Report','summary'=>'Attendance Summary','timesheet'=>'Timesheet','overtime'=>'Overtime','leave'=>'Leave and Balances','capacity'=>'Location Capacity','attendance'=>'Attendance Report'];
-        $title=$titles[$type]??'Attendance Report';
+        $title=$table['title']??($titles[$type]??'Attendance Report');
         $generated=current_time('Y-m-d H:i');
         $headers=$table['headers'];
         $data=$table['rows'];
@@ -670,14 +687,14 @@ trait EWS_Reports_Trait {
         $sheet.='<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>';
         $sheet.='<sheetViews><sheetView showGridLines="0" workbookViewId="0"><pane ySplit="8" topLeftCell="A9" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
         $sheet.='<sheetFormatPr defaultRowHeight="20"/><cols>';
-        $widths=$type==='workforce'?[18,12,12,12,16,12,12]:($type==='capacity'?[22,14,10,10,10,12,16,14]:(in_array($type,['summary','timesheet','overtime','leave'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12]));
+        $widths=$table['widths']??($type==='workforce'?[18,12,12,12,16,12,12]:($type==='capacity'?[22,14,10,10,10,12,16,14]:(in_array($type,['summary','timesheet','overtime','leave'],true)?array_merge([24,16,18],array_fill(0,16,12)):[24,16,18,12,14,10,10,14,18,10,12,10,11,12])));
         for($c=1;$c<=$maxCols;$c++){ $w=$widths[$c-1]??14; $sheet.='<col min="'.$c.'" max="'.$c.'" width="'.$w.'" customWidth="1"/>'; }
         $sheet.='</cols><sheetData>';
 
         // Hero header.
         $sheet.='<row r="1" ht="32">'.$cell('✓  Workforce One',1,1,1).'</row>';
         $sheet.='<row r="2" ht="30">'.$cell($title,2,1,2).'</row>';
-        $sheet.='<row r="3" ht="22">'.$cell('Employee Attendance & Working Location',3,1,3).'</row>';
+        $sheet.='<row r="3" ht="22">'.$cell($table['subtitle']??'Employee Attendance & Working Location',3,1,3).'</row>';
         $sheet.='<row r="4" ht="22">'.$cell('Period: '.$start.' to '.$end,4,1,3).$cell('Generated: '.$generated,4,5,3).'</row>';
         $sheet.='<row r="5" ht="8"></row>';
 
@@ -767,8 +784,10 @@ $styles.='<xf numFmtId="0" fontId="5" fillId="14" borderId="2" applyAlignment="1
         $zip->addFromString('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
         // Further sheets: the report's own (e.g. Daily Details), then the Definitions of every figure.
         $extra=$table['sheets']??[];
+        if(($table['definitions']??true)!==false){
         $defs=[];foreach(\WorkforceOne\Reports\Definitions::all() as $term=>$text)$defs[]=[$term,$text];
         $extra[]=['name'=>'Definitions','headers'=>['Figure','Definition'],'rows'=>$defs,'widths'=>[24,110]];
+        }
         $sheets=[[$title,$sheet_file]];
         foreach($extra as $i=>$x){$xf=$this->report_xlsx_temp($temps,'sheet'.($i+2));$this->report_xlsx_table_sheet($x['headers'],$x['rows'],$x['widths']??[],$xf);$sheets[]=[$x['name'],$xf];}
         $overrides='';$entries='';$rels='';

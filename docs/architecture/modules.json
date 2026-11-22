@@ -407,7 +407,10 @@
         "attendance_day",
         "last_device_location",
         "time_logs_table_name",
-        "cx_legacy_approvals"
+        "cx_legacy_approvals",
+        "face_reset_requests",
+        "cx_type_label",
+        "cx_change_text"
       ],
       "layered": [
         {
@@ -633,7 +636,8 @@
         "approval_workflow",
         "approval_notify_administrators",
         "approval_self_rule",
-        "approval_inbox_away"
+        "approval_inbox_away",
+        "hub_reports_enabled"
       ],
       "layered": [
         {
@@ -704,6 +708,36 @@
             "substitute_end",
             "admin_substitutes"
           ]
+        },
+        {
+          "slice": "hub",
+          "namespace": [
+            "Requests"
+          ],
+          "tables": [],
+          "store": [],
+          "services": [
+            "workforce-one/src/Requests/HubReport.php"
+          ],
+          "reads": [
+            {
+              "file": "workforce-one/src/Requests/Data/WordPressHubReportQuery.php",
+              "tables": [
+                "leave_requests",
+                "leave_types",
+                "overtime_requests",
+                "early_leave_requests",
+                "schedule_swaps",
+                "vacation_requests",
+                "attendance_corrections",
+                "hr_letters",
+                "approval_requests",
+                "employees"
+              ]
+            }
+          ],
+          "moved": [],
+          "traits_clean": []
         }
       ],
       "exports": [
@@ -869,7 +903,9 @@
         "reports"
       ],
       "tables": [],
-      "api": []
+      "api": [
+        "report_xlsx_from_table"
+      ]
     },
     "app": {
       "label": "Installed app and API: PWA, offline screen, native sign-in",

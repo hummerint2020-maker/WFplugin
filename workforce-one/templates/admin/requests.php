@@ -6,11 +6,13 @@
  * @var string|null $notice
  * @var bool $notice_is_error
  * @var string $post_url
+ * @var list<array{key:string,label:string,url:string,count:int,current:bool}>|null $tabs the two tabs, only with Requests Hub reports on (3.31.159)
  */
 if (!defined('ABSPATH')) exit;
 ?>
 <div class="wrap"><h1>Requests Hub</h1>
 <p style="max-width:980px;color:#50575e">Central request center for pending Workforce One requests. Administrators can review, approve or reject requests from one place.</p>
+<?php if (!empty($tabs)): include __DIR__ . '/requests-tabs.php'; endif; /* Requests Hub reports on (3.31.159); off: nothing printed */ ?>
 <?php if ($notice): ?>
     <div class="notice <?php echo $notice_is_error ? 'notice-error' : 'notice-success'; ?> is-dismissible"><p><?php echo esc_html($notice); ?></p></div>
 <?php endif; ?>

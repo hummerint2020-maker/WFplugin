@@ -2,7 +2,7 @@
 
 **Owner request (2026-11-22):** "We want every request, even the approved ones, to show in the Requests Hub, under a new tab called Reports. Think about it with me."
 
-**Status:** decisions taken (three rounds), design done; the mockup matches them and waits for the owner's approval before implementation.
+**Status:** mockup approved by the owner ("موافق، نفّذ", 2026-11-22); implemented in 3.31.159 (as-built notes at the end).
 
 ## Today
 
@@ -393,3 +393,17 @@ Also run, unchanged: `e2e_admin_requests.py`, `e2e_features.py`, `e2e_reports*.p
 - /home/user/WFplugin/workforce-one/templates/admin/requests.php (one line) with /home/user/WFplugin/workforce-one/templates/admin/requests-reports.php (new)
 - /home/user/WFplugin/workforce-one/includes/trait-reports.php (the extracted `report_csv_stream` / `report_xlsx_workbook`)
 - /home/user/WFplugin/docs/architecture/modules.json (the "hub" slice and the `api` additions), with /home/user/WFplugin/workforce-one/src/Settings/Options.php, /home/user/WFplugin/workforce-one/includes/trait-features.php and /home/user/WFplugin/tests/golden/expected.json
+
+
+---
+
+## As built (3.31.159)
+
+Where the code differs from the design above:
+
+- **No `HubReports` service and no `HubReportFilter` value object.** The pure rules are all in `src/Requests/HubReport.php`: the status map with its SQL CASE, the filter (an array), the outcome of an approval's steps, the face resets, the merge and the totals. The trait pages the keys itself. The slice in `modules.json` lists `HubReport.php` as its service.
+- **The read model** (`src/Requests/Data/WordPressHubReportQuery.php`) also gives `people()` (everyone, archived too) for the employee picker, because no people read returns archived employees in name order. Its tables are declared in the slice's `reads`.
+- **The Excel export** uses `report_xlsx_from_table()` and `report_xlsx_workbook()`, split out of `report_xlsx_build_parts()`. The Report Center's own tables take the same path with the same bytes; a table may set `title`, `subtitle`, `widths` and `definitions=false`. CSV is written by the hub itself, the same way as `report_detailed_csv()`.
+- **Export batches** (`ews_hub_export_batch`, default 2000, minimum 1) read keys after the last row of the previous batch. Face resets go in between batches in order. The e2e checks that batches of 3 give the same file.
+- **Department** goes in the export only, as the owner decided for Excel; the screen shows the employee.
+- **Not in the e2e:** a seeded 50k-row timing, and a Cairo time zone run. The page always reads 20 rows by key, and the query count does not grow with the rows.

@@ -1,0 +1,48 @@
+/* Requests Hub reports (3.31.159, docs/tasks/hub-reports.md): the tabs and the Reports tab. Logical properties: the -rtl copy is identical. */
+.ews-hr-lead{max-width:980px;color:#50575e}
+.nav-tab .ews-hr-count{display:inline-block;min-width:18px;padding:0 6px;margin-inline-start:4px;border-radius:9px;background:#d63638;color:#fff;font-size:11px;line-height:18px;text-align:center;vertical-align:1px}
+.ews-hr-table{margin-block-start:14px;background:#fff;border:1px solid #dcdcde;max-width:1200px;overflow-x:auto}
+.ews-hr-table table{border:0}
+.ews-hr-table td small{display:block;color:#646970}
+.ews-hr-none{color:#a7aaad}
+
+.ews-hr-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px;margin-block:16px 4px;max-width:1200px;padding:12px 14px;background:#fff;border:1px solid #dcdcde}
+.ews-hr-f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#50575e}
+.ews-hr-f input,.ews-hr-f select{min-width:150px}
+.ews-hr-export{margin-inline-start:auto;display:flex;gap:6px}
+
+.ews-hr-sum{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;padding:0;list-style:none;max-width:1200px}
+.ews-hr-sum li{display:flex;align-items:baseline;gap:6px;margin:0;padding:6px 12px;background:#fff;border:1px solid #dcdcde;border-inline-start-width:4px}
+.ews-hr-sum b{font-size:16px}
+.ews-hr-sum .is-ok{border-inline-start-color:#00a32a}
+.ews-hr-sum .is-no{border-inline-start-color:#d63638}
+.ews-hr-sum .is-wd{border-inline-start-color:#8c8f94}
+.ews-hr-sum .is-cx{border-inline-start-color:#50575e}
+.ews-hr-sum .is-wait{border-inline-start-color:#dba617}
+.ews-hr-sum .is-all{border-inline-start-color:#2271b1}
+
+.ews-hr-st{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;line-height:18px;white-space:nowrap;background:#f0f0f1;color:#3c434a}
+.ews-hr-st.is-ok{background:#edfaef;color:#00650f}
+.ews-hr-st.is-no{background:#fcf0f1;color:#8a2424}
+.ews-hr-st.is-wait{background:#fcf9e8;color:#6e4c00}
+.ews-hr-st.is-wd,.ews-hr-st.is-cx{background:#f0f0f1;color:#50575e}
+
+.ews-hr-empty{margin-block-start:14px;max-width:1150px;padding:24px;background:#fff;border:1px solid #dcdcde}
+.ews-hr-empty h2{margin-block-start:0}
+.ews-hr-empty p{color:#646970}
+
+.ews-hr-box{max-width:760px;padding:4px 18px 14px;background:#fff;border:1px solid #dcdcde}
+.ews-hr-off{display:inline-block;padding:1px 8px;margin-inline-start:6px;border-radius:10px;background:#f0f0f1;color:#50575e;font-size:12px;font-weight:400;vertical-align:2px}
+.ews-hr-sum a{display:flex;align-items:baseline;gap:6px;color:inherit;text-decoration:none}
+.ews-hr-sum li.is-current{background:#f0f6fc}
+.ews-hr-sum .is-approved{border-inline-start-color:#00a32a}
+.ews-hr-sum .is-rejected{border-inline-start-color:#d63638}
+.ews-hr-sum .is-withdrawn{border-inline-start-color:#8c8f94}
+.ews-hr-sum .is-cancelled{border-inline-start-color:#50575e}
+.ews-hr-sum .is-waiting{border-inline-start-color:#dba617}
+.ews-hr-st.is-approved{background:#edfaef;color:#00650f}
+.ews-hr-st.is-rejected{background:#fcf0f1;color:#8a2424}
+.ews-hr-st.is-waiting{background:#fcf9e8;color:#6e4c00}
+.ews-hr-st.is-withdrawn,.ews-hr-st.is-cancelled{background:#f0f0f1;color:#50575e}
+.ews-hr .tablenav{max-width:1200px}
+.ews-hr-tabs{margin-block-end:0}

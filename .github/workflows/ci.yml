@@ -135,6 +135,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_swap_inbox.py "$S"
       - name: Admin request pages behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_admin_requests.py "$S"
+      - name: Requests Hub reports (off by default, every request in every status, filters, paging, CSV and Excel)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_hub_reports.py "$S"
       - name: Leaves admin page behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_admin.py "$S"
       - name: Schedule Configuration page behaviour tests

@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.31.159
+### Requests Hub reports (docs/tasks/hub-reports.md, mockups docs/mockups/hub-reports/)
+Owner's request (2026-11-22): "every request, even the approved ones, in the Requests Hub under a new tab called Reports".
+A new switch (wp-admin → Features → **Requests Hub reports**), **off by default**: off, the Requests Hub is exactly as before.
+- **On, the Requests Hub has two tabs:** "Waiting for a decision" (the same table as before, with its count) and **Reports**.
+- **Reports** lists every request of every type in every status (waiting, approved, rejected, withdrawn, cancelled):
+  leave and the old vacation table, leave cancellations (their own row), overtime, early leave, shift swaps, attendance
+  corrections, HR letters and face resets.
+  - Filters: the period (the date the request was made; the current month by default), the type, the status, an employee
+    (archived ones too, marked; a swap counts for the colleague asked as well) or a department; totals by status.
+  - Each row says who decided it and when (the level of a multi-level approval, "X for Y" for a substitute, "Automatically"
+    when nobody decided by hand) and a note: the reason of a rejection, withdrawn, shortened, issued, ready to collect,
+    "the day passed" for a swap nobody answered in time, "date not recorded" for a cancellation asked without approvals.
+  - 20 a page, newest first. **View only**: requests are still decided on the first tab and in My approvals.
+  - **Export** CSV or Excel (the Report Center's workbook with the totals as cards and a Department column): every page of
+    what the filters show, read in batches; each export is in the Audit Log.
+- Administrators only, as the Requests Hub. No database change.
+
 ## 3.31.158
 ### Leave in My requests, and the Leave page behind a switch (docs/tasks/leave-in-requests.md, mockups docs/mockups/leave-in-requests/)
 Owner's request (2026-11-21): "the Leave page has no use any more". **Two new switches** (wp-admin → Features, My approvals section);

@@ -86,6 +86,7 @@ final class Options
         'ews_feature_overtime' => ['group' => 'features', 'label' => 'Overtime requests', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_tasks' => ['group' => 'features', 'label' => 'Tasks', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_my_approvals' => ['group' => 'features', 'label' => 'My approvals and My requests (the approvals inbox in the app)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_feature_hub_reports' => ['group' => 'features', 'label' => 'Requests Hub reports (a Reports tab: every request in every status, view only, CSV and Excel; 3.31.159)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_my_requests_leave' => ['group' => 'features', 'label' => 'Leave in My requests (balances, asking to cancel an approved leave, the leave history; 3.31.158)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_leave_page' => ['group' => 'features', 'label' => 'The Leave page in the app (off: it goes to My requests; only with Leave in My requests on)', 'kind' => 'bool', 'default' => true, 'page' => 'ews31-features'],
         'ews_shift_history_synced' => ['group' => 'schedule', 'label' => 'Shift history: the last day its new periods were applied', 'kind' => 'text', 'default' => '', 'internal' => true],

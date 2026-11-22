@@ -127,6 +127,11 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <?php $switch('leave_page_enabled', $on['leave_page']); ?>
 </div></div>
 
+<div class="wfo-feature-section" id="ews-hub-reports"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Requests Hub reports', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('A Reports tab on the Requests Hub: every request in every status, who decided it and when, with a CSV and Excel export. View only: requests are still decided on the first tab and in My approvals. Off, the Requests Hub is exactly as today.', 'workforce-one'); ?> <a href="<?php echo esc_url(admin_url('admin.php?page=ews31-requests')); ?>"><?php esc_html_e('Requests Hub', 'workforce-one'); ?></a></div></div>
+    <input type="hidden" name="hub_reports_present" value="1"><?php $switch('hub_reports_enabled', $on['hub_reports']); ?>
+</div></div>
+
 <div class="wfo-feature-section" id="ews-advances"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Salary advances', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Employees ask for an advance from My requests → New request and choose how many months to pay it back over. It is decided on the approval engine (by default the direct manager, then Finance); Finance records it as paid, and the instalments come off the pay from the month after.', 'workforce-one'); ?> <a href="<?php echo esc_url($advances_url); ?>"><?php esc_html_e('Advances', 'workforce-one'); ?></a></div></div>
     <?php $switch('advances_enabled', $on['advances']); ?>
