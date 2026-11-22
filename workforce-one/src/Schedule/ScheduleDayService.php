@@ -42,6 +42,12 @@ final class ScheduleDayService
         return $this->store->find($employeeId, $date);
     }
 
+    /** Every schedule row of that day (employee_id, work_date, status), in the stored order (3.31.160, the Smart Nudges cron). @return object[] */
+    public function rowsOn(string $date): array
+    {
+        return $this->store->rowsOnDates([$date]);
+    }
+
     /** @return array<int,string> employee id => the day's status, for everyone with a row that day (the Smart Nudges cron, 3.31.148) */
     public function statusesOn(string $date): array
     {

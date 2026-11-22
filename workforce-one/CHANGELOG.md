@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.31.160
+### Performance from the production System health (owner's request, 2026-11-22)
+The production System health showed no errors and no failed jobs, only reads repeated in a loop. Nothing changes in what anyone
+sees or how anything works; fewer queries:
+- **Smart Nudges job** (every five minutes): the Sign In reminder read each employee's shift, today's schedule row, "attendance
+  enabled" and today's Sign Ins one by one (about four queries a person, ~100 a run for 25 people). They are now read for everyone
+  at once (three queries). A night shift's day other than today is still read as before. The reminders are the same
+  (tests/e2e_smart_nudges_reads.py compares them person by person).
+- **My approvals, My requests, Leave**: "does this employee manage anyone?" and "is the managers table there?" were asked up to
+  26 times each while one page was built; now once a page.
+- **Every request of the site**: the hourly check for transfers due read a transient (one query on every page, API call and
+  public page); its next time is now an autoloaded option, read with the other options at no cost.
+
 ## 3.31.159
 ### Requests Hub reports (docs/tasks/hub-reports.md, mockups docs/mockups/hub-reports/)
 Owner's request (2026-11-22): "every request, even the approved ones, in the Requests Hub under a new tab called Reports".

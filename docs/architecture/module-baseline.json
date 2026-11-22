@@ -73,7 +73,7 @@
   "shell->payroll": 2,
   "shell->people": 6,
   "shell->reports": 1,
-  "shell->schedule": 24,
+  "shell->schedule": 25,
   "shell->tasks": 4,
   "tasks->people": 4
  },

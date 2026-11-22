@@ -86,4 +86,24 @@ final class AttendanceLogTest extends TestCase
         $this->assertSame('2', $this->log->openBreak(7, '2026-10-29')->id);
         $this->assertNull($this->log->openBreak(8, '2026-10-29'));
     }
+
+    /** 3.31.160 (the Smart Nudges cron): who signed in that day, for many at once, the same answer as todayEvents() one by one. */
+    public function testSignedInOnAgreesWithTodayEventsForEveryone(): void
+    {
+        $d = '2026-10-29';
+        $this->logs->add(1, 7, $d, 'sign_in', $d . ' 08:00:00');
+        $this->logs->add(2, 8, $d, 'late_sign_in', $d . ' 09:40:00');
+        $this->logs->add(3, 9, $d, 'sign_out', $d . ' 17:00:00');                               // a Sign Out alone is not a Sign In
+        $this->logs->add(4, 10, $d, 'sign_in', $d . ' 08:00:00');
+        $this->logs->add(5, 10, $d, 'sign_out', $d . ' 08:01:00', ['corrects_id' => '4']);    // corrected away
+        $this->logs->add(6, 11, '2026-10-28', 'sign_in', '2026-10-28 08:00:00');                // another day
+        $ids = [7, 8, 9, 10, 11, 12];
+        $batch = $this->log->signedInOn($ids, $d);
+        foreach ($ids as $id) {
+            $e = $this->log->todayEvents($id, $d);
+            $this->assertSame(!empty($e['sign_in']) || !empty($e['late_sign_in']), !empty($batch[$id]), 'employee ' . $id);
+        }
+        $this->assertSame([7, 8], array_keys($batch));
+        $this->assertSame([], $this->log->signedInOn([], $d));
+    }
 }

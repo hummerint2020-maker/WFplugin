@@ -153,6 +153,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_achievements.py "$S"
       - name: Engagement settings pages behaviour tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_engagement.py "$S"
+      - name: Smart Nudges job reads (the reminders read for everyone at once are the same as one by one)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_smart_nudges_reads.py "$S"
       - name: Employee profile and shift-based lateness tests
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_employee_profile.py "$S"
       - name: Admin dashboard and Audit Log tests

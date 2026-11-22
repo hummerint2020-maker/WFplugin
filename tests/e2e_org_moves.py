@@ -104,7 +104,7 @@ wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 EMP1 = ids()['eid']
 # Ahmed (head) → Mona → Nour → Hana; Ahmed → Karim → Hassan; Khaled alone. Mona and Karim have users.
 out = php("""foreach(['ews_employee_relationships','ews_audit_log','ews_departments','ews_org_moves','ews_approval_requests','ews_approval_steps','ews_notifications'] as $t)$wpdb->query("DELETE FROM {$p}$t");
-update_option('ews_org_chart',['enabled'=>1,'audience'=>'everyone','employee_view'=>'line','wide_span'=>8,'title_required'=>0],false); delete_transient('ews_org_moves_checked');
+update_option('ews_org_chart',['enabled'=>1,'audience'=>'everyone','employee_view'=>'line','wide_span'=>8,'title_required'=>0],false); delete_transient('ews_org_moves_checked'); delete_option('ews_org_moves_next_check');
 foreach(['orgmona','orgkarim'] as $l){$u=get_user_by('login',$l); if($u) wp_delete_user($u->ID);}
 $mk=function($n,$t,$u=0)use($wpdb,$p){$d=strtolower(str_replace(' ','.',$n));$wpdb->insert("{$p}ews_employees",['name'=>$n,'domain_name'=>$d,'email'=>$d.'@example.com','wp_user_id'=>$u,'job_title'=>$t,'active'=>1,'attendance_enabled'=>1]);return $wpdb->insert_id;};
 $um=wp_create_user('orgmona','orgmonapass','orgmona@example.com'); $uk=wp_create_user('orgkarim','orgkarimpass','orgkarim@example.com');
@@ -180,7 +180,7 @@ php("do_action('ews_privacy_cleanup');")
 check('on its day the daily job does it', manager(E['hana']) == E['mona'] and q("SELECT status FROM {p}ews_org_moves WHERE employee_id=%d ORDER BY id DESC LIMIT 1" % E['hana'])[0]['status'] == 'done')
 # A move that can no longer be done: its new manager archived before the day.
 r = move(adm, E['khaled'], ref('Karim Fathy', E['karim']), date=TOMORROW, reason='Fleet')
-php("$wpdb->query(\"UPDATE {$p}ews_org_moves SET effective_date='%s' WHERE status='scheduled'\"); $wpdb->update(\"{$p}ews_employees\",['active'=>0],['id'=>%d]); delete_transient('ews_org_moves_checked');" % (TODAY, E['karim']))
+php("$wpdb->query(\"UPDATE {$p}ews_org_moves SET effective_date='%s' WHERE status='scheduled'\"); $wpdb->update(\"{$p}ews_employees\",['active'=>0],['id'=>%d]); delete_transient('ews_org_moves_checked'); delete_option('ews_org_moves_next_check');" % (TODAY, E['karim']))
 page, d = chart(adm)
 fm = q("SELECT id,status,note FROM {p}ews_org_moves WHERE employee_id=%d ORDER BY id DESC LIMIT 1" % E['khaled'])
 check('a scheduled move whose new manager was archived is not done, and says why', fm[0]['status'] == 'failed' and fm[0]['note'] == 'manager' and manager(E['khaled']) == 0, fm)
@@ -229,7 +229,7 @@ check('...the Employees page too: "could not be saved", the supervisor unchanged
 php("""$t=$p.'ews_org_moves'; $now=current_time('mysql'); $ago=date('Y-m-d H:i:s',current_time('timestamp')-1200);
     $row=function($e,$to,$at,$note)use($wpdb,$t,$now){$wpdb->insert($t,['employee_id'=>$e,'from_manager_id'=>0,'to_manager_id'=>$to,'effective_date'=>current_time('Y-m-d'),'reason'=>'stuck','status'=>'applying','source'=>'chart','note'=>$note,'created_by'=>1,'created_at'=>$now]+($at?['applied_at'=>$at]:[]));};
     $row(%(hana)d,%(ahmed)d,null,''); $row(%(nour)d,%(ahmed)d,$ago,''); $row(%(hassan)d,%(ahmed)d,$ago,'resumed');
-    $wpdb->query("UPDATE {$t} SET applied_at=NULL WHERE employee_id=%(hana)d AND status='applying'"); delete_transient('ews_org_moves_checked');""" % E)
+    $wpdb->query("UPDATE {$t} SET applied_at=NULL WHERE employee_id=%(hana)d AND status='applying'"); delete_transient('ews_org_moves_checked'); delete_option('ews_org_moves_next_check');""" % E)
 php("do_action('ews_privacy_cleanup');")
 st_ = lambda e: q("SELECT status,note FROM {p}ews_org_moves WHERE employee_id=%d AND reason='stuck' ORDER BY id DESC LIMIT 1" % e)[0]
 check('a move left "applying" from before this release: shown as interrupted (not redone), her manager unchanged', st_(E['hana']) == {'status': 'failed', 'note': 'interrupted'} and manager(E['hana']) == hana_mgr, st_(E['hana']))

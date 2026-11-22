@@ -124,8 +124,10 @@ trait EWS_Org_Moves_Trait {
 
     /** At most once an hour, while the chart is on: the scheduled moves whose day has come. */
     public function org_moves_maybe_due(){
-        if(!$this->org_enabled() || get_transient('ews_org_moves_checked'))return;
-        set_transient('ews_org_moves_checked',1,HOUR_IN_SECONDS);
+        // Once an hour (3.31.160): the time of the next check is an autoloaded option, read with the others at no cost. A transient
+        // that expires is not autoloaded, so reading it cost one query on every request of the site (the app, the API, public pages).
+        if(!$this->org_enabled() || (int)get_option('ews_org_moves_next_check',0)>time())return;
+        update_option('ews_org_moves_next_check',time()+HOUR_IN_SECONDS,true);
         $this->org_moves_apply_due();
     }
 

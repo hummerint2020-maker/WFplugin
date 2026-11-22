@@ -64,6 +64,17 @@ final class WordPressReportingStore implements ReportingStore
         return (bool) $this->db->get_var($this->db->prepare("SELECT r.id FROM {$this->rt} r JOIN {$this->employees} e ON e.id=r.employee_id AND e.active=1 WHERE r.related_employee_id=%d AND r.relationship_type='supervisor' AND r.active=1 LIMIT 1", $employeeId));
     }
 
+    public function withActiveReports(array $employeeIds): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $employeeIds))));
+        $out = [];
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $ph = implode(',', array_fill(0, count($chunk), '%d'));
+            foreach ((array) $this->db->get_col($this->db->prepare("SELECT DISTINCT r.related_employee_id FROM {$this->rt} r JOIN {$this->employees} e ON e.id=r.employee_id AND e.active=1 WHERE r.related_employee_id IN ($ph) AND r.relationship_type='supervisor' AND r.active=1", $chunk)) as $id) $out[] = (int) $id;
+        }
+        return $out;
+    }
+
     public function deactivate(int $employeeId, string $type, string $now)
     {
         return $this->db->query($this->db->prepare(
