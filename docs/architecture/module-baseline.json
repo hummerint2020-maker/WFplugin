@@ -51,7 +51,7 @@
   "platform->locations": 1,
   "platform->notifications": 10,
   "platform->people": 2,
-  "platform->schedule": 21,
+  "platform->schedule": 20,
   "platform->tasks": 1,
   "reports->attendance": 4,
   "reports->locations": 3,
@@ -73,7 +73,7 @@
   "shell->payroll": 2,
   "shell->people": 6,
   "shell->reports": 1,
-  "shell->schedule": 25,
+  "shell->schedule": 23,
   "shell->tasks": 4,
   "tasks->people": 4
  },

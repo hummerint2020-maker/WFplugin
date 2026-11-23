@@ -312,7 +312,8 @@
         "attendance_page_cards",
         "shift_prime_people",
         "schedule_table_name",
-        "swap_notice_text"
+        "swap_notice_text",
+        "prime_shift_cache"
       ],
       "layered": [
         {
