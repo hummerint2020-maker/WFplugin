@@ -12,6 +12,7 @@ sees or how anything works; fewer queries:
   per colleague (25-29 queries a page); now one read for all of them, with the same rule.
 - **Every request of the site**: the hourly check for transfers due read a transient (one query on every page, API call and
   public page); its next time is now an autoloaded option, read with the other options at no cost.
+  The first request after the update checks once more (harmless: a move is claimed before it is applied, never twice).
 
 ## 3.31.159
 ### Requests Hub reports (docs/tasks/hub-reports.md, mockups docs/mockups/hub-reports/)
