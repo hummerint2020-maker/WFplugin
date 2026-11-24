@@ -87,7 +87,13 @@ final class ApprovalEngine
         if (!$workflow) return ApprovalResult::error('approval_workflow_not_found', 'Approval workflow is not configured.');
 
         $existing = $this->requests->existingId($entityType, $entityId, (int) $workflow->id);
-        if ($existing) return ApprovalResult::error('approval_already_started', 'Approval workflow already exists for this request.');
+        $round = 1;
+        if ($existing) {
+            // A leave changed more than once (3.31.161): a new round once the previous one is final; never two open at once.
+            $last = Workflows::restartsAfterFinal($entityType) ? $this->requests->latestRound($entityType, $entityId, (int) $workflow->id) : null;
+            if (!$last || !Workflows::isFinal((string) $last->status)) return ApprovalResult::error('approval_already_started', 'Approval workflow already exists for this request.');
+            $round = max(1, (int) ($last->entity_round ?? 1)) + 1;
+        }
 
         $steps = $this->workflows->activeSteps((int) $workflow->id);
 
@@ -111,7 +117,7 @@ final class ApprovalEngine
                 'status' => 'APPROVED',
                 'current_step' => null,
                 'completed_at' => $this->clock->now(),
-            ], ['%d', '%s', '%d', '%d', '%s', null, '%s']);
+            ] + ($round > 1 ? ['entity_round' => $round] : []), array_merge(['%d', '%s', '%d', '%d', '%s', null, '%s'], $round > 1 ? ['%d'] : []));
             if ($id === false) return ApprovalResult::error('approval_db_error', $this->requests->lastError());
             return ApprovalResult::ok($id);
         }
@@ -164,6 +170,10 @@ final class ApprovalEngine
         } else {
             $row['completed_at'] = $now;
             $fmt[] = '%s';
+        }
+        if ($round > 1) {
+            $row['entity_round'] = $round;
+            $fmt[] = '%d';
         }
         $approvalId = $this->requests->insertRequest($row, $fmt);
         if ($approvalId === false) return $this->startFailed($manageTransaction);

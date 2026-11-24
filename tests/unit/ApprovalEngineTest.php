@@ -60,6 +60,23 @@ final class ApprovalEngineTest extends TestCase
         $this->assertSame('approval_already_started', $again->code);
     }
 
+    public function testALeaveChangeStartsANewRoundOnlyAfterTheLastOneEnded(): void
+    {
+        $e = $this->w->engine();
+        $first = $e->start('vacation', 'leave_cancellation', 7, 1, [], true);
+        $this->assertTrue($first->ok);
+        $this->assertSame('approval_already_started', $e->start('vacation', 'leave_cancellation', 7, 1, [], true)->code, 'one waits: no second round');
+        $this->assertTrue($this->act($first->value, 'reject', 20)->ok);
+        $this->assertSame('REJECTED', $this->w->requests->requests[$first->value]->status);
+        $second = $e->start('vacation', 'leave_cancellation', 7, 1, [], true);
+        $this->assertTrue($second->ok, 'Leave return: a new round after a final decision');
+        $this->assertSame(2, (int) $this->w->requests->requests[$second->value]->entity_round);
+        // Every other type still starts once.
+        $leave = $e->start('vacation', 'leave', 8, 1, [], true);
+        $this->act($leave->value, 'reject', 20);
+        $this->assertSame('approval_already_started', $e->start('vacation', 'leave', 8, 1, [], true)->code);
+    }
+
     public function testTwoLevelsFirstPendingSecondWaiting(): void
     {
         $r = $this->start('vacation');

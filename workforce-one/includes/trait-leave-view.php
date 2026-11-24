@@ -95,6 +95,16 @@ trait EWS_Leave_View_Trait {
         return $this->my_approvals_enabled() && (bool)$this->option('ews_feature_my_requests_leave');
     }
 
+    /** Leave return (3.31.161, docs/tasks/leave-return.md): off by default; off, every leave path is exactly as before. */
+    private function leave_return_on(){
+        return (bool)$this->option('ews_feature_leave_return');
+    }
+
+    /** The employee's part of Leave return (back at work on any day, more than one change) lives in My requests. */
+    private function leave_return_ask_on(){
+        return $this->leave_return_on() && $this->my_requests_leave_on();
+    }
+
     /** The Leave page is shown unless leave is in My requests and the page is switched off (3.31.158). */
     private function leave_page_shown(){
         return !$this->my_requests_leave_on() || (bool)$this->option('ews_feature_leave_page');

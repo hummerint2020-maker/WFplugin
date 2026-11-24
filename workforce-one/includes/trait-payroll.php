@@ -216,6 +216,13 @@ trait EWS_Payroll_Trait {
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->payroll_tables()['runs']} WHERE month=%s",$month));
     }
 
+    /** The closed payroll months ('Y-m') between two days (3.31.161, Leave return: their leave days stay leave). @return string[] */
+    private function payroll_closed_months($from,$to){
+        global $wpdb;$this->ensure_payroll_schema();
+        if((string)$to<(string)$from)return [];
+        return array_map('strval',(array)$wpdb->get_col($wpdb->prepare("SELECT month FROM {$this->payroll_tables()['runs']} WHERE month BETWEEN %s AND %s",substr((string)$from,0,7),substr((string)$to,0,7))));
+    }
+
     /** A closed month's payslips, as payroll_month() rows (employee name and id as they were). @return array<int,array{employee:object,pay:array<string,mixed>}> */
     private function payroll_payslips($run_id,$only_employee=0){
         global $wpdb;$t=$this->payroll_tables();

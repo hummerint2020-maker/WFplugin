@@ -29,6 +29,9 @@ interface ApprovalRequestStore
     /** The id of a request already started for the entity and workflow, or null. */
     public function existingId(string $entityType, int $entityId, int $workflowId): ?string;
 
+    /** The newest request of an entity under a workflow (id, status, entity_round), for a new round (3.31.161). */
+    public function latestRound(string $entityType, int $entityId, int $workflowId): ?object;
+
     /** The newest request of an entity under a workflow key (joins its workflow's key and mode). */
     public function findByKey(string $workflowKey, string $entityType, int $entityId): ?object;
 
