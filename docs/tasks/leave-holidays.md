@@ -1,6 +1,6 @@
 # Company holidays are not leave days
 
-Status: design, waiting for the owner's answers (2026-11-24). Starts after the leave-cancellation PR is merged.
+Status: owner approved all 8 recommendations (2026-11-24). Mockup: docs/mockups/leave-holidays/index.html. Starts after the leave-cancellation PR is merged.
 
 ## Bug
 
