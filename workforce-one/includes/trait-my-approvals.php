@@ -332,7 +332,7 @@ trait EWS_My_Approvals_Trait {
             'all_url'=>$base,'leave_url'=>add_query_arg('req_kind','leave',$base),'shown'=>$this->leave_page_shown()]:null;
         return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$kind?add_query_arg('req_kind','leave',$base):$base, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
             'new'=>$new,'open_new'=>!empty($_GET['new']),'leave'=>$leave,
-            'cx_balance'=>$new['cx_balance']??null]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            'cx_balance'=>$kind===''?($new['cx_balance']??null):null]);   // not in the Leave filter // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
     /**

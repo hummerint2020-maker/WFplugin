@@ -85,6 +85,7 @@ pg = page()
 strip = re.search(r'<section class="wfo-lr-bals".*?</section>', pg, re.S)
 strip = strip.group(0) if strip else ''
 check('with leave in My requests: one strip, leave balances then the corrections card', strip.count('is-cx') == 1 and 'This year' in strip and strip.index('wfo-lr-bal tone-') < strip.index('is-cx'), strip[:600])
+check('...not in the Leave filter', 'is-cx' not in emp.req('/app/?ews_view=requests&req_kind=leave')[1])
 features(my_requests_cx_balance_enabled=True, my_requests_leave_present=True, my_requests_leave_enabled=False, corrections_enabled=False)
 check('Attendance corrections off: no card', 'is-cx' not in page())
 

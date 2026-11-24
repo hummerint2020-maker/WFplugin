@@ -29,7 +29,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
     <?php if ($notice): ?><div class="wfo-apv-toast is-<?php echo esc_attr($notice['type']); ?>" role="status"><?php echo esc_html($notice['text']); ?></div><?php endif; ?>
 <?php if ($leave_bals || $cx_balance): /* no indent: nothing printed while it is off (golden) */ ?>
     <section class="wfo-lr-bals" aria-labelledby="wfo-lr-bals-h">
-        <div class="wfo-lr-bals-h"><?php echo \WorkforceOne\Ui\Icons::svg('leave', 16, 2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><b id="wfo-lr-bals-h"><?php esc_html_e('Your balance', 'workforce-one'); ?></b><?php if ($leave_bals): ?><small><?php esc_html_e('This year · after requests waiting', 'workforce-one'); ?></small><?php endif; ?></div>
+        <div class="wfo-lr-bals-h"><?php echo \WorkforceOne\Ui\Icons::svg($leave_bals ? 'leave' : 'time', 16, 2); // phpcs:ignore WordPress.Security.EscapeOutput -- static markup ?><b id="wfo-lr-bals-h"><?php esc_html_e('Your balance', 'workforce-one'); ?></b><?php if ($leave_bals): ?><small><?php esc_html_e('This year · after requests waiting', 'workforce-one'); ?></small><?php endif; ?></div>
         <div class="wfo-lr-bals-row">
         <?php foreach ($leave_bals as $i => $t): ?>
             <div class="wfo-lr-bal tone-<?php echo (int) ($i % 4); ?>"><span dir="auto"><?php echo esc_html($t['name']); ?></span><?php if ($t['deducts'] && $t['available'] !== ''): ?><b><?php echo esc_html($t['available']); ?></b><small><?php echo esc_html(sprintf(/* translators: %s: days a year */ __('of %s days', 'workforce-one'), $t['of'] ?? '')); ?></small><?php else: ?><b>—</b><small><?php esc_html_e('No balance deduction', 'workforce-one'); ?></small><?php endif; ?></div>

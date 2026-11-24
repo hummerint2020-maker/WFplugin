@@ -9773,7 +9773,7 @@ msgid "Corrections balance in My requests"
 msgstr "رصيد التصحيحات في طلباتي"
 
 msgid "\"Your balance\" at the top of My requests also shows how many attendance corrections are left this month, and what happens to the next one once none are left. Only while Attendance corrections and My approvals are on, and a monthly limit is set."
-msgstr "\"رصيدك\" في أول طلباتي يبيّن كمان كام تصحيح حضور فاضل الشهر ده، وإيه اللي يحصل للتصحيح اللي بعده لما يخلصوا. بس وتصحيحات الحضور وموافقاتي شغالين، وفيه حد شهري متحدد."
+msgstr "\"رصيدك\" في أول طلباتي يبيّن كمان كام تصحيح حضور فاضل الشهر ده، وإيه اللي يحصل للتصحيح اللي بعده لما يخلصوا. بس لما تصحيحات الحضور وموافقاتي يكونوا شغالين، ويكون فيه حد شهري متحدد."
 
 msgid "Attendance corrections"
 msgstr "تصحيحات الحضور"
