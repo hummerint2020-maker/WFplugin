@@ -17,6 +17,9 @@ switch (wp-admin → Features → **Company holidays are not leave days**), **of
   for a decision is shown but not corrected until it is decided. A later cancellation returns only what the leave still charges.
 - Database (3.31.162): a new table `ews_leave_holiday_refunds` (one row per day given back) and `ews_leave_requests.holidays_skipped`.
   Nothing changes for existing rows.
+- Layers: the feature is the Leave module's first layered slice (`leave.holidays`): controller in the trait, `HolidayRefundService`,
+  `WordPressLeaveHolidayStore` (its only SQL), ports for the rest of the plugin. check_layers now also measures the older leave code's
+  SQL on the leave tables (layer-baseline.json, recorded once; it only goes down from here).
 
 ## 3.31.161
 ### Leave return: a leave changed more than once, a return HR records, and approved leave days locked (docs/tasks/leave-return.md, mockups docs/mockups/leave-return/)

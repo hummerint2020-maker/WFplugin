@@ -34,6 +34,20 @@ final class LeaveHolidaysTest extends TestCase
         $this->assertSame([], HolidayRefund::candidates([], ['2026-10-06'], [], 3));
     }
 
+    public function testSkipped(): void
+    {
+        $all = ['2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08'];
+        // Counted without the holiday: the holiday is kept on the leave.
+        $this->assertSame(['2026-10-06'], HolidayRefund::skipped($all, ['2026-10-06'], 4));
+        // Counted with every working day (the switch off, or turned on meanwhile): nothing skipped.
+        $this->assertSame([], HolidayRefund::skipped($all, ['2026-10-06'], 5));
+        $this->assertSame([], HolidayRefund::skipped($all, [], 5));
+        // A holiday outside the working days changes nothing.
+        $this->assertSame([], HolidayRefund::skipped($all, ['2026-10-10'], 5));
+        // Neither reading (the calendar changed meanwhile): not saved.
+        $this->assertNull(HolidayRefund::skipped($all, ['2026-10-06'], 3));
+    }
+
     public function testRestorable(): void
     {
         $this->assertTrue(HolidayRefund::restorable('Approved', true, null));

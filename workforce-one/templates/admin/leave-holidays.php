@@ -6,7 +6,7 @@
  * @var string $tab          'holidays'
  * @var bool   $return_tabs  Leave return is on: its two tabs too
  * @var int    $year         the leave year
- * @var array<int,array<string,mixed>> $rows  leave_holiday_report()
+ * @var array<int,array<string,mixed>> $rows  HolidayRefundService::report()
  * @var string $post_url
  * @var string $page_url
  * @var int|null $done_days  days given back by the last action (null: none)

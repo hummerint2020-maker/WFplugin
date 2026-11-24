@@ -164,7 +164,26 @@ trait EWS_Services_Trait {
             new class implements Permissions {
                 public function isAdmin(int $userId): bool { return (bool)user_can($userId,'manage_options'); }
             },
-            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports());
+            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports(),$this->leave_holiday_ports());
+    }
+
+    /** Company holidays charged as leave (3.31.162): what HolidayRefundService reaches in the plugin. */
+    private function leave_holiday_ports(): \WorkforceOne\Leave\HolidayRefundPorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new class($call) implements \WorkforceOne\Leave\HolidayRefundPorts {
+            private $call;
+            public function __construct(callable $call){ $this->call=$call; }
+            public function holidays(string $start,string $end): array { return (array)($this->call)('leave_company_holidays',$start,$end); }
+            public function leaveYear(): int { return (int)($this->call)('leave_year'); }
+            public function employee(int $employeeId): ?object { $e=($this->call)('people_employee',$employeeId); return is_object($e)?$e:null; }
+            public function withEmployeeLock(int $employeeId,callable $fn) { return ($this->call)('ews_with_lock','leave_emp_'.$employeeId,$fn,'busy'); }
+            public function balance(object $leave): ?object { $b=($this->call)('leave_request_balance',$leave); return is_object($b)?$b:null; }
+            public function restoreDay(object $leaveDay,object $employee,string $now,int $leaveId): bool { return (bool)($this->call)('leave_return_restore_day',$leaveDay,$employee,$now,$leaveId); }
+            public function carryTopUp(object $leave,object $balance,float $days,string $now) { return ($this->call)('leave_carry_top_up',$leave,$balance,$days,$now); }
+            public function weekLockRecord(int $employeeId,array $days,string $ref): void { ($this->call)('week_lock_record_request',$employeeId,$days,'leave_holiday_refund',$ref); }
+            public function notify(int $wpUserId,string $title,string $message,int $leaveId): void { ($this->call)('notify',$wpUserId,'leave',$title,$message,['entity_id'=>$leaveId]); }
+            public function actorId(): int { return (int)get_current_user_id(); }
+        };
     }
 
     /** The HR letters' ports (HL3): the adapters through which its services reach the site, the approvals engine, notifications, files and Payroll. */
