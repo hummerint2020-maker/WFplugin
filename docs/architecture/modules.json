@@ -571,7 +571,8 @@
         "leave_pending_newest_first",
         "leave_held_days",
         "leave_return_on",
-        "leave_held_audit"
+        "leave_held_audit",
+        "leave_round_token"
       ]
     },
     "overtime": {

@@ -163,9 +163,9 @@ trait EWS_Leave_Admin_Trait {
     private function leave_return_preview($r,$back){
         $closed=$this->payroll_closed_months($back,(string)$r->end_date);
         $eff=\WorkforceOne\Leave\ReturnRules::effectiveFrom((string)$back,(string)$r->end_date,$closed);
-        $days=$eff===null?0:$this->leave_days_from((int)$r->id,$eff);
-        $all=$this->leave_days_from((int)$r->id,'0000-00-00');
-        $whole=$eff!==null && $days>0 && $days===$all;
+        $days=$eff===null?0:$this->leave_return_days_from($r,$eff);
+        $all=$this->leave_return_days_from($r,(string)$r->start_date);
+        $whole=$eff!==null && $days>0 && ($days===$all || $eff<=(string)$r->start_date);
         $bal=(int)$r->deduct_balance?$this->leave_request_balance($r):null;
         $back_days=$days?min((float)$r->requested_days,(float)$days):0.0;
         if($whole)$back_days=(float)$r->requested_days;
@@ -211,7 +211,7 @@ trait EWS_Leave_Admin_Trait {
         $leaves=[];
         if($emp)$leaves=(array)$wpdb->get_results($wpdb->prepare(
             "SELECT r.id,r.start_date,r.end_date,r.requested_days,r.cancellation_status,t.name type_name FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types t ON t.id=r.leave_type_id
-             WHERE r.employee_id=%d AND r.status='Approved' AND EXISTS(SELECT 1 FROM {$wpdb->prefix}ews_leave_schedule_snapshots s WHERE s.leave_request_id=r.id) ORDER BY r.start_date DESC LIMIT 50",$emp));
+             WHERE r.employee_id=%d AND r.status='Approved' ORDER BY r.start_date DESC LIMIT 50",$emp));
         $preview=null;$check=null;$r=null;
         if($lid){
             $r=$this->leave_request_row($lid,'AND r.employee_id='.(int)$emp);
@@ -279,7 +279,7 @@ trait EWS_Leave_Admin_Trait {
         if(!$l || (string)$l->status!=='Approved')return 'done';
         $eff=\WorkforceOne\Leave\ReturnRules::effectiveFrom((string)$back,(string)$l->end_date,$this->payroll_closed_months($back,(string)$l->end_date));
         if($eff===null)return \WorkforceOne\Leave\ReturnRules::CLOSED_PAYROLL;
-        if($eff!==$exp_from || $this->leave_days_from($id,$eff)!==(int)$exp_days)return 'changed';
+        if($eff!==$exp_from || $this->leave_return_days_from($l,$eff)!==(int)$exp_days)return 'changed';
         $was=(string)($l->cancellation_status??'');
         if($was==='Pending'){
             $c=$this->approval_close_open('vacation','leave_cancellation',(int)$id,true);

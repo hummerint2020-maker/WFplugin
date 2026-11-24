@@ -229,9 +229,21 @@ decide(R, 'reject')
 ask(R, d(21))
 qs = decide(R, 'approve', old)
 check('a decision form from an older round is refused (moved), the new round still waits', qs.get('leave_error') == 'moved' and row(R)['cancellation_status'] == 'Pending', (qs, row(R)))
+noround = dict(form(R) or {})
+noround.pop('round', None)
+qs = decide(R, 'approve', noround)
+check('a form that shows no round (the Leave page before, the Hub) cannot decide a waiting round', qs.get('leave_error') == 'moved' and row(R)['cancellation_status'] == 'Pending', (qs, row(R)))
 decide(R, 'approve')
 check('...the current form decides it: day 2 back', row(R)['end_date'] == d(20) and used() == base - 1, (row(R), used()))
 check('...the rounds: Rejected, Withdrawn, Rejected, Approved', [c[1] for c in changes(R)] == ['Rejected', 'Withdrawn', 'Rejected', 'Approved'], changes(R))
+
+# A leave kept without leave days (very old data): its working days.
+N, _ = make(23, 24)
+php("$wpdb->delete($p.'ews_leave_schedule_snapshots',['leave_request_id'=>%d]);" % N)
+base = used()
+qs = ask(N, d(24))
+decide(N, 'approve')
+check('an old leave without leave days can still be changed (its working days)', qs.get('leave_cancel_sent') == '1' and row(N)['end_date'] == d(23) and used() == base - 1, (qs, row(N), used()))
 
 # A payroll month closed meanwhile: its days stay leave.
 P, _ = make(25, 27)
