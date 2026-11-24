@@ -109,8 +109,9 @@ trait EWS_Leave_Trait {
             return (string)$wpdb->get_var($wpdb->prepare("SELECT status FROM {$wpdb->prefix}ews_leave_requests WHERE id=%d",(int)$leave_id));
         }
 
+    /** Working days of a leave; with "Company holidays are not leave days" on (3.31.162), the company holidays are not counted. */
     private function vacation_working_days_count($start,$end){
-            return WorkingDays::count((string)$start,(string)$end,$this->working_days());
+            return WorkingDays::count((string)$start,(string)$end,$this->working_days(),$this->leave_holiday_dates($start,$end));
         }
 
     private function leave_redirect($args=[]){
@@ -193,7 +194,14 @@ trait EWS_Leave_Trait {
      */
     private function leave_insert_request($emp,$type,$start,$end,$days,$reason,$bal){
             global $wpdb;
-            $ok=$wpdb->insert($wpdb->prefix.'ews_leave_requests',['employee_id'=>$emp->id,'leave_type_id'=>(int)$type->id,'start_date'=>$start,'end_date'=>$end,'requested_days'=>$days,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'balance_id'=>$bal?(int)$bal->id:null],['%d','%d','%s','%s','%f','%s','%s','%d','%d']);
+            $row=['employee_id'=>$emp->id,'leave_type_id'=>(int)$type->id,'start_date'=>$start,'end_date'=>$end,'requested_days'=>$days,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'balance_id'=>$bal?(int)$bal->id:null];
+            $fmt=['%d','%d','%s','%s','%f','%s','%s','%d','%d'];
+            // Counted without the company holidays (3.31.162): the leave keeps the holidays it skipped, so its approval skips exactly those
+            // (its leave days always match what it charges). Read once here: a count made before the switch changed keeps no holiday.
+            $skip=$this->leave_holidays_skipped($start,$end,(float)$days);
+            if($skip===null)return 'save';
+            if($skip){$row['holidays_skipped']=implode(',',$skip);$fmt[]='%s';}
+            $ok=$wpdb->insert($wpdb->prefix.'ews_leave_requests',$row,$fmt);
             if($ok===false)return 'save';
             $id=(int)$wpdb->insert_id;
             if($this->leave_overlap((int)$emp->id,$start,$end,$id))return 'overlap';
@@ -219,7 +227,8 @@ trait EWS_Leave_Trait {
                 if($q===false)return new WP_Error('leave_balance','Could not update leave balance.');
             }
             $snap=$wpdb->prefix.'ews_leave_schedule_snapshots';
-            $leave_dates=WorkingDays::dates($r->start_date,$r->end_date,$this->working_days());
+            // A leave counted without the company holidays (3.31.162) gets no leave day on the ones it skipped; an older one as before.
+            $leave_dates=WorkingDays::dates($r->start_date,$r->end_date,$this->working_days(),!empty($r->holidays_skipped)?explode(',',(string)$r->holidays_skipped):[]);
             foreach($leave_dates as $date){
                 $existing=$this->schedule_for_employee_date((int)$emp->id,$date);
                 if($existing){

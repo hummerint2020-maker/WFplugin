@@ -9768,3 +9768,75 @@ msgstr "تسحب التعديل؟ الإجازة هتفضل زي ما هي؛ و�
 
 msgid "Your manager decides; until then the leave stands as it is. You can change it again later while leave days remain."
 msgstr "مديرك هو اللي يقرر؛ ولحد ساعتها الإجازة زي ما هي. تقدر تعدّلها تاني بعدين طول ما فيه أيام إجازة باقية."
+
+msgid "Choose at least one leave."
+msgstr "اختار إجازة واحدة على الأقل."
+
+msgid "Another change of this employee's leave is being saved. Try again in a moment."
+msgstr "فيه تعديل تاني على إجازة الموظف ده بيتحفظ دلوقتي. جرّب كمان شوية."
+
+msgid "Some leaves were not changed: they changed meanwhile, or a change is waiting for a decision. The list shows them as they are now."
+msgstr "فيه إجازات متغيّرتش: اتغيّرت في نفس الوقت، أو عليها تعديل مستني قرار. القائمة بتعرضها زي ما هي دلوقتي."
+
+msgid "Company holidays are not leave days is off."
+msgstr "ميزة «العطلات الرسمية مش أيام إجازة» مقفولة."
+
+msgid "Company holidays"
+msgstr "العطلات الرسمية"
+
+msgid "%1$d day(s) of %2$d leave(s) went back to the balance. The employees were told, and it is in the Audit Log."
+msgstr "رجع %1$d يوم من %2$d إجازة للرصيد. الموظفين وصلهم إشعار، واتسجّل في سجل التدقيق."
+
+msgid "Company holidays charged as leave (%d)"
+msgstr "عطلات رسمية اتخصمت كإجازة (%d)"
+
+msgid "Approved leaves charged for a company holiday inside them: asked before the switch was on, or the holiday was added after the leave was asked. Give the day back and it goes back to the employee's balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved."
+msgstr "إجازات متوافق عليها اتخصم فيها يوم عطلة رسمية: اتطلبت قبل تشغيل الميزة، أو العطلة اتضافت بعد طلب الإجازة. لما ترجّع اليوم بيرجع لرصيد الموظف، والعطلة مبتفضلش يوم إجازة في الجدول. الإجازات الجديدة مبقتش بتحسب العطلات الرسمية. الإجازات اللي لسه مستنية قرار بتظهر هنا بعد ما تتوافق."
+
+msgid "No leave of this year was charged for a company holiday."
+msgstr "مفيش إجازة السنة دي اتخصم فيها يوم عطلة رسمية."
+
+msgid "%1$d leave(s), %2$d day(s) to give back"
+msgstr "%1$d إجازة، %2$d يوم يرجعوا للرصيد"
+
+msgid "Give these days back to the balance?"
+msgstr "ترجّع الأيام دي للرصيد؟"
+
+msgid "Select all"
+msgstr "اختار الكل"
+
+msgid "Leave type"
+msgstr "نوع الإجازة"
+
+msgid "Days charged"
+msgstr "الأيام المحسوبة"
+
+msgid "Charged"
+msgstr "اتخصم"
+
+msgid "Should be"
+msgstr "المفروض"
+
+msgid "Goes back"
+msgstr "هيرجع"
+
+msgid "A change is waiting"
+msgstr "فيه تعديل مستني قرار"
+
+msgid "Partly cancelled"
+msgstr "اتلغى جزء منها"
+
+msgid "Give back"
+msgstr "رجّع"
+
+msgid "Decide the change first"
+msgstr "قرّر التعديل الأول"
+
+msgid "Give back the selected"
+msgstr "رجّع المختار"
+
+msgid "Company holidays are not leave days"
+msgstr "العطلات الرسمية مش أيام إجازة"
+
+msgid "A leave no longer counts the company holidays inside it: they are not taken from the balance and stay holidays in the schedule. HR finds the leaves of this year that were charged for a holiday before on the Leaves page and gives those days back; the employee is told, and it is in the Audit Log. Off: exactly as today."
+msgstr "الإجازة مبقتش بتحسب العطلات الرسمية اللي جواها: مبتتخصمش من الرصيد وبتفضل عطلة في الجدول. الموارد البشرية بتلاقي في صفحة الإجازات إجازات السنة دي اللي اتخصم فيها يوم عطلة قبل كده وترجّع الأيام دي؛ والموظف بيوصله إشعار، وبيتسجّل في سجل التدقيق. مقفولة: زي النهارده بالظبط."

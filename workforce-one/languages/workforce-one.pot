@@ -13351,3 +13351,99 @@ msgstr ""
 #: leave-return
 msgid "Your manager decides; until then the leave stands as it is. You can change it again later while leave days remain."
 msgstr ""
+
+#: leave-holidays
+msgid "Choose at least one leave."
+msgstr ""
+
+#: leave-holidays
+msgid "Another change of this employee's leave is being saved. Try again in a moment."
+msgstr ""
+
+#: leave-holidays
+msgid "Some leaves were not changed: they changed meanwhile, or a change is waiting for a decision. The list shows them as they are now."
+msgstr ""
+
+#: leave-holidays
+msgid "Company holidays are not leave days is off."
+msgstr ""
+
+#: leave-holidays
+msgid "Company holidays"
+msgstr ""
+
+#: leave-holidays
+msgid "%1$d day(s) of %2$d leave(s) went back to the balance. The employees were told, and it is in the Audit Log."
+msgstr ""
+
+#: leave-holidays
+msgid "Company holidays charged as leave (%d)"
+msgstr ""
+
+#: leave-holidays
+msgid "Approved leaves charged for a company holiday inside them: asked before the switch was on, or the holiday was added after the leave was asked. Give the day back and it goes back to the employee's balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved."
+msgstr ""
+
+#: leave-holidays
+msgid "No leave of this year was charged for a company holiday."
+msgstr ""
+
+#: leave-holidays
+msgid "%1$d leave(s), %2$d day(s) to give back"
+msgstr ""
+
+#: leave-holidays
+msgid "Give these days back to the balance?"
+msgstr ""
+
+#: leave-holidays
+msgid "Select all"
+msgstr ""
+
+#: leave-holidays
+msgid "Leave type"
+msgstr ""
+
+#: leave-holidays
+msgid "Days charged"
+msgstr ""
+
+#: leave-holidays
+msgid "Charged"
+msgstr ""
+
+#: leave-holidays
+msgid "Should be"
+msgstr ""
+
+#: leave-holidays
+msgid "Goes back"
+msgstr ""
+
+#: leave-holidays
+msgid "A change is waiting"
+msgstr ""
+
+#: leave-holidays
+msgid "Partly cancelled"
+msgstr ""
+
+#: leave-holidays
+msgid "Give back"
+msgstr ""
+
+#: leave-holidays
+msgid "Decide the change first"
+msgstr ""
+
+#: leave-holidays
+msgid "Give back the selected"
+msgstr ""
+
+#: leave-holidays
+msgid "Company holidays are not leave days"
+msgstr ""
+
+#: leave-holidays
+msgid "A leave no longer counts the company holidays inside it: they are not taken from the balance and stay holidays in the schedule. HR finds the leaves of this year that were charged for a holiday before on the Leaves page and gives those days back; the employee is told, and it is in the Audit Log. Off: exactly as today."
+msgstr ""

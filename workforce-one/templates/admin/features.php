@@ -127,6 +127,10 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <input type="hidden" name="leave_return_present" value="1"><?php $switch('leave_return_enabled', $on['leave_return']); ?>
 </div>
 <div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Company holidays are not leave days', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('A leave no longer counts the company holidays inside it: they are not taken from the balance and stay holidays in the schedule. HR finds the leaves of this year that were charged for a holiday before on the Leaves page and gives those days back; the employee is told, and it is in the Audit Log. Off: exactly as today.', 'workforce-one'); ?></div></div>
+    <input type="hidden" name="leave_holidays_present" value="1"><?php $switch('leave_holidays_enabled', $on['leave_holidays']); ?>
+</div>
+<div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Leave page in the app', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on.', 'workforce-one'); ?></div></div>
     <?php $switch('leave_page_enabled', $on['leave_page']); ?>
 </div></div>

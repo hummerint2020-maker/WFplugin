@@ -106,6 +106,11 @@ trait EWS_Leave_View_Trait {
         return (bool)$this->option('ews_feature_leave_return');
     }
 
+    /** Company holidays are not leave days (3.31.162, docs/tasks/leave-holidays.md): off by default; off, every leave counts as before. */
+    private function leave_holidays_on(){
+        return (bool)$this->option('ews_feature_leave_holidays');
+    }
+
     /** The employee's part of Leave return (back at work on any day, more than one change) lives in My requests. */
     private function leave_return_ask_on(){
         return $this->leave_return_on() && $this->my_requests_leave_on();

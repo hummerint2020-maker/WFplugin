@@ -1,0 +1,194 @@
+<title>استرجاع أيام العطلات</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: wp-admin "Leaves" page, one new section on top of the existing page, plus the switch and the employee notice */
+:root{
+  --bg:#f0f0f1; --panel:#ffffff; --fg:#1d2327; --muted:#5d6670; --line:#dcdcde;
+  --pri:#5B3FD9; --pri-soft:#EBE8FA; --pri-ink:#ffffff;
+  --ok:#00813a; --ok-soft:#e6f4ea; --warn:#9a6700; --warn-soft:#fff4d6; --hol:#b42318; --hol-soft:#fdecea;
+  --font:'Alexandria',system-ui,"Segoe UI",Tahoma,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15161a; --panel:#1f2127; --fg:#e8e9ec; --muted:#a3a8b3; --line:#33363e;
+  --pri:#9c88ff; --pri-soft:#2b2650; --pri-ink:#15161a;
+  --ok:#5fd08a; --ok-soft:#173523; --warn:#f0c04a; --warn-soft:#3a2f12; --hol:#ff8a80; --hol-soft:#3d1c1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15161a; --panel:#1f2127; --fg:#e8e9ec; --muted:#a3a8b3; --line:#33363e;
+  --pri:#9c88ff; --pri-soft:#2b2650; --pri-ink:#15161a;
+  --ok:#5fd08a; --ok-soft:#173523; --warn:#f0c04a; --warn-soft:#3a2f12; --hol:#ff8a80; --hol-soft:#3d1c1a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.7}
+.wrap{max-width:1100px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+.tag{font-size:12px;color:var(--muted);letter-spacing:.02em}
+h1{font-size:22px;margin:0;text-wrap:balance}
+h2{font-size:17px;margin:0;text-wrap:balance}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;display:grid;gap:14px;min-width:0}
+.head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-start}
+.sub{color:var(--muted);margin:0;max-width:65ch}
+.stats{display:flex;flex-wrap:wrap;gap:10px}
+.stat{border:1px solid var(--line);border-radius:6px;padding:6px 12px;font-size:13px}
+.stat b{font-variant-numeric:tabular-nums;font-size:16px;margin-inline-end:4px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:13px}
+th,td{padding:10px 12px;text-align:start;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.days{display:flex;flex-wrap:wrap;gap:4px}
+.d{border-radius:4px;padding:0 6px;font-size:12px;border:1px solid var(--line);white-space:nowrap}
+.d.h{background:var(--hol-soft);color:var(--hol);border-color:transparent;font-weight:600}
+.pill{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-pri{background:var(--pri-soft);color:var(--pri)}
+.btn{font:inherit;font-size:13px;border-radius:6px;padding:5px 14px;cursor:pointer;border:1px solid var(--pri);background:var(--pri);color:var(--pri-ink);white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--pri)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.note{font-size:12px;color:var(--muted)}
+.notice{border-inline-start:4px solid var(--ok);background:var(--panel);border-radius:4px;padding:10px 14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-inline-end:1px solid var(--line)}
+.notice[hidden]{display:none}
+.confirm{background:var(--pri-soft);border-radius:6px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.switch{display:flex;gap:12px;align-items:flex-start}
+.switch input{width:18px;height:18px;margin-top:4px;accent-color:var(--pri)}
+.push{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:2px;background:var(--bg)}
+.push b{font-size:13px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center}
+.done td{opacity:.6}
+@media (prefers-reduced-motion:no-preference){.notice{transition:opacity .2s}}
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <div>
+    <div class="tag">لوحة التحكم ← الإجازات · Mockup للمراجعة</div>
+    <h1>الإجازات</h1>
+  </div>
+
+  <div class="notice" id="done-notice" hidden>تم استرجاع <b id="done-count">0</b> يوم للرصيد، واتسجّل في سجل التدقيق، والموظفين وصلهم إشعار.</div>
+
+  <section class="panel" aria-labelledby="t1">
+    <div class="head">
+      <div style="display:grid;gap:4px;min-width:0">
+        <h2 id="t1">أيام عطلات رسمية اتخصمت من الرصيد (2026)</h2>
+        <p class="sub">دي إجازات قديمة كان فيها عطلة رسمية اتحسبت يوم إجازة. راجع واضغط "رجّع" عشان اليوم يرجع لرصيد الموظف. الإجازات الجديدة مش بتخصم العطلات من ساعة ما المفتاح اتفتح.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="s-leaves">4</b>إجازات</div>
+        <div class="stat"><b id="s-days">5</b>أيام ممكن ترجع</div>
+      </div>
+    </div>
+    <div class="legend"><span><span class="d h">6 أكتوبر</span> عطلة رسمية اتخصمت</span><span><span class="d">5 أكتوبر</span> يوم إجازة عادي</span></div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th><input type="checkbox" id="all" aria-label="اختار الكل"></th>
+          <th>الموظف</th><th>نوع الإجازة</th><th>الفترة</th><th>الأيام المحسوبة</th><th>اتخصم</th><th>المفروض</th><th>هيرجع</th><th>الحالة</th><th></th>
+        </tr></thead>
+        <tbody id="rows">
+          <tr data-days="1">
+            <td><input type="checkbox" class="pick" id="r1" aria-label="اختار"></td>
+            <td>محمد سامي<div class="note">المبيعات</div></td>
+            <td>سنوية</td>
+            <td class="num">4 – 8 أكتوبر</td>
+            <td><div class="days"><span class="d">4</span><span class="d">5</span><span class="d h">6 عيد القوات المسلحة</span><span class="d">7</span><span class="d">8</span></div></td>
+            <td class="num">5</td><td class="num">4</td><td class="num"><b>1</b></td>
+            <td><span class="pill p-ok">متوافق عليها</span></td>
+            <td><button class="btn" data-restore>رجّع</button></td>
+          </tr>
+          <tr data-days="2">
+            <td><input type="checkbox" class="pick" id="r2" aria-label="اختار"></td>
+            <td>سارة عادل<div class="note">الحسابات</div></td>
+            <td>سنوية</td>
+            <td class="num">29 يونيو – 2 يوليو</td>
+            <td><div class="days"><span class="d">29</span><span class="d h">30 ثورة 30 يونيو</span><span class="d">1</span><span class="d h">2 بديل إجازة</span></div></td>
+            <td class="num">4</td><td class="num">2</td><td class="num"><b>2</b></td>
+            <td><span class="pill p-ok">متوافق عليها</span></td>
+            <td><button class="btn" data-restore>رجّع</button></td>
+          </tr>
+          <tr data-days="1">
+            <td><input type="checkbox" class="pick" id="r3" aria-label="اختار"></td>
+            <td>أحمد فتحي<div class="note">التشغيل</div></td>
+            <td>سنوية</td>
+            <td class="num">21 – 23 يوليو<div class="note">كانت لحد 27، اتلغى الباقي</div></td>
+            <td><div class="days"><span class="d">21</span><span class="d">22</span><span class="d h">23 عيد الثورة</span></div></td>
+            <td class="num">3</td><td class="num">2</td><td class="num"><b>1</b></td>
+            <td><span class="pill p-pri">اتلغى جزء منها</span></td>
+            <td><button class="btn" data-restore>رجّع</button></td>
+          </tr>
+          <tr data-days="0">
+            <td><input type="checkbox" disabled aria-label="مش متاح"></td>
+            <td>منى حسن<div class="note">الموارد البشرية</div></td>
+            <td>سنوية</td>
+            <td class="num">5 – 8 أكتوبر</td>
+            <td><div class="days"><span class="d">5</span><span class="d h">6 عيد القوات المسلحة</span><span class="d">7</span><span class="d">8</span></div></td>
+            <td class="num">4</td><td class="num">3</td><td class="num"><b>1</b></td>
+            <td><span class="pill p-warn">طلب إلغاء معلّق</span></td>
+            <td><button class="btn" disabled title="قرّر طلب الإلغاء الأول">رجّع</button><div class="note">قرّر طلب الإلغاء الأول</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="confirm" id="bulk" hidden>
+      <span>هترجّع <b id="bulk-days">0</b> يوم لـ <b id="bulk-n">0</b> موظف. متأكد؟</span>
+      <span style="display:flex;gap:8px"><button class="btn" id="bulk-go">أيوه رجّع</button><button class="btn ghost" id="bulk-no">لأ</button></span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn ghost" id="bulk-open" disabled>رجّع المختار</button>
+      <span class="note">الطلبات اللي لسه مستنية موافقة مش بتظهر هنا لحد ما يتاخد فيها قرار. الأنواع اللي مش بتخصم من الرصيد مش بتظهر.</span>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="t2">
+      <h2 id="t2">الإعدادات ← المميزات</h2>
+      <label class="switch" for="sw"><input type="checkbox" id="sw" checked>
+        <span><b>العطلات الرسمية مش أيام إجازة</b><br><span class="note">الإجازات الجديدة متخصمش العطلات الرسمية من الرصيد، ويظهر تقرير استرجاع الأيام القديمة في صفحة الإجازات. مقفول افتراضياً.</span></span>
+      </label>
+    </section>
+    <section class="panel" aria-labelledby="t3">
+      <h2 id="t3">الإشعار اللي بيوصل للموظف</h2>
+      <div class="push"><b>رجعلك يوم في رصيد الإجازة</b><span>يوم 6 أكتوبر كان عطلة رسمية واتحسب من إجازتك (4 – 8 أكتوبر). رجعناه لرصيدك، وبقى رصيدك 12 يوم.</span></div>
+      <p class="note" style="margin:0">ويتسجل في سجل التدقيق: "استرجاع عطلة رسمية · إجازة #418 · 2026-10-06 · 1 يوم · بواسطة HR".</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var rows=document.getElementById('rows'), total=0;
+  function refresh(){
+    var live=[].slice.call(rows.querySelectorAll('tr:not(.done)'));
+    var days=0,n=0; live.forEach(function(r){var b=r.querySelector('[data-restore]'); if(b){days+=+r.dataset.days;n++;}});
+    document.getElementById('s-leaves').textContent=live.length;
+    document.getElementById('s-days').textContent=days+(+rows.lastElementChild.dataset.days===0?1:0);
+    var picked=[].slice.call(rows.querySelectorAll('.pick:checked'));
+    document.getElementById('bulk-open').disabled=!picked.length;
+  }
+  function restore(r){
+    if(r.classList.contains('done'))return;
+    r.classList.add('done'); total+=+r.dataset.days;
+    var cell=r.lastElementChild; cell.innerHTML='<span class="pill p-ok">رجع ✓</span>';
+    var cb=r.querySelector('.pick'); if(cb){cb.checked=false;cb.disabled=true;cb.classList.remove('pick');}
+    document.getElementById('done-count').textContent=total;
+    document.getElementById('done-notice').hidden=false;
+    refresh();
+  }
+  rows.addEventListener('click',function(e){var b=e.target.closest('[data-restore]'); if(b)restore(b.closest('tr'));});
+  rows.addEventListener('change',refresh);
+  document.getElementById('all').addEventListener('change',function(e){rows.querySelectorAll('.pick').forEach(function(c){c.checked=e.target.checked});refresh();});
+  var bulk=document.getElementById('bulk');
+  document.getElementById('bulk-open').addEventListener('click',function(){
+    var picked=[].slice.call(rows.querySelectorAll('.pick:checked')).map(function(c){return c.closest('tr')});
+    document.getElementById('bulk-days').textContent=picked.reduce(function(a,r){return a+ +r.dataset.days},0);
+    document.getElementById('bulk-n').textContent=picked.length; bulk.hidden=false;
+  });
+  document.getElementById('bulk-no').addEventListener('click',function(){bulk.hidden=true});
+  document.getElementById('bulk-go').addEventListener('click',function(){
+    [].slice.call(rows.querySelectorAll('.pick:checked')).forEach(function(c){restore(c.closest('tr'))});
+    bulk.hidden=true; document.getElementById('all').checked=false;
+  });
+})();
+</script>

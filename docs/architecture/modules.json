@@ -543,7 +543,8 @@
       "traits": [
         "leave",
         "leave-admin",
-        "leave-view"
+        "leave-view",
+        "leave-holidays"
       ],
       "tables": [
         "leave_requests",
@@ -551,7 +552,8 @@
         "leave_types",
         "leave_schedule_snapshots",
         "vacation_requests",
-        "leave_changes"
+        "leave_changes",
+        "leave_holiday_refunds"
       ],
       "api": [
         "leave_approval_card",
@@ -573,6 +575,17 @@
         "leave_return_on",
         "leave_held_audit",
         "leave_round_token"
+      ],
+      "layered": [
+        {
+          "slice": "holidays",
+          "tables": ["leave_holiday_refunds", "leave_requests", "leave_balances", "leave_types", "leave_schedule_snapshots"],
+          "store": "workforce-one/src/Leave/Data/WordPressLeaveHolidayStore.php",
+          "services": ["workforce-one/src/Leave/HolidayRefundService.php"],
+          "reads": [{"file": "workforce-one/src/Leave/Data/WordPressLeaveDayQuery.php", "tables": ["leave_requests", "leave_schedule_snapshots", "leave_types"]}],
+          "moved": ["leave_admin_holidays_view", "admin_leave_holiday_restore", "leave_holidays_skipped"],
+          "traits_clean": ["leave-holidays"]
+        }
       ]
     },
     "overtime": {
