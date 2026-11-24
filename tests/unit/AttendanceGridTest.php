@@ -28,6 +28,9 @@ final class AttendanceGridTest extends TestCase
         // Conflicts have their own pop-up in the app layout.
         $this->assertStringNotContainsString('someone else', $m['text']);
         $this->assertSame('Imported 3 row(s); rejected 0.', GridRules::message(['imported' => '3'])['text']);
+        // Leave return (3.31.161): refused leave days.
+        $this->assertSame(['text' => 'Saved 1 schedule record(s). Skipped empty cells: 0. 2 change(s) of an approved leave day were refused: HR records a return from leave.', 'error' => true], GridRules::message(['grid_saved' => '1', 'grid_skipped' => '0', 'grid_leave' => '2']));
+        $this->assertSame(['text' => 'Imported 1 row(s); rejected 1. 1 change(s) of an approved leave day were refused: HR records a return from leave.', 'error' => true], GridRules::message(['imported' => '1', 'rejected' => '1', 'grid_leave' => '1']));
     }
 
     public function testLeaveTypeOnlyOnAnApprovedLeaveDay(): void

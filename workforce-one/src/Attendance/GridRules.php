@@ -78,12 +78,14 @@ final class GridRules
     public static function message(array $q): ?array
     {
         $n = static function (string $k) use ($q): int { return isset($q[$k]) ? max(0, (int) $q[$k]) : 0; };
-        if (isset($q['imported'])) return ['text' => 'Imported ' . $n('imported') . ' row(s); rejected ' . $n('rejected') . '.', 'error' => false];
+        // Leave return (3.31.161): approved leave days are locked; HR records a return.
+        $leave = $n('grid_leave') ? ' ' . $n('grid_leave') . ' change(s) of an approved leave day were refused: HR records a return from leave.' : '';
+        if (isset($q['imported'])) return ['text' => 'Imported ' . $n('imported') . ' row(s); rejected ' . $n('rejected') . '.' . $leave, 'error' => $leave !== ''];
         if (isset($q['saved'])) return ['text' => 'Attendance saved.', 'error' => false];
         if (!isset($q['grid_saved'])) return null;
         $text = 'Saved ' . $n('grid_saved') . ' schedule record(s). Skipped empty cells: ' . $n('grid_skipped') . '.';
         // Conflicts (grid_conflict) get their own pop-up from the app layout (ux_notice_from_query()).
         if ($n('grid_invalid')) $text .= ' ' . $n('grid_invalid') . ' change(s) could not be saved (unknown status, or an employee you cannot manage).';
-        return ['text' => $text, 'error' => $n('grid_invalid') > 0];
+        return ['text' => $text . $leave, 'error' => $n('grid_invalid') > 0 || $leave !== ''];
     }
 }

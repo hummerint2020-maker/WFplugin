@@ -157,6 +157,7 @@ trait EWS_Attendance_Grid_Trait {
             'week_lock'=>$this->week_lock_view($dates[0]),'week_lock_when'=>function($at){return $this->week_lock_when($at);},
             'office_min'=>$office_min,'office_min_html'=>$office_min?$this->render_template('app/office-minimum',['om'=>$office_min]):'',
             'people'=>$people,
+            'held'=>$emps?$this->leave_held_days(array_map(function($e){return (int)$e->id;},$emps),$dates[0],$dates[count($dates)-1]):[],   // Leave return (3.31.161)
             'emps'=>$emps,'list'=>$list,'branch'=>$branch,'branch_filter'=>$branch_filter,'branch_filter_names'=>$branch_filter_names,'list_keep'=>$this->list_keep_args('attendance')+(!empty($office_min['scope']['dept'])&&!empty($office_min['scope']['choices'])?['om_dept'=>(int)$office_min['scope']['dept']]:[]),'dates'=>$dates,'today'=>$today,'current_emp_id'=>$current_emp_id,'days'=>$days,
             'summary'=>$summary,'day_summary'=>$day_summary,'team_options'=>array_values($team_options),
             'rate'=>Insights::rate($summary['Present'],$summary['Late'],$summary['Absent']),

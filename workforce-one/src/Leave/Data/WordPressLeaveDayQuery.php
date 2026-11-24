@@ -31,4 +31,20 @@ final class WordPressLeaveDayQuery implements LeaveDayQuery
         foreach ((array) $rows as $r) $out[(int) $r->employee_id][(string) $r->work_date] = trim((string) ($r->name ?? ''));
         return $out;
     }
+
+    public function heldDays(array $employeeIds, string $from, string $to): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $employeeIds))));
+        if (!$ids || $from > $to) return [];
+        $p = $this->db->prefix;
+        $ph = implode(',', array_fill(0, count($ids), '%d'));
+        $rows = $this->db->get_results($this->db->prepare(
+            "SELECT s.employee_id,s.work_date,r.id FROM {$p}ews_leave_schedule_snapshots s
+             JOIN {$p}ews_leave_requests r ON r.id=s.leave_request_id AND r.status='Approved'
+             WHERE s.employee_id IN ($ph) AND s.work_date BETWEEN %s AND %s",
+            array_merge($ids, [$from, $to])));
+        $out = [];
+        foreach ((array) $rows as $r) $out[(int) $r->employee_id][(string) $r->work_date] = (int) $r->id;
+        return $out;
+    }
 }

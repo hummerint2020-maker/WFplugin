@@ -76,6 +76,22 @@ trait EWS_Leave_Trait {
         }
 
     /**
+     * The days held by an approved leave (Leave return, 3.31.161, owner: a manager's schedule change never returns leave): employee
+     * id => Y-m-d => leave id. One read; [] with Leave return off (no query).
+     * @param int[] $employee_ids @return array<int,array<string,int>>
+     */
+    private function leave_held_days(array $employee_ids,$from,$to){
+            if(!$this->leave_return_on()||!$employee_ids)return [];
+            return $this->services()->leaveDays()->heldDays($employee_ids,(string)$from,(string)$to);
+        }
+
+    /** One Audit Log row for the schedule changes refused on approved leave days (up to 20 "employee date" pairs). */
+    private function leave_held_audit($source,array $pairs){
+            if(!$pairs)return;
+            $this->audit('schedule_leave_refused','schedule',0,$source.': '.count($pairs).' refused | '.implode(', ',array_slice($pairs,0,20)));
+        }
+
+    /**
      * The pending leave requests of these employees, newest first (the Smart Nudges cron, 3.31.148): one read for all of them, in the order the
      * one-person reminder reads them (requested_at DESC). @param int[] $employee_ids @return object[] id, employee_id, start_date, end_date, requested_days
      */
@@ -391,15 +407,12 @@ trait EWS_Leave_Trait {
      * kept, and the Audit Log says so). @return bool false on a database error
      */
     private function leave_return_restore_day($x,$emp,$now,$leave_id){
-            global $wpdb;
-            $cur=$wpdb->get_row($wpdb->prepare("SELECT id,status FROM {$this->schedule} WHERE employee_id=%d AND work_date=%s LIMIT 1",(int)$emp->id,(string)$x->work_date));
+            $cur=$this->schedule_for_employee_date((int)$emp->id,(string)$x->work_date);
             if(!$cur || (string)$cur->status!=='Vacation'){
                 $this->audit('leave_restore_kept','leave_request',(int)$leave_id,(string)$x->work_date.' kept as '.($cur?(string)$cur->status:'no schedule').' (changed while on leave)');
                 return true;
             }
-            if((int)$x->had_schedule && $x->schedule_id)$q=$wpdb->update($this->schedule,['status'=>$x->status,'note'=>$x->note,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>(int)$cur->id]);
-            else $q=$wpdb->delete($this->schedule,['id'=>(int)$cur->id]);
-            return $q!==false;
+            return $this->leave_restore_days([$x],$emp,$now);
         }
 
     /**

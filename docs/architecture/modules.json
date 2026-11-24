@@ -269,6 +269,7 @@
       "api": [
         "working_days",
         "schedule_leave_dates",
+        "schedule_for_employee_date",
         "swap_approval_card",
         "swap_peer_cards",
         "swap_withdraw",
@@ -536,7 +537,8 @@
         "leave_balances",
         "leave_types",
         "leave_schedule_snapshots",
-        "vacation_requests"
+        "vacation_requests",
+        "leave_changes"
       ],
       "api": [
         "leave_approval_card",
@@ -553,7 +555,9 @@
         "leave_cancel_withdraw",
         "leave_status_of",
         "leave_legacy_approvals",
-        "leave_pending_newest_first"
+        "leave_pending_newest_first",
+        "leave_held_days",
+        "leave_return_on"
       ]
     },
     "overtime": {
@@ -798,7 +802,8 @@
         "advance_payroll_lines",
         "advance_left_for",
         "advance_money",
-        "advances_can_pay"
+        "advances_can_pay",
+        "payroll_closed_months"
       ]
     },
     "hr_letters": {
