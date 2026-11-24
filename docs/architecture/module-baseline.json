@@ -107,7 +107,7 @@
   "people->schedule": 1,
   "platform->app": 4,
   "platform->attendance": 22,
-  "platform->leave": 6,
+  "platform->leave": 7,
   "platform->notifications": 1,
   "platform->overtime": 2,
   "platform->people": 8,

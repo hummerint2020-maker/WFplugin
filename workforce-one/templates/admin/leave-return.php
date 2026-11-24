@@ -9,6 +9,7 @@
  * @var array<int,object> $employees  active employees (id, name)
  * @var string $error      a refusal, translated
  * @var string $done       'recorded' | 'restored' | ''
+ * @var bool   $holiday_tab Company holidays are not leave days (3.31.162) is on: its tab too
  * Back at work:
  * @var int $emp
  * @var array<int,object> $leaves      the employee's approved leaves with leave days (id, start_date, end_date, requested_days, type_name, cancellation_status)
@@ -33,7 +34,7 @@ $tab_link = static function (string $t, string $label) use ($tab, $page_url): st
 };
 ?>
 <div class="wrap"><h1><?php esc_html_e('Leave Management', 'workforce-one'); ?></h1>
-<nav class="nav-tab-wrapper" style="margin-bottom:12px"><?php echo $tab_link('', __('Types and balances', 'workforce-one')) . $tab_link('return', __('Back at work', 'workforce-one')) . $tab_link('changed', __('Changed leave days', 'workforce-one')); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?></nav>
+<nav class="nav-tab-wrapper" style="margin-bottom:12px"><?php echo $tab_link('', __('Types and balances', 'workforce-one')) . $tab_link('return', __('Back at work', 'workforce-one')) . $tab_link('changed', __('Changed leave days', 'workforce-one')) . (!empty($holiday_tab) ? $tab_link('holidays', __('Company holidays', 'workforce-one')) : ''); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped above ?></nav>
 <?php if ($error !== ''): ?><div class="notice notice-error"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
 <?php if ($done === 'recorded'): ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e('The return was recorded. The days went back to the balance, and the employee and their manager were told.', 'workforce-one'); ?></p></div><?php endif; ?>
 <?php if ($done === 'restored'): ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e('The day is leave again in the schedule.', 'workforce-one'); ?></p></div><?php endif; ?>

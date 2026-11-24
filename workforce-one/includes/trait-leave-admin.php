@@ -22,8 +22,10 @@ trait EWS_Leave_Admin_Trait {
         $this->ensure_leave_schema();
         global $wpdb;
         // Leave return (3.31.161): two more tabs, only with the switch on.
-        $tab=$this->leave_return_on()?sanitize_key($_GET['tab']??''):'';
-        if($tab==='return'||$tab==='changed'){echo $this->render_template('admin/leave-return',$this->leave_admin_return_view($tab));return;}
+        $tab=sanitize_key($_GET['tab']??'');
+        if(($tab==='return'||$tab==='changed') && $this->leave_return_on()){echo $this->render_template('admin/leave-return',$this->leave_admin_return_view($tab));return;}
+        // Company holidays are not leave days (3.31.162): its tab, only with the switch on.
+        if($tab==='holidays' && $this->leave_holidays_on()){echo $this->render_template('admin/leave-holidays',$this->leave_admin_holidays_view());return;}
         $year=$this->leave_year();
         $years=AdminRecordRules::balanceYears($year);
         $shown_year=absint($_GET['balance_year']??$year);
@@ -45,7 +47,7 @@ trait EWS_Leave_Admin_Trait {
             'saved'=>isset($_GET['leave_admin_saved']),'recorded'=>isset($_GET['leave_recorded']),
             'record_error'=>isset($_GET['leave_record_error'])?sanitize_text_field(wp_unslash($_GET['leave_record_error'])):'',
             'post_url'=>admin_url('admin-post.php'),'page_url'=>admin_url('admin.php?page=ews31-leaves'),
-            'tabs'=>$this->leave_return_on(),
+            'tabs'=>$this->leave_return_on(),'holiday_tab'=>$this->leave_holidays_on(),
         ]);
     }
 
@@ -180,7 +182,7 @@ trait EWS_Leave_Admin_Trait {
         global $wpdb;
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only filters and a preview
         $base=['tab'=>$tab,'post_url'=>admin_url('admin-post.php'),'page_url'=>admin_url('admin.php?page=ews31-leaves'),'employees'=>$this->people_active_list(),
-            'error'=>isset($_GET['lr_error'])?$this->leave_admin_return_error(sanitize_key($_GET['lr_error'])):'','done'=>isset($_GET['lr_done'])?sanitize_key($_GET['lr_done']):''];
+            'error'=>isset($_GET['lr_error'])?$this->leave_admin_return_error(sanitize_key($_GET['lr_error'])):'','done'=>isset($_GET['lr_done'])?sanitize_key($_GET['lr_done']):'','holiday_tab'=>$this->leave_holidays_on()];
         $today=current_time('Y-m-d');
         if($tab==='changed'){
             $from=sanitize_text_field(wp_unslash($_GET['from']??''));$to=sanitize_text_field(wp_unslash($_GET['to']??''));

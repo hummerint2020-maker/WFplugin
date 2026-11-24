@@ -195,6 +195,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_return.py "$S"
       - name: Approved leave days locked in the schedule (Leave return)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_lock.py "$S"
+      - name: Company holidays are not leave days
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_holidays.py "$S"
       - name: App frame, navigation and login (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_layout.py "$S"
       - name: Appearance (theme) and the app frame's phone bar
