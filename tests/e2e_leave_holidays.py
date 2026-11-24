@@ -190,4 +190,5 @@ check('[off again] a new leave counts the holiday again', float(row(o)['requeste
 check('[off again] the report is gone', 'tab=holidays' not in adm.req(LEAVES)[1])
 check('[off again] a leave counted while on keeps its days', float(row(n)['requested_days']) == 4.0 and H3 not in snaps(n), (row(n), snaps(n)))
 
-results()
+print(f'{sum(results)} / {len(results)}')
+sys.exit(0 if all(results) else 1)
