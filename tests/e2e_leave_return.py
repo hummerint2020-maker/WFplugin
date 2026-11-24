@@ -7,7 +7,7 @@ follow a late return; leave approvals with levels start a new round each time. O
 Usage: WP_CLI="wp --path=/path/to/wp" python3 tests/e2e_leave_return.py <state-dir>
 Needs tests/e2e_setup.php users (admin/admin, emp1/emp1pass) at http://127.0.0.1:8080. Wipes Workforce One leave data.
 """
-import html, json, os, re, sys
+import atexit, html, json, os, re, sys, urllib.parse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from e2e_support import Session, check, d, php, q, results, wp, HERE  # noqa: E402
@@ -31,6 +31,21 @@ ids = json.loads(php("""
     echo wp_json_encode(['emp'=>$eid,'annual'=>$annual,'wf'=>$wf]);
 """ % TABLES).splitlines()[-1])
 E = ids['emp']
+
+
+def restore():
+    """What this suite changed is put back, even when it stops early."""
+    php("""$s=unserialize(file_get_contents(getenv('S').'/leave_return_saved.ser')); $keep=[];
+    foreach($s['o'] as $o){ $keep[]=$o['option_name']; $wpdb->replace($wpdb->options,$o); }
+    foreach($wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'ews\\\\_%' AND option_name NOT LIKE '%transient%'") as $n) if(!in_array($n,$keep,true)) $wpdb->delete($wpdb->options,['option_name'=>$n]);
+    wp_cache_flush();
+    foreach(""" + TABLES + """ as $t) $wpdb->query("DELETE FROM {$p}$t");
+    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=""" + str(E) + """");
+    foreach($s['w'] as $w) $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>$w['approval_mode'],'active'=>$w['active']],['id'=>$w['id']]);
+    foreach($s['t'] as $t) $wpdb->update($p.'ews_leave_types',['carry_mode'=>$t['carry_mode'],'carry_max'=>$t['carry_max']],['id'=>$t['id']]);""")
+
+
+atexit.register(restore)
 emp, adm = Session('emp1', 'emp1pass'), Session('admin', 'admin')
 fn = re.search(r'name="_wpnonce" value="([^"]+)"', adm.req('/wp-admin/admin.php?page=ews31-features')[1])
 features_nonce = fn.group(1) if fn else ''
@@ -50,8 +65,14 @@ def levels(on):
 
 
 def used():
-    r = q("SELECT used FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d ORDER BY leave_year LIMIT 1" % (E, ids['annual']))
-    return float(r[0]['used']) if r else 0.0
+    """The days used on every year's balance (a leave in January is charged to next year)."""
+    r = q("SELECT SUM(used) u FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d" % (E, ids['annual']))
+    return float(r[0]['u'] or 0) if r else 0.0
+
+
+def used_of(lid):
+    """The days used on the balance the leave is charged to (a leave in January is charged to next year)."""
+    return float(q("SELECT b.used FROM {p}ews_leave_balances b JOIN {p}ews_leave_requests r ON r.balance_id=b.id WHERE r.id=%d" % lid)[0]['used'])
 
 
 def row(lid):
@@ -263,6 +284,76 @@ decide(L, 'approve')
 check('...approved: cancelled, its last day back', row(L)['status'] == 'Cancelled' and used() == base - 3, (row(L), used()))
 levels(False)
 
+# ---------------------------------------------------------------- HR records "back at work" (wp-admin Leaves)
+LV = '/wp-admin/admin.php?page=ews31-leaves'
+
+
+def hr_page(**args):
+    return adm.req(LV + '&' + urllib.parse.urlencode(args))[1]
+
+
+def hr_record(lid, back, reason):
+    pg = hr_page(tab='return', lr_emp=E, lr_leave=lid, lr_back=back, lr_reason=reason)
+    f = re.search(r'<form method="post"[^>]*>(?:(?!</form>).)*value="ews_leave_return_record"(?:(?!</form>).)*</form>', pg, re.S)
+    if not f:
+        return pg, None, {}
+    data = {k: html.unescape(v) for k, v in re.findall(r'<input type="hidden"[^>]*? name="([^"]+)" value="([^"]*)"', f.group(0))}
+    data.pop('action')
+    return pg, data, adm.post('ews_leave_return_record', **data)[1]
+
+
+notes = lambda title: [r['message'] for r in q("SELECT message FROM {p}ews_notifications WHERE title='%s' ORDER BY id" % title)]
+H, _ = make(45, 47, shift=53)   # 8 .. 6 days ago (past days: HR only)
+base = used_of(H)
+check('the Leaves page has the "Back at work" and "Changed leave days" tabs', 'tab=return' in hr_page() and 'tab=changed' in hr_page())
+pg, data, qs = hr_record(H, d(-7), '')
+check('HR: without a reason there is nothing to confirm', data is None and 'Write the reason.' in pg, pg[-1500:])
+pg, data, qs = hr_record(H, d(-7), 'Came in, forgot to ask')
+check('...the preview says what goes back', 'The days from %s on go back (2 day(s)); the leave now ends on %s.' % (d(-7), d(-8)) in html.unescape(pg))
+check('...recorded: the leave ends the day before, 2 days back, no approval', qs.get('lr_done') == 'recorded' and row(H)['end_date'] == d(-8) and used_of(H) == base - 2 and snaps(H) == [d(-8)], (qs, row(H), used_of(H), base, snaps(H)))
+check('...the round is HR\'s, with its reason', changes(H)[-1][:2] == ('1', 'Recorded') and q("SELECT source,reason FROM {p}ews_leave_changes WHERE leave_request_id=%d" % H)[0] == {'source': 'hr', 'reason': 'Came in, forgot to ask'})
+check('...the employee is told, with the reason', any('HR recorded that you were back at work on %s' % d(-7) in m and 'Came in, forgot to ask' in m for m in notes('Back at work recorded')), notes('Back at work recorded'))
+check('...audited with the reason', any('reason: Came in, forgot to ask' in r['details'] for r in q("SELECT details FROM {p}ews_audit_log WHERE action='leave_return_recorded'")))
+qs = adm.post('ews_leave_return_record', **data)[1]
+check('the same form again: nothing is returned twice', qs.get('lr_error') in ('ended', 'changed', 'day') and used_of(H) == base - 2, qs)
+
+M, _ = make(50, 52)
+ask(M, d(51))
+pg, data, qs = hr_record(M, d(52), 'Back on the last day')
+check('a change still waiting: the preview says it is closed', 'still waiting is closed' in html.unescape(pg))
+check('...HR records: the employee\'s round is Closed, HR\'s Recorded, only the last day back', [c[1] for c in changes(M)] == ['Closed', 'Recorded'] and row(M)['end_date'] == d(51)
+      and row(M)['cancellation_status'] == 'Approved', (changes(M), row(M)))
+check('...the employee is told their change was closed', any('Your change request was closed because HR recorded your return.' in m for m in notes('Back at work recorded')))
+check('...and the decision form is gone', form(M) is None)
+qs = ask(M, d(51))
+check('...the employee may still change the leave afterwards', qs.get('leave_cancel_sent') == '1', qs)
+decide(M, 'reject')
+
+uid = q("SELECT wp_user_id FROM {p}ews_employees WHERE id=%d" % E)[0]['wp_user_id']
+php("$wpdb->update($p.'ews_employees',['wp_user_id'=>get_user_by('login','admin')->ID],['id'=>%d]);" % E)
+pg, data, qs = hr_record(M, d(51), 'my own')
+check('HR cannot record a return on their own leave', data is None and 'Another HR person must.' in pg)
+php("$wpdb->update($p.'ews_employees',['wp_user_id'=>%s],['id'=>%d]);" % (uid, E))
+php("$wpdb->insert($p.'ews_payroll_runs',['month'=>'%s','employees'=>1,'total_net'=>0,'currency'=>'EGP','closed_by'=>1,'closed_at'=>current_time('mysql')]);" % d(51)[:7])
+pg, data, qs = hr_record(M, d(51), 'closed month')
+check('a closed payroll month: HR cannot return it' if d(51)[:7] == d(50)[:7] else 'a closed payroll month: shown', (data is None and 'payroll of those days is closed' in pg) or d(51)[:7] != d(50)[:7], pg[-800:])
+php("$wpdb->query(\"DELETE FROM {$p}ews_payroll_runs\");")
+
+# The report: past leave days a manager changed.
+G, _ = make(55, 57, shift=60)   # 5 .. 3 days ago
+php("$wpdb->update($p.'ews_schedule',['status'=>'Office','updated_by'=>get_user_by('login','admin')->ID],['employee_id'=>%d,'work_date'=>'%s']);" % (E, d(-4)))
+pg = hr_page(tab='changed')
+rows = re.findall(r'<tr data-snap="(\d+)">(.*?)</tr>', pg, re.S)
+check('"Changed leave days" lists the changed day only, with the schedule now and who changed it', len(rows) == 1 and d(-4) in rows[0][1] and 'Office' in rows[0][1] and 'admin' in rows[0][1].lower(), rows)
+check('...with "Back at work from this day" prefilled', 'lr_leave=%d' % G in pg and 'lr_back=%s' % d(-4) in pg)
+n = re.search(r'name="_wpnonce" value="([^"]+)"', rows[0][1]).group(1) if rows else ''
+qs = adm.post('ews_leave_day_restore', _wpnonce=n, snap_id=rows[0][0] if rows else 0)[1]
+check('"Put the day back to leave": Vacation again, audited, the balance unchanged', qs.get('lr_done') == 'restored' and sched(d(-4)) == 'Vacation'
+      and any(r['details'].startswith(d(-4) + ': Office') for r in q("SELECT details FROM {p}ews_audit_log WHERE action='leave_day_restored'")), (qs, sched(d(-4))))
+check('...the report is empty', 'No changed leave day in this period.' in hr_page(tab='changed'))
+qs = adm.post('ews_leave_day_restore', _wpnonce=n, snap_id=rows[0][0] if rows else 0)[1]
+check('...twice: "already leave"', qs.get('lr_error') == 'kept', qs)
+
 # Switched off again: a shortened leave keeps the one-change rule.
 S2, _ = make(40, 42)
 ask(S2, d(41))
@@ -270,13 +361,5 @@ decide(S2, 'approve')
 features(my_requests_leave_enabled=True, leave_page_enabled=True)
 check('switched off again: the shortened leave offers no change', row(S2)['end_date'] == d(40) and 'value="ews_leave_cancel"' not in item(page(), S2), row(S2))
 
-php("""$s=unserialize(file_get_contents(getenv('S').'/leave_return_saved.ser')); $keep=[];
-    foreach($s['o'] as $o){ $keep[]=$o['option_name']; $wpdb->replace($wpdb->options,$o); }
-    foreach($wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'ews\\\\_%' AND option_name NOT LIKE '%transient%'") as $n) if(!in_array($n,$keep,true)) $wpdb->delete($wpdb->options,['option_name'=>$n]);
-    wp_cache_flush();
-    foreach(""" + TABLES + """ as $t) $wpdb->query("DELETE FROM {$p}$t");
-    $wpdb->query("DELETE FROM {$p}ews_schedule WHERE employee_id=""" + str(E) + """");
-    foreach($s['w'] as $w) $wpdb->update($p.'ews_approval_workflows',['approval_mode'=>$w['approval_mode'],'active'=>$w['active']],['id'=>$w['id']]);
-    foreach($s['t'] as $t) $wpdb->update($p.'ews_leave_types',['carry_mode'=>$t['carry_mode'],'carry_max'=>$t['carry_max']],['id'=>$t['id']]);""")
 print(f'{sum(results)} / {len(results)}')
 sys.exit(0 if all(results) else 1)

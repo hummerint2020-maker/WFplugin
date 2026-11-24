@@ -499,7 +499,7 @@ trait EWS_Leave_Trait {
             $this->leave_cancel_outcome=$whole?'':'from:'.$eff;
             $this->leave_return_applied=['from'=>$eff,'asked'=>(string)$asked,'back'=>$back,'whole'=>$whole,'closed'=>$closed,'top'=>(float)$top];
             $this->week_lock_record_request((int)$emp->id,$dates,'leave_cancel','leave #'.(int)$r->id.($whole?'':' from '.$eff));
-            $this->audit($source==='hr'?'leave_return_recorded':'leave_cancelled_from','leave_request',(int)$r->id,$r->type_name.' '.$r->start_date.' – '.$end.': '.($whole?'cancelled':'cancelled from '.$eff).', '.$back.' day(s) back'.($eff>(string)$asked?' (asked from '.$asked.'; payroll closed for '.implode(', ',$closed).')':'').($top>0?', next year +'.$top.' carried':''));
+            $this->audit($source==='hr'?'leave_return_recorded':'leave_cancelled_from','leave_request',(int)$r->id,$r->type_name.' '.$r->start_date.' – '.$end.': '.($whole?'cancelled':'cancelled from '.$eff).', '.$back.' day(s) back'.($eff>(string)$asked?' (asked from '.$asked.'; payroll closed for '.implode(', ',$closed).')':'').($top>0?', next year +'.$top.' carried':'').($source==='hr'&&$c&&(string)$c->reason!==''?' | HR: '.wp_get_current_user()->display_name.' | reason: '.$c->reason:''));
             return true;
         }
 

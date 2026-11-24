@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.31.161
+### Leave return: a leave changed more than once, a return HR records, and approved leave days locked (docs/tasks/leave-return.md, mockups docs/mockups/leave-return/)
+Owner's report (2026-11-24): an employee cancelled 2 days of a 3-day leave, then could not cancel the last day, and a manager
+changing that day in the schedule did not give it back. One new switch (wp-admin → Features → **Leave return**), **off by
+default**: off, everything is exactly as before (one change per leave, the schedule open to managers).
+- **The employee** (Leave in My requests on): "Change the leave" on any day of an approved leave from today on, the first day
+  (all of it) and a single remaining day included; again after an approved change, a refusal or a withdrawal. Each change is
+  approved as a cancellation is, and each is a new round of the approval (`ews_approval_requests.entity_round`). A decision
+  form from an older round is refused.
+- **The balance:** the days that go back are counted from the leave days actually removed, under a lock on the leave, so a day
+  never goes back twice. Days in a closed payroll month stay leave (the return starts on the first day of an open month).
+  When next year's balance already exists, its carried days follow the carry rule of the type (never more than the days back).
+  A day a manager changed before is kept as the manager set it (Audit Log: `leave_restore_kept`).
+- **Approved leave days are locked** in the Attendance grid (with or without JavaScript), the single-day edit and the CSV import
+  (the preview marks the row; the import reads again), for every manager, even with "Edit a locked week". The refusals are
+  counted, shown and in the Audit Log (`schedule_leave_refused`). Pending leave days stay open.
+- **HR** (wp-admin → Leaves → **Back at work**): records that an employee was back at work on a day, with a required reason,
+  no further approval, never on their own leave; a preview first; a change still waiting is closed; the employee and their
+  manager are told; Audit Log `leave_return_recorded` with the reason.
+- **Changed leave days** (wp-admin → Leaves): the past days of approved leaves whose schedule is no longer Vacation, with who
+  changed them and the day's attendance, and two actions: "Back at work from this day" and "Put the day back to leave".
+- Database (3.31.161): a new table `ews_leave_changes` (one row per round), `ews_approval_requests.entity_round` (its unique key
+  now includes the round) and a day key on the leave snapshots. Nothing changes for existing rows.
+
 ## 3.31.159
 ### Requests Hub reports (docs/tasks/hub-reports.md, mockups docs/mockups/hub-reports/)
 Owner's request (2026-11-22): "every request, even the approved ones, in the Requests Hub under a new tab called Reports".

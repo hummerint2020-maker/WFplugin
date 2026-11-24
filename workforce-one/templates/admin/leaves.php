@@ -13,6 +13,7 @@
  * @var string $record_error
  * @var string $post_url
  * @var string $page_url
+ * @var bool $tabs                   Leave return (3.31.161) is on: the tabs "Back at work" and "Changed leave days"
  */
 if (!defined('ABSPATH')) exit;
 $num = static function ($n) { return rtrim(rtrim(number_format((float) $n, 1, '.', ''), '0'), '.'); };
@@ -27,6 +28,7 @@ $rules_fields = static function ($t) use ($num): string {
 };
 ?>
 <div class="wrap"><h1>Leave Management</h1>
+<?php if (!empty($tabs)): ?><nav class="nav-tab-wrapper" style="margin-bottom:12px"><a class="nav-tab nav-tab-active" href="<?php echo esc_url($page_url); ?>"><?php esc_html_e('Types and balances', 'workforce-one'); ?></a><a class="nav-tab" href="<?php echo esc_url(add_query_arg('tab', 'return', $page_url)); ?>"><?php esc_html_e('Back at work', 'workforce-one'); ?></a><a class="nav-tab" href="<?php echo esc_url(add_query_arg('tab', 'changed', $page_url)); ?>"><?php esc_html_e('Changed leave days', 'workforce-one'); ?></a></nav><?php endif; ?>
 <p>Configure Leave Types and annual employee balances. Balances renew every 1 January. <strong>Planned</strong> leave is asked before its day; <strong>unplanned</strong> leave (sick, emergency) can be asked on the day or up to the days you set after it, and uses its own balance. What is left at year end is not carried over unless you choose so for a type.</p>
 <?php if ($saved): ?><div class="notice notice-success is-dismissible"><p>Leave configuration saved.</p></div><?php endif; ?>
 
