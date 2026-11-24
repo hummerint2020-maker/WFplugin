@@ -67,7 +67,7 @@ def used():
 
 
 def row(lid):
-    return q("SELECT start_date,end_date,status,cancellation_status,requested_days,holidays_excluded FROM {p}ews_leave_requests WHERE id=%d" % lid)[0]
+    return q("SELECT start_date,end_date,status,cancellation_status,requested_days,holidays_skipped FROM {p}ews_leave_requests WHERE id=%d" % lid)[0]
 
 
 def snaps(lid):
@@ -88,12 +88,16 @@ def approve(lid):
     adm.post('ews_vacation_request_respond', _wpnonce=adm.nonce('ews_vacation_request_respond'), request_id=lid, decision='approve')
 
 
+def refunds(lid):
+    return [r['work_date'] for r in q("SELECT work_date FROM {p}ews_leave_holiday_refunds WHERE leave_request_id=%d ORDER BY work_date" % lid)]
+
+
 def report():
     return adm.req(LEAVES + '&tab=holidays')[1]
 
 
 def restore_nonce(pg):
-    m = re.search(r'name="_wpnonce" value="([^"]+)"[^>]*>\s*<input type="hidden" name="action" value="ews_leave_holiday_restore"', pg)
+    m = re.search(r'name="_wpnonce" value="([^"]+)"[^<]*<input type="hidden" name="_wp_http_referer"[^>]*>\s*<input type="hidden" name="action" value="ews_leave_holiday_restore"', pg)
     return m.group(1) if m else ''
 
 
@@ -102,22 +106,16 @@ def give_back(**data):
     return adm.post('ews_leave_holiday_restore', _wpnonce=restore_nonce(pg) or 'x', **data)
 
 
-def refunds(lid):
-    return [r['work_date'] for r in q("SELECT work_date FROM {p}ews_leave_holiday_refunds WHERE leave_request_id=%d ORDER BY work_date" % lid)]
-
-
 tag = '[off] '
 # --- Off: exactly as before.
 a = ask(6, 10)   # 5 days with H1 = d(8)
 approve(a)
-check(tag + 'a leave over a company holiday counts it (5 days) and is not marked', float(row(a)['requested_days']) == 5.0 and int(row(a)['holidays_excluded']) == 0, row(a))
+check(tag + 'a leave over a company holiday counts it (5 days) and skips nothing', float(row(a)['requested_days']) == 5.0 and row(a)['holidays_skipped'] is None, row(a))
 check(tag + '...the holiday is a leave day, Vacation in the schedule', H1 in snaps(a) and sched(H1) == 'Vacation', (snaps(a), sched(H1)))
 check(tag + '...5 days used', used() == (5.0, 0.0), used())
 pg = adm.req(LEAVES)[1]
 check(tag + 'no Company holidays tab on the Leaves page', 'tab=holidays' not in pg)
 check(tag + 'the tab itself shows the balances page', 'data-lh-table' not in report() and 'data-lh-empty' not in report())
-st, qs, body = adm.post('ews_leave_holiday_restore', _wpnonce='x', leave_ids=a)
-check(tag + 'giving back is refused', float(row(a)['requested_days']) == 5.0 and 'is off' in body, (st, body[:200]))
 p_old = ask(12, 16)  # pending, asked while off: 5 days with H2 = d(14)
 check(tag + 'a pending leave asked while off counts the holiday', float(row(p_old)['requested_days']) == 5.0 and used() == (5.0, 5.0), (row(p_old), used()))
 
@@ -131,12 +129,21 @@ check(tag + '...not the pending one (shown once decided)', 'data-lh-leave="%d"' 
 
 # A new leave skips the holiday.
 n = ask(18, 22)      # H3 = d(20)
-check(tag + 'a new leave over a holiday counts 4 days, marked', float(row(n)['requested_days']) == 4.0 and int(row(n)['holidays_excluded']) == 1, row(n))
+check(tag + 'a new leave over a holiday counts 4 days, and keeps the holiday it skipped', float(row(n)['requested_days']) == 4.0 and row(n)['holidays_skipped'] == H3, row(n))
 approve(n)
 check(tag + '...approved: no leave day on the holiday, which is not Vacation', H3 not in snaps(n) and len(snaps(n)) == 4 and sched(H3) != 'Vacation', (snaps(n), sched(H3)))
-check(tag + '...and never in the report', 'data-lh-leave="%d"' % n not in report())
+check(tag + '...and is not in the report', 'data-lh-leave="%d"' % n not in report())
 nn = ask(26, 26)
 check(tag + 'a leave on a holiday only is refused (no working day)', nn == n, nn)
+
+# A holiday added after the leave was asked: the leave keeps the days it was asked for, then HR can give the day back.
+H5 = d(30)
+late = ask(29, 31)
+check(tag + 'a leave asked before a holiday exists counts 3 days', float(row(late)['requested_days']) == 3.0 and row(late)['holidays_skipped'] is None, row(late))
+php("$wpdb->insert($p.'ews_company_calendar',['event_date'=>'%s','title'=>'Late holiday','event_type'=>'general_leave','active'=>1]);" % H5)
+approve(late)
+check(tag + '...approved after the holiday was added: 3 leave days, as charged', len(snaps(late)) == 3 and H5 in snaps(late), snaps(late))
+check(tag + '...and HR finds it in the report', 'data-lh-leave="%d"' % late in report())
 
 # The pending leave asked before: approved the old way, then in the report.
 approve(p_old)
@@ -173,10 +180,13 @@ emp.post('ews_leave_cancel', _wpnonce=emp.nonce('ews_leave_cancel'), request_id=
 adm.post('ews_leave_cancel_respond', _wpnonce=adm.nonce('ews_leave_cancel_respond'), request_id=a, decision='approve')
 check(tag + 'cancelling the corrected leave returns its 4 days, not 5', row(a)['status'] == 'Cancelled' and used()[0] == before - 4, (row(a), before, used()))
 
-# Off again: nothing new is counted differently, the report goes.
+# Off again: nothing new is counted differently, the report goes, and giving back is refused.
+kept_nonce = restore_nonce(report())
 check(tag + 'turned off', switch(False))
+st, qs, body = adm.post('ews_leave_holiday_restore', _wpnonce=kept_nonce, one=late)
+check('[off again] giving back is refused', 'is off' in body and refunds(late) == [], (st, body[:200]))
 o = ask(25, 27)      # H4 = d(26)
-check('[off again] a new leave counts the holiday again', float(row(o)['requested_days']) == 3.0 and int(row(o)['holidays_excluded']) == 0, row(o))
+check('[off again] a new leave counts the holiday again', float(row(o)['requested_days']) == 3.0 and row(o)['holidays_skipped'] is None, row(o))
 check('[off again] the report is gone', 'tab=holidays' not in adm.req(LEAVES)[1])
 check('[off again] a leave counted while on keeps its days', float(row(n)['requested_days']) == 4.0 and H3 not in snaps(n), (row(n), snaps(n)))
 

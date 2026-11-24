@@ -7,9 +7,9 @@ use WorkforceOne\Leave\HolidayRefund;
  * Company holidays are not leave days (3.31.162, docs/tasks/leave-holidays.md, mockup docs/mockups/leave-holidays/).
  * One switch, off by default; off, every leave counts exactly as before and the report is not shown.
  * - On: a new leave is counted without the company holidays inside it (vacation_working_days_count()) and its approval puts no
- *   leave day on them (the leave's holidays_excluded).
- * - The report (wp-admin → Leaves → Company holidays): the approved leaves of this leave year, charged to the balance before the
- *   switch, with a leave day on an active company holiday. HR gives those days back: the day leaves the leave (its schedule goes
+ *   leave day on them (the leave keeps them in holidays_skipped, so its leave days always match what it charges).
+ * - The report (wp-admin → Leaves → Company holidays): the approved leaves of this leave year, charged to the balance, with a
+ *   leave day on an active company holiday (charged before the switch, or a holiday added after the leave was asked). HR gives those days back: the day leaves the leave (its schedule goes
  *   back as it was before the leave, unless a manager changed it), the leave charges one day less, the balance gets it back, the
  *   employee is told, and the Audit Log keeps it. A day is never given back twice (ews_leave_holiday_refunds' unique key, and the
  *   leave day is gone). Pending leaves and leaves with a change waiting are decided first (owner, 2026-11-24).
@@ -32,12 +32,24 @@ trait EWS_Leave_Holidays_Trait {
         }
 
     /**
-     * The report's leaves: approved, charged to this leave year's balance, counted before the switch, with a leave day on a company
-     * holiday. @return array<int,array<string,mixed>> one row per leave, by employee name
+     * The holidays a new leave is counted without (sorted Y-m-d), from one reading of the switch: those of its working days that are
+     * company holidays, when $days was counted without them; [] when $days counts every working day (the switch was off, or turned
+     * on meanwhile); null when $days matches neither (the calendar changed meanwhile: not saved). @return string[]|null
+     */
+    private function leave_holidays_skipped($start,$end,$days){
+            $all=\WorkforceOne\Leave\WorkingDays::dates((string)$start,(string)$end,$this->working_days());
+            $skip=array_values(array_intersect($all,$this->leave_holiday_dates($start,$end)));
+            if(abs(count($all)-count($skip)-(float)$days)<0.001)return $skip;
+            return abs(count($all)-(float)$days)<0.001?[]:null;
+        }
+
+    /**
+     * The report's leaves: approved, charged to this leave year's balance (or next year's, for a leave already asked for it; never a
+     * past year, owner 2026-11-24), with a leave day on a company holiday. @return array<int,array<string,mixed>> one row per leave, by employee name
      */
     private function leave_holiday_report($year){
             global $wpdb;
-            $hol=$this->leave_company_holidays(sprintf('%04d-01-01',$year-1),sprintf('%04d-12-31',$year+1));
+            $hol=$this->leave_company_holidays(sprintf('%04d-01-01',$year-1),sprintf('%04d-12-31',$year+2));
             if(!$hol)return [];
             $out=[];$req=$wpdb->prefix.'ews_leave_requests';$snap=$wpdb->prefix.'ews_leave_schedule_snapshots';
             foreach(array_chunk(array_keys($hol),300) as $chunk){
@@ -46,8 +58,8 @@ trait EWS_Leave_Holidays_Trait {
                     "SELECT DISTINCT s.leave_request_id FROM {$snap} s JOIN {$req} r ON r.id=s.leave_request_id
                      JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id
                      LEFT JOIN {$wpdb->prefix}ews_leave_balances b ON b.id=r.balance_id
-                     WHERE s.work_date IN ({$in}) AND r.status='Approved' AND r.holidays_excluded=0 AND lt.deduct_balance=1
-                       AND (b.leave_year=%d OR (b.id IS NULL AND YEAR(r.requested_at)=%d))",array_merge($chunk,[(int)$year,(int)$year])));
+                     WHERE s.work_date IN ({$in}) AND r.status='Approved' AND lt.deduct_balance=1
+                       AND (b.leave_year>=%d OR (b.id IS NULL AND YEAR(r.requested_at)>=%d))",array_merge($chunk,[(int)$year,(int)$year])));
                 foreach($rows as $x)$out[(int)$x->leave_request_id]=true;
             }
             if(!$out)return [];
@@ -104,7 +116,7 @@ trait EWS_Leave_Holidays_Trait {
             $one=absint($_POST['one']??0);
             $ids=$one?[$one]:array_slice(array_values(array_unique(array_filter(array_map('absint',(array)($_POST['leave_ids']??[]))))),0,200);
             if(!$ids)$this->leave_admin_redirect($back+['lh_error'=>'none']);
-            $days=0;$leaves=0;$failed=0;
+            $days=0;$leaves=0;$failed=0;$busy=0;
             foreach($ids as $id){
                 $r=$this->leave_request_row($id);
                 if(!$r){$failed++;continue;}
@@ -119,6 +131,7 @@ trait EWS_Leave_Holidays_Trait {
                     if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
                     return true;
                 },'busy');
+                if($res==='busy')$busy++;
                 if($res!==true || !$done){$failed++;continue;}
                 $days+=count($done['days']);$leaves++;
                 $this->audit('leave_holiday_refund','leave_request',(int)$id,$done['type'].' '.$done['start'].' – '.$done['end'].': '.count($done['days']).' company holiday(s) given back ('.implode(', ',$done['days']).'), '.$done['before'].' → '.$done['after'].' day(s)'.($done['top']>0?', next year +'.$done['top'].' carried':''));
@@ -129,7 +142,7 @@ trait EWS_Leave_Holidays_Trait {
                     $this->notify((int)$emp->wp_user_id,'leave','Leave days given back',$msg,['entity_id'=>(int)$id]);
                 }
             }
-            $this->leave_admin_redirect($back+['lh_days'=>$days,'lh_leaves'=>$leaves]+($failed?['lh_error'=>'some']:[]));
+            $this->leave_admin_redirect($back+['lh_days'=>$days,'lh_leaves'=>$leaves]+($failed?['lh_error'=>$busy?'busy':'some']:[]));
         }
 
     /**
@@ -140,9 +153,9 @@ trait EWS_Leave_Holidays_Trait {
     private function leave_holiday_restore_locked($id,$emp,$now,&$done){
             global $wpdb;
             $r=$this->leave_lock_row($id);
-            if(!$r || !HolidayRefund::restorable((string)$r->status,(bool)(int)$r->deduct_balance,$r->cancellation_status!==null?(string)$r->cancellation_status:null) || !empty($r->holidays_excluded))return 'done';
+            if(!$r || !HolidayRefund::restorable((string)$r->status,(bool)(int)$r->deduct_balance,$r->cancellation_status!==null?(string)$r->cancellation_status:null))return 'done';
             $bal=$this->leave_request_balance($r);
-            if(!$bal || (int)$bal->leave_year!==$this->leave_year())return 'done';   // owner: this leave year only
+            if(!$bal || (int)$bal->leave_year<$this->leave_year())return 'done';   // owner: not a past leave year (this one, or a leave already charged to next year)
             $snap=$wpdb->prefix.'ews_leave_schedule_snapshots';$ref=$wpdb->prefix.'ews_leave_holiday_refunds';
             $lock=(defined('DB_ENGINE') && DB_ENGINE==='sqlite')?'':' FOR UPDATE';
             $rows=(array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$snap} WHERE leave_request_id=%d ORDER BY work_date ASC{$lock}",(int)$r->id));

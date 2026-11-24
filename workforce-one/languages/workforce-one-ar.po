@@ -9790,8 +9790,8 @@ msgstr "رجع %1$d يوم من %2$d إجازة للرصيد. الموظفين �
 msgid "Company holidays charged as leave (%d)"
 msgstr "عطلات رسمية اتخصمت كإجازة (%d)"
 
-msgid "Leaves approved before the switch was on, charged for a company holiday inside them. Give the day back and it goes back to the employee's balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved."
-msgstr "إجازات اتوافق عليها قبل تشغيل الميزة واتخصم فيها يوم عطلة رسمية. لما ترجّع اليوم بيرجع لرصيد الموظف، والعطلة مبتفضلش يوم إجازة في الجدول. الإجازات الجديدة مبقتش بتحسب العطلات الرسمية. الإجازات اللي لسه مستنية قرار بتظهر هنا بعد ما تتوافق."
+msgid "Approved leaves charged for a company holiday inside them: asked before the switch was on, or the holiday was added after the leave was asked. Give the day back and it goes back to the employee's balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved."
+msgstr "إجازات متوافق عليها اتخصم فيها يوم عطلة رسمية: اتطلبت قبل تشغيل الميزة، أو العطلة اتضافت بعد طلب الإجازة. لما ترجّع اليوم بيرجع لرصيد الموظف، والعطلة مبتفضلش يوم إجازة في الجدول. الإجازات الجديدة مبقتش بتحسب العطلات الرسمية. الإجازات اللي لسه مستنية قرار بتظهر هنا بعد ما تتوافق."
 
 msgid "No leave of this year was charged for a company holiday."
 msgstr "مفيش إجازة السنة دي اتخصم فيها يوم عطلة رسمية."

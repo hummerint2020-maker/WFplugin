@@ -36,3 +36,15 @@ Unit: LeaveRulesTest (4–8 Oct example = 4, duplicates, weekend holiday), new H
 6. Leave types that do not deduct are left out. (Recommended.)
 7. The employee is notified when days come back. (Recommended.)
 8. Current leave year only. (Recommended.)
+
+## Implementation notes (3.31.162): where the code differs from the design
+
+- The leave keeps the holidays it was counted without (`ews_leave_requests.holidays_skipped`, comma-separated dates, NULL = none) instead of a 0/1 flag. Its approval skips exactly those, so its leave days always match what it charges, even when the calendar or the switch changed between the request and the approval (review finding 3). The switch is read once at the insert (finding 4): a count that matches neither reading is not saved.
+- So the report no longer needs to leave out leaves counted with the switch on: any approved leave with a leave day on an active company holiday is listed. That covers leaves asked before the switch, and a holiday added after a leave was asked. It stays a manual HR action; nothing changes automatically (option 3 not chosen).
+- Leave year: this year or a later one (a leave in January already asked is charged to next year), never a past year (owner question 8). The e2e suite then works whatever day it runs.
+- Pending leaves are not in the report (owner, question 3), so the approval needs no change for a refund racing it.
+- The refund table keeps the holiday's title instead of a calendar id, and no bucket (only approved leaves, so always `used`).
+- The employee's notification is stored in English, as the other leave notifications.
+- Next year's carried days follow a refund through the existing `leave_carry_top_up()` (Leave return), as for a late return.
+- Tests: one e2e suite, `tests/e2e_leave_holidays.py` (off, on, an old pending leave, a holiday added after asking, giving back once, a change waiting, a later cancellation, off again), and `tests/unit/LeaveHolidaysTest.php` for the pure parts; the other suites named in the design are unchanged.
+- A very old leave with no leave days (snapshots) falls back to counting working days on a later change; with the switch on that count skips holidays. Such leaves predate 3.31.1 and are not in the report.

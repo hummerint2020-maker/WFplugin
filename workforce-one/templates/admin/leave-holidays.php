@@ -28,7 +28,7 @@ $total = array_sum(array_map(static function ($r) { return $r['back']; }, $rows)
 
 <div style="background:#fff;border:1px solid #dcdcde;padding:20px;max-width:1200px">
     <h2 style="margin-top:0"><?php echo esc_html(sprintf(/* translators: %d: the leave year */ __('Company holidays charged as leave (%d)', 'workforce-one'), $year)); ?></h2>
-    <p style="color:#50575e;max-width:760px"><?php esc_html_e('Leaves approved before the switch was on, charged for a company holiday inside them. Give the day back and it goes back to the employee\'s balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved.', 'workforce-one'); ?></p>
+    <p style="color:#50575e;max-width:760px"><?php esc_html_e('Approved leaves charged for a company holiday inside them: asked before the switch was on, or the holiday was added after the leave was asked. Give the day back and it goes back to the employee\'s balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved.', 'workforce-one'); ?></p>
     <?php if (!$rows): ?><p data-lh-empty><?php esc_html_e('No leave of this year was charged for a company holiday.', 'workforce-one'); ?></p>
     <?php else: ?>
     <p><strong><?php echo esc_html(sprintf(/* translators: 1: leaves, 2: days */ __('%1$d leave(s), %2$d day(s) to give back', 'workforce-one'), count($rows), $total)); ?></strong></p>

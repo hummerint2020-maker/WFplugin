@@ -189,8 +189,8 @@ trait EWS_Schema_Trait {
                 'balance_id'=>"BIGINT UNSIGNED NULL",
                 // "I'm back early" (3.31.158): the first day a cancellation asked during the leave cancels; NULL = the whole leave.
                 'cancel_from'=>"DATE NULL",
-                // 3.31.162 (docs/tasks/leave-holidays.md): 1 = counted without the company holidays; older leaves stay 0.
-                'holidays_excluded'=>"TINYINT(1) NOT NULL DEFAULT 0"
+                // 3.31.162 (docs/tasks/leave-holidays.md): the company holidays (Y-m-d, comma separated) the leave was counted without; NULL = none.
+                'holidays_skipped'=>"TEXT NULL"
             ];
             foreach($req_defs as $col=>$def){
                 if(!in_array($col,$req_cols,true))$wpdb->query("ALTER TABLE {$req} ADD COLUMN `{$col}` {$def}");
@@ -359,7 +359,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.162'; }   // Company holidays are not leave days: ews_leave_holiday_refunds, ews_leave_requests.holidays_excluded
+        private function ews_schema_target(){ return '3.31.162'; }   // Company holidays are not leave days: ews_leave_holiday_refunds, ews_leave_requests.holidays_skipped
         // 3.31.161: Leave return: leave change rounds (ews_leave_changes), approval rounds (ews_approval_requests.entity_round), snapshot day key
 
         /*

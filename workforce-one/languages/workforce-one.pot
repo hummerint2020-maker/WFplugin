@@ -13381,7 +13381,7 @@ msgid "Company holidays charged as leave (%d)"
 msgstr ""
 
 #: leave-holidays
-msgid "Leaves approved before the switch was on, charged for a company holiday inside them. Give the day back and it goes back to the employee's balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved."
+msgid "Approved leaves charged for a company holiday inside them: asked before the switch was on, or the holiday was added after the leave was asked. Give the day back and it goes back to the employee's balance, and the holiday is no longer a leave day in the schedule. New leaves no longer count the company holidays. Leaves still waiting for a decision show here once they are approved."
 msgstr ""
 
 #: leave-holidays
