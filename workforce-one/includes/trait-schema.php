@@ -147,6 +147,14 @@ trait EWS_Schema_Trait {
                 approval_request_id BIGINT UNSIGNED NULL, requested_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
                 requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, decided_by BIGINT UNSIGNED NULL, decided_at DATETIME NULL,
                 PRIMARY KEY(id), KEY leave_round(leave_request_id,id), KEY employee(employee_id,requested_at)) {$c};");
+            // Company holidays given back (3.31.162, docs/tasks/leave-holidays.md): one row per leave day; the unique key means a day is
+            // never given back twice.
+            $refunds=$wpdb->prefix.'ews_leave_holiday_refunds';
+            dbDelta("CREATE TABLE {$refunds} (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, leave_request_id BIGINT UNSIGNED NOT NULL, employee_id BIGINT UNSIGNED NOT NULL,
+                work_date DATE NOT NULL, days DECIMAL(8,2) NOT NULL DEFAULT 1, balance_id BIGINT UNSIGNED NULL, holiday VARCHAR(190) NULL,
+                created_by BIGINT UNSIGNED NOT NULL DEFAULT 0, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY(id), UNIQUE KEY leave_day(leave_request_id,work_date), KEY employee(employee_id,work_date)) {$c};");
             dbDelta("CREATE TABLE {$early} (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, work_date DATE NOT NULL,
                 leave_minutes INT UNSIGNED NOT NULL, reason TEXT NULL, status VARCHAR(30) NOT NULL DEFAULT 'Pending',
@@ -180,7 +188,9 @@ trait EWS_Schema_Trait {
                 // Balance row the request was charged to (NULL for requests created before 3.31.1).
                 'balance_id'=>"BIGINT UNSIGNED NULL",
                 // "I'm back early" (3.31.158): the first day a cancellation asked during the leave cancels; NULL = the whole leave.
-                'cancel_from'=>"DATE NULL"
+                'cancel_from'=>"DATE NULL",
+                // 3.31.162 (docs/tasks/leave-holidays.md): 1 = counted without the company holidays; older leaves stay 0.
+                'holidays_excluded'=>"TINYINT(1) NOT NULL DEFAULT 0"
             ];
             foreach($req_defs as $col=>$def){
                 if(!in_array($col,$req_cols,true))$wpdb->query("ALTER TABLE {$req} ADD COLUMN `{$col}` {$def}");
@@ -349,7 +359,8 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.161'; }   // Leave return: leave change rounds (ews_leave_changes), approval rounds (ews_approval_requests.entity_round), snapshot day key
+        private function ews_schema_target(){ return '3.31.162'; }   // Company holidays are not leave days: ews_leave_holiday_refunds, ews_leave_requests.holidays_excluded
+        // 3.31.161: Leave return: leave change rounds (ews_leave_changes), approval rounds (ews_approval_requests.entity_round), snapshot day key
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

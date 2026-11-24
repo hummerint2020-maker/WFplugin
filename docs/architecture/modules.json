@@ -543,7 +543,8 @@
       "traits": [
         "leave",
         "leave-admin",
-        "leave-view"
+        "leave-view",
+        "leave-holidays"
       ],
       "tables": [
         "leave_requests",
@@ -551,7 +552,8 @@
         "leave_types",
         "leave_schedule_snapshots",
         "vacation_requests",
-        "leave_changes"
+        "leave_changes",
+        "leave_holiday_refunds"
       ],
       "api": [
         "leave_approval_card",

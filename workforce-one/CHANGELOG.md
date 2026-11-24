@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.31.162
+### Company holidays are not leave days (docs/tasks/leave-holidays.md, mockup docs/mockups/leave-holidays/)
+Owner's report (2026-11-24): a leave over a company holiday took that holiday from the balance (Sun 4 – Thu 8 Oct with 6 Oct a
+holiday charged 5 days instead of 4). Payroll was right (the holiday wins over the leave); only the balance was wrong. One new
+switch (wp-admin → Features → **Company holidays are not leave days**), **off by default**: off, everything is exactly as before.
+- **New leaves** (the employee's request and a leave HR records) are counted without the active company holidays inside them;
+  approved, they put no leave day on the holiday, which stays a holiday in the schedule. The leave remembers it
+  (`ews_leave_requests.holidays_excluded`), so turning the switch off later does not change its days.
+- **The report** (wp-admin → Leaves → **Company holidays**): this leave year's approved leaves, charged before the switch, with a
+  leave day on a company holiday. HR gives the days back, one leave or the selected ones: the balance gets them back (and next
+  year's carried days follow, as for a late return), the leave counts that many days less, the holiday goes back in the schedule
+  as it was before the leave (a day a manager changed is kept), the employee is told, and the Audit Log keeps it
+  (`leave_holiday_refund`). A day is never given back twice. Pending leaves show once approved; a leave with a change waiting
+  for a decision is shown but not corrected until it is decided. A later cancellation returns only what the leave still charges.
+- Database (3.31.162): a new table `ews_leave_holiday_refunds` (one row per day given back) and `ews_leave_requests.holidays_excluded`.
+  Nothing changes for existing rows.
+
 ## 3.31.161
 ### Leave return: a leave changed more than once, a return HR records, and approved leave days locked (docs/tasks/leave-return.md, mockups docs/mockups/leave-return/)
 Owner's report (2026-11-24): an employee cancelled 2 days of a 3-day leave, then could not cancel the last day, and a manager
