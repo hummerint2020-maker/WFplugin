@@ -85,6 +85,8 @@ final class WordPressLeaveHolidayStore implements LeaveHolidayStore
         $q = $this->db->insert($this->db->prefix . 'ews_leave_holiday_refunds', ['leave_request_id' => $leaveId, 'employee_id' => $employeeId, 'work_date' => $day, 'days' => 1,
             'balance_id' => $balanceId, 'holiday' => mb_substr($holiday, 0, 190), 'created_by' => $by, 'created_at' => $at], ['%d', '%d', '%s', '%f', '%d', '%s', '%d', '%s']);
         $this->db->suppress_errors($prev);
+        // A day given back already (the unique key) is expected; any other error is logged, as wpdb would have shown it.
+        if ($q !== 1 && stripos((string) $this->db->last_error, 'Duplicate') === false) error_log('Workforce One: leave holiday refund not saved: ' . $this->db->last_error);
         return $q === 1;
     }
 
