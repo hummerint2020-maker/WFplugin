@@ -331,7 +331,8 @@ trait EWS_My_Approvals_Trait {
         $leave=$lr && $emp?['balances'=>array_values((array)($new['types']??[])),'kind'=>$kind,'page'=>$page,'more'=>$more_pages,
             'all_url'=>$base,'leave_url'=>add_query_arg('req_kind','leave',$base),'shown'=>$this->leave_page_shown()]:null;
         return $this->render_template('app/requests',['items'=>$items,'post_url'=>admin_url('admin-post.php'),'notice'=>$notice,'filter'=>sanitize_key($_GET['req_state']??''),'base_url'=>$kind?add_query_arg('req_kind','leave',$base):$base, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only
-            'new'=>$new,'open_new'=>!empty($_GET['new']),'leave'=>$leave]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            'new'=>$new,'open_new'=>!empty($_GET['new']),'leave'=>$leave,
+            'cx_balance'=>$new['cx_balance']??null]); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
     }
 
     /**
@@ -357,7 +358,7 @@ trait EWS_My_Approvals_Trait {
         $cx=$this->cx_new_request_sheet($emp);
         if($cx['html']!==''){
             $kinds['correction']=['group'=>'attendance','label'=>__('Attendance correction','workforce-one'),'line'=>$cx['limit']>0?sprintf(/* translators: %d: requests left */_n('%d left this month','%d left this month',max(0,$cx['limit']-$cx['used']),'workforce-one'),max(0,$cx['limit']-$cx['used'])):__('A missing or wrong Sign In or Out','workforce-one'),'sheet'=>'wfo-cx-sheet'];
-            $data['cx_html']=$cx['html'];
+            $data['cx_html']=$cx['html'];$data['cx_balance']=$cx['balance'];
         }
         $swap=$this->swap_new_choices($emp);
         $kinds['swap']=['group'=>'attendance','label'=>__('Swap with a colleague','workforce-one'),'line'=>$swap['reason']===''?__('An office day for a home day','workforce-one'):($swap['reason']==='department'?__('You are not in a department yet','workforce-one'):($swap['reason']==='days'?__('No office or home days in the next two weeks','workforce-one'):__('Nobody else in your department','workforce-one'))),'sheet'=>'wfo-new-swap','off'=>$swap['reason']!==''];

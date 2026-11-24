@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.31.163
+### Corrections balance in My requests (docs/tasks/corrections-balance.md, mockups docs/mockups/corrections-balance/)
+Owner's request (2026-11-24): "in My requests, add the correction balance". A new switch (wp-admin → Features → My approvals
+and My requests → **Corrections balance in My requests**), **off by default**: off, My requests is exactly as before.
+- On (with Attendance corrections and My approvals on): "Your balance" on top of My requests shows a card **Attendance
+  corrections**: how many are left this month of the monthly limit (waiting and approved requests for this month's days count,
+  as the limit does). None left: "the next ones go to HR" or "none left this month", following the corrections settings.
+- With Leave in My requests on, the card comes after the leave balances in the same strip; off, the strip shows it alone.
+- No monthly limit (0): no card. No new query: the count is the one the New request sheet already reads.
+- Rules in `src/Attendance/CorrectionBalance.php` (unit tests); e2e `tests/e2e_corrections_balance.py`.
+
 ## 3.31.161
 ### Leave return: a leave changed more than once, a return HR records, and approved leave days locked (docs/tasks/leave-return.md, mockups docs/mockups/leave-return/)
 Owner's report (2026-11-24): an employee cancelled 2 days of a 3-day leave, then could not cancel the last day, and a manager

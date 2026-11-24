@@ -13351,3 +13351,28 @@ msgstr ""
 #: leave-return
 msgid "Your manager decides; until then the leave stands as it is. You can change it again later while leave days remain."
 msgstr ""
+
+#: corrections-balance
+msgid "Corrections balance in My requests"
+msgstr ""
+
+#: corrections-balance
+msgid "\"Your balance\" at the top of My requests also shows how many attendance corrections are left this month, and what happens to the next one once none are left. Only while Attendance corrections and My approvals are on, and a monthly limit is set."
+msgstr ""
+
+#: corrections-balance
+msgid "Attendance corrections"
+msgstr ""
+
+#: corrections-balance
+msgid "None left this month · the next ones go to HR"
+msgstr ""
+
+#: corrections-balance
+msgid "None left this month"
+msgstr ""
+
+#. translators: %s: corrections a month
+#: corrections-balance
+msgid "of %s this month"
+msgstr ""
