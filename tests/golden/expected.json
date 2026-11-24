@@ -1,15 +1,15 @@
 {
  "_about": "What this release changes on purpose (tests/golden/run.py; owner decision 2026-10-27): the pages (by their pages.json url and options) that may differ from the base, the action traces (by key, with the reason) whose SQL, return or rows may differ, and the hook / admin-post / shortcode / REST names it adds. Everything else must stay the same. Empty for a move-only release; emptied again by the next release.",
- "release": "3.31.159",
+ "release": "3.31.161",
  "pages": [
   {
    "url": "/wp-admin/admin.php?page=ews31-features",
-   "reason": "Requests Hub reports (docs/tasks/hub-reports.md): a new switch, off by default, in Feature Configuration",
+   "reason": "Leave return (docs/tasks/leave-return.md): a new switch, off by default, in Feature Configuration",
    "user": "admin"
   },
   {
    "url": "/wp-admin/admin.php?page=ews31-features",
-   "reason": "Requests Hub reports (docs/tasks/hub-reports.md): a new switch, off by default, in Feature Configuration",
+   "reason": "Leave return (docs/tasks/leave-return.md): a new switch, off by default, in Feature Configuration",
    "user": "admin",
    "options": {
     "ews_feature_week_lock": 1
@@ -18,6 +18,7 @@
  ],
  "actions": {},
  "hooks_added": [
-  "admin_post_ews31_requests_export"
+  "admin_post_ews_leave_return_record",
+  "admin_post_ews_leave_day_restore"
  ]
 }

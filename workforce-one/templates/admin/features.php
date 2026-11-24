@@ -123,6 +123,10 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
     <input type="hidden" name="my_requests_leave_present" value="1"><?php $switch('my_requests_leave_enabled', $on['my_requests_leave']); ?>
 </div>
 <div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Leave return', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('An employee can say they are back at work on any day of an approved leave, the first or the last one too, and change a leave more than once (each change approved as a cancellation is today). Approved leave days are locked in the Attendance grid, the single day edit and the import, even for a locked week. HR records a return the employee forgot to ask for, with a reason, and finds leave days changed in the schedule before on the Leaves page. Days in a closed payroll month stay leave; a day returned is never returned twice; the carried days of the next year follow a late return. Off: exactly as today.', 'workforce-one'); ?></div></div>
+    <input type="hidden" name="leave_return_present" value="1"><?php $switch('leave_return_enabled', $on['leave_return']); ?>
+</div>
+<div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Leave page in the app', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on.', 'workforce-one'); ?></div></div>
     <?php $switch('leave_page_enabled', $on['leave_page']); ?>
 </div></div>

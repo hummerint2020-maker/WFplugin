@@ -67,7 +67,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                 <form method="post" action="<?php echo esc_url($post_url); ?>">
                     <?php wp_nonce_field('ews_request_withdraw_' . $it['withdraw'] . '_' . (int) $it['id']); ?>
                     <input type="hidden" name="action" value="ews_request_withdraw"><input type="hidden" name="kind" value="<?php echo esc_attr($it['withdraw']); ?>"><input type="hidden" name="id" value="<?php echo (int) $it['id']; ?>">
-                    <p><?php echo $it['withdraw'] === 'leave_cancel' ? esc_html__('Withdraw the cancellation? The leave stays as it is, and a leave can be cancelled only once.', 'workforce-one') : ($it['withdraw'] === 'leave' ? esc_html__('Withdraw it? The days go back to your balance.', 'workforce-one') : ($it['withdraw'] === 'swap' ? esc_html__('Withdraw it? Your colleague will no longer be asked, and is told.', 'workforce-one') : esc_html__('Withdraw it? Nobody will need to decide it.', 'workforce-one'))); ?></p>
+                    <p><?php echo $it['withdraw'] === 'leave_cancel' ? (!empty($it['again']) ? esc_html__('Withdraw the change? The leave stays as it is; you can ask again later.', 'workforce-one') : esc_html__('Withdraw the cancellation? The leave stays as it is, and a leave can be cancelled only once.', 'workforce-one')) : ($it['withdraw'] === 'leave' ? esc_html__('Withdraw it? The days go back to your balance.', 'workforce-one') : ($it['withdraw'] === 'swap' ? esc_html__('Withdraw it? Your colleague will no longer be asked, and is told.', 'workforce-one') : esc_html__('Withdraw it? Nobody will need to decide it.', 'workforce-one'))); ?></p>
                     <button type="submit" class="wfo-apv-btn is-bad"><?php esc_html_e('Yes, withdraw it', 'workforce-one'); ?></button>
                 </form>
             </details>
@@ -89,7 +89,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                         <span class="wfo-lr-date"><input type="date" name="back_on" value="<?php echo esc_attr($ch['min']); ?>" min="<?php echo esc_attr($ch['min']); ?>" max="<?php echo esc_attr($ch['max']); ?>" required aria-label="<?php esc_attr_e('The day you are back at work', 'workforce-one'); ?>"></span></span></label>
                     <?php endif; ?>
                     <p class="wfo-lr-sum" data-lr-sum aria-live="polite"></p>
-                    <p class="wfo-lr-note"><?php esc_html_e('Your manager decides; until then the leave stands as it is. This is the one change this leave can have.', 'workforce-one'); ?></p>
+                    <p class="wfo-lr-note"><?php echo !empty($ch['again']) ? esc_html__('Your manager decides; until then the leave stands as it is. You can change it again later while leave days remain.', 'workforce-one') : esc_html__('Your manager decides; until then the leave stands as it is. This is the one change this leave can have.', 'workforce-one'); ?></p>
                     <button type="submit" class="wfo-apv-btn is-ok"><?php esc_html_e('Send the change', 'workforce-one'); ?></button>
                 </form>
             </details>

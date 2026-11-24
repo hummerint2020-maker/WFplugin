@@ -12,7 +12,7 @@
     function init() {
         var form = document.getElementById('ews-grid-form');
         if (!form) return;
-        var cells = Array.prototype.slice.call(form.querySelectorAll('td.ews-att-day[data-employee]'));
+        var cells = Array.prototype.slice.call(form.querySelectorAll('td.ews-att-day[data-employee]:not([data-held])'));
         var picker = document.getElementById('wfo-attg-picker');
         var scrim = form.querySelector('.wfo-attg-scrim');
         var title = document.getElementById('wfo-attg-picker-title');

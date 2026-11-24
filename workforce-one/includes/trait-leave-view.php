@@ -31,14 +31,20 @@ trait EWS_Leave_View_Trait {
         if($workflow && (int)$workflow->active===1){
             // Only the requests whose current approval step is assigned to this user.
             $at=$this->approval_tables();
-            return ['mine'=>true,'rows'=>(array)$wpdb->get_results($wpdb->prepare("{$select},ai.step_order,ai.id approval_step {$from} JOIN {$at['requests']} ar ON ar.entity_type=%s AND ar.entity_id=r.id JOIN {$at['instances']} ai ON ai.approval_request_id=ar.id AND ai.status='PENDING' AND ai.approver_wp_user_id=%d WHERE {$where} ORDER BY r.requested_at ASC",$entity,get_current_user_id()))];
+            return ['mine'=>true,'rows'=>$this->leave_view_rounds($entity,(array)$wpdb->get_results($wpdb->prepare("{$select},ai.step_order,ai.id approval_step {$from} JOIN {$at['requests']} ar ON ar.entity_type=%s AND ar.entity_id=r.id JOIN {$at['instances']} ai ON ai.approval_request_id=ar.id AND ai.status='PENDING' AND ai.approver_wp_user_id=%d WHERE {$where} ORDER BY r.requested_at ASC",$entity,get_current_user_id())))];
         }
         if(!$this->can('ews_manage_settings'))return null;
         $rows=(array)$wpdb->get_results("{$select} {$from} WHERE {$where} ORDER BY r.requested_at ASC");
         // An approval still open from before the workflow was switched off: its level, so the decision is not refused (3.31.122).
         $steps=$rows?$this->approval_shown_steps(array_map(function($r)use($entity){return ['vacation',$entity,(int)$r->id];},$rows)):[];
         foreach($rows as $r)$r->approval_step=$steps[$this->approval_request_key('vacation',$entity,(int)$r->id)]??0;
-        return ['mine'=>false,'rows'=>$rows];
+        return ['mine'=>false,'rows'=>$this->leave_view_rounds($entity,$rows)];
+    }
+
+    /** Leave return (3.31.161): each cancellation row carries the change it shows (->round), so a decision never lands on a newer one. */
+    private function leave_view_rounds($entity,array $rows){
+        if($entity==='leave_cancellation')foreach($rows as $r)$r->round=$this->leave_round_token((int)$r->id);
+        return $rows;
     }
 
     /** Office minimum (3.31.77): what approving each pending request does to the day (->om, or null). */
@@ -93,6 +99,16 @@ trait EWS_Leave_View_Trait {
     /** Leave in My requests (3.31.158): balances, asking to cancel, the leave history; only while My approvals is on. */
     private function my_requests_leave_on(){
         return $this->my_approvals_enabled() && (bool)$this->option('ews_feature_my_requests_leave');
+    }
+
+    /** Leave return (3.31.161, docs/tasks/leave-return.md): off by default; off, every leave path is exactly as before. */
+    private function leave_return_on(){
+        return (bool)$this->option('ews_feature_leave_return');
+    }
+
+    /** The employee's part of Leave return (back at work on any day, more than one change) lives in My requests. */
+    private function leave_return_ask_on(){
+        return $this->leave_return_on() && $this->my_requests_leave_on();
     }
 
     /** The Leave page is shown unless leave is in My requests and the page is switched off (3.31.158). */

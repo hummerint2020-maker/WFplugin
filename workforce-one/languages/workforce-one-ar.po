@@ -9582,3 +9582,189 @@ msgstr "تاب \"تقارير\" في مركز الطلبات: كل الطلبا�
 
 msgid "Cancelled by HR"
 msgstr "الموارد البشرية لغته"
+
+msgid "This day is an approved leave. A manager cannot change it; HR records a return from leave."
+msgstr "اليوم ده إجازة معتمدة. المدير ميقدرش يغيّره؛ الموارد البشرية هي اللي تسجّل الرجوع من الإجازة."
+
+msgid "Approved leave (#%d): HR records a return from leave"
+msgstr "إجازة معتمدة (#%d): الموارد البشرية هي اللي تسجّل الرجوع من الإجازة"
+
+msgid "Pick the day you are back at work: from the first day of the leave (or today) up to its last day."
+msgstr "اختار اليوم اللي رجعت فيه الشغل: من أول يوم في الإجازة (أو النهارده) لحد آخر يوم فيها."
+
+msgid "No leave day is left from that day on."
+msgstr "مفيش أيام إجازة باقية من اليوم ده."
+
+msgid "The leave changed since the preview. Check it again."
+msgstr "الإجازة اتغيرت بعد المعاينة. راجعها تاني."
+
+msgid "The employee's change was decided meanwhile. Check the leave again."
+msgstr "طلب تعديل الموظف اتاخد فيه قرار في نفس الوقت. راجع الإجازة تاني."
+
+msgid "Another leave of this employee is being saved. Try again in a moment."
+msgstr "فيه إجازة تانية للموظف ده بتتحفظ دلوقتي. جرّب تاني بعد شوية."
+
+msgid "Could not save. Nothing was changed."
+msgstr "مقدرناش نحفظ. ومفيش حاجة اتغيرت."
+
+msgid "The leave is no longer approved."
+msgstr "الإجازة مبقتش معتمدة."
+
+msgid "This day is no longer a leave day."
+msgstr "اليوم ده مبقاش يوم إجازة."
+
+msgid "This day is already leave in the schedule."
+msgstr "اليوم ده إجازة في الجدول أصلاً."
+
+msgid "Leave return is off."
+msgstr "الرجوع من الإجازة مقفول."
+
+msgid "Only an approved leave can be changed."
+msgstr "ينفع تعدّل الإجازة المعتمدة بس."
+
+msgid "A change of this leave is already waiting."
+msgstr "فيه تعديل للإجازة دي مستني بالفعل."
+
+msgid "The payroll of those days is closed, so they stay leave."
+msgstr "مرتبات الأيام دي اتقفلت، فهتفضل إجازة."
+
+msgid "Write the reason."
+msgstr "اكتب السبب."
+
+msgid "You cannot record a return on your own leave. Another HR person must."
+msgstr "مينفعش تسجّل رجوع على إجازتك إنت. لازم حد تاني من الموارد البشرية."
+
+msgid "No leave day is left to return."
+msgstr "مفيش أيام إجازة باقية ترجع."
+
+msgid "The leave could not be changed."
+msgstr "مقدرناش نعدّل الإجازة."
+
+msgid "Payroll closed"
+msgstr "المرتبات اتقفلت"
+
+msgid "The days up to %s stay leave: their payroll month is closed."
+msgstr "الأيام لحد %s هتفضل إجازة: شهر مرتباتها اتقفل."
+
+msgid "Change %d of this leave"
+msgstr "التعديل رقم %d للإجازة دي"
+
+msgid "Back at work, recorded by HR"
+msgstr "رجع الشغل، سجّلته الموارد البشرية"
+
+msgid "HR recorded that you were back at work on %1$s: %2$s day(s) went back to your balance. Reason: %3$s"
+msgstr "الموارد البشرية سجّلت إنك رجعت الشغل يوم %1$s: %2$s يوم رجعوا لرصيدك. السبب: %3$s"
+
+msgid "Cancelling it was refused. You can ask again."
+msgstr "الإلغاء اترفض. تقدر تطلب تاني."
+
+msgid "Cancelling it was refused."
+msgstr "الإلغاء اترفض."
+
+msgid "You withdrew the change, so the leave stands. You can ask again."
+msgstr "إنت سحبت التعديل، فالإجازة زي ما هي. تقدر تطلب تاني."
+
+msgid "Shortened at your request: the days from then on went back to your balance. You can change it again."
+msgstr "اتقصّرت بطلبك: الأيام من ساعتها رجعت لرصيدك. تقدر تعدّلها تاني."
+
+msgid "Days in a closed payroll month stayed leave."
+msgstr "الأيام اللي في شهر مرتباته مقفول فضلت إجازة."
+
+msgid "Leave return"
+msgstr "الرجوع من الإجازة"
+
+msgid "An employee can say they are back at work on any day of an approved leave, the first or the last one too, and change a leave more than once (each change approved as a cancellation is today). Approved leave days are locked in the Attendance grid, the single day edit and the import, even for a locked week. HR records a return the employee forgot to ask for, with a reason, and finds leave days changed in the schedule before on the Leaves page. Days in a closed payroll month stay leave; a day returned is never returned twice; the carried days of the next year follow a late return. Off: exactly as today."
+msgstr "الموظف يقدر يقول إنه رجع الشغل في أي يوم من إجازة معتمدة، أول يوم أو آخر يوم كمان، ويعدّل الإجازة أكتر من مرة (كل تعديل بيتوافق عليه زي الإلغاء النهارده). أيام الإجازة المعتمدة بتتقفل في جدول الحضور وتعديل اليوم الواحد والاستيراد، حتى في الأسبوع المقفول. الموارد البشرية بتسجّل رجوع نسي الموظف يطلبه، بسبب، وبتلاقي أيام الإجازة اللي اتغيرت في الجدول قبل كده في صفحة الإجازات. الأيام اللي في شهر مرتباته مقفول بتفضل إجازة؛ اليوم اللي رجع عمره ما يرجع مرتين؛ والأيام المرحّلة للسنة الجاية بتتظبط مع الرجوع المتأخر. وهو مقفول: زي النهارده بالظبط."
+
+msgid "Types and balances"
+msgstr "الأنواع والأرصدة"
+
+msgid "Back at work"
+msgstr "رجع الشغل"
+
+msgid "Changed leave days"
+msgstr "أيام إجازة اتغيرت"
+
+msgid "The return was recorded. The days went back to the balance, and the employee and their manager were told."
+msgstr "الرجوع اتسجّل. الأيام رجعت للرصيد، والموظف ومديره اتبلّغوا."
+
+msgid "The day is leave again in the schedule."
+msgstr "اليوم رجع إجازة تاني في الجدول."
+
+msgid "Record that an employee was back at work"
+msgstr "سجّل إن موظف رجع الشغل"
+
+msgid "For an employee who came back early and did not ask. The days from the day they were back go back to their balance and their schedule. A reason is required, and it is kept in the Audit Log. Days in a closed payroll month stay leave. You cannot record it on your own leave."
+msgstr "لموظف رجع بدري ومطلبش. الأيام من يوم رجوعه بترجع لرصيده ولجدوله. السبب إجباري، وبيتحفظ في سجل المراجعة. الأيام اللي في شهر مرتباته مقفول بتفضل إجازة. مينفعش تسجّله على إجازتك إنت."
+
+msgid "Select employee"
+msgstr "اختار الموظف"
+
+msgid "Approved leave"
+msgstr "إجازة معتمدة"
+
+msgid "No approved leave with leave days"
+msgstr "مفيش إجازة معتمدة فيها أيام إجازة"
+
+msgid "a change is waiting"
+msgstr "فيه تعديل مستني"
+
+msgid "Reason (required)"
+msgstr "السبب (إجباري)"
+
+msgid "Leave #%1$d %2$s, %3$s → %4$s"
+msgstr "إجازة #%1$d %2$s، %3$s ← %4$s"
+
+msgid "All of it is cancelled: %s day(s) go back to the balance."
+msgstr "الإجازة كلها هتتلغي: %s يوم هيرجعوا للرصيد."
+
+msgid "The days from %1$s on go back (%2$s day(s)); the leave now ends on %3$s."
+msgstr "الأيام من %1$s هترجع (%2$s يوم)؛ والإجازة هتخلص يوم %3$s."
+
+msgid "Payroll is closed for %1$s: those days stay leave, so the return starts on %2$s."
+msgstr "المرتبات مقفولة لـ %1$s: الأيام دي هتفضل إجازة، فالرجوع هيبدأ من %2$s."
+
+msgid "The balance after: %1$s used of %2$s."
+msgstr "الرصيد بعدها: %1$s مستخدم من %2$s."
+
+msgid "The employee's change request still waiting is closed, and they are told."
+msgstr "طلب التعديل اللي الموظف لسه مستنيه هيتقفل، وهيتبلّغ."
+
+msgid "Record the return"
+msgstr "سجّل الرجوع"
+
+msgid "Past days of approved leaves that are no longer leave in the schedule (a manager changed them before leave days were locked). They are still charged as leave. Record a return if the employee worked, or put the day back to leave."
+msgstr "أيام فاتت من إجازات معتمدة مبقتش إجازة في الجدول (مدير غيّرها قبل ما أيام الإجازة تتقفل). لسه محسوبة إجازة. سجّل رجوع لو الموظف اشتغل، أو رجّع اليوم إجازة."
+
+msgid "No changed leave day in this period."
+msgstr "مفيش يوم إجازة اتغير في الفترة دي."
+
+msgid "Schedule now"
+msgstr "الجدول دلوقتي"
+
+msgid "No schedule row"
+msgstr "مفيش جدول لليوم"
+
+msgid "No record"
+msgstr "مفيش تسجيل"
+
+msgid "Payroll closed: stays leave"
+msgstr "المرتبات اتقفلت: هيفضل إجازة"
+
+msgid "Back at work from this day"
+msgstr "رجع الشغل من اليوم ده"
+
+msgid "Put the day back to leave"
+msgstr "رجّع اليوم إجازة"
+
+msgid "%1$d day(s) · page %2$d of %3$d"
+msgstr "%1$d يوم · صفحة %2$d من %3$d"
+
+msgid "Approved leave: HR records a return from leave"
+msgstr "إجازة معتمدة: الموارد البشرية هي اللي تسجّل الرجوع من الإجازة"
+
+msgid "Withdraw the change? The leave stays as it is; you can ask again later."
+msgstr "تسحب التعديل؟ الإجازة هتفضل زي ما هي؛ وتقدر تطلب تاني بعدين."
+
+msgid "Your manager decides; until then the leave stands as it is. You can change it again later while leave days remain."
+msgstr "مديرك هو اللي يقرر؛ ولحد ساعتها الإجازة زي ما هي. تقدر تعدّلها تاني بعدين طول ما فيه أيام إجازة باقية."

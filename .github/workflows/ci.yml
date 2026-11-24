@@ -189,6 +189,10 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
       - name: Leave in My requests (off by default, balances, asking to cancel, the Leave filter, the Leave page switch)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_requests.py "$S"
+      - name: Leave return (off by default; a leave changed more than once, HR records a return, the changed days report)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_return.py "$S"
+      - name: Approved leave days locked in the schedule (Leave return)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_lock.py "$S"
       - name: App frame, navigation and login (employee app)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_layout.py "$S"
       - name: Appearance (theme) and the app frame's phone bar

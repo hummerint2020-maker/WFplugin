@@ -56,7 +56,7 @@ function ews_uninstall_site() {
         'ews_api_devices', 'ews_api_idempotency', 'ews_api_rate_limits', 'ews_api_tokens', 'ews_approval_workflows', 'ews_audit_log', 'ews_auto_attendance_rules', 'ews_break_sessions',
         'ews_company_calendar', 'ews_departments', 'ews_early_leave_requests', 'ews_employee_achievements', 'ews_employee_branches',
         'ews_employee_locations_v321', 'ews_employee_relationships', 'ews_employees', 'ews_face_profiles',
-        'ews_kiosks', 'ews_kudos', 'ews_leave_balances', 'ews_leave_requests', 'ews_leave_schedule_snapshots',
+        'ews_kiosks', 'ews_kudos', 'ews_leave_balances', 'ews_leave_requests', 'ews_leave_schedule_snapshots', 'ews_leave_changes',
         'ews_leave_types', 'ews_attendance_corrections', 'ews_dw_workers', 'ews_dw_sites', 'ews_dw_foremen', 'ews_dw_moves', 'ews_dw_days', 'ews_dw_sheets', 'ews_dw_advances', 'ews_dw_payouts', 'ews_dw_lines', 'ews_dw_changes', 'ews_signin_attempts', 'ews_org_moves', 'ews_locations', 'ews_notifications', 'ews_overtime_requests', 'ews_pay_adjustments', 'ews_pay_rates', 'ews_payroll_runs', 'ews_payslips', 'ews_poll_options',
         'ews_poll_votes', 'ews_polls', 'ews_presence_verifications', 'ews_push_subscriptions', 'ews_schedule',
         'ews_schedule_swaps', 'ews_shift_swaps', 'ews_tasks', 'ews_task_items', 'ews_task_comments', 'ews_task_activity', 'ews_team_members', 'ews_teams', 'ews_time_logs',

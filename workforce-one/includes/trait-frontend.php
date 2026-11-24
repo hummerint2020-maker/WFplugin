@@ -259,7 +259,8 @@ trait EWS_Frontend_Trait {
                 $m=['not_approved'=>__('Only an approved leave can be cancelled.','workforce-one'),'already_pending'=>__('You already asked to cancel this leave. It is waiting for a decision.','workforce-one'),
                     'already_rejected'=>__('Cancelling this leave was refused, so it cannot be asked again.','workforce-one'),'already_cancelled'=>__('This leave is already cancelled.','workforce-one'),
                     'started'=>__('This leave has started or starts today, so it can no longer be cancelled.','workforce-one'),'closed'=>__('A cancellation was already asked for this leave and closed, so it cannot be asked again.','workforce-one'),
-                    'not_started'=>__('This leave has not started yet; ask to cancel all of it instead.','workforce-one'),'ending'=>__('This leave ends today, so there are no days left to cancel.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
+                    'not_started'=>__('This leave has not started yet; ask to cancel all of it instead.','workforce-one'),'ending'=>__('This leave ends today, so there are no days left to cancel.','workforce-one'),
+                    'day'=>__('Pick the day you are back at work: from the first day of the leave (or today) up to its last day.','workforce-one'),'no_days'=>__('No leave day is left from that day on.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
                 return $this->ux_modal(__('Cancellation Not Submitted','workforce-one'),$m[sanitize_key($_GET['leave_cancel_error'])]??$m['save'],'error');
             }
             if(isset($_GET['leave_error'])){
@@ -663,7 +664,7 @@ trait EWS_Frontend_Trait {
              * attendance grid save result).
              */
             $u=remove_query_arg(['preview','time_success','time_error','time_reset','time_saved',
-                'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict','grid_locked',
+                'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict','grid_locked','grid_leave',
                 'leave_sent','leave_error','leave_done','leave_cancel_sent','early_error',
                 'break_success','break_error','overtime_sent','overtime_error','overtime_done','overtime_rejected',
                 'swap_error','swap_sent','swap_done',

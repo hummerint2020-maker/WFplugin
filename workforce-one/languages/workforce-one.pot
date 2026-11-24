@@ -13103,3 +13103,251 @@ msgstr ""
 #: includes/trait-admin-requests.php
 msgid "Cancelled by HR"
 msgstr ""
+
+#: leave-return
+msgid "This day is an approved leave. A manager cannot change it; HR records a return from leave."
+msgstr ""
+
+#: leave-return
+msgid "Approved leave (#%d): HR records a return from leave"
+msgstr ""
+
+#: leave-return
+msgid "Pick the day you are back at work: from the first day of the leave (or today) up to its last day."
+msgstr ""
+
+#: leave-return
+msgid "No leave day is left from that day on."
+msgstr ""
+
+#: leave-return
+msgid "The leave changed since the preview. Check it again."
+msgstr ""
+
+#: leave-return
+msgid "The employee's change was decided meanwhile. Check the leave again."
+msgstr ""
+
+#: leave-return
+msgid "Another leave of this employee is being saved. Try again in a moment."
+msgstr ""
+
+#: leave-return
+msgid "Could not save. Nothing was changed."
+msgstr ""
+
+#: leave-return
+msgid "The leave is no longer approved."
+msgstr ""
+
+#: leave-return
+msgid "This day is no longer a leave day."
+msgstr ""
+
+#: leave-return
+msgid "This day is already leave in the schedule."
+msgstr ""
+
+#: leave-return
+msgid "Leave return is off."
+msgstr ""
+
+#: leave-return
+msgid "Only an approved leave can be changed."
+msgstr ""
+
+#: leave-return
+msgid "A change of this leave is already waiting."
+msgstr ""
+
+#: leave-return
+msgid "The payroll of those days is closed, so they stay leave."
+msgstr ""
+
+#: leave-return
+msgid "Write the reason."
+msgstr ""
+
+#: leave-return
+msgid "You cannot record a return on your own leave. Another HR person must."
+msgstr ""
+
+#: leave-return
+msgid "No leave day is left to return."
+msgstr ""
+
+#: leave-return
+msgid "The leave could not be changed."
+msgstr ""
+
+#: leave-return
+msgid "Payroll closed"
+msgstr ""
+
+#: leave-return
+msgid "The days up to %s stay leave: their payroll month is closed."
+msgstr ""
+
+#: leave-return
+msgid "Change %d of this leave"
+msgstr ""
+
+#: leave-return
+msgid "Back at work, recorded by HR"
+msgstr ""
+
+#: leave-return
+msgid "HR recorded that you were back at work on %1$s: %2$s day(s) went back to your balance. Reason: %3$s"
+msgstr ""
+
+#: leave-return
+msgid "Cancelling it was refused. You can ask again."
+msgstr ""
+
+#: leave-return
+msgid "Cancelling it was refused."
+msgstr ""
+
+#: leave-return
+msgid "You withdrew the change, so the leave stands. You can ask again."
+msgstr ""
+
+#: leave-return
+msgid "Shortened at your request: the days from then on went back to your balance. You can change it again."
+msgstr ""
+
+#: leave-return
+msgid "Days in a closed payroll month stayed leave."
+msgstr ""
+
+#: leave-return
+msgid "Leave return"
+msgstr ""
+
+#: leave-return
+msgid "An employee can say they are back at work on any day of an approved leave, the first or the last one too, and change a leave more than once (each change approved as a cancellation is today). Approved leave days are locked in the Attendance grid, the single day edit and the import, even for a locked week. HR records a return the employee forgot to ask for, with a reason, and finds leave days changed in the schedule before on the Leaves page. Days in a closed payroll month stay leave; a day returned is never returned twice; the carried days of the next year follow a late return. Off: exactly as today."
+msgstr ""
+
+#: leave-return
+msgid "Types and balances"
+msgstr ""
+
+#: leave-return
+msgid "Back at work"
+msgstr ""
+
+#: leave-return
+msgid "Changed leave days"
+msgstr ""
+
+#: leave-return
+msgid "The return was recorded. The days went back to the balance, and the employee and their manager were told."
+msgstr ""
+
+#: leave-return
+msgid "The day is leave again in the schedule."
+msgstr ""
+
+#: leave-return
+msgid "Record that an employee was back at work"
+msgstr ""
+
+#: leave-return
+msgid "For an employee who came back early and did not ask. The days from the day they were back go back to their balance and their schedule. A reason is required, and it is kept in the Audit Log. Days in a closed payroll month stay leave. You cannot record it on your own leave."
+msgstr ""
+
+#: leave-return
+msgid "Select employee"
+msgstr ""
+
+#: leave-return
+msgid "Approved leave"
+msgstr ""
+
+#: leave-return
+msgid "No approved leave with leave days"
+msgstr ""
+
+#: leave-return
+msgid "a change is waiting"
+msgstr ""
+
+#: leave-return
+msgid "Reason (required)"
+msgstr ""
+
+#: leave-return
+msgid "Leave #%1$d %2$s, %3$s → %4$s"
+msgstr ""
+
+#: leave-return
+msgid "All of it is cancelled: %s day(s) go back to the balance."
+msgstr ""
+
+#: leave-return
+msgid "The days from %1$s on go back (%2$s day(s)); the leave now ends on %3$s."
+msgstr ""
+
+#: leave-return
+msgid "Payroll is closed for %1$s: those days stay leave, so the return starts on %2$s."
+msgstr ""
+
+#: leave-return
+msgid "The balance after: %1$s used of %2$s."
+msgstr ""
+
+#: leave-return
+msgid "The employee's change request still waiting is closed, and they are told."
+msgstr ""
+
+#: leave-return
+msgid "Record the return"
+msgstr ""
+
+#: leave-return
+msgid "Past days of approved leaves that are no longer leave in the schedule (a manager changed them before leave days were locked). They are still charged as leave. Record a return if the employee worked, or put the day back to leave."
+msgstr ""
+
+#: leave-return
+msgid "No changed leave day in this period."
+msgstr ""
+
+#: leave-return
+msgid "Schedule now"
+msgstr ""
+
+#: leave-return
+msgid "No schedule row"
+msgstr ""
+
+#: leave-return
+msgid "No record"
+msgstr ""
+
+#: leave-return
+msgid "Payroll closed: stays leave"
+msgstr ""
+
+#: leave-return
+msgid "Back at work from this day"
+msgstr ""
+
+#: leave-return
+msgid "Put the day back to leave"
+msgstr ""
+
+#: leave-return
+msgid "%1$d day(s) · page %2$d of %3$d"
+msgstr ""
+
+#: leave-return
+msgid "Approved leave: HR records a return from leave"
+msgstr ""
+
+#: leave-return
+msgid "Withdraw the change? The leave stays as it is; you can ask again later."
+msgstr ""
+
+#: leave-return
+msgid "Your manager decides; until then the leave stands as it is. You can change it again later while leave days remain."
+msgstr ""

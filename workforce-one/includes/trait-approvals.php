@@ -84,8 +84,9 @@ trait EWS_Approvals_Trait {
             current_step SMALLINT UNSIGNED NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             completed_at DATETIME NULL,
+            entity_round SMALLINT UNSIGNED NOT NULL DEFAULT 1,
             PRIMARY KEY(id),
-            UNIQUE KEY entity_workflow(entity_type,entity_id,workflow_id),
+            UNIQUE KEY entity_round(entity_type,entity_id,workflow_id,entity_round),
             KEY requester_status(requester_employee_id,status),
             KEY workflow_status(workflow_id,status),
             KEY entity(entity_type,entity_id)
@@ -130,6 +131,13 @@ trait EWS_Approvals_Trait {
         // 3.31.148: "who decided" is asked by person (the menu's My approvals check, the week's count). The column is added just above, so the key is too, here and not in the CREATE TABLE.
         $index_names=(array)$wpdb->get_col("SHOW INDEX FROM {$t['instances']}",2);
         if(!in_array('acted_by',$index_names,true))$wpdb->query("ALTER TABLE {$t['instances']} ADD KEY acted_by (acted_by_wp_user_id,acted_at)");
+        // 3.31.161 (Leave return): a leave may have a new cancellation round once the previous one is final, so the request is
+        // unique per round. Every existing row is round 1. dbDelta never drops a key, so the old one goes here, once the new one
+        // is in place (not on SQLite, whose composite keys cannot be swapped: a second round is then refused there).
+        if(!(defined('DB_ENGINE') && DB_ENGINE==='sqlite')){
+            $req_keys=(array)$wpdb->get_col("SHOW INDEX FROM {$t['requests']}",2);
+            if(in_array('entity_round',$req_keys,true) && in_array('entity_workflow',$req_keys,true))$wpdb->query("ALTER TABLE {$t['requests']} DROP INDEX entity_workflow");
+        }
         $this->approval_seed_workflows();
         return true;
     }

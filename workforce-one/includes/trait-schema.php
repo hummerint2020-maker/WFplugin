@@ -135,7 +135,18 @@ trait EWS_Schema_Trait {
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, leave_request_id BIGINT UNSIGNED NOT NULL, employee_id BIGINT UNSIGNED NOT NULL,
                 work_date DATE NOT NULL, had_schedule TINYINT(1) NOT NULL DEFAULT 0, schedule_id BIGINT UNSIGNED NULL,
                 status VARCHAR(80) NULL, note TEXT NULL, schedule_data LONGTEXT NULL,
-                PRIMARY KEY(id), KEY request_date(leave_request_id,work_date)) {$c};");
+                PRIMARY KEY(id), KEY request_date(leave_request_id,work_date), KEY employee_date(employee_id,work_date)) {$c};");
+            // Leave return (3.31.161, docs/tasks/leave-return.md): the history of a leave's changes, one row per round (the employee's
+            // "back at work" asked, or a return HR recorded). The leave row keeps the current round, as before.
+            $changes=$wpdb->prefix.'ews_leave_changes';
+            dbDelta("CREATE TABLE {$changes} (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, leave_request_id BIGINT UNSIGNED NOT NULL, employee_id BIGINT UNSIGNED NOT NULL,
+                round SMALLINT UNSIGNED NOT NULL DEFAULT 1, source VARCHAR(10) NOT NULL DEFAULT 'employee', asked_from DATE NOT NULL,
+                applied_from DATE NULL, status VARCHAR(20) NOT NULL DEFAULT 'Pending', days_back DECIMAL(8,2) NOT NULL DEFAULT 0,
+                carry_top_up DECIMAL(8,2) NOT NULL DEFAULT 0, end_before DATE NOT NULL, end_after DATE NULL, reason TEXT NULL,
+                approval_request_id BIGINT UNSIGNED NULL, requested_by BIGINT UNSIGNED NOT NULL DEFAULT 0,
+                requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, decided_by BIGINT UNSIGNED NULL, decided_at DATETIME NULL,
+                PRIMARY KEY(id), KEY leave_round(leave_request_id,id), KEY employee(employee_id,requested_at)) {$c};");
             dbDelta("CREATE TABLE {$early} (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, employee_id BIGINT UNSIGNED NOT NULL, work_date DATE NOT NULL,
                 leave_minutes INT UNSIGNED NOT NULL, reason TEXT NULL, status VARCHAR(30) NOT NULL DEFAULT 'Pending',
@@ -338,7 +349,7 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.158'; }   // Leave in My requests: "I'm back early" keeps the first day it cancels (ews_leave_requests.cancel_from)
+        private function ews_schema_target(){ return '3.31.161'; }   // Leave return: leave change rounds (ews_leave_changes), approval rounds (ews_approval_requests.entity_round), snapshot day key
 
         /*
          * True once maybe_upgrade_schema() has completed for the current schema

@@ -269,6 +269,7 @@
       "api": [
         "working_days",
         "schedule_leave_dates",
+        "schedule_for_employee_date",
         "swap_approval_card",
         "swap_peer_cards",
         "swap_withdraw",
@@ -325,6 +326,18 @@
           "services": [
             "workforce-one/src/Schedule/ScheduleDayService.php",
             "workforce-one/src/Schedule/WeekLockService.php"
+          ],
+          "reads": [
+            {
+              "file": "workforce-one/src/Leave/Data/WordPressChangedDaysQuery.php",
+              "tables": [
+                "leave_schedule_snapshots",
+                "leave_requests",
+                "leave_types",
+                "schedule",
+                "employees"
+              ]
+            }
           ],
           "moved": [
             "save_att_if_unchanged",
@@ -410,7 +423,8 @@
         "cx_legacy_approvals",
         "face_reset_requests",
         "cx_type_label",
-        "cx_change_text"
+        "cx_change_text",
+        "insights_load"
       ],
       "layered": [
         {
@@ -536,7 +550,8 @@
         "leave_balances",
         "leave_types",
         "leave_schedule_snapshots",
-        "vacation_requests"
+        "vacation_requests",
+        "leave_changes"
       ],
       "api": [
         "leave_approval_card",
@@ -553,7 +568,11 @@
         "leave_cancel_withdraw",
         "leave_status_of",
         "leave_legacy_approvals",
-        "leave_pending_newest_first"
+        "leave_pending_newest_first",
+        "leave_held_days",
+        "leave_return_on",
+        "leave_held_audit",
+        "leave_round_token"
       ]
     },
     "overtime": {
@@ -637,7 +656,8 @@
         "approval_notify_administrators",
         "approval_self_rule",
         "approval_inbox_away",
-        "hub_reports_enabled"
+        "hub_reports_enabled",
+        "approval_close_open"
       ],
       "layered": [
         {
@@ -798,7 +818,8 @@
         "advance_payroll_lines",
         "advance_left_for",
         "advance_money",
-        "advances_can_pay"
+        "advances_can_pay",
+        "payroll_closed_months"
       ]
     },
     "hr_letters": {
