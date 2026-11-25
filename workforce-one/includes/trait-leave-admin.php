@@ -157,29 +157,9 @@ trait EWS_Leave_Admin_Trait {
         return $m[$code]??$this->leave_return_message($code);
     }
 
-    /**
-     * What a return from $back would do now (the preview, and the handler's check): the first day returned once closed payroll
-     * months stay leave, the days, whether all of it goes, the balance after and a change still waiting.
-     * @return array{asked:string,effective:?string,closed:string[],days:int,whole:bool,end_after:string,used_after:?float,pending_change:bool}
-     */
-    private function leave_return_preview($r,$back){
-        $closed=$this->payroll_closed_months($back,(string)$r->end_date);
-        $eff=\WorkforceOne\Leave\ReturnRules::effectiveFrom((string)$back,(string)$r->end_date,$closed);
-        $days=$eff===null?0:$this->leave_return_days_from($r,$eff);
-        $all=$this->leave_return_days_from($r,(string)$r->start_date);
-        $whole=$eff!==null && $days>0 && ($days===$all || $eff<=(string)$r->start_date);
-        $bal=(int)$r->deduct_balance?$this->leave_request_balance($r):null;
-        $back_days=$days?min((float)$r->requested_days,(float)$days):0.0;
-        if($whole)$back_days=(float)$r->requested_days;
-        return ['asked'=>(string)$back,'effective'=>$eff,'closed'=>$closed,'days'=>$days,'whole'=>$whole,'back_days'=>$back_days,
-            'end_after'=>$eff!==null&&!$whole?gmdate('Y-m-d',strtotime($eff.' -1 day')):'',
-            'used_after'=>$bal?max(0.0,(float)$bal->used-$back_days):null,'entitlement'=>$bal?(float)$bal->entitlement:null,
-            'pending_change'=>(string)($r->cancellation_status??'')==='Pending'];
-    }
 
     /** The data of the tabs "Back at work" and "Changed leave days". @return array<string,mixed> */
     private function leave_admin_return_view($tab){
-        global $wpdb;
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only filters and a preview
         $base=['tab'=>$tab,'post_url'=>admin_url('admin-post.php'),'page_url'=>admin_url('admin.php?page=ews31-leaves'),'employees'=>$this->people_active_list(),
             'error'=>isset($_GET['lr_error'])?$this->leave_admin_return_error(sanitize_key($_GET['lr_error'])):'','done'=>isset($_GET['lr_done'])?sanitize_key($_GET['lr_done']):'','holiday_tab'=>$this->leave_holidays_on()];
@@ -189,7 +169,7 @@ trait EWS_Leave_Admin_Trait {
             if(!$this->valid_date($from))$from=gmdate('Y-m-d',strtotime($today.' -3 months'));
             if(!$this->valid_date($to))$to=$today;
             $emp=absint($_GET['employee']??0);$pg=max(1,absint($_GET['paged']??1));
-            $res=(new \WorkforceOne\Leave\Data\WordPressChangedDaysQuery($wpdb))->page($from,$to,$today,$emp,50,($pg-1)*50);
+            $res=$this->services()->leaveChangedDays()->page($from,$to,$today,$emp,50,($pg-1)*50);
             $ids=array_values(array_unique(array_map(function($x){return (int)$x->employee_id;},$res['rows'])));
             $events=[];
             if($res['rows']){$ds=array_map(function($x){return (string)$x->work_date;},$res['rows']);[,$events]=$this->insights_load($ids,min($ds),max($ds));}
@@ -211,14 +191,12 @@ trait EWS_Leave_Admin_Trait {
         $back=sanitize_text_field(wp_unslash($_GET['lr_back']??''));$reason=trim(sanitize_textarea_field(wp_unslash($_GET['lr_reason']??'')));
         // phpcs:enable
         $leaves=[];
-        if($emp)$leaves=(array)$wpdb->get_results($wpdb->prepare(
-            "SELECT r.id,r.start_date,r.end_date,r.requested_days,r.cancellation_status,t.name type_name FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types t ON t.id=r.leave_type_id
-             WHERE r.employee_id=%d AND r.status='Approved' ORDER BY r.start_date DESC LIMIT 50",$emp));
+        if($emp)$leaves=$this->services()->leaveReturns()->approvedLeaves($emp);
         $preview=null;$check=null;$r=null;
         if($lid){
             $r=$this->leave_request_row($lid,'AND r.employee_id='.(int)$emp);
             if($r && $this->valid_date($back)){
-                $preview=$this->leave_return_preview($r,$back);
+                $preview=$this->services()->leaveReturns()->preview($r,$back);
                 $check=\WorkforceOne\Leave\ReturnRules::hrCheck(['reason'=>$reason,'self'=>$this->leave_admin_is_self($r),'status'=>(string)$r->status,'start'=>(string)$r->start_date,'end'=>(string)$r->end_date,'back'=>$back,'effective'=>$preview['effective']]);
                 if(!$check && $preview['days']<1)$check=\WorkforceOne\Leave\ReturnRules::ENDED;
             }
@@ -247,23 +225,17 @@ trait EWS_Leave_Admin_Trait {
         $r=$this->leave_request_row($id);
         if(!$r)wp_die('Leave request not found.');
         $again=['tab'=>'return','lr_emp'=>(int)$r->employee_id,'lr_leave'=>$id,'lr_back'=>$back,'lr_reason'=>rawurlencode($reason)];
-        $preview=$this->leave_return_preview($r,$this->valid_date($back)?$back:'0000-00-00');
+        $preview=$this->services()->leaveReturns()->preview($r,$this->valid_date($back)?$back:'0000-00-00');
         $code=\WorkforceOne\Leave\ReturnRules::hrCheck(['reason'=>$reason,'self'=>$this->leave_admin_is_self($r),'status'=>(string)$r->status,'start'=>(string)$r->start_date,'end'=>(string)$r->end_date,'back'=>$back,'effective'=>$preview['effective']]);
         if(!$code && $preview['days']<1)$code=\WorkforceOne\Leave\ReturnRules::ENDED;
         if($code)$this->leave_admin_redirect($again+['lr_error'=>$code]);
         $emp=$this->people_employee((int)$r->employee_id);
         if(!$emp)wp_die('Employee not found.');
-        $now=current_time('mysql');$closed_round=false;
-        $result=$this->ews_with_lock('leave_emp_'.(int)$r->employee_id,function()use($id,$emp,$back,$reason,$now,$exp_from,$exp_days,&$closed_round){
-            global $wpdb;
-            if($wpdb->query('START TRANSACTION')===false)return 'save';
-            $res=$this->leave_admin_return_locked($id,$emp,$back,$reason,$now,$exp_from,$exp_days,$closed_round);
-            if($res!==true){$wpdb->query('ROLLBACK');return $res;}
-            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
-            return true;
-        },'busy');
-        if($result!==true)$this->leave_admin_redirect($again+['lr_error'=>(string)$result]);
-        $a=$this->leave_return_applied;
+        // The return, under the employee's lock and in its own transaction (LeaveReturnService, 3.31.164).
+        $o=$this->services()->leaveReturns()->recordReturn($id,$emp,$back,$reason,current_time('mysql'),$exp_from,$exp_days);
+        if($o['result']!==true)$this->leave_admin_redirect($again+['lr_error'=>(string)$o['result']]);
+        $closed_round=$o['closed_round'];
+        $a=$this->leave_return_applied=(array)$o['applied'];
         $days=rtrim(rtrim(number_format((float)($a['back']??0),2,'.',''),'0'),'.');
         $msg=sprintf('HR recorded that you were back at work on %1$s. %2$s Reason: %3$s',$back,
             !empty($a['whole'])?'Your '.$r->type_name.' leave was cancelled and '.$days.' day(s) went back to your balance.':'Your '.$r->type_name.' leave now ends on '.gmdate('Y-m-d',strtotime((string)$a['from'].' -1 day')).'; '.$days.' day(s) from '.$a['from'].' on went back to your balance.',$reason);
@@ -275,24 +247,6 @@ trait EWS_Leave_Admin_Trait {
         $this->leave_admin_redirect(['tab'=>'return','lr_emp'=>(int)$emp->id,'lr_done'=>'recorded']);
     }
 
-    /** The return HR records, under the employee's lock and in the caller's transaction. @return true|string an error code */
-    private function leave_admin_return_locked($id,$emp,$back,$reason,$now,$exp_from,$exp_days,&$closed_round){
-        $l=$this->leave_lock_row($id);
-        if(!$l || (string)$l->status!=='Approved')return 'done';
-        $eff=\WorkforceOne\Leave\ReturnRules::effectiveFrom((string)$back,(string)$l->end_date,$this->payroll_closed_months($back,(string)$l->end_date));
-        if($eff===null)return \WorkforceOne\Leave\ReturnRules::CLOSED_PAYROLL;
-        if($eff!==$exp_from || $this->leave_return_days_from($l,$eff)!==(int)$exp_days)return 'changed';
-        $was=(string)($l->cancellation_status??'');
-        if($was==='Pending'){
-            $c=$this->approval_close_open('vacation','leave_cancellation',(int)$id,true);
-            if($c===false)return 'save';
-            if($c!==true)return 'moved';
-            if(!$this->leave_change_close((int)$id,'Closed'))return 'save';
-            $closed_round=true;
-        }
-        if(!$this->leave_change_insert($l,'hr',$back,$reason,0))return 'save';
-        return $this->leave_return_apply((int)$id,$emp,$now,$back,'hr',$was);
-    }
 
     /**
      * "Put the day back to leave" (the report, owner 2026-11-24): a past day of an approved leave that a manager changed is leave
@@ -303,29 +257,10 @@ trait EWS_Leave_Admin_Trait {
         check_admin_referer('ews_leave_day_restore');
         $this->ensure_leave_schema();
         if(!$this->leave_return_on())wp_die(esc_html__('Leave return is off.','workforce-one'));
-        global $wpdb;
         $sid=absint($_POST['snap_id']??0);
         $keep=['tab'=>'changed'];
         foreach(['from','to','employee','paged'] as $k)if(isset($_POST[$k]))$keep[$k]=sanitize_text_field(wp_unslash($_POST[$k]));
-        $s=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE id=%d",$sid));
-        if(!$s)$this->leave_admin_redirect($keep+['lr_error'=>'snapshot']);
-        if($this->payroll_closed_months((string)$s->work_date,(string)$s->work_date))$this->leave_admin_redirect($keep+['lr_error'=>\WorkforceOne\Leave\ReturnRules::CLOSED_PAYROLL]);
-        $result=$this->ews_with_lock('leave_emp_'.(int)$s->employee_id,function()use($wpdb,$sid,$s){
-            if($wpdb->query('START TRANSACTION')===false)return 'save';
-            $l=$this->leave_lock_row((int)$s->leave_request_id);
-            $still=$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE id=%d",$sid));
-            $cur=$this->schedule_for_employee_date((int)$s->employee_id,(string)$s->work_date);
-            $res=true;
-            if(!$l || (string)$l->status!=='Approved')$res='done';
-            elseif(!$still)$res='snapshot';
-            elseif($cur && (string)$cur->status==='Vacation')$res='kept';
-            elseif(!$this->save_att((int)$s->employee_id,(string)$s->work_date,'Vacation','Approved leave #'.(int)$l->id))$res='save';
-            if($res!==true){$wpdb->query('ROLLBACK');return $res;}
-            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
-            $this->week_lock_record_request((int)$s->employee_id,[(string)$s->work_date],'leave_restore','leave #'.(int)$l->id);
-            $this->audit('leave_day_restored','leave_request',(int)$l->id,(string)$s->work_date.': '.($cur?(string)$cur->status:'no schedule').' → Vacation');
-            return true;
-        },'busy');
+        $result=$this->services()->leaveReturns()->putBackDay($sid);   // LeaveReturnService (3.31.164)
         $this->leave_admin_redirect($keep+($result===true?['lr_done'=>'restored']:['lr_error'=>(string)$result]));
     }
 }

@@ -275,94 +275,34 @@ trait EWS_Leave_Trait {
             return $today>(string)$r->start_date?$today:null;
         }
 
-    /** Cancellation approved: return used days, restore the snapshotted schedule, mark Cancelled. @return true|string leave_error */
-    private function leave_apply_cancellation($r,$emp,$bal,$now){
-            // Leave return (3.31.161): under the leave's row lock, from the days actually removed, closed payroll months kept.
-            if($this->leave_return_on())return $this->leave_return_apply((int)$r->id,$emp,$now,$this->leave_return_asked_day($r),'employee','Pending');
-            $this->substitutes_sync_at_shutdown();   // a manager's substitute follows the leave (3.31.107)
-            global $wpdb;
-            // With Leave in My requests on (3.31.158, owner): a cancellation decided once the leave has started cancels the days from
-            // today on only; the days taken stay leave. Once it has ended, nothing is left to cancel.
-            $from=$this->leave_cancel_from_day($r);
-            if($from!==null)return $this->leave_apply_cancellation_from($r,$emp,$bal,$now,$from);
-            if((int)$r->deduct_balance){
-                $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$r->requested_days,$now,$bal->id));
-                if($q===false)return 'save';
-            }
-            $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE leave_request_id=%d ORDER BY work_date ASC",(int)$r->id));
-            if($rows===null)return 'save';
-            if(!$this->leave_restore_days($rows,$emp,$now))return 'save';
-            $q=$wpdb->update($wpdb->prefix.'ews_leave_requests',['status'=>'Cancelled','cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],['id'=>(int)$r->id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s','%s','%d','%s'],['%d','%s','%s']);
-            if($q!==1)return $q===false?'save':'done';
-            $this->week_lock_record_request((int)$emp->id,array_map(function($x){return (string)$x->work_date;},$rows),'leave_cancel','leave #'.(int)$r->id);
-            return true;
-        }
-
-    /** The schedule of these snapshot days back as before the leave (and, $drop, the snapshots gone: 3.31.158). */
-    private function leave_restore_days($rows,$emp,$now,$drop=false){
-            global $wpdb;
-            foreach($rows as $x){
-                if((int)$x->had_schedule&&$x->schedule_id)$q=$wpdb->update($this->schedule,['status'=>$x->status,'note'=>$x->note,'updated_by'=>get_current_user_id(),'updated_at'=>$now],['id'=>$x->schedule_id]);
-                else $q=$wpdb->delete($this->schedule,['employee_id'=>$emp->id,'work_date'=>$x->work_date]);
-                if($q===false)return false;
-                if($drop && $wpdb->delete($wpdb->prefix.'ews_leave_schedule_snapshots',['id'=>(int)$x->id])===false)return false;
-            }
-            return true;
-        }
-
     /**
-     * A started leave's cancellation (3.31.158): the days from $from on go back to the balance and to the schedule as before the
-     * leave; the leave now ends the day before. Past its end, the cancellation is closed as Ended with nothing changed.
-     * @return true|string leave_error
+     * Cancellation approved: return used days, restore the snapshotted schedule, mark Cancelled; with Leave return on, the return
+     * itself (LeaveReturnService, 3.31.164). @return true|string leave_error
      */
-    private function leave_apply_cancellation_from($r,$emp,$bal,$now,$from){
-            global $wpdb;
-            $t=$wpdb->prefix.'ews_leave_requests';$cond=['id'=>(int)$r->id,'status'=>'Approved','cancellation_status'=>'Pending'];
-            if($from>(string)$r->end_date){
-                $q=$wpdb->update($t,['cancellation_status'=>'Ended','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],$cond,['%s','%d','%s'],['%d','%s','%s']);
-                $this->leave_cancel_outcome='ended';
-                return $q===1?true:($q===false?'save':'done');
-            }
-            $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE leave_request_id=%d AND work_date>=%s ORDER BY work_date ASC",(int)$r->id,$from));
-            if($rows===null)return 'save';
-            // The days given back: the leave's days from then on (its snapshots); a leave kept without snapshots counts its working days.
-            $any=$rows?1:(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE leave_request_id=%d",(int)$r->id));
-            $back=min((float)$r->requested_days,(float)($any?count($rows):$this->vacation_working_days_count($from,(string)$r->end_date)));
-            if(!$this->leave_restore_days($rows,$emp,$now,true))return 'save';
-            if((int)$r->deduct_balance && $back>0){
-                $q=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$back,$now,$bal->id));
-                if($q===false)return 'save';
-            }
-            $end=gmdate('Y-m-d',strtotime($from.' -1 day'));
-            $q=$wpdb->update($t,['end_date'=>$end,'requested_days'=>max(0.0,(float)$r->requested_days-$back),'cancellation_status'=>'Approved','cancelled_by'=>get_current_user_id(),'cancelled_at'=>$now],$cond,['%s','%f','%s','%d','%s'],['%d','%s','%s']);
-            if($q!==1)return $q===false?'save':'done';
-            // A manager's substitute ends when the leave now ends (review 2).
-            if(!$this->services()->substitutes()->followLeaveEnd((int)$r->id,(string)$r->start_date,$end))return 'save';
-            $this->leave_cancel_outcome='from:'.$from;
-            $this->week_lock_record_request((int)$emp->id,array_map(function($x){return (string)$x->work_date;},$rows),'leave_cancel','leave #'.(int)$r->id.' from '.$from);
-            $this->audit('leave_cancelled_from','leave_request',(int)$r->id,$r->type_name.' '.$r->start_date.' – '.$r->end_date.': cancelled from '.$from.', '.$back.' day(s) back');
-            return true;
+    private function leave_apply_cancellation($r,$emp,$bal,$now){
+            return $this->leave_return_result($this->services()->leaveReturns()->applyCancellation($r,$emp,$bal?:null,(string)$now,(bool)$this->leave_return_on()));
         }
+
+    /** The service's result, with the last cancellation's outcome and the return applied kept for the messages. @return true|string */
+    private function leave_return_result(array $o){
+            if($o['outcome']!==null)$this->leave_cancel_outcome=$o['outcome'];
+            if($o['applied']!==null)$this->leave_return_applied=$o['applied'];
+            return $o['result'];
+        }
+
+
 
     /* ------------------------------------------------------------------ Leave return (3.31.161, docs/tasks/leave-return.md) */
 
     /** The leave row, locked until the transaction ends (not on SQLite, which has no row locks), with its type. */
     private function leave_lock_row($id){
-            global $wpdb;
-            $lock=(defined('DB_ENGINE') && DB_ENGINE==='sqlite')?'':' FOR UPDATE';
-            return $wpdb->get_row($wpdb->prepare("SELECT r.*,lt.name type_name,lt.deduct_balance,lt.kind,lt.carry_mode,lt.carry_max FROM {$wpdb->prefix}ews_leave_requests r JOIN {$wpdb->prefix}ews_leave_types lt ON lt.id=r.leave_type_id WHERE r.id=%d LIMIT 1{$lock}",(int)$id));
+            return $this->services()->leaveReturns()->lockLeave((int)$id);
         }
 
-    /** The leave's change rounds, newest first (Leave return). @return object[] */
-    private function leave_changes($leave_id,$limit=10){
-            global $wpdb;
-            return (array)$wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_changes WHERE leave_request_id=%d ORDER BY id DESC LIMIT %d",(int)$leave_id,(int)$limit));
-        }
 
     /** The current (newest) change round of a leave, or null. */
     private function leave_change_current($leave_id){
-            $c=$this->leave_changes($leave_id,1);
-            return $c?$c[0]:null;
+            return $this->services()->leaveReturns()->currentChange((int)$leave_id);
         }
 
     /**
@@ -394,35 +334,12 @@ trait EWS_Leave_Trait {
             return !$c || (int)$c->approval_request_id>0;
         }
 
-    /** The leave's days from a day on: its snapshot days, or for a leave kept without any (very old data) its working days. */
-    private function leave_return_days_from($r,$from){
-            if($this->leave_days_from((int)$r->id,'0000-00-00')>0)return $this->leave_days_from((int)$r->id,$from);
-            return $from<=(string)$r->end_date?(int)$this->vacation_working_days_count(max($from,(string)$r->start_date),(string)$r->end_date):0;
-        }
 
-    /** A new change round. @return int its id, 0 on a database error */
-    private function leave_change_insert($r,$source,$asked,$reason,$approval_id){
-            global $wpdb;
-            $round=1+(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}ews_leave_changes WHERE leave_request_id=%d",(int)$r->id));
-            $row=['leave_request_id'=>(int)$r->id,'employee_id'=>(int)$r->employee_id,'round'=>$round,'source'=>(string)$source,'asked_from'=>(string)$asked,
-                'status'=>$source==='hr'?'Recorded':'Pending','end_before'=>(string)$r->end_date,'reason'=>$reason!==''?(string)$reason:null,
-                'requested_by'=>get_current_user_id(),'requested_at'=>current_time('mysql')];
-            if($approval_id)$row['approval_request_id']=(int)$approval_id;
-            return $wpdb->insert($wpdb->prefix.'ews_leave_changes',$row)===false?0:(int)$wpdb->insert_id;
-        }
 
-    /** The current round ends (Rejected, Withdrawn, Closed, Ended…). Nothing when the leave has no round (asked before 3.31.161). */
-    private function leave_change_close($leave_id,$status,$extra=[]){
-            global $wpdb;
-            $c=$this->leave_change_current($leave_id);
-            if(!$c || !in_array((string)$c->status,['Pending'],true))return true;
-            return $wpdb->update($wpdb->prefix.'ews_leave_changes',['status'=>(string)$status,'decided_by'=>get_current_user_id(),'decided_at'=>current_time('mysql')]+$extra,['id'=>(int)$c->id,'status'=>'Pending'])!==false;
-        }
 
     /** Snapshot days of a leave on or after a day. */
     private function leave_days_from($leave_id,$from){
-            global $wpdb;
-            return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}ews_leave_schedule_snapshots WHERE leave_request_id=%d AND work_date>=%s",(int)$leave_id,(string)$from));
+            return $this->services()->leaveReturns()->daysFrom((int)$leave_id,(string)$from);
         }
 
     /**
@@ -435,110 +352,18 @@ trait EWS_Leave_Trait {
         }
 
     /**
-     * One snapshot day back as it was before the leave, unless a manager changed it meanwhile (owner, 2026-11-24: their status is
-     * kept, and the Audit Log says so). @return bool false on a database error
+     * One snapshot day back as it was before the leave, unless a manager changed it meanwhile (kept, and the Audit Log says so).
+     * @return bool false on a database error
      */
     private function leave_return_restore_day($x,$emp,$now,$leave_id){
-            $cur=$this->schedule_for_employee_date((int)$emp->id,(string)$x->work_date);
-            if(!$cur || (string)$cur->status!=='Vacation'){
-                $this->audit('leave_restore_kept','leave_request',(int)$leave_id,(string)$x->work_date.' kept as '.($cur?(string)$cur->status:'no schedule').' (changed while on leave)');
-                return true;
-            }
-            return $this->leave_restore_days([$x],$emp,$now);
+            return $this->services()->leaveReturns()->restoreDay($x,$emp,(string)$now,(int)$leave_id);
         }
 
-    /**
-     * Next year's carried days follow a late return (owner, 2026-11-24): when days go back to a year whose next year's balance
-     * already exists, it grows by what the carry rule now allows, never more than the days returned. @return float|false the days added
-     */
+    /** Next year's carried days follow a late return. @return float|false the days added */
     private function leave_carry_top_up($r,$bal,$back,$now){
-            global $wpdb;
-            if($back<=0 || !$bal)return 0.0;
-            $bt=$wpdb->prefix.'ews_leave_balances';
-            $next=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d LIMIT 1",(int)$bal->employee_id,(int)$bal->leave_type_id,(int)$bal->leave_year+1));
-            if(!$next)return 0.0;   // it does not exist yet: it carries the corrected figures when it is made
-            $year=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$bt} WHERE id=%d",(int)$bal->id));
-            if(!$year)return false;
-            $add=ReturnRules::carryTopUp(TypeRules::config($r),(float)$year->entitlement,(float)$year->used,(float)$year->pending,(float)($next->carried??0),(float)$back);
-            if($add<=0)return 0.0;
-            if($wpdb->query($wpdb->prepare("UPDATE {$bt} SET carried=carried+%f,entitlement=entitlement+%f,updated_at=%s WHERE id=%d",$add,$add,$now,(int)$next->id))===false)return false;
-            $this->audit('leave_carry_topped_up','leave_balance',(int)$next->id,'leave #'.(int)$r->id.': '.(int)$bal->leave_year.' → '.((int)$bal->leave_year+1).' +'.$add.' carried');
-            return $add;
+            return $this->services()->leaveReturns()->carryTopUp($r,$bal?:null,$back,(string)$now);
         }
 
-    /**
-     * The return itself (Leave return on), for an approved change and for a return HR records; the caller owns the transaction.
-     * Under the leave's row lock: the days from $asked on (days in a closed payroll month stay leave) go back to the schedule and
-     * the balance, counted from the leave days actually removed, so a day is never returned twice.
-     * $expect: the cancellation state the caller read ('Pending' for a decision; HR: whatever it found).
-     * @return true|string leave_error
-     */
-    private function leave_return_apply($id,$emp,$now,$asked,$source,$expect){
-            global $wpdb;
-            $this->substitutes_sync_at_shutdown();
-            $r=$this->leave_lock_row($id);
-            if(!$r || (string)$r->status!=='Approved' || (string)($r->cancellation_status??'')!==(string)$expect)return 'done';
-            if($source==='employee'){
-                $asked=$this->leave_return_asked_day($r);   // the round as locked, not as read before (review)
-                // A level left open (approvals switched off meanwhile) would block every later round: closed now (review).
-                if($this->approval_close_open('vacation','leave_cancellation',(int)$r->id,true)===false)return 'save';
-            }
-            $t=$wpdb->prefix.'ews_leave_requests';$snap=$wpdb->prefix.'ews_leave_schedule_snapshots';
-            $end=(string)$r->end_date;
-            $closed=$this->payroll_closed_months($asked,$end);
-            $eff=ReturnRules::effectiveFrom((string)$asked,$end,$closed);
-            if($eff===null){
-                if($source==='hr')return 'closed_payroll';
-                $q=$wpdb->query($wpdb->prepare("UPDATE {$t} SET cancellation_status='Ended',cancelled_by=%d,cancelled_at=%s WHERE id=%d AND status='Approved' AND cancellation_status='Pending'",get_current_user_id(),$now,(int)$r->id));
-                if($q!==1)return $q===false?'save':'done';
-                if(!$this->leave_change_close((int)$r->id,'Ended'))return 'save';
-                $this->leave_cancel_outcome='ended';
-                $this->leave_return_applied=['closed_all'=>(bool)$closed];
-                if($closed)$this->audit('leave_return_kept_closed','leave_request',(int)$r->id,'nothing returned: payroll closed for '.implode(', ',$closed));
-                return true;
-            }
-            $lock=(defined('DB_ENGINE') && DB_ENGINE==='sqlite')?'':' FOR UPDATE';
-            $rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$snap} WHERE leave_request_id=%d AND work_date>=%s ORDER BY work_date ASC{$lock}",(int)$r->id,$eff));
-            if($rows===null)return 'save';
-            $deleted=0;$dates=[];
-            foreach($rows as $x){
-                if(!$this->leave_return_restore_day($x,$emp,$now,(int)$r->id))return 'save';
-                $n=$wpdb->delete($snap,['id'=>(int)$x->id]);
-                if($n===false)return 'save';
-                if($n===1){$deleted++;$dates[]=(string)$x->work_date;}
-            }
-            $remaining=(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$snap} WHERE leave_request_id=%d",(int)$r->id));
-            $has=($deleted+$remaining)>0;
-            $back=ReturnRules::daysBack($deleted,$remaining,(float)$r->requested_days,$has,$has?0:$this->vacation_working_days_count($eff,$end));
-            $bal=$this->leave_request_balance($r);
-            $top=0.0;
-            if((int)$r->deduct_balance && $back>0){
-                if(!$bal)return 'save';
-                if($wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_balances SET used=GREATEST(0,used-%f),updated_at=%s WHERE id=%d",$back,$now,(int)$bal->id))===false)return 'save';
-                $top=$this->leave_carry_top_up($r,$bal,$back,$now);
-                if($top===false)return 'save';
-            }
-            $whole=$has?$remaining===0:$eff<=(string)$r->start_date;
-            $new_end=$whole?$end:gmdate('Y-m-d',strtotime($eff.' -1 day'));
-            $set=$whole?['status'=>'Cancelled','cancellation_status'=>'Approved']:['end_date'=>$new_end,'requested_days'=>max(0,(float)$r->requested_days-$back),'cancellation_status'=>'Approved'];
-            $set+=['cancelled_by'=>(int)get_current_user_id(),'cancelled_at'=>$now,'cancel_from'=>(string)$asked];
-            $was=$r->cancellation_status;   // as locked: the update changes the leave only if it is still so
-            $where="id=%d AND status='Approved' AND ".($was===null?'cancellation_status IS NULL':'cancellation_status=%s');
-            $parts=[];$vals=[];
-            foreach($set as $k=>$v){$parts[]="`{$k}`=".(is_int($v)?'%d':(is_float($v)?'%f':'%s'));$vals[]=$v;}
-            $vals[]=(int)$r->id;if($was!==null)$vals[]=(string)$was;
-            $q=$wpdb->query($wpdb->prepare("UPDATE {$t} SET ".implode(',',$parts)." WHERE {$where}",$vals));
-            if($q!==1)return $q===false?'save':'done';
-            if(!$whole && !$this->services()->substitutes()->followLeaveEnd((int)$r->id,(string)$r->start_date,$new_end))return 'save';
-            // The round's history row: what was asked, what was applied (3.31.161).
-            $c=$this->leave_change_current((int)$r->id);
-            if($c && in_array((string)$c->status,['Pending','Recorded'],true) && $wpdb->update($wpdb->prefix.'ews_leave_changes',['status'=>$source==='hr'?'Recorded':'Approved','applied_from'=>$eff,'days_back'=>$back,'carry_top_up'=>(float)$top,'end_after'=>$whole?null:$new_end,'decided_by'=>get_current_user_id(),'decided_at'=>$now],['id'=>(int)$c->id])===false)return 'save';
-            $this->leave_cancel_outcome=$whole?'':'from:'.$eff;
-            $this->leave_return_applied=['from'=>$eff,'asked'=>(string)$asked,'back'=>$back,'whole'=>$whole,'closed'=>$closed,'top'=>(float)$top];
-            $this->week_lock_record_request((int)$emp->id,$dates,'leave_cancel','leave #'.(int)$r->id.($whole?'':' from '.$eff));
-            $this->audit($source==='hr'?'leave_return_recorded':'leave_cancelled_from','leave_request',(int)$r->id,$r->type_name.' '.$r->start_date.' – '.$end.': '.($whole?'cancelled':'cancelled from '.$eff).', '.$back.' day(s) back'.($eff>(string)$asked?' (asked from '.$asked.'; payroll closed for '.implode(', ',$closed).')':'').($top>0?', next year +'.$top.' carried':'').($source==='hr'&&$c&&(string)$c->reason!==''?' | HR: '.wp_get_current_user()->display_name.' | reason: '.$c->reason:''));
-            return true;
-        }
 
     /** A Leave return refusal, translated (ReturnRules codes). */
     private function leave_return_message($code){
@@ -554,20 +379,12 @@ trait EWS_Leave_Trait {
 
     /** @return true|string leave_error */
     private function leave_reject_cancellation($id){
-            global $wpdb;
-            $q=$wpdb->update($wpdb->prefix.'ews_leave_requests',['cancellation_status'=>'Rejected'],['id'=>(int)$id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s'],['%d','%s','%s']);
-            if($q!==1)return $q===false?'save':'done';
-            if($this->leave_return_on() && !$this->leave_change_close((int)$id,'Rejected'))return 'save';   // the round's history (3.31.161)
-            if($this->leave_return_on() && $this->approval_close_open('vacation','leave_cancellation',(int)$id,true)===false)return 'save';
-            return true;
+            return $this->services()->leaveReturns()->rejectCancellation((int)$id,(bool)$this->leave_return_on());
         }
 
     /** Mark an approved leave's cancellation as requested. @return int|false rows changed */
     private function leave_mark_cancellation_pending($id,$from=null){
-            global $wpdb;
-            // "I'm back early" (3.31.158): also the first day it cancels.
-            if($from!==null)return $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_requests SET cancellation_status='Pending',cancel_from=%s WHERE id=%d AND status='Approved' AND (cancellation_status IS NULL OR cancellation_status='Not Requested')",(string)$from,(int)$id));
-            return $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_requests SET cancellation_status='Pending' WHERE id=%d AND status='Approved' AND (cancellation_status IS NULL OR cancellation_status='Not Requested')",(int)$id));
+            return $this->services()->leaveReturns()->markPending((int)$id,$from!==null?(string)$from:null);
         }
 
     /** Notify the approvers of the pending step(s) of an approval request. */
@@ -730,11 +547,11 @@ trait EWS_Leave_Trait {
     public function leave_cancel_request(){
             if(!is_user_logged_in())wp_die('You must be logged in.');
             check_admin_referer('ews_leave_cancel');
-            global $wpdb; $this->ensure_leave_schema();
+            $this->ensure_leave_schema();
             $emp=$this->current_employee();
             $id=absint($_POST['request_id']??0);
             if(!$emp)wp_die('Employee not found.');
-            $r=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ews_leave_requests WHERE id=%d AND employee_id=%d LIMIT 1",$id,$emp->id));
+            $r=$this->services()->leaveReturns()->findOwn($id,$emp->id);
             if(!$r)wp_die('Leave request not found.');
             $messages=[
                 CancellationRules::NOT_APPROVED=>'Only an approved leave can be cancelled.',
@@ -793,13 +610,13 @@ trait EWS_Leave_Trait {
      * withdrawal. Each change is approved as a cancellation is. Always redirects.
      */
     private function leave_return_ask($r,$emp,$id,$today){
-            global $wpdb;
             // phpcs:disable WordPress.Security.NonceVerification.Missing -- checked by leave_cancel_request()
             $mode=sanitize_key($_POST['lr_mode']??'back');
             $posted=sanitize_text_field(wp_unslash($_POST['back_on']??''));
             // phpcs:enable WordPress.Security.NonceVerification.Missing
             $back=$mode==='all'||$posted===''?(string)$r->start_date:(preg_match('/^\d{4}-\d{2}-\d{2}$/',$posted)?$posted:'0000-00-00');
-            $rule=ReturnRules::checkBack((string)$r->status,$r->cancellation_status,(string)$r->start_date,(string)$r->end_date,$today,$back,$this->leave_return_days_from($r,$back));
+            $returns=$this->services()->leaveReturns();
+            $rule=ReturnRules::checkBack((string)$r->status,$r->cancellation_status,(string)$r->start_date,(string)$r->end_date,$today,$back,$returns->returnDaysFrom($r,$back));
             $from_requests=$this->approvals_return_view('vacation')==='requests';
             if($rule){
                 if($from_requests)$this->leave_redirect(['leave_cancel_error'=>$rule]);
@@ -807,21 +624,10 @@ trait EWS_Leave_Trait {
             }
             $levels=$this->leave_approval_active();
             $approval=0;
-            $this->leave_transaction(function()use(&$approval,$id,$emp,$back,$levels){
-                global $wpdb;
-                $locked=$this->leave_lock_row($id);
-                if(!$locked)return 'done';
-                // Checked again as locked: HR may have shortened it meanwhile (review).
-                if(ReturnRules::checkBack((string)$locked->status,$locked->cancellation_status,(string)$locked->start_date,(string)$locked->end_date,current_time('Y-m-d'),$back,$this->leave_return_days_from($locked,$back)))return 'done';
-                $ok=$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}ews_leave_requests SET cancellation_status='Pending',cancel_from=%s WHERE id=%d AND status='Approved' AND (cancellation_status IS NULL OR cancellation_status IN ('Not Requested','Approved','Rejected','Withdrawn','Ended'))",$back,(int)$id));
-                if($ok!==1)return $ok===false?'save':'done';
-                if($levels){
-                    $approval=$this->approval_start('vacation','leave_cancellation',$id,(int)$emp->id,['leave_request_id'=>$id],false);
-                    if(is_wp_error($approval))return 'approval';
-                    $ar=$this->approval_find_request('vacation','leave_cancellation',$id);
-                    if(!$ar||(int)$ar->id!==(int)$approval||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))return 'approval';
-                }
-                return $this->leave_change_insert($locked,'employee',$back,'',$levels?(int)$approval:0)?true:'save';
+            $this->leave_transaction(function()use(&$approval,$id,$emp,$back,$levels,$returns){
+                $o=$returns->askLocked((int)$id,$emp,$back,(bool)$levels);
+                $approval=$o['approval'];
+                return $o['result'];
             },$from_requests?['done'=>ReturnRules::ALREADY_PENDING]:null);
             $whole=$back===(string)$r->start_date;
             $msg=$whole?$emp->name.' asked to cancel '.$r->start_date.' to '.$r->end_date.' (all of it). Approval is required.':$emp->name.' is back at work on '.$back.' and asks to cancel '.$back.' to '.$r->end_date.'. Approval is required.';
@@ -1129,21 +935,7 @@ trait EWS_Leave_Trait {
      * cancellation (its approval exists once), so it cannot be asked again. @return true|string
      */
     private function leave_cancel_withdraw($id,$employee_id){
-            global $wpdb;
-            if($wpdb->query('START TRANSACTION')===false)return 'save';
-            $ok=$wpdb->update($wpdb->prefix.'ews_leave_requests',['cancellation_status'=>'Withdrawn'],['id'=>(int)$id,'employee_id'=>(int)$employee_id,'status'=>'Approved','cancellation_status'=>'Pending'],['%s'],['%d','%d','%s','%s']);
-            if($ok!==1){$wpdb->query('ROLLBACK');return $ok===false?'save':'done';}
-            $closed=$this->approval_close('vacation','leave_cancellation',(int)$id);
-            if($closed!==true){
-                $wpdb->query('ROLLBACK');
-                if($closed!==false)return 'done';   // 'moved': decided meanwhile
-                $ar=$this->approval_find_request('vacation','leave_cancellation',(int)$id);
-                return $ar && !\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status)?'done':'save';
-            }
-            if($this->leave_return_on() && !$this->leave_change_close((int)$id,'Withdrawn')){$wpdb->query('ROLLBACK');return 'save';}   // 3.31.161
-            if($wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return 'save';}
-            $this->audit('leave_cancellation_withdrawn','leave_request',(int)$id,'cancellation withdrawn');
-            return true;
+            return $this->services()->leaveReturns()->withdrawCancellation((int)$id,(int)$employee_id,(bool)$this->leave_return_on());
         }
 
     private function leave_withdraw($id,$employee_id){

@@ -28,6 +28,9 @@ interface ScheduleDayStore
     /** @param array<string,mixed> $row @return int|false rows changed, false on a database error */
     public function update(array $row, int $id);
 
+    /** The employee's row of that day removed (a leave day given back where there was no schedule, 3.31.164). @return int|false rows removed */
+    public function deleteDay(int $employeeId, string $date);
+
     /** status (and note, updated_by, updated_at) of a row, only while its status is still $expected. @return int|false rows changed */
     public function updateStatusIf(int $id, string $expected, string $status, string $note, int $by, string $at);
 
