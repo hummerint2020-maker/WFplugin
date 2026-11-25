@@ -88,6 +88,14 @@ def sched(day):
     return r[0]['status'] if r else None
 
 
+def in_year(a, n):
+    """The first offset from a whose n days stay in one year: a leave across the year end is refused, and make() would then
+    pick up the leave before it."""
+    while d(a)[:4] != d(a + n - 1)[:4]:
+        a += 1
+    return a
+
+
 def make(a, b, shift=0):
     """An approved leave from d(a) to d(b) through the real request and decision; shift moves it back (to start in the past)."""
     n = emp.nonce('ews_vacation_request_create')
@@ -266,12 +274,13 @@ else:
 
 # Year-end carry: next year's row exists; the days that come back are carried too.
 php("$wpdb->query(\"DELETE FROM {$p}ews_payroll_runs\");")
-C, _ = make(30, 32)
+c0 = in_year(30, 3)
+C, _ = make(c0, c0 + 2)
 y = int(q("SELECT leave_year FROM {p}ews_leave_balances WHERE id=(SELECT balance_id FROM {p}ews_leave_requests WHERE id=%d)" % C)[0]['leave_year'])
 cur = q("SELECT entitlement,used,pending FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d" % (E, ids['annual'], y))[0]
 carried = float(cur['entitlement']) - float(cur['used']) - float(cur['pending'])
 php("$wpdb->insert($p.'ews_leave_balances',['employee_id'=>%d,'leave_type_id'=>%d,'leave_year'=>%d,'entitlement'=>%f,'carried'=>%f,'used'=>0,'pending'=>0]);" % (E, ids['annual'], y + 1, 40 + carried, carried))
-ask(C, d(31))
+ask(C, d(c0 + 1))
 decide(C, 'approve')
 nxt = q("SELECT entitlement,carried FROM {p}ews_leave_balances WHERE employee_id=%d AND leave_type_id=%d AND leave_year=%d" % (E, ids['annual'], y + 1))[0]
 check('carry: next year\'s carried days grow by the 2 days back (carry all)', abs(float(nxt['carried']) - (carried + 2)) < 0.01 and abs(float(nxt['entitlement']) - (40 + carried + 2)) < 0.01, (carried, nxt))
@@ -281,14 +290,15 @@ php("$wpdb->query(\"DELETE FROM {$p}ews_leave_balances WHERE leave_year=%d\");" 
 
 # Leave approvals with a level: each change is a new round of the approval.
 levels(True)
-L, _ = make(35, 37)
+l0 = in_year(35, 3)
+L, _ = make(l0, l0 + 2)
 check('with levels: the leave is approved by its level', row(L)['status'] == 'Approved', row(L))
 base = used()
-qs = ask(L, d(36))
+qs = ask(L, d(l0 + 1))
 rounds = q("SELECT entity_round,status FROM {p}ews_approval_requests WHERE entity_type='leave_cancellation' AND entity_id=%d ORDER BY id" % L)
 check('...the first change starts round 1 of the approval', qs.get('leave_cancel_sent') == '1' and [r['entity_round'] for r in rounds] == ['1'], (qs, rounds))
 decide(L, 'approve')
-check('...approved at its level: 2 days back', row(L)['end_date'] == d(35) and used() == base - 2, (row(L), used()))
+check('...approved at its level: 2 days back', row(L)['end_date'] == d(l0) and used() == base - 2, (row(L), used()))
 qs = ask(L)
 rounds = q("SELECT entity_round,status FROM {p}ews_approval_requests WHERE entity_type='leave_cancellation' AND entity_id=%d ORDER BY id" % L)
 check('...the second change starts round 2', qs.get('leave_cancel_sent') == '1' and [r['entity_round'] for r in rounds] == ['1', '2'], (qs, rounds))
