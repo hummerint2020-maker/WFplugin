@@ -245,6 +245,7 @@ final class LeaveReturnServiceTest extends TestCase
         $o = $s->recordReturn(7, $this->emp, '2026-10-06', 'Back early', 'now', '2026-10-06', 3);
         $this->assertSame([true, true], [$o['result'], $o['closed_round']]);
         $this->assertSame(3.0, $o['applied']['back']);
+        $this->assertSame('from:2026-10-06', $o['outcome']);
         $this->assertSame(['Closed', 'Recorded', 'hr', 'Back early'], [$this->store->changes[1]->status, $this->store->changes[2]->status, $this->store->changes[2]->source, $this->store->changes[2]->reason]);
         $this->assertSame(['begin', 'rollback', 'begin', 'commit'], $this->tx->log);
         $last = end($this->audit->rows);

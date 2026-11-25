@@ -202,5 +202,10 @@ baseline does not rise. No product questions: nothing visible changes.
   `leave_admin_return_view`, reading through `Services::leaveChangedDays()`. `putBackDay` reads and saves the day through the injected
   `ScheduleDayService` (`day()`, `save()`), which is what `schedule_for_employee_date()` and `save_att()` already called.
 - Tests: `tests/unit/LeaveReturnServiceTest.php` + `tests/unit/Fakes/MemoryLeaveReturnStore.php`; the golden trace
-  `tests/golden/actions_leave_return.php` (no new `pages.json` entries). The `e2e_schedule_store.php` `deleteDay` case was not added:
+  `tests/golden/actions_leave_return.php` (no new `pages.json` entries); `ScheduleDayServiceTest` covers `restoreRow()` and `removeDay()`. The `e2e_schedule_store.php` `deleteDay` case was not added:
   the golden trace covers its SQL.
+- Review (CI golden + reviewer): two behaviour differences found and fixed. (1) Reject and withdraw read the Leave return switch before
+  their first write; the service now asks `LeaveReturnPorts::returnOn()` at the old point. (2) HR's recorded return did not keep
+  `leave_cancel_outcome`; `recordReturn()` returns it and the handler keeps it (and the applied return) also when the return failed, as
+  before. One informational difference is kept: with the switch off, no balance and a deducting type, the old code read `$bal->id` on
+  null (a PHP warning); the new code passes null, the SQL is the same (`WHERE id=0`).

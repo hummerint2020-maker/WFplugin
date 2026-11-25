@@ -389,10 +389,10 @@ final class LeaveReturnService
         $result = $this->site->withEmployeeLock((int) $emp->id, function () use ($id, $emp, $back, $reason, $now, $expFrom, $expDays, &$applied, &$outcome, &$closedRound) {
             if (!$this->tx->begin()) return 'save';
             $res = $this->recordLocked($id, $emp, $back, $reason, $now, $expFrom, $expDays, $closedRound);
-            $outcome = $res['outcome'];   // kept even when the commit fails, as before
+            $outcome = $res['outcome'];   // both kept even when the commit fails, as before
+            $applied = $res['applied'];
             if ($res['result'] !== true) { $this->tx->rollback(); return $res['result']; }
             if (!$this->tx->commit()) { $this->tx->rollback(); return 'save'; }
-            $applied = $res['applied'];
             return true;
         });
         return ['result' => $result === true ? true : (string) $result, 'outcome' => $outcome, 'applied' => $applied, 'closed_round' => $closedRound];
