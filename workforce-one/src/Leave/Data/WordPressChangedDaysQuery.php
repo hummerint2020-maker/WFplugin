@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
  * Read model of the report "Changed leave days" (Leave return, 3.31.161, docs/tasks/leave-return.md §4.6): the past days of
  * approved leaves whose schedule is no longer Vacation (a manager changed them, or the day was cleared). Reads only.
  */
-final class WordPressChangedDaysQuery
+final class WordPressChangedDaysQuery implements ChangedDaysQuery
 {
     /** @var \wpdb */
     private $db;

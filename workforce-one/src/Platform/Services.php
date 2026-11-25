@@ -75,6 +75,12 @@ use WorkforceOne\Leave\Data\WordPressLeaveDayQuery;
 use WorkforceOne\Leave\Data\LeaveHolidayStore;
 use WorkforceOne\Leave\Data\WordPressLeaveHolidayStore;
 use WorkforceOne\Leave\HolidayRefundPorts;
+use WorkforceOne\Leave\LeaveReturnPorts;
+use WorkforceOne\Leave\LeaveReturnService;
+use WorkforceOne\Leave\Data\ChangedDaysQuery;
+use WorkforceOne\Leave\Data\LeaveReturnStore;
+use WorkforceOne\Leave\Data\WordPressChangedDaysQuery;
+use WorkforceOne\Leave\Data\WordPressLeaveReturnStore;
 use WorkforceOne\Leave\HolidayRefundService;
 use WorkforceOne\HrLetters\Data\LetterSchema;
 use WorkforceOne\HrLetters\Data\LetterStore;
@@ -120,6 +126,8 @@ final class Services
     private $letterPorts;
     /** @var HolidayRefundPorts|null */
     private $holidayRefundPorts;
+    /** @var LeaveReturnPorts|null */
+    private $leaveReturnPorts;
     /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
     private $tables;
     /** @var array<string,object> */
@@ -128,8 +136,9 @@ final class Services
     /** @param array<string,string> $tables */
     public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
         Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts, ?LetterPorts $letterPorts = null,
-        ?HolidayRefundPorts $holidayRefundPorts = null)
+        ?HolidayRefundPorts $holidayRefundPorts = null, ?LeaveReturnPorts $leaveReturnPorts = null)
     {
+        $this->leaveReturnPorts = $leaveReturnPorts;
         $this->holidayRefundPorts = $holidayRefundPorts;
         $this->letterPorts = $letterPorts;
         $this->attendancePorts = $attendancePorts;
@@ -365,6 +374,29 @@ final class Services
         if (!isset($this->made[__FUNCTION__])) {
             if (!$this->holidayRefundPorts) throw new \LogicException('Leave holidays: no ports were given');
             $this->made[__FUNCTION__] = new HolidayRefundService($this->leaveHolidayStore(), $this->holidayRefundPorts, $this->tx, $this->audit, $this->clock);
+        }
+        return $this->made[__FUNCTION__];
+    }
+
+    public function leaveReturnStore(): LeaveReturnStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLeaveReturnStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The report "Changed leave days" (Leave return). */
+    public function leaveChangedDays(): ChangedDaysQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressChangedDaysQuery($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Leave return and cancellations (3.31.161, layered in 3.31.164). */
+    public function leaveReturns(): LeaveReturnService
+    {
+        if (!isset($this->made[__FUNCTION__])) {
+            if (!$this->leaveReturnPorts) throw new \LogicException('Leave return: no ports were given');
+            $this->made[__FUNCTION__] = new LeaveReturnService($this->leaveReturnStore(), $this->leaveReturnPorts, $this->scheduleDays(), $this->tx, $this->audit, $this->clock);
         }
         return $this->made[__FUNCTION__];
     }

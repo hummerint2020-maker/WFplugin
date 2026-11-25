@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.31.164
+### Leave return moved into layers (docs/tasks/leave-return-layers.md): no visible change
+Owner's choice (2026-11-24, "ابدا ب 1"): the planned move-only release for the 3.31.161 leave-return code. Nothing changes for anyone:
+the same pages, messages, queries in the same order, locks, transactions, audit rows and notifications, with the switch on or off.
+- **The Leave module's second layered slice (`leave.return`):** `LeaveReturnService` (the return, the cancellation before it, the
+  change rounds, HR's "Back at work", "Put the day back to leave", the withdrawal), `WordPressLeaveReturnStore` (its only SQL),
+  `LeaveReturnPorts` (what it reaches in the rest of the plugin) and the `ChangedDaysQuery` read model. The trait functions keep their
+  names as thin controllers; nine helpers with no other caller are gone.
+- The schedule writes of a return go through the Schedule module (`ScheduleDayService::restoreRow()` / `removeDay()`), not the table.
+- The `ews_leave_changes` CREATE moved, byte for byte, to `src/Leave/Data/LeaveReturnSchema.php` (owner, 2026-11-24), so the layer
+  baseline only goes down: 303 → 276 references (`trait-leave.php` 52 → 29, `trait-leave-admin.php` 12 → 8).
+- Tests: `tests/unit/LeaveReturnServiceTest.php` (fake store and ports), and a golden trace of every path
+  (`tests/golden/actions_leave_return.php`), the same on the old and the new code.
+
 ## 3.31.163
 ### Corrections balance in My requests (docs/tasks/corrections-balance.md, mockups docs/mockups/corrections-balance/)
 Owner's request (2026-11-24): "in My requests, add the correction balance". A new switch (wp-admin → Features → My approvals
@@ -10,6 +24,7 @@ and My requests → **Corrections balance in My requests**), **off by default**:
 - With Leave in My requests on, the card comes after the leave balances in the same strip; off, the strip shows it alone.
 - No monthly limit (0): no card. No new query: the count is the one the New request sheet already reads.
 - Rules in `src/Attendance/CorrectionBalance.php` (unit tests); e2e `tests/e2e_corrections_balance.py`.
+
 ## 3.31.162
 ### Company holidays are not leave days (docs/tasks/leave-holidays.md, mockup docs/mockups/leave-holidays/)
 Owner's report (2026-11-24): a leave over a company holiday took that holiday from the balance (Sun 4 – Thu 8 Oct with 6 Oct a

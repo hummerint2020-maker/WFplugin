@@ -89,6 +89,22 @@ final class ScheduleDayService
     }
 
     /**
+     * A day put back as it was before a leave (Leave return, 3.31.164; the old leave_restore_days()): status, note and who, as
+     * they were saved; nobody is told, as before. @return int|false rows changed, false on a database error
+     * @param mixed $status @param mixed $note as the leave's snapshot kept them
+     */
+    public function restoreRow(int $id, $status, $note, int $actor, string $at)
+    {
+        return $this->store->update(['status' => $status, 'note' => $note, 'updated_by' => $actor, 'updated_at' => $at], $id);
+    }
+
+    /** The employee's day removed (a leave day where there was no schedule before the leave). @return int|false */
+    public function removeDay(int $employeeId, string $date)
+    {
+        return $this->store->deleteDay($employeeId, $date);
+    }
+
+    /**
      * The Attendance grid's save: only if the day is still what the manager loaded ($expected; null: it was empty).
      *
      * - An empty day is inserted; the UNIQUE employee_date key settles two managers creating it at once (the loser is

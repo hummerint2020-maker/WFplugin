@@ -327,18 +327,7 @@
             "workforce-one/src/Schedule/ScheduleDayService.php",
             "workforce-one/src/Schedule/WeekLockService.php"
           ],
-          "reads": [
-            {
-              "file": "workforce-one/src/Leave/Data/WordPressChangedDaysQuery.php",
-              "tables": [
-                "leave_schedule_snapshots",
-                "leave_requests",
-                "leave_types",
-                "schedule",
-                "employees"
-              ]
-            }
-          ],
+          "reads": [],
           "moved": [
             "save_att_if_unchanged",
             "save_att",
@@ -585,6 +574,17 @@
           "reads": [{"file": "workforce-one/src/Leave/Data/WordPressLeaveDayQuery.php", "tables": ["leave_requests", "leave_schedule_snapshots", "leave_types"]}],
           "moved": ["leave_admin_holidays_view", "admin_leave_holiday_restore", "leave_holidays_skipped"],
           "traits_clean": ["leave-holidays"]
+        },
+        {
+          "slice": "return",
+          "tables": ["leave_changes", "leave_requests", "leave_balances", "leave_types", "leave_schedule_snapshots"],
+          "store": "workforce-one/src/Leave/Data/WordPressLeaveReturnStore.php",
+          "services": ["workforce-one/src/Leave/LeaveReturnService.php"],
+          "reads": [{"file": "workforce-one/src/Leave/Data/WordPressChangedDaysQuery.php", "tables": ["leave_schedule_snapshots", "leave_requests", "leave_types", "schedule", "employees"]}],
+          "moved": ["leave_lock_row", "leave_change_current", "leave_days_from", "leave_return_restore_day", "leave_carry_top_up", "leave_apply_cancellation",
+                    "leave_reject_cancellation", "leave_mark_cancellation_pending", "leave_cancel_request", "leave_return_ask", "leave_cancel_withdraw",
+                    "leave_admin_return_view", "admin_leave_return_record", "admin_leave_day_restore"],
+          "traits_clean": []
         }
       ]
     },

@@ -71,6 +71,14 @@ final class MemoryScheduleDayStore implements ScheduleDayStore
         return 1;
     }
 
+    public function deleteDay(int $employeeId, string $date)
+    {
+        if ($this->failUpdate) { $this->error = 'lock wait timeout'; return false; }
+        $n = 0;
+        foreach ($this->rows as $id => $r) if ((int) $r->employee_id === $employeeId && (string) $r->work_date === $date) { unset($this->rows[$id]); $n++; }
+        return $n;
+    }
+
     public function updateStatusIf(int $id, string $expected, string $status, string $note, int $by, string $at)
     {
         if ($this->failUpdate) { $this->error = 'lock wait timeout'; return false; }
