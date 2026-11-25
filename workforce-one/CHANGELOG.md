@@ -14,6 +14,16 @@ the same pages, messages, queries in the same order, locks, transactions, audit 
 - Tests: `tests/unit/LeaveReturnServiceTest.php` (fake store and ports), and a golden trace of every path
   (`tests/golden/actions_leave_return.php`), the same on the old and the new code.
 
+## 3.31.163
+### Corrections balance in My requests (docs/tasks/corrections-balance.md, mockups docs/mockups/corrections-balance/)
+Owner's request (2026-11-24): "in My requests, add the correction balance". A new switch (wp-admin → Features → My approvals
+and My requests → **Corrections balance in My requests**), **off by default**: off, My requests is exactly as before.
+- On (with Attendance corrections and My approvals on): "Your balance" on top of My requests shows a card **Attendance
+  corrections**: how many are left this month of the monthly limit (waiting and approved requests for this month's days count,
+  as the limit does). None left: "the next ones go to HR" or "none left this month", following the corrections settings.
+- With Leave in My requests on, the card comes after the leave balances in the same strip; off, the strip shows it alone.
+- No monthly limit (0): no card. No new query: the count is the one the New request sheet already reads.
+- Rules in `src/Attendance/CorrectionBalance.php` (unit tests); e2e `tests/e2e_corrections_balance.py`.
 ## 3.31.162
 ### Company holidays are not leave days (docs/tasks/leave-holidays.md, mockup docs/mockups/leave-holidays/)
 Owner's report (2026-11-24): a leave over a company holiday took that holiday from the balance (Sun 4 – Thu 8 Oct with 6 Oct a

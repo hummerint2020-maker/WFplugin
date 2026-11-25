@@ -40,7 +40,7 @@ trait EWS_Features_Trait {
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
                 'my_approvals'=>$this->my_approvals_enabled(),
-                'hub_reports'=>$this->hub_reports_enabled(),'my_requests_leave'=>(bool)$this->option('ews_feature_my_requests_leave'),'leave_return'=>(bool)$this->option('ews_feature_leave_return'),'leave_holidays'=>(bool)$this->option('ews_feature_leave_holidays'),'leave_page'=>(bool)$this->option('ews_feature_leave_page'),
+                'hub_reports'=>$this->hub_reports_enabled(),'my_requests_leave'=>(bool)$this->option('ews_feature_my_requests_leave'),'leave_return'=>(bool)$this->option('ews_feature_leave_return'),'leave_holidays'=>(bool)$this->option('ews_feature_leave_holidays'),'my_requests_cx_balance'=>(bool)$this->option('ews_feature_my_requests_cx_balance'),'leave_page'=>(bool)$this->option('ews_feature_leave_page'),
                 'app_api'=>$this->app_api_enabled(),
                 'api_refresh_safe'=>$this->api_refresh_safe_enabled(),
                 'substitutes'=>$this->substitutes_enabled(),
@@ -161,6 +161,11 @@ trait EWS_Features_Trait {
         if(isset($post['leave_holidays_present'])&&(bool)$this->option('ews_feature_leave_holidays')!==$flag('leave_holidays_enabled')){
             update_option('ews_feature_leave_holidays',$flag('leave_holidays_enabled')?1:0,false);
             $this->audit('leave_holidays_feature_update','settings',0,$flag('leave_holidays_enabled')?'enabled':'disabled');
+        }
+        // Corrections balance in My requests (3.31.163): written and audited only when it changes.
+        if(isset($post['my_requests_cx_balance_present'])&&(bool)$this->option('ews_feature_my_requests_cx_balance')!==$flag('my_requests_cx_balance_enabled')){
+            update_option('ews_feature_my_requests_cx_balance',$flag('my_requests_cx_balance_enabled')?1:0,false);
+            $this->audit('my_requests_cx_balance_feature_update','settings',0,$flag('my_requests_cx_balance_enabled')?'enabled':'disabled');
         }
         // Requests Hub reports (3.31.159): written and audited only when it changes.
         if(isset($post['hub_reports_present'])&&$this->hub_reports_enabled()!==$flag('hub_reports_enabled')){
