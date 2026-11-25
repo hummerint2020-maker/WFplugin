@@ -13446,4 +13446,27 @@ msgstr ""
 
 #: leave-holidays
 msgid "A leave no longer counts the company holidays inside it: they are not taken from the balance and stay holidays in the schedule. HR finds the leaves of this year that were charged for a holiday before on the Leaves page and gives those days back; the employee is told, and it is in the Audit Log. Off: exactly as today."
+#: corrections-balance
+msgid "Corrections balance in My requests"
+msgstr ""
+
+#: corrections-balance
+msgid "\"Your balance\" at the top of My requests also shows how many attendance corrections are left this month, and what happens to the next one once none are left. Only while Attendance corrections and My approvals are on, and a monthly limit is set."
+msgstr ""
+
+#: corrections-balance
+msgid "Attendance corrections"
+msgstr ""
+
+#: corrections-balance
+msgid "None left this month · the next ones go to HR"
+msgstr ""
+
+#: corrections-balance
+msgid "None left this month"
+msgstr ""
+
+#. translators: %s: corrections a month
+#: corrections-balance
+msgid "of %s this month"
 msgstr ""

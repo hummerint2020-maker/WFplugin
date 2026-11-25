@@ -189,6 +189,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_people.py "$S"
       - name: Leave in My requests (off by default, balances, asking to cancel, the Leave filter, the Leave page switch)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_requests.py "$S"
+      - name: Corrections balance in My requests (off by default; corrections left this month, to HR or refused, no limit, with leave)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_corrections_balance.py "$S"
       - name: Leave return (off by default; a leave changed more than once, HR records a return, the changed days report)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_leave_return.py "$S"
       - name: Approved leave days locked in the schedule (Leave return)

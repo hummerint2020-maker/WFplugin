@@ -133,6 +133,10 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <div class="wfo-feature-head">
     <div><div class="wfo-feature-title"><?php esc_html_e('Leave page in the app', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('On: shown as today. Off: the menu item goes, and its links open My requests (or My approvals for a decision). Can be turned off only while Leave in My requests is on.', 'workforce-one'); ?></div></div>
     <?php $switch('leave_page_enabled', $on['leave_page']); ?>
+</div>
+<div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Corrections balance in My requests', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('"Your balance" at the top of My requests also shows how many attendance corrections are left this month, and what happens to the next one once none are left. Only while Attendance corrections and My approvals are on, and a monthly limit is set.', 'workforce-one'); ?></div></div>
+    <input type="hidden" name="my_requests_cx_balance_present" value="1"><?php $switch('my_requests_cx_balance_enabled', $on['my_requests_cx_balance']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-hub-reports"><div class="wfo-feature-head">
