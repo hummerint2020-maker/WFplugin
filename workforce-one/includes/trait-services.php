@@ -215,6 +215,7 @@ trait EWS_Services_Trait {
                 return (int)$approval;
             }
             public function actorId(): int { return (int)get_current_user_id(); }
+            public function returnOn(): bool { return (bool)($this->call)('leave_return_on'); }
             public function actorName(): string { return (string)wp_get_current_user()->display_name; }
         };
     }

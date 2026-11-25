@@ -379,7 +379,7 @@ trait EWS_Leave_Trait {
 
     /** @return true|string leave_error */
     private function leave_reject_cancellation($id){
-            return $this->services()->leaveReturns()->rejectCancellation((int)$id,(bool)$this->leave_return_on());
+            return $this->services()->leaveReturns()->rejectCancellation((int)$id);
         }
 
     /** Mark an approved leave's cancellation as requested. @return int|false rows changed */
@@ -935,7 +935,7 @@ trait EWS_Leave_Trait {
      * cancellation (its approval exists once), so it cannot be asked again. @return true|string
      */
     private function leave_cancel_withdraw($id,$employee_id){
-            return $this->services()->leaveReturns()->withdrawCancellation((int)$id,(int)$employee_id,(bool)$this->leave_return_on());
+            return $this->services()->leaveReturns()->withdrawCancellation((int)$id,(int)$employee_id);
         }
 
     private function leave_withdraw($id,$employee_id){

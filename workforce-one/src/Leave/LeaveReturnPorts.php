@@ -48,6 +48,9 @@ interface LeaveReturnPorts
     /** A new approval round for the cancellation, waiting for its first level. @return int|null its id; null when it could not start */
     public function startRound(int $leaveId, int $employeeId): ?int;
 
+    /** Leave return is switched on: read when the old code read it (after the first write), so the queries keep their order. */
+    public function returnOn(): bool;
+
     /** The user doing it (0 for none) and their name. */
     public function actorId(): int;
 

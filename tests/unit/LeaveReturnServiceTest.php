@@ -64,6 +64,7 @@ final class LeaveReturnServiceTest extends TestCase
             public function approvalDecided(int $leaveId): bool { return $this->decided; }
             public function startRound(int $leaveId, int $employeeId): ?int { return $this->round; }
             public function actorId(): int { return 1; }
+            public function returnOn(): bool { return true; }
             public function actorName(): string { return 'Hana'; }
         };
         $this->tx = new class implements Transaction {
@@ -192,9 +193,9 @@ final class LeaveReturnServiceTest extends TestCase
     public function testRejectAndMarkPending(): void
     {
         $this->store->insertChange(['leave_request_id' => 7, 'employee_id' => 3, 'round' => 1, 'status' => 'Pending']);
-        $this->assertTrue($this->service()->rejectCancellation(7, true));
+        $this->assertTrue($this->service()->rejectCancellation(7));
         $this->assertSame(['Rejected', 'Rejected'], [$this->store->leaves[7]->cancellation_status, $this->store->changes[1]->status]);
-        $this->assertSame('done', $this->service()->rejectCancellation(7, true));
+        $this->assertSame('done', $this->service()->rejectCancellation(7));
         $this->store->leaves[7]->cancellation_status = null;
         $this->assertSame(1, $this->service()->markPending(7, '2026-10-07'));
         $this->assertSame('2026-10-07', $this->store->leaves[7]->cancel_from);
@@ -217,7 +218,7 @@ final class LeaveReturnServiceTest extends TestCase
     public function testWithdraw(): void
     {
         $this->store->insertChange(['leave_request_id' => 7, 'employee_id' => 3, 'round' => 1, 'status' => 'Pending']);
-        $this->assertTrue($this->service()->withdrawCancellation(7, 3, true));
+        $this->assertTrue($this->service()->withdrawCancellation(7, 3));
         $this->assertSame(['begin', 'commit'], $this->tx->log);
         $this->assertSame(['Withdrawn', 'Withdrawn'], [$this->store->leaves[7]->cancellation_status, $this->store->changes[1]->status]);
         $this->assertSame('leave_cancellation_withdrawn', $this->audit->rows[0][0]);
@@ -225,11 +226,11 @@ final class LeaveReturnServiceTest extends TestCase
         $this->setUp();
         $this->site->closeWithdrawn = false;
         $this->site->decided = true;
-        $this->assertSame('done', $this->service()->withdrawCancellation(7, 3, true));
+        $this->assertSame('done', $this->service()->withdrawCancellation(7, 3));
         $this->assertSame(['begin', 'rollback'], $this->tx->log);
         $this->site->decided = false;
         $this->store->leaves[7]->cancellation_status = 'Pending';   // the fake has no rollback
-        $this->assertSame('save', $this->service()->withdrawCancellation(7, 3, true));
+        $this->assertSame('save', $this->service()->withdrawCancellation(7, 3));
     }
 
     public function testHrRecordsAReturn(): void

@@ -315,12 +315,12 @@ final class LeaveReturnService
     }
 
     /** The cancellation refused. @return true|string leave_error */
-    public function rejectCancellation(int $id, bool $returnOn)
+    public function rejectCancellation(int $id)
     {
         $q = $this->store->rejectCancellation($id);
         if ($q !== 1) return $q === false ? 'save' : 'done';
-        if ($returnOn && !$this->closeChange($id, 'Rejected')) return 'save';   // the round's history (3.31.161)
-        if ($returnOn && $this->site->closeOpenApproval($id) === false) return 'save';
+        if ($this->site->returnOn() && !$this->closeChange($id, 'Rejected')) return 'save';   // the round's history (3.31.161)
+        if ($this->site->returnOn() && $this->site->closeOpenApproval($id) === false) return 'save';
         return true;
     }
 
@@ -359,7 +359,7 @@ final class LeaveReturnService
      * The employee withdraws a cancellation still waiting (My requests, 3.31.158): the leave stays as it was.
      * @return true|string
      */
-    public function withdrawCancellation(int $id, int $employeeId, bool $returnOn)
+    public function withdrawCancellation(int $id, int $employeeId)
     {
         if (!$this->tx->begin()) return 'save';
         $ok = $this->store->withdrawCancellation($id, $employeeId);
@@ -370,7 +370,7 @@ final class LeaveReturnService
             if ($closed !== false) return 'done';   // 'moved': decided meanwhile
             return $this->site->approvalDecided($id) ? 'done' : 'save';
         }
-        if ($returnOn && !$this->closeChange($id, 'Withdrawn')) { $this->tx->rollback(); return 'save'; }   // 3.31.161
+        if ($this->site->returnOn() && !$this->closeChange($id, 'Withdrawn')) { $this->tx->rollback(); return 'save'; }   // 3.31.161
         if (!$this->tx->commit()) { $this->tx->rollback(); return 'save'; }
         $this->audit->record('leave_cancellation_withdrawn', 'leave_request', $id, 'cancellation withdrawn');
         return true;
@@ -379,21 +379,23 @@ final class LeaveReturnService
     /**
      * HR records that the employee was back at work on a day (owner, 2026-11-24): under the employee's lock and in its own
      * transaction. A change still waiting is closed first; the days from then on go back.
-     * @return array{result:true|string,applied:?array,closed_round:bool}
+     * @return array{result:true|string,outcome:?string,applied:?array,closed_round:bool}
      */
     public function recordReturn(int $id, object $emp, string $back, string $reason, string $now, string $expFrom, int $expDays): array
     {
         $applied = null;
+        $outcome = null;
         $closedRound = false;
-        $result = $this->site->withEmployeeLock((int) $emp->id, function () use ($id, $emp, $back, $reason, $now, $expFrom, $expDays, &$applied, &$closedRound) {
+        $result = $this->site->withEmployeeLock((int) $emp->id, function () use ($id, $emp, $back, $reason, $now, $expFrom, $expDays, &$applied, &$outcome, &$closedRound) {
             if (!$this->tx->begin()) return 'save';
             $res = $this->recordLocked($id, $emp, $back, $reason, $now, $expFrom, $expDays, $closedRound);
+            $outcome = $res['outcome'];   // kept even when the commit fails, as before
             if ($res['result'] !== true) { $this->tx->rollback(); return $res['result']; }
             if (!$this->tx->commit()) { $this->tx->rollback(); return 'save'; }
             $applied = $res['applied'];
             return true;
         });
-        return ['result' => $result === true ? true : (string) $result, 'applied' => $applied, 'closed_round' => $closedRound];
+        return ['result' => $result === true ? true : (string) $result, 'outcome' => $outcome, 'applied' => $applied, 'closed_round' => $closedRound];
     }
 
     /** @return array{result:true|string,outcome:?string,applied:?array} */

@@ -235,6 +235,7 @@ trait EWS_Leave_Admin_Trait {
         $o=$this->services()->leaveReturns()->recordReturn($id,$emp,$back,$reason,current_time('mysql'),$exp_from,$exp_days);
         if($o['result']!==true)$this->leave_admin_redirect($again+['lr_error'=>(string)$o['result']]);
         $closed_round=$o['closed_round'];
+        if($o['outcome']!==null)$this->leave_cancel_outcome=$o['outcome'];
         $a=$this->leave_return_applied=(array)$o['applied'];
         $days=rtrim(rtrim(number_format((float)($a['back']??0),2,'.',''),'0'),'.');
         $msg=sprintf('HR recorded that you were back at work on %1$s. %2$s Reason: %3$s',$back,
