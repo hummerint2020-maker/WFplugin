@@ -27,10 +27,15 @@ def last(out):
     return lines[-1] if lines else ''
 
 
+def lit(s):
+    """A PHP single-quoted literal (no $ interpolation)."""
+    return "'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
 def text(key, locale=''):
     """The text as the site shows it now (a fresh request), in English or after switch_to_locale()."""
-    sw = "switch_to_locale(%s);" % json.dumps(locale) if locale else ''
-    return last(php(sw + "echo wp_json_encode(__(%s,'workforce-one'));" % json.dumps(key)))
+    sw = "switch_to_locale(%s);" % lit(locale) if locale else ''
+    return last(php(sw + "echo wp_json_encode(__(%s,'workforce-one'));" % lit(key)))
 
 
 def overrides():
@@ -38,13 +43,12 @@ def overrides():
 
 
 def forms(page):
-    """Each form's fields: list of (action/scope, fields)."""
+    """Each post form's fields as the browser would send them (hidden inputs, the textarea)."""
     out = []
-    for f in re.findall(r'<form method="post".*?</form>', page, re.S):
-        fields = [(n, html.unescape(v)) for n, v in re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)"', f)]
-        for n, v in re.findall(r'<textarea[^>]*name="([^"]+)"[^>]*>(.*?)</textarea>', f, re.S):
-            fields.append((n, html.unescape(v)))
-        out.append(fields)
+    for chunk in re.findall(r'<form method="post".*?</form>', page, re.S):
+        f = Form()
+        f.feed(chunk)
+        out.append(f.data)
     return out
 
 
@@ -136,7 +140,7 @@ st, page, _ = adm.req('/wp-admin/admin.php?page=ews31')
 check('off: no System messages item in the menu', 'ews31-system-messages' not in page)
 st, _, _ = adm.req(PAGE)
 check('off: the page cannot be opened', st != 200, st)
-php("update_option('ews_message_overrides',['en'=>[%s=>'Turned down']],false);" % json.dumps(KEY))
+php("update_option('ews_message_overrides',['en'=>[%s=>'Turned down']],false);" % lit(KEY))
 check('off: a saved text is not shown', text(KEY) == json.dumps(KEY))
 check('off: no gettext filter is added', last(php("echo (int)has_filter('gettext_workforce-one').(int)has_filter('load_script_translations');")) == '00')
 php("delete_option('ews_message_overrides');")
@@ -173,7 +177,7 @@ check('the list shows it as edited, first', 'data-sm-row="%s"' % h(KEY) in page 
 st, loc = save(adm, PH, 'ar', 'رفض طلب تصحيح %1$s: %2$s')
 check('an Arabic text with its values is saved', 'sm_done=saved' in loc and overrides().get('ar', {}).get(PH) == 'رفض طلب تصحيح %1$s: %2$s', (loc, overrides()))
 check('...the site shows it in Arabic', json.loads(text(PH, 'ar')) == 'رفض طلب تصحيح %1$s: %2$s')
-check('...and the values still fill in', last(php("switch_to_locale('ar'); echo sprintf(__(%s,'workforce-one'),'1/1','x');" % json.dumps(PH))) == 'رفض طلب تصحيح 1/1: x')
+check('...and the values still fill in', last(php("switch_to_locale('ar'); echo sprintf(__(%s,'workforce-one'),'1/1','x');" % lit(PH))) == 'رفض طلب تصحيح 1/1: x')
 check('...the English is untouched', text(PH) == json.dumps(PH))
 
 # ---------------------------------------------------------------- refused
@@ -185,7 +189,7 @@ st, loc = save(adm, PH, 'en', 'Rejected: %2$s')
 st, page, _ = adm.req(loc.replace('http://127.0.0.1:8080', ''))
 check('...the panel comes back with what was typed and why', 'data-sm-error' in page and 'Rejected: %2$s' in page)
 f, _ = edit_form(adm, KEY, 'en')
-php("update_option('ews_message_overrides',['en'=>[%s=>'Changed meanwhile']]+get_option('ews_message_overrides'),false);" % json.dumps(KEY))
+php("$o=get_option('ews_message_overrides'); $o['en'][%s]='Changed meanwhile'; update_option('ews_message_overrides',$o,false);" % lit(KEY))
 st, body, hd = adm.req('/wp-admin/admin-post.php', dict(f, text='Mine'))
 check('a save over a text someone else changed meanwhile is refused', 'sm_error=stale' in hd.get('Location', '') and overrides()['en'][KEY] == 'Changed meanwhile', hd.get('Location'))
 
@@ -201,7 +205,7 @@ check('a whole language goes back, the other language stays', 'sm_done=reset_man
 check('resets are written to the Audit Log', len(q("SELECT id FROM {p}ews_audit_log WHERE action='system_message_reset'")) >= 2)
 
 # ---------------------------------------------------------------- a text that is no longer in the plugin
-php("update_option('ews_message_overrides',['en'=>['A text an update removed'=>'Old words']]+get_option('ews_message_overrides'),false);")
+php("$o=get_option('ews_message_overrides'); $o['en']['A text an update removed']='Old words'; update_option('ews_message_overrides',$o,false);")
 st, page, _ = adm.req(PAGE + '&lang=en')
 check('a saved text whose original is gone is listed under Needs review', 'data-sm-review' in page and 'A text an update removed' in page)
 loc = reset(adm, 'one_review', 'en', post={})
