@@ -9857,3 +9857,679 @@ msgstr "خلصوا الشهر ده"
 
 msgid "of %s this month"
 msgstr "من %s الشهر ده"
+
+#. translators: 1: number of days, 2: leave type, 3: first day, 4: last day, 5: the company holidays, 6: days the leave counts now
+#: includes/trait-services.php:188
+msgid "%1$d day(s) went back to your balance: your %2$s leave (%3$s – %4$s) was charged for company holidays (%5$s). It now counts %6$s day(s)."
+msgstr "رجع %1$d يوم إلى رصيدك: إجازتك (%2$s) من %3$s إلى %4$s كانت محسوبة على أيام عطلات رسمية (%5$s). أصبحت الآن %6$s يوم."
+
+#. translators: 1: employee name, 2: leave type, 3: first day, 4: last day
+#: includes/trait-leave.php:545
+msgid "%1$s %2$s request from %3$s to %4$s is waiting for your approval."
+msgstr "طلب %2$s الخاص بـ %1$s من %3$s إلى %4$s في انتظار موافقتك."
+
+#. translators: 1: employee name, 2: leave type
+#: includes/trait-leave.php:792
+msgid "%1$s %2$s request is waiting for your approval."
+msgstr "طلب %2$s الخاص بـ %1$s في انتظار موافقتك."
+
+#. translators: 1: employee name, 2: first day, 3: last day
+#: includes/trait-leave.php:652
+msgid "%1$s asked to cancel %2$s to %3$s (all of it). Approval is required."
+msgstr "طلب %1$s إلغاء إجازته من %2$s إلى %3$s (بالكامل). يلزم الموافقة."
+
+#. translators: 1: employee name, 2: first day, 3: last day
+#: includes/trait-leave.php:618
+msgid "%1$s asked to cancel %2$s to %3$s. Approval is required."
+msgstr "طلب %1$s إلغاء إجازته من %2$s إلى %3$s. يلزم الموافقة."
+
+#. translators: 1: employee name, 2: the day back at work, 3: last day
+#: includes/trait-leave.php:602 includes/trait-leave.php:616 includes/trait-leave.php:654
+msgid "%1$s is back at work on %2$s and asks to cancel %2$s to %3$s. Approval is required."
+msgstr "عاد %1$s إلى العمل يوم %2$s ويطلب إلغاء الإجازة من %2$s إلى %3$s. يلزم الموافقة."
+
+#. translators: 1: employee name, 2: day, 3: start time, 4: end time, 5: approval level number
+#: includes/trait-overtime.php:185
+msgid "%1$s overtime request for %2$s (%3$s–%4$s) is awaiting your Level %5$d approval."
+msgstr "طلب العمل الإضافي الخاص بـ %1$s يوم %2$s (%3$s–%4$s) في انتظار موافقتك في المستوى %5$d."
+
+#. translators: 1: colleague, 2: what for
+#: includes/trait-recognition.php:119
+msgid "%1$s recognized you for %2$s."
+msgstr "شكرك %1$s على %2$s."
+
+#. translators: 1: colleague, 2: day
+#: includes/trait-swap.php:231
+msgid "%1$s rejected your schedule swap for %2$s."
+msgstr "رفض %1$s طلب تبديل جدولك ليوم %2$s."
+
+#. translators: 1: employee name, 2: number of days, 3: leave type, 4: first day, 5: last day
+#: includes/trait-leave.php:447
+msgid "%1$s requested %2$s day(s) of %3$s from %4$s to %5$s. Approval is required."
+msgstr "طلب %1$s إجازة %3$s لمدة %2$s يوم من %4$s إلى %5$s. يلزم الموافقة."
+
+#. translators: 1: employee name, 2: hours, 3: day, 4: start time, 5: end time
+#: includes/trait-overtime.php:113
+msgid "%1$s requested %2$s hour(s) of overtime on %3$s (%4$s–%5$s). Approval is required."
+msgstr "طلب %1$s عملًا إضافيًا لمدة %2$s ساعة يوم %3$s (%4$s–%5$s). يلزم الموافقة."
+
+#. translators: 1: employee name, 2: hours, 3: day, 4: start time, 5: end time, 6: approval level number
+#: includes/trait-overtime.php:108
+msgid "%1$s requested %2$s hour(s) of overtime on %3$s (%4$s–%5$s). It is awaiting your Level %6$d approval."
+msgstr "طلب %1$s عملًا إضافيًا لمدة %2$s ساعة يوم %3$s (%4$s–%5$s). الطلب في انتظار موافقتك في المستوى %6$d."
+
+#. translators: 1: employee name, 2: hours, 3: minutes, 4: day
+#: includes/trait-overtime.php:256
+msgid "%1$s requested Early Leave of %2$dh %3$dm on %4$s."
+msgstr "طلب %1$s انصرافًا مبكرًا لمدة %2$d س %3$d د يوم %4$s."
+
+#. translators: 1: employee name, 2: first day, 3: last day
+#: includes/trait-leave.php:604
+msgid "%1$s requested cancellation of %2$s to %3$s. Approval is required."
+msgstr "طلب %1$s إلغاء الإجازة من %2$s إلى %3$s. يلزم الموافقة."
+
+#. translators: 1: colleague, 2: day, 3: the requester's day now, 4: your day now
+#: includes/trait-swap.php:188
+msgid "%1$s requested to swap %2$s: %3$s ↔ %4$s."
+msgstr "طلب %1$s تبديل يوم %2$s: %3$s ↔ %4$s."
+
+#. translators: %d: number of texts
+#: includes/trait-system-messages.php:101
+msgid "%d text(s) went back to the default."
+msgstr "رجع %d نص إلى النص الافتراضي."
+
+#. translators: %s: employee name
+#: includes/trait-face-reset.php:166
+msgid "%s Face Reset request is waiting for your approval."
+msgstr "طلب إعادة ضبط الوجه الخاص بـ %s في انتظار موافقتك."
+
+#. translators: %s: employee name
+#: includes/trait-overtime.php:309
+msgid "%s overtime request is waiting for your approval."
+msgstr "طلب العمل الإضافي الخاص بـ %s في انتظار موافقتك."
+
+#. translators: %s: employee name
+#: includes/trait-face-reset.php:60
+msgid "%s requested a Face Reset. Approval is required."
+msgstr "طلب %s إعادة ضبط الوجه. يلزم الموافقة."
+
+#. translators: %s: number of texts
+#: templates/admin/system-messages.php:147
+msgid "%s texts"
+msgstr "%s نص"
+
+#. translators: %s: employee name
+#: includes/trait-leave.php:789
+msgid "%s vacation cancellation is waiting for your approval."
+msgstr "طلب إلغاء إجازة %s في انتظار موافقتك."
+
+#. translators: %d: characters
+#: templates/admin/system-messages.php:117
+msgid "(up to %d characters)"
+msgstr "(حتى %d حرف)"
+
+#: includes/trait-system-messages.php:53
+msgid "A backslash (\\) cannot be used in this text."
+msgstr "لا يمكن استخدام الشرطة المائلة العكسية (\\) في هذا النص."
+
+#: includes/trait-swap.php:322
+msgid "A schedule swap offered to you was rejected by an administrator."
+msgstr "رفض المسؤول طلب تبديل جدول كان موجّهًا إليك."
+
+#: includes/trait-system-messages.php:51
+msgid "A single % sign cannot be used in this text."
+msgstr "لا يمكن استخدام علامة % منفردة في هذا النص."
+
+#: templates/admin/system-messages.php:76
+msgid "Also edited elsewhere:"
+msgstr "نصوص تُعدّل من أماكن أخرى:"
+
+#: includes/trait-overtime.php:309
+msgid "An employee"
+msgstr "موظف"
+
+#: includes/trait-system-messages.php:44
+msgid "App & sign in"
+msgstr "التطبيق وتسجيل الدخول"
+
+#: includes/trait-leave-admin.php:250 includes/trait-leave-admin.php:253
+msgid "Back at work recorded"
+msgstr "تم تسجيل العودة إلى العمل"
+
+#: templates/admin/system-messages.php:122
+msgid "Back to default"
+msgstr "رجوع للافتراضي"
+
+#: templates/admin/system-messages.php:156
+msgid "Back to default: every edited Arabic text"
+msgstr "رجوع للافتراضي: كل النصوص العربية المعدّلة"
+
+#: templates/admin/system-messages.php:156
+msgid "Back to default: every edited English text"
+msgstr "رجوع للافتراضي: كل النصوص الإنجليزية المعدّلة"
+
+#: templates/admin/system-messages.php:156
+msgid "Back to default: every edited text of this part"
+msgstr "رجوع للافتراضي: كل النصوص المعدّلة في هذا القسم"
+
+#: includes/trait-system-messages.php:100
+msgid "Back to the default text."
+msgstr "رجع النص إلى الافتراضي."
+
+#: includes/trait-breaks.php:134
+msgid "Break Ended"
+msgstr "انتهت الاستراحة"
+
+#: templates/admin/system-messages.php:26
+msgid "Button / title"
+msgstr "زر / عنوان"
+
+#: templates/admin/system-messages.php:24
+msgid "Buttons & titles"
+msgstr "أزرار وعناوين"
+
+#: templates/admin/system-messages.php:75
+msgid "Change the words of any text the system shows, in each language. An empty text, or \"Back to default\", shows the original again. A change applies to new notifications only: the ones already sent keep their words."
+msgstr "غيّر كلام أي نص يعرضه النظام، لكل لغة على حدة. النص الفارغ أو \"رجوع للافتراضي\" يُظهر النص الأصلي مرة أخرى. التعديل يسري على الإشعارات الجديدة فقط، والإشعارات المرسلة من قبل تبقى بكلامها."
+
+#: templates/admin/features.php:254
+msgid "Change the words of the texts the system shows (notifications, notices, errors, buttons), in Arabic and in English. Off: every text is the original; edited texts are kept for when it is turned on again. Who may edit them: the \"Manage system messages\" permission in Roles."
+msgstr "غيّر كلام النصوص التي يعرضها النظام (الإشعارات والتنبيهات ورسائل الخطأ والأزرار) بالعربي والإنجليزي. عند الإيقاف تظهر كل النصوص الأصلية، وتُحفظ التعديلات لحين إعادة التشغيل. من يمكنه التعديل: صلاحية \"إدارة رسائل النظام\" في الأدوار."
+
+#: templates/admin/system-messages.php:132
+msgid "Current text"
+msgstr "النص الحالي"
+
+#: includes/trait-leave.php:719
+msgid "Days in a closed payroll month stay leave."
+msgstr "الأيام الواقعة في شهر رواتب مغلق تبقى إجازة."
+
+#: includes/trait-overtime.php:223
+msgid "Early Leave Approved"
+msgstr "تمت الموافقة على الانصراف المبكر"
+
+#: includes/trait-overtime.php:223
+msgid "Early Leave Rejected"
+msgstr "تم رفض الانصراف المبكر"
+
+#: includes/trait-overtime.php:259
+msgid "Early Leave Request"
+msgstr "طلب انصراف مبكر"
+
+#: templates/admin/system-messages.php:105
+msgid "Edit the Arabic text"
+msgstr "تعديل النص العربي"
+
+#: templates/admin/system-messages.php:105
+msgid "Edit the English text"
+msgstr "تعديل النص الإنجليزي"
+
+#: templates/admin/system-messages.php:140
+msgid "Edited"
+msgstr "معدّل"
+
+#: templates/admin/system-messages.php:99
+msgid "Edited only"
+msgstr "المعدّلة فقط"
+
+#: templates/admin/system-messages.php:26
+msgid "Error"
+msgstr "خطأ"
+
+#: templates/admin/system-messages.php:96
+msgid "Every part of the system"
+msgstr "كل أقسام النظام"
+
+#: includes/trait-face-reset.php:167
+msgid "Face Reset Approval Required"
+msgstr "مطلوب الموافقة على إعادة ضبط الوجه"
+
+#: includes/trait-face-reset.php:119
+msgid "Face Reset Approved"
+msgstr "تمت الموافقة على إعادة ضبط الوجه"
+
+#: includes/trait-face-reset.php:119
+msgid "Face Reset Rejected"
+msgstr "تم رفض إعادة ضبط الوجه"
+
+#: includes/trait-face-reset.php:69 includes/trait-face-reset.php:74
+msgid "Face Reset Request"
+msgstr "طلب إعادة ضبط الوجه"
+
+#: includes/trait-face-reset.php:166
+msgid "Face Reset request is waiting for your approval."
+msgstr "طلب إعادة ضبط الوجه في انتظار موافقتك."
+
+#: includes/trait-system-messages.php:45
+msgid "General"
+msgstr "عام"
+
+#. translators: 1: employee name, 2: the day back at work, 3: number of days, 4: leave type
+#: includes/trait-leave-admin.php:255
+msgid "HR recorded that %1$s was back at work on %2$s: %3$s day(s) of %4$s went back to the balance."
+msgstr "سجّلت الموارد البشرية عودة %1$s إلى العمل يوم %2$s: رجع %3$s يوم من إجازة %4$s إلى الرصيد."
+
+#. translators: 1: the day back at work, 2: what happened to the leave (a sentence), 3: HR's reason
+#: includes/trait-leave-admin.php:243
+msgid "HR recorded that you were back at work on %1$s. %2$s Reason: %3$s"
+msgstr "سجّلت الموارد البشرية عودتك إلى العمل يوم %1$s. %2$s السبب: %3$s"
+
+#: includes/trait-system-messages.php:50
+msgid "Keep every value of the original (the coloured chips), each at least once, and add no other."
+msgstr "احتفظ بكل قيمة موجودة في النص الأصلي (الخانات الملوّنة) مرة واحدة على الأقل، ولا تضف قيمًا أخرى."
+
+#: includes/trait-system-messages.php:52
+msgid "Keep the formatting of the original (such as bold) and add no other < or > signs."
+msgstr "احتفظ بتنسيق النص الأصلي (مثل الخط العريض) ولا تضف علامات < أو > أخرى."
+
+#: templates/admin/system-messages.php:119
+msgid "Keep these in the text:"
+msgstr "لازم تفضل في النص:"
+
+#: includes/trait-leave.php:538 includes/trait-leave.php:778
+msgid "Leave Approved"
+msgstr "تمت الموافقة على الإجازة"
+
+#: includes/trait-leave.php:720
+msgid "Leave Cancellation Rejected"
+msgstr "تم رفض إلغاء الإجازة"
+
+#: includes/trait-leave.php:614 includes/trait-leave.php:658
+msgid "Leave Cancellation Request"
+msgstr "طلب إلغاء إجازة"
+
+#: includes/trait-leave.php:720
+msgid "Leave Cancelled"
+msgstr "تم إلغاء الإجازة"
+
+#: includes/trait-leave.php:538 includes/trait-leave.php:778
+msgid "Leave Rejected"
+msgstr "تم رفض الإجازة"
+
+#: includes/trait-leave.php:484
+msgid "Leave Request"
+msgstr "طلب إجازة"
+
+#: includes/trait-services.php:186
+msgid "Leave days given back"
+msgstr "رجوع أيام إجازة إلى الرصيد"
+
+#: includes/trait-system-messages.php:43
+msgid "Locations & presence"
+msgstr "المواقع والتواجد"
+
+#: templates/admin/system-messages.php:76
+msgid "Login page"
+msgstr "صفحة تسجيل الدخول"
+
+#: includes/trait-system-messages.php:44
+msgid "Navigation & dashboard"
+msgstr "التنقل ولوحة التحكم"
+
+#: templates/admin/system-messages.php:166
+msgid "Need review after an update"
+msgstr "تحتاج مراجعة بعد التحديث"
+
+#: includes/trait-polls.php:201
+msgid "New poll"
+msgstr "استطلاع جديد"
+
+#: templates/admin/system-messages.php:134
+msgid "No text matches."
+msgstr "لا توجد نصوص مطابقة."
+
+#: templates/admin/system-messages.php:140
+msgid "Not editable yet"
+msgstr "لا يمكن تعديله بعد"
+
+#: includes/trait-system-messages.php:102
+msgid "Nothing was edited there, so nothing changed."
+msgstr "لم يكن هناك نص معدّل، فلم يتغير شيء."
+
+#: templates/admin/system-messages.php:25
+msgid "Notice"
+msgstr "تنبيه"
+
+#: templates/admin/system-messages.php:23
+msgid "Notices & banners"
+msgstr "تنبيهات وشرائط"
+
+#: templates/admin/system-messages.php:25
+msgid "Notification"
+msgstr "إشعار"
+
+#: templates/admin/system-messages.php:76
+msgid "Offline screen"
+msgstr "شاشة عدم الاتصال"
+
+#: templates/admin/system-messages.php:132
+msgid "Original"
+msgstr "الأصل"
+
+#: templates/admin/system-messages.php:111
+msgid "Original (English)"
+msgstr "الأصل (بالإنجليزي)"
+
+#: includes/trait-system-messages.php:40
+msgid "Overtime & early leave"
+msgstr "العمل الإضافي والانصراف المبكر"
+
+#: includes/trait-overtime.php:106 includes/trait-overtime.php:183 includes/trait-overtime.php:307
+msgid "Overtime Approval Required"
+msgstr "مطلوب الموافقة على عمل إضافي"
+
+#: includes/trait-overtime.php:73 includes/trait-overtime.php:101
+msgid "Overtime Approved"
+msgstr "تمت الموافقة على العمل الإضافي"
+
+#: includes/trait-overtime.php:116
+msgid "Overtime Request"
+msgstr "طلب عمل إضافي"
+
+#: templates/admin/system-messages.php:96
+msgid "Part of the system"
+msgstr "قسم النظام"
+
+#: includes/trait-system-messages.php:41
+msgid "Payroll & advances"
+msgstr "الرواتب والسلف"
+
+#: includes/trait-payroll.php:290
+msgid "Payslip ready"
+msgstr "قسيمة الراتب جاهزة"
+
+#. translators: 1: location name, 2: minutes
+#: includes/trait-presence.php:106
+msgid "Please verify your presence at <strong>%1$s</strong>. The request expires in %2$d minute."
+msgid_plural "Please verify your presence at <strong>%1$s</strong>. The request expires in %2$d minutes."
+msgstr[0] "يرجى تأكيد تواجدك في <strong>%1$s</strong>. ينتهي الطلب خلال %2$d دقيقة."
+msgstr[1] "يرجى تأكيد تواجدك في <strong>%1$s</strong>. ينتهي الطلب خلال %2$d دقيقة."
+msgstr[2] "يرجى تأكيد تواجدك في <strong>%1$s</strong>. ينتهي الطلب خلال %2$d دقيقة."
+msgstr[3] "يرجى تأكيد تواجدك في <strong>%1$s</strong>. ينتهي الطلب خلال %2$d دقائق."
+msgstr[4] "يرجى تأكيد تواجدك في <strong>%1$s</strong>. ينتهي الطلب خلال %2$d دقيقة."
+msgstr[5] "يرجى تأكيد تواجدك في <strong>%1$s</strong>. ينتهي الطلب خلال %2$d دقيقة."
+
+#: templates/admin/system-messages.php:157
+msgid "Put these texts back to the default?"
+msgstr "إرجاع هذه النصوص إلى الافتراضي؟"
+
+#: templates/admin/system-messages.php:175
+msgid "Remove it"
+msgstr "احذفه"
+
+#: templates/admin/system-messages.php:180
+msgid "Remove them all"
+msgstr "احذفها كلها"
+
+#: includes/trait-system-messages.php:40
+msgid "Requests & approvals"
+msgstr "الطلبات والموافقات"
+
+#: includes/trait-system-messages.php:99
+msgid "Saved. New notifications and pages use the new text."
+msgstr "تم الحفظ. الإشعارات والصفحات الجديدة ستستخدم النص الجديد."
+
+#: includes/trait-system-messages.php:39
+msgid "Schedule & swaps"
+msgstr "الجدول والتبديلات"
+
+#: includes/trait-swap.php:255 includes/trait-swap.php:258 includes/trait-swap.php:319
+msgid "Schedule Swap Completed"
+msgstr "تم تبديل الجدول"
+
+#: includes/trait-swap.php:229 includes/trait-swap.php:319 includes/trait-swap.php:387
+msgid "Schedule Swap Rejected"
+msgstr "تم رفض تبديل الجدول"
+
+#: includes/trait-swap.php:189
+msgid "Schedule Swap Request"
+msgstr "طلب تبديل جدول"
+
+#. translators: 1: day, 2: the new schedule (Office, WFH, …)
+#: includes/trait-services.php:65
+msgid "Schedule Updated"
+msgstr "تم تحديث الجدول"
+
+#: templates/admin/system-messages.php:98
+msgid "Search the original or the current text…"
+msgstr "ابحث في النص الأصلي أو الحالي…"
+
+#: includes/trait-system-messages.php:55
+msgid "Someone changed this text while you were editing it. Here it is as it is now."
+msgstr "عدّل شخص آخر هذا النص أثناء تعديلك له. هذا هو النص كما هو الآن."
+
+#: includes/trait-admin-nav.php:76 includes/trait-admin.php:125 includes/trait-admin.php:125
+msgid "System messages"
+msgstr "رسائل النظام"
+
+#: includes/trait-system-messages.php:70 includes/trait-system-messages.php:125
+msgid "System messages is off. Turn it on in Features."
+msgstr "رسائل النظام متوقفة. شغّلها من المميزات."
+
+#: includes/trait-system-messages.php:56 templates/admin/system-messages.php:115
+msgid "Texts with a number in them (one day, 2 days…) cannot be edited yet."
+msgstr "النصوص التي يتغير شكلها حسب العدد (يوم واحد، يومان…) لا يمكن تعديلها بعد."
+
+#. translators: %s: leave type
+#: includes/trait-leave.php:718
+msgid "The days of your %s leave you asked to cancel are in a closed payroll month, so they stay leave."
+msgstr "أيام إجازتك (%s) التي طلبت إلغاءها تقع في شهر رواتب مغلق، لذلك تبقى إجازة."
+
+#: templates/admin/system-messages.php:167
+msgid "The original of these texts changed in an update of the plugin, so your text no longer applies and the new default shows. Search for the new text above and edit it again, then remove the old one here."
+msgstr "تغيّر النص الأصلي لهذه النصوص في تحديث للإضافة، فلم يعد تعديلك يُطبّق ويظهر النص الافتراضي الجديد. ابحث عن النص الجديد بالأعلى وعدّله مرة أخرى، ثم احذف القديم من هنا."
+
+#. translators: %s: day
+#: includes/trait-swap.php:389
+msgid "The schedule swap for %s was not approved."
+msgstr "لم تتم الموافقة على تبديل الجدول ليوم %s."
+
+#: includes/trait-system-messages.php:54
+msgid "The text is too long."
+msgstr "النص أطول من المسموح."
+
+#: templates/admin/system-messages.php:84
+msgid "This site's language is an Arabic variant the plugin has no translation for: it shows the English texts, except the ones edited here in Arabic."
+msgstr "لغة الموقع لهجة عربية ليس لها ترجمة في الإضافة: تظهر النصوص بالإنجليزي، ما عدا النصوص المعدّلة هنا بالعربي."
+
+#: includes/trait-system-messages.php:57
+msgid "This text is no longer in the plugin."
+msgstr "هذا النص لم يعد موجودًا في الإضافة."
+
+#. translators: %d: number of places
+#: templates/admin/system-messages.php:114
+msgid "This text is used in %d places: the change applies to all of them."
+msgstr "هذا النص مستخدم في %d مكان، والتعديل سيسري عليها كلها."
+
+#: includes/trait-admin-requests.php:474 includes/trait-leave.php:466
+msgid "Vacation Approved"
+msgstr "تمت الموافقة على الإجازة"
+
+#: includes/trait-leave.php:600 includes/trait-leave.php:655 includes/trait-leave.php:723
+msgid "Vacation Cancellation Request"
+msgstr "طلب إلغاء إجازة"
+
+#: includes/trait-admin-requests.php:474
+msgid "Vacation Rejected"
+msgstr "تم رفض الإجازة"
+
+#: includes/trait-leave.php:470 includes/trait-leave.php:543 includes/trait-leave.php:790
+msgid "Vacation Request"
+msgstr "طلب إجازة"
+
+#: templates/admin/system-messages.php:132
+msgid "Where"
+msgstr "المكان"
+
+#: includes/trait-system-messages.php:49
+msgid "Write the text, or use \"Back to default\"."
+msgstr "اكتب النص، أو استخدم \"رجوع للافتراضي\"."
+
+#: includes/trait-recognition.php:117
+msgid "You received a Kudos"
+msgstr "وصلك شكر وتقدير"
+
+#. translators: 1: leave type, 2: new last day, 3: number of days, 4: first day given back
+#: includes/trait-leave-admin.php:248
+msgid "Your %1$s leave now ends on %2$s; %3$s day(s) from %4$s on went back to your balance."
+msgstr "إجازتك (%1$s) أصبحت تنتهي يوم %2$s؛ رجع %3$s يوم من %4$s وما بعده إلى رصيدك."
+
+#. translators: 1: leave type, 2: new last day, 3: first day given back
+#: includes/trait-leave.php:716
+msgid "Your %1$s leave now ends on %2$s; the days from %3$s on went back to your balance and schedule."
+msgstr "إجازتك (%1$s) أصبحت تنتهي يوم %2$s؛ رجعت الأيام من %3$s وما بعده إلى رصيدك وجدولك."
+
+#. translators: 1: leave type, 2: number of days
+#: includes/trait-leave-admin.php:246
+msgid "Your %1$s leave was cancelled and %2$s day(s) went back to your balance."
+msgstr "تم إلغاء إجازتك (%1$s) ورجع %2$s يوم إلى رصيدك."
+
+#. translators: 1: leave type, 2: first day, 3: last day
+#: includes/trait-leave.php:468 includes/trait-leave.php:534 includes/trait-leave.php:780
+msgid "Your %1$s request from %2$s to %3$s has been approved."
+msgstr "تمت الموافقة على طلب %1$s من %2$s إلى %3$s."
+
+#. translators: 1: leave type, 2: first day, 3: last day
+#: includes/trait-leave.php:536 includes/trait-leave.php:782
+msgid "Your %1$s request from %2$s to %3$s has been rejected."
+msgstr "تم رفض طلب %1$s من %2$s إلى %3$s."
+
+#. translators: %s: leave type
+#: includes/trait-leave.php:725
+msgid "Your %s leave cancellation is waiting for your approval."
+msgstr "طلب إلغاء إجازة (%s) في انتظار موافقتك."
+
+#. translators: %s: leave type
+#: includes/trait-leave.php:714
+msgid "Your %s leave cancellation request was rejected."
+msgstr "تم رفض طلب إلغاء إجازتك (%s)."
+
+#. translators: %s: leave type
+#: includes/trait-leave.php:717
+msgid "Your %s leave had ended before the cancellation was decided, so nothing changed."
+msgstr "انتهت إجازتك (%s) قبل البت في الإلغاء، فلم يتغير شيء."
+
+#. translators: %s: leave type
+#: includes/trait-leave.php:712
+msgid "Your %s leave was cancelled and the previous schedule was restored."
+msgstr "تم إلغاء إجازتك (%s) واسترجاع جدولك السابق."
+
+#. translators: %s: day
+#: includes/trait-overtime.php:226
+msgid "Your Early Leave request for %s has been approved."
+msgstr "تمت الموافقة على طلب الانصراف المبكر ليوم %s."
+
+#. translators: %s: day
+#: includes/trait-overtime.php:228
+msgid "Your Early Leave request for %s has been rejected."
+msgstr "تم رفض طلب الانصراف المبكر ليوم %s."
+
+#: includes/trait-face-reset.php:120
+msgid "Your Face Reset request has been approved. You can now enroll your new face."
+msgstr "تمت الموافقة على طلب إعادة ضبط الوجه. يمكنك الآن تسجيل وجهك الجديد."
+
+#: includes/trait-face-reset.php:120
+msgid "Your Face Reset request has been rejected. Your current face enrollment remains active."
+msgstr "تم رفض طلب إعادة ضبط الوجه. يظل تسجيل وجهك الحالي فعّالًا."
+
+#. translators: %d: minutes
+#: includes/trait-breaks.php:89
+msgid "Your break ended. Duration: %d minute."
+msgid_plural "Your break ended. Duration: %d minutes."
+msgstr[0] "انتهت استراحتك. المدة: %d دقيقة."
+msgstr[1] "انتهت استراحتك. المدة: %d دقيقة."
+msgstr[2] "انتهت استراحتك. المدة: %d دقيقة."
+msgstr[3] "انتهت استراحتك. المدة: %d دقائق."
+msgstr[4] "انتهت استراحتك. المدة: %d دقيقة."
+msgstr[5] "انتهت استراحتك. المدة: %d دقيقة."
+
+#: includes/trait-leave-admin.php:249
+msgid "Your change request was closed because HR recorded your return."
+msgstr "تم إغلاق طلب التغيير الخاص بك لأن الموارد البشرية سجّلت عودتك."
+
+#. translators: 1: day, 2: start time, 3: end time
+#: includes/trait-overtime.php:103
+msgid "Your overtime request for %1$s (%2$s–%3$s) has been approved."
+msgstr "تمت الموافقة على طلب العمل الإضافي ليوم %1$s (%2$s–%3$s)."
+
+#. translators: 1: day, 2: start time, 3: end time
+#: includes/trait-overtime.php:71
+msgid "Your overtime request for %1$s (%2$s–%3$s) has been rejected."
+msgstr "تم رفض طلب العمل الإضافي ليوم %1$s (%2$s–%3$s)."
+
+#. translators: 1: day, 2: start time, 3: end time, 4: duration
+#: includes/trait-overtime.php:69
+msgid "Your overtime request for %1$s (%2$s–%3$s, %4$s) has been approved."
+msgstr "تمت الموافقة على طلب العمل الإضافي ليوم %1$s (%2$s–%3$s، %4$s)."
+
+#. translators: %s: month and year
+#: includes/trait-payroll.php:290
+msgid "Your payslip for %s is ready in My Pay."
+msgstr "قسيمة راتبك لشهر %s جاهزة في راتبي."
+
+#: includes/trait-services.php:65
+msgid "Your schedule for <strong>%1$s</strong> is now <strong>%2$s</strong>."
+msgstr "جدولك يوم <strong>%1$s</strong> أصبح الآن <strong>%2$s</strong>."
+
+#: includes/trait-swap.php:322
+msgid "Your schedule has been updated after an administrator approved a swap."
+msgstr "تم تحديث جدولك بعد موافقة المسؤول على التبديل."
+
+#: includes/trait-swap.php:258
+msgid "Your schedule has been updated after the swap."
+msgstr "تم تحديث جدولك بعد التبديل."
+
+#. translators: 1: day, 2: the requester's day before, 3: the requester's day now
+#: includes/trait-swap.php:379
+msgid "Your schedule swap for %1$s was approved: %2$s ↔ %3$s."
+msgstr "تمت الموافقة على تبديل جدولك ليوم %1$s: %2$s ↔ %3$s."
+
+#. translators: 1: day, 2: colleague, 3: your day before, 4: your day now
+#: includes/trait-swap.php:257
+msgid "Your schedule swap for %1$s with %2$s is complete: %3$s ↔ %4$s."
+msgstr "تم تبديل جدولك ليوم %1$s مع %2$s: %3$s ↔ %4$s."
+
+#: includes/trait-swap.php:321
+msgid "Your schedule swap request was rejected by an administrator."
+msgstr "رفض المسؤول طلب تبديل جدولك."
+
+#: includes/trait-swap.php:321
+msgid "Your schedule swap was completed by an administrator."
+msgstr "أتم المسؤول تبديل جدولك."
+
+#: templates/admin/system-messages.php:117
+msgid "Your text"
+msgstr "نصك"
+
+#: includes/trait-admin-requests.php:474
+msgid "Your vacation request has been approved."
+msgstr "تمت الموافقة على طلب إجازتك."
+
+#: includes/trait-admin-requests.php:474
+msgid "Your vacation request has been rejected."
+msgstr "تم رفض طلب إجازتك."
+
+#: templates/admin/system-messages.php:79
+msgid "edited"
+msgstr "معدّل"
+
+#. translators: %d: number of places
+#: templates/admin/system-messages.php:137
+msgid "in %d places"
+msgstr "في %d مكان"
+
+#: templates/admin/system-messages.php:80
+msgid "need review"
+msgstr "تحتاج مراجعة"
+
+#: templates/admin/system-messages.php:78
+msgid "texts"
+msgstr "نص"
+
+#: includes/trait-achievements.php:112
+msgid "🎉 Achievement Unlocked!"
+msgstr "🎉 إنجاز جديد!"
+
+#: includes/trait-system-messages.php
+msgid "An & joined to a word or to # cannot be used in this text. Put a space after it."
+msgstr "لا يمكن استخدام & ملاصقة لكلمة أو لعلامة # في هذا النص. ضع مسافة بعدها."

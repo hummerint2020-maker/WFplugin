@@ -36,8 +36,11 @@ interface HolidayRefundPorts
     /** A final (locked) week changed by this: recorded in the Audit Log. @param string[] $days */
     public function weekLockRecord(int $employeeId, array $days, string $ref): void;
 
-    /** One notification to the employee's account. */
-    public function notify(int $wpUserId, string $title, string $message, int $leaveId): void;
+    /**
+     * Tells the employee that days went back (3.31.166: the words are chosen, and translated, by the plugin side).
+     * @param array{days:int,type:string,start:string,end:string,holidays:string[],after:string} $facts
+     */
+    public function notifyGivenBack(int $wpUserId, array $facts, int $leaveId): void;
 
     /** The user doing it (0 for none). */
     public function actorId(): int;

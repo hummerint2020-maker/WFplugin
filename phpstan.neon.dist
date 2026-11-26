@@ -6,6 +6,7 @@ parameters:
         - workforce-one
     excludePaths:
         - workforce-one/assets
+        - workforce-one/languages
     bootstrapFiles:
         - tests/phpstan-bootstrap.php
     reportUnmatchedIgnoredErrors: false

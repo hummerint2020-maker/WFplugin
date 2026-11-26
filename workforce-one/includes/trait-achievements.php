@@ -109,7 +109,7 @@ trait EWS_Achievements_Trait {
             return false;
         }
 
-        $title='🎉 Achievement Unlocked!';
+        $title=__('🎉 Achievement Unlocked!','workforce-one');
         $message=sprintf('%s %s — %s',$achievement->icon,$achievement->name,$achievement->description);
         $uid=(int)$emp->wp_user_id;
         if($uid){
