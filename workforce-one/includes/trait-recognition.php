@@ -114,8 +114,9 @@ trait EWS_Recognition_Trait {
         $id=(int)$wpdb->insert_id;
         $sender_name=(string)$sender->name;
         $label=$this->recognition_category_label($category);
-        $title='You received a Kudos';
-        $msg=$sender_name.' recognized you for '.$label.'.';
+        $title=__('You received a Kudos','workforce-one');
+        /* translators: 1: colleague, 2: what for */
+        $msg=sprintf(__('%1$s recognized you for %2$s.','workforce-one'),$sender_name,$label);
         if($message!=='')$msg.=' “'.wp_strip_all_tags($message).'”';
         if(!empty($recipient->wp_user_id)){
             // Their profile in People (where Kudos are shown); My Profile when People is off (3.31.94).

@@ -33,6 +33,7 @@ trait EWS_Permissions_Trait {
                 'ews_view_system_health'=>'View System Health',   // 3.31.110: code paths, query shapes and slow endpoints
                 'ews_week_lock_override'=>'Edit a locked week',   // 3.31.121: change the schedule of a final week (audited)
                 'ews_manage_hr_letters'=>'Manage HR letters',   // HR letters (HL3): the HR letters page, files, direct letters, types and letterhead
+                'ews_manage_messages'=>'Manage system messages',   // 3.31.165: edit the texts the plugin shows (System messages page)
             ];
         }
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.31.165
+### System messages: edit the texts the system shows (docs/tasks/system-messages.md, mockup /mnt/project-files/system-messages/)
+Owner's request (2026-11-25): "make the messages of the system editable". A new switch (wp-admin → Features → **System
+messages**), **off by default**: off, nothing is added to WordPress, the page is hidden and every text is the shipped one (saved
+edits are kept for when it is turned on again).
+- **The page** (wp-admin → Settings → **System messages**): every text of the plugin (3,033), in Arabic and in English, with
+  filters by kind (notifications, notices, errors, buttons and labels), part of the system, a search and "Edited only". Edit a text,
+  see a live preview, "Back to default" for one text, a part of the system or a whole language. Every save and reset is in the Audit Log.
+- **Safe edits:** the values of the original (names, dates, numbers) must all stay, each at least once, and none added; the
+  formatting tags must stay as they are; a lone % or a backslash is refused; each kind has a length limit; a save over a text someone
+  else changed meanwhile is refused.
+- **Who:** a new permission **Manage system messages**, given to administrators and the EWS Administrator role, and grantable in Roles.
+- Edits apply to new notifications and pages; notifications already sent keep their words. Texts with a number (one day, 2 days)
+  cannot be edited yet. A saved text whose original an update changed is listed under **Needs review**.
+- **Translated notifications (also while the switch is off):** about 40 notifications that were sent in English to everyone
+  (overtime, swaps, leave, early leave, presence, breaks, payroll, face reset, recognition, polls, schedule changes, holiday days
+  given back) now go through the translations and are sent in Arabic on an Arabic site; the English words are unchanged, except
+  the early leave titles, which now read "Early Leave Approved/Rejected" (before: "Early Leave Approve").
+- Tooling: `tools/build_message_catalog.php` builds the list of texts from the code (`languages/workforce-one-catalog.php`);
+  `tools/po_compile.py` compiles the .po exactly as WP-CLI does; `tests/check_message_catalog.py` keeps both in step (CI).
+- Tests: unit tests for the rules, the catalog, saving and the filter; e2e `tests/e2e_system_messages.py`.
+
 ## 3.31.164
 ### Leave return moved into layers (docs/tasks/leave-return-layers.md): no visible change
 Owner's choice (2026-11-24, "ابدا ب 1"): the planned move-only release for the 3.31.161 leave-return code. Nothing changes for anyone:

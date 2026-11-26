@@ -471,7 +471,7 @@ trait EWS_Admin_Requests_Trait {
         }
         if($ok && $approve && $emp)$this->week_lock_record_request((int)$emp->id,$written,'leave','legacy vacation #'.(int)$id);   // week lock (3.31.121)
         if(!$ok || $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
-        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?'Vacation Approved':'Vacation Rejected',$approve?'Your vacation request has been approved.':'Your vacation request has been rejected.',['entity_id'=>$id,'push'=>false]);
+        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?__('Vacation Approved','workforce-one'):__('Vacation Rejected','workforce-one'),$approve?__('Your vacation request has been approved.','workforce-one'):__('Your vacation request has been rejected.','workforce-one'),['entity_id'=>$id,'push'=>false]);
         return Hub::outcome($decision);
     }
 }

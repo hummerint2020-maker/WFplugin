@@ -56,7 +56,8 @@ trait EWS_Face_Reset_Trait {
         global $wpdb;
         $emp=$this->people_employee($employee_id,true);
         if(!$emp)return true;
-        $msg=$emp->name.' requested a Face Reset. Approval is required.';
+        /* translators: %s: employee name */
+        $msg=sprintf(__('%s requested a Face Reset. Approval is required.','workforce-one'),$emp->name);
         if($this->face_reset_workflow_active()){
             $this->face_reset_clear_finished_approval($employee_id);
             $approval=$this->approval_start('face_reset','face_reset_request',$employee_id,$employee_id,[],true);
@@ -65,12 +66,12 @@ trait EWS_Face_Reset_Trait {
             // A workflow without steps approves immediately.
             if($ar && strtoupper((string)$ar->status)==='APPROVED')return $this->face_reset_finish($employee_id,true,'by approval workflow');
             $step=$ar?$this->approval_current_step((int)$ar->id):null;
-            if($step && !empty($step->approver_wp_user_id))$this->face_reset_notify((int)$step->approver_wp_user_id,'Face Reset Request',$msg,'face_reset',$employee_id,$this->face_reset_admin_link());
+            if($step && !empty($step->approver_wp_user_id))$this->face_reset_notify((int)$step->approver_wp_user_id,__('Face Reset Request','workforce-one'),$msg,'face_reset',$employee_id,$this->face_reset_admin_link());
             return true;
         }
         foreach(get_users(['capability'=>'ews_manage_settings','fields'=>['ID']]) as $m){
             if((int)$m->ID===$user_id)continue;
-            $this->face_reset_notify((int)$m->ID,'Face Reset Request',$msg,'face_reset',$employee_id,$this->face_reset_admin_link());
+            $this->face_reset_notify((int)$m->ID,__('Face Reset Request','workforce-one'),$msg,'face_reset',$employee_id,$this->face_reset_admin_link());
         }
         return true;
     }
@@ -115,8 +116,8 @@ trait EWS_Face_Reset_Trait {
         $emp=$this->face_reset_employee($employee_id);
         if($emp && !empty($emp->wp_user_id)){
             $this->face_reset_notify((int)$emp->wp_user_id,
-                $approved?'Face Reset Approved':'Face Reset Rejected',
-                $approved?'Your Face Reset request has been approved. You can now enroll your new face.':'Your Face Reset request has been rejected. Your current face enrollment remains active.',
+                $approved?__('Face Reset Approved','workforce-one'):__('Face Reset Rejected','workforce-one'),
+                $approved?__('Your Face Reset request has been approved. You can now enroll your new face.','workforce-one'):__('Your Face Reset request has been rejected. Your current face enrollment remains active.','workforce-one'),
                 $approved?'success':'warning',$employee_id,add_query_arg('ews_view','time',$this->app_home_url()));
         }
     }
@@ -161,8 +162,9 @@ trait EWS_Face_Reset_Trait {
                 $next=$fresh?$this->approval_current_step((int)$fresh->id):null;
                 if($next && !empty($next->approver_wp_user_id)){
                     $emp=$this->face_reset_employee($employee_id);
-                    $msg=$emp?$emp->name.' Face Reset request is waiting for your approval.':'Face Reset request is waiting for your approval.';
-                    $this->face_reset_notify((int)$next->approver_wp_user_id,'Face Reset Approval Required',$msg,'face_reset',$employee_id,$this->face_reset_admin_link());
+                    /* translators: %s: employee name */
+                    $msg=$emp?sprintf(__('%s Face Reset request is waiting for your approval.','workforce-one'),$emp->name):__('Face Reset request is waiting for your approval.','workforce-one');
+                    $this->face_reset_notify((int)$next->approver_wp_user_id,__('Face Reset Approval Required','workforce-one'),$msg,'face_reset',$employee_id,$this->face_reset_admin_link());
                 }
                 return Hub::ADVANCED;
             }

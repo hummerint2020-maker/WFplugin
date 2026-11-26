@@ -61,7 +61,8 @@ trait EWS_Services_Trait {
         $audit=function($a,$e,$id,$d){$this->audit($a,$e,$id,$d);};
         $day_changed=function($uid,$date,$status,$id){
             $label=date_i18n('l, d M Y',strtotime($date));
-            $this->notify($uid,'schedule','Schedule Updated','Your schedule for <strong>'.esc_html($label).'</strong> is now <strong>'.esc_html($status).'</strong>.',
+            /* translators: 1: day, 2: the new schedule (Office, WFH, …) */
+            $this->notify($uid,'schedule',__('Schedule Updated','workforce-one'),sprintf(__('Your schedule for <strong>%1$s</strong> is now <strong>%2$s</strong>.','workforce-one'),esc_html($label),esc_html($status)),
                 ['type'=>'info','entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','schedule',$this->app_home_url())]);
         };
         $week_final=function($uid,$days,$link){
@@ -181,7 +182,12 @@ trait EWS_Services_Trait {
             public function restoreDay(object $leaveDay,object $employee,string $now,int $leaveId): bool { return (bool)($this->call)('leave_return_restore_day',$leaveDay,$employee,$now,$leaveId); }
             public function carryTopUp(object $leave,object $balance,float $days,string $now) { return ($this->call)('leave_carry_top_up',$leave,$balance,$days,$now); }
             public function weekLockRecord(int $employeeId,array $days,string $ref): void { ($this->call)('week_lock_record_request',$employeeId,$days,'leave_holiday_refund',$ref); }
-            public function notify(int $wpUserId,string $title,string $message,int $leaveId): void { ($this->call)('notify',$wpUserId,'leave',$title,$message,['entity_id'=>$leaveId]); }
+            public function notifyGivenBack(int $wpUserId,array $facts,int $leaveId): void {
+                ($this->call)('notify',$wpUserId,'leave',__('Leave days given back','workforce-one'),
+                    /* translators: 1: number of days, 2: leave type, 3: first day, 4: last day, 5: the company holidays, 6: days the leave counts now */
+                    sprintf(__('%1$d day(s) went back to your balance: your %2$s leave (%3$s – %4$s) was charged for company holidays (%5$s). It now counts %6$s day(s).','workforce-one'),
+                        (int)$facts['days'],$facts['type'],$facts['start'],$facts['end'],implode(', ',$facts['holidays']),$facts['after']),['entity_id'=>$leaveId]);
+            }
             public function actorId(): int { return (int)get_current_user_id(); }
         };
     }

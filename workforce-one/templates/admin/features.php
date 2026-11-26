@@ -47,6 +47,7 @@
  * @var string[] $weekday_names                 0 = Sunday
  * @var int[] $working_days
  * @var array{page_url:string,workflow_url:string,hr_set:bool,s:array<string,mixed>} $hr_letters  HR letters (3.31.144)
+ * @var string $system_messages_url  System messages (3.31.165)
  * @var array{s:array<string,mixed>,ended:bool,people:array<int,object>,with_birthday:int,total:int,moments_url:string,preview_url:string} $occasions  Occasions (3.31.145)
  * @var bool $saved
  * @var string|null $error
@@ -81,6 +82,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="advances_present" value="1">
 <input type="hidden" name="hr_letters_present" value="1">
 <input type="hidden" name="health_present" value="1">
+<input type="hidden" name="system_messages_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -246,6 +248,11 @@ $occ_fields = ['card_title' => [__('Greeting card title', 'workforce-one'), 60],
 <div class="wfo-feature-fields">
     <label><span class="wfo-field-label"><?php esc_html_e('Detailed query data from this share of requests', 'workforce-one'); ?></span><select name="health_sample_rate"><?php foreach (\WorkforceOne\Health\Settings::RATES as $r): ?><option value="<?php echo (int) $r; ?>" <?php selected($health_rate, $r); ?>><?php echo esc_html(sprintf(/* translators: %d: percent */ __('%d%% of requests', 'workforce-one'), $r)); ?></option><?php endforeach; ?></select></label>
     <label><span class="wfo-field-label"><?php esc_html_e('Keep the daily history for', 'workforce-one'); ?></span><select name="health_retention_days"><?php foreach (\WorkforceOne\Health\Settings::RETENTION as $d): ?><option value="<?php echo (int) $d; ?>" <?php selected($health_retention, $d); ?>><?php echo esc_html(sprintf(/* translators: %d: days */ __('%d days', 'workforce-one'), $d)); ?></option><?php endforeach; ?></select></label>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-system-messages"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('System messages', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('Change the words of the texts the system shows (notifications, notices, errors, buttons), in Arabic and in English. Off: every text is the original; edited texts are kept for when it is turned on again. Who may edit them: the "Manage system messages" permission in Roles.', 'workforce-one'); ?><?php if ($on['system_messages']): ?> <a href="<?php echo esc_url($system_messages_url); ?>"><?php esc_html_e('System messages', 'workforce-one'); ?></a><?php endif; ?></div></div>
+    <?php $switch('system_messages_enabled', $on['system_messages']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-substitutes"><div class="wfo-feature-head">

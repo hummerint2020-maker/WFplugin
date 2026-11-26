@@ -351,7 +351,8 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.162'; }   // Company holidays are not leave days: ews_leave_holiday_refunds, ews_leave_requests.holidays_skipped
+        private function ews_schema_target(){ return '3.31.165'; }   // System messages: the new capability ews_manage_messages reaches the roles (no table change)
+        // 3.31.162: Company holidays are not leave days: ews_leave_holiday_refunds, ews_leave_requests.holidays_skipped
         // 3.31.161: Leave return: leave change rounds (ews_leave_changes), approval rounds (ews_approval_requests.entity_round), snapshot day key
 
         /*

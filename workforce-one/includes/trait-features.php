@@ -48,6 +48,7 @@ trait EWS_Features_Trait {
                 'hr_letters'=>$this->hr_letters_enabled(),
                 'occasions'=>$this->occasions_enabled(),
                 'health'=>$this->health_enabled(),
+                'system_messages'=>$this->system_messages_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
@@ -76,6 +77,7 @@ trait EWS_Features_Trait {
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
             'occasions'=>$this->occasion_admin_data(),
             'att_page_cards'=>$this->attendance_page_cards(),
+            'system_messages_url'=>admin_url('admin.php?page=ews31-system-messages'),
             'hr_letters'=>['s'=>$this->hr_letter_settings(),'hr_set'=>(int)($this->approval_settings()['hr_user']??0)>0,'page_url'=>admin_url('admin.php?page=ews31-hr-letters&tab=types'),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')],
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
             'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
@@ -216,6 +218,11 @@ trait EWS_Features_Trait {
                     $this->health_switch_changed((bool)$now);
                 }
             }
+        }
+        // System messages (3.31.165): written only when switched, so a site that keeps it off stores nothing new.
+        if(isset($post['system_messages_present']) && $this->system_messages_enabled()!==$flag('system_messages_enabled')){
+            update_option('ews_feature_system_messages',$flag('system_messages_enabled')?1:0,false);
+            $this->audit('system_messages_feature_update','settings',0,$flag('system_messages_enabled')?'enabled':'disabled');
         }
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){
