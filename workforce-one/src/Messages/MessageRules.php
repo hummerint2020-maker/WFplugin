@@ -18,6 +18,7 @@ final class MessageRules
 
     /** printf placeholders the plugin uses (%s, %d, %1$s, %.1f, …) and %%. */
     // No space flag: the plugin never uses it, and texts like '100% sure' or '% sign' are prose, not tokens.
+    private const ENTITY = '/&#?[a-zA-Z0-9]/';
     private const TOKEN = '/%(?:(\d+)\$)?[-+0\'#]*\d*(?:\.\d+)?([bcdeEfFgGosuxX])|%%/';
 
     public static function key(string $context, string $original): string
@@ -69,6 +70,25 @@ final class MessageRules
         return $t === 's' ? 's' : (in_array($t, ['d', 'u', 'c', 'b', 'o', 'x', 'X'], true) ? 'd' : 'f');
     }
 
+    private static function isNumbered(string $s): bool
+    {
+        return (bool) preg_match('/%\d+\$/', $s);
+    }
+
+    /** '%1$s and %2$d' → '%s and %d' when each value appears once and in order; else as it is. */
+    public static function plainIfInOrder(string $s): string
+    {
+        preg_match_all(self::TOKEN, $s, $m, PREG_SET_ORDER);
+        $n = 0;
+        foreach ($m as $x) {
+            if ($x[0] === '%%') continue;
+            if ((int) ($x[1] ?? 0) !== ++$n) return $s;
+        }
+        return (string) preg_replace_callback(self::TOKEN, function ($x) {
+            return $x[0] === '%%' ? '%%' : '%' . substr($x[0], strlen($x[1]) + 2);
+        }, $s);
+    }
+
     /** '%s and %d' → '%1$s and %2$d': the text an editor starts from, so placeholders can be moved safely. */
     public static function numbered(string $s): string
     {
@@ -103,7 +123,7 @@ final class MessageRules
 
     /**
      * Checks an edit against its original. Returns the text to store and '' when it is fine, else the refusal code:
-     * empty, placeholders, percent, html, chars, too_long.
+     * empty, placeholders, percent, html, chars, entity, too_long.
      * @return array{0:string,1:string}
      */
     public static function check(string $original, string $text, string $kind): array
@@ -115,10 +135,13 @@ final class MessageRules
         // only as numbered ones, which PHP and wp.i18n both read. Plain ones in the edit are numbered the same way first.
         // An original that is not a printf text (a lone %, as in "100%") never goes through sprintf: no placeholder rules.
         if ($want !== null) {
-            $got = self::placeholders($text);
+            // Plain ones mixed with numbered ones (an inserted %1$s next to a kept %s) are numbered first, in order.
+            $got = self::placeholders(self::numbered($text));
             if ($got === null) return [$text, strpos((string) preg_replace(self::TOKEN, '', $text), '%') !== false ? 'percent' : 'placeholders'];
             if ($got !== $want) return [$text, 'placeholders'];
-            if ($want !== []) $text = self::numbered($text);
+            // Kept in the original's style: plain (%s) while the values stay in their order, so code that fills the text
+            // with a plain replace (wp.i18n texts read by .replace('%d', n)) keeps working; numbered only when they move.
+            if ($want !== []) $text = self::isNumbered($original) ? self::numbered($text) : self::plainIfInOrder(self::numbered($text));
             // %% means a % sign only where the text goes through sprintf (it has placeholders); elsewhere it would show twice.
             elseif (strpos($text, '%%') !== false) return [$text, 'percent'];
         }
@@ -129,6 +152,9 @@ final class MessageRules
         // Typed quotes become typographic ones, so "you're" still works.
         $origBare = (string) preg_replace('/<\/?[a-zA-Z][^<>]*>/', '', $original);
         if (substr_count($bare, '\\') > substr_count($origBare, '\\')) return [$text, 'chars'];
+        // An & joined to a word or # is an HTML entity (&quot; …): a browser decodes it inside an attribute, so it could close a
+        // quoted script string where the text is printed. Refused unless the original has the same.
+        if (preg_match_all(self::ENTITY, $bare) > preg_match_all(self::ENTITY, $origBare)) return [$text, 'entity'];
         foreach (["'" => '’', '"' => '”'] as $q => $typo) {
             if (substr_count($bare, $q) > substr_count($origBare, $q)) $text = self::replaceOutsideTags($text, $q, $typo);
         }

@@ -115,7 +115,7 @@ $dir = $lang === 'ar' ? 'rtl' : 'ltr';
             <?php if ($e['plural']): ?><p data-sm-plural><em><?php esc_html_e('Texts with a number in them (one day, 2 days…) cannot be edited yet.', 'workforce-one'); ?></em></p>
             <?php else: ?>
             <p><label for="ews-sm-text"><strong><?php esc_html_e('Your text', 'workforce-one'); ?></strong> <span style="color:#50575e"><?php echo esc_html(sprintf(/* translators: %d: characters */ __('(up to %d characters)', 'workforce-one'), (int) $e['limit'])); ?></span></label>
-                <textarea id="ews-sm-text" name="text" dir="<?php echo esc_attr($dir); ?>" maxlength="<?php echo (int) $e['limit']; ?>" placeholder="<?php echo esc_attr((string) $e['default']); ?>" data-sm-text><?php echo esc_textarea($value !== '' ? $value : \WorkforceOne\Messages\MessageRules::numbered((string) $e['default'])); ?></textarea></p>
+                <textarea id="ews-sm-text" name="text" dir="<?php echo esc_attr($dir); ?>" maxlength="<?php echo (int) $e['limit']; ?>" placeholder="<?php echo esc_attr((string) $e['default']); ?>" data-sm-text><?php echo esc_textarea($value !== '' ? $value : (string) $e['default']); ?></textarea></p>
             <?php if ($e['labels']): ?><p data-sm-placeholders><?php esc_html_e('Keep these in the text:', 'workforce-one'); ?>
                 <?php foreach ((array) $e['labels'] as $ph => $label): ?><button type="button" class="button button-small" data-sm-insert="<?php echo esc_attr((string) $ph); ?>">+ <?php echo esc_html((string) $label); ?></button> <?php endforeach; ?></p><?php endif; ?>
             <p><button class="button button-primary" data-sm-save><?php esc_html_e('Save', 'workforce-one'); ?></button>
@@ -154,7 +154,7 @@ $dir = $lang === 'ar' ? 'rtl' : 'ltr';
 
 <p style="margin-top:18px">
 <?php foreach (array_filter(['module' => (string) $filters['module'] !== '' ? __('Back to default: every edited text of this part', 'workforce-one') : '', 'all' => $lang === 'ar' ? __('Back to default: every edited Arabic text', 'workforce-one') : __('Back to default: every edited English text', 'workforce-one')]) as $scope => $label): ?>
-<form method="post" action="<?php echo esc_url($post_url); ?>" style="display:inline-block;margin-inline-end:14px" onsubmit="return window.confirm(<?php echo esc_attr((string) wp_json_encode(__('Put these texts back to the default?', 'workforce-one'))); ?>);">
+<form method="post" action="<?php echo esc_url($post_url); ?>" style="display:inline-block;margin-inline-end:14px" onsubmit="return window.confirm(<?php echo esc_attr((string) wp_json_encode(__('Put these texts back to the default?', 'workforce-one'), JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS | JSON_HEX_TAG)); ?>);">
     <?php wp_nonce_field('ews_messages_reset'); ?><input type="hidden" name="action" value="ews_messages_reset"><input type="hidden" name="scope" value="<?php echo esc_attr($scope); ?>"><?php $hidden(); ?>
     <button class="button-link button-link-delete" data-sm-reset-<?php echo esc_attr($scope); ?>><?php echo esc_html($label); ?></button>
 </form>

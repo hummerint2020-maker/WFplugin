@@ -389,6 +389,7 @@ return [
 'Amount'=>['m'=>'daily_workers','r'=>['includes/trait-daily-workers.php','templates/admin/advances.php','templates/admin/daily-workers.php'],'n'=>13,'c'=>'','p'=>0,'j'=>0,'k'=>'ui'],
 'Amount (%s)'=>['m'=>'approvals','r'=>['templates/app/new-request.php'],'n'=>1,'c'=>'translators: %s: currency','p'=>0,'j'=>0,'k'=>'ui'],
 'Amounts are not written to the Audit Log, only "payout recorded".'=>['m'=>'daily_workers','r'=>['templates/app/dw-payout.php'],'n'=>1,'c'=>'','p'=>0,'j'=>0,'k'=>'ui'],
+'An & joined to a word or to # cannot be used in this text. Put a space after it.'=>['m'=>'messages','r'=>['includes/trait-system-messages.php'],'n'=>1,'c'=>'','p'=>0,'j'=>0,'k'=>'error'],
 'An Egyptian national ID is 14 digits'=>['m'=>'daily_workers','r'=>['templates/app/dw-day.php'],'n'=>1,'c'=>'','p'=>0,'j'=>0,'k'=>'ui'],
 'An HR letter could not be made'=>['m'=>'hr_letters','r'=>['includes/trait-hr-letters.php'],'n'=>1,'c'=>'translators: 1: letter type, 2: employee name, 3: why','p'=>0,'j'=>0,'k'=>'ui'],
 'An HR letter request'=>['m'=>'approvals','r'=>['includes/trait-approval-deadlines.php'],'n'=>1,'c'=>'','p'=>0,'j'=>0,'k'=>'ui'],

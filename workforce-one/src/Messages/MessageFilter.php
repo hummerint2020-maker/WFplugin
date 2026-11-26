@@ -22,8 +22,8 @@ final class MessageFilter
     private $locale;
     /** @var array<int,array<string,array<string,string>>|null> */
     private $maps = [];
-    /** @var string|null */
-    private $bucket;
+    /** @var array<int,string> site => language bucket (a site may have its own language) */
+    private $buckets = [];
     /** @var bool */
     private $busy = false;
     /** @var callable():array<string,bool> */
@@ -72,17 +72,22 @@ final class MessageFilter
             if (!array_key_exists($site, $this->maps)) $this->maps[$site] = ($this->mapFor)($site);
             $map = $this->maps[$site];
             if (!$map) return null;
-            if ($this->bucket === null) $this->bucket = MessageRules::bucket((string) ($this->locale)());
-            return $map[$this->bucket] ?? null;
+            return $map[$this->bucketOf($site)] ?? null;
         } finally {
             $this->busy = false;
         }
     }
 
+    private function bucketOf(int $site): string
+    {
+        if (!isset($this->buckets[$site])) $this->buckets[$site] = MessageRules::bucket((string) ($this->locale)());
+        return $this->buckets[$site];
+    }
+
     /** change_locale, set_current_user: the language may have changed. */
     public function forgetLocale(): void
     {
-        $this->bucket = null;
+        $this->buckets = [];
     }
 
     /**
@@ -100,6 +105,11 @@ final class MessageFilter
         foreach ($data['locale_data']['messages'] as $key => $v) {
             if ($key !== '' && isset($edits[$key])) { $data['locale_data']['messages'][$key] = [$edits[$key]]; $changed = true; }
         }
+        // Edited script texts this file has no translation for (the edit is the first one).
+        $jsKeys = ($this->scriptKeys)();
+        foreach ($edits as $key => $text) {
+            if (isset($jsKeys[$key]) && !isset($data['locale_data']['messages'][$key])) { $data['locale_data']['messages'][$key] = [$text]; $changed = true; }
+        }
         return $changed ? (string) json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $json;
     }
 
@@ -112,8 +122,7 @@ final class MessageFilter
     public function preScriptTranslations($pre, $file, $handle, $domain)
     {
         if ($pre !== null || $domain !== 'workforce-one' || !in_array($handle, self::HANDLES, true)) return $pre;
-        if ($this->bucket === null) $this->bucket = MessageRules::bucket((string) ($this->locale)());
-        if ($this->bucket !== 'en') return $pre;
+        if ($this->bucketOf((int) ($this->site)()) !== 'en') return $pre;
         $edits = $this->edits();
         if (!$edits) return $pre;
         $jsKeys = ($this->scriptKeys)();

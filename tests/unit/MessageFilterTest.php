@@ -47,6 +47,10 @@ final class MessageFilterTest extends TestCase
         $this->assertSame(['اتحقق'], $out['locale_data']['messages']['Verify Face']);
         $this->assertSame(['غير مسجّل'], $out['locale_data']['messages']['Not enrolled']);
         $this->assertSame($json, $f->scriptTranslations($json, 'f.json', 'other-plugin', 'other'));
+        // An edited script text the file has no translation for is added.
+        $bare = json_encode(['locale_data' => ['messages' => ['' => ['domain' => 'messages']]]]);
+        $out = json_decode((string) $f->scriptTranslations($bare, 'f.json', 'workforce-one', 'workforce-one'), true);
+        $this->assertSame(['اتحقق'], $out['locale_data']['messages']['Verify Face']);
         $this->assertNull($f->preScriptTranslations(null, 'f.json', 'workforce-one', 'workforce-one'), 'Arabic: the shipped file is used');
         $this->locale = 'en_US';
         $f->forgetLocale();

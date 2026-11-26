@@ -10529,3 +10529,7 @@ msgstr "نص"
 #: includes/trait-achievements.php:112
 msgid "🎉 Achievement Unlocked!"
 msgstr "🎉 إنجاز جديد!"
+
+#: includes/trait-system-messages.php
+msgid "An & joined to a word or to # cannot be used in this text. Put a space after it."
+msgstr "لا يمكن استخدام & ملاصقة لكلمة أو لعلامة # في هذا النص. ضع مسافة بعدها."

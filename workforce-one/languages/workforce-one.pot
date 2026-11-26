@@ -14134,3 +14134,7 @@ msgstr ""
 #: includes/trait-achievements.php:112
 msgid "🎉 Achievement Unlocked!"
 msgstr ""
+
+#: includes/trait-system-messages.php
+msgid "An & joined to a word or to # cannot be used in this text. Put a space after it."
+msgstr ""

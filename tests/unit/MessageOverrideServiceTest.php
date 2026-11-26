@@ -32,6 +32,7 @@ final class MessageOverrideServiceTest extends TestCase
             'Correction rejected' => $row('attendance', 'notification'),
             'Your correction for %1$s was rejected: %2$s' => $row('attendance', 'notification'),
             'Save' => $row('platform', 'ui'),
+            'Hello %s' => $row('platform', 'ui'),
             '%d day' => $row('leave', 'ui', 1),
         ], ['Correction rejected' => 'رُفض التصحيح']);
     }
@@ -76,6 +77,12 @@ final class MessageOverrideServiceTest extends TestCase
         $this->assertSame('reset', $s->save('en', 'Save', 'Save', 'Keep', $this->cat)['code']);
         $this->assertSame([], $this->store->all);
         $this->assertSame('system_message_reset', $this->audit->rows[1][0]);
+    }
+
+    public function testSavingTheUntouchedTextWithValuesIsAReset(): void
+    {
+        $this->assertSame('reset', $this->svc()->save('en', 'Hello %s', 'Hello %1$s', 'Hello %s', $this->cat)['code']);
+        $this->assertSame(0, $this->store->writes);
     }
 
     public function testResetOneModuleAllAndReview(): void

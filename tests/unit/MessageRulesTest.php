@@ -35,7 +35,12 @@ final class MessageRulesTest extends TestCase
         $this->assertSame(['Correction turned down', ''], R::check('Correction rejected', 'Correction turned down', 'notification'));
         // Moved placeholders of a plain original come back numbered, so they stay in their place.
         $this->assertSame(['Day %2$s: %1$s', ''], R::check('Your correction for %s was rejected: %s', 'Day %2$s: %1$s', 'notification'));
-        $this->assertSame(['On %1$s: %2$s', ''], R::check('Your correction for %s was rejected: %s', 'On %s: %s', 'notification'));
+        // In their order they stay plain, as in the original (scripts fill '%d' with a plain replace).
+        $this->assertSame(['On %s: %s', ''], R::check('Your correction for %s was rejected: %s', 'On %s: %s', 'notification'));
+        $this->assertSame(['On %s: %s', ''], R::check('Your correction for %s was rejected: %s', 'On %1$s: %2$s', 'notification'));
+        $this->assertSame(['%d not saved', ''], R::check('%d changes not saved yet', '%1$d not saved', 'ui'));
+        // An inserted numbered one next to a kept plain one is read in order.
+        $this->assertSame(['%2$s, %1$s', ''], R::check('Your correction for %s was rejected: %s', '%2$s, %s', 'notification'));
         $this->assertSame(['رُفض تصحيح يوم %1$s: %2$s', ''], R::check('Your correction for %1$s was rejected: %2$s', 'رُفض تصحيح يوم %1$s: %2$s', 'notification'));
     }
 
@@ -45,7 +50,11 @@ final class MessageRulesTest extends TestCase
         $this->assertSame('placeholders', R::check($o, 'Rejected: %2$s', 'notification')[1]);
         $this->assertSame('placeholders', R::check($o, '%1$s %2$s %3$s', 'notification')[1]);
         $this->assertSame('placeholders', R::check($o, '%1$d %2$s', 'notification')[1]);
-        $this->assertSame('placeholders', R::check($o, '%s %2$s', 'notification')[1]);
+        $this->assertSame('placeholders', R::check($o, '%s %2$s %3$s', 'notification')[1]);
+        // HTML entities could close a quoted script string inside an attribute.
+        $this->assertSame('entity', R::check('Give these days back?', 'Back?&quot;)||alert(1)||(&quot;', 'ui')[1]);
+        $this->assertSame('entity', R::check('Give these days back?', 'Back&#34;', 'ui')[1]);
+        $this->assertSame('', R::check('Schedule & swaps', 'Schedule & changes', 'ui')[1]);
         $this->assertSame('percent', R::check($o, '%1$s %2$s 100%', 'notification')[1]);
         $this->assertSame('placeholders', R::check('Save', 'Save %s', 'ui')[1]);
         $this->assertSame('percent', R::check('Save', 'Save 100%%', 'ui')[1]);

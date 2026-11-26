@@ -51,6 +51,7 @@ trait EWS_System_Messages_Trait {
             'percent'=>__('A single % sign cannot be used in this text.','workforce-one'),
             'html'=>__('Keep the formatting of the original (such as bold) and add no other < or > signs.','workforce-one'),
             'chars'=>__('A backslash (\\) cannot be used in this text.','workforce-one'),
+            'entity'=>__('An & joined to a word or to # cannot be used in this text. Put a space after it.','workforce-one'),
             'too_long'=>__('The text is too long.','workforce-one'),
             'stale'=>__('Someone changed this text while you were editing it. Here it is as it is now.','workforce-one'),
             'plural'=>__('Texts with a number in them (one day, 2 days…) cannot be edited yet.','workforce-one'),

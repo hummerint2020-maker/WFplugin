@@ -32,7 +32,7 @@ $total = array_sum(array_map(static function ($r) { return $r['back']; }, $rows)
     <?php if (!$rows): ?><p data-lh-empty><?php esc_html_e('No leave of this year was charged for a company holiday.', 'workforce-one'); ?></p>
     <?php else: ?>
     <p><strong><?php echo esc_html(sprintf(/* translators: 1: leaves, 2: days */ __('%1$d leave(s), %2$d day(s) to give back', 'workforce-one'), count($rows), $total)); ?></strong></p>
-    <form method="post" action="<?php echo esc_url($post_url); ?>" data-lh-form onsubmit="return window.confirm(<?php echo esc_attr(wp_json_encode(__('Give these days back to the balance?', 'workforce-one'))); ?>);">
+    <form method="post" action="<?php echo esc_url($post_url); ?>" data-lh-form onsubmit="return window.confirm(<?php echo esc_attr(wp_json_encode(__('Give these days back to the balance?', 'workforce-one'), JSON_HEX_AMP | JSON_HEX_QUOT | JSON_HEX_APOS | JSON_HEX_TAG)); ?>);">
         <?php wp_nonce_field('ews_leave_holiday_restore'); ?><input type="hidden" name="action" value="ews_leave_holiday_restore">
         <div style="overflow-x:auto">
         <table class="widefat striped" data-lh-table>

@@ -47,17 +47,14 @@ final class MessageOverrideService
         if (($before ?? $default) !== $expected) return ['code' => 'stale', 'text' => ''];
         [$clean, $code] = MessageRules::check(MessageRules::split($key)[1], $text, $catalog->kind($key));
         if ($code !== '') return ['code' => $code, 'text' => $clean];
-        if ($clean === $default) {
+        if (MessageRules::numbered($clean) === MessageRules::numbered($default)) {
             if ($before === null) return ['code' => 'reset', 'text' => $clean];
-            unset($all[$lang][$key]);
-            if (empty($all[$lang])) unset($all[$lang]);
-            $this->store->put($all);
+            $this->write(function (array $all) use ($lang, $key) { unset($all[$lang][$key]); return $all; });
             $this->audit->record('system_message_reset', 'system_message', 0, self::detail($lang, $key) . '; scope=one; count=1');
             return ['code' => 'reset', 'text' => $clean];
         }
         if ($before === $clean) return ['code' => '', 'text' => $clean];
-        $all[$lang][$key] = $clean;
-        $this->store->put($all);
+        $this->write(function (array $all) use ($lang, $key, $clean) { $all[$lang][$key] = $clean; return $all; });
         $this->audit->record('system_message_save', 'system_message', 0, self::detail($lang, $key) . '; before=' . self::cut($before ?? $default, 200) . '; after=' . self::cut($clean, 200));
         return ['code' => '', 'text' => $clean];
     }
@@ -78,12 +75,21 @@ final class MessageOverrideService
                 || ($scope === 'module' && $catalog->has($key) && in_array($key, $catalog->keysOfModule($arg), true))) $drop[] = $key;
         }
         if (!$drop) return 0;
-        foreach ($drop as $key) unset($all[$lang][$key]);
-        if (empty($all[$lang])) unset($all[$lang]);
-        $this->store->put($all);
+        $this->write(function (array $all) use ($lang, $drop) { foreach ($drop as $key) unset($all[$lang][$key]); return $all; });
         $what = $scope === 'one' ? self::detail($lang, $drop[0]) : 'lang=' . $lang;
         $this->audit->record('system_message_reset', 'system_message', 0, $what . '; scope=' . ($scope === 'module' ? 'module:' . $arg : $scope) . '; count=' . count($drop));
         return count($drop);
+    }
+
+    /**
+     * Applies one change to the edits as they are right now (read again just before writing), so a text another admin
+     * saved meanwhile is kept. @param callable(array<string,array<string,string>>):array<string,array<string,string>> $change
+     */
+    private function write(callable $change): void
+    {
+        $all = $change($this->store->all());
+        foreach ($all as $l => $e) if (empty($e)) unset($all[$l]);
+        $this->store->put($all);
     }
 
     private static function detail(string $lang, string $key): string
