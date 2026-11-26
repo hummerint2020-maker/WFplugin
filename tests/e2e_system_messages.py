@@ -32,9 +32,13 @@ def lit(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'"
 
 
+# The site in Arabic for this request (the test site has no Arabic language pack, so switch_to_locale() would refuse).
+AS_AR = "add_filter('locale',function(){return 'ar';}); do_action('change_locale','ar');"
+
+
 def text(key, locale=''):
-    """The text as the site shows it now (a fresh request), in English or after switch_to_locale()."""
-    sw = "switch_to_locale(%s);" % lit(locale) if locale else ''
+    """The text as the site shows it now (a fresh request), in English or in Arabic."""
+    sw = AS_AR if locale else ''
     return last(php(sw + "echo wp_json_encode(__(%s,'workforce-one'));" % lit(key)))
 
 
@@ -177,7 +181,7 @@ check('the list shows it as edited, first', 'data-sm-row="%s"' % h(KEY) in page 
 st, loc = save(adm, PH, 'ar', 'رفض طلب تصحيح %1$s: %2$s')
 check('an Arabic text with its values is saved', 'sm_done=saved' in loc and overrides().get('ar', {}).get(PH) == 'رفض طلب تصحيح %1$s: %2$s', (loc, overrides()))
 check('...the site shows it in Arabic', json.loads(text(PH, 'ar')) == 'رفض طلب تصحيح %1$s: %2$s')
-check('...and the values still fill in', last(php("switch_to_locale('ar'); echo sprintf(__(%s,'workforce-one'),'1/1','x');" % lit(PH))) == 'رفض طلب تصحيح 1/1: x')
+check('...and the values still fill in', last(php(AS_AR + "echo sprintf(__(%s,'workforce-one'),'1/1','x');" % lit(PH))) == 'رفض طلب تصحيح 1/1: x')
 check('...the English is untouched', text(PH) == json.dumps(PH))
 
 # ---------------------------------------------------------------- refused
