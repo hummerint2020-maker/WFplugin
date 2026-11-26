@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Workforce One
  * Description: Workforce management platform for schedules, attendance, reporting and employee operations.
- * Version: 3.31.165
+ * Version: 3.31.166
  * Author: Internal
  * Text Domain: workforce-one
  * Domain Path: /languages
@@ -11,7 +11,7 @@
  * License: Proprietary
  */
 if (!defined('ABSPATH')) exit;
-if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.165');
+if (!defined('EWS_VERSION')) define('EWS_VERSION', '3.31.166');
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
@@ -126,7 +126,7 @@ class EWS_Manager_V31_1 {
             $this->prime_options();
             $this->maybe_upgrade_schema();
             $this->health_boot();   // System health (3.31.110): does nothing while it is off
-            $this->system_messages_boot();   // System messages (3.31.165): does nothing while it is off or nothing is edited
+            $this->system_messages_boot();   // System messages (3.31.166): does nothing while it is off or nothing is edited
             add_action('init',[$this,'load_textdomain'],1);
             add_shortcode('employee_app',[$this,'app']);
             add_filter('template_include',[$this,'app_fullscreen_template'],99); // Appearance → Full-screen app page
@@ -228,7 +228,7 @@ class EWS_Manager_V31_1 {
             \WorkforceOne\Settings\EngagementHooks::register($this);
             \WorkforceOne\Settings\OverviewHooks::register($this);
             \WorkforceOne\Payroll\Hooks::register($this);
-            \WorkforceOne\Messages\Hooks::register($this);   // System messages (3.31.165): its two actions refuse while it is off
+            \WorkforceOne\Messages\Hooks::register($this);   // System messages (3.31.166): its two actions refuse while it is off
             add_action('admin_post_ews_task_save',[$this,'task_save']);
             add_action('admin_post_ews_task_status_update',[$this,'task_status_update']);
             add_action('admin_post_ews_task_delete',[$this,'task_delete']);

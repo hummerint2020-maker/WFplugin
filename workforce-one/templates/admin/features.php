@@ -47,7 +47,7 @@
  * @var string[] $weekday_names                 0 = Sunday
  * @var int[] $working_days
  * @var array{page_url:string,workflow_url:string,hr_set:bool,s:array<string,mixed>} $hr_letters  HR letters (3.31.144)
- * @var string $system_messages_url  System messages (3.31.165)
+ * @var string $system_messages_url  System messages (3.31.166)
  * @var array{s:array<string,mixed>,ended:bool,people:array<int,object>,with_birthday:int,total:int,moments_url:string,preview_url:string} $occasions  Occasions (3.31.145)
  * @var bool $saved
  * @var string|null $error

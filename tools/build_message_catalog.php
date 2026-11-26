@@ -1,7 +1,7 @@
 <?php
 /**
  * Builds workforce-one/languages/workforce-one-catalog.php: every text of the plugin that goes through gettext
- * (domain workforce-one), for the System messages page (3.31.165, docs/tasks/system-messages.md §3).
+ * (domain workforce-one), for the System messages page (3.31.166, docs/tasks/system-messages.md §3).
  *
  * Read from the code itself (PHP's own tokenizer), not from the .pot, so it is never stale: run it after changing
  * texts; tests/check_message_catalog.py fails when the shipped file differs from a fresh build.

@@ -2,7 +2,7 @@
 use PHPUnit\Framework\TestCase;
 use WorkforceOne\Messages\MessageRules as R;
 
-/** System messages (3.31.165): what an edited text may be. */
+/** System messages (3.31.166): what an edited text may be. */
 final class MessageRulesTest extends TestCase
 {
     public function testKeysAndBuckets(): void

@@ -7,7 +7,7 @@ use WorkforceOne\Platform\AuditLog;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Saving and resetting edited texts (3.31.165, docs/tasks/system-messages.md §5). Every change is one Audit Log row.
+ * Saving and resetting edited texts (3.31.166, docs/tasks/system-messages.md §5). Every change is one Audit Log row.
  * Codes: '' (saved), reset (the text equals the default: the edit was removed), unknown, plural, stale, and the codes of
  * MessageRules::check().
  */

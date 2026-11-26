@@ -1,6 +1,6 @@
 <?php
 /**
- * wp-admin → Settings → System messages (3.31.165, docs/tasks/system-messages.md; mockup /mnt/project-files/system-messages/mockup.html).
+ * wp-admin → Settings → System messages (3.31.166, docs/tasks/system-messages.md; mockup /mnt/project-files/system-messages/mockup.html).
  * Only with the feature on. Prints what it is given; the edit panel opens with &edit=<hash>.
  *
  * @var string $lang            'ar' | 'en': the language being edited

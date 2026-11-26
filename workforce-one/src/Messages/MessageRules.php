@@ -4,7 +4,7 @@ namespace WorkforceOne\Messages;
 if (!defined('ABSPATH')) exit;
 
 /**
- * The rules of an edited message (3.31.165, docs/tasks/system-messages.md §2). Pure: no WordPress calls.
+ * The rules of an edited message (3.31.166, docs/tasks/system-messages.md §2). Pure: no WordPress calls.
  *
  * A message is one gettext text of the plugin, named by its key: the English original, or context + "\x04" + original,
  * as WordPress keys its translations. An edit replaces the text shown in one language bucket ('ar' or 'en').

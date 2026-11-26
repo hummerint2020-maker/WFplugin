@@ -1,4 +1,4 @@
-# Design: Edit system messages (3.31.165)
+# Design: Edit system messages (3.31.166)
 
 **Status:** technical design by the read-only architect on main 3.31.164, saved before implementation. Product design and mockup approved by the owner on 2026-11-25: `/mnt/project-files/system-messages/design.md`, `mockup.html`.
 
@@ -30,7 +30,7 @@ The architect's open questions were settled by the implementer with the recommen
 
 - Shape `['ar' => [key => text], 'en' => [key => text]]`; key = `msgid` or `msgctxt."\x04".msgid` (the `.l10n.php` key).
 - Bucket: `'ar'` when the locale starts with `ar`, otherwise `'en'`.
-- Upgrade: schema target `3.31.165` (new capability only, no table). No data migration; nothing is written while off.
+- Upgrade: schema target `3.31.166` (new capability only, no table). No data migration; nothing is written while off.
 
 ## 2. Rules — `src/Messages/MessageRules.php` (pure)
 

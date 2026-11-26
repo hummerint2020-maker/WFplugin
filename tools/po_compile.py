@@ -1,5 +1,5 @@
 """Compiles workforce-one/languages/workforce-one-ar.po into the .mo and .l10n.php files WordPress loads, byte for byte as
-`wp i18n make-mo` and `wp i18n make-php` (WP-CLI 2.12) write them, for a machine without WP-CLI (3.31.165).
+`wp i18n make-mo` and `wp i18n make-php` (WP-CLI 2.12) write them, for a machine without WP-CLI (3.31.166).
 `--check` proves it first: it rebuilds both files from the .po and fails if they differ from the shipped ones.
 
 Usage: python3 tools/po_compile.py [--check]

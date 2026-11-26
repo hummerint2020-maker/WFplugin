@@ -2,7 +2,7 @@
 use PHPUnit\Framework\TestCase;
 use WorkforceOne\Messages\MessageCatalog;
 
-/** System messages (3.31.165): the list the page shows. */
+/** System messages (3.31.166): the list the page shows. */
 final class MessageCatalogTest extends TestCase
 {
     private function catalog(): MessageCatalog

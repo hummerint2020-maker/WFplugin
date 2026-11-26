@@ -1,4 +1,4 @@
-/* System messages (3.31.165): the edit panel's placeholder buttons and live preview. No texts of its own. */
+/* System messages (3.31.166): the edit panel's placeholder buttons and live preview. No texts of its own. */
 (function () {
     'use strict';
     var box = document.querySelector('[data-sm-editor]');

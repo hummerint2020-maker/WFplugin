@@ -219,7 +219,7 @@ trait EWS_Features_Trait {
                 }
             }
         }
-        // System messages (3.31.165): written only when switched, so a site that keeps it off stores nothing new.
+        // System messages (3.31.166): written only when switched, so a site that keeps it off stores nothing new.
         if(isset($post['system_messages_present']) && $this->system_messages_enabled()!==$flag('system_messages_enabled')){
             update_option('ews_feature_system_messages',$flag('system_messages_enabled')?1:0,false);
             $this->audit('system_messages_feature_update','settings',0,$flag('system_messages_enabled')?'enabled':'disabled');

@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.31.165
+## 3.31.166
 ### System messages: edit the texts the system shows (docs/tasks/system-messages.md, mockup /mnt/project-files/system-messages/)
 Owner's request (2026-11-25): "make the messages of the system editable". A new switch (wp-admin → Features → **System
 messages**), **off by default**: off, nothing is added to WordPress, the page is hidden and every text is the shipped one (saved

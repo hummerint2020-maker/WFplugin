@@ -1,4 +1,4 @@
-"""Fail if the System messages catalog is stale (3.31.165, docs/tasks/system-messages.md).
+"""Fail if the System messages catalog is stale (3.31.166, docs/tasks/system-messages.md).
 
 1. workforce-one/languages/workforce-one-catalog.php must equal a fresh `php tools/build_message_catalog.php --stdout`
    (run the tool after changing a text).

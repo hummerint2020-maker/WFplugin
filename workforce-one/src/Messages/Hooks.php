@@ -3,7 +3,7 @@ namespace WorkforceOne\Messages;
 
 if (!defined('ABSPATH')) exit;
 
-/** WordPress hooks of the System messages module (3.31.165). */
+/** WordPress hooks of the System messages module (3.31.166). */
 final class Hooks
 {
     /** The page's two actions; they refuse while the feature is off. @param object $plugin */

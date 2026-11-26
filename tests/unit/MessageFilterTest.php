@@ -2,7 +2,7 @@
 use PHPUnit\Framework\TestCase;
 use WorkforceOne\Messages\MessageFilter;
 
-/** System messages (3.31.165): the gettext filter callbacks. */
+/** System messages (3.31.166): the gettext filter callbacks. */
 final class MessageFilterTest extends TestCase
 {
     /** @var int */

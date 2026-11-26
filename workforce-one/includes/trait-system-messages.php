@@ -6,7 +6,7 @@ use WorkforceOne\Messages\MessageFilter;
 use WorkforceOne\Messages\MessageRules;
 
 /**
- * System messages (3.31.165, docs/tasks/system-messages.md; mockup /mnt/project-files/system-messages/mockup.html):
+ * System messages (3.31.166, docs/tasks/system-messages.md; mockup /mnt/project-files/system-messages/mockup.html):
  * an administrator changes the words of any text the plugin shows (notifications, notices, errors, buttons), in Arabic
  * and in English, from wp-admin → Settings → System messages. One switch in Features, off by default; off, nothing is
  * registered, the page is hidden and every text is the shipped one (saved edits are kept for when it is turned on again).

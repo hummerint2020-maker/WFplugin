@@ -3,7 +3,7 @@ namespace WorkforceOne\Messages\Data;
 
 if (!defined('ABSPATH')) exit;
 
-/** Where the edited texts are kept (3.31.165): lang ('ar' | 'en') => key => text. */
+/** Where the edited texts are kept (3.31.166): lang ('ar' | 'en') => key => text. */
 interface MessageOverrideStore
 {
     /** @return array<string,array<string,string>> a fresh read (never a copy cached before a write of another request) */

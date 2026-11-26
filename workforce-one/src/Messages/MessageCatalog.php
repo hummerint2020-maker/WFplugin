@@ -4,7 +4,7 @@ namespace WorkforceOne\Messages;
 if (!defined('ABSPATH')) exit;
 
 /**
- * The texts of the plugin as the System messages page lists them (3.31.165). Pure: the catalog
+ * The texts of the plugin as the System messages page lists them (3.31.166). Pure: the catalog
  * (languages/workforce-one-catalog.php) and the shipped Arabic translations are given to it.
  */
 final class MessageCatalog

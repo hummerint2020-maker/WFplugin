@@ -4,7 +4,7 @@ namespace WorkforceOne\Messages;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Shows the edited texts (3.31.165): the callbacks of the gettext filters of the workforce-one domain only.
+ * Shows the edited texts (3.31.166): the callbacks of the gettext filters of the workforce-one domain only.
  * A text the admin edited for the current language replaces the translation; any other is left as it is.
  * Registered only while the feature is on and something was edited (EWS_System_Messages_Trait::system_messages_boot()).
  * The edits of each site are read once (switch_to_blog() reads that site's own, or none when its switch is off).

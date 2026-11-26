@@ -373,7 +373,7 @@ final class Services
         return $this->made[__FUNCTION__];
     }
 
-    /** The edited texts of System messages (3.31.165), one option. */
+    /** The edited texts of System messages (3.31.166), one option. */
     public function messageStore(): MessageOverrideStore
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressMessageOverrideStore();
@@ -393,7 +393,7 @@ final class Services
         return $this->made[__FUNCTION__];
     }
 
-    /** Saving and resetting edited texts (3.31.165). */
+    /** Saving and resetting edited texts (3.31.166). */
     public function messages(): MessageOverrideService
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new MessageOverrideService($this->messageStore(), $this->audit);
