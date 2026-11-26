@@ -2,6 +2,7 @@
 /**
  * wp-admin "Feature Configuration" page. Styles: assets/css/admin-features.css.
  *
+ * @var array{s:array<string,mixed>,open:int,statuses:list<string>,workflow_url:string} $sc  change requests to HR (3.31.165)
  * @var array<string,bool> $on                 feature switches (tasks, corrections, daily_workers, office_minimum, week_lock, presence_qr, presence_verification, breaks, face, recognition, kudos, overtime, early_leave_office_only, early_leave_self, confirm_global, app_api, api_refresh_safe)
  * @var list<string> $om_managers  the team managers the managers' minimum counts (3.31.153)
  * @var array{hidden:list<string>} $att_page_cards  the Attendance page cards hidden by the administrator (3.31.152)

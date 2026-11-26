@@ -93,7 +93,7 @@ final class ScheduleChangeService
             $cur = $scope[$eid] ? $this->days->day($eid, $date) : null;
             $rule = $this->site->statusRule($status);
             $setBranch = $branchMode && $c['branch'] !== null;
-            $oldLoc = $cur && $cur->location_id !== null ? (int) $cur->location_id : 0;
+            $oldLoc = $cur && isset($cur->location_id) ? (int) $cur->location_id : 0;
             $f = ['scope' => $scope[$eid], 'final' => $scope[$eid] && $this->site->weekFinalFor($date), 'status' => $status, 'rule' => $rule,
                 'old' => $cur ? (string) $cur->status : null, 'branch_change' => $setBranch && $oldLoc !== (int) $c['branch'],
                 'holiday' => isset($holidays[$date]), 'date' => $date, 'today' => $today, 'closed' => isset($closed[substr($date, 0, 7)]),
@@ -109,7 +109,7 @@ final class ScheduleChangeService
             if ($code !== '') { $out['refused'][] = ['employee' => $eid, 'date' => $date, 'code' => $code]; continue; }
             $ok[] = ['employee_id' => $eid, 'work_date' => $date, 'had_row' => $cur ? 1 : 0, 'schedule_id' => $cur ? (int) $cur->id : null,
                 'old_status' => $cur ? (string) $cur->status : null, 'new_status' => $status, 'branch_set' => $setBranch ? 1 : 0,
-                'old_location_id' => $cur && $cur->location_id !== null ? (int) $cur->location_id : null,
+                'old_location_id' => $cur && isset($cur->location_id) ? (int) $cur->location_id : null,
                 'new_location_id' => $setBranch && (int) $c['branch'] ? (int) $c['branch'] : null,
                 'open_key' => ScheduleChangeRules::openKey($eid, $date)];
         }
