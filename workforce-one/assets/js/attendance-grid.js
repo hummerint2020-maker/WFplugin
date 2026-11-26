@@ -243,7 +243,7 @@
 
         // Change requests to HR: "Send to HR…" lists the changes in the sheet; its button sends the form.
         var scSheet = form.hasAttribute('data-ews-sc') ? document.getElementById('wfo-sc-sheet') : null;
-        var scOpen = form.querySelector('[data-sc-open]');
+        var scOpen = form.querySelector('button[data-sc-send-open]');
         if (scSheet && scOpen) scOpen.addEventListener('click', function () {
             var list = scSheet.querySelector('[data-sc-list]');
             var arrow = scSheet.querySelector('template[data-sc-arrow]');

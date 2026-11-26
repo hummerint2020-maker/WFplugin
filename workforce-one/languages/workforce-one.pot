@@ -13583,7 +13583,7 @@ msgstr ""
 msgid "Approved: the days were applied and each employee was told."
 msgstr ""
 
-msgid "Approved: some days were not applied because they changed since the request. My requests and the Audit Log list them."
+msgid "Approved, but not every day was applied: some changed since the request. My requests and the Audit Log list them."
 msgstr ""
 
 msgid "Rejected, and the manager was told."
@@ -13874,4 +13874,20 @@ msgid "Send to HR"
 msgstr ""
 
 msgid "The schedule stays as it is until HR approves. You can withdraw it from My requests while it waits."
+msgstr ""
+
+msgid "Rejected on the Requests page."
+msgstr ""
+
+msgid "none applied"
+msgstr ""
+
+msgid "Not applied"
+msgstr ""
+
+msgid "Your schedule change was approved but not applied"
+msgstr ""
+
+#. translators: %d: request number
+msgid "Request #%d: none of the days was applied, because they all changed before the decision. See My requests."
 msgstr ""

@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.31.165
+### Schedule change requests to HR (docs/tasks/schedule-change-request.md, mockups docs/mockups/schedule-change/)
+Owner's decisions (2026-10-22, confirmed 2026-11-25 "ابدا"): release 2 of the week lock. A new switch (wp-admin → Features →
+Week lock → **Change requests to HR**), **off by default**: off, the final week is read-only exactly as in 3.31.121. It works only
+while the week lock and My approvals are on.
+- **On the Attendance grid**, a manager without "Edit a locked week" can change days of a final week and send them to HR with a
+  reason (at least 10 characters by default), at most 25 days per request, past days up to 14 days back. Days that cannot be asked
+  (a leave type unless "Allow leave types" is on, a company holiday, a leave day, an unchanged day, a closed payroll month, a day
+  already waiting, someone the manager does not manage) are listed in the pop-up with the reason; the others are sent.
+- The days waiting for HR show "Requested" on the grid. HR (Approval Workflows → Schedule Change, one level, HR, set on the first
+  request) approves or rejects the whole request on **My approvals** or the **Requests** page; rejecting needs a reason.
+- **Approved:** the days still as they were when asked are applied, audited as a change of a final week, and each employee is told
+  once. A day changed since is skipped (the request is "partly applied", My requests says which and why), or, with the setting
+  "refuse", approving changes nothing until it is back.
+- The manager sees each request in **My requests** and can withdraw it while it waits. A waiting request closes by itself after 14
+  days (setting) or when its payroll month is closed; switching the feature, the week lock or My approvals off closes the waiting
+  requests. The manager is told each time.
+- **The final-week banner** ("This week is final…") has a configurable title and text in Arabic and English on the Week lock
+  card; `{since}` is the lock time; an empty field keeps the default text. One text covers both the locked banner and the
+  request-mode banner.
+- Not in this release (R2b): sending final-week CSV import rows to HR, the Requests Hub Reports tab, the draft conversion of the
+  read-only grid and the office-minimum line on the send sheet. No change to the mobile app.
+- New tables `ews_schedule_change_requests` and `ews_schedule_change_days` (schema 3.31.165); layered slice `schedule.change`
+  (`ScheduleChangeService`, `ScheduleChangeRules`, `ScheduleChangeSettings`, `WordPressScheduleChangeStore`, `ScheduleChangePorts`).
+- Tests: `tests/unit/ScheduleChangeServiceTest.php`, `tests/e2e_schedule_change_store.php`, `tests/e2e_schedule_change.py`.
+
 ## 3.31.164
 ### Leave return moved into layers (docs/tasks/leave-return-layers.md): no visible change
 Owner's choice (2026-11-24, "ابدا ب 1"): the planned move-only release for the 3.31.161 leave-return code. Nothing changes for anyone:

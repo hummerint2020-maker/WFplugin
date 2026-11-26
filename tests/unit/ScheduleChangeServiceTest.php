@@ -293,6 +293,10 @@ final class ScheduleChangeServiceTest extends TestCase
         $this->assertSame('max_days', ScheduleChangeSettings::fromPost(['sc_reason_min' => '10', 'sc_max_days' => '0', 'sc_past_days' => '14', 'sc_expire_days' => '14'], ['Office'])[1]);
         [$s] = ScheduleChangeSettings::fromPost(['sc_reason_min' => '5', 'sc_max_days' => '3', 'sc_past_days' => '0', 'sc_expire_days' => '0', 'sc_statuses' => ['Office', 'Nope'], 'sc_changed_day' => 'refuse'], ['Office', 'WFH']);
         $this->assertSame([['Office'], 'refuse', 0], [$s['statuses'], $s['changed_day'], $s['import']]);
+        $post = ['sc_reason_min' => '10', 'sc_max_days' => '25', 'sc_past_days' => '14', 'sc_expire_days' => '14', 'sc_statuses' => ['Office', 'WFH']];
+        $this->assertSame([], ScheduleChangeSettings::fromPost($post, ['Office', 'WFH', 'Vacation'], ['Office', 'WFH'])[0]['statuses'], 'every offered status ticked: stored as "all"');
+        $this->assertSame(['Office'], ScheduleChangeSettings::fromPost(['sc_statuses' => ['Office']] + $post, ['Office', 'WFH'], ['Office', 'WFH'])[0]['statuses'], 'some: the list');
+        $this->assertSame(ScheduleChangeSettings::DEFAULTS, ScheduleChangeSettings::config(ScheduleChangeSettings::fromPost($post + ['sc_import' => '1'], ['Office', 'WFH'], ['Office', 'WFH'])[0], ['Office', 'WFH']), 'an untouched card saves the defaults it read');
         $this->assertSame(ScheduleChangeSettings::DEFAULTS, ScheduleChangeSettings::config(['max_days' => 999, 'changed_day' => 'x'], []));
     }
 }

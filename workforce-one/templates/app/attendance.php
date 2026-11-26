@@ -326,7 +326,7 @@ if ($sc_mode) $wl_readonly = false;
         <div class="ews-att-savebar wfo-sc-savebar">
             <span class="wfo-attg-count" aria-live="polite" data-none="<?php esc_attr_e('No changes yet. Tap a day to change it; HR decides.', 'workforce-one'); ?>" data-one="<?php esc_attr_e('1 change to send to HR', 'workforce-one'); ?>" data-many="<?php /* translators: %d: number of changed days (2 or more) */ esc_attr_e('%d changes to send to HR', 'workforce-one'); ?>" data-leave="<?php esc_attr_e('You have changes that are not sent yet.', 'workforce-one'); ?>"><?php esc_html_e('No changes yet. Tap a day to change it; HR decides.', 'workforce-one'); ?></span>
             <button type="button" class="ews-btn wfo-attg-undo" hidden><?php echo Icons::svg('close', 15, 2.2); ?><?php esc_html_e('Undo', 'workforce-one'); ?></button>
-            <button type="button" class="ews-btn ews-save-all" data-sc-open aria-haspopup="dialog"><?php echo Icons::svg('arrow', 17, 2.4); ?><?php esc_html_e('Send to HR…', 'workforce-one'); ?></button>
+            <button type="button" class="ews-btn ews-save-all" data-sc-send-open aria-haspopup="dialog"><?php echo Icons::svg('arrow', 17, 2.4); ?><?php esc_html_e('Send to HR…', 'workforce-one'); ?></button>
         </div>
         <?php include __DIR__ . '/schedule-change-sheet.php'; ?>
         <?php else: ?>

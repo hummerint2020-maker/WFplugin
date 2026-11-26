@@ -126,9 +126,12 @@ trait EWS_Features_Trait {
             // Change requests to HR (3.31.165), in the same card and by the same people.
             if(isset($post['sc_present'])){
                 [$sc,$sc_error]=$this->sc_settings_from_post($post);
-                if($sc_error!=='')$this->features_redirect(['features_error'=>'sc_'.$sc_error]);
+                // Off and staying off: a field left wrong in the block does not stop the rest of the page (and is not saved).
+                if($sc_error!==''&&!$flag('sc_enabled')&&!$this->option('ews_feature_schedule_change'))$sc=null;
+                elseif($sc_error!=='')$this->features_redirect(['features_error'=>'sc_'.$sc_error]);
                 $apv=isset($post['my_approvals_present'])?$flag('my_approvals_enabled'):$this->my_approvals_enabled();
-                if($flag('sc_enabled')&&!$apv)$this->features_redirect(['features_error'=>'sc_my_approvals']);
+                // Only switching it on needs My approvals; switching My approvals off later closes the waiting requests (below).
+                if($flag('sc_enabled')&&!$this->option('ews_feature_schedule_change')&&!$apv)$this->features_redirect(['features_error'=>'sc_my_approvals']);
             }
         }
         $occ=$this->occasions_validate($post);   // Occasions (3.31.145)
@@ -312,9 +315,10 @@ trait EWS_Features_Trait {
         }
         if($sc!==null){
             $sc_before=$this->sc_settings();$sc_flag_was=(bool)$this->option('ews_feature_schedule_change');
-            update_option('ews_schedule_change',$sc,false);
-            update_option('ews_feature_schedule_change',$flag('sc_enabled')?1:0,false);
-            $sc_after=$this->sc_settings();
+            $sc_after=$sc;   // already in config() form
+            // Written only when something changed: an untouched card leaves the options (and the Audit Log) as they were.
+            if($sc_before!==$sc_after)update_option('ews_schedule_change',$sc,false);
+            if($sc_flag_was!==$flag('sc_enabled'))update_option('ews_feature_schedule_change',$flag('sc_enabled')?1:0,false);
             if($sc_before!==$sc_after||$sc_flag_was!==$flag('sc_enabled'))$this->audit('schedule_change_settings','settings',0,($flag('sc_enabled')?'enabled':'disabled').'; statuses='.($sc_after['statuses']?implode(',',$sc_after['statuses']):'all').'; leave='.($sc_after['allow_leave']?'on':'off')
                 .'; reason='.$sc_after['reason_min'].'; max_days='.$sc_after['max_days'].'; past_days='.$sc_after['past_days'].'; changed_day='.$sc_after['changed_day'].'; expire='.$sc_after['expire_days'].'; import='.($sc_after['import']?'on':'off').'; notify_on_request='.($sc_after['notify_on_request']?'on':'off'));
         }

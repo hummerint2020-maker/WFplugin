@@ -14,6 +14,15 @@ use WorkforceOne\Schedule\ScheduleChangeSettings;
  */
 trait EWS_Schedule_Change_Trait {
 
+    /** The note of a rejection on the Requests page: stored in English (the Audit Log's language), shown translated. @var string */
+    private static $sc_hub_note='Rejected on the Requests page.';
+
+    /** A decision note as people read it. */
+    private function sc_note_text($note){
+        $note=(string)$note;
+        return $note===self::$sc_hub_note?__('Rejected on the Requests page.','workforce-one'):$note;
+    }
+
     /** The switch, with the week lock and My approvals (option reads only: no query while off). */
     public function sc_enabled(){
         return (bool)$this->option('ews_feature_schedule_change') && $this->week_lock_enabled() && $this->my_approvals_enabled();
@@ -121,13 +130,18 @@ trait EWS_Schedule_Change_Trait {
     /** What the card shows. @return array<string,mixed> */
     public function sc_admin_view(){
         return ['s'=>$this->sc_settings(),'open'=>$this->sc_enabled()?$this->services()->scheduleChanges()->openCount():0,   // no query while off
-            'statuses'=>array_values(array_filter($this->statuses(),function($st){return $this->schedule_type_attendance_rule($st)!=='leave';})),
-            'workflow_url'=>admin_url('admin.php?page=ews31-approvals')];
+            'statuses'=>$this->sc_offered_statuses(),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')];
+    }
+
+    /** The statuses the card offers: every type that is not a leave. @return string[] */
+    private function sc_offered_statuses(){
+        return array_values(array_filter($this->statuses(),function($st){return $this->schedule_type_attendance_rule($st)!=='leave';}));
     }
 
     /** The card's fields, checked. @param array<string,mixed> $post unslashed @return array{0:array<string,mixed>,1:string} */
     public function sc_settings_from_post(array $post){
-        return ScheduleChangeSettings::fromPost($post,$this->statuses());
+        [$sc,$error]=ScheduleChangeSettings::fromPost($post,$this->statuses(),$this->sc_offered_statuses());
+        return [$error===''?ScheduleChangeSettings::config($sc,$this->statuses()):$sc,$error];   // in sc_settings() form, to compare
     }
 
     /* ------------------------------------------------------------------ the Attendance grid */
@@ -212,7 +226,7 @@ trait EWS_Schedule_Change_Trait {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- display only
         if(isset($_GET['scd_done'])){
             $m=['approved'=>__('Approved: the days were applied and each employee was told.','workforce-one'),
-                'partial'=>__('Approved: some days were not applied because they changed since the request. My requests and the Audit Log list them.','workforce-one'),
+                'partial'=>__('Approved, but not every day was applied: some changed since the request. My requests and the Audit Log list them.','workforce-one'),
                 'rejected'=>__('Rejected, and the manager was told.','workforce-one'),
                 'advanced'=>__('Approved at your level. It moves to the next one.','workforce-one')];
             $k=sanitize_key($_GET['scd_done']);
@@ -292,7 +306,7 @@ trait EWS_Schedule_Change_Trait {
 
     /** An administrator's decision on the Requests page (the override of a level). @return string a Hub outcome */
     public function sc_hub_decide($id,$decision){
-        $r=$this->services()->scheduleChanges()->decide((int)$id,$decision,$decision==='reject'?'Rejected on the Requests page.':'',$this->approval_posted_step(),true);
+        $r=$this->services()->scheduleChanges()->decide((int)$id,$decision,$decision==='reject'?self::$sc_hub_note:'',$this->approval_posted_step(),true);
         $map=['advanced'=>Hub::ADVANCED,'approved'=>Hub::APPROVED,'partial'=>Hub::SC_PARTIAL,'rejected'=>Hub::REJECTED,'moved'=>Hub::MOVED,'changed'=>Hub::SC_CHANGED];
         return $map[$r['result']]??Hub::ERROR;
     }
@@ -310,9 +324,9 @@ trait EWS_Schedule_Change_Trait {
             $sub=[$range];
             $label='';$note='';$skipped=[];
             if($st==='partial'){
-                $label=__('Partly applied','workforce-one');
+                $label=(int)$r->applied>0?__('Partly applied','workforce-one'):__('Not applied','workforce-one');
                 /* translators: 1: days applied, 2: days not applied */
-                $sub[]=sprintf(__('%1$d applied, %2$d not','workforce-one'),(int)$r->applied,$n-(int)$r->applied);
+                $sub[]=(int)$r->applied>0?sprintf(__('%1$d applied, %2$d not','workforce-one'),(int)$r->applied,$n-(int)$r->applied):__('none applied','workforce-one');
                 foreach($row['days'] as $d)if(!in_array((string)$d->result,['applied','already',''],true))
                     $skipped[]=['employee'=>(int)$d->employee_id,'date'=>(string)$d->work_date,'old'=>$d->old_status,'new'=>(string)$d->new_status,'warn'=>$this->sc_skipped_text((string)$d->result,$d->now_status!==null?(string)$d->now_status:null)];
             }elseif($st==='expired'||$st==='closed'){
@@ -323,7 +337,7 @@ trait EWS_Schedule_Change_Trait {
                     :($why==='closed_month'?__('Closed automatically: its month was closed in Payroll.','workforce-one'):__('Closed automatically: change requests to HR were switched off.','workforce-one'));
             }elseif($st==='rejected' && trim((string)$r->decision_note)!==''){
                 /* translators: %s: reason */
-                $note=sprintf(__('Reason: %s','workforce-one'),(string)$r->decision_note);
+                $note=sprintf(__('Reason: %s','workforce-one'),$this->sc_note_text($r->decision_note));
             }
             $out[]=['key'=>'schedule-'.(int)$r->id,'tone'=>'schedule','title'=>sprintf(/* translators: %d: days */_n('Schedule change · %d day','Schedule change · %d days',$n,'workforce-one'),$n),
                 'sub'=>implode(' · ',$sub),'state'=>$state[$st]??'waiting','state_label'=>$label,'when'=>(string)$r->requested_at,'note'=>$note,
@@ -363,10 +377,12 @@ trait EWS_Schedule_Change_Trait {
             /* translators: 1: request number, 2: days */
             'approved'=>[__('Your schedule change was approved','workforce-one'),sprintf(_n('Request #%1$d: the %2$d day was applied.','Request #%1$d: the %2$d days were applied.',$n,'workforce-one'),$id,$n)],
             /* translators: 1: request number, 2: days applied, 3: days not applied */
-            'partial'=>[__('Your schedule change was partly applied','workforce-one'),sprintf(__('Request #%1$d: %2$d day(s) applied; %3$d not, because they changed before the decision. See My requests.','workforce-one'),$id,$n-$skipped,$skipped)],
+            'partial'=>$n-$skipped>0?[__('Your schedule change was partly applied','workforce-one'),sprintf(__('Request #%1$d: %2$d day(s) applied; %3$d not, because they changed before the decision. See My requests.','workforce-one'),$id,$n-$skipped,$skipped)]
+                /* translators: %d: request number */
+                :[__('Your schedule change was approved but not applied','workforce-one'),sprintf(__('Request #%d: none of the days was applied, because they all changed before the decision. See My requests.','workforce-one'),$id)],
             'rejected'=>[__('Your schedule change was rejected','workforce-one'),trim((string)($detail['note']??''))!==''
                 /* translators: 1: request number, 2: reason */
-                ?sprintf(__('Request #%1$d was rejected. Reason: %2$s','workforce-one'),$id,(string)$detail['note'])
+                ?sprintf(__('Request #%1$d was rejected. Reason: %2$s','workforce-one'),$id,$this->sc_note_text($detail['note']))
                 /* translators: %d: request number */
                 :sprintf(__('Request #%d was rejected.','workforce-one'),$id)],
             'closed'=>[__('Your schedule change was closed','workforce-one'),$why==='expired'

@@ -9978,8 +9978,8 @@ msgstr "ماتبعتش للموارد البشرية"
 msgid "Approved: the days were applied and each employee was told."
 msgstr "تمت الموافقة: الأيام اتطبقت وكل موظف وصله إشعار."
 
-msgid "Approved: some days were not applied because they changed since the request. My requests and the Audit Log list them."
-msgstr "تمت الموافقة: شوية أيام ماتطبقتش لأنها اتغيرت بعد الطلب. هتلاقيهم في طلباتي وسجل التدقيق."
+msgid "Approved, but not every day was applied: some changed since the request. My requests and the Audit Log list them."
+msgstr "تمت الموافقة، بس مش كل الأيام اتطبقت: فيه أيام اتغيرت بعد الطلب. هتلاقيهم في طلباتي وسجل التدقيق."
 
 msgid "Rejected, and the manager was told."
 msgstr "اترفض، والمدير وصله إشعار."
@@ -10294,3 +10294,19 @@ msgstr "ابعت للموارد البشرية"
 
 msgid "The schedule stays as it is until HR approves. You can withdraw it from My requests while it waits."
 msgstr "الجدول بيفضل زي ما هو لحد ما الموارد البشرية توافق. تقدر تسحبه من طلباتي وهو مستني."
+
+msgid "Rejected on the Requests page."
+msgstr "اترفض من صفحة الطلبات."
+
+msgid "none applied"
+msgstr "ولا يوم اتطبق"
+
+msgid "Not applied"
+msgstr "ماتطبقش"
+
+msgid "Your schedule change was approved but not applied"
+msgstr "طلب تعديل الجدول اتوافق عليه بس ماتطبقش"
+
+#. translators: %d: request number
+msgid "Request #%d: none of the days was applied, because they all changed before the decision. See My requests."
+msgstr "الطلب رقم %d: ولا يوم اتطبق، لأن كل الأيام اتغيرت قبل القرار. شوف طلباتي."

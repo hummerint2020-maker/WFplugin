@@ -44,10 +44,12 @@ final class ScheduleChangeSettings
     /**
      * From Feature Configuration (unslashed).
      * @param array<string,mixed> $post sc_statuses[], sc_allow_leave, sc_reason_min, sc_max_days, sc_past_days, sc_expire_days, sc_notify_on_request, sc_changed_day, sc_import
-     * @param string[] $types
+     * @param string[] $types every status
+     * @param string[]|null $offered the statuses the card shows (null: $types); all of them ticked is stored as [] ("all"), so a
+     *        status added later can be asked for too, and an untouched card saves what it read
      * @return array{0:array<string,mixed>,1:string} [settings, error: '' | reason_min | max_days | past_days | expire_days | statuses]
      */
-    public static function fromPost(array $post, array $types): array
+    public static function fromPost(array $post, array $types, ?array $offered = null): array
     {
         $out = [];
         foreach (['reason_min' => [1, 200], 'max_days' => [1, 200], 'past_days' => [0, 90], 'expire_days' => [0, 90]] as $k => [$min, $max]) {
@@ -59,6 +61,8 @@ final class ScheduleChangeSettings
         $out['statuses'] = array_values(array_intersect($types, $picked));
         $out['allow_leave'] = empty($post['sc_allow_leave']) ? 0 : 1;
         if (!$out['statuses']) return [[], 'statuses'];   // at least one (stored empty would mean "all")
+        $offered = array_values(array_intersect($types, $offered ?? $types));
+        if ($offered && !array_diff($offered, $out['statuses'])) $out['statuses'] = [];
         $out['notify_on_request'] = empty($post['sc_notify_on_request']) ? 0 : 1;
         $out['import'] = empty($post['sc_import']) ? 0 : 1;
         $out['changed_day'] = ($post['sc_changed_day'] ?? '') === 'refuse' ? 'refuse' : 'skip';
