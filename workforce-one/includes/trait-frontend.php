@@ -223,6 +223,7 @@ trait EWS_Frontend_Trait {
                 return $this->ux_modal(__('Schedule Conflict','workforce-one'),$message,'warning');
             }
             if(isset($_GET['cx_sent'])||isset($_GET['cx_done'])||isset($_GET['cx_error']))return $this->cx_notice();
+            if(sanitize_key($_GET['ews_view']??'')==='attendance' && (isset($_GET['sc_sent'])||isset($_GET['sc_error']))){$n=$this->sc_grid_notice();return $this->ux_modal($n['title'],$n['text'],$n['type']);}   // change requests to HR (3.31.165)
             foreach(['dw_error','dw_saved','dw_added','dw_moved','dw_adv','dw_paid','dw_change'] as $k)if(isset($_GET[$k]))return $this->dw_notice();
             $map=[
 
@@ -667,7 +668,7 @@ trait EWS_Frontend_Trait {
                 'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict','grid_locked','grid_leave',
                 'leave_sent','leave_error','leave_done','leave_cancel_sent','early_error',
                 'break_success','break_error','overtime_sent','overtime_error','overtime_done','overtime_rejected',
-                'swap_error','swap_sent','swap_done',
+                'swap_error','swap_sent','swap_done','sc_sent','sc_error',
                 'vacation_sent','vacation_error','vacation_done','vacation_rejected'], $u);
             wp_safe_redirect(add_query_arg($args,$u));exit;
         }

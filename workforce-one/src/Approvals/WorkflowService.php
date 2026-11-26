@@ -49,6 +49,7 @@ final class WorkflowService
             'attendance_correction' => ['Attendance Correction', 'NONE'],
             'salary_advance' => ['Salary Advance', 'NONE'],
             'hr_letter' => ['HR Letter', 'NONE'],
+            'schedule_change' => ['Schedule Change', 'LEVEL_1'],
         ];
         foreach ($defaults as $key => $def) {
             if ($this->workflows->idByKey($key)) continue;

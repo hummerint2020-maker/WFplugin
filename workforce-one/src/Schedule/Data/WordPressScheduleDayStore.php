@@ -84,6 +84,16 @@ final class WordPressScheduleDayStore implements ScheduleDayStore
         return $this->db->delete($this->table, ['employee_id' => $employeeId, 'work_date' => $date]);
     }
 
+    public function updateIf(int $id, int $employeeId, string $date, string $expected, string $status, bool $setBranch, int $locationId, int $by, string $at)
+    {
+        $branch = $setBranch ? ($locationId ? ',location_id=%d' : ',location_id=NULL') : '';
+        $args = $setBranch && $locationId ? [$status, $locationId, $by, $at] : [$status, $by, $at];
+        return $this->db->query($this->db->prepare(
+            "UPDATE {$this->table} SET status=%s{$branch},updated_by=%d,updated_at=%s WHERE id=%d AND employee_id=%d AND work_date=%s AND status=%s",
+            array_merge($args, [$id, $employeeId, $date, $expected])
+        ));
+    }
+
     public function updateStatusIf(int $id, string $expected, string $status, string $note, int $by, string $at)
     {
         $r = $this->db->query($this->db->prepare(

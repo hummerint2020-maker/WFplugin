@@ -95,9 +95,13 @@ $stats_cls = (in_array('leave', $cards_shown, true) ? ' has-leave' : '') . (coun
 $leave_split = $leave_card ? (string) $leave_card['line'] : '';
 $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'workforce-one'), 'leave' => __('Leave', 'workforce-one'), 'trip' => __('Business Trip', 'workforce-one')];
 $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
+// Change requests to HR (3.31.165): a final week is changed as before, and the changes go to HR as one request.
+$sc = $sc ?? null;
+$sc_mode = $sc && $wl_readonly;
+if ($sc_mode) $wl_readonly = false;
 ?>
 <?php if ($message): ?><div class="ews-notice wfo-att-notice<?php echo $message['error'] ? ' ews-notice-error' : ''; ?>"><?php echo esc_html($message['text']); ?></div><?php endif; ?>
-<div class="ews-attendance-page wfo-att<?php echo $wl_readonly ? ' wfo-wl-locked' : ''; ?>">
+<div class="ews-attendance-page wfo-att<?php echo $wl_readonly ? ' wfo-wl-locked' : ''; ?><?php echo $sc_mode ? ' wfo-sc-mode' : ''; ?>">
     <section class="wfo-att-top">
         <div class="wfo-att-intro">
             <span class="ews-dash-kicker wfo-att-kicker"><?php esc_html_e('MANAGER CONTROL CENTER', 'workforce-one'); ?></span>
@@ -196,7 +200,7 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
 <?php endif; ?>
 
     <?php if ($week_lock && ($week_lock['locked'] || $week_lock['soon'] !== '')): $wl_kind = $week_lock['soon'] !== '' ? 'soon' : ($week_lock['override'] ? 'override' : 'locked'); ?>
-    <section class="wfo-wl-banner is-<?php echo esc_attr($wl_kind); ?>" role="status">
+    <section class="wfo-wl-banner is-<?php echo esc_attr($wl_kind); ?><?php echo $sc_mode ? ' wfo-sc-banner' : ''; ?>" role="status">
         <span class="wfo-wl-ico"><?php echo Icons::svg($wl_kind === 'soon' ? 'overtime' : ($wl_kind === 'override' ? 'key' : 'lock'), 20, 2.2); ?></span>
         <div class="wfo-wl-text">
         <?php if ($wl_kind === 'soon'): ?>
@@ -205,9 +209,9 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
         <?php elseif ($wl_kind === 'override'): ?>
             <h3><?php esc_html_e('This week is final, and you can still edit it', 'workforce-one'); ?></h3>
             <p><?php /* translators: %s: date and time */ echo esc_html(sprintf(__('Locked since %s. Every change you make is recorded in the Audit Log under your name.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
-        <?php else: ?>
-            <h3><?php esc_html_e('This week is final', 'workforce-one'); ?></h3>
-            <p><?php /* translators: %s: date and time */ echo esc_html(sprintf(__('Locked since %s. Approved leave and swaps are still applied. To change a day, ask HR.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
+        <?php else: $wl_b = $week_lock['banner'] ?? ['title' => null, 'text' => null]; /* the administrator's text (3.31.165), else the default */ ?>
+            <h3><?php echo esc_html($wl_b['title'] ?? ($sc_mode ? __('This week is final: changes go to HR as a request', 'workforce-one') : __('This week is final', 'workforce-one'))); ?></h3>
+            <p><?php /* translators: %s: date and time */ echo esc_html($wl_b['text'] ?? sprintf($sc_mode ? __('Locked since %s. Change the days and write why; HR approves or rejects. Until then the schedule stays as it is. Leave and swaps are still applied as usual.', 'workforce-one') : __('Locked since %s. Approved leave and swaps are still applied. To change a day, ask HR.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
         <?php endif; ?>
         </div>
         <?php if ($wl_kind !== 'soon'): ?><span class="wfo-wl-final<?php echo $wl_kind === 'override' ? ' is-override' : ''; ?>"><?php echo Icons::svg($wl_kind === 'override' ? 'key' : 'lock', 14, 2.2); ?><?php echo $wl_kind === 'override' ? esc_html__('Edit a locked week', 'workforce-one') : esc_html__('Final', 'workforce-one'); ?></span><?php endif; ?>
@@ -260,12 +264,12 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
 
     <?php echo $office_min_html; // phpcs:ignore WordPress.Security.EscapeOutput -- templates/app/office-minimum.php escapes ?>
 
-    <form method="post" action="<?php echo esc_url($post_url); ?>" id="ews-grid-form"<?php if ($branch): ?> data-ews-branch-statuses="<?php echo esc_attr(wp_json_encode($branch['statuses'])); ?>"<?php endif; ?>>
-        <input type="hidden" name="action" value="ews31_att_grid_save">
+    <form method="post" action="<?php echo esc_url($post_url); ?>" id="ews-grid-form"<?php echo $sc_mode ? ' data-ews-sc data-sc-max="' . (int) $sc['max_days'] . '"' : ''; ?><?php if ($branch): ?> data-ews-branch-statuses="<?php echo esc_attr(wp_json_encode($branch['statuses'])); ?>"<?php endif; ?>>
+        <input type="hidden" name="action" value="<?php echo $sc_mode ? 'ews_schedule_change_request' : 'ews31_att_grid_save'; ?>">
         <input type="hidden" name="week" value="<?php echo esc_attr($week); ?>">
         <input type="hidden" name="attendance_client" value="desktop">
         <input type="hidden" name="att_changes_json" id="ews-att-changes-json" value="">
-        <?php wp_nonce_field('ews31_att_grid_save'); ?>
+        <?php wp_nonce_field($sc_mode ? 'ews_schedule_change_request' : 'ews31_att_grid_save'); ?>
 
         <div class="ews-att-table-wrap wfo-att-card" tabindex="0" role="region" aria-label="<?php esc_attr_e('Attendance', 'workforce-one'); ?>">
             <table class="ews-att-table wfo-attg" style="--days:<?php echo (int) count($dates); ?>"<?php if ($office_min): ?> data-om-statuses="<?php echo esc_attr(wp_json_encode($office_min['statuses'])); ?>" data-om-dates="<?php echo esc_attr(wp_json_encode(array_values($dates))); ?>"<?php if (!empty($office_min['mgr'])): ?> data-om-managers="<?php echo esc_attr(wp_json_encode($office_min['mgr']['ids'])); ?>"<?php endif; ?><?php if (isset($office_min['people'])): ?> data-om-people="<?php echo esc_attr(wp_json_encode($office_min['people'])); ?>"<?php endif; ?><?php endif; ?>>
@@ -285,9 +289,9 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
                 <?php foreach ($emps as $e): $eid = (int) $e->id; ?>
                     <tr class="ews-att-employee-row <?php echo esc_attr(trim(($current_emp_id === $eid ? 'current-user ' : '') . (!empty($e->_schedule_team_manager) ? 'team-manager' : ''))); ?>" <?php echo $row_attrs($e); ?>>
                         <td class="ews-att-employee"><?php echo $avatar($e); ?><div><strong><?php echo $badges($e); ?></strong><small><?php echo esc_html($e->domain_name); ?></small><?php if (!empty($e->_schedule_primary_team)): ?><span class="ews-att-team-label"><?php echo esc_html($e->_schedule_primary_team); ?></span><?php endif; ?></div></td>
-                        <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; $planned = (string) $day['planned']; $is_held = isset($held[$eid][$d]); $cell_ro = $wl_readonly || $is_held; ?>
-                        <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?><?php echo esc_attr($plan_class($planned)); ?>"<?php echo $is_held ? ' data-held="1"' : ''; ?> data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($planned); ?>"<?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); ?> data-branch="<?php echo $pb ? $pb : ''; ?>" data-branches="<?php echo esc_attr(implode(',', $branch['mine'][$eid] ?? [])); ?>" data-main-name="<?php echo esc_attr($branch['names'][$branch['main'][$eid] ?? 0] ?? ''); ?>"<?php endif; ?>>
-                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip"<?php echo $cell_ro ? ' disabled aria-disabled="true"' : ' data-ews-cell aria-haspopup="dialog"'; ?><?php echo $is_held ? ' title="' . esc_attr__('Approved leave: HR records a return from leave', 'workforce-one') . '"' : ''; ?> data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b><?php if ($cell_ro): ?><span class="wfo-wl-cell-lock" aria-hidden="true"><?php echo Icons::svg('lock', 12, 2.4); ?></span><?php endif; ?><?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); $takes = in_array($planned, $branch['statuses'], true); ?><small class="wfo-attg-branch<?php echo $pb ? '' : ' is-main'; ?>"<?php echo $takes ? '' : ' hidden'; ?>><?php echo esc_html($pb && isset($branch['names'][$pb]) ? $branch['names'][$pb] : ($branch['names'][$branch['main'][$eid] ?? 0] ?? '')); ?></small><?php endif; ?></button>
+                        <?php foreach ($dates as $i => $d): $day = $days[$eid][$d]; $planned = (string) $day['planned']; $is_held = isset($held[$eid][$d]); $sc_open = $sc_mode ? ($sc['open'][$eid][$d] ?? null) : null; $cell_ro = $wl_readonly || $is_held || $sc_open; ?>
+                        <td class="ews-att-day <?php echo $d === $today ? 'is-today ' : ''; ?><?php echo esc_attr($plan_class($planned)); ?><?php echo $sc_open ? ' wfo-sc-pending' : ''; ?>"<?php echo $is_held ? ' data-held="1"' : ''; ?><?php echo $sc_open ? ' data-sc-open="1"' : ''; ?> data-employee="<?php echo $eid; ?>" data-day="<?php echo (int) $i; ?>" data-status="<?php echo esc_attr($day['actual']); ?>" data-planned="<?php echo esc_attr($planned); ?>"<?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); ?> data-branch="<?php echo $pb ? $pb : ''; ?>" data-branches="<?php echo esc_attr(implode(',', $branch['mine'][$eid] ?? [])); ?>" data-main-name="<?php echo esc_attr($branch['names'][$branch['main'][$eid] ?? 0] ?? ''); ?>"<?php endif; ?>>
+                            <?php $cell_title = $e->name . ' · ' . date_i18n('D d M', strtotime($d)); ?><button type="button" class="wfo-attg-chip"<?php echo $cell_ro ? ' disabled aria-disabled="true"' : ' data-ews-cell aria-haspopup="dialog"'; ?><?php echo $is_held ? ' title="' . esc_attr__('Approved leave: HR records a return from leave', 'workforce-one') . '"' : ($sc_open ? ' title="' . esc_attr(sprintf(/* translators: 1: status asked, 2: manager */ __('Change requested: %1$s (by %2$s, waiting for HR)', 'workforce-one'), (string) $sc_open->new_status, $sc['names'][(int) $sc_open->requester_employee_id] ?? '')) . '"' : ''); ?> data-title="<?php echo esc_attr($cell_title); ?>"><span class="screen-reader-text"><?php echo esc_html($cell_title); ?></span><span class="wfo-attg-dname" aria-hidden="true"><?php echo esc_html(date_i18n('D', strtotime($d))); ?></span><b><?php echo esc_html($planned !== '' ? $planned : $not_set); ?></b><?php if ($sc_open): ?><span class="wfo-sc-badge"><?php esc_html_e('Requested', 'workforce-one'); ?></span><?php elseif ($cell_ro): ?><span class="wfo-wl-cell-lock" aria-hidden="true"><?php echo Icons::svg('lock', 12, 2.4); ?></span><?php endif; ?><?php if ($branch): $pb = (int) ($branch['planned'][$eid][$d] ?? 0); $takes = in_array($planned, $branch['statuses'], true); ?><small class="wfo-attg-branch<?php echo $pb ? '' : ' is-main'; ?>"<?php echo $takes ? '' : ' hidden'; ?>><?php echo esc_html($pb && isset($branch['names'][$pb]) ? $branch['names'][$pb] : ($branch['names'][$branch['main'][$eid] ?? 0] ?? '')); ?></small><?php endif; ?></button>
                             <div class="ews-att-result <?php echo esc_attr($day['badge']['class']); ?>"><?php echo $result($day['badge'], 'small'); ?></div>
                         </td>
                         <?php endforeach; ?>
@@ -318,6 +322,13 @@ $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
 
         <?php if ($wl_readonly): ?>
         <div class="ews-att-savebar wfo-wl-savebar"><?php echo Icons::svg('lock', 16, 2.2); ?><span><?php esc_html_e('The week is final: there is nothing to save.', 'workforce-one'); ?></span></div>
+        <?php elseif ($sc_mode): ?>
+        <div class="ews-att-savebar wfo-sc-savebar">
+            <span class="wfo-attg-count" aria-live="polite" data-none="<?php esc_attr_e('No changes yet. Tap a day to change it; HR decides.', 'workforce-one'); ?>" data-one="<?php esc_attr_e('1 change to send to HR', 'workforce-one'); ?>" data-many="<?php /* translators: %d: number of changed days (2 or more) */ esc_attr_e('%d changes to send to HR', 'workforce-one'); ?>" data-leave="<?php esc_attr_e('You have changes that are not sent yet.', 'workforce-one'); ?>"><?php esc_html_e('No changes yet. Tap a day to change it; HR decides.', 'workforce-one'); ?></span>
+            <button type="button" class="ews-btn wfo-attg-undo" hidden><?php echo Icons::svg('close', 15, 2.2); ?><?php esc_html_e('Undo', 'workforce-one'); ?></button>
+            <button type="button" class="ews-btn ews-save-all" data-sc-open aria-haspopup="dialog"><?php echo Icons::svg('arrow', 17, 2.4); ?><?php esc_html_e('Send to HR…', 'workforce-one'); ?></button>
+        </div>
+        <?php include __DIR__ . '/schedule-change-sheet.php'; ?>
         <?php else: ?>
         <div class="ews-att-savebar">
             <span class="wfo-attg-count" aria-live="polite" data-none="<?php esc_attr_e('No changes yet. Tap a day to change it.', 'workforce-one'); ?>" data-one="<?php esc_attr_e('1 change not saved yet', 'workforce-one'); ?>" data-many="<?php /* translators: %d: number of changed days (2 or more) */ esc_attr_e('%d changes not saved yet', 'workforce-one'); ?>" data-leave="<?php esc_attr_e('You have changes that are not saved yet.', 'workforce-one'); ?>"><?php esc_html_e('No changes yet. Tap a day to change it.', 'workforce-one'); ?></span>

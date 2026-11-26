@@ -67,6 +67,11 @@ use WorkforceOne\Schedule\Data\WordPressScheduleDayStore;
 use WorkforceOne\Schedule\ScheduleDayService;
 use WorkforceOne\Schedule\ScheduleNotifier;
 use WorkforceOne\Schedule\WeekLockService;
+use WorkforceOne\Schedule\ScheduleChangePorts;
+use WorkforceOne\Schedule\ScheduleChangeService;
+use WorkforceOne\Schedule\Data\ScheduleChangeSchema;
+use WorkforceOne\Schedule\Data\ScheduleChangeStore;
+use WorkforceOne\Schedule\Data\WordPressScheduleChangeStore;
 use WorkforceOne\HrLetters\Data\LetterQuery;
 use WorkforceOne\Requests\Data\HubReportQuery;
 use WorkforceOne\Requests\Data\WordPressHubReportQuery;
@@ -128,6 +133,8 @@ final class Services
     private $holidayRefundPorts;
     /** @var LeaveReturnPorts|null */
     private $leaveReturnPorts;
+    /** @var ScheduleChangePorts|null */
+    private $scheduleChangePorts;
     /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
     private $tables;
     /** @var array<string,object> */
@@ -136,8 +143,9 @@ final class Services
     /** @param array<string,string> $tables */
     public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
         Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts, ?LetterPorts $letterPorts = null,
-        ?HolidayRefundPorts $holidayRefundPorts = null, ?LeaveReturnPorts $leaveReturnPorts = null)
+        ?HolidayRefundPorts $holidayRefundPorts = null, ?LeaveReturnPorts $leaveReturnPorts = null, ?ScheduleChangePorts $scheduleChangePorts = null)
     {
+        $this->scheduleChangePorts = $scheduleChangePorts;
         $this->leaveReturnPorts = $leaveReturnPorts;
         $this->holidayRefundPorts = $holidayRefundPorts;
         $this->letterPorts = $letterPorts;
@@ -472,6 +480,28 @@ final class Services
     public function scheduleDays(): ScheduleDayService
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new ScheduleDayService($this->scheduleDayStore(), $this->people(), $this->scheduleNotifier, $this->audit, $this->clock);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The schedule change request tables (3.31.165): an upgrade step. */
+    public function scheduleChangeSchema(): void
+    {
+        ScheduleChangeSchema::create($this->db);
+    }
+
+    public function scheduleChangeStore(): ScheduleChangeStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressScheduleChangeStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Schedule change requests (3.31.165). */
+    public function scheduleChanges(): ScheduleChangeService
+    {
+        if (!isset($this->made[__FUNCTION__])) {
+            if (!$this->scheduleChangePorts) throw new \LogicException('Schedule change requests: no ports were given');
+            $this->made[__FUNCTION__] = new ScheduleChangeService($this->scheduleChangeStore(), $this->scheduleChangePorts, $this->scheduleDays(), $this->tx, $this->audit, $this->clock);
+        }
         return $this->made[__FUNCTION__];
     }
 

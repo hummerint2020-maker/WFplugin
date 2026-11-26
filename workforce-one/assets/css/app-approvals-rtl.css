@@ -187,3 +187,17 @@
 .wfo-lr-date input:disabled{opacity:.5}
 .wfo-lr-sum{display:flex;align-items:center;gap:6px;margin:0;padding:8px 10px;border-radius:10px;background:#E6F7EF;color:#0F6B43;font-size:12.5px}
 .wfo-lr-sum:empty{display:none}
+
+/* Schedule change requests (3.31.165): the HR card and My requests (mockups docs/mockups/schedule-change/hr-card, mine) */
+.wfo-app .wfo-apv-item.tone-schedule{--tc:#5B3FD9}
+.wfo-sc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wfo-sc-list li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 12px;border-radius:12px;background:#F6F5FD;border:1px solid #E5E2F7;font-size:13px}
+.wfo-sc-list li b{color:#13235B}
+.wfo-sc-list li>span:first-of-type{color:#4A5275;grid-column:1}
+.wfo-sc-list li .wfo-sc-change{grid-column:2;grid-row:1/span 2;align-self:center;display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#13235B;white-space:nowrap}
+.wfo-sc-change em{display:inline-flex;color:#5B3FD9;font-style:normal}
+[dir="rtl"] .wfo-sc-change em{transform:scaleX(-1)}
+.wfo-sc-list li.is-warn{background:#FFF8E8;border-color:#F5D9A0}
+.wfo-sc-since{grid-column:1/-1;display:flex;align-items:center;gap:5px;color:#7A4B00;font-size:12px;margin-top:2px}
+.wfo-sc-list.is-card{margin:10px 0}
+.wfo-sc-list.is-mini{margin:8px 0 0}

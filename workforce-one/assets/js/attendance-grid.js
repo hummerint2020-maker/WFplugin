@@ -5,14 +5,15 @@
    page loaded, so a stale page cannot overwrite another manager's newer work (the server reports it
    as a conflict). "By the schedule" branches (3.31.72): a day that takes a branch shows it under its
    status; the picker offers that employee's branches; "Branch…" above a day sets it for everyone
-   who has that branch. */
+   who has that branch. Change requests to HR (3.31.165): on a final week (form[data-ews-sc]) the same changes are listed in
+   a sheet (#wfo-sc-sheet) with a reason, and sent to HR instead of saved; a day already waiting for HR cannot be picked. */
 (function () {
     'use strict';
 
     function init() {
         var form = document.getElementById('ews-grid-form');
         if (!form) return;
-        var cells = Array.prototype.slice.call(form.querySelectorAll('td.ews-att-day[data-employee]:not([data-held])'));
+        var cells = Array.prototype.slice.call(form.querySelectorAll('td.ews-att-day[data-employee]:not([data-held]):not([data-sc-open])'));
         var picker = document.getElementById('wfo-attg-picker');
         var scrim = form.querySelector('.wfo-attg-scrim');
         var title = document.getElementById('wfo-attg-picker-title');
@@ -238,6 +239,38 @@
                 if (branchMode) c.branch = td.getAttribute('data-branch') || '';
                 return c;
             }));
+        });
+
+        // Change requests to HR: "Send to HR…" lists the changes in the sheet; its button sends the form.
+        var scSheet = form.hasAttribute('data-ews-sc') ? document.getElementById('wfo-sc-sheet') : null;
+        var scOpen = form.querySelector('[data-sc-open]');
+        if (scSheet && scOpen) scOpen.addEventListener('click', function () {
+            var list = scSheet.querySelector('[data-sc-list]');
+            var arrow = scSheet.querySelector('template[data-sc-arrow]');
+            var changed = changedCells();
+            var max = parseInt(form.getAttribute('data-sc-max') || '0', 10);
+            list.textContent = '';
+            changed.forEach(function (td) {
+                var chip = td.querySelector('.wfo-attg-chip');
+                var parts = (chip ? chip.getAttribute('data-title') || '' : '').split(' · ');
+                var li = document.createElement('li');
+                var b = document.createElement('b'); b.textContent = parts[0] || ''; li.appendChild(b);
+                var day = document.createElement('span'); day.textContent = parts.slice(1).join(' · '); li.appendChild(day);
+                var ch = document.createElement('span'); ch.className = 'wfo-sc-change';
+                ch.appendChild(document.createTextNode(td.dataset.original || notSet));
+                var em = document.createElement('em');
+                if (arrow) em.appendChild(arrow.content.cloneNode(true));
+                ch.appendChild(em);
+                ch.appendChild(document.createTextNode(td.dataset.value || notSet));
+                li.appendChild(ch);
+                list.appendChild(li);
+            });
+            var tooMany = max > 0 && changed.length > max;
+            var warn = scSheet.querySelector('[data-sc-too-many]');
+            if (warn) warn.hidden = !tooMany;
+            var send = scSheet.querySelector('[data-sc-send]');
+            if (send) send.disabled = tooMany || changed.length === 0;
+            if (window.wfoSheet) window.wfoSheet.open(scSheet, scOpen);
         });
 
         // Leaving with changes that are not saved: ask first.
