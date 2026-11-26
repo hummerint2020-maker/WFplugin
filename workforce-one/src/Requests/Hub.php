@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 final class Hub
 {
     /** Request types the hub can decide; the value is the row title prefix. */
-    public const TYPES = ['leave', 'leave_cancellation', 'overtime', 'early_leave', 'shift_swap', 'face_reset', 'legacy_vacation', 'correction', 'hr_letter'];
+    public const TYPES = ['leave', 'leave_cancellation', 'overtime', 'early_leave', 'shift_swap', 'face_reset', 'legacy_vacation', 'correction', 'hr_letter', 'schedule_change'];
 
     /** Outcomes of a decision; also the ?request_notice= / ?face_reset_notice= values. */
     public const APPROVED = 'approved';
@@ -21,6 +21,10 @@ final class Hub
     public const CHANGED = 'changed';
     /** The request moved to another approval level since the page was opened: nothing was changed (3.31.122). */
     public const MOVED = 'moved';
+    /** A schedule change approved with some days not applied: they changed since the request (3.31.167). */
+    public const SC_PARTIAL = 'sc_partial';
+    /** A schedule change not approved: a day changed since the request and the setting is "apply nothing" (3.31.167). */
+    public const SC_CHANGED = 'sc_changed';
 
     public static function isDecision(string $decision): bool
     {
@@ -110,6 +114,8 @@ final class Hub
             self::ERROR => 'The request could not be processed.',
             self::CHANGED => 'Nothing was changed: a schedule day of this swap changed since the request. You can reject it.',
             self::MOVED => 'This request moved to another level since you opened the page; nothing was changed.',
+            self::SC_PARTIAL => 'Approved: some days were not applied because they changed since the request; My requests and the Audit Log list them.',
+            self::SC_CHANGED => 'Nothing was changed: a day of this schedule change changed since the request. You can reject it.',
         ];
         return $messages[$key] ?? null;
     }
@@ -117,7 +123,7 @@ final class Hub
     /** The hub notice is shown as an error. */
     public static function isErrorNotice(string $key): bool
     {
-        return $key === self::ERROR || $key === self::CHANGED || $key === self::MOVED;
+        return $key === self::ERROR || $key === self::CHANGED || $key === self::MOVED || $key === self::SC_CHANGED;
     }
 
     /** Notice shown after a Face Reset page decision, or null for an unknown key. */

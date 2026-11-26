@@ -52,6 +52,7 @@ trait EWS_Features_Trait {
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
+                'schedule_change'=>(bool)$this->option('ews_feature_schedule_change'),
                 'attendance_cards'=>$this->attendance_cards_enabled(),
                 'leave_type'=>$this->leave_type_enabled(),
                 'presence_qr'=>(bool)(int)$this->option('ews_presence_qr_signin'),
@@ -89,6 +90,8 @@ trait EWS_Features_Trait {
             'office_minimum'=>$om_tab['settings'],'om_teams'=>$this->om_admin_teams($om_tab['dept']),'om_managers'=>$this->om_admin_managers($om_tab['dept']),'om_statuses'=>$this->schedule_type_names(true),
             'om_departments'=>$om_tab['departments'],'om_dept'=>$om_tab['dept'],'om_dept_own'=>$om_tab['own'],
             'week_lock'=>$this->week_lock_settings(),'week_lock_next'=>$this->week_lock_next(),'timezone'=>wp_timezone_string(),'week_lock_can'=>$this->week_lock_can_override(),
+            // Change requests to HR (3.31.167): the waiting ones are counted only while it is on (no query while off).
+            'sc'=>$this->sc_admin_view(),
             'roles_url'=>admin_url('admin.php?page=ews31-roles'),
             'weekday_names'=>$this->working_day_names(),'working_days'=>$this->working_days(),
             'saved'=>isset($_GET['features_saved']),
@@ -116,11 +119,22 @@ trait EWS_Features_Trait {
                 :\WorkforceOne\Settings\OfficeMinimumSettings::fromPost($post,$this->schedule_type_names(true),get_option('ews_office_minimum',[]));
             if($om_error!=='')$this->features_redirect(['features_error'=>'om_'.$om_error]+($om_dept?['om_dept'=>$om_dept]:[]));
         }
-        $wl=null;
+        $wl=null;$sc=null;
+        $sc_was=$this->sc_enabled();
         // Only someone who may edit a final week may move the cutoff or switch the lock off, or a week could be reopened unaudited.
         if(isset($post['week_lock_present'])&&$this->week_lock_can_override()){
-            [$wl,$wl_error]=\WorkforceOne\Settings\WeekLockSettings::fromPost($post);
+            [$wl,$wl_error]=\WorkforceOne\Settings\WeekLockSettings::fromPost($post,get_option('ews_week_lock',[]));
             if($wl_error!=='')$this->features_redirect(['features_error'=>'wl_'.$wl_error]);
+            // Change requests to HR (3.31.167), in the same card and by the same people.
+            if(isset($post['sc_present'])){
+                [$sc,$sc_error]=$this->sc_settings_from_post($post);
+                // Off and staying off: a field left wrong in the block does not stop the rest of the page (and is not saved).
+                if($sc_error!==''&&!$flag('sc_enabled')&&!$this->option('ews_feature_schedule_change'))$sc=null;
+                elseif($sc_error!=='')$this->features_redirect(['features_error'=>'sc_'.$sc_error]);
+                $apv=isset($post['my_approvals_present'])?$flag('my_approvals_enabled'):$this->my_approvals_enabled();
+                // Only switching it on needs My approvals; switching My approvals off later closes the waiting requests (below).
+                if($flag('sc_enabled')&&!$this->option('ews_feature_schedule_change')&&!$apv)$this->features_redirect(['features_error'=>'sc_my_approvals']);
+            }
         }
         $occ=$this->occasions_validate($post);   // Occasions (3.31.145)
         [$early,$error]=FeatureSettings::earlyLeave($post['early_leave_max']??120,$post['early_leave_monthly']??240);
@@ -300,8 +314,23 @@ trait EWS_Features_Trait {
             $wl_on=$this->week_lock_enabled();
             // Switched on: the cutoff that has passed already does not send a notification now (only the next one does).
             if($wl_on&&!$wl_was){$c=\WorkforceOne\Settings\WeekLockSettings::config($wl);update_option('ews_week_lock_notified',\WorkforceOne\Schedule\WeekLock::latest(current_time('mysql'),$this->working_days(),(int)$c['cutoff_day'],(string)$c['cutoff_time'])['week'],false);}
-            if($wl_before!==\WorkforceOne\Settings\WeekLockSettings::config($wl)||$wl_was!==$wl_on)$this->audit('week_lock_update','settings',0,($wl_on?'enabled':'disabled').'; cutoff='.$wl['cutoff_day'].' '.$wl['cutoff_time'].'; notify='.($wl['notify']?'on':'off'));
+            $wl_after=\WorkforceOne\Settings\WeekLockSettings::config($wl);
+            // The banner (3.31.167) is in the line only when it changed or is custom: an unchanged line stays as it was.
+            $banner_changed=array_intersect_key($wl_before,\WorkforceOne\Settings\WeekLockSettings::BANNER)!==array_intersect_key($wl_after,\WorkforceOne\Settings\WeekLockSettings::BANNER);
+            $banner=$banner_changed||\WorkforceOne\Settings\WeekLockSettings::customBanner($wl_after)?'; banner='.(\WorkforceOne\Settings\WeekLockSettings::customBanner($wl_after)?'custom':'default'):'';
+            if($wl_before!==$wl_after||$wl_was!==$wl_on)$this->audit('week_lock_update','settings',0,($wl_on?'enabled':'disabled').'; cutoff='.$wl['cutoff_day'].' '.$wl['cutoff_time'].'; notify='.($wl['notify']?'on':'off').$banner);
         }
+        if($sc!==null){
+            $sc_before=$this->sc_settings();$sc_flag_was=(bool)$this->option('ews_feature_schedule_change');
+            $sc_after=$sc;   // already in config() form
+            // Written only when something changed: an untouched card leaves the options (and the Audit Log) as they were.
+            if($sc_before!==$sc_after)update_option('ews_schedule_change',$sc,false);
+            if($sc_flag_was!==$flag('sc_enabled'))update_option('ews_feature_schedule_change',$flag('sc_enabled')?1:0,false);
+            if($sc_before!==$sc_after||$sc_flag_was!==$flag('sc_enabled'))$this->audit('schedule_change_settings','settings',0,($flag('sc_enabled')?'enabled':'disabled').'; statuses='.($sc_after['statuses']?implode(',',$sc_after['statuses']):'all').'; leave='.($sc_after['allow_leave']?'on':'off')
+                .'; reason='.$sc_after['reason_min'].'; max_days='.$sc_after['max_days'].'; past_days='.$sc_after['past_days'].'; changed_day='.$sc_after['changed_day'].'; expire='.$sc_after['expire_days'].'; import='.($sc_after['import']?'on':'off').'; notify_on_request='.($sc_after['notify_on_request']?'on':'off'));
+        }
+        // Switched off here (its own switch, the week lock or My approvals): the waiting requests close and their managers are told.
+        if($sc_was&&!$this->sc_enabled())$this->sc_close_all('off');
         update_option('ews_confirmation_actions',FeatureSettings::confirmActions($post['confirm_actions']??[]),false);
 
         $state=function($on){return $on?'enabled':'disabled';};

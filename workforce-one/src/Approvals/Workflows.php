@@ -33,6 +33,8 @@ final class Workflows
         // 3.31.109 (approvals stage 5): by default the direct manager, then Finance.
         'salary_advance' => ['Salary Advance', ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
         'hr_letter' => ['HR Letter', ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
+        // 3.31.167: a manager's change of a final week; always decided by someone (HR by default), so no "No approval".
+        'schedule_change' => ['Schedule Change', ['LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
     ];
 
     /** Mode names that read differently for one workflow. */
@@ -63,6 +65,7 @@ final class Workflows
         'shift_swap' => 'The colleague decides: the two days are swapped as soon as they accept (the same as Colleague only).',
         'salary_advance' => 'The first request sets it to two levels: the direct manager, then Finance.',
         'hr_letter' => 'The first request sets it to one level: HR.',
+        'schedule_change' => 'The first request sets it to one level: HR.',
     ];
 
     /** What "No approval" does in each module (they differ). */
@@ -74,6 +77,7 @@ final class Workflows
         'shift_swap' => '',
         'salary_advance' => 'Requests are approved automatically and wait to be paid.',
         'hr_letter' => 'Requests are approved automatically: a type with a template is issued at once (salary certificates included); the others wait for HR.',
+        'schedule_change' => '',
     ];
 
     /** Workflows seeded in the database that no module uses yet. */

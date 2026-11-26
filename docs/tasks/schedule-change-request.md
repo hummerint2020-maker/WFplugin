@@ -1,3 +1,614 @@
+# Schedule change request (week lock R2): refreshed design against main d71d3e9 (3.31.164), layered shape
+
+Read-only analysis. All file:line references below were checked against the current tree. Paths are relative to `/home/user/wfplugin`, and plugin code lives in `workforce-one/`. The owner's answers of 2026-10-22 (1–12) are treated as decided. This design also covers the owner's addition from today: a configurable final-week banner.
+
+---
+
+## 1. What changed since 3.31.121
+
+### 1.0 Two facts to know before anything else
+- **The feature was dropped once.** `docs/tasks/approvals-engine-move.md:8` and its §9.2 (`:575`) say "The schedule change request (F1) is dropped" (owner, 2026-10-27). That is why the plan's `Approvals\Engine` port and `LegacyApprovalEngine` (layered-modules.md §3 row F1) were never built. This design revives the feature, so that note and layered-modules.md §8 "Resulting order" are out of date.
+- **The R1 banner setting (owner answer 12) never shipped.** It was planned for 3.31.123, but 3.31.123 became a swap-fix release. `grep -rn "banner" src/Settings/WeekLockSettings.php includes/trait-features.php templates/admin/features.php` finds nothing, and the banner text is hard-coded at `templates/app/attendance.php:198-214`. It is now part of this design (§2.12), as the owner asked today.
+
+### 1.1 Every reference in the old design, re-checked
+| Old reference | Now | Note |
+|---|---|---|
+| `week_lock_refusal` trait-week-lock.php:44 | same, `:44-47`; `week_lock_record_request` `:63-67`; `week_lock_tick` `:96-100` | trait is `traits_clean` in slice `schedule.days` |
+| grid concurrent path skips locked cells, trait-attendance.php:317-319 | `includes/trait-attendance.php:280-282` (`att_grid_save` `:204-379`) | new since then: `leave_held_days` refusal `:234`, `:283` |
+| no-JS path :386-388 | `:351-354` | |
+| redirect `grid_locked` :410 | `:376` | |
+| `att_single` wp_die :414 | `:381` (one line) | also refuses approved-leave days now |
+| `parse_csv` locked rows :453 | `:388-440`; lock error `:420`; held-leave errors `:427-438` | |
+| `att_import` re-check :466 | `:444-451` | |
+| R1 modal trait-frontend.php:180-193 | `includes/trait-frontend.php:200-214` (`ux_notice_from_query`) | |
+| `remove_query_arg` list :615 | `:666-667` | |
+| `templates/app/attendance.php:82` `$wl_readonly` | `:97` | |
+| chips disabled :205 | cell `:288-290` (`$cell_ro = $wl_readonly \|\| $is_held`) | |
+| save bar :234-236 | `:319-327` | |
+| CSV note :284 | `:369` | |
+| banner (not cited before) | `:198-214` | kinds `soon` / `override` / `locked` |
+| `save_att_if_unchanged` trait-core.php:233-362 | moved: delegator `includes/trait-core.php:255`, body `src/Schedule/ScheduleDayService.php:117-151` | it notifies through the `ScheduleNotifier` port; adapter text at `includes/trait-services.php:62-66` |
+| `save_att` | `trait-core.php:260` → `ScheduleDayService::save` `:62-92` | unconditional, notifies per day |
+| `branch_plan_day` trait-branches.php:150-160 | same lines | **still direct SQL on `$this->schedule`** (L1 debt) |
+| advances `advance_workflow_ready` :144-148 | `trait-advances.php:144`; respond `:199`; withdraw `:233` | closest precedent is now **HR letters (HL3)**: `src/HrLetters/LetterRequests.php`, `LetterDecisions.php`, `includes/trait-hr-letters.php` |
+| `swap_apply_rows` :79-101 | `trait-swap.php:86-109` | still direct SQL (L3 not done) |
+| `swap_admin_decide` :196-224 | `:277-308` | |
+| daily workers change request :779-862 | `trait-daily-workers.php:809` (save), `:856` (decide) | |
+| `Workflows::IN_USE` :26-35 | `src/Approvals/Workflows.php:26-36` (+`hr_letter`); `NOT_SET_MEANS` `:58-66`; `NONE_MEANS` `:69-77` | |
+| `NONE_MEANS[$key]` read without `??` :888 | `includes/trait-approvals.php:611` | still without `??`, so the key is **required** |
+| seeding :240-264 | `approval_seed_workflows` `trait-approvals.php:340` → `WorkflowService::seedDefaults` `src/Approvals/WorkflowService.php:41-66` | `configure()` (`:72-75`) fails `workflow_not_found` without a seed, so the schema bump is still required |
+| `approval_start` :486-591, self rule :552-555, substitutes :580/:661 | wrapper `trait-approvals.php:411` → `ApprovalEngine::start` `src/Approvals/ApprovalEngine.php:84`; `mayDecide` `:290`; substitutes in `SubstituteService` | engine is layered since 3.31.128 |
+| `approval_act` :626-680 | wrapper `trait-approvals.php:436` (6th arg `$expected_step`) → `ApprovalEngine::act` `:319` | |
+| "double post not done yet" | **done in 3.31.122**: `approval_posted_step()` `trait-approvals.php:199-201` (reads `$_POST['approval_step']`, a **step id**, not step_order, via `LevelGuard::posted`), `approval_level_moved()` `:207-209`; My approvals adds `approval_step` automatically (`trait-my-approvals.php:122`); Hub rows carry `step` (`trait-admin-requests.php:78-79`); `Hub::MOVED` | old §3.6 becomes "use the engine's posted-level guard" (§2.6) |
+| `approval_close_open` :852-866 | wrapper `trait-approvals.php:586` → `ApprovalEngine::closeOpen` `:420-433` (`true \| 'moved' \| false`, `$closed` sets skip_reason) | lock order in the engine: steps, then request |
+| deadlines trait-approval-deadlines.php:15-45, kind label :80-84 | key loop `:19` (gates `hr_letter` on its switch); `approval_kind_label` `:49-51` | |
+| `Hub::TYPES` Hub.php:13 | same (`+hr_letter`); `CHANGED` text is swap-specific `:111`; `hubNotice` `:104-115`; `isErrorNotice` `:118-121` | |
+| Hub rows trait-admin-requests.php:16-83 | `:16-91` (HR letters loop `:59-61` is the model) | |
+| Hub decision switch :100-117 | `:430-445` | |
+| My approvals card :53-63 | `trait-my-approvals.php:56-68` | card may set `'bulk'=>false` (`templates/app/approvals.php:56`) |
+| kinds :133 | `:210-212` | |
+| `requests_content` :184-205 | `:289-332` (merge `:305`, notices `:311-321`) | |
+| `request_withdraw` :244-262 | `:378-400` | |
+| `ews_feature_my_approvals` :25/:49 | `my_approvals_enabled` `:29` | |
+| Approval Workflows card | hidden while a feature is off: `trait-approvals.php:604`; save guard `:635` | copy for `schedule_change` |
+| `report_days` trait-reports.php:274-333 | `:274` | unchanged |
+| payroll :115-159 / PayCalculator :18-28 | `trait-payroll.php:115`; `src/Payroll/PayCalculator.php:18-24`, `:92` | unchanged |
+| `statuses()` trait-schedule-types.php:112-114 | same | |
+| leave approval writes Vacation :153-182 | `leave_apply_final_approval` `trait-leave.php:217-248` | unconditional write; SC must skip such days |
+| leave cancellation restores unconditionally :207-210 | **changed**: `LeaveReturnService::restoreDay` `src/Leave/LeaveReturnService.php:150-160` keeps a day a manager changed (Leave return on); `restoreDays` `:135` (used by `applyCancellation` `:198` with return off) is still unconditional | the rule "never write under a leave" still holds |
+| corrections carry :485-529 | `trait-corrections.php:517-546` | |
+| `ews_schema_target()` '3.31.121' :332 | `includes/trait-schema.php:354` = **'3.31.162'** | step list `:400-405`; retry `:373`; per-site lock `:378-382` |
+| `uninstall.php:56` | `uninstall.php:55-59` | |
+| cron `employee-schedule-manager.php:244,266` | `:269` (hook), `:291` (schedule) | `Lifecycle::CRON_HOOKS` already has it (`src/Support/Lifecycle.php:17`) |
+| `notify()` :138-163 | `trait-notifications.php:138` | |
+| `modules.json:96-146` | schedule block starts `docs/architecture/modules.json:247` | now has `layered` slice `days` and `exports` |
+| `/me/schedule` trait-schedule-api.php:19-45 | `src/Api/Routes.php:41` | nothing to do (answer 9) |
+| `cx_hub_rows` :961 | `trait-corrections.php:995` | |
+| features card :87, template :166-180 | data `trait-features.php:89`; validation `:119-122`; save `:289-297`; template Week lock card `templates/admin/features.php:324-~345` | |
+| `attendance_content` trait-attendance-grid.php:84 | `:95-165`; `week_lock` var `:157`; `held` `:160` | |
+| `SchemaCheck::TABLES` "not changed" | **wrong now**: HL3 added `ews_hr_letters` (`src/Support/SchemaCheck.php:21`) | add both new tables |
+
+### 1.2 What moved or is new since October (relevant here)
+- **Schedule writes are a layered slice** (3.31.127): `ScheduleDayService`, `WeekLockService`, and `ScheduleDayStore` / `WordPressScheduleDayStore` (`src/Schedule/Data/*`). Slice `schedule.days` owns tables `schedule` and `company_calendar` (`modules.json` schedule.layered). L3 means **no other store may touch `ews_schedule`**. The new store must go through `ScheduleDayService`.
+- **The approval engine is layered** (3.31.128): `src/Approvals/{ApprovalEngine,ApprovalReads,WorkflowService,DeadlineService}`. Modules reach it through the trait wrappers, called from their own port adapters in `includes/trait-services.php`. The HR letters `LetterApprovals` adapter (`trait-services.php:240-255`) is the template to copy.
+- **Ports are anonymous classes over `$call=function($fn,...$args){return $this->$fn(...$args);}`** (`trait-services.php:171-222`). They are passed as an optional trailing constructor argument of `Platform\Services` (`src/Platform/Services.php:146-149`). The service getter throws `LogicException` when its ports are missing (`:357-365`, `:380-387`). Dynamic `$this->$fn(` calls are invisible to `check_modules.py`, so they do not raise the module baseline.
+- **Schema per feature**: `src/HrLetters/Data/LetterSchema.php` (`create(\wpdb)` + `sql()`), called by `ensure_hr_letters_schema()` → `services()->letterSchema()` (`trait-hr-letters.php:32-35`, `Services.php:287-290`). `LeaveReturnSchema::sql()` is called inline from `ensure_leave_schema` (`trait-schema.php:141`). `check_layers.py` skips `*Schema.php` for L1.
+- **Settings classes used by a Service live in the module's namespace** (`src/HrLetters/LetterSettings.php`). `src/Settings/*` (WeekLockSettings, OfficeMinimumSettings) are used only by traits. L4 rejects a Service that `use`s `WorkforceOne\Settings\*`, because Settings exports nothing.
+- **Leave return** (3.31.161): approved-leave days are read-only in the grid (`leave_held_days` `trait-leave.php:83-86`, template `$is_held`). There is also a changed-leave-days report and `putBackDay` (`LeaveReturnService.php:418-445`), which writes Vacation over a manager's change. **Leave holidays** (3.31.162): a leave skips company holidays (`holidays_skipped`). Neither changes SC rules: SC refuses leave days and holidays anyway.
+- **My approvals swap inbox** (3.31.124: `swap_peer_cards`, `trait-my-approvals.php:105-113`), **Leave in My requests** (3.31.158: `req_kind=leave`, `leave_cancel` withdraw), **Hub Reports tab** (3.31.159: `src/Requests/HubReport.php:21-22` fixed `TYPE_CODES`, `WordPressHubReportQuery`). A type missing from Reports is simply not listed there; nothing breaks.
+- **Golden harness** (`tests/golden/run.py`, `expected.json`, `pages.json`; its own CI job `.github/workflows/ci.yml:399-467`). A feature release declares the pages it changes and the hooks it adds. HL3 shows how a schema change is handled: the snapshot is restored with each side's schema marked done (CHANGELOG 3.31.144, line 273).
+
+### 1.3 What in the old design is now wrong
+1. The `level=<step_order>` post and the module-side `step_order` check (§3.6, §4.5). Replace with `approval_step` = step id, `levelMoved()` before acting, and the engine's `expectedStep`.
+2. `sc_apply_days` doing raw `UPDATE/INSERT ews_schedule`. That would violate L3. Use a new `ScheduleDayService::applyIf()` (§2.5).
+3. `ensure_schedule_change_schema()` with DDL in the trait. Use `src/Schedule/Data/ScheduleChangeSchema.php`.
+4. `src/Settings/ScheduleChangeSettings.php`. Use `src/Schedule/ScheduleChangeSettings.php` (L4).
+5. "`SchemaCheck::TABLES` not changed". Add the tables.
+6. "Seeded at trait-approvals:240-264". Seed in `WorkflowService::seedDefaults`.
+7. Schema target "3.31.123". Use **3.31.165**.
+8. "Leave cancellation restores unconditionally". Only true with Leave return off (see 1.1).
+9. "No mockups yet". 30 approved mockups exist in `docs/mockups/schedule-change/` (`*.en.html`, `*.ar.html`).
+10. The `Approvals\Engine` port (layered-modules F1) is obsolete. Use a per-module approvals port, as `LetterApprovals` does.
+11. `Hub::CHANGED`'s text names "swap" (`Hub.php:111`). SC needs its own notice keys.
+12. The grid apply notification: `save()` notifies one message per day, but the mockup `emp-push` shows **one message per employee with their days**. SC must not use `save()`/`saveIfUnchanged()`; it notifies after COMMIT through its port.
+
+---
+
+## 2. Refreshed design (layered)
+
+### 2.1 New files
+| File | Layer | Notes |
+|---|---|---|
+| `src/Schedule/ScheduleChangeService.php` | Service | create / decide+apply / withdraw / expire / closeAll / reads. No `$wpdb`, globals, options, clock or current user (L2). |
+| `src/Schedule/ScheduleChangeRules.php` | pure | `check()`, `outcome()`, `expired()`, `openKey()`, `summary()`, `isLeaveRule()` |
+| `src/Schedule/ScheduleChangeSettings.php` | pure | `DEFAULTS`, `config($saved, array $types)`, `fromPost(array $post, array $types)` |
+| `src/Schedule/ScheduleChangePorts.php` | port interface | §2.4 |
+| `src/Schedule/Data/ScheduleChangeStore.php` | Store interface | §2.3 |
+| `src/Schedule/Data/WordPressScheduleChangeStore.php` | Store | the only SQL on the two new tables; `lock()` = `''` on SQLite, else ` FOR UPDATE` (copy `WordPressLeaveReturnStore::lock()` `:18-21`) |
+| `src/Schedule/Data/ScheduleChangeSchema.php` | Schema | `create(\wpdb $db): void` (dbDelta of both), `requestsSql(string $prefix, string $collate)`, `daysSql(...)` |
+| `includes/trait-schedule-change.php` | thin controller, `EWS_Schedule_Change_Trait` | no `global $wpdb` (`traits_clean`) |
+| `templates/app/schedule-change-sheet.php` | template | the "Send to HR" sheet (mockup `send`) |
+| `assets/js/attendance-grid.js` (changed) | JS | request mode; optional `assets/js/schedule-change.js` for the sheet |
+| CSS in `assets/css/app-attendance.css` (+RTL as the mockups) | | |
+| `tests/unit/ScheduleChangeServiceTest.php`, `ScheduleChangeRulesTest.php`, `ScheduleChangeSettingsTest.php`, `tests/unit/Fakes/MemoryScheduleChangeStore.php` | tests | §4 |
+| `tests/e2e_schedule_change.py`, `tests/e2e_schedule_change_store.php` | tests | §4 |
+
+### 2.2 Data model (`ScheduleChangeSchema`, unchanged from the old §2 except the format)
+- **`{prefix}ews_schedule_change_requests`**: `id BIGINT UNSIGNED AI`, `requester_employee_id BIGINT UNSIGNED NOT NULL`, `requested_by BIGINT UNSIGNED NOT NULL DEFAULT 0`, `source VARCHAR(10) NOT NULL DEFAULT 'grid'` (grid / draft / import), `reason TEXT NOT NULL`, `status VARCHAR(20) NOT NULL DEFAULT 'pending'` (pending / approved / partial / rejected / withdrawn / expired / closed), `days SMALLINT UNSIGNED NOT NULL`, `applied SMALLINT UNSIGNED NOT NULL DEFAULT 0`, `first_date DATE NOT NULL`, `last_date DATE NOT NULL`, `requested_at DATETIME NOT NULL`, `decided_by BIGINT UNSIGNED NULL`, `decided_at DATETIME NULL`, `decision_note VARCHAR(500) NOT NULL DEFAULT ''`.
+  - Keys: `PRIMARY KEY  (id)`, `KEY status (status,requested_at)`, `KEY requester (requester_employee_id,id)`.
+- **`{prefix}ews_schedule_change_days`**: `id`, `request_id`, `employee_id`, `work_date DATE`, `had_row TINYINT(1)`, `schedule_id BIGINT UNSIGNED NULL`, `old_status VARCHAR(40) NULL` (as stored), `new_status VARCHAR(40) NOT NULL`, `branch_set TINYINT(1) NOT NULL DEFAULT 0`, `old_location_id`, `new_location_id BIGINT UNSIGNED NULL`, `result VARCHAR(12) NULL` (applied / already / changed / inactive / gone / branch / leave), `now_status VARCHAR(40) NULL`, `open_key VARCHAR(40) NULL`.
+  - Keys: `KEY request (request_id,employee_id,work_date)`, `KEY employee_date (employee_id,work_date)`, `UNIQUE KEY open_key (open_key)` (`"eid|Y-m-d"` while open, NULL after).
+- **Approval link:** workflow `schedule_change`, entity_type `schedule_change`, entity_id = the request id.
+
+### 2.3 Store interface `Schedule\Data\ScheduleChangeStore`
+Writes return what wpdb returned (`int|false`). Ordering is always `employee_id, work_date`.
+```php
+public function insertRequest(array $row): int;            // 0 on error
+public function insertDay(array $row): int;                // 0 on error
+public function lastWasDuplicate(): bool;                  // last error is a duplicate open_key (as LetterStore)
+public function find(int $id): ?object;
+public function lockRequest(int $id): ?object;             // FOR UPDATE (not SQLite)
+public function days(int $requestId): array;               // ordered
+public function lockDays(int $requestId): ?array;          // ordered, FOR UPDATE; null on error
+/** @param int[] $ids @return array<int,object[]> */ public function daysOf(array $ids): array;
+/** open days of these people in a range: employee_id, work_date, request_id, new_status, requester_employee_id */
+public function openOn(array $employeeIds, string $from, string $to): array;
+/** @return int|false */ public function claim(int $id, string $from, array $set);        // WHERE id AND status=$from
+/** @return int|false */ public function claimOwn(int $id, int $requesterEmployeeId, array $set); // + requester, status='pending'
+public function setDayResult(int $dayId, string $result, ?string $nowStatus): bool;     // also open_key=NULL
+public function releaseDays(int $requestId): bool;          // open_key=NULL (check !== false only)
+/** @return int|false */ public function finish(int $id, string $status, int $applied);
+public function waiting(int $limit): array;                 // pending, oldest first (Hub)
+public function forRequester(int $employeeId, int $limit): array;
+public function open(): array;                              // id, requested_at, first_date, last_date (expiry, close-all, count)
+public function lastError(): string;
+```
+
+**Days slice: added methods** (same slice, owner of `ews_schedule`):
+- `ScheduleDayStore::updateIf(int $id, int $employeeId, string $date, string $expected, array $set)`: returns `int|false`. It runs `UPDATE … SET … WHERE id=%d AND employee_id=%d AND work_date=%s AND status=%s`, with the `location_id` handling copied from `branch_plan_day` (NULL for 0).
+- `MemoryScheduleDayStore` (fake) gets the same method.
+
+### 2.4 Ports `Schedule\ScheduleChangePorts`
+Built once in `includes/trait-services.php` as `schedule_change_ports()`, the same style as `leave_return_ports()`, `:190-222`.
+```php
+public function enabled(): bool;                                  // sc_enabled()
+public function settings(): array;                                // sc_settings() (ScheduleChangeSettings::config)
+public function today(): string;                                  // current_time('Y-m-d')
+public function weekFinalFor(string $date): bool;                 // week_lock_refusal($date)==='locked' (the requester has no override)
+public function statusRule(string $status): ?string;             // null = not an active type; 'absent' for Absent; else schedule_type rule
+public function inScope(int $employeeId): bool;                   // people_active_id && employee_attendance_enabled && department_scope_allows_employee
+public function activeEmployee(int $employeeId): ?object;         // active + attendance on (id, name, wp_user_id) — at apply
+public function leaveOn(int $employeeId, string $date): int;      // leave_overlap (Pending/Approved) id, 0 none
+public function hasAttendance(int $employeeId, string $date): bool;
+/** @return string[] Y-m */ public function closedMonths(string $from, string $to): array;   // payroll_closed_months
+public function branchMode(): bool;                               // branch_settings()['mode']==='schedule'
+public function branchAllowed(int $employeeId, int $locationId, bool $requesterChoices): bool; // branch_main/other ids (+ branch_choices())
+// approvals (as LetterApprovals)
+public function workflowReady(): bool;                            // sc_workflow_ready(), own transaction, before ours
+public function startApproval(int $id, int $requesterEmployeeId): bool;   // approval_start(...,false)
+public function findApproval(int $id): ?object;
+public function levelMoved(int $approvalRequestId, ?int $posted): bool;
+public function canAct(int $approvalRequestId, bool $override): bool;
+public function act(int $approvalRequestId, string $decision, string $note, ?int $posted, bool $override): string; // '' | approval_error_code
+/** @return true|string|false */ public function closeApproval(int $id, bool $closed); // approval_close_open
+// after COMMIT only
+public function weekLockRecord(int $employeeId, array $days, string $ref): void;   // source 'schedule_change'
+public function notifyApprover(object $request): void;
+public function notifyRequester(string $event, object $request, array $detail): void; // approved|partial|rejected|closed
+/** @param array<string,string> $days */ public function notifyApplied(int $employeeId, array $days, int $requestId): void;
+public function notifyRequested(int $employeeId, array $days, int $requestId): void;
+public function actorId(): int;
+public function actorName(): string;
+```
+All text, links and `notify()` calls stay in the adapter (trait functions `sc_notify_*`). The service passes codes and values only.
+
+### 2.5 ScheduleDayService addition
+```php
+/**
+ * An approved change applied only while the day is still as read (schedule change request, 3.31.165). Nobody is told here
+ * (the caller tells each employee once, after COMMIT). @return array{result:string,now:?string} result: applied|already|changed|save
+ */
+public function applyIf(int $employeeId, string $date, ?int $scheduleId, ?string $expected, string $status,
+                        bool $setBranch, ?int $locationId, int $actor, string $at): array
+```
+- **Had a row:** `updateIf(...)`.
+  - `false` → `save`.
+  - `0` → `cur = statusOf(id) ?? find(eid,date)->status`, then `already` if `cur===status`, else `changed`.
+- **No row:** `findStatusNote(eid,date)` first. This pre-check means an INSERT is never allowed to fail on SQLite, which would abort the transaction.
+  - Row exists → `already` / `changed`.
+  - Else `insert([...,'note'=>'', 'location_id'?])`; `0` → `save`. On MySQL a racing insert makes the whole decision roll back and HR is told "try again".
+
+### 2.6 Service methods (signatures)
+```php
+final class ScheduleChangeService {
+  public function __construct(ScheduleChangeStore $store, ScheduleChangePorts $site, ScheduleDayService $days,
+                              Transaction $tx, AuditLog $audit, Clock $clock)
+  /** @param list<array{employee:int,date:string,status:string,branch?:int|null}> $changes
+   *  @return array{id:int,error:string,sent:int,refused:list<array{employee:int,date:string,code:string}>}
+   *  error: access|employee|reason|approval|too_many|none|pending|save */
+  public function create(object $requester, int $userId, array $changes, string $reason, string $source): array
+  /** @param int|null $posted approval_step shown
+   *  @return array{result:string,applied:list,skipped:list}
+   *  result: advanced|approved|partial|rejected|access|done|moved|note|approval|changed|save */
+  public function decide(int $id, string $decision, string $note, ?int $posted, bool $override): array
+  public function withdraw(int $id, int $employeeId): string        // ''|done|save
+  public function expireDue(): int                                   // cron; requests closed
+  public function closeAll(string $why): int                         // switched_off|week_lock_off|my_approvals_off; does NOT check enabled()
+  public function openCount(): int
+  /** @return array<int,array<string,object>> eid => date => open day */ public function openOn(array $eids, string $from, string $to): array
+  public function mine(int $employeeId, int $limit): array          // headers + days (daysOf, one query)
+  public function waiting(int $limit): array                         // headers + days, for the Hub
+  public function card(int $id): ?array                              // header, days with now-status + changed flag, closed months, leave on day
+}
+```
+
+**Rules** (`ScheduleChangeRules`, pure):
+- `check(array $f, array $cfg): string` returns `''` or one of: `not_locked`, `scope`, `status`, `leave_status`, `same`, `holiday`, `past`, `closed_month`, `leave_day`, `pending`, `attendance` (a leave type on a day with attendance), `branch`.
+- `outcome(...)` covers applied / already / changed.
+- `expired(string $requestedAt, string $now, int $days): bool`
+- `openKey(int $eid, string $date): string`
+
+**Settings** (`ScheduleChangeSettings::DEFAULTS`):
+- `statuses` = [] (empty means every active type whose rule is not `leave`, plus Absent)
+- `allow_leave` 0
+- `reason_min` 10 (1–200)
+- `max_days` 25 (1–200)
+- `past_days` 14 (0–90)
+- `closed_month` 'refuse' (fixed)
+- `expire_days` 14 (0–90, 0 = never)
+- `notify_on_request` 0
+- `changed_day` 'skip' | 'refuse'
+- `import` 1
+
+### 2.7 Pseudo-code
+
+**create** (one transaction; the workflow is made ready before it):
+```
+if !site.enabled() -> access
+cfg = site.settings(); reason = trim(reason); if mb_strlen(reason) < cfg.reason_min -> reason
+if !site.workflowReady() -> approval                       // its own transaction (WorkflowService::configure), BEFORE ours
+today = site.today(); ok=[]; refused=[]
+dedupe (eid,date) — the last one wins
+open = store.openOn(eids, minDate, maxDate)                // one read
+for c in changes:
+   cur = days.day(c.eid, c.date)                           // ScheduleDayService (same module, exported)
+   f = [final: site.weekFinalFor(date), scope: site.inScope(eid), rule: site.statusRule(status),
+        old: cur?.status, holiday: isset(days.companyHolidays(date,date)), today, closed: site.closedMonths(date,date),
+        leave: site.leaveOn(eid,date), attendance (only if rule==leave): site.hasAttendance(eid,date),
+        pending: isset(open[eid][date]), branch: (c.branch!==null && site.branchMode()) ? site.branchAllowed(eid,c.branch,true) : true]
+   code = Rules::check(f,cfg); code ? refused[] : ok[] = c + [had_row, schedule_id, old_status (stored, untrimmed), old_location_id]
+if count(ok) > cfg.max_days -> too_many (nothing sent)
+if !ok -> none (+refused)
+sort ok by (eid,date)
+tx.begin()                                   -> false: save
+  id = store.insertRequest(header)           -> 0: rollback, save
+  for d in ok: store.insertDay(d + open_key) -> 0: rollback; lastWasDuplicate ? pending : save   // never go on after a failed statement (SQLite)
+  site.startApproval(id, requester.id)       -> false: rollback, approval
+  ar = site.findApproval(id); ar waiting?    -> else rollback, approval   // modes have no NONE, defensive
+tx.commit()                                  -> false: rollback, save
+after: audit('schedule_change_request','schedule_change',id,"N days · week of … · \"reason\"")
+       site.notifyApprover(header); if cfg.notify_on_request: site.notifyRequested per employee
+```
+
+**decide + apply** (engine first, then the module's rows, then the schedule rows):
+```
+if !site.enabled() || decision∉{approve,reject} -> access
+r = store.find(id); if !r || r.status!='pending' -> done
+ar = site.findApproval(id); if !ar -> access
+if site.levelMoved(open(ar) ? ar.id : 0, posted) -> moved            // 3.31.122 guard, before anything else
+if !site.canAct(ar.id, override) -> access
+cfg = site.settings(); now = clock.now(); actor = site.actorId()
+tx.begin()                                                -> save
+  res = site.act(ar.id, decision, note, posted, override) // locks steps then request; expectedStep = posted
+  if res!=='' : rollback; return res                      // note | moved | approval
+  fresh = site.findApproval(id)
+  if waiting(fresh): commit; after: notifyApprover(r), audit 'schedule_change_level'; return advanced
+  locked = store.lockRequest(id); if !locked || locked.status!='pending': rollback; done
+  if REJECTED:
+     n = store.claim(id,'pending',[status=rejected, decided_by=actor, decided_at=now, decision_note=note]) ; n!==1 → rollback; n===false?save:done
+     store.releaseDays(id) === false → rollback; save
+     commit → false: rollback; save
+     after: audit 'schedule_change_rejected'; notifyRequester('rejected', locked, [note]); return rejected
+  // APPROVED, the last level
+  n = store.claim(id,'pending',[status=approved, decided_by, decided_at]); n!==1 → rollback; done|save
+  out = applyDays(locked, cfg, actor, now)               // 'save' | 'refuse' | [applied, skipped]
+  'save'   → rollback; save
+  'refuse' → rollback; changed                            // the engine level rolls back too: it stays open (Hub SC_CHANGED)
+  store.finish(id, skipped ? 'partial' : 'approved', count(applied)) === false → rollback; save
+commit → false: rollback; save
+after COMMIT:
+  per employee: site.weekLockRecord(eid, appliedDates, 'schedule change #id')
+  audit 'schedule_change_applied' per applied day ("Request #id · Name Sun 11 Oct: WFH → Office"),
+        'schedule_change_skipped' per skipped day, 'schedule_change_approved' ("N days · M applied")
+  site.notifyApplied(eid, [date=>status], id) once per employee (applied days only, 'already' excluded)
+  site.notifyRequester(skipped?'partial':'approved', locked, [skipped])
+  return approved|partial
+
+applyDays(r, cfg, actor, now):                           // inside the caller's transaction, never commits
+  rows = store.lockDays(r.id)  (null → 'save')           // ordered employee_id, work_date
+  for d in rows:
+    if !site.activeEmployee(d.eid)                   result=inactive
+    elif site.statusRule(d.new_status)===null         result=gone
+    elif site.leaveOn(d.eid,d.work_date)              result=leave
+    elif d.branch_set && d.new_location_id && !site.branchAllowed(d.eid,d.new_location_id,false) result=branch
+    else a = days.applyIf(d.eid,d.work_date,d.had_row?d.schedule_id:null,d.had_row?d.old_status:null,d.new_status,
+                          d.branch_set, d.new_location_id, actor, now); if a.result=='save' return 'save'
+    if result∉{applied,already} && cfg.changed_day=='refuse' return 'refuse'
+    store.setDayResult(d.id, result, now_status) || return 'save'
+  return [applied, skipped]
+```
+
+**withdraw** (My requests):
+```
+r = store.find(id); if !r || r.requester_employee_id!=employeeId || r.status!='pending' -> done
+tx.begin()
+  c = site.closeApproval(id,false); false → rollback; save ; 'moved' → rollback; done
+  n = store.claimOwn(id, employeeId, [status=withdrawn, decided_at=now]); n!==1 → rollback; done|save
+  store.releaseDays(id) === false → rollback; save
+tx.commit() → save on false
+after: audit 'schedule_change_withdrawn'
+```
+
+**expire / closeAll** (one transaction per request):
+```
+expireDue(): if !site.enabled() return 0; cfg; for r in store.open():
+    why = Rules::expired(r.requested_at, clock.now(), cfg.expire_days) ? 'expired'
+        : (site.closedMonths(r.first_date, r.last_date) ? 'closed_month' : '')
+    if why: closeOne(r, why)
+closeAll(why): for r in store.open(): closeOne(r, why)            // no enabled() check: it is off by now
+closeOne(r, why):
+  tx.begin(); c = site.closeApproval(r.id, true)   // skip_reason 'closed' → "Closed automatically" on the path
+  false → rollback; 'moved' → rollback (it was decided meanwhile; skip)
+  n = store.claim(r.id,'pending',[status = why=='expired'?'expired':'closed', decision_note=why, decided_at=now]); n!==1 → rollback
+  store.releaseDays(r.id) || rollback
+  commit; after: audit 'schedule_change_expired' / 'schedule_change_closed' (System); notifyRequester('closed', r, [why])
+```
+
+**Lock order** (the same in every path; written in the service docblock):
+1. Engine `approval_steps` then `approval_requests` (the engine's own order, `ApprovalEngine.php:427-431`).
+2. The module header (`lockRequest` / `claim`).
+3. Its day rows (`lockDays`, ordered).
+4. `ews_schedule` rows in (employee_id, work_date) order.
+
+Create only inserts new rows (header, then days with the UNIQUE `open_key`, then engine rows), as HL3's `request()` does.
+
+**No nested transactions:** only `create`, `decide`, `withdraw` and `closeOne` begin one. The engine is always called with `manage_transaction=false`. `workflowReady()` runs before `begin()`. Notifications go after COMMIT only (`notify()` inserts at once, `trait-notifications.php:138`).
+
+### 2.8 Controller (`includes/trait-schedule-change.php`, thin, no `$wpdb`)
+**Gate and settings**
+- `sc_enabled()`: `option('ews_feature_schedule_change') && week_lock_enabled() && my_approvals_enabled()` (option reads only).
+- `sc_settings()` returns `ScheduleChangeSettings::config($this->option('ews_schedule_change'), $this->schedule_types_config(true))`.
+
+**Schema and workflow**
+- `ensure_schedule_change_schema()`: `if ews_schema_is_current() return; $this->services()->scheduleChangeSchema();`
+- `sc_workflow_ready()`: copy of `hr_letter_workflow_ready` (`trait-hr-letters.php:40-50`):
+  - seeds `ews_approval_self_rule['schedule_change']='admins'` and `ews_approval_reject_note['schedule_change']=1` when absent;
+  - calls `approval_configure_workflow('schedule_change','LEVEL_1',[1=>['resolver_type'=>'HR']],Workflows::IN_USE['schedule_change'][1])`.
+
+**Handlers**
+- `schedule_change_request()`, admin-post `ews_schedule_change_request`. It checks `can('ews_manage_attendance')`, the nonce `ews_schedule_change_request`, and the week (`week_dates_configured`). It parses `att_changes_json` exactly as `att_grid_save` `:227-276` does (status sanitised, `in_array(statuses())`). Requester = `current_employee()`. It calls `services()->scheduleChanges()->create(...)` and redirects with `sc_sent=N&sc_refused=M` (refused codes kept in a 5-minute transient keyed by user) or `sc_error=code`.
+- `schedule_change_decide()`, admin-post `ews_schedule_change_decide` (My approvals card): nonce, then `decide($id,$d,approval_posted_note(),approval_posted_step(),false)`, then redirect `approvals_return_view('approvals')` with `sc_done` / `sc_error`.
+
+**Hub**
+- `sc_hub_rows()` returns `sc_enabled() ? waiting(…) : []`.
+- `sc_hub_decide($id,$decision)` calls `decide(...,'Rejected on the Requests page.' when rejecting, approval_posted_step(), true)` and maps: advanced→ADVANCED, approved→APPROVED, partial→`Hub::SC_PARTIAL`, rejected→REJECTED, moved→MOVED, changed→`Hub::SC_CHANGED`, else ERROR.
+
+**My approvals and My requests**
+- `sc_approval_card($id,$light=false)`:
+  - returns null when off;
+  - `$light` gives `employee_id` (the requester), tone `schedule`, since;
+  - the full card follows mockup `hr-card`: days old → new, "changed since" warnings, reason, pay note from closed months, the office-minimum line;
+  - action `ews_schedule_change_decide`, `'bulk'=>false`, decisions approve / reject.
+- `sc_my_requests($emp_id)` returns items with tone `schedule`, approval `['schedule_change','schedule_change',id]`, `withdraw='schedule'` while pending, a note with the skipped days or why it closed.
+- `sc_withdraw($id,$emp_id)`.
+
+**Grid, text and cron**
+- `sc_grid_view($dates,$emp_ids)` returns null when off or the week is not final for this user. Otherwise it returns `['mode'=>true,'open'=>openOn(...),'names'=>people_brief_by_ids(...),'cfg'=>…,'nonce'=>…]`.
+- `sc_error_text($code)` and `sc_refused_text($code)`: all words, translated.
+- Notify adapters `sc_notify_approver`, `sc_notify_requester`, `sc_notify_applied` ("Your schedule changed" with "Sun 11 Oct is now Office · …", url `ews_view=schedule&week=…`, push), `sc_notify_requested`.
+- `sc_expire_tick()` and `sc_close_all($why)`.
+
+### 2.9 Existing files that change
+| File:line | Change |
+|---|---|
+| `src/Platform/Services.php:146-149`, `:357-388` | ctor gains `?ScheduleChangePorts $scheduleChangePorts = null`; add `scheduleChangeSchema(): void` (`ScheduleChangeSchema::create($this->db)`), `scheduleChangeStore()`, `scheduleChanges()` (throws `LogicException` without ports) |
+| `includes/trait-services.php:167` | pass `$this->schedule_change_ports()`; add the adapter after `leave_return_ports()` (`:190-222`) |
+| `src/Schedule/Data/ScheduleDayStore.php`, `WordPressScheduleDayStore.php:87-97` | `updateIf()` (§2.3) |
+| `src/Schedule/ScheduleDayService.php` | `applyIf()` (§2.5) |
+| `includes/trait-week-lock.php:96-100` | `week_lock_tick`: first line `if($this->sc_enabled())$this->sc_expire_tick();` (no query while off). `week_lock_record_request` unchanged (source `schedule_change`) |
+| `includes/trait-attendance-grid.php:157` | pass `'sc'=>$this->sc_grid_view($dates,$page_ids)` and the draft (R2a, J1b); pass `banner` (§2.12) |
+| `templates/app/attendance.php:97` | `$sc_mode = $sc && $week_lock && $week_lock['locked'] && !$week_lock['override']`; `$wl_readonly` false in request mode |
+| `templates/app/attendance.php:198-214` | banner kind `request` (mockup text) and custom banner (§2.12) |
+| `templates/app/attendance.php:245,250` | fill selects enabled in request mode |
+| `templates/app/attendance.php:288-290` | `$cell_ro = ($wl_readonly) \|\| $is_held \|\| isset($sc['open'][$eid][$d])`; clock badge "Change requested: WFH (by Sara)" |
+| `templates/app/attendance.php:319-327` | save bar "N changes to send to HR" + **Send to HR…** (`data-ews-sc-mode`), form `action=ews_schedule_change_request`, includes `schedule-change-sheet.php` |
+| `templates/app/attendance.php:369` | CSV note unchanged in R2a |
+| `assets/js/attendance-grid.js:226-240` | in `data-ews-sc-mode`, submit opens the sheet (changes list, reason with `minlength`) before posting; the payload is the same; draft prefill (J1b) |
+| `includes/trait-attendance.php:376` | J1b: when `$locked>0 && sc_enabled()`, keep the refused changes in transient `ews_sc_draft_<uid>` (15 min) and add `grid_draft=1` |
+| `includes/trait-frontend.php:200-214`, `:666-667` | R1 modal adds "Send them to HR as a request" when `grid_draft=1`; `sc_sent/sc_refused/sc_error/grid_draft` notices and their removal |
+| `src/Approvals/Workflows.php:26-36,58-77` | `IN_USE['schedule_change']=['Schedule Change',['LEVEL_1','LEVEL_2','LEVEL_3','LEVEL_4']]`; `NOT_SET_MEANS` "The first request sets it to one level: HR."; `NONE_MEANS` `''` (needed at `trait-approvals.php:611`) |
+| `src/Approvals/WorkflowService.php:44-53` | seed `'schedule_change' => ['Schedule Change','LEVEL_1']` (inactive) |
+| `includes/trait-approvals.php:604`, `:635` | hide and refuse the card while `!sc_enabled()`, as `hr_letter` |
+| `includes/trait-approval-deadlines.php:19`, `:49-51` | gate the key on `sc_enabled()`; label `'schedule_change'=>__('A schedule change request')` |
+| `src/Requests/Hub.php:13`, `:104-121` | add `'schedule_change'` to TYPES; `SC_PARTIAL='sc_partial'` ("Approved: some days were not applied because they changed since the request; My requests and the Audit Log list them.") and `SC_CHANGED='sc_changed'` (mockup text, error) |
+| `includes/trait-admin-requests.php:59-61`, `:439` | loop over `sc_hub_rows()` (title 'Schedule Change', `Hub::details(N days · week of …, per-person old → new, "reason")`, ref `['schedule_change','schedule_change',id]`); `case 'schedule_change'` |
+| `includes/trait-my-approvals.php:56-68` | `case 'schedule_change': return $this->sc_approval_card((int)$entity_id,$light);` |
+| `trait-my-approvals.php:210-212` | kind `'schedule'=>__('Schedule changes')` |
+| `trait-my-approvals.php:305` | merge `sc_my_requests` |
+| `trait-my-approvals.php:311-321` | `sc_*` notices |
+| `trait-my-approvals.php:285` | `remove_query_arg` list |
+| `trait-my-approvals.php:388-397` | `case 'schedule': $r=$this->sc_withdraw($id,(int)$emp->id);` |
+| `includes/trait-features.php:89`, `:119-122`, `:289-297` | data `sc` / `sc_open` / `my_approvals_on` / `hr_set`. Save (week lock block, override holders only) validates `ScheduleChangeSettings::fromPost`. Turning on with My approvals off → `features_error=sc_my_approvals`. Remember `$sc_was=$this->sc_enabled()` at handler start; at the end, if `$sc_was && !$this->sc_enabled()` → `sc_close_all(...)` with why from the switch that went off. Audit `schedule_change_settings`. |
+| `templates/admin/features.php:324-~345` | "Change requests to HR" block inside the Week lock card (mockup `settings`): switch, statuses checkboxes, leave types, reason min, max days, past days, changed-day radio, expiry, CSV import (shown disabled "next release" in R2a, or omitted), notify on request, "N waiting requests will be closed", My approvals state, link to Approval Workflows. Plus the banner fields (§2.12). |
+| `includes/trait-schema.php:354` | `'3.31.165'` (comment: schedule change request tables, workflow seed) |
+| `trait-schema.php:400-405` | append `'ensure_schedule_change_schema'` after `ensure_hr_letters_schema` |
+| `src/Support/SchemaCheck.php:15-22` | add `ews_schedule_change_requests`, `ews_schedule_change_days` |
+| `uninstall.php:55-59` | the two tables; options `ews_feature_schedule_change`, `ews_schedule_change` (if uninstall lists options) |
+| `src/Settings/Options.php:~135-139` | `ews_feature_schedule_change` (bool, false, page features); `ews_schedule_change` (grouped, builtin text) |
+| `employee-schedule-manager.php:~265` | `admin_post_ews_schedule_change_request`, `admin_post_ews_schedule_change_decide`; `require_once includes/trait-schedule-change.php`; `use EWS_Schedule_Change_Trait` (`:108`) |
+| `src/Settings/WeekLockSettings.php` | banner keys (§2.12) |
+| `languages/*.po`, `CHANGELOG.md`, version 3.31.165 | |
+| `tests/golden/expected.json` | release 3.31.165; pages: both Feature Configuration pages (`pages.json` rows with and without `ews_feature_week_lock`); hooks_added: the two admin-post actions; actions: any approvals-trace row that differs because of the seeded workflow row (HL3 did the same) |
+
+### 2.10 modules.json and baselines
+In `schedule`:
+- `traits` += `"schedule-change"`.
+- `tables` += `"schedule_change_requests","schedule_change_days"`.
+- `layered` += 
+```json
+{"slice":"change","tables":["schedule_change_requests","schedule_change_days"],
+ "store":"workforce-one/src/Schedule/Data/WordPressScheduleChangeStore.php",
+ "services":["workforce-one/src/Schedule/ScheduleChangeService.php","workforce-one/src/Schedule/ScheduleChangeRules.php","workforce-one/src/Schedule/ScheduleChangeSettings.php"],
+ "reads":[],"moved":[],"traits_clean":["schedule-change"]}
+```
+- `api` += `sc_enabled, sc_settings, sc_hub_rows, sc_hub_decide, sc_approval_card, sc_my_requests, sc_withdraw, sc_error_text, sc_grid_view, sc_close_all, sc_expire_tick`, plus `ensure_schedule_change_schema` (as `ensure_hr_letters_schema` is in hr_letters' api).
+- `exports` unchanged. Only `Platform\Services` (not in a slice) constructs the service, and it is in the Schedule namespace anyway.
+
+Baselines:
+- `layer-baseline.json` must not change. The new tables are referenced only by the store and `*Schema.php`. `uninstall.php` lists bare `'ews_…'` names, which `LIT` does not count.
+- `module-baseline.json` must not change. Cross-module calls go through `$call('fn')`, which `CALL` does not see. Calls from approvals / platform / shell traits into `sc_*` go to the api list.
+- Do not touch `branch_plan_day` in this release.
+
+### 2.11 Why "off changes nothing", and how it is proven
+- **Gate:** `sc_enabled()` reads three primed options and is checked first everywhere. Grid `sc_grid_view` → null. Hub / my-requests / card / deadlines / approval-workflow card → `[]` / null / skipped. Cron → no call. Draft branch in `att_grid_save` → not entered. No query, no markup change.
+- **Upgrade with the switch off:** two tables plus one inactive workflow row. The engine never sees an `IN_USE` key that has no card (it is hidden while off). Deadlines skip it.
+- **Proof:**
+  - (a) Golden: every existing page byte-identical except the declared Feature Configuration pages. The week-lock-on grid page (`pages.json` row 3) must stay identical with SC off and banner empty. Query counts are not higher.
+  - (b) `e2e_schedule_change.py` "off" block: grid final week HTML (minus nonces), Hub, My approvals, My requests and the R1 modal equal before and after setting only the options; `num_queries` of the grid page equal (EWSQ mu-plugin as in `e2e_speed.py`).
+  - (c) `e2e_week_lock.py` unchanged and green.
+  - (d) `check_layers.py`, `check_modules.py` unchanged baselines.
+
+### 2.12 Final-week banner (owner answer 12, today's addition)
+- **Where the keys live:** `ews_week_lock` / `WeekLockSettings`, not ScheduleChangeSettings, because the banner exists with the request feature off. New `DEFAULTS`: `banner_title_ar`, `banner_text_ar`, `banner_title_en`, `banner_text_en`, all `''`.
+- **Normalising:** `config()` trims and caps title at 120 and text at 500 (`mb_substr`). `fromPost()` reads `wl_banner_title_ar` etc.: `sanitize_text_field` for titles, `sanitize_textarea_field` for texts, both done in the trait before the pure class (or plain `strip_tags` + trim in the class, which stays pure). Only "Edit a locked week" holders can save, the same as the card (`trait-features.php:119`).
+- **Audit:** the `week_lock_update` line adds `banner=custom|default` only when the banner changed or is custom, so the existing line is byte-identical when unused (golden-safe).
+- **Locale:** `strpos(determine_locale(),'ar')===0 ? 'ar' : 'en'`, the precedent of `hr_letter_ui_lang` (`trait-hr-letters.php:190-192`) and `occasion_lang` (`trait-occasions.php:72-74`). Add `week_lock_banner($view,$kind)` in `trait-week-lock.php`, returning `['title'=>…,'text'=>…]|null`:
+  - the custom title/text of the person's language when non-empty;
+  - each part independently, otherwise the current translated default for that kind;
+  - `{since}` replaced with `week_lock_when($since)` (`:84`).
+- **Kinds it applies to:** `locked` and `request` (the request-mode variant). One custom text serves both. Kinds `soon` and `override` keep their texts.
+- **Rendering:** `templates/app/attendance.php:206-210` prints `esc_html($banner['title'])` and `esc_html($banner['text'])` (plain text, no HTML).
+- **On the card:** after the cutoff / notify rows of the Week lock card in `templates/admin/features.php` (mockup `settings.en.html` shows it in the same card, under "Banner text"). Four fields with the help text "{since} is replaced by the time the week was locked. Leave it empty to keep the default text. Each person sees the text in their own language."
+- **Golden:** with the keys empty, the output is identical.
+
+---
+
+## 3. Scope: 3.31.165 (R2a) vs R2b
+
+**R2a, must ship:**
+- Tables, schema class, schema bump and seed; `SchemaCheck`; Options; uninstall.
+- Settings card block, switch and close-all on switch-off (any of the three gates); the banner setting (§2.12).
+- Grid request mode, send sheet, badges, and result notice (mockups `request`, `send`, `sent`).
+- create / decide / apply (guarded) / withdraw / expire (days and closed month) via the existing 5-minute tick.
+- My approvals card, Hub row and decision with SC notices, My requests and withdraw.
+- Approval Workflows card, deadlines label, self rule and reject-note seed.
+- Notifications (approver, requester, employee once per employee), audit rows, translations.
+- Unit, store contract, e2e, golden declarations.
+
+**R2a, should ship; first to cut if the release grows:**
+- J1b draft conversion: R1 modal plus transient (mockup `draft`), about 60 lines plus JS.
+- The office-minimum line on the sheet and the card. It is a warning only: `om_days($dates,$override)`, `trait-office-minimum.php:123`, called by the controller, not the service.
+
+**R2b (the owner allowed CSV either way; I recommend R2b):**
+- CSV import requests (mockup `csv`): `parse_csv` `:420` row valid with `'request'=>true`; `att_import` `:444-451` collects them and calls `create(...,'import')`; a reason field; "Import N rows and send M to HR". It touches the dense one-line `att_import`/`att_preview` and needs its own e2e block. Leaving it out keeps the R1 error row, which is the documented "off" behaviour of `import`. In R2a the `import` setting is stored with its default but shown as "next release", or the field is hidden.
+- The Requests Hub **Reports** tab listing schedule changes: `HubReport::TYPE_CODES`, `WordPressHubReportQuery` reads (+ `modules.json` approvals.hub reads), report row formatter `trait-admin-requests.php:~340`. Not decided by the owner (the tab did not exist in October); see §5 Q2.
+
+---
+
+## 4. Tests
+
+### Unit (fakes, as `tests/unit/LeaveReturnServiceTest.php:36-80`)
+- **`ScheduleChangeServiceTest`.** Uses `MemoryScheduleChangeStore`, `MemoryScheduleDayStore` (+`updateIf`), an anonymous `ScheduleChangePorts` that records calls, and `Transaction` / `AuditLog` / `Clock` fakes. Cases:
+  - **Create:**
+    - each refusal code;
+    - `too_many` sends nothing;
+    - reason too short;
+    - `workflowReady` false → nothing begun;
+    - duplicate `open_key` on the second insert → rollback and `pending`;
+    - `startApproval` false → rollback;
+    - commit false → rollback;
+    - notify only after commit;
+    - `notify_on_request`.
+  - **Decide:**
+    - `levelMoved` → `moved` with no `begin`;
+    - `act` error → rollback;
+    - waiting → commit and `advanced` with `notifyApprover`;
+    - reject → claim, release, notify requester;
+    - approve applied / already / changed (skip → `partial`; refuse → rollback and `changed`, no audit, no notify);
+    - inactive / gone / leave / branch;
+    - `applyIf` save → rollback;
+    - claim 0 → `done`;
+    - one `notifyApplied` per employee with their days only;
+    - `weekLockRecord` after commit.
+  - **Withdraw:** not own / decided → `done`; `closeApproval` `moved` → rollback and `done`; false → `save`.
+  - **expireDue:** by days, by closed month, `expire_days=0` never, decided meanwhile (`moved`) skipped, off → 0.
+  - **closeAll** runs while `enabled()` is false.
+  - **Transaction order** asserted from `tx->log` plus the ports' call log (act before `lockRequest` before `lockDays`).
+- **`ScheduleDayServiceTest`:** add `applyIf` (updated, 0 rows same → already, 0 rows other → changed, deleted row → changed, no row + exists → already/changed, insert 0 → save, location set and cleared, no notify).
+- **`ScheduleChangeRulesTest`, `ScheduleChangeSettingsTest`** (defaults, ranges, empty statuses default, `fromPost`).
+- **Banner:** `WeekLockSettings` caps and empties; the old config shape is unchanged when the keys are absent.
+- **Existing tests:**
+  - `OptionsTest`: new keys.
+  - `ApprovalsTest` / `WorkflowsTest`: `schedule_change` has no NONE/PEER, `NONE_MEANS` has the key.
+  - `HubReportTest` unaffected.
+  - `HubTest` (or `ApprovalsTest` where Hub is tested): TYPES and the two notices.
+  - `LifecycleTest` unchanged.
+
+### Store contract (real DB): `tests/e2e_schedule_change_store.php`
+`wp eval-file`, the pattern of `tests/e2e_hr_letters_store.php` / `e2e_schedule_store.php`, added to `ci.yml` after `:117`. Cases:
+- UNIQUE `open_key` (a second open day fails and `lastWasDuplicate()` is true; NULL allowed many times);
+- `claim` affected counts;
+- `lockDays` order;
+- `updateIf` counts and `location_id` NULL vs value;
+- `releaseDays` returns `!== false` even when 0 rows changed (MySQL);
+- a prefix switch reuses the store.
+
+### e2e: `tests/e2e_schedule_change.py`
+Model it on `tests/e2e_week_lock.py` (its `seed()`, `lock()`, `sched()`, `audits()`, `form_nonce()`), with cleanup in `finally`. Users: admin (override), emp1 Mona with `ews_manage_attendance` and **without** `ews_week_lock_override`, HR user set in approval settings, emp2 Omar.
+- **Off:** the grid final week, Hub, My approvals, My requests and the R1 modal identical before and after `ews_feature_schedule_change` stays 0 with the lock on; grid `num_queries` equal; on + My approvals off → features save refused with `sc_my_approvals`.
+- **Create:**
+  - one day; several days and people; branch "By the schedule";
+  - each refusal message: open week, held/pending leave, leave type with `allow_leave` 0/1, holiday, past_days boundary, closed payroll month, already requested, out of department, unlinked requester;
+  - `max_days`; reason min;
+  - badge shown and cell disabled;
+  - J1b draft (R2a).
+- **Decide:**
+  - My approvals approve → schedule written, employee told **once**, `schedule_locked_by_schedule_change` audit;
+  - reject needs a note;
+  - LEVEL_2 workflow: Hub decides level 1 → ADVANCED; a stale `approval_step` → MOVED;
+  - self rule `admins` (HR requests);
+  - HR not set → administrators.
+- **Changed days** (an override edit, a leave approval, a swap before approving): skip → `partial` plus My requests note; refuse → `sc_changed`, level still PENDING, rows untouched.
+- **Race:** stale read helper as `e2e_swap_mu.php`.
+- **`break_writes`** (`tests/e2e_support.py:133`):
+  - `('schedule','UPDATE')` during apply → everything rolls back (engine PENDING, request pending, `open_key` kept);
+  - `('schedule_change_days','INSERT')` during create → no header, no approval request;
+  - `('approval_steps','UPDATE')` during decide.
+- **Withdraw / expire / switches:**
+  - withdraw pending; withdraw after decision → `done`;
+  - expiry by days (age `requested_at`) and by closing the month (`payroll_runs` row), via `wp cron event run ews_week_lock_tick`; a second tick does nothing;
+  - switch off, week lock off and My approvals off each close the requests and tell the requesters;
+  - cutoff moved (still decidable);
+  - deactivated employee, deactivated type and removed branch each skip with the reason.
+- **Payroll:** an open-month past Office → Business Trip removes the absence in `payroll_month`.
+- **Banner:** custom ar/en with `{since}`, empty → default, request-mode variant, override and soon unchanged.
+
+### Existing suites to rerun
+`e2e_week_lock`, `e2e_attendance_grid`, `e2e_admin_requests`, `e2e_my_approvals`, `e2e_approval_engine`, `e2e_self_approval`, `e2e_request_races`, `e2e_schema` (second upgrade, no ALTER), `e2e_lifecycle`, `e2e_substitutes`, `e2e_swap`, `e2e_swap_inbox`, `e2e_leave` (+ leave-return suite), `e2e_hub_reports`, `e2e_features`, `e2e_office_minimum`, `e2e_speed`, `e2e_schedule_store.php`, `e2e_approval_store.php`, plus golden. Browser: `tests/my_approvals_browser.js`, and `browser_smoke.js` for the grid request mode.
+
+SQLite limits (the plugin skips `FOR UPDATE` and `GET_LOCK` on `DB_ENGINE==='sqlite'`, `trait-attendance.php:172`, `trait-approvals.php:137`):
+- The UNIQUE race, the lock-order and `break_writes` cases are only meaningful on CI's MySQL job.
+- The golden job only runs in CI or with `GOLDEN_OK=1` on 127.0.0.1.
+
+---
+
+## 5. Risks and the new questions
+
+### Risks
+- **Pay after the fact.** Past-day changes move absence and lateness pay. Mitigated by HR approval, `past_days`, the closed-month refusal and expiry, and the card's pay note.
+- **ScheduleDayService grows a second write path (`applyIf`).** It must keep `save()`/`saveIfUnchanged()` byte-identical; the golden schedule actions cover this.
+- **Leave interplay is the most delicate part.** The leave approval write is unconditional (`trait-leave.php:232-245`). An SC-inserted row racing a leave's INSERT on MySQL makes the leave approval fail with "Could not apply vacation schedule"; it does not corrupt anything, and the e2e covers the order.
+- **`putBackDay` and the Leave return restore** may later overwrite a day SC skipped. That is acceptable, because SC never writes under a leave.
+- **Golden with a schema bump and a seeded workflow row:** the approvals trace's end state may differ. Declare it as HL3 did.
+- **Grid JS:** request mode reuses the payload but flips the read-only logic. Browser smoke is required.
+- **Size.** About 1,500–1,900 PHP and JS lines plus tests, roughly HL3's size. CSV in R2b keeps it shippable.
+- **Downgrade with open requests:** engine rows without a card. Document it in the CHANGELOG.
+- **`approvals-engine-move.md` §8 Q4:** an administrator who made a request cannot decide it on the Hub. It does not matter here: administrators hold the override and edit directly.
+
+### New questions for the owner (only those the code changes forced; each has a recommended default)
+1. **The feature was recorded as "dropped" on 2026-10-27** (`approvals-engine-move.md:8`). Please confirm it is back on as 3.31.165, with the October answers unchanged. Recommended: yes, as briefed.
+2. **The Requests Hub "Reports" tab** (new in 3.31.159) has a fixed list of types. Should schedule changes appear there? Recommended: yes, in R2b (R2a: only the waiting list).
+3. **My approvals switched off while requests are open.** Recommended: treat it like the other two switches (answer 8): the waiting requests are closed and the managers told, so no request hides with live engine steps.
+4. **One custom banner text for both final-week banners?** That is the R1 "locked" banner and the new "send to HR" banner. Recommended: one text, applied to whichever of the two a manager sees. The override and "becomes final today" banners keep their texts.
+
+
+## Owner (2026-11-25)
+- "ابدا": build it as 3.31.165 with the October answers (Q1 above: yes). Banner text configurable (answer 12, repeated today). Q3 and Q4 follow answers 7, 8 and 12 as recommended; Q2 (Hub Reports tab) and the CSV import go to R2b.
+
+---
+
+# Original design (3.31.121) and the owner's answers
+
 # Design: week lock, release 2, "schedule change request" (owner answer 8)
 
 **Status:** design only, read-only analysis of branch `claude/wordpress-plugin-improvement-jb0znc` at fefcda9 (3.31.121, PR #10 not merged). It is ready to save to `docs/tasks/schedule-change-request.md`. **No code or mockups yet.** Mockups come first (§10). The owner answers §12 before implementation starts.

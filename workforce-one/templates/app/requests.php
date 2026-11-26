@@ -63,6 +63,7 @@ $shown = $filter !== '' && isset($labels[$filter]) ? array_values(array_filter($
                 <span class="wfo-apv-state is-<?php echo esc_attr($it['state']); ?>"><?php echo esc_html((($it['state_label'] ?? '') !== '' ? $it['state_label'] : $labels[$it['state']]) . ($it['state'] === 'waiting' && $p && $p['level'] ? ' · ' . sprintf(/* translators: 1: level, 2: number of levels */ __('level %1$s of %2$s', 'workforce-one'), $num($p['level']), $num($p['levels'])) : '')); ?></span>
             </div>
             <?php if (($it['note'] ?? '') !== ''): ?><p class="wfo-apv-why"><?php echo esc_html($it['note']); ?></p><?php endif; ?>
+<?php if (!empty($it['sc_days'])): $sc_days = $it['sc_days']; $sc_class = 'is-mini'; $sc_change = false; include __DIR__ . '/sc-days.php'; endif; /* a schedule change's days not applied (3.31.167; no indent: nothing printed without it) */ ?>
             <?php if ($p && $p['steps']): ?>
             <details class="wfo-apv-more"<?php echo $it['state'] === 'waiting' ? ' open' : ''; ?>>
                 <summary><?php esc_html_e('Who decides it', 'workforce-one'); ?></summary>

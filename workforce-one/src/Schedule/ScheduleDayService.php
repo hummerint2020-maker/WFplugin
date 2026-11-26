@@ -105,6 +105,33 @@ final class ScheduleDayService
     }
 
     /**
+     * A schedule change request's approved day (3.31.167), inside the caller's transaction: written only while the day is
+     * still what it was when the change was asked ($expected; null: there was no row). Nobody is told here and nothing is
+     * audited: the caller tells each employee once and writes the Audit Log after COMMIT.
+     * - A row: one conditional UPDATE. Nothing changed: 'already' when the day is now the asked status, else 'changed'.
+     * - No row: read first (an INSERT must not fail inside the transaction: SQLite would end it); a row now there is
+     *   'already' or 'changed'; else it is inserted.
+     * @return array{result:string,now:?string} result: applied | already | changed | save (a database error)
+     */
+    public function applyIf(int $employeeId, string $date, ?int $scheduleId, ?string $expected, string $status, bool $setBranch, int $locationId, int $actor, string $at): array
+    {
+        if ($scheduleId !== null && $expected !== null) {
+            $n = $this->store->updateIf($scheduleId, $employeeId, $date, $expected, $status, $setBranch, $locationId, $actor, $at);
+            if ($n === false) return ['result' => 'save', 'now' => null];
+            if ($n > 0) return ['result' => 'applied', 'now' => null];
+            $row = $this->store->findStatusNote($employeeId, $date);
+            $now = $row ? (string) $row->status : null;
+            if ($row && (int) $row->id === $scheduleId && $now === $expected) return ['result' => 'already', 'now' => null];   // same values (MySQL counts changed rows)
+            return ['result' => $now === $status ? 'already' : 'changed', 'now' => $now];
+        }
+        $row = $this->store->findStatusNote($employeeId, $date);
+        if ($row) return ['result' => (string) $row->status === $status ? 'already' : 'changed', 'now' => (string) $row->status];
+        $data = ['employee_id' => $employeeId, 'work_date' => $date, 'status' => $status, 'note' => '', 'updated_by' => $actor, 'updated_at' => $at];
+        if ($setBranch && $locationId) $data['location_id'] = $locationId;
+        return ['result' => $this->store->insert($data) ? 'applied' : 'save', 'now' => null];
+    }
+
+    /**
      * The Attendance grid's save: only if the day is still what the manager loaded ($expected; null: it was empty).
      *
      * - An empty day is inserted; the UNIQUE employee_date key settles two managers creating it at once (the loser is

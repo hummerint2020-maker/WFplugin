@@ -9858,6 +9858,459 @@ msgstr "خلصوا الشهر ده"
 msgid "of %s this month"
 msgstr "من %s الشهر ده"
 
+msgid "A schedule change request"
+msgstr "طلب تعديل جدول"
+
+msgid "Schedule changes"
+msgstr "تعديلات الجدول"
+
+msgid "Change requests to HR are off, or you cannot do that."
+msgstr "طلبات التعديل للموارد البشرية مقفولة، أو مش مسموح لك تعمل كده."
+
+#, php-format
+msgid "Write why the days should change (at least %d characters)."
+msgstr "اكتب ليه الأيام دي محتاجة تتغير (%d حرف على الأقل)."
+
+msgid "The request could not be sent for approval. Try again."
+msgstr "الطلب ماتبعتش للموافقة. جرّب تاني."
+
+#, php-format
+msgid "At most %d days can be asked for in one request."
+msgstr "أقصى عدد في الطلب الواحد %d يوم."
+
+msgid "Nothing was sent: none of these days can be asked for."
+msgstr "ماتبعتش حاجة: ولا يوم من دول ينفع يتطلب."
+
+msgid "A change of one of these days already waits for HR."
+msgstr "فيه يوم من دول عليه طلب تعديل لسه مستني الموارد البشرية."
+
+msgid "This request is no longer waiting: it was already decided, withdrawn or closed."
+msgstr "الطلب ده مبقاش مستني: اتحسم أو اتسحب أو اتقفل."
+
+msgid "Nothing was changed: a day of this request changed since it was asked. You can reject it."
+msgstr "ماحصلش أي تغيير: يوم من أيام الطلب اتغير بعد ما اتطلب. ممكن ترفضه."
+
+msgid "you cannot manage this person"
+msgstr "مش من حقك تدير الموظف ده"
+
+msgid "this week is not final: save it on the grid as usual"
+msgstr "الأسبوع ده مش نهائي: احفظه من الجدول عادي"
+
+msgid "this status cannot be asked for"
+msgstr "الحالة دي ماينفعش تتطلب"
+
+msgid "a leave goes through a leave request, so the balance is counted"
+msgstr "الإجازة بتتعمل بطلب إجازة عشان الرصيد يتحسب"
+
+msgid "the day is already so"
+msgstr "اليوم أصلًا كده"
+
+msgid "it is a company holiday"
+msgstr "ده يوم إجازة رسمية للشركة"
+
+#, php-format
+msgid "it is more than %d days ago"
+msgstr "فات عليه أكتر من %d يوم"
+
+msgid "its month is closed in Payroll"
+msgstr "شهره مقفول في المرتبات"
+
+msgid "this day is a leave; change it through the leave"
+msgstr "اليوم ده إجازة؛ غيّره من الإجازة نفسها"
+
+msgid "attendance is already recorded that day"
+msgstr "الحضور متسجل في اليوم ده خلاص"
+
+msgid "a change of this day already waits for HR"
+msgstr "فيه طلب تعديل لليوم ده لسه مستني الموارد البشرية"
+
+msgid "this branch is not one of theirs"
+msgstr "الفرع ده مش من فروعه"
+
+msgid "Not applied: the employee is no longer active."
+msgstr "ماتطبقش: الموظف مبقاش نشط."
+
+msgid "Not applied: the status is no longer in use."
+msgstr "ماتطبقش: الحالة دي مبقتش مستخدمة."
+
+msgid "Not applied: the day became a leave before the decision."
+msgstr "ماتطبقش: اليوم بقى إجازة قبل القرار."
+
+msgid "Not applied: the branch is no longer one of theirs."
+msgstr "ماتطبقش: الفرع مبقاش من فروعه."
+
+msgid "Not applied: its month was closed in Payroll."
+msgstr "ماتطبقش: شهره اتقفل في المرتبات."
+
+#, php-format
+msgid "Not applied: the day changed before the decision (now %s)."
+msgstr "ماتطبقش: اليوم اتغير قبل القرار (دلوقتي %s)."
+
+msgid "Not applied: the day changed before the decision."
+msgstr "ماتطبقش: اليوم اتغير قبل القرار."
+
+#, php-format
+msgid "%d day not sent:"
+msgid_plural "%d days not sent:"
+msgstr[0] "%d يوم ماتبعتش:"
+msgstr[1] "%d يوم ماتبعتش:"
+msgstr[2] "%d يوم ماتبعتش:"
+msgstr[3] "%d يوم ماتبعتش:"
+msgstr[4] "%d يوم ماتبعتش:"
+msgstr[5] "%d يوم ماتبعتش:"
+
+#, php-format
+msgid "Sent to HR: %d day"
+msgid_plural "Sent to HR: %d days"
+msgstr[0] "اتبعت للموارد البشرية: %d يوم"
+msgstr[1] "اتبعت للموارد البشرية: %d يوم"
+msgstr[2] "اتبعت للموارد البشرية: %d يوم"
+msgstr[3] "اتبعت للموارد البشرية: %d يوم"
+msgstr[4] "اتبعت للموارد البشرية: %d يوم"
+msgstr[5] "اتبعت للموارد البشرية: %d يوم"
+
+msgid "HR will review it and you will be told when it is decided."
+msgstr "الموارد البشرية هتراجعه وهيوصلك إشعار لما يتحسم."
+
+msgid "Not sent to HR"
+msgstr "ماتبعتش للموارد البشرية"
+
+msgid "Approved: the days were applied and each employee was told."
+msgstr "تمت الموافقة: الأيام اتطبقت وكل موظف وصله إشعار."
+
+msgid "Approved, but not every day was applied: some changed since the request. My requests and the Audit Log list them."
+msgstr "تمت الموافقة، بس مش كل الأيام اتطبقت: فيه أيام اتغيرت بعد الطلب. هتلاقيهم في طلباتي وسجل التدقيق."
+
+msgid "Rejected, and the manager was told."
+msgstr "اترفض، والمدير وصله إشعار."
+
+msgid "Approved at your level. It moves to the next one."
+msgstr "اتوافق عليه في مستواك. هيروح للمستوى اللي بعده."
+
+msgid "Changed since the request: now a leave."
+msgstr "اتغير بعد الطلب: بقى إجازة."
+
+#, php-format
+msgid "Changed since the request: now %s."
+msgstr "اتغير بعد الطلب: دلوقتي %s."
+
+msgid "While it stays so, approving changes nothing."
+msgstr "طول ما هو كده، الموافقة مش هتغير حاجة."
+
+msgid "This day will be skipped."
+msgstr "اليوم ده هيتساب."
+
+#, php-format
+msgid "%1$d day · %2$s"
+msgid_plural "%1$d days · %2$s"
+msgstr[0] "%1$d يوم · %2$s"
+msgstr[1] "%1$d يوم · %2$s"
+msgstr[2] "%1$d يوم · %2$s"
+msgstr[3] "%1$d يوم · %2$s"
+msgstr[4] "%1$d يوم · %2$s"
+msgstr[5] "%1$d يوم · %2$s"
+
+#, php-format
+msgid "Payroll is closed for %s: this request closes automatically."
+msgstr "المرتبات مقفولة لـ %s: الطلب ده هيتقفل تلقائيًا."
+
+msgid "The month is still open in Payroll. Past days change absence and lateness."
+msgstr "الشهر لسه مفتوح في المرتبات. الأيام اللي فاتت بتغيّر الغياب والتأخير."
+
+#, php-format
+msgid "%d day changed since"
+msgid_plural "%d days changed since"
+msgstr[0] "%d يوم اتغير بعد الطلب"
+msgstr[1] "%d يوم اتغير بعد الطلب"
+msgstr[2] "%d يوم اتغير بعد الطلب"
+msgstr[3] "%d يوم اتغير بعد الطلب"
+msgstr[4] "%d يوم اتغير بعد الطلب"
+msgstr[5] "%d يوم اتغير بعد الطلب"
+
+msgid "Schedule change"
+msgstr "تعديل جدول"
+
+msgid "Partly applied"
+msgstr "اتطبق جزء منه"
+
+#, php-format
+msgid "%1$d applied, %2$d not"
+msgstr "%1$d اتطبق، %2$d لأ"
+
+#, php-format
+msgid "Closed automatically: %d days without a decision."
+msgstr "اتقفل تلقائيًا: %d يوم من غير قرار."
+
+msgid "Closed automatically: its month was closed in Payroll."
+msgstr "اتقفل تلقائيًا: شهره اتقفل في المرتبات."
+
+msgid "Closed automatically: change requests to HR were switched off."
+msgstr "اتقفل تلقائيًا: طلبات التعديل للموارد البشرية اتقفلت."
+
+#, php-format
+msgid "Schedule change · %d day"
+msgid_plural "Schedule change · %d days"
+msgstr[0] "تعديل جدول · %d يوم"
+msgstr[1] "تعديل جدول · %d يوم"
+msgstr[2] "تعديل جدول · %d يوم"
+msgstr[3] "تعديل جدول · %d يوم"
+msgstr[4] "تعديل جدول · %d يوم"
+msgstr[5] "تعديل جدول · %d يوم"
+
+msgid "A schedule change waits for you"
+msgstr "فيه تعديل جدول مستنيك"
+
+#, php-format
+msgid "%1$s asked to change %2$d day of a final week. Open My approvals."
+msgid_plural "%1$s asked to change %2$d days of a final week. Open My approvals."
+msgstr[0] "%1$s طلب تعديل %2$d يوم في أسبوع نهائي. افتح موافقاتي."
+msgstr[1] "%1$s طلب تعديل %2$d يوم في أسبوع نهائي. افتح موافقاتي."
+msgstr[2] "%1$s طلب تعديل %2$d يوم في أسبوع نهائي. افتح موافقاتي."
+msgstr[3] "%1$s طلب تعديل %2$d يوم في أسبوع نهائي. افتح موافقاتي."
+msgstr[4] "%1$s طلب تعديل %2$d يوم في أسبوع نهائي. افتح موافقاتي."
+msgstr[5] "%1$s طلب تعديل %2$d يوم في أسبوع نهائي. افتح موافقاتي."
+
+msgid "Your schedule change was approved"
+msgstr "طلب تعديل الجدول اتوافق عليه"
+
+#, php-format
+msgid "Request #%1$d: the %2$d day was applied."
+msgid_plural "Request #%1$d: the %2$d days were applied."
+msgstr[0] "الطلب #%1$d: الـ %2$d يوم اتطبقوا."
+msgstr[1] "الطلب #%1$d: الـ %2$d يوم اتطبقوا."
+msgstr[2] "الطلب #%1$d: الـ %2$d يوم اتطبقوا."
+msgstr[3] "الطلب #%1$d: الـ %2$d يوم اتطبقوا."
+msgstr[4] "الطلب #%1$d: الـ %2$d يوم اتطبقوا."
+msgstr[5] "الطلب #%1$d: الـ %2$d يوم اتطبقوا."
+
+msgid "Your schedule change was partly applied"
+msgstr "طلب تعديل الجدول اتطبق جزء منه"
+
+#, php-format
+msgid "Request #%1$d: %2$d day(s) applied; %3$d not, because they changed before the decision. See My requests."
+msgstr "الطلب #%1$d: %2$d يوم اتطبق؛ و%3$d لأ، لأنهم اتغيروا قبل القرار. شوف طلباتي."
+
+msgid "Your schedule change was rejected"
+msgstr "طلب تعديل الجدول اترفض"
+
+#, php-format
+msgid "Request #%1$d was rejected. Reason: %2$s"
+msgstr "الطلب #%1$d اترفض. السبب: %2$s"
+
+#, php-format
+msgid "Request #%d was rejected."
+msgstr "الطلب #%d اترفض."
+
+msgid "Your schedule change was closed"
+msgstr "طلب تعديل الجدول اتقفل"
+
+#, php-format
+msgid "Request #%1$d closed automatically: %2$d days without a decision."
+msgstr "الطلب #%1$d اتقفل تلقائيًا: %2$d يوم من غير قرار."
+
+#, php-format
+msgid "Request #%d closed automatically: its month was closed in Payroll."
+msgstr "الطلب #%d اتقفل تلقائيًا: شهره اتقفل في المرتبات."
+
+#, php-format
+msgid "Request #%d closed automatically: change requests to HR were switched off."
+msgstr "الطلب #%d اتقفل تلقائيًا: طلبات التعديل للموارد البشرية اتقفلت."
+
+#, php-format
+msgid "%1$s is now %2$s"
+msgstr "%1$s بقى %2$s"
+
+#, php-format
+msgid "%1$s to %2$s"
+msgstr "%1$s يبقى %2$s"
+
+msgid "Your schedule changed"
+msgstr "جدولك اتغير"
+
+msgid "A change of your schedule was asked"
+msgstr "فيه طلب لتعديل جدولك"
+
+msgid "Your manager asked HR to change:"
+msgstr "مديرك طلب من الموارد البشرية تعديل:"
+
+msgid "Banner text"
+msgstr "نص الشريط"
+
+msgid "What managers see above the Attendance page when the week is final. Leave it empty to keep the default text."
+msgstr "اللي المديرين بيشوفوه فوق صفحة الحضور لما الأسبوع يبقى نهائي. سيبه فاضي عشان يفضل النص الافتراضي."
+
+msgid "Title (Arabic)"
+msgstr "العنوان (عربي)"
+
+msgid "Text (Arabic)"
+msgstr "النص (عربي)"
+
+msgid "Title (English)"
+msgstr "العنوان (إنجليزي)"
+
+msgid "Text (English)"
+msgstr "النص (إنجليزي)"
+
+msgid "{since} is replaced by the time the week was locked. Each person sees the text in their own language. With change requests to HR on, the same text shows on the page where managers send their changes."
+msgstr "{since} بيتبدل بوقت قفل الأسبوع. كل واحد بيشوف النص بلغته. ولو طلبات التعديل للموارد البشرية شغالة، نفس النص بيظهر في الصفحة اللي المديرين بيبعتوا منها تعديلاتهم."
+
+msgid "Change requests to HR"
+msgstr "طلبات التعديل للموارد البشرية"
+
+msgid "A manager's change on a day of a final week becomes a request to HR, with a reason"
+msgstr "تعديل المدير على يوم في أسبوع نهائي بيبقى طلب للموارد البشرية، بسبب"
+
+msgid "Works only while the week lock and My approvals are on. Switching it off (or the week lock, or My approvals) closes the waiting requests automatically and tells the managers."
+msgstr "بيشتغل بس طول ما قفل الأسبوع وموافقاتي شغالين. لو قفلته (أو قفلت قفل الأسبوع أو موافقاتي) الطلبات المستنية بتتقفل تلقائيًا والمديرين بيوصلهم إشعار."
+
+msgid "My approvals is on: HR decides in the app and on the Requests page."
+msgstr "موافقاتي شغالة: الموارد البشرية بتقرر من التطبيق ومن صفحة الطلبات."
+
+msgid "My approvals is off: switch it on first (HR decides there)."
+msgstr "موافقاتي مقفولة: شغّلها الأول (الموارد البشرية بتقرر منها)."
+
+msgid "Statuses that can be requested"
+msgstr "الحالات اللي ينفع تتطلب"
+
+msgid "Leave types"
+msgstr "أنواع الإجازات"
+
+msgid "Leave goes through a leave request, so the balance is counted."
+msgstr "الإجازة بتتعمل بطلب إجازة عشان الرصيد يتحسب."
+
+msgid "characters at least (a reason is always required)"
+msgstr "حرف على الأقل (السبب مطلوب دايمًا)"
+
+msgid "Most days in one request"
+msgstr "أقصى عدد أيام في الطلب الواحد"
+
+msgid "Past days"
+msgstr "الأيام اللي فاتت"
+
+msgid "days back (0 = today and later only)"
+msgstr "يوم لورا (0 = النهارده واللي بعده بس)"
+
+msgid "Never in a month already closed in Payroll."
+msgstr "أبدًا في شهر مقفول في المرتبات."
+
+msgid "A day changed before the decision"
+msgstr "يوم اتغير قبل القرار"
+
+msgid "Skip that day and apply the others"
+msgstr "سيب اليوم ده وطبّق الباقي"
+
+msgid "Apply nothing (HR rejects it)"
+msgstr "ماتطبقش حاجة (الموارد البشرية ترفضه)"
+
+msgid "Expiry"
+msgstr "الانتهاء"
+
+msgid "days without a decision (0 = never)"
+msgstr "يوم من غير قرار (0 = أبدًا)"
+
+msgid "It also closes when its month is closed in Payroll."
+msgstr "وبيتقفل كمان لما شهره يتقفل في المرتبات."
+
+msgid "CSV import"
+msgstr "الاستيراد من CSV"
+
+msgid "Rows in a final week are sent to HR as one request with one reason"
+msgstr "الصفوف اللي في أسبوع نهائي بتتبعت للموارد البشرية كطلب واحد بسبب واحد"
+
+msgid "Comes in the next release; until then CSV rows in a final week are refused as before."
+msgstr "جاي في الإصدار الجاي؛ لحد كده صفوف CSV اللي في أسبوع نهائي بتترفض زي الأول."
+
+msgid "The employee"
+msgstr "الموظف"
+
+msgid "Also tell them when it is requested"
+msgstr "بلّغه كمان لما يتطلب"
+
+msgid "They are always told when it is applied, like any schedule change."
+msgstr "بيوصله إشعار دايمًا لما يتطبق، زي أي تعديل في الجدول."
+
+msgid "Who approves"
+msgstr "مين بيوافق"
+
+msgid "HR, one level, until you change it on"
+msgstr "الموارد البشرية، مستوى واحد، لحد ما تغيّره من"
+
+msgid "Approval Workflows → Schedule Change"
+msgstr "مسارات الموافقة ← تعديل الجدول"
+
+#, php-format
+msgid "If you switch this off now: %d waiting request will be closed automatically and its manager told."
+msgid_plural "If you switch this off now: %d waiting requests will be closed automatically and their managers told."
+msgstr[0] "لو قفلته دلوقتي: %d طلب مستني هيتقفل تلقائيًا والمديرين هيوصلهم إشعار."
+msgstr[1] "لو قفلته دلوقتي: %d طلب مستني هيتقفل تلقائيًا والمديرين هيوصلهم إشعار."
+msgstr[2] "لو قفلته دلوقتي: %d طلب مستني هيتقفل تلقائيًا والمديرين هيوصلهم إشعار."
+msgstr[3] "لو قفلته دلوقتي: %d طلب مستني هيتقفل تلقائيًا والمديرين هيوصلهم إشعار."
+msgstr[4] "لو قفلته دلوقتي: %d طلب مستني هيتقفل تلقائيًا والمديرين هيوصلهم إشعار."
+msgstr[5] "لو قفلته دلوقتي: %d طلب مستني هيتقفل تلقائيًا والمديرين هيوصلهم إشعار."
+
+msgid "This week is final: changes go to HR as a request"
+msgstr "الأسبوع ده نهائي: التعديلات بتروح للموارد البشرية كطلب"
+
+#, php-format
+msgid "Locked since %s. Change the days and write why; HR approves or rejects. Until then the schedule stays as it is. Leave and swaps are still applied as usual."
+msgstr "مقفول من %s. عدّل الأيام واكتب السبب؛ الموارد البشرية توافق أو ترفض. لحد كده الجدول بيفضل زي ما هو. الإجازات والتبديلات بتتطبق عادي."
+
+#, php-format
+msgid "Change requested: %1$s (by %2$s, waiting for HR)"
+msgstr "تعديل مطلوب: %1$s (من %2$s، مستني الموارد البشرية)"
+
+msgid "No changes yet. Tap a day to change it; HR decides."
+msgstr "مفيش تعديلات لسه. دوس على يوم عشان تغيّره؛ الموارد البشرية هي اللي بتقرر."
+
+msgid "1 change to send to HR"
+msgstr "تعديل واحد هيتبعت للموارد البشرية"
+
+#, php-format
+msgid "%d changes to send to HR"
+msgstr "%d تعديل هيتبعتوا للموارد البشرية"
+
+msgid "You have changes that are not sent yet."
+msgstr "عندك تعديلات لسه ماتبعتتش."
+
+msgid "Send to HR…"
+msgstr "ابعت للموارد البشرية…"
+
+msgid "Send the changes to HR"
+msgstr "ابعت التعديلات للموارد البشرية"
+
+msgid "The changes"
+msgstr "التعديلات"
+
+#, php-format
+msgid "At most %d days can be asked for in one request: undo some first."
+msgstr "أقصى عدد في الطلب الواحد %d يوم: رجّع شوية تعديلات الأول."
+
+#, php-format
+msgid "At least %d characters. HR sees it."
+msgstr "%d حرف على الأقل. الموارد البشرية بتشوفه."
+
+msgid "Send to HR"
+msgstr "ابعت للموارد البشرية"
+
+msgid "The schedule stays as it is until HR approves. You can withdraw it from My requests while it waits."
+msgstr "الجدول بيفضل زي ما هو لحد ما الموارد البشرية توافق. تقدر تسحبه من طلباتي وهو مستني."
+
+msgid "Rejected on the Requests page."
+msgstr "اترفض من صفحة الطلبات."
+
+msgid "none applied"
+msgstr "ولا يوم اتطبق"
+
+msgid "Not applied"
+msgstr "ماتطبقش"
+
+msgid "Your schedule change was approved but not applied"
+msgstr "طلب تعديل الجدول اتوافق عليه بس ماتطبقش"
+
+#. translators: %d: request number
+msgid "Request #%d: none of the days was applied, because they all changed before the decision. See My requests."
+msgstr "الطلب رقم %d: ولا يوم اتطبق، لأن كل الأيام اتغيرت قبل القرار. شوف طلباتي."
+
 #. translators: 1: number of days, 2: leave type, 3: first day, 4: last day, 5: the company holidays, 6: days the leave counts now
 #: includes/trait-services.php:188
 msgid "%1$d day(s) went back to your balance: your %2$s leave (%3$s – %4$s) was charged for company holidays (%5$s). It now counts %6$s day(s)."
@@ -10533,3 +10986,11 @@ msgstr "🎉 إنجاز جديد!"
 #: includes/trait-system-messages.php
 msgid "An & joined to a word or to # cannot be used in this text. Put a space after it."
 msgstr "لا يمكن استخدام & ملاصقة لكلمة أو لعلامة # في هذا النص. ضع مسافة بعدها."
+
+#. translators: %d: days
+msgid "Not applied: at the decision it was more than %d days ago."
+msgstr "ماتطبقش: وقت القرار كان فات عليه أكتر من %d يوم."
+
+#. translators: %d: days
+msgid "Now more than %d days ago: approving will not apply this day."
+msgstr "فات عليه دلوقتي أكتر من %d يوم: الموافقة مش هتطبّق اليوم ده."

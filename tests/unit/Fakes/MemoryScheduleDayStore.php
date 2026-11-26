@@ -89,6 +89,18 @@ final class MemoryScheduleDayStore implements ScheduleDayStore
         return 1;
     }
 
+    public function updateIf(int $id, int $employeeId, string $date, string $expected, string $status, bool $setBranch, int $locationId, int $by, string $at)
+    {
+        if ($this->failUpdate) { $this->error = 'lock wait timeout'; return false; }
+        if ($this->raceStatus !== null && isset($this->rows[$id])) { $this->rows[$id]->status = $this->raceStatus; $this->raceStatus = null; }
+        $r = $this->rows[$id] ?? null;
+        if (!$r || (int) $r->employee_id !== $employeeId || $r->work_date !== $date || $r->status !== $expected) return 0;
+        $loc = $setBranch ? ($locationId ?: null) : ($r->location_id ?? null);
+        if ($r->status === $status && ($r->location_id ?? null) == $loc) return 0;   // MySQL: no row changed
+        $r->status = $status; $r->location_id = $loc; $r->updated_by = $by; $r->updated_at = $at;
+        return 1;
+    }
+
     public function lastError(): string { return $this->error; }
 
     public function rowsOnDates(array $dates): array

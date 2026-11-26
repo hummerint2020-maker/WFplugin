@@ -13471,6 +13471,426 @@ msgstr ""
 msgid "of %s this month"
 msgstr ""
 
+msgid "A schedule change request"
+msgstr ""
+
+msgid "Schedule changes"
+msgstr ""
+
+msgid "Change requests to HR are off, or you cannot do that."
+msgstr ""
+
+#, php-format
+msgid "Write why the days should change (at least %d characters)."
+msgstr ""
+
+msgid "The request could not be sent for approval. Try again."
+msgstr ""
+
+#, php-format
+msgid "At most %d days can be asked for in one request."
+msgstr ""
+
+msgid "Nothing was sent: none of these days can be asked for."
+msgstr ""
+
+msgid "A change of one of these days already waits for HR."
+msgstr ""
+
+msgid "This request is no longer waiting: it was already decided, withdrawn or closed."
+msgstr ""
+
+msgid "Nothing was changed: a day of this request changed since it was asked. You can reject it."
+msgstr ""
+
+msgid "you cannot manage this person"
+msgstr ""
+
+msgid "this week is not final: save it on the grid as usual"
+msgstr ""
+
+msgid "this status cannot be asked for"
+msgstr ""
+
+msgid "a leave goes through a leave request, so the balance is counted"
+msgstr ""
+
+msgid "the day is already so"
+msgstr ""
+
+msgid "it is a company holiday"
+msgstr ""
+
+#, php-format
+msgid "it is more than %d days ago"
+msgstr ""
+
+msgid "its month is closed in Payroll"
+msgstr ""
+
+msgid "this day is a leave; change it through the leave"
+msgstr ""
+
+msgid "attendance is already recorded that day"
+msgstr ""
+
+msgid "a change of this day already waits for HR"
+msgstr ""
+
+msgid "this branch is not one of theirs"
+msgstr ""
+
+msgid "Not applied: the employee is no longer active."
+msgstr ""
+
+msgid "Not applied: the status is no longer in use."
+msgstr ""
+
+msgid "Not applied: the day became a leave before the decision."
+msgstr ""
+
+msgid "Not applied: the branch is no longer one of theirs."
+msgstr ""
+
+msgid "Not applied: its month was closed in Payroll."
+msgstr ""
+
+#, php-format
+msgid "Not applied: the day changed before the decision (now %s)."
+msgstr ""
+
+msgid "Not applied: the day changed before the decision."
+msgstr ""
+
+#, php-format
+msgid "%d day not sent:"
+msgid_plural "%d days not sent:"
+msgstr[0] ""
+msgstr[1] ""
+
+#, php-format
+msgid "Sent to HR: %d day"
+msgid_plural "Sent to HR: %d days"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "HR will review it and you will be told when it is decided."
+msgstr ""
+
+msgid "Not sent to HR"
+msgstr ""
+
+msgid "Approved: the days were applied and each employee was told."
+msgstr ""
+
+msgid "Approved, but not every day was applied: some changed since the request. My requests and the Audit Log list them."
+msgstr ""
+
+msgid "Rejected, and the manager was told."
+msgstr ""
+
+msgid "Approved at your level. It moves to the next one."
+msgstr ""
+
+msgid "Changed since the request: now a leave."
+msgstr ""
+
+#, php-format
+msgid "Changed since the request: now %s."
+msgstr ""
+
+msgid "While it stays so, approving changes nothing."
+msgstr ""
+
+msgid "This day will be skipped."
+msgstr ""
+
+#, php-format
+msgid "%1$d day · %2$s"
+msgid_plural "%1$d days · %2$s"
+msgstr[0] ""
+msgstr[1] ""
+
+#, php-format
+msgid "Payroll is closed for %s: this request closes automatically."
+msgstr ""
+
+msgid "The month is still open in Payroll. Past days change absence and lateness."
+msgstr ""
+
+#, php-format
+msgid "%d day changed since"
+msgid_plural "%d days changed since"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Schedule change"
+msgstr ""
+
+msgid "Partly applied"
+msgstr ""
+
+#, php-format
+msgid "%1$d applied, %2$d not"
+msgstr ""
+
+#, php-format
+msgid "Closed automatically: %d days without a decision."
+msgstr ""
+
+msgid "Closed automatically: its month was closed in Payroll."
+msgstr ""
+
+msgid "Closed automatically: change requests to HR were switched off."
+msgstr ""
+
+#, php-format
+msgid "Schedule change · %d day"
+msgid_plural "Schedule change · %d days"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "A schedule change waits for you"
+msgstr ""
+
+#, php-format
+msgid "%1$s asked to change %2$d day of a final week. Open My approvals."
+msgid_plural "%1$s asked to change %2$d days of a final week. Open My approvals."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Your schedule change was approved"
+msgstr ""
+
+#, php-format
+msgid "Request #%1$d: the %2$d day was applied."
+msgid_plural "Request #%1$d: the %2$d days were applied."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Your schedule change was partly applied"
+msgstr ""
+
+#, php-format
+msgid "Request #%1$d: %2$d day(s) applied; %3$d not, because they changed before the decision. See My requests."
+msgstr ""
+
+msgid "Your schedule change was rejected"
+msgstr ""
+
+#, php-format
+msgid "Request #%1$d was rejected. Reason: %2$s"
+msgstr ""
+
+#, php-format
+msgid "Request #%d was rejected."
+msgstr ""
+
+msgid "Your schedule change was closed"
+msgstr ""
+
+#, php-format
+msgid "Request #%1$d closed automatically: %2$d days without a decision."
+msgstr ""
+
+#, php-format
+msgid "Request #%d closed automatically: its month was closed in Payroll."
+msgstr ""
+
+#, php-format
+msgid "Request #%d closed automatically: change requests to HR were switched off."
+msgstr ""
+
+#, php-format
+msgid "%1$s is now %2$s"
+msgstr ""
+
+#, php-format
+msgid "%1$s to %2$s"
+msgstr ""
+
+msgid "Your schedule changed"
+msgstr ""
+
+msgid "A change of your schedule was asked"
+msgstr ""
+
+msgid "Your manager asked HR to change:"
+msgstr ""
+
+msgid "Banner text"
+msgstr ""
+
+msgid "What managers see above the Attendance page when the week is final. Leave it empty to keep the default text."
+msgstr ""
+
+msgid "Title (Arabic)"
+msgstr ""
+
+msgid "Text (Arabic)"
+msgstr ""
+
+msgid "Title (English)"
+msgstr ""
+
+msgid "Text (English)"
+msgstr ""
+
+msgid "{since} is replaced by the time the week was locked. Each person sees the text in their own language. With change requests to HR on, the same text shows on the page where managers send their changes."
+msgstr ""
+
+msgid "Change requests to HR"
+msgstr ""
+
+msgid "A manager's change on a day of a final week becomes a request to HR, with a reason"
+msgstr ""
+
+msgid "Works only while the week lock and My approvals are on. Switching it off (or the week lock, or My approvals) closes the waiting requests automatically and tells the managers."
+msgstr ""
+
+msgid "My approvals is on: HR decides in the app and on the Requests page."
+msgstr ""
+
+msgid "My approvals is off: switch it on first (HR decides there)."
+msgstr ""
+
+msgid "Statuses that can be requested"
+msgstr ""
+
+msgid "Leave types"
+msgstr ""
+
+msgid "Leave goes through a leave request, so the balance is counted."
+msgstr ""
+
+msgid "characters at least (a reason is always required)"
+msgstr ""
+
+msgid "Most days in one request"
+msgstr ""
+
+msgid "Past days"
+msgstr ""
+
+msgid "days back (0 = today and later only)"
+msgstr ""
+
+msgid "Never in a month already closed in Payroll."
+msgstr ""
+
+msgid "A day changed before the decision"
+msgstr ""
+
+msgid "Skip that day and apply the others"
+msgstr ""
+
+msgid "Apply nothing (HR rejects it)"
+msgstr ""
+
+msgid "Expiry"
+msgstr ""
+
+msgid "days without a decision (0 = never)"
+msgstr ""
+
+msgid "It also closes when its month is closed in Payroll."
+msgstr ""
+
+msgid "CSV import"
+msgstr ""
+
+msgid "Rows in a final week are sent to HR as one request with one reason"
+msgstr ""
+
+msgid "Comes in the next release; until then CSV rows in a final week are refused as before."
+msgstr ""
+
+msgid "The employee"
+msgstr ""
+
+msgid "Also tell them when it is requested"
+msgstr ""
+
+msgid "They are always told when it is applied, like any schedule change."
+msgstr ""
+
+msgid "Who approves"
+msgstr ""
+
+msgid "HR, one level, until you change it on"
+msgstr ""
+
+msgid "Approval Workflows → Schedule Change"
+msgstr ""
+
+#, php-format
+msgid "If you switch this off now: %d waiting request will be closed automatically and its manager told."
+msgid_plural "If you switch this off now: %d waiting requests will be closed automatically and their managers told."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "This week is final: changes go to HR as a request"
+msgstr ""
+
+#, php-format
+msgid "Locked since %s. Change the days and write why; HR approves or rejects. Until then the schedule stays as it is. Leave and swaps are still applied as usual."
+msgstr ""
+
+#, php-format
+msgid "Change requested: %1$s (by %2$s, waiting for HR)"
+msgstr ""
+
+msgid "No changes yet. Tap a day to change it; HR decides."
+msgstr ""
+
+msgid "1 change to send to HR"
+msgstr ""
+
+#, php-format
+msgid "%d changes to send to HR"
+msgstr ""
+
+msgid "You have changes that are not sent yet."
+msgstr ""
+
+msgid "Send to HR…"
+msgstr ""
+
+msgid "Send the changes to HR"
+msgstr ""
+
+msgid "The changes"
+msgstr ""
+
+#, php-format
+msgid "At most %d days can be asked for in one request: undo some first."
+msgstr ""
+
+#, php-format
+msgid "At least %d characters. HR sees it."
+msgstr ""
+
+msgid "Send to HR"
+msgstr ""
+
+msgid "The schedule stays as it is until HR approves. You can withdraw it from My requests while it waits."
+msgstr ""
+
+msgid "Rejected on the Requests page."
+msgstr ""
+
+msgid "none applied"
+msgstr ""
+
+msgid "Not applied"
+msgstr ""
+
+msgid "Your schedule change was approved but not applied"
+msgstr ""
+
+#. translators: %d: request number
+msgid "Request #%d: none of the days was applied, because they all changed before the decision. See My requests."
+
 #. translators: 1: number of days, 2: leave type, 3: first day, 4: last day, 5: the company holidays, 6: days the leave counts now
 #: includes/trait-services.php:188
 msgid "%1$d day(s) went back to your balance: your %2$s leave (%3$s – %4$s) was charged for company holidays (%5$s). It now counts %6$s day(s)."
@@ -14137,4 +14557,12 @@ msgstr ""
 
 #: includes/trait-system-messages.php
 msgid "An & joined to a word or to # cannot be used in this text. Put a space after it."
+msgstr ""
+
+#. translators: %d: days
+msgid "Not applied: at the decision it was more than %d days ago."
+msgstr ""
+
+#. translators: %d: days
+msgid "Now more than %d days ago: approving will not apply this day."
 msgstr ""

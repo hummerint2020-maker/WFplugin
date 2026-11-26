@@ -165,7 +165,7 @@ trait EWS_Services_Trait {
             new class implements Permissions {
                 public function isAdmin(int $userId): bool { return (bool)user_can($userId,'manage_options'); }
             },
-            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports(),$this->leave_holiday_ports(),$this->leave_return_ports());
+            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports(),$this->leave_holiday_ports(),$this->leave_return_ports(),$this->schedule_change_ports());
     }
 
     /** Company holidays charged as leave (3.31.162): what HolidayRefundService reaches in the plugin. */
@@ -223,6 +223,58 @@ trait EWS_Services_Trait {
             public function actorId(): int { return (int)get_current_user_id(); }
             public function returnOn(): bool { return (bool)($this->call)('leave_return_on'); }
             public function actorName(): string { return (string)wp_get_current_user()->display_name; }
+        };
+    }
+
+    /** Schedule change requests (3.31.167): what ScheduleChangeService reaches in the plugin (the words live in trait-schedule-change.php). */
+    private function schedule_change_ports(): \WorkforceOne\Schedule\ScheduleChangePorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new class($call) implements \WorkforceOne\Schedule\ScheduleChangePorts {
+            private $call;
+            public function __construct(callable $call){ $this->call=$call; }
+            public function enabled(): bool { return (bool)($this->call)('sc_enabled'); }
+            public function settings(): array { return (array)($this->call)('sc_settings'); }
+            public function today(): string { return (string)current_time('Y-m-d'); }
+            public function weekFinalFor(string $date): bool { return ($this->call)('week_lock_refusal',$date)==='locked'; }
+            public function statusRule(string $status): ?string {
+                if($status==='Absent')return 'absent';
+                if(!in_array($status,(array)($this->call)('schedule_type_names',true),true))return null;
+                return (string)($this->call)('schedule_type_attendance_rule',$status);
+            }
+            public function inScope(int $employeeId): bool {
+                return (bool)($this->call)('people_active_id',$employeeId) && (bool)($this->call)('employee_attendance_enabled',$employeeId) && (bool)($this->call)('department_scope_allows_employee',$employeeId);
+            }
+            public function activeEmployee(int $employeeId): ?object {
+                $e=($this->call)('people_employee',$employeeId,true);
+                return is_object($e) && ($this->call)('employee_attendance_enabled',$employeeId)?$e:null;
+            }
+            public function leaveOn(int $employeeId,string $date): bool { return (bool)($this->call)('leave_overlap',$employeeId,$date,$date); }
+            public function hasAttendance(int $employeeId,string $date): bool { return (bool)($this->call)('services')->timeLogStore()->typesOn($employeeId,$date); }
+            public function closedMonths(string $from,string $to): array { return array_values(array_map('strval',(array)($this->call)('payroll_closed_months',$from,$to))); }
+            public function branchMode(): bool { return (($this->call)('branch_settings')['mode']??'')==='schedule'; }
+            public function branchAllowed(int $employeeId,int $locationId,string $status,bool $requester): bool {
+                if(!$locationId)return true;
+                $mine=array_map('intval',array_merge([($this->call)('branch_main_id',$employeeId)],(array)($this->call)('branch_other_ids',$employeeId)));
+                if(!in_array($locationId,$mine,true))return false;
+                return !$requester || isset(((array)($this->call)('branch_choices'))[$locationId]);
+            }
+            public function workflowReady(): bool { return (bool)($this->call)('sc_workflow_ready'); }
+            public function startApproval(int $requestId,int $requesterEmployeeId): bool { return !is_wp_error(($this->call)('approval_start','schedule_change','schedule_change',$requestId,$requesterEmployeeId,[],false)); }
+            public function findApproval(int $requestId): ?object { $r=($this->call)('approval_find_request','schedule_change','schedule_change',$requestId); return is_object($r)?$r:null; }
+            public function levelMoved(int $approvalRequestId,$posted): bool { return (bool)($this->call)('approval_level_moved',$approvalRequestId,$posted); }
+            public function canAct(int $approvalRequestId,bool $override): bool { return (bool)($this->call)('approval_can_act',$approvalRequestId) || ($override && current_user_can('manage_options')); }
+            public function act(int $approvalRequestId,string $decision,string $note,$posted,bool $override): string {
+                $r=($this->call)('approval_act',$approvalRequestId,$decision,$note,false,$override,$posted);
+                return is_wp_error($r)?(string)($this->call)('approval_error_code',$r):'';
+            }
+            public function closeApproval(int $requestId,bool $closed) { return ($this->call)('approval_close_open','schedule_change','schedule_change',$requestId,$closed); }
+            public function weekLockRecord(int $employeeId,array $days,string $ref): void { ($this->call)('week_lock_record_request',$employeeId,$days,'schedule_change',$ref); }
+            public function notifyApprover(object $request): void { ($this->call)('sc_notify_approver',$request); }
+            public function notifyRequester(string $event,object $request,array $detail): void { ($this->call)('sc_notify_requester',$event,$request,$detail); }
+            public function notifyApplied(int $employeeId,array $days,int $requestId): void { ($this->call)('sc_notify_employee','applied',$employeeId,$days,$requestId); }
+            public function notifyRequested(int $employeeId,array $days,int $requestId): void { ($this->call)('sc_notify_employee','requested',$employeeId,$days,$requestId); }
+            public function employeeName(int $employeeId): string { return (string)($this->call)('people_name',$employeeId); }
+            public function actorId(): int { return (int)get_current_user_id(); }
         };
     }
 

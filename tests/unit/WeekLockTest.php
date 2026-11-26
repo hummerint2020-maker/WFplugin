@@ -65,12 +65,30 @@ final class WeekLockTest extends TestCase
     public function testSettings(): void
     {
         $this->assertSame(WeekLockSettings::DEFAULTS, WeekLockSettings::config(null));
-        $this->assertSame(['cutoff_day' => 6, 'cutoff_time' => '09:30', 'notify' => 0], WeekLockSettings::config(['cutoff_day' => '6', 'cutoff_time' => '09:30', 'notify' => '']));
+        $this->assertSame(['cutoff_day' => 6, 'cutoff_time' => '09:30', 'notify' => 0, 'banner_title_ar' => '', 'banner_text_ar' => '', 'banner_title_en' => '', 'banner_text_en' => ''], WeekLockSettings::config(['cutoff_day' => '6', 'cutoff_time' => '09:30', 'notify' => '']));
         $this->assertSame(WeekLockSettings::DEFAULTS, WeekLockSettings::config(['cutoff_day' => 9, 'cutoff_time' => '25:00']), 'bad values keep the defaults');
-        $this->assertSame([['cutoff_day' => 0, 'cutoff_time' => '08:15', 'notify' => 1], ''], WeekLockSettings::fromPost(['wl_cutoff_day' => '0', 'wl_cutoff_time' => '08:15', 'wl_notify' => '1']));
+        $this->assertSame([['cutoff_day' => 0, 'cutoff_time' => '08:15', 'notify' => 1, 'banner_title_ar' => '', 'banner_text_ar' => '', 'banner_title_en' => '', 'banner_text_en' => ''], ''], WeekLockSettings::fromPost(['wl_cutoff_day' => '0', 'wl_cutoff_time' => '08:15', 'wl_notify' => '1']));
         $this->assertSame('day', WeekLockSettings::fromPost(['wl_cutoff_day' => '7', 'wl_cutoff_time' => '08:15'])[1]);
         $this->assertSame('day', WeekLockSettings::fromPost(['wl_cutoff_day' => '', 'wl_cutoff_time' => '08:15'])[1]);
         $this->assertSame('time', WeekLockSettings::fromPost(['wl_cutoff_day' => '4', 'wl_cutoff_time' => '5pm'])[1]);
         $this->assertSame(0, WeekLockSettings::fromPost(['wl_cutoff_day' => '4', 'wl_cutoff_time' => '17:00'])[0]['notify']);
+    }
+
+    /** The final-week banner (3.31.167, owner answer 12): plain text, capped, kept when the page has no fields, {since} replaced. */
+    public function testBanner(): void
+    {
+        $c = WeekLockSettings::config(['banner_title_ar' => "  <b>الأسبوع</b>\n نهائي ", 'banner_text_en' => str_repeat('x', 600), 'banner_text_ar' => 5]);
+        $this->assertSame('الأسبوع نهائي', $c['banner_title_ar'], 'no tags, one line');
+        $this->assertSame(500, mb_strlen($c['banner_text_en']));
+        $this->assertSame('', $c['banner_text_ar'], 'not a string: the default');
+        [$p] = WeekLockSettings::fromPost(['wl_cutoff_day' => '4', 'wl_cutoff_time' => '17:00', 'wl_banner_title_en' => 'Final week', 'wl_banner_text_en' => "Since {since}.\nAsk HR."], ['banner_title_ar' => 'قديم']);
+        $this->assertSame('Final week', $p['banner_title_en']);
+        $this->assertSame("Since {since}.\nAsk HR.", $p['banner_text_en'], 'a text keeps its lines');
+        $this->assertSame('قديم', $p['banner_title_ar'], 'a field not on the page is kept');
+        $b = WeekLockSettings::banner(WeekLockSettings::config($p), 'en', 'Thu 8 Oct, 5:00 PM');
+        $this->assertSame(['title' => 'Final week', 'text' => "Since Thu 8 Oct, 5:00 PM.\nAsk HR."], $b);
+        $this->assertSame(['title' => 'قديم', 'text' => null], WeekLockSettings::banner(WeekLockSettings::config($p), 'ar', 'x'), 'an empty part keeps the default');
+        $this->assertTrue(WeekLockSettings::customBanner($p));
+        $this->assertFalse(WeekLockSettings::customBanner(WeekLockSettings::DEFAULTS));
     }
 }
