@@ -70,7 +70,7 @@ trait EWS_Week_Lock_Trait {
      * What a page shows for the week starting $week_start, or null when the switch is off.
      * @return array{locked:bool,since:string,override:bool,soon:string,banner:array{title:?string,text:?string}}|null since: when it
      *         became final; soon: today's cutoff that will make it final (empty otherwise); banner: the custom final-week banner in
-     *         the person's language (3.31.165), each part null for the default text
+     *         the person's language (3.31.167), each part null for the default text
      */
     private function week_lock_view($week_start){
         if(!$this->week_lock_enabled())return null;
@@ -98,7 +98,7 @@ trait EWS_Week_Lock_Trait {
     /** Every five minutes (WP-Cron): once per cutoff, tell everyone with a schedule that week (WeekLockService, 3.31.127). */
     public function week_lock_tick(){
         if(!$this->week_lock_enabled())return;
-        if($this->sc_enabled())$this->sc_expire_tick();   // schedule change requests (3.31.165): expired, or their payroll month closed
+        if($this->sc_enabled())$this->sc_expire_tick();   // schedule change requests (3.31.167): expired, or their payroll month closed
         $week=$this->services()->weekLock()->dueWeek($this->week_lock_settings(),$this->week_lock_now(),$this->working_days());
         if($week!=='')$this->week_lock_notify($week);
     }

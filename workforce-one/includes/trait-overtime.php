@@ -65,10 +65,12 @@ trait EWS_Overtime_Trait {
     private function overtime_finalized($req,$emp,$approved){
             $id=(int)$req->id;
             $msg=$approved
-                ?'Your overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.', '.OvertimeRules::durationText((int)$req->requested_minutes).') has been approved.'
-                :'Your overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.') has been rejected.';
+                /* translators: 1: day, 2: start time, 3: end time, 4: duration */
+                ?sprintf(__('Your overtime request for %1$s (%2$s–%3$s, %4$s) has been approved.','workforce-one'),$req->overtime_date,$req->start_time,$req->end_time,OvertimeRules::durationText((int)$req->requested_minutes))
+                /* translators: 1: day, 2: start time, 3: end time */
+                :sprintf(__('Your overtime request for %1$s (%2$s–%3$s) has been rejected.','workforce-one'),$req->overtime_date,$req->start_time,$req->end_time);
             $this->audit($approved?'overtime_approved':'overtime_rejected','overtime_request',$id,($approved?'Approved':'Rejected').' by '.wp_get_current_user()->display_name);
-            if($emp->wp_user_id)$this->overtime_notify($emp->wp_user_id,$approved?'Overtime Approved':'Overtime Rejected',$msg,$id);
+            if($emp->wp_user_id)$this->overtime_notify($emp->wp_user_id,$approved?__('Overtime Approved','workforce-one'):__('Overtime Rejected','workforce-one'),$msg,$id);
         }
 
     /* ------------------------------------------------------------------ overtime handlers */
@@ -96,17 +98,22 @@ trait EWS_Overtime_Trait {
             $this->audit('overtime_request','overtime_request',$id,$emp->name.' requested '.$hours.' overtime hour(s) on '.$date);
             if($ar){
                 if($ar->status==='APPROVED'){
-                    if($emp->wp_user_id)$this->overtime_notify($emp->wp_user_id,'Overtime Approved','Your overtime request for '.$date.' ('.$start.'–'.$end.') has been approved.',$id);
+                    if($emp->wp_user_id)$this->overtime_notify($emp->wp_user_id,__('Overtime Approved','workforce-one'),
+                        /* translators: 1: day, 2: start time, 3: end time */
+                        sprintf(__('Your overtime request for %1$s (%2$s–%3$s) has been approved.','workforce-one'),$date,$start,$end),$id);
                 }else{
                     $step=$this->approval_current_step((int)$ar->id);
-                    if($step&&$step->approver_wp_user_id)$this->overtime_notify($step->approver_wp_user_id,'Overtime Approval Required',$emp->name.' requested '.$hours.' hour(s) of overtime on '.$date.' ('.$start.'–'.$end.'). It is awaiting your Level '.(int)$step->step_order.' approval.',$id);
+                    if($step&&$step->approver_wp_user_id)$this->overtime_notify($step->approver_wp_user_id,__('Overtime Approval Required','workforce-one'),
+                        /* translators: 1: employee name, 2: hours, 3: day, 4: start time, 5: end time, 6: approval level number */
+                        sprintf(__('%1$s requested %2$s hour(s) of overtime on %3$s (%4$s–%5$s). It is awaiting your Level %6$d approval.','workforce-one'),$emp->name,$hours,$date,$start,$end,(int)$step->step_order),$id);
                 }
                 $this->overtime_redirect(['overtime_sent'=>$hours]);
             }
-            $msg=$emp->name.' requested '.$hours.' hour(s) of overtime on '.$date.' ('.$start.'–'.$end.'). Approval is required.';
+            /* translators: 1: employee name, 2: hours, 3: day, 4: start time, 5: end time */
+            $msg=sprintf(__('%1$s requested %2$s hour(s) of overtime on %3$s (%4$s–%5$s). Approval is required.','workforce-one'),$emp->name,$hours,$date,$start,$end);
             foreach(get_users(['capability'=>'ews_manage_time','fields'=>['ID']]) as $m){
                 if((int)$m->ID===(int)get_current_user_id())continue;
-                $this->overtime_notify($m->ID,'Overtime Request',$msg,$id);
+                $this->overtime_notify($m->ID,__('Overtime Request','workforce-one'),$msg,$id);
             }
             $this->overtime_redirect(['overtime_sent'=>$hours]);
         }
@@ -173,7 +180,9 @@ trait EWS_Overtime_Trait {
                     $this->overtime_redirect($fresh->status==='APPROVED'?['overtime_done'=>1]:['overtime_rejected'=>1]);
                 }
                 $next=$this->approval_current_step((int)$fresh->id);
-                if($next&&$next->approver_wp_user_id)$this->overtime_notify($next->approver_wp_user_id,'Overtime Approval Required',$emp->name.' overtime request for '.$req->overtime_date.' ('.$req->start_time.'–'.$req->end_time.') is awaiting your Level '.(int)$next->step_order.' approval.',$id);
+                if($next&&$next->approver_wp_user_id)$this->overtime_notify($next->approver_wp_user_id,__('Overtime Approval Required','workforce-one'),
+                    /* translators: 1: employee name, 2: day, 3: start time, 4: end time, 5: approval level number */
+                    sprintf(__('%1$s overtime request for %2$s (%3$s–%4$s) is awaiting your Level %5$d approval.','workforce-one'),$emp->name,$req->overtime_date,$req->start_time,$req->end_time,(int)$next->step_order),$id);
                 $this->overtime_redirect(['overtime_done'=>1]);
             }
 
@@ -211,8 +220,12 @@ trait EWS_Overtime_Trait {
             global $wpdb;
             $emp=$this->people_employee((int)$r->employee_id);
             if(!$emp||!$emp->wp_user_id)return;
-            $title='Early Leave '.ucfirst($decision);
-            $msg='Your Early Leave request for '.$r->work_date.' has been '.($decision==='approve'?'approved':'rejected').'.';
+            $title=$decision==='approve'?__('Early Leave Approved','workforce-one'):__('Early Leave Rejected','workforce-one');
+            $msg=$decision==='approve'
+                /* translators: %s: day */
+                ?sprintf(__('Your Early Leave request for %s has been approved.','workforce-one'),$r->work_date)
+                /* translators: %s: day */
+                :sprintf(__('Your Early Leave request for %s has been rejected.','workforce-one'),$r->work_date);
             $this->notify((int)$emp->wp_user_id,'early_leave',$title,$msg,['entity_id'=>(int)$r->id,'push'=>$push]);
         }
 
@@ -239,10 +252,11 @@ trait EWS_Overtime_Trait {
             $ok=$wpdb->insert($wpdb->prefix.'ews_early_leave_requests',['employee_id'=>$emp->id,'work_date'=>$date,'leave_minutes'=>$minutes,'reason'=>$reason,'status'=>'Pending','requested_by'=>get_current_user_id(),'requested_at'=>current_time('mysql')],['%d','%s','%d','%s','%s','%d','%s']);   // the site's time, as overtime (not the database server's clock)
             if($ok===false)$this->leave_redirect(['early_error'=>'save']);
             $id=$wpdb->insert_id;
-            $msg=$emp->name.' requested Early Leave of '.floor($minutes/60).'h '.($minutes%60).'m on '.$date.'.';
+            /* translators: 1: employee name, 2: hours, 3: minutes, 4: day */
+            $msg=sprintf(__('%1$s requested Early Leave of %2$dh %3$dm on %4$s.','workforce-one'),$emp->name,(int)floor($minutes/60),$minutes%60,$date);
             foreach(get_users(['capability'=>'ews_manage_time','fields'=>['ID']]) as $m){
                 if((int)$m->ID===(int)get_current_user_id())continue;
-                $this->notify((int)$m->ID,'early_leave','Early Leave Request',$msg,['entity_id'=>$id]);
+                $this->notify((int)$m->ID,'early_leave',__('Early Leave Request','workforce-one'),$msg,['entity_id'=>$id]);
             }
             $this->leave_redirect(['leave_sent'=>1]);
         }
@@ -290,7 +304,9 @@ trait EWS_Overtime_Trait {
                 $next=$this->approval_current_step((int)$fresh->id);
                 if($next&&$next->approver_wp_user_id){
                     $emp=$this->people_employee((int)$req->employee_id);
-                    $this->notify((int)$next->approver_wp_user_id,'overtime','Overtime Approval Required',($emp?$emp->name:'An employee').' overtime request is waiting for your approval.',['entity_id'=>$id]);
+                    $this->notify((int)$next->approver_wp_user_id,'overtime',__('Overtime Approval Required','workforce-one'),
+                        /* translators: %s: employee name */
+                        sprintf(__('%s overtime request is waiting for your approval.','workforce-one'),$emp?$emp->name:__('An employee','workforce-one')),['entity_id'=>$id]);
                 }
                 return Hub::ADVANCED;
             }

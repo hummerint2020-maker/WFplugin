@@ -80,6 +80,11 @@ use WorkforceOne\Leave\Data\WordPressLeaveDayQuery;
 use WorkforceOne\Leave\Data\LeaveHolidayStore;
 use WorkforceOne\Leave\Data\WordPressLeaveHolidayStore;
 use WorkforceOne\Leave\HolidayRefundPorts;
+use WorkforceOne\Messages\Data\CatalogFiles;
+use WorkforceOne\Messages\Data\MessageOverrideStore;
+use WorkforceOne\Messages\Data\WordPressMessageOverrideStore;
+use WorkforceOne\Messages\MessageCatalog;
+use WorkforceOne\Messages\MessageOverrideService;
 use WorkforceOne\Leave\LeaveReturnPorts;
 use WorkforceOne\Leave\LeaveReturnService;
 use WorkforceOne\Leave\Data\ChangedDaysQuery;
@@ -376,6 +381,33 @@ final class Services
         return $this->made[__FUNCTION__];
     }
 
+    /** The edited texts of System messages (3.31.166), one option. */
+    public function messageStore(): MessageOverrideStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressMessageOverrideStore();
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The shipped catalog and translations System messages lists from (read only when asked). */
+    public function messageFiles(): CatalogFiles
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new CatalogFiles(dirname(__DIR__, 2) . '/languages');
+        return $this->made[__FUNCTION__];
+    }
+
+    public function messageCatalog(): MessageCatalog
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new MessageCatalog($this->messageFiles()->catalog(), $this->messageFiles()->arabic());
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Saving and resetting edited texts (3.31.166). */
+    public function messages(): MessageOverrideService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new MessageOverrideService($this->messageStore(), $this->audit);
+        return $this->made[__FUNCTION__];
+    }
+
     /** Company holidays charged as leave (3.31.162): the report and giving the days back. */
     public function leaveHolidays(): HolidayRefundService
     {
@@ -483,7 +515,7 @@ final class Services
         return $this->made[__FUNCTION__];
     }
 
-    /** The schedule change request tables (3.31.165): an upgrade step. */
+    /** The schedule change request tables (3.31.167): an upgrade step. */
     public function scheduleChangeSchema(): void
     {
         ScheduleChangeSchema::create($this->db);
@@ -495,7 +527,7 @@ final class Services
         return $this->made[__FUNCTION__];
     }
 
-    /** Schedule change requests (3.31.165). */
+    /** Schedule change requests (3.31.167). */
     public function scheduleChanges(): ScheduleChangeService
     {
         if (!isset($this->made[__FUNCTION__])) {

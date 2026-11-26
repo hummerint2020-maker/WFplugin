@@ -63,7 +63,7 @@ trait EWS_My_Approvals_Trait {
             case 'face_reset_request': return $this->face_reset_approval_card((int)$entity_id,$light);
             case 'salary_advance': return $this->advance_approval_card((int)$entity_id,$light);
             case 'hr_letter': return $this->hr_letter_approval_card((int)$entity_id,$light);
-            case 'schedule_change': return $this->sc_approval_card((int)$entity_id,$light);   // 3.31.165
+            case 'schedule_change': return $this->sc_approval_card((int)$entity_id,$light);   // 3.31.167
         }
         return null;
     }
@@ -248,7 +248,7 @@ trait EWS_My_Approvals_Trait {
         if(isset($_GET['adv_error']))return ['type'=>'error','text'=>$this->advance_error_text(sanitize_key($_GET['adv_error']))];
         if(isset($_GET['hl_done']))return ['type'=>'success','text'=>__('The letter request was decided.','workforce-one')];
         if(isset($_GET['hl_error']))return ['type'=>'error','text'=>$this->hr_letter_error_text(sanitize_key($_GET['hl_error']))];
-        if(isset($_GET['scd_done'])||isset($_GET['scd_error']))return $this->sc_approvals_notice();   // schedule changes (3.31.165)
+        if(isset($_GET['scd_done'])||isset($_GET['scd_error']))return $this->sc_approvals_notice();   // schedule changes (3.31.167)
         if(isset($_GET['leave_rejected']))return ['type'=>'success','text'=>__('The leave request was rejected, and the employee was told.','workforce-one')];
         if(isset($_GET['swap_done'])){
             $done=['accepted'=>__('You accepted: both schedules are updated.','workforce-one'),'awaiting'=>__('You accepted. It now goes to the approver.','workforce-one'),
@@ -395,7 +395,7 @@ trait EWS_My_Approvals_Trait {
             case 'correction': $r=$this->corrections_enabled()?$this->cx_withdraw($id,(int)$emp->id):'access';break;
             case 'advance': $r=$this->advances_enabled()?$this->advance_withdraw($id,(int)$emp->id):'access';break;
             case 'letter': $r=$this->hr_letter_withdraw($id,(int)$emp->id);break;
-            case 'schedule': $r=$this->sc_withdraw($id,(int)$emp->id);break;   // 3.31.165
+            case 'schedule': $r=$this->sc_withdraw($id,(int)$emp->id);break;   // 3.31.167
             case 'swap': $r=$this->swap_withdraw($id,(int)$emp->id);break;
             default: $r='access';
         }

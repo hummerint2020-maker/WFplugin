@@ -223,7 +223,7 @@ trait EWS_Frontend_Trait {
                 return $this->ux_modal(__('Schedule Conflict','workforce-one'),$message,'warning');
             }
             if(isset($_GET['cx_sent'])||isset($_GET['cx_done'])||isset($_GET['cx_error']))return $this->cx_notice();
-            if(sanitize_key($_GET['ews_view']??'')==='attendance' && (isset($_GET['sc_sent'])||isset($_GET['sc_error']))){$n=$this->sc_grid_notice();return $this->ux_modal($n['title'],$n['text'],$n['type']);}   // change requests to HR (3.31.165)
+            if(sanitize_key($_GET['ews_view']??'')==='attendance' && (isset($_GET['sc_sent'])||isset($_GET['sc_error']))){$n=$this->sc_grid_notice();return $this->ux_modal($n['title'],$n['text'],$n['type']);}   // change requests to HR (3.31.167)
             foreach(['dw_error','dw_saved','dw_added','dw_moved','dw_adv','dw_paid','dw_change'] as $k)if(isset($_GET[$k]))return $this->dw_notice();
             $map=[
 

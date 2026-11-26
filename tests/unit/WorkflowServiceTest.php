@@ -35,7 +35,7 @@ final class WorkflowServiceTest extends TestCase
         $this->assertSame(0, (int) $this->w->workflows->workflows[2]->active);
         $this->assertSame('PEER', $this->w->workflows->workflows[5]->approval_mode);
         $this->w->workflowService()->seedDefaults();
-        $this->assertSame('LEVEL_1', $this->w->workflows->workflows[9]->approval_mode, 'Schedule Change: HR, one level (3.31.165)');
+        $this->assertSame('LEVEL_1', $this->w->workflows->workflows[9]->approval_mode, 'Schedule Change: HR, one level (3.31.167)');
         $this->assertCount(9, $this->w->workflows->workflows, 'a second run adds nothing');
     }
 

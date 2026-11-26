@@ -4,7 +4,7 @@ namespace WorkforceOne\Schedule;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Schedule change request rules (3.31.165, docs/tasks/schedule-change-request.md): which day a manager may ask HR to change,
+ * Schedule change request rules (3.31.167, docs/tasks/schedule-change-request.md): which day a manager may ask HR to change,
  * and when a waiting request closes by itself. Pure PHP.
  */
 final class ScheduleChangeRules

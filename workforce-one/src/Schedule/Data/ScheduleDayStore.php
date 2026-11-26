@@ -35,7 +35,7 @@ interface ScheduleDayStore
     public function updateStatusIf(int $id, string $expected, string $status, string $note, int $by, string $at);
 
     /**
-     * A schedule change request's approved day (3.31.165): status (and the branch when $setBranch; 0 = their main branch, NULL),
+     * A schedule change request's approved day (3.31.167): status (and the branch when $setBranch; 0 = their main branch, NULL),
      * only while the row is still the employee's day with status $expected. The note is kept. @return int|false rows changed
      */
     public function updateIf(int $id, int $employeeId, string $date, string $expected, string $status, bool $setBranch, int $locationId, int $by, string $at);

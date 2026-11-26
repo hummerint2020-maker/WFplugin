@@ -1083,6 +1083,40 @@
         "health_boot",
         "health_external"
       ]
+    },
+    "messages": {
+      "label": "System messages: edit the texts the system shows (3.31.166)",
+      "traits": [
+        "system-messages"
+      ],
+      "tables": [],
+      "api": [
+        "system_messages_enabled",
+        "system_messages_boot",
+        "admin_system_messages",
+        "system_messages_save",
+        "system_messages_reset"
+      ],
+      "layered": [
+        {
+          "slice": "overrides",
+          "tables": [],
+          "store": [
+            "workforce-one/src/Messages/Data/WordPressMessageOverrideStore.php",
+            "workforce-one/src/Messages/Data/CatalogFiles.php"
+          ],
+          "services": [
+            "workforce-one/src/Messages/MessageOverrideService.php",
+            "workforce-one/src/Messages/MessageCatalog.php",
+            "workforce-one/src/Messages/MessageRules.php",
+            "workforce-one/src/Messages/ImportantMessages.php"
+          ],
+          "moved": [],
+          "traits_clean": [
+            "system-messages"
+          ]
+        }
+      ]
     }
   }
 }

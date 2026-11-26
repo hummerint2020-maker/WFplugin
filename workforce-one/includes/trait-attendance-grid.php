@@ -143,7 +143,7 @@ trait EWS_Attendance_Grid_Trait {
                 'statuses'=>array_values(array_filter($this->schedule_type_names(true),function($st){return $this->schedule_type_requires_location($st);}))];
         }
         $office_min=$this->om_attendance($dates);
-        // Change requests to HR (3.31.165): a final week's changes are sent to HR. Off, or a week this person may not ask for: null, nothing printed.
+        // Change requests to HR (3.31.167): a final week's changes are sent to HR. Off, or a week this person may not ask for: null, nothing printed.
         $sc_view=$this->sc_grid_view($dates,array_map(function($e){return (int)$e->id;},$emps));
         if($sc_view){wp_enqueue_style('workforce-one-requests');wp_enqueue_script('workforce-one-sheet');}
         // The cards' lists (3.31.125): off, nothing more is printed or loaded.

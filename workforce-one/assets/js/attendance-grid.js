@@ -5,7 +5,7 @@
    page loaded, so a stale page cannot overwrite another manager's newer work (the server reports it
    as a conflict). "By the schedule" branches (3.31.72): a day that takes a branch shows it under its
    status; the picker offers that employee's branches; "Branch…" above a day sets it for everyone
-   who has that branch. Change requests to HR (3.31.165): on a final week (form[data-ews-sc]) the same changes are listed in
+   who has that branch. Change requests to HR (3.31.167): on a final week (form[data-ews-sc]) the same changes are listed in
    a sheet (#wfo-sc-sheet) with a reason, and sent to HR instead of saved; a day already waiting for HR cannot be picked. */
 (function () {
     'use strict';

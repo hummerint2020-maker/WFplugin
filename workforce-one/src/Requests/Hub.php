@@ -21,9 +21,9 @@ final class Hub
     public const CHANGED = 'changed';
     /** The request moved to another approval level since the page was opened: nothing was changed (3.31.122). */
     public const MOVED = 'moved';
-    /** A schedule change approved with some days not applied: they changed since the request (3.31.165). */
+    /** A schedule change approved with some days not applied: they changed since the request (3.31.167). */
     public const SC_PARTIAL = 'sc_partial';
-    /** A schedule change not approved: a day changed since the request and the setting is "apply nothing" (3.31.165). */
+    /** A schedule change not approved: a day changed since the request and the setting is "apply nothing" (3.31.167). */
     public const SC_CHANGED = 'sc_changed';
 
     public static function isDecision(string $decision): bool

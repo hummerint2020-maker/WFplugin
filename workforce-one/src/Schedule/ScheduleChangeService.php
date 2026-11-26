@@ -9,7 +9,7 @@ use WorkforceOne\Schedule\Data\ScheduleChangeStore;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Schedule change requests (3.31.165, week lock release 2; docs/tasks/schedule-change-request.md, owner answers 2026-10-22):
+ * Schedule change requests (3.31.167, week lock release 2; docs/tasks/schedule-change-request.md, owner answers 2026-10-22):
  * a manager asks HR to change days of a final week, with a reason; HR approves or rejects the whole request on the approvals
  * engine; on the last approval every day still as it was asked is applied (a day changed meanwhile is skipped, or the whole
  * request refused by the setting); a waiting request can be withdrawn and closes by itself after expire_days or when its
@@ -216,6 +216,8 @@ final class ScheduleChangeService
         if ($rows === null) return 'save';
         // A payroll month closed since the request is never changed (the tick closes such a request; this covers the minutes between).
         $closed = array_flip($this->site->closedMonths((string) $r->first_date, (string) $r->last_date));
+        // The days-back limit holds at the decision too (owner, 2026-11-26): a day that is now further back is not applied.
+        $oldest = ScheduleChangeRules::addDays($this->site->today(), -(int) ($cfg['past_days'] ?? 14));
         $applied = [];
         $skipped = [];
         foreach ($rows as $d) {
@@ -225,6 +227,7 @@ final class ScheduleChangeService
             $loc = $d->new_location_id !== null ? (int) $d->new_location_id : 0;
             $nowStatus = null;
             if (isset($closed[substr($date, 0, 7)])) $result = 'closed_month';
+            elseif ($date < $oldest) $result = 'past';
             elseif (!$this->site->activeEmployee($eid)) $result = 'inactive';
             elseif ($this->site->statusRule($new) === null) $result = 'gone';
             elseif ($this->site->leaveOn($eid, $date)) $result = 'leave';
@@ -236,7 +239,8 @@ final class ScheduleChangeService
                 $result = $a['result'];
                 $nowStatus = $a['now'];
             }
-            if (!in_array($result, ['applied', 'already'], true) && $cfg['changed_day'] === 'refuse') return 'refuse';
+            // "Refuse" waits for a changed day to come back; a day too far back or in a closed month never will, so it is skipped.
+            if (!in_array($result, ['applied', 'already', 'past', 'closed_month'], true) && $cfg['changed_day'] === 'refuse') return 'refuse';
             if (!$this->store->setDayResult((int) $d->id, $result, $nowStatus)) return 'save';
             $day = ['employee' => $eid, 'date' => $date, 'old' => $d->old_status, 'new' => $new, 'result' => $result, 'now' => $nowStatus];
             if (in_array($result, ['applied', 'already'], true)) $applied[] = $day;

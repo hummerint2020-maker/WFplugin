@@ -4,7 +4,7 @@ namespace WorkforceOne\Schedule;
 if (!defined('ABSPATH')) exit;
 
 /**
- * Schedule change request settings (3.31.165, option ews_schedule_change; the switch is ews_feature_schedule_change).
+ * Schedule change request settings (3.31.167, option ews_schedule_change; the switch is ews_feature_schedule_change).
  * Edited on Feature Configuration → Week lock → Change requests to HR (docs/tasks/schedule-change-request.md §2.6).
  * Pure: no WordPress calls.
  */

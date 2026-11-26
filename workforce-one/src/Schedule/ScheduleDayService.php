@@ -105,7 +105,7 @@ final class ScheduleDayService
     }
 
     /**
-     * A schedule change request's approved day (3.31.165), inside the caller's transaction: written only while the day is
+     * A schedule change request's approved day (3.31.167), inside the caller's transaction: written only while the day is
      * still what it was when the change was asked ($expected; null: there was no row). Nobody is told here and nothing is
      * audited: the caller tells each employee once and writes the Audit Log after COMMIT.
      * - A row: one conditional UPDATE. Nothing changed: 'already' when the day is now the asked status, else 'changed'.

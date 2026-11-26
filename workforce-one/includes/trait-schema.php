@@ -351,7 +351,8 @@ private function ensure_break_schema(){
             ) {$c};");
         }
 
-        private function ews_schema_target(){ return '3.31.165'; }   // Schedule change requests: ews_schedule_change_requests, ews_schedule_change_days; the Schedule Change workflow row
+        private function ews_schema_target(){ return '3.31.167'; }   // 3.31.167: Schedule change requests: ews_schedule_change_requests, ews_schedule_change_days; the Schedule Change workflow row
+        // 3.31.166: System messages: the new capability ews_manage_messages reaches the roles (no table change)
         // 3.31.162: Company holidays are not leave days: ews_leave_holiday_refunds, ews_leave_requests.holidays_skipped
         // 3.31.161: Leave return: leave change rounds (ews_leave_changes), approval rounds (ews_approval_requests.entity_round), snapshot day key
 

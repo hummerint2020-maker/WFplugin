@@ -285,9 +285,9 @@ trait EWS_Payroll_Trait {
         if(isset($r['error']))$this->payroll_redirect($back+['payroll_error'=>$r['error']]);
         $rules=$this->payroll_rules();
         if($rules['employee_view']){
-            $label=date('F Y',strtotime($month.'-01'));
+            $label=date_i18n('F Y',strtotime($month.'-01'));
             foreach($r['people'] as $x){
-                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll','Payslip ready','Your payslip for '.$label.' is ready in My Pay.',['type'=>'info','entity_id'=>$r['run_id'],'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
+                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll',__('Payslip ready','workforce-one'),sprintf(/* translators: %s: month and year */__('Your payslip for %s is ready in My Pay.','workforce-one'),$label),['type'=>'info','entity_id'=>$r['run_id'],'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
             }
         }
         $this->payroll_redirect($back+['payroll_saved'=>'closed']);

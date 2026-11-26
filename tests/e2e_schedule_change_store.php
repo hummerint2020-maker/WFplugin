@@ -1,6 +1,6 @@
 <?php
 /**
- * The schedule change requests Store on the real database (3.31.165; docs/tasks/schedule-change-request.md §4): temporary copies
+ * The schedule change requests Store on the real database (3.31.167; docs/tasks/schedule-change-request.md §4): temporary copies
  * of the installed tables, so nothing of the site is touched. Run with wp eval-file (CI's MySQL; SQLite works too).
  */
 use WorkforceOne\Schedule\Data\ScheduleChangeSchema;

@@ -95,7 +95,7 @@ $stats_cls = (in_array('leave', $cards_shown, true) ? ' has-leave' : '') . (coun
 $leave_split = $leave_card ? (string) $leave_card['line'] : '';
 $plan_dots = ['office' => __('Office', 'workforce-one'), 'wfh' => __('WFH', 'workforce-one'), 'leave' => __('Leave', 'workforce-one'), 'trip' => __('Business Trip', 'workforce-one')];
 $wl_readonly = $week_lock && $week_lock['locked'] && !$week_lock['override'];
-// Change requests to HR (3.31.165): a final week is changed as before, and the changes go to HR as one request.
+// Change requests to HR (3.31.167): a final week is changed as before, and the changes go to HR as one request.
 $sc = $sc ?? null;
 $sc_mode = $sc && $wl_readonly;
 if ($sc_mode) $wl_readonly = false;
@@ -209,7 +209,7 @@ if ($sc_mode) $wl_readonly = false;
         <?php elseif ($wl_kind === 'override'): ?>
             <h3><?php esc_html_e('This week is final, and you can still edit it', 'workforce-one'); ?></h3>
             <p><?php /* translators: %s: date and time */ echo esc_html(sprintf(__('Locked since %s. Every change you make is recorded in the Audit Log under your name.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
-        <?php else: $wl_b = $week_lock['banner'] ?? ['title' => null, 'text' => null]; /* the administrator's text (3.31.165), else the default */ ?>
+        <?php else: $wl_b = $week_lock['banner'] ?? ['title' => null, 'text' => null]; /* the administrator's text (3.31.167), else the default */ ?>
             <h3><?php echo esc_html($wl_b['title'] ?? ($sc_mode ? __('This week is final: changes go to HR as a request', 'workforce-one') : __('This week is final', 'workforce-one'))); ?></h3>
             <p><?php /* translators: %s: date and time */ echo esc_html($wl_b['text'] ?? sprintf($sc_mode ? __('Locked since %s. Change the days and write why; HR approves or rejects. Until then the schedule stays as it is. Leave and swaps are still applied as usual.', 'workforce-one') : __('Locked since %s. Approved leave and swaps are still applied. To change a day, ask HR.', 'workforce-one'), $week_lock_when($week_lock['since']))); ?></p>
         <?php endif; ?>

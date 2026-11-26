@@ -4,7 +4,7 @@ namespace WorkforceOne\Schedule\Data;
 if (!defined('ABSPATH')) exit;
 
 /**
- * The schedule change request tables (3.31.165, docs/tasks/schedule-change-request.md §2.2): one header per request (the
+ * The schedule change request tables (3.31.167, docs/tasks/schedule-change-request.md §2.2): one header per request (the
  * approvals engine's entity) and one row per person and day. open_key is "employee|date" while the request waits and NULL
  * after, so the UNIQUE key allows one waiting request per person and day.
  */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Schedule change requests (3.31.165): the days of a request, each person · day · old → new, with a warning line.
+ * Schedule change requests (3.31.167): the days of a request, each person · day · old → new, with a warning line.
  * Included by templates/app/approvals.php (the HR card) and templates/app/requests.php (the days not applied).
  * @var list<array{name:string,day:string,old:string,new:string,warn:string}> $sc_days
  * @var string $sc_class is-card | is-mini

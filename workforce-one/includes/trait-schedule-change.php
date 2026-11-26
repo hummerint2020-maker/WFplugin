@@ -5,7 +5,7 @@ use WorkforceOne\Requests\Hub;
 use WorkforceOne\Schedule\ScheduleChangeSettings;
 
 /**
- * Schedule change requests (3.31.165, week lock release 2; design docs/tasks/schedule-change-request.md, mockups
+ * Schedule change requests (3.31.167, week lock release 2; design docs/tasks/schedule-change-request.md, mockups
  * docs/mockups/schedule-change/). Off by default (Feature Configuration → Week lock → Change requests to HR), and only while the
  * week lock and My approvals are on. A manager changes days of a final week on the Attendance grid and sends them to HR with a
  * reason; HR approves or rejects the whole request (My approvals, the Requests page); the days still as they were asked are
@@ -106,6 +106,8 @@ trait EWS_Schedule_Change_Trait {
             'leave'=>__('Not applied: the day became a leave before the decision.','workforce-one'),
             'branch'=>__('Not applied: the branch is no longer one of theirs.','workforce-one'),
             'closed_month'=>__('Not applied: its month was closed in Payroll.','workforce-one'),
+            /* translators: %d: days */
+            'past'=>sprintf(__('Not applied: at the decision it was more than %d days ago.','workforce-one'),(int)$this->sc_settings()['past_days']),
         ];
         if(isset($m[$result]))return $m[$result];
         /* translators: %s: the day's status now */
@@ -264,10 +266,14 @@ trait EWS_Schedule_Change_Trait {
         $r=$c['request'];
         $refuse=$this->sc_settings()['changed_day']==='refuse';
         $days=[];$changed=0;$people=[];
+        $past=(int)$this->sc_settings()['past_days'];
+        $oldest=\WorkforceOne\Schedule\ScheduleChangeRules::addDays(current_time('Y-m-d'),-$past);
         foreach($c['days'] as $d){
             $people[(int)$d['employee']]=true;
             $warn='';
-            if($d['changed']){
+            /* translators: %d: days */
+            if((string)$d['date']<$oldest)$warn=sprintf(__('Now more than %d days ago: approving will not apply this day.','workforce-one'),$past);
+            elseif($d['changed']){
                 $changed++;
                 /* translators: %s: the day's status now */
                 $now=$d['leave']?__('Changed since the request: now a leave.','workforce-one'):sprintf(__('Changed since the request: now %s.','workforce-one'),$d['now']!==null?$d['now']:__('Not Set','workforce-one'));

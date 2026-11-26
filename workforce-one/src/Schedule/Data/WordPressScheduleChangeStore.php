@@ -3,7 +3,7 @@ namespace WorkforceOne\Schedule\Data;
 
 if (!defined('ABSPATH')) exit;
 
-/** SQL adapter for the schedule change requests (3.31.165). The tables follow the prefix of the container. */
+/** SQL adapter for the schedule change requests (3.31.167). The tables follow the prefix of the container. */
 final class WordPressScheduleChangeStore implements ScheduleChangeStore
 {
     /** @var \wpdb */

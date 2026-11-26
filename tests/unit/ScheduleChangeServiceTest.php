@@ -17,7 +17,7 @@ require_once __DIR__ . '/Fakes/MemoryScheduleDayStore.php';
 require_once __DIR__ . '/Fakes/MemoryScheduleChangeStore.php';
 
 /**
- * Schedule change requests (3.31.165, docs/tasks/schedule-change-request.md): asking, deciding, applying with the guard,
+ * Schedule change requests (3.31.167, docs/tasks/schedule-change-request.md): asking, deciding, applying with the guard,
  * withdrawing and closing, on in-memory stores (no WordPress, no database). The transaction fake rolls both stores back.
  */
 final class ScheduleChangeServiceTest extends TestCase
@@ -225,6 +225,20 @@ final class ScheduleChangeServiceTest extends TestCase
         $r = $this->service()->decide($id, 'approve', '', null, false);
         $this->assertSame(['partial', 'WFH'], [$r['result'], $this->dayStore->rows[1]->status]);
         $this->assertSame('closed_month', array_values($this->store->days)[0]->result);
+    }
+
+    /** The days-back limit holds at the decision too (owner, 2026-11-26), also in "refuse" mode, which would otherwise wait forever. */
+    public function testADayNowTooFarBackIsNotAppliedAtTheDecision(): void
+    {
+        $this->cfg['changed_day'] = 'refuse';
+        $this->final[] = '2026-10-01';
+        $this->dayStore->add(7, '2026-10-01', 'WFH');
+        $this->dayStore->add(7, '2026-10-11', 'WFH');
+        $id = $this->ask([['employee' => 7, 'date' => '2026-10-01', 'status' => 'Office'], ['employee' => 7, 'date' => '2026-10-11', 'status' => 'Office']])['id'];
+        $this->now = '2026-10-16 09:00:00';   // 2026-10-01 is now 15 days back
+        $r = $this->service()->decide($id, 'approve', '', null, false);
+        $this->assertSame(['partial', 'WFH', 'Office'], [$r['result'], $this->dayStore->rows[1]->status, $this->dayStore->rows[2]->status]);
+        $this->assertSame(['past', 'applied'], array_column(array_map('get_object_vars', array_values($this->store->days)), 'result'));
     }
 
     public function testRejectAdvanceMovedAndAnEngineError(): void

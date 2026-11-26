@@ -3,7 +3,7 @@ namespace WorkforceOne\Tests\Fakes;
 
 use WorkforceOne\Schedule\Data\ScheduleChangeStore;
 
-/** ScheduleChangeStore in memory (3.31.165): the UNIQUE open_key is enforced; $failDay acts out a database error. */
+/** ScheduleChangeStore in memory (3.31.167): the UNIQUE open_key is enforced; $failDay acts out a database error. */
 final class MemoryScheduleChangeStore implements ScheduleChangeStore
 {
     /** @var array<int,object> */

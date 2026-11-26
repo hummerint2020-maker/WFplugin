@@ -1,6 +1,6 @@
 <?php
 /**
- * Change requests to HR (3.31.165, mockup docs/mockups/schedule-change/send): the sheet that lists the changed days of a final
+ * Change requests to HR (3.31.167, mockup docs/mockups/schedule-change/send): the sheet that lists the changed days of a final
  * week and asks why, inside the grid's form (assets/js/attendance-grid.js fills the list and opens it).
  * @var array{reason_min:int,max_days:int} $sc
  */

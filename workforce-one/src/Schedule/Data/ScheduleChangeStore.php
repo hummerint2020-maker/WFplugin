@@ -4,7 +4,7 @@ namespace WorkforceOne\Schedule\Data;
 if (!defined('ABSPATH')) exit;
 
 /**
- * The schedule change request tables (3.31.165): the only SQL on ews_schedule_change_requests / _days is its WordPress
+ * The schedule change request tables (3.31.167): the only SQL on ews_schedule_change_requests / _days is its WordPress
  * implementation. Writes return what the database returned (rows changed, or false); days are always in
  * (employee_id, work_date) order, the lock order every path uses.
  */

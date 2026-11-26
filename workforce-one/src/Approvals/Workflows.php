@@ -33,7 +33,7 @@ final class Workflows
         // 3.31.109 (approvals stage 5): by default the direct manager, then Finance.
         'salary_advance' => ['Salary Advance', ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
         'hr_letter' => ['HR Letter', ['NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
-        // 3.31.165: a manager's change of a final week; always decided by someone (HR by default), so no "No approval".
+        // 3.31.167: a manager's change of a final week; always decided by someone (HR by default), so no "No approval".
         'schedule_change' => ['Schedule Change', ['LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']],
     ];
 

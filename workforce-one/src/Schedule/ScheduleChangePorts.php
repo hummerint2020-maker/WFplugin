@@ -4,7 +4,7 @@ namespace WorkforceOne\Schedule;
 if (!defined('ABSPATH')) exit;
 
 /**
- * What ScheduleChangeService reaches in the rest of the plugin (3.31.165, docs/tasks/schedule-change-request.md §2.4): the week
+ * What ScheduleChangeService reaches in the rest of the plugin (3.31.167, docs/tasks/schedule-change-request.md §2.4): the week
  * lock, schedule types, People, leave, payroll months, branches, the approvals engine and the notifications. Built once, in
  * includes/trait-services.php (schedule_change_ports()). All words and links stay there: the service passes codes and values.
  */

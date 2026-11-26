@@ -13,7 +13,7 @@ final class WeekLockSettings
         'cutoff_day' => 4,          // Thursday (0 = Sunday)
         'cutoff_time' => '17:00',   // site time
         'notify' => 1,              // tell everyone with a schedule that week at the cutoff
-        // The final-week banner on the Attendance page (3.31.165, owner answer 12): empty keeps the translated default.
+        // The final-week banner on the Attendance page (3.31.167, owner answer 12): empty keeps the translated default.
         'banner_title_ar' => '',
         'banner_text_ar' => '',
         'banner_title_en' => '',

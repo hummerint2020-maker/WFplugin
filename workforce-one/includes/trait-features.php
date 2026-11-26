@@ -48,6 +48,7 @@ trait EWS_Features_Trait {
                 'hr_letters'=>$this->hr_letters_enabled(),
                 'occasions'=>$this->occasions_enabled(),
                 'health'=>$this->health_enabled(),
+                'system_messages'=>$this->system_messages_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
@@ -77,6 +78,7 @@ trait EWS_Features_Trait {
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
             'occasions'=>$this->occasion_admin_data(),
             'att_page_cards'=>$this->attendance_page_cards(),
+            'system_messages_url'=>admin_url('admin.php?page=ews31-system-messages'),
             'hr_letters'=>['s'=>$this->hr_letter_settings(),'hr_set'=>(int)($this->approval_settings()['hr_user']??0)>0,'page_url'=>admin_url('admin.php?page=ews31-hr-letters&tab=types'),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')],
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
             'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
@@ -88,7 +90,7 @@ trait EWS_Features_Trait {
             'office_minimum'=>$om_tab['settings'],'om_teams'=>$this->om_admin_teams($om_tab['dept']),'om_managers'=>$this->om_admin_managers($om_tab['dept']),'om_statuses'=>$this->schedule_type_names(true),
             'om_departments'=>$om_tab['departments'],'om_dept'=>$om_tab['dept'],'om_dept_own'=>$om_tab['own'],
             'week_lock'=>$this->week_lock_settings(),'week_lock_next'=>$this->week_lock_next(),'timezone'=>wp_timezone_string(),'week_lock_can'=>$this->week_lock_can_override(),
-            // Change requests to HR (3.31.165): the waiting ones are counted only while it is on (no query while off).
+            // Change requests to HR (3.31.167): the waiting ones are counted only while it is on (no query while off).
             'sc'=>$this->sc_admin_view(),
             'roles_url'=>admin_url('admin.php?page=ews31-roles'),
             'weekday_names'=>$this->working_day_names(),'working_days'=>$this->working_days(),
@@ -123,7 +125,7 @@ trait EWS_Features_Trait {
         if(isset($post['week_lock_present'])&&$this->week_lock_can_override()){
             [$wl,$wl_error]=\WorkforceOne\Settings\WeekLockSettings::fromPost($post,get_option('ews_week_lock',[]));
             if($wl_error!=='')$this->features_redirect(['features_error'=>'wl_'.$wl_error]);
-            // Change requests to HR (3.31.165), in the same card and by the same people.
+            // Change requests to HR (3.31.167), in the same card and by the same people.
             if(isset($post['sc_present'])){
                 [$sc,$sc_error]=$this->sc_settings_from_post($post);
                 // Off and staying off: a field left wrong in the block does not stop the rest of the page (and is not saved).
@@ -231,6 +233,11 @@ trait EWS_Features_Trait {
                 }
             }
         }
+        // System messages (3.31.166): written only when switched, so a site that keeps it off stores nothing new.
+        if(isset($post['system_messages_present']) && $this->system_messages_enabled()!==$flag('system_messages_enabled')){
+            update_option('ews_feature_system_messages',$flag('system_messages_enabled')?1:0,false);
+            $this->audit('system_messages_feature_update','settings',0,$flag('system_messages_enabled')?'enabled':'disabled');
+        }
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){
             update_option('ews_feature_substitutes',$flag('substitutes_enabled')?1:0,false);
@@ -308,7 +315,7 @@ trait EWS_Features_Trait {
             // Switched on: the cutoff that has passed already does not send a notification now (only the next one does).
             if($wl_on&&!$wl_was){$c=\WorkforceOne\Settings\WeekLockSettings::config($wl);update_option('ews_week_lock_notified',\WorkforceOne\Schedule\WeekLock::latest(current_time('mysql'),$this->working_days(),(int)$c['cutoff_day'],(string)$c['cutoff_time'])['week'],false);}
             $wl_after=\WorkforceOne\Settings\WeekLockSettings::config($wl);
-            // The banner (3.31.165) is in the line only when it changed or is custom: an unchanged line stays as it was.
+            // The banner (3.31.167) is in the line only when it changed or is custom: an unchanged line stays as it was.
             $banner_changed=array_intersect_key($wl_before,\WorkforceOne\Settings\WeekLockSettings::BANNER)!==array_intersect_key($wl_after,\WorkforceOne\Settings\WeekLockSettings::BANNER);
             $banner=$banner_changed||\WorkforceOne\Settings\WeekLockSettings::customBanner($wl_after)?'; banner='.(\WorkforceOne\Settings\WeekLockSettings::customBanner($wl_after)?'custom':'default'):'';
             if($wl_before!==$wl_after||$wl_was!==$wl_on)$this->audit('week_lock_update','settings',0,($wl_on?'enabled':'disabled').'; cutoff='.$wl['cutoff_day'].' '.$wl['cutoff_time'].'; notify='.($wl['notify']?'on':'off').$banner);

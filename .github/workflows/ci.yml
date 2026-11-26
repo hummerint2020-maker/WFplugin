@@ -50,6 +50,8 @@ jobs:
         run: python3 tests/check_notification_inbox_boundary.py
       - name: Layered modules stay layered (docs/tasks/layered-modules.md)
         run: python3 tests/check_layers.py
+      - name: System messages catalog and compiled translations match the code and the .po
+        run: python3 tests/check_message_catalog.py
       - name: API contract (OpenAPI matches the routes, error codes and examples)
         run: |
           python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml
@@ -293,6 +295,8 @@ jobs:
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_notification_links.py "$S"
       - name: Offline screen (settings, page, service worker, preview)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_offline_screen.py "$S"
+      - name: System messages (off changes nothing, the switch, who may edit, saving in English and Arabic, refused texts, back to default, needs review)
+        run: WP_CLI="wp --path=$WP" python3 tests/e2e_system_messages.py "$S"
       - name: Organization chart (off by default, settings, the chart, loops refused, job titles, My team and who sees whom)
         run: WP_CLI="wp --path=$WP" python3 tests/e2e_org_chart.py "$S"
       - name: Organization chart moves (now and scheduled, waiting approvals moved, history, Employees page) and the managers file in Excel

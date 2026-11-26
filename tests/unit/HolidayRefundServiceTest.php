@@ -49,7 +49,7 @@ final class HolidayRefundServiceTest extends TestCase
             public function restoreDay(object $leaveDay, object $employee, string $now, int $leaveId): bool { return true; }
             public function carryTopUp(object $leave, object $balance, float $days, string $now) { return 0.0; }
             public function weekLockRecord(int $employeeId, array $days, string $ref): void {}
-            public function notify(int $wpUserId, string $title, string $message, int $leaveId): void { $this->notes[] = $message; }
+            public function notifyGivenBack(int $wpUserId, array $facts, int $leaveId): void { $this->notes[] = $facts; }
             public function actorId(): int { return 1; }
         };
         $this->tx = new class implements Transaction {

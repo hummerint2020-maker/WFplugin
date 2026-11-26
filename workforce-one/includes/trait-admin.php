@@ -122,6 +122,7 @@ trait EWS_Admin_Trait {
             add_submenu_page('ews31','Leaves','Leaves','ews_manage_settings','ews31-leaves',[$this,'admin_leaves']);
             add_submenu_page('ews31','Payroll','Payroll','ews_manage_payroll','ews31-payroll',[$this,'admin_payroll']);
             if($this->health_can_view())add_submenu_page('ews31',__('System health','workforce-one'),__('System health','workforce-one'),'read','ews31-system-health',[$this,'admin_system_health']);   // 3.31.110
+            if($this->system_messages_enabled())add_submenu_page('ews31',__('System messages','workforce-one'),__('System messages','workforce-one'),'ews_manage_messages','ews31-system-messages',[$this,'admin_system_messages']);   // 3.31.166, only while on
             if($this->advances_can_pay())add_submenu_page('ews31','Advances','Advances','read','ews31-advances',[$this,'admin_advances']);   // 3.31.109: only who may pay them
             if($this->hr_letters_enabled() || get_option('ews_hr_letters_ever'))add_submenu_page('ews31',__('HR letters','workforce-one'),__('HR letters','workforce-one'),'ews_manage_hr_letters','ews31-hr-letters',[$this,'admin_hr_letters']);   // HL3: while on, or once letters were made
             if($this->corrections_enabled())add_submenu_page('ews31',__('Attendance Corrections','workforce-one'),__('Attendance Corrections','workforce-one'),'ews_manage_corrections','ews31-corrections',[$this,'admin_corrections']);

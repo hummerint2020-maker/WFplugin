@@ -59,7 +59,7 @@ trait EWS_Admin_Requests_Trait {
         foreach($this->hr_letter_hub_rows() as $r){   // HR letters (HL3, owner decision 1): waiting for a decision; no salary amount
             $add('hr_letter',$r->id,$r->employee_id,'HR Letter',$r->requested_at,Hub::details((string)$r->type_label.((string)$r->type_key==='other'?': '.(string)$r->other_text:'').' · '.((string)$r->language==='ar'?'Arabic':'English'),'to '.(string)$r->addressee,(int)$r->with_salary?'shows the salary':''),['hr_letter','hr_letter',(int)$r->id]);
         }
-        foreach($this->sc_hub_rows() as $row){   // schedule change requests (3.31.165): waiting for a decision
+        foreach($this->sc_hub_rows() as $row){   // schedule change requests (3.31.167): waiting for a decision
             $r=$row['request'];
             $add('schedule_change',$r->id,$r->requester_employee_id,'Schedule Change',$r->requested_at,$this->sc_hub_details($row),['schedule_change','schedule_change',(int)$r->id]);
         }
@@ -476,7 +476,7 @@ trait EWS_Admin_Requests_Trait {
         }
         if($ok && $approve && $emp)$this->week_lock_record_request((int)$emp->id,$written,'leave','legacy vacation #'.(int)$id);   // week lock (3.31.121)
         if(!$ok || $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
-        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?'Vacation Approved':'Vacation Rejected',$approve?'Your vacation request has been approved.':'Your vacation request has been rejected.',['entity_id'=>$id,'push'=>false]);
+        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?__('Vacation Approved','workforce-one'):__('Vacation Rejected','workforce-one'),$approve?__('Your vacation request has been approved.','workforce-one'):__('Your vacation request has been rejected.','workforce-one'),['entity_id'=>$id,'push'=>false]);
         return Hub::outcome($decision);
     }
 }

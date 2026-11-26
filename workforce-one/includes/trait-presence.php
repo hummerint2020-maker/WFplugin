@@ -102,7 +102,8 @@ trait EWS_Presence_Trait {
         list(,$vt)=$this->presence_tables();$minutes=\WorkforceOne\Settings\FeatureSettings::presenceMinutes($this->option('ews_presence_request_minutes'));$expires=gmdate('Y-m-d H:i:s',time()+$minutes*60);$ok=$wpdb->insert($vt,['employee_id'=>$eid,'location_id'=>$location_id,'requested_by'=>get_current_user_id(),'status'=>'pending','expires_at'=>$expires,'created_at'=>current_time('mysql')],['%d','%d','%d','%s','%s','%s']);if($ok===false)wp_die(__('Could not create presence verification request.','workforce-one'));$id=(int)$wpdb->insert_id;
         $this->audit('presence_verification_requested','presence_verification',$id,$emp->name.' / '.$loc->name.' / expires='.$expires);
         if(!empty($emp->wp_user_id)){
-            $msg='Please verify your presence at <strong>'.esc_html($loc->name).'</strong>. The request expires in '.$minutes.' '.($minutes===1?'minute':'minutes').'.';$url=add_query_arg(['ews_view'=>'presence','presence_request'=>$id],$this->app_home_url());$this->notify((int)$emp->wp_user_id,'presence','Presence Verification',$msg,['entity_id'=>$id,'url'=>$url]);
+            /* translators: 1: location name, 2: minutes */
+            $msg=sprintf(_n('Please verify your presence at <strong>%1$s</strong>. The request expires in %2$d minute.','Please verify your presence at <strong>%1$s</strong>. The request expires in %2$d minutes.',(int)$minutes,'workforce-one'),esc_html($loc->name),(int)$minutes);$url=add_query_arg(['ews_view'=>'presence','presence_request'=>$id],$this->app_home_url());$this->notify((int)$emp->wp_user_id,'presence',__('Presence Verification','workforce-one'),$msg,['entity_id'=>$id,'url'=>$url]);
         }
         wp_safe_redirect(wp_get_referer()?:admin_url('admin.php?page=ews31-requests'));exit;
     }

@@ -73,12 +73,13 @@ trait EWS_Admin_Nav_Trait {
             'ews31-settings-overview'=>__('Overview','workforce-one'),
             'ews31-audit'=>__('Audit log','workforce-one'),
             'ews31-system-health'=>__('System health','workforce-one'),
+            'ews31-system-messages'=>__('System messages','workforce-one'),
         ];
     }
 
     /** Features that hide a tab while off (AdminNav::sections()). @return array<string,bool> */
     private function admin_nav_features(){
-        return ['face'=>$this->face_signin_enabled(),'recognition'=>$this->recognition_enabled(),'tasks'=>$this->tasks_enabled(),'org'=>$this->org_enabled(),'substitutes'=>$this->substitutes_enabled(),'advances'=>$this->advances_enabled(),'hr_letters'=>$this->hr_letters_enabled() || (bool)get_option('ews_hr_letters_ever'),'health'=>$this->health_enabled()&&$this->health_can_view()];
+        return ['face'=>$this->face_signin_enabled(),'recognition'=>$this->recognition_enabled(),'tasks'=>$this->tasks_enabled(),'org'=>$this->org_enabled(),'substitutes'=>$this->substitutes_enabled(),'advances'=>$this->advances_enabled(),'hr_letters'=>$this->hr_letters_enabled() || (bool)get_option('ews_hr_letters_ever'),'health'=>$this->health_enabled()&&$this->health_can_view(),'system_messages'=>$this->system_messages_enabled()];
     }
 
     /** End of admin_menu: one menu item per section, the other pages kept but hidden. */

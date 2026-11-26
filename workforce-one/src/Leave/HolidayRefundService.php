@@ -94,9 +94,8 @@ final class HolidayRefundService
             $this->audit->record('leave_holiday_refund', 'leave_request', $id, $done['type'] . ' ' . $done['start'] . ' – ' . $done['end'] . ': ' . $n . ' company holiday(s) given back ('
                 . implode(', ', $done['days']) . '), ' . $done['before'] . ' → ' . $done['after'] . ' day(s)' . ($done['top'] > 0 ? ', next year +' . $done['top'] . ' carried' : ''));
             if (!empty($emp->wp_user_id)) {
-                // Stored in English, as the other leave notifications.
-                $this->site->notify((int) $emp->wp_user_id, 'Leave days given back', sprintf('%1$d day(s) went back to your balance: your %2$s leave (%3$s – %4$s) was charged for company holidays (%5$s). It now counts %6$s day(s).',
-                    $n, $done['type'], $done['start'], $done['end'], implode(', ', $done['days']), $done['after']), $id);
+                $this->site->notifyGivenBack((int) $emp->wp_user_id, ['days' => $n, 'type' => (string) $done['type'], 'start' => (string) $done['start'],
+                    'end' => (string) $done['end'], 'holidays' => array_map('strval', $done['days']), 'after' => (string) $done['after']], $id);
             }
         }
         return $out;

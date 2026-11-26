@@ -239,13 +239,20 @@ trait EWS_Leave_Admin_Trait {
         $closed_round=$o['closed_round'];
         $a=(array)$this->leave_return_applied;
         $days=rtrim(rtrim(number_format((float)($a['back']??0),2,'.',''),'0'),'.');
-        $msg=sprintf('HR recorded that you were back at work on %1$s. %2$s Reason: %3$s',$back,
-            !empty($a['whole'])?'Your '.$r->type_name.' leave was cancelled and '.$days.' day(s) went back to your balance.':'Your '.$r->type_name.' leave now ends on '.gmdate('Y-m-d',strtotime((string)$a['from'].' -1 day')).'; '.$days.' day(s) from '.$a['from'].' on went back to your balance.',$reason);
-        if($closed_round)$msg.=' Your change request was closed because HR recorded your return.';
-        if($emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'leave','Back at work recorded',$msg,['entity_id'=>$id]);
+        /* translators: 1: the day back at work, 2: what happened to the leave (a sentence), 3: HR's reason */
+        $msg=sprintf(__('HR recorded that you were back at work on %1$s. %2$s Reason: %3$s','workforce-one'),$back,
+            !empty($a['whole'])
+                /* translators: 1: leave type, 2: number of days */
+                ?sprintf(__('Your %1$s leave was cancelled and %2$s day(s) went back to your balance.','workforce-one'),$r->type_name,$days)
+                /* translators: 1: leave type, 2: new last day, 3: number of days, 4: first day given back */
+                :sprintf(__('Your %1$s leave now ends on %2$s; %3$s day(s) from %4$s on went back to your balance.','workforce-one'),$r->type_name,gmdate('Y-m-d',strtotime((string)$a['from'].' -1 day')),$days,$a['from']),$reason);
+        if($closed_round)$msg.=' '.__('Your change request was closed because HR recorded your return.','workforce-one');
+        if($emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'leave',__('Back at work recorded','workforce-one'),$msg,['entity_id'=>$id]);
         $mgr=(int)$this->people_manager_of((int)$emp->id);
         $mgr_user=$mgr?(int)$this->people_user_id($mgr,true):0;
-        if($mgr_user && $mgr_user!==(int)get_current_user_id())$this->notify($mgr_user,'leave','Back at work recorded',sprintf('HR recorded that %1$s was back at work on %2$s: %3$s day(s) of %4$s went back to the balance.',$emp->name,$back,$days,$r->type_name),['entity_id'=>$id]);
+        if($mgr_user && $mgr_user!==(int)get_current_user_id())$this->notify($mgr_user,'leave',__('Back at work recorded','workforce-one'),
+            /* translators: 1: employee name, 2: the day back at work, 3: number of days, 4: leave type */
+            sprintf(__('HR recorded that %1$s was back at work on %2$s: %3$s day(s) of %4$s went back to the balance.','workforce-one'),$emp->name,$back,$days,$r->type_name),['entity_id'=>$id]);
         $this->leave_admin_redirect(['tab'=>'return','lr_emp'=>(int)$emp->id,'lr_done'=>'recorded']);
     }
 

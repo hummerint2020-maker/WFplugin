@@ -1,4 +1,4 @@
-"""Behaviour tests for schedule change requests (3.31.165, docs/tasks/schedule-change-request.md): while the week lock, My
+"""Behaviour tests for schedule change requests (3.31.167, docs/tasks/schedule-change-request.md): while the week lock, My
 approvals and its own switch are on, a manager changes days of a final week on the Attendance grid and sends them to HR with a
 reason; HR approves or rejects the whole request (My approvals, the Requests page); the days still as they were asked are applied
 and each employee is told; the manager can withdraw it from My requests; a waiting request closes after the set days, or when the

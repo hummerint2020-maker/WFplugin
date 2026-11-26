@@ -74,7 +74,7 @@ final class WeekLockTest extends TestCase
         $this->assertSame(0, WeekLockSettings::fromPost(['wl_cutoff_day' => '4', 'wl_cutoff_time' => '17:00'])[0]['notify']);
     }
 
-    /** The final-week banner (3.31.165, owner answer 12): plain text, capped, kept when the page has no fields, {since} replaced. */
+    /** The final-week banner (3.31.167, owner answer 12): plain text, capped, kept when the page has no fields, {since} replaced. */
     public function testBanner(): void
     {
         $c = WeekLockSettings::config(['banner_title_ar' => "  <b>الأسبوع</b>\n نهائي ", 'banner_text_en' => str_repeat('x', 600), 'banner_text_ar' => 5]);

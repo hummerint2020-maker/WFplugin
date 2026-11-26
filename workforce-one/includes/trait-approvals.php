@@ -602,7 +602,7 @@ trait EWS_Approvals_Trait {
         $cards=[];$W=\WorkforceOne\Approvals\Workflows::class;
         foreach(\WorkforceOne\Approvals\Workflows::IN_USE as $key=>[$label,$supported]){
             if($key==='hr_letter' && !$this->hr_letters_enabled())continue;   // HR letters (HL3): the card only while letters are on
-            if($key==='schedule_change' && !$this->sc_enabled())continue;   // schedule change requests (3.31.165): the same
+            if($key==='schedule_change' && !$this->sc_enabled())continue;   // schedule change requests (3.31.167): the same
             $workflow=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$t['workflows']} WHERE workflow_key=%s LIMIT 1",$key));
             $levels=[];
             for($i=1;$i<=\WorkforceOne\Approvals\Workflows::MAX_LEVELS;$i++)$levels[$i]=['resolver_type'=>'SUPERVISOR','resolver_value'=>'','min_amount'=>null];
