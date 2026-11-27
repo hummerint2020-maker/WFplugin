@@ -141,6 +141,9 @@ trait EWS_App_Layout_Trait {
         return wp_logout_url(add_query_arg('loggedout','1',get_permalink()?:home_url('/')));
     }
 
+    /** Skeleton loading (3.31.168): off by default; off, the app's pages are as before. */
+    private function skeleton_enabled(){ return (bool)(int)$this->option('ews_feature_skeleton'); }
+
     private function layout($title,$body,$active='dashboard'){
         [$desktop,$mobile]=$this->app_navigation();
         $emp=$this->current_employee();
@@ -150,7 +153,7 @@ trait EWS_App_Layout_Trait {
         $clock=$bar['center']&&$emp?\WorkforceOne\Ui\MobileBar::clockState($this->today_events((int)$emp->id),true):'';
         $occ=$this->occasion_frame($active);   // Occasions (3.31.145): all '' while off
         return $this->render_template('app/layout',['occasion'=>$occ,
-            'title'=>$title,'body'=>$body,'active'=>$active,'greeting'=>$this->app_header_greeting,'desktop_items'=>$desktop,'mobile_items'=>$mobile,'bar'=>$bar,'clock_state'=>$clock,
+            'title'=>$title,'body'=>$body,'active'=>$active,'skeleton'=>$this->skeleton_enabled(),'greeting'=>$this->app_header_greeting,'desktop_items'=>$desktop,'mobile_items'=>$mobile,'bar'=>$bar,'clock_state'=>$clock,
             // The built-in tagline is translated; one typed in Appearance is shown as entered.
             'company_name'=>$look['company_name'],'app_name'=>$look['app_name'],'logo_url'=>$look['logo_url'],
             'tagline'=>$look['tagline']===\WorkforceOne\Settings\Appearance::DEFAULTS['tagline']?__('One Platform. One Team. One Goal.','workforce-one'):$look['tagline'],

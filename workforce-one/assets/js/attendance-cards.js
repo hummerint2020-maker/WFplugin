@@ -180,7 +180,9 @@
             Object.keys(params).forEach(function (k) { args[k] = params[k]; });
             var qs = Object.keys(args).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(args[k]); }).join('&');
             body.setAttribute('aria-busy', 'true');
-            if (!offset) message(T.loading, false);
+            // Skeleton loading (3.31.168, assets/js/skeleton.js, only while its switch is on): grey rows instead of the word.
+            if (!offset && window.wfoSkeleton) { window.wfoSkeleton.rows(body, 5); foot.hidden = true; }
+            else if (!offset) message(T.loading, false);
             busy(true);
             fetch(dialog.getAttribute('data-url') + '?' + qs, { credentials: 'same-origin', cache: 'no-store', signal: state.ctrl ? state.ctrl.signal : undefined })
                 .then(function (r) { return r.json().catch(function () { return { success: false, data: { reason: 'error' } }; }); })

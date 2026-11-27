@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.31.168
+### Skeleton loading (docs/tasks/skeleton-loading.md, mockup /mnt/project-files/skeleton-loading/), off by default
+- **A grey outline of the next screen while it loads.** A new switch (wp-admin → Features → **Skeleton loading**). On: after a tap on the app's menu (side menu, bottom bar, More), the tapped item is active at once and, if the next screen takes longer than 150 ms, its outline shows in place of the old screen: request cards for My requests and the other request lists, the counters and cards for My approvals, a table for Schedule and Attendance, a general outline for the rest. Back returns the page as it was. The Attendance cards show grey rows while their list loads instead of "Loading…". The shimmer stops for people who ask for reduced motion; a screen reader hears "Loading…".
+- Off (the default) nothing changes: no attribute, script or style is added. Turning it on or off is in the Audit Log.
+- UI only: no database change.
+- Tests: unit test for which outline a view gets; a browser test (off, on with a slow page, a fast page, a phone in Arabic, reduced motion).
+
 ## 3.31.166
 ### System messages: edit the texts the system shows (docs/tasks/system-messages.md, mockup /mnt/project-files/system-messages/)
 Owner's request (2026-11-25): "make the messages of the system editable". A new switch (wp-admin → Features → **System

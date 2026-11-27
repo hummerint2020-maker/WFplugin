@@ -83,6 +83,7 @@ $switch = static function (string $name, bool $checked, string $label = 'Enabled
 <input type="hidden" name="hr_letters_present" value="1">
 <input type="hidden" name="health_present" value="1">
 <input type="hidden" name="system_messages_present" value="1">
+<input type="hidden" name="skeleton_present" value="1">
 
 <div class="wfo-feature-section"><div class="wfo-feature-head">
     <div><div class="wfo-feature-title">Tasks</div><div class="wfo-feature-desc">Native Workforce One task management with personal tasks, manager assignment, priorities and due dates.</div></div>
@@ -248,6 +249,11 @@ $occ_fields = ['card_title' => [__('Greeting card title', 'workforce-one'), 60],
 <div class="wfo-feature-fields">
     <label><span class="wfo-field-label"><?php esc_html_e('Detailed query data from this share of requests', 'workforce-one'); ?></span><select name="health_sample_rate"><?php foreach (\WorkforceOne\Health\Settings::RATES as $r): ?><option value="<?php echo (int) $r; ?>" <?php selected($health_rate, $r); ?>><?php echo esc_html(sprintf(/* translators: %d: percent */ __('%d%% of requests', 'workforce-one'), $r)); ?></option><?php endforeach; ?></select></label>
     <label><span class="wfo-field-label"><?php esc_html_e('Keep the daily history for', 'workforce-one'); ?></span><select name="health_retention_days"><?php foreach (\WorkforceOne\Health\Settings::RETENTION as $d): ?><option value="<?php echo (int) $d; ?>" <?php selected($health_retention, $d); ?>><?php echo esc_html(sprintf(/* translators: %d: days */ __('%d days', 'workforce-one'), $d)); ?></option><?php endforeach; ?></select></label>
+</div></div>
+
+<div class="wfo-feature-section" id="ews-skeleton"><div class="wfo-feature-head">
+    <div><div class="wfo-feature-title"><?php esc_html_e('Skeleton loading', 'workforce-one'); ?></div><div class="wfo-feature-desc"><?php esc_html_e('In the app, after a tap on the menu, a grey outline of the next screen (its cards, list or table) shows at once while that screen loads, instead of the old screen staying still. The Attendance cards show grey rows while their list loads. Nothing else changes. Off by default.', 'workforce-one'); ?></div></div>
+    <?php $switch('skeleton_enabled', $on['skeleton']); ?>
 </div></div>
 
 <div class="wfo-feature-section" id="ews-system-messages"><div class="wfo-feature-head">
