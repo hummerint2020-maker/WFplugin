@@ -10533,3 +10533,11 @@ msgstr "🎉 إنجاز جديد!"
 #: includes/trait-system-messages.php
 msgid "An & joined to a word or to # cannot be used in this text. Put a space after it."
 msgstr "لا يمكن استخدام & ملاصقة لكلمة أو لعلامة # في هذا النص. ضع مسافة بعدها."
+
+#: templates/admin/features.php:255
+msgid "Skeleton loading"
+msgstr "التحميل الهيكلي (Skeleton)"
+
+#: templates/admin/features.php:255
+msgid "In the app, after a tap on the menu, a grey outline of the next screen (its cards, list or table) shows at once while that screen loads, instead of the old screen staying still. The Attendance cards show grey rows while their list loads. Nothing else changes. Off by default."
+msgstr "في التطبيق، بعد الضغط على القائمة يظهر فورًا هيكل رمادي للشاشة التالية (كروتها أو قائمتها أو جدولها) لحين تحميلها، بدل أن تبقى الشاشة القديمة ثابتة. وتعرض كروت الحضور صفوفًا رمادية أثناء تحميل قائمتها. لا يتغير شيء آخر. متوقفة افتراضيًا."

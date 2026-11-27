@@ -25,6 +25,7 @@
  * @var string $logo_url             '' = the app name's initials
  * @var string $home_url
  * @var string $profile_url
+ * @var bool   $skeleton             Skeleton loading (3.31.168): the menu links say which outline their view gets
  * @var string $logout_url
  */
 if (!defined('ABSPATH')) exit;
@@ -40,9 +41,13 @@ $count = static function ($x): string {
     $n = (int) ($x['count'] ?? 0);
     return $n ? '<i class="wfo-nav-count" aria-label="' . esc_attr(sprintf(/* translators: %d: number of requests */ _n('%d waiting', '%d waiting', $n, 'workforce-one'), $n)) . '">' . esc_html(number_format_i18n(min($n, 99))) . '</i>' : '';
 };
-$tab = function ($x) use ($active, $count) {
+// Skeleton loading (3.31.168): '' while off, so the links are as before.
+$sk = static function ($x) use ($skeleton): string {
+    return !empty($skeleton) ? ' data-wfo-skel="' . esc_attr(\WorkforceOne\Ui\Skeleton::shape((string) $x['key'])) . '"' : '';
+};
+$tab = function ($x) use ($active, $count, $sk) {
     $on = $active === $x['key'];
-    return '<a class="wfo-tab' . ($on ? ' active' : '') . '" href="' . esc_url($x['url']) . '"' . ($on ? ' aria-current="page"' : '') . '><span class="wfo-tab-icon">' . Icons::forView($x['key'], 22, $on ? 2.1 : 1.8) . '</span><span class="wfo-tab-label">' . esc_html($x['mobile_label']) . '</span>' . $count($x) . '</a>';
+    return '<a class="wfo-tab' . ($on ? ' active' : '') . '" href="' . esc_url($x['url']) . '"' . $sk($x) . ($on ? ' aria-current="page"' : '') . '><span class="wfo-tab-icon">' . Icons::forView($x['key'], 22, $on ? 2.1 : 1.8) . '</span><span class="wfo-tab-label">' . esc_html($x['mobile_label']) . '</span>' . $count($x) . '</a>';
 };
 ?>
 <div class="ews-app wfo-app<?php echo esc_attr($occasion['class']); ?>">
@@ -52,7 +57,7 @@ $tab = function ($x) use ($active, $count) {
                 <?php if ($logo_url !== ''): ?><img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr($app_name); ?>"><?php else: ?><span aria-hidden="true"><?php echo esc_html($mark ?: 'W1'); ?></span><span class="screen-reader-text"><?php echo esc_html($app_name); ?></span><?php endif; ?>
             </a>
             <nav class="ews-nav">
-                <?php foreach ($desktop_items as $x): $on = $active === $x['key']; ?><a class="<?php echo $on ? 'active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $on ? ' aria-current="page"' : ''; ?>><?php echo Icons::forView($x['key'], 22, $on ? 2.1 : 1.8); ?><span class="wfo-rail-label"><?php echo esc_html($x['desktop_label']); ?></span><?php echo $count($x); ?></a><?php endforeach; ?>
+                <?php foreach ($desktop_items as $x): $on = $active === $x['key']; ?><a class="<?php echo $on ? 'active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $sk($x); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><?php echo $on ? ' aria-current="page"' : ''; ?>><?php echo Icons::forView($x['key'], 22, $on ? 2.1 : 1.8); ?><span class="wfo-rail-label"><?php echo esc_html($x['desktop_label']); ?></span><?php echo $count($x); ?></a><?php endforeach; ?>
             </nav>
             <a class="wfo-rail-logout" href="<?php echo esc_url($logout_url); ?>"><?php echo Icons::svg('logout', 20); ?><span class="wfo-rail-label"><?php esc_html_e('Log out', 'workforce-one'); ?></span></a>
         </aside>
@@ -81,14 +86,14 @@ $tab = function ($x) use ($active, $count) {
                     </div>
                 </div>
             </header>
-            <div class="wfo-content"><?php echo $occasion['card'] . $body; ?></div>
+            <div class="wfo-content"<?php if (!empty($skeleton)): ?> data-wfo-skel-label="<?php esc_attr_e('Loading…', 'workforce-one'); ?>"<?php endif; ?>><?php echo $occasion['card'] . $body; ?></div>
         </main>
     </div>
 
     <?php echo $occasion['over']; // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><nav class="wfo-tabbar" aria-label="<?php esc_attr_e('Workforce One navigation', 'workforce-one'); ?>">
         <?php foreach ($bar['start'] as $x) echo $tab($x); ?>
         <?php if ($bar['center']): $x = $bar['center']; $on = $active === $x['key']; ?>
-            <a class="wfo-tab wfo-tab-clock<?php echo $on ? ' active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $on ? ' aria-current="page"' : ''; ?>>
+            <a class="wfo-tab wfo-tab-clock<?php echo $on ? ' active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $sk($x); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><?php echo $on ? ' aria-current="page"' : ''; ?>>
                 <span class="wfo-tab-clock-btn"><?php echo Icons::svg('clock', 26, 2); ?><?php if ($clock_state !== ''): ?><i class="wfo-clock-dot is-<?php echo esc_attr($clock_state); ?>"></i><span class="screen-reader-text"> (<?php echo esc_html($clock_labels[$clock_state]); ?>)</span><?php endif; ?></span>
                 <span class="wfo-tab-label"><?php echo esc_html($x['mobile_label']); ?></span>
             </a>
@@ -111,7 +116,7 @@ $tab = function ($x) use ($active, $count) {
             </div>
             <?php if ($bar['more']): ?>
             <div class="wfo-more-grid">
-                <?php foreach ($bar['more'] as $x): $on = $active === $x['key']; ?><a class="wfo-more-item<?php echo $on ? ' active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $on ? ' aria-current="page"' : ''; ?>><span class="wfo-more-icon"><?php echo Icons::forView($x['key'], 24); ?></span><span><?php echo esc_html($x['mobile_label']); ?></span><?php echo $count($x); ?></a><?php endforeach; ?>
+                <?php foreach ($bar['more'] as $x): $on = $active === $x['key']; ?><a class="wfo-more-item<?php echo $on ? ' active' : ''; ?>" href="<?php echo esc_url($x['url']); ?>"<?php echo $sk($x); // phpcs:ignore WordPress.Security.EscapeOutput -- built escaped ?><?php echo $on ? ' aria-current="page"' : ''; ?>><span class="wfo-more-icon"><?php echo Icons::forView($x['key'], 24); ?></span><span><?php echo esc_html($x['mobile_label']); ?></span><?php echo $count($x); ?></a><?php endforeach; ?>
             </div>
             <?php endif; ?>
             <div class="wfo-more-rows">

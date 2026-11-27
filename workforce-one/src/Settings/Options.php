@@ -135,6 +135,7 @@ final class Options
         'ews_approval_settings' => ['group' => 'features', 'label' => 'Approval workflows: who HR and Finance are, the working day the deadlines count in', 'kind' => 'grouped', 'default' => [], 'builtin' => 'HR and Finance not set; 09:00–17:00', 'page' => 'ews31-approvals'],
         'ews_feature_office_minimum' => ['group' => 'features', 'label' => 'Office minimum', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_week_lock' => ['group' => 'features', 'label' => 'Week lock', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
+        'ews_feature_skeleton' => ['group' => 'features', 'label' => 'Skeleton loading (a grey outline of the next screen while it loads)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_attendance_cards' => ['group' => 'features', 'label' => 'Attendance card details (the Attendance page cards open who and when)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_feature_leave_type' => ['group' => 'features', 'label' => 'Leave type on the Attendance page (a day of approved leave shows its type, with a Leave days card)', 'kind' => 'bool', 'default' => false, 'page' => 'ews31-features'],
         'ews_attendance_page_cards' => ['group' => 'features', 'label' => 'Attendance page: the cards shown above the grid', 'kind' => 'grouped', 'default' => [], 'builtin' => 'all shown (Leave days only with the leave type)', 'page' => 'ews31-features'],

@@ -49,6 +49,7 @@ trait EWS_Features_Trait {
                 'occasions'=>$this->occasions_enabled(),
                 'health'=>$this->health_enabled(),
                 'system_messages'=>$this->system_messages_enabled(),
+                'skeleton'=>(bool)(int)$this->option('ews_feature_skeleton'),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
@@ -218,6 +219,11 @@ trait EWS_Features_Trait {
                     $this->health_switch_changed((bool)$now);
                 }
             }
+        }
+        // Skeleton loading (3.31.168).
+        if(isset($post['skeleton_present']) && (bool)(int)$this->option('ews_feature_skeleton')!==$flag('skeleton_enabled')){
+            update_option('ews_feature_skeleton',$flag('skeleton_enabled')?1:0,false);
+            $this->audit('skeleton_feature_update','settings',0,$flag('skeleton_enabled')?'enabled':'disabled');
         }
         // System messages (3.31.166): written only when switched, so a site that keeps it off stores nothing new.
         if(isset($post['system_messages_present']) && $this->system_messages_enabled()!==$flag('system_messages_enabled')){

@@ -370,6 +370,12 @@ trait EWS_Frontend_Trait {
             wp_enqueue_style('workforce-one-shell', $root.'assets/css/app-shell.css', ['workforce-one'], $ver);
             wp_style_add_data('workforce-one-shell', 'rtl', 'replace');
             wp_add_inline_style('workforce-one-shell', $this->appearance_css());
+            // Skeleton loading (3.31.168): nothing is added while it is off.
+            if($this->skeleton_enabled() && is_user_logged_in()){
+                wp_enqueue_style('workforce-one-skeleton', $root.'assets/css/app-skeleton.css', ['workforce-one-shell'], $ver);
+                wp_style_add_data('workforce-one-skeleton', 'rtl', 'replace');
+                wp_enqueue_script('workforce-one-skeleton', $root.'assets/js/skeleton.js', [], $ver, true);
+            }
             // Signed out, the app page is the login (templates/app/login.php): its styles in the <head>.
             if(!is_user_logged_in())$this->enqueue_login_assets();
             // Occasions (3.31.145): the occasion's stylesheet in the <head> too (nothing while off: occasion_now() returns null first).

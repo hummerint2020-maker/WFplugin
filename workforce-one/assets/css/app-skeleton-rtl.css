@@ -1,0 +1,27 @@
+/* Skeleton loading (3.31.168): the grey outline drawn by assets/js/skeleton.js. Loaded only while the switch is on. */
+.wfo-content.is-skel > :not(.wfo-skel-root):not(.wfo-skel-sr){display:none !important}
+.wfo-skel-root{display:flex;flex-direction:column;gap:12px}
+.wfo-skel{background-color:var(--wfo-line,#E8E9F2);background-image:linear-gradient(-90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.65) 50%,rgba(255,255,255,0) 100%);background-repeat:no-repeat;background-size:40% 100%;background-position:160% 0;animation:wfo-skel-shine 1.3s ease-in-out infinite;border-radius:8px}
+@keyframes wfo-skel-shine{to{background-position:-60% 0}}
+@media (prefers-reduced-motion:reduce){.wfo-skel{animation:none;background-image:none}}
+.wfo-skel-card{background:var(--wfo-surface,#fff);border-radius:var(--wfo-r-card,20px);padding:14px;box-shadow:var(--wfo-shadow,0 8px 24px rgba(19,35,91,.08));display:flex;flex-direction:column;gap:12px}
+.wfo-skel-row{display:flex;flex-direction:row;align-items:center;gap:12px}
+.wfo-skel-grow{flex:1 1 auto;display:flex;flex-direction:column;gap:8px;min-width:0}
+.wfo-skel-line{height:11px}
+.wfo-skel-w40{width:40%}.wfo-skel-w60{width:60%}.wfo-skel-w80{width:80%}
+.wfo-skel-ico{width:40px;height:40px;border-radius:12px;flex:0 0 auto}
+.wfo-skel-av{width:38px;height:38px;border-radius:50%;flex:0 0 auto}
+.wfo-skel-pill{width:56px;height:22px;border-radius:999px;flex:0 0 auto}
+.wfo-skel-chips{display:flex;gap:8px}
+.wfo-skel-chip{width:72px;height:30px;border-radius:999px}
+.wfo-skel-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wfo-skel-kpi{height:64px;border-radius:16px}
+.wfo-skel-btns{display:flex;gap:8px}
+.wfo-skel-btn{flex:1 1 0;height:36px;border-radius:var(--wfo-r-ctl,14px)}
+.wfo-skel-table{display:grid;grid-template-columns:minmax(80px,1.6fr) repeat(6,minmax(0,1fr));gap:12px 8px;align-items:center}
+.wfo-skel-table .wfo-skel-line{width:auto;max-width:80%}
+.wfo-skel-cell{height:22px;border-radius:7px}
+.wfo-skel-cell.wfo-skel-head{height:11px}
+/* A list loaded in place (the Attendance cards sheet) */
+.wfo-skel-rows{display:flex;flex-direction:column}
+.wfo-skel-rows .wfo-skel-row{padding:10px 12px;border-bottom:1px solid var(--wfo-line,#E8E9F2)}
