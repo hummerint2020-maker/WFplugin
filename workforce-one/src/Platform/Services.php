@@ -72,6 +72,21 @@ use WorkforceOne\Requests\Data\HubReportQuery;
 use WorkforceOne\Requests\Data\WordPressHubReportQuery;
 use WorkforceOne\Leave\Data\LeaveDayQuery;
 use WorkforceOne\Leave\Data\WordPressLeaveDayQuery;
+use WorkforceOne\Leave\Data\LeaveHolidayStore;
+use WorkforceOne\Leave\Data\WordPressLeaveHolidayStore;
+use WorkforceOne\Leave\HolidayRefundPorts;
+use WorkforceOne\Messages\Data\CatalogFiles;
+use WorkforceOne\Messages\Data\MessageOverrideStore;
+use WorkforceOne\Messages\Data\WordPressMessageOverrideStore;
+use WorkforceOne\Messages\MessageCatalog;
+use WorkforceOne\Messages\MessageOverrideService;
+use WorkforceOne\Leave\LeaveReturnPorts;
+use WorkforceOne\Leave\LeaveReturnService;
+use WorkforceOne\Leave\Data\ChangedDaysQuery;
+use WorkforceOne\Leave\Data\LeaveReturnStore;
+use WorkforceOne\Leave\Data\WordPressChangedDaysQuery;
+use WorkforceOne\Leave\Data\WordPressLeaveReturnStore;
+use WorkforceOne\Leave\HolidayRefundService;
 use WorkforceOne\HrLetters\Data\LetterSchema;
 use WorkforceOne\HrLetters\Data\LetterStore;
 use WorkforceOne\HrLetters\Data\WordPressLetterQuery;
@@ -114,6 +129,10 @@ final class Services
     private $attendancePorts;
     /** @var LetterPorts|null */
     private $letterPorts;
+    /** @var HolidayRefundPorts|null */
+    private $holidayRefundPorts;
+    /** @var LeaveReturnPorts|null */
+    private $leaveReturnPorts;
     /** @var array<string,string> the plugin's table names (by short name), where the old code used them */
     private $tables;
     /** @var array<string,object> */
@@ -121,8 +140,11 @@ final class Services
 
     /** @param array<string,string> $tables */
     public function __construct(\wpdb $db, array $tables, AuditLog $audit, Clock $clock, PeoplePorts $peoplePorts, OnceClaim $claim, ScheduleNotifier $scheduleNotifier,
-        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts, ?LetterPorts $letterPorts = null)
+        Transaction $tx, Permissions $permissions, ApprovalPorts $approvalPorts, SubstitutePorts $substitutePorts, AttendancePorts $attendancePorts, ?LetterPorts $letterPorts = null,
+        ?HolidayRefundPorts $holidayRefundPorts = null, ?LeaveReturnPorts $leaveReturnPorts = null)
     {
+        $this->leaveReturnPorts = $leaveReturnPorts;
+        $this->holidayRefundPorts = $holidayRefundPorts;
         $this->letterPorts = $letterPorts;
         $this->attendancePorts = $attendancePorts;
         $this->substitutePorts = $substitutePorts;
@@ -342,6 +364,72 @@ final class Services
     public function leaveDays(): LeaveDayQuery
     {
         if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLeaveDayQuery($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    public function leaveHolidayStore(): LeaveHolidayStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLeaveHolidayStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The edited texts of System messages (3.31.166), one option. */
+    public function messageStore(): MessageOverrideStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressMessageOverrideStore();
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The shipped catalog and translations System messages lists from (read only when asked). */
+    public function messageFiles(): CatalogFiles
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new CatalogFiles(dirname(__DIR__, 2) . '/languages');
+        return $this->made[__FUNCTION__];
+    }
+
+    public function messageCatalog(): MessageCatalog
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new MessageCatalog($this->messageFiles()->catalog(), $this->messageFiles()->arabic());
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Saving and resetting edited texts (3.31.166). */
+    public function messages(): MessageOverrideService
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new MessageOverrideService($this->messageStore(), $this->audit);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Company holidays charged as leave (3.31.162): the report and giving the days back. */
+    public function leaveHolidays(): HolidayRefundService
+    {
+        if (!isset($this->made[__FUNCTION__])) {
+            if (!$this->holidayRefundPorts) throw new \LogicException('Leave holidays: no ports were given');
+            $this->made[__FUNCTION__] = new HolidayRefundService($this->leaveHolidayStore(), $this->holidayRefundPorts, $this->tx, $this->audit, $this->clock);
+        }
+        return $this->made[__FUNCTION__];
+    }
+
+    public function leaveReturnStore(): LeaveReturnStore
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressLeaveReturnStore($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** The report "Changed leave days" (Leave return). */
+    public function leaveChangedDays(): ChangedDaysQuery
+    {
+        if (!isset($this->made[__FUNCTION__])) $this->made[__FUNCTION__] = new WordPressChangedDaysQuery($this->db);
+        return $this->made[__FUNCTION__];
+    }
+
+    /** Leave return and cancellations (3.31.161, layered in 3.31.164). */
+    public function leaveReturns(): LeaveReturnService
+    {
+        if (!isset($this->made[__FUNCTION__])) {
+            if (!$this->leaveReturnPorts) throw new \LogicException('Leave return: no ports were given');
+            $this->made[__FUNCTION__] = new LeaveReturnService($this->leaveReturnStore(), $this->leaveReturnPorts, $this->scheduleDays(), $this->tx, $this->audit, $this->clock);
+        }
         return $this->made[__FUNCTION__];
     }
 

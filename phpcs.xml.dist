@@ -3,6 +3,7 @@
     <description>PHP version compatibility for the minimum supported PHP (see plugin header).</description>
     <file>workforce-one</file>
     <exclude-pattern>workforce-one/assets/vendor/*</exclude-pattern>
+    <exclude-pattern>workforce-one/languages/*</exclude-pattern>
     <arg name="extensions" value="php"/>
     <arg value="sp"/>
     <config name="testVersion" value="7.4-"/>

@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.31.160
+## 3.31.167
 ### Performance from the production System health (owner's request, 2026-11-22)
 The production System health showed no errors and no failed jobs, only reads repeated in a loop. Nothing changes in what anyone
 sees or how anything works; fewer queries:
@@ -13,6 +13,97 @@ sees or how anything works; fewer queries:
 - **Every request of the site**: the hourly check for transfers due read a transient (one query on every page, API call and
   public page); its next time is now an autoloaded option, read with the other options at no cost.
   The first request after the update checks once more (harmless: a move is claimed before it is applied, never twice).
+## 3.31.166
+### System messages: edit the texts the system shows (docs/tasks/system-messages.md, mockup /mnt/project-files/system-messages/)
+Owner's request (2026-11-25): "make the messages of the system editable". A new switch (wp-admin → Features → **System
+messages**), **off by default**: off, nothing is added to WordPress, the page is hidden and every text is the shipped one (saved
+edits are kept for when it is turned on again).
+- **The page** (wp-admin → Settings → **System messages**): every text of the plugin (3,033), in Arabic and in English, with
+  filters by kind (notifications, notices, errors, buttons and labels), part of the system, a search and "Edited only". Edit a text,
+  see a live preview, "Back to default" for one text, a part of the system or a whole language. Every save and reset is in the Audit Log.
+- **Safe edits:** the values of the original (names, dates, numbers) must all stay, each at least once, and none added; the
+  formatting tags must stay as they are; a lone % or a backslash is refused; each kind has a length limit; a save over a text someone
+  else changed meanwhile is refused.
+- **Who:** a new permission **Manage system messages**, given to administrators and the EWS Administrator role, and grantable in Roles.
+- Edits apply to new notifications and pages; notifications already sent keep their words. Texts with a number (one day, 2 days)
+  cannot be edited yet. A saved text whose original an update changed is listed under **Needs review**.
+- **Translated notifications (also while the switch is off):** about 40 notifications that were sent in English to everyone
+  (overtime, swaps, leave, early leave, presence, breaks, payroll, face reset, recognition, polls, schedule changes, holiday days
+  given back) now go through the translations and are sent in Arabic on an Arabic site; the English words are unchanged, except
+  the early leave titles, which now read "Early Leave Approved/Rejected" (before: "Early Leave Approve").
+- Tooling: `tools/build_message_catalog.php` builds the list of texts from the code (`languages/workforce-one-catalog.php`);
+  `tools/po_compile.py` compiles the .po exactly as WP-CLI does; `tests/check_message_catalog.py` keeps both in step (CI).
+- Tests: unit tests for the rules, the catalog, saving and the filter; e2e `tests/e2e_system_messages.py`.
+
+## 3.31.164
+### Leave return moved into layers (docs/tasks/leave-return-layers.md): no visible change
+Owner's choice (2026-11-24, "ابدا ب 1"): the planned move-only release for the 3.31.161 leave-return code. Nothing changes for anyone:
+the same pages, messages, queries in the same order, locks, transactions, audit rows and notifications, with the switch on or off.
+- **The Leave module's second layered slice (`leave.return`):** `LeaveReturnService` (the return, the cancellation before it, the
+  change rounds, HR's "Back at work", "Put the day back to leave", the withdrawal), `WordPressLeaveReturnStore` (its only SQL),
+  `LeaveReturnPorts` (what it reaches in the rest of the plugin) and the `ChangedDaysQuery` read model. The trait functions keep their
+  names as thin controllers; nine helpers with no other caller are gone.
+- The schedule writes of a return go through the Schedule module (`ScheduleDayService::restoreRow()` / `removeDay()`), not the table.
+- The `ews_leave_changes` CREATE moved, byte for byte, to `src/Leave/Data/LeaveReturnSchema.php` (owner, 2026-11-24), so the layer
+  baseline only goes down: 303 → 276 references (`trait-leave.php` 52 → 29, `trait-leave-admin.php` 12 → 8).
+- Tests: `tests/unit/LeaveReturnServiceTest.php` (fake store and ports), and a golden trace of every path
+  (`tests/golden/actions_leave_return.php`), the same on the old and the new code.
+
+## 3.31.163
+### Corrections balance in My requests (docs/tasks/corrections-balance.md, mockups docs/mockups/corrections-balance/)
+Owner's request (2026-11-24): "in My requests, add the correction balance". A new switch (wp-admin → Features → My approvals
+and My requests → **Corrections balance in My requests**), **off by default**: off, My requests is exactly as before.
+- On (with Attendance corrections and My approvals on): "Your balance" on top of My requests shows a card **Attendance
+  corrections**: how many are left this month of the monthly limit (waiting and approved requests for this month's days count,
+  as the limit does). None left: "the next ones go to HR" or "none left this month", following the corrections settings.
+- With Leave in My requests on, the card comes after the leave balances in the same strip; off, the strip shows it alone.
+- No monthly limit (0): no card. No new query: the count is the one the New request sheet already reads.
+- Rules in `src/Attendance/CorrectionBalance.php` (unit tests); e2e `tests/e2e_corrections_balance.py`.
+
+## 3.31.162
+### Company holidays are not leave days (docs/tasks/leave-holidays.md, mockup docs/mockups/leave-holidays/)
+Owner's report (2026-11-24): a leave over a company holiday took that holiday from the balance (Sun 4 – Thu 8 Oct with 6 Oct a
+holiday charged 5 days instead of 4). Payroll was right (the holiday wins over the leave); only the balance was wrong. One new
+switch (wp-admin → Features → **Company holidays are not leave days**), **off by default**: off, everything is exactly as before.
+- **New leaves** (the employee's request and a leave HR records) are counted without the active company holidays inside them;
+  approved, they put no leave day on the holiday, which stays a holiday in the schedule. The leave keeps the holidays it skipped
+  (`ews_leave_requests.holidays_skipped`), so its leave days always match what it charges, whatever happens to the calendar or
+  the switch before it is approved.
+- **The report** (wp-admin → Leaves → **Company holidays**): approved leaves charged to this leave year (or to next year, never a
+  past year) with a leave day on a company holiday: asked before the switch, or the holiday was added after the leave was asked. HR gives the days back, one leave or the selected ones: the balance gets them back (and next
+  year's carried days follow, as for a late return), the leave counts that many days less, the holiday goes back in the schedule
+  as it was before the leave (a day a manager changed is kept), the employee is told, and the Audit Log keeps it
+  (`leave_holiday_refund`). A day is never given back twice. Pending leaves show once approved; a leave with a change waiting
+  for a decision is shown but not corrected until it is decided. A later cancellation returns only what the leave still charges.
+- Database (3.31.162): a new table `ews_leave_holiday_refunds` (one row per day given back) and `ews_leave_requests.holidays_skipped`.
+  Nothing changes for existing rows.
+- Layers: the feature is the Leave module's first layered slice (`leave.holidays`): controller in the trait, `HolidayRefundService`,
+  `WordPressLeaveHolidayStore` (its only SQL), ports for the rest of the plugin. check_layers now also measures the older leave code's
+  SQL on the leave tables (layer-baseline.json, recorded once; it only goes down from here).
+
+## 3.31.161
+### Leave return: a leave changed more than once, a return HR records, and approved leave days locked (docs/tasks/leave-return.md, mockups docs/mockups/leave-return/)
+Owner's report (2026-11-24): an employee cancelled 2 days of a 3-day leave, then could not cancel the last day, and a manager
+changing that day in the schedule did not give it back. One new switch (wp-admin → Features → **Leave return**), **off by
+default**: off, everything is exactly as before (one change per leave, the schedule open to managers).
+- **The employee** (Leave in My requests on): "Change the leave" on any day of an approved leave from today on, the first day
+  (all of it) and a single remaining day included; again after an approved change, a refusal or a withdrawal. Each change is
+  approved as a cancellation is, and each is a new round of the approval (`ews_approval_requests.entity_round`). A decision
+  form from an older round is refused.
+- **The balance:** the days that go back are counted from the leave days actually removed, under a lock on the leave, so a day
+  never goes back twice. Days in a closed payroll month stay leave (the return starts on the first day of an open month).
+  When next year's balance already exists, its carried days follow the carry rule of the type (never more than the days back).
+  A day a manager changed before is kept as the manager set it (Audit Log: `leave_restore_kept`).
+- **Approved leave days are locked** in the Attendance grid (with or without JavaScript), the single-day edit and the CSV import
+  (the preview marks the row; the import reads again), for every manager, even with "Edit a locked week". The refusals are
+  counted, shown and in the Audit Log (`schedule_leave_refused`). Pending leave days stay open.
+- **HR** (wp-admin → Leaves → **Back at work**): records that an employee was back at work on a day, with a required reason,
+  no further approval, never on their own leave; a preview first; a change still waiting is closed; the employee and their
+  manager are told; Audit Log `leave_return_recorded` with the reason.
+- **Changed leave days** (wp-admin → Leaves): the past days of approved leaves whose schedule is no longer Vacation, with who
+  changed them and the day's attendance, and two actions: "Back at work from this day" and "Put the day back to leave".
+- Database (3.31.161): a new table `ews_leave_changes` (one row per round), `ews_approval_requests.entity_round` (its unique key
+  now includes the round) and a day key on the leave snapshots. Nothing changes for existing rows.
 
 ## 3.31.159
 ### Requests Hub reports (docs/tasks/hub-reports.md, mockups docs/mockups/hub-reports/)

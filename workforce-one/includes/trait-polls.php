@@ -198,7 +198,7 @@ trait EWS_Polls_Trait {
             :$this->people_active_user_ids();
         $url=add_query_arg('ews_view','polls',$this->app_home_url());
         foreach($users as $uid){
-            $this->notify((int)$uid,'poll','New poll',(string)$poll->question,['entity_id'=>(int)$poll->id,'url'=>$url]);
+            $this->notify((int)$uid,'poll',__('New poll','workforce-one'),(string)$poll->question,['entity_id'=>(int)$poll->id,'url'=>$url]);
         }
         $wpdb->update($t['polls'],['notified_at'=>$this->polls_now()],['id'=>(int)$poll->id],['%s'],['%d']);
         return count($users);

@@ -82,6 +82,7 @@ trait EWS_Admin_Requests_Trait {
                 'requested_at'=>(string)$requested_at,
                 // The level this row shows (0: none open), so a decision never lands on a later one (3.31.122).
                 'step'=>$step?(int)$step->id:0,'stage'=>(string)$stage,
+                'round'=>$type==='leave_cancellation'?$this->leave_round_token((int)$id):0,   // Leave return (3.31.161): the change this row shows
                 'nonce'=>wp_create_nonce('ews_admin_request_decision_'.$type.'_'.(int)$id),
             ];
         }
@@ -300,7 +301,7 @@ trait EWS_Admin_Requests_Trait {
                 break;
             case 'leave_cancellation':
                 $title=sprintf(__('Leave cancellation / %s','workforce-one'),(string)($r->type_name??''));
-                $detail=Hub::details(!empty($r->cancel_from)?sprintf(__('From %s','workforce-one'),$r->cancel_from):__('All of it','workforce-one'),$r->start_date.' → '.$r->end_date);
+                $detail=Hub::details(!empty($r->cancel_from)&&(string)$r->cancel_from>(string)$r->start_date?sprintf(__('From %s','workforce-one'),$r->cancel_from):__('All of it','workforce-one'),$r->start_date.' → '.$r->end_date);
                 $cs=(string)$r->cancellation_status;
                 if($status===$R::WAITING)$note=$level();
                 elseif($status===$R::WITHDRAWN){$by=$employee;$at=$time($ar->completed_at??'');$note=__('Withdrawn by the employee','workforce-one');}
@@ -470,7 +471,7 @@ trait EWS_Admin_Requests_Trait {
         }
         if($ok && $approve && $emp)$this->week_lock_record_request((int)$emp->id,$written,'leave','legacy vacation #'.(int)$id);   // week lock (3.31.121)
         if(!$ok || $wpdb->query('COMMIT')===false){$wpdb->query('ROLLBACK');return Hub::ERROR;}
-        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?'Vacation Approved':'Vacation Rejected',$approve?'Your vacation request has been approved.':'Your vacation request has been rejected.',['entity_id'=>$id,'push'=>false]);
+        if($emp && $emp->wp_user_id)$this->notify((int)$emp->wp_user_id,'vacation',$approve?__('Vacation Approved','workforce-one'):__('Vacation Rejected','workforce-one'),$approve?__('Your vacation request has been approved.','workforce-one'):__('Your vacation request has been rejected.','workforce-one'),['entity_id'=>$id,'push'=>false]);
         return Hub::outcome($decision);
     }
 }

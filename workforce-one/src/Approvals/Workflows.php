@@ -100,6 +100,21 @@ final class Workflows
     /** The longest reminder / move-up time, in working hours. */
     public const MAX_DEADLINE_HOURS = 720;
 
+    /**
+     * Request types that may start a new approval round once the previous one is final (3.31.161, Leave return: a leave may be
+     * changed more than once). Every other type keeps one approval per request.
+     */
+    public static function restartsAfterFinal(string $entityType): bool
+    {
+        return $entityType === 'leave_cancellation';
+    }
+
+    /** An approval request that is decided or closed: a new round may start after it. */
+    public static function isFinal(string $status): bool
+    {
+        return in_array(strtoupper($status), ['APPROVED', 'REJECTED', 'CANCELLED'], true);
+    }
+
     public static function modeFamily(string $mode): string
     {
         $mode = strtoupper($mode);

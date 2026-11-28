@@ -269,6 +269,7 @@
       "api": [
         "working_days",
         "schedule_leave_dates",
+        "schedule_for_employee_date",
         "swap_approval_card",
         "swap_peer_cards",
         "swap_withdraw",
@@ -327,6 +328,7 @@
             "workforce-one/src/Schedule/ScheduleDayService.php",
             "workforce-one/src/Schedule/WeekLockService.php"
           ],
+          "reads": [],
           "moved": [
             "save_att_if_unchanged",
             "save_att",
@@ -411,7 +413,8 @@
         "cx_legacy_approvals",
         "face_reset_requests",
         "cx_type_label",
-        "cx_change_text"
+        "cx_change_text",
+        "insights_load"
       ],
       "layered": [
         {
@@ -530,14 +533,17 @@
       "traits": [
         "leave",
         "leave-admin",
-        "leave-view"
+        "leave-view",
+        "leave-holidays"
       ],
       "tables": [
         "leave_requests",
         "leave_balances",
         "leave_types",
         "leave_schedule_snapshots",
-        "vacation_requests"
+        "vacation_requests",
+        "leave_changes",
+        "leave_holiday_refunds"
       ],
       "api": [
         "leave_approval_card",
@@ -554,7 +560,33 @@
         "leave_cancel_withdraw",
         "leave_status_of",
         "leave_legacy_approvals",
-        "leave_pending_newest_first"
+        "leave_pending_newest_first",
+        "leave_held_days",
+        "leave_return_on",
+        "leave_held_audit",
+        "leave_round_token"
+      ],
+      "layered": [
+        {
+          "slice": "holidays",
+          "tables": ["leave_holiday_refunds", "leave_requests", "leave_balances", "leave_types", "leave_schedule_snapshots"],
+          "store": "workforce-one/src/Leave/Data/WordPressLeaveHolidayStore.php",
+          "services": ["workforce-one/src/Leave/HolidayRefundService.php"],
+          "reads": [{"file": "workforce-one/src/Leave/Data/WordPressLeaveDayQuery.php", "tables": ["leave_requests", "leave_schedule_snapshots", "leave_types"]}],
+          "moved": ["leave_admin_holidays_view", "admin_leave_holiday_restore", "leave_holidays_skipped"],
+          "traits_clean": ["leave-holidays"]
+        },
+        {
+          "slice": "return",
+          "tables": ["leave_changes", "leave_requests", "leave_balances", "leave_types", "leave_schedule_snapshots"],
+          "store": "workforce-one/src/Leave/Data/WordPressLeaveReturnStore.php",
+          "services": ["workforce-one/src/Leave/LeaveReturnService.php"],
+          "reads": [{"file": "workforce-one/src/Leave/Data/WordPressChangedDaysQuery.php", "tables": ["leave_schedule_snapshots", "leave_requests", "leave_types", "schedule", "employees"]}],
+          "moved": ["leave_lock_row", "leave_change_current", "leave_days_from", "leave_return_restore_day", "leave_carry_top_up", "leave_apply_cancellation",
+                    "leave_reject_cancellation", "leave_mark_cancellation_pending", "leave_cancel_request", "leave_return_ask", "leave_cancel_withdraw",
+                    "leave_admin_return_view", "admin_leave_return_record", "admin_leave_day_restore"],
+          "traits_clean": []
+        }
       ]
     },
     "overtime": {
@@ -638,7 +670,8 @@
         "approval_notify_administrators",
         "approval_self_rule",
         "approval_inbox_away",
-        "hub_reports_enabled"
+        "hub_reports_enabled",
+        "approval_close_open"
       ],
       "layered": [
         {
@@ -799,7 +832,8 @@
         "advance_payroll_lines",
         "advance_left_for",
         "advance_money",
-        "advances_can_pay"
+        "advances_can_pay",
+        "payroll_closed_months"
       ]
     },
     "hr_letters": {
@@ -956,6 +990,40 @@
         "health_switch_changed",
         "health_boot",
         "health_external"
+      ]
+    },
+    "messages": {
+      "label": "System messages: edit the texts the system shows (3.31.166)",
+      "traits": [
+        "system-messages"
+      ],
+      "tables": [],
+      "api": [
+        "system_messages_enabled",
+        "system_messages_boot",
+        "admin_system_messages",
+        "system_messages_save",
+        "system_messages_reset"
+      ],
+      "layered": [
+        {
+          "slice": "overrides",
+          "tables": [],
+          "store": [
+            "workforce-one/src/Messages/Data/WordPressMessageOverrideStore.php",
+            "workforce-one/src/Messages/Data/CatalogFiles.php"
+          ],
+          "services": [
+            "workforce-one/src/Messages/MessageOverrideService.php",
+            "workforce-one/src/Messages/MessageCatalog.php",
+            "workforce-one/src/Messages/MessageRules.php",
+            "workforce-one/src/Messages/ImportantMessages.php"
+          ],
+          "moved": [],
+          "traits_clean": [
+            "system-messages"
+          ]
+        }
       ]
     }
   }

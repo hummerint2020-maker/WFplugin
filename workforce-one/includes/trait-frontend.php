@@ -259,7 +259,8 @@ trait EWS_Frontend_Trait {
                 $m=['not_approved'=>__('Only an approved leave can be cancelled.','workforce-one'),'already_pending'=>__('You already asked to cancel this leave. It is waiting for a decision.','workforce-one'),
                     'already_rejected'=>__('Cancelling this leave was refused, so it cannot be asked again.','workforce-one'),'already_cancelled'=>__('This leave is already cancelled.','workforce-one'),
                     'started'=>__('This leave has started or starts today, so it can no longer be cancelled.','workforce-one'),'closed'=>__('A cancellation was already asked for this leave and closed, so it cannot be asked again.','workforce-one'),
-                    'not_started'=>__('This leave has not started yet; ask to cancel all of it instead.','workforce-one'),'ending'=>__('This leave ends today, so there are no days left to cancel.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
+                    'not_started'=>__('This leave has not started yet; ask to cancel all of it instead.','workforce-one'),'ending'=>__('This leave ends today, so there are no days left to cancel.','workforce-one'),
+                    'day'=>__('Pick the day you are back at work: from the first day of the leave (or today) up to its last day.','workforce-one'),'no_days'=>__('No leave day is left from that day on.','workforce-one'),'save'=>__('The cancellation could not be asked. Please try again.','workforce-one')];
                 return $this->ux_modal(__('Cancellation Not Submitted','workforce-one'),$m[sanitize_key($_GET['leave_cancel_error'])]??$m['save'],'error');
             }
             if(isset($_GET['leave_error'])){
@@ -426,7 +427,7 @@ trait EWS_Frontend_Trait {
         global $wpdb;
         if(!$emp)return [];
         // Without attendance tracking there is no Sign In reminder, but the other reminders still apply.
-        // The cron reads only employees with attendance tracked (3.31.160: no query per person to ask again).
+        // The cron reads only employees with attendance tracked (3.31.167: no query per person to ask again).
         $tracks_attendance=is_array($prefetch)&&!empty($prefetch['tracked'])?true:$this->employee_attendance_enabled((int)$emp->id);
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return [];
@@ -441,7 +442,7 @@ trait EWS_Frontend_Trait {
         };
 
         if($tracks_attendance && !empty($cfg['items']['attendance'])){
-            // The cron read today's rows and Sign Ins for everyone at once (3.31.160); a day other than today (a night shift) is read here as before.
+            // The cron read today's rows and Sign Ins for everyone at once (3.31.167); a day other than today (a night shift) is read here as before.
             $att_day=is_array($prefetch)&&isset($prefetch['today_rows'])?(string)$this->attendance_day((int)$emp->id):'';
             $pre=$att_day!==''&&$att_day===($prefetch['today']??'');
             $sch=$pre?($prefetch['today_rows'][(int)$emp->id]??null):$this->today_schedule_for_employee((int)$emp->id);
@@ -503,7 +504,7 @@ trait EWS_Frontend_Trait {
         $users=array_values(array_unique(array_map(function($e){return (int)$e->wp_user_id;},$employees)));
         foreach(array_chunk($users,500) as $chunk)update_meta_cache('user',$chunk);
         $out=['tracked'=>true];   // the cron's query keeps only employees with attendance tracked
-        // The Sign In reminder (3.31.160): everyone's shift, today's schedule row and today's Sign Ins in three reads, not four per person.
+        // The Sign In reminder (3.31.167): everyone's shift, today's schedule row and today's Sign Ins in three reads, not four per person.
         if(!empty($cfg['items']['attendance'])){
             $this->prime_shift_cache($employees);
             $today=current_time('Y-m-d');
@@ -676,7 +677,7 @@ trait EWS_Frontend_Trait {
              * attendance grid save result).
              */
             $u=remove_query_arg(['preview','time_success','time_error','time_reset','time_saved',
-                'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict','grid_locked',
+                'saved','imported','rejected','grid_saved','grid_skipped','grid_invalid','grid_conflict','grid_locked','grid_leave',
                 'leave_sent','leave_error','leave_done','leave_cancel_sent','early_error',
                 'break_success','break_error','overtime_sent','overtime_error','overtime_done','overtime_rejected',
                 'swap_error','swap_sent','swap_done',

@@ -80,7 +80,7 @@ final class OrgDirectory
         return $this->reporting->hasActiveReport($employeeId);
     }
 
-    /** hasReports() for many at once (3.31.160, the substitutes list): id => true for those someone active reports to. @param list<int> $employeeIds @return array<int,bool> */
+    /** hasReports() for many at once (3.31.167, the substitutes list): id => true for those someone active reports to. @param list<int> $employeeIds @return array<int,bool> */
     public function withReports(array $employeeIds): array
     {
         if (!$employeeIds || !$this->reporting->tableExists()) return [];

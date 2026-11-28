@@ -87,7 +87,7 @@ final class AttendanceLogTest extends TestCase
         $this->assertNull($this->log->openBreak(8, '2026-10-29'));
     }
 
-    /** 3.31.160 (the Smart Nudges cron): who signed in that day, for many at once, the same answer as todayEvents() one by one. */
+    /** 3.31.167 (the Smart Nudges cron): who signed in that day, for many at once, the same answer as todayEvents() one by one. */
     public function testSignedInOnAgreesWithTodayEventsForEveryone(): void
     {
         $d = '2026-10-29';

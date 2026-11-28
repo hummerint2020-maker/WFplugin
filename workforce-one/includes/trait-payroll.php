@@ -216,6 +216,13 @@ trait EWS_Payroll_Trait {
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->payroll_tables()['runs']} WHERE month=%s",$month));
     }
 
+    /** The closed payroll months ('Y-m') between two days (3.31.161, Leave return: their leave days stay leave). @return string[] */
+    private function payroll_closed_months($from,$to){
+        global $wpdb;$this->ensure_payroll_schema();
+        if((string)$to<(string)$from)return [];
+        return array_map('strval',(array)$wpdb->get_col($wpdb->prepare("SELECT month FROM {$this->payroll_tables()['runs']} WHERE month BETWEEN %s AND %s",substr((string)$from,0,7),substr((string)$to,0,7))));
+    }
+
     /** A closed month's payslips, as payroll_month() rows (employee name and id as they were). @return array<int,array{employee:object,pay:array<string,mixed>}> */
     private function payroll_payslips($run_id,$only_employee=0){
         global $wpdb;$t=$this->payroll_tables();
@@ -278,9 +285,9 @@ trait EWS_Payroll_Trait {
         if(isset($r['error']))$this->payroll_redirect($back+['payroll_error'=>$r['error']]);
         $rules=$this->payroll_rules();
         if($rules['employee_view']){
-            $label=date('F Y',strtotime($month.'-01'));
+            $label=date_i18n('F Y',strtotime($month.'-01'));
             foreach($r['people'] as $x){
-                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll','Payslip ready','Your payslip for '.$label.' is ready in My Pay.',['type'=>'info','entity_id'=>$r['run_id'],'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
+                if(!empty($x['employee']->wp_user_id))$this->notify((int)$x['employee']->wp_user_id,'payroll',__('Payslip ready','workforce-one'),sprintf(/* translators: %s: month and year */__('Your payslip for %s is ready in My Pay.','workforce-one'),$label),['type'=>'info','entity_id'=>$r['run_id'],'url'=>add_query_arg('ews_view','pay',$this->app_home_url())]);
             }
         }
         $this->payroll_redirect($back+['payroll_saved'=>'closed']);

@@ -80,6 +80,15 @@ final class MemoryApprovalRequestStore implements ApprovalRequestStore
         return null;
     }
 
+    public function latestRound(string $entityType, int $entityId, int $workflowId): ?object
+    {
+        $found = null;
+        foreach ($this->requests as $r) {
+            if ($r->entity_type === $entityType && (int) $r->entity_id === $entityId && (int) $r->workflow_id === $workflowId && ($found === null || (int) $r->id > (int) $found->id)) $found = $r;
+        }
+        return $found ? (object) ['id' => $found->id, 'status' => $found->status, 'entity_round' => $found->entity_round ?? 1] : null;
+    }
+
     public function findByKey(string $workflowKey, string $entityType, int $entityId): ?object
     {
         $found = null;

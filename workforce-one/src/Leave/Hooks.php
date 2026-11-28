@@ -12,6 +12,11 @@ final class Hooks
         add_action('admin_post_ews_leave_type_save', [$plugin, 'admin_leave_type_save']);
         add_action('admin_post_ews_leave_balance_save', [$plugin, 'admin_leave_balance_save']);
         add_action('admin_post_ews_admin_leave_record', [$plugin, 'admin_admin_leave_record']);
+        // Leave return (3.31.161): HR records "back at work"; the report puts a changed day back to leave.
+        add_action('admin_post_ews_leave_return_record', [$plugin, 'admin_leave_return_record']);
+        add_action('admin_post_ews_leave_day_restore', [$plugin, 'admin_leave_day_restore']);
+        // Company holidays are not leave days (3.31.162): HR gives back the holidays charged before.
+        add_action('admin_post_ews_leave_holiday_restore', [$plugin, 'admin_leave_holiday_restore']);
         add_action('admin_post_ews_vacation_request_create', [$plugin, 'leave_request_create']);
         add_action('admin_post_ews_vacation_request_respond', [$plugin, 'leave_request_respond']);
         add_action('admin_post_ews_leave_cancel', [$plugin, 'leave_cancel_request']);

@@ -212,7 +212,7 @@ $as(0);
 $run('apply_due', function () use ($o) { return $o->org_moves_apply_due(); });
 $run('apply_due_again', function () use ($o) { return $o->org_moves_apply_due(); });
 delete_transient('ews_org_moves_checked'); delete_option('ews_org_moves_next_check');
-$run('maybe_due', function () use ($o) { $o->org_moves_maybe_due(); return (get_transient('ews_org_moves_checked') || (int) get_option('ews_org_moves_next_check', 0) > time() ? 1 : 0); });   // the hourly gate: a transient before 3.31.160, an autoloaded option since
+$run('maybe_due', function () use ($o) { $o->org_moves_maybe_due(); return (get_transient('ews_org_moves_checked') || (int) get_option('ews_org_moves_next_check', 0) > time() ? 1 : 0); });   // the hourly gate: a transient before 3.31.167, an autoloaded option since
 $run('maybe_due_gate', function () use ($o) { $o->org_moves_maybe_due(); return (get_transient('ews_org_moves_checked') || (int) get_option('ews_org_moves_next_check', 0) > time() ? 1 : 0); });
 $run('for_chart_due', function () use ($call) { return $call('org_moves_for_chart'); });
 $wpdb->query("RENAME TABLE {$p}ews_org_moves TO {$p}ews_org_moves_x");

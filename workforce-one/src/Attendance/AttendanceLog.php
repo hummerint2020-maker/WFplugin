@@ -32,7 +32,7 @@ final class AttendanceLog
     }
 
     /**
-     * Who has a Sign In (or Late Sign In) on that day, for many employees in one read (3.31.160, the Smart Nudges cron): the same
+     * Who has a Sign In (or Late Sign In) on that day, for many employees in one read (3.31.167, the Smart Nudges cron): the same
      * live events todayEvents() reads one employee at a time. @param list<int> $employeeIds @return array<int,bool> employee id => true
      */
     public function signedInOn(array $employeeIds, string $day): array

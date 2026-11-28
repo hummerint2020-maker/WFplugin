@@ -79,6 +79,11 @@ final class WordPressScheduleDayStore implements ScheduleDayStore
         return $this->db->update($this->table, $row, ['id' => $id]);
     }
 
+    public function deleteDay(int $employeeId, string $date)
+    {
+        return $this->db->delete($this->table, ['employee_id' => $employeeId, 'work_date' => $date]);
+    }
+
     public function updateStatusIf(int $id, string $expected, string $status, string $note, int $by, string $at)
     {
         $r = $this->db->query($this->db->prepare(

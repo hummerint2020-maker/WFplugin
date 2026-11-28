@@ -85,7 +85,8 @@ trait EWS_Breaks_Trait {
         /** Text of the "Break Ended" notification and of the Resume message. */
         private function break_ended_message($minutes){
             $minutes=(int)$minutes;
-            return 'Your break ended. Duration: '.$minutes.' minute'.($minutes===1?'':'s').'.';
+            /* translators: %d: minutes */
+            return sprintf(_n('Your break ended. Duration: %d minute.','Your break ended. Duration: %d minutes.',$minutes,'workforce-one'),$minutes);
         }
 
         /** The Web message for a BreakRules code (the texts of 3.31.45). */
@@ -130,7 +131,7 @@ trait EWS_Breaks_Trait {
 
         /** The "Break Ended" notification. */
         private function break_notify_ended($emp,$id,$minutes){
-            $this->notify((int)$emp->wp_user_id,'break','Break Ended',$this->break_ended_message($minutes),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);
+            $this->notify((int)$emp->wp_user_id,'break',__('Break Ended','workforce-one'),$this->break_ended_message($minutes),['entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','time',$this->app_home_url())]);
         }
 
         private function break_ui_data($employee_id){

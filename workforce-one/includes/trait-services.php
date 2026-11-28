@@ -61,7 +61,8 @@ trait EWS_Services_Trait {
         $audit=function($a,$e,$id,$d){$this->audit($a,$e,$id,$d);};
         $day_changed=function($uid,$date,$status,$id){
             $label=date_i18n('l, d M Y',strtotime($date));
-            $this->notify($uid,'schedule','Schedule Updated','Your schedule for <strong>'.esc_html($label).'</strong> is now <strong>'.esc_html($status).'</strong>.',
+            /* translators: 1: day, 2: the new schedule (Office, WFH, …) */
+            $this->notify($uid,'schedule',__('Schedule Updated','workforce-one'),sprintf(__('Your schedule for <strong>%1$s</strong> is now <strong>%2$s</strong>.','workforce-one'),esc_html($label),esc_html($status)),
                 ['type'=>'info','entity_id'=>(int)$id,'url'=>add_query_arg('ews_view','schedule',$this->app_home_url())]);
         };
         $week_final=function($uid,$days,$link){
@@ -164,7 +165,65 @@ trait EWS_Services_Trait {
             new class implements Permissions {
                 public function isAdmin(int $userId): bool { return (bool)user_can($userId,'manage_options'); }
             },
-            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports());
+            $this->approval_ports(),$this->substitute_ports(),$this->attendance_ports(),$this->letter_ports(),$this->leave_holiday_ports(),$this->leave_return_ports());
+    }
+
+    /** Company holidays charged as leave (3.31.162): what HolidayRefundService reaches in the plugin. */
+    private function leave_holiday_ports(): \WorkforceOne\Leave\HolidayRefundPorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new class($call) implements \WorkforceOne\Leave\HolidayRefundPorts {
+            private $call;
+            public function __construct(callable $call){ $this->call=$call; }
+            public function holidays(string $start,string $end): array { return (array)($this->call)('leave_company_holidays',$start,$end); }
+            public function leaveYear(): int { return (int)($this->call)('leave_year'); }
+            public function employee(int $employeeId): ?object { $e=($this->call)('people_employee',$employeeId); return is_object($e)?$e:null; }
+            public function withEmployeeLock(int $employeeId,callable $fn) { return ($this->call)('ews_with_lock','leave_emp_'.$employeeId,$fn,'busy'); }
+            public function balance(object $leave): ?object { $b=($this->call)('leave_request_balance',$leave); return is_object($b)?$b:null; }
+            public function restoreDay(object $leaveDay,object $employee,string $now,int $leaveId): bool { return (bool)($this->call)('leave_return_restore_day',$leaveDay,$employee,$now,$leaveId); }
+            public function carryTopUp(object $leave,object $balance,float $days,string $now) { return ($this->call)('leave_carry_top_up',$leave,$balance,$days,$now); }
+            public function weekLockRecord(int $employeeId,array $days,string $ref): void { ($this->call)('week_lock_record_request',$employeeId,$days,'leave_holiday_refund',$ref); }
+            public function notifyGivenBack(int $wpUserId,array $facts,int $leaveId): void {
+                ($this->call)('notify',$wpUserId,'leave',__('Leave days given back','workforce-one'),
+                    /* translators: 1: number of days, 2: leave type, 3: first day, 4: last day, 5: the company holidays, 6: days the leave counts now */
+                    sprintf(__('%1$d day(s) went back to your balance: your %2$s leave (%3$s – %4$s) was charged for company holidays (%5$s). It now counts %6$s day(s).','workforce-one'),
+                        (int)$facts['days'],$facts['type'],$facts['start'],$facts['end'],implode(', ',$facts['holidays']),$facts['after']),['entity_id'=>$leaveId]);
+            }
+            public function actorId(): int { return (int)get_current_user_id(); }
+        };
+    }
+
+    /** Leave return (3.31.164): what LeaveReturnService reaches in the plugin, the same functions the trait called before. */
+    private function leave_return_ports(): \WorkforceOne\Leave\LeaveReturnPorts {
+        $call=function($fn,...$args){return $this->$fn(...$args);};
+        return new class($call) implements \WorkforceOne\Leave\LeaveReturnPorts {
+            private $call;
+            public function __construct(callable $call){ $this->call=$call; }
+            public function cancelFromDay(object $leave): ?string { $d=($this->call)('leave_cancel_from_day',$leave); return $d===null?null:(string)$d; }
+            public function today(): string { return (string)current_time('Y-m-d'); }
+            public function closedMonths(string $from,string $to): array { return (array)($this->call)('payroll_closed_months',$from,$to); }
+            public function workingDaysCount(string $start,string $end) { return ($this->call)('vacation_working_days_count',$start,$end); }
+            public function balance(object $leave): ?object { $b=($this->call)('leave_request_balance',$leave); return is_object($b)?$b:null; }
+            public function substitutesSyncAtShutdown(): void { ($this->call)('substitutes_sync_at_shutdown'); }
+            public function followLeaveEnd(int $leaveId,string $start,string $end): bool { return (bool)($this->call)('services')->substitutes()->followLeaveEnd($leaveId,$start,$end); }
+            public function weekLockRecord(int $employeeId,array $days,string $source,string $ref): void { ($this->call)('week_lock_record_request',$employeeId,$days,$source,$ref); }
+            public function withEmployeeLock(int $employeeId,callable $fn) { return ($this->call)('ews_with_lock','leave_emp_'.$employeeId,$fn,'busy'); }
+            public function closeOpenApproval(int $leaveId) { return ($this->call)('approval_close_open','vacation','leave_cancellation',$leaveId,true); }
+            public function closeWithdrawnApproval(int $leaveId) { return ($this->call)('approval_close','vacation','leave_cancellation',$leaveId); }
+            public function approvalDecided(int $leaveId): bool {
+                $ar=($this->call)('approval_find_request','vacation','leave_cancellation',$leaveId);
+                return $ar && !\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status);
+            }
+            public function startRound(int $leaveId,int $employeeId): ?int {
+                $approval=($this->call)('approval_start','vacation','leave_cancellation',$leaveId,$employeeId,['leave_request_id'=>$leaveId],false);
+                if(is_wp_error($approval))return null;
+                $ar=($this->call)('approval_find_request','vacation','leave_cancellation',$leaveId);
+                if(!$ar||(int)$ar->id!==(int)$approval||!\WorkforceOne\Approvals\StateMachine::isWaitingForLevel((string)$ar->status))return null;
+                return (int)$approval;
+            }
+            public function actorId(): int { return (int)get_current_user_id(); }
+            public function returnOn(): bool { return (bool)($this->call)('leave_return_on'); }
+            public function actorName(): string { return (string)wp_get_current_user()->display_name; }
+        };
     }
 
     /** The HR letters' ports (HL3): the adapters through which its services reach the site, the approvals engine, notifications, files and Payroll. */

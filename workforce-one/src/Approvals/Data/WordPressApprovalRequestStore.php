@@ -69,6 +69,11 @@ final class WordPressApprovalRequestStore implements ApprovalRequestStore
         return $v === null ? null : (string) $v;
     }
 
+    public function latestRound(string $entityType, int $entityId, int $workflowId): ?object
+    {
+        return $this->one($this->db->get_row($this->db->prepare("SELECT id,status,entity_round FROM {$this->requests} WHERE entity_type=%s AND entity_id=%d AND workflow_id=%d ORDER BY id DESC LIMIT 1", $entityType, $entityId, $workflowId)));
+    }
+
     public function findByKey(string $workflowKey, string $entityType, int $entityId): ?object
     {
         return $this->one($this->db->get_row($this->db->prepare(

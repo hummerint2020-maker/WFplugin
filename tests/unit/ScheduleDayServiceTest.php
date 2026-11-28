@@ -73,6 +73,27 @@ final class ScheduleDayServiceTest extends TestCase
         $this->assertSame([], $this->service()->statusesOn('2026-10-30'));
     }
 
+    public function testRestoreRowPutsTheDayBackAsItWasWithoutTellingAnyone(): void
+    {
+        $id = $this->store->add(7, '2026-10-27', 'Vacation', 'Approved leave #4');
+        $this->assertSame(1, $this->service()->restoreRow($id, 'Office', 'before', 3, '2026-10-26 09:00:00'));
+        $this->assertSame(['Office', 'before', 3, '2026-10-26 09:00:00'], [$this->store->rows[$id]->status, $this->store->rows[$id]->note, $this->store->rows[$id]->updated_by, $this->store->rows[$id]->updated_at]);
+        $this->assertSame([], $this->told);
+        $this->store->failUpdate = true;
+        $this->assertFalse($this->service()->restoreRow($id, 'Office', 'before', 3, '2026-10-26 09:00:00'));
+    }
+
+    public function testRemoveDayDeletesOnlyThatEmployeesDay(): void
+    {
+        $this->store->add(7, '2026-10-27', 'Vacation', 'Approved leave #4');
+        $other = $this->store->add(8, '2026-10-27', 'Office');
+        $this->assertSame(1, $this->service()->removeDay(7, '2026-10-27'));
+        $this->assertSame(0, $this->service()->removeDay(7, '2026-10-27'));
+        $this->assertSame([$other], array_keys($this->store->rows));
+        $this->store->failUpdate = true;
+        $this->assertFalse($this->service()->removeDay(8, '2026-10-27'));
+    }
+
     public function testGridInsertsAnEmptyDayAndTellsThePerson(): void
     {
         $r = $this->service()->saveIfUnchanged(7, '2026-10-27', 'WFH', null, 3);

@@ -148,7 +148,7 @@ trait EWS_Substitutes_Trait {
     private function substitute_when($dt){ return date_i18n('D j M, H:i',strtotime((string)$dt)); }
 
     /** Whether $employee may be a substitute for $manager under the setting. */
-    /** @param array<int,bool>|null $managers who manages someone, read ahead for a list (3.31.160); null: asked here */
+    /** @param array<int,bool>|null $managers who manages someone, read ahead for a list (3.31.167); null: asked here */
     private function substitute_eligible($manager,$candidate,$managers=null){
         $who=$this->substitute_settings()['who'];
         return Substitutes::eligible($who,['active'=>$candidate && (int)$candidate->active===1 && (int)$candidate->wp_user_id>0,
@@ -187,7 +187,7 @@ trait EWS_Substitutes_Trait {
         if(!$manager)return [];
         $boss=$this->approval_related_employee((int)$manager->id,'supervisor');
         $out=[];$people=$this->people_active_users();
-        // Who manages someone, in one read (3.31.160; before, one query per colleague: production System health): the department's
+        // Who manages someone, in one read (3.31.167; before, one query per colleague: production System health): the department's
         // people for "a manager in your department", everyone when only managers may stand in.
         $all=$this->substitute_settings()['who']==='managers';$ask=[];
         foreach($people as $r)if((int)$r->id!==(int)$manager->id && ($all || ((int)$manager->department_id>0 && (int)$r->department_id===(int)$manager->department_id)))$ask[]=(int)$r->id;

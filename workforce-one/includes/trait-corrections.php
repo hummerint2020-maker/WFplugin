@@ -1120,12 +1120,25 @@ trait EWS_Corrections_Trait {
         return $this->services()->correctionRequests()->withdraw((int)$id,(int)$employee_id,get_current_user_id());
     }
 
-    /** The correction sheet for the New request sheet of My requests (3.31.105): what is left this month, and the sheet itself. @return array{html:string,used:int,limit:int} */
+    /**
+     * The correction sheet for the New request sheet of My requests (3.31.105): what is left this month, and the sheet itself.
+     * balance (3.31.163): the "Your balance" card of My requests, from the same count (no extra query); null while its switch is off
+     * or without a monthly limit.
+     * @return array{html:string,used:int,limit:int,balance:?array<string,mixed>}
+     */
     private function cx_new_request_sheet($emp){
-        if(!$this->corrections_enabled() || !$emp)return ['html'=>'','used'=>0,'limit'=>0];
+        if(!$this->corrections_enabled() || !$emp)return ['html'=>'','used'=>0,'limit'=>0,'balance'=>null];
         $this->ensure_corrections_schema_once();
         wp_enqueue_style('workforce-one-corrections');wp_enqueue_script('workforce-one-corrections');
         $days=$this->cx_recent_days($emp);
-        return ['html'=>$this->render_template('app/correction-sheet',$this->cx_sheet_data($emp,$days)),'used'=>$this->cx_month_count((int)$emp->id,current_time('Y-m-d')),'limit'=>(int)$this->correction_settings()['monthly_limit']];
+        $s=$this->correction_settings();
+        $used=$this->cx_month_count((int)$emp->id,current_time('Y-m-d'));
+        return ['html'=>$this->render_template('app/correction-sheet',$this->cx_sheet_data($emp,$days)),'used'=>$used,'limit'=>(int)$s['monthly_limit'],
+            'balance'=>$this->my_requests_cx_balance_on()?\WorkforceOne\Attendance\CorrectionBalance::card($s,$used):null];
+    }
+
+    /** Corrections balance in My requests (3.31.163, docs/tasks/corrections-balance.md): off by default; only with corrections and My approvals on. */
+    private function my_requests_cx_balance_on(){
+        return $this->corrections_enabled() && $this->my_approvals_enabled() && (bool)$this->option('ews_feature_my_requests_cx_balance');
     }
 }

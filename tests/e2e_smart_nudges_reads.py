@@ -1,4 +1,4 @@
-"""Smart Nudges job reads (3.31.160, production System health): the Sign In reminder's reads for every employee at once.
+"""Smart Nudges job reads (3.31.167, production System health): the Sign In reminder's reads for every employee at once.
 
 Before, the job read each employee's shift, today's schedule row, "attendance enabled" and today's Sign Ins one by one (about four
 queries a person, every five minutes). Now it reads them for everyone in three queries. The reminders must stay exactly the same:
@@ -16,7 +16,7 @@ wp('eval-file', os.path.join(HERE, 'e2e_setup.php'))
 out = php("""
     $saved=get_option('ews_smart_nudges',null);$saved_shifts=get_option('ews_shifts',null);
     try{
-    // Shifts (review 3.31.160): one active from an hour ago, one inactive (company hours), one overnight (its day may be yesterday).
+    // Shifts (review 3.31.167): one active from an hour ago, one inactive (company hours), one overnight (its day may be yesterday).
     $h=(int)current_time('G');$from=sprintf('%02d:00',max(0,$h-1));
     update_option('ews_shifts',[['id'=>1,'name'=>'Standard','start'=>'08:00','end'=>'17:00','active'=>1],['id'=>7,'name'=>'Early','start'=>$from,'end'=>'23:59','active'=>1],
         ['id'=>8,'name'=>'Old','start'=>$from,'end'=>'23:59','active'=>0],['id'=>9,'name'=>'Night','start'=>'22:00','end'=>'06:00','overnight'=>1,'active'=>1]],false);

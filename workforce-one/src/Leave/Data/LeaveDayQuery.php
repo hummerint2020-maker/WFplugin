@@ -14,4 +14,11 @@ interface LeaveDayQuery
      * @return array<int,array<string,string>> employee id => Y-m-d => the type's name ('' when the type is gone or was never set)
      */
     public function typesByDay(array $employeeIds, string $from, string $to): array;
+
+    /**
+     * The days held by an approved leave (its snapshot days, Leave return 3.31.161): locked in the schedule.
+     * @param int[] $employeeIds
+     * @return array<int,array<string,int>> employee id => Y-m-d => the leave's id
+     */
+    public function heldDays(array $employeeIds, string $from, string $to): array;
 }

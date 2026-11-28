@@ -40,7 +40,7 @@ trait EWS_Features_Trait {
                 'tasks'=>$this->tasks_enabled(),
                 'corrections'=>$this->corrections_enabled(),
                 'my_approvals'=>$this->my_approvals_enabled(),
-                'hub_reports'=>$this->hub_reports_enabled(),'my_requests_leave'=>(bool)$this->option('ews_feature_my_requests_leave'),'leave_page'=>(bool)$this->option('ews_feature_leave_page'),
+                'hub_reports'=>$this->hub_reports_enabled(),'my_requests_leave'=>(bool)$this->option('ews_feature_my_requests_leave'),'leave_return'=>(bool)$this->option('ews_feature_leave_return'),'leave_holidays'=>(bool)$this->option('ews_feature_leave_holidays'),'my_requests_cx_balance'=>(bool)$this->option('ews_feature_my_requests_cx_balance'),'leave_page'=>(bool)$this->option('ews_feature_leave_page'),
                 'app_api'=>$this->app_api_enabled(),
                 'api_refresh_safe'=>$this->api_refresh_safe_enabled(),
                 'substitutes'=>$this->substitutes_enabled(),
@@ -48,6 +48,7 @@ trait EWS_Features_Trait {
                 'hr_letters'=>$this->hr_letters_enabled(),
                 'occasions'=>$this->occasions_enabled(),
                 'health'=>$this->health_enabled(),
+                'system_messages'=>$this->system_messages_enabled(),
                 'daily_workers'=>$this->dw_enabled(),
                 'office_minimum'=>$this->om_enabled(),
                 'week_lock'=>$this->week_lock_enabled(),
@@ -76,6 +77,7 @@ trait EWS_Features_Trait {
             'org'=>$this->org_settings(),'org_url'=>admin_url('admin.php?page=ews31-org-chart'),
             'occasions'=>$this->occasion_admin_data(),
             'att_page_cards'=>$this->attendance_page_cards(),
+            'system_messages_url'=>admin_url('admin.php?page=ews31-system-messages'),
             'hr_letters'=>['s'=>$this->hr_letter_settings(),'hr_set'=>(int)($this->approval_settings()['hr_user']??0)>0,'page_url'=>admin_url('admin.php?page=ews31-hr-letters&tab=types'),'workflow_url'=>admin_url('admin.php?page=ews31-approvals')],
             'advance'=>$this->advance_settings(),'advances_url'=>admin_url('admin.php?page=ews31-advances'),
             'health_rate'=>\WorkforceOne\Health\Settings::rate($this->option('ews_health_sample_rate')),'health_retention'=>\WorkforceOne\Health\Settings::retention($this->option('ews_health_retention_days')),'health_url'=>admin_url('admin.php?page=ews31-system-health'),
@@ -152,6 +154,21 @@ trait EWS_Features_Trait {
             if((bool)$this->option('ews_feature_my_requests_leave')!==$mrl){update_option('ews_feature_my_requests_leave',$mrl?1:0,false);$this->audit('my_requests_leave_feature_update','settings',0,$mrl?'enabled':'disabled');}
             if((bool)$this->option('ews_feature_leave_page')!==$page){update_option('ews_feature_leave_page',$page?1:0,false);$this->audit('leave_page_feature_update','settings',0,$page?'shown':'hidden');}
         }
+        // Leave return (3.31.161, docs/tasks/leave-return.md): written and audited only when it changes.
+        if(isset($post['leave_return_present'])&&(bool)$this->option('ews_feature_leave_return')!==$flag('leave_return_enabled')){
+            update_option('ews_feature_leave_return',$flag('leave_return_enabled')?1:0,false);
+            $this->audit('leave_return_feature_update','settings',0,$flag('leave_return_enabled')?'enabled':'disabled');
+        }
+        // Company holidays are not leave days (3.31.162, docs/tasks/leave-holidays.md): written and audited only when it changes.
+        if(isset($post['leave_holidays_present'])&&(bool)$this->option('ews_feature_leave_holidays')!==$flag('leave_holidays_enabled')){
+            update_option('ews_feature_leave_holidays',$flag('leave_holidays_enabled')?1:0,false);
+            $this->audit('leave_holidays_feature_update','settings',0,$flag('leave_holidays_enabled')?'enabled':'disabled');
+        }
+        // Corrections balance in My requests (3.31.163): written and audited only when it changes.
+        if(isset($post['my_requests_cx_balance_present'])&&(bool)$this->option('ews_feature_my_requests_cx_balance')!==$flag('my_requests_cx_balance_enabled')){
+            update_option('ews_feature_my_requests_cx_balance',$flag('my_requests_cx_balance_enabled')?1:0,false);
+            $this->audit('my_requests_cx_balance_feature_update','settings',0,$flag('my_requests_cx_balance_enabled')?'enabled':'disabled');
+        }
         // Requests Hub reports (3.31.159): written and audited only when it changes.
         if(isset($post['hub_reports_present'])&&$this->hub_reports_enabled()!==$flag('hub_reports_enabled')){
             update_option('ews_feature_hub_reports',$flag('hub_reports_enabled')?1:0,false);
@@ -201,6 +218,11 @@ trait EWS_Features_Trait {
                     $this->health_switch_changed((bool)$now);
                 }
             }
+        }
+        // System messages (3.31.166): written only when switched, so a site that keeps it off stores nothing new.
+        if(isset($post['system_messages_present']) && $this->system_messages_enabled()!==$flag('system_messages_enabled')){
+            update_option('ews_feature_system_messages',$flag('system_messages_enabled')?1:0,false);
+            $this->audit('system_messages_feature_update','settings',0,$flag('system_messages_enabled')?'enabled':'disabled');
         }
         // A substitute while a manager is away (3.31.107).
         if(isset($post['substitutes_present'])){
