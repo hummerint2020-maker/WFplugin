@@ -24,7 +24,20 @@ def snap():
     h = open(os.path.join(KIT, 'snap', 'attendance.%s.html' % Lang.code)).read()
     h = h.replace('{{ASSETS}}', Build.assets).replace('BA Team', T('شركة النيل للمقاولات', 'Nile Contracting'))
     css = CSS.replace('.css', '-rtl.css') if Lang.rtl() else CSS
-    return h.replace('</head>', '<link rel="stylesheet" href="%s"><link rel="stylesheet" href="%smock.css"></head>' % (css, Build.kit), 1)
+    h = h.replace('</head>', '<link rel="stylesheet" href="%s"><link rel="stylesheet" href="%smock.css"></head>' % (css, Build.kit), 1)
+    return anonymise(h)
+
+
+def anonymise(h):
+    """Owner (2026-11-28): the employees are Emp1, Emp2, … in the planner's mockups (row order)."""
+    rows = re.findall(r'<tr class="ews-att-employee-row[^"]*" data-employee-name="([^"]*)"[^>]*>\s*<td class="ews-att-employee">.*?<strong>([^<]+)</strong><small>([^<]*)</small>', h, re.S)
+    for n, (key, name, login) in enumerate(rows, 1):
+        emp = 'Emp%d' % n
+        h = h.replace('data-employee-name="%s"' % key, 'data-employee-name="%s"' % emp.lower())
+        h = h.replace('<strong>%s</strong><small>%s</small>' % (name, login), '<strong>%s</strong><small>emp%d</small>' % (emp, n))
+        h = h.replace(name + ' ·', emp + ' ·')
+    h = re.sub(r'(<span class="ews-att-avatar wfo-att-avatar tone-\d" aria-hidden="true">)[^<]*(</span><div><strong>Emp(\d+)</strong>)', lambda m: m.group(1) + 'E' + m.group(3) + m.group(2), h)
+    return h
 
 
 def bar():
@@ -40,7 +53,7 @@ def draft_panel():
     warns = [
         (T('الخميس ١٥', 'Thu 15'), T('٩ في المكتب، والحد الأدنى ١٢: ٤ في إجازة و٣ وصلوا لأيام مكتبهم في الأسبوع.', '9 in the office, the minimum is 12: 4 on leave and 3 have reached their office days this week.')),
         (T('الأحد ١١', 'Sun 11'), T('مديرين في المكتب ١، والحد الأدنى ٢: المدير التاني في رحلة عمل.', '1 manager in the office, the minimum is 2: the other is on a business trip.')),
-        (T('كريم فتحي', 'Karim Fathy'), T('مكتب ٤ أيام بدل ٣: عشان الحد الأدنى يوم الاثنين.', 'Office 4 days instead of 3: to reach Monday\'s minimum.')),
+        (T('Emp7', 'Emp7'), T('مكتب ٤ أيام بدل ٣: عشان الحد الأدنى يوم الاثنين.', 'Office 4 days instead of 3: to reach Monday\'s minimum.')),
     ]
     rows = ''.join('<li><b>%s:</b> <span>%s</span></li>' % (esc(a), esc(b)) for a, b in warns)
     return ('<section class="wfo-sp-draft" role="region" aria-label="%s"><div class="wfo-sp-draft-head">%s<div><b>%s</b><span>%s</span></div>'
@@ -92,7 +105,7 @@ def prefs():
             esc(T('اختار الأيام اللي تحب تكون فيها في المكتب أو في البيت. المخطط بيحاول يمشي عليها لما يعمل الجدول.', 'Choose the days you prefer to be in the office or at home. The planner tries to follow them when it makes the schedule.')),
             rows, esc(T('أيام مكتبك في الأسبوع: ٣. الحد الأدنى في المكتب وأي إجازة ليهم الأولوية.', 'Your office days a week: 3. The office minimum and any leave come first.')),
             esc(T('حفظ', 'Save')))
-        return app_page(T('ملفي الشخصي', 'My Profile'), body, active='profile', feature_css=CSS)
+        return app_page(T('ملفي الشخصي', 'My Profile'), body, active='profile', feature_css=CSS, who=('Emp3', 'Emp3'))
     return make
 
 
@@ -103,7 +116,7 @@ def admin_employee():
                 '<tr><th scope="row">%s</th><td><label><input type="radio" name="od"> %s</label><br><label><input type="radio" name="od" checked> %s <input type="number" class="small-text" value="5" min="0" max="7"> %s</label>'
                 '<p class="description">%s</p></td></tr>'
                 '<tr><th scope="row">%s</th><td>%s<p class="description">%s</p></td></tr></table></div>') % (
-            esc(T('تعديل موظف: كريم فتحي', 'Edit employee: Karim Fathy')), esc(T('مخطط الجدول', 'Schedule planner')),
+            esc(T('تعديل موظف: Emp7', 'Edit employee: Emp7')), esc(T('مخطط الجدول', 'Schedule planner')),
             esc(T('أيام المكتب في الأسبوع', 'Office days a week')), esc(T('زي الشركة (٣)', 'Company default (3)')), esc(T('عدد مختلف:', 'A different number:')), esc(T('أيام', 'days')),
             esc(T('مثلًا المديرين ٥ أيام. الإجازات والعطلات بتتشال من العدد في أسبوعها.', 'For example managers 5 days. Leave and holidays come off the number in their week.')),
             esc(T('أيامه المفضلة', 'Preferred days')), esc(T('الأحد مكتب · الاثنين البيت · الأربعاء مكتب · الخميس البيت', 'Sun office · Mon home · Wed office · Thu home')),
