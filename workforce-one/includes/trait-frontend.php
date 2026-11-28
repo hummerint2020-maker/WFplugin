@@ -427,7 +427,8 @@ trait EWS_Frontend_Trait {
         global $wpdb;
         if(!$emp)return [];
         // Without attendance tracking there is no Sign In reminder, but the other reminders still apply.
-        $tracks_attendance=$this->employee_attendance_enabled((int)$emp->id);
+        // The cron reads only employees with attendance tracked (3.31.167: no query per person to ask again).
+        $tracks_attendance=is_array($prefetch)&&!empty($prefetch['tracked'])?true:$this->employee_attendance_enabled((int)$emp->id);
         $user_id=$user_id===null?get_current_user_id():absint($user_id);
         if(!$user_id)return [];
         $cfg=$this->smart_nudge_settings();
@@ -441,10 +442,13 @@ trait EWS_Frontend_Trait {
         };
 
         if($tracks_attendance && !empty($cfg['items']['attendance'])){
-            $sch=$this->today_schedule_for_employee((int)$emp->id);
+            // The cron read today's rows and Sign Ins for everyone at once (3.31.167); a day other than today (a night shift) is read here as before.
+            $att_day=is_array($prefetch)&&isset($prefetch['today_rows'])?(string)$this->attendance_day((int)$emp->id):'';
+            $pre=$att_day!==''&&$att_day===($prefetch['today']??'');
+            $sch=$pre?($prefetch['today_rows'][(int)$emp->id]??null):$this->today_schedule_for_employee((int)$emp->id);
             if($sch && $this->schedule_type_requires_sign_in($sch->status) && empty($this->company_leave_dates($today,$today))){
-                $events=$this->today_events((int)$emp->id);
-                $signed=!empty($events['sign_in'])||!empty($events['late_sign_in']);
+                if($pre)$signed=!empty($prefetch['signed'][(int)$emp->id]);
+                else{$events=$this->today_events((int)$emp->id);$signed=!empty($events['sign_in'])||!empty($events['late_sign_in']);}
                 if(!$signed){
                     $h=$this->working_hours((int)$emp->id);$start=$this->smart_nudge_minutes($h['start']??'');$now=$this->smart_nudge_minutes(current_time('H:i'));
                     if($start!==null && $now!==null && $now >= $start+(int)$cfg['attendance_after'] && $this->sign_in_window_open((int)$emp->id)){
@@ -499,7 +503,16 @@ trait EWS_Frontend_Trait {
         $ids=array_values(array_unique(array_map(function($e){return (int)$e->id;},$employees)));
         $users=array_values(array_unique(array_map(function($e){return (int)$e->wp_user_id;},$employees)));
         foreach(array_chunk($users,500) as $chunk)update_meta_cache('user',$chunk);
-        $out=[];
+        $out=['tracked'=>true];   // the cron's query keeps only employees with attendance tracked
+        // The Sign In reminder (3.31.167): everyone's shift, today's schedule row and today's Sign Ins in three reads, not four per person.
+        if(!empty($cfg['items']['attendance'])){
+            $this->prime_shift_cache($employees);
+            $today=current_time('Y-m-d');
+            $rows=[];
+            foreach($this->services()->scheduleDays()->rowsOn($today) as $r)if(!isset($rows[(int)$r->employee_id]))$rows[(int)$r->employee_id]=$r;
+            $out['today']=$today;$out['today_rows']=$rows;
+            $out['signed']=$this->services()->attendanceLog()->signedInOn($ids,$today);
+        }
         if(!empty($cfg['enabled']) && !empty($cfg['items']['leave'])){
             $out['leave']=\WorkforceOne\Settings\SmartNudges::firstPerEmployee($this->leave_pending_newest_first($ids),3);
         }

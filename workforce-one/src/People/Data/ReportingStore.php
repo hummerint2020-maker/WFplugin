@@ -24,6 +24,9 @@ interface ReportingStore
     /** Does an active employee report directly to this one? */
     public function hasActiveReport(int $employeeId): bool;
 
+    /** hasActiveReport() for many at once (3.31.167): the ids someone active reports to. @param list<int> $employeeIds @return list<int> */
+    public function withActiveReports(array $employeeIds): array;
+
     /** Ends the employee's active line of this type (the SQL of approval_set_relationship). @return int|false rows changed, false on a database error */
     public function deactivate(int $employeeId, string $type, string $now);
 

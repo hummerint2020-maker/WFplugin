@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.31.167
+### Performance from the production System health (owner's request, 2026-11-22)
+The production System health showed no errors and no failed jobs, only reads repeated in a loop. Nothing changes in what anyone
+sees or how anything works; fewer queries:
+- **Smart Nudges job** (every five minutes): the Sign In reminder read each employee's shift, today's schedule row, "attendance
+  enabled" and today's Sign Ins one by one (about four queries a person, ~100 a run for 25 people). They are now read for everyone
+  at once (three queries). A night shift's day other than today is still read as before. The reminders are the same
+  (tests/e2e_smart_nudges_reads.py compares them person by person).
+- **My approvals, My requests, Leave** (the "I'll be away" substitutes list): "does this colleague manage anyone?" was asked once
+  per colleague (25-29 queries a page); now one read for all of them, with the same rule.
+- **Every request of the site**: the hourly check for transfers due read a transient (one query on every page, API call and
+  public page); its next time is now an autoloaded option, read with the other options at no cost.
+  The first request after the update checks once more (harmless: a move is claimed before it is applied, never twice).
 ## 3.31.166
 ### System messages: edit the texts the system shows (docs/tasks/system-messages.md, mockup /mnt/project-files/system-messages/)
 Owner's request (2026-11-25): "make the messages of the system editable". A new switch (wp-admin → Features → **System

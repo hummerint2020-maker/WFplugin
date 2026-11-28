@@ -216,6 +216,7 @@ final class Options
         'ews_notification_policy_updated_at' => ['group' => 'system', 'label' => 'Notification settings last saved', 'kind' => 'text', 'default' => '', 'internal' => true],
         'ews_notification_policy_updated_by' => ['group' => 'system', 'label' => 'Notification settings saved by (user id)', 'kind' => 'int', 'default' => 0, 'internal' => true],
         'ews_privacy_cleanup_last_run' => ['group' => 'system', 'label' => 'Privacy cleanup last run', 'kind' => 'text', 'default' => '', 'internal' => true],
+        'ews_org_moves_next_check' => ['group' => 'system', 'label' => 'Next check for transfers due (3.31.167; autoloaded, so reading it costs nothing)', 'kind' => 'int', 'default' => 0, 'internal' => true],
         'ews_smart_nudges_last_run' => ['group' => 'system', 'label' => 'Smart Nudges last run', 'kind' => 'int', 'default' => 0, 'internal' => true],
         'ews_smart_nudges_last_result' => ['group' => 'system', 'label' => 'Smart Nudges last result', 'kind' => 'grouped', 'default' => [], 'internal' => true],
     ];

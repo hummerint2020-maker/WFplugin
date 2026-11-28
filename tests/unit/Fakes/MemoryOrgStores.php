@@ -65,6 +65,18 @@ final class MemoryReportingStore implements ReportingStore
         return array_values(array_map(function ($l) { return (object) ['employee_id' => (string) $l[1], 'related_employee_id' => (string) $l[2]]; }, $rows));
     }
 
+    public function withActiveReports(array $employeeIds): array
+    {
+        $this->calls[] = 'withActiveReports';
+        $out = [];
+        foreach (array_values(array_unique(array_map('intval', $employeeIds))) as $id) {
+            foreach ($this->lines as $l) {
+                if ($l[2] === $id && $l[3] === 'supervisor' && $l[4] === 1 && isset($this->people->rows[$l[1]]) && $this->people->rows[$l[1]]->active === '1') { $out[] = $id; break; }
+            }
+        }
+        return $out;
+    }
+
     public function hasActiveReport(int $employeeId): bool
     {
         $this->calls[] = 'hasActiveReport';

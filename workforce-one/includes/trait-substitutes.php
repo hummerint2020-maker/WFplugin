@@ -148,10 +148,11 @@ trait EWS_Substitutes_Trait {
     private function substitute_when($dt){ return date_i18n('D j M, H:i',strtotime((string)$dt)); }
 
     /** Whether $employee may be a substitute for $manager under the setting. */
-    private function substitute_eligible($manager,$candidate){
+    /** @param array<int,bool>|null $managers who manages someone, read ahead for a list (3.31.167); null: asked here */
+    private function substitute_eligible($manager,$candidate,$managers=null){
         $who=$this->substitute_settings()['who'];
         return Substitutes::eligible($who,['active'=>$candidate && (int)$candidate->active===1 && (int)$candidate->wp_user_id>0,
-            'has_reports'=>$candidate && $who==='managers' && $this->people_has_reports((int)$candidate->id),
+            'has_reports'=>$candidate && $who==='managers' && ($managers!==null?!empty($managers[(int)$candidate->id]):$this->people_has_reports((int)$candidate->id)),
             'same_department'=>$candidate && $manager && (int)$manager->department_id>0 && (int)$candidate->department_id===(int)$manager->department_id]);
     }
 
@@ -185,11 +186,16 @@ trait EWS_Substitutes_Trait {
     private function substitute_choices($manager){
         if(!$manager)return [];
         $boss=$this->approval_related_employee((int)$manager->id,'supervisor');
-        $out=[];
-        foreach($this->people_active_users() as $r){
-            if((int)$r->id===(int)$manager->id || !$this->substitute_eligible($manager,$r))continue;
+        $out=[];$people=$this->people_active_users();
+        // Who manages someone, in one read (3.31.167; before, one query per colleague: production System health): the department's
+        // people for "a manager in your department", everyone when only managers may stand in.
+        $all=$this->substitute_settings()['who']==='managers';$ask=[];
+        foreach($people as $r)if((int)$r->id!==(int)$manager->id && ($all || ((int)$manager->department_id>0 && (int)$r->department_id===(int)$manager->department_id)))$ask[]=(int)$r->id;
+        $managers=$ask?$this->services()->org()->withReports($ask):[];
+        foreach($people as $r){
+            if((int)$r->id===(int)$manager->id || !$this->substitute_eligible($manager,$r,$managers))continue;
             $is_boss=$boss && (int)$boss->id===(int)$r->id;
-            $peer=!$is_boss && (int)$manager->department_id>0 && (int)$r->department_id===(int)$manager->department_id && $this->people_has_reports((int)$r->id);
+            $peer=!$is_boss && (int)$manager->department_id>0 && (int)$r->department_id===(int)$manager->department_id && !empty($managers[(int)$r->id]);
             $out[]=['id'=>(int)$r->id,'name'=>(string)$r->name,'sub'=>$is_boss?__('Your manager','workforce-one'):($peer?__('A manager in your department','workforce-one'):''),'suggested'=>$is_boss||$peer,'rank'=>$is_boss?0:($peer?1:2)];
         }
         usort($out,function($a,$b){return [$a['rank'],$a['name']]<=>[$b['rank'],$b['name']];});
