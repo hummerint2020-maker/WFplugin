@@ -1,0 +1,27 @@
+/* Schedule planner (docs/tasks/schedule-planner.md). Logical properties: the -rtl copy is identical. */
+.wfo-sp-bar,.wfo-sp-draft{display:flex;flex-direction:column;gap:10px;margin-block:12px;padding:14px 16px;border-radius:14px;background:#f4f1ff;border:1px solid #ddd3ff}
+.wfo-sp-bar{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.wfo-sp-bar-text{display:flex;flex-direction:column;gap:2px;max-width:70ch}
+.wfo-sp-bar-text span,.wfo-sp-draft-head span{color:#5f6584;font-size:13px}
+.wfo-sp-go{display:inline-flex;align-items:center;gap:6px;background:#5b3fd9;color:#fff;border-color:#5b3fd9}
+.wfo-sp-draft-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wfo-sp-draft-head > div:first-of-type{display:flex;flex-direction:column;flex:1;min-width:220px}
+.wfo-sp-draft-head svg{color:#5b3fd9}
+.wfo-sp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.wfo-sp-stats{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#3c4160}
+.wfo-sp-stats b{font-size:16px;margin-inline-end:2px}
+.wfo-sp-warn{font-size:13px;line-height:1.6;background:#fff8e6;border:1px solid #f0d58a;border-radius:10px;padding:8px 12px}
+.wfo-sp-warn summary{cursor:pointer;font-weight:600;font-size:14px;color:#7a5600}
+.wfo-sp-warn ul{margin:8px 0 0;padding-inline-start:18px;display:flex;flex-direction:column;gap:4px}
+.wfo-sp-warn li b{margin-inline-end:6px}
+td.wfo-sp-proposed .wfo-attg-chip{outline:2px dashed #5b3fd9;outline-offset:-3px}
+.ews-att-plan-legend .wfo-sp-key{display:inline-block;width:12px;height:12px;border:2px dashed #5b3fd9;border-radius:3px;vertical-align:-2px}
+.wfo-sp-prefs ul{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.wfo-sp-prefs li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wfo-sp-seg{display:inline-flex;border:1px solid #d9dcea;border-radius:10px;overflow:hidden}
+.wfo-sp-seg button{border:0;background:#fff;padding:6px 10px;font:inherit;font-size:13px;color:#3c4160}
+.wfo-sp-seg button + button{border-inline-start:1px solid #d9dcea}
+.wfo-sp-seg button.is-on{background:#5b3fd9;color:#fff}
+.wfo-sp-note{font-size:12px;color:#5f6584}
+.wfo-sp-admin{max-width:820px;padding:4px 18px 14px;background:#fff;border:1px solid #dcdcde}
+.wfo-sp-off{display:inline-block;padding:1px 8px;margin-inline-start:6px;border-radius:10px;background:#f0f0f1;color:#50575e;font-size:12px;font-weight:400;vertical-align:2px}

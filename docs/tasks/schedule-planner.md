@@ -2,9 +2,11 @@
 
 **Owner request (2026-11-28):** "I want to add AI that makes the schedule, but it must be free."
 
-**Status:** decisions taken; the mockup comes next. No design or code yet.
+**Status:** decisions taken (two rounds); the mockup is waiting for the owner's approval. No design or code yet.
 
 ## Owner decisions (2026-11-28)
+
+**Second round (2026-11-28):** office days are set as a company default with an override per employee by the admin; the employee marks preferred days in the app; only administrators run the planner; when the rules cannot all be met, the planner makes its best try and lists warnings.
 
 1. **Engine:** a planner built into the plugin. It runs on the site's own server and costs nothing. No employee data leaves the site, and no external AI or API key is used. It follows the rules exactly instead of guessing.
 2. **What it fills:** the empty days of a chosen week (next week by default). Anything already set, leave and company holidays stay as they are.
